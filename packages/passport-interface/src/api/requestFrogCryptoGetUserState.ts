@@ -11,9 +11,9 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Get data for all the frogs. Optionally upload new frogs.
+ * Get user specific FrogCrypto state.
  *
- * This endpoint is only available to authenticated admin users.
+ * @see {@link FrogCryptoUserStateRequest}
  */
 export async function requestFrogCryptoGetUserState(
   zupassServerUrl: string,

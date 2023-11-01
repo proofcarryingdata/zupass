@@ -615,7 +615,12 @@ export interface AgreeToTermsResponseValue {
 export const ISSUANCE_STRING = "Issue me PCDs please.";
 
 /**
- * User asks metadata about themselves such as when they can get next frog.
+ * User asks metadata about themselves such as when they can get next frog and
+ * how many frogs in Frogedex.
+ *
+ * NB: The number of possible frogs are currently not user specific. It is
+ * possible that we will introduce series unlock in the future where the number
+ * of possible frogs will be user specific.
  */
 export interface FrogCryptoUserStateRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
@@ -635,9 +640,7 @@ export interface FrogCryptoComputedUserState {
  */
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
-  frogs: {
-    count: number;
-  };
+  possibleFrogCount: number;
 }
 
 /**

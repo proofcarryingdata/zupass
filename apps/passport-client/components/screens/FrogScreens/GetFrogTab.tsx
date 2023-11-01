@@ -1,52 +1,31 @@
-import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
-import { Subscription } from "@pcd/passport-interface";
+import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import {
+  FrogCryptoUserStateResponseValue,
+  Subscription
+} from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
-import { useDispatch, usePCDCollection } from "../../../src/appHooks";
+import { useDispatch } from "../../../src/appHooks";
 import { PCDCard } from "../../shared/PCDCard";
 import { ActionButton } from "./Button";
 
+/**
+ * The GetFrog tab allows users to get frogs from their subscriptions as well as view their frogs.
+ */
 export function GetFrogTab({
-  subs,
-  refetch
+  pcds,
+  userState,
+  subscriptions,
+  refreshUserState
 }: {
-  subs: Subscription[];
-  refetch: () => Promise<void>;
+  pcds: EdDSAFrogPCD[];
+  userState: FrogCryptoUserStateResponseValue;
+  subscriptions: Subscription[];
+  refreshUserState: () => Promise<void>;
 }) {
-  const pcds = usePCDCollection();
-  // NB: we cannot use useMemo because pcds are mutate in-place
-  const frogPCDs = pcds
-    .getAllPCDsInFolder("FrogCrypto")
-    .filter(
-      (pcd): pcd is EdDSAFrogPCD => pcd.type === EdDSAFrogPCDPackage.name
-    );
-
-  const [selectedPCDID, setSelectedPCDID] = useState("");
-  const selectedPCD = useMemo(
-    () => frogPCDs.find((pcd) => pcd.id === selectedPCDID) || frogPCDs[0],
-    [frogPCDs, selectedPCDID]
-  );
-  const onPcdClick = useCallback((id: string) => {
-    setSelectedPCDID(id);
-  }, []);
-
-  const [_lastestFrogPCD, setLatestFrogPCD] = useState<EdDSAFrogPCD>();
-  useEffect(() => {
-    const latest = _.maxBy(frogPCDs, (pcd) => pcd.claim.data.timestampSigned);
-    if (latest) {
-      setLatestFrogPCD((previous) => {
-        if (previous && previous.id !== latest.id) {
-          setSelectedPCDID(latest.id);
-        }
-
-        return latest;
-      });
-    }
-  }, [frogPCDs]);
-
   const [searchMessage, setSearchMessage] = useState("");
   useEffect(() => {
     if (searchMessage) {
@@ -63,29 +42,28 @@ export function GetFrogTab({
   return (
     <>
       <SearchGroup>
-        {subs.map((sub) => (
+        {subscriptions.map((sub) => (
           <SearchButton
             key={sub.id}
             sub={sub}
-            refetch={refetch}
+            refreshUserState={refreshUserState}
             setMessage={setSearchMessage}
+            nextFetchAt={
+              userState?.feeds?.find((feed) => feed.feedId === sub.feed.id)
+                ?.nextFetchAt
+            }
           />
         ))}
       </SearchGroup>
 
-      {searchMessage && <Notice>{searchMessage}</Notice>}
+      {searchMessage !== "" && <Notice>{searchMessage}</Notice>}
 
-      {frogPCDs.length > 0 && (
+      {pcds.length > 0 && (
         <>
           <Separator style={{ margin: 0 }} />
           <PCDContainer>
-            {frogPCDs.map((pcd) => (
-              <PCDCard
-                key={pcd.id}
-                pcd={pcd}
-                onClick={onPcdClick}
-                expanded={pcd.id === selectedPCD?.id}
-              />
+            {pcds.map((pcd) => (
+              <PCDCard key={pcd.id} pcd={pcd} expanded />
             ))}
           </PCDContainer>
         </>
@@ -94,13 +72,19 @@ export function GetFrogTab({
   );
 }
 
+/**
+ * Button to get a frog from a feed. It calls refreshUserState after each
+ * request to ensure cooldown is updated.
+ */
 const SearchButton = ({
-  sub: { id, feed, nextFetchAt },
-  refetch,
+  sub: { id, feed },
+  nextFetchAt,
+  refreshUserState,
   setMessage
 }: {
-  sub: Subscription & { nextFetchAt?: number };
-  refetch: () => Promise<void>;
+  sub: Subscription;
+  nextFetchAt?: number;
+  refreshUserState: () => Promise<void>;
   setMessage: (message: string) => void;
 }) => {
   const dispatch = useDispatch();
@@ -115,12 +99,12 @@ const SearchButton = ({
           subscriptionId: id,
           onSucess: () => {
             setMessage(`You found a new frog in ${feed.name}!`);
-            refetch().then(resolve).catch(reject);
+            refreshUserState().then(resolve).catch(reject);
           },
-          onError: (e) => refetch().finally(() => reject(e))
+          onError: (e) => refreshUserState().finally(() => reject(e))
         });
       }),
-    [dispatch, feed.name, id, refetch, setMessage]
+    [dispatch, feed.name, id, refreshUserState, setMessage]
   );
   const name = useMemo(() => _.upperCase(`Search ${feed.name}`), [feed.name]);
 
@@ -131,6 +115,11 @@ const SearchButton = ({
   );
 };
 
+/**
+ * Takes a future timestamp and returns a " (wait X)" string where X is a human
+ * readable duration until the timestamp. Returns an empty string if the
+ * timestamp is in the past.
+ */
 function useCountDown(timestamp: number) {
   const end = useMemo(() => new Date(timestamp), [timestamp]);
   const [diffText, setDiffText] = useState("");
@@ -149,7 +138,7 @@ function useCountDown(timestamp: number) {
         });
         setDiffText(diffString);
       }
-    }, 1000);
+    }, 500);
 
     return () => {
       clearInterval(interval);

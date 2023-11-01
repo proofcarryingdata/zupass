@@ -150,7 +150,7 @@ export async function deleteFrogData(
   );
 }
 
-export async function getFrogCount(pool: Pool): Promise<number> {
+export async function getPossibleFrogCount(pool: Pool): Promise<number> {
   const result = await sqlQuery(
     pool,
     `select count(*) as count from frogcrypto_frogs`,

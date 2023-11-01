@@ -97,3 +97,8 @@ export interface FrogCryptoDbFrogData {
   uuid: string;
   frog: Omit<FrogCryptoFrogData, "id" | "uuid">;
 }
+
+/**
+ * All FrogCrypto PCDs are stored in a folder named "FrogCrypto".
+ */
+export const FrogCryptoFolderName = "FrogCrypto";

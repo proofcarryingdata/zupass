@@ -7,6 +7,7 @@ import {
   pollFeed,
   requestListFeeds
 } from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -129,7 +130,7 @@ describe("frogcrypto functionality", function () {
 
     let userState = await getUserState();
     expect(userState.success).to.be.true;
-    expect(userState.value?.frogs?.count).to.be.greaterThan(0);
+    expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
     expect(userState.value?.feeds).to.be.empty;
 
     const response = await getFrog(feed, DATE_EPOCH_1H);
@@ -137,7 +138,7 @@ describe("frogcrypto functionality", function () {
 
     userState = await getUserState();
     expect(userState.success).to.be.true;
-    expect(userState.value?.frogs?.count).to.be.greaterThan(0);
+    expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
     expect(userState.value?.feeds).to.be.not.empty;
     const feedState = userState.value?.feeds?.[0];
     expect(feedState?.feedId).to.eq(feed.id);
@@ -157,7 +158,7 @@ describe("frogcrypto functionality", function () {
     expect(response.value?.actions.length).to.eq(1);
     const populateAction = response.value?.actions[0] as AppendToFolderAction;
     expect(populateAction.type).to.eq(PCDActionType.AppendToFolder);
-    expect(populateAction.folder).to.eq("FrogCrypto");
+    expect(populateAction.folder).to.eq(FrogCryptoFolderName);
     expect(populateAction.pcds[0].type).to.eq(EdDSAFrogPCDPackage.name);
 
     frogPCD = await EdDSAFrogPCDPackage.deserialize(populateAction.pcds[0].pcd);

@@ -21,8 +21,8 @@ import { FrogCryptoUserFeedState } from "../database/models";
 import {
   deleteFrogData,
   fetchUserFeedsState,
-  getFrogCount,
   getFrogData,
+  getPossibleFrogCount,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
@@ -80,7 +80,7 @@ export class FrogcryptoService {
       feeds: userFeeds.map((userFeed) =>
         this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
       ),
-      frogs: { count: await getFrogCount(this.context.dbPool) }
+      possibleFrogCount: await getPossibleFrogCount(this.context.dbPool)
     };
   }
 

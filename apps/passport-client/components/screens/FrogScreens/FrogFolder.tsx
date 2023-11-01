@@ -1,3 +1,4 @@
+import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -30,7 +31,7 @@ export function FrogFolder({
         height={18}
       />
       <FunkyFont>
-        {"FROGCRYPTO".split("").map((letter, i) => (
+        {FrogCryptoFolderName.split("").map((letter, i) => (
           <BounceText key={i} delay={i * 0.1}>
             {letter}
           </BounceText>

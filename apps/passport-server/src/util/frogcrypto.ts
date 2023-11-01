@@ -14,6 +14,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import { PCDPermissionType } from "@pcd/pcd-collection";
 import { PCDPackage } from "@pcd/pcd-types";
 import _ from "lodash";
@@ -69,7 +70,7 @@ const commonFeedConfig: Pick<
   },
   permissions: [
     {
-      folder: "FrogCrypto",
+      folder: FrogCryptoFolderName,
       type: PCDPermissionType.AppendToFolder
     }
   ]

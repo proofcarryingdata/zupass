@@ -3,14 +3,16 @@ import _ from "lodash";
 import { useMemo } from "react";
 import styled from "styled-components";
 
+/**
+ * The FrogeDex tab allows users to view their progress towards collecting all frogs.
+ */
 export function DexTab({
-  frogs,
+  possibleFrogCount,
   pcds
 }: {
-  frogs?: { count?: number };
+  possibleFrogCount?: number;
   pcds: EdDSAFrogPCD[];
 }) {
-  const count = frogs?.count;
   const names = useMemo(() => {
     const names: string[] = [];
 
@@ -21,14 +23,14 @@ export function DexTab({
     return names;
   }, [pcds]);
 
-  if (!count) {
+  if (!possibleFrogCount) {
     return <div>loading...</div>;
   }
 
   return (
     <table>
       <tbody>
-        {_.range(1, count).map((i) => (
+        {_.range(1, possibleFrogCount + 1).map((i) => (
           <tr key={i}>
             <Cell>{i}</Cell>
             {names[i] ? (

@@ -1,9 +1,10 @@
-import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   CredentialManager,
   FrogCryptoUserStateResponseValue,
   requestFrogCryptoGetUserState
 } from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -12,6 +13,7 @@ import {
   useDispatch,
   useIdentity,
   useIsSyncSettled,
+  usePCDCollection,
   usePCDsInFolder,
   useSubscriptions
 } from "../../../src/appHooks";
@@ -21,7 +23,7 @@ import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { ActionButton, Button } from "./Button";
-import { DexTab } from "./DEXTab";
+import { DexTab } from "./DexTab";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab } from "./ScoreTab";
 
@@ -32,8 +34,17 @@ import { ScoreTab } from "./ScoreTab";
 export function FrogHomeScreen() {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
-  const frogPCDs = usePCDsInFolder("FrogCrypto");
-  const { subs, frogs, refetch } = useFrogSubscriptions();
+  const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
+  const { userState, refreshUserState } = useUserFeedState();
+  const subs = useSubscriptions();
+  const frogSubs = useMemo(
+    () =>
+      subs.value
+        .getActiveSubscriptions()
+        .filter((sub) => sub.providerUrl.includes("frogcrypto")),
+    [subs]
+  );
+
   const [tab, setTab] = useState<"get" | "score" | "dex">("get");
 
   const initFrog = useInitializeFrogSubscriptions();
@@ -56,12 +67,17 @@ export function FrogHomeScreen() {
             style={{ transform: "translate(-2.5px, 1px)" }}
           />
 
-          {subs.length === 0 && (
+          {frogSubs.length === 0 && (
             <ActionButton onClick={initFrog}>light fire</ActionButton>
           )}
-          {subs.length > 0 &&
+          {frogSubs.length > 0 &&
             (frogPCDs.length === 0 ? (
-              <GetFrogTab subs={subs} refetch={refetch} />
+              <GetFrogTab
+                subscriptions={frogSubs}
+                userState={userState}
+                refreshUserState={refreshUserState}
+                pcds={frogPCDs}
+              />
             ) : (
               <>
                 <ButtonGroup>
@@ -85,9 +101,21 @@ export function FrogHomeScreen() {
                   </Button>
                 </ButtonGroup>
 
-                {tab === "get" && <GetFrogTab subs={subs} refetch={refetch} />}
+                {tab === "get" && (
+                  <GetFrogTab
+                    subscriptions={frogSubs}
+                    userState={userState}
+                    refreshUserState={refreshUserState}
+                    pcds={frogPCDs}
+                  />
+                )}
                 {tab === "score" && <ScoreTab />}
-                {tab === "dex" && <DexTab frogs={frogs} pcds={frogPCDs} />}
+                {tab === "dex" && (
+                  <DexTab
+                    possibleFrogCount={userState.possibleFrogCount}
+                    pcds={frogPCDs}
+                  />
+                )}
               </>
             ))}
         </Container>
@@ -96,18 +124,10 @@ export function FrogHomeScreen() {
   );
 }
 
-const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
-
-function useFrogSubscriptions() {
-  const subs = useSubscriptions();
-  const frogSubscriptions = useMemo(
-    () =>
-      subs.value
-        .getActiveSubscriptions()
-        .filter((sub) => sub.providerUrl.includes("frogcrypto")),
-    [subs]
-  );
-
+/**
+ * Fetch the user's frog crypto state as well as the ability to refetch.
+ */
+function useUserFeedState() {
   const [userState, setUserState] =
     useState<FrogCryptoUserStateResponseValue>();
   const identity = useIdentity();
@@ -134,33 +154,37 @@ function useFrogSubscriptions() {
 
   return useMemo(
     () => ({
-      subs: frogSubscriptions.map((sub) => ({
-        ...sub,
-        nextFetchAt: userState?.feeds?.find(
-          (feed) => feed.feedId === sub.feed.id
-        )?.nextFetchAt
-      })),
-      frogs: userState?.frogs,
-      refetch: refreshUserState
+      userState,
+      refreshUserState
     }),
-    [frogSubscriptions, userState, refreshUserState]
+    [userState, refreshUserState]
   );
 }
 
-const useInitializeFrogSubscriptions = () => {
+const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
+
+/**
+ * Returns a callback to register the default frog subscription provider and
+ * subscribes to all public frog feeds.
+ */
+const useInitializeFrogSubscriptions: () => () => Promise<void> = () => {
   const dispatch = useDispatch();
   const { value: subs } = useSubscriptions();
 
   return useCallback(async () => {
-    subs.getOrAddProvider(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL, "FrogCrypto");
+    subs.getOrAddProvider(
+      DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
+      FrogCryptoFolderName
+    );
 
-    // Subscribe to public feeds
+    // Subscribe to public feeds. We don't check for duplicates here because
+    // this function should only be called if user has no frog subscriptions.
     await subs.listFeeds(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL).then((res) =>
       res.feeds.forEach((feed) =>
         dispatch({
           type: "add-subscription",
           providerUrl: DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
-          providerName: "FrogCrypto",
+          providerName: FrogCryptoFolderName,
           feed
         })
       )

@@ -42,6 +42,7 @@ import {
   verifyFeedCredential,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import {
   PCDAction,
   PCDActionType,
@@ -88,7 +89,7 @@ import { ApplicationContext } from "../types";
 import {
   FROGCRYPTO_FEEDS,
   FrogCryptoFeed,
-  FrogCryptoFeedHost,
+  FrogCryptoFeedHost
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
@@ -106,7 +107,7 @@ export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
 
 export enum FeedProviderName {
   ZUPASS = "Zupass",
-  FROGCRYPTO = "FrogCrypto"
+  FROGCRYPTO = FrogCryptoFolderName
 }
 
 export class IssuanceService {
@@ -413,7 +414,7 @@ export class IssuanceService {
               actions: [
                 {
                   pcds: await this.issueEdDSAFrogPCDs(req.pcd, feed),
-                  folder: "FrogCrypto",
+                  folder: FrogCryptoFolderName,
                   type: PCDActionType.AppendToFolder
                 }
               ]
