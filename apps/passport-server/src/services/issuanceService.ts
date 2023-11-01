@@ -18,6 +18,7 @@ import {
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
   FeedHost,
+  FrogCryptoFolderName,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -42,7 +43,6 @@ import {
   verifyFeedCredential,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
-import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import {
   PCDAction,
   PCDActionType,
@@ -107,7 +107,7 @@ export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
 
 export enum FeedProviderName {
   ZUPASS = "Zupass",
-  FROGCRYPTO = FrogCryptoFolderName
+  FROGCRYPTO = "FrogCrypto"
 }
 
 export class IssuanceService {

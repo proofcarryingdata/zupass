@@ -9,7 +9,7 @@ import prettyMilliseconds from "pretty-ms";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../../src/appHooks";
-import { PCDCard } from "../../shared/PCDCard";
+import { PCDCardList } from "../../shared/PCDCardList";
 import { ActionButton } from "./Button";
 
 /**
@@ -61,11 +61,14 @@ export function GetFrogTab({
       {pcds.length > 0 && (
         <>
           <Separator style={{ margin: 0 }} />
-          <PCDContainer>
-            {pcds.map((pcd) => (
-              <PCDCard key={pcd.id} pcd={pcd} expanded />
-            ))}
-          </PCDContainer>
+          <PCDCardList
+            pcds={pcds}
+            defaultSortState={{
+              sortBy: "index",
+              sortOrder: "desc"
+            }}
+            allExpanded
+          />
         </>
       )}
     </>
@@ -122,37 +125,32 @@ const SearchButton = ({
  */
 function useCountDown(timestamp: number) {
   const end = useMemo(() => new Date(timestamp), [timestamp]);
-  const [diffText, setDiffText] = useState("");
+  const getDiffText = useCallback((end: Date) => {
+    const now = new Date();
+    const diffMs = Math.ceil((end.getTime() - now.getTime()) / 1000) * 1000;
+    if (diffMs <= 0) {
+      return "";
+    } else {
+      const diffString = prettyMilliseconds(diffMs, {
+        millisecondsDecimalDigits: 0,
+        secondsDecimalDigits: 0,
+        unitCount: 4
+      });
+      return diffString;
+    }
+  }, []);
+  const [diffText, setDiffText] = useState(() => getDiffText(end));
 
   useEffect(() => {
-    const interval = setInterval(() => {
-      const now = new Date();
-      const diffMs = Math.ceil((end.getTime() - now.getTime()) / 1000) * 1000;
-      if (diffMs <= 0) {
-        setDiffText("");
-      } else {
-        const diffString = prettyMilliseconds(diffMs, {
-          millisecondsDecimalDigits: 0,
-          secondsDecimalDigits: 0,
-          unitCount: 4
-        });
-        setDiffText(diffString);
-      }
-    }, 500);
+    const interval = setInterval(() => setDiffText(getDiffText(end)), 500);
 
     return () => {
       clearInterval(interval);
     };
-  }, [end]);
+  }, [end, getDiffText]);
 
   return diffText ? ` (wait ${diffText})` : "";
 }
-
-const PCDContainer = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`;
 
 const SearchGroup = styled.div`
   display: flex;

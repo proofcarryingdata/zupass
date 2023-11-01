@@ -1,10 +1,10 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   CredentialManager,
+  FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   requestFrogCryptoGetUserState
 } from "@pcd/passport-interface";
-import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -18,12 +18,14 @@ import {
   useSubscriptions
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { H1 } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
 import { ActionButton, Button } from "./Button";
 import { DexTab } from "./DexTab";
+import { SuperFunkyFont } from "./FrogFolder";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab } from "./ScoreTab";
 
@@ -60,12 +62,9 @@ export function FrogHomeScreen() {
         <Container>
           <AppHeader />
 
-          <img
-            draggable="false"
-            src="/images/frogs/frogcrypto.svg"
-            width="100%"
-            style={{ transform: "translate(-2.5px, 1px)" }}
-          />
+          <SuperFunkyFont>
+            <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
+          </SuperFunkyFont>
 
           {frogSubs.length === 0 && (
             <ActionButton onClick={initFrog}>light fire</ActionButton>

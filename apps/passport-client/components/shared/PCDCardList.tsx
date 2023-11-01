@@ -29,7 +29,21 @@ type SortState = {
   sortOrder?: "asc" | "desc";
 };
 
-export function PCDCardList({ pcds }: { pcds: PCD[] }) {
+export function PCDCardList({
+  pcds,
+  defaultSortState,
+  allExpanded
+}: {
+  pcds: PCD[];
+  /**
+   * Defaults to natural order of PCDs which loosely corresponds to when it is issued.
+   */
+  defaultSortState?: SortState;
+  /**
+   * If true, all PCDs will be expanded. Otherwise, the last clicked PCD is expanded.
+   */
+  allExpanded?: boolean;
+}) {
   const mainPCDId = useMemo(() => {
     if (pcds[0]?.type === SemaphoreIdentityPCDTypeName) {
       return pcds[0]?.id;
@@ -58,10 +72,12 @@ export function PCDCardList({ pcds }: { pcds: PCD[] }) {
       ),
     [sortablePCDs]
   );
-  const [sortState, setSortState] = useState<SortState>({
-    sortBy: "index",
-    sortOrder: "asc"
-  });
+  const [sortState, setSortState] = useState<SortState>(
+    defaultSortState ?? {
+      sortBy: "index",
+      sortOrder: "asc"
+    }
+  );
   const sortedPCDs = useMemo(
     () =>
       (sortState.sortBy && sortState.sortOrder
@@ -108,8 +124,8 @@ export function PCDCardList({ pcds }: { pcds: PCD[] }) {
           key={pcd.id}
           pcd={pcd}
           isMainIdentity={pcd.id === mainPCDId}
-          onClick={onClick}
-          expanded={pcd.id === selectedPCD?.id}
+          onClick={allExpanded ? undefined : onClick}
+          expanded={allExpanded || pcd.id === selectedPCD?.id}
         />
       ))}
     </Container>

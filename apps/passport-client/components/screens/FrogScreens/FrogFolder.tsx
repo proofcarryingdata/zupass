@@ -1,4 +1,4 @@
-import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -30,13 +30,13 @@ export function FrogFolder({
         width={18}
         height={18}
       />
-      <FunkyFont>
+      <SuperFunkyFont>
         {FrogCryptoFolderName.split("").map((letter, i) => (
           <BounceText key={i} delay={i * 0.1}>
             {letter}
           </BounceText>
         ))}
-      </FunkyFont>
+      </SuperFunkyFont>
       <NewFont>
         <CountDown />
       </NewFont>
@@ -193,7 +193,7 @@ const NewFont = styled.div`
   }
 `;
 
-const FunkyFont = styled.div`
+export const SuperFunkyFont = styled.div`
   font-family: "SuperFunky";
   font-size: 20px;
   display: flex;

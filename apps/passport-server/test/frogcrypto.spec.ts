@@ -1,5 +1,6 @@
 import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
+  FrogCryptoFolderName,
   FrogCryptoUserStateResult,
   PollFeedResult,
   createFeedCredentialPayload,
@@ -7,7 +8,6 @@ import {
   pollFeed,
   requestListFeeds
 } from "@pcd/passport-interface";
-import { FrogCryptoFolderName } from "@pcd/passport-interface/src/FrogCrypto";
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
