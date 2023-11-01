@@ -288,3 +288,18 @@ export async function fetchTelegramAnonMessagesByNullifier(
   );
   return result.rows;
 }
+
+export async function fetchTelegramChatTopicById(
+  client: Pool,
+  chatTopicId: number
+): Promise<TelegramTopicFetch> {
+  const result = await sqlQuery(
+    client,
+    `
+    select telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
+    where id = $1
+    `,
+    [chatTopicId]
+  );
+  return result.rows[0];
+}

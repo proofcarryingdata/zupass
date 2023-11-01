@@ -1,24 +1,32 @@
-"use client";
-
 import Post from "@/components/post";
 import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
-import { useEffect, useState } from "react";
 
-export default function Page({ params }: { params: { nullifier: string } }) {
-  const [messages, setMessages] = useState<string[]>([]);
+interface AnonMessageWithDetails {
+  id: number;
+  nullifier: string;
+  chat_topic_id: number;
+  content: string;
+  proof: string;
+  chat_name: string;
+  topic_name: string;
+  message_timestamp: string;
+}
 
-  useEffect(() => {
-    const getData = async () => {
-      const data = await fetch(
-        `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${params.nullifier}`
-      );
-      const dataJson = await data.json();
-      console.log(dataJson);
+export default async function Page({
+  params
+}: {
+  params: { nullifier: string };
+}) {
+  const getData = async (): Promise<AnonMessageWithDetails[]> => {
+    const data = await fetch(
+      `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${params.nullifier}`,
+      { cache: "no-store" }
+    );
+    const dataJson = await data.json();
+    return dataJson;
+  };
 
-      setMessages(dataJson.map((d: any) => d.content));
-    };
-    getData();
-  }, []);
+  const messages = await getData();
 
   return (
     <div className="flex flex-col items-center bg-white p-4">
@@ -38,11 +46,30 @@ export default function Page({ params }: { params: { nullifier: string } }) {
           #{params.nullifier.substring(0, 4)}
         </span>
       </div>
-      <div className="flex flex-col gap-2 mt-4">
-        {messages.map((message) => (
-          <Post title={"Devconnect Community Hub"} content={message} />
-        ))}
-      </div>
+      {messages.length === 0 ? (
+        <div className="flex flex-col items-center mt-4">
+          <span className="text-[#2e2e35] opacity-30 text-xl ">
+            No messages ... yet
+          </span>
+        </div>
+      ) : (
+        <div className="flex flex-col gap-2 mt-4">
+          {messages
+            .sort(
+              (a, b) =>
+                new Date(b.message_timestamp).getTime() -
+                new Date(a.message_timestamp).getTime()
+            )
+            .map((message: AnonMessageWithDetails, i: number) => (
+              <Post
+                title={message.chat_name}
+                content={message.content}
+                key={i}
+                timestamp={message.message_timestamp}
+              />
+            ))}
+        </div>
+      )}
     </div>
   );
 }

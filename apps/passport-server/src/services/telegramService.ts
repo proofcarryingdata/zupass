@@ -2,7 +2,7 @@ import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getAnonTopicNullifier } from "@pcd/passport-interface";
-import { ONE_HOUR_MS, bigintToPseudonym, sleep } from "@pcd/util";
+import { ONE_HOUR_MS, bigintToPseudonym, isFulfilled, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -10,7 +10,7 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
-import { AnonMessage } from "../database/models";
+import { AnonMessage, AnonMessageWithDetails } from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -24,6 +24,7 @@ import {
   fetchEventsPerChat,
   fetchEventsWithTelegramChats,
   fetchTelegramAnonMessagesByNullifier,
+  fetchTelegramChatTopicById,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
@@ -864,7 +865,6 @@ export class TelegramService {
     chatId: number,
     topicId: number,
     message: string
-    // nullifier: bigint
   ): Promise<void> {
     return traced("telegram", "sendToAnonymousChannel", async (span) => {
       span?.setAttribute("chatId", chatId);
@@ -876,10 +876,6 @@ export class TelegramService {
           message_thread_id: topicId,
           parse_mode: "HTML",
           disable_web_page_preview: true
-          // reply_markup: new InlineKeyboard().url(
-          //   `${bigintToPseudonym(nullifier)}`,
-          //   `${process.env.TELEGRAM_ANON_PROFILE_DIRECT_LINK}?startApp=${nullifier}&startapp=${nullifier}`
-          // )
         });
       } catch (error: { error_code: number; description: string } & any) {
         const isDeletedThread =
@@ -1105,12 +1101,13 @@ export class TelegramService {
       );
 
       const currentTime = new Date();
+      const timestamp = currentTime.toISOString();
 
       if (!nullifierData) {
         await insertOrUpdateTelegramNullifier(
           this.context.dbPool,
           nullifierHash,
-          [currentTime.toISOString()],
+          [timestamp],
           topic.id
         );
         await insertTelegramAnonMessage(
@@ -1118,7 +1115,8 @@ export class TelegramService {
           nullifierHash,
           topic.id,
           rawMessage,
-          serializedZKEdDSATicket
+          serializedZKEdDSATicket,
+          timestamp
         );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
@@ -1148,7 +1146,8 @@ export class TelegramService {
             nullifierHash,
             topic.id,
             rawMessage,
-            serializedZKEdDSATicket
+            serializedZKEdDSATicket,
+            newTimestamps[newTimestamps.length - 1]
           );
         } else {
           const rlError = new Error(
@@ -1225,16 +1224,40 @@ export class TelegramService {
 
   public async handleGetAnonMessages(
     nullifierHash: string
-  ): Promise<AnonMessage[]> {
+  ): Promise<AnonMessageWithDetails[]> {
     return traced("telegram", "handleGetAnonMessages", async () => {
       const messages = await fetchTelegramAnonMessagesByNullifier(
         this.context.dbPool,
         nullifierHash
       );
 
-      if (messages.length === 0) throw new Error(`No messages found`);
+      const detailedMessages = messages.map(async (m: AnonMessage) => {
+        try {
+          const { telegramChatID, topic_name } =
+            await fetchTelegramChatTopicById(
+              this.context.dbPool,
+              m.chat_topic_id
+            );
+          const chat = (await this.anonBot.api.getChat(
+            telegramChatID
+          )) as TopicChat;
+          if (!chat) throw new Error(`Chat not found`);
+          return {
+            ...m,
+            topic_name,
+            chat_name: chat?.title
+          } as AnonMessageWithDetails;
+        } catch (e) {
+          logger(`[TELEGRAM] Error fetching message details`, e);
+          return null;
+        }
+      });
 
-      return messages;
+      const settled = await Promise.allSettled(detailedMessages);
+      return settled
+        .filter(isFulfilled)
+        .filter((m) => m !== null)
+        .map((m) => m.value) as AnonMessageWithDetails[];
     });
   }
 

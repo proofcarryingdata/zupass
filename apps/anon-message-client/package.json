@@ -3,7 +3,7 @@
   "version": "0.1.5",
   "private": true,
   "scripts": {
-    "dev": "NODE_ENV=development nodemon dev.ts",
+    "dev": "NODE_EXTRA_CA_CERTS=\"$(mkcert -CAROOT)/rootCA.pem\" NODE_ENV=development nodemon dev.ts",
     "build": "next build",
     "export": "next export",
     "start": "next start",
@@ -20,6 +20,7 @@
     "@types/react-dom": "18.2.7",
     "autoprefixer": "10.4.14",
     "js-sha256": "^0.10.1",
+    "moment": "^2.29.4",
     "next": "^13.5.3",
     "postcss": "8.4.27",
     "react": "18.2.0",

@@ -314,4 +314,10 @@ export interface AnonMessage {
   chat_topic_id: number;
   content: string;
   proof: string;
+  message_timestamp: string;
+}
+
+export interface AnonMessageWithDetails extends AnonMessage {
+  chat_name: string;
+  topic_name: string;
 }
