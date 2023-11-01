@@ -185,7 +185,10 @@ describe("devconnect functionality", function () {
     eventBConfigId = await insertPretixEventConfig(
       db,
       organizerConfigId,
-      [mocker.get().organizer1.eventBItem3.id + ""],
+      [
+        mocker.get().organizer1.eventBItem3.id + "",
+        mocker.get().organizer1.eventBItem4.id + ""
+      ],
       [mocker.get().organizer1.eventBItem3.id + ""],
       mocker.get().organizer1.eventB.slug
     );
@@ -251,7 +254,7 @@ describe("devconnect functionality", function () {
             {
               id: eventBConfigId,
               eventID: "event-b",
-              activeItemIDs: ["10003"],
+              activeItemIDs: ["10003", "10004"],
               superuserItemIds: ["10003"]
             },
             {
@@ -1419,14 +1422,19 @@ describe("devconnect functionality", function () {
         throw new Error(`Could not fetch event info for ${eventBConfigId}`);
       }
 
+      const originalItemId = mocker.get().organizer1.eventBItem3.id;
       const originalItem = (
         await fetchPretixItemsInfoByEvent(db, eventInfo.id)
-      )[0];
+      ).find((i) => i.item_id === originalItemId.toString());
+
+      if (!originalItem) {
+        throw new Error(`Could not fetch item info for ${originalItemId}`);
+      }
 
       mocker.updateItem(
         mocker.get().organizer1.orgUrl,
         mocker.get().organizer1.eventB.slug,
-        mocker.get().organizer1.eventBItem3.id,
+        originalItemId,
         (item) => {
           // This is valid
           //item.generate_tickets = null;
@@ -1435,7 +1443,13 @@ describe("devconnect functionality", function () {
       );
 
       await devconnectPretixSyncService.trySync();
-      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id)).find(
+        (i) => i.item_id === originalItemId.toString()
+      );
+
+      if (!item) {
+        throw new Error(`Could not fetch item info for ${originalItemId}`);
+      }
 
       // The event name matches the one fetched during sync
       expect(item.item_name).to.eq(updatedNameInNewSync);
@@ -2355,7 +2369,7 @@ describe("devconnect functionality", function () {
         (tt) => tt.ticketGroup === KnownTicketGroup.Devconnect23
       );
 
-      expect(devconnectTicketTypes?.length).to.eq(3);
+      expect(devconnectTicketTypes?.length).to.eq(4);
     }
   );
 

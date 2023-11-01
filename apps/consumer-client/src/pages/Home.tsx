@@ -34,6 +34,12 @@ function Page() {
               Prove and Get a ZKEdDSA Event Ticket Proof from Zupass
             </Link>
           </li>
+          <li>
+            <Link to="/examples/zu-auth">
+              EdDSA Ticket PCD anonymous and non-anonymous authentication from
+              Zupass
+            </Link>
+          </li>
         </ol>
       </div>
     </div>

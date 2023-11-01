@@ -4,7 +4,6 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   KudosTargetType,
-  KudosUserInfo,
   SemaphoreSignatureKudosPCDArgs,
   SemaphoreSignatureKudosPCDPackage
 } from "@pcd/semaphore-signature-kudos-pcd";
@@ -12,11 +11,14 @@ import { sleep } from "@pcd/util";
 import { Bot, session } from "grammy";
 import { fetchSemaphoreIdFromTelegramUsername } from "../database/queries/telegram/fetchSemaphoreId";
 import { fetchTelegramConversationsByChatId } from "../database/queries/telegram/fetchTelegramConversation";
+import { fetchTelegramUserIdFromSemaphoreId } from "../database/queries/telegram/fetchTelegramUserId";
+import { insertKudosbotProof } from "../database/queries/telegram/insertKudosbotProof";
 import { updateTelegramUsername } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
+  KudosSessionData,
   SessionData,
   getSessionKey,
   isDirectMessage,
@@ -51,8 +53,8 @@ export class KudosbotService {
     const getProofUrl = (
       zupassClientUrl: string,
       returnUrl: string,
-      giver: KudosUserInfo,
-      targetUser: KudosUserInfo
+      sessionData: KudosSessionData,
+      watermark: string
     ): string => {
       const args: SemaphoreSignatureKudosPCDArgs = {
         identity: {
@@ -64,11 +66,15 @@ export class KudosbotService {
         data: {
           argumentType: ArgumentTypeName.Object,
           value: {
-            watermark: "✨",
-            giver,
+            watermark,
+            giver: {
+              semaphoreID: sessionData.giverSemaphoreId
+            },
             target: {
               type: KudosTargetType.User,
-              user: targetUser
+              user: {
+                semaphoreID: sessionData.targetSemaphoreId
+              }
             }
           }
         }
@@ -82,7 +88,7 @@ export class KudosbotService {
         args,
         {
           title: "",
-          description: "Create a kudos ✨",
+          description: `Give a Kudos to @${sessionData.targetUsername} ${watermark}`,
           genericProveScreen: true
         }
       );
@@ -92,16 +98,20 @@ export class KudosbotService {
     const kudosbotMenu = new Menu<BotContext>("kudos");
     kudosbotMenu.dynamic((ctx, menu) => {
       if (ctx.session.kudosData) {
-        const { sender, recipient } = ctx.session.kudosData;
-        const proofUrl = getProofUrl(
-          PASSPORT_CLIENT_URL,
-          KUDOSBOT_UPLOAD_URL,
-          sender,
-          recipient
-        );
-        menu.webApp("Send kudos", proofUrl);
+        menu.add();
+        for (const watermark of ["❤️", "👏", "🙇‍♂️"]) {
+          const proofUrl = getProofUrl(
+            PASSPORT_CLIENT_URL,
+            KUDOSBOT_UPLOAD_URL,
+            ctx.session.kudosData,
+            watermark
+          );
+          menu.webApp(watermark, proofUrl).add();
+        }
+        menu.row();
       } else {
-        ctx.reply("Kudosbot encountered an error.");
+        logger("[KUDOSBOT] session data was invalid");
+        ctx.reply("Kudosbot encountered an error. Please try again.");
       }
       return menu;
     });
@@ -113,57 +123,57 @@ export class KudosbotService {
     });
 
     this.bot.command("kudos", async (ctx) => {
-      const kudosSender = ctx.from?.username;
+      const kudosGiverUsername = ctx.from?.username;
       const payload = ctx.match;
       if (payload.length === 0) {
         return ctx.reply(
           "Please enter the kudos receiver's Telegram handle after the kudos command."
         );
       }
-      let kudosRecipient = payload;
-      if (kudosRecipient[0] === "@") {
-        kudosRecipient = kudosRecipient.substring(1);
+      let kudosTargetUsername = payload;
+      if (kudosTargetUsername[0] === "@") {
+        kudosTargetUsername = kudosTargetUsername.substring(1);
       }
       logger(
-        `[KUDOSBOT] kudos command called; username: ${kudosSender}, kudosReceiver: ${kudosRecipient}`
+        `[KUDOSBOT] kudos command called; username: ${kudosGiverUsername}, kudosReceiver: ${kudosTargetUsername}`
       );
 
       try {
-        if (isDirectMessage(ctx) && kudosSender) {
+        if (isDirectMessage(ctx) && kudosGiverUsername) {
           // look up kudos receiever handle in db to see if it's a valid telegram handle to receieve kudos
-          const kudosSenderSemaphoreId =
+          const kudosGiverSemaphoreId =
             await fetchSemaphoreIdFromTelegramUsername(
               this.context.dbPool,
-              kudosSender
+              kudosGiverUsername
             );
-          if (!kudosSenderSemaphoreId) {
+          if (!kudosGiverSemaphoreId) {
             return await ctx.reply(
               "Error retrieving your Zupass information. Please make sure to join the group before sending a kudos."
             );
           }
-          const kudosRecipientSemaphoreId =
+          const kudosTargetSemaphoreId =
             await fetchSemaphoreIdFromTelegramUsername(
               this.context.dbPool,
-              kudosRecipient
+              kudosTargetUsername
             );
-          if (!kudosRecipientSemaphoreId) {
+          if (!kudosTargetSemaphoreId) {
             return await ctx.reply(
               "Error retrieving recipient's Zupass information. Please enter a valid kudos recipient handle for a user in the group."
             );
           }
           ctx.session.kudosData = {
-            sender: {
-              semaphoreID: kudosSenderSemaphoreId
-              // telegramUsername: kudosSender
-            },
-            recipient: {
-              semaphoreID: kudosRecipientSemaphoreId
-              // telegramUsername: kudosRecipient
-            }
+            giverSemaphoreId: kudosGiverSemaphoreId,
+            targetSemaphoreId: kudosTargetSemaphoreId,
+            targetUsername: kudosTargetUsername
           };
-          await ctx.reply("Send a kudos by pressing on the button.", {
-            reply_markup: kudosbotMenu
-          });
+          await ctx.reply(
+            `You are giving a <b>Kudos</b> to @${kudosTargetUsername} !\n\nChoose which Kudos to give below 👇
+            `,
+            {
+              reply_markup: kudosbotMenu,
+              parse_mode: "HTML"
+            }
+          );
         }
       } catch (e) {
         logger("[KUDOSBOT] kudos error", e);
@@ -254,6 +264,45 @@ export class KudosbotService {
       logger(`[KUDOSBOT] Error starting bot`, e);
       this.rollbarService?.reportError(e);
     }
+  }
+
+  public async handleUpload(
+    context: ApplicationContext,
+    proof: string
+  ): Promise<void> {
+    const pcd = await SemaphoreSignatureKudosPCDPackage.deserialize(
+      JSON.parse(proof).pcd
+    );
+
+    const pcdValid = await SemaphoreSignatureKudosPCDPackage.verify(pcd);
+    if (!pcdValid) {
+      throw new Error("Proof is not valid");
+    }
+
+    const kudosGiverSemaphoreId = pcd.claim.data.giver.semaphoreID;
+    const kudosGiverTelegramUserId = await fetchTelegramUserIdFromSemaphoreId(
+      context.dbPool,
+      kudosGiverSemaphoreId
+    );
+    if (!kudosGiverTelegramUserId) {
+      throw new Error("Sender does not yet exist");
+    }
+
+    if (
+      pcd.proof.semaphoreSignaturePCD.claim.identityCommitment !=
+      kudosGiverSemaphoreId
+    ) {
+      throw new Error(
+        "Kudos giver semaphore ID does not match proof identity commitment"
+      );
+    }
+
+    await insertKudosbotProof(context.dbPool, proof);
+
+    await this.bot.api.sendMessage(
+      kudosGiverTelegramUserId,
+      `Your Kudos has been received! ${pcd.claim.data.watermark}`
+    );
   }
 
   public async getBotURL(): Promise<string> {

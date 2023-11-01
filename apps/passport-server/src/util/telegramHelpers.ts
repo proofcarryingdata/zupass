@@ -3,7 +3,6 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { KudosUserInfo } from "@pcd/semaphore-signature-kudos-pcd";
 import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
@@ -56,6 +55,12 @@ interface BotCommandWithAnon extends BotCommand {
   alwaysInclude?: boolean;
 }
 
+export interface KudosSessionData {
+  giverSemaphoreId: string;
+  targetSemaphoreId: string;
+  targetUsername: string;
+}
+
 export interface SessionData {
   dbPool: Pool;
   selectedEvent?: LinkedPretixTelegramEvent;
@@ -64,7 +69,7 @@ export interface SessionData {
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
-  kudosData?: { sender: KudosUserInfo; recipient: KudosUserInfo };
+  kudosData?: KudosSessionData;
   topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 
@@ -353,7 +358,8 @@ const editOrSendMessage = async (
 
 const generateTicketProofUrl = async (
   telegramUserId: string,
-  validEventIds: string[]
+  validEventIds: string[],
+  telegramUsername?: string
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
     span?.setAttribute("userId", telegramUserId);
@@ -421,7 +427,12 @@ const generateTicketProofUrl = async (
       // TG bot doesn't like localhost URLs
       passportOrigin = "http://127.0.0.1:3000/";
     }
-    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+
+    // pass telegram username as path param if nonempty
+    const returnUrl =
+      telegramUsername && telegramUsername.length > 0
+        ? `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}/${telegramUsername}`
+        : `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
     span?.setAttribute("returnUrl", returnUrl);
 
     const proofUrl = constructZupassPcdGetRequestUrl<
@@ -567,6 +578,8 @@ export const chatsToJoin = async (
       return;
     }
 
+    const telegramUsername = ctx.from?.username;
+
     for (const chat of chatsWithMembership) {
       if (chat.isChatMember) {
         const invite = await ctx.api.createChatInviteLink(chat.telegramChatID, {
@@ -577,7 +590,8 @@ export const chatsToJoin = async (
       } else {
         const proofUrl = await generateTicketProofUrl(
           userId.toString(),
-          chat.ticketEventIds
+          chat.ticketEventIds,
+          telegramUsername
         );
         range.webApp(`${chat.chat?.title}`, proofUrl).row();
       }
