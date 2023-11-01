@@ -3,6 +3,7 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { FrogCryptoFrogData } from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
@@ -612,3 +613,59 @@ export interface AgreeToTermsResponseValue {
  * issue the user.
  */
 export const ISSUANCE_STRING = "Issue me PCDs please.";
+
+/**
+ * User asks metadata about themselves such as when they can get next frog.
+ */
+export interface FrogCryptoUserStateRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+/**
+ * Individual feed level response to {@link FrogCryptoUserStateRequest}
+ */
+export interface FrogCryptoComputedUserState {
+  feedId: string;
+  lastFetchedAt: number;
+  nextFetchAt: number;
+}
+
+/**
+ * Response to {@link FrogCryptoUserStateRequest}
+ */
+export interface FrogCryptoUserStateResponseValue {
+  feeds: FrogCryptoComputedUserState[];
+}
+
+/**
+ * Admin request to manage frogs in the databse.
+ */
+export type FrogCryptoUpdateFrogsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  /**
+   * Pass empty array for no-op and return all frogs.
+   */
+  frogs: FrogCryptoFrogData[];
+};
+
+/**
+ * Response to {@link FrogCryptoUpdateFrogsRequest} and returns all frogs.
+ */
+export interface FrogCryptoUpdateFrogsResponseValue {
+  frogs: FrogCryptoFrogData[];
+}
+
+/**
+ * Admin request to delete frogs in the databse.
+ */
+export type FrogCryptoDeleteFrogsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  frogIds: number[];
+};
+
+/**
+ * Response to {@link FrogCryptoDeleteFrogsRequest} and returns all remaining frogs.
+ */
+export interface FrogCryptoDeleteFrogsResponseValue {
+  frogs: FrogCryptoFrogData[];
+}

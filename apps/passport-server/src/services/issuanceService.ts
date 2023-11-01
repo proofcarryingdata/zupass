@@ -89,7 +89,6 @@ import {
   FROGCRYPTO_FEEDS,
   FrogCryptoFeed,
   FrogCryptoFeedHost,
-  createFrogData
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
@@ -97,6 +96,7 @@ import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
+import { FrogcryptoService } from "./frogcryptoService";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
@@ -119,12 +119,14 @@ export class IssuanceService {
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
+  private readonly frogcryptoService: FrogcryptoService;
   private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
 
   public constructor(
     context: ApplicationContext,
     cacheService: PersistentCacheService,
     multiprocessService: MultiProcessService,
+    frogcryptoService: FrogcryptoService,
     rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
@@ -132,6 +134,7 @@ export class IssuanceService {
     this.context = context;
     this.cacheService = cacheService;
     this.multiprocessService = multiprocessService;
+    this.frogcryptoService = frogcryptoService;
     this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
@@ -399,12 +402,13 @@ export class IssuanceService {
         ): Promise<PollFeedResponseValue> => {
           try {
             if (req.pcd === undefined) {
-              throw new Error(`Missing credential`);
+              throw new PCDHTTPError(400, `Missing credential`);
             }
             await verifyFeedCredential(
               req.pcd,
               this.cachedVerifySignaturePCD.bind(this)
             );
+
             return {
               actions: [
                 {
@@ -415,6 +419,10 @@ export class IssuanceService {
               ]
             };
           } catch (e) {
+            if (e instanceof PCDHTTPError) {
+              throw e;
+            }
+
             logger(`Error encountered while serving feed:`, e);
             this.rollbarService?.reportError(e);
           }
@@ -928,7 +936,7 @@ export class IssuanceService {
         },
         data: {
           argumentType: ArgumentTypeName.Object,
-          value: await createFrogData(credential, feed)
+          value: await this.frogcryptoService.reserveFrogData(credential, feed)
         },
         id: {
           argumentType: ArgumentTypeName.String
@@ -1380,7 +1388,8 @@ export async function startIssuanceService(
   context: ApplicationContext,
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null,
-  multiprocessService: MultiProcessService
+  multiprocessService: MultiProcessService,
+  frogcryptoService: FrogcryptoService
 ): Promise<IssuanceService | null> {
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
@@ -1399,6 +1408,7 @@ export async function startIssuanceService(
     context,
     cacheService,
     multiprocessService,
+    frogcryptoService,
     rollbarService,
     zupassRsaKey,
     zupassEddsaKey
