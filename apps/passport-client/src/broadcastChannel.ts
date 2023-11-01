@@ -6,20 +6,32 @@ import { Action } from "./dispatch";
 const CHANNEL_NAME = "zupass_broadcast_channel";
 // The event message that prompts other tabs to refresh their local state
 const PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE = "password_change_on_other_tab";
+const LOGOUT_ON_OTHER_TAB = "logout_on_other_tab";
+const LOGIN_ON_OTHER_TAB = "login_on_other_tab";
 let channel: BroadcastChannel | null = null;
 
 /**
  * Messages other tabs in the current browser session via the BroadcastChannel
  * that we have updated our password in this tab.
  */
-export function notifyPasswordChangeOnOtherTabs() {
-  if (channel === null) {
-    channel = new BroadcastChannel(CHANNEL_NAME);
-    console.error(
-      "Channel has not been set up with listener yet, please ensure you have called setupBroadcastChannel()"
-    );
-  }
-  channel.postMessage(PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE);
+export function notifyPasswordChangeToOtherTabs() {
+  postOnBroadcastChannel(PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE);
+}
+
+/**
+ * Messages other tabs in the current browser session via the BroadcastChannel
+ * that we have logged in in this tab.
+ */
+export function notifyLoginToOtherTabs() {
+  postOnBroadcastChannel(LOGIN_ON_OTHER_TAB);
+}
+
+/**
+ * Messages other tabs in the current browser session via the BroadcastChannel
+ * that we have logged out in this tab.
+ */
+export function notifyLogoutToOtherTabs() {
+  postOnBroadcastChannel(LOGOUT_ON_OTHER_TAB);
 }
 
 /**
@@ -35,17 +47,39 @@ export function setupBroadcastChannel(
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
   }
-  channel.onmessage = (event) => {
-    if (event.data === PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE) {
+  channel.onmessage = (msg) => {
+    // NOTE: We're using the "broadcast-channel" package which supports all
+    // browsers, not the native BroadcastChannel API.  They have a subtly
+    // different interface.  In particular, we get our message directly as an
+    // argument here rather than having to look in event.data to find it.
+    console.log("[BROADCAST_CHANNEL] Received message", msg);
+    if (msg === PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE) {
       dispatch({
         type: "password-change-on-other-tab"
       });
+    } else if (msg === LOGIN_ON_OTHER_TAB || msg === LOGOUT_ON_OTHER_TAB) {
+      forceReloadPage();
     } else {
-      console.error("BroadcastChannel event has no handler", event);
+      console.error("BroadcastChannel message has no handler", msg);
     }
   };
 }
 
 export function closeBroadcastChannel() {
   return channel?.close();
+}
+
+export function postOnBroadcastChannel(eventData: string): void {
+  if (channel === null) {
+    channel = new BroadcastChannel(CHANNEL_NAME);
+    console.error(
+      "Channel has not been set up with listener yet, please ensure you have called setupBroadcastChannel()"
+    );
+  }
+  console.log("[BROADCAST_CHANNEL] Posting message", eventData);
+  channel.postMessage(eventData);
+}
+
+export function forceReloadPage(): void {
+  location.reload();
 }

@@ -27,7 +27,11 @@ import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
-import { notifyPasswordChangeOnOtherTabs } from "./broadcastChannel";
+import {
+  notifyLoginToOtherTabs,
+  notifyLogoutToOtherTabs,
+  notifyPasswordChangeToOtherTabs
+} from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
@@ -313,6 +317,7 @@ async function createNewUserWithPassword(
       dismissToCurrentPage: true
     }
   });
+  notifyLoginToOtherTabs();
 }
 
 /**
@@ -423,6 +428,7 @@ async function resetPassport(state: AppState, update: ZuUpdate) {
       modalType: "none"
     }
   });
+  notifyLogoutToOtherTabs();
 
   setTimeout(() => {
     window.location.reload();
@@ -519,6 +525,7 @@ async function loadFromSync(
     self: userResponse.value,
     modal
   });
+  notifyLoginToOtherTabs();
 
   await sleep(1);
 
@@ -550,7 +557,7 @@ async function saveNewPasswordAndBroadcast(
   const newSelf = { ...state.self, salt: newSalt };
   saveSelf(newSelf);
   saveEncryptionKey(newEncryptionKey);
-  notifyPasswordChangeOnOtherTabs();
+  notifyPasswordChangeToOtherTabs();
   return update({
     encryptionKey: newEncryptionKey,
     self: newSelf
