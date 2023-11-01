@@ -1,7 +1,7 @@
 "use client";
 
 import Post from "@/components/post";
-import { bigintToPseudonym } from "@pcd/util";
+import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
 import { useEffect, useState } from "react";
 
 export default function Page({ params }: { params: { nullifier: string } }) {
@@ -26,9 +26,14 @@ export default function Page({ params }: { params: { nullifier: string } }) {
         <span className="font-bold text-[#2e2e35]">ZK-TG</span>
       </div>
       <div className="flex flex-col gap-2 items-center">
-        <span className="text-[#2E2E35] font-bold mt-4 text-xl">
-          {bigintToPseudonym(BigInt(params.nullifier))}
-        </span>
+        <div className="flex flex-col items-center">
+          <span className="text-4xl mb-1">
+            {bigIntToPseudonymEmoji(BigInt(params.nullifier))}
+          </span>
+          <span className="text-[#2E2E35] font-bold text-xl">
+            {bigIntToPseudonymName(BigInt(params.nullifier))}
+          </span>
+        </div>
         <span className="font-mono text-[#2e2e35] opacity-30">
           #{params.nullifier.substring(0, 4)}
         </span>

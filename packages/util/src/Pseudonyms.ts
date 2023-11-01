@@ -1,4 +1,4 @@
-const PSEUDONYM_TO_EMOJI: { [name: string]: string } = {
+export const PSEUDONYM_TO_EMOJI: { [name: string]: string } = {
   "Anonymous Monkey": "🐒",
   "Anonymous Bear": "🐻",
   "Anonymous Duck": "🦆",
@@ -48,10 +48,17 @@ const PSEUDONYM_TO_EMOJI: { [name: string]: string } = {
   "Anonymous Moon": "🌚"
 };
 
+export function bigIntToPseudonymEmoji(input: bigint): string {
+  const key = Number(input % BigInt(Object.keys(PSEUDONYM_TO_EMOJI).length));
+  return Object.values(PSEUDONYM_TO_EMOJI)[key];
+}
+
+export function bigIntToPseudonymName(input: bigint): string {
+  const key = Number(input % BigInt(Object.keys(PSEUDONYM_TO_EMOJI).length));
+  return Object.keys(PSEUDONYM_TO_EMOJI)[key];
+}
+
 /** Converts a given number, such as a nullifier hash, to a pseudonym. */
 export function bigintToPseudonym(input: bigint): string {
-  const key = Number(input % BigInt(Object.keys(PSEUDONYM_TO_EMOJI).length));
-  return `${Object.values(PSEUDONYM_TO_EMOJI)[key]} ${
-    Object.keys(PSEUDONYM_TO_EMOJI)[key]
-  }`;
+  return `${bigIntToPseudonymEmoji(input)} ${bigIntToPseudonymName(input)}`;
 }
