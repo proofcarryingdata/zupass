@@ -10,8 +10,8 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import request from "request";
 import urljoin from "url-join";
-import * as uuid from "uuid";
 import {
   FeedProviderName,
   IssuanceService
@@ -86,34 +86,18 @@ export function initFrogcryptoRoutes(
     res.json(result satisfies FrogCryptoUserStateResponseValue);
   });
 
-  // TODO: serve real frog images
   app.get("/frogcrypto/images/:uuid", async (req, res) => {
     const imageId = checkUrlParam(req, "uuid");
 
-    let parsedUuid;
-    try {
-      parsedUuid = uuid.parse(imageId);
-    } catch (e) {
-      throw new PCDHTTPError(400, `invalid uuid ${imageId}`);
+    if (!process.env.FROGCRYPTO_ASSETS_URL) {
+      throw new PCDHTTPError(503, "FrogCrypto Assets Unavailable");
     }
 
-    // convert to integer - see answers to https://stackoverflow.com/q/39346517/2860309
-    const buffer = Buffer.from(parsedUuid);
-    const result = buffer.readUInt32BE(0);
-
-    const frogPaths: string[] = [
-      "images/frogs/frog.jpeg",
-      "images/frogs/frog2.jpeg",
-      "images/frogs/frog3.jpeg",
-      "images/frogs/frog4.jpeg"
-    ];
-
-    res.redirect(
-      urljoin(
-        process.env.PASSPORT_CLIENT_URL || "",
-        frogPaths[result % frogPaths.length]
+    req
+      .pipe(
+        request(urljoin(process.env.FROGCRYPTO_ASSETS_URL, `${imageId}.png`))
       )
-    );
+      .pipe(res);
   });
 
   app.post("/frogcrypto/admin/frogs", async (req, res) => {
