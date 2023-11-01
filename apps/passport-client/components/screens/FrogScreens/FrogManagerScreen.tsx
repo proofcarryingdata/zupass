@@ -3,6 +3,7 @@ import {
   requestFrogCryptoManageFrogs
 } from "@pcd/passport-interface";
 import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
+import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -24,7 +25,7 @@ export function FrogManagerScreen() {
 
   const [newFrogs, setNewFrogs] = useState<FrogCryptoFrogData[]>([]);
   const [newFrogsError, setNewFrogsError] = useState<string>();
-  const handleFileChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const onTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
     try {
       const parsedData = frogParser(event.target.value);
       setNewFrogs(parsedData);
@@ -33,7 +34,15 @@ export function FrogManagerScreen() {
     }
   };
 
-  const { result: frogs, isLoading, refetch, error } = useFrogs();
+  const [selectedFrogIds, setSelectedFrogIds] = useState<number[]>([]);
+
+  const {
+    result: frogs,
+    isLoading,
+    updateFrogs,
+    deleteFrogs,
+    error
+  } = useFrogs();
 
   useEffect(() => {
     if (error?.includes("not authorized")) {
@@ -49,18 +58,21 @@ export function FrogManagerScreen() {
   return (
     <AppContainer bg="gray">
       <Container>
-        <textarea onChange={handleFileChange} />
+        <h2>Add New Frogs</h2>
+        <textarea onChange={onTextChange} />
         {newFrogsError && (
-          <ErrorMessage>Error parsing CSV: {newFrogsError}</ErrorMessage>
+          <ErrorMessage>Error parsing frogs: {newFrogsError}</ErrorMessage>
         )}
 
         {newFrogs.length > 0 && (
           <>
-            <h2>New Frogs</h2>
+            <h2>(Preview) New Frogs</h2>
             <DataTable data={newFrogs} />
-            <button onClick={() => refetch(newFrogs)}>Add Frogs</button>
+            <button onClick={() => updateFrogs(newFrogs)}>Add Frogs</button>
           </>
         )}
+
+        <Separator />
 
         <h2>Frogs</h2>
         {isLoading && <p>Loading...</p>}
@@ -73,10 +85,21 @@ export function FrogManagerScreen() {
 }
 
 function useFrogs(): {
+  /**
+   * All the frogs in the database. This always reflects the latest state of the database
+   * after last request made here.
+   */
   result: FrogCryptoFrogData[];
   isLoading: boolean;
   error: string | undefined;
-  refetch: (frogs: FrogCryptoFrogData[]) => void;
+  /**
+   * Call this to upsert (replace) frogs in the database.
+   */
+  updateFrogs: (frogs: FrogCryptoFrogData[]) => void;
+  /**
+   * Call this to delete frogs in the database.
+   */
+  deleteFrogs: (frogIds: number[]) => void;
 } {
   const [result, setResult] = useState<FrogCryptoFrogData[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -85,14 +108,11 @@ function useFrogs(): {
   const identity = useIdentity();
   const pcds = usePCDCollection();
   const credentialCache = useCredentialCache();
-
   const credentialManager = useMemo(
     () => new CredentialManager(identity, pcds, credentialCache),
     [credentialCache, identity, pcds]
   );
-
   const [pcd, setPcd] = useState<SerializedPCD>();
-  const [inputFrogs, setInputFrogs] = useState<FrogCryptoFrogData[]>([]);
   useEffect(() => {
     const fetchPcd = async () => {
       const pcd = await credentialManager.requestCredential({
@@ -103,19 +123,18 @@ function useFrogs(): {
     fetchPcd();
   }, [credentialManager]);
 
-  const req = useMemo(
-    () => ({
-      pcd,
-      frogs: inputFrogs
-    }),
-    [inputFrogs, pcd]
-  );
+  const [req, setReq] = useState<
+    | { type: "load" }
+    | { type: "update"; frogs: FrogCryptoFrogData[] }
+    | { type: "delete"; frogs: number[] }
+  >({ type: "load" });
 
+  // ensure only one request is in flight at a time
   useEffect(() => {
     const abortController = new AbortController();
 
-    const fetchFrogs = async () => {
-      if (!req.pcd) {
+    const doRequest = async () => {
+      if (!pcd) {
         setError("Waiting for PCD to be ready");
         return;
       }
@@ -123,10 +142,32 @@ function useFrogs(): {
       try {
         setError(undefined);
         setIsLoading(true);
-        const result = await requestFrogCryptoManageFrogs(
-          appConfig.zupassServer,
-          req
-        );
+
+        let result;
+        switch (req.type) {
+          case "load":
+            result = await requestFrogCryptoManageFrogs(
+              appConfig.zupassServer,
+              {
+                pcd,
+                frogs: []
+              }
+            );
+            break;
+          case "update":
+            result = await requestFrogCryptoManageFrogs(
+              appConfig.zupassServer,
+              { pcd, frogs: req.frogs }
+            );
+            break;
+          case "delete":
+            result = await requestFrogCryptoManageFrogs(
+              appConfig.zupassServer,
+              req
+            );
+            break;
+        }
+
         if (abortController.signal.aborted) {
           return;
         }
@@ -146,18 +187,20 @@ function useFrogs(): {
         }
       }
     };
-    fetchFrogs();
+    doRequest();
 
     return () => {
       abortController.abort();
     };
-  }, [req]);
+  }, [pcd, req]);
 
   return {
     result,
     isLoading,
     error,
-    refetch: setInputFrogs
+    updateFrogs: (frogs) => setReq({ type: "update", frogs }),
+    deleteFrogs: (frogs) =>
+      setReq({ type: "delete", frogs: frogs.map((f) => f.id) })
   };
 }
 

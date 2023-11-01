@@ -1,6 +1,6 @@
 create table frogcrypto_frogs (
-  id SERIAL PRIMARY KEY,
-  uuid UUID NOT NULL DEFAULT uuid_generate_v4(),
+  id INTEGER PRIMARY KEY,
+  uuid UUID NOT NULL,
   frog JSONB NOT NULL
 );
 

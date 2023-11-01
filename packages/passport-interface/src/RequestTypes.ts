@@ -620,19 +620,52 @@ export const ISSUANCE_STRING = "Issue me PCDs please.";
 export interface FrogCryptoUserStateRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
 }
+
+/**
+ * Individual feed level response to {@link FrogCryptoUserStateRequest}
+ */
 export interface FrogCryptoComputedUserState {
   feedId: string;
   lastFetchedAt: number;
   nextFetchAt: number;
 }
+
+/**
+ * Response to {@link FrogCryptoUserStateRequest}
+ */
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
 }
 
-export interface FrogCryptoManageFrogsRequest {
+/**
+ * Admin request to manage frogs in the databse.
+ */
+export type FrogCryptoManageFrogsRequest = {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  /**
+   * Pass empty array for no-op and return all frogs.
+   */
+  frogs: FrogCryptoFrogData[];
+};
+
+/**
+ * Response to {@link FrogCryptoManageFrogsRequest} and returns all frogs.
+ */
+export interface FrogCryptoManageFrogsResponseValue {
   frogs: FrogCryptoFrogData[];
 }
-export interface FrogCryptoManageFrogsResponseValue {
+
+/**
+ * Admin request to delete frogs in the databse.
+ */
+export type FrogCryptoDeleteFrogsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  frogIds: number[];
+};
+
+/**
+ * Response to {@link FrogCryptoDeleteFrogsRequest} and returns all remaining frogs.
+ */
+export interface FrogCryptoDeleteFrogsResponseValue {
   frogs: FrogCryptoFrogData[];
 }

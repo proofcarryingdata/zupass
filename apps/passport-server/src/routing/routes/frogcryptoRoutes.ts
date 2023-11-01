@@ -118,4 +118,11 @@ export function initFrogcryptoRoutes(
     );
     res.json(result satisfies FrogCryptoManageFrogsResponseValue);
   });
+
+  app.delete("/frogcrypto/manage/frogs", async (req, res) => {
+    const result = await frogcryptoService.deleteFrogData(
+      req.body as FrogCryptoManageFrogsRequest
+    );
+    res.json(result satisfies FrogCryptoManageFrogsResponseValue);
+  });
 }

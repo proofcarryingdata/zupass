@@ -8,6 +8,8 @@ import {
 } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoComputedUserState,
+  FrogCryptoDeleteFrogsRequest,
+  FrogCryptoDeleteFrogsResponseValue,
   FrogCryptoManageFrogsRequest,
   FrogCryptoManageFrogsResponseValue,
   FrogCryptoUserStateRequest,
@@ -22,6 +24,7 @@ import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
+  deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
   initializeUserFeedState,
@@ -33,7 +36,7 @@ import { fetchUserByCommitment } from "../database/queries/users";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
-import { FROGCRYPTO_FEEDS, FrogCryptoFeedConfig } from "../util/frogcrypto";
+import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 
@@ -44,6 +47,7 @@ export class FrogcryptoService {
     string,
     Promise<string | null>
   >;
+  private readonly adminUsers: string[];
 
   public constructor(
     context: ApplicationContext,
@@ -57,9 +61,10 @@ export class FrogcryptoService {
     >({
       max: 1000
     });
+    this.adminUsers = this.getAdminUsers();
   }
 
-  public async getFeeds(): Promise<FrogCryptoFeedConfig[]> {
+  public async getFeeds(): Promise<FrogCryptoFeed[]> {
     return FROGCRYPTO_FEEDS;
   }
 
@@ -87,7 +92,7 @@ export class FrogcryptoService {
 
   public async reserveFrogData(
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
-    feed: FrogCryptoFeedConfig
+    feed: FrogCryptoFeed
   ): Promise<IFrogData> {
     const semaphoreId = await this.cachedVerifySignaturePCD(pcd);
     if (!semaphoreId) {
@@ -177,9 +182,21 @@ export class FrogcryptoService {
     };
   }
 
+  public async deleteFrogData(
+    req: FrogCryptoDeleteFrogsRequest
+  ): Promise<FrogCryptoDeleteFrogsResponseValue> {
+    await this.cachedVerifyAdminSignaturePCD(req.pcd);
+
+    await deleteFrogData(this.context.dbPool, req.frogIds);
+
+    return {
+      frogs: await getFrogData(this.context.dbPool)
+    };
+  }
+
   private computeUserFeedState(
     state: FrogCryptoUserFeedState | undefined,
-    feed: FrogCryptoFeedConfig
+    feed: FrogCryptoFeed
   ): FrogCryptoComputedUserState {
     const lastFetchedAt = state?.last_fetched_at?.getTime() ?? 0;
     const nextFetchAt = lastFetchedAt + feed.cooldown * 1000;
@@ -255,8 +272,25 @@ export class FrogcryptoService {
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");
     }
-    if (!["forest.fang@outlook.com"].includes(user.email)) {
+    if (!this.adminUsers.includes(user.email)) {
       throw new PCDHTTPError(403, "not authorized");
+    }
+  }
+
+  private getAdminUsers(): string[] {
+    try {
+      const res = JSON.parse(process.env.FROGCRYPTO_ADMIN_USER_EMAILS || "[]");
+      if (!Array.isArray(res) || res.some((e) => typeof e !== "string")) {
+        throw new Error("admin users must be an array of strings");
+      }
+      if (res.length === 0) {
+        logger("[FROGCRYPTO] No admin users configured");
+      }
+      return res;
+    } catch (e) {
+      logger("[FROGCRYPTO] Failed to load admin users", e);
+      this.rollbarService?.reportError(e);
+      return [];
     }
   }
 }
