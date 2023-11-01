@@ -14,7 +14,7 @@ let channel: BroadcastChannel | null = null;
  * Messages other tabs in the current browser session via the BroadcastChannel
  * that we have updated our password in this tab.
  */
-export function notifyPasswordChangeToOtherTabs() {
+export function notifyPasswordChangeToOtherTabs(): void {
   postOnBroadcastChannel(PASSWORD_CHANGE_ON_OTHER_TAB_MESSAGE);
 }
 
@@ -22,7 +22,7 @@ export function notifyPasswordChangeToOtherTabs() {
  * Messages other tabs in the current browser session via the BroadcastChannel
  * that we have logged in in this tab.
  */
-export function notifyLoginToOtherTabs() {
+export function notifyLoginToOtherTabs(): void {
   postOnBroadcastChannel(LOGIN_ON_OTHER_TAB);
 }
 
@@ -30,7 +30,7 @@ export function notifyLoginToOtherTabs() {
  * Messages other tabs in the current browser session via the BroadcastChannel
  * that we have logged out in this tab.
  */
-export function notifyLogoutToOtherTabs() {
+export function notifyLogoutToOtherTabs(): void {
   postOnBroadcastChannel(LOGOUT_ON_OTHER_TAB);
 }
 
@@ -43,7 +43,7 @@ export function notifyLogoutToOtherTabs() {
  */
 export function setupBroadcastChannel(
   dispatch: (action: Action) => Promise<void>
-) {
+): void {
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
   }
@@ -65,8 +65,9 @@ export function setupBroadcastChannel(
   };
 }
 
-export function closeBroadcastChannel() {
-  return channel?.close();
+export function closeBroadcastChannel(): void {
+  channel?.close(); // Not bothering to await this promise.
+  channel = null;
 }
 
 export function postOnBroadcastChannel(eventData: string): void {
@@ -77,7 +78,7 @@ export function postOnBroadcastChannel(eventData: string): void {
     );
   }
   console.log("[BROADCAST_CHANNEL] Posting message", eventData);
-  channel.postMessage(eventData);
+  channel.postMessage(eventData); // Not bothering to await this promise.
 }
 
 export function forceReloadPage(): void {
