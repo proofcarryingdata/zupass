@@ -1,5 +1,6 @@
 "use client";
 
+import Post from "@/components/post";
 import { bigintToPseudonym } from "@pcd/util";
 import { useEffect, useState } from "react";
 
@@ -18,17 +19,23 @@ export default function Page({ params }: { params: { nullifier: string } }) {
     };
     getData();
   }, []);
+
   return (
-    <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
-      <span className="text-white font-bold my-4 text-xl">
-        {bigintToPseudonym(BigInt(params.nullifier))}
-      </span>
-      <div>
-        <span className="text-white font-bold my-4">Posts</span>
+    <div className="flex flex-col items-center bg-white p-4">
+      <div className="flex items-center justify-center p-2 w-full">
+        <span className="font-bold text-[#2e2e35]">ZK-TG</span>
       </div>
-      <div className="flex flex-col gap-2">
+      <div className="flex flex-col gap-2 items-center">
+        <span className="text-[#2E2E35] font-bold mt-4 text-xl">
+          {bigintToPseudonym(BigInt(params.nullifier))}
+        </span>
+        <span className="font-mono text-[#2e2e35] opacity-30">
+          #{params.nullifier.substring(0, 4)}
+        </span>
+      </div>
+      <div className="flex flex-col gap-2 mt-4">
         {messages.map((message) => (
-          <div className="bg-white rounded-lg p-4 text-black">{message}</div>
+          <Post title={"Devconnect Community Hub"} content={message} />
         ))}
       </div>
     </div>

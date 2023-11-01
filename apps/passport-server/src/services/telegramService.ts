@@ -864,6 +864,7 @@ export class TelegramService {
     chatId: number,
     topicId: number,
     message: string
+    // nullifier: bigint
   ): Promise<void> {
     return traced("telegram", "sendToAnonymousChannel", async (span) => {
       span?.setAttribute("chatId", chatId);
@@ -873,7 +874,12 @@ export class TelegramService {
       try {
         await this.anonBot.api.sendMessage(chatId, message, {
           message_thread_id: topicId,
-          parse_mode: "HTML"
+          parse_mode: "HTML",
+          disable_web_page_preview: true
+          // reply_markup: new InlineKeyboard().url(
+          //   `${bigintToPseudonym(nullifier)}`,
+          //   `${process.env.TELEGRAM_ANON_PROFILE_DIRECT_LINK}?startApp=${nullifier}&startapp=${nullifier}`
+          // )
         });
       } catch (error: { error_code: number; description: string } & any) {
         const isDeletedThread =
@@ -1154,16 +1160,19 @@ export class TelegramService {
       }
 
       const formattedMessage = `
-      ${bigintToPseudonym(BigInt(nullifierHash))}
-      ${rawMessage}
-      <i>submitted ${currentTime.toLocaleString("en-GB")}</i>
-      ----------------------------------------------------------
-      `;
+      <a href="${
+        process.env.TELEGRAM_ANON_PROFILE_DIRECT_LINK
+      }?startApp=${BigInt(nullifierHash)}&startapp=${BigInt(
+        nullifierHash
+      )}">${bigintToPseudonym(BigInt(nullifierHash))} #${BigInt(nullifierHash)
+        .toString()
+        .substring(0, 4)}</a>\n\n${rawMessage}`;
 
       await this.sendToAnonymousChannel(
         chat.id,
         parseInt(topic.topic_id),
         formattedMessage
+        // BigInt(nullifierHash)
       );
     });
   }

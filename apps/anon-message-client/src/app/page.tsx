@@ -12,7 +12,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import sha256 from "js-sha256";
-import { useSearchParams } from "next/navigation";
+import { redirect, useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const MAX_HEADER_SIZE = 280; // max tweet size
@@ -120,11 +120,16 @@ export default function () {
 
   useEffect(() => {
     if (!topicDataRaw) return;
-    const topicDataEncoded = Buffer.from(topicDataRaw, "base64");
-    const topicData = JSON.parse(
-      decodeURIComponent(topicDataEncoded.toString("utf-8"))
-    );
-    setTopicData(topicData);
+    const onlyDigits = /^\d+$/;
+    if (onlyDigits.test(topicDataRaw)) {
+      redirect(`/${topicDataRaw}`);
+    } else {
+      const topicDataEncoded = Buffer.from(topicDataRaw, "base64");
+      const topicData = JSON.parse(
+        decodeURIComponent(topicDataEncoded.toString("utf-8"))
+      );
+      setTopicData(topicData);
+    }
   }, [topicDataRaw]);
 
   useEffect(() => {
