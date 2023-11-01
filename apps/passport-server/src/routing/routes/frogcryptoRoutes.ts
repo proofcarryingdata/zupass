@@ -117,7 +117,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/frogs", async (req, res) => {
-    const result = await frogcryptoService.updateFrogsData(
+    const result = await frogcryptoService.updateFrogData(
       req.body as FrogCryptoUpdateFrogsRequest
     );
     res.json(result satisfies FrogCryptoUpdateFrogsResponseValue);

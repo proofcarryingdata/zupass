@@ -39,6 +39,7 @@ export function isFrogCryptoFrogData(
     typeof value === "object" &&
     "id" in value &&
     typeof value.id === "number" &&
+    Number.isSafeInteger(value.id) &&
     "uuid" in value &&
     typeof value.uuid === "string" &&
     "name" in value &&
@@ -54,29 +55,36 @@ export function isFrogCryptoFrogData(
       typeof value.temperament === "undefined") &&
     "drop_weight" in value &&
     typeof value.drop_weight === "number" &&
+    Number.isFinite(value.drop_weight) &&
     "jump_min" in value &&
-    (typeof value.jump_min === "number" ||
+    ((typeof value.jump_min === "number" && Number.isInteger(value.jump_min)) ||
       typeof value.jump_min === "undefined") &&
     "jump_max" in value &&
-    (typeof value.jump_max === "number" ||
+    ((typeof value.jump_max === "number" && Number.isInteger(value.jump_max)) ||
       typeof value.jump_max === "undefined") &&
     "speed_min" in value &&
-    (typeof value.speed_min === "number" ||
+    ((typeof value.speed_min === "number" &&
+      Number.isInteger(value.speed_min)) ||
       typeof value.speed_min === "undefined") &&
     "speed_max" in value &&
-    (typeof value.speed_max === "number" ||
+    ((typeof value.speed_max === "number" &&
+      Number.isInteger(value.speed_max)) ||
       typeof value.speed_max === "undefined") &&
     "intelligence_min" in value &&
-    (typeof value.intelligence_min === "number" ||
+    ((typeof value.intelligence_min === "number" &&
+      Number.isInteger(value.intelligence_min)) ||
       typeof value.intelligence_min === "undefined") &&
     "intelligence_max" in value &&
-    (typeof value.intelligence_max === "number" ||
+    ((typeof value.intelligence_max === "number" &&
+      Number.isInteger(value.intelligence_max)) ||
       typeof value.intelligence_max === "undefined") &&
     "beauty_min" in value &&
-    (typeof value.beauty_min === "number" ||
+    ((typeof value.beauty_min === "number" &&
+      Number.isInteger(value.beauty_min)) ||
       typeof value.beauty_min === "undefined") &&
     "beauty_max" in value &&
-    (typeof value.beauty_max === "number" ||
+    ((typeof value.beauty_max === "number" &&
+      Number.isInteger(value.beauty_max)) ||
       typeof value.beauty_max === "undefined")
   );
 }

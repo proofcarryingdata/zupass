@@ -1,6 +1,9 @@
 import {
   Biome,
   EdDSAFrogPCDPackage,
+  TEMPERAMENT_MAX,
+  TEMPERAMENT_MIN,
+  Temperament
 } from "@pcd/eddsa-frog-pcd";
 import {
   Feed,
@@ -12,8 +15,8 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
-import _ from "lodash";
 import { PCDPackage } from "@pcd/pcd-types";
+import _ from "lodash";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { FeedProviderName } from "../services/issuanceService";
 
@@ -153,4 +156,32 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
       feeds: this.hostedFeed.map((f) => f.feed).filter((f) => !f.private)
     };
   }
+}
+
+export function sampleFrogAttribute(min?: number, max?: number): number {
+  return _.random(Math.round(min || 0), Math.round(max || 10));
+}
+
+export function parseFrogEnum(
+  e: Record<number, string>,
+  value: string
+): number {
+  const key = _.findKey(e, (v) => v.toLowerCase() === value.toLowerCase());
+  if (key === undefined) {
+    throw new Error(`invalid enum value ${value}`);
+  }
+  return parseInt(key);
+}
+
+export function parseFrogTemperament(value?: string): Temperament {
+  if (!value) {
+    return _.random(TEMPERAMENT_MIN, TEMPERAMENT_MAX);
+  }
+  if (value === "N/A") {
+    return Temperament.N_A;
+  }
+  if (value === "???") {
+    return Temperament.UNKNOWN;
+  }
+  return parseFrogEnum(Temperament, value);
 }

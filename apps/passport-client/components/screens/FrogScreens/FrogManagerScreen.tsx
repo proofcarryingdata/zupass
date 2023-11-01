@@ -3,7 +3,10 @@ import {
   requestFrogCryptoDeleteFrogs,
   requestFrogCryptoUpdateFrogs
 } from "@pcd/passport-interface";
-import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
+import {
+  FrogCryptoFrogData,
+  isFrogCryptoFrogData
+} from "@pcd/passport-interface/src/FrogCrypto";
 import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
@@ -32,6 +35,7 @@ export function FrogManagerScreen() {
     try {
       const parsedData = frogParser(event.target.value);
       setNewFrogs(parsedData);
+      setNewFrogsError(undefined);
     } catch (error) {
       setNewFrogsError(error.message);
     }
@@ -324,7 +328,7 @@ function frogParser(data: string): FrogCryptoFrogData[] {
     const [intelligence_min, intelligence_max] = parseAttribtue("intelligence");
     const [beauty_min, beauty_max] = parseAttribtue("beauty");
 
-    return {
+    const frogData = {
       id: +rawFrog.frogId,
       uuid: rawFrog.uuid,
       name: rawFrog.name,
@@ -342,6 +346,12 @@ function frogParser(data: string): FrogCryptoFrogData[] {
       beauty_min,
       beauty_max
     } satisfies FrogCryptoFrogData;
+
+    if (!isFrogCryptoFrogData(frogData)) {
+      throw new Error(`Invalid frog data: ${JSON.stringify(frogData)}`);
+    }
+
+    return frogData;
   });
 }
 

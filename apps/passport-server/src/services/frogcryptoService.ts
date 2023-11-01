@@ -1,11 +1,4 @@
-import {
-  Biome,
-  IFrogData,
-  Rarity,
-  TEMPERAMENT_MAX,
-  TEMPERAMENT_MIN,
-  Temperament
-} from "@pcd/eddsa-frog-pcd";
+import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
@@ -38,7 +31,13 @@ import { fetchUserByCommitment } from "../database/queries/users";
 import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
-import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../util/frogcrypto";
+import {
+  FROGCRYPTO_FEEDS,
+  FrogCryptoFeed,
+  parseFrogEnum,
+  parseFrogTemperament,
+  sampleFrogAttribute
+} from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 
@@ -139,7 +138,7 @@ export class FrogcryptoService {
   /**
    * Upsert frog data into the database and return all frog data.
    */
-  public async updateFrogsData(
+  public async updateFrogData(
     req: FrogCryptoUpdateFrogsRequest
   ): Promise<FrogCryptoUpdateFrogsResponseValue> {
     await this.cachedVerifyAdminSignaturePCD(req.pcd);
@@ -194,44 +193,19 @@ export class FrogcryptoService {
       ..._.pick(frogData, "name", "description"),
       imageUrl: `${process.env.PASSPORT_SERVER_URL}/frogcrypto/images/${frogData.uuid}`,
       frogId: frogData.id,
-      biome: this.parseEnum(Biome, frogData.biome),
-      rarity: this.parseEnum(Rarity, frogData.rarity),
-      temperament: this.parseTemperament(frogData.temperament),
-      jump: this.sampleAttribute(frogData.jump_min, frogData.jump_max),
-      speed: this.sampleAttribute(frogData.speed_min, frogData.speed_max),
-      intelligence: this.sampleAttribute(
+      biome: parseFrogEnum(Biome, frogData.biome),
+      rarity: parseFrogEnum(Rarity, frogData.rarity),
+      temperament: parseFrogTemperament(frogData.temperament),
+      jump: sampleFrogAttribute(frogData.jump_min, frogData.jump_max),
+      speed: sampleFrogAttribute(frogData.speed_min, frogData.speed_max),
+      intelligence: sampleFrogAttribute(
         frogData.intelligence_min,
         frogData.intelligence_max
       ),
-      beauty: this.sampleAttribute(frogData.beauty_min, frogData.beauty_max),
+      beauty: sampleFrogAttribute(frogData.beauty_min, frogData.beauty_max),
       timestampSigned: Date.now(),
       ownerSemaphoreId
     };
-  }
-
-  private sampleAttribute(min?: number, max?: number): number {
-    return _.random(Math.round(min || 0), Math.round(max || 10));
-  }
-
-  private parseEnum(e: Record<number, string>, value: string): number {
-    const key = _.findKey(e, (v) => v.toLowerCase() === value.toLowerCase());
-    if (key === undefined) {
-      throw new Error(`invalid enum value ${value}`);
-    }
-    return parseInt(key);
-  }
-
-  private parseTemperament(value?: string): Temperament {
-    if (!value) {
-      return _.random(TEMPERAMENT_MIN, TEMPERAMENT_MAX);
-    }
-    if (value === "N/A") {
-      return Temperament.N_A;
-    }
-    if (value === "???") {
-      return Temperament.UNKNOWN;
-    }
-    return this.parseEnum(Temperament, value);
   }
 
   private async cachedVerifyPCDAndGetSemaphoreId(
