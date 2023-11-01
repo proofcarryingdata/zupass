@@ -5,6 +5,7 @@ import {
   PCD,
   PCDArgument,
   PCDPackage,
+  ProveDisplayOptions,
   SerializedPCD
 } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
@@ -13,6 +14,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
+import stableStringify from "fast-json-stable-stringify";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
@@ -28,13 +30,26 @@ export interface KudosUserInfo {
   semaphoreID: string;
 }
 
-export type KudosRecipient =
-  | { type: "user"; user: KudosUserInfo }
-  | { type: "post"; post: ZKEdDSAEventTicketPCD };
+export enum KudosTargetType {
+  User = "user",
+  Post = "post"
+}
+
+export type KudosUserTarget = {
+  type: KudosTargetType.User;
+  user: KudosUserInfo;
+};
+
+export type KudosPostTarget = {
+  type: KudosTargetType.Post;
+  post: ZKEdDSAEventTicketPCD;
+};
+
+export type KudosTarget = KudosUserTarget | KudosPostTarget;
 
 export interface IKudosData {
-  sender: KudosUserInfo;
-  recipient: KudosRecipient;
+  giver: KudosUserInfo;
+  target: KudosTarget;
   watermark: string;
 }
 
@@ -56,14 +71,14 @@ export interface SemaphoreSignatureKudosPCDInitArgs {
 export let initArgs: SemaphoreSignatureKudosPCDInitArgs;
 
 /**
- * Initializes this {@link EdDSAFrogPCDPackage}.
+ * Initializes this {@link SemaphoreSignatureKudosPCDPackage}.
  */
 async function init(args: SemaphoreSignatureKudosPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
 /**
- * Defines the essential parameters required for creating an {@link EdDSAFrogPCD}.
+ * Defines the essential parameters required for creating an {@link SemaphoreSignatureKudosPCD}.
  */
 export type SemaphoreSignatureKudosPCDArgs = {
   identity: PCDArgument<SemaphoreIdentityPCD>;
@@ -71,7 +86,7 @@ export type SemaphoreSignatureKudosPCDArgs = {
 };
 
 /**
- * Defines the EdDSA Frog PCD claim. The claim contains data that was signed
+ * Defines the Semaphore Signature Kudos PCD claim. The claim contains data that was signed
  * with the private key corresponding to the given public key stored in the proof.
  */
 export interface SemaphoreSignatureKudosPCDClaim {
@@ -112,8 +127,8 @@ export class SemaphoreSignatureKudosPCD
 }
 
 /**
- * Creates a new {@link EdDSAFrogPCD} by generating an {@link EdDSAFrogPCDProof}
- * and deriving an {@link EdDSAFrogPCDClaim} from the given {@link EdDSAFrogPCDArgs}.
+ * Creates a new {@link SemaphoreSignatureKudosPCD} by generating an {@link SemaphoreSignatureKudosPCDProof}
+ * and deriving an {@link SemaphoreSignatureKudosPCDClaim} from the given {@link SemaphoreSignatureKudosPCDArgs}.
  */
 export async function prove(
   args: SemaphoreSignatureKudosPCDArgs
@@ -131,7 +146,7 @@ export async function prove(
   }
 
   // Custom parser?
-  const seralizedData = JSON.stringify(args.data.value);
+  const seralizedData = stableStringify(args.data.value);
 
   // Creates an EdDSA PCD where the message is a serialized data
   const semaphoreSignaturePCD = await SemaphoreSignaturePCDPackage.prove({
@@ -150,8 +165,8 @@ export async function prove(
 }
 
 /**
- * Verifies an EdDSA Frog PCD by checking that its {@link EdDSAFrogPCDClaim} corresponds to
- * its {@link EdDSAFrogPCDProof}. If they match, the function returns true, otherwise false.
+ * Verifies an Semaphore Signature Kudos PCD by checking that its {@link SemaphoreSignatureKudosPCDClaim} corresponds to
+ * its {@link SemaphoreSignatureKudosPCDProof}. If they match, the function returns true, otherwise false.
  * In most cases, verifying the validity of the PCD with this function is not enough.
  * It may also be necessary to check the public key of the
  * entity that signed the claim and verify the authenticity of the entity.
@@ -163,7 +178,7 @@ export async function verify(
     throw new Error("package not initialized");
   }
 
-  const messageDerivedFromClaim = JSON.stringify(pcd.claim.data);
+  const messageDerivedFromClaim = stableStringify(pcd.claim.data);
 
   return (
     _.isEqual(
@@ -174,9 +189,9 @@ export async function verify(
 }
 
 /**
- * Serializes an {@link EdDSAFrogPCD}.
- * @param pcd The EdDSA Frog PCD to be serialized.
- * @returns The serialized version of the EdDSA Frog PCD.
+ * Serializes an {@link SemaphoreSignatureKudosPCD}.
+ * @param pcd The Semaphore Signature Kudos PCD to be serialized.
+ * @returns The serialized version of the Semaphore Signature Kudos PCD.
  */
 export async function serialize(
   pcd: SemaphoreSignatureKudosPCD
@@ -211,8 +226,8 @@ export async function deserialize(
   if (!initArgs) {
     throw new Error("package not initialized");
   }
-
   const deserializedWrapper = JSONBig().parse(serialized);
+  console.log({ deserializedWrapper });
   const deserializedSemaphoreSignaturePCD =
     await SemaphoreSignaturePCDPackage.deserialize(
       deserializedWrapper.semaphoreSignaturePCD.pcd
@@ -240,12 +255,12 @@ export function getDisplayOptions(
   const kudosData = pcd.claim.data;
   if (!kudosData) {
     return {
-      header: "Frog",
-      displayName: "frog-" + pcd.id.substring(0, 4)
+      header: "Kudos",
+      displayName: "kudos-" + pcd.id.substring(0, 4)
     };
   }
 
-  const header = `@${kudosData.sender} gave @${kudosData.recipient} a kudos: ${kudosData.watermark}`;
+  const header = `@${kudosData.giver} gave @${kudosData.target} a kudos`;
 
   return {
     header,
@@ -262,6 +277,10 @@ export function isSemaphoreSignatureKudosPCD(
   return pcd.type === SemaphoreSignatureKudosPCDTypeName;
 }
 
+export function getProveDisplayOptions(): ProveDisplayOptions<SemaphoreSignatureKudosPCDArgs> {
+  return {};
+}
+
 /**
  * The PCD package of the Semaphore Signature Kudos PCD. It exports an object containing
  * the code necessary to operate on this PCD data.
@@ -276,6 +295,7 @@ export const SemaphoreSignatureKudosPCDPackage: PCDPackage<
   renderCardBody: SemaphoreSignatureKudosPCDCardBody,
   getDisplayOptions,
   init,
+  getProveDisplayOptions,
   prove,
   verify,
   serialize,

@@ -1,8 +1,9 @@
 import { Menu } from "@grammyjs/menu";
-import { PCDGetRequest, PCDRequestType } from "@pcd/passport-interface";
+import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
+  KudosTargetType,
   KudosUserInfo,
   SemaphoreSignatureKudosPCDArgs,
   SemaphoreSignatureKudosPCDPackage
@@ -50,8 +51,8 @@ export class KudosbotService {
     const getProofUrl = (
       zupassClientUrl: string,
       returnUrl: string,
-      sender: KudosUserInfo,
-      recipient: KudosUserInfo
+      giver: KudosUserInfo,
+      targetUser: KudosUserInfo
     ): string => {
       const args: SemaphoreSignatureKudosPCDArgs = {
         identity: {
@@ -63,23 +64,28 @@ export class KudosbotService {
         data: {
           argumentType: ArgumentTypeName.Object,
           value: {
-            watermark: "Kudos",
-            sender,
-            recipient: {
-              type: "user",
-              user: recipient
+            watermark: "✨",
+            giver,
+            target: {
+              type: KudosTargetType.User,
+              user: targetUser
             }
           }
         }
       };
-      const req: PCDGetRequest = {
-        type: PCDRequestType.Get,
+      const proofUrl = constructZupassPcdGetRequestUrl<
+        typeof SemaphoreSignatureKudosPCDPackage
+      >(
+        zupassClientUrl,
         returnUrl,
+        SemaphoreSignatureKudosPCDPackage.name,
         args,
-        pcdType: SemaphoreSignatureKudosPCDPackage.name
-      };
-      const encReq = encodeURIComponent(JSON.stringify(req));
-      const proofUrl = `${zupassClientUrl}/#prove?request=${encReq}`;
+        {
+          title: "",
+          description: "Create a kudos ✨",
+          genericProveScreen: true
+        }
+      );
       return proofUrl;
     };
 

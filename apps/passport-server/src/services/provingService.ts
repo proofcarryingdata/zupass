@@ -15,6 +15,7 @@ import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignatureKudosPCDPackage } from "@pcd/semaphore-signature-kudos-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import path from "path";
@@ -206,6 +207,10 @@ export async function startProvingService(
     wasmFilePath:
       fullPath + "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
     zkeyFilePath: fullPath + "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey"
+  });
+
+  await SemaphoreSignatureKudosPCDPackage.init?.({
+    makeEncodedVerifyLink: undefined
   });
 
   const provingService = new ProvingService(rollbarService);
