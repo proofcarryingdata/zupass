@@ -3,13 +3,10 @@ import {
   getParentFolder,
   isRootFolder
 } from "@pcd/pcd-collection";
-import { PCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
-  useMemo,
   useState
 } from "react";
 import { useNavigate } from "react-router-dom";
@@ -22,7 +19,7 @@ import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
-import { PCDCard } from "../shared/PCDCard";
+import { PCDCardList } from "../shared/PCDCardList";
 import { FrogFolder } from "./FrogScreens/FrogFolder";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
@@ -56,36 +53,6 @@ export function HomeScreenImpl() {
       delete sessionStorage.newAddedPCDID;
     }
   });
-
-  const mainPCDId = useMemo(() => {
-    if (pcdsInFolder[0]?.type === SemaphoreIdentityPCDTypeName) {
-      return pcdsInFolder[0]?.id;
-    }
-  }, [pcdsInFolder]);
-  const [selectedPCDID, setSelectedPCDID] = useState("");
-  const selectedPCD = useMemo(() => {
-    let selected;
-
-    // if user just added a PCD, highlight that one
-    if (sessionStorage.newAddedPCDID != null) {
-      selected = pcdsInFolder.find(
-        (pcd) => pcd.id === sessionStorage.newAddedPCDID
-      );
-    } else {
-      selected = pcdsInFolder.find((pcd) => pcd.id === selectedPCDID);
-    }
-
-    // default to first PCD if no selected PCD found
-    if (selected === undefined) {
-      selected = pcdsInFolder[0];
-    }
-
-    return selected;
-  }, [pcdsInFolder, selectedPCDID]);
-
-  const onPcdClick = useCallback((id: string) => {
-    setSelectedPCDID(id);
-  }, []);
 
   const onFolderClick = useCallback((folder: string) => {
     setBrowsingFolder(folder);
@@ -136,15 +103,7 @@ export function HomeScreenImpl() {
           )}
           {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
           {pcdsInFolder.length > 0 ? (
-            pcdsInFolder.map((pcd) => (
-              <WrappedPCDCard
-                key={pcd.id}
-                pcd={pcd}
-                mainIdPCD={mainPCDId}
-                onPcdClick={onPcdClick}
-                expanded={pcd.id === selectedPCD?.id}
-              />
-            ))
+            <PCDCardList pcds={pcdsInFolder} />
           ) : (
             <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
           )}
@@ -284,34 +243,4 @@ const FolderEntryContainer = styled.div`
   &:hover {
     background: var(--primary-lite);
   }
-`;
-
-const WrappedPCDCard = React.memo(WrappedPCDCardImpl);
-
-function WrappedPCDCardImpl({
-  pcd,
-  expanded,
-  mainIdPCD,
-  onPcdClick
-}: {
-  pcd: PCD;
-  expanded: boolean;
-  mainIdPCD: string;
-  onPcdClick?: (id: string) => void;
-}) {
-  return (
-    <PCDContainer key={"container-" + pcd.id}>
-      <PCDCard
-        key={"card-" + pcd.id}
-        pcd={pcd}
-        expanded={expanded}
-        isMainIdentity={pcd.id === mainIdPCD}
-        onClick={onPcdClick}
-      />
-    </PCDContainer>
-  );
-}
-
-const PCDContainer = styled.div`
-  margin-top: 8px;
 `;
