@@ -1,5 +1,11 @@
+import { SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { exec } from "child_process";
 import validator from "email-validator";
+import { LRUCache } from "lru-cache";
 import { promisify } from "util";
 import { logger } from "./logger";
 
@@ -127,5 +133,32 @@ export function compareArrays<T>(
     new: newItems,
     updated: updatedItems,
     removed: removedItems
+  };
+}
+
+/**
+ * Returns a promised verification of a PCD, either from the cache or,
+ * if there is no cache entry, from the multiprocess service.
+ */
+export function cachedVerifySignaturePCD(
+  verificationPromiseCache: LRUCache<string, Promise<boolean>>
+) {
+  return async (
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<boolean> => {
+    const key = JSON.stringify(serializedPCD);
+    const cached = verificationPromiseCache.get(key);
+    if (cached) {
+      return cached;
+    } else {
+      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
+        serializedPCD.pcd
+      );
+      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
+      verificationPromiseCache.set(key, promise);
+      // If the promise rejects, delete it from the cache
+      promise.catch(() => verificationPromiseCache.delete(key));
+      return promise;
+    }
   };
 }

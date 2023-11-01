@@ -54,13 +54,12 @@ export class FrogcryptoService {
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService | null
+    rollbarService: RollbarService | null,
+    verificationPromiseCache: LRUCache<string, Promise<boolean>>
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
-      max: 1000
-    });
+    this.verificationPromiseCache = verificationPromiseCache;
     this.adminUsers = this.getAdminUsers();
   }
 
@@ -296,9 +295,14 @@ export class FrogcryptoService {
 
 export function startFrogcryptoService(
   context: ApplicationContext,
-  rollbarService: RollbarService | null
+  rollbarService: RollbarService | null,
+  verificationPromiseCache: LRUCache<string, Promise<boolean>>
 ): FrogcryptoService {
-  const service = new FrogcryptoService(context, rollbarService);
+  const service = new FrogcryptoService(
+    context,
+    rollbarService,
+    verificationPromiseCache
+  );
 
   return service;
 }

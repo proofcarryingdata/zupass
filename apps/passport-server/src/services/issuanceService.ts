@@ -100,6 +100,7 @@ import {
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
+import { cachedVerifySignaturePCD } from "../util/util";
 import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
@@ -138,7 +139,8 @@ export class IssuanceService {
     frogcryptoService: FrogcryptoService,
     rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
-    eddsaPrivateKey: string
+    eddsaPrivateKey: string,
+    verificationPromiseCache: LRUCache<string, Promise<boolean>>
   ) {
     this.context = context;
     this.cacheService = cacheService;
@@ -149,9 +151,7 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
-      max: 1000
-    });
+    this.verificationPromiseCache = verificationPromiseCache;
 
     const zupassFeedHost = new FeedHost(
       [
@@ -167,7 +167,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                cachedVerifySignaturePCD(this.verificationPromiseCache)
               );
               const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
               const ticketsByEvent = _.groupBy(
@@ -243,7 +243,7 @@ export class IssuanceService {
               }
               await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                cachedVerifySignaturePCD(this.verificationPromiseCache)
               );
               return {
                 actions: [
@@ -289,7 +289,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                cachedVerifySignaturePCD(this.verificationPromiseCache)
               );
               const pcds = await this.issueEmailPCDs(pcd);
 
@@ -327,7 +327,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                cachedVerifySignaturePCD(this.verificationPromiseCache)
               );
               const pcds = await this.issueZuzaluTicketPCDs(pcd);
 
@@ -365,7 +365,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                cachedVerifySignaturePCD(this.verificationPromiseCache)
               );
 
               const pcds = await this.issueZuconnectTicketPCDs(pcd);
@@ -415,7 +415,7 @@ export class IssuanceService {
             }
             await verifyFeedCredential(
               req.pcd,
-              this.cachedVerifySignaturePCD.bind(this)
+              cachedVerifySignaturePCD(this.verificationPromiseCache)
             );
 
             return {
@@ -1124,29 +1124,6 @@ export class IssuanceService {
   }
 
   /**
-   * Returns a promised verification of a PCD, either from the cache or,
-   * if there is no cache entry, from the multiprocess service.
-   */
-  private async cachedVerifySignaturePCD(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<boolean> {
-    const key = JSON.stringify(serializedPCD);
-    const cached = this.verificationPromiseCache.get(key);
-    if (cached) {
-      return cached;
-    } else {
-      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
-        serializedPCD.pcd
-      );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
-      this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache
-      promise.catch(() => this.verificationPromiseCache.delete(key));
-      return promise;
-    }
-  }
-
-  /**
    * Verifies a ticket based on:
    * 1) verification of the PCD (that it is correctly formed, with a proof
    *    matching the claim)
@@ -1437,7 +1414,8 @@ export async function startIssuanceService(
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null,
   multiprocessService: MultiProcessService,
-  frogcryptoService: FrogcryptoService
+  frogcryptoService: FrogcryptoService,
+  verificationPromiseCache: LRUCache<string, Promise<boolean>>
 ): Promise<IssuanceService | null> {
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
@@ -1459,7 +1437,8 @@ export async function startIssuanceService(
     frogcryptoService,
     rollbarService,
     zupassRsaKey,
-    zupassEddsaKey
+    zupassEddsaKey,
+    verificationPromiseCache
   );
 
   return issuanceService;
