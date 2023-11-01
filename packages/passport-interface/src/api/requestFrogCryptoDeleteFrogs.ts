@@ -1,7 +1,7 @@
 import urlJoin from "url-join";
 import {
-  FrogCryptoManageFrogsRequest,
-  FrogCryptoManageFrogsResponseValue
+  FrogCryptoDeleteFrogsRequest,
+  FrogCryptoDeleteFrogsResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -11,19 +11,19 @@ import { httpPostSimple } from "./makeRequest";
  *
  * This endpoint is only available to authenticated admin users.
  */
-export async function requestFrogCryptoManageFrogs(
+export async function requestFrogCryptoDeleteFrogs(
   zupassServerUrl: string,
-  req: FrogCryptoManageFrogsRequest
-): Promise<FrogCryptoManageFrogsResult> {
+  req: FrogCryptoDeleteFrogsRequest
+): Promise<FrogCryptoDeleteFrogsResult> {
   return httpPostSimple(
-    urlJoin(zupassServerUrl, "/frogcrypto/manage/frogs"),
+    urlJoin(zupassServerUrl, "/frogcrypto/admin/delete-frogs"),
     async (resText) => ({
-      value: JSON.parse(resText) as FrogCryptoManageFrogsResponseValue,
+      value: JSON.parse(resText) as FrogCryptoDeleteFrogsResponseValue,
       success: true
     }),
     req
   );
 }
 
-export type FrogCryptoManageFrogsResult =
-  APIResult<FrogCryptoManageFrogsResponseValue>;
+export type FrogCryptoDeleteFrogsResult =
+  APIResult<FrogCryptoDeleteFrogsResponseValue>;

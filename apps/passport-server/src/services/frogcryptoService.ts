@@ -13,8 +13,10 @@ import {
   FrogCryptoManageFrogsRequest,
   FrogCryptoManageFrogsResponseValue,
   FrogCryptoUserStateRequest,
-  FrogCryptoUserStateResponseValue
+  FrogCryptoUserStateResponseValue,
+  verifyFeedCredential
 } from "@pcd/passport-interface";
+import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -28,9 +30,9 @@ import {
   fetchUserFeedsState,
   getFrogData,
   initializeUserFeedState,
-  insertFrogData,
   sampleFrogData,
-  updateUserFeedState
+  updateUserFeedState,
+  upsertFrogData
 } from "../database/queries/frogcrypto";
 import { fetchUserByCommitment } from "../database/queries/users";
 import { sqlTransaction } from "../database/sqlQuery";
@@ -43,10 +45,7 @@ import { RollbarService } from "./rollbarService";
 export class FrogcryptoService {
   private readonly context: ApplicationContext;
   private readonly rollbarService: RollbarService | null;
-  private readonly verificationPromiseCache: LRUCache<
-    string,
-    Promise<string | null>
-  >;
+  private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
   private readonly adminUsers: string[];
 
   public constructor(
@@ -55,10 +54,7 @@ export class FrogcryptoService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.verificationPromiseCache = new LRUCache<
-      string,
-      Promise<string | null>
-    >({
+    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
     this.adminUsers = this.getAdminUsers();
@@ -71,10 +67,7 @@ export class FrogcryptoService {
   public async getUserState(
     req: FrogCryptoUserStateRequest
   ): Promise<FrogCryptoUserStateResponseValue> {
-    const semaphoreId = await this.cachedVerifySignaturePCD(req.pcd);
-    if (!semaphoreId) {
-      throw new PCDHTTPError(400, "invalid PCD");
-    }
+    const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
     const userFeeds = await fetchUserFeedsState(
       this.context.dbPool,
@@ -94,10 +87,7 @@ export class FrogcryptoService {
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     feed: FrogCryptoFeed
   ): Promise<IFrogData> {
-    const semaphoreId = await this.cachedVerifySignaturePCD(pcd);
-    if (!semaphoreId) {
-      throw new PCDHTTPError(400, "invalid PCD");
-    }
+    const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(pcd);
 
     await initializeUserFeedState(this.context.dbPool, semaphoreId, feed.id);
 
@@ -126,6 +116,7 @@ export class FrogcryptoService {
 
         const { nextFetchAt } = this.computeUserFeedState(
           {
+            semaphore_id: semaphoreId,
             feed_id: feed.id,
             last_fetched_at: lastFetchedAt
           },
@@ -140,37 +131,21 @@ export class FrogcryptoService {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
 
-        return {
-          ..._.pick(frogData, "name", "description"),
-          imageUrl: `${process.env.PASSPORT_SERVER_URL}/frogcrypto/images/${frogData.uuid}`,
-          frogId: frogData.id,
-          biome: this.parseEnum(Biome, frogData.biome),
-          rarity: this.parseEnum(Rarity, frogData.rarity),
-          temperament: this.parseTemperament(frogData.temperament),
-          jump: this.sampleAttribute(frogData.jump_min, frogData.jump_max),
-          speed: this.sampleAttribute(frogData.speed_min, frogData.speed_max),
-          intelligence: this.sampleAttribute(
-            frogData.intelligence_min,
-            frogData.intelligence_max
-          ),
-          beauty: this.sampleAttribute(
-            frogData.beauty_min,
-            frogData.beauty_max
-          ),
-          timestampSigned: Date.now(),
-          ownerSemaphoreId: semaphoreId
-        };
+        return this.generateFrogData(frogData, semaphoreId);
       }
     );
   }
 
+  /**
+   * Upsert frog data into the database and return all frog data.
+   */
   public async manageFrogData(
     req: FrogCryptoManageFrogsRequest
   ): Promise<FrogCryptoManageFrogsResponseValue> {
     await this.cachedVerifyAdminSignaturePCD(req.pcd);
 
     try {
-      await insertFrogData(this.context.dbPool, req.frogs);
+      await upsertFrogData(this.context.dbPool, req.frogs);
     } catch (e) {
       logger(`Error encountered while inserting frog data:`, e);
       this.rollbarService?.reportError(e);
@@ -182,6 +157,9 @@ export class FrogcryptoService {
     };
   }
 
+  /**
+   * Delete frog data from the database and return all frog data.
+   */
   public async deleteFrogData(
     req: FrogCryptoDeleteFrogsRequest
   ): Promise<FrogCryptoDeleteFrogsResponseValue> {
@@ -205,6 +183,29 @@ export class FrogcryptoService {
       feedId: feed.id,
       lastFetchedAt,
       nextFetchAt
+    };
+  }
+
+  private generateFrogData(
+    frogData: FrogCryptoFrogData,
+    ownerSemaphoreId: string
+  ): IFrogData {
+    return {
+      ..._.pick(frogData, "name", "description"),
+      imageUrl: `${process.env.PASSPORT_SERVER_URL}/frogcrypto/images/${frogData.uuid}`,
+      frogId: frogData.id,
+      biome: this.parseEnum(Biome, frogData.biome),
+      rarity: this.parseEnum(Rarity, frogData.rarity),
+      temperament: this.parseTemperament(frogData.temperament),
+      jump: this.sampleAttribute(frogData.jump_min, frogData.jump_max),
+      speed: this.sampleAttribute(frogData.speed_min, frogData.speed_max),
+      intelligence: this.sampleAttribute(
+        frogData.intelligence_min,
+        frogData.intelligence_max
+      ),
+      beauty: this.sampleAttribute(frogData.beauty_min, frogData.beauty_max),
+      timestampSigned: Date.now(),
+      ownerSemaphoreId
     };
   }
 
@@ -233,13 +234,27 @@ export class FrogcryptoService {
     return this.parseEnum(Temperament, value);
   }
 
+  private async cachedVerifyPCDAndGetSemaphoreId(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<string> {
+    try {
+      const { pcd } = await verifyFeedCredential(
+        serializedPCD,
+        this.cachedVerifySignaturePCD.bind(this)
+      );
+      return pcd.claim.identityCommitment;
+    } catch (e) {
+      throw new PCDHTTPError(400, "invalid PCD");
+    }
+  }
+
   /**
    * Returns a promised verification of a PCD, either from the cache or,
    * if there is no cache entry, from the multiprocess service.
    */
   private async cachedVerifySignaturePCD(
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<string | null> {
+  ): Promise<boolean> {
     const key = JSON.stringify(serializedPCD);
     const cached = this.verificationPromiseCache.get(key);
     if (cached) {
@@ -248,9 +263,7 @@ export class FrogcryptoService {
       const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
         serializedPCD.pcd
       );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized).then(
-        () => deserialized.claim.identityCommitment
-      );
+      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
       this.verificationPromiseCache.set(key, promise);
       // If the promise rejects, delete it from the cache
       promise.catch(() => this.verificationPromiseCache.delete(key));
@@ -264,10 +277,7 @@ export class FrogcryptoService {
   private async cachedVerifyAdminSignaturePCD(
     pcd: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<void> {
-    const id = await this.cachedVerifySignaturePCD(pcd);
-    if (!id) {
-      throw new PCDHTTPError(400, "invalid PCD");
-    }
+    const id = await this.cachedVerifyPCDAndGetSemaphoreId(pcd);
     const user = await fetchUserByCommitment(this.context.dbPool, id);
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");

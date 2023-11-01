@@ -1,11 +1,14 @@
 import {
   CredentialManager,
+  requestFrogCryptoDeleteFrogs,
   requestFrogCryptoManageFrogs
 } from "@pcd/passport-interface";
 import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
 import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { useEffect, useMemo, useState } from "react";
+import _ from "lodash";
+import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import Table from "react-table-lite";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -34,8 +37,6 @@ export function FrogManagerScreen() {
     }
   };
 
-  const [selectedFrogIds, setSelectedFrogIds] = useState<number[]>([]);
-
   const {
     result: frogs,
     isLoading,
@@ -43,6 +44,11 @@ export function FrogManagerScreen() {
     deleteFrogs,
     error
   } = useFrogs();
+
+  const [selectedFrogIds, setSelectedFrogIds] = useState<number[]>([]);
+  useEffect(() => {
+    setSelectedFrogIds([]);
+  }, [frogs]);
 
   useEffect(() => {
     if (error?.includes("not authorized")) {
@@ -59,7 +65,12 @@ export function FrogManagerScreen() {
     <AppContainer bg="gray">
       <Container>
         <h2>Add New Frogs</h2>
-        <textarea onChange={onTextChange} />
+        <p>
+          Go to the Export tab of the Frog data spreadsheet, click on Export
+          JSON in the toolbar, and copy the generated JSON representation of
+          frogs.
+        </p>
+        <textarea rows={10} onChange={onTextChange} />
         {newFrogsError && (
           <ErrorMessage>Error parsing frogs: {newFrogsError}</ErrorMessage>
         )}
@@ -77,8 +88,18 @@ export function FrogManagerScreen() {
         <h2>Frogs</h2>
         {isLoading && <p>Loading...</p>}
         {error && <ErrorMessage>Error fetching frogs: {error}</ErrorMessage>}
-        {!error && frogs.length === 0 && <p>No frogs</p>}
-        <DataTable data={frogs} />
+        <button
+          onClick={() => deleteFrogs(selectedFrogIds)}
+          disabled={selectedFrogIds.length === 0}
+        >
+          Delete Selected Frogs{" "}
+          {selectedFrogIds.length > 0 && `(${selectedFrogIds.length})`}
+        </button>
+        <DataTable
+          data={frogs}
+          checkedIds={selectedFrogIds}
+          setCheckedIds={setSelectedFrogIds}
+        />
       </Container>
     </AppContainer>
   );
@@ -126,7 +147,7 @@ function useFrogs(): {
   const [req, setReq] = useState<
     | { type: "load" }
     | { type: "update"; frogs: FrogCryptoFrogData[] }
-    | { type: "delete"; frogs: number[] }
+    | { type: "delete"; frogIds: number[] }
   >({ type: "load" });
 
   // ensure only one request is in flight at a time
@@ -161,9 +182,9 @@ function useFrogs(): {
             );
             break;
           case "delete":
-            result = await requestFrogCryptoManageFrogs(
+            result = await requestFrogCryptoDeleteFrogs(
               appConfig.zupassServer,
-              req
+              { pcd, frogIds: req.frogIds }
             );
             break;
         }
@@ -199,56 +220,93 @@ function useFrogs(): {
     isLoading,
     error,
     updateFrogs: (frogs) => setReq({ type: "update", frogs }),
-    deleteFrogs: (frogs) =>
-      setReq({ type: "delete", frogs: frogs.map((f) => f.id) })
+    deleteFrogs: (frogIds) => setReq({ type: "delete", frogIds })
   };
 }
 
-function DataTable({ data }: { data: Record<string, any>[] }) {
-  // Get the keys from the first object. Assumes all objects have the same shape.
-  const keys = data.length > 0 ? Object.keys(data[0]) : [];
+function DataTable({
+  data,
+  checkedIds,
+  setCheckedIds
+}: {
+  data: Record<string, any>[];
+  checkedIds?: number[];
+  setCheckedIds?: Dispatch<SetStateAction<number[]>>;
+}) {
+  const keys =
+    data.length > 0
+      ? _.chain(data).map(Object.keys).flatten().uniq().value()
+      : [];
+
+  const dataWithChecked = data.map((row) => ({
+    ...row,
+    checked: checkedIds?.includes(row.id)
+  }));
 
   return (
-    <table>
-      <thead>
-        <tr>
-          {keys.map((key, idx) => (
-            <th key={idx}>{key}</th>
-          ))}
-        </tr>
-      </thead>
-      <tbody>
-        {data.map((item, rowIndex) => (
-          <tr key={rowIndex}>
-            {keys.map((key, colIndex) => (
-              <td key={colIndex}>
-                {typeof item[key] === "undefined" ? "<undefined>" : item[key]}
-              </td>
-            ))}
-          </tr>
-        ))}
-      </tbody>
-    </table>
+    <Table
+      data={dataWithChecked}
+      headers={keys}
+      noDataMessage="No Frogs"
+      checkedKey="checked"
+      showMultiSelect={!!setCheckedIds}
+      customRenderCell={keys.reduce((acc, key) => {
+        acc[key] = (row) => {
+          return typeof row[key] === "undefined" ? "<undefined>" : row[key];
+        };
+        acc["description"] = (row) => {
+          return (
+            <Description title={row["description"]}>
+              {row["description"]}
+            </Description>
+          );
+        };
+        return acc;
+      }, {})}
+      onRowSelect={(args, row) => {
+        setCheckedIds?.((rowIds) =>
+          row.checked
+            ? rowIds.filter((id) => id !== row.id)
+            : [...rowIds, row.id]
+        );
+      }}
+      onAllRowSelect={(args, allrows) => {
+        setCheckedIds?.((ids) =>
+          ids.length === allrows.length ? [] : allrows.map((row) => row.id)
+        );
+      }}
+      containerStyle={{ maxHeight: "400px", overflow: "auto" }}
+      cellStyle={{ padding: "4px" }}
+      headerStyle={{ padding: "4px" }}
+    />
   );
 }
 
 const Container = styled.div`
   padding: 16px;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
+  width: 100vw;
+  max-width: 100vw;
+  overflow-x: auto;
 
   display: flex;
   flex-direction: column;
   gap: 16px;
 `;
 
+/**
+ * Parses the data from the frog spreadsheet into a format that can be used by the
+ * `requestFrogCryptoManageFrogs` API.
+ *
+ * @param data The data from the frog spreadsheet as a JSON array of Record<attr name, attr val>.
+ * Numeric range value can be empty, a single number, or a range of numbers separated by a dash.
+ * Enum values can be empty or a string. They are matched to numeric enum at the time of issuance.
+ */
 function frogParser(data: string): FrogCryptoFrogData[] {
   return JSON.parse(data).map((rawFrog) => {
     function parseAttribtue(
       attribute: string
     ): [number, number] | [undefined, undefined] {
-      const value = String(rawFrog[attribute] ?? "");
+      const value = String(rawFrog[attribute] ?? "").trim();
       if (!value) {
         return [undefined, undefined];
       }
@@ -286,3 +344,12 @@ function frogParser(data: string): FrogCryptoFrogData[] {
     } satisfies FrogCryptoFrogData;
   });
 }
+
+const Description = styled.span`
+  display: -webkit-box;
+  max-width: 200px;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  text-overflow: ellipsis;
+`;

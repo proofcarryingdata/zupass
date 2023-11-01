@@ -16,7 +16,7 @@ export async function requestFrogCryptoManageFrogs(
   req: FrogCryptoManageFrogsRequest
 ): Promise<FrogCryptoManageFrogsResult> {
   return httpPostSimple(
-    urlJoin(zupassServerUrl, "/frogcrypto/manage/frogs"),
+    urlJoin(zupassServerUrl, "/frogcrypto/admin/frogs"),
     async (resText) => ({
       value: JSON.parse(resText) as FrogCryptoManageFrogsResponseValue,
       success: true

@@ -13,12 +13,9 @@ import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { insertFrogData } from "../src/database/queries/frogcrypto";
+import { upsertFrogData } from "../src/database/queries/frogcrypto";
 import { Zupass } from "../src/types";
-import {
-  FROGCRYPTO_FEEDS,
-  FrogCryptoFeed,
-} from "../src/util/frogcrypto";
+import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../src/util/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { testFrogs } from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -37,7 +34,7 @@ describe("frogcrypto functionality", function () {
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
     db = await getDB();
-    await insertFrogData(db, testFrogs);
+    await upsertFrogData(db, testFrogs);
 
     application = await startTestingApp();
 

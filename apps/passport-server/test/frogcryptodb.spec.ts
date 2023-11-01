@@ -7,12 +7,13 @@ import { Client } from "pg";
 import { Pool } from "postgres-pool";
 import { getDB } from "../src/database/postgresPool";
 import {
+  deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
   initializeUserFeedState,
-  insertFrogData,
   sampleFrogData,
-  updateUserFeedState
+  updateUserFeedState,
+  upsertFrogData
 } from "../src/database/queries/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { testFrogs } from "./util/frogcrypto";
@@ -40,10 +41,33 @@ describe("database reads and writes for frogcrypto features", function () {
   });
 
   step("insert frogs", async function () {
-    await insertFrogData(db, testFrogs);
+    await upsertFrogData(db, testFrogs);
 
     const allFrogs = await getFrogData(db);
     expect(allFrogs.length).to.eq(testFrogs.length);
+  });
+
+  step("update frogs", async function () {
+    const mutatedFrog = {
+      ...testFrogs[3],
+      biome: "Swamp"
+    };
+    await upsertFrogData(db, [mutatedFrog]);
+
+    const allFrogs = await getFrogData(db);
+    expect(allFrogs.length).to.eq(testFrogs.length);
+    expect(allFrogs.find((frog) => frog.id === mutatedFrog.id)?.biome).to.eq(
+      "Swamp"
+    );
+  });
+
+  step("delete frogs", async function () {
+    const frogId = testFrogs[3].id;
+    await deleteFrogData(db, [frogId]);
+
+    const allFrogs = await getFrogData(db);
+    expect(allFrogs.length).to.eq(testFrogs.length - 1);
+    expect(allFrogs.map((frog) => frog.id)).does.not.include(frogId);
   });
 
   step("sample a frog", async function () {
@@ -63,14 +87,19 @@ describe("database reads and writes for frogcrypto features", function () {
     expect(emptyState).to.be.empty;
 
     await initializeUserFeedState(db, "test", "test");
-    const initState = await fetchUserFeedsState(db, "test");
+    let initState = await fetchUserFeedsState(db, "test");
     expect(initState).to.not.be.empty;
-    const feedState = initState[0];
+    let feedState = initState[0];
     expect(feedState.feed_id).to.eq("test");
     expect(feedState.last_fetched_at.getTime()).to.be.eq(0);
 
     // re-init should have no effect
     await initializeUserFeedState(db, "test", "test");
+    initState = await fetchUserFeedsState(db, "test");
+    expect(initState).to.not.be.empty;
+    feedState = initState[0];
+    expect(feedState.feed_id).to.eq("test");
+    expect(feedState.last_fetched_at.getTime()).to.be.eq(0);
   });
 
   step("reserves only one update at a time", async function () {

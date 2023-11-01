@@ -92,9 +92,9 @@ export async function updateUserFeedState(
 }
 
 /**
- * Insert frog data into the database.
+ * Upsert frog data into the database.
  */
-export async function insertFrogData(
+export async function upsertFrogData(
   client: Pool,
   frogDataList: FrogCryptoFrogData[]
 ): Promise<void> {
@@ -116,7 +116,11 @@ export async function insertFrogData(
  * Returns all the frogs in the database.
  */
 export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
-  const result = await sqlQuery(pool, `select * from frogcrypto_frogs`, []);
+  const result = await sqlQuery(
+    pool,
+    `select * from frogcrypto_frogs order by id`,
+    []
+  );
 
   return result.rows.map(toFrogData);
 }
@@ -164,8 +168,8 @@ export async function sampleFrogData(
 
 function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
   return {
-    ...dbFrogData.frog,
     id: dbFrogData.id,
-    uuid: dbFrogData.uuid
+    uuid: dbFrogData.uuid,
+    ...dbFrogData.frog
   };
 }

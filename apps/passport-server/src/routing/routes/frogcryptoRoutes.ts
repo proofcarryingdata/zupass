@@ -1,4 +1,6 @@
 import {
+  FrogCryptoDeleteFrogsRequest,
+  FrogCryptoDeleteFrogsResponseValue,
   FrogCryptoManageFrogsRequest,
   FrogCryptoManageFrogsResponseValue,
   FrogCryptoUserStateRequest,
@@ -8,6 +10,7 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import urljoin from "url-join";
 import * as uuid from "uuid";
 import {
   FeedProviderName,
@@ -106,23 +109,24 @@ export function initFrogcryptoRoutes(
     ];
 
     res.redirect(
-      `${process.env.PASSPORT_CLIENT_URL}/${
+      urljoin(
+        process.env.PASSPORT_CLIENT_URL || "",
         frogPaths[result % frogPaths.length]
-      }`
+      )
     );
   });
 
-  app.post("/frogcrypto/manage/frogs", async (req, res) => {
+  app.post("/frogcrypto/admin/frogs", async (req, res) => {
     const result = await frogcryptoService.manageFrogData(
       req.body as FrogCryptoManageFrogsRequest
     );
     res.json(result satisfies FrogCryptoManageFrogsResponseValue);
   });
 
-  app.delete("/frogcrypto/manage/frogs", async (req, res) => {
+  app.post("/frogcrypto/admin/delete-frogs", async (req, res) => {
     const result = await frogcryptoService.deleteFrogData(
-      req.body as FrogCryptoManageFrogsRequest
+      req.body as FrogCryptoDeleteFrogsRequest
     );
-    res.json(result satisfies FrogCryptoManageFrogsResponseValue);
+    res.json(result satisfies FrogCryptoDeleteFrogsResponseValue);
   });
 }
