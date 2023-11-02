@@ -9,13 +9,14 @@ import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
+  getPossibleFrogIds,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
   upsertFrogData
 } from "../src/database/queries/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
-import { testFrogs } from "./util/frogcrypto";
+import { testFrogs, testFrogsAndObjects } from "./util/frogcrypto";
 
 describe("database reads and writes for frogcrypto features", function () {
   this.timeout(15_000);
@@ -117,5 +118,15 @@ describe("database reads and writes for frogcrypto features", function () {
 
     const userFeedState = await fetchUserFeedsState(db, "test");
     expect(userFeedState[0].last_fetched_at.getTime()).to.be.greaterThan(0);
+  });
+
+  step("returns possible frog ids excluding objects", async function () {
+    await upsertFrogData(db, testFrogsAndObjects);
+
+    const possibleFrogIds = await getPossibleFrogIds(db);
+    expect(possibleFrogIds).to.deep.eq([
+      [1, 3],
+      [7, 8]
+    ]);
   });
 });

@@ -132,7 +132,9 @@ describe("frogcrypto functionality", function () {
 
     let userState = await getUserState();
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
+    expect(userState.value?.possibleFrogIds).to.deep.equal([
+      [1, testFrogs.length]
+    ]);
     expect(userState.value?.feeds).to.be.empty;
     expect(userState.value?.myScore).to.be.undefined;
 
@@ -141,7 +143,9 @@ describe("frogcrypto functionality", function () {
 
     userState = await getUserState();
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
+    expect(userState.value?.possibleFrogIds).to.deep.equal([
+      [1, testFrogs.length]
+    ]);
     expect(userState.value?.myScore?.score).to.eq(1);
     expect(userState.value?.myScore?.semaphore_id).to.be.eq(
       identity.getCommitment().toString()

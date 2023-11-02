@@ -640,7 +640,14 @@ export interface FrogCryptoComputedUserState {
  */
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
-  possibleFrogCount: number;
+  /**
+   * A pair list of [min, max] over consecutive integer sequences that represent
+   * the possible frog ids. For example, [[1, 5], [7, 10]] means there are frogs
+   * with ids [1, 2, 3, 4, 5, 7, 8, 9, 10].
+   *
+   * See {@link getPossibleFrogIds}
+   */
+  possibleFrogIds: [number, number][];
   myScore?: FrogCryptoScore;
 }
 

@@ -2,15 +2,16 @@ import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import _ from "lodash";
 import { useMemo } from "react";
 import styled from "styled-components";
+import { RippleLoader } from "../../core/RippleLoader";
 
 /**
  * The FrogeDex tab allows users to view their progress towards collecting all frogs.
  */
 export function DexTab({
-  possibleFrogCount,
+  possibleFrogIds,
   pcds
 }: {
-  possibleFrogCount?: number;
+  possibleFrogIds?: [number, number][];
   pcds: EdDSAFrogPCD[];
 }) {
   const names = useMemo(() => {
@@ -23,23 +24,27 @@ export function DexTab({
     return names;
   }, [pcds]);
 
-  if (!possibleFrogCount) {
-    return <div>loading...</div>;
+  if (!possibleFrogIds) {
+    return <RippleLoader />;
   }
 
   return (
     <table>
       <tbody>
-        {_.range(1, possibleFrogCount + 1).map((i) => (
-          <tr key={i}>
-            <Cell>{i}</Cell>
-            {names[i] ? (
-              <Cell>{names[i]}</Cell>
-            ) : (
-              <UnknownCell>???</UnknownCell>
-            )}
-          </tr>
-        ))}
+        {_.chain(possibleFrogIds)
+          .map(([min, max]) => _.range(min, max + 1))
+          .flatten()
+          .value()
+          .map((i) => (
+            <tr key={i}>
+              <Cell>{i}</Cell>
+              {names[i] ? (
+                <Cell>{names[i]}</Cell>
+              ) : (
+                <UnknownCell>???</UnknownCell>
+              )}
+            </tr>
+          ))}
       </tbody>
     </table>
   );

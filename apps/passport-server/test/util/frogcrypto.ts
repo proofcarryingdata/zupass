@@ -75,3 +75,78 @@ export const testFrogs: FrogCryptoFrogData[] = [
     beauty_max: 1
   }
 ];
+
+export const testFrogsAndObjects: FrogCryptoFrogData[] = [
+  {
+    id: 5,
+    uuid: uuid(),
+    name: "Object 1",
+    description: "A object",
+    biome: "N/A",
+    rarity: "object",
+    temperament: undefined,
+    drop_weight: 1,
+    jump_min: 1,
+    jump_max: 1,
+    speed_min: 1,
+    speed_max: 1,
+    intelligence_min: 1,
+    intelligence_max: 1,
+    beauty_min: 1,
+    beauty_max: 1
+  },
+  {
+    id: 6,
+    uuid: uuid(),
+    name: "Object 2",
+    description: "A object",
+    biome: "N/A",
+    rarity: "object",
+    temperament: undefined,
+    drop_weight: 1,
+    jump_min: 1,
+    jump_max: 1,
+    speed_min: 1,
+    speed_max: 1,
+    intelligence_min: 1,
+    intelligence_max: 1,
+    beauty_min: 1,
+    beauty_max: 1
+  },
+  {
+    id: 7,
+    uuid: uuid(),
+    name: "Frog 7",
+    description: "A frog",
+    biome: "Jungle",
+    rarity: "common",
+    temperament: undefined,
+    drop_weight: 1,
+    jump_min: 1,
+    jump_max: 1,
+    speed_min: 1,
+    speed_max: 1,
+    intelligence_min: 1,
+    intelligence_max: 1,
+    beauty_min: 1,
+    beauty_max: 1
+  },
+  {
+    id: 8,
+    uuid: uuid(),
+    name: "Frog 8",
+    description: "A frog",
+    biome: "Desert",
+    rarity: "rare",
+    temperament: "MEOW",
+    drop_weight: 1,
+    jump_min: 1,
+    jump_max: 1,
+    speed_min: 1,
+    speed_max: 1,
+    intelligence_min: 1,
+    intelligence_max: 1,
+    beauty_min: 1,
+    beauty_max: 1
+  }
+];
