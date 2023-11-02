@@ -600,17 +600,66 @@ async function makeUploadId(
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: AppState, update: ZuUpdate) {
+  // This re-entrancy protection ensures only one event-sequence is
+  // inside of doSync() at any time.  When doSync() completes, it will
+  // run again if any state changes were made, or if any updates were skipped.
+  if (!syncInProgress) {
+    try {
+      syncInProgress = true;
+      const stateChanges = await doSync(state, update);
+
+      // sync() is triggered via dispatch on any update, so if we make changes
+      // we know we'll be called again the latest AppState snapshot.  If we
+      // have no changes, we can force another sync via and empty update, to
+      // ensure we didn't miss any important states.
+      if (stateChanges) {
+        update(stateChanges);
+      } else if (skippedSyncUpdates > 0) {
+        console.log("[SYNC] running an extra sync in case of missed updates");
+        update({});
+      }
+      skippedSyncUpdates = 0;
+    } finally {
+      syncInProgress = false;
+    }
+  } else {
+    // If we got an update, but skipped it because another was in progress,
+    // track that so we can make sure another update runs later.  This ensures
+    // we don't miss a snapshot of an AppState change which could turn out to be
+    // important.
+    console.log("[SYNC] skipping reentrant update");
+    skippedSyncUpdates++;
+  }
+}
+
+/**
+ * Used for reentrantcy protection inside of sync().
+ */
+let syncInProgress = false;
+let skippedSyncUpdates = 0;
+
+/**
+ * Does the real work of sync(), inside of reentrancy protection.
+ * Returns the changes to be made to AppState.  If changes were made,
+ * this function should be run again.
+ */
+async function doSync(
+  state: AppState,
+  update: ZuUpdate
+): Promise<Partial<AppState> | undefined> {
   if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
-    return;
+    return undefined;
   }
 
-  // If we haven't downloaded from storage, do that first
-  if (!state.downloadedPCDs && !state.downloadingPCDs) {
+  // If we haven't downloaded from storage, do that first.  After that we'll
+  // download again when requested to poll, but only after the first full sync
+  // has completed.
+  if (
+    !state.downloadedPCDs ||
+    (state.completedFirstSync && state.extraDownloadRequested)
+  ) {
     console.log("[SYNC] sync action: download");
-    update({
-      downloadingPCDs: true
-    });
 
     // Download user's E2EE storage, which includes both PCDs and subscriptions.
     // We'll skip this if it fails, or if the server indicates no changes based
@@ -626,37 +675,28 @@ async function sync(state: AppState, update: ZuUpdate) {
       // uploads even when download is skipped.
       const uploadedUploadId = await makeUploadId(pcds, subscriptions);
 
-      update({
+      return {
         downloadedPCDs: true,
-        downloadingPCDs: false,
         uploadedUploadId,
         pcds,
         subscriptions,
-        serverStorageRevision: revision
-      });
+        serverStorageRevision: revision,
+        extraDownloadRequested: false
+      };
     } else {
       console.log(
         `[SYNC] skipping download:`,
         dlRes.success ? "no changes" : "failed"
       );
-      update({
+      return {
         downloadedPCDs: true,
-        downloadingPCDs: false
-      });
+        extraDownloadRequested: false
+      };
     }
-
-    return;
   }
 
-  if (state.downloadingPCDs || !state.downloadedPCDs) {
-    return;
-  }
-
-  if (!state.loadedIssuedPCDs && !state.loadingIssuedPCDs) {
-    update({
-      loadingIssuedPCDs: true
-    });
-
+  if (!state.loadedIssuedPCDs) {
+    update({ loadingIssuedPCDs: true });
     try {
       console.log("[SYNC] loading issued pcds");
       addDefaultSubscriptions(state.subscriptions);
@@ -683,61 +723,54 @@ async function sync(state: AppState, update: ZuUpdate) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
 
-    update({
-      loadingIssuedPCDs: false,
+    return {
       loadedIssuedPCDs: true,
+      loadingIssuedPCDs: false,
       pcds: state.pcds,
       subscriptions: state.subscriptions
-    });
-    return;
+    };
   }
 
-  if (!state.loadedIssuedPCDs && state.loadingIssuedPCDs) {
-    return;
-  }
-
-  // Generate an upload ID from the state of PCDs and subscriptions
+  // Generate an upload ID from the state of PCDs and subscriptions.
+  // Upload only if the ID is different, meaning changes to upload.
   const uploadId = await makeUploadId(state.pcds, state.subscriptions);
+  if (state.uploadedUploadId !== uploadId) {
+    // Uploading requires state.self be set, which should be set by now.  If
+    // it's not, wait to upload on another sync triggered when self changes.
+    if (!state.self) {
+      console.error("[SYNC] no user available to upload");
+      return undefined;
+    }
 
-  // If it matches what we downloaded or uploaded already, there's nothing
-  // to do
-  if (
-    state.uploadedUploadId === uploadId ||
-    state.uploadingUploadId === uploadId
-  ) {
-    console.log("[SYNC] sync action: no-op");
-    return;
+    console.log("[SYNC] sync action: upload");
+    // TODO(artwyman): Add serverStorageRevision input here, but only after
+    // we're able to respond to a conflict by downloading.
+    const upRes = await uploadStorage(
+      state.self,
+      state.pcds,
+      state.subscriptions
+    );
+    if (upRes.success) {
+      return {
+        uploadedUploadId: uploadId,
+        serverStorageRevision: upRes.value.revision
+      };
+    } else {
+      return {
+        completedFirstSync: true
+      };
+    }
   }
 
-  // Uploading requires state.self be set, which should be set by now.  If it's
-  // not, wait to upload on another sync triggered when self changes.
-  if (!state.self) {
-    console.error("[SYNC] no user available to upload");
-    return;
+  if (!state.completedFirstSync) {
+    console.log("[SYNC] first sync completed");
+    return {
+      completedFirstSync: true
+    };
   }
 
-  console.log("[SYNC] sync action: upload");
-  update({
-    uploadingUploadId: uploadId
-  });
-  // TODO(artwyman): Add serverStorageRevision input here, but only after
-  // we're able to respond to a conflict by downloading.
-  const upRes = await uploadStorage(
-    state.self,
-    state.pcds,
-    state.subscriptions
-  );
-  if (upRes.success) {
-    update({
-      uploadingUploadId: undefined,
-      uploadedUploadId: uploadId,
-      serverStorageRevision: upRes.value.revision
-    });
-  } else {
-    update({
-      uploadingUploadId: undefined
-    });
-  }
+  console.log("[SYNC] sync action: no-op");
+  return undefined;
 }
 
 async function syncSubscription(
@@ -801,8 +834,7 @@ async function addSubscription(
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
-    loadedIssuedPCDs: false,
-    loadingIssuedPCDs: false
+    loadedIssuedPCDs: false
   });
 }
 
@@ -832,8 +864,7 @@ async function updateSubscriptionPermissions(
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
-    loadedIssuedPCDs: false,
-    loadingIssuedPCDs: false
+    loadedIssuedPCDs: false
   });
 }
 
@@ -858,8 +889,8 @@ async function setKnownTicketTypesAndKeys(
 
 /**
  * After the user has agreed to the terms, save the updated user record, set
- * `loadedIssuedPCDs` and `loadingIssuedPCDs` to false in order to prompt a
- * feed refresh, and dismiss the "legal terms" modal.
+ * `loadedIssuedPCDs` to false in order to prompt a feed refresh, and dismiss
+ * the "legal terms" modal.
  */
 async function handleAgreedPrivacyNotice(
   state: AppState,
@@ -870,7 +901,6 @@ async function handleAgreedPrivacyNotice(
   update({
     self: { ...state.self, terms_agreed: version },
     loadedIssuedPCDs: false,
-    loadingIssuedPCDs: false,
     modal: { modalType: "none" }
   });
 }
