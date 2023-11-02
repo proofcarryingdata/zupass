@@ -8,7 +8,6 @@ import {
   FeedSubscriptionManager,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
-  NetworkFeedApi,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
