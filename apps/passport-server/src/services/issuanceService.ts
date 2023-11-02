@@ -1394,7 +1394,7 @@ export class IssuanceService {
     const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
       req.checkerProof.pcd
     );
-    const valid = await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
     if (!valid) {
       throw new PCDHTTPError(403, "invalid proof");
     }
@@ -1416,7 +1416,7 @@ export class IssuanceService {
     const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
       req.checkerProof.pcd
     );
-    const valid = await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
 
     if (!valid) {
       throw new PCDHTTPError(403, "invalid proof");
