@@ -1,5 +1,25 @@
 # @pcd/passport-interface
 
+## 0.8.0
+
+### Minor Changes
+
+- new package versions
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/eddsa-ticket-pcd@0.3.0
+  - @pcd/emitter@0.2.0
+  - @pcd/passport-crypto@0.8.0
+  - @pcd/pcd-collection@0.8.0
+  - @pcd/pcd-types@0.8.0
+  - @pcd/rsa-ticket-pcd@0.3.0
+  - @pcd/semaphore-group-pcd@0.8.0
+  - @pcd/semaphore-identity-pcd@0.8.0
+  - @pcd/semaphore-signature-pcd@0.8.0
+  - @pcd/util@0.2.0
+
 ## 0.7.2
 
 ### Patch Changes

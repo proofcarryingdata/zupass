@@ -7,6 +7,7 @@ import {
 import {
   KnownPublicKeyType,
   KnownTicketGroup,
+  LATEST_PRIVACY_NOTICE,
   ZuzaluUserRole
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
@@ -133,7 +134,8 @@ describe("database reads and writes", function () {
       const newCommitment = newIdentity.commitment.toString();
       const newUuid = await upsertUser(db, {
         email: testTicket.email,
-        commitment: newCommitment
+        commitment: newCommitment,
+        terms_agreed: LATEST_PRIVACY_NOTICE
       });
 
       const loggedinUser = await fetchLoggedInZuzaluUser(db, { uuid: newUuid });
@@ -335,7 +337,8 @@ describe("database reads and writes", function () {
     const uuid = await upsertUser(db, {
       commitment,
       email,
-      salt: salt1
+      salt: salt1,
+      terms_agreed: LATEST_PRIVACY_NOTICE
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
@@ -400,7 +403,8 @@ describe("database reads and writes", function () {
     const uuid = await upsertUser(db, {
       commitment,
       email,
-      salt: salt1
+      salt: salt1,
+      terms_agreed: LATEST_PRIVACY_NOTICE
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
@@ -489,7 +493,8 @@ describe("database reads and writes", function () {
     const commitment = new Identity().commitment.toString();
     const uuid = await upsertUser(db, {
       commitment,
-      email
+      email,
+      terms_agreed: LATEST_PRIVACY_NOTICE
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");

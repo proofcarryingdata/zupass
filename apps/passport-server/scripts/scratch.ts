@@ -180,6 +180,48 @@ yargs
       }
     }
   )
+  .command(
+    "frogs-assets [frog-data-json-path] [frog-images-src] [frog-images-dest]",
+    "copy the frog images from <id>.png to <uuid>.png",
+    (yargs) =>
+      yargs
+        .positional("frogDataJsonPath", {
+          type: "string",
+          demandOption: true,
+          describe: "path to the frog data json file"
+        })
+        .positional("frogImagesSrc", {
+          type: "string",
+          demandOption: true,
+          describe: "path to the frog images directory to read"
+        })
+        .positional("frogImagesDest", {
+          type: "string",
+          demandOption: true,
+          describe: "path to the frog images directory to save"
+        }),
+    async function (argv) {
+      const frogData = require(argv.frogDataJsonPath);
+      const fs = require("fs");
+      const path = require("path");
+
+      const frogImagesSrc = path.resolve(argv.frogImagesSrc);
+      const frogImagesDest = path.resolve(argv.frogImagesDest);
+
+      for (const frog of frogData) {
+        const src = path.join(
+          frogImagesSrc,
+          `${String(frog.frogId).padStart(2, "0")}.png`
+        );
+        const dest = path.join(frogImagesDest, `${frog.uuid}.png`);
+        try {
+          fs.copyFileSync(src, dest, fs.constants.COPYFILE_FICLONE);
+        } catch (e) {
+          console.error(`Error copying ${src} to ${dest}: ${e}`);
+        }
+      }
+    }
+  )
   .help().argv;
 
 if (process.argv.slice(2).length === 0) {

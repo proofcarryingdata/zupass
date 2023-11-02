@@ -1,9 +1,10 @@
 import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
+import sendgrid from "@sendgrid/mail";
 import process from "node:process";
 import * as path from "path";
 import urljoin from "url-join";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
-import { IEmailAPI, mailgunSendEmail } from "./apis/emailAPI";
+import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import {
   IZuconnectTripshaAPI,
@@ -89,11 +90,12 @@ async function getOverridenApis(
     logger("[INIT] overriding email client");
     emailAPI = apiOverrides.emailAPI;
   } else {
-    if (process.env.MAILGUN_API_KEY === undefined) {
-      logger("[EMAIL] Missing environment variable: MAILGUN_API_KEY");
+    if (process.env.SENDGRID_API_KEY === undefined) {
+      logger("[EMAIL] Missing environment variable: SENDGRID_API_KEY");
       emailAPI = null;
     } else {
-      emailAPI = { send: mailgunSendEmail };
+      sendgrid.setApiKey(process.env.SENDGRID_API_KEY);
+      emailAPI = { send: sendgridSendEmail };
     }
   }
 

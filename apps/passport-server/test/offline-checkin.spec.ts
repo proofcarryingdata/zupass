@@ -59,21 +59,24 @@ describe.only("offline checkin database queries should work", function () {
       email: user1.email,
       commitment: user1.identity.commitment.toString(),
       encryptionKey: undefined,
-      salt: undefined
+      salt: undefined,
+      terms_agreed: 1
     });
 
     await upsertUser(db, {
       email: user2.email,
       commitment: user2.identity.commitment.toString(),
       encryptionKey: undefined,
-      salt: undefined
+      salt: undefined,
+      terms_agreed: 1
     });
 
     await upsertUser(db, {
       email: user3.email,
       commitment: user3.identity.commitment.toString(),
       encryptionKey: undefined,
-      salt: undefined
+      salt: undefined,
+      terms_agreed: 1
     });
   });
 
@@ -139,7 +142,8 @@ describe.only("offline checkin database queries should work", function () {
         position_id: positionId++ + "",
         pretix_checkin_timestamp: null,
         secret: randomUUID(),
-        zupass_checkin_timestamp: null
+        zupass_checkin_timestamp: null,
+        pretix_events_config_id: progCrypto
       });
       const user1AwGA = await insertDevconnectPretixTicket(db, {
         checker: null,
@@ -151,7 +155,8 @@ describe.only("offline checkin database queries should work", function () {
         position_id: positionId++ + "",
         pretix_checkin_timestamp: null,
         secret: randomUUID(),
-        zupass_checkin_timestamp: null
+        zupass_checkin_timestamp: null,
+        pretix_events_config_id: aw
       });
       const user2ProgCryptoGA = await insertDevconnectPretixTicket(db, {
         checker: null,
@@ -163,7 +168,8 @@ describe.only("offline checkin database queries should work", function () {
         position_id: positionId++ + "",
         pretix_checkin_timestamp: null,
         secret: randomUUID(),
-        zupass_checkin_timestamp: null
+        zupass_checkin_timestamp: null,
+        pretix_events_config_id: progCrypto
       });
       const user2ProgCryptoSuper = await insertDevconnectPretixTicket(db, {
         checker: null,
@@ -175,7 +181,8 @@ describe.only("offline checkin database queries should work", function () {
         position_id: positionId++ + "",
         pretix_checkin_timestamp: null,
         secret: randomUUID(),
-        zupass_checkin_timestamp: null
+        zupass_checkin_timestamp: null,
+        pretix_events_config_id: progCrypto
       });
       const user2AwSuper = await insertDevconnectPretixTicket(db, {
         checker: null,
@@ -187,7 +194,8 @@ describe.only("offline checkin database queries should work", function () {
         position_id: positionId++ + "",
         pretix_checkin_timestamp: null,
         secret: randomUUID(),
-        zupass_checkin_timestamp: null
+        zupass_checkin_timestamp: null,
+        pretix_events_config_id: aw
       });
       const user3AwSuper = await insertDevconnectPretixTicket(db, {
         checker: null,
@@ -199,7 +207,8 @@ describe.only("offline checkin database queries should work", function () {
         position_id: positionId++ + "",
         pretix_checkin_timestamp: null,
         secret: randomUUID(),
-        zupass_checkin_timestamp: null
+        zupass_checkin_timestamp: null,
+        pretix_events_config_id: aw
       });
       const user3Zuconnect = await upsertZuconnectTicket(db, {
         attendee_email: user3.email,
@@ -207,7 +216,8 @@ describe.only("offline checkin database queries should work", function () {
         external_ticket_id: randomUUID(),
         is_deleted: false,
         is_mock_ticket: false,
-        product_id: ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
+        product_id: ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id,
+        extra_info: []
       });
       const user2Zuconnect = await upsertZuconnectTicket(db, {
         attendee_email: user2.email,
@@ -215,7 +225,8 @@ describe.only("offline checkin database queries should work", function () {
         external_ticket_id: randomUUID(),
         is_deleted: false,
         is_mock_ticket: false,
-        product_id: ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
+        product_id: ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id,
+        extra_info: []
       });
 
       expectOfflineTickets(

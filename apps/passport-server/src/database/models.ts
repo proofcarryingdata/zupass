@@ -23,6 +23,8 @@ export interface TelegramConversation {
   telegram_user_id: number;
   telegram_chat_id: number;
   verified: boolean;
+  semaphore_id: string;
+  telegram_username: string;
 }
 
 /**
@@ -50,6 +52,7 @@ export interface DevconnectPretixTicket {
   email: string;
   full_name: string;
   devconnect_pretix_items_info_id: string;
+  pretix_events_config_id: string;
   is_deleted: boolean;
   is_consumed: boolean;
   position_id: string;
@@ -87,6 +90,18 @@ export interface DevconnectPretixTicketDBWithEmailAndItem
   pretix_events_config_id: string;
 }
 
+// A ticket but with no PII
+export interface DevconnectPretixRedactedTicket {
+  hashed_email: string;
+  devconnect_pretix_items_info_id: string;
+  pretix_events_config_id: string;
+  is_consumed: boolean;
+  position_id: string;
+  secret: string;
+  checker: string | null;
+  pretix_checkin_timestamp: Date | null;
+}
+
 export interface DevconnectSuperuser {
   ticket_id: string;
   email: string;
@@ -116,6 +131,7 @@ export interface LoggedInZuzaluUser extends ZuzaluUser {
   commitment: string;
   salt: string | null;
   encryption_key: string | null;
+  terms_agreed: number;
 }
 
 export interface UserRow {
@@ -125,6 +141,7 @@ export interface UserRow {
   salt: string | null;
   encryption_key: string | null;
   account_reset_timestamps: string[];
+  terms_agreed: number;
 }
 
 export interface EncryptedStorageModel {
@@ -178,11 +195,17 @@ export interface PretixItemInfo {
   item_name: string;
 }
 
-export interface TelegramTopic {
-  telegram_chat_id: string;
-  topic_id: string;
+export interface TelegramTopicFetch {
+  telegramChatID: string;
+  topic_id: string | null;
   topic_name: string;
   is_anon_topic: boolean;
+  id: number;
+}
+
+export interface TelegramTopicWithFwdInfo extends TelegramTopicFetch {
+  sender_chat_topic_id: number | null;
+  receiver_chat_topic_id: number | null;
 }
 
 // Representation of a "known public key" as fetched from the DB
@@ -228,10 +251,11 @@ export interface ZuconnectTicketDB {
   attendee_name: string;
   is_deleted: boolean;
   is_mock_ticket: boolean;
+  extra_info: string[];
 }
 
 export interface LinkedPretixTelegramEvent {
-  telegramChatID: string | null;
+  telegramChatID: string | undefined;
   eventName: string;
   configEventID: string;
   isLinkedToCurrentChat: boolean;
@@ -246,6 +270,39 @@ export interface UserIDWithChatIDs {
   telegramChatIDs: string[];
 }
 
-export type ChatIDWithEventsAndMembership = ChatIDWithEventIDs & {
+export interface ChatIDWithEventsAndMembership extends ChatIDWithEventIDs {
   isChatMember: boolean;
-};
+}
+
+export interface TelegramForwardFetch {
+  senderID: number;
+  senderTopicID: string | null;
+  senderTopicName: string;
+  senderChatID: string;
+  receiverID: number;
+  receiverTopicID: string | null;
+  receiverTopicName: string;
+  receiverChatID: string;
+}
+
+// FrogCrypto Data Models
+
+/**
+ * A state record for a single feed for a user
+ *
+ * Currently, this is only used for the cooldown timer where we save when the user last fetched from a feed.
+ */
+export interface FrogCryptoUserFeedState {
+  /**
+   * User semaphore id
+   */
+  semaphore_id: string;
+  /**
+   * Feed id
+   */
+  feed_id: string;
+  /**
+   * Timestamp of the last time the user fetched from this feed
+   */
+  last_fetched_at: Date;
+}

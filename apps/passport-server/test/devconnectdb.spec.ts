@@ -180,6 +180,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       full_name: "UserFirst UserLast",
       email: "user-one@test.com",
       devconnect_pretix_items_info_id: "",
+      pretix_events_config_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1000",
@@ -193,6 +194,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       full_name: "Super User1",
       email: "user-two@test.com",
       devconnect_pretix_items_info_id: "",
+      pretix_events_config_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1001",
@@ -206,6 +208,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       full_name: "ThirdParty Attendee",
       email: "thirdparty-attendee@test.com",
       devconnect_pretix_items_info_id: "",
+      pretix_events_config_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1002",
@@ -219,6 +222,7 @@ describe("database reads and writes for devconnect ticket features", function ()
       full_name: "ThirdParty SuperUser",
       email: "thirdparty-attendee@test.com",
       devconnect_pretix_items_info_id: "",
+      pretix_events_config_id: "",
       is_consumed: false,
       is_deleted: false,
       position_id: "1003",
@@ -348,6 +352,8 @@ describe("database reads and writes for devconnect ticket features", function ()
     for (const ticket of testTickets) {
       const item = testItems[ticket._itemIdx];
       ticket.devconnect_pretix_items_info_id = item.dbId;
+      ticket.pretix_events_config_id =
+        testEvents[testItems[ticket._itemIdx]._eventIdx].dbEventConfigId;
 
       const insertedTicket = await insertDevconnectPretixTicket(db, ticket);
       expect(insertedTicket.devconnect_pretix_items_info_id).to.eq(

@@ -1,5 +1,17 @@
 # @pcd/rsa-image-pcd
 
+## 0.2.0
+
+### Minor Changes
+
+- new package versions
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.8.0
+  - @pcd/rsa-pcd@0.3.0
+
 ## 0.1.2
 
 ### Patch Changes

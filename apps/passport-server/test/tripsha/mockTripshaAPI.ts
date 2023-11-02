@@ -71,6 +71,23 @@ export const goodResponse = {
       email: "test5@example.com",
       first: "Test Five",
       last: undefined
+    },
+    {
+      id: "454ab77c700e87a8897f72a",
+      ticketName: "For people only using Day Passes (add-ons)",
+      email: "test6@example.com",
+      first: "Test",
+      last: "Six",
+      options: [
+        {
+          id: "601fed54-a065-4a55-9846-46534eff59f9",
+          name: "Tuesday Oct 31 - Neuroscience"
+        },
+        {
+          id: "1ef87069-c90c-4f0a-892e-ace558f6aeae",
+          name: "Wednesday Nov 1 - New Governance"
+        }
+      ]
     }
   ]
 };

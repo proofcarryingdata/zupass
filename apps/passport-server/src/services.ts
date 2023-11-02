@@ -3,7 +3,9 @@ import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
+import { startFrogcryptoService } from "./services/frogcryptoService";
 import { startIssuanceService } from "./services/issuanceService";
+import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
@@ -29,6 +31,7 @@ export async function startServices(
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
   const telegramService = await startTelegramService(context, rollbarService);
+  const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
@@ -63,11 +66,13 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
+  const frogcryptoService = startFrogcryptoService(context, rollbarService);
   const issuanceService = await startIssuanceService(
     context,
     persistentCacheService,
     rollbarService,
-    multiprocessService
+    multiprocessService,
+    frogcryptoService
   );
   const services: GlobalServices = {
     semaphoreService,
@@ -83,6 +88,8 @@ export async function startServices(
     issuanceService,
     discordService,
     telegramService,
+    kudosbotService,
+    frogcryptoService,
     persistentCacheService,
     multiprocessService
   };
@@ -95,6 +102,7 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.zuzaluPretixSyncService?.stop();
   services.metricsService.stop();
   services.telegramService?.stop();
+  services.kudosbotService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
   services.zuconnectTripshaSyncService?.stop();

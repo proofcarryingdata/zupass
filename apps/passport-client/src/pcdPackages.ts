@@ -1,3 +1,4 @@
+import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
@@ -44,6 +45,10 @@ async function loadPackages(): Promise<PCDPackage[]> {
     makeEncodedVerifyLink
   });
 
+  await EdDSAFrogPCDPackage.init({
+    makeEncodedVerifyLink
+  });
+
   await EdDSATicketPCDPackage.init({
     makeEncodedVerifyLink
   });
@@ -62,6 +67,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     RSAPCDPackage,
     RSATicketPCDPackage,
     EdDSAPCDPackage,
+    EdDSAFrogPCDPackage,
     EdDSATicketPCDPackage,
     ZKEdDSAEventTicketPCDPackage,
     RSAImagePCDPackage,

@@ -1,13 +1,14 @@
 import {
   defaultOfflineTickets,
   FeedSubscriptionManager,
+  NetworkFeedApi,
   OfflineDevconnectTicket,
   OfflineTickets,
   User
 } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
+import { z } from "zod";
 import { getPackages } from "./pcdPackages";
 
 const OLD_PCDS_KEY = "pcds"; // deprecated
@@ -128,4 +129,53 @@ export function loadIdentity(): Identity | null {
 
 export function saveIdentity(identity: Identity): void {
   window.localStorage["identity"] = identity.toString();
+}
+
+export function loadPrivacyNoticeAgreed(): number | null {
+  const stored = window.localStorage["privacy_notice_agreed"];
+  return stored ? parseInt(stored) : null;
+}
+
+export function savePrivacyNoticeAgreed(version: number): void {
+  window.localStorage["privacy_notice_agreed"] = version.toString();
+}
+
+/**
+ * Zod Schema for parsing the type PersistentSyncStatus type.
+ *
+ * This object holds the persistent status of the state-machine for E2EE
+ * storage.  This should be kept up-to-date with the other storage-related
+ * fields such as encryption key, PCDs, and subscription feeds.  This object is
+ * intended to leave room for more fields to be added later, which can be
+ * loaded/stored atomically.
+ */
+const PersistentSyncStatusSchema = z.object({
+  /**
+   * Represents the most recent revision returned by the server when
+   * downloading E2EE storage.  Should change once that download has been
+   * integrated and saved into local storage.  Can be used to detect changes
+   * on future download, and conflicts on future upload.
+   */
+  serverStorageRevision: z.string().optional()
+});
+export type PersistentSyncStatus = z.infer<typeof PersistentSyncStatusSchema>;
+
+export function savePersistentSyncStatus(status: PersistentSyncStatus): void {
+  window.localStorage["sync_status"] = JSON.stringify(status);
+}
+
+export function loadPersistentSyncStatus(): PersistentSyncStatus {
+  const statusString = window.localStorage["sync_status"];
+  if (!statusString) {
+    return {};
+  }
+  try {
+    return PersistentSyncStatusSchema.parse(JSON.parse(statusString));
+  } catch (e) {
+    console.error(
+      "Can't parse stored PersistentSyncStatus.  Resetting to default.",
+      e
+    );
+    return {};
+  }
 }

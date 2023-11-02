@@ -1,4 +1,5 @@
 import {
+  AgreeTermsRequest,
   ConfirmEmailRequest,
   CreateNewUserRequest,
   SaltResponseValue,
@@ -144,6 +145,21 @@ export function initAccountRoutes(
       encryptionKey,
       res
     );
+  });
+
+  /**
+   * Records that the user has agreed to a given version of the legal terms.
+   */
+  app.post("/account/agree-terms", async (req: Request, res: Response) => {
+    const pcd = checkBody<AgreeTermsRequest, "pcd">(req, "pcd");
+
+    const result = await userService.handleAgreeTerms(pcd);
+
+    if (result.success) {
+      res.status(200).json(result.value);
+    } else {
+      res.status(403).send(result.error);
+    }
   });
 
   /**

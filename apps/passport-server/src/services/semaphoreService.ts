@@ -89,7 +89,8 @@ export class SemaphoreService {
       logger(`[SEMA] Reloading semaphore service...`);
 
       await this.reloadZuzaluGroups();
-      await this.reloadGenericGroup();
+      // turned off for devconnect - lots of users = slow global group.
+      // await this.reloadGenericGroup();
       await this.saveHistoricSemaphoreGroups();
 
       logger(`[SEMA] Semaphore service reloaded.`);

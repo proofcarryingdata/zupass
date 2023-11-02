@@ -75,16 +75,16 @@ function SendEmailVerification({ email }: { email: string }) {
           );
 
           if (!storageResult.success) {
-            setError("An error occurred while downloading storage");
+            setError("An error occurred while downloading encrypted storage.");
           }
 
           dispatch({
-            type: "load-from-sync",
+            type: "load-after-login",
             storage: storageResult.value,
             encryptionKey
           });
         } else {
-          window.location.hash = `#/create-password?email=${encodeURIComponent(
+          window.location.hash = `#/privacy-notice?email=${encodeURIComponent(
             email
           )}&token=${encodeURIComponent(token)}`;
         }

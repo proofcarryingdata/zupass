@@ -70,6 +70,18 @@ export function ZKEdDSAEventTicketCardBody({
       </TextContainer>
       <Spacer h={8} />
 
+      <FieldLabel>Attendee Email</FieldLabel>
+      <TextContainer>
+        {pcd.claim.partialTicket.attendeeEmail || "HIDDEN"}
+      </TextContainer>
+      <Spacer h={8} />
+
+      <FieldLabel>Attendee Name</FieldLabel>
+      <TextContainer>
+        {pcd.claim.partialTicket.attendeeName || "HIDDEN"}
+      </TextContainer>
+      <Spacer h={8} />
+
       <FieldLabel>Watermark</FieldLabel>
       <TextContainer>{pcd.claim.watermark}</TextContainer>
       <Spacer h={8} />

@@ -8,10 +8,12 @@ import {
 
 export function ZuconnectKnownTicketDetails({
   productId,
-  publicKeyName
+  publicKeyName,
+  ticketName
 }: {
   productId: string;
   publicKeyName: string;
+  ticketName: string | undefined;
 }) {
   const type = Object.entries(ZUCONNECT_PRODUCT_ID_MAPPINGS).find(
     ([_name, product]) => product.id === productId
@@ -21,15 +23,26 @@ export function ZuconnectKnownTicketDetails({
     <CardContainerExpanded>
       <CardOutlineExpanded>
         <CardHeader col="var(--accent-lite)">
-          <div>VERIFIED ZUCONNECT '23 TICKET</div>
-          <div>SIGNED BY: {publicKeyName}</div>
-          <ZuzaluRole>TYPE: {type}</ZuzaluRole>
+          <VerifyLine>
+            VERIFIED <strong>ZUCONNECT '23</strong> TICKET
+          </VerifyLine>
+          <VerifyLine>
+            {(ticketName ?? type).split("\n").map((line) => {
+              return <NameLine>{line}</NameLine>;
+            })}
+          </VerifyLine>
+          <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
         </CardHeader>
       </CardOutlineExpanded>
     </CardContainerExpanded>
   );
 }
 
-const ZuzaluRole = styled.div`
-  text-transform: uppercase;
+const VerifyLine = styled.div`
+  text-transform: capitalize;
+  margin: 12px 0px;
+`;
+
+const NameLine = styled.p`
+  margin: 2px 0px;
 `;

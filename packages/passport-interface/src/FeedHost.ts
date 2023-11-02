@@ -7,18 +7,18 @@ import {
 } from "./RequestTypes";
 import { Feed } from "./SubscriptionManager";
 
-export interface HostedFeed {
-  feed: Feed;
+export interface HostedFeed<IFeed extends Feed = Feed> {
+  feed: IFeed;
   handleRequest(request: PollFeedRequest): Promise<PollFeedResponseValue>;
 }
 
-export class FeedHost {
-  private readonly hostedFeed: HostedFeed[];
-  private readonly providerUrl: string;
-  private readonly providerName: string;
+export class FeedHost<IFeed extends Feed = Feed> {
+  protected readonly hostedFeed: HostedFeed<IFeed>[];
+  protected readonly providerUrl: string;
+  protected readonly providerName: string;
 
   public constructor(
-    feeds: HostedFeed[],
+    feeds: HostedFeed<IFeed>[],
     providerUrl: string,
     providerName: string
   ) {

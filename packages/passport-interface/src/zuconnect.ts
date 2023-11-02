@@ -8,7 +8,7 @@ export const ZUCONNECT_TICKET_NAMES = [
   "1st Week Pass",
   "ZuConnect Scholarship",
   "ZuConnect Organizer Pass",
-  "Day Pass"
+  "For people only using Day Passes (add-ons)"
 ] as const;
 
 export type ZuconnectTicketType = (typeof ZUCONNECT_TICKET_NAMES)[number];
@@ -73,7 +73,7 @@ export const ZUCONNECT_PRODUCT_ID_MAPPINGS: {
     name: "Organizer",
     zuzaluRoleEquivalent: ZuzaluUserRole.Organizer
   },
-  "Day Pass": {
+  "For people only using Day Passes (add-ons)": {
     id: ZUCONNECT_23_DAY_PASS_PRODUCT_ID,
     eventId: ZUCONNECT_23_DAY_PASS_EVENT_ID,
     name: "Visitor",

@@ -1,33 +1,31 @@
 // This enum should never overlap with PCDActionType
 // See test "hould not allow action types to be assigned to permission
 // types or vice-versa" in permissions.spec.ts
-export enum PCDPermissionType {
-  ReplaceInFolder = "ReplaceInFolder_permission",
-  AppendToFolder = "AppendToFolder_permission",
-  DeleteFolder = "DeleteFolder_permission"
-}
+export const PCDPermissionType = {
+  ReplaceInFolder: "ReplaceInFolder_permission",
+  AppendToFolder: "AppendToFolder_permission",
+  DeleteFolder: "DeleteFolder_permission"
+} as const;
 
-export interface PCDPermission {
-  type: PCDPermissionType;
-}
+export type PCDPermission = PCDFolderPermission;
 
-export interface PCDFolderPermission extends PCDPermission {
-  type: PCDPermissionType.AppendToFolder | PCDPermissionType.ReplaceInFolder;
+export type PCDFolderPermission =
+  | AppendToFolderPermission
+  | ReplaceInFolderPermission
+  | DeleteFolderPermission;
+
+export interface AppendToFolderPermission {
+  type: typeof PCDPermissionType.AppendToFolder;
   folder: string;
 }
 
-export interface AppendToFolderPermission extends PCDPermission {
-  type: PCDPermissionType.AppendToFolder;
+export interface ReplaceInFolderPermission {
+  type: typeof PCDPermissionType.ReplaceInFolder;
   folder: string;
 }
 
-export interface ReplaceInFolderPermission extends PCDPermission {
-  type: PCDPermissionType.ReplaceInFolder;
-  folder: string;
-}
-
-export interface DeleteFolderPermission extends PCDPermission {
-  type: PCDPermissionType.DeleteFolder;
+export interface DeleteFolderPermission {
+  type: typeof PCDPermissionType.DeleteFolder;
   folder: string;
 }
 

@@ -1,8 +1,10 @@
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  TicketCategory,
   getQRCodeColorOverride
 } from "@pcd/eddsa-ticket-pcd";
+import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import {
   encodeQRPayload,
   QRDisplayWithRegenerateAndStorage,
@@ -15,6 +17,7 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../../src/appHooks";
 import { makeEncodedVerifyLink } from "../../../src/qr";
+import { TextCenter } from "../../core";
 import { RedactedText } from "../../core/RedactedText";
 import { ToggleSwitch } from "../../core/Toggle";
 import { icons } from "../../icons";
@@ -118,6 +121,19 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
   }
 }
 
+function ZuconnectDayPassInfo({ ticketName }: { ticketName: string }) {
+  const lines = ticketName.split("\n");
+  return (
+    <>
+      <TextCenter>
+        {lines.map((line) => (
+          <div>{line.toLocaleUpperCase()}</div>
+        ))}
+      </TextCenter>
+    </>
+  );
+}
+
 export function ZKTicketPCDCard({ pcd }: { pcd: EdDSATicketPCD }) {
   const [zk, setZk] = useState<boolean>(false);
   const onToggle = useCallback(() => {
@@ -129,6 +145,13 @@ export function ZKTicketPCDCard({ pcd }: { pcd: EdDSATicketPCD }) {
     <Container>
       <TicketInfo>
         <TicketQR zk={zk} pcd={pcd} />
+        {ticketData.ticketCategory === TicketCategory.ZuConnect &&
+          ticketData.productId === ZUCONNECT_23_DAY_PASS_PRODUCT_ID && (
+            <>
+              <Spacer h={8} />
+              <ZuconnectDayPassInfo ticketName={ticketData.ticketName} />
+            </>
+          )}
         <Spacer h={8} />
         <RedactedText redacted={zk}>{ticketData?.attendeeName}</RedactedText>
         <RedactedText redacted={zk}>{ticketData?.attendeeEmail}</RedactedText>

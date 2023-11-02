@@ -1,5 +1,10 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { booleanToBigInt, numberToBigInt, uuidToBigInt } from "@pcd/util";
+import {
+  booleanToBigInt,
+  generateSnarkMessageHash,
+  numberToBigInt,
+  uuidToBigInt
+} from "@pcd/util";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
 /**
@@ -42,8 +47,8 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     booleanToBigInt(data.isConsumed),
     booleanToBigInt(data.isRevoked),
     numberToBigInt(data.ticketCategory),
-    numberToBigInt(0),
-    numberToBigInt(0),
+    generateSnarkMessageHash(data.attendeeEmail),
+    generateSnarkMessageHash(data.attendeeName),
     numberToBigInt(0)
   ];
 }

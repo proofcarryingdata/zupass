@@ -35,6 +35,8 @@ export default function Page() {
     useState(false);
   const [revealIsConsumed, setRevealIsConsumed] = useState(false);
   const [revealIsRevoked, setRevealIsRevoked] = useState(false);
+  const [revealAttendeeEmail, setRevealAttendeeEmail] = useState(false);
+  const [revealAttendeeName, setRevealAttendeeName] = useState(false);
   const [revealFieldsUserProvided, setRevealFieldsUserProvided] =
     useState(false);
   const [validEventIdsInput, setValidEventIdsInput] = useState("");
@@ -65,7 +67,9 @@ export default function Page() {
       revealTimestampSigned,
       revealAttendeeSemaphoreId,
       revealIsConsumed,
-      revealIsRevoked
+      revealIsRevoked,
+      revealAttendeeEmail,
+      revealAttendeeName
     }),
     [
       revealTicketId,
@@ -75,7 +79,9 @@ export default function Page() {
       revealTimestampSigned,
       revealAttendeeSemaphoreId,
       revealIsConsumed,
-      revealIsRevoked
+      revealIsRevoked,
+      revealAttendeeEmail,
+      revealAttendeeName
     ]
   );
 
@@ -234,6 +240,28 @@ export default function Page() {
         <label>
           <input
             type="checkbox"
+            checked={revealAttendeeEmail}
+            onChange={() => {
+              setRevealAttendeeEmail((checked) => !checked);
+            }}
+          />
+          request attendeeEmail?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealAttendeeName}
+            onChange={() => {
+              setRevealAttendeeName((checked) => !checked);
+            }}
+          />
+          request attendeeName?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
             checked={revealFieldsUserProvided}
             onChange={() => {
               setRevealFieldsUserProvided((checked) => !checked);
@@ -322,6 +350,20 @@ export default function Page() {
                   // undefined means it is not revealed in this PCD
                   pcd.claim.partialTicket.isRevoked !== undefined
                     ? pcd.claim.partialTicket.isRevoked
+                    : "HIDDEN"
+                }`}</p>
+                <p>{`Attendee Email: ${
+                  // attendeeEmail can be true, false, or undefined
+                  // undefined means it is not revealed in this PCD
+                  pcd.claim.partialTicket.attendeeEmail !== undefined
+                    ? pcd.claim.partialTicket.attendeeEmail
+                    : "HIDDEN"
+                }`}</p>
+                <p>{`Attendee Name: ${
+                  // attendeeName can be true, false, or undefined
+                  // undefined means it is not revealed in this PCD
+                  pcd.claim.partialTicket.attendeeName !== undefined
+                    ? pcd.claim.partialTicket.attendeeName
                     : "HIDDEN"
                 }`}</p>
                 <p>{`Signer: ${pcd.claim.signer}`}</p>

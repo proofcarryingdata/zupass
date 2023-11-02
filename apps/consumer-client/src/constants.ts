@@ -20,3 +20,9 @@ export const EVERYONE_SEMAPHORE_GROUP_URL = IS_PROD
   : IS_STAGING
   ? "https://api-staging.zupass.org/semaphore/5"
   : "http://localhost:3002/semaphore/5";
+
+export const CONSUMER_SERVER_URL = IS_PROD
+  ? "https://consumer-server.onrender.com/"
+  : IS_STAGING
+  ? "https://consumer-server-staging.onrender.com/"
+  : "http://localhost:3003/";

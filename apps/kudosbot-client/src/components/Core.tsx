@@ -1,24 +1,5 @@
-import React, { useCallback, useState } from "react";
+import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { PCD_GITHUB_URL } from "../constants";
-
-export const Container = styled.div`
-  font-family: system-ui, sans-serif;
-  border: 1px solid black;
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 8px;
-`;
-
-export const CodeLink = ({
-  file,
-  children
-}: {
-  file: string;
-  children: React.ReactNode;
-}) => {
-  return <a href={PCD_GITHUB_URL + file}>{children}</a>;
-};
 
 export const CollapsableCode = ({
   code,

@@ -2,6 +2,7 @@ import { wrap, Wrapper } from "@pcd/emitter";
 import {
   CredentialCache,
   FeedSubscriptionManager,
+  LATEST_PRIVACY_NOTICE,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -13,6 +14,7 @@ import { Dispatcher, StateContext, StateContextValue } from "./dispatch";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
+import { getLastValidURL } from "./util";
 
 export function usePCDCollectionWithHash(): {
   pcds: PCDCollection;
@@ -107,6 +109,18 @@ export function useUserForcedToLogout(): boolean {
   return userForcedToLogout;
 }
 
+export function useUserShouldAgreeNewPrivacyNotice(): void {
+  const self = useSelf();
+  const dispatch = useDispatch();
+  const invalidUser = useUserForcedToLogout();
+
+  if (!invalidUser && self && self.terms_agreed < LATEST_PRIVACY_NOTICE) {
+    dispatch({
+      type: "prompt-to-agree-privacy-notice"
+    });
+  }
+}
+
 export function useIsSyncSettled(): boolean {
   const isDownloaded = useIsDownloaded();
   const loadedIssued = useLoadedIssuedPCDs();
@@ -175,4 +189,33 @@ export function useRequirePassword() {
       }
     });
   }
+}
+
+// Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
+export function useLaserScannerKeystrokeInput() {
+  const [typedText, setTypedText] = useState("");
+
+  useEffect(() => {
+    function handleKeyDown(event: KeyboardEvent) {
+      if (event.key === "Enter") {
+        // Check URL regex and navigate to the last match, if it exists
+        const url = getLastValidURL(typedText);
+        if (url) {
+          window.location.href = url;
+        }
+      }
+      // Ignore characters that could not be in a valid URL
+      if (/^[a-zA-Z0-9\-._~!$&'()*+,;=:@%#/]$/.test(event.key)) {
+        setTypedText((prevText) => prevText + event.key);
+      }
+    }
+
+    window.addEventListener("keydown", handleKeyDown);
+
+    return () => {
+      window.removeEventListener("keydown", handleKeyDown);
+    };
+  }, [typedText]);
+
+  return typedText;
 }

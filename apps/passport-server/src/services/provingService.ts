@@ -1,3 +1,4 @@
+import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
@@ -198,6 +199,7 @@ export async function startProvingService(
   });
 
   await RSATicketPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
+  await EdDSAFrogPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
   await EdDSATicketPCDPackage.init?.({ makeEncodedVerifyLink: undefined });
 
   await ZKEdDSAEventTicketPCDPackage.init?.({

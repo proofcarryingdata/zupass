@@ -1,6 +1,6 @@
 {
   "name": "@pcd/halo-nonce-pcd",
-  "version": "0.3.2",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "types": "./src/index.ts",
@@ -29,10 +29,10 @@
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/passport-ui": "0.7.2",
-    "@pcd/pcd-types": "0.7.2",
+    "@pcd/passport-ui": "0.8.0",
+    "@pcd/pcd-types": "0.8.0",
     "@pcd/tsconfig": "*",
-    "@pcd/util": "0.1.2",
+    "@pcd/util": "0.2.0",
     "@types/elliptic": "^6.4.14",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",

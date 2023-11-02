@@ -132,20 +132,31 @@ export function AlreadyRegisteredScreen() {
         appConfig.zupassServer,
         encryptionKey
       );
-      setIsLoggingIn(false);
 
       if (!storageResult.success) {
-        return setError(
-          "Password incorrect. Double-check your password. " +
-            "If you've lost access, you can reset your account below."
-        );
+        setIsLoggingIn(false);
+        if ("NotFound" === storageResult.error.name) {
+          return setError(
+            "Password incorrect. Double-check your password. " +
+              "If you've lost access, you can reset your account below."
+          );
+        } else {
+          return setError(
+            "An error occurred while downloading encrypted storage."
+          );
+        }
       }
 
-      dispatch({
-        type: "load-from-sync",
-        storage: storageResult.value,
-        encryptionKey: encryptionKey
-      });
+      try {
+        await dispatch({
+          type: "load-after-login",
+          storage: storageResult.value,
+          encryptionKey: encryptionKey
+        });
+      } catch (e) {
+        setIsLoggingIn(false);
+        return setError(e.message);
+      }
     },
     [dispatch, password, salt]
   );

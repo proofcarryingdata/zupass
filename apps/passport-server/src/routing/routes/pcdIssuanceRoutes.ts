@@ -18,7 +18,10 @@ import {
   VerifyTicketResult
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import { IssuanceService } from "../../services/issuanceService";
+import {
+  FeedProviderName,
+  IssuanceService
+} from "../../services/issuanceService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkUrlParam } from "../params";
@@ -81,7 +84,8 @@ export function initPCDIssuanceRoutes(
   app.get("/feeds", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleListFeedsRequest(
-      req.body as ListFeedsRequest
+      req.body as ListFeedsRequest,
+      FeedProviderName.ZUPASS
     );
     res.json(result satisfies ListFeedsResponseValue);
   });
@@ -93,7 +97,8 @@ export function initPCDIssuanceRoutes(
   app.post("/feeds", async (req, res) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleFeedRequest(
-      req.body as PollFeedRequest
+      req.body as PollFeedRequest,
+      FeedProviderName.ZUPASS
     );
     res.json(result satisfies PollFeedResponseValue);
   });
@@ -101,10 +106,15 @@ export function initPCDIssuanceRoutes(
   app.get("/feeds/:feedId", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const feedId = checkUrlParam(req, "feedId");
-    if (!issuanceService.hasFeedWithId(feedId)) {
+    if (!issuanceService.hasFeedWithId(feedId, FeedProviderName.ZUPASS)) {
       throw new PCDHTTPError(404);
     }
-    res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
+    res.json(
+      await issuanceService.handleListSingleFeedRequest(
+        { feedId },
+        FeedProviderName.ZUPASS
+      )
+    );
   });
 
   app.post("/issue/check-ticket-by-id", async (req: Request, res: Response) => {

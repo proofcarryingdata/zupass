@@ -3,9 +3,10 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { NamedAPIError } from "./api/apiResult";
+import { FrogCryptoFrogData, FrogCryptoScore } from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
+import { NamedAPIError } from "./api/apiResult";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -402,6 +403,7 @@ export type VerifyTicketByIdResponseValue =
       publicKeyName: string;
       group: KnownTicketGroup;
       productId: string;
+      ticketName?: string;
     }
   | {
       verified: false;
@@ -453,6 +455,7 @@ export interface ZupassUserJson {
   commitment: string;
   email: string;
   salt: string | null;
+  terms_agreed: number;
 }
 
 /**
@@ -632,6 +635,27 @@ export type KnownTicketTypesResponseValue = KnownTicketTypesAndKeys;
 export type KnownTicketTypesRequest = undefined;
 
 /**
+ * The version of the legal terms being agreed to.
+ */
+export interface AgreeTermsPayload {
+  version: number;
+}
+
+/**
+ * When a user agrees to new legal terms, they send us a signed proof.
+ */
+export interface AgreeTermsRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+/**
+ * After the user agrees to the terms, respond with the terms version recorded.
+ */
+export interface AgreeToTermsResponseValue {
+  version: number;
+}
+
+/**
  * The string the client must sign with the user's semaphore identity
  * in order to be able to request the PCDs that the server wants to
  * issue the user.
@@ -680,4 +704,67 @@ export interface OfflineSecondPartyTicket {
   group: KnownTicketGroup;
   publicKeyName: string;
   productId?: string;
+}
+
+/**
+ * User asks metadata about themselves such as when they can get next frog and
+ * how many frogs in Frogedex.
+ *
+ * NB: The number of possible frogs are currently not user specific. It is
+ * possible that we will introduce series unlock in the future where the number
+ * of possible frogs will be user specific.
+ */
+export interface FrogCryptoUserStateRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+/**
+ * Individual feed level response to {@link FrogCryptoUserStateRequest}
+ */
+export interface FrogCryptoComputedUserState {
+  feedId: string;
+  lastFetchedAt: number;
+  nextFetchAt: number;
+}
+
+/**
+ * Response to {@link FrogCryptoUserStateRequest}
+ */
+export interface FrogCryptoUserStateResponseValue {
+  feeds: FrogCryptoComputedUserState[];
+  possibleFrogCount: number;
+  myScore?: FrogCryptoScore;
+}
+
+/**
+ * Admin request to manage frogs in the databse.
+ */
+export type FrogCryptoUpdateFrogsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  /**
+   * Pass empty array for no-op and return all frogs.
+   */
+  frogs: FrogCryptoFrogData[];
+};
+
+/**
+ * Response to {@link FrogCryptoUpdateFrogsRequest} and returns all frogs.
+ */
+export interface FrogCryptoUpdateFrogsResponseValue {
+  frogs: FrogCryptoFrogData[];
+}
+
+/**
+ * Admin request to delete frogs in the databse.
+ */
+export type FrogCryptoDeleteFrogsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  frogIds: number[];
+};
+
+/**
+ * Response to {@link FrogCryptoDeleteFrogsRequest} and returns all remaining frogs.
+ */
+export interface FrogCryptoDeleteFrogsResponseValue {
+  frogs: FrogCryptoFrogData[];
 }

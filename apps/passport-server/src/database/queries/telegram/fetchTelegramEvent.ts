@@ -5,7 +5,9 @@ import {
   LinkedPretixTelegramEvent,
   TelegramChat,
   TelegramEvent,
-  TelegramTopic,
+  TelegramForwardFetch,
+  TelegramTopicFetch,
+  TelegramTopicWithFwdInfo,
   UserIDWithChatIDs
 } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
@@ -16,7 +18,7 @@ import { sqlQuery } from "../../sqlQuery";
 export async function fetchTelegramEventByEventId(
   client: Pool,
   eventId: string
-): Promise<TelegramEvent> {
+): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `\
@@ -24,6 +26,23 @@ export async function fetchTelegramEventByEventId(
     where ticket_event_id = $1
     `,
     [eventId]
+  );
+
+  return result.rows;
+}
+
+export async function fetchTelegramBotEvent(
+  client: Pool,
+  eventId: string,
+  telegramChatID: string | number
+): Promise<TelegramEvent> {
+  const result = await sqlQuery(
+    client,
+    `\
+    select * from telegram_bot_events
+    where ticket_event_id = $1 and telegram_chat_id = $2
+    `,
+    [eventId, telegramChatID]
   );
 
   return result.rows[0] ?? null;
@@ -68,7 +87,7 @@ export async function fetchEventsWithTelegramChats(
   const result = await sqlQuery(
     client,
     `
-    SELECT
+    SELECT DISTINCT ON (tbe.ticket_event_id)
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
       dpe.pretix_events_config_id AS "configEventID",
@@ -76,7 +95,10 @@ export async function fetchEventsWithTelegramChats(
     FROM 
       devconnect_pretix_events_info dpe 
     LEFT JOIN 
-      telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id;
+      telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
+    ORDER BY tbe.ticket_event_id, 
+      CASE WHEN tbe.telegram_chat_id = $1 THEN true ELSE false END DESC,
+      tbe.telegram_chat_id;
     `,
     [currentTelegramChatId]
   );
@@ -104,11 +126,11 @@ export async function fetchEventsPerChat(
 export async function fetchTelegramAnonTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramTopic[]> {
+): Promise<TelegramTopicFetch[]> {
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_topics
+    SELECT telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
     where telegram_chat_id = $1 and is_anon_topic is true
     `,
     [telegramChatId]
@@ -119,11 +141,11 @@ export async function fetchTelegramAnonTopicsByChatId(
 export async function fetchTelegramTopicsByChatId(
   client: Pool,
   telegramChatId: number
-): Promise<TelegramTopic[]> {
+): Promise<TelegramTopicFetch[]> {
   const result = await sqlQuery(
     client,
     `\
-    select * from telegram_chat_topics
+    SELECT telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
     where telegram_chat_id = $1
     `,
     [telegramChatId]
@@ -184,19 +206,69 @@ export async function fetchTelegramChatsWithMembershipStatus(
 
 export async function fetchTelegramTopic(
   client: Pool,
-  telegramChatId: number,
-  topicId: number
-): Promise<TelegramTopic | null> {
-  const result = await sqlQuery(
-    client,
-    ` 
-    SELECT * 
+  telegramChatId: number | string,
+  topicId?: number | string
+): Promise<TelegramTopicFetch | null> {
+  const query = `
+    SELECT telegram_chat_id AS "telegramChatID", * 
     FROM telegram_chat_topics
     WHERE 
         telegram_chat_id = $1 AND 
-        topic_id = $2
-  `,
-    [telegramChatId, topicId]
-  );
+        (topic_id = $2 OR ($2 IS NULL AND topic_id IS NULL))
+  `;
+  const result = await sqlQuery(client, query, [
+    telegramChatId,
+    topicId || null
+  ]);
   return result.rows[0] ?? null;
+}
+
+export async function fetchTelegramTopicsReceiving(
+  client: Pool
+): Promise<TelegramTopicWithFwdInfo[]> {
+  const result = await sqlQuery(
+    client,
+    ` 
+    SELECT telegram_chat_id AS "telegramChatID", * 
+    FROM telegram_chat_topics tct
+    JOIN telegram_forwarding tf ON tct.id = tf.receiver_chat_topic_id
+    WHERE tf.receiver_chat_topic_id IS NOT NULL;`,
+    []
+  );
+  return result.rows;
+}
+
+/**
+ * This query looks to see if the sendingTopicID a) exists in the forwarding table and b) has a receiving topic.
+ * If so, it performs two left joins and populates the sending and receiving ids with the actual telegram chat topic.
+ * The resulting value can be used to determine the source and destination for the forwarded message.
+ */
+export async function fetchTelegramTopicForwarding(
+  client: Pool,
+  sendingChatID: string | number,
+  sendingTopicID?: string | number
+): Promise<TelegramForwardFetch[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT 
+      tct.telegram_chat_id AS "telegramChatID",
+      tct.*,
+      sender_topic.id AS "senderID",
+      sender_topic.topic_id AS "senderTopicID",
+      sender_topic.topic_name AS "senderTopicName",
+      sender_topic.telegram_chat_id AS "senderChatID",
+      receiver_topic.id AS "receiverID",
+      receiver_topic.topic_id AS "receiverTopicID",
+      receiver_topic.topic_name AS "receiverTopicName",
+      receiver_topic.telegram_chat_id AS "receiverChatID"
+    FROM telegram_forwarding tf
+    LEFT JOIN telegram_chat_topics tct ON tf.sender_chat_topic_id = tct.id
+    LEFT JOIN telegram_chat_topics sender_topic ON tf.sender_chat_topic_id = sender_topic.id
+    LEFT JOIN telegram_chat_topics receiver_topic ON tf.receiver_chat_topic_id = receiver_topic.id
+    WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL));
+    `,
+    [sendingChatID, sendingTopicID || null]
+  );
+  return result.rows;
 }

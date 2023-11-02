@@ -53,8 +53,6 @@ export enum TicketCategory {
  */
 export interface ITicketData {
   // The fields below are not signed and are used for display purposes.
-  attendeeName: string;
-  attendeeEmail: string;
   eventName: string;
   ticketName: string;
   checkerEmail: string | undefined;
@@ -69,6 +67,8 @@ export interface ITicketData {
   isConsumed: boolean;
   isRevoked: boolean;
   ticketCategory: TicketCategory;
+  attendeeName: string;
+  attendeeEmail: string;
 }
 
 /**
@@ -213,7 +213,7 @@ export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
   const messageDerivedFromClaim = ticketDataToBigInts(pcd.claim.ticket);
 
   if (!_.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
-    throw new Error(`ticket data does not match proof`);
+    return false;
   }
 
   return EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);

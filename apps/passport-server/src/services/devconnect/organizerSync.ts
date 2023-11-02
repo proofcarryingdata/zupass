@@ -1,5 +1,9 @@
+import { getHash } from "@pcd/passport-crypto";
+import { UNREDACT_TICKETS_TERMS_VERSION } from "@pcd/passport-interface";
+import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
+  DevconnectPretixCategory,
   DevconnectPretixCheckinList,
   DevconnectPretixEvent,
   DevconnectPretixEventSettings,
@@ -13,11 +17,18 @@ import {
   DevconnectPretixOrganizerConfig
 } from "../../apis/devconnect/organizer";
 import {
+  DevconnectPretixRedactedTicket,
   DevconnectPretixTicket,
   DevconnectPretixTicketDB,
+  DevconnectPretixTicketWithCheckin,
   PretixEventInfo,
   PretixItemInfo
 } from "../../database/models";
+import {
+  deleteDevconnectPretixRedactedTickets,
+  fetchDevconnectPretixRedactedTicketsByEvent,
+  upsertDevconnectPretixRedactedTicket
+} from "../../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectTicketsAwaitingSync
@@ -36,12 +47,14 @@ import {
   softDeletePretixItemInfo,
   updatePretixItemsInfo
 } from "../../database/queries/pretixItemInfo";
+import { fetchUsersByMinimumAgreedTerms } from "../../database/queries/users";
 import {
   mostRecentCheckinEvent,
+  pretixRedactedTicketsDifferent,
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
-import { normalizeEmail } from "../../util/util";
+import { compareArrays, normalizeEmail } from "../../util/util";
 import { setError, traced } from "../telemetryService";
 
 const NAME = "OrganizerSync";
@@ -51,9 +64,11 @@ export const PRETIX_CHECKER = "Pretix";
 interface EventData {
   settings: DevconnectPretixEventSettings;
   eventInfo: DevconnectPretixEvent;
+  categories: DevconnectPretixCategory[];
   items: DevconnectPretixItem[];
   tickets: DevconnectPretixOrder[];
   checkinLists: DevconnectPretixCheckinList[];
+  approvedLegalTermsEmails: Set<string>;
 }
 
 interface EventDataFromPretix {
@@ -87,6 +102,7 @@ export class OrganizerSync {
   private pretixAPI: IDevconnectPretixAPI;
   private db: Pool;
   private _isRunning: boolean;
+  private readonly enableRedaction: boolean;
 
   public get isRunning(): boolean {
     return this._isRunning;
@@ -95,12 +111,14 @@ export class OrganizerSync {
   public constructor(
     organizer: DevconnectPretixOrganizerConfig,
     pretixAPI: IDevconnectPretixAPI,
-    db: Pool
+    db: Pool,
+    enableRedaction: boolean
   ) {
     this.organizer = organizer;
     this.pretixAPI = pretixAPI;
     this.db = db;
     this._isRunning = false;
+    this.enableRedaction = enableRedaction;
   }
 
   // Conduct a single sync run
@@ -225,20 +243,28 @@ export class OrganizerSync {
   }
 
   /**
-   * Validate that an item/products settings match our expectations.
-   * These settings correspond to the product being of type "Admission",
-   * "Personalization" being set to "Personalized ticket", and
-   * "Generate tickets" in the "Tickets & Badges" section being set to
+   * Validate that an item / product's settings match our expectations.
+   * These settings correspond to the product (1) either being an add-on item OR of
+   * type "Admission" with "Personalization" being set to "Personalized ticket"
+   * and (2) "Generate tickets" in the "Tickets & Badges" section being set to
    * "Choose automatically depending on event settings" in the Pretix UI.
    */
-  private validateEventItem(item: DevconnectPretixItem): string[] {
+  private validateEventItem(
+    item: DevconnectPretixItem,
+    addonCategoryIdSet: Set<number>
+  ): string[] {
     const errors = [];
-    if (item.admission !== true) {
-      errors.push(`Product type is not "Admission"`);
-    }
 
-    if (item.personalized !== true) {
-      errors.push(`"Personalization" is not set to "Personalized ticket"`);
+    // If item is not an add-on, check that it is an Admission product and
+    // that "Personalization" is set to "Personalized Ticket"
+    if (!addonCategoryIdSet.has(item.category)) {
+      if (item.admission !== true) {
+        errors.push(`Product type is not "Admission"`);
+      }
+
+      if (item.personalized !== true) {
+        errors.push(`"Personalization" is not set to "Personalized ticket"`);
+      }
     }
 
     if (
@@ -263,9 +289,12 @@ export class OrganizerSync {
     eventData: EventData,
     eventConfig: DevconnectPretixEventConfig
   ): string[] {
-    const { settings, items } = eventData;
+    const { settings, items, categories } = eventData;
     const activeItemIdSet = new Set(eventConfig.activeItemIDs);
     const superuserItemIdSet = new Set(eventConfig.superuserItemIds);
+    const addonCategoryIdSet = new Set(
+      categories.filter((a) => a.is_addon).map((a) => a.id)
+    );
 
     // We want to make sure that we log all errors, so we collect everything
     // and only throw an exception once we have found all of them.
@@ -285,7 +314,7 @@ export class OrganizerSync {
       // Ignore items which are not in the event's "activeItemIDs" set
       if (activeItemIdSet.has(item.id.toString())) {
         fetchedItemsIdSet.add(item.id.toString());
-        const itemErrors = this.validateEventItem(item);
+        const itemErrors = this.validateEventItem(item, addonCategoryIdSet);
         if (itemErrors.length > 0) {
           errors.push(
             `Product "${item.name.en}" (${item.id}) in event "${eventData.eventInfo.name.en}" is invalid:\n` +
@@ -369,8 +398,25 @@ export class OrganizerSync {
     return traced(NAME, "fetchEventData", async () => {
       const { orgURL, token } = organizer;
       const { eventID } = event;
+      const approvedLegalTermsEmails: Set<string> = new Set();
+
+      if (this.enableRedaction) {
+        const usersApprovingPII = await fetchUsersByMinimumAgreedTerms(
+          this.db,
+          UNREDACT_TICKETS_TERMS_VERSION
+        );
+        for (const user of usersApprovingPII) {
+          approvedLegalTermsEmails.add(user.email);
+        }
+      }
 
       const settings = await this.pretixAPI.fetchEventSettings(
+        orgURL,
+        token,
+        eventID
+      );
+
+      const categories = await this.pretixAPI.fetchCategories(
         orgURL,
         token,
         eventID
@@ -388,7 +434,15 @@ export class OrganizerSync {
         eventID
       );
 
-      return { settings, items, eventInfo, tickets, checkinLists };
+      return {
+        settings,
+        categories,
+        items,
+        eventInfo,
+        tickets,
+        checkinLists,
+        approvedLegalTermsEmails
+      };
     });
   }
 
@@ -405,7 +459,13 @@ export class OrganizerSync {
   ): Promise<void> {
     return traced(NAME, "saveEvent", async (span) => {
       try {
-        const { eventInfo, items, tickets, checkinLists } = eventData;
+        const {
+          eventInfo,
+          items,
+          tickets,
+          checkinLists,
+          approvedLegalTermsEmails
+        } = eventData;
 
         span?.setAttribute("org_url", organizer.orgURL);
         span?.setAttribute("ticket_count", tickets.length);
@@ -419,7 +479,12 @@ export class OrganizerSync {
           checkinLists[0].id.toString()
         );
         await this.syncItemInfos(organizer, event, items);
-        await this.syncTickets(organizer, event, tickets);
+        await this.syncTickets(
+          organizer,
+          event,
+          tickets,
+          approvedLegalTermsEmails
+        );
       } catch (e) {
         logger("[DEVCONNECT PRETIX] Sync aborted due to errors", e);
         setError(e, span);
@@ -625,6 +690,74 @@ export class OrganizerSync {
     });
   }
 
+  private checkinDataForNewTicket(
+    ticket: DevconnectPretixTicket
+  ): DevconnectPretixTicketWithCheckin {
+    let checker = null;
+    let zupass_checkin_timestamp = null;
+
+    // This is the first time we've seen this ticket, and it's already
+    // checked in on Pretix.
+    if (ticket.pretix_checkin_timestamp) {
+      checker = PRETIX_CHECKER;
+      zupass_checkin_timestamp = ticket.pretix_checkin_timestamp;
+    }
+
+    return {
+      ...ticket,
+      checker,
+      zupass_checkin_timestamp
+    };
+  }
+
+  private checkinDataForExistingTicket(
+    updatedTicket: DevconnectPretixTicket,
+    oldTicket: DevconnectPretixTicketWithCheckin
+  ): DevconnectPretixTicketWithCheckin {
+    // These values do not come from Pretix sync, so we have to compute
+    // them. We start with the old ticket as default.
+    let checker = oldTicket?.checker ?? null;
+    let zupass_checkin_timestamp = oldTicket?.zupass_checkin_timestamp ?? null;
+
+    // If a ticket has been checked in on Pretix, but was not checked
+    // in on our side, then use the checkin details provided by Pretix.
+    if (!oldTicket?.is_consumed && updatedTicket.pretix_checkin_timestamp) {
+      checker = PRETIX_CHECKER;
+      zupass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
+    }
+
+    // Here we are checking for a ticket which, prior to this point,
+    // has been checked in (is_consumed) but not synced (does not have
+    // a pretix_checkin_timestamp). This is the same check that we do
+    // in fetchDevconnectTicketsAwaitingSync().
+    //
+    // In this.ordersToDevconnectPretixTickets(), we set is_consumed
+    // based on data from Pretix, but since there has been no push-sync
+    // yet, this will be set to 'false'. Instead, we should ensure
+    // that is_consumed remains true, so that the Zupass UI shows the
+    // expected values while sync remains pending.
+    if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
+      updatedTicket.is_consumed = true;
+    }
+
+    return { ...updatedTicket, checker, zupass_checkin_timestamp };
+  }
+
+  private async prepareRedactedTicket(
+    ticket: DevconnectPretixTicket
+  ): Promise<DevconnectPretixRedactedTicket> {
+    return {
+      hashed_email: await getHash(ticket.email),
+      position_id: ticket.position_id,
+      checker: ticket.is_consumed ? PRETIX_CHECKER : null,
+      pretix_checkin_timestamp: ticket.pretix_checkin_timestamp,
+      secret: ticket.secret,
+      is_consumed: ticket.is_consumed,
+      devconnect_pretix_items_info_id: ticket.devconnect_pretix_items_info_id,
+      pretix_events_config_id: ticket.pretix_events_config_id
+    };
+  }
+
   /**
    * Sync and update data for Pretix tickets under event.
    * Returns whether update was successful.
@@ -632,7 +765,8 @@ export class OrganizerSync {
   private async syncTickets(
     organizer: DevconnectPretixOrganizerConfig,
     event: DevconnectPretixEventConfig,
-    pretixOrders: DevconnectPretixOrder[]
+    pretixOrders: DevconnectPretixOrder[],
+    approvedLegalTermsEmails: Set<string>
   ): Promise<void> {
     return traced(NAME, "syncTickets", async (span) => {
       span?.setAttribute("org_url", organizer.orgURL);
@@ -657,73 +791,77 @@ export class OrganizerSync {
           eventInfo.id
         );
 
-        const ticketsFromPretix = this.ordersToDevconnectTickets(
+        const ticketsFromPretix = await this.ordersToDevconnectTickets(
           eventInfo,
           pretixOrders,
-          updatedItemsInfo
+          updatedItemsInfo,
+          eventConfigID,
+          approvedLegalTermsEmails
         );
 
-        const newTicketsByPositionId = new Map(
-          ticketsFromPretix.map((t) => [t.position_id, t])
-        );
+        let approvedTickets: DevconnectPretixTicket[] = [];
+        let ticketsToRedact: DevconnectPretixTicket[] = [];
+        let redactedTicketsInDB: DevconnectPretixRedactedTicket[] = [];
+
+        if (this.enableRedaction) {
+          const groupedTickets = _.groupBy(ticketsFromPretix, (ticket) =>
+            approvedLegalTermsEmails.has(ticket.email) ? "approved" : "redacted"
+          );
+
+          approvedTickets = groupedTickets.approved ?? [];
+          ticketsToRedact = groupedTickets.redacted ?? [];
+
+          redactedTicketsInDB =
+            await fetchDevconnectPretixRedactedTicketsByEvent(
+              this.db,
+              eventConfigID
+            );
+        } else {
+          approvedTickets = ticketsFromPretix;
+        }
+
         const existingTickets = await fetchDevconnectPretixTicketsByEvent(
           this.db,
           eventConfigID
         );
+
+        const changes = compareArrays(
+          existingTickets,
+          approvedTickets,
+          "position_id",
+          pretixTicketsDifferent
+        );
+
         const existingTicketsByPositionId = new Map(
           existingTickets.map((t) => [t.position_id, t])
-        );
-        const newTickets = ticketsFromPretix.filter(
-          (t) => !existingTicketsByPositionId.has(t.position_id)
         );
 
         // Step 1 of saving: insert tickets that are new
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${newTickets.length} new tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Inserting ${changes.new.length} new tickets`
         );
-        for (const ticket of newTickets) {
+        for (const ticket of changes.new.map(this.checkinDataForNewTicket)) {
           logger(
             `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
             }] Inserting ticket ${JSON.stringify(ticket)}`
           );
 
-          let checker = null;
-          let zupass_checkin_timestamp = null;
-
-          // This is the first time we've seen this ticket, and it's already
-          // checked in on Pretix.
-          if (ticket.pretix_checkin_timestamp) {
-            checker = PRETIX_CHECKER;
-            zupass_checkin_timestamp = ticket.pretix_checkin_timestamp;
-          }
-
-          await insertDevconnectPretixTicket(this.db, {
-            ...ticket,
-            checker,
-            zupass_checkin_timestamp
-          });
+          await insertDevconnectPretixTicket(this.db, ticket);
         }
 
         // Step 2 of saving: update tickets that have changed
-        // Filter to tickets that existed before, and filter to those that have changed.
-        const updatedTickets = ticketsFromPretix
-          .filter((t) => existingTicketsByPositionId.has(t.position_id))
-          .filter((t) => {
-            const oldTicket = existingTicketsByPositionId.get(
-              t.position_id
-            ) as DevconnectPretixTicketDB;
-            const newTicket = t;
-            return pretixTicketsDifferent(oldTicket, newTicket);
-          });
-
         // For the tickets that have changed, update them in the database.
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${updatedTickets.length} tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Updating ${changes.updated.length} tickets`
         );
-        for (const updatedTicket of updatedTickets) {
+        for (const ticket of changes.updated) {
           const oldTicket = existingTicketsByPositionId.get(
-            updatedTicket.position_id
+            ticket.position_id
+          ) as DevconnectPretixTicketDB;
+          const updatedTicket = this.checkinDataForExistingTicket(
+            ticket,
+            oldTicket
           );
           logger(
             `[DEVCONNECT PRETIX] [${
@@ -733,52 +871,15 @@ export class OrganizerSync {
             )}`
           );
 
-          // These values do not come from Pretix sync, so we have to compute
-          // them. We start with the old ticket as default.
-          let checker = oldTicket?.checker ?? null;
-          let zupass_checkin_timestamp =
-            oldTicket?.zupass_checkin_timestamp ?? null;
-
-          // If a ticket has been checked in on Pretix, but was not checked
-          // in on our side, then use the checkin details provided by Pretix.
-          if (
-            !oldTicket?.is_consumed &&
-            updatedTicket.pretix_checkin_timestamp
-          ) {
-            checker = PRETIX_CHECKER;
-            zupass_checkin_timestamp = updatedTicket.pretix_checkin_timestamp;
-          }
-
-          // Here we are checking for a ticket which, prior to this point,
-          // has been checked in (is_consumed) but not synced (does not have
-          // a pretix_checkin_timestamp). This is the same check that we do
-          // in fetchDevconnectTicketsAwaitingSync().
-          //
-          // In this.ordersToDevconnectPretixTickets(), we set is_consumed
-          // based on data from Pretix, but since there has been no push-sync
-          // yet, this will be set to 'false'. Instead, we should ensure
-          // that is_consumed remains true, so that the Zupass UI shows the
-          // expected values while sync remains pending.
-          if (oldTicket?.is_consumed && !oldTicket.pretix_checkin_timestamp) {
-            updatedTicket.is_consumed = true;
-          }
-
           // Merge the checkin details into the ticket for saving.
-          await updateDevconnectPretixTicket(this.db, {
-            ...updatedTicket,
-            checker,
-            zupass_checkin_timestamp
-          });
+          await updateDevconnectPretixTicket(this.db, updatedTicket);
         }
 
         // Step 3 of saving: soft delete tickets that don't exist anymore
-        const removedTickets = existingTickets.filter(
-          (existing) => !newTicketsByPositionId.has(existing.position_id)
-        );
         logger(
-          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${removedTickets.length} tickets`
+          `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${changes.removed.length} tickets`
         );
-        for (const removedTicket of removedTickets) {
+        for (const removedTicket of changes.removed) {
           logger(
             `[DEVCONNECT PRETIX] [${
               eventInfo.event_name
@@ -787,12 +888,56 @@ export class OrganizerSync {
           await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
 
-        span?.setAttribute("ticketsInserted", newTickets.length);
-        span?.setAttribute("ticketsUpdated", updatedTickets.length);
-        span?.setAttribute("ticketsDeleted", removedTickets.length);
+        if (this.enableRedaction) {
+          // Step 4 of saving: save redacted tickets
+          // Grouping by position ID is safe here because all of these tickets
+          // belong to the same event, and position ID is locally unique.
+          const redactedTickets = await Promise.all(
+            ticketsToRedact.map(this.prepareRedactedTicket)
+          );
+
+          const redactionChanges =
+            compareArrays<DevconnectPretixRedactedTicket>(
+              redactedTicketsInDB,
+              redactedTickets,
+              "position_id",
+              pretixRedactedTicketsDifferent
+            );
+
+          for (const redactedTicket of [
+            ...redactionChanges.new,
+            ...redactionChanges.updated
+          ]) {
+            await upsertDevconnectPretixRedactedTicket(this.db, redactedTicket);
+          }
+
+          await deleteDevconnectPretixRedactedTickets(
+            this.db,
+            eventConfigID,
+            redactionChanges.removed.map((t) => t.position_id)
+          );
+
+          span?.setAttribute(
+            "redactedTicketsInserted",
+            redactionChanges.new.length
+          );
+          span?.setAttribute(
+            "redactedTicketsUpdated",
+            redactionChanges.updated.length
+          );
+          span?.setAttribute(
+            "redactedTicketsDeleted",
+            redactionChanges.removed.length
+          );
+        }
+
+        span?.setAttribute("ticketsInserted", changes.new.length);
+        span?.setAttribute("ticketsUpdated", changes.updated.length);
+        span?.setAttribute("ticketsDeleted", changes.removed.length);
+
         span?.setAttribute(
           "ticketsTotal",
-          existingTickets.length + newTickets.length - removedTickets.length
+          existingTickets.length + changes.new.length - changes.removed.length
         );
       } catch (e) {
         logger(
@@ -813,11 +958,13 @@ export class OrganizerSync {
    * `DevconnectPretixTicket` to equal to the date ranges of the visitor
    * subevent events they have in their order.
    */
-  private ordersToDevconnectTickets(
+  private async ordersToDevconnectTickets(
     eventInfo: PretixEventInfo,
     orders: DevconnectPretixOrder[],
-    itemsInfo: PretixItemInfo[]
-  ): DevconnectPretixTicket[] {
+    itemsInfo: PretixItemInfo[],
+    eventConfigID: string,
+    approvedLegalTermsEmails: Set<string>
+  ): Promise<DevconnectPretixTicket[]> {
     // Go through all orders and aggregate all item IDs under
     // the same (email, event_id, organizer_url) tuple. Since we're
     // already fixing the event_id and organizer_url in this function,
@@ -842,14 +989,28 @@ export class OrganizerSync {
         if (existingItem) {
           // Try getting email from response to question; otherwise, default to email of purchaser
           if (!attendee_email) {
-            logger(
-              `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
-              JSON.stringify({
-                orderCode: order.code,
-                positionID: positionid,
-                orderEmail: order.email
-              })
-            );
+            if (
+              this.enableRedaction &&
+              !approvedLegalTermsEmails.has(order.email)
+            ) {
+              logger(
+                `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
+                JSON.stringify({
+                  orderCode: order.code,
+                  positionID: positionid,
+                  orderEmail: await getHash(order.email)
+                })
+              );
+            } else {
+              logger(
+                `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Encountered order position without attendee email, defaulting to order email`,
+                JSON.stringify({
+                  orderCode: order.code,
+                  positionID: positionid,
+                  orderEmail: order.email
+                })
+              );
+            }
           }
           const email = normalizeEmail(attendee_email || order.email);
 
@@ -882,8 +1043,9 @@ export class OrganizerSync {
 
           tickets.push({
             email,
-            full_name: attendee_name,
+            full_name: attendee_name || order.name || "", // Fallback since we have a not-null constraint
             devconnect_pretix_items_info_id: existingItem.id,
+            pretix_events_config_id: eventConfigID,
             is_deleted: false,
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),

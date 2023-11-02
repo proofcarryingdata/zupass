@@ -13,7 +13,6 @@ import {
   User
 } from "@pcd/passport-interface";
 import { expect } from "chai";
-import "chai-spies";
 import { randomBytes } from "crypto";
 import "mocha";
 import { v4 as uuid } from "uuid";

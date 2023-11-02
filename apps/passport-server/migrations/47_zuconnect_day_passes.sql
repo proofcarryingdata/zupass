@@ -1,0 +1,1 @@
+ALTER TABLE zuconnect_tickets ADD COLUMN extra_info VARCHAR[] DEFAULT '{}';

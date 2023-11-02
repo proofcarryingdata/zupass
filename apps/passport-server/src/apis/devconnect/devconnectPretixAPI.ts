@@ -37,6 +37,11 @@ export interface IDevconnectPretixAPI {
     token: string,
     eventID: string
   ): Promise<DevconnectPretixEventSettings>;
+  fetchCategories(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixCategory[]>;
   fetchAllEvents(
     orgUrl: string,
     token: string
@@ -199,6 +204,36 @@ export class DevconnectPretixAPI implements IDevconnectPretixAPI {
     });
   }
 
+  public async fetchCategories(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<DevconnectPretixCategory[]> {
+    return traced(TRACE_SERVICE, "fetchAddons", async (span) => {
+      span?.setAttribute("org_url", orgUrl);
+      const categories: DevconnectPretixCategory[] = [];
+
+      // Fetch categories from paginated API
+      let url = `${orgUrl}/events/${eventID}/categories/`;
+      while (url != null) {
+        logger(`[DEVCONNECT PRETIX] Fetching categories: ${url}`);
+        const res = await this.queuedFetch(url, {
+          headers: { Authorization: `Token ${token}` }
+        });
+        if (!res.ok) {
+          throw new Error(
+            `[PRETIX] Error fetching ${url}: ${res.status} ${res.statusText}`
+          );
+        }
+        const page = await res.json();
+        categories.push(...page.results);
+        url = page.next;
+      }
+
+      return categories;
+    });
+  }
+
   public async fetchItems(
     orgUrl: string,
     token: string,
@@ -349,12 +384,14 @@ export interface DevconnectPretixOrder {
   status: string; // "p"
   testmode: boolean;
   secret: string;
+  name: string;
   email: string;
   positions: DevconnectPretixPosition[]; // should have exactly one
 }
 
 export interface DevconnectPretixItem {
   id: number; // corresponds to "item" field in DevconnectPretixPosition
+  category: number;
   admission: boolean;
   personalized: boolean;
   generate_tickets?: boolean | null;
@@ -374,6 +411,11 @@ export interface DevconnectPretixEventSettings {
   // in the Pretix UI.
   attendee_emails_asked: boolean;
   attendee_emails_required: boolean;
+}
+
+export interface DevconnectPretixCategory {
+  id: number;
+  is_addon: boolean;
 }
 
 // Each event has one or more check-in lists
