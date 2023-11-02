@@ -53,13 +53,23 @@ function ScoreTable({
         {scores.map((score) => (
           <tr key={score.rank}>
             <td>{score.rank}</td>
-            <td>{score.telegram_username || "An Unnamed Toad"}</td>
+            <td>{getUserShortId(score.semaphore_id)}</td>
             <td style={{ textAlign: "right" }}>{score.score}</td>
           </tr>
         ))}
       </tbody>
     </table>
   );
+}
+
+/**
+ * Returns a short username for a given semaphore id.
+ *
+ * TODO: replace with an unique username generator instead
+ */
+function getUserShortId(id: string) {
+  const hexString = Buffer.from(id, "utf8").toString("hex");
+  return `0x${hexString.slice(0, 4)}...${hexString.slice(-4)}`;
 }
 
 const Container = styled.div`

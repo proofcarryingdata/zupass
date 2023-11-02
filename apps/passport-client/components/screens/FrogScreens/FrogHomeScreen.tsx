@@ -43,7 +43,7 @@ const TABS = [
     label: "frogedex"
   }
 ] as const;
-type Tab = (typeof TABS)[number]["tab"];
+type TabId = (typeof TABS)[number]["tab"];
 
 /** A placeholder screen for FrogCrypto.
  *
@@ -63,7 +63,7 @@ export function FrogHomeScreen() {
     [subs]
   );
   const initFrog = useInitializeFrogSubscriptions();
-  const [tab, setTab] = useState<Tab>("get");
+  const [tab, setTab] = useState<TabId>("get");
 
   if (!syncSettled) {
     return <SyncingPCDs />;
@@ -126,28 +126,6 @@ export function FrogHomeScreen() {
                 )}
               </>
             ))}
-
-          <Disclaimer>
-            <p>By engaging with FrogCrypto, you hereby consent to:</p>
-            <ol>
-              <li>
-                Permit ZuKat to disclose your Telegram username to FrogCrypto.
-              </li>
-              <li>
-                Acknowledge that ZuKat can only access and share your Telegram
-                username if you've joined a Telegram group by producing a
-                zero-knowledge proof for your event ticket.
-              </li>
-              <li>
-                Understand that FrogCrypto collects traffic analytics for the
-                purposes of score tallying and product improvement. Yet, any
-                Frog PCDs you possess are stored solely in your end-to-end
-                encrypted storage. FrogCrypto cannot, under any circumstances,
-                view any of your PCDs without your explicit authorization nor
-                can they restore any Frog PCD you may delete or misplace.
-              </li>
-            </ol>
-          </Disclaimer>
         </Container>
       </AppContainer>
     </>
@@ -241,9 +219,4 @@ const ButtonGroup = styled.div`
 const Score = styled.div`
   font-size: 16px;
   text-align: center;
-`;
-
-const Disclaimer = styled.div`
-  font-size: 12px;
-  color: rgba(var(--white-rgb), 0.5);
 `;

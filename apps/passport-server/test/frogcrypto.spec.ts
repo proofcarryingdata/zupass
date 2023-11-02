@@ -2,7 +2,6 @@ import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoFolderName,
   FrogCryptoUserStateResult,
-  LATEST_PRIVACY_NOTICE,
   PollFeedResult,
   createFeedCredentialPayload,
   frogCryptoGetUserState,
@@ -19,11 +18,6 @@ import { Pool } from "postgres-pool";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import { upsertFrogData } from "../src/database/queries/frogcrypto";
-import { upsertUser } from "../src/database/queries/saveUser";
-import {
-  insertTelegramChat,
-  insertTelegramVerification
-} from "../src/database/queries/telegram/insertTelegramConversation";
 import { Zupass } from "../src/types";
 import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../src/util/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
@@ -149,7 +143,9 @@ describe("frogcrypto functionality", function () {
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
     expect(userState.value?.myScore?.score).to.eq(1);
-    expect(userState.value?.myScore?.telegram_username).to.be.null;
+    expect(userState.value?.myScore?.semaphore_id).to.be.eq(
+      identity.getCommitment().toString()
+    );
     expect(userState.value?.feeds).to.be.not.empty;
     const feedState = userState.value?.feeds?.[0];
     expect(feedState?.feedId).to.eq(feed.id);
@@ -169,44 +165,6 @@ describe("frogcrypto functionality", function () {
     expect(scores.length).to.greaterThan(1);
     expect(scores[0].rank).to.eq(1);
     expect(scores[0].score).to.eq(2);
-  });
-
-  it("should return telegram username", async () => {
-    // Insert a dummy user
-    const commitment = identity.commitment.toString();
-    const uuid = await upsertUser(db, {
-      email: "test@example.com",
-      commitment,
-      terms_agreed: LATEST_PRIVACY_NOTICE
-    });
-    if (!uuid) {
-      throw new Error("expected to be able to insert a commitment");
-    }
-    // Insert test telegram username
-    expect(await insertTelegramChat(db, 123)).to.eq(1);
-    expect(
-      await insertTelegramVerification(db, 123, 123, commitment, "test")
-    ).to.eq(1);
-    await getFrog(FROGCRYPTO_FEEDS[0], DATE_EPOCH_1H);
-
-    const userState = await getUserState();
-    expect(userState.success).to.be.true;
-    const myScore = userState.value?.myScore;
-    expectToExist(myScore);
-    expect(myScore.telegram_username).to.eq("test");
-    expect(myScore.score).to.eq(1);
-    const myRank = myScore.rank;
-
-    const response = await requestFrogCryptoGetScoreboard(
-      application.expressContext.localEndpoint
-    );
-    expect(response.success).to.be.true;
-    const scores = response.value;
-    expectToExist(scores);
-    const myScoreboard = scores.find((score) => score.rank === myRank);
-    expectToExist(myScoreboard);
-    expect(myScoreboard.telegram_username).to.eq("test");
-    expect(myScoreboard.score).to.eq(1);
   });
 
   async function testGetFrog(

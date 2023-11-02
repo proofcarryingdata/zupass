@@ -223,13 +223,12 @@ export async function getScoreboard(
     `select
     cast(score as int) as score,
     cast(rank as int) as rank,
-    telegram_username
+    semaphore_id
     from (
       select *, rank() over (order by score desc) from frogcrypto_user_scores
       order by score desc
       limit $1
     ) scores
-    left join telegram_bot_conversations using(semaphore_id)
     order by rank asc`,
     [limit]
   );
@@ -246,11 +245,10 @@ export async function getUserScore(
     `select
     cast(score as int) as score,
     cast(rank as int) as rank,
-    telegram_username
+    semaphore_id
     from (
       select *, rank() over (order by score desc) from frogcrypto_user_scores
     ) scores
-    left join telegram_bot_conversations using(semaphore_id)
     where semaphore_id = $1`,
     [semaphoreId]
   );
