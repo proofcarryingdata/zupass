@@ -680,8 +680,7 @@ export function defaultOfflineTickets(): OfflineTickets {
 }
 
 /**
- * @todo - redact this? I think devconnect tickets are fine because
- * only event staff have access to this.
+ * Shown to checkers with valid permissions when they are in offline mode.
  */
 export interface OfflineDevconnectTicket {
   id: string;
@@ -691,17 +690,6 @@ export interface OfflineDevconnectTicket {
   ticketName: string;
   checkinTimestamp?: string;
   checker: string | null;
-}
-
-/**
- * @todo - redacting the contents of this server-side before giving it to the
- * client probably makes sense.
- */
-export interface OfflineSecondPartyTicket {
-  id: string;
-  group: KnownTicketGroup;
-  publicKeyName: string;
-  productId?: string;
 }
 
 /**
