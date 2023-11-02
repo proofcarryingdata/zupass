@@ -80,14 +80,14 @@ export function ActionButton({
     <Button
       onClick={handleClick}
       disabled={loading || disabled}
-      loading={loading}
+      pending={loading}
     >
       {children}
     </Button>
   );
 }
 
-export const Button = styled.button<{ loading?: boolean }>`
+export const Button = styled.button<{ pending?: boolean }>`
   font-size: 16px;
   padding: 8px;
   border: none;
@@ -100,6 +100,6 @@ export const Button = styled.button<{ loading?: boolean }>`
   &:disabled {
     background-color: rgba(var(--white-rgb), 0.2);
     filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-    cursor: ${(props) => (props.loading ? "wait" : "unset")};
+    cursor: ${(props) => (props.pending ? "wait" : "unset")};
   }
 `;

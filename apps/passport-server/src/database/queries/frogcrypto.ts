@@ -1,7 +1,8 @@
 import { Biome } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoDbFrogData,
-  FrogCryptoFrogData
+  FrogCryptoFrogData,
+  FrogCryptoScore
 } from "@pcd/passport-interface/src/FrogCrypto";
 import _ from "lodash";
 import { Client } from "pg";
@@ -153,11 +154,13 @@ export async function deleteFrogData(
 export async function getPossibleFrogCount(pool: Pool): Promise<number> {
   const result = await sqlQuery(
     pool,
-    `select count(*) as count from frogcrypto_frogs`,
+    `select
+    cast(count(*) as int) as count
+    from frogcrypto_frogs`,
     []
   );
 
-  return +result.rows[0].count;
+  return result.rows[0].count;
 }
 
 /**
@@ -193,4 +196,62 @@ function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
     uuid: dbFrogData.uuid,
     ...dbFrogData.frog
   };
+}
+
+export async function incrementScore(
+  client: Client,
+  semaphoreId: string
+): Promise<FrogCryptoScore> {
+  const res = await client.query(
+    `insert into frogcrypto_user_scores
+    (semaphore_id, score)
+    values ($1, 1)
+    on conflict (semaphore_id) do update set score = frogcrypto_user_scores.score + 1
+    returning *`,
+    [semaphoreId]
+  );
+
+  return res.rows[0];
+}
+
+export async function getScoreboard(
+  pool: Pool,
+  limit = 50
+): Promise<FrogCryptoScore[]> {
+  const result = await sqlQuery(
+    pool,
+    `select
+    cast(score as int) as score,
+    cast(rank as int) as rank,
+    semaphore_id
+    from (
+      select *, rank() over (order by score desc) from frogcrypto_user_scores
+      order by score desc
+      limit $1
+    ) scores
+    order by rank asc`,
+    [limit]
+  );
+
+  return result.rows;
+}
+
+export async function getUserScore(
+  pool: Pool,
+  semaphoreId: string
+): Promise<FrogCryptoScore | undefined> {
+  const result = await sqlQuery(
+    pool,
+    `select
+    cast(score as int) as score,
+    cast(rank as int) as rank,
+    semaphore_id
+    from (
+      select *, rank() over (order by score desc) from frogcrypto_user_scores
+    ) scores
+    where semaphore_id = $1`,
+    [semaphoreId]
+  );
+
+  return result.rows[0];
 }

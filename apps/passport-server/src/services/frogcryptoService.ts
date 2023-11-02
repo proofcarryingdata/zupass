@@ -3,13 +3,14 @@ import {
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
+  FrogCryptoFrogData,
+  FrogCryptoScore,
   FrogCryptoUpdateFrogsRequest,
   FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
   FrogCryptoUserStateResponseValue,
   verifyFeedCredential
 } from "@pcd/passport-interface";
-import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -23,6 +24,9 @@ import {
   fetchUserFeedsState,
   getFrogData,
   getPossibleFrogCount,
+  getScoreboard,
+  getUserScore,
+  incrementScore,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
@@ -80,7 +84,8 @@ export class FrogcryptoService {
       feeds: userFeeds.map((userFeed) =>
         this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
       ),
-      possibleFrogCount: await getPossibleFrogCount(this.context.dbPool)
+      possibleFrogCount: await getPossibleFrogCount(this.context.dbPool),
+      myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
   }
 
@@ -131,6 +136,7 @@ export class FrogcryptoService {
         if (!frogData) {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
+        await incrementScore(client, semaphoreId);
 
         return this.generateFrogData(frogData, semaphoreId);
       }
@@ -171,6 +177,13 @@ export class FrogcryptoService {
     return {
       frogs: await getFrogData(this.context.dbPool)
     };
+  }
+
+  /**
+   * Return default number of top scores.
+   */
+  public async getScoreboard(): Promise<FrogCryptoScore[]> {
+    return getScoreboard(this.context.dbPool);
   }
 
   private computeUserFeedState(

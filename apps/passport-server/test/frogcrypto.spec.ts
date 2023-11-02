@@ -6,6 +6,7 @@ import {
   createFeedCredentialPayload,
   frogCryptoGetUserState,
   pollFeed,
+  requestFrogCryptoGetScoreboard,
   requestListFeeds
 } from "@pcd/passport-interface";
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
@@ -22,6 +23,7 @@ import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../src/util/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { testFrogs } from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 const DATE_EPOCH_1H = new Date(60 * 60 * 1000);
 const DATE_EPOCH_1H1M = new Date(DATE_EPOCH_1H.getTime() + 60 * 1000);
@@ -132,6 +134,7 @@ describe("frogcrypto functionality", function () {
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
     expect(userState.value?.feeds).to.be.empty;
+    expect(userState.value?.myScore).to.be.undefined;
 
     const response = await getFrog(feed, DATE_EPOCH_1H);
     expect(response.success).to.be.true;
@@ -139,6 +142,10 @@ describe("frogcrypto functionality", function () {
     userState = await getUserState();
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogCount).to.be.eq(testFrogs.length);
+    expect(userState.value?.myScore?.score).to.eq(1);
+    expect(userState.value?.myScore?.semaphore_id).to.be.eq(
+      identity.getCommitment().toString()
+    );
     expect(userState.value?.feeds).to.be.not.empty;
     const feedState = userState.value?.feeds?.[0];
     expect(feedState?.feedId).to.eq(feed.id);
@@ -146,6 +153,18 @@ describe("frogcrypto functionality", function () {
     expect(feedState?.nextFetchAt).to.eq(
       DATE_EPOCH_1H.getTime() + feed.cooldown * 1000
     );
+  });
+
+  it("should return hi scores", async () => {
+    const response = await requestFrogCryptoGetScoreboard(
+      application.expressContext.localEndpoint
+    );
+    expect(response.success).to.be.true;
+    const scores = response.value;
+    expectToExist(scores);
+    expect(scores.length).to.greaterThan(1);
+    expect(scores[0].rank).to.eq(1);
+    expect(scores[0].score).to.eq(2);
   });
 
   async function testGetFrog(

@@ -102,3 +102,12 @@ export interface FrogCryptoDbFrogData {
  * All FrogCrypto PCDs are stored in a folder named "FrogCrypto".
  */
 export const FrogCryptoFolderName = "FrogCrypto";
+
+/**
+ * User score data and computed rank
+ */
+export interface FrogCryptoScore {
+  semaphore_id: string;
+  score: number;
+  rank: number;
+}
