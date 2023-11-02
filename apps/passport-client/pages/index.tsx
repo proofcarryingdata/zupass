@@ -368,7 +368,7 @@ async function loadInitialState(): Promise<AppState> {
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
   const offlineTickets = loadOfflineTickets();
-  const checkedOfflineInDevconnectTickets =
+  const checkedInOfflineDevconnectTickets =
     loadCheckedInOfflineDevconnectTickets();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
@@ -399,7 +399,7 @@ async function loadInitialState(): Promise<AppState> {
     resolvingSubscriptionId: undefined,
     credentialCache,
     offlineTickets,
-    checkedinOfflineDevconnectTickets: checkedOfflineInDevconnectTickets,
+    checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
     offline: !window.navigator.onLine,
     serverStorageRevision: persistentSyncStatus.serverStorageRevision
   };
