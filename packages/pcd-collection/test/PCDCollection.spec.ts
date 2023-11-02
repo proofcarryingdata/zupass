@@ -157,7 +157,7 @@ describe("PCDCollection", async function () {
     const collection = new PCDCollection(packages);
     await collection.deserializeAllAndAdd(serializedPCDs);
 
-    const hash = collection.getHash();
+    const hash = await collection.getHash();
 
     const replacement = await newPCD(pcdList[0].id);
 
@@ -169,7 +169,7 @@ describe("PCDCollection", async function () {
       pcdList[2]
     ]);
 
-    const hashAfterEdit = collection.getHash();
+    const hashAfterEdit = await collection.getHash();
     expect(hashAfterEdit).to.not.eq(hash);
   });
 
@@ -200,12 +200,12 @@ describe("PCDCollection", async function () {
 
     const collection = new PCDCollection(packages);
     await collection.deserializeAllAndAdd(serializedPCDs);
-    const hash = collection.getHash();
+    const hash = await collection.getHash();
 
     collection.remove(pcdList[0].id);
 
     expect(collection.getAll()).to.deep.eq([pcdList[1], pcdList[2]]);
-    const hashAfterEdit = collection.getHash();
+    const hashAfterEdit = await collection.getHash();
 
     expect(hashAfterEdit).to.not.eq(hash);
   });
@@ -236,6 +236,38 @@ describe("PCDCollection", async function () {
       collection.setPCDFolder(pcdList[0].id, "folder");
     });
     expect(fourthHash).to.not.eq(firstHash);
+  });
+
+  it("should maintain hash across serialization", async function () {
+    const pcdList = await Promise.all([
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD()
+    ]);
+
+    // Insertion order intentionally doesn't match order of IDs or folders.
+    const collection = new PCDCollection(packages);
+    collection.add(pcdList[0]);
+    collection.setPCDFolder(pcdList[0].id, "3");
+    collection.add(pcdList[1]);
+    collection.setPCDFolder(pcdList[1].id, "1");
+    collection.add(pcdList[2]);
+    collection.setPCDFolder(pcdList[2].id, "AAAAA");
+    collection.add(pcdList[3]);
+    collection.setPCDFolder(pcdList[3].id, "AAAAA/BBBB");
+    collection.add(pcdList[4]);
+    // No folder for pcdList[4]
+
+    const firstHash = await collection.getHash();
+
+    const serializedCollection = await collection.serializeCollection();
+    const deserializedCollection = await PCDCollection.deserialize(
+      packages,
+      serializedCollection
+    );
+    expect(await deserializedCollection.getHash()).to.eq(firstHash);
   });
 });
 
