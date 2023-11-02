@@ -1,31 +1,15 @@
 import {
-  KnownTicketGroup,
   OfflineDevconnectTicket,
-  OfflineSecondPartyTicket,
   OfflineTickets
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
-import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../../services/issuanceService";
-import { zuzaluRoleToProductId } from "../../util/zuzaluUser";
-import {
-  DevconnectPretixTicketDBWithEmailAndItem,
-  LoggedInZuzaluUser,
-  ZuconnectTicketDB
-} from "../models";
+import { DevconnectPretixTicketDBWithEmailAndItem } from "../models";
 import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectSuperusersForEmail
 } from "../queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { fetchUserByCommitment } from "../queries/users";
-import {
-  fetchAllZuconnectTickets,
-  fetchZuconnectTicketsByEmail
-} from "../queries/zuconnect/fetchZuconnectTickets";
-import {
-  fetchAllLoggedInZuzaluUsers,
-  fetchZuzaluUser
-} from "../queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 
 /**
  * Fetches the relevant tickets for the given user. Relevant tickets are
@@ -44,61 +28,12 @@ export async function fetchOfflineTicketsForChecker(
     dbPool,
     userCommitment
   );
-  const zuconnectTickets = await fetchOfflineZuconnectTickets(
-    dbPool,
-    userCommitment
-  );
-  const zuzaluTickets = await fetchOfflineZuzaluTickets(dbPool, userCommitment);
 
   const result = {
-    devconnectTickets,
-    secondPartyTickets: [...zuconnectTickets, ...zuzaluTickets]
+    devconnectTickets
   };
 
   return result;
-}
-
-async function fetchOfflineZuzaluTickets(
-  dbPool: Pool,
-  userCommitment: string
-): Promise<OfflineSecondPartyTicket[]> {
-  const user = await fetchUserByCommitment(dbPool, userCommitment);
-  if (!user) {
-    throw new Error(`no user found for uuid ${userCommitment}`);
-  }
-
-  const zuzaluTicket = await fetchZuzaluUser(dbPool, user.email);
-
-  // only attendees of zuzalu get offline zuzalu tickets
-  if (!zuzaluTicket) {
-    return [];
-  }
-
-  const allZuconnectTickets = await fetchAllLoggedInZuzaluUsers(dbPool);
-  return allZuconnectTickets.map(zuzaluUserToOfflineTicket);
-}
-
-async function fetchOfflineZuconnectTickets(
-  dbPool: Pool,
-  userCommitment: string
-): Promise<OfflineSecondPartyTicket[]> {
-  const user = await fetchUserByCommitment(dbPool, userCommitment);
-  if (!user) {
-    throw new Error(`no user found for uuid ${userCommitment}`);
-  }
-
-  const zuconnectTickets = await fetchZuconnectTicketsByEmail(
-    dbPool,
-    user.email
-  );
-
-  // only attendees of zuconnect get these offline tickets
-  if (zuconnectTickets.length === 0) {
-    return [];
-  }
-
-  const allZuconnectTickets = await fetchAllZuconnectTickets(dbPool);
-  return allZuconnectTickets.map(zuconnectTicketToOfflineTicket);
 }
 
 async function fetchOfflineDevconnectTickets(
@@ -143,27 +78,5 @@ function devconnectTicketToOfflineTicket(
     attendeeName: ticket.full_name,
     eventName: ticket.event_name,
     ticketName: ticket.item_name
-  };
-}
-
-function zuconnectTicketToOfflineTicket(
-  ticket: ZuconnectTicketDB
-): OfflineSecondPartyTicket {
-  return {
-    id: ticket.id,
-    group: KnownTicketGroup.Zuconnect23,
-    publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-    productId: ticket.product_id
-  };
-}
-
-function zuzaluUserToOfflineTicket(
-  ticket: LoggedInZuzaluUser
-): OfflineSecondPartyTicket {
-  return {
-    id: ticket.uuid,
-    group: KnownTicketGroup.Zuzalu23,
-    publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-    productId: zuzaluRoleToProductId(ticket.role)
   };
 }

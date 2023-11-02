@@ -1,25 +1,26 @@
 import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
-import { KnownTicketGroup } from "@pcd/passport-interface";
+import {
+  KnownTicketGroup,
+  requestVerifyTicket,
+  requestVerifyTicketById
+} from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
+import { appConfig } from "../../src/appConfig";
 import {
   usePCDCollection,
   useQuery,
   useStateContext
 } from "../../src/appHooks";
-import {
-  secondPartyCheckByIdWithOffline,
-  secondPartyCheckByPCDWithOffline
-} from "../../src/checkin";
 import { StateContextValue } from "../../src/dispatch";
 import { CenterColumn, H4, H5, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
+import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
 import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
-import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
 enum VerifyOutcome {
   // We recognize this ticket
@@ -68,11 +69,7 @@ export function SecondPartyTicketVerifyScreen() {
         setVerifyResult(result);
       } else {
         const payload = JSON.parse(Buffer.from(id, "base64").toString());
-        const result = await verifyById(
-          payload.ticketId,
-          payload.timestamp,
-          stateContext
-        );
+        const result = await verifyById(payload.ticketId, payload.timestamp);
         setVerifyResult(result);
       }
     })();
@@ -189,10 +186,9 @@ async function deserializeAndVerify(
   // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
   const decodedPCD = decodeQRPayload(pcdStr);
 
-  const result = await secondPartyCheckByPCDWithOffline(
-    decodedPCD,
-    stateContext
-  );
+  const result = await requestVerifyTicket(appConfig.zupassServer, {
+    pcd: decodedPCD
+  });
 
   if (result.success && result.value.verified) {
     const pcd = await stateContext
@@ -227,14 +223,12 @@ async function deserializeAndVerify(
 
 async function verifyById(
   ticketId: string,
-  timestamp: string,
-  stateContext: StateContextValue
+  timestamp: string
 ): Promise<VerifyResult> {
-  const result = await secondPartyCheckByIdWithOffline(
+  const result = await requestVerifyTicketById(appConfig.zupassServer, {
     ticketId,
-    timestamp,
-    stateContext
-  );
+    timestamp
+  });
 
   if (result.success && result.value.verified) {
     return {

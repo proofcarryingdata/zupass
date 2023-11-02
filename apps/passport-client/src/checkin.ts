@@ -3,14 +3,8 @@ import {
   checkTicketById,
   CheckTicketByIdResult,
   CheckTicketInByIdResult,
-  OfflineDevconnectTicket,
-  OfflineSecondPartyTicket,
-  requestVerifyTicket,
-  requestVerifyTicketById,
-  VerifyTicketByIdResult,
-  VerifyTicketResult
+  OfflineDevconnectTicket
 } from "@pcd/passport-interface";
-import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import _ from "lodash";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
@@ -51,18 +45,6 @@ function isOfflineDevconnectTicketCheckedIn(
   return (
     getCheckedInOfflineDevconnectTicket(ticketId, stateContext) !== undefined
   );
-}
-
-function getOfflineSecondPartyTicket(
-  ticketId: string,
-  stateContext: StateContextValue
-): OfflineSecondPartyTicket | undefined {
-  const state = stateContext.getState();
-  const ticket = state.offlineTickets.secondPartyTickets.find(
-    (t) => t.id === ticketId
-  );
-
-  return ticket;
 }
 
 function checkinOfflineDevconnectTicket(
@@ -197,77 +179,5 @@ export async function devconnectCheckInByIdWithOffline(
       ticketId,
       stateContext.getState().identity
     );
-  }
-}
-
-export async function secondPartyCheckByIdWithOffline(
-  ticketId: string,
-  timestamp: string,
-  stateContext: StateContextValue
-): Promise<VerifyTicketByIdResult> {
-  if (DEBUG_FORCE_OFFLINE || stateContext.getState().offline) {
-    const ticket = getOfflineSecondPartyTicket(ticketId, stateContext);
-
-    if (!ticket) {
-      return {
-        success: true,
-        value: {
-          verified: false,
-          message: "Unknown ticket. Go online to get the latest tickets."
-        }
-      };
-    }
-
-    return {
-      success: true,
-      value: {
-        group: ticket.group,
-        publicKeyName: ticket.publicKeyName,
-        verified: true,
-        productId: ticket.productId
-      }
-    };
-  } else {
-    return await requestVerifyTicketById(appConfig.zupassServer, {
-      ticketId,
-      timestamp
-    });
-  }
-}
-
-export async function secondPartyCheckByPCDWithOffline(
-  pcd: string, // JSON.stringify(SerializedPCD<ZKEdDSAEventTicketPCD>)
-  stateContext: StateContextValue
-): Promise<VerifyTicketResult> {
-  if (DEBUG_FORCE_OFFLINE || stateContext.getState().offline) {
-    const parsed = await ZKEdDSAEventTicketPCDPackage.deserialize(
-      JSON.parse(pcd).pcd
-    );
-    const ticketId = parsed.claim.partialTicket.ticketId;
-    const ticket = getOfflineSecondPartyTicket(ticketId, stateContext);
-
-    if (!ticket) {
-      return {
-        success: true,
-        value: {
-          verified: false,
-          message: "Unknown ticket. Go online to get the latest tickets."
-        }
-      };
-    }
-
-    return {
-      success: true,
-      value: {
-        group: ticket.group,
-        // todo
-        publicKeyName: ticket.publicKeyName,
-        verified: true
-      }
-    };
-  } else {
-    return await requestVerifyTicket(appConfig.zupassServer, {
-      pcd
-    });
   }
 }

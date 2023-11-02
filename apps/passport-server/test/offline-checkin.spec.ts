@@ -1,8 +1,4 @@
-import {
-  KnownTicketGroup,
-  OfflineTickets,
-  ZUCONNECT_PRODUCT_ID_MAPPINGS
-} from "@pcd/passport-interface";
+import { OfflineTickets } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -19,8 +15,6 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { upsertUser } from "../src/database/queries/saveUser";
-import { upsertZuconnectTicket } from "../src/database/queries/zuconnect/insertZuconnectTicket";
-import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../src/services/issuanceService";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { randomEmail } from "./util/util";
 
@@ -210,24 +204,6 @@ describe.only("offline checkin database queries should work", function () {
         zupass_checkin_timestamp: null,
         pretix_events_config_id: aw
       });
-      const user3Zuconnect = await upsertZuconnectTicket(db, {
-        attendee_email: user3.email,
-        attendee_name: user3.fullName,
-        external_ticket_id: randomUUID(),
-        is_deleted: false,
-        is_mock_ticket: false,
-        product_id: ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id,
-        extra_info: []
-      });
-      const user2Zuconnect = await upsertZuconnectTicket(db, {
-        attendee_email: user2.email,
-        attendee_name: user2.fullName,
-        external_ticket_id: randomUUID(),
-        is_deleted: false,
-        is_mock_ticket: false,
-        product_id: ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id,
-        extra_info: []
-      });
 
       expectOfflineTickets(
         await fetchOfflineTicketsForChecker(
@@ -235,8 +211,7 @@ describe.only("offline checkin database queries should work", function () {
           user1.identity.commitment.toString()
         ),
         {
-          devconnectTickets: [],
-          secondPartyTickets: []
+          devconnectTickets: []
         }
       );
 
@@ -301,22 +276,6 @@ describe.only("offline checkin database queries should work", function () {
               checkinTimestamp: undefined,
               checker: null
             }
-          ],
-          secondPartyTickets: [
-            {
-              id: user3Zuconnect.id,
-              group: KnownTicketGroup.Zuconnect23,
-              publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-              productId:
-                ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
-            },
-            {
-              id: user2Zuconnect.id,
-              group: KnownTicketGroup.Zuconnect23,
-              publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-              productId:
-                ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
-            }
           ]
         }
       );
@@ -355,22 +314,6 @@ describe.only("offline checkin database queries should work", function () {
               checkinTimestamp: undefined,
               checker: null
             }
-          ],
-          secondPartyTickets: [
-            {
-              id: user3Zuconnect.id,
-              group: KnownTicketGroup.Zuconnect23,
-              publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-              productId:
-                ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
-            },
-            {
-              id: user2Zuconnect.id,
-              group: KnownTicketGroup.Zuconnect23,
-              publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-              productId:
-                ZUCONNECT_PRODUCT_ID_MAPPINGS["ZuConnect Resident Pass"].id
-            }
           ]
         }
       );
@@ -384,8 +327,5 @@ function expectOfflineTickets(
 ): void {
   expect(actual.devconnectTickets).to.deep.equalInAnyOrder(
     expected.devconnectTickets
-  );
-  expect(actual.secondPartyTickets).to.deep.equalInAnyOrder(
-    expected.secondPartyTickets
   );
 }

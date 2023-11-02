@@ -668,7 +668,6 @@ export const ISSUANCE_STRING = "Issue me PCDs please.";
  */
 export interface OfflineTickets {
   devconnectTickets: OfflineDevconnectTicket[];
-  secondPartyTickets: OfflineSecondPartyTicket[];
 }
 
 /**
@@ -676,8 +675,7 @@ export interface OfflineTickets {
  */
 export function defaultOfflineTickets(): OfflineTickets {
   return {
-    devconnectTickets: [],
-    secondPartyTickets: []
+    devconnectTickets: []
   };
 }
 
