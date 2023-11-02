@@ -30,7 +30,7 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
 
   return showPCD ? (
     <Container>
-      <a onClick={() => setShowPCD(false)}>View as frog</a>
+      <LinkButton onClick={() => setShowPCD(false)}>View as frog</LinkButton>
       <FrogQR pcd={pcd} />
       <CopyFrogPCD pcd={pcd} />
     </Container>

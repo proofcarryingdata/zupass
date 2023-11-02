@@ -124,6 +124,8 @@ export type Action =
   | {
       type: "sync-subscription";
       subscriptionId: string;
+      onSucess?: () => void;
+      onError?: (e: Error) => void;
     };
 
 export type StateContextState = {
@@ -219,7 +221,13 @@ export async function dispatch(
     case "prompt-to-agree-privacy-notice":
       return promptToAgreePrivacyNotice(state, update);
     case "sync-subscription":
-      return syncSubscription(state, update, action.subscriptionId);
+      return syncSubscription(
+        state,
+        update,
+        action.subscriptionId,
+        action.onSucess,
+        action.onError
+      );
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -728,7 +736,9 @@ async function sync(state: AppState, update: ZuUpdate) {
 async function syncSubscription(
   state: AppState,
   update: ZuUpdate,
-  subscriptionId: string
+  subscriptionId: string,
+  onSuccess?: () => void,
+  onError?: (e: Error) => void
 ) {
   try {
     console.log("[SYNC] loading pcds from subscription", subscriptionId);
@@ -752,7 +762,9 @@ async function syncSubscription(
     update({
       pcds: state.pcds
     });
+    onSuccess?.();
   } catch (e) {
+    onError?.(e);
     console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
   }
 }
