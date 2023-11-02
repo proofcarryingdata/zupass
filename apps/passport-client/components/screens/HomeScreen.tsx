@@ -9,7 +9,7 @@ import React, {
   useLayoutEffect,
   useState
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
@@ -24,6 +24,8 @@ import { FrogFolder } from "./FrogScreens/FrogFolder";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
+const FOLDER_QUERY_PARAM = "folder";
+
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
@@ -32,7 +34,10 @@ export function HomeScreenImpl() {
   const self = useSelf();
   const navigate = useNavigate();
 
-  const [browsingFolder, setBrowsingFolder] = useState("/");
+  const [searchParams, setSeachParams] = useSearchParams();
+  const [browsingFolder, setBrowsingFolder] = useState(
+    decodeURIComponent(searchParams.get(FOLDER_QUERY_PARAM)) || "/"
+  );
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
@@ -54,9 +59,13 @@ export function HomeScreenImpl() {
     }
   });
 
-  const onFolderClick = useCallback((folder: string) => {
-    setBrowsingFolder(folder);
-  }, []);
+  const onFolderClick = useCallback(
+    (folder: string) => {
+      setBrowsingFolder(folder);
+      setSeachParams({ [FOLDER_QUERY_PARAM]: encodeURIComponent(folder) });
+    },
+    [setSeachParams]
+  );
 
   const isRoot = isRootFolder(browsingFolder);
 
