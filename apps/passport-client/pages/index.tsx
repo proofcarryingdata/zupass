@@ -263,7 +263,7 @@ class App extends React.Component<object, AppState> {
   }
 
   jobSyncOfflineCheckins = async () => {
-    if (!this.state.self) {
+    if (!this.state.self || this.state.offline) {
       return;
     }
 
