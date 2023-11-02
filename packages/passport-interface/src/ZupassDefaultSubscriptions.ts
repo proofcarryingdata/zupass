@@ -1,9 +1,4 @@
-import {
-  AppendToFolderPermission,
-  DeleteFolderPermission,
-  PCDPermissionType,
-  ReplaceInFolderPermission
-} from "@pcd/pcd-collection";
+import { PCDPermissionType } from "@pcd/pcd-collection";
 import { Feed, ZupassFeedIds } from "./SubscriptionManager";
 
 export const zupassDefaultSubscriptions: Record<
@@ -25,11 +20,11 @@ export const zupassDefaultSubscriptions: Record<
       {
         folder: "Zuzalu '23",
         type: PCDPermissionType.DeleteFolder
-      } as DeleteFolderPermission,
+      },
       {
         folder: "Zuzalu '23",
         type: PCDPermissionType.ReplaceInFolder
-      } as ReplaceInFolderPermission
+      }
     ]
   },
   [ZupassFeedIds.Devconnect]: {
@@ -44,27 +39,27 @@ export const zupassDefaultSubscriptions: Record<
       {
         folder: "Devconnect",
         type: PCDPermissionType.AppendToFolder
-      } as AppendToFolderPermission,
+      },
       {
         folder: "Devconnect",
         type: PCDPermissionType.ReplaceInFolder
-      } as ReplaceInFolderPermission,
+      },
       {
         folder: "Devconnect",
         type: PCDPermissionType.DeleteFolder
-      } as DeleteFolderPermission,
+      },
       {
         folder: "SBC SRW",
         type: PCDPermissionType.AppendToFolder
-      } as AppendToFolderPermission,
+      },
       {
         folder: "SBC SRW",
         type: PCDPermissionType.ReplaceInFolder
-      } as ReplaceInFolderPermission,
+      },
       {
         folder: "SBC SRW",
         type: PCDPermissionType.DeleteFolder
-      } as DeleteFolderPermission
+      }
     ]
   },
   [ZupassFeedIds.Email]: {
@@ -79,11 +74,11 @@ export const zupassDefaultSubscriptions: Record<
       {
         folder: "Email",
         type: PCDPermissionType.DeleteFolder
-      } as DeleteFolderPermission,
+      },
       {
         folder: "Email",
         type: PCDPermissionType.ReplaceInFolder
-      } as ReplaceInFolderPermission
+      }
     ]
   },
   [ZupassFeedIds.Zuconnect_23]: {
@@ -98,11 +93,15 @@ export const zupassDefaultSubscriptions: Record<
       {
         folder: "Zuconnect",
         type: PCDPermissionType.DeleteFolder
-      } as DeleteFolderPermission,
+      },
       {
-        folder: "Zuconnect",
+        folder: "ZuConnect",
+        type: PCDPermissionType.DeleteFolder
+      },
+      {
+        folder: "ZuConnect",
         type: PCDPermissionType.ReplaceInFolder
-      } as ReplaceInFolderPermission
+      }
     ]
   }
 };

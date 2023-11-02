@@ -47,6 +47,15 @@ export function getDevconnectMockPretixAPIServer(
     );
 
     handlers.push(
+      rest.get(orgUrl + "/events/:event/categories", (req, res, ctx) => {
+        const org = mocker.getOrgByUrl(orgUrl);
+        const categories =
+          org.categoriesByEventId.get(req.params.event as string) ?? [];
+        return res(ctx.json({ results: categories, next: null }));
+      })
+    );
+
+    handlers.push(
       rest.get(orgUrl + "/events/:event/settings", (req, res, ctx) => {
         const org = mocker.getOrgByUrl(orgUrl);
         const settings = org.settingsByEventID.get(req.params.event as string);

@@ -9,7 +9,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -23,12 +23,17 @@ import path from "path";
 import { Pool } from "postgres-pool";
 import { ZuconnectTripshaAPI } from "../src/apis/zuconnect/zuconnectTripshaAPI";
 import { stopApplication } from "../src/application";
+import { ZuconnectTicketDB } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import { fetchAllZuconnectTickets } from "../src/database/queries/zuconnect/fetchZuconnectTickets";
 import { upsertZuconnectTicket } from "../src/database/queries/zuconnect/insertZuconnectTicket";
 import { insertZuzaluPretixTicket } from "../src/database/queries/zuzalu_pretix_tickets/insertZuzaluPretixTicket";
 import { sqlQuery } from "../src/database/sqlQuery";
-import { ZuconnectTripshaSyncService } from "../src/services/zuconnectTripshaSyncService";
+import {
+  ZuconnectTripshaSyncService,
+  apiTicketsToDBTickets,
+  zuconnectTicketsDifferent
+} from "../src/services/zuconnectTripshaSyncService";
 import { Zupass } from "../src/types";
 import { expectCurrentSemaphoreToBe } from "./semaphore/checkSemaphore";
 import {
@@ -44,6 +49,7 @@ import {
 import { testLogin } from "./user/testLoginPCDPass";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 describe("zuconnect functionality", function () {
   this.timeout(30_000);
@@ -55,6 +61,10 @@ describe("zuconnect functionality", function () {
   let user: User;
   let ticketPCD: EdDSATicketPCD;
   const numberOfValidTickets = goodResponse.tickets.length;
+  const zuconnectTripshaAPI = new ZuconnectTripshaAPI(
+    MOCK_ZUCONNECT_TRIPSHA_URL,
+    MOCK_ZUCONNECT_TRIPSHA_KEY
+  );
 
   const zkeyFilePath = path.join(
     __dirname,
@@ -76,10 +86,7 @@ describe("zuconnect functionality", function () {
     server.listen({ onUnhandledRequest: "bypass" });
 
     application = await startTestingApp({
-      zuconnectTripshaAPI: new ZuconnectTripshaAPI(
-        MOCK_ZUCONNECT_TRIPSHA_URL,
-        MOCK_ZUCONNECT_TRIPSHA_KEY
-      )
+      zuconnectTripshaAPI
     });
 
     if (!application.services.zuconnectTripshaSyncService) {
@@ -119,16 +126,17 @@ describe("zuconnect functionality", function () {
   });
 
   it("tickets should have expected values after sync", async () => {
-    const tickets = await fetchAllZuconnectTickets(db);
+    const dbTickets = await fetchAllZuconnectTickets(db);
+    const apiTickets = await zuconnectTripshaAPI.fetchTickets();
 
     const dbTicketsByExternalId = new Map(
-      tickets.map((ticket) => [ticket.external_ticket_id, ticket])
+      dbTickets.map((ticket) => [ticket.external_ticket_id, ticket])
     );
     const apiTicketsByExternalId = new Map(
-      goodResponse.tickets.map((ticket) => [ticket.id, ticket])
+      apiTickets.map((ticket) => [ticket.id, ticket])
     );
 
-    for (const ticket of tickets) {
+    for (const ticket of dbTickets) {
       expect(ticket.attendee_email).to.eq(
         apiTicketsByExternalId.get(ticket.external_ticket_id)?.email
       );
@@ -141,10 +149,26 @@ describe("zuconnect functionality", function () {
     ).to.eq(2);
     expect(
       dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info[0]
-    ).to.eq(goodResponse.tickets[5].options?.[0].name);
+    ).to.eq(apiTickets[5].extraInfo[0]);
     expect(
       dbTicketsByExternalId.get(idOfTicketWithAddons)?.extra_info[1]
-    ).to.eq(goodResponse.tickets[5].options?.[1].name);
+    ).to.eq(apiTickets[5].extraInfo[1]);
+  });
+
+  it("tickets from the API should show as being unchanged from the DB after sync", async () => {
+    const apiTickets = await zuconnectTripshaAPI.fetchTickets();
+    const dbTickets = await fetchAllZuconnectTickets(db);
+
+    const dbTicketsByExternalId = new Map(
+      dbTickets.map((ticket) => [ticket.external_ticket_id, ticket])
+    );
+
+    for (const apiTicket of apiTicketsToDBTickets(apiTickets)) {
+      const dbTicket = dbTicketsByExternalId.get(
+        apiTicket.external_ticket_id
+      ) as ZuconnectTicketDB;
+      expect(zuconnectTicketsDifferent(apiTicket, dbTicket)).to.be.false;
+    }
   });
 
   it("should soft-delete when tickets do not appear in API response", async () => {
@@ -301,7 +325,7 @@ describe("zuconnect functionality", function () {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const response = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       identity,
       payload,
       ZupassFeedIds.Zuconnect_23
@@ -310,10 +334,11 @@ describe("zuconnect functionality", function () {
 
     expect(response.success).to.be.true;
 
-    expect(response.value?.actions.length).to.eq(2);
-    const populateAction = response.value?.actions[1] as ReplaceInFolderAction;
+    expect(response.value?.actions.length).to.eq(3);
+    const populateAction = response.value?.actions[2];
+    expectToExist(populateAction, isReplaceInFolderAction);
     expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
-    expect(populateAction.folder).to.eq("Zuconnect");
+    expect(populateAction.folder).to.eq("ZuConnect");
     expect(populateAction.pcds[0].type).to.eq(EdDSATicketPCDPackage.name);
 
     ticketPCD = await EdDSATicketPCDPackage.deserialize(
@@ -439,7 +464,7 @@ describe("zuconnect functionality", function () {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const response = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       userWithTwoTicketsRow.identity,
       payload,
       ZupassFeedIds.Zuconnect_23
@@ -448,10 +473,11 @@ describe("zuconnect functionality", function () {
 
     expect(response.success).to.be.true;
 
-    expect(response.value?.actions.length).to.eq(2);
-    const populateAction = response.value?.actions[1] as ReplaceInFolderAction;
+    expect(response.value?.actions.length).to.eq(3);
+    const populateAction = response.value?.actions[2];
+    expectToExist(populateAction, isReplaceInFolderAction);
     expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
-    expect(populateAction.folder).to.eq("Zuconnect");
+    expect(populateAction.folder).to.eq("ZuConnect");
     expect(populateAction.pcds.length).to.eq(2);
     for (const pcd of populateAction.pcds) {
       expect(

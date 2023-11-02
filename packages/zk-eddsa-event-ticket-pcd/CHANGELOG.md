@@ -1,5 +1,11 @@
 # @pcd/zk-eddsa-event-ticket-pcd
 
+## 0.2.1
+
+### Patch Changes
+
+- update
+
 ## 0.2.0
 
 ### Minor Changes

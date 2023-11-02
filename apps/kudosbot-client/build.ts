@@ -1,10 +1,13 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import express from "express";
 import fs from "fs";
 import https from "https";
 import { IS_LOCAL_HTTPS } from "./src/constants";
+
+dotenv.config();
 
 const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
@@ -49,7 +52,7 @@ async function run(command: string) {
       await ctx.watch();
       const port = 3004;
 
-      if (IS_LOCAL_HTTPS) {
+      if (IS_LOCAL_HTTPS === "true") {
         console.log(`Serving local HTTPS...`);
         const app = express();
         app.use(express.static("public"));

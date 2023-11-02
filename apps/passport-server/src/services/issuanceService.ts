@@ -1,3 +1,4 @@
+import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
@@ -17,6 +18,7 @@ import {
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
   FeedHost,
+  FrogCryptoFolderName,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -42,13 +44,9 @@ import {
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
-  AppendToFolderAction,
-  AppendToFolderPermission,
-  DeleteFolderAction,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction,
   joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -88,12 +86,18 @@ import {
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
+import {
+  FROGCRYPTO_FEEDS,
+  FrogCryptoFeed,
+  FrogCryptoFeedHost
+} from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
 import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
+import { FrogcryptoService } from "./frogcryptoService";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
@@ -101,22 +105,29 @@ import { traced } from "./telemetryService";
 
 export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
 
+export enum FeedProviderName {
+  ZUPASS = "Zupass",
+  FROGCRYPTO = "FrogCrypto"
+}
+
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
-  private readonly feedHost: FeedHost;
+  private readonly feedHosts: Record<FeedProviderName, FeedHost>;
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
+  private readonly frogcryptoService: FrogcryptoService;
   private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
 
   public constructor(
     context: ApplicationContext,
     cacheService: PersistentCacheService,
     multiprocessService: MultiProcessService,
+    frogcryptoService: FrogcryptoService,
     rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
@@ -124,23 +135,23 @@ export class IssuanceService {
     this.context = context;
     this.cacheService = cacheService;
     this.multiprocessService = multiprocessService;
+    this.frogcryptoService = frogcryptoService;
     this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    const FEED_PROVIDER_NAME = "Zupass";
     this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
 
-    this.feedHost = new FeedHost(
+    const zupassFeedHost = new FeedHost(
       [
         {
           handleRequest: async (
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            const actions = [];
+            const actions: PCDAction[] = [];
 
             try {
               if (req.pcd === undefined) {
@@ -232,7 +243,7 @@ export class IssuanceService {
                     pcds: await this.issueFrogPCDs(),
                     folder: "Frogs",
                     type: PCDActionType.AppendToFolder
-                  } as AppendToFolderAction
+                  }
                 ]
               };
             } catch (e) {
@@ -254,7 +265,7 @@ export class IssuanceService {
               {
                 folder: "Frogs",
                 type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission
+              }
             ]
           }
         },
@@ -279,7 +290,7 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Email",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -287,7 +298,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -317,7 +328,7 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuzalu '23",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -325,7 +336,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -351,20 +362,27 @@ export class IssuanceService {
 
               const pcds = await this.issueZuconnectTicketPCDs(pcd);
 
-              // Clear out the folder
+              // Clear out the old folder
               actions.push({
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuconnect",
                 recursive: false
-              } as DeleteFolderAction);
+              });
+
+              // Clear out the folder
+              actions.push({
+                type: PCDActionType.DeleteFolder,
+                folder: "ZuConnect",
+                recursive: false
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
-                folder: "Zuconnect",
+                folder: "ZuConnect",
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -376,30 +394,80 @@ export class IssuanceService {
         }
       ],
       `${process.env.PASSPORT_SERVER_URL}/feeds`,
-      FEED_PROVIDER_NAME
+      FeedProviderName.ZUPASS
+    );
+    const frogcryptoFeedHost = new FrogCryptoFeedHost(
+      FROGCRYPTO_FEEDS.map((feed) => ({
+        handleRequest: async (
+          req: PollFeedRequest
+        ): Promise<PollFeedResponseValue> => {
+          try {
+            if (req.pcd === undefined) {
+              throw new PCDHTTPError(400, `Missing credential`);
+            }
+            await verifyFeedCredential(
+              req.pcd,
+              this.cachedVerifySignaturePCD.bind(this)
+            );
+
+            return {
+              actions: [
+                {
+                  pcds: await this.issueEdDSAFrogPCDs(req.pcd, feed),
+                  folder: FrogCryptoFolderName,
+                  type: PCDActionType.AppendToFolder
+                }
+              ]
+            };
+          } catch (e) {
+            if (e instanceof PCDHTTPError) {
+              throw e;
+            }
+
+            logger(`Error encountered while serving feed:`, e);
+            this.rollbarService?.reportError(e);
+          }
+          return { actions: [] };
+        },
+        feed
+      }))
+    );
+
+    this.feedHosts = [zupassFeedHost, frogcryptoFeedHost].reduce(
+      (acc, feedHost) => {
+        acc[feedHost.getProviderName()] = feedHost;
+        return acc;
+      },
+      {} as Record<string, FeedHost>
     );
   }
 
   public async handleListFeedsRequest(
-    request: ListFeedsRequest
+    request: ListFeedsRequest,
+    feedProvider: FeedProviderName
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHost.handleListFeedsRequest(request);
+    return this.feedHosts[feedProvider].handleListFeedsRequest(request);
   }
 
   public async handleListSingleFeedRequest(
-    request: ListSingleFeedRequest
+    request: ListSingleFeedRequest,
+    feedProvider: FeedProviderName
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHost.handleListSingleFeedRequest(request);
+    return this.feedHosts[feedProvider].handleListSingleFeedRequest(request);
   }
 
   public async handleFeedRequest(
-    request: PollFeedRequest
+    request: PollFeedRequest,
+    feedProvider: FeedProviderName
   ): Promise<PollFeedResponseValue> {
-    return this.feedHost.handleFeedRequest(request);
+    return this.feedHosts[feedProvider].handleFeedRequest(request);
   }
 
-  public hasFeedWithId(feedId: string): boolean {
-    return this.feedHost.hasFeedWithId(feedId);
+  public hasFeedWithId(
+    feedId: string,
+    feedProvider: FeedProviderName
+  ): boolean {
+    return this.feedHosts[feedProvider].hasFeedWithId(feedId);
   }
 
   public getRSAPublicKey(): string {
@@ -844,6 +912,42 @@ export class IssuanceService {
     return [frogPCD];
   }
 
+  private async issueEdDSAFrogPCDs(
+    credential: SerializedPCD<SemaphoreSignaturePCD>,
+    feed: FrogCryptoFeed
+  ): Promise<SerializedPCD[]> {
+    const serverUrl = process.env.PASSPORT_CLIENT_URL;
+
+    if (!serverUrl) {
+      logger("[ISSUE] can't issue frogs - unaware of the client location");
+      return [];
+    }
+
+    // TODO: return as user facing error
+    if (!feed.active) {
+      logger("[ISSUE] can't issue frogs - feed is inactive");
+      return [];
+    }
+
+    const frogPCD = await EdDSAFrogPCDPackage.serialize(
+      await EdDSAFrogPCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: this.exportedRSAPrivateKey
+        },
+        data: {
+          argumentType: ArgumentTypeName.Object,
+          value: await this.frogcryptoService.reserveFrogData(credential, feed)
+        },
+        id: {
+          argumentType: ArgumentTypeName.String
+        }
+      })
+    );
+
+    return [frogPCD];
+  }
+
   /**
    * Issues email PCDs based on the user's verified email address.
    * Currently we only verify a single email address, but could provide
@@ -1182,7 +1286,11 @@ export class IssuanceService {
           verified: true,
           group: KnownTicketGroup.Zuconnect23,
           publicKeyName: ZUPASS_TICKET_PUBLIC_KEY_NAME,
-          productId: zuconnectTicket.product_id
+          productId: zuconnectTicket.product_id,
+          ticketName:
+            zuconnectTicket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
+              ? zuconnectTicket.extra_info.join("\n")
+              : zuconnectProductIdToName(zuconnectTicket.product_id)
         }
       };
     } else {
@@ -1202,7 +1310,8 @@ export class IssuanceService {
                 ? ZUZALU_23_VISITOR_PRODUCT_ID
                 : zuzaluTicket.role === ZuzaluUserRole.Organizer
                 ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID
+                : ZUZALU_23_RESIDENT_PRODUCT_ID,
+            ticketName: undefined
           }
         };
       }
@@ -1280,7 +1389,8 @@ export async function startIssuanceService(
   context: ApplicationContext,
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null,
-  multiprocessService: MultiProcessService
+  multiprocessService: MultiProcessService,
+  frogcryptoService: FrogcryptoService
 ): Promise<IssuanceService | null> {
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
@@ -1299,6 +1409,7 @@ export async function startIssuanceService(
     context,
     cacheService,
     multiprocessService,
+    frogcryptoService,
     rollbarService,
     zupassRsaKey,
     zupassEddsaKey

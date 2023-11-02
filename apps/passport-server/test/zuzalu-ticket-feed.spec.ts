@@ -5,7 +5,7 @@ import {
   ZupassFeedIds,
   ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
-import { PCDActionType, ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { isReplaceInFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
@@ -23,6 +23,7 @@ import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
 import { testLogin } from "./user/testLoginPCDPass";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 describe("zuzalu pcdpass functionality", function () {
   this.timeout(30_000);
@@ -90,7 +91,7 @@ describe("zuzalu pcdpass functionality", function () {
     async function () {
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Zuzalu_23
@@ -101,7 +102,8 @@ describe("zuzalu pcdpass functionality", function () {
       }
 
       expect(response.value.actions.length).to.eq(2);
-      const action = response.value.actions[1] as ReplaceInFolderAction;
+      const action = response.value.actions[1];
+      expectToExist(action, isReplaceInFolderAction);
 
       expect(action.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(action.folder).to.eq("Zuzalu '23");

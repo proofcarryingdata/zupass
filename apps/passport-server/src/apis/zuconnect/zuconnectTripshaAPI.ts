@@ -31,7 +31,10 @@ const ZuconnectTripshaSchema = z.object({
     .nullable()
     .optional()
     .transform((last) => last ?? ""),
-  options: z.array(z.object({ id: z.string(), name: z.string() })).optional()
+  options: z
+    .array(z.object({ id: z.string(), name: z.string() }))
+    .optional()
+    .default([])
 });
 
 const ZuconnectTripshaNormalizedSchema = ZuconnectTripshaSchema

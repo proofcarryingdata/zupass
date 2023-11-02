@@ -46,3 +46,20 @@ export async function deleteTelegramChatTopic(
     [telegramChatId, telegramTopicId]
   );
 }
+
+export async function deleteTelegramForward(
+  client: Pool,
+  receiverChatTopicID: number,
+  senderChatTopicID: number | null
+): Promise<void> {
+  let queryString =
+    "DELETE FROM telegram_forwarding WHERE receiver_chat_topic_id = $1";
+  const queryParams = [receiverChatTopicID];
+
+  if (senderChatTopicID !== null) {
+    queryString += " AND sender_chat_topic_id = $2";
+    queryParams.push(senderChatTopicID);
+  }
+
+  await sqlQuery(client, queryString, queryParams);
+}

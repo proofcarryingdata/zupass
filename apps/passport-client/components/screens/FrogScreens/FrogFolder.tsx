@@ -1,3 +1,4 @@
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -29,13 +30,13 @@ export function FrogFolder({
         width={18}
         height={18}
       />
-      <img
-        draggable="false"
-        src="/images/frogs/frogcrypto.svg"
-        height={12}
-        width={135}
-        style={{ transform: "translate(-2.5px, 1px)" }}
-      />
+      <SuperFunkyFont>
+        {FrogCryptoFolderName.split("").map((letter, i) => (
+          <BounceText key={i} delay={i * 0.1}>
+            {letter}
+          </BounceText>
+        ))}
+      </SuperFunkyFont>
       <NewFont>
         <CountDown />
       </NewFont>
@@ -141,11 +142,11 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
           },
           move: {
             enable: true,
-            speed: { min: 10, max: 20 },
+            speed: { min: 5, max: 20 },
             direction: "top",
-            random: false,
+            random: true,
             straight: false,
-            outMode: "destroy",
+            outMode: "bounce-horizontal",
             gravity: {
               enable: true
             }
@@ -174,21 +175,88 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
 }
 
 const NewFont = styled.div`
-  font-size: 15px;
-  /* vertical-align: super; */
+  font-size: 14px;
   animation: color-change 1s infinite;
   font-family: monospace;
-  /* align-self: stretch; */
+  margin-left: auto;
 
   @keyframes color-change {
     0% {
-      color: #fc9575;
+      color: #ff9900;
     }
     50% {
-      color: #83b692;
+      color: #afffbc;
     }
     100% {
-      color: #fc9575;
+      color: #ff9900;
+    }
+  }
+`;
+
+export const SuperFunkyFont = styled.div`
+  font-family: "SuperFunky";
+  font-size: 20px;
+  display: flex;
+
+  * {
+    background-size: 100%;
+    background-color: #ff9900;
+    background-image: linear-gradient(45deg, #ff9900, #afffbc);
+    -webkit-background-clip: text;
+    -moz-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    -moz-text-fill-color: transparent;
+  }
+`;
+
+const BounceText = styled.span<{ delay: number }>`
+  animation: bounce 5s infinite ${(p) => p.delay}s;
+
+  @keyframes bounce {
+    0% {
+      transform: scale(1, 1) translateY(0);
+    }
+    2% {
+      transform: scale(1.1, 0.9) translateY(0);
+    }
+    5% {
+      transform: scale(0.9, 1.1) translateY(-10px);
+    }
+    10% {
+      transform: scale(1.05, 0.95) translateY(0);
+    }
+    12% {
+      transform: scale(1, 1) translateY(-2px);
+    }
+    15% {
+      transform: scale(1, 1) translateY(0);
+    }
+    100% {
+      transform: scale(1, 1) translateY(0);
+    }
+  }
+
+  @-webkit-keyframes bounce {
+    0% {
+      transform: scale(1, 1) translateY(0);
+    }
+    2% {
+      transform: scale(1.1, 0.9) translateY(0);
+    }
+    5% {
+      transform: scale(0.9, 1.1) translateY(-10px);
+    }
+    10% {
+      transform: scale(1.05, 0.95) translateY(0);
+    }
+    12% {
+      transform: scale(1, 1) translateY(-2px);
+    }
+    15% {
+      transform: scale(1, 1) translateY(0);
+    }
+    100% {
+      transform: scale(1, 1) translateY(0);
     }
   }
 `;

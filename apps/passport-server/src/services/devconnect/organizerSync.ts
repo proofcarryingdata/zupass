@@ -3,6 +3,7 @@ import { UNREDACT_TICKETS_TERMS_VERSION } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
+  DevconnectPretixCategory,
   DevconnectPretixCheckinList,
   DevconnectPretixEvent,
   DevconnectPretixEventSettings,
@@ -63,6 +64,7 @@ export const PRETIX_CHECKER = "Pretix";
 interface EventData {
   settings: DevconnectPretixEventSettings;
   eventInfo: DevconnectPretixEvent;
+  categories: DevconnectPretixCategory[];
   items: DevconnectPretixItem[];
   tickets: DevconnectPretixOrder[];
   checkinLists: DevconnectPretixCheckinList[];
@@ -241,20 +243,28 @@ export class OrganizerSync {
   }
 
   /**
-   * Validate that an item/products settings match our expectations.
-   * These settings correspond to the product being of type "Admission",
-   * "Personalization" being set to "Personalized ticket", and
-   * "Generate tickets" in the "Tickets & Badges" section being set to
+   * Validate that an item / product's settings match our expectations.
+   * These settings correspond to the product (1) either being an add-on item OR of
+   * type "Admission" with "Personalization" being set to "Personalized ticket"
+   * and (2) "Generate tickets" in the "Tickets & Badges" section being set to
    * "Choose automatically depending on event settings" in the Pretix UI.
    */
-  private validateEventItem(item: DevconnectPretixItem): string[] {
+  private validateEventItem(
+    item: DevconnectPretixItem,
+    addonCategoryIdSet: Set<number>
+  ): string[] {
     const errors = [];
-    if (item.admission !== true) {
-      errors.push(`Product type is not "Admission"`);
-    }
 
-    if (item.personalized !== true) {
-      errors.push(`"Personalization" is not set to "Personalized ticket"`);
+    // If item is not an add-on, check that it is an Admission product and
+    // that "Personalization" is set to "Personalized Ticket"
+    if (!addonCategoryIdSet.has(item.category)) {
+      if (item.admission !== true) {
+        errors.push(`Product type is not "Admission"`);
+      }
+
+      if (item.personalized !== true) {
+        errors.push(`"Personalization" is not set to "Personalized ticket"`);
+      }
     }
 
     if (
@@ -279,9 +289,12 @@ export class OrganizerSync {
     eventData: EventData,
     eventConfig: DevconnectPretixEventConfig
   ): string[] {
-    const { settings, items } = eventData;
+    const { settings, items, categories } = eventData;
     const activeItemIdSet = new Set(eventConfig.activeItemIDs);
     const superuserItemIdSet = new Set(eventConfig.superuserItemIds);
+    const addonCategoryIdSet = new Set(
+      categories.filter((a) => a.is_addon).map((a) => a.id)
+    );
 
     // We want to make sure that we log all errors, so we collect everything
     // and only throw an exception once we have found all of them.
@@ -301,7 +314,7 @@ export class OrganizerSync {
       // Ignore items which are not in the event's "activeItemIDs" set
       if (activeItemIdSet.has(item.id.toString())) {
         fetchedItemsIdSet.add(item.id.toString());
-        const itemErrors = this.validateEventItem(item);
+        const itemErrors = this.validateEventItem(item, addonCategoryIdSet);
         if (itemErrors.length > 0) {
           errors.push(
             `Product "${item.name.en}" (${item.id}) in event "${eventData.eventInfo.name.en}" is invalid:\n` +
@@ -403,6 +416,12 @@ export class OrganizerSync {
         eventID
       );
 
+      const categories = await this.pretixAPI.fetchCategories(
+        orgURL,
+        token,
+        eventID
+      );
+
       const items = await this.pretixAPI.fetchItems(orgURL, token, eventID);
 
       const eventInfo = await this.pretixAPI.fetchEvent(orgURL, token, eventID);
@@ -417,6 +436,7 @@ export class OrganizerSync {
 
       return {
         settings,
+        categories,
         items,
         eventInfo,
         tickets,
@@ -1023,7 +1043,7 @@ export class OrganizerSync {
 
           tickets.push({
             email,
-            full_name: attendee_name,
+            full_name: attendee_name || order.name || "", // Fallback since we have a not-null constraint
             devconnect_pretix_items_info_id: existingItem.id,
             pretix_events_config_id: eventConfigID,
             is_deleted: false,

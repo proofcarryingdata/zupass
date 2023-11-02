@@ -26,11 +26,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import {
-  PCDActionType,
-  ReplaceInFolderAction,
-  isReplaceInFolderAction
-} from "@pcd/pcd-collection";
+import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -122,6 +118,7 @@ import {
 } from "./user/testUserSync";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 // @todo: merge this with zupass.spec.ts, and delete this file, after completely deprecating pcdpass
 describe("devconnect functionality", function () {
@@ -188,7 +185,10 @@ describe("devconnect functionality", function () {
     eventBConfigId = await insertPretixEventConfig(
       db,
       organizerConfigId,
-      [mocker.get().organizer1.eventBItem3.id + ""],
+      [
+        mocker.get().organizer1.eventBItem3.id + "",
+        mocker.get().organizer1.eventBItem4.id + ""
+      ],
       [mocker.get().organizer1.eventBItem3.id + ""],
       mocker.get().organizer1.eventB.slug
     );
@@ -254,7 +254,7 @@ describe("devconnect functionality", function () {
             {
               id: eventBConfigId,
               eventID: "event-b",
-              activeItemIDs: ["10003"],
+              activeItemIDs: ["10003", "10004"],
               superuserItemIds: ["10003"]
             },
             {
@@ -1422,14 +1422,19 @@ describe("devconnect functionality", function () {
         throw new Error(`Could not fetch event info for ${eventBConfigId}`);
       }
 
+      const originalItemId = mocker.get().organizer1.eventBItem3.id;
       const originalItem = (
         await fetchPretixItemsInfoByEvent(db, eventInfo.id)
-      )[0];
+      ).find((i) => i.item_id === originalItemId.toString());
+
+      if (!originalItem) {
+        throw new Error(`Could not fetch item info for ${originalItemId}`);
+      }
 
       mocker.updateItem(
         mocker.get().organizer1.orgUrl,
         mocker.get().organizer1.eventB.slug,
-        mocker.get().organizer1.eventBItem3.id,
+        originalItemId,
         (item) => {
           // This is valid
           //item.generate_tickets = null;
@@ -1438,7 +1443,13 @@ describe("devconnect functionality", function () {
       );
 
       await devconnectPretixSyncService.trySync();
-      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id))[0];
+      const item = (await fetchPretixItemsInfoByEvent(db, eventInfo.id)).find(
+        (i) => i.item_id === originalItemId.toString()
+      );
+
+      if (!item) {
+        throw new Error(`Could not fetch item info for ${originalItemId}`);
+      }
 
       // The event name matches the one fetched during sync
       expect(item.item_name).to.eq(updatedNameInNewSync);
@@ -1756,7 +1767,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1770,8 +1781,8 @@ describe("devconnect functionality", function () {
       expect(response.value?.actions?.length).to.eq(3);
 
       // Now we have an action to populate the folder
-      const populateAction = response.value
-        ?.actions?.[2] as ReplaceInFolderAction;
+      const populateAction = response.value?.actions?.[2];
+      expectToExist(populateAction, isReplaceInFolderAction);
 
       expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
       expect(populateAction.folder).to.eq("Devconnect/Event A");
@@ -1798,13 +1809,13 @@ describe("devconnect functionality", function () {
     MockDate.set(new Date());
     const payload = JSON.stringify(createFeedCredentialPayload());
     const expressResponse1 = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       identity,
       payload,
       ZupassFeedIds.Devconnect
     );
     const expressResponse2 = await pollFeed(
-      application.expressContext.localEndpoint,
+      `${application.expressContext.localEndpoint}/feeds`,
       identity,
       payload,
       ZupassFeedIds.Devconnect
@@ -1812,8 +1823,10 @@ describe("devconnect functionality", function () {
     MockDate.reset();
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
-    const action1 = response1.actions[2] as ReplaceInFolderAction;
-    const action2 = response2.actions[2] as ReplaceInFolderAction;
+    const action1 = response1.actions[2];
+    expectToExist(action1, isReplaceInFolderAction);
+    const action2 = response2.actions[2];
+    expectToExist(action2, isReplaceInFolderAction);
 
     const pcds1 = await Promise.all(
       action1.pcds.map((pcd) => EdDSATicketPCDPackage.deserialize(pcd.pcd))
@@ -1857,7 +1870,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1866,7 +1879,8 @@ describe("devconnect functionality", function () {
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(3);
 
-      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      const devconnectAction = responseBody.actions[2];
+      expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
       expect(devconnectAction.folder).to.eq("Devconnect/New name");
 
@@ -1907,7 +1921,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const response = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1915,7 +1929,8 @@ describe("devconnect functionality", function () {
       MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
       expect(responseBody.actions.length).to.eq(3);
-      const devconnectAction = responseBody.actions[2] as ReplaceInFolderAction;
+      const devconnectAction = responseBody.actions[2];
+      expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
       expect(Array.isArray(devconnectAction.pcds)).to.eq(true);
@@ -1958,7 +1973,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const issueResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -1966,7 +1981,8 @@ describe("devconnect functionality", function () {
       MockDate.reset();
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
 
-      const action = issueResponseBody.actions[2] as ReplaceInFolderAction;
+      const action = issueResponseBody.actions[2];
+      expectToExist(action, isReplaceInFolderAction);
       const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
       ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
@@ -2009,7 +2025,7 @@ describe("devconnect functionality", function () {
     async function () {
       MockDate.set(new Date());
       const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         "asdf",
         ZupassFeedIds.Devconnect
@@ -2031,7 +2047,7 @@ describe("devconnect functionality", function () {
       // Attempt to use credential payload one hour later
       MockDate.set(new Date(2023, 10, 5, 15, 30, 0));
       const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         identity,
         payload,
         ZupassFeedIds.Devconnect
@@ -2049,7 +2065,7 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date());
       const payload = JSON.stringify(createFeedCredentialPayload());
       const expressResponse = await pollFeed(
-        application.expressContext.localEndpoint,
+        `${application.expressContext.localEndpoint}/feeds`,
         new Identity(),
         payload,
         ZupassFeedIds.Devconnect
@@ -2353,7 +2369,7 @@ describe("devconnect functionality", function () {
         (tt) => tt.ticketGroup === KnownTicketGroup.Devconnect23
       );
 
-      expect(devconnectTicketTypes?.length).to.eq(3);
+      expect(devconnectTicketTypes?.length).to.eq(4);
     }
   );
 

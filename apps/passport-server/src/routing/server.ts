@@ -7,12 +7,12 @@ import morgan from "morgan";
 import nocache from "nocache";
 import { EventName, sendEvent } from "../apis/honeycombAPI";
 import { ApplicationContext, GlobalServices, Zupass } from "../types";
-import { IS_PROD } from "../util/isProd";
 import { logger } from "../util/logger";
 import { tracingMiddleware } from "./middlewares/tracingMiddleware";
 import { respondWithError } from "./pcdHttpError";
 import { initAccountRoutes } from "./routes/accountRoutes";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
+import { initFrogcryptoRoutes } from "./routes/frogcryptoRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initKudosbotRoutes } from "./routes/kudosbotRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
@@ -32,8 +32,7 @@ export async function startHttpServer(
     server: http.Server;
     localEndpoint: string;
   }>((resolve, reject) => {
-    const envPort = parseInt(process.env.PORT ?? "", 10);
-    const port = IS_PROD ? envPort : 3002;
+    const port = parseInt(process.env.PORT ?? "3002", 10);
     if (isNaN(port)) {
       throw new Error("couldn't start http server, missing port");
     }
@@ -121,6 +120,7 @@ function initAllRoutes(
   initPCDIssuanceRoutes(app, context, globalServices);
   initTelegramRoutes(app, context, globalServices);
   initKudosbotRoutes(app, context, globalServices);
+  initFrogcryptoRoutes(app, context, globalServices);
   initLogRoutes(app);
 }
 

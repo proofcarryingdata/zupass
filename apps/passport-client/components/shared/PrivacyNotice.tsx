@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { Button, Spacer } from "../core";
 
-function PrivacyNoticeText() {
+export function PrivacyNoticeText() {
   return (
     <Prose>
       <h2>ZUPASS PRIVACY NOTICE</h2>
@@ -308,6 +308,7 @@ const MinimizedNotice = styled.div`
 
   &:hover {
     background: rgba(255, 255, 255, 0.9);
+    color: black;
   }
 `;
 
@@ -344,6 +345,7 @@ const ExpandedTermsTextContainer = styled.div`
   border-radius: 8px;
   padding: 32px 16px;
   background: white;
+  color: black;
 `;
 const Prose = styled.div`
   p {

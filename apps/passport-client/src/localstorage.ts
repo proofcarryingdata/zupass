@@ -1,5 +1,8 @@
-import { FeedSubscriptionManager, User } from "@pcd/passport-interface";
-import { NetworkFeedApi } from "@pcd/passport-interface/src/FeedAPI";
+import {
+  FeedSubscriptionManager,
+  NetworkFeedApi,
+  User
+} from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
