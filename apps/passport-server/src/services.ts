@@ -1,4 +1,3 @@
-import { LRUCache } from "lru-cache";
 import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
@@ -27,10 +26,6 @@ export async function startServices(
 ): Promise<GlobalServices> {
   await startTelemetry(context);
   instrumentPCDs();
-
-  const verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
-    max: 1000
-  });
 
   const multiprocessService = startMultiProcessService();
   const discordService = await startDiscordService();
@@ -71,18 +66,16 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
-  const frogcryptoService = startFrogcryptoService(
-    context,
-    rollbarService,
-    verificationPromiseCache
-  );
   const issuanceService = await startIssuanceService(
     context,
     persistentCacheService,
     rollbarService,
-    multiprocessService,
-    frogcryptoService,
-    verificationPromiseCache
+    multiprocessService
+  );
+  const frogcryptoService = startFrogcryptoService(
+    context,
+    rollbarService,
+    issuanceService
   );
   const services: GlobalServices = {
     semaphoreService,

@@ -49,7 +49,7 @@ export interface GlobalServices {
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
   kudosbotService: KudosbotService | null;
-  frogcryptoService: FrogcryptoService;
+  frogcryptoService: FrogcryptoService | null;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
 }
