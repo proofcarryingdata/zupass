@@ -1,6 +1,5 @@
 import { Biome } from "@pcd/eddsa-frog-pcd";
-import chai, { expect } from "chai";
-import chaiAsPromised from "chai-as-promised";
+import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import { Client } from "pg";
@@ -25,7 +24,6 @@ describe("database reads and writes for frogcrypto features", function () {
   let client: Client;
 
   this.beforeAll(async () => {
-    chai.use(chaiAsPromised);
     await overrideEnvironment(testingEnv);
     db = await getDB();
     client = await db.connect();

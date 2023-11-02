@@ -9,7 +9,7 @@
     "dev": "yarn build && nodemon -w src -e ts --exec \"yarn build && yarn start:dev\"",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "test": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
     "clean": "rm -rf node_modules"
   },
