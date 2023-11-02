@@ -35,7 +35,6 @@ import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
-import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
   StateContext,
@@ -47,6 +46,7 @@ import {
   loadEncryptionKey,
   loadIdentity,
   loadPCDs,
+  loadPersistentSyncStatus,
   loadSelf,
   loadSubscriptions,
   saveIdentity,
@@ -221,10 +221,6 @@ async function loadInitialState(): Promise<AppState> {
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
-  if (self) {
-    await addDefaultSubscriptions(subscriptions);
-  }
-
   let modal = { modalType: "none" } as AppState["modal"];
 
   if (
@@ -239,6 +235,8 @@ async function loadInitialState(): Promise<AppState> {
 
   const credentialCache = createStorageBackedCredentialCache();
 
+  const persistentSyncStatus = loadPersistentSyncStatus();
+
   return {
     self,
     encryptionKey,
@@ -247,7 +245,8 @@ async function loadInitialState(): Promise<AppState> {
     modal,
     subscriptions,
     resolvingSubscriptionId: undefined,
-    credentialCache
+    credentialCache,
+    serverStorageRevision: persistentSyncStatus.serverStorageRevision
   };
 }
 

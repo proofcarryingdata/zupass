@@ -49,12 +49,19 @@ export interface AppState {
   // If set, the user has had their password changed from a different device
   anotherDeviceChangedPassword?: boolean;
 
+  // Dynamic (in-memory-only) state-machine for sync of E2EE encrypted data.
   uploadedUploadId?: string;
   uploadingUploadId?: string;
   downloadedPCDs?: boolean;
   downloadingPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
   loadingIssuedPCDs?: boolean;
+
+  // Persistent sync state-machine fields, saved in local storage as a
+  // PersistentSyncStatus object.  This is structured to allow for more
+  // fields to be added later.  See the docs in that type for the meaning of
+  // individual fields.
+  serverStorageRevision?: string;
 
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;

@@ -48,15 +48,21 @@ export function SyncExistingScreen() {
       setIsLoading(false);
 
       if (!storageResult.success) {
-        setError(
-          "Couldn't login with this Sync Key. If you've lost access to your Sync Key" +
-            " you can reset your account from the homepage of this website."
-        );
-        return;
+        if ("NotFound" === storageResult.error.name) {
+          return setError(
+            "Couldn't login with this Sync Key. If you've lost access to your" +
+              " Sync Key you can reset your account from the homepage of this" +
+              " website."
+          );
+        } else {
+          return setError(
+            "An error occurred while downloading encrypted storage."
+          );
+        }
       }
 
       dispatch({
-        type: "load-from-sync",
+        type: "load-after-login",
         storage: storageResult.value,
         encryptionKey
       });
