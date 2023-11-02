@@ -66,7 +66,7 @@ export function setupBroadcastChannel(
 }
 
 export function closeBroadcastChannel(): void {
-  channel?.close(); // Not bothering to await this promise.
+  channel?.close().catch(console.error);
   channel = null;
 }
 
@@ -78,7 +78,7 @@ export function postOnBroadcastChannel(eventData: string): void {
     );
   }
   console.log("[BROADCAST_CHANNEL] Posting message", eventData);
-  channel.postMessage(eventData); // Not bothering to await this promise.
+  channel.postMessage(eventData).catch(console.error);
 }
 
 export function forceReloadPage(): void {
