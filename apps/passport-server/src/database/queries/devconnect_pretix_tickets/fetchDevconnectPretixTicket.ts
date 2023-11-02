@@ -36,7 +36,10 @@ export async function fetchDevconnectPretixTicketsByEvent(
   const result = await sqlQuery(
     client,
     `\
-    select t.* from devconnect_pretix_tickets t
+    select ei.event_name, ii.item_name, t.* 
+    from devconnect_pretix_tickets t
+    left join devconnect_pretix_events_info ei on ei.pretix_events_config_id = t.pretix_events_config_id
+    left join devconnect_pretix_items_info ii on ii.devconnect_pretix_events_info_id = ei.id and ii.id = t.devconnect_pretix_items_info_id
     where t.pretix_events_config_id = $1 and t.is_deleted = false`,
     [eventConfigID]
   );
