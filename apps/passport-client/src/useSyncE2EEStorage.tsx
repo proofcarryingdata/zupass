@@ -13,9 +13,8 @@ import {
   requestUploadEncryptedStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { useCallback, useContext, useEffect, useState } from "react";
+import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
-import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
@@ -180,16 +179,4 @@ export function useSyncE2EEStorage() {
   useEffect(() => {
     load();
   }, [load]);
-}
-
-export function useHasUploaded() {
-  const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
-  const { hash } = usePCDCollectionWithHash();
-  const uploadedId = useUploadedId();
-
-  useEffect(() => {
-    setHasUploaded(hash === uploadedId);
-  }, [hash, uploadedId]);
-
-  return hasUploaded;
 }

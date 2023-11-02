@@ -74,7 +74,7 @@ export async function prove(args: EmailPCDArgs): Promise<EmailPCD> {
       argumentType: ArgumentTypeName.String
     },
     id: {
-      value: undefined,
+      value: args.id.value ? args.id.value + "-signature" : undefined,
       argumentType: ArgumentTypeName.String
     }
   });
