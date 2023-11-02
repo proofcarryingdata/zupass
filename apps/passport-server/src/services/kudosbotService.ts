@@ -4,6 +4,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   KudosTargetType,
+  SemaphoreSignatureKudosPCD,
   SemaphoreSignatureKudosPCDArgs,
   SemaphoreSignatureKudosPCDPackage
 } from "@pcd/semaphore-signature-kudos-pcd";
@@ -12,6 +13,7 @@ import { Bot, session } from "grammy";
 import { fetchSemaphoreIdFromTelegramUsername } from "../database/queries/telegram/fetchSemaphoreId";
 import { fetchTelegramConversationsByChatId } from "../database/queries/telegram/fetchTelegramConversation";
 import { fetchTelegramUserIdFromSemaphoreId } from "../database/queries/telegram/fetchTelegramUserId";
+import { fetchTelegramUsernameFromSemaphoreId } from "../database/queries/telegram/fetchTelegramUsername";
 import { insertKudosbotProof } from "../database/queries/telegram/insertKudosbotProof";
 import { updateTelegramUsername } from "../database/queries/telegram/insertTelegramConversation";
 import { ApplicationContext } from "../types";
@@ -67,9 +69,6 @@ export class KudosbotService {
           argumentType: ArgumentTypeName.Object,
           value: {
             watermark,
-            giver: {
-              semaphoreID: sessionData.giverSemaphoreId
-            },
             target: {
               type: KudosTargetType.User,
               user: {
@@ -270,16 +269,18 @@ export class KudosbotService {
     context: ApplicationContext,
     proof: string
   ): Promise<void> {
-    const pcd = await SemaphoreSignatureKudosPCDPackage.deserialize(
-      JSON.parse(proof).pcd
-    );
+    const pcd: SemaphoreSignatureKudosPCD =
+      await SemaphoreSignatureKudosPCDPackage.deserialize(
+        JSON.parse(proof).pcd
+      );
 
     const pcdValid = await SemaphoreSignatureKudosPCDPackage.verify(pcd);
     if (!pcdValid) {
       throw new Error("Proof is not valid");
     }
 
-    const kudosGiverSemaphoreId = pcd.claim.data.giver.semaphoreID;
+    const kudosGiverSemaphoreId =
+      pcd.proof.semaphoreSignaturePCD.claim.identityCommitment;
     const kudosGiverTelegramUserId = await fetchTelegramUserIdFromSemaphoreId(
       context.dbPool,
       kudosGiverSemaphoreId
@@ -288,21 +289,24 @@ export class KudosbotService {
       throw new Error("Sender does not yet exist");
     }
 
-    if (
-      pcd.proof.semaphoreSignaturePCD.claim.identityCommitment !=
-      kudosGiverSemaphoreId
-    ) {
-      throw new Error(
-        "Kudos giver semaphore ID does not match proof identity commitment"
+    const { target, watermark } = pcd.claim.data;
+    if (target.type === KudosTargetType.Post) {
+      throw new Error("Not supported yet");
+      // TODO: fix weird type issue here
+    } else if (pcd.claim.data.target.user?.semaphoreID) {
+      const kudosTargetTelegramUsername =
+        await fetchTelegramUsernameFromSemaphoreId(
+          context.dbPool,
+          pcd.claim.data.target.user.semaphoreID
+        );
+
+      await insertKudosbotProof(context.dbPool, proof);
+
+      await this.bot.api.sendMessage(
+        kudosGiverTelegramUserId,
+        `Your Kudos to @${kudosTargetTelegramUsername} has been received! ${watermark}`
       );
     }
-
-    await insertKudosbotProof(context.dbPool, proof);
-
-    await this.bot.api.sendMessage(
-      kudosGiverTelegramUserId,
-      `Your Kudos has been received! ${pcd.claim.data.watermark}`
-    );
   }
 
   public async getBotURL(): Promise<string> {

@@ -38,17 +38,18 @@ export enum KudosTargetType {
 export type KudosUserTarget = {
   type: KudosTargetType.User;
   user: KudosUserInfo;
+  post?: never;
 };
 
 export type KudosPostTarget = {
   type: KudosTargetType.Post;
+  user?: never;
   post: ZKEdDSAEventTicketPCD;
 };
 
 export type KudosTarget = KudosUserTarget | KudosPostTarget;
 
 export interface IKudosData {
-  giver: KudosUserInfo;
   target: KudosTarget;
   watermark: string;
 }
@@ -260,7 +261,7 @@ export function getDisplayOptions(
     };
   }
 
-  const header = `@${kudosData.giver} gave @${kudosData.target} a kudos`;
+  const header = `${pcd.proof.semaphoreSignaturePCD.claim.identityCommitment} gave @${kudosData.target} a kudos`;
 
   return {
     header,
