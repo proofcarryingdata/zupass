@@ -13,7 +13,7 @@ const CopyButton: React.FC<CopyButtonProps> = ({ link }) => {
 
   return (
     <button
-      className="flex items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium"
+      className="flex items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium shadow-sm"
       onClick={() => {
         copyLink();
         setCopied(true);

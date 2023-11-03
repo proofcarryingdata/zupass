@@ -1,5 +1,6 @@
 "use client";
 
+import CopyButton from "@/components/CopyButton";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   AnonTopicDataPayload,
@@ -237,19 +238,13 @@ export default function () {
                 email.
               </span>
               <div className="flex item-center gap-4 mx-auto mt-4">
-                <button
-                  className="flex items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      window.location.origin +
-                        window.location.pathname +
-                        window.location.search
-                    );
-                    setCopied(true);
-                  }}
-                >
-                  {copied ? "Link copied!" : "Copy link"}
-                </button>
+                <CopyButton
+                  link={
+                    window.location.origin +
+                    window.location.pathname +
+                    window.location.search
+                  }
+                />
               </div>
             </div>
           )}
