@@ -1091,7 +1091,7 @@ export class TelegramService {
 
       const expectedExternalNullifier = getAnonTopicNullifier().toString();
 
-      if (externalNullifier !== expectedExternalNullifier.toString())
+      if (externalNullifier !== expectedExternalNullifier)
         throw new Error("Nullifier mismatch - try proving again.");
 
       const nullifierData = await fetchAnonTopicNullifier(
@@ -1171,7 +1171,6 @@ export class TelegramService {
         chat.id,
         parseInt(topic.topic_id),
         formattedMessage
-        // BigInt(nullifierHash)
       );
     });
   }

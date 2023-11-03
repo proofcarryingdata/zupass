@@ -16,7 +16,7 @@ export default function Loading() {
         </span>
       </div>
       <div className="flex flex-col gap-2 mt-4 w-full">
-        {[...Array(10)].map((_message: any, i: number) => (
+        {[...Array(5)].map((_message: any, i: number) => (
           <div
             className="w-full flex flex-col border border-black border-opacity-10 rounded-lg p-4 animate-pulse"
             key={i}
