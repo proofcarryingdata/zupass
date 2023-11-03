@@ -27,10 +27,8 @@ export function EdDSATicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
 
 function TicketQR({ pcd }: { pcd: EdDSATicketPCD }) {
   const generate = useCallback(async () => {
-    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     const serialized = await EdDSATicketPCDPackage.serialize(pcd);
     const serializedPCD = JSON.stringify(serialized);
-    console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
     if (!initArgs.makeEncodedVerifyLink) {
       throw new Error("must provide makeEncodedVerifyLink");

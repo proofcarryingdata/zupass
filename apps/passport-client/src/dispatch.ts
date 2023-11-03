@@ -127,12 +127,14 @@ export type Action =
       onError?: (e: Error) => void;
     };
 
-export type StateContextState = {
+export type StateContextValue = {
   getState: GetState;
   stateEmitter: StateEmitter;
   dispatch: Dispatcher;
+  update: ZuUpdate;
 };
-export const StateContext = createContext<StateContextState>({} as any);
+
+export const StateContext = createContext<StateContextValue>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 
