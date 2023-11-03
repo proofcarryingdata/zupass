@@ -292,8 +292,10 @@ export class KudosbotService {
     const { target, watermark } = pcd.claim.data;
     if (target.type === KudosTargetType.Post) {
       throw new Error("Not supported yet");
-      // TODO: fix weird type issue here
-    } else if (pcd.claim.data.target.user?.semaphoreID) {
+    } else if (target.type === KudosTargetType.User) {
+      if (!pcd.claim.data.target.user?.semaphoreID) {
+        throw new Error("Kudos format is invalid");
+      }
       const kudosTargetTelegramUsername =
         await fetchTelegramUsernameFromSemaphoreId(
           context.dbPool,
