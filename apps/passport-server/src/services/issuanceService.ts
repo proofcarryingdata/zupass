@@ -40,8 +40,8 @@ import {
   ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
-  verifyFeedCredential,
-  zupassDefaultSubscriptions
+  getZupassDefaultSubscriptions,
+  verifyFeedCredential
 } from "@pcd/passport-interface";
 import {
   PCDAction,
@@ -144,6 +144,8 @@ export class IssuanceService {
     this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
+
+    const zupassDefaultSubscriptions = getZupassDefaultSubscriptions();
 
     const zupassFeedHost = new FeedHost(
       [

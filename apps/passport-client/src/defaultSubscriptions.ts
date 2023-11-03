@@ -2,7 +2,7 @@ import {
   FeedSubscriptionManager,
   Subscription,
   ZupassFeedIds,
-  zupassDefaultSubscriptions
+  getZupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import { appConfig } from "../src/appConfig";
 
@@ -28,7 +28,7 @@ export async function addDefaultSubscriptions(
   if (!subscriptions.hasProvider(DEFAULT_FEED_URL)) {
     subscriptions.addProvider(DEFAULT_FEED_URL, DEFAULT_FEED_PROVIDER_NAME);
   }
-
+  const zupassDefaultSubscriptions = getZupassDefaultSubscriptions();
   for (const id in zupassDefaultSubscriptions) {
     subscriptions.subscribe(
       DEFAULT_FEED_URL,
