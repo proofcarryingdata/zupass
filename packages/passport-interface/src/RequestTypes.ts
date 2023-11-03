@@ -3,7 +3,11 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { FrogCryptoFrogData, FrogCryptoScore } from "./FrogCrypto";
+import {
+  FrogCryptoDbFeedData,
+  FrogCryptoFrogData,
+  FrogCryptoScore
+} from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
@@ -711,6 +715,7 @@ export interface FrogCryptoComputedUserState {
   feedId: string;
   lastFetchedAt: number;
   nextFetchAt: number;
+  active: boolean;
 }
 
 /**
@@ -756,4 +761,22 @@ export type FrogCryptoDeleteFrogsRequest = {
  */
 export interface FrogCryptoDeleteFrogsResponseValue {
   frogs: FrogCryptoFrogData[];
+}
+
+/**
+ * Admin request to manage feeds in the databse.
+ */
+export type FrogCryptoUpdateFeedsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  /**
+   * Pass empty array for no-op and return all feeds.
+   */
+  feeds: FrogCryptoDbFeedData[];
+};
+
+/**
+ * Response to {@link FrogCryptoUpdateFeedsRequest} and returns all feeds.
+ */
+export interface FrogCryptoUpdateFeedsResponseValue {
+  feeds: FrogCryptoDbFeedData[];
 }

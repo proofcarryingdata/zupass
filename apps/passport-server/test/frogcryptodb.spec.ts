@@ -1,4 +1,4 @@
-import { Biome } from "@pcd/eddsa-frog-pcd";
+import { FrogCryptoDbFeedData } from "@pcd/passport-interface";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -8,15 +8,17 @@ import { getDB } from "../src/database/postgresPool";
 import {
   deleteFrogData,
   fetchUserFeedsState,
+  getFeedData,
   getFrogData,
   getPossibleFrogIds,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
+  upsertFeedData,
   upsertFrogData
 } from "../src/database/queries/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
-import { testFrogs, testFrogsAndObjects } from "./util/frogcrypto";
+import { testFeeds, testFrogs, testFrogsAndObjects } from "./util/frogcrypto";
 
 describe("database reads and writes for frogcrypto features", function () {
   this.timeout(15_000);
@@ -70,13 +72,15 @@ describe("database reads and writes for frogcrypto features", function () {
   });
 
   step("sample a frog", async function () {
-    const frog = await sampleFrogData(db, [Biome.Jungle]);
+    const frog = await sampleFrogData(db, {
+      Jungle: { dropWeightScaler: 1 }
+    });
 
     expect(frog?.biome).to.eq("Jungle");
   });
 
   step("return undefined if there is no frog to sample", async function () {
-    const frog = await sampleFrogData(db, []);
+    const frog = await sampleFrogData(db, {});
 
     expect(frog).to.be.undefined;
   });
@@ -125,5 +129,26 @@ describe("database reads and writes for frogcrypto features", function () {
 
     const possibleFrogIds = await getPossibleFrogIds(db);
     expect(possibleFrogIds).to.deep.eq([1, 2, 3, 7, 8]);
+  });
+  
+  step("insert feeds", async function () {
+    await upsertFeedData(db, testFeeds);
+
+    const allFeeds = await getFeedData(db);
+    expect(allFeeds.length).to.eq(testFeeds.length);
+  });
+
+  step("update feeds", async function () {
+    const mutatedFeed = JSON.parse(
+      JSON.stringify(testFeeds[3])
+    ) as FrogCryptoDbFeedData;
+    mutatedFeed.feed.private = false;
+    await upsertFeedData(db, [mutatedFeed]);
+
+    const allFeeds = await getFeedData(db);
+    expect(allFeeds.length).to.eq(testFeeds.length);
+    expect(
+      allFeeds.find((feed) => feed.id === mutatedFeed.uuid)?.private
+    ).to.eq(false);
   });
 });

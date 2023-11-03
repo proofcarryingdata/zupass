@@ -1,3 +1,118 @@
+import { Biome, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+
+import { Feed } from "./SubscriptionManager";
+
+/**
+ * Map of configs for Biome(s) where PCDs can be issued from this feed
+ */
+export type FrogCryptoFeedBiomeConfigs = Partial<
+  Record<
+    keyof typeof Biome,
+    {
+      /**
+       * A scaling factor that is multiplied to the weight of the frog to affect
+       * the probability of the frog being issued
+       */
+      dropWeightScaler: number;
+    }
+  >
+>;
+
+/**
+ * FrogCrypto specific feed configurations
+ *
+ * Note: It is important to ensure that the feed cannot be discovered by guessing the {@link Feed#id}
+ */
+export interface FrogCryptoFeed extends Feed<typeof EdDSAFrogPCDPackage> {
+  /**
+   * Whether this feed is discoverable in GET /feeds
+   *
+   * A feed can still be queried as GET /feeds/:feedId or polled as POST /feeds even if it is not discoverable
+   * as long as the user knows the feed ID.
+   * @default false
+   */
+  private: boolean;
+  /**
+   * Unix timestamp in seconds of when this feed will become inactive
+   *
+   * PCD can only be issued from this feed if it is active
+   * @default 0 means the feed is inactive
+   */
+  activeUntil: number;
+  /**
+   * How long to wait between each PCD issuance in seconds
+   */
+  cooldown: number;
+  /**
+   * Map of configs for Biome(s) where PCDs can be issued from this feed
+   */
+  biomes: FrogCryptoFeedBiomeConfigs;
+}
+
+/**
+ * DB schema for feed data
+ */
+export type FrogCryptoDbFeedData = {
+  uuid: string;
+  feed: Omit<
+    FrogCryptoFeed,
+    | "id"
+    | "autoPoll"
+    | "inputPCDType"
+    | "partialArgs"
+    | "credentialRequest"
+    | "permissions"
+    | "active"
+  >;
+};
+
+/**
+ * Validate is a value is a {@link FrogCryptoDbFeedData}
+ */
+export function isFrogCryptoDbFeedData(
+  value: Record<string, unknown>
+): value is FrogCryptoDbFeedData {
+  if (
+    typeof value !== "object" ||
+    value === null ||
+    !("uuid" in value && typeof value.uuid === "string")
+  ) {
+    return false;
+  }
+
+  const feed = value.feed;
+  if (!feed || typeof feed !== "object") {
+    return false;
+  }
+
+  if (!("biomes" in feed)) {
+    return false;
+  }
+  const biomes = feed.biomes;
+  if (!biomes || typeof biomes !== "object") {
+    return false;
+  }
+
+  return (
+    "private" in feed &&
+    typeof feed.private === "boolean" &&
+    "activeUntil" in feed &&
+    typeof feed.activeUntil === "number" &&
+    Number.isInteger(feed.activeUntil) &&
+    "cooldown" in feed &&
+    typeof feed.cooldown === "number" &&
+    Number.isInteger(feed.cooldown) &&
+    Object.values(biomes).every(
+      (biomeConfig) =>
+        typeof biomeConfig === "object" &&
+        biomeConfig !== null &&
+        "dropWeightScaler" in biomeConfig &&
+        typeof biomeConfig.dropWeightScaler === "number" &&
+        Number.isFinite(biomeConfig.dropWeightScaler)
+    )
+  );
+}
+
 /**
  * The prototype specification for frog creation
  *

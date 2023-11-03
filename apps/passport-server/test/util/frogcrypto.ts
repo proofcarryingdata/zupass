@@ -1,4 +1,7 @@
-import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
+import {
+  FrogCryptoDbFeedData,
+  FrogCryptoFrogData
+} from "@pcd/passport-interface";
 import { v4 as uuid } from "uuid";
 
 export const testFrogs: FrogCryptoFrogData[] = [
@@ -148,5 +151,66 @@ export const testFrogsAndObjects: FrogCryptoFrogData[] = [
     intelligence_max: 1,
     beauty_min: 1,
     beauty_max: 1
+  }
+];
+
+export const testFeeds: FrogCryptoDbFeedData[] = [
+  {
+    uuid: "85b139fa-3665-4b96-a7bd-77c6c4ed18cd",
+    feed: {
+      name: "Bog",
+      description: "Bog",
+      private: false,
+      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      cooldown: 60,
+      biomes: {
+        Jungle: { dropWeightScaler: 1 },
+        Swamp: { dropWeightScaler: 1 },
+        Unknown: { dropWeightScaler: 1 }
+      }
+    }
+  },
+  {
+    uuid: "9e827420-79c4-4a84-b8d3-65cecdf495bc",
+    feed: {
+      name: "Cog",
+      description: "Cog",
+      private: true,
+      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      cooldown: 180,
+      biomes: {
+        Jungle: { dropWeightScaler: 1 },
+        Swamp: { dropWeightScaler: 1 },
+        Unknown: { dropWeightScaler: 1 }
+      }
+    }
+  },
+  {
+    uuid: "4fdb8af9-5334-4037-a176-cef05158ef66",
+    feed: {
+      name: "Dog",
+      description: "Dog",
+      private: true,
+      activeUntil: Date.now() / 1000, // expired
+      cooldown: 60,
+      biomes: {
+        Jungle: { dropWeightScaler: 1 },
+        Swamp: { dropWeightScaler: 1 },
+        Unknown: { dropWeightScaler: 1 }
+      }
+    }
+  },
+  {
+    uuid: "ca2e9b76-2337-4eb6-8b08-40191bb5017d",
+    feed: {
+      name: "God",
+      description: "God",
+      private: true,
+      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      cooldown: 600,
+      biomes: {
+        TheWrithingVoid: { dropWeightScaler: 1 }
+      }
+    }
   }
 ];

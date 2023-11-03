@@ -1,12 +1,14 @@
 import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
-  FeedHost,
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
-  FrogCryptoScore,
+  FrogCryptoFeed,
   FrogCryptoFolderName,
   FrogCryptoFrogData,
+  FrogCryptoScore,
+  FrogCryptoUpdateFeedsRequest,
+  FrogCryptoUpdateFeedsResponseValue,
   FrogCryptoUpdateFrogsRequest,
   FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
@@ -27,13 +29,15 @@ import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
+  getPossibleFrogIds,
+  getRawFeedData,
   getScoreboard,
   getUserScore,
   incrementScore,
-  getPossibleFrogIds,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
+  upsertFeedData,
   upsertFrogData
 } from "../database/queries/frogcrypto";
 import { fetchUserByCommitment } from "../database/queries/users";
@@ -41,8 +45,6 @@ import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import {
-  FROGCRYPTO_FEEDS,
-  FrogCryptoFeed,
   FrogCryptoFeedHost,
   parseFrogEnum,
   parseFrogTemperament,
@@ -56,7 +58,7 @@ export class FrogcryptoService {
   private readonly context: ApplicationContext;
   private readonly rollbarService: RollbarService | null;
   private readonly issuanceService: IssuanceService;
-  private readonly feedHost: FeedHost;
+  private readonly feedHost: FrogCryptoFeedHost;
   private readonly adminUsers: string[];
 
   public constructor(
@@ -68,12 +70,11 @@ export class FrogcryptoService {
     this.rollbarService = rollbarService;
     this.issuanceService = issuanceService;
     this.feedHost = new FrogCryptoFeedHost(
-      FROGCRYPTO_FEEDS.map((feed) => ({
-        handleRequest: async (
-          req: PollFeedRequest
-        ): Promise<PollFeedResponseValue> => {
+      this.context.dbPool,
+      (feed: FrogCryptoFeed) =>
+        async (req: PollFeedRequest): Promise<PollFeedResponseValue> => {
           try {
-            if (!feed.active) {
+            if (feed.activeUntil <= Date.now() / 1000) {
               throw new PCDHTTPError(403, "Feed is not active");
             }
 
@@ -106,15 +107,13 @@ export class FrogcryptoService {
             this.rollbarService?.reportError(e);
           }
           return { actions: [] };
-        },
-        feed
-      }))
+        }
     );
     this.adminUsers = this.getAdminUsers();
   }
 
-  public async getFeeds(): Promise<FrogCryptoFeed[]> {
-    return FROGCRYPTO_FEEDS;
+  public getFeeds(): FrogCryptoFeed[] {
+    return this.feedHost.getFeeds();
   }
 
   public async handleListFeedsRequest(
@@ -149,12 +148,14 @@ export class FrogcryptoService {
       semaphoreId
     );
 
-    const allFeeds = _.keyBy(await this.getFeeds(), "id");
+    const allFeeds = _.keyBy(this.getFeeds(), "id");
 
     return {
-      feeds: userFeeds.map((userFeed) =>
-        this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
-      ),
+      feeds: userFeeds
+        .filter((userFeed) => allFeeds[userFeed.feed_id])
+        .map((userFeed) =>
+          this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
+        ),
       possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
@@ -257,6 +258,39 @@ export class FrogcryptoService {
     return getScoreboard(this.context.dbPool);
   }
 
+  /**
+   * Upsert feed data into the database and return all raw feed data.
+   */
+  public async updateFeedData(
+    req: FrogCryptoUpdateFeedsRequest
+  ): Promise<FrogCryptoUpdateFeedsResponseValue> {
+    await this.cachedVerifyAdminSignaturePCD(req.pcd);
+
+    try {
+      await upsertFeedData(this.context.dbPool, req.feeds);
+      // nb: refresh in-memory feed cache. As of 2023/11, we run a single
+      // server. Once we scale out, servers may return stale data. See @{link
+      // feedHost#refreshFeeds} on how to fix.
+      await this.feedHost.refreshFeeds();
+    } catch (e) {
+      logger(`Error encountered while inserting frog data:`, e);
+      this.rollbarService?.reportError(e);
+      throw new PCDHTTPError(500, `Error inserting frog data: ${e}`);
+    }
+
+    return {
+      feeds: await getRawFeedData(this.context.dbPool)
+    };
+  }
+
+  public start(): void {
+    this.feedHost.start();
+  }
+
+  public stop(): void {
+    this.feedHost.stop();
+  }
+
   private computeUserFeedState(
     state: FrogCryptoUserFeedState | undefined,
     feed: FrogCryptoFeed
@@ -267,7 +301,8 @@ export class FrogcryptoService {
     return {
       feedId: feed.id,
       lastFetchedAt,
-      nextFetchAt
+      nextFetchAt,
+      active: feed.activeUntil > Date.now() / 1000
     };
   }
 
@@ -357,6 +392,7 @@ export function startFrogcryptoService(
     rollbarService,
     issuanceService
   );
+  service.start();
 
   return service;
 }

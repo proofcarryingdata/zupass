@@ -25,7 +25,7 @@ export const EdDSAPCDTypeName = "eddsa-frog-pcd";
 export enum Biome {
   Unknown,
   Jungle,
-  Dessert,
+  Desert,
   Swamp,
   TheCapital,
   PutridSwamp,

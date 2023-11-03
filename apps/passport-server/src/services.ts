@@ -109,6 +109,7 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
   services.zuconnectTripshaSyncService?.stop();
+  services.frogcryptoService?.stop();
   await services.discordService?.stop();
   await services.multiprocessService.stop();
 }

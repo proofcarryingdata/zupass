@@ -1,5 +1,6 @@
-import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
+  FrogCryptoFeed,
   FrogCryptoFolderName,
   FrogCryptoUserStateResult,
   PollFeedResult,
@@ -18,11 +19,14 @@ import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { upsertFrogData } from "../src/database/queries/frogcrypto";
+import {
+  getFeedData,
+  upsertFeedData,
+  upsertFrogData
+} from "../src/database/queries/frogcrypto";
 import { Zupass } from "../src/types";
-import { FROGCRYPTO_FEEDS, FrogCryptoFeed } from "../src/util/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
-import { testFrogs } from "./util/frogcrypto";
+import { testFeeds, testFrogs } from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
@@ -36,11 +40,14 @@ describe("frogcrypto functionality", function () {
   let application: Zupass;
   let identity: Identity;
   let frogPCD: EdDSAFrogPCD;
+  let feeds: FrogCryptoFeed[];
 
   this.beforeAll(async () => {
     await overrideEnvironment(testingEnv);
     db = await getDB();
     await upsertFrogData(db, testFrogs);
+    await upsertFeedData(db, testFeeds);
+    feeds = await getFeedData(db);
 
     application = await startTestingApp();
 
@@ -65,37 +72,41 @@ describe("frogcrypto functionality", function () {
     expect(feeds).to.not.be.undefined;
     expect(feeds?.length).to.eq(1);
     const feed = feeds?.[0] as FrogCryptoFeed;
-    expect(feed?.active).to.be.true;
-    expect(feed?.private).to.be.false;
+    expectToExist(feed);
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.false;
   });
 
   it("should be able to get frog", async () => {
-    const feed = FROGCRYPTO_FEEDS[0];
-    expect(feed.active).to.be.true;
+    const feed = feeds[0];
+    expectToExist(feed);
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.false;
 
     await testGetFrog(feed, DATE_EPOCH_1H);
   });
 
   it("should be able to get frog even if feed is private", async () => {
-    const feed = FROGCRYPTO_FEEDS[1];
-    expect(feed.active).to.be.true;
+    const feed = feeds[1];
+    expectToExist(feed);
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.true;
 
     await testGetFrog(feed, DATE_EPOCH_1H);
   });
 
   it("should not be able to get frog if feed is inactive", async () => {
-    const feed = FROGCRYPTO_FEEDS[2];
-    expect(feed.active).to.be.false;
+    const feed = feeds[2];
+    expectToExist(feed);
+    expect(feed.activeUntil).to.be.lessThanOrEqual(Date.now() / 1000);
     expect(feed.private).to.be.true;
 
-    await testGetFrogFail(feed, DATE_EPOCH_1H, "not active");
+    await testGetFrogFail(feed, new Date(), "not active");
   });
 
   it("should be able to get frog if after cooldown", async () => {
-    const feed = FROGCRYPTO_FEEDS[0];
-    expect(feed.active).to.be.true;
+    const feed = feeds[0];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
@@ -104,8 +115,8 @@ describe("frogcrypto functionality", function () {
   });
 
   it("should not be able to get frog if before cooldown", async () => {
-    const feed = FROGCRYPTO_FEEDS[0];
-    expect(feed.active).to.be.true;
+    const feed = feeds[0];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
@@ -118,17 +129,19 @@ describe("frogcrypto functionality", function () {
   });
 
   it("should get 404 if no frogs are available", async () => {
-    const feed = FROGCRYPTO_FEEDS[3];
-    expect(feed.active).to.be.true;
+    const feed = feeds[3];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.true;
-    expect(feed.biomes).to.have.same.members([Biome.TheWrithingVoid]);
+    expect(feed.biomes).to.deep.eq({
+      TheWrithingVoid: { dropWeightScaler: 1 }
+    });
 
     await testGetFrogFail(feed, DATE_EPOCH_1H, "Frog Not Found");
   });
 
   it("should update user state after getting frog", async () => {
-    const feed = FROGCRYPTO_FEEDS[0];
-    expect(feed.active).to.be.true;
+    const feed = feeds[0];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.false;
 
     let userState = await getUserState();
