@@ -120,7 +120,7 @@ export function FrogHomeScreen() {
                 {tab === "score" && <ScoreTab score={userState?.myScore} />}
                 {tab === "dex" && (
                   <DexTab
-                    possibleFrogCount={userState.possibleFrogCount}
+                    possibleFrogIds={userState.possibleFrogIds}
                     pcds={frogPCDs}
                   />
                 )}

@@ -23,10 +23,10 @@ import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
-  getPossibleFrogCount,
   getScoreboard,
   getUserScore,
   incrementScore,
+  getPossibleFrogIds,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
@@ -84,7 +84,7 @@ export class FrogcryptoService {
       feeds: userFeeds.map((userFeed) =>
         this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
       ),
-      possibleFrogCount: await getPossibleFrogCount(this.context.dbPool),
+      possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
   }

@@ -151,16 +151,22 @@ export async function deleteFrogData(
   );
 }
 
-export async function getPossibleFrogCount(pool: Pool): Promise<number> {
+/**
+ * Returns a list of possible frog ids
+ */
+export async function getPossibleFrogIds(pool: Pool): Promise<number[]> {
   const result = await sqlQuery(
     pool,
-    `select
-    cast(count(*) as int) as count
-    from frogcrypto_frogs`,
+    `
+  select id
+  from frogcrypto_frogs
+  where frog->>'rarity' <> 'object'
+  order by id
+    `,
     []
   );
 
-  return result.rows[0].count;
+  return result.rows.map((row) => row.id);
 }
 
 /**
