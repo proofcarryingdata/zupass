@@ -7,11 +7,17 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
-import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
+import {
+  useFolders,
+  usePCDCollection,
+  usePCDsInFolder,
+  useSelf
+} from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
@@ -24,6 +30,8 @@ import { FrogFolder } from "./FrogScreens/FrogFolder";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
+const FOLDER_QUERY_PARAM = "folder";
+
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
@@ -32,7 +40,22 @@ export function HomeScreenImpl() {
   const self = useSelf();
   const navigate = useNavigate();
 
-  const [browsingFolder, setBrowsingFolder] = useState("/");
+  const pcdCollection = usePCDCollection();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const defaultBrowsingFolder = useMemo(() => {
+    let folderPathFromQuery = decodeURIComponent(
+      searchParams.get(FOLDER_QUERY_PARAM)
+    );
+    if (
+      !folderPathFromQuery ||
+      !pcdCollection.isValidFolder(folderPathFromQuery)
+    ) {
+      folderPathFromQuery = "";
+    }
+    return folderPathFromQuery;
+  }, [pcdCollection, searchParams]);
+
+  const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
@@ -53,6 +76,16 @@ export function HomeScreenImpl() {
       delete sessionStorage.newAddedPCDID;
     }
   });
+
+  useEffect(() => {
+    if (!browsingFolder) {
+      setSearchParams(undefined);
+    } else {
+      setSearchParams({
+        [FOLDER_QUERY_PARAM]: encodeURIComponent(browsingFolder)
+      });
+    }
+  }, [browsingFolder, setSearchParams]);
 
   const onFolderClick = useCallback((folder: string) => {
     setBrowsingFolder(folder);
