@@ -4,7 +4,9 @@ import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
+import { checkInOfflineTickets } from "../src/database/multitableQueries/checkInOfflineTickets";
 import { fetchOfflineTicketsForChecker } from "../src/database/multitableQueries/fetchOfflineTickets";
 import { getDB } from "../src/database/postgresPool";
 import { insertDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
@@ -32,7 +34,9 @@ function makeTestUser(): TestUser {
   };
 }
 
-describe.only("offline checkin database queries should work", function () {
+describe("offline checkin database queries should work", function () {
+  this.timeout(15_000);
+
   let db: Pool;
 
   const user1 = makeTestUser();
@@ -304,6 +308,56 @@ describe.only("offline checkin database queries should work", function () {
               ticketName: superItemName,
               checkinTimestamp: undefined,
               checker: null
+            },
+            {
+              id: user3AwSuper.id,
+              attendeeEmail: user3.email,
+              attendeeName: user3.fullName,
+              eventName: awEventName,
+              ticketName: superItemName,
+              checkinTimestamp: undefined,
+              checker: null
+            }
+          ]
+        }
+      );
+
+      const now = new Date();
+      MockDate.set(now);
+
+      await checkInOfflineTickets(db, user3.identity.commitment.toString(), [
+        user1AwGA.id,
+        user1AwGA.id, // 2nd checkin of same ticket does not cause an error, just a log
+        user2AwSuper.id, // checking in multiple tickets should work
+        user1ProgCryptoGA.id // checkin of ticket to an event the user doesn't have a superuser ticket to should be ignored
+      ]);
+
+      // after checking in, the right tickets should be removed from the user's
+      // offline mode ticket list
+      expectOfflineTickets(
+        await fetchOfflineTicketsForChecker(
+          db,
+          user3.identity.commitment.toString()
+        ),
+        {
+          devconnectTickets: [
+            {
+              id: user1AwGA.id,
+              attendeeEmail: user1.email,
+              attendeeName: user1.fullName,
+              eventName: awEventName,
+              ticketName: gaItemName,
+              checkinTimestamp: now.toISOString(),
+              checker: user3.email
+            },
+            {
+              id: user2AwSuper.id,
+              attendeeEmail: user2.email,
+              attendeeName: user2.fullName,
+              eventName: awEventName,
+              ticketName: superItemName,
+              checkinTimestamp: now.toISOString(),
+              checker: user3.email
             },
             {
               id: user3AwSuper.id,

@@ -20,7 +20,7 @@ export async function checkInOfflineTickets(
   checkedOfflineInDevconnectTicketIDs: string[]
 ): Promise<void> {
   logger(
-    `[OFFLINE_CHECKIN] use ${checkerCommitment} attempting to check in ${checkedOfflineInDevconnectTicketIDs}`
+    `[OFFLINE_CHECKIN] user ${checkerCommitment} attempting to check in ticket ids ${checkedOfflineInDevconnectTicketIDs}`
   );
   const user = await fetchUserByCommitment(dbPool, checkerCommitment);
   if (!user) {
@@ -38,7 +38,12 @@ export async function checkInOfflineTickets(
       )}`
   );
   const checkableEventIds = new Set(
-    ...superuserTickets.map((t) => t.pretix_events_config_id)
+    superuserTickets.map((t) => t.pretix_events_config_id)
+  );
+
+  logger(
+    "[OFFLINE_CHECKIN] set of checkable event ids",
+    Array.from(checkableEventIds)
   );
 
   const tickets = await Promise.all(
@@ -55,7 +60,7 @@ export async function checkInOfflineTickets(
     if (!checkableEventIds.has(ticket.pretix_events_config_id)) {
       logger(
         `[OFFLINE_CHECKIN] ${checkerCommitment} attempted to check in ticket` +
-          ` ${ticket.id} with item id ${ticket.devconnect_pretix_items_info_id} but did not have permission`
+          ` ${ticket.id} with event id ${ticket.pretix_events_config_id} but did not have permission`
       );
       continue;
     }

@@ -45,10 +45,10 @@ export async function consumeDevconnectPretixTicket(
   const result = await sqlQuery(
     client,
     `update devconnect_pretix_tickets
-    set is_consumed=TRUE, checker=$2, zupass_checkin_timestamp=now()
+    set is_consumed=TRUE, checker=$2, zupass_checkin_timestamp=$3
     where id=$1 and is_deleted=FALSE and is_consumed=FALSE
     returning id`,
-    [id, checkerEmail]
+    [id, checkerEmail, new Date()]
   );
   return result.rowCount === 1;
 }
