@@ -12,7 +12,7 @@ export default function Loading() {
           </span>
         </div>
         <span className="font-mono text-[#2e2e35] opacity-30 animate-pulse">
-          #0000
+          #####
         </span>
       </div>
       <div className="flex flex-col gap-2 mt-4 w-full">

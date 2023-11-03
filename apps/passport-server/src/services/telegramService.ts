@@ -1,7 +1,12 @@
 import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { getAnonTopicNullifier } from "@pcd/passport-interface";
+import {
+  NullifierHashPayload,
+  PayloadType,
+  RedirectTopicDataPayload,
+  getAnonTopicNullifier
+} from "@pcd/passport-interface";
 import { ONE_HOUR_MS, bigintToPseudonym, isFulfilled, sleep } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
@@ -42,11 +47,11 @@ import {
   BotContext,
   SessionData,
   TopicChat,
-  base64EncodeTopicData,
   chatIDsToChats,
   chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
+  encodeTopicData,
   eventsToLink,
   findChatByEventIds,
   getBotURL,
@@ -534,13 +539,31 @@ export class TelegramService {
           }
         );
 
-        const directLinkParams = `${ctx.chat.id.toString()}_${messageThreadId}`;
+        const directLinkParams: RedirectTopicDataPayload = {
+          type: PayloadType.RedirectTopicData,
+          value: {
+            topicId: messageThreadId,
+            chatId: ctx.chat.id
+          }
+        };
+
+        const encodedPayload = Buffer.from(
+          JSON.stringify(directLinkParams),
+          "utf-8"
+        ).toString("base64");
+
+        logger(`[TELEGRAM] ${encodedPayload}`);
+
+        logger(
+          `[TELEGRAM] ${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${encodedPayload}&startapp=${encodedPayload}`
+        );
+
         const messageToPin = await ctx.reply("Click to post", {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
             "Post Anonymously",
             // NOTE: The order and casing of the direct link params is VERY IMPORTANT. https://github.com/TelegramMessenger/Telegram-iOS/issues/1091
-            `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${directLinkParams}&startapp=${directLinkParams}`
+            `${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${encodedPayload}&startapp=${encodedPayload}`
           )
         });
         ctx.pinChatMessage(messageToPin.message_id);
@@ -1157,12 +1180,22 @@ export class TelegramService {
         }
       }
 
+      const payloadData: NullifierHashPayload = {
+        type: PayloadType.NullifierHash,
+        value: BigInt(nullifierHash).toString()
+      };
+
+      const encodedPayload = Buffer.from(
+        JSON.stringify(payloadData),
+        "utf-8"
+      ).toString("base64");
+
       const formattedMessage = `
       <a href="${
-        process.env.TELEGRAM_ANON_PROFILE_DIRECT_LINK
-      }?startApp=${BigInt(nullifierHash)}&startapp=${BigInt(
-        nullifierHash
-      )}">${bigintToPseudonym(BigInt(nullifierHash))} #${BigInt(nullifierHash)
+        process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
+      }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
+        BigInt(nullifierHash)
+      )} #${BigInt(nullifierHash)
         .toString()
         .substring(0, 4)}</a>\n\n${rawMessage}`;
 
@@ -1202,12 +1235,15 @@ export class TelegramService {
 
         const validEventIds = telegramEvents.map((e) => e.ticket_event_id);
 
-        const encodedTopicData = base64EncodeTopicData(
-          telegramChatId,
-          topic.topic_name,
-          topic.topic_id,
-          validEventIds
-        );
+        const encodedTopicData = encodeTopicData({
+          type: PayloadType.AnonTopicDataPayload,
+          value: {
+            chatId: telegramChatId,
+            topicName: topic.topic_name,
+            topicId: parseInt(topic.topic_id),
+            validEventIds
+          }
+        });
 
         const url = `${process.env.TELEGRAM_ANON_WEBSITE}?tgWebAppStartParam=${encodedTopicData}`;
         span?.setAttribute(`redirect url`, url);
@@ -1229,17 +1265,17 @@ export class TelegramService {
         nullifierHash
       );
 
-      const topicIdCache: Record<number, string> = {};
+      const chatIdCache: Record<number, string> = {};
 
       const detailedMessages = messages.map(
         async (m: AnonMessageWithDetails) => {
           try {
-            if (!topicIdCache[m.telegram_chat_id]) {
+            if (!chatIdCache[m.telegram_chat_id]) {
               const chat = (await this.anonBot.api.getChat(
                 m.telegram_chat_id
               )) as TopicChat;
               if (!chat) throw new Error(`Chat not found`);
-              topicIdCache[m.telegram_chat_id] = chat?.title;
+              chatIdCache[m.telegram_chat_id] = chat?.title;
               return {
                 ...m,
                 chat_name: chat?.title
@@ -1247,7 +1283,7 @@ export class TelegramService {
             } else {
               return {
                 ...m,
-                chat_name: topicIdCache[m.telegram_chat_id]
+                chat_name: chatIdCache[m.telegram_chat_id]
               };
             }
           } catch (e) {

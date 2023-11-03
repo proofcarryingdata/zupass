@@ -1,3 +1,4 @@
+import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -121,36 +122,55 @@ export function initTelegramRoutes(
 
   app.get("/telegram/anon", async (req: Request, res: Response) => {
     try {
-      const { tgWebAppStartParam } = req.query;
+      const tgWebAppStartParam = checkQueryParam(req, "tgWebAppStartParam");
       if (!tgWebAppStartParam) throw new Error(`No start param received`);
 
-      const onlyDigits = /^\d+$/;
-      if (onlyDigits.test(tgWebAppStartParam.toString())) {
-        logger(
-          `[TELEGRAM] Redirecting for anonymous profile for nullifier hash ${tgWebAppStartParam.toString()}`
-        );
-        res.redirect(
-          `${
-            process.env.TELEGRAM_ANON_WEBSITE
-          }/${tgWebAppStartParam.toString()}`
-        );
-      } else {
-        const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
-        if (!chatId || !topicId)
-          throw new Error(`No chatId or topicId received`);
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
 
-        if (!telegramService) {
-          throw new Error("Telegram service not initialized");
+      const anonPayload: AnonWebAppPayload = JSON.parse(
+        Buffer.from(tgWebAppStartParam, "base64").toString()
+      );
+
+      switch (anonPayload.type) {
+        case PayloadType.RedirectTopicData: {
+          const { chatId, topicId } = anonPayload.value;
+          if (!chatId || !topicId)
+            throw new Error(`No chatId or topicId received`);
+
+          const redirectUrl =
+            await telegramService.handleRequestAnonymousMessageLink(
+              chatId,
+              topicId
+            );
+
+          if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+          logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+          res.redirect(redirectUrl);
+          break;
         }
-        const redirectUrl =
-          await telegramService.handleRequestAnonymousMessageLink(
-            parseInt(chatId),
-            parseInt(topicId)
-          );
 
-        if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
-        logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
-        res.redirect(redirectUrl);
+        case PayloadType.NullifierHash: {
+          logger(
+            `[TELEGRAM] Redirecting for anonymous profile for nullifier hash ${anonPayload.value}`
+          );
+          if (!process.env.TELEGRAM_ANON_WEBSITE) {
+            throw new Error(
+              "TELEGRAM_ANON_WEBSITE environment variable not set"
+            );
+          }
+          res.redirect(
+            `${process.env.TELEGRAM_ANON_WEBSITE}/${anonPayload.value}`
+          );
+          break;
+        }
+
+        default: {
+          throw new Error(
+            `Unhandled payload type ${(anonPayload as AnonWebAppPayload).type}`
+          );
+        }
       }
     } catch (e) {
       logger("[TELEGRAM] generate link for anonymous message", e);

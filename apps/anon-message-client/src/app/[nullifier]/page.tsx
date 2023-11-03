@@ -20,6 +20,7 @@ export default async function Page({
   params: { nullifier: string };
 }) {
   const getData = async (): Promise<AnonMessageWithDetails[]> => {
+    if (!params.nullifier) return Promise.resolve([]);
     const data = await fetch(
       `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${params.nullifier}`,
       { cache: "no-store" }

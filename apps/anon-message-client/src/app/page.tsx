@@ -2,6 +2,9 @@
 
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
+  AnonTopicDataPayload,
+  AnonWebAppPayload,
+  PayloadType,
   constructZupassPcdGetRequestUrl,
   getAnonTopicNullifier
 } from "@pcd/passport-interface/src/PassportInterface";
@@ -12,7 +15,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import sha256 from "js-sha256";
-import { redirect, useSearchParams } from "next/navigation";
+import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const MAX_HEADER_SIZE = 280; // max tweet size
@@ -22,20 +25,13 @@ function getMessageWatermark(message: string): bigint {
   return BigInt("0x" + hashed);
 }
 
-interface TopicData {
-  chatId: string;
-  topicName: string;
-  topicId: string;
-  validEventIds: string[];
-}
-
 interface InvalidMessage {
   reason: string | undefined;
 }
 
 async function requestProof(
   message: string,
-  topicId: string,
+  topicId: number,
   validEventIds: string[]
 ) {
   const watermark = getMessageWatermark(message).toString();
@@ -111,7 +107,9 @@ export default function () {
   const [invalidMessage, setInvalidMessage] = useState<
     InvalidMessage | undefined
   >();
-  const [topicData, setTopicData] = useState<TopicData | undefined>();
+  const [topicData, setTopicData] = useState<
+    AnonTopicDataPayload | undefined
+  >();
   const [loadingProofUrl, setLoadingProofUrl] = useState(false);
   const [showInfo, setShowInfo] = useState<boolean>(true);
   const [copied, setCopied] = useState<boolean>(false);
@@ -120,15 +118,13 @@ export default function () {
 
   useEffect(() => {
     if (!topicDataRaw) return;
-    const onlyDigits = /^\d+$/;
-    if (onlyDigits.test(topicDataRaw)) {
-      redirect(`/${topicDataRaw}`);
-    } else {
-      const topicDataEncoded = Buffer.from(topicDataRaw, "base64");
-      const topicData = JSON.parse(
-        decodeURIComponent(topicDataEncoded.toString("utf-8"))
-      );
-      setTopicData(topicData);
+
+    const anonPayload: AnonWebAppPayload = JSON.parse(
+      decodeURIComponent(topicDataRaw)
+    );
+
+    if (anonPayload.type === PayloadType.AnonTopicDataPayload) {
+      setTopicData(anonPayload);
     }
   }, [topicDataRaw]);
 
@@ -146,8 +142,17 @@ export default function () {
 
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
-    if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
-    await requestProof(message, topicData.topicId, topicData.validEventIds);
+    if (
+      !topicData ||
+      !topicData.value.topicId ||
+      !topicData.value.validEventIds
+    )
+      return;
+    await requestProof(
+      message,
+      topicData.value.topicId,
+      topicData.value.validEventIds
+    );
     setLoadingProofUrl(false);
   }, [message]);
 
@@ -168,7 +173,7 @@ export default function () {
     return (
       <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
         <span className="text-white font-bold my-4">
-          {`Post to #${topicData.topicName}`}
+          {`Post to ${topicData.value.topicName}`}
         </span>
         <div className="flex flex-col gap-2 bg-[#50ACF9] rounded-lg w-full p-2">
           <textarea
@@ -187,7 +192,7 @@ export default function () {
             >
               {loadingProofUrl
                 ? `Loading...`
-                : `Send to ${topicData.topicName}`}
+                : `Send to ${topicData.value.topicName}`}
             </button>
           ) : (
             <>

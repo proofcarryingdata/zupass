@@ -128,3 +128,37 @@ export function constructZupassPcdProveAndAddRequestUrl<
 export const getAnonTopicNullifier = (): bigint => {
   return BigInt("0x" + sha256("anon_message").substring(0, 16));
 };
+
+export enum PayloadType {
+  RedirectTopicData = "topic-data",
+  NullifierHash = "nullifier-hash",
+  AnonTopicDataPayload = "anon-topic-data-payload"
+}
+
+export type RedirectTopicDataPayload = {
+  type: PayloadType.RedirectTopicData;
+  value: {
+    topicId: number;
+    chatId: number;
+  };
+};
+
+export type NullifierHashPayload = {
+  type: PayloadType.NullifierHash;
+  value: string;
+};
+
+export type AnonTopicDataPayload = {
+  type: PayloadType.AnonTopicDataPayload;
+  value: {
+    chatId: number;
+    topicName: string;
+    topicId: number;
+    validEventIds: string[];
+  };
+};
+
+export type AnonWebAppPayload =
+  | RedirectTopicDataPayload
+  | NullifierHashPayload
+  | AnonTopicDataPayload;
