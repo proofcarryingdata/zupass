@@ -96,6 +96,10 @@ export class PCDCollection {
     return getFoldersInFolder(folderPath, Object.values(this.folders));
   }
 
+  public isValidFolder(folderPath: string): boolean {
+    return Object.values(this.folders).includes(folderPath);
+  }
+
   public setPCDFolder(pcdId: string, folder: string): void {
     if (!this.hasPCDWithId(pcdId)) {
       throw new Error(`can't set folder of pcd ${pcdId} - pcd doesn't exist`);
