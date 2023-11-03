@@ -864,7 +864,8 @@ export class IssuanceService {
       attendeeSemaphoreId: semaphoreId,
       isConsumed: t.is_consumed,
       isRevoked: t.is_deleted,
-      ticketCategory: TicketCategory.Devconnect
+      ticketCategory: TicketCategory.Devconnect,
+      imageUrl: ""
     } satisfies ITicketData;
   }
 
@@ -1049,7 +1050,8 @@ export class IssuanceService {
             timestampConsumed: 0,
             isConsumed: false,
             isRevoked: false,
-            ticketCategory: TicketCategory.Zuzalu
+            ticketCategory: TicketCategory.Zuzalu,
+            imageUrl: ""
           })
         );
       }
@@ -1110,7 +1112,8 @@ export class IssuanceService {
               timestampConsumed: 0,
               isConsumed: false,
               isRevoked: false,
-              ticketCategory: TicketCategory.ZuConnect
+              ticketCategory: TicketCategory.ZuConnect,
+              imageUrl: ""
             })
           );
         }

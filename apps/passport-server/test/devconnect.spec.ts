@@ -2393,7 +2393,8 @@ describe("devconnect functionality", function () {
         attendeeSemaphoreId: "12345",
         isConsumed: false,
         isRevoked: false,
-        ticketCategory: TicketCategory.Zuzalu
+        ticketCategory: TicketCategory.Zuzalu,
+        imageUrl: ""
       };
 
       ticketPCD = await EdDSATicketPCDPackage.prove({
@@ -2455,7 +2456,8 @@ describe("devconnect functionality", function () {
       isConsumed: false,
       isRevoked: false,
       // Category is claimed to be Zuzalu but this is not trustworthy
-      ticketCategory: TicketCategory.Zuzalu
+      ticketCategory: TicketCategory.Zuzalu,
+      imageUrl: "" 
     };
 
     ticketPCD = await EdDSATicketPCDPackage.prove({

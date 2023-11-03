@@ -26,7 +26,8 @@ export enum TicketCategory {
   ZuConnect = 0,
   Devconnect = 1,
   PcdWorkingGroup = 2,
-  Zuzalu = 3
+  Zuzalu = 3,
+  Generic = 4
 }
 
 /**
@@ -52,10 +53,12 @@ export enum TicketCategory {
  * when verifying tickets.
  */
 export interface ITicketData {
-  // The fields below are not signed and are used for display purposes.
+  // The fields below are not individually signed and are used for display
+  // purposes.
   eventName: string;
   ticketName: string;
   checkerEmail: string | undefined;
+  imageUrl: string;
   // The fields below are signed using the passport-server's private EdDSA key
   // and can be used by 3rd parties to represent their own tickets.
   ticketId: string; // The ticket ID is a unique identifier of the ticket.
@@ -70,6 +73,11 @@ export interface ITicketData {
   attendeeName: string;
   attendeeEmail: string;
 }
+
+export type ITicketDisplayFields = Pick<
+  ITicketData,
+  "eventName" | "ticketName" | "imageUrl"
+>;
 
 /**
  * Interface containing the arguments that 3rd parties use to

@@ -33,6 +33,7 @@
     "@zk-kit/groth16": "^0.3.0",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
+    "safe-stable-stringify": "^2.4.3",
     "styled-components": "^5.3.9",
     "uuid": "^9.0.0"
   },

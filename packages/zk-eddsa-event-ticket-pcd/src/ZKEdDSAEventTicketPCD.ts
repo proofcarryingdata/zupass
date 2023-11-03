@@ -42,6 +42,7 @@ import {
 } from "@zk-kit/groth16";
 import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
+import stableStringify from "safe-stable-stringify";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
@@ -71,6 +72,7 @@ export type EdDSATicketFieldsToReveal = {
   revealTicketCategory?: boolean;
   revealAttendeeEmail?: boolean;
   revealAttendeeName?: boolean;
+  revealDisplayFields?: boolean;
 };
 
 /**
@@ -228,8 +230,9 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
     );
   }
 
-  const deserializedTicket =
-    await EdDSATicketPCDPackage.deserialize(serializedTicketPCD);
+  const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+    serializedTicketPCD
+  );
 
   const identityPCD = await SemaphoreIdentityPCDPackage.deserialize(
     serializedIdentityPCD
@@ -327,8 +330,8 @@ function snarkInputForProof(
     // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
     // and we would only need to change the TypeScript. For now, we will treat the inputs as
     // 0 in terms of signatures.
-    reservedSignedField3: "0",
-    revealReservedSignedField3: "0",
+    reservedSignedField3: ticketAsBigIntArray[11].toString(),
+    revealReservedSignedField3: fieldsToReveal.revealDisplayFields ? "1" : "0",
 
     // Ticket signature fields
     ticketSignerPubkeyAx: hexToBigInt(pubKey[0]).toString(),
@@ -398,15 +401,10 @@ function claimFromProofResult(
   if (!babyJubIsNegativeOne(publicSignals[10])) {
     partialTicket.attendeeName = ticketPCD.claim.ticket.attendeeName;
   }
-
-  // This field is currently not typed or being used, but is being kept as
-  // a reserved field that is hardcoded to zero and included in the preimage
-  // of the hashed signature. As such, the flags for revealing this reserved
-  // signed field should always be -1 until it is being typed and used.
   if (!babyJubIsNegativeOne(publicSignals[11])) {
-    throw new Error(
-      "ZkEdDSAEventTicketPCD: reservedSignedField3 is not in use"
-    );
+    partialTicket.eventName = ticketPCD.claim.ticket.eventName;
+    partialTicket.ticketName = ticketPCD.claim.ticket.ticketName;
+    partialTicket.imageUrl = ticketPCD.claim.ticket.imageUrl;
   }
 
   const claim: ZKEdDSAEventTicketPCDClaim = {
@@ -582,9 +580,13 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
       ? negOne
       : generateSnarkMessageHash(t.attendeeName).toString()
   );
-
-  // Placeholder for reserved field
-  ret.push(negOne);
+  // Include a hash of the entire ticket data, including those fields which are
+  // not individually signed, e.g. ticketName and imageUrl
+  ret.push(
+      generateSnarkMessageHash(
+          stableStringify(t) as string
+        ).toString()
+  );
 
   ret.push(claim.nullifierHash || negOne);
 

@@ -5,7 +5,12 @@ import {
   numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
-import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
+import stableStringify from "safe-stable-stringify";
+import {
+  EdDSATicketPCD,
+  ITicketData,
+  ITicketDisplayFields
+} from "./EdDSATicketPCD";
 
 /**
  * A serialized ticket is a list of big integers, where each one is a field in {@link ITicketData}. It needs to be a list of big integers so that it can be passed into {@link EdDSAPCD} to be signed.
@@ -20,9 +25,6 @@ export type SerializedTicket = [
   bigint,
   bigint,
   bigint,
-  // These three fields are currently not typed or being used, but are kept
-  // as reserved fields that are hardcoded to zero and included in the preimage
-  // of the hashed signature.
   bigint,
   bigint,
   bigint
@@ -49,7 +51,7 @@ export function ticketDataToBigInts(data: ITicketData): SerializedTicket {
     numberToBigInt(data.ticketCategory),
     generateSnarkMessageHash(data.attendeeEmail),
     generateSnarkMessageHash(data.attendeeName),
-    numberToBigInt(0)
+    generateSnarkMessageHash(stableStringify(data))
   ];
 }
 
@@ -86,4 +88,17 @@ export function getQRCodeColorOverride(
 
   // Otherwise, don't override and use default.
   return undefined;
+}
+
+/**
+ * Extract display fields from the ticket's data.
+ */
+export function getTicketDisplayFields(
+  ticketData: ITicketData
+): ITicketDisplayFields {
+  return {
+    ticketName: ticketData.ticketName,
+    eventName: ticketData.eventName,
+    imageUrl: ticketData.imageUrl
+  };
 }
