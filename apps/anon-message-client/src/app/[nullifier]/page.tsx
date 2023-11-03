@@ -56,7 +56,7 @@ export default async function Page({
             </span>
           </div>
         ) : (
-          <div className="flex flex-col gap-2 mt-4">
+          <div className="flex flex-col gap-2 mt-4 w-full">
             {messages
               .sort(
                 (a, b) =>
