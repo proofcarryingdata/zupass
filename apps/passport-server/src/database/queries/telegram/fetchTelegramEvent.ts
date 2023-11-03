@@ -1,6 +1,7 @@
 import { Pool } from "postgres-pool";
 import {
   AnonMessage,
+  AnonMessageWithDetails,
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
@@ -302,4 +303,20 @@ export async function fetchTelegramChatTopicById(
     [chatTopicId]
   );
   return result.rows[0];
+}
+
+export async function fetchTelegramAnonMessagesWithTopicByNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonMessageWithDetails[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select * from telegram_chat_anon_messages
+    inner join telegram_chat_topics on telegram_chat_anon_messages.chat_topic_id = telegram_chat_topics.id
+    where telegram_chat_anon_messages.nullifier = $1
+    `,
+    [nullifierHash]
+  );
+  return result.rows;
 }

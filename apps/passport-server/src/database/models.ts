@@ -318,6 +318,7 @@ export interface AnonMessage {
 }
 
 export interface AnonMessageWithDetails extends AnonMessage {
+  telegram_chat_id: number;
   chat_name: string;
   topic_name: string;
 }

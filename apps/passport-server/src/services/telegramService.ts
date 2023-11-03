@@ -10,7 +10,7 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat } from "grammy/types";
 import { sha256 } from "js-sha256";
-import { AnonMessage, AnonMessageWithDetails } from "../database/models";
+import { AnonMessageWithDetails } from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -23,8 +23,7 @@ import {
 import {
   fetchEventsPerChat,
   fetchEventsWithTelegramChats,
-  fetchTelegramAnonMessagesByNullifier,
-  fetchTelegramChatTopicById,
+  fetchTelegramAnonMessagesWithTopicByNullifier,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
@@ -1225,32 +1224,38 @@ export class TelegramService {
     nullifierHash: string
   ): Promise<AnonMessageWithDetails[]> {
     return traced("telegram", "handleGetAnonMessages", async () => {
-      const messages = await fetchTelegramAnonMessagesByNullifier(
+      const messages = await fetchTelegramAnonMessagesWithTopicByNullifier(
         this.context.dbPool,
         nullifierHash
       );
 
-      const detailedMessages = messages.map(async (m: AnonMessage) => {
-        try {
-          const { telegramChatID, topic_name } =
-            await fetchTelegramChatTopicById(
-              this.context.dbPool,
-              m.chat_topic_id
-            );
-          const chat = (await this.anonBot.api.getChat(
-            telegramChatID
-          )) as TopicChat;
-          if (!chat) throw new Error(`Chat not found`);
-          return {
-            ...m,
-            topic_name,
-            chat_name: chat?.title
-          } as AnonMessageWithDetails;
-        } catch (e) {
-          logger(`[TELEGRAM] Error fetching message details`, e);
-          return null;
+      const topicIdCache: Record<number, string> = {};
+
+      const detailedMessages = messages.map(
+        async (m: AnonMessageWithDetails) => {
+          try {
+            if (!topicIdCache[m.telegram_chat_id]) {
+              const chat = (await this.anonBot.api.getChat(
+                m.telegram_chat_id
+              )) as TopicChat;
+              if (!chat) throw new Error(`Chat not found`);
+              topicIdCache[m.telegram_chat_id] = chat?.title;
+              return {
+                ...m,
+                chat_name: chat?.title
+              };
+            } else {
+              return {
+                ...m,
+                chat_name: topicIdCache[m.telegram_chat_id]
+              };
+            }
+          } catch (e) {
+            logger(`[TELEGRAM] Error fetching message details`, e);
+            return null;
+          }
         }
-      });
+      );
 
       const settled = await Promise.allSettled(detailedMessages);
       return settled
