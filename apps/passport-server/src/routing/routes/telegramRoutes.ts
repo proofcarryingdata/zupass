@@ -124,21 +124,34 @@ export function initTelegramRoutes(
       const { tgWebAppStartParam } = req.query;
       if (!tgWebAppStartParam) throw new Error(`No start param received`);
 
-      const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
-      if (!chatId || !topicId) throw new Error(`No chatId or topicId received`);
-
-      if (!telegramService) {
-        throw new Error("Telegram service not initialized");
-      }
-      const redirectUrl =
-        await telegramService.handleRequestAnonymousMessageLink(
-          parseInt(chatId),
-          parseInt(topicId)
+      const onlyDigits = /^\d+$/;
+      if (onlyDigits.test(tgWebAppStartParam.toString())) {
+        logger(
+          `[TELEGRAM] Redirecting for anonymous profile for nullifier hash ${tgWebAppStartParam.toString()}`
         );
+        res.redirect(
+          `${
+            process.env.TELEGRAM_ANON_WEBSITE
+          }/${tgWebAppStartParam.toString()}`
+        );
+      } else {
+        const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
+        if (!chatId || !topicId)
+          throw new Error(`No chatId or topicId received`);
 
-      if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
-      logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
-      res.redirect(redirectUrl);
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
+        const redirectUrl =
+          await telegramService.handleRequestAnonymousMessageLink(
+            parseInt(chatId),
+            parseInt(topicId)
+          );
+
+        if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+        logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+        res.redirect(redirectUrl);
+      }
     } catch (e) {
       logger("[TELEGRAM] generate link for anonymous message", e);
       rollbarService?.reportError(e);
