@@ -279,3 +279,25 @@ export interface TelegramForwardFetch {
   receiverTopicName: string;
   receiverChatID: string;
 }
+
+// FrogCrypto Data Models
+
+/**
+ * A state record for a single feed for a user
+ *
+ * Currently, this is only used for the cooldown timer where we save when the user last fetched from a feed.
+ */
+export interface FrogCryptoUserFeedState {
+  /**
+   * User semaphore id
+   */
+  semaphore_id: string;
+  /**
+   * Feed id
+   */
+  feed_id: string;
+  /**
+   * Timestamp of the last time the user fetched from this feed
+   */
+  last_fetched_at: Date;
+}

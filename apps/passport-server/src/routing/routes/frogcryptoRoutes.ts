@@ -1,9 +1,17 @@
 import {
+  FrogCryptoDeleteFrogsRequest,
+  FrogCryptoDeleteFrogsResponseValue,
+  FrogCryptoUpdateFrogsRequest,
+  FrogCryptoUpdateFrogsResponseValue,
+  FrogCryptoUserStateRequest,
+  FrogCryptoUserStateResponseValue,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import request from "request";
+import urljoin from "url-join";
 import {
   FeedProviderName,
   IssuanceService
@@ -16,7 +24,7 @@ import { PCDHTTPError } from "../pcdHttpError";
 export function initFrogcryptoRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { issuanceService }: GlobalServices
+  { issuanceService, frogcryptoService }: GlobalServices
 ): void {
   logger("[INIT] initializing frogcrypto routes");
 
@@ -69,5 +77,45 @@ export function initFrogcryptoRoutes(
         FeedProviderName.FROGCRYPTO
       )
     );
+  });
+
+  app.get("/frogcrypto/scoreboard", async (req, res) => {
+    const result = await frogcryptoService.getScoreboard();
+    res.json(result);
+  });
+
+  app.post("/frogcrypto/user-state", async (req, res) => {
+    const result = await frogcryptoService.getUserState(
+      req.body as FrogCryptoUserStateRequest
+    );
+    res.json(result satisfies FrogCryptoUserStateResponseValue);
+  });
+
+  app.get("/frogcrypto/images/:uuid", async (req, res) => {
+    const imageId = checkUrlParam(req, "uuid");
+
+    if (!process.env.FROGCRYPTO_ASSETS_URL) {
+      throw new PCDHTTPError(503, "FrogCrypto Assets Unavailable");
+    }
+
+    req
+      .pipe(
+        request(urljoin(process.env.FROGCRYPTO_ASSETS_URL, `${imageId}.png`))
+      )
+      .pipe(res);
+  });
+
+  app.post("/frogcrypto/admin/frogs", async (req, res) => {
+    const result = await frogcryptoService.updateFrogData(
+      req.body as FrogCryptoUpdateFrogsRequest
+    );
+    res.json(result satisfies FrogCryptoUpdateFrogsResponseValue);
+  });
+
+  app.post("/frogcrypto/admin/delete-frogs", async (req, res) => {
+    const result = await frogcryptoService.deleteFrogData(
+      req.body as FrogCryptoDeleteFrogsRequest
+    );
+    res.json(result satisfies FrogCryptoDeleteFrogsResponseValue);
   });
 }

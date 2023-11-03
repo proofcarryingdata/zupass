@@ -1,18 +1,49 @@
-import { Separator } from "@pcd/passport-ui";
-import { useCallback, useMemo, useState } from "react";
-import styled from "styled-components";
+import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
+  CredentialManager,
+  FrogCryptoFolderName,
+  FrogCryptoUserStateResponseValue,
+  requestFrogCryptoGetUserState
+} from "@pcd/passport-interface";
+import { useCallback, useEffect, useMemo, useState } from "react";
+import styled from "styled-components";
+import { appConfig } from "../../../src/appConfig";
+import {
+  useCredentialCache,
   useDispatch,
+  useIdentity,
   useIsSyncSettled,
+  usePCDCollection,
   usePCDsInFolder,
   useSubscriptions
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { H1 } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
-import { PCDCard } from "../../shared/PCDCard";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
+import { ActionButton, Button } from "./Button";
+import { DexTab } from "./DexTab";
+import { SuperFunkyFont } from "./FrogFolder";
+import { GetFrogTab } from "./GetFrogTab";
+import { ScoreTab } from "./ScoreTab";
+
+const TABS = [
+  {
+    tab: "get",
+    label: "get frogs"
+  },
+  {
+    tab: "score",
+    label: "hi scores"
+  },
+  {
+    tab: "dex",
+    label: "frogedex"
+  }
+] as const;
+type TabId = (typeof TABS)[number]["tab"];
 
 /** A placeholder screen for FrogCrypto.
  *
@@ -20,49 +51,19 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
  */
 export function FrogHomeScreen() {
   useSyncE2EEStorage();
-  const dispatch = useDispatch();
   const syncSettled = useIsSyncSettled();
-  const { value: subs } = useSubscriptions();
-  const frogSub = useMemo(
-    () => subs.getActiveSubscriptions().find((sub) => sub.feed.name === "Bog"),
+  const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
+  const { userState, refreshUserState } = useUserFeedState();
+  const subs = useSubscriptions();
+  const frogSubs = useMemo(
+    () =>
+      subs.value
+        .getActiveSubscriptions()
+        .filter((sub) => sub.providerUrl.includes("frogcrypto")),
     [subs]
   );
-  const frogPCDs = usePCDsInFolder("FrogCrypto");
-
-  const getFrog = useCallback(async () => {
-    if (!frogSub) {
-      return;
-    }
-
-    dispatch({
-      type: "sync-subscription",
-      subscriptionId: frogSub.id
-    });
-  }, [dispatch, frogSub]);
-
-  const [selectedPCDID, setSelectedPCDID] = useState("");
-  const selectedPCD = useMemo(() => {
-    // if user just added a PCD, highlight that one
-    if (sessionStorage.newAddedPCDID) {
-      const added = frogPCDs.find(
-        (pcd) => pcd.id === sessionStorage.newAddedPCDID
-      );
-      if (added) {
-        return added;
-      }
-    }
-
-    const selected = frogPCDs.find((pcd) => pcd.id === selectedPCDID);
-    if (selected) {
-      return selected;
-    }
-
-    // default to first PCD if no selected PCD found
-    return frogPCDs[0];
-  }, [frogPCDs, selectedPCDID]);
-  const onPcdClick = useCallback((id: string) => {
-    setSelectedPCDID(id);
-  }, []);
+  const initFrog = useInitializeFrogSubscriptions();
+  const [tab, setTab] = useState<TabId>("get");
 
   if (!syncSettled) {
     return <SyncingPCDs />;
@@ -75,30 +76,129 @@ export function FrogHomeScreen() {
         <Container>
           <AppHeader />
 
-          <button disabled={!frogSub} onClick={getFrog}>
-            Get Frog
-          </button>
+          <SuperFunkyFont>
+            <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
+          </SuperFunkyFont>
 
-          {frogPCDs.length > 0 && (
-            <>
-              <Separator />
-              <PCDContainer>
-                {frogPCDs.map((pcd) => (
-                  <PCDCard
-                    key={pcd.id}
-                    pcd={pcd}
-                    onClick={onPcdClick}
-                    expanded={pcd.id === selectedPCD?.id}
-                  />
-                ))}
-              </PCDContainer>
-            </>
+          {userState?.myScore?.score && (
+            <Score>Score {userState?.myScore?.score}</Score>
           )}
+
+          {frogSubs.length === 0 && (
+            <ActionButton onClick={initFrog}>light fire</ActionButton>
+          )}
+          {frogSubs.length > 0 &&
+            (frogPCDs.length === 0 ? (
+              <GetFrogTab
+                subscriptions={frogSubs}
+                userState={userState}
+                refreshUserState={refreshUserState}
+                pcds={frogPCDs}
+              />
+            ) : (
+              <>
+                <ButtonGroup>
+                  {TABS.map(({ tab: t, label }) => (
+                    <Button
+                      key={t}
+                      disabled={tab === t}
+                      onClick={() => setTab(t)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+
+                {tab === "get" && (
+                  <GetFrogTab
+                    subscriptions={frogSubs}
+                    userState={userState}
+                    refreshUserState={refreshUserState}
+                    pcds={frogPCDs}
+                  />
+                )}
+                {tab === "score" && <ScoreTab score={userState?.myScore} />}
+                {tab === "dex" && (
+                  <DexTab
+                    possibleFrogCount={userState.possibleFrogCount}
+                    pcds={frogPCDs}
+                  />
+                )}
+              </>
+            ))}
         </Container>
       </AppContainer>
     </>
   );
 }
+
+/**
+ * Fetch the user's frog crypto state as well as the ability to refetch.
+ */
+function useUserFeedState() {
+  const [userState, setUserState] =
+    useState<FrogCryptoUserStateResponseValue>();
+  const identity = useIdentity();
+  const pcds = usePCDCollection();
+  const credentialCache = useCredentialCache();
+  const credentialManager = useMemo(
+    () => new CredentialManager(identity, pcds, credentialCache),
+    [credentialCache, identity, pcds]
+  );
+  const refreshUserState = useCallback(async () => {
+    const pcd = await credentialManager.requestCredential({
+      signatureType: "sempahore-signature-pcd"
+    });
+
+    const state = await requestFrogCryptoGetUserState(appConfig.zupassServer, {
+      pcd
+    });
+
+    setUserState(state.value);
+  }, [credentialManager]);
+  useEffect(() => {
+    refreshUserState();
+  }, [refreshUserState]);
+
+  return useMemo(
+    () => ({
+      userState,
+      refreshUserState
+    }),
+    [userState, refreshUserState]
+  );
+}
+
+const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
+
+/**
+ * Returns a callback to register the default frog subscription provider and
+ * subscribes to all public frog feeds.
+ */
+const useInitializeFrogSubscriptions: () => () => Promise<void> = () => {
+  const dispatch = useDispatch();
+  const { value: subs } = useSubscriptions();
+
+  return useCallback(async () => {
+    subs.getOrAddProvider(
+      DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
+      FrogCryptoFolderName
+    );
+
+    // Subscribe to public feeds. We don't check for duplicates here because
+    // this function should only be called if user has no frog subscriptions.
+    await subs.listFeeds(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL).then((res) =>
+      res.feeds.forEach((feed) =>
+        dispatch({
+          type: "add-subscription",
+          providerUrl: DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
+          providerName: FrogCryptoFolderName,
+          feed
+        })
+      )
+    );
+  }, [dispatch, subs]);
+};
 
 const Container = styled.div`
   padding: 16px;
@@ -108,11 +208,15 @@ const Container = styled.div`
 
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: 32px;
 `;
 
-const PCDContainer = styled.div`
+const ButtonGroup = styled.div`
   display: flex;
-  flex-direction: column;
   gap: 8px;
+`;
+
+const Score = styled.div`
+  font-size: 16px;
+  text-align: center;
 `;

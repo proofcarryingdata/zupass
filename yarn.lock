@@ -12612,6 +12612,11 @@ react-select@^5.7.7:
     react-transition-group "^4.3.0"
     use-isomorphic-layout-effect "^1.1.2"
 
+react-table-lite@^3.0.2:
+  version "3.0.2"
+  resolved "https://registry.yarnpkg.com/react-table-lite/-/react-table-lite-3.0.2.tgz#901b8070a5acab499e6a365b405a8cfb7d4f200e"
+  integrity sha512-9OiFkDvqow0mGfIx9IkQvBvJn3E1v8xPxyb4reLRgEJtu7YuXmh66ualgkmwBiZiis3uHupgJ9Fz1il/BrrVkQ==
+
 react-tooltip@^5.21.4:
   version "5.21.4"
   resolved "https://registry.yarnpkg.com/react-tooltip/-/react-tooltip-5.21.4.tgz#29160c8e50857065f1b2489b144edacf5fed8e90"

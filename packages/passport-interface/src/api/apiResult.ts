@@ -51,14 +51,20 @@ export interface NamedAPIError {
 }
 
 /**
- * Default value for `APIErrorWithReason.name` for cases when a more
+ * Default value for `NamedAPIError.name` for cases when a more
  * specific name cannot be determined.
  */
-const ERROR_REASON_UNKNOWN = "Unknown";
+export const ERROR_NAME_UNKNOWN = "Unknown";
+
+/**
+ * Value for `NamedAPIError.name` for cases where a client-side check
+ * indicates the server didn't respond properly.
+ */
+export const ERROR_NAME_BAD_RESPONSE = "BadResponse";
 
 /**
  * Helper function which can be used directly in the `onError` field of a
- * ResultMapper to produce an error type of APIErrorWithReason.  This
+ * ResultMapper to produce an error type of NamedAPIError.  This
  * can handle server-provided errors which conform to the right type, as well
  * as server or local errors which do not.
  *
@@ -125,7 +131,7 @@ export async function onNamedAPIError<TResult>(
 
   // If we still haven't figured out a name, it is unknown.
   if (apiError.name === undefined) {
-    apiError.name = ERROR_REASON_UNKNOWN;
+    apiError.name = ERROR_NAME_UNKNOWN;
   }
 
   console.log(apiError);

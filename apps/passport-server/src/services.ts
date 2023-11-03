@@ -3,6 +3,7 @@ import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
+import { startFrogcryptoService } from "./services/frogcryptoService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
@@ -65,11 +66,13 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
+  const frogcryptoService = startFrogcryptoService(context, rollbarService);
   const issuanceService = await startIssuanceService(
     context,
     persistentCacheService,
     rollbarService,
-    multiprocessService
+    multiprocessService,
+    frogcryptoService
   );
   const services: GlobalServices = {
     semaphoreService,
@@ -86,6 +89,7 @@ export async function startServices(
     discordService,
     telegramService,
     kudosbotService,
+    frogcryptoService,
     persistentCacheService,
     multiprocessService
   };

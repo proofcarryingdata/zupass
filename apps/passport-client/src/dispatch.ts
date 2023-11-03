@@ -3,17 +3,15 @@ import {
   agreeTerms,
   applyActions,
   CredentialManager,
+  deserializeStorage,
   Feed,
   FeedSubscriptionManager,
-  isSyncedEncryptedStorageV2,
-  isSyncedEncryptedStorageV3,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
-  NetworkFeedApi,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
-  SyncedEncryptedStorage,
+  StorageWithRevision,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
@@ -27,7 +25,11 @@ import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
-import { notifyPasswordChangeOnOtherTabs } from "./broadcastChannel";
+import {
+  notifyLoginToOtherTabs,
+  notifyLogoutToOtherTabs,
+  notifyPasswordChangeToOtherTabs
+} from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
@@ -36,6 +38,7 @@ import {
   saveEncryptionKey,
   saveIdentity,
   savePCDs,
+  savePersistentSyncStatus,
   saveSelf,
   saveSubscriptions
 } from "./localstorage";
@@ -84,8 +87,8 @@ export type Action =
     }
   | { type: "participant-invalid" }
   | {
-      type: "load-from-sync";
-      storage: SyncedEncryptedStorage;
+      type: "load-after-login";
+      storage: StorageWithRevision;
       encryptionKey: string;
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
@@ -120,6 +123,8 @@ export type Action =
   | {
       type: "sync-subscription";
       subscriptionId: string;
+      onSucess?: () => void;
+      onError?: (e: Error) => void;
     };
 
 export type StateContextState = {
@@ -162,8 +167,8 @@ export async function dispatch(
       return clearError(state, update);
     case "reset-passport":
       return resetPassport(state, update);
-    case "load-from-sync":
-      return loadFromSync(action.encryptionKey, action.storage, update);
+    case "load-after-login":
+      return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -215,7 +220,13 @@ export async function dispatch(
     case "prompt-to-agree-privacy-notice":
       return promptToAgreePrivacyNotice(state, update);
     case "sync-subscription":
-      return syncSubscription(state, update, action.subscriptionId);
+      return syncSubscription(
+        state,
+        update,
+        action.subscriptionId,
+        action.onSucess,
+        action.onError
+      );
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -264,7 +275,7 @@ async function createNewUserSkipPassword(
   );
 
   if (newUserResult.success) {
-    return finishLogin(newUserResult.value, state, update);
+    return finishAccountCreation(newUserResult.value, state, update);
   }
 
   update({
@@ -303,7 +314,7 @@ async function createNewUserWithPassword(
   );
 
   if (newUserResult.success) {
-    return finishLogin(newUserResult.value, state, update);
+    return finishAccountCreation(newUserResult.value, state, update);
   }
 
   update({
@@ -313,12 +324,17 @@ async function createNewUserWithPassword(
       dismissToCurrentPage: true
     }
   });
+  notifyLoginToOtherTabs();
 }
 
 /**
  * Runs the first time the user logs in with their email
  */
-async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
+async function finishAccountCreation(
+  user: User,
+  state: AppState,
+  update: ZuUpdate
+) {
   // Verify that the identity is correct.
   const { identity } = state;
 
@@ -333,16 +349,15 @@ async function finishLogin(user: User, state: AppState, update: ZuUpdate) {
     });
   }
 
-  await addDefaultSubscriptions(state.subscriptions);
-
   // Save to local storage.
   await setSelf(user, state, update);
 
   // Save PCDs to E2EE storage.
-  await uploadStorage();
+  await uploadStorage(user, state.pcds, state.subscriptions);
+  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
 
-  // Close any existing modal, if it exists
-  update({ modal: { modalType: "none" } });
+  // Save what we uploaded, and close any existing modal, if it exists
+  update({ modal: { modalType: "none" }, uploadedUploadId: uploadId });
 
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
@@ -423,6 +438,7 @@ async function resetPassport(state: AppState, update: ZuUpdate) {
       modalType: "none"
     }
   });
+  notifyLogoutToOtherTabs();
 
   setTimeout(() => {
     window.location.reload();
@@ -454,37 +470,29 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
   update({ pcds: state.pcds });
 }
 
-async function loadFromSync(
+async function loadAfterLogin(
   encryptionKey: string,
-  storage: SyncedEncryptedStorage,
+  storage: StorageWithRevision,
   update: ZuUpdate
 ) {
-  let pcds: PCDCollection;
-  let subscriptions: FeedSubscriptionManager;
-
-  if (isSyncedEncryptedStorageV3(storage)) {
-    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
-    subscriptions = FeedSubscriptionManager.deserialize(
-      new NetworkFeedApi(),
-      storage.subscriptions
-    );
-  } else if (isSyncedEncryptedStorageV2(storage)) {
-    pcds = await PCDCollection.deserialize(await getPackages(), storage.pcds);
-  } else {
-    pcds = await new PCDCollection(await getPackages());
-    await pcds.deserializeAllAndAdd(storage.pcds);
-  }
+  const { pcds, subscriptions } = await deserializeStorage(
+    storage.storage,
+    await getPackages()
+  );
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(
     appConfig.zupassServer,
-    storage.self.uuid
+    storage.storage.self.uuid
   );
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage);
   }
 
-  // assumes that we only have one semaphore identity in Zupass.
+  // TODO: This fragile mechanism of fetching the user's identity PCD assumes
+  // it's always the first one created, and that changes never cause the order
+  // to change.  We should do something more robust, probably tied to the
+  // commitment stored in self.
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
@@ -492,22 +500,22 @@ async function loadFromSync(
   let modal: AppState["modal"] = { modalType: "none" };
   if (!identityPCD) {
     // TODO: handle error gracefully
+    // TODO: Also check that identityPCD's commitment matches the one
+    // in storage.self
     throw new Error("no identity found in encrypted storage");
   } else if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
     encryptionKey == null &&
-    storage.self.salt == null
+    storage.storage.self.salt == null
   ) {
     console.log("Asking existing user to set a password");
     modal = { modalType: "upgrade-account-modal" };
   }
 
-  if (subscriptions) {
-    await saveSubscriptions(subscriptions);
-  }
-
   await savePCDs(pcds);
+  await saveSubscriptions(subscriptions);
+  savePersistentSyncStatus({ serverStorageRevision: storage.revision });
   saveEncryptionKey(encryptionKey);
   saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
@@ -515,15 +523,16 @@ async function loadFromSync(
   update({
     encryptionKey,
     pcds,
+    serverStorageRevision: storage.revision,
     identity: identityPCD.claim.identity,
     self: userResponse.value,
     modal
   });
+  notifyLoginToOtherTabs();
 
   await sleep(1);
 
-  console.log("Loaded from sync key, redirecting to home screen...");
-  window.localStorage["savedSyncKey"] = "true";
+  console.log("Loaded after login, redirecting to home screen...");
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
@@ -550,7 +559,7 @@ async function saveNewPasswordAndBroadcast(
   const newSelf = { ...state.self, salt: newSalt };
   saveSelf(newSelf);
   saveEncryptionKey(newEncryptionKey);
-  notifyPasswordChangeOnOtherTabs();
+  notifyPasswordChangeToOtherTabs();
   return update({
     encryptionKey: newEncryptionKey,
     self: newSelf
@@ -592,74 +601,106 @@ async function makeUploadId(
  *   to e2ee, then uploads then to e2ee.
  */
 async function sync(state: AppState, update: ZuUpdate) {
+  // This re-entrancy protection ensures only one event-sequence is
+  // inside of doSync() at any time.  When doSync() completes, it will
+  // run again if any state changes were made, or if any updates were skipped.
+  if (!syncInProgress) {
+    try {
+      syncInProgress = true;
+      const stateChanges = await doSync(state, update);
+
+      // sync() is triggered via dispatch on any update, so if we make changes
+      // we know we'll be called again the latest AppState snapshot.  If we
+      // have no changes, we can force another sync via and empty update, to
+      // ensure we didn't miss any important states.
+      if (stateChanges) {
+        update(stateChanges);
+      } else if (skippedSyncUpdates > 0) {
+        console.log("[SYNC] running an extra sync in case of missed updates");
+        update({});
+      }
+      skippedSyncUpdates = 0;
+    } finally {
+      syncInProgress = false;
+    }
+  } else {
+    // If we got an update, but skipped it because another was in progress,
+    // track that so we can make sure another update runs later.  This ensures
+    // we don't miss a snapshot of an AppState change which could turn out to be
+    // important.
+    console.log("[SYNC] skipping reentrant update");
+    skippedSyncUpdates++;
+  }
+}
+
+/**
+ * Used for reentrantcy protection inside of sync().
+ */
+let syncInProgress = false;
+let skippedSyncUpdates = 0;
+
+/**
+ * Does the real work of sync(), inside of reentrancy protection.
+ * Returns the changes to be made to AppState.  If changes were made,
+ * this function should be run again.
+ */
+async function doSync(
+  state: AppState,
+  update: ZuUpdate
+): Promise<Partial<AppState> | undefined> {
   if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
-    return;
+    return undefined;
   }
 
-  // If we haven't downloaded from storage, do that first
-  if (!state.downloadedPCDs && !state.downloadingPCDs) {
+  // If we haven't downloaded from storage, do that first.  After that we'll
+  // download again when requested to poll, but only after the first full sync
+  // has completed.
+  if (
+    !state.downloadedPCDs ||
+    (state.completedFirstSync && state.extraDownloadRequested)
+  ) {
     console.log("[SYNC] sync action: download");
-    update({
-      downloadingPCDs: true
-    });
 
-    /**
-     * Get both PCDs and subscriptions
-     * Subscriptions might be null even if we got PCDs, if we were
-     * downloading from a pre-v3 version of encrypted storage
-     * {@link SyncedEncryptedStorageV3}
-     * */
-    const downloaded = await downloadStorage();
+    // Download user's E2EE storage, which includes both PCDs and subscriptions.
+    // We'll skip this if it fails, or if the server indicates no changes based
+    // on the last revision we downloaded.
+    const dlRes = await downloadStorage(state.serverStorageRevision);
+    if (dlRes.success && dlRes.value != null) {
+      const { pcds, subscriptions, revision } = dlRes.value;
 
-    if (downloaded != null && downloaded.pcds != null) {
-      const { pcds, subscriptions } = downloaded;
+      // Calculating this ID tracks that there's no need to upload what we
+      // just downloaded, which reduces unnecessary revision conflicts.
+      // TODO(artwyman): Tracking the "dirty" state corresponding to this
+      // variable in local storage would allow us to avoid unnecessary
+      // uploads even when download is skipped.
+      const uploadedUploadId = await makeUploadId(pcds, subscriptions);
 
-      if (subscriptions) {
-        addDefaultSubscriptions(subscriptions);
-      }
-
-      update({
+      return {
         downloadedPCDs: true,
-        downloadingPCDs: false,
-        pcds: pcds,
-        // If we got subscriptions, add them and generate an upload ID.
-        // The upload ID is a combination of hashes of the states of the PCDs
-        // and subscriptions.
-        // If later subscription-polling doesn't change the PCD set, we can
-        // avoid having to do an upload.
-        // If we didn't get subscriptions, it's because we downloaded from a
-        // pre-v3 version of encrypted storage and therefore we definitely
-        // want to do an upload.
-        ...(subscriptions !== null
-          ? {
-              uploadedUploadId: await makeUploadId(pcds, subscriptions),
-              subscriptions
-            }
-          : {})
-      });
+        uploadedUploadId,
+        pcds,
+        subscriptions,
+        serverStorageRevision: revision,
+        extraDownloadRequested: false
+      };
     } else {
-      console.log(`[SYNC] skipping download`);
-      update({
+      console.log(
+        `[SYNC] skipping download:`,
+        dlRes.success ? "no changes" : "failed"
+      );
+      return {
         downloadedPCDs: true,
-        downloadingPCDs: false
-      });
+        extraDownloadRequested: false
+      };
     }
-
-    return;
   }
 
-  if (state.downloadingPCDs || !state.downloadedPCDs) {
-    return;
-  }
-
-  if (!state.loadedIssuedPCDs && !state.loadingIssuedPCDs) {
-    update({
-      loadingIssuedPCDs: true
-    });
-
+  if (!state.loadedIssuedPCDs) {
+    update({ loadingIssuedPCDs: true });
     try {
       console.log("[SYNC] loading issued pcds");
+      addDefaultSubscriptions(state.subscriptions);
       console.log(
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()
@@ -672,56 +713,73 @@ async function sync(state: AppState, update: ZuUpdate) {
       console.log("[SYNC] initalized credentialManager", credentialManager);
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
-      console.log("[SYNC] fetched actions", actions);
+      console.log(`[SYNC] fetched ${actions.length} actions`);
 
       await applyActions(state.pcds, actions);
       console.log("[SYNC] applied pcd actions");
       await savePCDs(state.pcds);
-      console.log("[SYNC] loaded and saved issued pcds");
+      await saveSubscriptions(state.subscriptions);
+      console.log("[SYNC] saved issued pcds and updated subscriptions");
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
     }
 
-    update({
-      loadingIssuedPCDs: false,
+    return {
       loadedIssuedPCDs: true,
-      pcds: state.pcds
-    });
-    return;
+      loadingIssuedPCDs: false,
+      pcds: state.pcds,
+      subscriptions: state.subscriptions
+    };
   }
 
-  if (!state.loadedIssuedPCDs && state.loadingIssuedPCDs) {
-    return;
-  }
-
-  // Generate an upload ID from the state of PCDs and subscriptions
+  // Generate an upload ID from the state of PCDs and subscriptions.
+  // Upload only if the ID is different, meaning changes to upload.
   const uploadId = await makeUploadId(state.pcds, state.subscriptions);
+  if (state.uploadedUploadId !== uploadId) {
+    // Uploading requires state.self be set, which should be set by now.  If
+    // it's not, wait to upload on another sync triggered when self changes.
+    if (!state.self) {
+      console.error("[SYNC] no user available to upload");
+      return undefined;
+    }
 
-  // If it matches what we downloaded or uploaded already, there's nothing
-  // to do
-  if (
-    state.uploadedUploadId === uploadId ||
-    state.uploadingUploadId === uploadId
-  ) {
-    console.log("[SYNC] sync action: no-op");
-    return;
+    console.log("[SYNC] sync action: upload");
+    // TODO(artwyman): Add serverStorageRevision input here, but only after
+    // we're able to respond to a conflict by downloading.
+    const upRes = await uploadStorage(
+      state.self,
+      state.pcds,
+      state.subscriptions
+    );
+    if (upRes.success) {
+      return {
+        uploadedUploadId: uploadId,
+        serverStorageRevision: upRes.value.revision
+      };
+    } else {
+      return {
+        completedFirstSync: true
+      };
+    }
   }
 
-  console.log("[SYNC] sync action: upload");
-  update({
-    uploadingUploadId: uploadId
-  });
-  await uploadStorage();
-  update({
-    uploadingUploadId: undefined,
-    uploadedUploadId: uploadId
-  });
+  if (!state.completedFirstSync) {
+    console.log("[SYNC] first sync completed");
+    return {
+      completedFirstSync: true
+    };
+  }
+
+  console.log("[SYNC] sync action: no-op");
+  return undefined;
 }
 
 async function syncSubscription(
   state: AppState,
   update: ZuUpdate,
-  subscriptionId: string
+  subscriptionId: string,
+  onSuccess?: () => void,
+  onError?: (e: Error) => void
 ) {
   try {
     console.log("[SYNC] loading pcds from subscription", subscriptionId);
@@ -735,7 +793,7 @@ async function syncSubscription(
       subscription,
       credentialManager
     );
-    console.log("[SYNC] fetched actions", actions);
+    console.log(`[SYNC] fetched ${actions.length} actions`);
 
     await applyActions(state.pcds, actions);
     console.log("[SYNC] applied pcd actions");
@@ -745,7 +803,9 @@ async function syncSubscription(
     update({
       pcds: state.pcds
     });
+    onSuccess?.();
   } catch (e) {
+    onError?.(e);
     console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
   }
 }
@@ -775,8 +835,7 @@ async function addSubscription(
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
-    loadedIssuedPCDs: false,
-    loadingIssuedPCDs: false
+    loadedIssuedPCDs: false
   });
 }
 
@@ -806,8 +865,7 @@ async function updateSubscriptionPermissions(
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
-    loadedIssuedPCDs: false,
-    loadingIssuedPCDs: false
+    loadedIssuedPCDs: false
   });
 }
 
@@ -832,8 +890,8 @@ async function setKnownTicketTypesAndKeys(
 
 /**
  * After the user has agreed to the terms, save the updated user record, set
- * `loadedIssuedPCDs` and `loadingIssuedPCDs` to false in order to prompt a
- * feed refresh, and dismiss the "legal terms" modal.
+ * `loadedIssuedPCDs` to false in order to prompt a feed refresh, and dismiss
+ * the "legal terms" modal.
  */
 async function handleAgreedPrivacyNotice(
   state: AppState,
@@ -844,7 +902,6 @@ async function handleAgreedPrivacyNotice(
   update({
     self: { ...state.self, terms_agreed: version },
     loadedIssuedPCDs: false,
-    loadingIssuedPCDs: false,
     modal: { modalType: "none" }
   });
 }
