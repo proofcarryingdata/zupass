@@ -354,9 +354,10 @@ async function finishAccountCreation(
 
   // Save PCDs to E2EE storage.
   await uploadStorage(user, state.pcds, state.subscriptions);
+  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
 
-  // Close any existing modal, if it exists
-  update({ modal: { modalType: "none" } });
+  // Save what we uploaded, and close any existing modal, if it exists
+  update({ modal: { modalType: "none" }, uploadedUploadId: uploadId });
 
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
@@ -712,7 +713,7 @@ async function doSync(
       console.log("[SYNC] initalized credentialManager", credentialManager);
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
-      console.log("[SYNC] fetched actions", actions);
+      console.log(`[SYNC] fetched ${actions.length} actions`);
 
       await applyActions(state.pcds, actions);
       console.log("[SYNC] applied pcd actions");
@@ -792,7 +793,7 @@ async function syncSubscription(
       subscription,
       credentialManager
     );
-    console.log("[SYNC] fetched actions", actions);
+    console.log(`[SYNC] fetched ${actions.length} actions`);
 
     await applyActions(state.pcds, actions);
     console.log("[SYNC] applied pcd actions");
