@@ -31,7 +31,7 @@
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "@pcd/semaphore-signature-pcd": "0.8.0",
     "@pcd/util": "^0.2.0",
-    "@pcd/semaphore-signature-kudos-pcd": "0.8.0",
+    "@pcd/semaphore-signature-kudos-pcd": "0.0.1",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.2.1",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/identity": "^3.14.0",
