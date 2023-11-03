@@ -337,9 +337,7 @@ async function finishAccountCreation(
 ) {
   // Verify that the identity is correct.
   const { identity } = state;
-
-  console.log("Save self", identity, user);
-
+  console.log("[ACCOUNT] Check user", identity, user);
   if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
@@ -347,18 +345,33 @@ async function finishAccountCreation(
         message: "Something went wrong saving your Zupass. Contact support."
       }
     });
+    return; // Don't save the bad identity.  User must reset account.
   }
 
-  // Save to local storage.
+  // Save PCDs to E2EE storage.
+  console.log("[ACCOUNT] Upload initial PCDs");
+  const uploadResult = await uploadStorage(
+    user,
+    state.pcds,
+    state.subscriptions
+  );
+  if (uploadResult.success) {
+    const uploadId = await makeUploadId(state.pcds, state.subscriptions);
+    update({
+      modal: { modalType: "none" },
+      uploadedUploadId: uploadId,
+      serverStorageRevision: uploadResult.value.revision
+    });
+  }
+
+  // Save user to local storage.  This is done last because it unblocks
+  // background sync, which is best delayed until after the upload above.
+  console.log("[ACCOUNT] Save self");
   await setSelf(user, state, update);
 
-  // Save PCDs to E2EE storage.
-  await uploadStorage(user, state.pcds, state.subscriptions);
-  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
-
-  // Save what we uploaded, and close any existing modal, if it exists
-  update({ modal: { modalType: "none" }, uploadedUploadId: uploadId });
-
+  // Account creation is complete.  Close any existing modal, and redirect
+  // user if they were in the middle of something.
+  update({ modal: { modalType: "none" } });
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
@@ -648,6 +661,11 @@ async function doSync(
   state: AppState,
   update: ZuUpdate
 ): Promise<Partial<AppState> | undefined> {
+  // Check pre-requisites which would indicate if we're not fully logged in yet.
+  if (!state.self) {
+    console.log("[SYNC] no user available to sync");
+    return undefined;
+  }
   if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
@@ -736,13 +754,6 @@ async function doSync(
   // Upload only if the ID is different, meaning changes to upload.
   const uploadId = await makeUploadId(state.pcds, state.subscriptions);
   if (state.uploadedUploadId !== uploadId) {
-    // Uploading requires state.self be set, which should be set by now.  If
-    // it's not, wait to upload on another sync triggered when self changes.
-    if (!state.self) {
-      console.error("[SYNC] no user available to upload");
-      return undefined;
-    }
-
     console.log("[SYNC] sync action: upload");
     // TODO(artwyman): Add serverStorageRevision input here, but only after
     // we're able to respond to a conflict by downloading.
