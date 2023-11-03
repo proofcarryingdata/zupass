@@ -11,7 +11,7 @@ export function DexTab({
   possibleFrogIds,
   pcds
 }: {
-  possibleFrogIds?: [number, number][];
+  possibleFrogIds?: number[];
   pcds: EdDSAFrogPCD[];
 }) {
   const names = useMemo(() => {
@@ -31,20 +31,16 @@ export function DexTab({
   return (
     <table>
       <tbody>
-        {_.chain(possibleFrogIds)
-          .map(([min, max]) => _.range(min, max + 1))
-          .flatten()
-          .value()
-          .map((i) => (
-            <tr key={i}>
-              <Cell>{i}</Cell>
-              {names[i] ? (
-                <Cell>{names[i]}</Cell>
-              ) : (
-                <UnknownCell>???</UnknownCell>
-              )}
-            </tr>
-          ))}
+        {possibleFrogIds.map((i) => (
+          <tr key={i}>
+            <Cell>{i}</Cell>
+            {names[i] ? (
+              <Cell>{names[i]}</Cell>
+            ) : (
+              <UnknownCell>???</UnknownCell>
+            )}
+          </tr>
+        ))}
       </tbody>
     </table>
   );

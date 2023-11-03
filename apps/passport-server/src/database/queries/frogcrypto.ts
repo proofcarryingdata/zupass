@@ -152,40 +152,21 @@ export async function deleteFrogData(
 }
 
 /**
- * Returns a list of possible frog ids as a pair list of [min, max] consecutive
- * ids.
- *
- * FrogCrypto entities are identified by a unique consecutive integer ids.
- * However, some FrogCrypto entities are not "frogs" but are instead "objects"
- * such as "stick" or "rock". These objects are not included in the list of
- * possible frogs and create holes in the list of ids shown on Frogedex. This
- * function returns a list of pairs of consecutive ids that are possible frogs.
- * For example: [[1, 10], [12, 15]] means that frog ids 1-10 and 12-15 are all
- * possible frogs.
- *
- * How does the query work: Every group of consecutive ids shares the same
- * distance from the id to its relative rank in the universe. In the above
- * example, the distance is 0 and 1 respectively. Effectively, the distance is
- * the cumulative number of skipped ids.
+ * Returns a list of possible frog ids
  */
-export async function getPossibleFrogIds(
-  pool: Pool
-): Promise<[number, number][]> {
+export async function getPossibleFrogIds(pool: Pool): Promise<number[]> {
   const result = await sqlQuery(
     pool,
     `
-select min(id) as min, max(id) as max
-from (
-  select *, row_number() over (order by id) as rank from frogcrypto_frogs
+  select id
+  from frogcrypto_frogs
   where frog->>'rarity' <> 'object'
-) frogs
-group by (id - rank)
-order by min(id)
+  order by id
     `,
     []
   );
 
-  return result.rows.map((row) => [row.min, row.max]);
+  return result.rows.map((row) => row.id);
 }
 
 /**

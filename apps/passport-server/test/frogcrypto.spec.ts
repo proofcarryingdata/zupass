@@ -12,6 +12,7 @@ import {
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import _ from "lodash";
 import "mocha";
 import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
@@ -132,9 +133,9 @@ describe("frogcrypto functionality", function () {
 
     let userState = await getUserState();
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogIds).to.deep.equal([
-      [1, testFrogs.length]
-    ]);
+    expect(userState.value?.possibleFrogIds).to.deep.equal(
+      _.range(1, testFrogs.length + 1)
+    );
     expect(userState.value?.feeds).to.be.empty;
     expect(userState.value?.myScore).to.be.undefined;
 
@@ -143,13 +144,12 @@ describe("frogcrypto functionality", function () {
 
     userState = await getUserState();
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogIds).to.deep.equal([
-      [1, testFrogs.length]
-    ]);
+    expect(userState.value?.possibleFrogIds).to.deep.equal(
+      _.range(1, testFrogs.length + 1)
+    );
     expect(userState.value?.myScore?.score).to.eq(1);
     expect(userState.value?.myScore?.semaphore_id).to.be.eq(
-      identity.getCommitment().toString()
-    );
+      identity.getCommitment().toString());
     expect(userState.value?.feeds).to.be.not.empty;
     const feedState = userState.value?.feeds?.[0];
     expect(feedState?.feedId).to.eq(feed.id);

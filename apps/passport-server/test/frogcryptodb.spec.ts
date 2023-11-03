@@ -124,9 +124,6 @@ describe("database reads and writes for frogcrypto features", function () {
     await upsertFrogData(db, testFrogsAndObjects);
 
     const possibleFrogIds = await getPossibleFrogIds(db);
-    expect(possibleFrogIds).to.deep.eq([
-      [1, 3],
-      [7, 8]
-    ]);
+    expect(possibleFrogIds).to.deep.eq([1, 2, 3, 7, 8]);
   });
 });
