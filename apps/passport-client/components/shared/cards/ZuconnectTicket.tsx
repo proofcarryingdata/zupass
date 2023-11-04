@@ -17,7 +17,8 @@ export function ZuconnectKnownTicketDetails({
 }) {
   const type = Object.entries(ZUCONNECT_PRODUCT_ID_MAPPINGS).find(
     ([_name, product]) => product.id === productId
-  )[0];
+  )?.[0];
+
   return (
     <CardContainerExpanded>
       <CardOutlineExpanded>

@@ -19,6 +19,8 @@ import {
   CheckTicketInByIdResult,
   FeedHost,
   FrogCryptoFolderName,
+  GetOfflineTicketsRequest,
+  GetOfflineTicketsResponseValue,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -28,6 +30,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
+  UploadOfflineCheckinsResponseValue,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -57,6 +61,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { Response } from "express";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -65,6 +70,8 @@ import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
 } from "../database/models";
+import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
+import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
@@ -97,6 +104,7 @@ import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
+import { zuzaluRoleToProductId } from "../util/zuzaluUser";
 import { FrogcryptoService } from "./frogcryptoService";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
@@ -1039,12 +1047,7 @@ export class IssuanceService {
             attendeeName: user.name,
             attendeeEmail: user.email,
             eventId: ZUZALU_23_EVENT_ID,
-            productId:
-              user.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_23_VISITOR_PRODUCT_ID
-                : user.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID,
+            productId: zuzaluRoleToProductId(user.role),
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
@@ -1382,6 +1385,50 @@ export class IssuanceService {
         })
       }
     };
+  }
+
+  public async handleGetOfflineTickets(
+    req: GetOfflineTicketsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    const offlineTickets = await fetchOfflineTicketsForChecker(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment
+    );
+
+    res.json({
+      offlineTickets
+    } satisfies GetOfflineTicketsResponseValue);
+  }
+
+  public async handleUploadOfflineCheckins(
+    req: UploadOfflineCheckinsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
+
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    await checkInOfflineTickets(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment,
+      req.checkedOfflineInDevconnectTicketIDs
+    );
+
+    res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
 }
 

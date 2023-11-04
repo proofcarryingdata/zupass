@@ -54,11 +54,6 @@ export function QRDisplayWithRegenerateAndStorage({
     const savedState = JSON.parse(
       localStorage[uniqueId] || "{}"
     ) as Partial<SavedQRState>;
-    console.log(
-      `[QR] ('${uniqueId}') loaded saved state for ${uniqueId}: ${JSON.stringify(
-        savedState
-      )}`
-    );
 
     const { timestamp, payload } = savedState;
 
@@ -67,9 +62,6 @@ export function QRDisplayWithRegenerateAndStorage({
       Date.now() - timestamp < maxAgeMs &&
       payload !== undefined
     ) {
-      console.log(
-        `[QR] ('${uniqueId}') from localStorage, timestamp ${timestamp}`
-      );
       return { timestamp, payload: payload };
     }
 
@@ -79,12 +71,8 @@ export function QRDisplayWithRegenerateAndStorage({
   const maybeGenerateQR = useCallback(async () => {
     const timestamp = Date.now();
     if (savedState && timestamp - savedState.timestamp < regenerateAfterMs) {
-      console.log(
-        `[QR] ('${uniqueId}') not regenerating, timestamp ${timestamp}`
-      );
       return;
     }
-    console.log(`[QR] ('${uniqueId}') regenerating data ${timestamp}`);
     const newData = await generateQRPayload();
     const newSavedState: SavedQRState = { timestamp, payload: newData };
     localStorage[uniqueId] = JSON.stringify(newSavedState);
@@ -95,13 +83,15 @@ export function QRDisplayWithRegenerateAndStorage({
     maybeGenerateQR();
     const interval = setInterval(maybeGenerateQR, maxAgeMs / 10);
     return () => clearInterval(interval);
-  }, [maxAgeMs, maybeGenerateQR]);
+  }, [maxAgeMs, maybeGenerateQR, savedState]);
 
   const logoOverlay = useMemo(() => {
     return savedState ? loadedLogo : loadingLogo;
   }, [loadedLogo, loadingLogo, savedState]);
 
-  console.log(`[QR] ('${uniqueId}') rendering ${savedState?.payload}`);
+  useEffect(() => {
+    console.log("[QR] rendering ", savedState);
+  }, [savedState, savedState?.payload]);
 
   return (
     <QRDisplay
