@@ -12,10 +12,7 @@ import {
 import express, { Request, Response } from "express";
 import request from "request";
 import urljoin from "url-join";
-import {
-  FeedProviderName,
-  IssuanceService
-} from "../../services/issuanceService";
+import { FrogcryptoService } from "../../services/frogcryptoService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkUrlParam } from "../params";
@@ -24,17 +21,17 @@ import { PCDHTTPError } from "../pcdHttpError";
 export function initFrogcryptoRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { issuanceService, frogcryptoService }: GlobalServices
+  { frogcryptoService }: GlobalServices
 ): void {
   logger("[INIT] initializing frogcrypto routes");
 
   /**
-   * Throws if we don't have an instance of {@link issuanceService}.
+   * Throws if we don't have an instance of {@link frogcryptoService}.
    */
-  function checkIssuanceServiceStarted(
-    issuanceService: IssuanceService | null
-  ): asserts issuanceService {
-    if (!issuanceService) {
+  function checkFrogcryptoServiceStarted(
+    frogcryptoService: FrogcryptoService | null
+  ): asserts frogcryptoService {
+    if (!frogcryptoService) {
       throw new PCDHTTPError(503, "issuance service not instantiated");
     }
   }
@@ -44,10 +41,9 @@ export function initFrogcryptoRoutes(
    * particular feed that this server is hosting.
    */
   app.get("/frogcrypto/feeds", async (req, res) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleListFeedsRequest(
-      req.body as PollFeedRequest,
-      FeedProviderName.FROGCRYPTO
+    checkFrogcryptoServiceStarted(frogcryptoService);
+    const result = await frogcryptoService.handleListFeedsRequest(
+      req.body as PollFeedRequest
     );
     res.json(result satisfies ListFeedsResponseValue);
   });
@@ -57,34 +53,30 @@ export function initFrogcryptoRoutes(
    * particular feed that this server is hosting.
    */
   app.post("/frogcrypto/feeds", async (req, res) => {
-    checkIssuanceServiceStarted(issuanceService);
-    const result = await issuanceService.handleFeedRequest(
-      req.body as PollFeedRequest,
-      FeedProviderName.FROGCRYPTO
+    checkFrogcryptoServiceStarted(frogcryptoService);
+    const result = await frogcryptoService.handleFeedRequest(
+      req.body as PollFeedRequest
     );
     res.json(result satisfies PollFeedResponseValue);
   });
 
   app.get("/frogcrypto/feeds/:feedId", async (req: Request, res: Response) => {
-    checkIssuanceServiceStarted(issuanceService);
+    checkFrogcryptoServiceStarted(frogcryptoService);
     const feedId = checkUrlParam(req, "feedId");
-    if (!issuanceService.hasFeedWithId(feedId, FeedProviderName.FROGCRYPTO)) {
+    if (!frogcryptoService.hasFeedWithId(feedId)) {
       throw new PCDHTTPError(404);
     }
-    res.json(
-      await issuanceService.handleListSingleFeedRequest(
-        { feedId },
-        FeedProviderName.FROGCRYPTO
-      )
-    );
+    res.json(await frogcryptoService.handleListSingleFeedRequest({ feedId }));
   });
 
   app.get("/frogcrypto/scoreboard", async (req, res) => {
+    checkFrogcryptoServiceStarted(frogcryptoService);
     const result = await frogcryptoService.getScoreboard();
     res.json(result);
   });
 
   app.post("/frogcrypto/user-state", async (req, res) => {
+    checkFrogcryptoServiceStarted(frogcryptoService);
     const result = await frogcryptoService.getUserState(
       req.body as FrogCryptoUserStateRequest
     );
@@ -106,6 +98,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/frogs", async (req, res) => {
+    checkFrogcryptoServiceStarted(frogcryptoService);
     const result = await frogcryptoService.updateFrogData(
       req.body as FrogCryptoUpdateFrogsRequest
     );
@@ -113,6 +106,7 @@ export function initFrogcryptoRoutes(
   });
 
   app.post("/frogcrypto/admin/delete-frogs", async (req, res) => {
+    checkFrogcryptoServiceStarted(frogcryptoService);
     const result = await frogcryptoService.deleteFrogData(
       req.body as FrogCryptoDeleteFrogsRequest
     );

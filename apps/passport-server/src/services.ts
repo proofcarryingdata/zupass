@@ -66,13 +66,16 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
-  const frogcryptoService = startFrogcryptoService(context, rollbarService);
   const issuanceService = await startIssuanceService(
     context,
     persistentCacheService,
     rollbarService,
-    multiprocessService,
-    frogcryptoService
+    multiprocessService
+  );
+  const frogcryptoService = startFrogcryptoService(
+    context,
+    rollbarService,
+    issuanceService
   );
   const services: GlobalServices = {
     semaphoreService,
