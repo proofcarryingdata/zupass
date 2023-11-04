@@ -185,7 +185,8 @@ export async function verify(
     _.isEqual(
       messageDerivedFromClaim,
       pcd.proof.semaphoreSignaturePCD.claim.signedMessage
-    ) && SemaphoreSignaturePCDPackage.verify(pcd.proof.semaphoreSignaturePCD)
+    ) &&
+    (await SemaphoreSignaturePCDPackage.verify(pcd.proof.semaphoreSignaturePCD))
   );
 }
 
