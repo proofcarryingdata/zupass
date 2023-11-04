@@ -277,8 +277,8 @@ export class FrogcryptoService {
     };
   }
 
-  public start(): void {
-    this.feedHost.start();
+  public async start(): Promise<void> {
+    await this.feedHost.start();
   }
 
   public stop(): void {
@@ -371,11 +371,11 @@ export class FrogcryptoService {
   }
 }
 
-export function startFrogcryptoService(
+export async function startFrogcryptoService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   issuanceService: IssuanceService | null
-): FrogcryptoService | null {
+): Promise<FrogcryptoService | null> {
   if (!issuanceService) {
     logger("[FROGCRYPTO] Issuance service not configured");
     return null;
@@ -386,7 +386,7 @@ export function startFrogcryptoService(
     rollbarService,
     issuanceService
   );
-  service.start();
+  await service.start();
 
   return service;
 }

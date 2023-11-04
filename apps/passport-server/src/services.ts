@@ -72,7 +72,7 @@ export async function startServices(
     rollbarService,
     multiprocessService
   );
-  const frogcryptoService = startFrogcryptoService(
+  const frogcryptoService = await startFrogcryptoService(
     context,
     rollbarService,
     issuanceService

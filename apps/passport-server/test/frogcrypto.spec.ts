@@ -69,9 +69,9 @@ describe("frogcrypto functionality", function () {
     );
     expect(response.success).to.be.true;
     const feeds = response.value?.feeds;
-    expect(feeds).to.not.be.undefined;
-    expect(feeds?.length).to.eq(1);
-    const feed = feeds?.[0] as FrogCryptoFeed;
+    expectToExist(feeds);
+    expect(feeds.length).to.eq(1);
+    const feed = feeds[0] as FrogCryptoFeed;
     expectToExist(feed);
     expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.false;
@@ -162,7 +162,8 @@ describe("frogcrypto functionality", function () {
     );
     expect(userState.value?.myScore?.score).to.eq(1);
     expect(userState.value?.myScore?.semaphore_id).to.be.eq(
-      identity.getCommitment().toString());
+      identity.getCommitment().toString()
+    );
     expect(userState.value?.feeds).to.be.not.empty;
     const feedState = userState.value?.feeds?.[0];
     expect(feedState?.feedId).to.eq(feed.id);

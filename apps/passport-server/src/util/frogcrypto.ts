@@ -40,8 +40,8 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
   }
 
   // TODO: use Postgres NOTIFY/LISTEN to update the list of feeds on demand
-  public start(): void {
-    this.refreshFeeds();
+  public async start(): Promise<void> {
+    await this.refreshFeeds();
     this.interval = setInterval(async () => {
       // Reload every minute
       await this.refreshFeeds();
