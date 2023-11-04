@@ -66,6 +66,11 @@ export interface DevconnectPretixTicketWithCheckin
   zupass_checkin_timestamp: Date | null;
 }
 
+export interface DevconnectPretixTicketWithCheckinDB
+  extends DevconnectPretixTicketWithCheckin {
+  id: string;
+}
+
 export interface DevconnectPretixTicketDB
   extends DevconnectPretixTicketWithCheckin {
   id: string;

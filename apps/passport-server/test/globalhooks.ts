@@ -1,6 +1,7 @@
 import chai from "chai";
 import chaiAsPromised from "chai-as-promised";
 import spies from "chai-spies";
+import deepEqualInAnyOrder from "deep-equal-in-any-order";
 
 export const mochaHooks = {
   /**
@@ -9,5 +10,6 @@ export const mochaHooks = {
   beforeAll(): void {
     chai.use(chaiAsPromised);
     chai.use(spies);
+    chai.use(deepEqualInAnyOrder);
   }
 };

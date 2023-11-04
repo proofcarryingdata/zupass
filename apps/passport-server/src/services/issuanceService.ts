@@ -1,4 +1,4 @@
-import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
@@ -18,7 +18,8 @@ import {
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
   FeedHost,
-  FrogCryptoFolderName,
+  GetOfflineTicketsRequest,
+  GetOfflineTicketsResponseValue,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -28,6 +29,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
+  UploadOfflineCheckinsResponseValue,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -57,6 +60,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { Response } from "express";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -65,6 +69,8 @@ import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
 } from "../database/models";
+import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
+import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
@@ -86,18 +92,13 @@ import {
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
-import {
-  FROGCRYPTO_FEEDS,
-  FrogCryptoFeed,
-  FrogCryptoFeedHost
-} from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { timeBasedId } from "../util/timeBasedId";
 import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
-import { FrogcryptoService } from "./frogcryptoService";
+import { zuzaluRoleToProductId } from "../util/zuzaluUser";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
@@ -105,29 +106,22 @@ import { traced } from "./telemetryService";
 
 export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";
 
-export enum FeedProviderName {
-  ZUPASS = "Zupass",
-  FROGCRYPTO = "FrogCrypto"
-}
-
 export class IssuanceService {
   private readonly context: ApplicationContext;
   private readonly cacheService: PersistentCacheService;
   private readonly rollbarService: RollbarService | null;
-  private readonly feedHosts: Record<FeedProviderName, FeedHost>;
+  private readonly feedHost: FeedHost;
   private readonly eddsaPrivateKey: string;
   private readonly rsaPrivateKey: NodeRSA;
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
-  private readonly frogcryptoService: FrogcryptoService;
   private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
 
   public constructor(
     context: ApplicationContext,
     cacheService: PersistentCacheService,
     multiprocessService: MultiProcessService,
-    frogcryptoService: FrogcryptoService,
     rollbarService: RollbarService | null,
     rsaPrivateKey: NodeRSA,
     eddsaPrivateKey: string
@@ -135,7 +129,6 @@ export class IssuanceService {
     this.context = context;
     this.cacheService = cacheService;
     this.multiprocessService = multiprocessService;
-    this.frogcryptoService = frogcryptoService;
     this.rollbarService = rollbarService;
     this.rsaPrivateKey = rsaPrivateKey;
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
@@ -144,8 +137,9 @@ export class IssuanceService {
     this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
+    this.cachedVerifySignaturePCD = this.cachedVerifySignaturePCD.bind(this);
 
-    const zupassFeedHost = new FeedHost(
+    this.feedHost = new FeedHost(
       [
         {
           handleRequest: async (
@@ -159,7 +153,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
               const ticketsByEvent = _.groupBy(
@@ -235,7 +229,7 @@ export class IssuanceService {
               }
               await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               return {
                 actions: [
@@ -281,7 +275,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               const pcds = await this.issueEmailPCDs(pcd);
 
@@ -319,7 +313,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               const pcds = await this.issueZuzaluTicketPCDs(pcd);
 
@@ -357,7 +351,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
 
               const pcds = await this.issueZuconnectTicketPCDs(pcd);
@@ -394,80 +388,30 @@ export class IssuanceService {
         }
       ],
       `${process.env.PASSPORT_SERVER_URL}/feeds`,
-      FeedProviderName.ZUPASS
-    );
-    const frogcryptoFeedHost = new FrogCryptoFeedHost(
-      FROGCRYPTO_FEEDS.map((feed) => ({
-        handleRequest: async (
-          req: PollFeedRequest
-        ): Promise<PollFeedResponseValue> => {
-          try {
-            if (req.pcd === undefined) {
-              throw new PCDHTTPError(400, `Missing credential`);
-            }
-            await verifyFeedCredential(
-              req.pcd,
-              this.cachedVerifySignaturePCD.bind(this)
-            );
-
-            return {
-              actions: [
-                {
-                  pcds: await this.issueEdDSAFrogPCDs(req.pcd, feed),
-                  folder: FrogCryptoFolderName,
-                  type: PCDActionType.AppendToFolder
-                }
-              ]
-            };
-          } catch (e) {
-            if (e instanceof PCDHTTPError) {
-              throw e;
-            }
-
-            logger(`Error encountered while serving feed:`, e);
-            this.rollbarService?.reportError(e);
-          }
-          return { actions: [] };
-        },
-        feed
-      }))
-    );
-
-    this.feedHosts = [zupassFeedHost, frogcryptoFeedHost].reduce(
-      (acc, feedHost) => {
-        acc[feedHost.getProviderName()] = feedHost;
-        return acc;
-      },
-      {} as Record<string, FeedHost>
+      "Zupass"
     );
   }
 
   public async handleListFeedsRequest(
-    request: ListFeedsRequest,
-    feedProvider: FeedProviderName
+    request: ListFeedsRequest
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHosts[feedProvider].handleListFeedsRequest(request);
+    return this.feedHost.handleListFeedsRequest(request);
   }
 
   public async handleListSingleFeedRequest(
-    request: ListSingleFeedRequest,
-    feedProvider: FeedProviderName
+    request: ListSingleFeedRequest
   ): Promise<ListFeedsResponseValue> {
-    return this.feedHosts[feedProvider].handleListSingleFeedRequest(request);
+    return this.feedHost.handleListSingleFeedRequest(request);
   }
 
   public async handleFeedRequest(
-    request: PollFeedRequest,
-    feedProvider: FeedProviderName
+    request: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
-    return this.feedHosts[feedProvider].handleFeedRequest(request);
+    return this.feedHost.handleFeedRequest(request);
   }
 
-  public hasFeedWithId(
-    feedId: string,
-    feedProvider: FeedProviderName
-  ): boolean {
-    return this.feedHosts[feedProvider].hasFeedWithId(feedId);
+  public hasFeedWithId(feedId: string): boolean {
+    return this.feedHost.hasFeedWithId(feedId);
   }
 
   public getRSAPublicKey(): string {
@@ -671,6 +615,29 @@ export class IssuanceService {
         error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
         success: false
       };
+    }
+  }
+
+  /**
+   * Returns a promised verification of a PCD, either from the cache or,
+   * if there is no cache entry, from the multiprocess service.
+   */
+  public async cachedVerifySignaturePCD(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<boolean> {
+    const key = JSON.stringify(serializedPCD);
+    const cached = this.verificationPromiseCache.get(key);
+    if (cached) {
+      return cached;
+    } else {
+      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
+        serializedPCD.pcd
+      );
+      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
+      this.verificationPromiseCache.set(key, promise);
+      // If the promise rejects, delete it from the cache
+      promise.catch(() => this.verificationPromiseCache.delete(key));
+      return promise;
     }
   }
 
@@ -912,23 +879,13 @@ export class IssuanceService {
     return [frogPCD];
   }
 
-  private async issueEdDSAFrogPCDs(
+  /**
+   * Issue an EdDSAFrogPCD from IFrogData signed with IssuanceService's private key.
+   */
+  public async issueEdDSAFrogPCDs(
     credential: SerializedPCD<SemaphoreSignaturePCD>,
-    feed: FrogCryptoFeed
+    frogData: IFrogData
   ): Promise<SerializedPCD[]> {
-    const serverUrl = process.env.PASSPORT_CLIENT_URL;
-
-    if (!serverUrl) {
-      logger("[ISSUE] can't issue frogs - unaware of the client location");
-      return [];
-    }
-
-    // TODO: return as user facing error
-    if (!feed.active) {
-      logger("[ISSUE] can't issue frogs - feed is inactive");
-      return [];
-    }
-
     const frogPCD = await EdDSAFrogPCDPackage.serialize(
       await EdDSAFrogPCDPackage.prove({
         privateKey: {
@@ -937,7 +894,7 @@ export class IssuanceService {
         },
         data: {
           argumentType: ArgumentTypeName.Object,
-          value: await this.frogcryptoService.reserveFrogData(credential, feed)
+          value: frogData
         },
         id: {
           argumentType: ArgumentTypeName.String
@@ -1039,12 +996,7 @@ export class IssuanceService {
             attendeeName: user.name,
             attendeeEmail: user.email,
             eventId: ZUZALU_23_EVENT_ID,
-            productId:
-              user.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_23_VISITOR_PRODUCT_ID
-                : user.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID,
+            productId: zuzaluRoleToProductId(user.role),
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
@@ -1118,29 +1070,6 @@ export class IssuanceService {
         return pcds;
       }
     );
-  }
-
-  /**
-   * Returns a promised verification of a PCD, either from the cache or,
-   * if there is no cache entry, from the multiprocess service.
-   */
-  private async cachedVerifySignaturePCD(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<boolean> {
-    const key = JSON.stringify(serializedPCD);
-    const cached = this.verificationPromiseCache.get(key);
-    if (cached) {
-      return cached;
-    } else {
-      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
-        serializedPCD.pcd
-      );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
-      this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache
-      promise.catch(() => this.verificationPromiseCache.delete(key));
-      return promise;
-    }
   }
 
   /**
@@ -1383,14 +1312,57 @@ export class IssuanceService {
       }
     };
   }
+
+  public async handleGetOfflineTickets(
+    req: GetOfflineTicketsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    const offlineTickets = await fetchOfflineTicketsForChecker(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment
+    );
+
+    res.json({
+      offlineTickets
+    } satisfies GetOfflineTicketsResponseValue);
+  }
+
+  public async handleUploadOfflineCheckins(
+    req: UploadOfflineCheckinsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
+
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    await checkInOfflineTickets(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment,
+      req.checkedOfflineInDevconnectTicketIDs
+    );
+
+    res.json({} satisfies UploadOfflineCheckinsResponseValue);
+  }
 }
 
 export async function startIssuanceService(
   context: ApplicationContext,
   cacheService: PersistentCacheService,
   rollbarService: RollbarService | null,
-  multiprocessService: MultiProcessService,
-  frogcryptoService: FrogcryptoService
+  multiprocessService: MultiProcessService
 ): Promise<IssuanceService | null> {
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
@@ -1409,7 +1381,6 @@ export async function startIssuanceService(
     context,
     cacheService,
     multiprocessService,
-    frogcryptoService,
     rollbarService,
     zupassRsaKey,
     zupassEddsaKey

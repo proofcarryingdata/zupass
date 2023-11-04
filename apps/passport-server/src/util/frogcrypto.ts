@@ -19,7 +19,6 @@ import { PCDPermissionType } from "@pcd/pcd-collection";
 import { PCDPackage } from "@pcd/pcd-types";
 import _ from "lodash";
 import { PCDHTTPError } from "../routing/pcdHttpError";
-import { FeedProviderName } from "../services/issuanceService";
 
 /**
  * FrogCrypto specific feed configurations
@@ -124,7 +123,7 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
     super(
       feeds,
       `${process.env.PASSPORT_SERVER_URL}/frogcrypto/feeds`,
-      FeedProviderName.FROGCRYPTO
+      "FrogCrypto"
     );
   }
 

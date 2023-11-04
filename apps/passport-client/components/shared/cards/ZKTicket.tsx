@@ -6,9 +6,9 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import {
+  encodeQRPayload,
   QRDisplayWithRegenerateAndStorage,
-  Spacer,
-  encodeQRPayload
+  Spacer
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -40,7 +40,6 @@ function makeTicketIdVerifyLink(ticketId: string): string {
 function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
   const pcds = usePCDCollection();
   const generate = useCallback(async () => {
-    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     if (zk) {
       const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
       const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(

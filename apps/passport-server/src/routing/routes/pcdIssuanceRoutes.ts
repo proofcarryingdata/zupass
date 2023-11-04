@@ -4,22 +4,21 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
+  GetOfflineTicketsRequest,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
   VerifyTicketResult
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import {
-  FeedProviderName,
-  IssuanceService
-} from "../../services/issuanceService";
+import { IssuanceService } from "../../services/issuanceService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkUrlParam } from "../params";
@@ -82,8 +81,7 @@ export function initPCDIssuanceRoutes(
   app.get("/feeds", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleListFeedsRequest(
-      req.body as ListFeedsRequest,
-      FeedProviderName.ZUPASS
+      req.body as ListFeedsRequest
     );
     res.json(result satisfies ListFeedsResponseValue);
   });
@@ -95,8 +93,7 @@ export function initPCDIssuanceRoutes(
   app.post("/feeds", async (req, res) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.handleFeedRequest(
-      req.body as PollFeedRequest,
-      FeedProviderName.ZUPASS
+      req.body as PollFeedRequest
     );
     res.json(result satisfies PollFeedResponseValue);
   });
@@ -104,15 +101,10 @@ export function initPCDIssuanceRoutes(
   app.get("/feeds/:feedId", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const feedId = checkUrlParam(req, "feedId");
-    if (!issuanceService.hasFeedWithId(feedId, FeedProviderName.ZUPASS)) {
+    if (!issuanceService.hasFeedWithId(feedId)) {
       throw new PCDHTTPError(404);
     }
-    res.json(
-      await issuanceService.handleListSingleFeedRequest(
-        { feedId },
-        FeedProviderName.ZUPASS
-      )
-    );
+    res.json(await issuanceService.handleListSingleFeedRequest({ feedId }));
   });
 
   app.post("/issue/check-ticket-by-id", async (req: Request, res: Response) => {
@@ -160,6 +152,33 @@ export function initPCDIssuanceRoutes(
         req.body as VerifyTicketByIdRequest
       );
       return res.json(result satisfies VerifyTicketByIdResult);
+    }
+  );
+
+  /**
+   * Downloads relevant tickets for offline verification/checkin from the
+   * perspective of the user hitting this route.
+   */
+  app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    await issuanceService.handleGetOfflineTickets(
+      req.body as GetOfflineTicketsRequest,
+      res
+    );
+  });
+
+  /**
+   * Attempts to bulk-check-in tickets that were checked in by a user
+   * in offline mode.
+   */
+  app.post(
+    "/issue/checkin-offline-tickets",
+    async (req: Request, res: Response) => {
+      checkIssuanceServiceStarted(issuanceService);
+      await issuanceService.handleUploadOfflineCheckins(
+        req.body as UploadOfflineCheckinsRequest,
+        res
+      );
     }
   );
 

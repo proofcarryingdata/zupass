@@ -1,5 +1,8 @@
 import { Pool } from "postgres-pool";
-import { DevconnectPretixTicketWithCheckin } from "../../models";
+import {
+  DevconnectPretixTicketWithCheckin,
+  DevconnectPretixTicketWithCheckinDB
+} from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
@@ -9,7 +12,7 @@ import { sqlQuery } from "../../sqlQuery";
 export async function insertDevconnectPretixTicket(
   client: Pool,
   params: DevconnectPretixTicketWithCheckin
-): Promise<DevconnectPretixTicketWithCheckin> {
+): Promise<DevconnectPretixTicketWithCheckinDB> {
   const result = await sqlQuery(
     client,
     `\
