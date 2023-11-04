@@ -30,6 +30,7 @@ export * from "./api/requestEncryptedStorage";
 export * from "./api/requestFrogCryptoDeleteFrogs";
 export * from "./api/requestFrogCryptoGetScoreboard";
 export * from "./api/requestFrogCryptoGetUserState";
+export * from "./api/requestFrogCryptoUpdateFeeds";
 export * from "./api/requestFrogCryptoUpdateFrogs";
 export * from "./api/requestIssuanceServiceEnabled";
 export * from "./api/requestKnownTickets";

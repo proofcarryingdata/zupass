@@ -20,6 +20,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/eddsa-frog-pcd": "0.0.1",
     "@pcd/eddsa-ticket-pcd": "0.3.0",
     "@pcd/emitter": "0.2.0",
     "@pcd/passport-crypto": "0.8.0",

@@ -39,21 +39,29 @@ export function GetFrogTab({
     }
   }, [searchMessage]);
 
+  // TODO: filter seach button to show only active subscriptions
   return (
     <>
       <SearchGroup>
-        {subscriptions.map((sub) => (
-          <SearchButton
-            key={sub.id}
-            sub={sub}
-            refreshUserState={refreshUserState}
-            setMessage={setSearchMessage}
-            nextFetchAt={
-              userState?.feeds?.find((feed) => feed.feedId === sub.feed.id)
-                ?.nextFetchAt
-            }
-          />
-        ))}
+        {subscriptions.map((sub) => {
+          const userFeedState = userState?.feeds?.find(
+            (feed) => feed.feedId === sub.feed.id
+          );
+
+          if (userFeedState?.active === false) {
+            return null;
+          }
+
+          return (
+            <SearchButton
+              key={sub.id}
+              sub={sub}
+              refreshUserState={refreshUserState}
+              setMessage={setSearchMessage}
+              nextFetchAt={userFeedState?.nextFetchAt}
+            />
+          );
+        })}
       </SearchGroup>
 
       {searchMessage !== "" && <Notice>{searchMessage}</Notice>}
@@ -101,6 +109,7 @@ const SearchButton = ({
           type: "sync-subscription",
           subscriptionId: id,
           onSucess: () => {
+            // FIXME: sync-subscription swallows http errors and always resolve as success
             setMessage(`You found a new frog in ${feed.name}!`);
             refreshUserState().then(resolve).catch(reject);
           },

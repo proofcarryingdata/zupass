@@ -1,9 +1,13 @@
-import { Biome } from "@pcd/eddsa-frog-pcd";
 import {
+  FrogCryptoDbFeedData,
   FrogCryptoDbFrogData,
+  FrogCryptoFeed,
+  FrogCryptoFeedBiomeConfigs,
+  FrogCryptoFolderName,
   FrogCryptoFrogData,
   FrogCryptoScore
-} from "@pcd/passport-interface/src/FrogCrypto";
+} from "@pcd/passport-interface";
+import { PCDPermissionType } from "@pcd/pcd-collection";
 import _ from "lodash";
 import { Client } from "pg";
 import { Pool } from "postgres-pool";
@@ -130,8 +134,7 @@ export async function upsertFrogData(
 export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
   const result = await sqlQuery(
     pool,
-    `select * from frogcrypto_frogs order by id`,
-    []
+    `select * from frogcrypto_frogs order by id`
   );
 
   return result.rows.map(toFrogData);
@@ -162,31 +165,39 @@ export async function getPossibleFrogIds(pool: Pool): Promise<number[]> {
   from frogcrypto_frogs
   where frog->>'rarity' <> 'object'
   order by id
-    `,
-    []
+    `
   );
 
   return result.rows.map((row) => row.id);
 }
 
 /**
- * Sample a single frog based on drop_weight
+ * Sample a single frog based on drop_weight scaled by biome specific scaling factor.
  *
  * https://utopia.duth.gr/~pefraimi/research/data/2007EncOfAlg.pdf
  */
 export async function sampleFrogData(
   pool: Pool,
-  biomes: Biome[]
+  biomes: FrogCryptoFeedBiomeConfigs
 ): Promise<FrogCryptoFrogData | undefined> {
-  const biomeSet = biomes.map((biome) => Biome[biome]).filter(Boolean);
+  const [biomeKeys, scalingFactors] = _.chain(biomes)
+    .toPairs()
+    .map(([biome, config]) => [biome, config?.dropWeightScaler])
+    .filter(([, scalingFactor]) => !!scalingFactor)
+    .unzip()
+    .value();
 
   const result = await sqlQuery(
     pool,
-    `select * from frogcrypto_frogs
-    where frog->>'biome' ilike any($1)
-    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision))
+    `
+    with biome_scaling as (
+      select unnest($1::text[]) as biome, unnest($2::float[]) as scaling_factor
+    )
+    select * from frogcrypto_frogs
+    join biome_scaling on lower(frog->>'biome') = lower(biome_scaling.biome)
+    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision) / scaling_factor)
     limit 1`,
-    [biomeSet]
+    [biomeKeys, scalingFactors]
   );
 
   if (result.rowCount === 0) {
@@ -242,6 +253,38 @@ export async function getScoreboard(
   return result.rows;
 }
 
+/**
+ * Upsert feed data into the database.
+ */
+export async function upsertFeedData(
+  client: Pool,
+  feedDataList: FrogCryptoDbFeedData[]
+): Promise<void> {
+  for (const feedData of feedDataList) {
+    await sqlQuery(
+      client,
+      `insert into frogcrypto_feeds
+    (uuid, feed)
+    values ($1, $2)
+    on conflict (uuid) do update
+    set feed = $2
+    `,
+      [feedData.uuid, feedData.feed]
+    );
+  }
+}
+
+/**
+ * Returns all the raw feeds in the database.
+ */
+export async function getRawFeedData(
+  pool: Pool
+): Promise<FrogCryptoDbFeedData[]> {
+  const result = await sqlQuery(pool, `select * from frogcrypto_feeds`);
+
+  return result.rows;
+}
+
 export async function getUserScore(
   pool: Pool,
   semaphoreId: string
@@ -260,4 +303,31 @@ export async function getUserScore(
   );
 
   return result.rows[0];
+}
+
+/**
+ * Returns all the feeds in the database.
+ */
+export async function getFeedData(pool: Pool): Promise<FrogCryptoFeed[]> {
+  return (await getRawFeedData(pool)).map(toFeedData);
+}
+
+function toFeedData(dbFeedData: FrogCryptoDbFeedData): FrogCryptoFeed {
+  return {
+    // hydrate with default values
+    autoPoll: false,
+    inputPCDType: undefined,
+    partialArgs: undefined,
+    credentialRequest: {
+      signatureType: "sempahore-signature-pcd"
+    },
+    permissions: [
+      {
+        folder: FrogCryptoFolderName,
+        type: PCDPermissionType.AppendToFolder
+      }
+    ],
+    ...dbFeedData.feed,
+    id: dbFeedData.uuid
+  };
 }

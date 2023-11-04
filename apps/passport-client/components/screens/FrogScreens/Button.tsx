@@ -103,3 +103,8 @@ export const Button = styled.button<{ pending?: boolean }>`
     cursor: ${(props) => (props.pending ? "wait" : "unset")};
   }
 `;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
+`;
