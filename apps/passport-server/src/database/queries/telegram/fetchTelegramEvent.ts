@@ -68,7 +68,7 @@ export async function fetchTelegramChat(
 
 export async function fetchTelegramEventsByChatId(
   client: Pool,
-  telegramChatId: number
+  telegramChatId: number | string
 ): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,

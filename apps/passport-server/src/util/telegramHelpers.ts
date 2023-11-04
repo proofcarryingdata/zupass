@@ -22,9 +22,9 @@ import {
 } from "grammy/types";
 import { Pool } from "postgres-pool";
 import {
-  ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
+  TelegramEvent,
   TelegramTopicFetch,
   TelegramTopicWithFwdInfo
 } from "../database/models";
@@ -266,18 +266,14 @@ export const chatIDsToChats = async <T extends { telegramChatID?: string }>(
   });
 };
 
-export const findChatsByEventIds = (
-  chats: ChatIDWithEventIDs[],
-  eventIds: string[]
-): string[] | null => {
-  if (eventIds.length === 0) return null;
-  const chatIds: string[] = [];
-  for (const chat of chats) {
-    if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
-      chatIds.push(chat.telegramChatID);
-    }
-  }
-  return chatIds;
+export const verifyUserEventIds = (
+  chats: TelegramEvent[],
+  userEventIds: string[]
+): boolean => {
+  if (userEventIds.length === 0) return false;
+  const set = new Set(chats.map((chat) => chat.ticket_event_id));
+  // userEventIds is a subset or equal to the known events associated with the chat
+  return userEventIds.every((userEventId) => set.has(userEventId));
 };
 
 export const senderIsAdmin = async (

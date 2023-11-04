@@ -26,7 +26,6 @@ import {
   fetchTelegramVerificationStatus
 } from "../database/queries/telegram/fetchTelegramConversation";
 import {
-  fetchEventsPerChat,
   fetchEventsWithTelegramChats,
   fetchTelegramAnonMessagesWithTopicByNullifier,
   fetchTelegramEventsByChatId,
@@ -53,7 +52,6 @@ import {
   chatsToPostIn,
   encodeTopicData,
   eventsToLink,
-  findChatsByEventIds,
   getBotURL,
   getGroupChat,
   getSessionKey,
@@ -63,7 +61,8 @@ import {
   ratResponse,
   senderIsAdmin,
   setBotInfo,
-  uwuResponse
+  uwuResponse,
+  verifyUserEventIds
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -997,18 +996,16 @@ export class TelegramService {
       }
       span?.setAttribute("validEventIds", validEventIds);
 
-      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatIds = findChatsByEventIds(eventsByChat, validEventIds);
-      if (!telegramChatIds?.includes(telegramChatId))
-        throw new Error(`submitted event ids are not linked to chat`);
-
-      if (!telegramChatId) {
-        throw new Error(
-          `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
-            ","
-          )}, which have no matching chat`
-        );
+      const eventsByChat = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        telegramChatId
+      );
+      if (eventsByChat.length == 0)
+        throw new Error(`No valid events found for given chat`);
+      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+        throw new Error(`User submitted event Ids are invalid `);
       }
+
       span?.setAttribute("chatId", telegramChatId);
 
       const chat = await getGroupChat(this.authBot.api, telegramChatId);
@@ -1062,18 +1059,16 @@ export class TelegramService {
         throw new Error(`User did not submit any valid event ids`);
       }
 
-      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatIds = findChatsByEventIds(eventsByChat, validEventIds);
-      if (!telegramChatIds?.includes(telegramChatId))
-        throw new Error(`submitted event ids are not linked to chat`);
-
-      if (!telegramChatId) {
-        throw new Error(
-          `User attempted to use a ticket for events ${validEventIds.join(
-            ","
-          )}, which have no matching chat`
-        );
+      const eventsByChat = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        telegramChatId
+      );
+      if (eventsByChat.length == 0)
+        throw new Error(`No valid events found for given chat`);
+      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+        throw new Error(`User submitted event Ids are invalid `);
       }
+
       span?.setAttribute("chatId", telegramChatId);
 
       if (!watermark) {
