@@ -124,9 +124,28 @@ export function initTelegramRoutes(
     try {
       const tgWebAppStartParam = checkQueryParam(req, "tgWebAppStartParam");
       if (!tgWebAppStartParam) throw new Error(`No start param received`);
-
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
+      }
+
+      const isLegacyPayloadType = /^-?\d+_\d+$/.test(tgWebAppStartParam);
+
+      if (isLegacyPayloadType) {
+        logger(`[TELEGRAM] handling legacy payload: ${tgWebAppStartParam}`);
+        const [chatId, topicId] = tgWebAppStartParam.split("_");
+        if (!chatId || !topicId)
+          throw new Error(`No chatId or topicId received`);
+
+        const redirectUrl =
+          await telegramService.handleRequestAnonymousMessageLink(
+            parseInt(chatId),
+            parseInt(topicId)
+          );
+
+        if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+        logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+        res.redirect(redirectUrl);
+        return;
       }
 
       const anonPayload: AnonWebAppPayload = JSON.parse(
