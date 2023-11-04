@@ -135,15 +135,21 @@ export function AlreadyRegisteredScreen() {
 
       if (!storageResult.success) {
         setIsLoggingIn(false);
-        return setError(
-          "Password incorrect. Double-check your password. " +
-            "If you've lost access, you can reset your account below."
-        );
+        if ("NotFound" === storageResult.error.name) {
+          return setError(
+            "Password incorrect. Double-check your password. " +
+              "If you've lost access, you can reset your account below."
+          );
+        } else {
+          return setError(
+            "An error occurred while downloading encrypted storage."
+          );
+        }
       }
 
       try {
         await dispatch({
-          type: "load-from-sync",
+          type: "load-after-login",
           storage: storageResult.value,
           encryptionKey: encryptionKey
         });

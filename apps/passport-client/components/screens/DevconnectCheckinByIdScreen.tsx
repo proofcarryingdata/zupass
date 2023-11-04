@@ -1,6 +1,4 @@
 import {
-  checkinTicketById,
-  checkTicketById,
   CheckTicketByIdResponseValue,
   CheckTicketByIdResult,
   TicketError
@@ -9,11 +7,15 @@ import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
-import { useIdentity, useQuery } from "../../src/appHooks";
+import { useQuery, useStateContext } from "../../src/appHooks";
+import {
+  devconnectCheckByIdWithOffline,
+  devconnectCheckInByIdWithOffline
+} from "../../src/checkin";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
+import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import {
   CardBodyContainer,
   CardHeader,
@@ -36,7 +38,20 @@ export function DevconnectCheckinByIdScreen() {
     content = <CheckInById ticketId={ticketId} />;
   }
 
-  return <>{content}</>;
+  return (
+    <AppContainer bg={"primary"}>
+      <Container>
+        <IndicateIfOffline marginBottom="16px">
+          <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
+          <Spacer h={8} />
+          You're offline. Zupass is using a backed up copy of event tickets.
+          Check-ins will be synced the next time you start the app with a
+          working network connection.
+        </IndicateIfOffline>
+        {content}
+      </Container>
+    </AppContainer>
+  );
 }
 
 function CheckInById({ ticketId }: { ticketId: string }) {
@@ -184,20 +199,18 @@ function TicketErrorContent({ error }: { error: TicketError }) {
 
 function TicketError({ error }: { error: TicketError }) {
   return (
-    <AppContainer bg={"primary"}>
-      <Container>
-        <TicketErrorContent error={error} />
-        <div
-          style={{
-            marginTop: "16px",
-            width: "100%"
-          }}
-        >
-          <ScanAnotherTicket />
-          <Home />
-        </div>
-      </Container>
-    </AppContainer>
+    <>
+      <TicketErrorContent error={error} />
+      <div
+        style={{
+          marginTop: "16px",
+          width: "100%"
+        }}
+      >
+        <ScanAnotherTicket />
+        <Home />
+      </div>
+    </>
   );
 }
 
@@ -236,12 +249,10 @@ function UserReadyForCheckin({
   ticketId: string;
 }) {
   return (
-    <AppContainer bg={"primary"}>
-      <Container>
-        <TicketInfoSection ticketData={ticketData} />
-        <CheckInSection ticketId={ticketId} />
-      </Container>
-    </AppContainer>
+    <>
+      <TicketInfoSection ticketData={ticketData} />
+      <CheckInSection ticketId={ticketId} />
+    </>
   );
 }
 
@@ -256,7 +267,7 @@ function useCheckTicketById(ticketId: string | undefined):
     } {
   const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<CheckTicketByIdResult | undefined>();
-  const identity = useIdentity();
+  const stateContext = useStateContext();
 
   const doCheckTicketById = useCallback(
     async (ticketId: string | undefined) => {
@@ -266,15 +277,14 @@ function useCheckTicketById(ticketId: string | undefined):
         console.log("checking", ticketId);
       }
 
-      const checkTicketByIdResult = await checkTicketById(
-        appConfig.zupassServer,
+      const checkTicketByIdResult = await devconnectCheckByIdWithOffline(
         ticketId,
-        identity
+        stateContext
       );
       setInProgress(false);
       setResult(checkTicketByIdResult);
     },
-    [identity]
+    [stateContext]
   );
 
   useEffect(() => {
@@ -289,11 +299,11 @@ function useCheckTicketById(ticketId: string | undefined):
 }
 
 function CheckInSection({ ticketId }: { ticketId: string }) {
+  const dispatchContext = useStateContext();
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
   const [checkinError, setCheckinError] = useState<TicketError | null>(null);
-  const identity = useIdentity();
 
   const onCheckInClick = useCallback(async () => {
     if (inProgress) {
@@ -301,10 +311,9 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
     }
 
     setInProgress(true);
-    const checkinResult = await checkinTicketById(
-      appConfig.zupassServer,
+    const checkinResult = await devconnectCheckInByIdWithOffline(
       ticketId,
-      identity
+      dispatchContext
     );
     setInProgress(false);
 
@@ -315,7 +324,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
       setCheckedIn(true);
       setFinishedCheckinAttempt(true);
     }
-  }, [inProgress, identity, ticketId]);
+  }, [inProgress, ticketId, dispatchContext]);
 
   return (
     <CheckinSectionContainer>

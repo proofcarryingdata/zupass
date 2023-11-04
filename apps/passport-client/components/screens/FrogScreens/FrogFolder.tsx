@@ -1,3 +1,4 @@
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -29,13 +30,13 @@ export function FrogFolder({
         width={18}
         height={18}
       />
-      <FunkyFont>
-        {"FROGCRYPTO".split("").map((letter, i) => (
+      <SuperFunkyFont>
+        {FrogCryptoFolderName.split("").map((letter, i) => (
           <BounceText key={i} delay={i * 0.1}>
             {letter}
           </BounceText>
         ))}
-      </FunkyFont>
+      </SuperFunkyFont>
       <NewFont>
         <CountDown />
       </NewFont>
@@ -141,11 +142,11 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
           },
           move: {
             enable: true,
-            speed: { min: 10, max: 20 },
+            speed: { min: 5, max: 20 },
             direction: "top",
-            random: false,
+            random: true,
             straight: false,
-            outMode: "destroy",
+            outMode: "bounce-horizontal",
             gravity: {
               enable: true
             }
@@ -174,11 +175,10 @@ function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
 }
 
 const NewFont = styled.div`
-  font-size: 15px;
-  /* vertical-align: super; */
+  font-size: 14px;
   animation: color-change 1s infinite;
   font-family: monospace;
-  /* align-self: stretch; */
+  margin-left: auto;
 
   @keyframes color-change {
     0% {
@@ -193,7 +193,7 @@ const NewFont = styled.div`
   }
 `;
 
-const FunkyFont = styled.div`
+export const SuperFunkyFont = styled.div`
   font-family: "SuperFunky";
   font-size: 20px;
   display: flex;

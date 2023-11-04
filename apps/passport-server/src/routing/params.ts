@@ -61,6 +61,31 @@ export function checkUrlParam(req: Request, paramName: string): string {
 }
 
 /**
+ * Extracts an optional string value from the url params of an Express
+ * {@link Request}.  If the value is missing, return undefined.  If the value is
+ * not a string, throws a {@link PCDHTTPError}.
+ */
+export function checkOptionalUrlParam(
+  req: Request,
+  paramName: string
+): string | undefined {
+  const value = req.params[paramName];
+
+  if (typeof value === "undefined") {
+    return undefined;
+  }
+
+  if (typeof value !== "string") {
+    throw new PCDHTTPError(
+      400,
+      `missing required url path parameter '${paramName}' - was ${value}`
+    );
+  }
+
+  return decodeURIComponent(value);
+}
+
+/**
  * Extracts a javascript value from the request body of a {@link Request}.
  * If the value is `null` or `undefined`, throws an error.
  *

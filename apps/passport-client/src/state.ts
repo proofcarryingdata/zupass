@@ -3,6 +3,8 @@ import {
   FeedSubscriptionManager,
   KnownPublicKey,
   KnownTicketType,
+  OfflineDevconnectTicket,
+  OfflineTickets,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -49,15 +51,29 @@ export interface AppState {
   // If set, the user has had their password changed from a different device
   anotherDeviceChangedPassword?: boolean;
 
+  // Dynamic (in-memory-only) state-machine for sync of E2EE encrypted data.
+  // TODO(artwyman): The parts of this not needed by the rest of the app
+  // might be better stored elsewhere, to avoid issues with reentrancy
+  // and stale snapshots delivered via dispatch().
   uploadedUploadId?: string;
-  uploadingUploadId?: string;
   downloadedPCDs?: boolean;
-  downloadingPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
-  loadingIssuedPCDs?: boolean;
+  loadingIssuedPCDs?: boolean; // Used only to update UI
+  completedFirstSync?: boolean;
+  extraDownloadRequested?: boolean;
+
+  // Persistent sync state-machine fields, saved in local storage as a
+  // PersistentSyncStatus object.  This is structured to allow for more
+  // fields to be added later.  See the docs in that type for the meaning of
+  // individual fields.
+  serverStorageRevision?: string;
 
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
+
+  offlineTickets: OfflineTickets;
+  checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
+  offline: boolean;
 }
 
 export interface AppError {

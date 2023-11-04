@@ -4,12 +4,14 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
+  GetOfflineTicketsRequest,
   IssuanceEnabledResponseValue,
   KnownTicketTypesResult,
   ListFeedsRequest,
   ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -150,6 +152,33 @@ export function initPCDIssuanceRoutes(
         req.body as VerifyTicketByIdRequest
       );
       return res.json(result satisfies VerifyTicketByIdResult);
+    }
+  );
+
+  /**
+   * Downloads relevant tickets for offline verification/checkin from the
+   * perspective of the user hitting this route.
+   */
+  app.post("/issue/offline-tickets", async (req: Request, res: Response) => {
+    checkIssuanceServiceStarted(issuanceService);
+    await issuanceService.handleGetOfflineTickets(
+      req.body as GetOfflineTicketsRequest,
+      res
+    );
+  });
+
+  /**
+   * Attempts to bulk-check-in tickets that were checked in by a user
+   * in offline mode.
+   */
+  app.post(
+    "/issue/checkin-offline-tickets",
+    async (req: Request, res: Response) => {
+      checkIssuanceServiceStarted(issuanceService);
+      await issuanceService.handleUploadOfflineCheckins(
+        req.body as UploadOfflineCheckinsRequest,
+        res
+      );
     }
   );
 

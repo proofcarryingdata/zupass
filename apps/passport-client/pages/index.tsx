@@ -1,15 +1,22 @@
-import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
+import {
+  createStorageBackedCredentialCache,
+  offlineTickets,
+  offlineTicketsCheckin
+} from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { AppThemeProvider } from "@skiff-org/skiff-ui";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
+import { toast } from "react-hot-toast";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
+import { FrogHomeScreen } from "../components/screens/FrogScreens/FrogHomeScreen";
+import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -29,25 +36,30 @@ import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
-import { addDefaultSubscriptions } from "../src/defaultSubscriptions";
 import {
   Action,
   StateContext,
-  StateContextState,
+  StateContextValue,
   dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
+  loadCheckedInOfflineDevconnectTickets,
   loadEncryptionKey,
   loadIdentity,
+  loadOfflineTickets,
   loadPCDs,
+  loadPersistentSyncStatus,
   loadSelf,
   loadSubscriptions,
+  saveCheckedInOfflineTickets,
   saveIdentity,
+  saveOfflineTickets,
   saveSubscriptions
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
@@ -56,6 +68,10 @@ import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
+  readonly BG_POLL_INTERVAL_MS = 1000 * 60;
+  lastBackgroundPoll = 0;
+  activePollTimout: NodeJS.Timeout | undefined = undefined;
+
   stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
     this.setState(diff, () => {
@@ -71,10 +87,11 @@ class App extends React.Component<object, AppState> {
   componentWillUnmount(): void {
     closeBroadcastChannel();
   }
-  stateContextState: StateContextState = {
+  stateContextState: StateContextValue = {
     getState: () => this.state,
     stateEmitter: this.stateEmitter,
-    dispatch: this.dispatch
+    dispatch: this.dispatch,
+    update: this.update
   };
 
   render() {
@@ -128,23 +145,156 @@ class App extends React.Component<object, AppState> {
   }
 
   startBackgroundJobs = () => {
-    console.log("Starting background jobs...");
-    this.jobPollUser();
+    console.log("[JOB] Starting background jobs...");
+    document.addEventListener("visibilitychange", () => {
+      this.setupPolling();
+    });
+    this.setupPolling();
+    this.startJobSyncOfflineCheckins();
+    this.jobCheckConnectivity();
   };
 
-  jobPollUser = async () => {
-    console.log("[JOB] polling user");
+  jobCheckConnectivity = async () => {
+    window.addEventListener("offline", () => this.setIsOffline(true));
+    window.addEventListener("online", () => this.setIsOffline(false));
+  };
 
-    try {
-      if (this.state?.self) {
-        await pollUser(this.state.self, this.dispatch);
+  setIsOffline(offline: boolean) {
+    console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
+    this.update({
+      ...this.state,
+      offline: offline
+    });
+    if (offline) {
+      toast("Offline", {
+        icon: "❌",
+        style: {
+          width: "80vw"
+        }
+      });
+    } else {
+      toast("Back Online", {
+        icon: "👍",
+        style: {
+          width: "80vw"
+        }
+      });
+    }
+  }
+
+  /**
+   * Idempotently enables or disables periodic polling of jobPollServerUpdates,
+   * based on whether the window is visible or invisible.
+   *
+   * If there is an existing poll scheduled, it will not be rescheduled,
+   * but may be cancelled.  If there is no poll scheduled, a new one may be
+   * scheduled.  It may happen immediately after the window becomes visible,
+   * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
+   */
+  setupPolling = async () => {
+    if (!document.hidden) {
+      if (!this.activePollTimout) {
+        const nextPollDelay = Math.max(
+          0,
+          this.lastBackgroundPoll + this.BG_POLL_INTERVAL_MS - Date.now()
+        );
+        this.activePollTimout = setTimeout(
+          this.jobPollServerUpdates,
+          nextPollDelay
+        );
+        console.log(
+          `[JOB] next poll for updates scheduled in ${nextPollDelay}ms`
+        );
       }
-    } catch (e) {
-      console.log("[JOB] failed poll user");
-      console.log(e);
+    } else {
+      if (this.activePollTimout) {
+        clearTimeout(this.activePollTimout);
+        this.activePollTimout = undefined;
+        console.log("[JOB] poll for updates disabled");
+      }
+    }
+  };
+
+  /**
+   * Periodic job for polling the server.  Is scheduled by setupPolling, and
+   * will reschedule itself in the same way.
+   */
+  jobPollServerUpdates = async () => {
+    // Mark that poll has started.
+    console.log("[JOB] polling server for updates");
+    this.activePollTimout = undefined;
+    try {
+      // Do the real work of the poll.
+      this.doPollServerUpdates();
+    } finally {
+      // Reschedule next poll.
+      this.lastBackgroundPoll = Date.now();
+      this.setupPolling();
+    }
+  };
+
+  doPollServerUpdates = async () => {
+    if (
+      !this.state?.self ||
+      !!this.state.userInvalid ||
+      !!this.state.anotherDeviceChangedPassword
+    ) {
+      console.log("[JOB] skipping poll with invalid user");
+      return;
     }
 
-    setTimeout(this.jobPollUser, 1000 * 60);
+    // Check for updates to User object.
+    try {
+      await pollUser(this.state.self, this.dispatch);
+    } catch (e) {
+      console.log("[JOB] failed poll user", e);
+    }
+
+    // Trigger sync of E2EE storage, but only if the first-time sync had time
+    // to complete.
+    if (this.state.completedFirstSync) {
+      this.update({ ...this.state, extraDownloadRequested: true });
+    }
+  };
+
+  async startJobSyncOfflineCheckins() {
+    await this.jobSyncOfflineCheckins();
+    setInterval(this.jobSyncOfflineCheckins, 1000 * 60);
+  }
+
+  jobSyncOfflineCheckins = async () => {
+    if (!this.state.self || this.state.offline) {
+      return;
+    }
+
+    if (this.state.checkedinOfflineDevconnectTickets.length > 0) {
+      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+        appConfig.zupassServer,
+        this.state.identity,
+        this.state.checkedinOfflineDevconnectTickets
+      );
+
+      if (checkinOfflineTicketsResult.success) {
+        this.update({
+          ...this.state,
+          checkedinOfflineDevconnectTickets: []
+        });
+        saveCheckedInOfflineTickets(undefined);
+      }
+    }
+
+    const offlineTicketsResult = await offlineTickets(
+      appConfig.zupassServer,
+      this.state.identity
+    );
+
+    if (offlineTicketsResult.success) {
+      this.update({
+        ...this.state,
+        offlineTickets: offlineTicketsResult.value.offlineTickets
+      });
+      saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
+    }
   };
 }
 
@@ -194,6 +344,8 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
+          <Route path="frog" element={<FrogHomeScreen />} />
+          <Route path="frog-admin" element={<FrogManagerScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -201,6 +353,7 @@ function RouterImpl() {
   );
 }
 
+// TODO: move to a separate file
 async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
 
@@ -214,12 +367,11 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
+  const offlineTickets = loadOfflineTickets();
+  const checkedInOfflineDevconnectTickets =
+    loadCheckedInOfflineDevconnectTickets();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
-
-  if (self) {
-    await addDefaultSubscriptions(subscriptions);
-  }
 
   let modal = { modalType: "none" } as AppState["modal"];
 
@@ -235,6 +387,8 @@ async function loadInitialState(): Promise<AppState> {
 
   const credentialCache = createStorageBackedCredentialCache();
 
+  const persistentSyncStatus = loadPersistentSyncStatus();
+
   return {
     self,
     encryptionKey,
@@ -243,7 +397,11 @@ async function loadInitialState(): Promise<AppState> {
     modal,
     subscriptions,
     resolvingSubscriptionId: undefined,
-    credentialCache
+    credentialCache,
+    offlineTickets,
+    checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
+    offline: !window.navigator.onLine,
+    serverStorageRevision: persistentSyncStatus.serverStorageRevision
   };
 }
 

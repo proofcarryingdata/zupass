@@ -12,6 +12,7 @@ import {
 import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
+import { FrogcryptoService } from "./services/frogcryptoService";
 import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
@@ -48,6 +49,7 @@ export interface GlobalServices {
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
   kudosbotService: KudosbotService | null;
+  frogcryptoService: FrogcryptoService | null;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
 }

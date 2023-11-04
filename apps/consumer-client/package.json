@@ -34,6 +34,7 @@
     "react-dom": "^18.2.0",
     "react-router-dom": "^6.9.0",
     "styled-components": "^5.3.6",
+    "url-join": "^5.0.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {

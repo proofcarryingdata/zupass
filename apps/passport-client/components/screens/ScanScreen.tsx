@@ -4,10 +4,11 @@ import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { maybeRedirect } from "../../src/util";
-import { Spacer, TextCenter } from "../core";
+import { H5, Spacer, TextCenter } from "../core";
 import { Button, CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
+import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
 enum ScannerMode {
   CAMERA = "CAMERA",
@@ -35,9 +36,7 @@ export function ScanScreen() {
           }}
           constraints={{ facingMode: "environment", aspectRatio: 1 }}
           ViewFinder={ViewFinder}
-          containerStyle={{
-            width: "100%"
-          }}
+          containerStyle={{ width: "100%" }}
         />
       )}
       {scannerMode === ScannerMode.LASER_KEYSTROKE && (
@@ -45,9 +44,9 @@ export function ScanScreen() {
           <CloseButton />
         </FullWidthRow>
       )}
-      <Spacer h={24} />
+      <Spacer h={16} />
       <TextCenter>Scan a ticket to verify</TextCenter>
-      <Spacer h={24} />
+      <Spacer h={32} />
       <Button
         onClick={() => {
           if (scannerMode === ScannerMode.CAMERA) {
@@ -60,6 +59,14 @@ export function ScanScreen() {
         Switch to {scannerMode === ScannerMode.CAMERA ? "laser" : "camera"}{" "}
         scanning
       </Button>
+      <Spacer h={32} />
+      <IndicateIfOffline>
+        <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
+        <Spacer h={8} />
+        You're offline. Zupass is using a backed up copy of event tickets.
+        Check-ins will be synced the next time you start the app with a working
+        network connection.
+      </IndicateIfOffline>
     </AppContainer>
   );
 }
@@ -95,6 +102,7 @@ const ScanOverlayWrap = styled.div`
   bottom: 0;
   right: 0;
   z-index: 1;
+  margin: 16px;
 `;
 
 const FullWidthRow = styled.div`

@@ -1,3 +1,4 @@
+import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
@@ -17,6 +18,8 @@ import {
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
   FeedHost,
+  GetOfflineTicketsRequest,
+  GetOfflineTicketsResponseValue,
   ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
@@ -26,6 +29,8 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
+  UploadOfflineCheckinsRequest,
+  UploadOfflineCheckinsResponseValue,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -42,13 +47,9 @@ import {
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
-  AppendToFolderAction,
-  AppendToFolderPermission,
-  DeleteFolderAction,
   PCDAction,
   PCDActionType,
   PCDPermissionType,
-  ReplaceInFolderAction,
   joinPath
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -59,6 +60,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { Response } from "express";
 import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
@@ -67,6 +69,8 @@ import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
 } from "../database/models";
+import { checkInOfflineTickets } from "../database/multitableQueries/checkInOfflineTickets";
+import { fetchOfflineTicketsForChecker } from "../database/multitableQueries/fetchOfflineTickets";
 import {
   fetchDevconnectPretixTicketByTicketId,
   fetchDevconnectPretixTicketsByEmail,
@@ -94,6 +98,7 @@ import {
   zuconnectProductIdToEventId,
   zuconnectProductIdToName
 } from "../util/zuconnectTicket";
+import { zuzaluRoleToProductId } from "../util/zuzaluUser";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
 import { RollbarService } from "./rollbarService";
@@ -129,10 +134,10 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    const FEED_PROVIDER_NAME = "Zupass";
     this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
+    this.cachedVerifySignaturePCD = this.cachedVerifySignaturePCD.bind(this);
 
     this.feedHost = new FeedHost(
       [
@@ -140,7 +145,7 @@ export class IssuanceService {
           handleRequest: async (
             req: PollFeedRequest
           ): Promise<PollFeedResponseValue> => {
-            const actions = [];
+            const actions: PCDAction[] = [];
 
             try {
               if (req.pcd === undefined) {
@@ -148,7 +153,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
               const ticketsByEvent = _.groupBy(
@@ -224,7 +229,7 @@ export class IssuanceService {
               }
               await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               return {
                 actions: [
@@ -232,7 +237,7 @@ export class IssuanceService {
                     pcds: await this.issueFrogPCDs(),
                     folder: "Frogs",
                     type: PCDActionType.AppendToFolder
-                  } as AppendToFolderAction
+                  }
                 ]
               };
             } catch (e) {
@@ -254,7 +259,7 @@ export class IssuanceService {
               {
                 folder: "Frogs",
                 type: PCDPermissionType.AppendToFolder
-              } as AppendToFolderPermission
+              }
             ]
           }
         },
@@ -270,7 +275,7 @@ export class IssuanceService {
               }
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               const pcds = await this.issueEmailPCDs(pcd);
 
@@ -279,7 +284,7 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Email",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -287,7 +292,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EmailPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -308,7 +313,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
               const pcds = await this.issueZuzaluTicketPCDs(pcd);
 
@@ -317,7 +322,7 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuzalu '23",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -325,7 +330,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -346,7 +351,7 @@ export class IssuanceService {
             try {
               const { pcd } = await verifyFeedCredential(
                 req.pcd,
-                this.cachedVerifySignaturePCD.bind(this)
+                this.cachedVerifySignaturePCD
               );
 
               const pcds = await this.issueZuconnectTicketPCDs(pcd);
@@ -356,14 +361,14 @@ export class IssuanceService {
                 type: PCDActionType.DeleteFolder,
                 folder: "Zuconnect",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               // Clear out the folder
               actions.push({
                 type: PCDActionType.DeleteFolder,
                 folder: "ZuConnect",
                 recursive: false
-              } as DeleteFolderAction);
+              });
 
               actions.push({
                 type: PCDActionType.ReplaceInFolder,
@@ -371,7 +376,7 @@ export class IssuanceService {
                 pcds: await Promise.all(
                   pcds.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
                 )
-              } as ReplaceInFolderAction);
+              });
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
               this.rollbarService?.reportError(e);
@@ -383,7 +388,7 @@ export class IssuanceService {
         }
       ],
       `${process.env.PASSPORT_SERVER_URL}/feeds`,
-      FEED_PROVIDER_NAME
+      "Zupass"
     );
   }
 
@@ -610,6 +615,29 @@ export class IssuanceService {
         error: { name: "ServerError", detailedMessage: getErrorMessage(e) },
         success: false
       };
+    }
+  }
+
+  /**
+   * Returns a promised verification of a PCD, either from the cache or,
+   * if there is no cache entry, from the multiprocess service.
+   */
+  public async cachedVerifySignaturePCD(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<boolean> {
+    const key = JSON.stringify(serializedPCD);
+    const cached = this.verificationPromiseCache.get(key);
+    if (cached) {
+      return cached;
+    } else {
+      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
+        serializedPCD.pcd
+      );
+      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
+      this.verificationPromiseCache.set(key, promise);
+      // If the promise rejects, delete it from the cache
+      promise.catch(() => this.verificationPromiseCache.delete(key));
+      return promise;
     }
   }
 
@@ -852,6 +880,32 @@ export class IssuanceService {
   }
 
   /**
+   * Issue an EdDSAFrogPCD from IFrogData signed with IssuanceService's private key.
+   */
+  public async issueEdDSAFrogPCDs(
+    credential: SerializedPCD<SemaphoreSignaturePCD>,
+    frogData: IFrogData
+  ): Promise<SerializedPCD[]> {
+    const frogPCD = await EdDSAFrogPCDPackage.serialize(
+      await EdDSAFrogPCDPackage.prove({
+        privateKey: {
+          argumentType: ArgumentTypeName.String,
+          value: this.exportedRSAPrivateKey
+        },
+        data: {
+          argumentType: ArgumentTypeName.Object,
+          value: frogData
+        },
+        id: {
+          argumentType: ArgumentTypeName.String
+        }
+      })
+    );
+
+    return [frogPCD];
+  }
+
+  /**
    * Issues email PCDs based on the user's verified email address.
    * Currently we only verify a single email address, but could provide
    * multiple PCDs if it were possible to verify secondary emails.
@@ -942,12 +996,7 @@ export class IssuanceService {
             attendeeName: user.name,
             attendeeEmail: user.email,
             eventId: ZUZALU_23_EVENT_ID,
-            productId:
-              user.role === ZuzaluUserRole.Visitor
-                ? ZUZALU_23_VISITOR_PRODUCT_ID
-                : user.role === ZuzaluUserRole.Organizer
-                ? ZUZALU_23_ORGANIZER_PRODUCT_ID
-                : ZUZALU_23_RESIDENT_PRODUCT_ID,
+            productId: zuzaluRoleToProductId(user.role),
             timestampSigned: Date.now(),
             timestampConsumed: 0,
             isConsumed: false,
@@ -1021,29 +1070,6 @@ export class IssuanceService {
         return pcds;
       }
     );
-  }
-
-  /**
-   * Returns a promised verification of a PCD, either from the cache or,
-   * if there is no cache entry, from the multiprocess service.
-   */
-  private async cachedVerifySignaturePCD(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<boolean> {
-    const key = JSON.stringify(serializedPCD);
-    const cached = this.verificationPromiseCache.get(key);
-    if (cached) {
-      return cached;
-    } else {
-      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
-        serializedPCD.pcd
-      );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
-      this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache
-      promise.catch(() => this.verificationPromiseCache.delete(key));
-      return promise;
-    }
   }
 
   /**
@@ -1285,6 +1311,50 @@ export class IssuanceService {
         })
       }
     };
+  }
+
+  public async handleGetOfflineTickets(
+    req: GetOfflineTicketsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    const offlineTickets = await fetchOfflineTicketsForChecker(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment
+    );
+
+    res.json({
+      offlineTickets
+    } satisfies GetOfflineTicketsResponseValue);
+  }
+
+  public async handleUploadOfflineCheckins(
+    req: UploadOfflineCheckinsRequest,
+    res: Response
+  ): Promise<void> {
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.checkerProof.pcd
+    );
+    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
+
+    if (!valid) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
+    await checkInOfflineTickets(
+      this.context.dbPool,
+      signaturePCD.claim.identityCommitment,
+      req.checkedOfflineInDevconnectTicketIDs
+    );
+
+    res.json({} satisfies UploadOfflineCheckinsResponseValue);
   }
 }
 
