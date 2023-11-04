@@ -6,11 +6,7 @@ import {
   closeWebviewHtml,
   errorHtmlWithDetails
 } from "../../util/telegramWebApp";
-import {
-  checkOptionalUrlParam,
-  checkQueryParam,
-  checkUrlParam
-} from "../params";
+import { checkOptionalQueryParam, checkQueryParam } from "../params";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -29,23 +25,32 @@ export function initTelegramRoutes(
    * Telegram.
    */
   app.get(
-    "/telegram/verify/:chatId/:id/:username?",
+    [
+      "/telegram/verify",
+      "/telegram/verify/*",
+      "/telegram/verify/:id",
+      "/telegram/verify/:id/:username"
+    ],
     async (req: Request, res: Response) => {
       try {
         const proof = checkQueryParam(req, "proof");
-        const telegram_user_id = checkUrlParam(req, "id");
-        const telegram_chat_id = checkUrlParam(req, "chatId");
-        let telegram_username = checkOptionalUrlParam(req, "username");
+        const telegram_user_id = checkOptionalQueryParam(req, "userId");
+        const telegram_chat_id = checkOptionalQueryParam(req, "chatId");
+        const telegram_username = checkOptionalQueryParam(req, "username");
+
+        if (!telegram_chat_id || !telegram_chat_id)
+          throw new Error(
+            `Missing chat Id or user Id. Type /start and try again.`
+          );
+
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
 
         if (!telegram_user_id || !/^-?\d+$/.test(telegram_user_id)) {
           throw new Error(
             "telegram_user_id field needs to be a numeric string and be non-empty"
           );
-        }
-
-        // express path param value should always be undefined rather than empty string, but adding this just in case
-        if (telegram_username?.length === 0) {
-          telegram_username = undefined;
         }
 
         logger(

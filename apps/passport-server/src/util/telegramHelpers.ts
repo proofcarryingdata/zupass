@@ -412,9 +412,9 @@ const generateTicketProofUrl = async (
     }
 
     // pass telegram username as path param if nonempty
-    let returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramChatId}/${telegramUserId}`;
+    let returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify?chatId=${telegramChatId}&userId=${telegramUserId}`;
     if (telegramUsername && telegramUsername.length > 0)
-      returnUrl += `/${telegramUsername}`;
+      returnUrl += `&username=${telegramUsername}`;
 
     span?.setAttribute("returnUrl", returnUrl);
 

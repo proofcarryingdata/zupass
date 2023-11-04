@@ -794,6 +794,7 @@ export class TelegramService {
   public anonBotExists(): boolean {
     return this.authBot.botInfo.id !== this.anonBot.botInfo.id;
   }
+
   /**
    * Telegram does not allow two instances of a authBot to be running at once.
    * During deployment, a new instance of the app will be started before the
