@@ -1,64 +1,67 @@
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
+import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
-import { Button, CircleButton } from "../core/Button";
+import { CircleButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
-enum ScannerMode {
-  CAMERA = "CAMERA",
-  LASER_KEYSTROKE = "LASER_KEYSTROKE"
-}
-
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
-  const [scannerMode, setScannerMode] = useState(ScannerMode.CAMERA);
-  useLaserScannerKeystrokeInput(scannerMode === ScannerMode.CAMERA);
+  const usingLaserScanner = loadUsingLaserScanner();
+  useLaserScannerKeystrokeInput();
   const nav = useNavigate();
 
   return (
     <AppContainer bg="gray">
-      {scannerMode === ScannerMode.CAMERA && (
-        <QrReader
-          onResult={(result, error) => {
-            if (result != null) {
-              console.log(`Got result, considering redirect`, result.getText());
-              const newLoc = maybeRedirect(result.getText());
-              if (newLoc) nav(newLoc);
-            } else if (error != null) {
-              //    console.info(error);
-            }
-          }}
-          constraints={{ facingMode: "environment", aspectRatio: 1 }}
-          ViewFinder={ViewFinder}
-          containerStyle={{ width: "100%" }}
-        />
+      {!usingLaserScanner && (
+        <>
+          <QrReader
+            onResult={(result, error) => {
+              if (result != null) {
+                console.log(
+                  `Got result, considering redirect`,
+                  result.getText()
+                );
+                const newLoc = maybeRedirect(result.getText());
+                if (newLoc) nav(newLoc);
+              } else if (error != null) {
+                //    console.info(error);
+              }
+            }}
+            constraints={{ facingMode: "environment", aspectRatio: 1 }}
+            ViewFinder={ViewFinder}
+            containerStyle={{ width: "100%" }}
+          />
+          <Spacer h={16} />
+          <TextCenter>Scan a ticket to verify</TextCenter>
+        </>
       )}
-      {scannerMode === ScannerMode.LASER_KEYSTROKE && (
-        <FullWidthRow>
-          <CloseButton />
-        </FullWidthRow>
+      {usingLaserScanner && (
+        <>
+          <FullWidthRow>
+            <CloseButton />
+            <Spacer h={32} />
+            <TextCenter>
+              Press and hold down the <Orange>orange</Orange> scan button and
+              position the attendee's QR code in front of the laser light. If
+              you're having trouble, ask the participant to increase the
+              brightness on their screen.
+            </TextCenter>
+            <Spacer h={16} />
+            <TextCenter>
+              Please reach out to the Zupass Help Desk for any further scanning
+              issues.
+            </TextCenter>
+            {/* TODO: Add an image if we have a good one */}
+          </FullWidthRow>
+        </>
       )}
-      <Spacer h={16} />
-      <TextCenter>Scan a ticket to verify</TextCenter>
-      <Spacer h={32} />
-      <Button
-        onClick={() => {
-          if (scannerMode === ScannerMode.CAMERA) {
-            setScannerMode(ScannerMode.LASER_KEYSTROKE);
-          } else {
-            setScannerMode(ScannerMode.CAMERA);
-          }
-        }}
-      >
-        Switch to {scannerMode === ScannerMode.CAMERA ? "laser" : "camera"}{" "}
-        scanning
-      </Button>
       <Spacer h={32} />
       <IndicateIfOffline>
         <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
@@ -95,6 +98,10 @@ function ViewFinder() {
   );
 }
 
+const Orange = styled.span`
+  font-weight: bold;
+  color: orange;
+`;
 const ScanOverlayWrap = styled.div`
   position: absolute;
   top: 0;

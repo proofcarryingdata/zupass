@@ -11,6 +11,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Dispatcher, StateContext, StateContextValue } from "./dispatch";
+import { loadUsingLaserScanner } from "./localstorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
@@ -192,13 +193,14 @@ export function useRequirePassword() {
 }
 
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
-export function useLaserScannerKeystrokeInput(disabled?: boolean) {
+export function useLaserScannerKeystrokeInput() {
   const [typedText, setTypedText] = useState("");
   const nav = useNavigate();
+  const usingLaserScanner = loadUsingLaserScanner();
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {
-      if (disabled) return;
+      if (!usingLaserScanner) return;
       if (event.key === "Enter") {
         // Check URL regex and navigate to the last match, if it exists
         const url = getLastValidURL(typedText);
@@ -218,7 +220,7 @@ export function useLaserScannerKeystrokeInput(disabled?: boolean) {
     return () => {
       window.removeEventListener("keydown", handleKeyDown);
     };
-  }, [typedText, nav, disabled]);
+  }, [typedText, nav, usingLaserScanner]);
 
   return typedText;
 }
