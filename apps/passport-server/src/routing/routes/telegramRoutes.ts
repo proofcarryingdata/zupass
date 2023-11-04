@@ -6,7 +6,11 @@ import {
   closeWebviewHtml,
   errorHtmlWithDetails
 } from "../../util/telegramWebApp";
-import { checkOptionalQueryParam, checkQueryParam } from "../params";
+import {
+  checkOptionalQueryParam,
+  checkQueryParam,
+  checkUrlParam
+} from "../params";
 
 export function initTelegramRoutes(
   app: express.Application,
