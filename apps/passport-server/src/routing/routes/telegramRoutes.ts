@@ -161,7 +161,7 @@ export function initTelegramRoutes(
             );
           }
           res.redirect(
-            `${process.env.TELEGRAM_ANON_WEBSITE}/${anonPayload.value}`
+            `${process.env.TELEGRAM_ANON_WEBSITE}/profile?nullifierHash=${anonPayload.value}`
           );
           break;
         }

@@ -1,6 +1,9 @@
+"use client";
+
 import Post from "@/components/post";
 import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
-import { Suspense } from "react";
+import { useSearchParams } from "next/navigation";
+import { Suspense, useEffect, useState } from "react";
 import Loading from "./loading";
 
 interface AnonMessageWithDetails {
@@ -14,22 +17,29 @@ interface AnonMessageWithDetails {
   message_timestamp: string;
 }
 
-export default async function Page({
-  params
-}: {
-  params: { nullifier: string };
-}) {
-  const getData = async (): Promise<AnonMessageWithDetails[]> => {
-    if (!params.nullifier) return Promise.resolve([]);
-    const data = await fetch(
-      `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${params.nullifier}`,
-      { cache: "no-store" }
-    );
-    const dataJson = await data.json();
-    return dataJson;
-  };
+export default function Page() {
+  const [messages, setMessages] = useState<
+    AnonMessageWithDetails[] | undefined
+  >(undefined);
+  const searchParams = useSearchParams();
+  const nullifierHash = searchParams.get("nullifierHash");
 
-  const messages = await getData();
+  useEffect(() => {
+    const getData = async (): Promise<AnonMessageWithDetails[] | undefined> => {
+      if (!nullifierHash) return Promise.resolve(undefined);
+      const data = await fetch(
+        `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${nullifierHash}`,
+        { cache: "no-store" }
+      );
+      const dataJson = await data.json();
+      console.log(dataJson);
+      return dataJson;
+    };
+
+    getData().then((m) => setMessages(m));
+  }, [nullifierHash]);
+
+  if (!nullifierHash || !messages) return <Loading />;
 
   return (
     <Suspense fallback={<Loading />}>
@@ -40,14 +50,14 @@ export default async function Page({
         <div className="flex flex-col gap-2 items-center">
           <div className="flex flex-col items-center">
             <span className="text-4xl mb-1">
-              {bigIntToPseudonymEmoji(BigInt(params.nullifier))}
+              {bigIntToPseudonymEmoji(BigInt(nullifierHash))}
             </span>
             <span className="text-[#2E2E35] font-bold text-xl">
-              {bigIntToPseudonymName(BigInt(params.nullifier))}
+              {bigIntToPseudonymName(BigInt(nullifierHash))}
             </span>
           </div>
           <span className="font-mono text-[#2e2e35] opacity-30">
-            #{params.nullifier.substring(0, 4)}
+            #{nullifierHash.substring(0, 4)}
           </span>
         </div>
         {messages.length === 0 ? (
