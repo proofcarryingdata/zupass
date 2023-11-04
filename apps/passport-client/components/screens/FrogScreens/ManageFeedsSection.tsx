@@ -2,8 +2,8 @@ import { Biome } from "@pcd/eddsa-frog-pcd";
 import {
   CredentialManager,
   FrogCryptoDbFeedData,
+  FrogCryptoDbFeedDataSchema,
   FrogCryptoFeedBiomeConfigs,
-  isFrogCryptoDbFeedData,
   requestFrogCryptoUpdateFeeds
 } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
@@ -235,7 +235,10 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
       }
     } satisfies FrogCryptoDbFeedData;
 
-    if (!isFrogCryptoDbFeedData(feedData)) {
+    try {
+      FrogCryptoDbFeedDataSchema.parse(feedData);
+    } catch (e) {
+      console.error(e);
       throw new Error(`Invalid feed data: ${JSON.stringify(feedData)}`);
     }
 

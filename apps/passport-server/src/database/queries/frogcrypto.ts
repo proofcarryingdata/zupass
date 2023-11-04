@@ -134,8 +134,7 @@ export async function upsertFrogData(
 export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
   const result = await sqlQuery(
     pool,
-    `select * from frogcrypto_frogs order by id`,
-    []
+    `select * from frogcrypto_frogs order by id`
   );
 
   return result.rows.map(toFrogData);
@@ -166,8 +165,7 @@ export async function getPossibleFrogIds(pool: Pool): Promise<number[]> {
   from frogcrypto_frogs
   where frog->>'rarity' <> 'object'
   order by id
-    `,
-    []
+    `
   );
 
   return result.rows.map((row) => row.id);
@@ -282,7 +280,7 @@ export async function upsertFeedData(
 export async function getRawFeedData(
   pool: Pool
 ): Promise<FrogCryptoDbFeedData[]> {
-  const result = await sqlQuery(pool, `select * from frogcrypto_feeds`, []);
+  const result = await sqlQuery(pool, `select * from frogcrypto_feeds`);
 
   return result.rows;
 }
@@ -316,8 +314,6 @@ export async function getFeedData(pool: Pool): Promise<FrogCryptoFeed[]> {
 
 function toFeedData(dbFeedData: FrogCryptoDbFeedData): FrogCryptoFeed {
   return {
-    id: dbFeedData.uuid,
-    ...dbFeedData.feed,
     // hydrate with default values
     autoPoll: false,
     inputPCDType: undefined,
@@ -330,6 +326,8 @@ function toFeedData(dbFeedData: FrogCryptoDbFeedData): FrogCryptoFeed {
         folder: FrogCryptoFolderName,
         type: PCDPermissionType.AppendToFolder
       }
-    ]
+    ],
+    ...dbFeedData.feed,
+    id: dbFeedData.uuid
   };
 }

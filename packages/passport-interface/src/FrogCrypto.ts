@@ -1,21 +1,38 @@
 import { Biome, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
-
+import _ from "lodash";
+import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
 
 /**
  * Map of configs for Biome(s) where PCDs can be issued from this feed
  */
-export type FrogCryptoFeedBiomeConfigs = Partial<
-  Record<
-    keyof typeof Biome,
-    {
-      /**
-       * A scaling factor that is multiplied to the weight of the frog to affect
-       * the probability of the frog being issued
-       */
-      dropWeightScaler: number;
-    }
-  >
+export const FrogCryptoFeedBiomeConfigSchema = z.object({
+  /**
+   * A scaling factor that is multiplied to the weight of the frog to affect
+   * the probability of the frog being issued
+   *
+   * For example, if a feed has 3 frogs:
+   *
+   * * JungleFrog1's drop weight is 1
+   * * JungleFrog2's drop weight is 2
+   * * DesertFrog3's drop weight is 3
+   *
+   *  If the Jungle's dropWeightScaler is 2 and the Desert's
+   *   dropWeightScaler is 1, then
+   *
+   * * JungleFrog1's probability of being issued is 2/9
+   * * JungleFrog2's probability of being issued is 4/9
+   * * DesertFrog3's probability of being issued is 3/9
+   */
+  dropWeightScaler: z.number().nonnegative()
+});
+
+export const FrogCryptoFeedBiomeConfigsSchema = z.object(
+  _.mapValues(Biome, () => FrogCryptoFeedBiomeConfigSchema.optional())
+);
+
+export type FrogCryptoFeedBiomeConfigs = z.infer<
+  typeof FrogCryptoFeedBiomeConfigsSchema
 >;
 
 /**
@@ -52,66 +69,19 @@ export interface FrogCryptoFeed extends Feed<typeof EdDSAFrogPCDPackage> {
 /**
  * DB schema for feed data
  */
-export type FrogCryptoDbFeedData = {
-  uuid: string;
-  feed: Omit<
-    FrogCryptoFeed,
-    | "id"
-    | "autoPoll"
-    | "inputPCDType"
-    | "partialArgs"
-    | "credentialRequest"
-    | "permissions"
-    | "active"
-  >;
-};
+export const FrogCryptoDbFeedDataSchema = z.object({
+  uuid: z.string().uuid(),
+  feed: z.object({
+    name: z.string().min(1),
+    description: z.string().min(1),
+    private: z.boolean(),
+    activeUntil: z.number().nonnegative().int(),
+    cooldown: z.number().nonnegative().int(),
+    biomes: FrogCryptoFeedBiomeConfigsSchema
+  })
+});
 
-/**
- * Validate is a value is a {@link FrogCryptoDbFeedData}
- */
-export function isFrogCryptoDbFeedData(
-  value: Record<string, unknown>
-): value is FrogCryptoDbFeedData {
-  if (
-    typeof value !== "object" ||
-    value === null ||
-    !("uuid" in value && typeof value.uuid === "string")
-  ) {
-    return false;
-  }
-
-  const feed = value.feed;
-  if (!feed || typeof feed !== "object") {
-    return false;
-  }
-
-  if (!("biomes" in feed)) {
-    return false;
-  }
-  const biomes = feed.biomes;
-  if (!biomes || typeof biomes !== "object") {
-    return false;
-  }
-
-  return (
-    "private" in feed &&
-    typeof feed.private === "boolean" &&
-    "activeUntil" in feed &&
-    typeof feed.activeUntil === "number" &&
-    Number.isInteger(feed.activeUntil) &&
-    "cooldown" in feed &&
-    typeof feed.cooldown === "number" &&
-    Number.isInteger(feed.cooldown) &&
-    Object.values(biomes).every(
-      (biomeConfig) =>
-        typeof biomeConfig === "object" &&
-        biomeConfig !== null &&
-        "dropWeightScaler" in biomeConfig &&
-        typeof biomeConfig.dropWeightScaler === "number" &&
-        Number.isFinite(biomeConfig.dropWeightScaler)
-    )
-  );
-}
+export type FrogCryptoDbFeedData = z.infer<typeof FrogCryptoDbFeedDataSchema>;
 
 /**
  * The prototype specification for frog creation
@@ -122,87 +92,29 @@ export function isFrogCryptoDbFeedData(
  *
  * Undefined numeric attribute means that the value will be randomly selected from [0, 10].
  */
-export type FrogCryptoFrogData = {
-  id: number;
-  uuid: string;
-  name: string;
-  description: string;
-  biome: string;
-  rarity: string;
+export const FrogCryptoFrogDataSchema = z.object({
+  id: z.number().nonnegative().int(),
+  uuid: z.string().uuid(),
+  name: z.string().min(1),
+  description: z.string().min(1),
+  biome: z.string().min(1),
+  rarity: z.string().min(1),
   /**
    * undefined means the temperament will be randomly selected
    */
-  temperament: string | undefined;
-  drop_weight: number;
-  jump_min: number | undefined;
-  jump_max: number | undefined;
-  speed_min: number | undefined;
-  speed_max: number | undefined;
-  intelligence_min: number | undefined;
-  intelligence_max: number | undefined;
-  beauty_min: number | undefined;
-  beauty_max: number | undefined;
-};
+  temperament: z.string().optional(),
+  drop_weight: z.number().nonnegative(),
+  jump_min: z.number().gte(0).lte(10).optional(),
+  jump_max: z.number().gte(0).lte(10).optional(),
+  speed_min: z.number().gte(0).lte(10).optional(),
+  speed_max: z.number().gte(0).lte(10).optional(),
+  intelligence_min: z.number().gte(0).lte(10).optional(),
+  intelligence_max: z.number().gte(0).lte(10).optional(),
+  beauty_min: z.number().gte(0).lte(10).optional(),
+  beauty_max: z.number().gte(0).lte(10).optional()
+});
 
-/**
- * Validate is a value is a {@link FrogCryptoFrogData}
- */
-export function isFrogCryptoFrogData(
-  value: Record<string, unknown>
-): value is FrogCryptoFrogData {
-  return (
-    typeof value === "object" &&
-    "id" in value &&
-    typeof value.id === "number" &&
-    Number.isSafeInteger(value.id) &&
-    "uuid" in value &&
-    typeof value.uuid === "string" &&
-    "name" in value &&
-    typeof value.name === "string" &&
-    "description" in value &&
-    typeof value.description === "string" &&
-    "biome" in value &&
-    typeof value.biome === "string" &&
-    "rarity" in value &&
-    typeof value.rarity === "string" &&
-    "temperament" in value &&
-    (typeof value.temperament === "string" ||
-      typeof value.temperament === "undefined") &&
-    "drop_weight" in value &&
-    typeof value.drop_weight === "number" &&
-    Number.isFinite(value.drop_weight) &&
-    "jump_min" in value &&
-    ((typeof value.jump_min === "number" && Number.isInteger(value.jump_min)) ||
-      typeof value.jump_min === "undefined") &&
-    "jump_max" in value &&
-    ((typeof value.jump_max === "number" && Number.isInteger(value.jump_max)) ||
-      typeof value.jump_max === "undefined") &&
-    "speed_min" in value &&
-    ((typeof value.speed_min === "number" &&
-      Number.isInteger(value.speed_min)) ||
-      typeof value.speed_min === "undefined") &&
-    "speed_max" in value &&
-    ((typeof value.speed_max === "number" &&
-      Number.isInteger(value.speed_max)) ||
-      typeof value.speed_max === "undefined") &&
-    "intelligence_min" in value &&
-    ((typeof value.intelligence_min === "number" &&
-      Number.isInteger(value.intelligence_min)) ||
-      typeof value.intelligence_min === "undefined") &&
-    "intelligence_max" in value &&
-    ((typeof value.intelligence_max === "number" &&
-      Number.isInteger(value.intelligence_max)) ||
-      typeof value.intelligence_max === "undefined") &&
-    "beauty_min" in value &&
-    ((typeof value.beauty_min === "number" &&
-      Number.isInteger(value.beauty_min)) ||
-      typeof value.beauty_min === "undefined") &&
-    "beauty_max" in value &&
-    ((typeof value.beauty_max === "number" &&
-      Number.isInteger(value.beauty_max)) ||
-      typeof value.beauty_max === "undefined")
-  );
-}
+export type FrogCryptoFrogData = z.infer<typeof FrogCryptoFrogDataSchema>;
 
 /**
  * DB schema for frog data

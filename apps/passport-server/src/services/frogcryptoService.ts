@@ -112,10 +112,6 @@ export class FrogcryptoService {
     this.adminUsers = this.getAdminUsers();
   }
 
-  public getFeeds(): FrogCryptoFeed[] {
-    return this.feedHost.getFeeds();
-  }
-
   public async handleListFeedsRequest(
     request: ListFeedsRequest
   ): Promise<ListFeedsResponseValue> {
@@ -148,7 +144,7 @@ export class FrogcryptoService {
       semaphoreId
     );
 
-    const allFeeds = _.keyBy(this.getFeeds(), "id");
+    const allFeeds = _.keyBy(this.feedHost.getAllFeeds(), "id");
 
     return {
       feeds: userFeeds
@@ -227,7 +223,6 @@ export class FrogcryptoService {
       await upsertFrogData(this.context.dbPool, req.frogs);
     } catch (e) {
       logger(`Error encountered while inserting frog data:`, e);
-      this.rollbarService?.reportError(e);
       throw new PCDHTTPError(500, `Error inserting frog data: ${e}`);
     }
 
@@ -274,7 +269,6 @@ export class FrogcryptoService {
       await this.feedHost.refreshFeeds();
     } catch (e) {
       logger(`Error encountered while inserting frog data:`, e);
-      this.rollbarService?.reportError(e);
       throw new PCDHTTPError(500, `Error inserting frog data: ${e}`);
     }
 

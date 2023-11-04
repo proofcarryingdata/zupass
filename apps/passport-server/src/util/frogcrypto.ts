@@ -23,7 +23,6 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
     feed: FrogCryptoFeed
   ) => (request: PollFeedRequest) => Promise<PollFeedResponseValue>;
   private interval: NodeJS.Timer | undefined;
-  private feeds: FrogCryptoFeed[];
 
   public constructor(
     dbPool: Pool,
@@ -38,7 +37,6 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
     );
     this.dbPool = dbPool;
     this.feedRequestHandler = feedRequestHandler;
-    this.feeds = [];
   }
 
   // TODO: use Postgres NOTIFY/LISTEN to update the list of feeds on demand
@@ -60,18 +58,18 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
    * Refetch the list of feeds that this server is hosting from the database.
    */
   public async refreshFeeds(): Promise<void> {
-    this.feeds = await getFeedData(this.dbPool);
+    const feeds = await getFeedData(this.dbPool);
     this.hostedFeed.length = 0;
     this.hostedFeed.push(
-      ...this.feeds.map((feed) => ({
+      ...feeds.map((feed) => ({
         feed,
         handleRequest: this.feedRequestHandler(feed)
       }))
     );
   }
 
-  public getFeeds(): FrogCryptoFeed[] {
-    return this.feeds;
+  public getAllFeeds(): FrogCryptoFeed[] {
+    return this.hostedFeed.map((f) => f.feed);
   }
 
   public handleFeedRequest(
@@ -94,6 +92,9 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
     return feed.handleRequest(request);
   }
 
+  /**
+   * List all public feeds that this server is hosting.
+   */
   public async handleListFeedsRequest(
     _request: ListFeedsRequest
   ): Promise<ListFeedsResponseValue> {

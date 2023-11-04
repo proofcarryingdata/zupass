@@ -130,7 +130,7 @@ describe("database reads and writes for frogcrypto features", function () {
     const possibleFrogIds = await getPossibleFrogIds(db);
     expect(possibleFrogIds).to.deep.eq([1, 2, 3, 7, 8]);
   });
-  
+
   step("insert feeds", async function () {
     await upsertFeedData(db, testFeeds);
 
@@ -150,5 +150,27 @@ describe("database reads and writes for frogcrypto features", function () {
     expect(
       allFeeds.find((feed) => feed.id === mutatedFeed.uuid)?.private
     ).to.eq(false);
+  });
+
+  step("upsert feeds", async function () {
+    const mutatedFeed = JSON.parse(
+      JSON.stringify(testFeeds[3])
+    ) as FrogCryptoDbFeedData;
+    mutatedFeed.feed.activeUntil = 0;
+    const newFeed = {
+      ...testFeeds[3],
+      uuid: "065f829b-8aff-4f6a-9457-768a3a0d757b"
+    };
+    await upsertFeedData(db, [mutatedFeed, newFeed]);
+
+    const allFeeds = await getFeedData(db);
+    expect(allFeeds.length).to.eq(testFeeds.length + 1);
+    expect(
+      allFeeds.find((feed) => feed.id === mutatedFeed.uuid)?.activeUntil
+    ).to.deep.eq(0);
+    expect(allFeeds.find((feed) => feed.id === newFeed.uuid)).to.deep.include({
+      id: newFeed.uuid,
+      ...newFeed.feed
+    });
   });
 });

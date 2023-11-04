@@ -1,7 +1,7 @@
 import {
   CredentialManager,
   FrogCryptoFrogData,
-  isFrogCryptoFrogData,
+  FrogCryptoFrogDataSchema,
   requestFrogCryptoDeleteFrogs,
   requestFrogCryptoUpdateFrogs
 } from "@pcd/passport-interface";
@@ -260,7 +260,10 @@ function frogParser(data: string): FrogCryptoFrogData[] {
       beauty_max
     } satisfies FrogCryptoFrogData;
 
-    if (!isFrogCryptoFrogData(frogData)) {
+    try {
+      FrogCryptoFrogDataSchema.parse(frogData);
+    } catch (e) {
+      console.error(e);
       throw new Error(`Invalid frog data: ${JSON.stringify(frogData)}`);
     }
 
