@@ -1,3 +1,4 @@
+import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -121,24 +122,75 @@ export function initTelegramRoutes(
 
   app.get("/telegram/anon", async (req: Request, res: Response) => {
     try {
-      const { tgWebAppStartParam } = req.query;
+      const tgWebAppStartParam = checkQueryParam(req, "tgWebAppStartParam");
       if (!tgWebAppStartParam) throw new Error(`No start param received`);
-
-      const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
-      if (!chatId || !topicId) throw new Error(`No chatId or topicId received`);
-
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
-      const redirectUrl =
-        await telegramService.handleRequestAnonymousMessageLink(
-          parseInt(chatId),
-          parseInt(topicId)
-        );
 
-      if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
-      logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
-      res.redirect(redirectUrl);
+      const isLegacyPayloadType = /^-?\d+_\d+$/.test(tgWebAppStartParam);
+
+      if (isLegacyPayloadType) {
+        logger(`[TELEGRAM] handling legacy payload: ${tgWebAppStartParam}`);
+        const [chatId, topicId] = tgWebAppStartParam.split("_");
+        if (!chatId || !topicId)
+          throw new Error(`No chatId or topicId received`);
+
+        const redirectUrl =
+          await telegramService.handleRequestAnonymousMessageLink(
+            parseInt(chatId),
+            parseInt(topicId)
+          );
+
+        if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+        logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+        res.redirect(redirectUrl);
+        return;
+      }
+
+      const anonPayload: AnonWebAppPayload = JSON.parse(
+        Buffer.from(tgWebAppStartParam, "base64").toString()
+      );
+
+      switch (anonPayload.type) {
+        case PayloadType.RedirectTopicData: {
+          const { chatId, topicId } = anonPayload.value;
+          if (!chatId || !topicId)
+            throw new Error(`No chatId or topicId received`);
+
+          const redirectUrl =
+            await telegramService.handleRequestAnonymousMessageLink(
+              chatId,
+              topicId
+            );
+
+          if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+          logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+          res.redirect(redirectUrl);
+          break;
+        }
+
+        case PayloadType.NullifierHash: {
+          logger(
+            `[TELEGRAM] Redirecting for anonymous profile for nullifier hash ${anonPayload.value}`
+          );
+          if (!process.env.TELEGRAM_ANON_WEBSITE) {
+            throw new Error(
+              "TELEGRAM_ANON_WEBSITE environment variable not set"
+            );
+          }
+          res.redirect(
+            `${process.env.TELEGRAM_ANON_WEBSITE}/profile?nullifierHash=${anonPayload.value}`
+          );
+          break;
+        }
+
+        default: {
+          throw new Error(
+            `Unhandled payload type ${(anonPayload as AnonWebAppPayload).type}`
+          );
+        }
+      }
     } catch (e) {
       logger("[TELEGRAM] generate link for anonymous message", e);
       rollbarService?.reportError(e);
@@ -146,4 +198,23 @@ export function initTelegramRoutes(
       res.status(500).send(errorHtmlWithDetails(e as Error));
     }
   });
+
+  app.get(
+    "/telegram/anonget/:nullifier",
+    async (req: Request, res: Response) => {
+      try {
+        const nullifierHash = checkUrlParam(req, "nullifier");
+        if (!nullifierHash || typeof nullifierHash !== "string") {
+          throw new Error(
+            "nullifierHash field needs to be a string and be non-empty"
+          );
+        }
+        const messages =
+          await telegramService?.handleGetAnonMessages(nullifierHash);
+        res.json(messages);
+      } catch (e) {
+        logger("[TELEGRAM] failed to get posts", e);
+      }
+    }
+  );
 }

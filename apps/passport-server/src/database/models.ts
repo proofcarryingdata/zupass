@@ -234,6 +234,7 @@ export interface KnownTicketTypeWithKey extends KnownTicketType {
 export interface AnonNullifierInfo {
   nullifier: string;
   message_timestamps: string[];
+  chat_topic_id: number;
 }
 
 /**
@@ -305,4 +306,19 @@ export interface FrogCryptoUserFeedState {
    * Timestamp of the last time the user fetched from this feed
    */
   last_fetched_at: Date;
+}
+
+export interface AnonMessage {
+  id: number;
+  nullifier: string;
+  chat_topic_id: number;
+  content: string;
+  proof: string;
+  message_timestamp: string;
+}
+
+export interface AnonMessageWithDetails extends AnonMessage {
+  telegram_chat_id: number;
+  chat_name: string;
+  topic_name: string;
 }

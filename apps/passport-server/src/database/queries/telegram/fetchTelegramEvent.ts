@@ -1,5 +1,7 @@
 import { Pool } from "postgres-pool";
 import {
+  AnonMessage,
+  AnonMessageWithDetails,
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
@@ -269,6 +271,52 @@ export async function fetchTelegramTopicForwarding(
     WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL));
     `,
     [sendingChatID, sendingTopicID || null]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramAnonMessagesByNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonMessage[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select * from telegram_chat_anon_messages 
+    where nullifier = $1
+    `,
+    [nullifierHash]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramChatTopicById(
+  client: Pool,
+  chatTopicId: number
+): Promise<TelegramTopicFetch> {
+  const result = await sqlQuery(
+    client,
+    `
+    select telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
+    where id = $1
+    `,
+    [chatTopicId]
+  );
+  return result.rows[0];
+}
+
+export async function fetchTelegramAnonMessagesWithTopicByNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonMessageWithDetails[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select * from telegram_chat_anon_messages
+    inner join telegram_chat_topics on telegram_chat_anon_messages.chat_topic_id = telegram_chat_topics.id
+    where telegram_chat_anon_messages.nullifier = $1
+    `,
+    [nullifierHash]
   );
   return result.rows;
 }
