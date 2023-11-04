@@ -343,6 +343,7 @@ const editOrSendMessage = async (
 
 const generateTicketProofUrl = async (
   telegramUserId: string,
+  telegramChatId: string,
   validEventIds: string[],
   telegramUsername?: string
 ): Promise<string> => {
@@ -414,10 +415,10 @@ const generateTicketProofUrl = async (
     }
 
     // pass telegram username as path param if nonempty
-    const returnUrl =
-      telegramUsername && telegramUsername.length > 0
-        ? `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}/${telegramUsername}`
-        : `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    let returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramChatId}/${telegramUserId}`;
+    if (telegramUsername && telegramUsername.length > 0)
+      returnUrl += `/${telegramUsername}`;
+
     span?.setAttribute("returnUrl", returnUrl);
 
     const proofUrl = constructZupassPcdGetRequestUrl<
@@ -575,6 +576,7 @@ export const chatsToJoin = async (
       } else {
         const proofUrl = await generateTicketProofUrl(
           userId.toString(),
+          chat.telegramChatID,
           chat.ticketEventIds,
           telegramUsername
         );

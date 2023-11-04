@@ -953,6 +953,7 @@ export class TelegramService {
   public async handleVerification(
     serializedZKEdDSATicket: string,
     telegramUserId: number,
+    telegramChatId: string,
     telegramUsername?: string
   ): Promise<void> {
     return traced("telegram", "handleVerification", async (span) => {
@@ -997,7 +998,9 @@ export class TelegramService {
       span?.setAttribute("validEventIds", validEventIds);
 
       const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+      if (!eventsByChat.find((e) => e.telegramChatID === telegramChatId))
+        throw new Error(`ChatId is invalid`);
+
       if (!telegramChatId) {
         throw new Error(
           `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
