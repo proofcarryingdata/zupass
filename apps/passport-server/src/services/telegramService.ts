@@ -1185,13 +1185,14 @@ export class TelegramService {
       ).toString("base64");
 
       const formattedMessage = `
+      <b>
       <a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
       }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
         BigInt(nullifierHash)
       )} #${BigInt(nullifierHash)
         .toString()
-        .substring(0, 4)}</a>\n\n${rawMessage}`;
+        .substring(0, 4)}</a></b>\n\n${rawMessage}`;
 
       await this.sendToAnonymousChannel(
         chat.id,
