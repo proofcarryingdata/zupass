@@ -90,9 +90,9 @@ async function requestProof(
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
-  }/telegram/message/${chatId}?message=${encodeURIComponent(
+  }/telegram/message/?message=${encodeURIComponent(
     message
-  )}&topicId=${topicId}`;
+  )}&topicId=${topicId}&chatId=${chatId}`;
 
   const proofUrl = await constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
