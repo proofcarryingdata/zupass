@@ -27,7 +27,7 @@ import {
   insertTelegramTopic,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
-import { findChatByEventIds } from "../src/util/telegramHelpers";
+import { findChatsByEventIds } from "../src/util/telegramHelpers";
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
@@ -277,8 +277,8 @@ describe("telegram bot functionality", function () {
       ];
 
       testCases.forEach((test) => {
-        const result = findChatByEventIds(sampleChats, test.input);
-        expect(result).to.eq(test.expected);
+        const result = findChatsByEventIds(sampleChats, test.input);
+        expect(result?.[0]).to.eq(test.expected);
       });
     }
   );

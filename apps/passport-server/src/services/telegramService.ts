@@ -53,7 +53,7 @@ import {
   chatsToPostIn,
   encodeTopicData,
   eventsToLink,
-  findChatByEventIds,
+  findChatsByEventIds,
   getBotURL,
   getGroupChat,
   getSessionKey,
@@ -998,8 +998,9 @@ export class TelegramService {
       span?.setAttribute("validEventIds", validEventIds);
 
       const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      if (!eventsByChat.find((e) => e.telegramChatID === telegramChatId))
-        throw new Error(`ChatId is invalid`);
+      const telegramChatIds = findChatsByEventIds(eventsByChat, validEventIds);
+      if (!telegramChatIds?.includes(telegramChatId))
+        throw new Error(`submitted event ids are not linked to chat`);
 
       if (!telegramChatId) {
         throw new Error(
@@ -1037,6 +1038,7 @@ export class TelegramService {
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
     rawMessage: string,
+    telegramChatId: string,
     topicId: string
   ): Promise<void> {
     return traced("telegram", "handleSendAnonymousMessage", async (span) => {
@@ -1061,7 +1063,10 @@ export class TelegramService {
       }
 
       const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+      const telegramChatIds = findChatsByEventIds(eventsByChat, validEventIds);
+      if (!telegramChatIds?.includes(telegramChatId))
+        throw new Error(`submitted event ids are not linked to chat`);
+
       if (!telegramChatId) {
         throw new Error(
           `User attempted to use a ticket for events ${validEventIds.join(

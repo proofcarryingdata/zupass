@@ -32,6 +32,7 @@ interface InvalidMessage {
 
 async function requestProof(
   message: string,
+  chatId: number,
   topicId: number,
   validEventIds: string[]
 ) {
@@ -89,7 +90,9 @@ async function requestProof(
   let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
-  }/telegram/message?message=${encodeURIComponent(message)}&topicId=${topicId}`;
+  }/telegram/message/${chatId}?message=${encodeURIComponent(
+    message
+  )}&topicId=${topicId}`;
 
   const proofUrl = await constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
@@ -145,11 +148,13 @@ export default function () {
     if (
       !topicData ||
       !topicData.value.topicId ||
-      !topicData.value.validEventIds
+      !topicData.value.validEventIds ||
+      !topicData.value.chatId
     )
       return;
     await requestProof(
       message,
+      topicData.value.chatId,
       topicData.value.topicId,
       topicData.value.validEventIds
     );

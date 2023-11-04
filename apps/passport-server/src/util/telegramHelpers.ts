@@ -266,17 +266,18 @@ export const chatIDsToChats = async <T extends { telegramChatID?: string }>(
   });
 };
 
-export const findChatByEventIds = (
+export const findChatsByEventIds = (
   chats: ChatIDWithEventIDs[],
   eventIds: string[]
-): string | null => {
+): string[] | null => {
   if (eventIds.length === 0) return null;
+  const chatIds: string[] = [];
   for (const chat of chats) {
     if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
-      return chat.telegramChatID;
+      chatIds.push(chat.telegramChatID);
     }
   }
-  return null;
+  return chatIds;
 };
 
 export const senderIsAdmin = async (
