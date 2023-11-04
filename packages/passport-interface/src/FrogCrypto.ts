@@ -36,11 +36,9 @@ export type FrogCryptoFeedBiomeConfigs = z.infer<
 >;
 
 /**
- * FrogCrypto specific feed configurations
- *
- * Note: It is important to ensure that the feed cannot be discovered by guessing the {@link Feed#id}
+ * Schema for FrogCrypto specific feed interface
  */
-export interface FrogCryptoFeed extends Feed<typeof EdDSAFrogPCDPackage> {
+export const IFrogCryptoFeedSchema = z.object({
   /**
    * Whether this feed is discoverable in GET /feeds
    *
@@ -48,23 +46,31 @@ export interface FrogCryptoFeed extends Feed<typeof EdDSAFrogPCDPackage> {
    * as long as the user knows the feed ID.
    * @default false
    */
-  private: boolean;
+  private: z.boolean(),
   /**
    * Unix timestamp in seconds of when this feed will become inactive
    *
    * PCD can only be issued from this feed if it is active
    * @default 0 means the feed is inactive
    */
-  activeUntil: number;
+  activeUntil: z.number().nonnegative().int(),
   /**
    * How long to wait between each PCD issuance in seconds
    */
-  cooldown: number;
+  cooldown: z.number().nonnegative().int(),
   /**
    * Map of configs for Biome(s) where PCDs can be issued from this feed
    */
-  biomes: FrogCryptoFeedBiomeConfigs;
-}
+  biomes: FrogCryptoFeedBiomeConfigsSchema
+});
+
+/**
+ * FrogCrypto specific feed configuration
+ *
+ * Note: It is important to ensure that the feed cannot be discovered by guessing the {@link Feed#id}
+ */
+export type FrogCryptoFeed = Feed<typeof EdDSAFrogPCDPackage> &
+  z.infer<typeof IFrogCryptoFeedSchema>;
 
 /**
  * DB schema for feed data

@@ -1,3 +1,5 @@
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
 import validator from "email-validator";
 import { v4 as uuid } from "uuid";
@@ -82,4 +84,12 @@ export function maybeRedirect(text: string): string | null {
     return hash;
   }
   return null;
+}
+
+/**
+ * Check if a folder path is a FrogCrypto (sub)folder.
+ */
+export function isFrogCryptoFolder(folderPath: string): boolean {
+  const parts = splitPath(folderPath);
+  return parts[0] === FrogCryptoFolderName;
 }

@@ -7,6 +7,7 @@ import { Separator } from "@pcd/passport-ui";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { useCallback, useEffect, useMemo, useState } from "react";
+import { toast } from "react-hot-toast";
 import styled from "styled-components";
 import { useDispatch } from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
@@ -26,20 +27,8 @@ export function GetFrogTab({
   subscriptions: Subscription[];
   refreshUserState: () => Promise<void>;
 }) {
-  const [searchMessage, setSearchMessage] = useState("");
-  useEffect(() => {
-    if (searchMessage) {
-      const timeout = setTimeout(() => {
-        setSearchMessage("");
-      }, 5000);
-
-      return () => {
-        clearTimeout(timeout);
-      };
-    }
-  }, [searchMessage]);
-
   // TODO: filter seach button to show only active subscriptions
+  // TODO: surface a maintenance message if all subscriptions are inactive
   return (
     <>
       <SearchGroup>
@@ -57,14 +46,11 @@ export function GetFrogTab({
               key={sub.id}
               sub={sub}
               refreshUserState={refreshUserState}
-              setMessage={setSearchMessage}
               nextFetchAt={userFeedState?.nextFetchAt}
             />
           );
         })}
       </SearchGroup>
-
-      {searchMessage !== "" && <Notice>{searchMessage}</Notice>}
 
       {pcds.length > 0 && (
         <>
@@ -90,13 +76,11 @@ export function GetFrogTab({
 const SearchButton = ({
   sub: { id, feed },
   nextFetchAt,
-  refreshUserState,
-  setMessage
+  refreshUserState
 }: {
   sub: Subscription;
   nextFetchAt?: number;
   refreshUserState: () => Promise<void>;
-  setMessage: (message: string) => void;
 }) => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
@@ -110,13 +94,15 @@ const SearchButton = ({
           subscriptionId: id,
           onSucess: () => {
             // FIXME: sync-subscription swallows http errors and always resolve as success
-            setMessage(`You found a new frog in ${feed.name}!`);
+            toast(`You found a new frog in ${feed.name}!`, {
+              icon: "🐸"
+            });
             refreshUserState().then(resolve).catch(reject);
           },
           onError: (e) => refreshUserState().finally(() => reject(e))
         });
       }),
-    [dispatch, feed.name, id, refreshUserState, setMessage]
+    [dispatch, feed.name, id, refreshUserState]
   );
   const name = useMemo(() => _.upperCase(`Search ${feed.name}`), [feed.name]);
 
@@ -165,8 +151,4 @@ const SearchGroup = styled.div`
   display: flex;
   gap: 8px;
   flex-direction: column;
-`;
-
-const Notice = styled.div`
-  text-align: center;
 `;
