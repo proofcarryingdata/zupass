@@ -552,12 +552,6 @@ export class TelegramService {
           "utf-8"
         ).toString("base64");
 
-        logger(`[TELEGRAM] ${encodedPayload}`);
-
-        logger(
-          `[TELEGRAM] ${process.env.TELEGRAM_ANON_BOT_DIRECT_LINK}?startApp=${encodedPayload}&startapp=${encodedPayload}`
-        );
-
         const messageToPin = await ctx.reply("Click to post", {
           message_thread_id: messageThreadId,
           reply_markup: new InlineKeyboard().url(
