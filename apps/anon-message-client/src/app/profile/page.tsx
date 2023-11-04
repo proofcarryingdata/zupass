@@ -32,7 +32,6 @@ export default function Page() {
         { cache: "no-store" }
       );
       const dataJson = await data.json();
-      console.log(dataJson);
       return dataJson;
     };
 

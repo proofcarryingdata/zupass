@@ -113,7 +113,6 @@ export default function () {
   >();
   const [loadingProofUrl, setLoadingProofUrl] = useState(false);
   const [showInfo, setShowInfo] = useState<boolean>(true);
-  const [copied, setCopied] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const topicDataRaw = searchParams.get("tgWebAppStartParam");
 
