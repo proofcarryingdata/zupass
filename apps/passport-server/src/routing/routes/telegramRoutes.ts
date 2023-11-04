@@ -88,12 +88,12 @@ export function initTelegramRoutes(
    * the `eventId` as a required field and the 'watermark' of the field
    * will contain the anonymous message to be sent.
    */
-  app.get("/telegram/message/:chatId", async (req, res) => {
+  app.get("/telegram/message", async (req, res) => {
     try {
       const proof = checkQueryParam(req, "proof");
       const message = checkQueryParam(req, "message");
       const topicId = checkQueryParam(req, "topicId");
-      const chatId = checkUrlParam(req, "chatId");
+      const chatId = checkQueryParam(req, "chatId");
 
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
