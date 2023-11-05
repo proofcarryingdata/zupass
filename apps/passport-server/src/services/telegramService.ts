@@ -359,7 +359,10 @@ export class TelegramService {
         userId,
         `Loading tickets and events...`
       );
-      const events = await fetchEventsWithTelegramChats(this.context.dbPool);
+      const events = await fetchEventsWithTelegramChats(
+        this.context.dbPool,
+        false
+      );
       const eventsWithChats = await chatIDsToChats(ctx, events);
 
       if (eventsWithChats.length === 0) {

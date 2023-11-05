@@ -510,7 +510,7 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchEventsWithTelegramChats(db, chatId);
+    const events = await fetchEventsWithTelegramChats(db, true, chatId);
     for (const event of events) {
       range
         .text(

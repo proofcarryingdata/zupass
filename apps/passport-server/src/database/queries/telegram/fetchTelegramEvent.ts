@@ -84,12 +84,13 @@ export async function fetchTelegramEventsByChatId(
 
 export async function fetchEventsWithTelegramChats(
   client: Pool,
+  distinct = true,
   currentTelegramChatId?: number
 ): Promise<LinkedPretixTelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `
-    SELECT DISTINCT ON (tbe.ticket_event_id)
+    SELECT ${distinct ? `DISTINCT ON (tbe.ticket_event_id)` : ""}
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
       dpe.pretix_events_config_id AS "configEventID",
