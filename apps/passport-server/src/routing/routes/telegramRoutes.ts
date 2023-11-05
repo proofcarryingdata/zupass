@@ -31,7 +31,6 @@ export function initTelegramRoutes(
   app.get(
     [
       "/telegram/verify",
-      "/telegram/verify/*",
       "/telegram/verify/:id",
       "/telegram/verify/:id/:username"
     ],
