@@ -1277,6 +1277,7 @@ export class TelegramService {
           );
           await insertTelegramAnonMessage(
             this.context.dbPool,
+            anonMessageId,
             nullifierHash,
             topic.id,
             rawMessage,
