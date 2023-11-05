@@ -22,9 +22,9 @@ import {
 } from "grammy/types";
 import { Pool } from "postgres-pool";
 import {
-  ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
+  TelegramEvent,
   TelegramTopicFetch,
   TelegramTopicWithFwdInfo
 } from "../database/models";
@@ -266,17 +266,14 @@ export const chatIDsToChats = async <T extends { telegramChatID?: string }>(
   });
 };
 
-export const findChatByEventIds = (
-  chats: ChatIDWithEventIDs[],
-  eventIds: string[]
-): string | null => {
-  if (eventIds.length === 0) return null;
-  for (const chat of chats) {
-    if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
-      return chat.telegramChatID;
-    }
-  }
-  return null;
+export const verifyUserEventIds = (
+  chats: TelegramEvent[],
+  userEventIds: string[]
+): boolean => {
+  if (userEventIds.length === 0) return false;
+  const set = new Set(chats.map((chat) => chat.ticket_event_id));
+  // userEventIds is a subset or equal to the known events associated with the chat
+  return userEventIds.every((userEventId) => set.has(userEventId));
 };
 
 export const senderIsAdmin = async (
@@ -343,6 +340,7 @@ const editOrSendMessage = async (
 
 const generateTicketProofUrl = async (
   telegramUserId: string,
+  telegramChatId: string,
   validEventIds: string[],
   telegramUsername?: string
 ): Promise<string> => {
@@ -414,10 +412,10 @@ const generateTicketProofUrl = async (
     }
 
     // pass telegram username as path param if nonempty
-    const returnUrl =
-      telegramUsername && telegramUsername.length > 0
-        ? `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}/${telegramUsername}`
-        : `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    let returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify?chatId=${telegramChatId}&userId=${telegramUserId}`;
+    if (telegramUsername && telegramUsername.length > 0)
+      returnUrl += `&username=${telegramUsername}`;
+
     span?.setAttribute("returnUrl", returnUrl);
 
     const proofUrl = constructZupassPcdGetRequestUrl<
@@ -512,7 +510,7 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchEventsWithTelegramChats(db, chatId);
+    const events = await fetchEventsWithTelegramChats(db, true, chatId);
     for (const event of events) {
       range
         .text(
@@ -575,6 +573,7 @@ export const chatsToJoin = async (
       } else {
         const proofUrl = await generateTicketProofUrl(
           userId.toString(),
+          chat.telegramChatID,
           chat.ticketEventIds,
           telegramUsername
         );

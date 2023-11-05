@@ -26,7 +26,6 @@ import {
   fetchTelegramVerificationStatus
 } from "../database/queries/telegram/fetchTelegramConversation";
 import {
-  fetchEventsPerChat,
   fetchEventsWithTelegramChats,
   fetchTelegramAnonMessagesWithTopicByNullifier,
   fetchTelegramEventsByChatId,
@@ -53,7 +52,6 @@ import {
   chatsToPostIn,
   encodeTopicData,
   eventsToLink,
-  findChatByEventIds,
   getBotURL,
   getGroupChat,
   getSessionKey,
@@ -63,7 +61,8 @@ import {
   ratResponse,
   senderIsAdmin,
   setBotInfo,
-  uwuResponse
+  uwuResponse,
+  verifyUserEventIds
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit } from "../util/util";
 import { RollbarService } from "./rollbarService";
@@ -360,7 +359,10 @@ export class TelegramService {
         userId,
         `Loading tickets and events...`
       );
-      const events = await fetchEventsWithTelegramChats(this.context.dbPool);
+      const events = await fetchEventsWithTelegramChats(
+        this.context.dbPool,
+        false
+      );
       const eventsWithChats = await chatIDsToChats(ctx, events);
 
       if (eventsWithChats.length === 0) {
@@ -795,6 +797,7 @@ export class TelegramService {
   public anonBotExists(): boolean {
     return this.authBot.botInfo.id !== this.anonBot.botInfo.id;
   }
+
   /**
    * Telegram does not allow two instances of a authBot to be running at once.
    * During deployment, a new instance of the app will be started before the
@@ -953,6 +956,7 @@ export class TelegramService {
   public async handleVerification(
     serializedZKEdDSATicket: string,
     telegramUserId: number,
+    telegramChatId: string,
     telegramUsername?: string
   ): Promise<void> {
     return traced("telegram", "handleVerification", async (span) => {
@@ -996,15 +1000,16 @@ export class TelegramService {
       }
       span?.setAttribute("validEventIds", validEventIds);
 
-      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
-      if (!telegramChatId) {
-        throw new Error(
-          `User ${telegramUserId} attempted to use a ticket for events ${validEventIds.join(
-            ","
-          )}, which have no matching chat`
-        );
+      const eventsByChat = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        telegramChatId
+      );
+      if (eventsByChat.length == 0)
+        throw new Error(`No valid events found for given chat`);
+      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+        throw new Error(`User submitted event Ids are invalid `);
       }
+
       span?.setAttribute("chatId", telegramChatId);
 
       const chat = await getGroupChat(this.authBot.api, telegramChatId);
@@ -1034,6 +1039,7 @@ export class TelegramService {
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
     rawMessage: string,
+    telegramChatId: string,
     topicId: string
   ): Promise<void> {
     return traced("telegram", "handleSendAnonymousMessage", async (span) => {
@@ -1057,15 +1063,16 @@ export class TelegramService {
         throw new Error(`User did not submit any valid event ids`);
       }
 
-      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
-      if (!telegramChatId) {
-        throw new Error(
-          `User attempted to use a ticket for events ${validEventIds.join(
-            ","
-          )}, which have no matching chat`
-        );
+      const eventsByChat = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        telegramChatId
+      );
+      if (eventsByChat.length == 0)
+        throw new Error(`No valid events found for given chat`);
+      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+        throw new Error(`User submitted event Ids are invalid `);
       }
+
       span?.setAttribute("chatId", telegramChatId);
 
       if (!watermark) {
