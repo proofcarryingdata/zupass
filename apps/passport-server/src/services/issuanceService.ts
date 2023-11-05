@@ -65,6 +65,7 @@ import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
+import urljoin from "url-join";
 import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
@@ -963,6 +964,15 @@ export class IssuanceService {
     credential: SemaphoreSignaturePCD
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
+      const serverUrl = process.env.PASSPORT_CLIENT_URL;
+
+      if (!serverUrl) {
+        logger(
+          "[ISSUE] can't issue Zuzalu tickets - unaware of the client location"
+        );
+        return [];
+      }
+
       const commitmentRow = await this.checkUserExists(credential);
       const email = commitmentRow?.email;
       if (commitmentRow) {
@@ -1001,7 +1011,9 @@ export class IssuanceService {
             timestampConsumed: 0,
             isConsumed: false,
             isRevoked: false,
-            ticketCategory: TicketCategory.Zuzalu
+            ticketCategory: TicketCategory.Zuzalu,
+            imageUrl: urljoin(serverUrl, "images/zuzalu", "zuzalu.png"),
+            imageAltText: "Zuzalu logo"
           })
         );
       }
