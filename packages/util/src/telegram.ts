@@ -11,3 +11,7 @@ export function encodeAnonMessageIdAndReaction(
 ): string {
   return `REACT:${anonMessageId}:${reaction}`;
 }
+
+export const getAnonTopicNullifier = (): bigint => {
+  return BigInt("0x" + sha256("anon_message").substring(0, 16));
+};

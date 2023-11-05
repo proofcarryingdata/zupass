@@ -6,12 +6,11 @@ import {
   AnonTopicDataPayload,
   AnonWebAppPayload,
   PayloadType,
-  constructZupassPcdGetRequestUrl,
-  getAnonTopicNullifier
+  constructZupassPcdGetRequestUrl
 } from "@pcd/passport-interface/src/PassportInterface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { getMessageWatermark } from "@pcd/util";
+import { getAnonTopicNullifier, getMessageWatermark } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage

@@ -5,13 +5,13 @@ import {
   NullifierHashPayload,
   PayloadType,
   ReactDataPayload,
-  RedirectTopicDataPayload,
-  getAnonTopicNullifier
+  RedirectTopicDataPayload
 } from "@pcd/passport-interface";
 import {
   ONE_HOUR_MS,
   bigintToPseudonym,
   encodeAnonMessageIdAndReaction,
+  getAnonTopicNullifier,
   getMessageWatermark,
   isFulfilled,
   sleep
@@ -1079,10 +1079,12 @@ export class TelegramService {
       throw new Error(`No valid events found for chat id`);
     const validEventIds = events.map((e) => e.ticket_event_id);
 
-    // Construct watermark:
-    const watermark = `REACT:[${message?.id}]:[${anonPayload.react}]`;
     // Construct proof url
-    const proofUrl = await generateReactProofUrl(validEventIds, watermark);
+    const proofUrl = await generateReactProofUrl(
+      validEventIds,
+      message.id.toString(),
+      anonPayload.react
+    );
     logger(`[TELEGRAM] react proof url`, proofUrl);
     return proofUrl;
   }

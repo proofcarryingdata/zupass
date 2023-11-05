@@ -7,7 +7,11 @@ import {
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import {
+  ZUPASS_SUPPORT_EMAIL,
+  encodeAnonMessageIdAndReaction,
+  getMessageWatermark
+} from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
@@ -434,12 +438,17 @@ const generateTicketProofUrl = async (
 
 export const generateReactProofUrl = async (
   validEventIds: string[],
-  watermark: string
+  anonMessageId: string,
+  reaction: string
 ): Promise<string> => {
   return traced("telegram", "generateReactProofUrl", async (span) => {
-    span?.setAttribute("watermark", watermark);
     span?.setAttribute("validEventIds", validEventIds);
 
+    // Construct watermark:
+    const watermark = getMessageWatermark(
+      encodeAnonMessageIdAndReaction(anonMessageId, reaction)
+    ).toString();
+    span?.setAttribute("watermark", watermark);
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
       revealEventId: false,
@@ -504,7 +513,7 @@ export const generateReactProofUrl = async (
     }
 
     // pass telegram username as path param if nonempty
-    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/anonreact`;
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/anonreact?anonMessageId=${anonMessageId}&reaction=${reaction}`;
     span?.setAttribute("returnUrl", returnUrl);
 
     const proofUrl = constructZupassPcdGetRequestUrl<
