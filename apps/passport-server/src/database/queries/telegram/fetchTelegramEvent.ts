@@ -298,7 +298,7 @@ export async function fetchTelegramAnonMessagesById(
   const result = await sqlQuery(
     client,
     `
-    SELECT tam.*, tct.*
+    SELECT tam.*, tct.telegram_chat_id
     FROM telegram_chat_anon_messages tam
     LEFT JOIN telegram_chat_topics tct ON tam.chat_topic_id = tct.id
     WHERE tam.id = $1

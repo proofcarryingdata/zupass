@@ -1064,6 +1064,7 @@ export class TelegramService {
   ): Promise<string> {
     const react = decodeURIComponent(anonPayload.react);
     logger(`[TELEGRAM] got react`, react);
+    logger(`[TELEGRAM] payoad id`, anonPayload.anonMessageId);
     const message = await fetchTelegramAnonMessagesById(
       this.context.dbPool,
       anonPayload.anonMessageId
@@ -1078,10 +1079,11 @@ export class TelegramService {
     if (events.length === 0)
       throw new Error(`No valid events found for chat id`);
     const validEventIds = events.map((e) => e.ticket_event_id);
-
+    logger(`message.id`, message.id);
     // Construct proof url
     const proofUrl = await generateReactProofUrl(
       validEventIds,
+      message.telegram_chat_id,
       message.id.toString(),
       anonPayload.react
     );
@@ -1140,7 +1142,10 @@ export class TelegramService {
       }
       span?.setAttribute("watermark", watermark);
 
-      const preimage = encodeAnonMessageIdAndReaction(anonMessageId, reaction);
+      const preimage = encodeAnonMessageIdAndReaction(
+        anonMessageId,
+        encodeURIComponent(reaction)
+      );
       if (getMessageWatermark(preimage).toString() !== watermark.toString()) {
         throw new Error(
           `Anonymous reaction string ${preimage} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(

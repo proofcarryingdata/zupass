@@ -252,6 +252,7 @@ export function initTelegramRoutes(
       const chatId = checkQueryParam(req, "chatId");
       const anonMessageId = checkQueryParam(req, "anonMessageId");
       const reaction = checkQueryParam(req, "reaction");
+      logger(`[ANON REACT]`, reaction, decodeURIComponent(reaction));
 
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
