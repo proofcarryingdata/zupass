@@ -89,7 +89,7 @@ export async function fetchEventsWithTelegramChats(
   const result = await sqlQuery(
     client,
     `
-    SELECT
+    SELECT DISTINCT ON (tbe.ticket_event_id)
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
       dpe.pretix_events_config_id AS "configEventID",
