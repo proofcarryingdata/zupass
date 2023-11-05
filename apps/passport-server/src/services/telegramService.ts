@@ -1291,6 +1291,45 @@ export class TelegramService {
       const currentTime = new Date();
       const timestamp = currentTime.toISOString();
 
+      if (!nullifierData) {
+        await insertOrUpdateTelegramNullifier(
+          this.context.dbPool,
+          nullifierHash,
+          [timestamp],
+          topic.id
+        );
+      } else {
+        const timestamps = nullifierData.message_timestamps.map((t) =>
+          new Date(t).getTime()
+        );
+        const maxDailyPostsPerTopic = parseInt(
+          process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
+        );
+        const rlDuration = ONE_HOUR_MS * 24;
+        const { rateLimitExceeded, newTimestamps } =
+          checkSlidingWindowRateLimit(
+            timestamps,
+            maxDailyPostsPerTopic,
+            rlDuration
+          );
+        span?.setAttribute("rateLimitExceeded", rateLimitExceeded);
+
+        if (!rateLimitExceeded) {
+          await insertOrUpdateTelegramNullifier(
+            this.context.dbPool,
+            nullifierHash,
+            newTimestamps,
+            topic.id
+          );
+        } else {
+          const rlError = new Error(
+            `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
+          );
+          rlError.name = "Rate limit exceeded";
+          throw rlError;
+        }
+      }
+
       const payloadData: NullifierHashPayload = {
         type: PayloadType.NullifierHash,
         value: BigInt(nullifierHash).toString()
@@ -1336,64 +1375,16 @@ export class TelegramService {
       );
       if (!message) throw new Error(`Failed to send telegram message`);
 
-      if (!nullifierData) {
-        await insertOrUpdateTelegramNullifier(
-          this.context.dbPool,
-          nullifierHash,
-          [timestamp],
-          topic.id
-        );
-        await insertTelegramAnonMessage(
-          this.context.dbPool,
-          anonMessageId,
-          nullifierHash,
-          topic.id,
-          rawMessage,
-          serializedZKEdDSATicket,
-          timestamp,
-          message.message_id
-        );
-      } else {
-        const timestamps = nullifierData.message_timestamps.map((t) =>
-          new Date(t).getTime()
-        );
-        const maxDailyPostsPerTopic = parseInt(
-          process.env.MAX_DAILY_ANON_TOPIC_POSTS_PER_USER ?? "3"
-        );
-        const rlDuration = ONE_HOUR_MS * 24;
-        const { rateLimitExceeded, newTimestamps } =
-          checkSlidingWindowRateLimit(
-            timestamps,
-            maxDailyPostsPerTopic,
-            rlDuration
-          );
-        span?.setAttribute("rateLimitExceeded", rateLimitExceeded);
-
-        if (!rateLimitExceeded) {
-          await insertOrUpdateTelegramNullifier(
-            this.context.dbPool,
-            nullifierHash,
-            newTimestamps,
-            topic.id
-          );
-          await insertTelegramAnonMessage(
-            this.context.dbPool,
-            anonMessageId,
-            nullifierHash,
-            topic.id,
-            rawMessage,
-            serializedZKEdDSATicket,
-            newTimestamps[newTimestamps.length - 1],
-            message.message_id
-          );
-        } else {
-          const rlError = new Error(
-            `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
-          );
-          rlError.name = "Rate limit exceeded";
-          throw rlError;
-        }
-      }
+      await insertTelegramAnonMessage(
+        this.context.dbPool,
+        anonMessageId,
+        nullifierHash,
+        topic.id,
+        rawMessage,
+        serializedZKEdDSATicket,
+        timestamp,
+        message.message_id
+      );
     });
   }
 
