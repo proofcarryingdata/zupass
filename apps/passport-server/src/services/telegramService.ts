@@ -1161,13 +1161,50 @@ export class TelegramService {
         reaction
       );
 
-      const _reactionsForMessage = await fetchTelegramReactionsForMessage(
+      const reactionsForMessage = await fetchTelegramReactionsForMessage(
         this.context.dbPool,
         anonMessageId
       );
 
+      const linkPayloadData: ReactDataPayload = {
+        type: PayloadType.ReactData,
+        react: encodeURIComponent("👍"),
+        anonMessageId
+      };
+
+      const encodedLinkPayload = Buffer.from(
+        JSON.stringify(linkPayloadData),
+        "utf-8"
+      ).toString("base64");
+
+      // const encodedLink = link + "?startapp=123";
+      const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
+      const encodedLink = `${link}?startApp=${encodedLinkPayload}&startapp=${encodedLinkPayload}`;
+
+      const reacts = reactionsForMessage[0];
+      // Generate keyboard from reactions
+      const button: InlineKeyboardButton[] = [
+        {
+          text: `${reacts.reaction}  ${reacts.count}`,
+          url: encodedLink
+        }
+        // { text: `❤️  0`, url: "https://google.com" },
+        // { text: `🐭  0`, url: "https://google.com" }
+      ];
+
+      logger(`REACTS`, reactionsForMessage);
+      const message = await fetchTelegramAnonMessagesById(
+        this.context.dbPool,
+        anonMessageId
+      );
+      if (!message) throw new Error(`Message to react to not found`);
+
       // TODO
-      // await this.anonBot.api.editMessageReplyMarkupInline
+      await this.anonBot.api.editMessageReplyMarkup(
+        telegramChatId,
+        parseInt(message.sent_message_id),
+        { reply_markup: { inline_keyboard: [button] } }
+      );
     });
   }
 

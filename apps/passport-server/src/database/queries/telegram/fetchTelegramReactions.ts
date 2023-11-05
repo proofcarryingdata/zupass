@@ -9,7 +9,7 @@ export async function fetchTelegramReactionsForMessage(
   const result = await sqlQuery(
     client,
     `\
-    select reaction, count(*) from telegram_chat_reactions
+    select reaction, count(*)::int from telegram_chat_reactions
     where anon_message_id = $1 group by reaction order by reaction desc
     `,
     [anonMessageId]
