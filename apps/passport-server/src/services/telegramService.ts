@@ -1071,6 +1071,7 @@ export class TelegramService {
   }
 
   public async handleReactAnonymousMessage(
+    telegramChatId: string,
     serializedZKEdDSATicket: string
   ): Promise<void> {
     return traced("telegram", "handleReactAnonymousMessage", async (span) => {
@@ -1101,14 +1102,14 @@ export class TelegramService {
 
       span?.setAttribute("externalNullifier", externalNullifier);
 
-      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
-      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
-      if (!telegramChatId) {
-        throw new Error(
-          `User attempted to use a ticket for events ${validEventIds.join(
-            ","
-          )}, which have no matching chat`
-        );
+      const eventsByChat = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        telegramChatId
+      );
+      if (eventsByChat.length == 0)
+        throw new Error(`No valid events found for given chat`);
+      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+        throw new Error(`User submitted event Ids are invalid `);
       }
 
       span?.setAttribute("chatId", telegramChatId);

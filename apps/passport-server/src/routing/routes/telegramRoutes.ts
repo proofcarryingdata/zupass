@@ -248,11 +248,12 @@ export function initTelegramRoutes(
   app.get("/telegram/anonreact", async (req: Request, res: Response) => {
     try {
       const proof = checkQueryParam(req, "proof");
+      const chatId = checkQueryParam(req, "chatId");
 
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
-      await telegramService.handleReactAnonymousMessage(proof);
+      await telegramService.handleReactAnonymousMessage(chatId, proof);
       res.setHeader("Content-Type", "text/html");
       res.send(closeWebviewHtml);
     } catch (e) {
