@@ -1,5 +1,4 @@
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
-import { sha256 } from "js-sha256";
 
 export enum PCDRequestType {
   Get = "Get",
@@ -125,14 +124,11 @@ export function constructZupassPcdProveAndAddRequestUrl<
   return `${zupassClientUrl}#/add?request=${eqReq}`;
 }
 
-export const getAnonTopicNullifier = (): bigint => {
-  return BigInt("0x" + sha256("anon_message").substring(0, 16));
-};
-
 export enum PayloadType {
   RedirectTopicData = "topic-data",
   NullifierHash = "nullifier-hash",
-  AnonTopicDataPayload = "anon-topic-data-payload"
+  AnonTopicDataPayload = "anon-topic-data-payload",
+  ReactData = "react-data"
 }
 
 export type RedirectTopicDataPayload = {
@@ -158,7 +154,14 @@ export type AnonTopicDataPayload = {
   };
 };
 
+export type ReactDataPayload = {
+  type: PayloadType.ReactData;
+  anonMessageId: string;
+  react: string;
+};
+
 export type AnonWebAppPayload =
   | RedirectTopicDataPayload
   | NullifierHashPayload
-  | AnonTopicDataPayload;
+  | AnonTopicDataPayload
+  | ReactDataPayload;
