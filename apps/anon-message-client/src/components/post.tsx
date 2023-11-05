@@ -4,6 +4,14 @@ interface PostProps {
   title: string;
   content: string;
   timestamp: string;
+  reactions: string[];
+}
+
+function reactionsToReactionCount(reactions: string[]): Record<string, number> {
+  return reactions.reduce((prev: Record<string, number>, curr: string) => {
+    prev[curr] = (prev[curr] ?? 0) + 1;
+    return prev;
+  }, {});
 }
 
 // from: https://github.com/dcposch/zucast/blob/master/src/components/PostBox.tsx
@@ -15,7 +23,12 @@ function formatTime(timeMs: number) {
   return `${Math.floor(secsAgo / 60 / 60 / 24)}d`;
 }
 
-const Post: React.FC<PostProps> = ({ title, content, timestamp }) => {
+const Post: React.FC<PostProps> = ({
+  title,
+  content,
+  reactions,
+  timestamp
+}) => {
   return (
     <div className="flex flex-col border border-black border-opacity-10 rounded-lg p-4">
       <div className="text-[#037EE5] flex items-center justify-between mb-2">
@@ -25,6 +38,17 @@ const Post: React.FC<PostProps> = ({ title, content, timestamp }) => {
         </span>
       </div>
       <span className="text-[#2e2e35]">{content}</span>
+      {!!reactions.length && (
+        <div className="mt-2 gap-2 flex font-bold text-[#2e2e35]">
+          {Object.entries(reactionsToReactionCount(reactions)).map(
+            ([reaction, count]) => (
+              <div className="border rounded-md p-1">
+                {reaction} {count}
+              </div>
+            )
+          )}
+        </div>
+      )}
     </div>
   );
 };

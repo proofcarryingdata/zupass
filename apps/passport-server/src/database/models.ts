@@ -16,7 +16,7 @@ export interface ZuzaluPretixTicket {
   visitor_date_ranges?: DateRange[] | null;
 }
 
-export interface TelegramReactionsCountByMessage {
+export interface TelegramReactionCount {
   reaction: string;
   count: number;
 }
@@ -327,4 +327,5 @@ export interface AnonMessageWithDetails extends AnonMessage {
   telegram_chat_id: number;
   chat_name: string;
   topic_name: string;
+  reactions: string[];
 }

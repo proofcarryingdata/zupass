@@ -230,6 +230,9 @@ export function initTelegramRoutes(
     "/telegram/anonget/:nullifier",
     async (req: Request, res: Response) => {
       try {
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
         const nullifierHash = checkUrlParam(req, "nullifier");
         if (!nullifierHash || typeof nullifierHash !== "string") {
           throw new Error(
@@ -237,7 +240,7 @@ export function initTelegramRoutes(
           );
         }
         const messages =
-          await telegramService?.handleGetAnonMessages(nullifierHash);
+          await telegramService.handleGetAnonMessages(nullifierHash);
         res.json(messages);
       } catch (e) {
         logger("[TELEGRAM] failed to get posts", e);

@@ -15,6 +15,7 @@ interface AnonMessageWithDetails {
   chat_name: string;
   topic_name: string;
   message_timestamp: string;
+  reactions: string[];
 }
 
 export default function Page() {
@@ -40,6 +41,8 @@ export default function Page() {
 
   if (!nullifierHash || !messages) return <Loading />;
 
+  const totalKarma = messages.filter((m) => !!m.reactions.length).length;
+
   return (
     <Suspense fallback={<Loading />}>
       <div className="flex flex-col items-center bg-white p-4">
@@ -59,6 +62,10 @@ export default function Page() {
             #{nullifierHash.substring(0, 4)}
           </span>
         </div>
+        <div className="text-[#2e2e35] mt-2 font-bold">
+          Total Karma: {totalKarma}
+        </div>
+
         {messages.length === 0 ? (
           <div className="flex flex-col items-center mt-4">
             <span className="text-[#2e2e35] opacity-30 text-xl ">
@@ -79,6 +86,7 @@ export default function Page() {
                   content={message.content}
                   key={i}
                   timestamp={message.message_timestamp}
+                  reactions={message.reactions}
                 />
               ))}
           </div>

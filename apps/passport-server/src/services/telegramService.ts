@@ -28,7 +28,10 @@ import {
   Message
 } from "grammy/types";
 import { v1 as uuidV1 } from "uuid";
-import { AnonMessageWithDetails } from "../database/models";
+import {
+  AnonMessageWithDetails,
+  TelegramReactionCount
+} from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -46,7 +49,10 @@ import {
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
 } from "../database/queries/telegram/fetchTelegramEvent";
-import { fetchTelegramReactionsForMessage } from "../database/queries/telegram/fetchTelegramReactions";
+import {
+  fetchTelegramReactionsForMessage,
+  fetchTelegramReactionsForNullifier
+} from "../database/queries/telegram/fetchTelegramReactions";
 import {
   insertOrUpdateTelegramNullifier,
   insertTelegramAnonMessage,
@@ -1297,12 +1303,11 @@ export class TelegramService {
 
       const formattedMessage = `
       <b>
-      <u>
       <a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
       }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
         BigInt(nullifierHash)
-      )}</a></u></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
+      )}</a></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
         "en-GB"
       )}</i>\n----------------------------------------------------------`;
 
@@ -1439,6 +1444,19 @@ export class TelegramService {
         return url;
       }
     );
+  }
+
+  // TODO: maybe remove and associated query
+  public async handleGetAnonReactions(
+    nulliferHash: string
+  ): Promise<TelegramReactionCount[]> {
+    return traced("telegram", "handleGetAnonReactions", async () => {
+      const reactions = await fetchTelegramReactionsForNullifier(
+        this.context.dbPool,
+        nulliferHash
+      );
+      return reactions;
+    });
   }
 
   public async handleGetAnonMessages(
