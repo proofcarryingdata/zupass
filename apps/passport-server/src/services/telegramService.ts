@@ -1186,13 +1186,14 @@ export class TelegramService {
 
       const formattedMessage = `
       <b>
+      <u>
       <a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
       }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
         BigInt(nullifierHash)
-      )} #${BigInt(nullifierHash)
-        .toString()
-        .substring(0, 4)}</a></b>\n\n${rawMessage}`;
+      )}</a></u></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
+        "en-GB"
+      )}</i>\n----------------------------------------------------------`;
 
       await this.sendToAnonymousChannel(
         chat.id,
