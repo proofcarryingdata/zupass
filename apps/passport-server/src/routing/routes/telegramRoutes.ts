@@ -250,11 +250,18 @@ export function initTelegramRoutes(
     try {
       const proof = checkQueryParam(req, "proof");
       const chatId = checkQueryParam(req, "chatId");
+      const anonMessageId = checkQueryParam(req, "anonMessageId");
+      const reaction = checkQueryParam(req, "reaction");
 
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
-      await telegramService.handleReactAnonymousMessage(chatId, proof);
+      await telegramService.handleReactAnonymousMessage(
+        proof,
+        chatId,
+        anonMessageId,
+        reaction
+      );
       res.setHeader("Content-Type", "text/html");
       res.send(closeWebviewHtml);
     } catch (e) {

@@ -8,7 +8,14 @@ import {
   RedirectTopicDataPayload,
   getAnonTopicNullifier
 } from "@pcd/passport-interface";
-import { ONE_HOUR_MS, bigintToPseudonym, isFulfilled, sleep } from "@pcd/util";
+import {
+  ONE_HOUR_MS,
+  bigintToPseudonym,
+  encodeAnonMessageIdAndReaction,
+  getMessageWatermark,
+  isFulfilled,
+  sleep
+} from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -20,7 +27,6 @@ import {
   InlineKeyboardMarkup,
   Message
 } from "grammy/types";
-import { sha256 } from "js-sha256";
 import { v1 as uuidV1 } from "uuid";
 import { AnonMessageWithDetails } from "../database/models";
 import {
@@ -1082,8 +1088,10 @@ export class TelegramService {
   }
 
   public async handleReactAnonymousMessage(
+    serializedZKEdDSATicket: string,
     telegramChatId: string,
-    serializedZKEdDSATicket: string
+    anonMessageId: string,
+    reaction: string
   ): Promise<void> {
     return traced("telegram", "handleReactAnonymousMessage", async (span) => {
       logger("[TELEGRAM] Reacting to anonymous message");
@@ -1130,10 +1138,12 @@ export class TelegramService {
       }
       span?.setAttribute("watermark", watermark);
 
-      const [reactText, anonMessageId, reaction] = watermark.split(":");
-      if (reactText !== "REACT" || !anonMessageId || !reaction) {
+      const preimage = encodeAnonMessageIdAndReaction(anonMessageId, reaction);
+      if (getMessageWatermark(preimage).toString() !== watermark.toString()) {
         throw new Error(
-          `Invalid watermark format, expect "REACT:[anonMessageId]:[reaction], got ${watermark}`
+          `Anonymous reaction string ${preimage} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+            preimage
+          ).toString()}`
         );
       }
 
@@ -1195,11 +1205,6 @@ export class TelegramService {
 
       if (!watermark) {
         throw new Error("Anonymous message PCD did not contain watermark");
-      }
-
-      function getMessageWatermark(message: string): bigint {
-        const hashed = sha256(message).substring(0, 16);
-        return BigInt("0x" + hashed);
       }
 
       if (getMessageWatermark(rawMessage).toString() !== watermark.toString()) {
