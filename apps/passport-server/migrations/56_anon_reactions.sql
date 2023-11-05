@@ -8,5 +8,8 @@ CREATE TABLE telegram_chat_reactions (
 	proof VARCHAR NOT NULL,
   reaction VARCHAR NOT NULL,
   anon_message_id UUID NOT NULL,
-  FOREIGN KEY (anon_message_id) REFERENCES telegram_chat_anon_messages(id)
+  sender_nullifier VARCHAR NOT NULL,
+  FOREIGN KEY (anon_message_id) REFERENCES telegram_chat_anon_messages(id),
+  -- Each nullifier may give more than one of the same reaction on a message.
+  UNIQUE (sender_nullifier, anon_message_id, reaction)
 );

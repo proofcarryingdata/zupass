@@ -1162,12 +1162,46 @@ export class TelegramService {
         );
       }
 
-      await insertTelegramReaction(
+      const anonMessage = await fetchTelegramAnonMessagesById(
         this.context.dbPool,
-        serializedZKEdDSATicket,
-        anonMessageId,
-        reaction
+        anonMessageId
       );
+      if (!anonMessage) {
+        logger(
+          "[TELEGRAM] anonMessage falsy, anonMessageId parameter points to a nonexistent record",
+          { anonMessageId }
+        );
+        throw new Error("This anonymous message does not exist");
+      }
+
+      if (anonMessage.nullifier === nullifierHash) {
+        logger("[TELEGRAM] User tried to react to own message", {
+          nullifierHash
+        });
+        throw new Error("Cannot react to your own message");
+      }
+
+      try {
+        await insertTelegramReaction(
+          this.context.dbPool,
+          serializedZKEdDSATicket,
+          anonMessageId,
+          reaction,
+          nullifierHash
+        );
+      } catch (e: any) {
+        // Receiving this error message means that the user tried to
+        // react with the same reaction twice to a message.
+        if (
+          e.message.includes(
+            "telegram_chat_reactions_sender_nullifier_anon_message_id_re_key"
+          )
+        ) {
+          throw new Error(
+            `Cannot react more than once with ${reaction} to this message`
+          );
+        }
+      }
 
       const reactionsForMessage = await fetchTelegramReactionsForMessage(
         this.context.dbPool,

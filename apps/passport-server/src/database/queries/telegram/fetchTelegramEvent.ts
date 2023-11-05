@@ -330,10 +330,10 @@ export async function fetchTelegramAnonMessagesWithTopicByNullifier(
   const result = await sqlQuery(
     client,
     `
-    select m.*, t.topic_name, t.telegram_chat_id, r.reactions
+    select m.*, t.topic_name, t.telegram_chat_id, coalesce(r.reactions, '{}') as reactions
       from telegram_chat_anon_messages m
       inner join telegram_chat_topics t on m.chat_topic_id = t.id
-      join (select anon_message_id, array_agg(reaction) as reactions from telegram_chat_reactions group by anon_message_id) r on r.anon_message_id = m.id
+      left join (select anon_message_id, array_agg(reaction) as reactions from telegram_chat_reactions group by anon_message_id) r on r.anon_message_id = m.id
       where m.nullifier = $1
     `,
     [nullifierHash]
