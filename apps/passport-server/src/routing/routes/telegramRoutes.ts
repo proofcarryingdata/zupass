@@ -237,4 +237,22 @@ export function initTelegramRoutes(
       }
     }
   );
+
+  app.get("/telegram/anonreact", async (req: Request, res: Response) => {
+    try {
+      const proof = checkQueryParam(req, "proof");
+
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
+      await telegramService.handleReactAnonymousMessage(proof);
+      res.setHeader("Content-Type", "text/html");
+      res.send(closeWebviewHtml);
+    } catch (e) {
+      logger("[TELEGRAM] failed to verify", e);
+      rollbarService?.reportError(e);
+      res.set("Content-Type", "text/html");
+      res.status(500).send(errorHtmlWithDetails(e as Error));
+    }
+  });
 }

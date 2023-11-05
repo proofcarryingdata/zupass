@@ -16,6 +16,11 @@ export interface ZuzaluPretixTicket {
   visitor_date_ranges?: DateRange[] | null;
 }
 
+export interface TelegramReactionsCountByMessage {
+  reaction: string;
+  count: number;
+}
+
 /**
  * A conversation between the Telegram bot and a user, and associated params.
  */

@@ -32,6 +32,7 @@ import {
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
 } from "../database/queries/telegram/fetchTelegramEvent";
+import { fetchTelegramReactionsForMessage } from "../database/queries/telegram/fetchTelegramReactions";
 import {
   insertOrUpdateTelegramNullifier,
   insertTelegramAnonMessage,
@@ -40,6 +41,7 @@ import {
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
+import { insertTelegramReaction } from "../database/queries/telegram/insertTelegramReaction";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
@@ -1037,6 +1039,78 @@ export class TelegramService {
 
       // Send invite link
       await this.sendInviteLink(telegramUserId, chat);
+    });
+  }
+
+  public async handleReactAnonymousMessage(
+    serializedZKEdDSATicket: string
+  ): Promise<void> {
+    return traced("telegram", "handleReactAnonymousMessage", async (span) => {
+      logger("[TELEGRAM] Reacting to anonymous message");
+
+      const pcd = await this.verifyZKEdDSAEventTicketPCD(
+        serializedZKEdDSATicket
+      );
+
+      if (!pcd) {
+        throw new Error("Could not verify PCD for anonymous message");
+      }
+
+      const { watermark, validEventIds, externalNullifier, nullifierHash } =
+        pcd.claim;
+
+      if (!validEventIds) {
+        throw new Error(`User did not submit any valid event ids`);
+      }
+      span?.setAttribute("validEventIds", validEventIds);
+
+      if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+      const expectedExternalNullifier = getAnonTopicNullifier().toString();
+
+      if (externalNullifier !== expectedExternalNullifier)
+        throw new Error("Nullifier mismatch - try proving again.");
+
+      span?.setAttribute("externalNullifier", externalNullifier);
+
+      const eventsByChat = await fetchEventsPerChat(this.context.dbPool);
+      const telegramChatId = findChatByEventIds(eventsByChat, validEventIds);
+      if (!telegramChatId) {
+        throw new Error(
+          `User attempted to use a ticket for events ${validEventIds.join(
+            ","
+          )}, which have no matching chat`
+        );
+      }
+
+      span?.setAttribute("chatId", telegramChatId);
+
+      if (!watermark) {
+        throw new Error("Anonymous reaction PCD did not contain watermark");
+      }
+      span?.setAttribute("watermark", watermark);
+
+      const [reactText, anonMessageId, reaction] = watermark.split(":");
+      if (reactText !== "REACT" || !anonMessageId || !reaction) {
+        throw new Error(
+          `Invalid watermark format, expect "REACT:[anonMessageId]:[reaction], got ${watermark}`
+        );
+      }
+
+      await insertTelegramReaction(
+        this.context.dbPool,
+        serializedZKEdDSATicket,
+        anonMessageId,
+        reaction
+      );
+
+      const _reactionsForMessage = await fetchTelegramReactionsForMessage(
+        this.context.dbPool,
+        anonMessageId
+      );
+
+      // TODO
+      // await this.anonBot.api.editMessageReplyMarkupInline
     });
   }
 
