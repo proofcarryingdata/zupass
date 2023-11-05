@@ -207,8 +207,9 @@ export function initTelegramRoutes(
 
         case PayloadType.ReactData: {
           logger(`[TELEGRAM] got react data`, anonPayload);
-
-          // logger(`[REACT]`, react);
+          const proofUrl =
+            await telegramService.handleRequestReactProofLink(anonPayload);
+          res.redirect(proofUrl);
           break;
         }
 

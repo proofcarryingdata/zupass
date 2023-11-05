@@ -62,6 +62,7 @@ import {
   chatsToPostIn,
   encodeTopicData,
   eventsToLink,
+  generateReactProofUrl,
   getBotURL,
   getGroupChat,
   getSessionKey,
@@ -1056,18 +1057,28 @@ export class TelegramService {
     anonPayload: ReactDataPayload
   ): Promise<string> {
     const react = decodeURIComponent(anonPayload.react);
+    logger(`[TELEGRAM] got react`, react);
     const message = await fetchTelegramAnonMessagesById(
       this.context.dbPool,
       anonPayload.anonMessageId
     );
     if (!message) throw new Error(`Message to react to not found`);
+
     // Get valid event Ids
+    const events = await fetchTelegramEventsByChatId(
+      this.context.dbPool,
+      message.telegram_chat_id
+    );
+    if (events.length === 0)
+      throw new Error(`No valid events found for chat id`);
+    const validEventIds = events.map((e) => e.ticket_event_id);
+
     // Construct watermark:
-    const watermark = `REACT:[${message?.id}]:[${react}]`;
-    return watermark;
+    const watermark = `REACT:[${message?.id}]:[${anonPayload.react}]`;
     // Construct proof url
-    // const proofUrl = generateReactProofUrl(, watermark);
-    // return "" proofUrl;
+    const proofUrl = await generateReactProofUrl(validEventIds, watermark);
+    logger(`[TELEGRAM] react proof url`, proofUrl);
+    return proofUrl;
   }
 
   public async handleReactAnonymousMessage(
@@ -1084,7 +1095,7 @@ export class TelegramService {
       if (!pcd) {
         throw new Error("Could not verify PCD for anonymous message");
       }
-
+      logger(`GOT CLAIM`, pcd.claim);
       const { watermark, validEventIds, externalNullifier, nullifierHash } =
         pcd.claim;
 
