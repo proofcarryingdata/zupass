@@ -132,7 +132,8 @@ export const getAnonTopicNullifier = (): bigint => {
 export enum PayloadType {
   RedirectTopicData = "topic-data",
   NullifierHash = "nullifier-hash",
-  AnonTopicDataPayload = "anon-topic-data-payload"
+  AnonTopicDataPayload = "anon-topic-data-payload",
+  ReactData = "react-data"
 }
 
 export type RedirectTopicDataPayload = {
@@ -158,7 +159,14 @@ export type AnonTopicDataPayload = {
   };
 };
 
+export type ReactDataPayload = {
+  type: PayloadType.ReactData;
+  anonMessageId: string;
+  react: string;
+};
+
 export type AnonWebAppPayload =
   | RedirectTopicDataPayload
   | NullifierHashPayload
-  | AnonTopicDataPayload;
+  | AnonTopicDataPayload
+  | ReactDataPayload;

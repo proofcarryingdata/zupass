@@ -291,6 +291,23 @@ export async function fetchTelegramAnonMessagesByNullifier(
   return result.rows;
 }
 
+export async function fetchTelegramAnonMessagesById(
+  client: Pool,
+  id: string
+): Promise<(AnonMessage & { telegram_chat_id: string }) | null> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT tam.*, tct.*
+    FROM telegram_chat_anon_messages tam
+    LEFT JOIN telegram_chat_topics tct ON tam.chat_topic_id = tct.id
+    WHERE tam.id = $1
+    `,
+    [id]
+  );
+  return result.rows[0] ?? null;
+}
+
 export async function fetchTelegramChatTopicById(
   client: Pool,
   chatTopicId: number

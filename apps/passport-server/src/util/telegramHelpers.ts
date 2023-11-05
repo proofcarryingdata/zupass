@@ -432,6 +432,95 @@ const generateTicketProofUrl = async (
   });
 };
 
+export const generateReactProofUrl = async (
+  validEventIds: string[],
+  watermark: string
+): Promise<string> => {
+  return traced("telegram", "generateReactProofUrl", async (span) => {
+    span?.setAttribute("watermark", watermark);
+    span?.setAttribute("validEventIds", validEventIds);
+
+    const fieldsToReveal: EdDSATicketFieldsToReveal = {
+      revealTicketId: false,
+      revealEventId: false,
+      revealProductId: false,
+      revealTimestampConsumed: false,
+      revealTimestampSigned: false,
+      revealAttendeeSemaphoreId: true,
+      revealIsConsumed: false,
+      revealIsRevoked: false
+    };
+
+    const args: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EdDSATicketPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+        displayName: "Your Ticket",
+        description: "",
+        validatorParams: {
+          eventIds: validEventIds,
+          productIds: [],
+          // TODO: surface which event ticket we are looking for
+          notFoundMessage: "You don't have a ticket to this event."
+        },
+        hideIcon: true
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        userProvided: false,
+        hideIcon: true
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: undefined,
+        userProvided: false
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: validEventIds,
+        userProvided: false
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: watermark,
+        userProvided: false,
+        description: `The reaction type and post you are reacting to.`
+      }
+    };
+
+    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+    if (passportOrigin === "http://localhost:3000/") {
+      // TG bot doesn't like localhost URLs
+      passportOrigin = "http://127.0.0.1:3000/";
+    }
+
+    // pass telegram username as path param if nonempty
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/anonreact`;
+    span?.setAttribute("returnUrl", returnUrl);
+
+    const proofUrl = constructZupassPcdGetRequestUrl<
+      typeof ZKEdDSAEventTicketPCDPackage
+    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+      genericProveScreen: true,
+      title: "",
+      description:
+        "ZuRat requests a zero-knowledge proof of your ticket to react to a message."
+    });
+    span?.setAttribute("proofUrl", proofUrl);
+
+    return proofUrl;
+  });
+};
+
 const getChatsWithMembershipStatus = async (
   db: Pool,
   ctx: BotContext,

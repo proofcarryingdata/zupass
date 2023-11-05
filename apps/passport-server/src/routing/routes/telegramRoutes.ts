@@ -205,6 +205,13 @@ export function initTelegramRoutes(
           break;
         }
 
+        case PayloadType.ReactData: {
+          logger(`[TELEGRAM] got react data`, anonPayload);
+
+          // logger(`[REACT]`, react);
+          break;
+        }
+
         default: {
           throw new Error(
             `Unhandled payload type ${(anonPayload as AnonWebAppPayload).type}`

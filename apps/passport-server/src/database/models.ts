@@ -320,6 +320,7 @@ export interface AnonMessage {
   content: string;
   proof: string;
   message_timestamp: string;
+  sent_message_id: string;
 }
 
 export interface AnonMessageWithDetails extends AnonMessage {

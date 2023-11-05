@@ -4,6 +4,7 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   NullifierHashPayload,
   PayloadType,
+  ReactDataPayload,
   RedirectTopicDataPayload,
   getAnonTopicNullifier
 } from "@pcd/passport-interface";
@@ -13,7 +14,12 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
-import { Chat, Message } from "grammy/types";
+import {
+  Chat,
+  InlineKeyboardButton,
+  InlineKeyboardMarkup,
+  Message
+} from "grammy/types";
 import { sha256 } from "js-sha256";
 import { v1 as uuidV1 } from "uuid";
 import { AnonMessageWithDetails } from "../database/models";
@@ -28,6 +34,7 @@ import {
 } from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsWithTelegramChats,
+  fetchTelegramAnonMessagesById,
   fetchTelegramAnonMessagesWithTopicByNullifier,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
@@ -886,7 +893,8 @@ export class TelegramService {
   private async sendToAnonymousChannel(
     chatId: number,
     topicId: number,
-    message: string
+    message: string,
+    reply_markup?: InlineKeyboardMarkup
   ): Promise<Message.TextMessage> {
     return traced(
       "telegram",
@@ -900,7 +908,8 @@ export class TelegramService {
           return await this.anonBot.api.sendMessage(chatId, message, {
             message_thread_id: topicId,
             parse_mode: "HTML",
-            disable_web_page_preview: true
+            disable_web_page_preview: true,
+            reply_markup
           });
         } catch (error: { error_code: number; description: string } & any) {
           const isDeletedThread =
@@ -1041,6 +1050,24 @@ export class TelegramService {
       // Send invite link
       await this.sendInviteLink(telegramUserId, chat);
     });
+  }
+
+  public async handleRequestReactProofLink(
+    anonPayload: ReactDataPayload
+  ): Promise<string> {
+    const react = decodeURIComponent(anonPayload.react);
+    const message = await fetchTelegramAnonMessagesById(
+      this.context.dbPool,
+      anonPayload.anonMessageId
+    );
+    if (!message) throw new Error(`Message to react to not found`);
+    // Get valid event Ids
+    // Construct watermark:
+    const watermark = `REACT:[${message?.id}]:[${react}]`;
+    return watermark;
+    // Construct proof url
+    // const proofUrl = generateReactProofUrl(, watermark);
+    // return "" proofUrl;
   }
 
   public async handleReactAnonymousMessage(
@@ -1227,11 +1254,38 @@ export class TelegramService {
       )}</i>\n----------------------------------------------------------`;
 
       const anonMessageId = uuidV1();
-      // put anonMessageId in here?
+
+      const linkPayloadData: ReactDataPayload = {
+        type: PayloadType.ReactData,
+        react: encodeURIComponent("👍"),
+        anonMessageId
+      };
+
+      const encodedLinkPayload = Buffer.from(
+        JSON.stringify(linkPayloadData),
+        "utf-8"
+      ).toString("base64");
+
+      // const encodedLink = link + "?startapp=123";
+      const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
+      const encodedLink = `${link}?startApp=${encodedLinkPayload}&startapp=${encodedLinkPayload}`;
+      // link + `?startapp=${encodedLinkPayload}&startApp=${encodedLinkPayload}`;
+      const button: InlineKeyboardButton[] = [
+        {
+          text: `👍  0`,
+          url: encodedLink
+        }
+        // { text: `❤️  0`, url: "https://google.com" },
+        // { text: `🐭  0`, url: "https://google.com" }
+      ];
+      logger(`[BUTTON]`, button[0]);
+
+      const replyMarkup: InlineKeyboardMarkup = { inline_keyboard: [button] };
       const message = await this.sendToAnonymousChannel(
         chat.id,
         parseInt(topic.topic_id),
-        formattedMessage
+        formattedMessage,
+        replyMarkup
       );
       if (!message) throw new Error(`Failed to send telegram message`);
 
