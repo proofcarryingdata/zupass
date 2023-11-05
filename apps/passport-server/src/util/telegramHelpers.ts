@@ -2,7 +2,9 @@ import { MenuRange } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   AnonTopicDataPayload,
+  AnonWebAppPayload,
   PayloadType,
+  ReactDataPayload,
   constructZupassPcdGetRequestUrl
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -523,7 +525,7 @@ export const generateReactProofUrl = async (
       typeof ZKEdDSAEventTicketPCDPackage
     >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
       genericProveScreen: true,
-      title: "",
+      title: `${decodeURIComponent(reaction)} ZK React`,
       description:
         "ZuRat requests a zero-knowledge proof of your ticket to react to a message."
     });
@@ -1012,3 +1014,19 @@ const reduceFwdList = (
 
   return reducedList;
 };
+
+export const encodePayload = (data: AnonWebAppPayload): string => {
+  return Buffer.from(JSON.stringify(data), "utf-8").toString("base64");
+};
+
+export const buildReactPayload = (
+  emoji: string,
+  anonMessageId: string
+): ReactDataPayload => {
+  return {
+    type: PayloadType.ReactData,
+    react: encodeURIComponent(emoji),
+    anonMessageId
+  };
+};
+export const emojis = ["👍", "❤️", "🦔"];

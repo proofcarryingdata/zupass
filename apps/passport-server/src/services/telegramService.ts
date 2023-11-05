@@ -62,10 +62,13 @@ import {
   BotContext,
   SessionData,
   TopicChat,
+  buildReactPayload,
   chatIDsToChats,
   chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
+  emojis,
+  encodePayload,
   encodeTopicData,
   eventsToLink,
   generateReactProofUrl,
@@ -1079,7 +1082,7 @@ export class TelegramService {
     if (events.length === 0)
       throw new Error(`No valid events found for chat id`);
     const validEventIds = events.map((e) => e.ticket_event_id);
-    logger(`message.id`, message.id);
+
     // Construct proof url
     const proofUrl = await generateReactProofUrl(
       validEventIds,
@@ -1166,44 +1169,34 @@ export class TelegramService {
         anonMessageId
       );
 
-      const linkPayloadData: ReactDataPayload = {
-        type: PayloadType.ReactData,
-        react: encodeURIComponent("👍"),
-        anonMessageId
-      };
+      const payloads = emojis.map((emoji) => {
+        return {
+          emoji,
+          payload: encodePayload(buildReactPayload(emoji, anonMessageId))
+        };
+      });
 
-      const encodedLinkPayload = Buffer.from(
-        JSON.stringify(linkPayloadData),
-        "utf-8"
-      ).toString("base64");
-
-      // const encodedLink = link + "?startapp=123";
       const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
-      const encodedLink = `${link}?startApp=${encodedLinkPayload}&startapp=${encodedLinkPayload}`;
+      const buttons: InlineKeyboardButton[] = payloads.map((p) => {
+        const reactCount = reactionsForMessage.find(
+          (f) => f.reaction === p.emoji
+        );
+        return {
+          text: `${p.emoji} ${reactCount ? reactCount.count : ""}`,
+          url: `${link}?startApp=${p.payload}&startapp=${p.payload}`
+        };
+      });
 
-      const reacts = reactionsForMessage[0];
-      // Generate keyboard from reactions
-      const button: InlineKeyboardButton[] = [
-        {
-          text: `${reacts.reaction}  ${reacts.count}`,
-          url: encodedLink
-        }
-        // { text: `❤️  0`, url: "https://google.com" },
-        // { text: `🐭  0`, url: "https://google.com" }
-      ];
-
-      logger(`REACTS`, reactionsForMessage);
       const message = await fetchTelegramAnonMessagesById(
         this.context.dbPool,
         anonMessageId
       );
       if (!message) throw new Error(`Message to react to not found`);
 
-      // TODO
       await this.anonBot.api.editMessageReplyMarkup(
         telegramChatId,
         parseInt(message.sent_message_id),
-        { reply_markup: { inline_keyboard: [button] } }
+        { reply_markup: { inline_keyboard: [buttons] } }
       );
     });
   }
@@ -1316,32 +1309,21 @@ export class TelegramService {
 
       const anonMessageId = uuidV1();
 
-      const linkPayloadData: ReactDataPayload = {
-        type: PayloadType.ReactData,
-        react: encodeURIComponent("👍"),
-        anonMessageId
-      };
-
-      const encodedLinkPayload = Buffer.from(
-        JSON.stringify(linkPayloadData),
-        "utf-8"
-      ).toString("base64");
-
-      // const encodedLink = link + "?startapp=123";
+      const payloads = emojis.map((emoji) => {
+        return {
+          emoji,
+          payload: encodePayload(buildReactPayload(emoji, anonMessageId))
+        };
+      });
       const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
-      const encodedLink = `${link}?startApp=${encodedLinkPayload}&startapp=${encodedLinkPayload}`;
-      // link + `?startapp=${encodedLinkPayload}&startApp=${encodedLinkPayload}`;
-      const button: InlineKeyboardButton[] = [
-        {
-          text: `👍  0`,
-          url: encodedLink
-        }
-        // { text: `❤️  0`, url: "https://google.com" },
-        // { text: `🐭  0`, url: "https://google.com" }
-      ];
-      logger(`[BUTTON]`, button[0]);
+      const buttons: InlineKeyboardButton[] = payloads.map((p) => {
+        return {
+          text: `${p.emoji}`,
+          url: `${link}?startApp=${p.payload}&startapp=${p.payload}`
+        };
+      });
 
-      const replyMarkup: InlineKeyboardMarkup = { inline_keyboard: [button] };
+      const replyMarkup: InlineKeyboardMarkup = { inline_keyboard: [buttons] };
       const message = await this.sendToAnonymousChannel(
         chat.id,
         parseInt(topic.topic_id),
