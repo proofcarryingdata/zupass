@@ -66,3 +66,20 @@ export function getLastValidURL(inputString: string) {
     return null;
   }
 }
+
+export function maybeRedirect(text: string): string | null {
+  const verifyUrlPrefixes = [
+    `${window.location.origin}/#/verify`,
+    `${window.location.origin}#/verify`,
+    `${window.location.origin}/#/checkin`,
+    `${window.location.origin}#/checkin`,
+    `${window.location.origin}/#/checkin-by-id`,
+    `${window.location.origin}#/checkin-by-id`
+  ];
+  if (verifyUrlPrefixes.find((prefix) => text.startsWith(prefix))) {
+    const hash = text.substring(text.indexOf("#") + 1);
+    console.log(`Redirecting to ${hash}`);
+    return hash;
+  }
+  return null;
+}
