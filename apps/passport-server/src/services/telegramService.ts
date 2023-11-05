@@ -15,6 +15,7 @@ import {
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import { Chat, Message } from "grammy/types";
 import { sha256 } from "js-sha256";
+import { v1 as uuidV1 } from "uuid";
 import { AnonMessageWithDetails } from "../database/models";
 import {
   deleteTelegramChatTopic,
@@ -1225,6 +1226,8 @@ export class TelegramService {
         "en-GB"
       )}</i>\n----------------------------------------------------------`;
 
+      const anonMessageId = uuidV1();
+      // put anonMessageId in here?
       const message = await this.sendToAnonymousChannel(
         chat.id,
         parseInt(topic.topic_id),
@@ -1241,6 +1244,7 @@ export class TelegramService {
         );
         await insertTelegramAnonMessage(
           this.context.dbPool,
+          anonMessageId,
           nullifierHash,
           topic.id,
           rawMessage,

@@ -125,6 +125,7 @@ on conflict (sender_chat_topic_id, receiver_chat_topic_id) do nothing`,
 
 export async function insertTelegramAnonMessage(
   client: Pool,
+  id: string,
   nullifierHash: string,
   chatTopicId: number,
   message: string,
@@ -135,10 +136,11 @@ export async function insertTelegramAnonMessage(
   const result = await sqlQuery(
     client,
     `\
-    insert into telegram_chat_anon_messages (nullifier, chat_topic_id, content, proof, message_timestamp, sent_message_id)
-    values ($1, $2, $3, $4, $5, $6)
+    insert into telegram_chat_anon_messages (id, nullifier, chat_topic_id, content, proof, message_timestamp, sent_message_id)
+    values ($1, $2, $3, $4, $5, $6, $7)
     `,
     [
+      id,
       nullifierHash,
       chatTopicId,
       message,
