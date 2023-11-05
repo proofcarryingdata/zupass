@@ -1101,7 +1101,7 @@ export class TelegramService {
     reaction: string
   ): Promise<void> {
     return traced("telegram", "handleReactAnonymousMessage", async (span) => {
-      logger("[TELEGRAM] Reacting to anonymous message");
+      logger("[TELEGRAM] Reacting to anonymous message", reaction);
 
       const pcd = await this.verifyZKEdDSAEventTicketPCD(
         serializedZKEdDSATicket
@@ -1110,7 +1110,6 @@ export class TelegramService {
       if (!pcd) {
         throw new Error("Could not verify PCD for anonymous message");
       }
-      logger(`GOT CLAIM`, pcd.claim);
       const { watermark, validEventIds, externalNullifier, nullifierHash } =
         pcd.claim;
 
@@ -1147,7 +1146,7 @@ export class TelegramService {
 
       const preimage = encodeAnonMessageIdAndReaction(
         anonMessageId,
-        encodeURIComponent(reaction)
+        encodeURIComponent(reaction) // This is because the reaction is hashed as encoded originally
       );
       if (getMessageWatermark(preimage).toString() !== watermark.toString()) {
         throw new Error(

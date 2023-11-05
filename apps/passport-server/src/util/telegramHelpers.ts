@@ -452,7 +452,6 @@ export const generateReactProofUrl = async (
     const watermark = getMessageWatermark(
       encodeAnonMessageIdAndReaction(anonMessageId, reaction)
     ).toString();
-    logger(`[WATERMARK]`, anonMessageId, reaction, watermark);
     span?.setAttribute("watermark", watermark);
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
       revealTicketId: false,
@@ -1029,4 +1028,5 @@ export const buildReactPayload = (
     anonMessageId
   };
 };
+
 export const emojis = ["👍", "❤️", "🦔"];
