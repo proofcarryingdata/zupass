@@ -129,15 +129,23 @@ export async function insertTelegramAnonMessage(
   chatTopicId: number,
   message: string,
   proof: string,
-  timestamp: string
+  timestamp: string,
+  sentMessageId?: number
 ): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-    insert into telegram_chat_anon_messages (nullifier, chat_topic_id, content, proof, message_timestamp)
-    values ($1, $2, $3, $4, $5)
+    insert into telegram_chat_anon_messages (nullifier, chat_topic_id, content, proof, message_timestamp, sent_message_id)
+    values ($1, $2, $3, $4, $5, $6)
     `,
-    [nullifierHash, chatTopicId, message, proof, timestamp]
+    [
+      nullifierHash,
+      chatTopicId,
+      message,
+      proof,
+      timestamp,
+      sentMessageId || null
+    ]
   );
   return result.rowCount;
 }

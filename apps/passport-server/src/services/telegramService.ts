@@ -13,7 +13,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
-import { Chat } from "grammy/types";
+import { Chat, Message } from "grammy/types";
 import { sha256 } from "js-sha256";
 import { AnonMessageWithDetails } from "../database/models";
 import {
@@ -564,7 +564,7 @@ export class TelegramService {
         ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
       } catch (error) {
         logger(`[ERROR] ${error}`);
-        await ctx.reply(`Failed to link anonymous chat. Check server logs`, {
+        await ctx.reply(`Failed to link anonymous chat. ${error} `, {
           message_thread_id: messageThreadId
         });
       }
@@ -881,33 +881,37 @@ export class TelegramService {
     chatId: number,
     topicId: number,
     message: string
-  ): Promise<void> {
-    return traced("telegram", "sendToAnonymousChannel", async (span) => {
-      span?.setAttribute("chatId", chatId);
-      span?.setAttribute("topicId", topicId);
-      span?.setAttribute("message", message);
+  ): Promise<Message.TextMessage> {
+    return traced(
+      "telegram",
+      "sendToAnonymousChannel",
+      async (span): Promise<Message.TextMessage> => {
+        span?.setAttribute("chatId", chatId);
+        span?.setAttribute("topicId", topicId);
+        span?.setAttribute("message", message);
 
-      try {
-        await this.anonBot.api.sendMessage(chatId, message, {
-          message_thread_id: topicId,
-          parse_mode: "HTML",
-          disable_web_page_preview: true
-        });
-      } catch (error: { error_code: number; description: string } & any) {
-        const isDeletedThread =
-          error.error_code === 400 &&
-          error.description === "Bad Request: message thread not found";
-        if (isDeletedThread) {
-          logger(
-            `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
-          );
-          await deleteTelegramChatTopic(this.context.dbPool, chatId, topicId);
-          throw new Error(`Topic has been deleted. Choose a different one!`);
-        } else {
-          throw new Error(error);
+        try {
+          return await this.anonBot.api.sendMessage(chatId, message, {
+            message_thread_id: topicId,
+            parse_mode: "HTML",
+            disable_web_page_preview: true
+          });
+        } catch (error: { error_code: number; description: string } & any) {
+          const isDeletedThread =
+            error.error_code === 400 &&
+            error.description === "Bad Request: message thread not found";
+          if (isDeletedThread) {
+            logger(
+              `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
+            );
+            await deleteTelegramChatTopic(this.context.dbPool, chatId, topicId);
+            throw new Error(`Topic has been deleted. Choose a different one!`);
+          } else {
+            throw new Error(error);
+          }
         }
       }
-    });
+    );
   }
 
   private async sendInviteLink(
@@ -1119,6 +1123,33 @@ export class TelegramService {
       const currentTime = new Date();
       const timestamp = currentTime.toISOString();
 
+      const payloadData: NullifierHashPayload = {
+        type: PayloadType.NullifierHash,
+        value: BigInt(nullifierHash).toString()
+      };
+
+      const encodedPayload = Buffer.from(
+        JSON.stringify(payloadData),
+        "utf-8"
+      ).toString("base64");
+
+      const formattedMessage = `
+      <b>
+      <a href="${
+        process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
+      }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
+        BigInt(nullifierHash)
+      )} #${BigInt(nullifierHash)
+        .toString()
+        .substring(0, 4)}</a></b>\n\n${rawMessage}`;
+
+      const message = await this.sendToAnonymousChannel(
+        chat.id,
+        parseInt(topic.topic_id),
+        formattedMessage
+      );
+      if (!message) throw new Error(`Failed to send telegram message`);
+
       if (!nullifierData) {
         await insertOrUpdateTelegramNullifier(
           this.context.dbPool,
@@ -1132,7 +1163,8 @@ export class TelegramService {
           topic.id,
           rawMessage,
           serializedZKEdDSATicket,
-          timestamp
+          timestamp,
+          message.message_id
         );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
@@ -1163,7 +1195,8 @@ export class TelegramService {
             topic.id,
             rawMessage,
             serializedZKEdDSATicket,
-            newTimestamps[newTimestamps.length - 1]
+            newTimestamps[newTimestamps.length - 1],
+            message.message_id
           );
         } else {
           const rlError = new Error(
@@ -1173,32 +1206,6 @@ export class TelegramService {
           throw rlError;
         }
       }
-
-      const payloadData: NullifierHashPayload = {
-        type: PayloadType.NullifierHash,
-        value: BigInt(nullifierHash).toString()
-      };
-
-      const encodedPayload = Buffer.from(
-        JSON.stringify(payloadData),
-        "utf-8"
-      ).toString("base64");
-
-      const formattedMessage = `
-      <b>
-      <a href="${
-        process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
-      }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
-        BigInt(nullifierHash)
-      )} #${BigInt(nullifierHash)
-        .toString()
-        .substring(0, 4)}</a></b>\n\n${rawMessage}`;
-
-      await this.sendToAnonymousChannel(
-        chat.id,
-        parseInt(topic.topic_id),
-        formattedMessage
-      );
     });
   }
 
