@@ -15,6 +15,7 @@ import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { AnimatePresence, motion } from "framer-motion";
 import sha256 from "js-sha256";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -112,9 +113,15 @@ export default function () {
     AnonTopicDataPayload | undefined
   >();
   const [loadingProofUrl, setLoadingProofUrl] = useState(false);
+  const [expanded, setExpanded] = useState<boolean>(false);
   const [showInfo, setShowInfo] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const topicDataRaw = searchParams.get("tgWebAppStartParam");
+
+  const showInfoVariants = {
+    open: { opacity: 1, transform: "translateY(0px)" },
+    collapsed: { opacity: 0, transform: "translateY(20px)" }
+  };
 
   useEffect(() => {
     if (!topicDataRaw) return;
@@ -171,7 +178,7 @@ export default function () {
     );
   } else {
     return (
-      <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
+      <div className="flex flex-col items-center bg-[#037EE5] p-4">
         <span className="text-white font-bold my-4">
           {`Post to ${topicData.value.topicName}`}
         </span>
@@ -205,48 +212,122 @@ export default function () {
               )}
             </>
           )}
-          {showInfo && (
-            <div className="flex flex-col gap-2 text-left mx-auto mt-4 bg-[#50ACF9] p-4 rounded-lg">
-              <div className="flex justify-between items-center">
-                <span className="text-white font-semibold">
-                  What is anonymous posting?
-                </span>
-                <div
-                  className="p-2 bg-white bg-opacity-20 rounded cursor-pointer"
-                  onClick={() => setShowInfo(false)}
-                >
-                  <svg
-                    width="15"
-                    height="15"
-                    viewBox="0 0 15 15"
-                    fill="none"
-                    xmlns="http://www.w3.org/2000/svg"
+          <AnimatePresence>
+            {showInfo && (
+              <motion.div
+                initial="collapsed"
+                animate="open"
+                exit="collapsed"
+                variants={showInfoVariants}
+                transition={{ duration: 0.2 }}
+                className="flex flex-col gap-2 text-left mx-auto mt-4 bg-[#50ACF9] p-4 rounded-lg"
+              >
+                <div className="flex justify-between items-center mb-3">
+                  {expanded ? (
+                    <div
+                      onClick={() => setExpanded(false)}
+                      className="cursor-pointer"
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 15 15"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M8.84182 3.13514C9.04327 3.32401 9.05348 3.64042 8.86462 3.84188L5.43521 7.49991L8.86462 11.1579C9.05348 11.3594 9.04327 11.6758 8.84182 11.8647C8.64036 12.0535 8.32394 12.0433 8.13508 11.8419L4.38508 7.84188C4.20477 7.64955 4.20477 7.35027 4.38508 7.15794L8.13508 3.15794C8.32394 2.95648 8.64036 2.94628 8.84182 3.13514Z"
+                          fill="#ffffff"
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                  ) : (
+                    <div
+                      onClick={() => setExpanded(true)}
+                      className="cursor-pointer"
+                    >
+                      <svg
+                        width="15"
+                        height="15"
+                        viewBox="0 0 15 15"
+                        fill="none"
+                        xmlns="http://www.w3.org/2000/svg"
+                      >
+                        <path
+                          d="M0.877075 7.49972C0.877075 3.84204 3.84222 0.876892 7.49991 0.876892C11.1576 0.876892 14.1227 3.84204 14.1227 7.49972C14.1227 11.1574 11.1576 14.1226 7.49991 14.1226C3.84222 14.1226 0.877075 11.1574 0.877075 7.49972ZM7.49991 1.82689C4.36689 1.82689 1.82708 4.36671 1.82708 7.49972C1.82708 10.6327 4.36689 13.1726 7.49991 13.1726C10.6329 13.1726 13.1727 10.6327 13.1727 7.49972C13.1727 4.36671 10.6329 1.82689 7.49991 1.82689ZM8.24993 10.5C8.24993 10.9142 7.91414 11.25 7.49993 11.25C7.08571 11.25 6.74993 10.9142 6.74993 10.5C6.74993 10.0858 7.08571 9.75 7.49993 9.75C7.91414 9.75 8.24993 10.0858 8.24993 10.5ZM6.05003 6.25C6.05003 5.57211 6.63511 4.925 7.50003 4.925C8.36496 4.925 8.95003 5.57211 8.95003 6.25C8.95003 6.74118 8.68002 6.99212 8.21447 7.27494C8.16251 7.30651 8.10258 7.34131 8.03847 7.37854L8.03841 7.37858C7.85521 7.48497 7.63788 7.61119 7.47449 7.73849C7.23214 7.92732 6.95003 8.23198 6.95003 8.7C6.95004 9.00376 7.19628 9.25 7.50004 9.25C7.8024 9.25 8.04778 9.00601 8.05002 8.70417L8.05056 8.7033C8.05924 8.6896 8.08493 8.65735 8.15058 8.6062C8.25207 8.52712 8.36508 8.46163 8.51567 8.37436L8.51571 8.37433C8.59422 8.32883 8.68296 8.27741 8.78559 8.21506C9.32004 7.89038 10.05 7.35382 10.05 6.25C10.05 4.92789 8.93511 3.825 7.50003 3.825C6.06496 3.825 4.95003 4.92789 4.95003 6.25C4.95003 6.55376 5.19628 6.8 5.50003 6.8C5.80379 6.8 6.05003 6.55376 6.05003 6.25Z"
+                          fill="#ffffff"
+                          fill-rule="evenodd"
+                          clip-rule="evenodd"
+                        ></path>
+                      </svg>
+                    </div>
+                  )}
+
+                  <span className="text-white font-semibold">
+                    What is anonymous posting?
+                  </span>
+                  <div
+                    className="cursor-pointer"
+                    onClick={() => setShowInfo(false)}
                   >
-                    <path
-                      d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z"
-                      fill="currentColor"
-                      fill-rule="evenodd"
-                      clip-rule="evenodd"
-                    ></path>
-                  </svg>
+                    <svg
+                      width="15"
+                      height="15"
+                      viewBox="0 0 15 15"
+                      fill="none"
+                      xmlns="http://www.w3.org/2000/svg"
+                    >
+                      <path
+                        d="M11.7816 4.03157C12.0062 3.80702 12.0062 3.44295 11.7816 3.2184C11.5571 2.99385 11.193 2.99385 10.9685 3.2184L7.50005 6.68682L4.03164 3.2184C3.80708 2.99385 3.44301 2.99385 3.21846 3.2184C2.99391 3.44295 2.99391 3.80702 3.21846 4.03157L6.68688 7.49999L3.21846 10.9684C2.99391 11.193 2.99391 11.557 3.21846 11.7816C3.44301 12.0061 3.80708 12.0061 4.03164 11.7816L7.50005 8.31316L10.9685 11.7816C11.193 12.0061 11.5571 12.0061 11.7816 11.7816C12.0062 11.557 12.0062 11.193 11.7816 10.9684L8.31322 7.49999L11.7816 4.03157Z"
+                        fill="#ffffff"
+                        fillRule="evenodd"
+                        clipRule="evenodd"
+                      ></path>
+                    </svg>
+                  </div>
                 </div>
-              </div>
-              <span className="text-white opacity-80">
-                ZuRat never learns your Zupass account or email, only a proof
-                that you have a ticket and a unique nullifier not linked to your
-                email.
-              </span>
-              <div className="flex item-center gap-4 mx-auto mt-4">
-                <CopyButton
-                  link={
-                    window.location.origin +
-                    window.location.pathname +
-                    window.location.search
-                  }
-                />
-              </div>
-            </div>
-          )}
+                {!expanded ? (
+                  <div>
+                    <span className="text-white opacity-80">
+                      ZuRat never learns your Zupass account or email, only a
+                      proof that you have a ticket and a unique nullifier not
+                      linked to your email.
+                    </span>
+                    <div className="flex item-center gap-4 mx-auto mt-4 w-full">
+                      <button
+                        className="w-full flex justify-center items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium shadow-sm"
+                        onClick={() => setExpanded(true)}
+                      >
+                        Learn More
+                      </button>
+                    </div>
+                  </div>
+                ) : (
+                  <div>
+                    {" "}
+                    <span className="text-white opacity-80">
+                      If you're posting through a Telegram Mini App, Telegram
+                      automatically bundles some deanonymizing info. We never
+                      see or store this, but if you don't want to trust us on
+                      that, you can also copy a clean link to this submission
+                      page and access it via a secure browser.
+                    </span>
+                    <div className="flex item-center gap-4 mx-auto mt-4 w-full">
+                      <CopyButton
+                        link={
+                          window.location.origin +
+                          window.location.pathname +
+                          window.location.search
+                        }
+                      />
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
       </div>
     );
