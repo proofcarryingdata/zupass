@@ -125,11 +125,40 @@ export function constructZupassPcdProveAndAddRequestUrl<
   return `${zupassClientUrl}#/add?request=${eqReq}`;
 }
 
-export const getAnonTopicNullifier = (
-  chatId: number,
-  topicId: number
-): bigint => {
-  return BigInt(
-    "0x" + sha256(JSON.stringify({ chatId, topicId })).substring(0, 16)
-  );
+export const getAnonTopicNullifier = (): bigint => {
+  return BigInt("0x" + sha256("anon_message").substring(0, 16));
 };
+
+export enum PayloadType {
+  RedirectTopicData = "topic-data",
+  NullifierHash = "nullifier-hash",
+  AnonTopicDataPayload = "anon-topic-data-payload"
+}
+
+export type RedirectTopicDataPayload = {
+  type: PayloadType.RedirectTopicData;
+  value: {
+    topicId: number;
+    chatId: number;
+  };
+};
+
+export type NullifierHashPayload = {
+  type: PayloadType.NullifierHash;
+  value: string;
+};
+
+export type AnonTopicDataPayload = {
+  type: PayloadType.AnonTopicDataPayload;
+  value: {
+    chatId: number;
+    topicName: string;
+    topicId: number;
+    validEventIds: string[];
+  };
+};
+
+export type AnonWebAppPayload =
+  | RedirectTopicDataPayload
+  | NullifierHashPayload
+  | AnonTopicDataPayload;

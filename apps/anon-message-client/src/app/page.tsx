@@ -1,7 +1,11 @@
 "use client";
 
+import CopyButton from "@/components/CopyButton";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
+  AnonTopicDataPayload,
+  AnonWebAppPayload,
+  PayloadType,
   constructZupassPcdGetRequestUrl,
   getAnonTopicNullifier
 } from "@pcd/passport-interface/src/PassportInterface";
@@ -22,21 +26,13 @@ function getMessageWatermark(message: string): bigint {
   return BigInt("0x" + hashed);
 }
 
-interface TopicData {
-  chatId: string;
-  topicName: string;
-  topicId: string;
-  validEventIds: string[];
-}
-
 interface InvalidMessage {
   reason: string | undefined;
 }
 
 async function requestProof(
   message: string,
-  chatId: string,
-  topicId: string,
+  topicId: number,
   validEventIds: string[]
 ) {
   const watermark = getMessageWatermark(message).toString();
@@ -75,10 +71,7 @@ async function requestProof(
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
-      value: getAnonTopicNullifier(
-        parseInt(chatId),
-        parseInt(topicId)
-      ).toString(),
+      value: getAnonTopicNullifier().toString(),
       userProvided: false
     },
     validEventIds: {
@@ -115,20 +108,24 @@ export default function () {
   const [invalidMessage, setInvalidMessage] = useState<
     InvalidMessage | undefined
   >();
-  const [topicData, setTopicData] = useState<TopicData | undefined>();
+  const [topicData, setTopicData] = useState<
+    AnonTopicDataPayload | undefined
+  >();
   const [loadingProofUrl, setLoadingProofUrl] = useState(false);
   const [showInfo, setShowInfo] = useState<boolean>(true);
-  const [copied, setCopied] = useState<boolean>(false);
   const searchParams = useSearchParams();
   const topicDataRaw = searchParams.get("tgWebAppStartParam");
 
   useEffect(() => {
     if (!topicDataRaw) return;
-    const topicDataEncoded = Buffer.from(topicDataRaw, "base64");
-    const topicData = JSON.parse(
-      decodeURIComponent(topicDataEncoded.toString("utf-8"))
+
+    const anonPayload: AnonWebAppPayload = JSON.parse(
+      decodeURIComponent(topicDataRaw)
     );
-    setTopicData(topicData);
+
+    if (anonPayload.type === PayloadType.AnonTopicDataPayload) {
+      setTopicData(anonPayload);
+    }
   }, [topicDataRaw]);
 
   useEffect(() => {
@@ -145,12 +142,16 @@ export default function () {
 
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
-    if (!topicData || !topicData.topicId || !topicData.validEventIds) return;
+    if (
+      !topicData ||
+      !topicData.value.topicId ||
+      !topicData.value.validEventIds
+    )
+      return;
     await requestProof(
       message,
-      topicData.chatId,
-      topicData.topicId,
-      topicData.validEventIds
+      topicData.value.topicId,
+      topicData.value.validEventIds
     );
     setLoadingProofUrl(false);
   }, [message]);
@@ -172,7 +173,7 @@ export default function () {
     return (
       <div className="w-screen h-screen flex flex-col items-center bg-[#037EE5] p-4">
         <span className="text-white font-bold my-4">
-          {`Post to #${topicData.topicName}`}
+          {`Post to ${topicData.value.topicName}`}
         </span>
         <div className="flex flex-col gap-2 bg-[#50ACF9] rounded-lg w-full p-2">
           <textarea
@@ -191,7 +192,7 @@ export default function () {
             >
               {loadingProofUrl
                 ? `Loading...`
-                : `Send to ${topicData.topicName}`}
+                : `Send to ${topicData.value.topicName}`}
             </button>
           ) : (
             <>
@@ -231,23 +232,18 @@ export default function () {
                 </div>
               </div>
               <span className="text-white opacity-80">
-                ZuRat never learns your Zupass account or email, only a proof that
-                you have a ticket and a unique nullifier not linked to your email.
+                ZuRat never learns your Zupass account or email, only a proof
+                that you have a ticket and a unique nullifier not linked to your
+                email.
               </span>
               <div className="flex item-center gap-4 mx-auto mt-4">
-                <button
-                  className="flex items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium"
-                  onClick={() => {
-                    navigator.clipboard.writeText(
-                      window.location.origin +
-                        window.location.pathname +
-                        window.location.search
-                    );
-                    setCopied(true);
-                  }}
-                >
-                  {copied ? "Link copied!" : "Copy link"}
-                </button>
+                <CopyButton
+                  link={
+                    window.location.origin +
+                    window.location.pathname +
+                    window.location.search
+                  }
+                />
               </div>
             </div>
           )}

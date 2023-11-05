@@ -23,7 +23,7 @@ import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { SyncingPCDs } from "../../shared/SyncingPCDs";
-import { ActionButton, Button } from "./Button";
+import { ActionButton, Button, ButtonGroup } from "./Button";
 import { DexTab } from "./DexTab";
 import { SuperFunkyFont } from "./FrogFolder";
 import { GetFrogTab } from "./GetFrogTab";
@@ -209,11 +209,6 @@ const Container = styled.div`
   display: flex;
   flex-direction: column;
   gap: 32px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 8px;
 `;
 
 const Score = styled.div`

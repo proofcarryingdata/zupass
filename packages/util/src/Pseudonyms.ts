@@ -1,54 +1,64 @@
-const PSEUDONYMS = [
-  "🐒 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴍᴏɴᴋᴇʏ",
-  "🐻 ᴀɴᴏɴʏᴍᴏᴜꜱ ʙᴇᴀʀ",
-  "🦆 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴅᴜᴄᴋ",
-  "🦉 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴏᴡʟ",
-  "🐴 ᴀɴᴏɴʏᴍᴏᴜꜱ ʜᴏʀꜱᴇ",
-  "🐝 ᴀɴᴏɴʏᴍᴏᴜꜱ ʙᴇᴇ",
-  "🪱 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴡᴏʀᴍ",
-  "🦋 ᴀɴᴏɴʏᴍᴏᴜꜱ ʙᴜᴛᴛᴇʀꜰʟʏ",
-  "🐌 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜱɴᴀɪʟ",
-  "🐢 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴛᴜʀᴛʟᴇ",
-  "🦎 ᴀɴᴏɴʏᴍᴏᴜꜱ ʟɪᴢᴀʀᴅ",
-  "🐸 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜰʀᴏɢ",
-  "🦖 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴛ. ʀᴇx",
-  "🐙 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴏᴄᴛᴏᴘᴜꜱ",
-  "🦐 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜱʜʀɪᴍᴘ",
-  "🦀 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄʀᴀʙ",
-  "🐟 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜰɪꜱʜ",
-  "🐬 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴅᴏʟᴘʜɪɴ",
-  "🐳 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴡʜᴀʟᴇ",
-  "🦓 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴢᴇʙʀᴀ",
-  "🦧 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴏʀᴀɴɢᴜᴛᴀɴ",
-  "🐘 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴇʟᴇᴘʜᴀɴᴛ",
-  "🐫 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄᴀᴍᴇʟ",
-  "🦒 ᴀɴᴏɴʏᴍᴏᴜꜱ ɢɪʀᴀꜰꜰᴇ",
-  "🦘 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴋᴀɴɢᴀʀᴏᴏ",
-  "🐄 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄᴏᴡ",
-  "🐑 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜱʜᴇᴇᴘ",
-  "🐈 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄᴀᴛ",
-  "🐓 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄʜɪᴄᴋᴇɴ",
-  "🦜 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴘᴀʀʀᴏᴛ",
-  "🦩 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜰʟᴀᴍɪɴɢᴏ",
-  "🦨 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜱᴋᴜɴᴋ",
-  "🦝 ᴀɴᴏɴʏᴍᴏᴜꜱ ʀᴀᴄᴄᴏᴏɴ",
-  "🦥 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜱʟᴏᴛʜ",
-  "🐀 ᴀɴᴏɴ ᴇ. ᴍᴏᴜꜱᴇ",
-  "🦔 ᴀɴᴏɴʏᴍᴏᴜꜱ ʜᴇᴅɢᴇʜᴏɢ",
-  "🪵 ᴀɴᴏɴʏᴍᴏᴜꜱ ʟᴏɢ",
-  "🍄 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴍᴜꜱʜʀᴏᴏᴍ",
-  "🌵 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄᴀᴄᴛᴜꜱ",
-  "🌻 ᴀɴᴏɴʏᴍᴏᴜꜱ ꜱᴜɴꜰʟᴏᴡᴇʀ",
-  "🌽 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄᴏʀɴ",
-  "🥜 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴘᴇᴀɴᴜᴛ",
-  "🥖 ᴀɴᴏɴʏᴍᴏᴜꜱ ʙᴀɢᴜᴇᴛᴛᴇ",
-  "🛶 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴄᴀɴᴏᴇ",
-  "🍠 ᴀɴᴏɴʏᴍᴏᴜꜱ ʏᴀᴍ",
-  "🎃 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴘᴜᴍᴘᴋɪɴ",
-  "🌚 ᴀɴᴏɴʏᴍᴏᴜꜱ ᴍᴏᴏɴ"
-];
+export const PSEUDONYM_TO_EMOJI: { [name: string]: string } = {
+  "Anonymous Monkey": "🐒",
+  "Anonymous Bear": "🐻",
+  "Anonymous Duck": "🦆",
+  "Anonymous Owl": "🦉",
+  "Anonymous Horse": "🐴",
+  "Anonymous Bee": "🐝",
+  "Anonymous Worm": "🪱",
+  "Anonymous Butterfly": "🦋",
+  "Anonymous Snail": "🐌",
+  "Anonymous Turtle": "🐢",
+  "Anonymous Lizard": "🦎",
+  "Anonymous Frog": "🐸",
+  "Anonymous T. Rex": "🦖",
+  "Anonymous Octopus": "🐙",
+  "Anonymous Shrimp": "🦐",
+  "Anonymous Crab": "🦀",
+  "Anonymous Fish": "🐟",
+  "Anonymous Dolphin": "🐬",
+  "Anonymous Whale": "🐳",
+  "Anonymous Zebra": "🦓",
+  "Anonymous Orangutan": "🦧",
+  "Anonymous Elephant": "🐘",
+  "Anonymous Camel": "🐫",
+  "Anonymous Giraffe": "🦒",
+  "Anonymous Kangaroo": "🦘",
+  "Anonymous Cow": "🐄",
+  "Anonymous Sheep": "🐑",
+  "Anonymous Cat": "🐈",
+  "Anonymous Chicken": "🐓",
+  "Anonymous Parrot": "🦜",
+  "Anonymous Flamingo": "🦩",
+  "Anonymous Skunk": "🦨",
+  "Anonymous Raccoon": "🦝",
+  "Anonymous Sloth": "🦥",
+  "Anonymous Mouse": "🐀",
+  "Anonymous Hedgehog": "🦔",
+  "Anonymous Log": "🪵",
+  "Anonymous Mushroom": "🍄",
+  "Anonymous Cactus": "🌵",
+  "Anonymous Sunflower": "🌻",
+  "Anonymous Corn": "🌽",
+  "Anonymous Peanut": "🥜",
+  "Anonymous Baguette": "🥖",
+  "Anonymous Canoe": "🛶",
+  "Anonymous Yam": "🍠",
+  "Anonymous Pumpkin": "🎃",
+  "Anonymous Moon": "🌚"
+};
+
+export function bigIntToPseudonymEmoji(input: bigint): string {
+  const key = Number(input % BigInt(Object.keys(PSEUDONYM_TO_EMOJI).length));
+  return Object.values(PSEUDONYM_TO_EMOJI)[key];
+}
+
+export function bigIntToPseudonymName(input: bigint): string {
+  const key = Number(input % BigInt(Object.keys(PSEUDONYM_TO_EMOJI).length));
+  return Object.keys(PSEUDONYM_TO_EMOJI)[key];
+}
 
 /** Converts a given number, such as a nullifier hash, to a pseudonym. */
-export function bigintToPseudonym(input: bigint) {
-  return PSEUDONYMS[Number(input % BigInt(PSEUDONYMS.length))];
+export function bigintToPseudonym(input: bigint): string {
+  return `${bigIntToPseudonymEmoji(input)} ${bigIntToPseudonymName(input)}`;
 }

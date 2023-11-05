@@ -1,6 +1,10 @@
 import { MenuRange } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
+import {
+  AnonTopicDataPayload,
+  PayloadType,
+  constructZupassPcdGetRequestUrl
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
@@ -129,25 +133,8 @@ const adminGroupChatCommands: BotCommandWithAnon[] = [
   }
 ];
 
-export const base64EncodeTopicData = (
-  chatId: number | string,
-  topicName: string,
-  topicId: number | string,
-  validEventIds: string[]
-): string => {
-  const topicData = Buffer.from(
-    encodeURIComponent(
-      JSON.stringify({
-        chatId,
-        topicName,
-        topicId,
-        validEventIds
-      })
-    ),
-    "utf-8"
-  );
-  const encodedTopicData = topicData.toString("base64");
-  return encodedTopicData;
+export const encodeTopicData = (topicData: AnonTopicDataPayload): string => {
+  return encodeURIComponent(JSON.stringify(topicData));
 };
 
 function isFulfilled<T>(
@@ -650,12 +637,15 @@ export const chatsToPostIn = async (
             .row();
           for (const topic of topics) {
             if (topic.topic_id) {
-              const encodedTopicData = base64EncodeTopicData(
-                chat.id,
-                topic.topic_name,
-                topic.topic_id,
-                validEventIds
-              );
+              const encodedTopicData = encodeTopicData({
+                type: PayloadType.AnonTopicDataPayload,
+                value: {
+                  chatId: chat.id,
+                  topicName: topic.topic_name,
+                  topicId: parseInt(topic.topic_id),
+                  validEventIds
+                }
+              });
               range
                 .webApp(
                   `${topic.topic_name}`,

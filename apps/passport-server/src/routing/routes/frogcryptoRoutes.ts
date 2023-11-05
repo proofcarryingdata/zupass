@@ -1,6 +1,8 @@
 import {
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
+  FrogCryptoUpdateFeedsRequest,
+  FrogCryptoUpdateFeedsResponseValue,
   FrogCryptoUpdateFrogsRequest,
   FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
@@ -111,5 +113,13 @@ export function initFrogcryptoRoutes(
       req.body as FrogCryptoDeleteFrogsRequest
     );
     res.json(result satisfies FrogCryptoDeleteFrogsResponseValue);
+  });
+
+  app.post("/frogcrypto/admin/feeds", async (req, res) => {
+    checkFrogcryptoServiceStarted(frogcryptoService);
+    const result = await frogcryptoService.updateFeedData(
+      req.body as FrogCryptoUpdateFeedsRequest
+    );
+    res.json(result satisfies FrogCryptoUpdateFeedsResponseValue);
   });
 }
