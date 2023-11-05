@@ -179,3 +179,11 @@ export function loadPersistentSyncStatus(): PersistentSyncStatus {
     return {};
   }
 }
+
+export function saveUsingLaserScanner(usingLaserScanner: boolean) {
+  window.localStorage["using_laser_scanner"] = usingLaserScanner.toString();
+}
+
+export function loadUsingLaserScanner() {
+  return window.localStorage["using_laser_scanner"] === "true";
+}
