@@ -5,7 +5,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
-import { ChatIDWithEventIDs } from "../src/database/models";
+import { TelegramEvent } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
 import {
   getAllOrganizers,
@@ -27,7 +27,7 @@ import {
   insertTelegramTopic,
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
-import { findChatByEventIds } from "../src/util/telegramHelpers";
+import { verifyUserEventIds } from "../src/util/telegramHelpers";
 import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
@@ -235,50 +235,90 @@ describe("telegram bot functionality", function () {
   step(
     "fetching a telegram chat via a list of eventIds should work",
     async function () {
-      const sampleChats: ChatIDWithEventIDs[] = [
+      const sampleChats: TelegramEvent[] = [
         {
-          telegramChatID: "chat1",
-          ticketEventIds: ["event1", "event2", "event3"]
+          telegram_chat_id: 1,
+          ticket_event_id: "event1"
         },
-        { telegramChatID: "chat2", ticketEventIds: ["event4", "event5"] }
+        {
+          telegram_chat_id: 1,
+          ticket_event_id: "event2"
+        },
+        {
+          telegram_chat_id: 1,
+          ticket_event_id: "event3"
+        },
+        {
+          telegram_chat_id: 2,
+          ticket_event_id: "event3"
+        },
+        {
+          telegram_chat_id: 2,
+          ticket_event_id: "event4"
+        },
+        {
+          telegram_chat_id: 2,
+          ticket_event_id: "event5"
+        }
       ];
 
       const testCases = [
         {
           name: "Finds chat with matching single event ID",
+          chatId: 2,
           input: ["event5"],
-          expected: "chat2"
+          expected: true
         },
         {
           name: "Finds chat with matching multiple event IDs",
           input: ["event1", "event2", "event3"],
-          expected: "chat1"
+          chatId: 1,
+          expected: true
         },
         {
           name: "Handles event IDs that match different chats (should return null)",
           input: ["event3", "event4"],
-          expected: null
+          chatId: 1,
+          expected: false
+        },
+        {
+          name: "Returns multiple chats when they each link to an event",
+          input: ["event3"],
+          chatId: 1,
+          expected: true
+        },
+        {
+          name: "Returns multiple chats when they each link to an event",
+          input: ["event3"],
+          chatId: 2,
+          expected: true
         },
         {
           name: "Returns null if no chat matches the event IDs",
           input: ["event6"],
-          expected: null
+          chatId: 1,
+          expected: false
         },
         {
           name: "Handles empty event ID list (should return null)",
           input: [],
-          expected: null
+          chatId: 1,
+          expected: false
         },
         {
           name: "Handles event IDs that partially match (should return null)",
-          input: ["event1", "event6"],
-          expected: null
+          input: ["event1", "event4"],
+          chatId: 1,
+          expected: false
         }
       ];
 
       testCases.forEach((test) => {
-        const result = findChatByEventIds(sampleChats, test.input);
-        expect(result).to.eq(test.expected);
+        const chats = sampleChats.filter(
+          (c) => c.telegram_chat_id === test.chatId
+        );
+        const result = verifyUserEventIds(chats, test.input);
+        expect(result).to.eql(test.expected);
       });
     }
   );
