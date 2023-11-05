@@ -39,11 +39,11 @@ const Post: React.FC<PostProps> = ({
       </div>
       <span className="text-[#2e2e35]">{content}</span>
       {!!reactions.length && (
-        <div className="mt-2 gap-2 flex font-bold text-[#2e2e35]">
+        <div className="mt-2 gap-2 flex font-bold text-[#2e2e35] opacity-80 cursor-default">
           {Object.entries(reactionsToReactionCount(reactions)).map(
             ([reaction, count]) => (
               <div className="border rounded-md p-1">
-                {reaction} {count}
+                {reaction}&nbsp;{count}
               </div>
             )
           )}
