@@ -2,13 +2,6 @@
 
 import CopyButton from "@/components/CopyButton";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import {
-  AnonTopicDataPayload,
-  AnonWebAppPayload,
-  PayloadType,
-  constructZupassPcdGetRequestUrl,
-  getAnonTopicNullifier
-} from "@pcd/passport-interface/src/PassportInterface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
@@ -25,6 +18,35 @@ function getMessageWatermark(message: string): bigint {
   const hashed = sha256.sha256(message).substring(0, 16);
   return BigInt("0x" + hashed);
 }
+
+interface TopicData {
+  chatId: string;
+  topicName: string;
+  topicId: string;
+  validEventIds: string[];
+}
+
+export function constructZupassPcdGetRequestUrl<T>(
+  zupassClientUrl: string,
+  returnUrl: string,
+  pcdType: any,
+  args: any,
+  options?: any
+) {
+  const req = {
+    type: "Get",
+    returnUrl: returnUrl,
+    args: args,
+    pcdType,
+    options
+  };
+  const encReq = encodeURIComponent(JSON.stringify(req));
+  return `${zupassClientUrl}#/prove?request=${encReq}`;
+}
+
+export const getAnonTopicNullifier = (): bigint => {
+  return BigInt("0x" + sha256.sha256("anon_message").substring(0, 16));
+};
 
 interface InvalidMessage {
   reason: string | undefined;
@@ -108,22 +130,19 @@ export default function () {
   const [invalidMessage, setInvalidMessage] = useState<
     InvalidMessage | undefined
   >();
-  const [topicData, setTopicData] = useState<
-    AnonTopicDataPayload | undefined
-  >();
+  const [topicData, setTopicData] = useState<any>();
   const [loadingProofUrl, setLoadingProofUrl] = useState(false);
   const [showInfo, setShowInfo] = useState<boolean>(true);
   const searchParams = useSearchParams();
   const topicDataRaw = searchParams.get("tgWebAppStartParam");
+  console.log({ topicDataStr: decodeURIComponent(topicDataRaw ?? "") });
 
   useEffect(() => {
     if (!topicDataRaw) return;
 
-    const anonPayload: AnonWebAppPayload = JSON.parse(
-      decodeURIComponent(topicDataRaw)
-    );
+    const anonPayload: any = JSON.parse(decodeURIComponent(topicDataRaw));
 
-    if (anonPayload.type === PayloadType.AnonTopicDataPayload) {
+    if (anonPayload.type === "anon-topic-data-payload") {
       setTopicData(anonPayload);
     }
   }, [topicDataRaw]);
