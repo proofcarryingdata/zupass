@@ -459,7 +459,7 @@ export const generateReactProofUrl = async (
       revealProductId: false,
       revealTimestampConsumed: false,
       revealTimestampSigned: false,
-      revealAttendeeSemaphoreId: true,
+      revealAttendeeSemaphoreId: false,
       revealIsConsumed: false,
       revealIsRevoked: false
     };
@@ -489,6 +489,7 @@ export const generateReactProofUrl = async (
       fieldsToReveal: {
         argumentType: ArgumentTypeName.ToggleList,
         value: fieldsToReveal,
+        description: "No ticket information will be revealed",
         userProvided: false,
         hideIcon: true
       },
