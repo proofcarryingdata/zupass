@@ -241,7 +241,9 @@ export function initTelegramRoutes(
         }
         const messages =
           await telegramService.handleGetAnonMessages(nullifierHash);
-        res.json(messages);
+        const totalKarma =
+          await telegramService.handleGetAnonTotalKarma(nullifierHash);
+        res.json({ messages, totalKarma });
       } catch (e) {
         logger("[TELEGRAM] failed to get posts", e);
       }

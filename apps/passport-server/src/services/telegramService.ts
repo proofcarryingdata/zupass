@@ -9,7 +9,8 @@ import {
 } from "@pcd/passport-interface";
 import {
   ONE_HOUR_MS,
-  bigintToPseudonym,
+  bigIntToPseudonymEmoji,
+  bigIntToPseudonymName,
   encodeAnonMessageIdAndReaction,
   getAnonTopicNullifier,
   getMessageWatermark,
@@ -28,10 +29,7 @@ import {
   Message
 } from "grammy/types";
 import { v1 as uuidV1 } from "uuid";
-import {
-  AnonMessageWithDetails,
-  TelegramReactionCount
-} from "../database/models";
+import { AnonMessageWithDetails } from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -51,7 +49,7 @@ import {
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   fetchTelegramReactionsForMessage,
-  fetchTelegramReactionsForNullifier
+  fetchTelegramTotalKarmaForNullifier
 } from "../database/queries/telegram/fetchTelegramReactions";
 import {
   insertOrUpdateTelegramNullifier,
@@ -1374,13 +1372,14 @@ export class TelegramService {
         "utf-8"
       ).toString("base64");
 
-      const formattedMessage = `
-      <b>
-      <a href="${
+      const formattedMessage = `<b><a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
-      }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
+      }?startApp=${encodedPayload}&startapp=${encodedPayload}">
+      ${bigIntToPseudonymEmoji(
         BigInt(nullifierHash)
-      )}</a></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
+      )} <u>${bigIntToPseudonymName(
+        BigInt(nullifierHash)
+      )}</u></a></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
         "en-GB"
       )}</i>\n----------------------------------------------------------`;
 
@@ -1471,16 +1470,13 @@ export class TelegramService {
     );
   }
 
-  // TODO: maybe remove and associated query
-  public async handleGetAnonReactions(
-    nulliferHash: string
-  ): Promise<TelegramReactionCount[]> {
-    return traced("telegram", "handleGetAnonReactions", async () => {
-      const reactions = await fetchTelegramReactionsForNullifier(
+  public async handleGetAnonTotalKarma(nulliferHash: string): Promise<number> {
+    return traced("telegram", "handleGetAnonTotalKarma", async () => {
+      const totalKarma = await fetchTelegramTotalKarmaForNullifier(
         this.context.dbPool,
         nulliferHash
       );
-      return reactions;
+      return totalKarma;
     });
   }
 

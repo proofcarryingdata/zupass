@@ -9,26 +9,40 @@ export async function fetchTelegramReactionsForMessage(
   const result = await sqlQuery(
     client,
     `\
-    select reaction, count(*)::int from telegram_chat_reactions
-    where anon_message_id = $1 group by reaction order by reaction desc
+    select
+      reaction,
+      count(*):: int
+    from
+      telegram_chat_reactions
+    where
+      anon_message_id = $1
+    group by
+      reaction
+    order by
+      reaction desc;
     `,
     [anonMessageId]
   );
   return result.rows;
 }
 
-export async function fetchTelegramReactionsForNullifier(
+export async function fetchTelegramTotalKarmaForNullifier(
   client: Pool,
   nulliferHash: string
-): Promise<TelegramReactionCount[]> {
+): Promise<number> {
   const result = await sqlQuery(
     client,
     `\
-    select reaction, count(*) from telegram_chat_reactions r
-join telegram_chat_anon_messages m on m.id = r.anon_message_id
-where m.nullifier = $1 group by reaction order by reaction desc;
-    `,
+    select
+      distinct sender_nullifier,
+      anon_message_id
+    from
+      telegram_chat_reactions r
+      join telegram_chat_anon_messages m on m.id = r.anon_message_id
+    where
+      m.nullifier = $1;
+  `,
     [nulliferHash]
   );
-  return result.rows;
+  return result.rowCount;
 }
