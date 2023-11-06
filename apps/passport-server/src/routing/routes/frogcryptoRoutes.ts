@@ -94,7 +94,12 @@ export function initFrogcryptoRoutes(
 
     req
       .pipe(
-        request(urljoin(process.env.FROGCRYPTO_ASSETS_URL, `${imageId}.png`))
+        request(
+          urljoin(process.env.FROGCRYPTO_ASSETS_URL, `${imageId}.png`)
+        ).on("error", (err) => {
+          logger(`[FrogCrypto] Error fetching FrogCrypto Assets: ${err}`);
+          throw new PCDHTTPError(503, "FrogCrypto Assets Unavailable");
+        })
       )
       .pipe(res);
   });

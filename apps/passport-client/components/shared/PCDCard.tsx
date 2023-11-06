@@ -161,7 +161,11 @@ function CardBody({
     return <MainIdentityCard />;
   }
 
-  if (isEdDSATicketPCD(pcd)) {
+  if (
+    isEdDSATicketPCD(pcd) &&
+    (pcd.claim.ticket.ticketCategory === TicketCategory.Devconnect ||
+      pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect)
+  ) {
     return <TicketCardBody pcd={pcd} />;
   }
 

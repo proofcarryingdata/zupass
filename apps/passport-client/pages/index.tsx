@@ -15,7 +15,6 @@ import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScre
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
-import { FrogHomeScreen } from "../components/screens/FrogScreens/FrogHomeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
@@ -346,7 +345,6 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
-          <Route path="frog" element={<FrogHomeScreen />} />
           <Route path="frog-admin" element={<FrogManagerScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>

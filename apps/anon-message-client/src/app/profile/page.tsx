@@ -1,5 +1,7 @@
 "use client";
 
+import "./profiles.css";
+
 import Post from "@/components/post";
 import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
 import { useSearchParams } from "next/navigation";
@@ -15,17 +17,23 @@ interface AnonMessageWithDetails {
   chat_name: string;
   topic_name: string;
   message_timestamp: string;
+  reactions: string[];
+}
+
+interface AnonymousProfileResponse {
+  messages: AnonMessageWithDetails[];
+  totalKarma: number;
 }
 
 export default function Page() {
-  const [messages, setMessages] = useState<
-    AnonMessageWithDetails[] | undefined
+  const [response, setResponse] = useState<
+    AnonymousProfileResponse | undefined
   >(undefined);
   const searchParams = useSearchParams();
   const nullifierHash = searchParams.get("nullifierHash");
 
   useEffect(() => {
-    const getData = async (): Promise<AnonMessageWithDetails[] | undefined> => {
+    const getData = async (): Promise<AnonymousProfileResponse | undefined> => {
       if (!nullifierHash) return Promise.resolve(undefined);
       const data = await fetch(
         `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${nullifierHash}`,
@@ -35,10 +43,12 @@ export default function Page() {
       return dataJson;
     };
 
-    getData().then((m) => setMessages(m));
+    getData().then((r) => setResponse(r));
   }, [nullifierHash]);
 
-  if (!nullifierHash || !messages) return <Loading />;
+  if (!nullifierHash || !response) return <Loading />;
+
+  const { totalKarma, messages } = response;
 
   return (
     <Suspense fallback={<Loading />}>
@@ -59,6 +69,10 @@ export default function Page() {
             #{nullifierHash.substring(0, 4)}
           </span>
         </div>
+        <div className="text-[#2e2e35] mt-2 font-bold">
+          Total Karma: {totalKarma}
+        </div>
+
         {messages.length === 0 ? (
           <div className="flex flex-col items-center mt-4">
             <span className="text-[#2e2e35] opacity-30 text-xl ">
@@ -79,6 +93,7 @@ export default function Page() {
                   content={message.content}
                   key={i}
                   timestamp={message.message_timestamp}
+                  reactions={message.reactions}
                 />
               ))}
           </div>

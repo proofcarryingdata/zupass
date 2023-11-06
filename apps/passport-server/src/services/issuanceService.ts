@@ -65,6 +65,7 @@ import _ from "lodash";
 import { LRUCache } from "lru-cache";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
+import urljoin from "url-join";
 import {
   DevconnectPretixTicketDBWithEmailAndItem,
   UserRow
@@ -837,10 +838,13 @@ export class IssuanceService {
 
   private async issueFrogPCDs(): Promise<SerializedPCD[]> {
     const FROG_INTERVAL_MS = 1000 * 60 * 10; // one new frog every ten minutes
-    const serverUrl = process.env.PASSPORT_CLIENT_URL;
+    // Images are served from passport-client's web host
+    const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
 
-    if (!serverUrl) {
-      logger("[ISSUE] can't issue frogs - unaware of the client location");
+    if (!imageServerUrl) {
+      logger(
+        "[ISSUE] can't issue frogs - unaware of the image server location"
+      );
       return [];
     }
 
@@ -863,7 +867,7 @@ export class IssuanceService {
         },
         url: {
           argumentType: ArgumentTypeName.String,
-          value: serverUrl + "/" + randomFrogPath
+          value: imageServerUrl + "/" + randomFrogPath
         },
         title: {
           argumentType: ArgumentTypeName.String,
@@ -963,6 +967,18 @@ export class IssuanceService {
     credential: SemaphoreSignaturePCD
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
+      // The image we use for Zuzalu tickets is served from the same place
+      // as passport-client.
+      // This is the same mechanism as used in frog image PCDs.
+      const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
+
+      if (!imageServerUrl) {
+        logger(
+          "[ISSUE] can't issue Zuzalu tickets - unaware of the image server location"
+        );
+        return [];
+      }
+
       const commitmentRow = await this.checkUserExists(credential);
       const email = commitmentRow?.email;
       if (commitmentRow) {
@@ -1001,7 +1017,9 @@ export class IssuanceService {
             timestampConsumed: 0,
             isConsumed: false,
             isRevoked: false,
-            ticketCategory: TicketCategory.Zuzalu
+            ticketCategory: TicketCategory.Zuzalu,
+            imageUrl: urljoin(imageServerUrl, "images/zuzalu", "zuzalu.png"),
+            imageAltText: "Zuzalu logo"
           })
         );
       }

@@ -6,26 +6,20 @@ import {
   AnonTopicDataPayload,
   AnonWebAppPayload,
   PayloadType,
-  constructZupassPcdGetRequestUrl,
-  getAnonTopicNullifier
+  constructZupassPcdGetRequestUrl
 } from "@pcd/passport-interface/src/PassportInterface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { getAnonTopicNullifier, getMessageWatermark } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { AnimatePresence, motion } from "framer-motion";
-import sha256 from "js-sha256";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 
 const MAX_HEADER_SIZE = 280; // max tweet size
-
-function getMessageWatermark(message: string): bigint {
-  const hashed = sha256.sha256(message).substring(0, 16);
-  return BigInt("0x" + hashed);
-}
 
 interface InvalidMessage {
   reason: string | undefined;

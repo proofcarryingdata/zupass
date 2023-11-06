@@ -39,7 +39,7 @@ export async function deleteDevconnectPretixRedactedTickets(
   await sqlQuery(
     client,
     `DELETE FROM devconnect_pretix_redacted_tickets WHERE pretix_events_config_id = $1
-    AND position_id IN($2)`,
+    AND position_id = ANY($2)`,
     [eventConfigID, ids]
   );
 }

@@ -16,6 +16,11 @@ export interface ZuzaluPretixTicket {
   visitor_date_ranges?: DateRange[] | null;
 }
 
+export interface TelegramReactionCount {
+  reaction: string;
+  count: number;
+}
+
 /**
  * A conversation between the Telegram bot and a user, and associated params.
  */
@@ -315,10 +320,12 @@ export interface AnonMessage {
   content: string;
   proof: string;
   message_timestamp: string;
+  sent_message_id: string;
 }
 
 export interface AnonMessageWithDetails extends AnonMessage {
   telegram_chat_id: number;
   chat_name: string;
   topic_name: string;
+  reactions: string[];
 }
