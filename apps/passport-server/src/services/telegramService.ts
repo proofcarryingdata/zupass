@@ -9,7 +9,8 @@ import {
 } from "@pcd/passport-interface";
 import {
   ONE_HOUR_MS,
-  bigintToPseudonym,
+  bigIntToPseudonymEmoji,
+  bigIntToPseudonymName,
   encodeAnonMessageIdAndReaction,
   getAnonTopicNullifier,
   getMessageWatermark,
@@ -1371,13 +1372,14 @@ export class TelegramService {
         "utf-8"
       ).toString("base64");
 
-      const formattedMessage = `
-      <b>
-      <a href="${
+      const formattedMessage = `<b><a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
-      }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
+      }?startApp=${encodedPayload}&startapp=${encodedPayload}">
+      ${bigIntToPseudonymEmoji(
         BigInt(nullifierHash)
-      )}</a></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
+      )} <u>${bigIntToPseudonymName(
+        BigInt(nullifierHash)
+      )}</u></a></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
         "en-GB"
       )}</i>\n----------------------------------------------------------`;
 
