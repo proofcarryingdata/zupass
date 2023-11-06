@@ -46,15 +46,15 @@ import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAEventTicketCardBody } from "./CardBody";
 
+/**
+ * The globally unique type name of the {@link ZKEdDSAEventTicketPCD}.
+ */
+export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
+
+// A static external identifier used as a default value when none is specified.
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
   "dummy-nullifier-for-eddsa-event-ticket-pcds"
 );
-
-export const ZKEdDSAEventTicketPCDTypeName = "zk-eddsa-event-ticket-pcd";
-
-let depsInitializedPromise: Promise<void> | undefined;
-let eddsa: Eddsa;
-let savedInitArgs: ZKEdDSAEventTicketPCDInitArgs | undefined = undefined;
 
 /**
  * Specifies which fields of an EdDSATicket should be revealed in a proof.
@@ -74,7 +74,7 @@ export type EdDSATicketFieldsToReveal = {
 };
 
 /**
- * Info required to initialize this PCD package.  These are the artifacts
+ * Info required to initialize this PCD package. These are the artifacts
  * associated with the circom circuit.
  */
 export interface ZKEdDSAEventTicketPCDInitArgs {
@@ -88,25 +88,23 @@ export interface ZKEdDSAEventTicketPCDInitArgs {
 export const VALID_EVENT_IDS_MAX_LEN = 20;
 
 /**
- * Arguments to request a new proof.
+ * Defines the essential parameters required for creating an {@link ZKEdDSAEventTicketPCD}.
  */
 export type ZKEdDSAEventTicketPCDArgs = {
-  // generally, `ticket` and `identity` are user-provided
+  // Generally, `ticket` and `identity` are user-provided.
   ticket: PCDArgument<
     EdDSATicketPCD,
     {
       /**
-       * used only in proof screen validation
-       *
-       * dev should implement additional constraints either in the proof level (e.g. validEventIds)
-       * or in the app level (e.g. check revealed eventId or productId)
-       *
+       * Used only in proof screen validation.
+       * Developers should implement additional constraints either in the proof level (e.g. validEventIds)
+       * or in the app level (e.g. check revealed eventId or productId).
        * If both `eventIds` and `productIds` are provided, they must be of the same length and
        * they will be checked as pairs. Pass empty array to skip the check.
        */
       eventIds: string[];
       productIds: string[];
-      // user friendly message when no valid ticket is found
+      // User friendly message when no valid ticket is found.
       notFoundMessage: string;
     }
   >;
@@ -117,31 +115,34 @@ export type ZKEdDSAEventTicketPCDArgs = {
   // UUIDs with max length VALID_EVENT_IDS_MAX_LEN (20).
   validEventIds: StringArrayArgument;
 
-  // `fieldsToReveal`, `externalNullifier`, `watermark` are usually app-specified
+  // `fieldsToReveal`, `externalNullifier`, `watermark` are usually app-specified.
   fieldsToReveal: RevealListArgument<EdDSATicketFieldsToReveal>;
   watermark: BigIntArgument;
 
-  // provide externalNullifier field to request a nullifierHash
-  // if you don't provide this field, no nullifierHash will be outputted
+  // Provide externalNullifier field to request a nullifierHash.
+  // If you don't provide this field, no nullifierHash will be outputted.
   externalNullifier: BigIntArgument;
 };
 
 /**
- * Claim part of a ZKEdDSAEventTicketPCD contains all public/revealed fields.
+ * Defines the ZK EdDSA Ticket PCD claim. The claim contains all
+ * public/revealed fields.
  */
 export interface ZKEdDSAEventTicketPCDClaim {
   partialTicket: Partial<ITicketData>;
   watermark: string;
   signer: EdDSAPublicKey;
 
-  // only if requested in PCDArgs
+  // Only if requested in PCDArgs.
   validEventIds?: string[];
   externalNullifier?: string;
   nullifierHash?: string;
 }
 
 /**
- * ZKEdDSAEventTicketPCD PCD type representation.
+ * The ZK EdDSA Ticket PCD represents a proof of ownership of an EdDSA-signed ticket.
+ * The prover can prove ownership of a ticket corresponding to their semaphore identity,
+ * and optionally prove the ticket corresponds to one of a list of valid events.
  */
 export class ZKEdDSAEventTicketPCD
   implements PCD<ZKEdDSAEventTicketPCDClaim, Groth16Proof>
@@ -159,13 +160,25 @@ export class ZKEdDSAEventTicketPCD
   }
 }
 
+// Stores the initialization arguments for this PCD Package, which are used by
+// `prove` to get the zero-knowledge artifact paths.
+export let initArgs: ZKEdDSAEventTicketPCDInitArgs;
+
 /**
  * Initialize ZKEdDSAEventTicketPCDPackage.
  */
 export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
-  savedInitArgs = args;
+  initArgs = args;
 }
 
+let depsInitializedPromise: Promise<void> | undefined;
+let eddsa: Eddsa;
+
+/**
+ * A promise designed to make sure that the EdDSA algorithm
+ * of the `circomlibjs` package has been properly initialized.
+ * It only initializes it once.
+ */
 async function ensureDepsInitialized(): Promise<void> {
   if (!depsInitializedPromise) {
     depsInitializedPromise = (async () => {
@@ -183,17 +196,24 @@ async function ensureDepsInitialized(): Promise<void> {
   await depsInitializedPromise;
 }
 
-async function ensureInitialized(): Promise<ZKEdDSAEventTicketPCDInitArgs> {
-  if (!savedInitArgs) {
+/**
+ * Ensure that the initialization arguments and dependencies (EdDSA) have
+ * been correctly initialized.
+ */
+async function ensureInitialized(): Promise<void> {
+  if (!initArgs) {
     throw new Error(
       "Cannot initialize ZKEdDSAEventTicketPCDPackage: init has not been called yet"
     );
   }
 
   await ensureDepsInitialized();
-  return savedInitArgs;
 }
 
+/**
+ * Checks that the PCD arguments are well defined and return the PCDs on which
+ * ZK EdDSA Ticket PCD depends.
+ */
 async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
   ticketPCD: EdDSATicketPCD;
   identityPCD: SemaphoreIdentityPCD;
@@ -201,16 +221,19 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
   watermark: bigint;
 }> {
   const serializedTicketPCD = args.ticket.value?.pcd;
+
   if (!serializedTicketPCD) {
     throw new Error("Cannot make proof: missing ticket PCD");
   }
 
   const serializedIdentityPCD = args.identity.value?.pcd;
+
   if (!serializedIdentityPCD) {
     throw new Error("Cannot make proof: missing identity PCD");
   }
 
   const fieldsToReveal = args.fieldsToReveal.value;
+
   if (!fieldsToReveal) {
     throw new Error("Cannot make proof: missing fields request object");
   }
@@ -237,15 +260,15 @@ async function checkProveInputs(args: ZKEdDSAEventTicketPCDArgs): Promise<{
 
   return {
     ticketPCD: deserializedTicket,
-    identityPCD: identityPCD,
-    fieldsToReveal: fieldsToReveal,
+    identityPCD,
+    fieldsToReveal,
     watermark: BigInt(args.watermark.value)
   };
 }
 
 /**
- * Convert a list of valid event IDs from input format (variable-length list
- * of UUID strings) to snark signal format (fixed-length list of bigint
+ * Converts a list of valid event IDs from input format (variable-length list
+ * of UUID strings) to Snark signal format (fixed-length list of bigint
  * strings).  The result always has length VALID_EVENT_IDS_MAX_LEN with
  * unused fields are filled in with a value of BABY_JUB_NEGATIVE_ONE.
  */
@@ -253,6 +276,7 @@ export function snarkInputForValidEventIds(validEventIds?: string[]): string[] {
   if (validEventIds === undefined) {
     validEventIds = [];
   }
+
   if (validEventIds.length > VALID_EVENT_IDS_MAX_LEN) {
     throw new Error(
       "validEventIds for a ZKEdDSAEventTicketPCD can have up to 100 entries.  " +
@@ -260,18 +284,26 @@ export function snarkInputForValidEventIds(validEventIds?: string[]): string[] {
         " given."
     );
   }
+
   const snarkIds = new Array<string>(VALID_EVENT_IDS_MAX_LEN);
   let i = 0;
+
   for (const validId of validEventIds) {
     snarkIds[i] = uuidToBigInt(validId).toString();
     ++i;
   }
+
   for (; i < VALID_EVENT_IDS_MAX_LEN; ++i) {
     snarkIds[i] = BABY_JUB_NEGATIVE_ONE.toString();
   }
+
   return snarkIds;
 }
 
+/**
+ * Takes the PCD arguments and constructs an object ready to
+ * be used as a input for the zero-knowledge proof.
+ */
 function snarkInputForProof(
   ticketPCD: EdDSATicketPCD,
   identityPCD: SemaphoreIdentityPCD,
@@ -289,7 +321,7 @@ function snarkInputForProof(
   const checkValidEventIds = validEventIdsInput !== undefined;
 
   return {
-    // Ticket data fields
+    // Ticket data fields.
     ticketId: ticketAsBigIntArray[0].toString(),
     revealTicketId: fieldsToReveal.revealTicketId ? "1" : "0",
     ticketEventId: ticketAsBigIntArray[1].toString(),
@@ -318,7 +350,7 @@ function snarkInputForProof(
     // See later comment to explain the concept of reserved fields.
     reservedSignedField1: ticketAsBigIntArray[9].toString(),
     revealReservedSignedField1: fieldsToReveal.revealAttendeeEmail ? "1" : "0",
-    // This field was previously reserved, but is now used for attendee name:
+    // This field was previously reserved, but is now used for attendee name.
     reservedSignedField2: ticketAsBigIntArray[10].toString(),
     revealReservedSignedField2: fieldsToReveal.revealAttendeeName ? "1" : "0",
 
@@ -330,14 +362,14 @@ function snarkInputForProof(
     reservedSignedField3: "0",
     revealReservedSignedField3: "0",
 
-    // Ticket signature fields
+    // Ticket signature fields.
     ticketSignerPubkeyAx: hexToBigInt(pubKey[0]).toString(),
     ticketSignerPubkeyAy: hexToBigInt(pubKey[1]).toString(),
     ticketSignatureR8x: eddsa.F.toObject(rawSig.R8[0]).toString(),
     ticketSignatureR8y: eddsa.F.toObject(rawSig.R8[1]).toString(),
     ticketSignatureS: rawSig.S.toString(),
 
-    // Attendee identity secret
+    // Attendee identity secret.
     semaphoreIdentityNullifier: identityPCD.claim.identity
       .getNullifier()
       .toString(),
@@ -345,11 +377,11 @@ function snarkInputForProof(
       .getTrapdoor()
       .toString(),
 
-    // Valid event ID list
+    // Valid event ID list.
     validEventIds: snarkInputForValidEventIds(validEventIdsInput),
     checkValidEventIds: checkValidEventIds ? "1" : "0",
 
-    // Security features
+    // Security features.
     externalNullifier:
       externalNullifer || STATIC_TICKET_PCD_NULLIFIER.toString(),
     revealNullifierHash: externalNullifer ? "1" : "0",
@@ -357,6 +389,9 @@ function snarkInputForProof(
   } as Record<string, `${number}` | `${number}`[]>;
 }
 
+/**
+ * Takes the PCD arguments and constructs the PCD claim.
+ */
 function claimFromProofResult(
   ticketPCD: EdDSATicketPCD,
   publicSignals: string[],
@@ -368,33 +403,43 @@ function claimFromProofResult(
   if (!babyJubIsNegativeOne(publicSignals[0])) {
     partialTicket.ticketId = decStringToBigIntToUuid(publicSignals[0]);
   }
+
   if (!babyJubIsNegativeOne(publicSignals[1])) {
     partialTicket.eventId = decStringToBigIntToUuid(publicSignals[1]);
   }
+
   if (!babyJubIsNegativeOne(publicSignals[2])) {
     partialTicket.productId = decStringToBigIntToUuid(publicSignals[2]);
   }
+
   if (!babyJubIsNegativeOne(publicSignals[3])) {
     partialTicket.timestampConsumed = parseInt(publicSignals[3]);
   }
+
   if (!babyJubIsNegativeOne(publicSignals[4])) {
     partialTicket.timestampSigned = parseInt(publicSignals[4]);
   }
+
   if (!babyJubIsNegativeOne(publicSignals[5])) {
     partialTicket.attendeeSemaphoreId = publicSignals[5];
   }
+
   if (!babyJubIsNegativeOne(publicSignals[6])) {
     partialTicket.isConsumed = publicSignals[6] !== "0";
   }
+
   if (!babyJubIsNegativeOne(publicSignals[7])) {
     partialTicket.isRevoked = publicSignals[7] !== "0";
   }
+
   if (!babyJubIsNegativeOne(publicSignals[8])) {
     partialTicket.ticketCategory = parseInt(publicSignals[8]);
   }
+
   if (!babyJubIsNegativeOne(publicSignals[9])) {
     partialTicket.attendeeEmail = ticketPCD.claim.ticket.attendeeEmail;
   }
+
   if (!babyJubIsNegativeOne(publicSignals[10])) {
     partialTicket.attendeeName = ticketPCD.claim.ticket.attendeeName;
   }
@@ -427,6 +472,10 @@ function claimFromProofResult(
   return claim;
 }
 
+/**
+ * Provides the information about the ZK EdDSA Ticket PCD proof that will be displayed
+ * to users on Zupass.
+ */
 export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicketPCDArgs> {
   return {
     defaultArgs: {
@@ -502,10 +551,15 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
 /**
  * Creates a new ZKEdDSAEventTicketPCD.
  */
+
+/**
+ * Creates a new {@link ZKEdDSAEventTicketPCD} by generating an Groth16 proof
+ * and deriving an {@link ZKEdDSAEventTicketPCDClaim} from the given {@link ZKEdDSAEventTicketPCDArgs}.
+ */
 export async function prove(
   args: ZKEdDSAEventTicketPCDArgs
 ): Promise<ZKEdDSAEventTicketPCD> {
-  const initArgs = await ensureInitialized();
+  await ensureInitialized();
 
   const { ticketPCD, identityPCD, fieldsToReveal, watermark } =
     await checkProveInputs(args);
@@ -536,13 +590,17 @@ export async function prove(
   return new ZKEdDSAEventTicketPCD(uuid(), claim, proof);
 }
 
+/**
+ * Extracts the public signals to be used in the verification
+ * of the Groth16 proof from the PCD claim.
+ */
 function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
   const t = claim.partialTicket;
   const ret: string[] = [];
 
   const negOne = BABY_JUB_NEGATIVE_ONE.toString();
 
-  // Outputs appear in public signals first
+  // Outputs appear in public signals first.
   ret.push(
     t.ticketId === undefined ? negOne : uuidToBigInt(t.ticketId).toString()
   );
@@ -583,19 +641,19 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
       : generateSnarkMessageHash(t.attendeeName).toString()
   );
 
-  // Placeholder for reserved field
+  // Placeholder for reserved field.
   ret.push(negOne);
 
   ret.push(claim.nullifierHash || negOne);
 
-  // Public inputs appear in public signals in declaration order
+  // Public inputs appear in public signals in declaration order.
   ret.push(hexToBigInt(claim.signer[0]).toString());
   ret.push(hexToBigInt(claim.signer[1]).toString());
 
   for (const eventId of snarkInputForValidEventIds(claim.validEventIds)) {
     ret.push(eventId);
   }
-  ret.push(claim.validEventIds !== undefined ? "1" : "0"); // checkValidEventIds
+  ret.push(claim.validEventIds !== undefined ? "1" : "0");
 
   ret.push(
     claim.externalNullifier?.toString() ||
@@ -608,19 +666,20 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
 }
 
 /**
- * Verify the claims and proof of a ZKEdDSAEventTicketPCD.
+ * Checks if a ZK EdDSA Ticket PCD is valid by verifying the Groth16 proof.
+ * It requires dependencies but not artifacts as the verification key is available in
+ * code as vkey imported above, so doesn't require full package initialization.
  */
 export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
-  // verify() requires dependencies but not artifacts (verification key
-  // is available in code as vkey imported above), so doesn't require
-  // full package initialization.
-
   const publicSignals = publicSignalsFromClaim(pcd.claim);
+
   return groth16Verify(vkey, { publicSignals, proof: pcd.proof });
 }
 
 /**
- * Serialize a ZKEdDSAEventTicketPCD.
+ * Serializes an {@link ZKEdDSAEventTicketPCD}.
+ * @param pcd The ZK EdDSA PCD Ticket to be serialized.
+ * @returns The serialized version of the ZK EdDSA Ticket PCD.
  */
 export async function serialize(
   pcd: ZKEdDSAEventTicketPCD
@@ -632,7 +691,9 @@ export async function serialize(
 }
 
 /**
- * Deserialize a ZKEdDSAEventTicketPCD.
+ * Deserializes a serialized {@link ZKEdDSAEventTicketPCD}.
+ * @param serialized The serialized PCD to deserialize.
+ * @returns The deserialized version of the ZK EdDSA Ticket PCD.
  */
 export async function deserialize(
   serialized: string
@@ -649,7 +710,10 @@ export async function deserialize(
 }
 
 /**
- * Get display options for a ZKEdDSAEventTicketPCD.
+ * Provides the information about the {@link ZKEdDSAEventTicketPCD} that will be displayed
+ * to users on Zupass.
+ * @param pcd The ZK EdDSA Ticket PCD instance.
+ * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: ZKEdDSAEventTicketPCD): DisplayOptions {
   return {
