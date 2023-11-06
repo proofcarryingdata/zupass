@@ -188,9 +188,13 @@ export async function prove(
 
   // extract inputs for proof from SecretPhrasePCDArgs
   const { username, secret, phraseId } = checkProofInputs(args);
+  console.log("Username: ", username);
+  console.log("Secret: ", secret);
+  console.log("PhraseID: ", phraseId);
 
   // marshall inputs into bn254 field elements
   const snarkInput = snarkInputForProof(username, secret);
+  console.log("Snark Input: ", snarkInput);
 
   // prove knowledge of the secret phrase
   const { proof, publicSignals } = await groth16Prove(
