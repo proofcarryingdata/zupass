@@ -5,12 +5,12 @@ import {
   CredentialManager,
   deserializeStorage,
   Feed,
-  FeedSubscriptionManager,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
+  serializeStorage,
   StorageWithRevision,
   User
 } from "@pcd/passport-interface";
@@ -46,7 +46,11 @@ import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { hasSetupPassword } from "./user";
-import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import {
+  downloadStorage,
+  uploadSerializedStorage,
+  uploadStorage
+} from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -358,11 +362,10 @@ async function finishAccountCreation(
     state.subscriptions
   );
   if (uploadResult.success) {
-    const uploadId = await makeUploadId(state.pcds, state.subscriptions);
     update({
       modal: { modalType: "none" },
-      uploadedUploadId: uploadId,
-      serverStorageRevision: uploadResult.value.revision
+      serverStorageRevision: uploadResult.value.revision,
+      serverStorageHash: uploadResult.value.storageHash
     });
   }
 
@@ -490,7 +493,7 @@ async function loadAfterLogin(
   storage: StorageWithRevision,
   update: ZuUpdate
 ) {
-  const { pcds, subscriptions } = await deserializeStorage(
+  const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
     await getPackages()
   );
@@ -530,7 +533,10 @@ async function loadAfterLogin(
 
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);
-  savePersistentSyncStatus({ serverStorageRevision: storage.revision });
+  savePersistentSyncStatus({
+    serverStorageRevision: storage.revision,
+    serverStorageHash: storageHash
+  });
   saveEncryptionKey(encryptionKey);
   saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
@@ -538,7 +544,9 @@ async function loadAfterLogin(
   update({
     encryptionKey,
     pcds,
+    subscriptions,
     serverStorageRevision: storage.revision,
+    serverStorageHash: storageHash,
     identity: identityPCD.claim.identity,
     self: userResponse.value,
     modal
@@ -575,7 +583,7 @@ async function saveNewPasswordAndBroadcast(
   saveSelf(newSelf);
   saveEncryptionKey(newEncryptionKey);
   notifyPasswordChangeToOtherTabs();
-  return update({
+  update({
     encryptionKey: newEncryptionKey,
     self: newSelf
   });
@@ -593,13 +601,6 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
     anotherDeviceChangedPassword: true,
     modal: { modalType: "another-device-changed-password" }
   });
-}
-
-async function makeUploadId(
-  pcds: PCDCollection,
-  subscriptions: FeedSubscriptionManager
-): Promise<string> {
-  return `${await pcds.getHash()}-${await subscriptions.getHash()}`;
 }
 
 /**
@@ -687,21 +688,13 @@ async function doSync(
     // on the last revision we downloaded.
     const dlRes = await downloadStorage(state.serverStorageRevision);
     if (dlRes.success && dlRes.value != null) {
-      const { pcds, subscriptions, revision } = dlRes.value;
-
-      // Calculating this ID tracks that there's no need to upload what we
-      // just downloaded, which reduces unnecessary revision conflicts.
-      // TODO(artwyman): Tracking the "dirty" state corresponding to this
-      // variable in local storage would allow us to avoid unnecessary
-      // uploads even when download is skipped.
-      const uploadedUploadId = await makeUploadId(pcds, subscriptions);
-
+      const { pcds, subscriptions, revision, storageHash } = dlRes.value;
       return {
         downloadedPCDs: true,
-        uploadedUploadId,
         pcds,
         subscriptions,
         serverStorageRevision: revision,
+        serverStorageHash: storageHash,
         extraDownloadRequested: false
       };
     } else {
@@ -752,22 +745,25 @@ async function doSync(
     };
   }
 
-  // Generate an upload ID from the state of PCDs and subscriptions.
-  // Upload only if the ID is different, meaning changes to upload.
-  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
-  if (state.uploadedUploadId !== uploadId) {
+  // Generate a hash from our in-memory state.  Upload only if the hash is
+  // different, meaning there are some changes to upload.
+  const appStorage = await serializeStorage(
+    state.self,
+    state.pcds,
+    state.subscriptions
+  );
+  if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
-    // TODO(artwyman): Add serverStorageRevision input here, but only after
-    // we're able to respond to a conflict by downloading.
-    const upRes = await uploadStorage(
-      state.self,
-      state.pcds,
-      state.subscriptions
+    // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
+    // but only after we're able to respond to a conflict by downloading.
+    const upRes = await uploadSerializedStorage(
+      appStorage.serializedStorage,
+      appStorage.storageHash
     );
     if (upRes.success) {
       return {
-        uploadedUploadId: uploadId,
-        serverStorageRevision: upRes.value.revision
+        serverStorageRevision: upRes.value.revision,
+        serverStorageHash: upRes.value.storageHash
       };
     } else {
       return {

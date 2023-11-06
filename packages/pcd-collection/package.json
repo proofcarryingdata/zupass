@@ -24,6 +24,7 @@
     "@pcd/pcd-types": "0.8.0",
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "chai": "^4.3.7",
+    "fast-json-stable-stringify": "^2.1.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },

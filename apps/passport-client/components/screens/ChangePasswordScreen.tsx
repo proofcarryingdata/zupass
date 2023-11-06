@@ -3,7 +3,12 @@ import { requestPasswordSalt } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
-import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
+import {
+  useDispatch,
+  useHasSetupPassword,
+  useSelf,
+  useUpdate
+} from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
@@ -22,6 +27,7 @@ export function ChangePasswordScreen() {
   // after a password is set for the first time.
   const [isChangePassword] = useState(hasSetupPassword);
   const dispatch = useDispatch();
+  const update = useUpdate();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
   const [currentPassword, setCurrentPassword] = useState("");
@@ -60,7 +66,7 @@ export function ChangePasswordScreen() {
           saltResult.value
         );
       }
-      await setPassword(newPassword, currentEncryptionKey, dispatch);
+      await setPassword(newPassword, currentEncryptionKey, dispatch, update);
 
       setFinished(true);
 
