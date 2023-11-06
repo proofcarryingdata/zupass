@@ -838,10 +838,13 @@ export class IssuanceService {
 
   private async issueFrogPCDs(): Promise<SerializedPCD[]> {
     const FROG_INTERVAL_MS = 1000 * 60 * 10; // one new frog every ten minutes
-    const serverUrl = process.env.PASSPORT_CLIENT_URL;
+    // Images are served from passport-client's web host
+    const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
 
-    if (!serverUrl) {
-      logger("[ISSUE] can't issue frogs - unaware of the client location");
+    if (!imageServerUrl) {
+      logger(
+        "[ISSUE] can't issue frogs - unaware of the image server location"
+      );
       return [];
     }
 
@@ -864,7 +867,7 @@ export class IssuanceService {
         },
         url: {
           argumentType: ArgumentTypeName.String,
-          value: serverUrl + "/" + randomFrogPath
+          value: imageServerUrl + "/" + randomFrogPath
         },
         title: {
           argumentType: ArgumentTypeName.String,
@@ -964,11 +967,14 @@ export class IssuanceService {
     credential: SemaphoreSignaturePCD
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
-      const serverUrl = process.env.PASSPORT_CLIENT_URL;
+      // The image we use for Zuzalu tickets is served from the same place
+      // as passport-client.
+      // This is the same mechanism as used in frog image PCDs.
+      const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
 
-      if (!serverUrl) {
+      if (!imageServerUrl) {
         logger(
-          "[ISSUE] can't issue Zuzalu tickets - unaware of the client location"
+          "[ISSUE] can't issue Zuzalu tickets - unaware of the image server location"
         );
         return [];
       }
@@ -1012,7 +1018,7 @@ export class IssuanceService {
             isConsumed: false,
             isRevoked: false,
             ticketCategory: TicketCategory.Zuzalu,
-            imageUrl: urljoin(serverUrl, "images/zuzalu", "zuzalu.png"),
+            imageUrl: urljoin(imageServerUrl, "images/zuzalu", "zuzalu.png"),
             imageAltText: "Zuzalu logo"
           })
         );
