@@ -20,15 +20,20 @@ interface AnonMessageWithDetails {
   reactions: string[];
 }
 
+interface AnonymousProfileResponse {
+  messages: AnonMessageWithDetails[];
+  totalKarma: number;
+}
+
 export default function Page() {
-  const [messages, setMessages] = useState<
-    AnonMessageWithDetails[] | undefined
+  const [response, setResponse] = useState<
+    AnonymousProfileResponse | undefined
   >(undefined);
   const searchParams = useSearchParams();
   const nullifierHash = searchParams.get("nullifierHash");
 
   useEffect(() => {
-    const getData = async (): Promise<AnonMessageWithDetails[] | undefined> => {
+    const getData = async (): Promise<AnonymousProfileResponse | undefined> => {
       if (!nullifierHash) return Promise.resolve(undefined);
       const data = await fetch(
         `${process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL}/telegram/anonget/${nullifierHash}`,
@@ -38,12 +43,12 @@ export default function Page() {
       return dataJson;
     };
 
-    getData().then((m) => setMessages(m));
+    getData().then((r) => setResponse(r));
   }, [nullifierHash]);
 
-  if (!nullifierHash || !messages) return <Loading />;
+  if (!nullifierHash || !response) return <Loading />;
 
-  const totalKarma = messages.filter((m) => !!m.reactions.length).length;
+  const { totalKarma, messages } = response;
 
   return (
     <Suspense fallback={<Loading />}>

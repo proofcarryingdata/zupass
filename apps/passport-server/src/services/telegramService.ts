@@ -28,10 +28,7 @@ import {
   Message
 } from "grammy/types";
 import { v1 as uuidV1 } from "uuid";
-import {
-  AnonMessageWithDetails,
-  TelegramReactionCount
-} from "../database/models";
+import { AnonMessageWithDetails } from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -51,7 +48,7 @@ import {
 } from "../database/queries/telegram/fetchTelegramEvent";
 import {
   fetchTelegramReactionsForMessage,
-  fetchTelegramReactionsForNullifier
+  fetchTelegramTotalKarmaForNullifier
 } from "../database/queries/telegram/fetchTelegramReactions";
 import {
   insertOrUpdateTelegramNullifier,
@@ -1471,16 +1468,13 @@ export class TelegramService {
     );
   }
 
-  // TODO: maybe remove and associated query
-  public async handleGetAnonReactions(
-    nulliferHash: string
-  ): Promise<TelegramReactionCount[]> {
-    return traced("telegram", "handleGetAnonReactions", async () => {
-      const reactions = await fetchTelegramReactionsForNullifier(
+  public async handleGetAnonTotalKarma(nulliferHash: string): Promise<number> {
+    return traced("telegram", "ahdnelGetAnonTotalKarma", async () => {
+      const totalKarma = await fetchTelegramTotalKarmaForNullifier(
         this.context.dbPool,
         nulliferHash
       );
-      return reactions;
+      return totalKarma;
     });
   }
 
