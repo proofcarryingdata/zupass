@@ -1051,18 +1051,14 @@ function snarkInputForProof(username, secret) {
   const secretBigints = phraseToBigints(secret);
   return {
     username: usernameBigint.toString(),
-    secret: secretBigints.map((num) => num.toString())
+    phrase: secretBigints.map((num) => num.toString())
   };
 }
 function prove(args) {
   return __async(this, null, function* () {
     const initArgs = yield ensureInitialized();
     const { username, secret, phraseId } = checkProofInputs(args);
-    console.log("Username: ", username);
-    console.log("Secret: ", secret);
-    console.log("PhraseID: ", phraseId);
     const snarkInput = snarkInputForProof(username, secret);
-    console.log("Snark Input: ", snarkInput);
     const { proof, publicSignals } = yield (0, import_groth16.prove)(
       snarkInput,
       initArgs.wasmFilePath,

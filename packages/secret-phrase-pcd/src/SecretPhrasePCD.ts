@@ -173,7 +173,7 @@ export function snarkInputForProof(username: string, secret: string):
   // return as an object usable by the ZK circuit as inputs
   return {
     username: usernameBigint.toString(),
-    secret: secretBigints.map((num) => num.toString())
+    phrase: secretBigints.map((num) => num.toString())
   } as Record<string, `${number}` | `${number}`[]>;
 }
 
@@ -188,13 +188,9 @@ export async function prove(
 
   // extract inputs for proof from SecretPhrasePCDArgs
   const { username, secret, phraseId } = checkProofInputs(args);
-  console.log("Username: ", username);
-  console.log("Secret: ", secret);
-  console.log("PhraseID: ", phraseId);
 
   // marshall inputs into bn254 field elements
   const snarkInput = snarkInputForProof(username, secret);
-  console.log("Snark Input: ", snarkInput);
 
   // prove knowledge of the secret phrase
   const { proof, publicSignals } = await groth16Prove(
