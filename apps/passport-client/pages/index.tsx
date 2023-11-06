@@ -339,7 +339,7 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
-          <Route path="frog-admin" element={<FrogManagerScreen />} />
+          <Route path="pond-control" element={<FrogManagerScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

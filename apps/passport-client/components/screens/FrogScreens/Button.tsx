@@ -23,7 +23,7 @@ export function ActionButton({
    * The action to perform when the button is clicked. This should return a
    * promise that resolves when the action is complete.
    */
-  onClick: () => Promise<void>;
+  onClick: () => Promise<unknown>;
   disabled?: boolean;
   /**
    * The component to use for the button. Defaults to Button.

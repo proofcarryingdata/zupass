@@ -4,10 +4,8 @@ import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
-import {
-  DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
-  useUserFeedState
-} from "./FrogHomeSection";
+import { useUserFeedState } from "./FrogHomeSection";
+import { DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL } from "./useFrogFeed";
 
 /**
  * Render the FrogCrypto folder in the home screen.
