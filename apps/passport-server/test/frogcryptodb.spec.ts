@@ -1,5 +1,6 @@
 import { FrogCryptoDbFeedData } from "@pcd/passport-interface";
 import { expect } from "chai";
+import _ from "lodash";
 import "mocha";
 import { step } from "mocha-steps";
 import { Client } from "pg";
@@ -88,14 +89,20 @@ describe("database reads and writes for frogcrypto features", function () {
   });
 
   step("sample a frog from weighted biomes", async function () {
-    const frog = await sampleFrogData(db, {
-      TheCapital: { dropWeightScaler: 1000 },
-      Desert: { dropWeightScaler: 0.001 },
-      Jungle: { dropWeightScaler: 0 } // 0 weight should be ignored
-    });
+    const frogs = await Promise.all(
+      _.range(0, 100).map(() =>
+        sampleFrogData(db, {
+          TheCapital: { dropWeightScaler: 100 },
+          Desert: { dropWeightScaler: 0.01 },
+          Jungle: { dropWeightScaler: 0 } // 0 weight should be ignored
+        })
+      )
+    );
 
-    // statistically guranteed to be TheCapital
-    expect(frog?.biome).to.eq("The Capital");
+    // sample 100 frogs with Capital frog expect to show up 99.98% chance each time. there is < 1e-14 chance for non capital frog to show up more than seven times
+    expect(
+      frogs.filter((frog) => frog?.biome === "The Capital").length
+    ).to.be.greaterThanOrEqual(93);
   });
 
   step("return undefined if there is no frog to sample", async function () {

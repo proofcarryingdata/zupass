@@ -1,8 +1,10 @@
 import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   FROG_FREEROLLS,
+  FeedSubscriptionManager,
   FrogCryptoUserStateResponseValue,
-  Subscription
+  Subscription,
+  SubscriptionErrorType
 } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
 import _ from "lodash";
@@ -10,7 +12,7 @@ import prettyMilliseconds from "pretty-ms";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { toast } from "react-hot-toast";
 import styled from "styled-components";
-import { useDispatch } from "../../../src/appHooks";
+import { useDispatch, useSubscriptions } from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { ActionButton } from "./Button";
 
@@ -28,12 +30,27 @@ export function GetFrogTab({
   subscriptions: Subscription[];
   refreshUserState: () => Promise<void>;
 }) {
-  // TODO: filter seach button to show only active subscriptions
-  // TODO: surface a maintenance message if all subscriptions are inactive
+  const { value: subManager } = useSubscriptions();
+  const userStateByFeedId = useMemo(
+    () => _.keyBy(userState.feeds, (feed) => feed.feedId),
+    [userState]
+  );
+  const activeSubs = useMemo(
+    () => subscriptions.filter((sub) => userStateByFeedId[sub.feed.id]?.active),
+    [subscriptions, userStateByFeedId]
+  );
+
   return (
     <>
       <SearchGroup>
-        {subscriptions.map((sub) => {
+        {activeSubs.length === 0 && (
+          <ErrorBox>
+            Oopsie-toad! We're sprucing up the lily pads. Return soon for leaps
+            and bounds of fun!
+          </ErrorBox>
+        )}
+
+        {activeSubs.map((sub) => {
           const userFeedState = userState?.feeds?.find(
             (feed) => feed.feedId === sub.feed.id
           );
@@ -48,6 +65,7 @@ export function GetFrogTab({
               sub={sub}
               refreshUserState={refreshUserState}
               nextFetchAt={userFeedState?.nextFetchAt}
+              subManager={subManager}
               score={userState?.myScore?.score}
             />
           );
@@ -79,12 +97,14 @@ const SearchButton = ({
   sub: { id, feed },
   nextFetchAt,
   refreshUserState,
-  score
+  score,
+  subManager
 }: {
   sub: Subscription;
   nextFetchAt?: number;
   refreshUserState: () => Promise<void>;
   score: number | undefined;
+  subManager: FeedSubscriptionManager;
 }) => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
@@ -97,16 +117,33 @@ const SearchButton = ({
           type: "sync-subscription",
           subscriptionId: id,
           onSucess: () => {
-            // FIXME: sync-subscription swallows http errors and always resolve as success
-            toast(`You found a new frog in ${feed.name}!`, {
-              icon: "🐸"
-            });
+            // nb: sync-subscription swallows http errors and always resolve as success
+            const error = subManager.getError(id);
+            if (error?.type === SubscriptionErrorType.FetchError) {
+              const fetchErrorMsg = error?.e?.message?.toLowerCase();
+              if (fetchErrorMsg?.includes("not active")) {
+                toast.error(
+                  `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
+                );
+                subManager.resetError(id);
+              } else if (fetchErrorMsg?.includes("next fetch")) {
+                toast.error(
+                  "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
+                );
+                subManager.resetError(id);
+              }
+            } else {
+              toast.success(`You found a new frog in ${feed.name}!`, {
+                icon: "🐸"
+              });
+            }
+
             refreshUserState().then(resolve).catch(reject);
           },
           onError: (e) => refreshUserState().finally(() => reject(e))
         });
       }),
-    [dispatch, feed.name, id, refreshUserState]
+    [dispatch, feed.name, id, refreshUserState, subManager]
   );
   const name = useMemo(() => _.upperCase(`Search ${feed.name}`), [feed.name]);
   const freerolls = FROG_FREEROLLS + 1 - score;
@@ -158,4 +195,12 @@ const SearchGroup = styled.div`
   display: flex;
   gap: 8px;
   flex-direction: column;
+`;
+
+const ErrorBox = styled.div`
+  user-select: none;
+  padding: 16px;
+  background-color: rgba(var(--white-rgb), 0.05);
+  border-radius: 16px;
+  color: var(--danger-bright);
 `;
