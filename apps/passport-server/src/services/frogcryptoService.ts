@@ -1,5 +1,6 @@
 import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
+  FROG_FREEROLLS,
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
@@ -204,7 +205,16 @@ export class FrogcryptoService {
         if (!frogData) {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
-        await incrementScore(client, semaphoreId);
+        const { score:scoreAfterRoll } = await incrementScore(client, semaphoreId);
+        // rollback last fetched timestamp if user has free rolls left
+        if (scoreAfterRoll <= FROG_FREEROLLS) {
+          await updateUserFeedState(
+            client,
+            semaphoreId,
+            feed.id,
+            lastFetchedAt.toUTCString()
+          );
+        }
 
         return this.generateFrogData(frogData, semaphoreId);
       }

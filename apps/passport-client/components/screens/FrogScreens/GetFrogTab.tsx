@@ -1,5 +1,6 @@
 import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
+  FROG_FREEROLLS,
   FrogCryptoUserStateResponseValue,
   Subscription
 } from "@pcd/passport-interface";
@@ -47,6 +48,7 @@ export function GetFrogTab({
               sub={sub}
               refreshUserState={refreshUserState}
               nextFetchAt={userFeedState?.nextFetchAt}
+              score={userState?.myScore?.score}
             />
           );
         })}
@@ -76,11 +78,13 @@ export function GetFrogTab({
 const SearchButton = ({
   sub: { id, feed },
   nextFetchAt,
-  refreshUserState
+  refreshUserState,
+  score
 }: {
   sub: Subscription;
   nextFetchAt?: number;
   refreshUserState: () => Promise<void>;
+  score: number | undefined;
 }) => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
@@ -105,10 +109,13 @@ const SearchButton = ({
     [dispatch, feed.name, id, refreshUserState]
   );
   const name = useMemo(() => _.upperCase(`Search ${feed.name}`), [feed.name]);
+  const freerolls = FROG_FREEROLLS + 1 - score;
 
   return (
     <ActionButton key={id} onClick={onClick} disabled={!canFetch}>
-      {canFetch ? name : `${name}${countDown}`}
+      {canFetch
+        ? `${name}${freerolls > 0 ? ` (${freerolls})` : ""}`
+        : `${name}${countDown}`}
     </ActionButton>
   );
 };

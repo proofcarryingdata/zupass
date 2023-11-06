@@ -79,6 +79,25 @@ describe("database reads and writes for frogcrypto features", function () {
     expect(frog?.biome).to.eq("Jungle");
   });
 
+  step("sample a frog from complexly named biome", async function () {
+    const frog = await sampleFrogData(db, {
+      TheCapital: { dropWeightScaler: 1 }
+    });
+
+    expect(frog?.biome).to.eq("The Capital");
+  });
+
+  step("sample a frog from weighted biomes", async function () {
+    const frog = await sampleFrogData(db, {
+      TheCapital: { dropWeightScaler: 1000 },
+      Desert: { dropWeightScaler: 0.001 },
+      Jungle: { dropWeightScaler: 0 } // 0 weight should be ignored
+    });
+
+    // statistically guranteed to be TheCapital
+    expect(frog?.biome).to.eq("The Capital");
+  });
+
   step("return undefined if there is no frog to sample", async function () {
     const frog = await sampleFrogData(db, {});
 
