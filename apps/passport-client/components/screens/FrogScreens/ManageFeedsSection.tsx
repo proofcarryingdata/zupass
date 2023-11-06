@@ -229,7 +229,7 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
         name: rawFeed.name,
         description: rawFeed.description,
         private: Boolean(rawFeed.private),
-        activeUntil: new Date(rawFeed.activeUntil).getTime(),
+        activeUntil: Math.round(new Date(rawFeed.activeUntil).getTime() / 1000),
         cooldown: Number.parseInt(rawFeed.cooldown),
         biomes: parseBiomes(rawFeed)
       }
@@ -256,7 +256,7 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
       name: feed.feed.name,
       description: feed.feed.description,
       private: feed.feed.private,
-      activeUntil: feed.feed.activeUntil,
+      activeUntil: new Date(feed.feed.activeUntil * 1000).toISOString(),
       cooldown: feed.feed.cooldown,
       ...Object.keys(Biome).reduce(
         (acc, biome) => {
@@ -321,7 +321,7 @@ export function DataTable({
           if (!activeUntil) {
             return "<undefined>";
           }
-          const duration = activeUntil - Date.now();
+          const duration = activeUntil * 1000 - Date.now();
 
           return (
             <div>
@@ -331,7 +331,7 @@ export function DataTable({
               </p>
               <p>
                 <b>Date: </b>
-                {new Date(activeUntil).toISOString()}
+                {new Date(activeUntil * 1000).toISOString()}
               </p>
               {duration > 0 ? (
                 <p>

@@ -15,7 +15,6 @@ import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScre
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
-import { FrogHomeScreen } from "../components/screens/FrogScreens/FrogHomeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
@@ -60,7 +59,8 @@ import {
   saveCheckedInOfflineTickets,
   saveIdentity,
   saveOfflineTickets,
-  saveSubscriptions
+  saveSubscriptions,
+  saveUsingLaserScanner
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
@@ -83,6 +83,7 @@ class App extends React.Component<object, AppState> {
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
     setupBroadcastChannel(this.dispatch);
+    setupUsingLaserScanning();
   }
   componentWillUnmount(): void {
     closeBroadcastChannel();
@@ -344,13 +345,28 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
-          <Route path="frog" element={<FrogHomeScreen />} />
           <Route path="frog-admin" element={<FrogManagerScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
     </HashRouter>
   );
+}
+
+/**
+ * To set up usingLaserScanning local storage, which turns off the camera
+ * on the scan screen so the laser scanner can be used. This flag will be
+ * exclusively used on the Devconnect laser scanning devices.
+ */
+function setupUsingLaserScanning() {
+  const queryParams = new URLSearchParams(window.location.search.slice(1));
+  const laserQueryParam = queryParams.get("laser");
+  if (laserQueryParam === "true") {
+    saveUsingLaserScanner(true);
+  } else if (laserQueryParam === "false") {
+    // We may want to use this to forcibly make this state false
+    saveUsingLaserScanner(false);
+  }
 }
 
 // TODO: move to a separate file
