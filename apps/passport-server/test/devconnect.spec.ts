@@ -58,7 +58,10 @@ import {
   LoggedInZuzaluUser
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
-import { fetchDevconnectPretixRedactedTicketsByHashedEmail } from "../src/database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
+import {
+  fetchDevconnectPretixRedactedTicketsByHashedEmail,
+  upsertDevconnectPretixRedactedTicket
+} from "../src/database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
 import {
   fetchAllNonDeletedDevconnectPretixTickets,
   fetchDevconnectPretixTicketByTicketId,
@@ -2576,7 +2579,84 @@ describe("devconnect functionality", function () {
     // Redacted tickets should now be unredacted
     expect(unredactedTickets.length).to.eq(redactedTickets.length);
     expect(unredactedTickets.length).to.eq(3);
+
+    const redactedTicketsAfterLogin =
+      await fetchDevconnectPretixRedactedTicketsByHashedEmail(
+        db,
+        await getHash(testEmail)
+      );
+    expect(redactedTicketsAfterLogin.length).to.eq(0);
   });
+
+  /**
+   * It is possible for a user to log in or agree terms during a sync. This can
+   * result in a situation where they have redacted tickets in the DB even
+   * though their tickets have been un-redacted. The redacted tickets are
+   * harmless and don't interfere with the un-redacted tickets, but it is
+   * obviously good if they get cleaned up when they're no longer needed. This
+   * test manufactures a scenario where a logged-in user has redacted tickets,
+   * and checks that they get deleted on the next sync run.
+   */
+  step(
+    "redacted tickets for logged-in and agreed users should be deleted on next sync",
+    async () => {
+      const devconnectPretixAPIConfigFromDB =
+        await getDevconnectPretixConfig(db);
+      const organizer = devconnectPretixAPIConfigFromDB
+        ?.organizers[0] as DevconnectPretixOrganizerConfig;
+      const orgUrl = organizer.orgURL;
+
+      // Pick an event where we will consume all of the tickets
+      const eventID = organizer.events[0].eventID;
+      const org = mocker.get().organizersByOrgUrl.get(orgUrl) as IOrganizer;
+      const ordersForEvent = org.ordersByEventID.get(
+        eventID
+      ) as DevconnectPretixOrder[];
+
+      const testEmail = ordersForEvent[0].email;
+      const unredactedTickets = await fetchDevconnectPretixTicketsByEmail(
+        db,
+        testEmail
+      );
+
+      // Insert a redacted ticket manually, simulating a partial sync
+      const hashedEmail = await getHash(testEmail);
+      await upsertDevconnectPretixRedactedTicket(db, {
+        ...unredactedTickets[0],
+        hashed_email: hashedEmail
+      });
+
+      // Check that the ticket is there
+      expect(
+        (
+          await fetchDevconnectPretixRedactedTicketsByHashedEmail(
+            db,
+            hashedEmail
+          )
+        ).length
+      ).to.eq(1);
+
+      const os = new OrganizerSync(
+        organizer,
+        new DevconnectPretixAPI({ requestsPerInterval: 300 }),
+        application.context.dbPool,
+        // Enable redaction
+        true
+      );
+
+      await os.run();
+
+      // Post-sync, it should be gone.
+      expect(
+        (
+          await fetchDevconnectPretixRedactedTicketsByHashedEmail(
+            db,
+            hashedEmail
+          )
+        ).length
+      ).to.eq(0);
+    }
+  );
 
   step("accepting legal terms should unredact tickets", async () => {
     const devconnectPretixAPIConfigFromDB = await getDevconnectPretixConfig(db);
