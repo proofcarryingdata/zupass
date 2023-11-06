@@ -2,12 +2,19 @@ import { MenuRange } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   AnonTopicDataPayload,
+  AnonWebAppPayload,
   PayloadType,
+  ReactDataPayload,
   constructZupassPcdGetRequestUrl
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import {
+  ZUPASS_SUPPORT_EMAIL,
+  encodeAnonMessageIdAndReaction,
+  getAnonTopicNullifier,
+  getMessageWatermark
+} from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
@@ -425,6 +432,101 @@ const generateTicketProofUrl = async (
       title: "",
       description:
         "ZuKat requests a zero-knowledge proof of your ticket to join a Telegram group."
+    });
+    span?.setAttribute("proofUrl", proofUrl);
+
+    return proofUrl;
+  });
+};
+
+export const generateReactProofUrl = async (
+  validEventIds: string[],
+  telegramChatId: string,
+  anonMessageId: string,
+  reaction: string
+): Promise<string> => {
+  return traced("telegram", "generateReactProofUrl", async (span) => {
+    span?.setAttribute("validEventIds", validEventIds);
+
+    // Construct watermark:
+    const watermark = getMessageWatermark(
+      encodeAnonMessageIdAndReaction(anonMessageId, reaction)
+    ).toString();
+    span?.setAttribute("watermark", watermark);
+    const fieldsToReveal: EdDSATicketFieldsToReveal = {
+      revealTicketId: false,
+      revealEventId: false,
+      revealProductId: false,
+      revealTimestampConsumed: false,
+      revealTimestampSigned: false,
+      revealAttendeeSemaphoreId: true,
+      revealIsConsumed: false,
+      revealIsRevoked: false
+    };
+
+    const args: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EdDSATicketPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+        displayName: "Your Ticket",
+        description: "",
+        validatorParams: {
+          eventIds: validEventIds,
+          productIds: [],
+          // TODO: surface which event ticket we are looking for
+          notFoundMessage: "You don't have a ticket to this event."
+        },
+        hideIcon: true
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        userProvided: false,
+        hideIcon: true
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: getAnonTopicNullifier().toString(),
+        userProvided: false
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: validEventIds,
+        userProvided: false
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: watermark,
+        userProvided: false,
+        description: `The reaction type and post you are reacting to.`
+      }
+    };
+
+    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+    if (passportOrigin === "http://localhost:3000/") {
+      // TG bot doesn't like localhost URLs
+      passportOrigin = "http://127.0.0.1:3000/";
+    }
+
+    // pass telegram username as path param if nonempty
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/anonreact?anonMessageId=${anonMessageId}&reaction=${reaction}&chatId=${telegramChatId}`;
+    span?.setAttribute("returnUrl", returnUrl);
+
+    const proofUrl = constructZupassPcdGetRequestUrl<
+      typeof ZKEdDSAEventTicketPCDPackage
+    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+      genericProveScreen: true,
+      title: `${decodeURIComponent(reaction)} ZK React`,
+      description:
+        "ZuRat requests a zero-knowledge proof of your ticket to react to a message."
     });
     span?.setAttribute("proofUrl", proofUrl);
 
@@ -911,3 +1013,20 @@ const reduceFwdList = (
 
   return reducedList;
 };
+
+export const encodePayload = (data: AnonWebAppPayload): string => {
+  return Buffer.from(JSON.stringify(data), "utf-8").toString("base64");
+};
+
+export const buildReactPayload = (
+  emoji: string,
+  anonMessageId: string
+): ReactDataPayload => {
+  return {
+    type: PayloadType.ReactData,
+    react: encodeURIComponent(emoji),
+    anonMessageId
+  };
+};
+
+export const emojis = ["👍", "❤️", "🦔"];

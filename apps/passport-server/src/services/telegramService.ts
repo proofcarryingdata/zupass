@@ -4,18 +4,34 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   NullifierHashPayload,
   PayloadType,
-  RedirectTopicDataPayload,
-  getAnonTopicNullifier
+  ReactDataPayload,
+  RedirectTopicDataPayload
 } from "@pcd/passport-interface";
-import { ONE_HOUR_MS, bigintToPseudonym, isFulfilled, sleep } from "@pcd/util";
+import {
+  ONE_HOUR_MS,
+  bigintToPseudonym,
+  encodeAnonMessageIdAndReaction,
+  getAnonTopicNullifier,
+  getMessageWatermark,
+  isFulfilled,
+  sleep
+} from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
-import { Chat } from "grammy/types";
-import { sha256 } from "js-sha256";
-import { AnonMessageWithDetails } from "../database/models";
+import {
+  Chat,
+  InlineKeyboardButton,
+  InlineKeyboardMarkup,
+  Message
+} from "grammy/types";
+import { v1 as uuidV1 } from "uuid";
+import {
+  AnonMessageWithDetails,
+  TelegramReactionCount
+} from "../database/models";
 import {
   deleteTelegramChatTopic,
   deleteTelegramForward
@@ -27,11 +43,16 @@ import {
 } from "../database/queries/telegram/fetchTelegramConversation";
 import {
   fetchEventsWithTelegramChats,
+  fetchTelegramAnonMessagesById,
   fetchTelegramAnonMessagesWithTopicByNullifier,
   fetchTelegramEventsByChatId,
   fetchTelegramTopic,
   fetchTelegramTopicForwarding
 } from "../database/queries/telegram/fetchTelegramEvent";
+import {
+  fetchTelegramReactionsForMessage,
+  fetchTelegramReactionsForNullifier
+} from "../database/queries/telegram/fetchTelegramReactions";
 import {
   insertOrUpdateTelegramNullifier,
   insertTelegramAnonMessage,
@@ -40,18 +61,23 @@ import {
   insertTelegramTopic,
   insertTelegramVerification
 } from "../database/queries/telegram/insertTelegramConversation";
+import { insertTelegramReaction } from "../database/queries/telegram/insertTelegramReaction";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import {
   BotContext,
   SessionData,
   TopicChat,
+  buildReactPayload,
   chatIDsToChats,
   chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
+  emojis,
+  encodePayload,
   encodeTopicData,
   eventsToLink,
+  generateReactProofUrl,
   getBotURL,
   getGroupChat,
   getSessionKey,
@@ -566,7 +592,7 @@ export class TelegramService {
         ctx.api.closeForumTopic(ctx.chat.id, messageThreadId);
       } catch (error) {
         logger(`[ERROR] ${error}`);
-        await ctx.reply(`Failed to link anonymous chat. Check server logs`, {
+        await ctx.reply(`Failed to link anonymous chat. ${error} `, {
           message_thread_id: messageThreadId
         });
       }
@@ -883,34 +909,40 @@ export class TelegramService {
   private async sendToAnonymousChannel(
     chatId: number,
     topicId: number,
-    message: string
-  ): Promise<void> {
-    return traced("telegram", "sendToAnonymousChannel", async (span) => {
-      span?.setAttribute("chatId", chatId);
-      span?.setAttribute("topicId", topicId);
-      span?.setAttribute("message", message);
+    message: string,
+    reply_markup?: InlineKeyboardMarkup
+  ): Promise<Message.TextMessage> {
+    return traced(
+      "telegram",
+      "sendToAnonymousChannel",
+      async (span): Promise<Message.TextMessage> => {
+        span?.setAttribute("chatId", chatId);
+        span?.setAttribute("topicId", topicId);
+        span?.setAttribute("message", message);
 
-      try {
-        await this.anonBot.api.sendMessage(chatId, message, {
-          message_thread_id: topicId,
-          parse_mode: "HTML",
-          disable_web_page_preview: true
-        });
-      } catch (error: { error_code: number; description: string } & any) {
-        const isDeletedThread =
-          error.error_code === 400 &&
-          error.description === "Bad Request: message thread not found";
-        if (isDeletedThread) {
-          logger(
-            `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
-          );
-          await deleteTelegramChatTopic(this.context.dbPool, chatId, topicId);
-          throw new Error(`Topic has been deleted. Choose a different one!`);
-        } else {
-          throw new Error(error);
+        try {
+          return await this.anonBot.api.sendMessage(chatId, message, {
+            message_thread_id: topicId,
+            parse_mode: "HTML",
+            disable_web_page_preview: true,
+            reply_markup
+          });
+        } catch (error: { error_code: number; description: string } & any) {
+          const isDeletedThread =
+            error.error_code === 400 &&
+            error.description === "Bad Request: message thread not found";
+          if (isDeletedThread) {
+            logger(
+              `[TELEGRAM] topic has been deleted from Telegram, removing from db...`
+            );
+            await deleteTelegramChatTopic(this.context.dbPool, chatId, topicId);
+            throw new Error(`Topic has been deleted. Choose a different one!`);
+          } else {
+            throw new Error(error);
+          }
         }
       }
-    });
+    );
   }
 
   private async sendInviteLink(
@@ -1036,6 +1068,178 @@ export class TelegramService {
     });
   }
 
+  public async handleRequestReactProofLink(
+    anonPayload: ReactDataPayload
+  ): Promise<string> {
+    const react = decodeURIComponent(anonPayload.react);
+    logger(`[TELEGRAM] got react`, react);
+    logger(`[TELEGRAM] payoad id`, anonPayload.anonMessageId);
+    const message = await fetchTelegramAnonMessagesById(
+      this.context.dbPool,
+      anonPayload.anonMessageId
+    );
+    if (!message) throw new Error(`Message to react to not found`);
+
+    // Get valid event Ids
+    const events = await fetchTelegramEventsByChatId(
+      this.context.dbPool,
+      message.telegram_chat_id
+    );
+    if (events.length === 0)
+      throw new Error(`No valid events found for chat id`);
+    const validEventIds = events.map((e) => e.ticket_event_id);
+
+    // Construct proof url
+    const proofUrl = await generateReactProofUrl(
+      validEventIds,
+      message.telegram_chat_id,
+      message.id.toString(),
+      anonPayload.react
+    );
+    logger(`[TELEGRAM] react proof url`, proofUrl);
+    return proofUrl;
+  }
+
+  public async handleReactAnonymousMessage(
+    serializedZKEdDSATicket: string,
+    telegramChatId: string,
+    anonMessageId: string,
+    reaction: string
+  ): Promise<void> {
+    return traced("telegram", "handleReactAnonymousMessage", async (span) => {
+      logger("[TELEGRAM] Reacting to anonymous message", reaction);
+
+      const pcd = await this.verifyZKEdDSAEventTicketPCD(
+        serializedZKEdDSATicket
+      );
+
+      if (!pcd) {
+        throw new Error("Could not verify PCD for anonymous message");
+      }
+      const { watermark, validEventIds, externalNullifier, nullifierHash } =
+        pcd.claim;
+
+      if (!validEventIds) {
+        throw new Error(`User did not submit any valid event ids`);
+      }
+      span?.setAttribute("validEventIds", validEventIds);
+
+      if (!nullifierHash) throw new Error(`Nullifier hash not found`);
+
+      const expectedExternalNullifier = getAnonTopicNullifier().toString();
+
+      if (externalNullifier !== expectedExternalNullifier)
+        throw new Error("Nullifier mismatch - try proving again.");
+
+      span?.setAttribute("externalNullifier", externalNullifier);
+
+      const eventsByChat = await fetchTelegramEventsByChatId(
+        this.context.dbPool,
+        telegramChatId
+      );
+      if (eventsByChat.length == 0)
+        throw new Error(`No valid events found for given chat`);
+      if (!verifyUserEventIds(eventsByChat, validEventIds)) {
+        throw new Error(`User submitted event Ids are invalid `);
+      }
+
+      span?.setAttribute("chatId", telegramChatId);
+
+      if (!watermark) {
+        throw new Error("Anonymous reaction PCD did not contain watermark");
+      }
+      span?.setAttribute("watermark", watermark);
+
+      const preimage = encodeAnonMessageIdAndReaction(
+        anonMessageId,
+        encodeURIComponent(reaction) // This is because the reaction is hashed as encoded originally
+      );
+      if (getMessageWatermark(preimage).toString() !== watermark.toString()) {
+        throw new Error(
+          `Anonymous reaction string ${preimage} didn't match watermark. got ${watermark} and expected ${getMessageWatermark(
+            preimage
+          ).toString()}`
+        );
+      }
+
+      const anonMessage = await fetchTelegramAnonMessagesById(
+        this.context.dbPool,
+        anonMessageId
+      );
+      if (!anonMessage) {
+        logger(
+          "[TELEGRAM] anonMessage falsy, anonMessageId parameter points to a nonexistent record",
+          { anonMessageId }
+        );
+        throw new Error("This anonymous message does not exist");
+      }
+
+      if (anonMessage.nullifier === nullifierHash) {
+        logger("[TELEGRAM] User tried to react to own message", {
+          nullifierHash
+        });
+        throw new Error("Cannot react to your own message");
+      }
+
+      try {
+        await insertTelegramReaction(
+          this.context.dbPool,
+          serializedZKEdDSATicket,
+          anonMessageId,
+          reaction,
+          nullifierHash
+        );
+      } catch (e: any) {
+        // Receiving this error message means that the user tried to
+        // react with the same reaction twice to a message.
+        if (
+          e.message.includes(
+            "telegram_chat_reactions_sender_nullifier_anon_message_id_re_key"
+          )
+        ) {
+          throw new Error(
+            `Cannot react more than once with ${reaction} to this message`
+          );
+        }
+      }
+
+      const reactionsForMessage = await fetchTelegramReactionsForMessage(
+        this.context.dbPool,
+        anonMessageId
+      );
+
+      const payloads = emojis.map((emoji) => {
+        return {
+          emoji,
+          payload: encodePayload(buildReactPayload(emoji, anonMessageId))
+        };
+      });
+
+      const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
+      const buttons: InlineKeyboardButton[] = payloads.map((p) => {
+        const reactCount = reactionsForMessage.find(
+          (f) => f.reaction === p.emoji
+        );
+        return {
+          text: `${p.emoji} ${reactCount ? reactCount.count : ""}`,
+          url: `${link}?startApp=${p.payload}&startapp=${p.payload}`
+        };
+      });
+
+      const message = await fetchTelegramAnonMessagesById(
+        this.context.dbPool,
+        anonMessageId
+      );
+      if (!message) throw new Error(`Message to react to not found`);
+
+      await this.anonBot.api.editMessageReplyMarkup(
+        telegramChatId,
+        parseInt(message.sent_message_id),
+        { reply_markup: { inline_keyboard: [buttons] } }
+      );
+    });
+  }
+
   public async handleSendAnonymousMessage(
     serializedZKEdDSATicket: string,
     rawMessage: string,
@@ -1077,11 +1281,6 @@ export class TelegramService {
 
       if (!watermark) {
         throw new Error("Anonymous message PCD did not contain watermark");
-      }
-
-      function getMessageWatermark(message: string): bigint {
-        const hashed = sha256(message).substring(0, 16);
-        return BigInt("0x" + hashed);
       }
 
       if (getMessageWatermark(rawMessage).toString() !== watermark.toString()) {
@@ -1133,14 +1332,6 @@ export class TelegramService {
           [timestamp],
           topic.id
         );
-        await insertTelegramAnonMessage(
-          this.context.dbPool,
-          nullifierHash,
-          topic.id,
-          rawMessage,
-          serializedZKEdDSATicket,
-          timestamp
-        );
       } else {
         const timestamps = nullifierData.message_timestamps.map((t) =>
           new Date(t).getTime()
@@ -1164,14 +1355,6 @@ export class TelegramService {
             newTimestamps,
             topic.id
           );
-          await insertTelegramAnonMessage(
-            this.context.dbPool,
-            nullifierHash,
-            topic.id,
-            rawMessage,
-            serializedZKEdDSATicket,
-            newTimestamps[newTimestamps.length - 1]
-          );
         } else {
           const rlError = new Error(
             `You have exceeded the daily limit of ${maxDailyPostsPerTopic} messages for this topic.`
@@ -1193,19 +1376,48 @@ export class TelegramService {
 
       const formattedMessage = `
       <b>
-      <u>
       <a href="${
         process.env.TELEGRAM_ANON_BOT_DIRECT_LINK
       }?startApp=${encodedPayload}&startapp=${encodedPayload}">${bigintToPseudonym(
         BigInt(nullifierHash)
-      )}</a></u></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
+      )}</a></b>\n\n${rawMessage}\n\n<i>submitted ${currentTime.toLocaleString(
         "en-GB"
       )}</i>\n----------------------------------------------------------`;
 
-      await this.sendToAnonymousChannel(
+      const anonMessageId = uuidV1();
+
+      const payloads = emojis.map((emoji) => {
+        return {
+          emoji,
+          payload: encodePayload(buildReactPayload(emoji, anonMessageId))
+        };
+      });
+      const link = process.env.TELEGRAM_ANON_BOT_DIRECT_LINK;
+      const buttons: InlineKeyboardButton[] = payloads.map((p) => {
+        return {
+          text: `${p.emoji}`,
+          url: `${link}?startApp=${p.payload}&startapp=${p.payload}`
+        };
+      });
+
+      const replyMarkup: InlineKeyboardMarkup = { inline_keyboard: [buttons] };
+      const message = await this.sendToAnonymousChannel(
         chat.id,
         parseInt(topic.topic_id),
-        formattedMessage
+        formattedMessage,
+        replyMarkup
+      );
+      if (!message) throw new Error(`Failed to send telegram message`);
+
+      await insertTelegramAnonMessage(
+        this.context.dbPool,
+        anonMessageId,
+        nullifierHash,
+        topic.id,
+        rawMessage,
+        serializedZKEdDSATicket,
+        timestamp,
+        message.message_id
       );
     });
   }
@@ -1257,6 +1469,19 @@ export class TelegramService {
         return url;
       }
     );
+  }
+
+  // TODO: maybe remove and associated query
+  public async handleGetAnonReactions(
+    nulliferHash: string
+  ): Promise<TelegramReactionCount[]> {
+    return traced("telegram", "handleGetAnonReactions", async () => {
+      const reactions = await fetchTelegramReactionsForNullifier(
+        this.context.dbPool,
+        nulliferHash
+      );
+      return reactions;
+    });
   }
 
   public async handleGetAnonMessages(

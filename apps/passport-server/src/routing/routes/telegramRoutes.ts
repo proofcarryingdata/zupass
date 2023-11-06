@@ -205,6 +205,13 @@ export function initTelegramRoutes(
           break;
         }
 
+        case PayloadType.ReactData: {
+          const proofUrl =
+            await telegramService.handleRequestReactProofLink(anonPayload);
+          res.redirect(proofUrl);
+          break;
+        }
+
         default: {
           throw new Error(
             `Unhandled payload type ${(anonPayload as AnonWebAppPayload).type}`
@@ -223,6 +230,9 @@ export function initTelegramRoutes(
     "/telegram/anonget/:nullifier",
     async (req: Request, res: Response) => {
       try {
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
         const nullifierHash = checkUrlParam(req, "nullifier");
         if (!nullifierHash || typeof nullifierHash !== "string") {
           throw new Error(
@@ -230,11 +240,37 @@ export function initTelegramRoutes(
           );
         }
         const messages =
-          await telegramService?.handleGetAnonMessages(nullifierHash);
+          await telegramService.handleGetAnonMessages(nullifierHash);
         res.json(messages);
       } catch (e) {
         logger("[TELEGRAM] failed to get posts", e);
       }
     }
   );
+
+  app.get("/telegram/anonreact", async (req: Request, res: Response) => {
+    try {
+      const proof = checkQueryParam(req, "proof");
+      const chatId = checkQueryParam(req, "chatId");
+      const anonMessageId = checkQueryParam(req, "anonMessageId");
+      const reaction = checkQueryParam(req, "reaction");
+
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
+      await telegramService.handleReactAnonymousMessage(
+        proof,
+        chatId,
+        anonMessageId,
+        reaction
+      );
+      res.setHeader("Content-Type", "text/html");
+      res.send(closeWebviewHtml);
+    } catch (e) {
+      logger("[TELEGRAM] failed to verify", e);
+      rollbarService?.reportError(e);
+      res.set("Content-Type", "text/html");
+      res.status(500).send(errorHtmlWithDetails(e as Error));
+    }
+  });
 }
