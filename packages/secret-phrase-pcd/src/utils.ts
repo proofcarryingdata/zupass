@@ -9,7 +9,7 @@ export function phraseToBigints(phrase: string): Array<bigint> {
   if (phrase.length > 180)
     throw Error('title too long: must be <= 180 characters');
   // convert to chunks of bytes
-  let chunks: bigint[] = [];
+  const chunks: bigint[] = [];
   for (let i = 0; i < 6; i++) {
     const start = i * 31;
     const end = (i + 1) * 31;
@@ -28,7 +28,7 @@ export function phraseToBigints(phrase: string): Array<bigint> {
     // pad an additional 0 to the front of the chunk
     chunk = Buffer.concat([Buffer.alloc(1), chunk]);
     // return as compatible hex string
-    chunks.push(BigInt(`0x${chunk.toString('hex')}`) as bigint);
+    chunks.push(BigInt(`0x${chunk.toString('hex')}`));
   }
   return chunks;
 }
@@ -45,5 +45,5 @@ export function usernameToBigint(username: string): bigint {
   const encoded = encoder.encode(username);
   // convert to bigint
   const hex = Buffer.from(encoded).toString('hex')
-  return BigInt(`0x${hex}`) as bigint;
+  return BigInt(`0x${hex}`);
 }

@@ -12,7 +12,7 @@ import {
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
-import { Poseidon, buildPoseidon } from "circomlibjs";
+// import { Poseidon, buildPoseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { SecretPhraseCardBody } from "./CardBody";
@@ -21,7 +21,7 @@ import { phraseToBigints, usernameToBigint } from "./utils";
 
 export const SecretPhrasePCDTypeName = "secret-phrase-pcd";
 let depsInitializedPromise: Promise<void> | undefined;
-let poseidon: Poseidon;
+// let poseidon: Poseidon;
 let savedInitArgs: SecretPhrasePCDInitArgs | undefined = undefined;
 
 /**
@@ -89,11 +89,11 @@ export async function init(args: SecretPhrasePCDInitArgs) {
 }
 
 async function ensureDepsInitialized(): Promise<void> {
-  if (!depsInitializedPromise) {
-    depsInitializedPromise = (async () => {
-      poseidon = await buildPoseidon();
-    })();
-  }
+  // if (!depsInitializedPromise) {
+  //   depsInitializedPromise = (async () => {
+  //     poseidon = await buildPoseidon();
+  //   })();
+  // }
 
   await depsInitializedPromise;
 }
@@ -136,7 +136,7 @@ export function checkProofInputs(args: SecretPhrasePCDArgs): {
     throw new Error("Cannot make The Word proof: secret too long (must be < 180 characters)");
   }
 
-  let phraseId = args.phraseId.value;
+  const phraseId = args.phraseId.value;
   if (!phraseId) {
     throw new Error("Cannot make The Word proof: missing phraseId");
   }
@@ -167,8 +167,8 @@ function publicSignalsFromClaim(claim: SecretPhrasePCDClaim): string[] {
 export function snarkInputForProof(username: string, secret: string):
   Record<string, `${number}` | `${number}`[]> {
   // marshall inputs into bn254 field elements
-  let usernameBigint = usernameToBigint(username)
-  let secretBigints = phraseToBigints(secret);
+  const usernameBigint = usernameToBigint(username)
+  const secretBigints = phraseToBigints(secret);
 
   // return as an object usable by the ZK circuit as inputs
   return {
