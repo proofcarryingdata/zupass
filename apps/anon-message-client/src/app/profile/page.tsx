@@ -1,5 +1,7 @@
 "use client";
 
+import "./profiles.css";
+
 import Post from "@/components/post";
 import { bigIntToPseudonymEmoji, bigIntToPseudonymName } from "@pcd/util";
 import { useSearchParams } from "next/navigation";
