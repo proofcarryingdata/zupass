@@ -40,7 +40,7 @@ export function UpgradeAccountModal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, dispatch]);
+  }, [loading, newPassword, dispatch, update]);
 
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;

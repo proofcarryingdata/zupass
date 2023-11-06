@@ -80,6 +80,7 @@ export function ChangePasswordScreen() {
     currentPassword,
     newPassword,
     dispatch,
+    update,
     loading,
     self.email,
     isChangePassword
