@@ -1471,7 +1471,7 @@ export class TelegramService {
   }
 
   public async handleGetAnonTotalKarma(nulliferHash: string): Promise<number> {
-    return traced("telegram", "ahdnelGetAnonTotalKarma", async () => {
+    return traced("telegram", "handleGetAnonTotalKarma", async () => {
       const totalKarma = await fetchTelegramTotalKarmaForNullifier(
         this.context.dbPool,
         nulliferHash
