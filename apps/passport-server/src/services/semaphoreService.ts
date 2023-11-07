@@ -122,6 +122,11 @@ export class SemaphoreService {
     });
   }
 
+  /**
+   * Populates two Devconnect-related groups: attendees, which includes all
+   * users with any Devconnect ticket, and organizers, which includes all
+   * users with any superuser Devconnect ticket.
+   */
   private async reloadDevconnectGroups(): Promise<void> {
     return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
       const devconnectAttendees = await fetchAllUsersWithDevconnectTickets(
@@ -129,6 +134,9 @@ export class SemaphoreService {
       );
       const devconnectOrganizers =
         await fetchAllUsersWithDevconnectSuperuserTickets(this.dbPool);
+
+      span?.setAttribute("attendees", devconnectAttendees.length);
+      span?.setAttribute("organizers", devconnectOrganizers.length);
 
       logger(
         `[SEMA] Rebuilding Devconnect attendee group, ${devconnectAttendees.length} total users.`
