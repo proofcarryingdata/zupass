@@ -260,6 +260,7 @@ export const SuperFunkyFont = styled.div`
   font-family: "SuperFunky";
   font-size: 20px;
   display: flex;
+  user-select: none;
 
   * {
     background-size: 100%;

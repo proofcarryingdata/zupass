@@ -1,8 +1,4 @@
-import {
-  TEMPERAMENT_MAX,
-  TEMPERAMENT_MIN,
-  Temperament
-} from "@pcd/eddsa-frog-pcd";
+import { COMMON_TEMPERAMENT_SET, Temperament } from "@pcd/eddsa-frog-pcd";
 import {
   FeedHost,
   FrogCryptoFeed,
@@ -123,7 +119,7 @@ export function parseFrogEnum(
 
 export function parseFrogTemperament(value?: string): Temperament {
   if (!value) {
-    return _.random(TEMPERAMENT_MIN, TEMPERAMENT_MAX);
+    return _.sample(COMMON_TEMPERAMENT_SET) ?? Temperament.N_A; // fallback makes TS happy
   }
   if (value === "N/A") {
     return Temperament.N_A;

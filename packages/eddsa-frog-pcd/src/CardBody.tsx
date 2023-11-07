@@ -41,10 +41,10 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
       </LinkButton>
       <FrogImg src={frogData?.imageUrl} draggable={false} />
       <FrogInfo>
-        <FrogAttribute label="JUMP" title="Jump" value={frogData.jump} />
+        <FrogAttribute label="JMP" title="Jump" value={frogData.jump} />
         <FrogAttribute
-          label="TMPT"
-          title="Temperament"
+          label="VIB"
+          title="Vibe"
           value={temperamentValue(frogData.temperament)}
         />
         <FrogAttribute label="SPD" title="Speed" value={frogData?.speed} />
@@ -53,7 +53,7 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
           title="Intelligence"
           value={frogData.intelligence}
         />
-        <FrogAttribute label="BUTY" title="Beauty" value={frogData.beauty} />
+        <FrogAttribute label="BTY" title="Beauty" value={frogData.beauty} />
       </FrogInfo>
       {showMore && (
         <>
@@ -91,7 +91,9 @@ function FrogAttribute({
   return (
     <Attribute>
       <AttrTitle title={title}>{label}</AttrTitle>
-      <AttrValue style={{ color: attrColor(value) }}>{value}</AttrValue>
+      <AttrValue style={{ color: attrColor(value) }}>
+        {formatAttrValue(value)}
+      </AttrValue>
     </Attribute>
   );
 }
@@ -105,6 +107,13 @@ function attrColor(value: string | number | undefined) {
       return "#206b5e";
     }
   }
+}
+
+function formatAttrValue(value: string | number | undefined) {
+  if (typeof value === "number") {
+    return String(value).padStart(2, "0");
+  }
+  return value;
 }
 
 function temperamentValue(temperament: Temperament) {
@@ -192,6 +201,7 @@ const Attribute = styled.div`
   flex-direction: column;
   align-items: center;
   gap: 4px;
+  font-family: monospace;
 `;
 
 const AttrTitle = styled.div`

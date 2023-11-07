@@ -91,7 +91,11 @@ export async function initializeUserFeedState(
 export async function updateUserFeedState(
   client: Client,
   semaphoreId: string,
-  feedId: string
+  feedId: string,
+  /**
+   *  can be used to reset cooldown to give a free roll
+   */
+  lastFetchedAt: string = new Date().toUTCString()
 ): Promise<Date | undefined> {
   const result = await client.query(
     `
@@ -101,7 +105,7 @@ export async function updateUserFeedState(
     where old.id = new.id
     returning old.last_fetched_at
     `,
-    [semaphoreId, feedId, new Date().toUTCString()]
+    [semaphoreId, feedId, lastFetchedAt]
   );
 
   return result.rows[0]?.last_fetched_at;
@@ -194,8 +198,8 @@ export async function sampleFrogData(
       select unnest($1::text[]) as biome, unnest($2::float[]) as scaling_factor
     )
     select * from frogcrypto_frogs
-    join biome_scaling on lower(frog->>'biome') = lower(biome_scaling.biome)
-    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision) / scaling_factor)
+    join biome_scaling on replace(lower(frog->>'biome'), ' ', '') = lower(biome_scaling.biome)
+    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision) / scaling_factor) desc
     limit 1`,
     [biomeKeys, scalingFactors]
   );

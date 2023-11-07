@@ -76,6 +76,24 @@ export const testFrogs: FrogCryptoFrogData[] = [
     intelligence_max: 1,
     beauty_min: 1,
     beauty_max: 1
+  },
+  {
+    id: 5,
+    uuid: uuid(),
+    name: "Frog 5",
+    description: "A frog",
+    biome: "The Capital",
+    rarity: "rare",
+    temperament: "MEOW",
+    drop_weight: 1,
+    jump_min: 1,
+    jump_max: 1,
+    speed_min: 1,
+    speed_max: 1,
+    intelligence_min: 1,
+    intelligence_max: 1,
+    beauty_min: 1,
+    beauty_max: 1
   }
 ];
 

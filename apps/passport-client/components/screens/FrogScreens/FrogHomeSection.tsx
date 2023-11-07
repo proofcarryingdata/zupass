@@ -1,6 +1,7 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   CredentialManager,
+  FROG_FREEROLLS,
   FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   IFrogCryptoFeedSchema,
@@ -24,6 +25,7 @@ import { DexTab } from "./DexTab";
 import { SuperFunkyFont } from "./FrogFolder";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab } from "./ScoreTab";
+import { TypistText } from "./TypistText";
 
 const TABS = [
   {
@@ -47,6 +49,7 @@ type TabId = (typeof TABS)[number]["tab"];
 export function FrogHomeSection() {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const { userState, refreshUserState } = useUserFeedState();
+  const hasFreeRolls = (userState?.myScore?.score ?? 0) > FROG_FREEROLLS;
   const subs = useSubscriptions();
   const frogSubs = useMemo(
     () =>
@@ -64,30 +67,65 @@ export function FrogHomeSection() {
         <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
       </SuperFunkyFont>
 
-      {userState?.myScore?.score && (
+      {userState?.myScore?.score > 0 && (
         <Score>Score {userState?.myScore?.score}</Score>
       )}
 
       {frogSubs.length === 0 && (
-        <ActionButton onClick={initFrog}>light fire</ActionButton>
+        <TypistText
+          onInit={(typewriter) =>
+            typewriter
+              .typeString(
+                "You are walking through the Anatolian wetlands when you come upon a damp, misty swamp.<br>"
+              )
+              .pauseFor(500)
+              .typeString("Will you dive headfirst")
+              .deleteChars("dive headfirst".length)
+              .typeString("cross the threshold into this world of wonder?")
+          }
+        >
+          <ActionButton onClick={initFrog}>Enter Bog</ActionButton>
+        </TypistText>
       )}
+
       {frogSubs.length > 0 &&
-        (frogPCDs.length === 0 ? (
-          <GetFrogTab
-            subscriptions={frogSubs}
-            userState={userState}
-            refreshUserState={refreshUserState}
-            pcds={frogPCDs}
-          />
+        (frogPCDs.length === 0 && !userState?.myScore?.score ? (
+          <>
+            <TypistText
+              onInit={(typewriter) =>
+                typewriter
+                  .typeString(
+                    "You're certain you saw a frog wearing a monocle."
+                  )
+                  .pauseFor(500)
+                  .changeDeleteSpeed(20)
+                  .deleteAll()
+                  .typeString("You enter the bog.")
+              }
+            >
+              <GetFrogTab
+                subscriptions={frogSubs}
+                userState={userState}
+                refreshUserState={refreshUserState}
+                pcds={frogPCDs}
+              />
+            </TypistText>
+          </>
         ) : (
           <>
-            <ButtonGroup>
-              {TABS.map(({ tab: t, label }) => (
-                <Button key={t} disabled={tab === t} onClick={() => setTab(t)}>
-                  {label}
-                </Button>
-              ))}
-            </ButtonGroup>
+            {!hasFreeRolls && (
+              <ButtonGroup>
+                {TABS.map(({ tab: t, label }) => (
+                  <Button
+                    key={t}
+                    disabled={tab === t}
+                    onClick={() => setTab(t)}
+                  >
+                    {label}
+                  </Button>
+                ))}
+              </ButtonGroup>
+            )}
 
             {tab === "get" && (
               <GetFrogTab

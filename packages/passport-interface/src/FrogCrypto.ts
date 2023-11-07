@@ -4,6 +4,13 @@ import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
 
 /**
+ * Number of free rolls that a user globally
+ *
+ * User's lastFetchedAt is set to 0 if their score is less than this value
+ */
+export const FROG_FREEROLLS = 2;
+
+/**
  * Map of configs for Biome(s) where PCDs can be issued from this feed
  */
 export const FrogCryptoFeedBiomeConfigSchema = z.object({
