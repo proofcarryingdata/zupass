@@ -90,7 +90,7 @@ describe("database reads and writes for frogcrypto features", function () {
 
   step("sample a frog from weighted biomes", async function () {
     const frogs = await Promise.all(
-      _.range(0, 100).map(() =>
+      _.range(0, 1000).map(() =>
         sampleFrogData(db, {
           TheCapital: { dropWeightScaler: 100 },
           Desert: { dropWeightScaler: 0.01 },
@@ -99,10 +99,10 @@ describe("database reads and writes for frogcrypto features", function () {
       )
     );
 
-    // sample 100 frogs with Capital frog expect to show up 99.98% chance each time. there is < 1e-14 chance for non capital frog to show up more than seven times
+    // sample 1000 frogs with Capital frog expect to show up 99.98% chance each time. there is < 1e-14 chance for non capital frog to show up more than 10 times
     expect(
       frogs.filter((frog) => frog?.biome === "The Capital").length
-    ).to.be.greaterThanOrEqual(93);
+    ).to.be.greaterThanOrEqual(990);
   });
 
   step("return undefined if there is no frog to sample", async function () {
