@@ -21,6 +21,7 @@ import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import {
   getFeedData,
+  getFrogData,
   upsertFeedData,
   upsertFrogData
 } from "../src/database/queries/frogcrypto";
@@ -159,6 +160,29 @@ describe("frogcrypto functionality", function () {
 
     await testGetFrog(feed, DATE_EPOCH_1H);
     expect(frogPCD.claim.data.biome).to.eq(Biome.TheCapital);
+  });
+
+  it("should sample frog attribute based on prototype", async () => {
+    const feed = feeds[4];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.true;
+    expect(feed.biomes).to.deep.eq({
+      TheCapital: { dropWeightScaler: 1 }
+    });
+
+    const prototype = (await getFrogData(db)).find(
+      (frog) => frog.biome === "The Capital"
+    );
+    expectToExist(prototype);
+    expect(prototype.intelligence_min).to.eq(0);
+    expect(prototype.intelligence_max).to.eq(0);
+    expect(prototype.beauty_min).to.be.undefined;
+    expect(prototype.beauty_max).to.be.undefined;
+
+    await testGetFrog(feed, DATE_EPOCH_1H);
+    expect(frogPCD.claim.data.biome).to.eq(Biome.TheCapital);
+    expect(frogPCD.claim.data.intelligence).to.eq(0);
+    expect(frogPCD.claim.data.beauty).to.be.finite;
   });
 
   it("should get 404 if no frogs are available", async () => {

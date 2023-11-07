@@ -90,10 +90,10 @@ export const testFrogs: FrogCryptoFrogData[] = [
     jump_max: 1,
     speed_min: 1,
     speed_max: 1,
-    intelligence_min: 1,
-    intelligence_max: 1,
-    beauty_min: 1,
-    beauty_max: 1
+    intelligence_min: 0,
+    intelligence_max: 0,
+    beauty_min: undefined,
+    beauty_max: undefined
   }
 ];
 

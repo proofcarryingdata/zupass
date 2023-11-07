@@ -27,6 +27,13 @@ const define = {
           process.env.ROLLBAR_ENV_NAME
         )
       }
+    : {}),
+  ...(process.env.FROGCRYPTO_SERVER_URL !== undefined
+    ? {
+        "process.env.FROGCRYPTO_SERVER_URL": JSON.stringify(
+          process.env.FROGCRYPTO_SERVER_URL
+        )
+      }
     : {})
 };
 

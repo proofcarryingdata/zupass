@@ -43,21 +43,24 @@ export function GetFrogTab({
   return (
     <>
       <SearchGroup>
-        {activeSubs.length === 0 && (
-          <ErrorBox>
-            Oopsie-toad! We're sprucing up the lily pads. Return soon for leaps
-            and bounds of fun!
-          </ErrorBox>
-        )}
+        {activeSubs.length === 0 &&
+          // nb: workaround where feed state is not updated instantly when the
+          // first feed is added. we look for a sub that has been added 5sec ago
+          // and has not been active. we might find a more elegant solution
+          // later
+          !!subscriptions.find(
+            (sub) => sub.subscribedTimestamp < Date.now() - 5000
+          ) && (
+            <ErrorBox>
+              Oopsie-toad! We're sprucing up the lily pads. Return soon for
+              leaps and bounds of fun!
+            </ErrorBox>
+          )}
 
         {activeSubs.map((sub) => {
           const userFeedState = userState?.feeds?.find(
             (feed) => feed.feedId === sub.feed.id
           );
-
-          if (userFeedState?.active === false) {
-            return null;
-          }
 
           return (
             <SearchButton
@@ -145,7 +148,7 @@ const SearchButton = ({
       }),
     [dispatch, feed.name, id, refreshUserState, subManager]
   );
-  const name = useMemo(() => _.upperCase(`Search ${feed.name}`), [feed.name]);
+  const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
   const freerolls = FROG_FREEROLLS + 1 - score;
 
   return (

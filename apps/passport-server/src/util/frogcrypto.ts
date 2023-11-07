@@ -103,7 +103,7 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
 }
 
 export function sampleFrogAttribute(min?: number, max?: number): number {
-  return _.random(Math.round(min || 0), Math.round(max || 10));
+  return _.random(Math.round(min ?? 0), Math.round(max ?? 15));
 }
 
 export function parseFrogEnum(
