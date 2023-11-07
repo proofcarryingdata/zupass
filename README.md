@@ -141,7 +141,7 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 ### Zupass
 
 - static site is deployed to https://zupass.org/
-- server is deployed to https://api.zupass.com/
+- server is deployed to https://api.zupass.org/
 
 ### Example PCD App
 
