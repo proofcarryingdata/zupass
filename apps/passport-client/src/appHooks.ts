@@ -10,7 +10,12 @@ import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import { Dispatcher, StateContext, StateContextValue } from "./dispatch";
+import {
+  Dispatcher,
+  StateContext,
+  StateContextValue,
+  ZuUpdate
+} from "./dispatch";
 import { loadUsingLaserScanner } from "./localstorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
@@ -67,6 +72,11 @@ export function useIdentity(): Identity {
 export function useDispatch(): Dispatcher {
   const { dispatch } = useContext(StateContext);
   return dispatch;
+}
+
+export function useUpdate(): ZuUpdate {
+  const { update } = useContext(StateContext);
+  return update;
 }
 
 export function useIsOffline(): boolean {
@@ -131,10 +141,6 @@ export function useIsSyncSettled(): boolean {
 
 export function useIsLoggedIn(): boolean {
   return useSelector<boolean | undefined>((s) => s.self !== undefined, []);
-}
-
-export function useUploadedId(): string | undefined {
-  return useSelector<string | undefined>((s) => s.uploadedUploadId, []);
 }
 
 export function useResolvingSubscriptionId(): string | undefined {

@@ -417,7 +417,8 @@ async function loadInitialState(): Promise<AppState> {
     offlineTickets,
     checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
     offline: !window.navigator.onLine,
-    serverStorageRevision: persistentSyncStatus.serverStorageRevision
+    serverStorageRevision: persistentSyncStatus.serverStorageRevision,
+    serverStorageHash: persistentSyncStatus.serverStorageHash
   };
 }
 
