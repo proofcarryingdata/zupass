@@ -117,14 +117,14 @@ export const FrogCryptoFrogDataSchema = z.object({
    */
   temperament: z.string().optional(),
   drop_weight: z.number().nonnegative(),
-  jump_min: z.number().gte(0).lte(10).optional(),
-  jump_max: z.number().gte(0).lte(10).optional(),
-  speed_min: z.number().gte(0).lte(10).optional(),
-  speed_max: z.number().gte(0).lte(10).optional(),
-  intelligence_min: z.number().gte(0).lte(10).optional(),
-  intelligence_max: z.number().gte(0).lte(10).optional(),
-  beauty_min: z.number().gte(0).lte(10).optional(),
-  beauty_max: z.number().gte(0).lte(10).optional()
+  jump_min: z.number().gte(0).lte(15).optional(),
+  jump_max: z.number().gte(0).lte(15).optional(),
+  speed_min: z.number().gte(0).lte(15).optional(),
+  speed_max: z.number().gte(0).lte(15).optional(),
+  intelligence_min: z.number().gte(0).lte(15).optional(),
+  intelligence_max: z.number().gte(0).lte(15).optional(),
+  beauty_min: z.number().gte(0).lte(15).optional(),
+  beauty_max: z.number().gte(0).lte(15).optional()
 });
 
 export type FrogCryptoFrogData = z.infer<typeof FrogCryptoFrogDataSchema>;

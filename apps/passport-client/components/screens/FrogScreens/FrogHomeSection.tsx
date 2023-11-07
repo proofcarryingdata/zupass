@@ -1,7 +1,6 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   CredentialManager,
-  FROG_FREEROLLS,
   FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   IFrogCryptoFeedSchema,
@@ -62,7 +61,6 @@ export function FrogHomeSection() {
   const [tab, setTab] = useState<TabId>("get");
   const { userState, refreshUserState } = useUserFeedState(frogSubs);
   const myScore = userState?.myScore?.score ?? 0;
-  const hasFreeRolls = myScore <= FROG_FREEROLLS;
 
   if (!userState) {
     return <RippleLoader />;
@@ -74,22 +72,28 @@ export function FrogHomeSection() {
         <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
       </SuperFunkyFont>
 
-      {myScore > 0 && <Score>Score {myScore}</Score>}
+      {myScore > 0 && (
+        <Score>
+          Score {myScore} | Rank #{userState?.myScore?.rank}
+        </Score>
+      )}
 
       {frogSubs.length === 0 && (
         <TypistText
           onInit={(typewriter) =>
             typewriter
               .typeString(
-                "You are walking through the Anatolian wetlands when you come upon a damp, misty swamp.<br>"
+                "you are walking through the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
               )
               .pauseFor(500)
-              .typeString("Will you dive headfirst")
-              .deleteChars("dive headfirst".length)
-              .typeString("cross the threshold into this world of wonder?")
+              .typeString(
+                "a sultry CROAK beckons you closer. it is like music to your ears.<br/><br/>"
+              )
+              .pauseFor(500)
+              .typeString("will you enter the world of FROGCRYPTO?")
           }
         >
-          <ActionButton onClick={initFrog}>Enter Bog</ActionButton>
+          <ActionButton onClick={initFrog}>enter SWAMP</ActionButton>
         </TypistText>
       )}
 
@@ -100,12 +104,12 @@ export function FrogHomeSection() {
               onInit={(typewriter) =>
                 typewriter
                   .typeString(
-                    "You're certain you saw a frog wearing a monocle."
+                    "you're certain you saw a frog wearing a monocle."
                   )
                   .pauseFor(500)
                   .changeDeleteSpeed(20)
                   .deleteAll()
-                  .typeString("You enter the bog.")
+                  .typeString("you enter the SWAMP.")
               }
             >
               <GetFrogTab
@@ -118,19 +122,23 @@ export function FrogHomeSection() {
           </>
         ) : (
           <>
-            {!hasFreeRolls && (
-              <ButtonGroup>
-                {TABS.map(({ tab: t, label }) => (
-                  <Button
-                    key={t}
-                    disabled={tab === t}
-                    onClick={() => setTab(t)}
-                  >
-                    {label}
-                  </Button>
-                ))}
-              </ButtonGroup>
-            )}
+            {
+              // show frog card on first pull
+              // show tabs on second pull
+              myScore >= 2 && (
+                <ButtonGroup>
+                  {TABS.map(({ tab: t, label }) => (
+                    <Button
+                      key={t}
+                      disabled={tab === t}
+                      onClick={() => setTab(t)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              )
+            }
 
             {tab === "get" && (
               <GetFrogTab
@@ -196,7 +204,7 @@ function useUserFeedState(subscriptions: Subscription[]) {
   );
 }
 
-export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
+export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.frogCryptoServer}/frogcrypto/feeds`;
 
 /**
  * Returns a callback to register the default frog subscription provider and
@@ -257,6 +265,7 @@ const Container = styled.div`
   width: 100%;
   height: 100%;
   max-width: 100%;
+  font-family: monospace;
 
   display: flex;
   flex-direction: column;
