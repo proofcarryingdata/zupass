@@ -62,7 +62,7 @@ export function FrogHomeSection() {
   const [tab, setTab] = useState<TabId>("get");
   const { userState, refreshUserState } = useUserFeedState(frogSubs);
   const myScore = userState?.myScore?.score ?? 0;
-  const hasFreeRolls = myScore > FROG_FREEROLLS;
+  const hasFreeRolls = myScore <= FROG_FREEROLLS;
 
   if (!userState) {
     return <RippleLoader />;
