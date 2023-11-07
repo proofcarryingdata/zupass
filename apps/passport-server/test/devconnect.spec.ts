@@ -293,7 +293,9 @@ describe("devconnect functionality", function () {
         r: [],
         v: [],
         o: [],
-        g: []
+        g: [],
+        d: [],
+        s: []
       });
     }
   );
@@ -343,7 +345,9 @@ describe("devconnect functionality", function () {
         r: [residentUser.commitment],
         v: [],
         o: [],
-        g: [residentUser.commitment]
+        g: [residentUser.commitment],
+        d: [],
+        s: []
       });
     }
   );
@@ -412,7 +416,9 @@ describe("devconnect functionality", function () {
           residentUser.commitment,
           visitorUser.commitment,
           organizerUser.commitment
-        ]
+        ],
+        d: [],
+        s: []
       });
     }
   );
@@ -623,7 +629,9 @@ describe("devconnect functionality", function () {
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
           organizerUser.commitment
-        ]
+        ],
+        d: [],
+        s: []
       });
       await testLatestHistoricSemaphoreGroups(application);
     }
@@ -674,7 +682,9 @@ describe("devconnect functionality", function () {
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
           organizerUser.commitment
-        ]
+        ],
+        d: [],
+        s: []
       });
       await testLatestHistoricSemaphoreGroups(application);
     }
@@ -725,7 +735,9 @@ describe("devconnect functionality", function () {
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
           organizerUser.commitment
-        ]
+        ],
+        d: [],
+        s: []
       });
       await testLatestHistoricSemaphoreGroups(application);
     }
@@ -772,7 +784,9 @@ describe("devconnect functionality", function () {
           updatedToOrganizerUser.commitment,
           visitorUser.commitment,
           organizerUser.commitment
-        ]
+        ],
+        d: [],
+        s: []
       });
     }
   );
@@ -1612,7 +1626,9 @@ describe("devconnect functionality", function () {
       r: [],
       v: [],
       o: [],
-      g: [identity.commitment.toString()]
+      g: [identity.commitment.toString()],
+      d: [],
+      s: []
     });
     await testLatestHistoricSemaphoreGroups(application);
   });
@@ -1723,7 +1739,9 @@ describe("devconnect functionality", function () {
         r: [],
         v: [],
         o: [],
-        g: [identity.commitment.toString()]
+        g: [identity.commitment.toString()],
+        d: [],
+        s: []
       });
       await testLatestHistoricSemaphoreGroups(application);
     }

@@ -8,7 +8,11 @@ import {
   fetchLatestHistoricSemaphoreGroups,
   insertNewHistoricSemaphoreGroup
 } from "../database/queries/historicSemaphore";
-import { fetchAllUsers } from "../database/queries/users";
+import {
+  fetchAllUsers,
+  fetchAllUsersWithDevconnectSuperuserTickets,
+  fetchAllUsersWithDevconnectTickets
+} from "../database/queries/users";
 import { fetchAllLoggedInZuconnectUsers } from "../database/queries/zuconnect/fetchZuconnectUsers";
 import { fetchAllLoggedInZuzaluUsers } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { PCDHTTPError } from "../routing/pcdHttpError";
@@ -36,6 +40,8 @@ export class SemaphoreService {
   public groupVisitors = (): NamedGroup => this.getNamedGroup("3");
   public groupOrganizers = (): NamedGroup => this.getNamedGroup("4");
   public groupEveryone = (): NamedGroup => this.getNamedGroup("5");
+  public groupDevconnectAttendees = (): NamedGroup => this.getNamedGroup("6");
+  public groupDevconnectOrganizers = (): NamedGroup => this.getNamedGroup("7");
 
   public constructor(config: ApplicationContext) {
     this.dbPool = config.dbPool;
@@ -50,7 +56,9 @@ export class SemaphoreService {
       { name: "Zuzalu Residents", group: new Group("2", 16) },
       { name: "Zuzalu Visitors", group: new Group("3", 16) },
       { name: "Zuzalu Organizers", group: new Group("4", 16) },
-      { name: "Everyone", group: new Group("5", 16) }
+      { name: "Everyone", group: new Group("5", 16) },
+      { name: "Devconnect Attendees", group: new Group("6", 16) },
+      { name: "Devconnect Organizers", group: new Group("7", 16) }
     ];
   }
 
@@ -91,6 +99,7 @@ export class SemaphoreService {
       await this.reloadZuzaluGroups();
       // turned off for devconnect - lots of users = slow global group.
       // await this.reloadGenericGroup();
+      await this.reloadDevconnectGroups();
       await this.saveHistoricSemaphoreGroups();
 
       logger(`[SEMA] Semaphore service reloaded.`);
@@ -110,6 +119,53 @@ export class SemaphoreService {
         allUsers.map((c) => c.commitment)
       );
       namedGroup.group = newGroup;
+    });
+  }
+
+  private async reloadDevconnectGroups(): Promise<void> {
+    return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
+      const devconnectAttendees = await fetchAllUsersWithDevconnectTickets(
+        this.dbPool
+      );
+      const devconnectOrganizers =
+        await fetchAllUsersWithDevconnectSuperuserTickets(this.dbPool);
+
+      logger(
+        `[SEMA] Rebuilding Devconnect attendee group, ${devconnectAttendees.length} total users.`
+      );
+      logger(
+        `[SEMA] Rebuilding Devconnect organizer group, ${devconnectOrganizers.length} total users.`
+      );
+
+      const attendeesGroupUserIds = devconnectAttendees.map(
+        (user) => user.commitment
+      );
+      const organizersGroupUserIds = devconnectOrganizers.map(
+        (user) => user.commitment
+      );
+
+      const attendeesNamedGroup = this.groups.find(
+        (group) => group.group.id.toString() === "6"
+      );
+      const organizersNamedGroup = this.groups.find(
+        (group) => group.group.id.toString() === "7"
+      );
+
+      if (attendeesNamedGroup) {
+        attendeesNamedGroup.group = new Group(
+          attendeesNamedGroup.group.id,
+          attendeesNamedGroup.group.depth,
+          attendeesGroupUserIds
+        );
+      }
+
+      if (organizersNamedGroup) {
+        organizersNamedGroup.group = new Group(
+          organizersNamedGroup.group.id,
+          organizersNamedGroup.group.depth,
+          organizersGroupUserIds
+        );
+      }
     });
   }
 

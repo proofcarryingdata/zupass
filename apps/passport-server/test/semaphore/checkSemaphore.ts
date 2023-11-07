@@ -8,7 +8,9 @@ export interface SemaphoreGroups {
   r: string[]; // residents
   v: string[]; // visitors
   o: string[]; // organizers
-  g: string[]; // generic
+  g: string[]; // generic,
+  d: string[]; // devconnect attendees
+  s: string[]; // devconnect superusers/organizers
 }
 
 export function expectGroupsEqual(
@@ -60,6 +62,12 @@ function getCurrentSemaphoreServiceGroups(
       .group.members.map((m) => m.toString()),
     r: application.services.semaphoreService
       .groupResidents()
+      .group.members.map((m) => m.toString()),
+    d: application.services.semaphoreService
+      .groupDevconnectAttendees()
+      .group.members.map((m) => m.toString()),
+    s: application.services.semaphoreService
+      .groupDevconnectOrganizers()
       .group.members.map((m) => m.toString())
   };
 }
@@ -95,6 +103,14 @@ async function getLatestHistoricalSemaphoreGroups(
     g:
       parsedLatestGroups
         .find((g) => g.id.toString() === "5")
+        ?.members?.map((m) => m.toString()) ?? [],
+    d:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "6")
+        ?.members?.map((m) => m.toString()) ?? [],
+    s:
+      parsedLatestGroups
+        .find((g) => g.id.toString() === "7")
         ?.members?.map((m) => m.toString()) ?? []
   };
 }
