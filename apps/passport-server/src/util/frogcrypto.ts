@@ -110,7 +110,12 @@ export function parseFrogEnum(
   e: Record<number, string>,
   value: string
 ): number {
-  const key = _.findKey(e, (v) => v.toLowerCase() === value.toLowerCase());
+  const key = _.findKey(
+    e,
+    (v) =>
+      typeof v === "string" &&
+      v.toLowerCase() === value.toLowerCase().replace(/ /g, "")
+  );
   if (key === undefined) {
     throw new Error(`invalid enum value ${value}`);
   }

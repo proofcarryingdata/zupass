@@ -230,5 +230,18 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
         TheWrithingVoid: { dropWeightScaler: 1 }
       }
     }
+  },
+  {
+    uuid: "4991c5ca-1622-4eb7-8657-e90843487557",
+    feed: {
+      name: "Cat",
+      description: "Cat",
+      private: true,
+      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      cooldown: 600,
+      biomes: {
+        TheCapital: { dropWeightScaler: 1 }
+      }
+    }
   }
 ];

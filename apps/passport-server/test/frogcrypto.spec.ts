@@ -1,4 +1,4 @@
-import { EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoFeed,
   FrogCryptoFolderName,
@@ -147,6 +147,18 @@ describe("frogcrypto functionality", function () {
       DATE_EPOCH_1H1M59S,
       "Next fetch available at 3720000"
     );
+  });
+
+  it("should return frog from complex biome", async () => {
+    const feed = feeds[4];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.true;
+    expect(feed.biomes).to.deep.eq({
+      TheCapital: { dropWeightScaler: 1 }
+    });
+
+    await testGetFrog(feed, DATE_EPOCH_1H);
+    expect(frogPCD.claim.data.biome).to.eq(Biome.TheCapital);
   });
 
   it("should get 404 if no frogs are available", async () => {
