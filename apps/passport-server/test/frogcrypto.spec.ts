@@ -165,19 +165,25 @@ describe("frogcrypto functionality", function () {
     expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
     expect(feed.private).to.be.false;
 
-    let userState = await getUserState();
+    let userState = await getUserState([feed.id]);
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogIds).to.deep.equal(
       _.range(1, testFrogs.length + 1)
     );
-    expect(userState.value?.feeds).to.be.empty;
     expect(userState.value?.myScore).to.be.undefined;
+    expect(userState.value?.feeds).to.have.length(1);
+    let feedState = userState.value?.feeds?.[0];
+    expectToExist(feedState);
+    expect(feedState.feedId).to.eq(feed.id);
+    expect(feedState.lastFetchedAt).to.eq(0);
+    expect(feedState.nextFetchAt).to.eq(feed.cooldown * 1000);
+    expect(feedState.active).to.be.true;
 
     // first roll
     let response = await getFrog(feed, DATE_EPOCH_1H);
     expect(response.success).to.be.true;
 
-    userState = await getUserState();
+    userState = await getUserState([feed.id]);
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogIds).to.deep.equal(
       _.range(1, testFrogs.length + 1)
@@ -187,10 +193,12 @@ describe("frogcrypto functionality", function () {
       identity.getCommitment().toString()
     );
     expect(userState.value?.feeds).to.be.not.empty;
-    let feedState = userState.value?.feeds?.[0];
-    expect(feedState?.feedId).to.eq(feed.id);
-    expect(feedState?.lastFetchedAt).to.eq(0);
-    expect(feedState?.nextFetchAt).to.eq(feed.cooldown * 1000);
+    feedState = userState.value?.feeds?.[0];
+    expectToExist(feedState);
+    expect(feedState.feedId).to.eq(feed.id);
+    expect(feedState.lastFetchedAt).to.eq(0);
+    expect(feedState.nextFetchAt).to.eq(feed.cooldown * 1000);
+    expect(feedState.active).to.be.true;
 
     // second roll
     await getFrog(feed, DATE_EPOCH_1H);
@@ -198,7 +206,7 @@ describe("frogcrypto functionality", function () {
     response = await getFrog(feed, DATE_EPOCH_1H);
     expect(response.success).to.be.true;
 
-    userState = await getUserState();
+    userState = await getUserState([feed.id]);
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogIds).to.deep.equal(
       _.range(1, testFrogs.length + 1)
@@ -209,11 +217,39 @@ describe("frogcrypto functionality", function () {
     );
     expect(userState.value?.feeds).to.be.not.empty;
     feedState = userState.value?.feeds?.[0];
-    expect(feedState?.feedId).to.eq(feed.id);
+    expectToExist(feedState);
+    expect(feedState.feedId).to.eq(feed.id);
     expect(feedState?.lastFetchedAt).to.eq(DATE_EPOCH_1H.getTime());
     expect(feedState?.nextFetchAt).to.eq(
       DATE_EPOCH_1H.getTime() + feed.cooldown * 1000
     );
+    expect(feedState.active).to.be.true;
+  });
+
+  it("should not return feed state if not asked for", async () => {
+    const oldFeed = feeds[0];
+    const newFeed = feeds[1];
+    MockDate.set(oldFeed.activeUntil * 1000);
+    expect(oldFeed.activeUntil).to.be.eq(Date.now() / 1000);
+    expect(newFeed.activeUntil).to.be.eq(Date.now() / 1000);
+    expect(oldFeed.private).to.be.false;
+    expect(newFeed.private).to.be.true;
+
+    const userState = await getUserState([newFeed.id]);
+    expect(userState.success).to.be.true;
+    expect(userState.value?.possibleFrogIds).to.deep.equal(
+      _.range(1, testFrogs.length + 1)
+    );
+    expect(userState.value?.myScore).to.be.undefined;
+    expect(userState.value?.feeds).to.have.length(1);
+    const feedState = userState.value?.feeds?.[0];
+    expectToExist(feedState);
+    expect(feedState.feedId).to.eq(newFeed.id);
+    expect(feedState.lastFetchedAt).to.eq(0);
+    expect(feedState.nextFetchAt).to.eq(newFeed.cooldown * 1000);
+    expect(feedState.active).to.be.false;
+
+    MockDate.reset();
   });
 
   it("should return hi scores", async () => {
@@ -277,12 +313,15 @@ describe("frogcrypto functionality", function () {
     return response;
   }
 
-  async function getUserState(): Promise<FrogCryptoUserStateResult> {
+  async function getUserState(
+    feedIds: string[]
+  ): Promise<FrogCryptoUserStateResult> {
     const payload = JSON.stringify(createFeedCredentialPayload());
     return frogCryptoGetUserState(
       application.expressContext.localEndpoint,
       identity,
-      payload
+      payload,
+      feedIds
     );
   }
 });

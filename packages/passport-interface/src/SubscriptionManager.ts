@@ -165,7 +165,8 @@ export class FeedSubscriptionManager {
       });
     } catch (e) {
       this.setError(subscription.id, {
-        type: SubscriptionErrorType.FetchError
+        type: SubscriptionErrorType.FetchError,
+        e: e instanceof Error ? e : undefined
       });
     }
 
@@ -476,6 +477,7 @@ export interface SubscriptionPermissionError {
 
 export interface SubscriptionFetchError {
   type: SubscriptionErrorType.FetchError;
+  e: Error | undefined;
 }
 
 export type SubscriptionError =

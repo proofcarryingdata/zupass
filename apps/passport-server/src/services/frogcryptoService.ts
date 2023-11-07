@@ -140,19 +140,19 @@ export class FrogcryptoService {
   ): Promise<FrogCryptoUserStateResponseValue> {
     const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
-    const userFeeds = await fetchUserFeedsState(
-      this.context.dbPool,
-      semaphoreId
+    const userFeeds = _.keyBy(
+      await fetchUserFeedsState(this.context.dbPool, semaphoreId),
+      "feed_id"
     );
 
-    const allFeeds = _.keyBy(this.feedHost.getAllFeeds(), "id");
+    const allFeeds = this.feedHost
+      .getAllFeeds()
+      .filter((feed) => req.feedIds.includes(feed.id));
 
     return {
-      feeds: userFeeds
-        .filter((userFeed) => allFeeds[userFeed.feed_id])
-        .map((userFeed) =>
-          this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
-        ),
+      feeds: allFeeds.map((feed) =>
+        this.computeUserFeedState(userFeeds[feed.id], feed)
+      ),
       possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };

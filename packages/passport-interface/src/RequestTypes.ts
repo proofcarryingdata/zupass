@@ -697,8 +697,10 @@ export interface OfflineDevconnectTicket {
 }
 
 /**
- * User asks metadata about themselves such as when they can get next frog and
- * how many frogs in Frogedex.
+ * User requests about
+ * 1. for the feeds they are subscribed to, when they can get next frog and
+ *    whether it is active
+ * 2. how many frogs in Frogedex
  *
  * NB: The number of possible frogs are currently not user specific. It is
  * possible that we will introduce series unlock in the future where the number
@@ -706,6 +708,7 @@ export interface OfflineDevconnectTicket {
  */
 export interface FrogCryptoUserStateRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  feedIds: string[];
 }
 
 /**

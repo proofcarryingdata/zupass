@@ -197,9 +197,15 @@ export async function sampleFrogData(
     with biome_scaling as (
       select unnest($1::text[]) as biome, unnest($2::float[]) as scaling_factor
     )
+
     select * from frogcrypto_frogs
     join biome_scaling on replace(lower(frog->>'biome'), ' ', '') = lower(biome_scaling.biome)
-    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision) / scaling_factor) desc
+
+    order by
+    -- prevent underflow
+    random() ^ least(1.0 / cast(frog->>'drop_weight' as double precision) / scaling_factor, 10)
+    desc
+
     limit 1`,
     [biomeKeys, scalingFactors]
   );
