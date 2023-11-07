@@ -21,6 +21,8 @@ export function expectGroupsEqual(
   expect(new Set(...lhs.r)).to.deep.eq(new Set(...rhs.r));
   expect(new Set(...lhs.v)).to.deep.eq(new Set(...rhs.v));
   expect(new Set(...lhs.o)).to.deep.eq(new Set(...rhs.o));
+  expect(new Set(...lhs.d)).to.deep.eq(new Set(...rhs.d));
+  expect(new Set(...lhs.s)).to.deep.eq(new Set(...rhs.s));
   // turned off for devconnect - lots of users = slow global group.
   // expect(new Set(...lhs.g)).to.deep.eq(new Set(...rhs.g));
 }

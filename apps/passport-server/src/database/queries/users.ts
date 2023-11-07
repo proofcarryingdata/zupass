@@ -111,7 +111,7 @@ export async function fetchAllUsersWithDevconnectTickets(
     client,
     `
   SELECT u.* FROM users u
-  JOIN devconnect_pretix_tickets t
+  INNER JOIN devconnect_pretix_tickets t
   ON u.email = t.email
   WHERE t.is_deleted = false
   GROUP BY u.uuid
@@ -122,7 +122,7 @@ export async function fetchAllUsersWithDevconnectTickets(
 }
 
 /**
- * Fetch all users with Devconnect tickets
+ * Fetch all users with superuser Devconnect tickets
  */
 export async function fetchAllUsersWithDevconnectSuperuserTickets(
   client: Pool
@@ -131,11 +131,11 @@ export async function fetchAllUsersWithDevconnectSuperuserTickets(
     client,
     `
   SELECT u.* FROM users u
-  JOIN devconnect_pretix_tickets t
+  INNER JOIN devconnect_pretix_tickets t
   ON u.email = t.email
-  JOIN devconnect_pretix_items_info i ON t.devconnect_pretix_items_info_id = i.id
-  JOIN devconnect_pretix_events_info e ON i.devconnect_pretix_events_info_id = e.id
-  JOIN pretix_events_config ec ON e.pretix_events_config_id = ec.id
+  INNER JOIN devconnect_pretix_items_info i ON t.devconnect_pretix_items_info_id = i.id
+  INNER JOIN devconnect_pretix_events_info e ON i.devconnect_pretix_events_info_id = e.id
+  INNER JOIN pretix_events_config ec ON e.pretix_events_config_id = ec.id
   WHERE t.is_deleted = false AND i.item_id = ANY(ec.superuser_item_ids)
   GROUP BY u.uuid
   `

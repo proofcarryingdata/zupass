@@ -153,6 +153,8 @@ describe("devconnect functionality", function () {
   let ticketPCD: EdDSATicketPCD;
   let checkerIdentity: Identity;
 
+  const loggedInIdentityCommitments = new Set<string>();
+
   this.beforeEach(async () => {
     backupData = mocker.backup();
   });
@@ -1596,6 +1598,7 @@ describe("devconnect functionality", function () {
 
     expect(emailAPI.send).to.have.been.called.exactly(4);
     identity = result.identity;
+    loggedInIdentityCommitments.add(identity.commitment.toString());
   });
 
   step(
@@ -1616,6 +1619,8 @@ describe("devconnect functionality", function () {
         throw new Error("failed to log in");
       }
 
+      loggedInIdentityCommitments.add(result.identity.commitment.toString());
+
       expect(emailAPI.send).to.have.been.called.exactly(5);
     }
   );
@@ -1627,8 +1632,8 @@ describe("devconnect functionality", function () {
       v: [],
       o: [],
       g: [identity.commitment.toString()],
-      d: [],
-      s: []
+      d: [...loggedInIdentityCommitments],
+      s: [...loggedInIdentityCommitments]
     });
     await testLatestHistoricSemaphoreGroups(application);
   });
@@ -1727,6 +1732,9 @@ describe("devconnect functionality", function () {
       throw new Error("exected a user");
     }
 
+    loggedInIdentityCommitments.delete(identity.commitment.toString());
+    loggedInIdentityCommitments.add(result.identity.commitment.toString());
+
     identity = result.identity;
   });
 
@@ -1740,8 +1748,38 @@ describe("devconnect functionality", function () {
         v: [],
         o: [],
         g: [identity.commitment.toString()],
-        d: [],
-        s: []
+        d: [...loggedInIdentityCommitments],
+        s: [...loggedInIdentityCommitments]
+      });
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step(
+    "logging in a regular user adds them to devconnect attendees but not superuser semaphore group",
+    async function () {
+      const result = await testLogin(
+        application,
+        mocker.get().organizer1.EMAIL_3, // Not a superuser
+        {
+          expectEmailIncorrect: false,
+          expectUserAlreadyLoggedIn: false,
+          force: false,
+          skipSetupPassword: true
+        }
+      );
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+        g: [identity.commitment.toString()],
+        d: [
+          ...loggedInIdentityCommitments,
+          result?.identity.commitment.toString() as string
+        ],
+        s: [...loggedInIdentityCommitments]
       });
       await testLatestHistoricSemaphoreGroups(application);
     }
