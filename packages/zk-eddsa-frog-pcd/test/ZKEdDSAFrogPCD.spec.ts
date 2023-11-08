@@ -41,6 +41,7 @@ const prvKey =
   "0001020304050607080900010203040506070809000102030405060708090001";
 
 const EXTERNAL_NULLIFIER = BigInt(42);
+const WATERMARK = BigInt(6);
 
 describe("ZKEdDSAFrogPCD should work", function () {
   this.timeout(1000 * 30);
@@ -113,6 +114,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
       externalNullifier: {
         value: EXTERNAL_NULLIFIER.toString(),
         argumentType: ArgumentTypeName.BigInt
+      },
+      watermark: {
+        value: WATERMARK.toString(),
+        argumentType: ArgumentTypeName.BigInt
       }
     };
 
@@ -136,6 +141,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     expect(claim.signerPublicKey).to.not.be.undefined;
     expect(claim.externalNullifier).to.be.equal(EXTERNAL_NULLIFIER.toString());
     expect(claim.nullifierHash).to.be.not.be.undefined;
+    expect(claim.watermark).to.be.equal(WATERMARK.toString());
 
     const verificationRes = await ZKEdDSAFrogPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;
@@ -321,6 +327,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
       claim.nullifierHash = "123";
+    });
+
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
+      claim.watermark = "123";
     });
   });
 
