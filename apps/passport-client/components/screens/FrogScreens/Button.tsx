@@ -144,6 +144,7 @@ export const Button = styled.button<{ pending?: boolean }>`
   color: var(--white);
   cursor: pointer;
   flex: 1;
+  user-select: none;
 
   &:disabled {
     background-color: rgba(var(--white-rgb), 0.2);
