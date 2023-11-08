@@ -72,12 +72,12 @@ import {
   chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
-  displayEmojis,
   encodePayload,
   encodeTopicData,
   eventsToLink,
   generateReactProofUrl,
   getBotURL,
+  getDisplayEmojis,
   getGroupChat,
   getSessionKey,
   helpResponse,
@@ -1211,7 +1211,7 @@ export class TelegramService {
       );
 
       const allEmojis = _.uniq([
-        ...displayEmojis,
+        ...getDisplayEmojis(new Date(anonMessage.message_timestamp)),
         ...reactionsForMessage.map((rc) => rc.reaction)
       ]);
       const payloads = allEmojis.map((emoji) => {
@@ -1391,7 +1391,7 @@ export class TelegramService {
 
       const anonMessageId = uuidV1();
 
-      const payloads = displayEmojis.map((emoji) => {
+      const payloads = getDisplayEmojis().map((emoji) => {
         return {
           emoji,
           payload: encodePayload(buildReactPayload(emoji, anonMessageId))

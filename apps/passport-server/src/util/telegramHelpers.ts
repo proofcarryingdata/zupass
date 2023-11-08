@@ -1030,4 +1030,15 @@ export const buildReactPayload = (
   };
 };
 
-export const displayEmojis = ["👍", "❤️", "🐸"];
+export function getDisplayEmojis(messageTimestamp?: Date): string[] {
+  const frogCryptoDeployTimestamp = new Date(
+    "Wed Nov 08 2023 16:30:00 GMT+0300 (GMT+03:00)"
+  );
+  if (
+    messageTimestamp &&
+    messageTimestamp.getTime() < frogCryptoDeployTimestamp.getTime()
+  ) {
+    return ["👍", "❤️", "🦔"];
+  }
+  return ["👍", "❤️", "🐸"];
+}
