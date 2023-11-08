@@ -44,6 +44,24 @@ const TABS = [
 ] as const;
 type TabId = (typeof TABS)[number]["tab"];
 
+const scoreToFrogTitle: (number) => string = (score: number) => {
+  if (score > 133) {
+    return `🟢 LEGEND`;
+  } else if (score > 68) {
+    return `🔵 GRANDMASTER - ${Math.floor(((score - 69) / 64) * 100)}%`;
+  } else if (score > 35) {
+    return `🟣 MASTER - ${Math.floor(((score - 36) / 32) * 100)}%`;
+  } else if (score > 18) {
+    return `🔴 EXPERT - ${Math.floor(((score - 19) / 16) * 100)}%`;
+  } else if (score > 9) {
+    return `🟠 JORUNEYMAN - ${Math.floor(((score - 10) / 8) * 100)}%`;
+  } else if (score > 4) {
+    return `🟡 APPRENTICE - ${Math.floor(((score - 5) / 5) * 100)}%`;
+  } else {
+    return `⚪️ NOVICE(${Math.floor(((score - 0) / 5) * 100)}%)`;
+  }
+};
+
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
@@ -74,7 +92,7 @@ export function FrogHomeSection() {
 
       {myScore > 0 && (
         <Score>
-          Score {myScore} | Rank #{userState?.myScore?.rank}
+          Score {myScore} <br /> {scoreToFrogTitle(myScore)}
         </Score>
       )}
 
