@@ -10,8 +10,7 @@ import {
   Biome,
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
-  Temperament,
-  initArgs
+  Temperament
 } from "./EdDSAFrogPCD";
 import { getEdDSAFrogData } from "./utils";
 
@@ -39,7 +38,7 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
       <LinkButton onClick={() => setShowPCD(true)}>
         View as proof-carrying data
       </LinkButton>
-      <FrogImg src={frogData?.imageUrl} draggable={false} />
+      <FrogImg src={frogData?.imageUrl} draggable={false} loading="lazy" />
       <FrogInfo>
         <FrogAttribute label="JMP" title="Jump" value={frogData.jump} />
         <FrogAttribute
@@ -55,6 +54,9 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
         />
         <FrogAttribute label="BTY" title="Beauty" value={frogData.beauty} />
       </FrogInfo>
+      <LinkButton onClick={() => setShowMore(!showMore)}>
+        {showMore ? "Collapse" : "See more"}
+      </LinkButton>
       {showMore && (
         <>
           <Description>{frogData.description}</Description>
@@ -72,9 +74,6 @@ export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
           </FrogInfo>
         </>
       )}
-      <LinkButton onClick={() => setShowMore(!showMore)}>
-        {showMore ? "Collapse" : "See more"}
-      </LinkButton>
     </Container>
   );
 }
@@ -138,11 +137,13 @@ function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }) {
     const serializedPCD = JSON.stringify(serialized);
     console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
-    if (!initArgs.makeEncodedVerifyLink) {
-      throw new Error("must provide makeEncodedVerifyLink");
-    }
-    const verificationLink = initArgs.makeEncodedVerifyLink(encodedPCD);
-    return verificationLink;
+    return encodedPCD;
+    // FrogPCD doesn't verify on passport server yet
+    // if (!initArgs.makeEncodedVerifyLink) {
+    //   throw new Error("must provide makeEncodedVerifyLink");
+    // }
+    // const verificationLink = initArgs.makeEncodedVerifyLink(encodedPCD);
+    // return verificationLink;
   }, [pcd]);
 
   return (

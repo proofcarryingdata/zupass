@@ -1,7 +1,8 @@
-import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCD, isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   FROG_FREEROLLS,
   FeedSubscriptionManager,
+  FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   Subscription,
   SubscriptionErrorType
@@ -9,12 +10,17 @@ import {
 import { Separator } from "@pcd/passport-ui";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import styled from "styled-components";
-import { useDispatch, useSubscriptions } from "../../../src/appHooks";
+import {
+  useDispatch,
+  usePCDCollection,
+  useSubscriptions
+} from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { ActionButton } from "./Button";
+import { ActionButton, FrogSearchButton } from "./Button";
+import { useFrogConfetti } from "./useFrogParticles";
 
 /**
  * The GetFrog tab allows users to get frogs from their subscriptions as well as view their frogs.
@@ -112,52 +118,141 @@ const SearchButton = ({
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
   const canFetch = !nextFetchAt || nextFetchAt < Date.now();
+  const confetti = useFrogConfetti();
 
-  const onClick = useCallback(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        dispatch({
-          type: "sync-subscription",
-          subscriptionId: id,
-          onSucess: () => {
-            // nb: sync-subscription swallows http errors and always resolve as success
-            const error = subManager.getError(id);
-            if (error?.type === SubscriptionErrorType.FetchError) {
-              const fetchErrorMsg = error?.e?.message?.toLowerCase();
-              if (fetchErrorMsg?.includes("not active")) {
-                toast.error(
-                  `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
-                );
-                subManager.resetError(id);
-              } else if (fetchErrorMsg?.includes("next fetch")) {
-                toast.error(
-                  "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
-                );
-                subManager.resetError(id);
-              }
-            } else {
-              toast.success(`You found a new frog in ${feed.name}!`, {
-                icon: "🐸"
+  const getLastFrogRef = useGetLastFrog();
+
+  const onClick = useCallback(async () => {
+    await toast
+      .promise(
+        new Promise<void>((resolve) => {
+          setTimeout(resolve, 6000);
+        }).then(
+          () =>
+            new Promise<void>((resolve, reject) => {
+              dispatch({
+                type: "sync-subscription",
+                subscriptionId: id,
+                onSucess: () => {
+                  // nb: sync-subscription swallows http errors and always resolve as success
+                  const error = subManager.getError(id);
+                  if (error?.type === SubscriptionErrorType.FetchError) {
+                    const fetchErrorMsg = error?.e?.message?.toLowerCase();
+                    if (fetchErrorMsg?.includes("not active")) {
+                      subManager.resetError(id);
+                      return reject(
+                        `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
+                      );
+                    }
+                    if (fetchErrorMsg?.includes("next fetch")) {
+                      subManager.resetError(id);
+                      return reject(
+                        "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
+                      );
+                    }
+                  }
+
+                  resolve();
+                  confetti();
+                },
+                onError: reject
               });
-            }
-
-            refreshUserState().then(resolve).catch(reject);
+            })
+        ),
+        {
+          loading: <LoadingMessages biome={feed.name} />,
+          success: () => {
+            return `You found a ${
+              getLastFrogRef()?.claim?.data?.name || "new frog"
+            } in ${feed.name}!`;
           },
-          onError: (e) => refreshUserState().finally(() => reject(e))
-        });
-      }),
-    [dispatch, feed.name, id, refreshUserState, subManager]
-  );
+          error: (e) =>
+            typeof e === "string" ? e : "Oopsie-toad! Something went wrong."
+        }
+      )
+      .finally(() => refreshUserState());
+  }, [
+    confetti,
+    dispatch,
+    feed.name,
+    getLastFrogRef,
+    id,
+    refreshUserState,
+    subManager
+  ]);
   const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
   const freerolls = FROG_FREEROLLS + 1 - score;
 
   return (
-    <ActionButton key={id} onClick={onClick} disabled={!canFetch}>
+    <ActionButton
+      key={id}
+      onClick={onClick}
+      disabled={!canFetch}
+      ButtonComponent={FrogSearchButton}
+    >
       {canFetch
-        ? `${name}${freerolls > 0 ? ` (${freerolls})` : ""}`
+        ? `${name}${freerolls > 0 ? ` (${freerolls} remaining)` : ""}`
         : `${name}${countDown}`}
     </ActionButton>
   );
+};
+
+/**
+ * Returns the last issued frog PCD in the frog crypto folder.
+ */
+const useGetLastFrog = () => {
+  const pcdCollection = usePCDCollection();
+  const getLastFrog = useCallback(
+    () =>
+      _.maxBy(
+        pcdCollection
+          .getAllPCDsInFolder(FrogCryptoFolderName)
+          .filter(isEdDSAFrogPCD),
+        (pcd) => pcd.claim.data.timestampSigned
+      ),
+    [pcdCollection]
+  );
+  const ref = useRef(getLastFrog);
+  useEffect(() => {
+    ref.current = getLastFrog;
+  }, [getLastFrog]);
+
+  return ref.current;
+};
+
+/**
+ * Returns a random loading message that changes every 3 seconds.
+ */
+const LoadingMessages = ({ biome }: { biome: string }) => {
+  const messages = useMemo(
+    () => [
+      `Searching ${biome}...`,
+      `Froggy radar scanning ${biome}...`,
+      `Frogs, where are you?`,
+      `Pond-ering where the frogs are hiding...`
+    ],
+    [biome]
+  );
+
+  const [currentMessage, setCurrentMessage] = useState("");
+
+  // Function to get a random message
+  const getRandomMessage = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    setCurrentMessage(messages[randomIndex]);
+  }, [messages]);
+
+  useEffect(() => {
+    // Set the initial message
+    getRandomMessage();
+    // Change the message every 3 seconds
+    const interval = setInterval(getRandomMessage, 3000);
+
+    // Clean up interval on unmount
+    return () => clearInterval(interval);
+  }, [getRandomMessage]);
+
+  return <>{currentMessage}</>;
 };
 
 /**
