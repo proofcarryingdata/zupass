@@ -1,7 +1,8 @@
-import { EdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCD, isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   FROG_FREEROLLS,
   FeedSubscriptionManager,
+  FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   Subscription,
   SubscriptionErrorType
@@ -12,7 +13,11 @@ import prettyMilliseconds from "pretty-ms";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import styled from "styled-components";
-import { useDispatch, useSubscriptions } from "../../../src/appHooks";
+import {
+  useDispatch,
+  usePCDCollection,
+  useSubscriptions
+} from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { ActionButton, FrogSearchButton } from "./Button";
 import { useFrogConfetti } from "./useFrogParticles";
@@ -71,7 +76,6 @@ export function GetFrogTab({
               nextFetchAt={userFeedState?.nextFetchAt}
               subManager={subManager}
               score={userState?.myScore?.score}
-              pcds={pcds}
             />
           );
         })}
@@ -103,82 +107,79 @@ const SearchButton = ({
   nextFetchAt,
   refreshUserState,
   score,
-  subManager,
-  pcds
+  subManager
 }: {
   sub: Subscription;
   nextFetchAt?: number;
   refreshUserState: () => Promise<void>;
   score: number | undefined;
   subManager: FeedSubscriptionManager;
-  pcds: EdDSAFrogPCD[];
 }) => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
   const canFetch = !nextFetchAt || nextFetchAt < Date.now();
   const confetti = useFrogConfetti();
 
-  const pcdsRef = useRef(pcds);
-  useEffect(() => {
-    pcdsRef.current = pcds;
-  }, [pcds]);
+  const getLastFrogRef = useGetLastFrog();
 
   const onClick = useCallback(async () => {
     await toast
       .promise(
-        Promise.all([
-          new Promise<void>((resolve) => {
-            setTimeout(resolve, 6000);
-          }),
-          new Promise<void>((resolve, reject) => {
-            dispatch({
-              type: "sync-subscription",
-              subscriptionId: id,
-              onSucess: () => {
-                // nb: sync-subscription swallows http errors and always resolve as success
-                const error = subManager.getError(id);
-                if (error?.type === SubscriptionErrorType.FetchError) {
-                  const fetchErrorMsg = error?.e?.message?.toLowerCase();
-                  if (fetchErrorMsg?.includes("not active")) {
-                    subManager.resetError(id);
-                    return reject(
-                      `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
-                    );
+        new Promise<void>((resolve) => {
+          setTimeout(resolve, 6000);
+        }).then(
+          () =>
+            new Promise<void>((resolve, reject) => {
+              dispatch({
+                type: "sync-subscription",
+                subscriptionId: id,
+                onSucess: () => {
+                  // nb: sync-subscription swallows http errors and always resolve as success
+                  const error = subManager.getError(id);
+                  if (error?.type === SubscriptionErrorType.FetchError) {
+                    const fetchErrorMsg = error?.e?.message?.toLowerCase();
+                    if (fetchErrorMsg?.includes("not active")) {
+                      subManager.resetError(id);
+                      return reject(
+                        `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
+                      );
+                    }
+                    if (fetchErrorMsg?.includes("next fetch")) {
+                      subManager.resetError(id);
+                      return reject(
+                        "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
+                      );
+                    }
                   }
-                  if (fetchErrorMsg?.includes("next fetch")) {
-                    subManager.resetError(id);
-                    return reject(
-                      "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
-                    );
-                  }
-                }
 
-                resolve();
-              },
-              onError: reject
-            });
-          })
-        ]).then(([, res]) => {
-          confetti();
-          return res;
-        }),
+                  resolve();
+                  confetti();
+                },
+                onError: reject
+              });
+            })
+        ),
         {
           loading: <LoadingMessages biome={feed.name} />,
           success: () => {
-            const frog = _.maxBy(
-              pcdsRef.current,
-              (pcd) => pcd.claim.data.timestampSigned
-            );
-            return `You found a ${frog?.claim?.data?.name || "new frog"} in ${
-              feed.name
-            }!`;
+            return `You found a ${
+              getLastFrogRef()?.claim?.data?.name || "new frog"
+            } in ${feed.name}!`;
           },
           error: (e) =>
             typeof e === "string" ? e : "Oopsie-toad! Something went wrong."
         }
       )
       .finally(() => refreshUserState());
-  }, [confetti, dispatch, feed.name, id, refreshUserState, subManager]);
+  }, [
+    confetti,
+    dispatch,
+    feed.name,
+    getLastFrogRef,
+    id,
+    refreshUserState,
+    subManager
+  ]);
   const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
   const freerolls = FROG_FREEROLLS + 1 - score;
 
@@ -194,6 +195,26 @@ const SearchButton = ({
         : `${name}${countDown}`}
     </ActionButton>
   );
+};
+
+const useGetLastFrog = () => {
+  const pcdCollection = usePCDCollection();
+  const getLastFrog = useCallback(
+    () =>
+      _.maxBy(
+        pcdCollection
+          .getAllPCDsInFolder(FrogCryptoFolderName)
+          .filter(isEdDSAFrogPCD),
+        (pcd) => pcd.claim.data.timestampSigned
+      ),
+    [pcdCollection]
+  );
+  const ref = useRef(getLastFrog);
+  useEffect(() => {
+    ref.current = getLastFrog;
+  }, [getLastFrog]);
+
+  return ref.current;
 };
 
 const LoadingMessages = ({ biome }: { biome: string }) => {
