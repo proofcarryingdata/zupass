@@ -28,6 +28,7 @@ import {
   InlineKeyboardMarkup,
   Message
 } from "grammy/types";
+import _ from "lodash";
 import { v1 as uuidV1 } from "uuid";
 import { AnonMessageWithDetails } from "../database/models";
 import {
@@ -88,7 +89,7 @@ import {
   uwuResponse,
   verifyUserEventIds
 } from "../util/telegramHelpers";
-import { checkSlidingWindowRateLimit } from "../util/util";
+import { checkSlidingWindowRateLimit, isValidEmoji } from "../util/util";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
@@ -1146,6 +1147,9 @@ export class TelegramService {
       if (!watermark) {
         throw new Error("Anonymous reaction PCD did not contain watermark");
       }
+      if (!isValidEmoji(watermark)) {
+        throw new Error("Invalid watermark");
+      }
       span?.setAttribute("watermark", watermark);
 
       const preimage = encodeAnonMessageIdAndReaction(
@@ -1206,10 +1210,10 @@ export class TelegramService {
         anonMessageId
       );
 
-      const allEmojis = [
+      const allEmojis = _.uniq([
         ...displayEmojis,
         ...reactionsForMessage.map((rc) => rc.reaction)
-      ];
+      ]);
       const payloads = allEmojis.map((emoji) => {
         return {
           emoji,
