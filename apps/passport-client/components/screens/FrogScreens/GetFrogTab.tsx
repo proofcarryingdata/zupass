@@ -252,7 +252,7 @@ const LoadingMessages = ({ biome }: { biome: string }) => {
     return () => clearInterval(interval);
   }, [getRandomMessage]);
 
-  return currentMessage;
+  return <>{currentMessage}</>;
 };
 
 /**
