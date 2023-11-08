@@ -89,7 +89,7 @@ import {
   uwuResponse,
   verifyUserEventIds
 } from "../util/telegramHelpers";
-import { checkSlidingWindowRateLimit, isValidSingleEmoji } from "../util/util";
+import { checkSlidingWindowRateLimit, isValidEmoji } from "../util/util";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
@@ -1147,7 +1147,7 @@ export class TelegramService {
       if (!watermark) {
         throw new Error("Anonymous reaction PCD did not contain watermark");
       }
-      if (!isValidSingleEmoji(reaction)) {
+      if (!isValidEmoji(reaction)) {
         throw new Error("Invalid watermark");
       }
       span?.setAttribute("watermark", watermark);
