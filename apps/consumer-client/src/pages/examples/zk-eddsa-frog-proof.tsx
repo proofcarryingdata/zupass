@@ -22,7 +22,8 @@ import { ZUPASS_URL } from "../../constants";
 
 export default function Page() {
   const externalNullifier =
-    generateSnarkMessageHash("consumer-client").toString();
+    generateSnarkMessageHash("consumer-client-nullifier").toString();
+  const watermark = generateSnarkMessageHash("consumer-client-watermark").toString();
 
   // Populate PCD from either client-side or server-side proving using the Zupass popup
   const [pcdStr] = useZupassPopupMessages();
@@ -35,7 +36,8 @@ export default function Page() {
   const { pcd } = useZKEdDSAFrogProof(
     pcdStr,
     onVerified,
-    externalNullifier
+    externalNullifier,
+    watermark
   );
 
   return (
@@ -53,7 +55,8 @@ export default function Page() {
             openZKEdDSAFrogPopup(
               ZUPASS_URL,
               window.location.origin + "#/popup",
-              externalNullifier
+              externalNullifier,
+              watermark
             )
           }
           disabled={valid}
@@ -83,6 +86,7 @@ export default function Page() {
                 <p>{`Signer: ${pcd.claim.signerPublicKey}`}</p>
                 <p>{`External Nullifier: ${pcd.claim.externalNullifier}`}</p>
                 <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
+                <p>{`Watermark: ${pcd.claim.watermark}`}</p>
               </>
             )}
           </>
@@ -103,7 +107,8 @@ export default function Page() {
 export function openZKEdDSAFrogPopup(
   urlToZupassWebsite: string,
   popupUrl: string,
-  externalNullifier?: string
+  externalNullifier: string,
+  watermark: string
 ) {
   const args: ZKEdDSAFrogPCDArgs = {
     frog: {
@@ -126,6 +131,11 @@ export function openZKEdDSAFrogPopup(
       value: externalNullifier,
       userProvided: false
     },
+    watermark: {
+      argumentType: ArgumentTypeName.BigInt,
+      value: watermark,
+      userProvided: false
+    },
   };
 
   const proofUrl = constructZupassPcdGetRequestUrl<
@@ -146,7 +156,8 @@ export function openZKEdDSAFrogPopup(
 function useZKEdDSAFrogProof(
   pcdStr: string,
   onVerified: (valid: boolean) => void,
-  externalNullifier?: string
+  externalNullifier: string,
+  watermark: string
 ): { pcd: ZKEdDSAFrogPCD | undefined; error: any } {
   const [error, _setError] = useState<Error | undefined>();
   const zkEdDSAFrogPCD = useSerializedPCD(
@@ -158,12 +169,14 @@ function useZKEdDSAFrogProof(
     if (zkEdDSAFrogPCD) {
       verifyProof(
         zkEdDSAFrogPCD,
-        externalNullifier
+        externalNullifier,
+        watermark
       ).then(onVerified);
     }
   }, [
     zkEdDSAFrogPCD,
     externalNullifier,
+    watermark,
     onVerified
   ]);
 
@@ -175,7 +188,8 @@ function useZKEdDSAFrogProof(
 
 async function verifyProof(
   pcd: ZKEdDSAFrogPCD,
-  externalNullifier?: string
+  externalNullifier: string,
+  watermark: string
 ): Promise<boolean> {
   const { verify } = ZKEdDSAFrogPCDPackage;
   const verified = await verify(pcd);
@@ -185,5 +199,6 @@ async function verifyProof(
   const sameExternalNullifier =
     pcd.claim.externalNullifier === externalNullifier ||
     (!pcd.claim.externalNullifier && !externalNullifier);
-  return sameExternalNullifier;
+  const sameWatermark = pcd.claim.watermark === watermark;
+  return sameExternalNullifier && sameWatermark;
 }
