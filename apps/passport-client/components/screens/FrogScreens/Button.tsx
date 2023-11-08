@@ -113,6 +113,8 @@ export const FrogSearchButton = ({
       container.start();
     }
 
+    // nb: we always need this so we can disable animation when button starts as
+    // enabled
     return () => {
       container.stop();
     };
