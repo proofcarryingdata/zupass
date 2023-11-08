@@ -71,7 +71,7 @@ import {
   chatsToForwardTo,
   chatsToJoin,
   chatsToPostIn,
-  emojis,
+  displayEmojis,
   encodePayload,
   encodeTopicData,
   eventsToLink,
@@ -1206,7 +1206,11 @@ export class TelegramService {
         anonMessageId
       );
 
-      const payloads = emojis.map((emoji) => {
+      const allEmojis = [
+        ...displayEmojis,
+        ...reactionsForMessage.map((rc) => rc.reaction)
+      ];
+      const payloads = allEmojis.map((emoji) => {
         return {
           emoji,
           payload: encodePayload(buildReactPayload(emoji, anonMessageId))
@@ -1383,7 +1387,7 @@ export class TelegramService {
 
       const anonMessageId = uuidV1();
 
-      const payloads = emojis.map((emoji) => {
+      const payloads = displayEmojis.map((emoji) => {
         return {
           emoji,
           payload: encodePayload(buildReactPayload(emoji, anonMessageId))
