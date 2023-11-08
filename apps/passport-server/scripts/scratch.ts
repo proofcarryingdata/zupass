@@ -232,7 +232,7 @@ yargs
       let commitments = [];
       let group: Group = new Group("1", 16);
 
-      const runs = 10;
+      const runs = 3;
 
       let start = performance.now();
 
@@ -256,7 +256,7 @@ yargs
 
       start = performance.now();
 
-      const numberOfMembersToChange = 10;
+      const numberOfMembersToChange = 40;
 
       for (let k = 0; k < runs; k++) {
         // Cut off the first n commitments

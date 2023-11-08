@@ -19,7 +19,6 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { zuconnectProductIdToZuzaluRole } from "../util/zuconnectTicket";
-import { MultiProcessService } from "./multiProcessService";
 import { traced } from "./telemetryService";
 
 type LoggedInZuzaluOrZuconnectUser = Pick<
@@ -35,7 +34,6 @@ export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;
   private groups: Map<string, NamedGroup>;
   private dbPool: Pool;
-  private readonly multiProcessService: MultiProcessService;
 
   public groupParticipants = (): NamedGroup => this.getNamedGroup("1");
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
@@ -45,13 +43,9 @@ export class SemaphoreService {
   public groupDevconnectAttendees = (): NamedGroup => this.getNamedGroup("6");
   public groupDevconnectOrganizers = (): NamedGroup => this.getNamedGroup("7");
 
-  public constructor(
-    config: ApplicationContext,
-    multiProcessService: MultiProcessService
-  ) {
+  public constructor(config: ApplicationContext) {
     this.dbPool = config.dbPool;
     this.groups = SemaphoreService.createGroups();
-    this.multiProcessService = multiProcessService;
   }
 
   private static createGroups(): Map<string, NamedGroup> {
@@ -399,10 +393,9 @@ export class SemaphoreService {
 }
 
 export function startSemaphoreService(
-  context: ApplicationContext,
-  multiProcessService: MultiProcessService
+  context: ApplicationContext
 ): SemaphoreService {
-  const semaphoreService = new SemaphoreService(context, multiProcessService);
+  const semaphoreService = new SemaphoreService(context);
   semaphoreService.start();
   semaphoreService.scheduleReload();
   return semaphoreService;
