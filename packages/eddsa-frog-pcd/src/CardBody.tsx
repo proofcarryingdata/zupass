@@ -11,15 +11,6 @@ import {
 } from "./EdDSAFrogPCD";
 import { getEdDSAFrogData } from "./utils";
 
-const RARITY_COLORS = {
-  [Rarity.Common]: "#168675",
-  [Rarity.Rare]: "#1197B5",
-  [Rarity.Epic]: "#6F3BB0",
-  [Rarity.Legendary]: "#FF9900",
-  [Rarity.Unknown]: "#A7967E",
-  [Rarity.Object]: "#A7967E"
-} as const;
-
 export function EdDSAFrogCardBody({
   pcd,
   returnHeader
@@ -44,11 +35,20 @@ export function EdDSAFrogCardBody({
       );
     }
 
+    const rarityColors = {
+      [Rarity.Common]: "#168675",
+      [Rarity.Rare]: "#1197B5",
+      [Rarity.Epic]: "#6F3BB0",
+      [Rarity.Legendary]: "#FF9900",
+      [Rarity.Unknown]: "#A7967E",
+      [Rarity.Object]: "#A7967E"
+    } as const;
+
     return (
       <HeaderContainer
         style={{
           backgroundColor:
-            RARITY_COLORS[frogData.rarity] ?? "var(--bg-dark-primary)"
+            rarityColors[frogData.rarity] ?? "var(--bg-dark-primary)"
         }}
       >
         {`#${frogData.frogId} ${frogData.name}`}
