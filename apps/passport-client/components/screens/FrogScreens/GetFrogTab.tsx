@@ -9,7 +9,7 @@ import {
 import { Separator } from "@pcd/passport-ui";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { toast } from "react-hot-toast";
 import styled from "styled-components";
 import { useDispatch, useSubscriptions } from "../../../src/appHooks";
@@ -71,6 +71,7 @@ export function GetFrogTab({
               nextFetchAt={userFeedState?.nextFetchAt}
               subManager={subManager}
               score={userState?.myScore?.score}
+              pcds={pcds}
             />
           );
         })}
@@ -102,25 +103,32 @@ const SearchButton = ({
   nextFetchAt,
   refreshUserState,
   score,
-  subManager
+  subManager,
+  pcds
 }: {
   sub: Subscription;
   nextFetchAt?: number;
   refreshUserState: () => Promise<void>;
   score: number | undefined;
   subManager: FeedSubscriptionManager;
+  pcds: EdDSAFrogPCD[];
 }) => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
   const canFetch = !nextFetchAt || nextFetchAt < Date.now();
   const confetti = useFrogConfetti();
 
+  const pcdsRef = useRef(pcds);
+  useEffect(() => {
+    pcdsRef.current = pcds;
+  }, [pcds]);
+
   const onClick = useCallback(async () => {
     await toast
       .promise(
         Promise.all([
           new Promise<void>((resolve) => {
-            setTimeout(resolve, 2000);
+            setTimeout(resolve, 6000);
           }),
           new Promise<void>((resolve, reject) => {
             dispatch({
@@ -132,11 +140,13 @@ const SearchButton = ({
                 if (error?.type === SubscriptionErrorType.FetchError) {
                   const fetchErrorMsg = error?.e?.message?.toLowerCase();
                   if (fetchErrorMsg?.includes("not active")) {
+                    subManager.resetError(id);
                     return reject(
                       `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
                     );
                   }
                   if (fetchErrorMsg?.includes("next fetch")) {
+                    subManager.resetError(id);
                     return reject(
                       "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
                     );
@@ -148,17 +158,23 @@ const SearchButton = ({
               onError: reject
             });
           })
-        ]).then(([, res]) => res),
+        ]).then(([, res]) => {
+          confetti();
+          return res;
+        }),
         {
-          loading: `Searching ${feed.name}...`,
+          loading: <LoadingMessages biome={feed.name} />,
           success: () => {
-            confetti();
-            return `You found a new frog in ${feed.name}!`;
+            const frog = _.maxBy(
+              pcdsRef.current,
+              (pcd) => pcd.claim.data.timestampSigned
+            );
+            return `You found a ${frog?.claim?.data?.name || "new frog"} in ${
+              feed.name
+            }!`;
           },
-          error: (e) => {
-            subManager.resetError(id);
-            return e?.message;
-          }
+          error: (e) =>
+            typeof e === "string" ? e : "Oopsie-toad! Something went wrong."
         }
       )
       .finally(() => refreshUserState());
@@ -178,6 +194,38 @@ const SearchButton = ({
         : `${name}${countDown}`}
     </ActionButton>
   );
+};
+
+const LoadingMessages = ({ biome }: { biome: string }) => {
+  const messages = useMemo(
+    () => [
+      `Searching ${biome}...`,
+      `Froggy radar scanning ${biome}...`,
+      `Frogs, where are you?`,
+      `Pond-ering where the frogs are hiding...`
+    ],
+    [biome]
+  );
+
+  const [currentMessage, setCurrentMessage] = useState("");
+
+  // Function to get a random message
+  const getRandomMessage = useCallback(() => {
+    const randomIndex = Math.floor(Math.random() * messages.length);
+    setCurrentMessage(messages[randomIndex]);
+  }, [messages]);
+
+  useEffect(() => {
+    // Set the initial message
+    getRandomMessage();
+    // Change the message every 3 seconds
+    const interval = setInterval(getRandomMessage, 3000);
+
+    // Clean up interval on unmount
+    return () => clearInterval(interval);
+  }, [getRandomMessage]);
+
+  return currentMessage;
 };
 
 /**

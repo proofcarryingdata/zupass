@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { loadFull } from "tsparticles";
 import { confetti } from "tsparticles-confetti";
 import { Container, tsParticles } from "tsparticles-engine";
@@ -108,73 +108,8 @@ export function useFrogParticles(ref: React.RefObject<HTMLDivElement> | null) {
 }
 
 export function useFrogConfetti() {
-  useEffect(() => {
-    tsParticles.load({
-      preset: "confetti",
-      options: {
-        fullScreen: {
-          enable: true,
-          zIndex: 100
-        },
-        fpsLimit: 120,
-        particles: {
-          color: {
-            value: [
-              "#004b23",
-              "#006400",
-              "#007200",
-              "#008000",
-              "#38b000",
-              "#70e000",
-              "#9ef01a",
-              "#ccff33"
-            ],
-            animation: {
-              enable: true,
-              speed: 100,
-              sync: true
-            }
-          },
-          shape: {
-            type: "image",
-            image: {
-              replaceColor: true,
-              src: "/images/frogs/frog.svg"
-            }
-          },
-          opacity: {
-            value: 1
-          },
-          size: {
-            value: { min: 1000, max: 2000 },
-            animation: {
-              enable: true,
-              speed: 10,
-              minimumValue: 1,
-              sync: true,
-              startValue: "min",
-              count: 1
-            }
-          },
-          move: {
-            enable: true,
-            speed: { min: 5, max: 20 },
-            direction: "top",
-            random: true,
-            straight: false,
-            outMode: "bounce-horizontal",
-            gravity: {
-              enable: true
-            }
-          }
-        },
-        detectRetina: true
-      }
-    });
-  }, []);
-
-  return () => {
-    confetti({
+  return useCallback(async () => {
+    const container = await confetti({
       spread: 360,
       ticks: 100,
       gravity: 1,
@@ -209,5 +144,11 @@ export function useFrogConfetti() {
         }
       }
     });
-  };
+
+    // fixme: workaround when we switch tab back to GetFrog, confetti plays
+    // again. look into this later
+    setTimeout(() => {
+      container.destroy();
+    }, 5000);
+  }, []);
 }
