@@ -57,10 +57,14 @@ function ScoreTable({
         {scores.map((score) => (
           <tr
             key={score.rank}
-            style={{
-              fontWeight:
-                score.semaphore_id === myScore?.semaphore_id ? "bold" : "normal"
-            }}
+            style={
+              score.semaphore_id === myScore?.semaphore_id
+                ? {
+                    fontWeight: "bold",
+                    color: "var(--accent-darker)"
+                  }
+                : {}
+            }
           >
             <td>{score.rank}</td>
             <td>{getUserShortId(score.semaphore_id)}</td>
