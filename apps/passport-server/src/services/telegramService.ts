@@ -1147,7 +1147,7 @@ export class TelegramService {
       if (!watermark) {
         throw new Error("Anonymous reaction PCD did not contain watermark");
       }
-      if (!isValidSingleEmoji(watermark)) {
+      if (!isValidSingleEmoji(reaction)) {
         throw new Error("Invalid watermark");
       }
       span?.setAttribute("watermark", watermark);
