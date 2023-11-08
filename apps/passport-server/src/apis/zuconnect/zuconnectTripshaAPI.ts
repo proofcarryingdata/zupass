@@ -53,6 +53,9 @@ const ZuconnectTripshaNormalizedSchema = ZuconnectTripshaSchema
         }
       }
     }
+    if (ticketName === "Latecomer Pass") {
+      ticketName = "ZuConnect Resident Pass";
+    }
     return {
       id,
       ticketName,
