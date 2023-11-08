@@ -197,6 +197,9 @@ const SearchButton = ({
   );
 };
 
+/**
+ * Returns the last issued frog PCD in the frog crypto folder.
+ */
 const useGetLastFrog = () => {
   const pcdCollection = usePCDCollection();
   const getLastFrog = useCallback(
@@ -217,6 +220,9 @@ const useGetLastFrog = () => {
   return ref.current;
 };
 
+/**
+ * Returns a random loading message that changes every 3 seconds.
+ */
 const LoadingMessages = ({ biome }: { biome: string }) => {
   const messages = useMemo(
     () => [

@@ -138,6 +138,7 @@ function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }) {
     console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
     return encodedPCD;
+    // FrogPCD doesn't verify on passport server yet
     // if (!initArgs.makeEncodedVerifyLink) {
     //   throw new Error("must provide makeEncodedVerifyLink");
     // }
