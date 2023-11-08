@@ -14,7 +14,8 @@ import { toast } from "react-hot-toast";
 import styled from "styled-components";
 import { useDispatch, useSubscriptions } from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { ActionButton } from "./Button";
+import { ActionButton, FrogSearchButton } from "./Button";
+import { useFrogConfetti } from "./useFrogParticles";
 
 /**
  * The GetFrog tab allows users to get frogs from their subscriptions as well as view their frogs.
@@ -112,49 +113,68 @@ const SearchButton = ({
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
   const canFetch = !nextFetchAt || nextFetchAt < Date.now();
+  const confetti = useFrogConfetti();
 
-  const onClick = useCallback(
-    () =>
-      new Promise<void>((resolve, reject) => {
-        dispatch({
-          type: "sync-subscription",
-          subscriptionId: id,
-          onSucess: () => {
-            // nb: sync-subscription swallows http errors and always resolve as success
-            const error = subManager.getError(id);
-            if (error?.type === SubscriptionErrorType.FetchError) {
-              const fetchErrorMsg = error?.e?.message?.toLowerCase();
-              if (fetchErrorMsg?.includes("not active")) {
-                toast.error(
-                  `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
-                );
-                subManager.resetError(id);
-              } else if (fetchErrorMsg?.includes("next fetch")) {
-                toast.error(
-                  "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
-                );
-                subManager.resetError(id);
-              }
-            } else {
-              toast.success(`You found a new frog in ${feed.name}!`, {
-                icon: "🐸"
-              });
-            }
+  const onClick = useCallback(async () => {
+    await toast
+      .promise(
+        Promise.all([
+          new Promise<void>((resolve) => {
+            setTimeout(resolve, 2000);
+          }),
+          new Promise<void>((resolve, reject) => {
+            dispatch({
+              type: "sync-subscription",
+              subscriptionId: id,
+              onSucess: () => {
+                // nb: sync-subscription swallows http errors and always resolve as success
+                const error = subManager.getError(id);
+                if (error?.type === SubscriptionErrorType.FetchError) {
+                  const fetchErrorMsg = error?.e?.message?.toLowerCase();
+                  if (fetchErrorMsg?.includes("not active")) {
+                    return reject(
+                      `Ribbit! ${feed.name} has vanished into a mist of mystery. It might return after a few bug snacks, or it might find new ponds to explore. Keep your eyes peeled for the next leap of adventure!`
+                    );
+                  }
+                  if (fetchErrorMsg?.includes("next fetch")) {
+                    return reject(
+                      "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
+                    );
+                  }
+                }
 
-            refreshUserState().then(resolve).catch(reject);
+                resolve();
+              },
+              onError: reject
+            });
+          })
+        ]).then(([, res]) => res),
+        {
+          loading: `Searching ${feed.name}...`,
+          success: () => {
+            confetti();
+            return `You found a new frog in ${feed.name}!`;
           },
-          onError: (e) => refreshUserState().finally(() => reject(e))
-        });
-      }),
-    [dispatch, feed.name, id, refreshUserState, subManager]
-  );
+          error: (e) => {
+            subManager.resetError(id);
+            return e?.message;
+          }
+        }
+      )
+      .finally(() => refreshUserState());
+  }, [confetti, dispatch, feed.name, id, refreshUserState, subManager]);
   const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
   const freerolls = FROG_FREEROLLS + 1 - score;
 
   return (
-    <ActionButton key={id} onClick={onClick} disabled={!canFetch}>
+    <ActionButton
+      key={id}
+      onClick={onClick}
+      disabled={!canFetch}
+      ButtonComponent={FrogSearchButton}
+    >
       {canFetch
-        ? `${name}${freerolls > 0 ? ` (${freerolls})` : ""}`
+        ? `${name}${freerolls > 0 ? ` (${freerolls} remaining)` : ""}`
         : `${name}${countDown}`}
     </ActionButton>
   );

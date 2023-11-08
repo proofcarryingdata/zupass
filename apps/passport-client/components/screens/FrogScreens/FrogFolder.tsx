@@ -5,10 +5,9 @@ import {
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
-import { loadFull } from "tsparticles";
-import { tsParticles } from "tsparticles-engine";
 import { useSubscriptions } from "../../../src/appHooks";
 import { DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL } from "./FrogHomeSection";
+import { useFrogParticles } from "./useFrogParticles";
 
 /**
  * Render the FrogCrypto folder in the home screen.
@@ -30,7 +29,7 @@ export function FrogFolder({
 }) {
   const divRef = useRef<HTMLDivElement>(null);
   const { gameOn, setGameOn } = useFetchGameOn();
-  useParticles(gameOn === false ? divRef : null);
+  useFrogParticles(gameOn === false ? divRef : null);
 
   return (
     <Container
@@ -136,105 +135,6 @@ function CountDown({ setGameOn }: { setGameOn: (gameOn: boolean) => void }) {
   }, [end, setGameOn]);
 
   return <>{diffText}</>;
-}
-
-function useParticles(ref: React.RefObject<HTMLDivElement> | null) {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const load = async () => {
-      await loadFull(tsParticles);
-      setReady(true);
-    };
-    load();
-  }, []);
-
-  useEffect(() => {
-    if (!ready || !ref) {
-      return;
-    }
-
-    tsParticles.load({
-      element: ref.current,
-      options: {
-        fullScreen: {
-          enable: true,
-          zIndex: 100
-        },
-        fpsLimit: 120,
-        particles: {
-          number: {
-            value: 0
-          },
-          color: {
-            value: [
-              "#004b23",
-              "#006400",
-              "#007200",
-              "#008000",
-              "#38b000",
-              "#70e000",
-              "#9ef01a",
-              "#ccff33"
-            ],
-            animation: {
-              enable: true,
-              speed: 100,
-              sync: true
-            }
-          },
-          shape: {
-            type: "image",
-            image: {
-              replaceColor: true,
-              src: "/images/frogs/frog.svg"
-            }
-          },
-          opacity: {
-            value: 1
-          },
-          size: {
-            value: { min: 1000, max: 2000 },
-            animation: {
-              enable: true,
-              speed: 10,
-              minimumValue: 1,
-              sync: true,
-              startValue: "min",
-              count: 1
-            }
-          },
-          move: {
-            enable: true,
-            speed: { min: 5, max: 20 },
-            direction: "top",
-            random: true,
-            straight: false,
-            outMode: "bounce-horizontal",
-            gravity: {
-              enable: true
-            }
-          }
-        },
-        interactivity: {
-          detectsOn: "parent",
-          events: {
-            onClick: {
-              enable: true,
-              mode: "trail"
-            },
-            resize: true
-          },
-          modes: {
-            trail: {
-              delay: 0.1,
-              quantity: 10
-            }
-          }
-        },
-        detectRetina: true
-      }
-    });
-  }, [ready, ref]);
 }
 
 const NewFont = styled.div`

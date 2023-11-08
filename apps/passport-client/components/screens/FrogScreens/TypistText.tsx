@@ -63,6 +63,6 @@ const FadeIn = styled.div`
 `;
 
 const TypewriterContainer = styled.div`
-  font-size: 18px;
+  font-size: 16px;
   user-select: none;
 `;
