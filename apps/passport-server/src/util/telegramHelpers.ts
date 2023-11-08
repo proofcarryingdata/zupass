@@ -1030,4 +1030,4 @@ export const buildReactPayload = (
   };
 };
 
-export const emojis = ["👍", "❤️", "🦔"];
+export const emojis = ["👍", "❤️", "🐸"];
