@@ -83,7 +83,7 @@ export const ZUCONNECT_PRODUCT_ID_MAPPINGS: {
   "Latecomer Pass": {
     id: ZUCONNECT_23_RESIDENT_PRODUCT_ID,
     eventId: ZUCONNECT_23_RESIDENT_EVENT_ID,
-    name: "Latecomer Pass",
+    name: "Resident",
     zuzaluRoleEquivalent: ZuzaluUserRole.Resident
   }
 };
