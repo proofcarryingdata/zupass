@@ -42,6 +42,10 @@ template EdDSAFrogPCD () {
     // External nullifier, used to tie together nullifiers within a single category. 
     signal input externalNullifier;
 
+    // Watermark allows prover to tie a proof to a challenge. It's unconstrained,
+    // but included in the proof.
+    signal input watermark;
+
     // Calculate "message" representing the frog, which is a hash of the fields.
     signal frogMessageHash <== Poseidon(13)([
         frogId,
@@ -80,6 +84,9 @@ template EdDSAFrogPCD () {
 
     // Calculate nullifier
     signal output nullifierHash <== Poseidon(2)([externalNullifier, semaphoreIdentityNullifier]);
+
+    // Dummy constraint on watermark to make sure it can't be compiled out.
+    signal watermarkSquared <== watermark * watermark;
 }
 
 component main { public [
@@ -97,5 +104,6 @@ component main { public [
     reservedField3,
     frogSignerPubkeyAx,
     frogSignerPubkeyAy,
-    externalNullifier
+    externalNullifier,
+    watermark
 ] } = EdDSAFrogPCD();
