@@ -1,5 +1,6 @@
 import {
   ArgumentTypeName,
+  BooleanArgument,
   DisplayOptions,
   NumberArgument,
   PCD,
@@ -37,6 +38,12 @@ export interface SecretPhrasePCDInitArgs {
 
 export type SecretPhrasePCDArgs = {
   /**
+   * Determines whether the PCD should include the secret or not in the claim
+   * Not used in ZK proof
+   */
+  includeSecret: BooleanArgument,
+
+  /**
    * Publicly known Phrase ID that is used to look up rounds
    * Not used in ZK proof
    */
@@ -61,6 +68,7 @@ export type SecretPhrasePCDArgs = {
 export interface SecretPhrasePCDClaim {
   phraseId: number,
   username: string,
+  secret?: string,
   secretHash: string
 }
 
@@ -112,6 +120,7 @@ async function ensureInitialized(): Promise<SecretPhrasePCDInitArgs> {
  * @returns - extracted proof inputs (must be marshalled into bigints)
  */
 export function checkProofInputs(args: SecretPhrasePCDArgs): {
+  includeSecret: boolean,
   username: string,
   secret: string,
   phraseId: number
@@ -137,8 +146,10 @@ export function checkProofInputs(args: SecretPhrasePCDArgs): {
     throw new Error("Cannot make The Word proof: missing phraseId");
   }
 
+  const includeSecret = args.includeSecret.value ? args.includeSecret.value : false;
+
   // return valid inputs
-  return { username, secret, phraseId: Number(phraseId) };
+  return { username, secret, phraseId: Number(phraseId), includeSecret };
 }
 
 /**
@@ -183,7 +194,7 @@ export async function prove(
   const initArgs = await ensureInitialized();
 
   // extract inputs for proof from SecretPhrasePCDArgs
-  const { username, secret, phraseId } = checkProofInputs(args);
+  const { username, secret, phraseId, includeSecret } = checkProofInputs(args);
 
   // marshall inputs into bn254 field elements
   const snarkInput = snarkInputForProof(username, secret);
@@ -202,6 +213,7 @@ export async function prove(
   const claim: SecretPhrasePCDClaim = {
     phraseId,
     username,
+    secret: includeSecret ? secret : undefined,
     secretHash
   }
 

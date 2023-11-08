@@ -6,10 +6,11 @@ import { SecretPhrasePCD } from "./SecretPhrasePCD";
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
 export function SecretPhraseCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
+  // determine whether or not to show the secret hash
+  const isSecret = pcd.claim.secret ? false : true;
   return (
     <Container>
-      <p>This PCD represents knowledge of a secret phrase in "The Word"</p>
-
+      <p>PCD proving knowledge of a secret phrase for "The Word"</p>
       <Separator />
 
       <FieldLabel>Round Number</FieldLabel>
@@ -17,13 +18,18 @@ export function SecretPhraseCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
       <Spacer h={8} />
 
       <FieldLabel>Username</FieldLabel>
-      <HiddenText
-        text={pcd.claim.username}
-      />
+      <TextContainer>{pcd.claim.username}</TextContainer>
       <Spacer h={8} />
 
+      {!isSecret && (
+        <>
+          <FieldLabel>Secret Phrase</FieldLabel>
+          <HiddenText text={pcd.claim.secret!} />
+        </>
+      )}
+      <Spacer h={8} />
       <FieldLabel>Hash of the Secret Phrase</FieldLabel>
-      <HiddenText text={pcd.claim.secretHash.toString()} />
+      <TextContainer>{pcd.claim.secretHash.toString()}</TextContainer>
     </Container>
   );
 }

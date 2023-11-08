@@ -930,22 +930,23 @@ var import_passport_ui = require("@pcd/passport-ui");
 var import_styled_components = __toESM(require("styled-components"));
 var import_jsx_runtime = require("react/jsx-runtime");
 function SecretPhraseCardBody({ pcd }) {
+  const isSecret = pcd.claim.secret ? false : true;
   return /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(Container, { children: [
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: 'This PCD represents knowledge of a secret phrase in "The Word"' }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: 'PCD proving knowledge of a secret phrase for "The Word"' }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Separator, {}),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Round Number" }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.claim.phraseId.toString() }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Username" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-      import_passport_ui.HiddenText,
-      {
-        text: pcd.claim.username
-      }
-    ),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.claim.username }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
+    !isSecret && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Username" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.HiddenText, { text: pcd.claim.secret })
+    ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Hash of the Secret Phrase" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.HiddenText, { text: pcd.claim.secretHash.toString() })
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.claim.secretHash.toString() })
   ] });
 }
 var Container = import_styled_components.default.div`
@@ -1036,7 +1037,8 @@ function checkProofInputs(args) {
   if (!phraseId) {
     throw new Error("Cannot make The Word proof: missing phraseId");
   }
-  return { username, secret, phraseId: Number(phraseId) };
+  const includeSecret = args.includeSecret.value ? args.includeSecret.value : false;
+  return { username, secret, phraseId: Number(phraseId), includeSecret };
 }
 function publicSignalsFromClaim(claim) {
   const hash = claim.secretHash;
@@ -1054,7 +1056,7 @@ function snarkInputForProof(username, secret) {
 function prove(args) {
   return __async(this, null, function* () {
     const initArgs = yield ensureInitialized();
-    const { username, secret, phraseId } = checkProofInputs(args);
+    const { username, secret, phraseId, includeSecret } = checkProofInputs(args);
     const snarkInput = snarkInputForProof(username, secret);
     const { proof, publicSignals } = yield (0, import_groth16.prove)(
       snarkInput,
@@ -1065,6 +1067,7 @@ function prove(args) {
     const claim = {
       phraseId,
       username,
+      secret: includeSecret ? secret : void 0,
       secretHash
     };
     return new SecretPhrasePCD((0, import_uuid.v4)(), claim, proof);
