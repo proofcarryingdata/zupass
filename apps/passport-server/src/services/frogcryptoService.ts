@@ -1,6 +1,7 @@
 import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
   FROG_FREEROLLS,
+  FROG_SCORE_CAP,
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
@@ -201,11 +202,25 @@ export class FrogcryptoService {
           throw new PCDHTTPError(403, `Next fetch available at ${nextFetchAt}`);
         }
 
-        const frogData = await sampleFrogData(this.context.dbPool, feed.biomes);
-        if (!frogData) {
+        const frogDataSpec = await sampleFrogData(
+          this.context.dbPool,
+          feed.biomes
+        );
+        if (!frogDataSpec) {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
-        const { score:scoreAfterRoll } = await incrementScore(client, semaphoreId);
+
+        const frogData = this.generateFrogData(frogDataSpec, semaphoreId);
+
+        const { score: scoreAfterRoll } = await incrementScore(
+          client,
+          semaphoreId,
+          // non-frog frog doesn't get point
+          frogData.biome === Biome.Unknown ? 0 : 1
+        );
+        if (scoreAfterRoll > FROG_SCORE_CAP) {
+          throw new PCDHTTPError(403, "Frog faucet off.");
+        }
         // rollback last fetched timestamp if user has free rolls left
         if (scoreAfterRoll <= FROG_FREEROLLS) {
           await updateUserFeedState(
@@ -216,7 +231,7 @@ export class FrogcryptoService {
           );
         }
 
-        return this.generateFrogData(frogData, semaphoreId);
+        return frogData;
       }
     );
   }

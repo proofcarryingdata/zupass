@@ -1,4 +1,4 @@
-import { EdDSAFrogPCD, isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
+import { Biome, EdDSAFrogPCD, isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
   FROG_FREEROLLS,
   FeedSubscriptionManager,
@@ -126,7 +126,7 @@ const SearchButton = ({
     await toast
       .promise(
         new Promise<void>((resolve) => {
-          setTimeout(resolve, 6000);
+          setTimeout(resolve, 4000);
         }).then(
           () =>
             new Promise<void>((resolve, reject) => {
@@ -150,6 +150,12 @@ const SearchButton = ({
                         "Froggy hiccup! Seems like one of our amphibians is playing camouflage. Zoo staff are peeking under every leaf. Hop back later for another try!"
                       );
                     }
+                    if (fetchErrorMsg?.includes("faucet off")) {
+                      subManager.resetError(id);
+                      return reject(
+                        "Froggy hall of fame! You've won... but your lily pad's full. No room for more buddies!"
+                      );
+                    }
                   }
 
                   resolve();
@@ -162,9 +168,15 @@ const SearchButton = ({
         {
           loading: <LoadingMessages biome={feed.name} />,
           success: () => {
-            return `You found a ${
-              getLastFrogRef()?.claim?.data?.name || "new frog"
-            } in ${feed.name}!`;
+            const lastFrog = getLastFrogRef();
+            // nb: this shouldn't happen
+            if (!lastFrog) {
+              return null;
+            }
+            if (lastFrog.claim.data.biome === Biome.Unknown) {
+              return `You found something strange in ${feed.name}. It doesn't appear to be a frog.`;
+            }
+            return `You found a ${lastFrog.claim.data.name} in ${feed.name}!`;
           },
           error: (e) =>
             typeof e === "string" ? e : "Oopsie-toad! Something went wrong."

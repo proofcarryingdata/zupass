@@ -1,23 +1,60 @@
-import {
-  LinkButton,
-  QRDisplayWithRegenerateAndStorage,
-  encodeQRPayload
-} from "@pcd/passport-ui";
+import { LinkButton, encodeQRPayload } from "@pcd/passport-ui";
 import _ from "lodash";
-import { useCallback, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import {
   Biome,
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
+  Rarity,
   Temperament
 } from "./EdDSAFrogPCD";
 import { getEdDSAFrogData } from "./utils";
 
-export function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
+const RARITY_COLORS = {
+  [Rarity.Common]: "#168675",
+  [Rarity.Rare]: "#1197B5",
+  [Rarity.Epic]: "#6F3BB0",
+  [Rarity.Legendary]: "#FF9900",
+  [Rarity.Unknown]: "#A7967E",
+  [Rarity.Object]: "#A7967E"
+} as const;
+
+export function EdDSAFrogCardBody({
+  pcd,
+  returnHeader
+}: {
+  pcd: EdDSAFrogPCD;
+  returnHeader?: boolean;
+}) {
   const frogData = useMemo(() => getEdDSAFrogData(pcd), [pcd]);
   const [showMore, setShowMore] = useState(false);
   const [showPCD, setShowPCD] = useState(false);
+
+  if (returnHeader) {
+    if (!frogData) {
+      return <>Frog</>;
+    }
+
+    if (frogData.rarity === Rarity.Mythic) {
+      return (
+        <MythicContainer>
+          {`#${frogData.frogId} ${frogData.name}`}
+        </MythicContainer>
+      );
+    }
+
+    return (
+      <HeaderContainer
+        style={{
+          backgroundColor:
+            RARITY_COLORS[frogData.rarity] ?? "var(--bg-dark-primary)"
+        }}
+      >
+        {`#${frogData.frogId} ${frogData.name}`}
+      </HeaderContainer>
+    );
+  }
 
   if (!frogData) {
     return (
@@ -131,28 +168,16 @@ function biomeValue(biome: Biome) {
 }
 
 function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }) {
+  const [hex, setHex] = useState("");
   const generate = useCallback(async () => {
-    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     const serialized = await EdDSAFrogPCDPackage.serialize(pcd);
-    const serializedPCD = JSON.stringify(serialized);
-    console.log(`[QR] generated proof, length ${serializedPCD.length}`);
-    const encodedPCD = encodeQRPayload(serializedPCD);
-    return encodedPCD;
-    // FrogPCD doesn't verify on passport server yet
-    // if (!initArgs.makeEncodedVerifyLink) {
-    //   throw new Error("must provide makeEncodedVerifyLink");
-    // }
-    // const verificationLink = initArgs.makeEncodedVerifyLink(encodedPCD);
-    // return verificationLink;
+    return encodeQRPayload(JSON.stringify(serialized));
   }, [pcd]);
+  useEffect(() => {
+    generate().then(setHex);
+  }, [generate]);
 
-  return (
-    <QRDisplayWithRegenerateAndStorage
-      generateQRPayload={generate}
-      maxAgeMs={1000 * 60}
-      uniqueId={pcd.id}
-    />
-  );
+  return <HexContainer>{hex}</HexContainer>;
 }
 
 function CopyFrogPCD({ pcd }: { pcd: EdDSAFrogPCD }) {
@@ -184,7 +209,7 @@ const Container = styled.div`
 const FrogInfo = styled.div`
   display: flex;
   justify-content: space-around;
-  gap: 8px;
+  gap: 20px;
 `;
 
 const FrogImg = styled.img`
@@ -213,4 +238,55 @@ const AttrTitle = styled.div`
 
 const AttrValue = styled.div`
   font-size: 14px;
+`;
+
+const HexContainer = styled.div`
+  word-wrap: break-word;
+  word-break: break-all;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  max-height: 300px;
+  overflow-y: auto;
+`;
+
+const HeaderContainer = styled.div`
+  text-align: center;
+  margin: -10px;
+  padding: 10px;
+  color: white;
+  font-weight: bold;
+`;
+
+const MythicContainer = styled(HeaderContainer)`
+  @keyframes SAHGlowingGradient {
+    0% {
+      background-position: 84% 0;
+    }
+    50% {
+      background-position: 17% 100%;
+    }
+    100% {
+      background-position: 84% 0;
+    }
+  }
+
+  appearance: none;
+  background: linear-gradient(
+    48deg,
+    #e3c1f4,
+    #d9d7ed,
+    #dff7f1,
+    #acf0ff,
+    #e3c1f4,
+    #d9d7ed,
+    #dff7f1,
+    #acf0ff,
+    #e3c1f4
+  );
+  animation: SAHGlowingGradient 8s ease infinite;
+  opacity: 1;
+  background-size: 400% 400%;
+
+  color: #fda7a7;
+  text-shadow: 0px 1px 2px #129191;
 `;

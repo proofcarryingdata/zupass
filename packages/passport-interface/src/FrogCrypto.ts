@@ -11,6 +11,13 @@ import { Feed } from "./SubscriptionManager";
 export const FROG_FREEROLLS = 2;
 
 /**
+ * The maximum score that a user can have
+ *
+ * Once a user reaches this score, they will no longer be able to earn more PCDs from this feed
+ */
+export const FROG_SCORE_CAP = 1000;
+
+/**
  * Map of configs for Biome(s) where PCDs can be issued from this feed
  */
 export const FrogCryptoFeedBiomeConfigSchema = z.object({
