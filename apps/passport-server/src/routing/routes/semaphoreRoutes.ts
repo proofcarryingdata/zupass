@@ -109,6 +109,9 @@ export function initSemaphoreRoutes(
     }
 
     const result = serializeSemaphoreGroup(namedGroup.group, namedGroup.name);
+    result.members = result.members.filter(
+      (m) => m !== namedGroup.group.zeroValue.toString()
+    );
 
     res.json(result satisfies SerializedSemaphoreGroup);
   });

@@ -3,8 +3,7 @@ import { DevconnectPretixTicket } from "../../models";
 import { sqlQuery } from "../../sqlQuery";
 
 /**
- * Delete a particular user that has a ticket in pretix, and also their
- * identity commitment, if they have logged into Zupass.
+ * Soft delete a Devconnect ticket.
  */
 export async function softDeleteDevconnectPretixTicket(
   client: Pool,

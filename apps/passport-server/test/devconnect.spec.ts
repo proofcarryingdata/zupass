@@ -21,6 +21,7 @@ import {
   createFeedCredentialPayload,
   pollFeed,
   requestKnownTicketTypes,
+  requestSemaphoreGroup,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey,
   requestVerifyTicket,
@@ -69,6 +70,7 @@ import {
   fetchDevconnectPretixTicketsByEvent,
   fetchDevconnectTicketsAwaitingSync
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
+import { softDeleteDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
@@ -1662,8 +1664,11 @@ describe("devconnect functionality", function () {
       );
 
       if (!result?.user) {
-        throw new Error("exected a user");
+        throw new Error("expected a user");
       }
+
+      loggedInIdentityCommitments.delete(identity.commitment.toString());
+      loggedInIdentityCommitments.add(result.identity.commitment.toString());
 
       identity = result.identity;
 
@@ -1731,11 +1736,11 @@ describe("devconnect functionality", function () {
     if (!result?.user) {
       throw new Error("exected a user");
     }
-
     loggedInIdentityCommitments.delete(identity.commitment.toString());
     loggedInIdentityCommitments.add(result.identity.commitment.toString());
 
     identity = result.identity;
+    await application.services.semaphoreService.reload();
   });
 
   step(
@@ -1784,6 +1789,56 @@ describe("devconnect functionality", function () {
       await testLatestHistoricSemaphoreGroups(application);
     }
   );
+
+  step(
+    "deleting a ticket removes the user from the semaphore group",
+    async function () {
+      const ticketsForUser = await fetchDevconnectPretixTicketsByEmail(
+        db,
+        mocker.get().organizer1.EMAIL_3
+      );
+      for (const ticket of ticketsForUser) {
+        await softDeleteDevconnectPretixTicket(db, ticket);
+      }
+
+      await application.services.semaphoreService.reload();
+
+      expectCurrentSemaphoreToBe(application, {
+        p: [],
+        r: [],
+        v: [],
+        o: [],
+        g: [identity.commitment.toString()],
+        // Compare to the previous test, which included an extra identity
+        // commitment here for the user matching EMAIL_3
+        d: [...loggedInIdentityCommitments],
+        s: [...loggedInIdentityCommitments]
+      });
+      await testLatestHistoricSemaphoreGroups(application);
+    }
+  );
+
+  step("semaphore group route returns expected values", async function () {
+    const attendeeGroupResult = await requestSemaphoreGroup(
+      `${application.expressContext.localEndpoint}/semaphore/6`
+    );
+    expect(attendeeGroupResult.success).to.be.true;
+    if (attendeeGroupResult.success) {
+      expect(attendeeGroupResult.value.members).to.deep.eq([
+        ...loggedInIdentityCommitments
+      ]);
+    }
+
+    const organizerGroupResult = await requestSemaphoreGroup(
+      `${application.expressContext.localEndpoint}/semaphore/7`
+    );
+    expect(organizerGroupResult.success).to.be.true;
+    if (organizerGroupResult.success) {
+      expect(organizerGroupResult.value.members).to.deep.eq([
+        ...loggedInIdentityCommitments
+      ]);
+    }
+  });
 
   step("user should be able to sync end to end encryption", async function () {
     await testUserSyncNoRev(application);

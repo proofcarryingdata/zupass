@@ -35,7 +35,7 @@ export async function startServices(
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
-  const semaphoreService = startSemaphoreService(context);
+  const semaphoreService = startSemaphoreService(context, multiprocessService);
   const zuzaluPretixSyncService = startZuzaluPretixSyncService(
     context,
     rollbarService,

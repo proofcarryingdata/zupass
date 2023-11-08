@@ -33,10 +33,9 @@ type LoggedInZuzaluOrZuconnectUser = Pick<
  */
 export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;
-  private groups: NamedGroup[];
+  private groups: Map<string, NamedGroup>;
   private dbPool: Pool;
   private readonly multiProcessService: MultiProcessService;
-  private readonly groupMembers: Map<string, Set<string>>;
 
   public groupParticipants = (): NamedGroup => this.getNamedGroup("1");
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
@@ -53,27 +52,24 @@ export class SemaphoreService {
     this.dbPool = config.dbPool;
     this.groups = SemaphoreService.createGroups();
     this.multiProcessService = multiProcessService;
-    this.groupMembers = new Map(
-      this.groups.map((group) => [group.group.id.toString(), new Set()])
-    );
   }
 
-  private static createGroups(): NamedGroup[] {
-    return [
+  private static createGroups(): Map<string, NamedGroup> {
+    return new Map([
       // @todo: deprecate groups 1-4
       // Blocked on Zupoll, Zucast, and zuzalu.city
-      { name: "Zuzalu Participants", group: new Group("1", 16) },
-      { name: "Zuzalu Residents", group: new Group("2", 16) },
-      { name: "Zuzalu Visitors", group: new Group("3", 16) },
-      { name: "Zuzalu Organizers", group: new Group("4", 16) },
-      { name: "Everyone", group: new Group("5", 16) },
-      { name: "Devconnect Attendees", group: new Group("6", 16) },
-      { name: "Devconnect Organizers", group: new Group("7", 16) }
-    ];
+      ["1", { name: "Zuzalu Participants", group: new Group("1", 16) }],
+      ["2", { name: "Zuzalu Residents", group: new Group("2", 16) }],
+      ["3", { name: "Zuzalu Visitors", group: new Group("3", 16) }],
+      ["4", { name: "Zuzalu Organizers", group: new Group("4", 16) }],
+      ["5", { name: "Everyone", group: new Group("5", 16) }],
+      ["6", { name: "Devconnect Attendees", group: new Group("6", 16) }],
+      ["7", { name: "Devconnect Organizers", group: new Group("7", 16) }]
+    ]);
   }
 
   public getNamedGroup(id: string): NamedGroup {
-    const ret = this.groups.find((g) => g.group.id === id);
+    const ret = this.groups.get(id);
     if (!ret) throw new PCDHTTPError(404, "Missing group " + id);
     return ret;
   }
@@ -132,6 +128,28 @@ export class SemaphoreService {
     });
   }
 
+  private calculateGroupChanges(
+    group: NamedGroup,
+    latestMembers: string[]
+  ): { toAdd: string[]; toRemove: string[] } {
+    const groupMembers = group.group.members
+      .filter((m) => m !== group.group.zeroValue)
+      .map((m) => m.toString());
+
+    const groupMemberSet = new Set(groupMembers);
+
+    const toAdd = latestMembers.filter((id) => !groupMemberSet.has(id));
+    const latestMemberSet = new Set(latestMembers);
+    const toRemove = groupMembers.filter(
+      (id) => !latestMemberSet.has(id.toString())
+    );
+
+    return {
+      toAdd,
+      toRemove
+    };
+  }
+
   /**
    * Populates two Devconnect-related groups: attendees, which includes all
    * users with any Devconnect ticket, and organizers, which includes all
@@ -162,63 +180,51 @@ export class SemaphoreService {
         (user) => user.commitment
       );
 
-      const attendeesNamedGroup = this.groups.find(
-        (group) => group.group.id.toString() === "6"
-      );
-      const organizersNamedGroup = this.groups.find(
-        (group) => group.group.id.toString() === "7"
-      );
+      const attendeesNamedGroup = this.groups.get("6");
+      const organizersNamedGroup = this.groups.get("7");
 
       if (attendeesNamedGroup) {
-        const existingAttendees = new Set(attendeesNamedGroup.group.members);
-        const attendeesToAdd = attendeesGroupUserIds.filter(
-          (id) => !existingAttendees.has(id)
-        );
-        const latestAttendees = new Set(attendeesGroupUserIds);
-        const attendeesToRemove = attendeesNamedGroup.group.members.filter(
-          (id) => !latestAttendees.has(id.toString())
+        const { toAdd, toRemove } = this.calculateGroupChanges(
+          attendeesNamedGroup,
+          attendeesGroupUserIds
         );
 
-        span?.setAttribute("attendees_added", attendeesToAdd.length);
-        span?.setAttribute("attendees_removed", attendeesToRemove.length);
+        span?.setAttribute("attendees_added", toAdd.length);
+        span?.setAttribute("attendees_removed", toRemove.length);
         logger(
-          `[SEMA] Adding ${attendeesToAdd.length}, removing ${attendeesToRemove.length} attendees.`
+          `[SEMA] Adding ${toAdd.length}, removing ${toRemove.length} attendees.`
         );
 
-        for (const newId of attendeesToAdd) {
+        for (const newId of toAdd) {
           attendeesNamedGroup.group.addMember(newId);
         }
 
-        for (const deletedId of attendeesToRemove) {
+        for (const deletedId of toRemove) {
           attendeesNamedGroup.group.removeMember(
-            attendeesNamedGroup.group.indexOf(deletedId)
+            attendeesNamedGroup.group.indexOf(BigInt(deletedId))
           );
         }
       }
 
       if (organizersNamedGroup) {
-        const existingOrganizers = new Set(organizersNamedGroup.group.members);
-        const organizersToAdd = organizersGroupUserIds.filter(
-          (id) => !existingOrganizers.has(id)
-        );
-        const latestOrganizers = new Set(organizersGroupUserIds);
-        const organizersToRemove = organizersNamedGroup.group.members.filter(
-          (id) => !latestOrganizers.has(id.toString())
+        const { toAdd, toRemove } = this.calculateGroupChanges(
+          organizersNamedGroup,
+          organizersGroupUserIds
         );
 
-        span?.setAttribute("organizers_added", organizersToAdd.length);
-        span?.setAttribute("organizers_removed", organizersToRemove.length);
+        span?.setAttribute("organizers_added", toAdd.length);
+        span?.setAttribute("organizers_removed", toRemove.length);
         logger(
-          `[SEMA] Adding ${organizersToAdd.length}, removing ${organizersToRemove.length} attendees.`
+          `[SEMA] Adding ${toAdd.length}, removing ${toRemove.length} attendees.`
         );
 
-        for (const newId of organizersToAdd) {
+        for (const newId of toAdd) {
           organizersNamedGroup.group.addMember(newId);
         }
 
-        for (const deletedId of organizersToRemove) {
+        for (const deletedId of toRemove) {
           organizersNamedGroup.group.removeMember(
-            organizersNamedGroup.group.indexOf(deletedId)
+            organizersNamedGroup.group.indexOf(BigInt(deletedId))
           );
         }
       }
@@ -234,7 +240,7 @@ export class SemaphoreService {
 
     const latestGroups = await fetchLatestHistoricSemaphoreGroups(this.dbPool);
 
-    for (const localGroup of this.groups) {
+    for (const localGroup of this.groups.values()) {
       const correspondingLatestGroup = latestGroups.find(
         (g) => g.groupId === localGroup.group.id
       );
@@ -306,17 +312,24 @@ export class SemaphoreService {
       span?.setAttribute("users", users.length);
       logger(`[SEMA] Rebuilding groups, ${users.length} total users.`);
 
-      this.groups = SemaphoreService.createGroups();
+      // Zuzalu groups get totally re-created
+      const newGroups = SemaphoreService.createGroups();
+      const zuzaluGroups = [];
+      for (const id of ["1", "2", "3", "4"]) {
+        const group = newGroups.get(id) as NamedGroup;
+        zuzaluGroups.push(group);
+        this.groups.set(id, group);
+      }
 
       const groupIdsToUsers: Map<string, LoggedInZuzaluOrZuconnectUser[]> =
         new Map();
       const groupsById: Map<string, NamedGroup> = new Map();
-      for (const group of this.groups) {
+      for (const group of zuzaluGroups) {
         groupIdsToUsers.set(group.group.id.toString(), []);
         groupsById.set(group.group.id.toString(), group);
       }
 
-      logger(`[SEMA] initializing ${this.groups.length} groups`);
+      logger(`[SEMA] initializing ${this.groups.size} groups`);
       logger(`[SEMA] inserting ${users.length} users`);
 
       // calculate which users go into which groups

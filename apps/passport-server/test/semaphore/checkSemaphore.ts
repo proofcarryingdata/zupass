@@ -1,4 +1,5 @@
 import { deserializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { BigNumberish, Group } from "@semaphore-protocol/group";
 import { expect } from "chai";
 import { fetchLatestHistoricSemaphoreGroups } from "../../src/database/queries/historicSemaphore";
 import { Zupass } from "../../src/types";
@@ -17,12 +18,12 @@ export function expectGroupsEqual(
   lhs: SemaphoreGroups,
   rhs: SemaphoreGroups
 ): void {
-  expect(new Set(...lhs.p)).to.deep.eq(new Set(...rhs.p));
-  expect(new Set(...lhs.r)).to.deep.eq(new Set(...rhs.r));
-  expect(new Set(...lhs.v)).to.deep.eq(new Set(...rhs.v));
-  expect(new Set(...lhs.o)).to.deep.eq(new Set(...rhs.o));
-  expect(new Set(...lhs.d)).to.deep.eq(new Set(...rhs.d));
-  expect(new Set(...lhs.s)).to.deep.eq(new Set(...rhs.s));
+  expect(new Set(lhs.p)).to.deep.eq(new Set(rhs.p));
+  expect(new Set(lhs.r)).to.deep.eq(new Set(rhs.r));
+  expect(new Set(lhs.v)).to.deep.eq(new Set(rhs.v));
+  expect(new Set(lhs.o)).to.deep.eq(new Set(rhs.o));
+  expect(new Set(lhs.d)).to.deep.eq(new Set(rhs.d));
+  expect(new Set(lhs.s)).to.deep.eq(new Set(rhs.s));
   // turned off for devconnect - lots of users = slow global group.
   // expect(new Set(...lhs.g)).to.deep.eq(new Set(...rhs.g));
 }
@@ -39,38 +40,43 @@ export async function testLatestHistoricSemaphoreGroups(
   application: Zupass
 ): Promise<void> {
   const currentSemaphoreGroups = getCurrentSemaphoreServiceGroups(application);
-
   const latestHistoricSemaphoreGroups =
     await getLatestHistoricalSemaphoreGroups(application);
 
   expectGroupsEqual(latestHistoricSemaphoreGroups, currentSemaphoreGroups);
 }
 
+function nonZeroGroupMembers(group: Group): BigNumberish[] {
+  return group.members.filter(
+    (m) => m.toString() != group.zeroValue.toString()
+  );
+}
+
 function getCurrentSemaphoreServiceGroups(
   application: Zupass
 ): SemaphoreGroups {
   return {
-    g: application.services.semaphoreService
-      .groupEveryone()
-      .group.members.map((m) => m.toString()),
-    v: application.services.semaphoreService
-      .groupVisitors()
-      .group.members.map((m) => m.toString()),
-    o: application.services.semaphoreService
-      .groupOrganizers()
-      .group.members.map((m) => m.toString()),
-    p: application.services.semaphoreService
-      .groupParticipants()
-      .group.members.map((m) => m.toString()),
-    r: application.services.semaphoreService
-      .groupResidents()
-      .group.members.map((m) => m.toString()),
-    d: application.services.semaphoreService
-      .groupDevconnectAttendees()
-      .group.members.map((m) => m.toString()),
-    s: application.services.semaphoreService
-      .groupDevconnectOrganizers()
-      .group.members.map((m) => m.toString())
+    g: nonZeroGroupMembers(
+      application.services.semaphoreService.groupEveryone().group
+    ).map((m) => m.toString()),
+    v: nonZeroGroupMembers(
+      application.services.semaphoreService.groupVisitors().group
+    ).map((m) => m.toString()),
+    o: nonZeroGroupMembers(
+      application.services.semaphoreService.groupOrganizers().group
+    ).map((m) => m.toString()),
+    p: nonZeroGroupMembers(
+      application.services.semaphoreService.groupParticipants().group
+    ).map((m) => m.toString()),
+    r: nonZeroGroupMembers(
+      application.services.semaphoreService.groupResidents().group
+    ).map((m) => m.toString()),
+    d: nonZeroGroupMembers(
+      application.services.semaphoreService.groupDevconnectAttendees().group
+    ).map((m) => m.toString()),
+    s: nonZeroGroupMembers(
+      application.services.semaphoreService.groupDevconnectOrganizers().group
+    ).map((m) => m.toString())
   };
 }
 
@@ -87,32 +93,32 @@ async function getLatestHistoricalSemaphoreGroups(
 
   return {
     p:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "1")
-        ?.members?.map((m) => m.toString()) ?? [],
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "1") as Group
+      ).map((m) => m.toString()) ?? [],
     r:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "2")
-        ?.members?.map((m) => m.toString()) ?? [],
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "2") as Group
+      ).map((m) => m.toString()) ?? [],
     v:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "3")
-        ?.members?.map((m) => m.toString()) ?? [],
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "3") as Group
+      ).map((m) => m.toString()) ?? [],
     o:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "4")
-        ?.members?.map((m) => m.toString()) ?? [],
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "4") as Group
+      ).map((m) => m.toString()) ?? [],
     g:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "5")
-        ?.members?.map((m) => m.toString()) ?? [],
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "5") as Group
+      ).map((m) => m.toString()) ?? [],
     d:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "6")
-        ?.members?.map((m) => m.toString()) ?? [],
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "6") as Group
+      ).map((m) => m.toString()) ?? [],
     s:
-      parsedLatestGroups
-        .find((g) => g.id.toString() === "7")
-        ?.members?.map((m) => m.toString()) ?? []
+      nonZeroGroupMembers(
+        parsedLatestGroups.find((g) => g.id.toString() === "7") as Group
+      ).map((m) => m.toString()) ?? []
   };
 }

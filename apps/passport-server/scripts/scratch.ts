@@ -232,7 +232,7 @@ yargs
       let commitments = [];
       let group: Group = new Group("1", 16);
 
-      const runs = 3;
+      const runs = 10;
 
       let start = performance.now();
 
@@ -256,7 +256,7 @@ yargs
 
       start = performance.now();
 
-      const numberOfMembersToChange = 5;
+      const numberOfMembersToChange = 10;
 
       for (let k = 0; k < runs; k++) {
         // Cut off the first n commitments
@@ -291,7 +291,7 @@ yargs
       finish = performance.now();
 
       console.log(
-        `Average time to change ${numberOfMembersToChange} members of a 5000-member semaphore group is ${
+        `Average time to remove and insert ${numberOfMembersToChange} members of a 5000-member semaphore group is ${
           (finish - start) / runs
         } ms`
       );
