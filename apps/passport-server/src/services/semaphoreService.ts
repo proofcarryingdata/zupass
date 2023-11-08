@@ -36,6 +36,7 @@ export class SemaphoreService {
   private groups: NamedGroup[];
   private dbPool: Pool;
   private readonly multiProcessService: MultiProcessService;
+  private readonly groupMembers: Map<string, Set<string>>;
 
   public groupParticipants = (): NamedGroup => this.getNamedGroup("1");
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
@@ -52,6 +53,9 @@ export class SemaphoreService {
     this.dbPool = config.dbPool;
     this.groups = SemaphoreService.createGroups();
     this.multiProcessService = multiProcessService;
+    this.groupMembers = new Map(
+      this.groups.map((group) => [group.group.id.toString(), new Set()])
+    );
   }
 
   private static createGroups(): NamedGroup[] {
@@ -134,7 +138,7 @@ export class SemaphoreService {
    * users with any superuser Devconnect ticket.
    */
   private async reloadDevconnectGroups(): Promise<void> {
-    return traced("Semaphore", "reloadZuzaluGroups", async (span) => {
+    return traced("Semaphore", "reloadDevconnectGroups", async (span) => {
       const devconnectAttendees = await fetchAllUsersWithDevconnectTickets(
         this.dbPool
       );
@@ -175,6 +179,12 @@ export class SemaphoreService {
           (id) => !latestAttendees.has(id.toString())
         );
 
+        span?.setAttribute("attendees_added", attendeesToAdd.length);
+        span?.setAttribute("attendees_removed", attendeesToRemove.length);
+        logger(
+          `[SEMA] Adding ${attendeesToAdd.length}, removing ${attendeesToRemove.length} attendees.`
+        );
+
         for (const newId of attendeesToAdd) {
           attendeesNamedGroup.group.addMember(newId);
         }
@@ -194,6 +204,12 @@ export class SemaphoreService {
         const latestOrganizers = new Set(organizersGroupUserIds);
         const organizersToRemove = organizersNamedGroup.group.members.filter(
           (id) => !latestOrganizers.has(id.toString())
+        );
+
+        span?.setAttribute("organizers_added", organizersToAdd.length);
+        span?.setAttribute("organizers_removed", organizersToRemove.length);
+        logger(
+          `[SEMA] Adding ${organizersToAdd.length}, removing ${organizersToRemove.length} attendees.`
         );
 
         for (const newId of organizersToAdd) {

@@ -5,6 +5,8 @@ import * as dotenv from "dotenv";
 import * as path from "path";
 import yargs from "yargs";
 
+import { Group } from "@semaphore-protocol/group";
+import { Identity } from "@semaphore-protocol/identity";
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { getDB } from "../src/database/postgresPool";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
@@ -220,6 +222,79 @@ yargs
           console.error(`Error copying ${src} to ${dest}: ${e}`);
         }
       }
+    }
+  )
+  .command(
+    "semaphore-group-load",
+    "",
+    async function (yargs) {},
+    async function (argv) {
+      let commitments = [];
+      let group: Group = new Group("1", 16);
+
+      const runs = 3;
+
+      let start = performance.now();
+
+      for (let j = 0; j < runs; j++) {
+        commitments = [];
+        for (let i = 0; i < 5000; i++) {
+          const identity = new Identity();
+          commitments.push(identity.commitment.toString());
+        }
+
+        group = new Group("1", 16, commitments);
+      }
+
+      let finish = performance.now();
+
+      console.log(
+        `Average time to create 5000-member semaphore group is ${
+          (finish - start) / runs
+        } ms`
+      );
+
+      start = performance.now();
+
+      const numberOfMembersToChange = 5;
+
+      for (let k = 0; k < runs; k++) {
+        // Cut off the first n commitments
+        commitments = commitments.slice(numberOfMembersToChange);
+
+        // Add n new commitments
+        for (let i = 0; i < numberOfMembersToChange; i++) {
+          const identity = new Identity();
+          commitments.push(identity.commitment.toString());
+        }
+
+        const existingMembers = new Set(
+          group.members.map((item) => item.toString())
+        );
+        const membersToAdd = commitments.filter(
+          (id) => !existingMembers.has(id)
+        );
+        const latestMembers = new Set(commitments);
+        const membersToRemove = group.members.filter(
+          (id) => !latestMembers.has(id.toString())
+        );
+
+        for (const newId of membersToAdd) {
+          group.addMember(BigInt(newId));
+        }
+
+        for (const deletedId of membersToRemove) {
+          group.removeMember(group.indexOf(BigInt(deletedId)));
+        }
+      }
+
+      finish = performance.now();
+
+      console.log(
+        `Average time to change ${numberOfMembersToChange} members of a 5000-member semaphore group is ${
+          (finish - start) / runs
+        } ms`
+      );
     }
   )
   .help().argv;
