@@ -267,15 +267,6 @@ export function getProveDisplayOptions(): ProveDisplayOptions<SecretPhrasePCDArg
       phraseId: {
         argumentType: ArgumentTypeName.Number,
         description: "The Round ID identifying the secret phrase",
-        // validate(value, params) {
-        //   if (value !== ArgumentTypeName.Number) {
-        //     return false;
-        //   },
-
-        //   if (params?.secret) {
-
-        //   }
-        // }
       },
       username: {
         argumentType: ArgumentTypeName.String,
@@ -286,6 +277,10 @@ export function getProveDisplayOptions(): ProveDisplayOptions<SecretPhrasePCDArg
         defaultVisible: false,
         description: "The secret phrase to prove knowledge of",
       },
+      includeSecret: {
+        argumentType: ArgumentTypeName.Boolean,
+        description: "Set to true when storing in ZuPass and false when proving from zupass"
+      }
     }
   };
 }
@@ -328,6 +323,13 @@ export function getDisplayOptions(pcd: SecretPhrasePCD): DisplayOptions {
     header: `The Word: Secret Phrase #${phraseId}`,
     displayName: `The Word: Secret Phrase #${phraseId}`
   };
+}
+
+/**
+ * Returns true if a PCD is an Secret Phrase PCD, or false otherwise.
+ */
+export function isSecretPhrasePCD(pcd: PCD): pcd is SecretPhrasePCD {
+  return pcd.type === SecretPhrasePCDTypeName;
 }
 
 export const SecretPhrasePCDPackage: PCDPackage<

@@ -811,6 +811,7 @@ __export(src_exports, {
   getDisplayOptions: () => getDisplayOptions,
   getProveDisplayOptions: () => getProveDisplayOptions,
   init: () => init,
+  isSecretPhrasePCD: () => isSecretPhrasePCD,
   prove: () => prove,
   serialize: () => serialize,
   snarkInputForProof: () => snarkInputForProof,
@@ -941,7 +942,7 @@ function SecretPhraseCardBody({ pcd }) {
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.claim.username }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
     !isSecret && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Username" }),
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Secret Phrase" }),
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.HiddenText, { text: pcd.claim.secret })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
@@ -1099,13 +1100,6 @@ function getProveDisplayOptions() {
       phraseId: {
         argumentType: import_pcd_types.ArgumentTypeName.Number,
         description: "The Round ID identifying the secret phrase"
-        // validate(value, params) {
-        //   if (value !== ArgumentTypeName.Number) {
-        //     return false;
-        //   },
-        //   if (params?.secret) {
-        //   }
-        // }
       },
       username: {
         argumentType: import_pcd_types.ArgumentTypeName.String,
@@ -1115,6 +1109,10 @@ function getProveDisplayOptions() {
         argumentType: import_pcd_types.ArgumentTypeName.String,
         defaultVisible: false,
         description: "The secret phrase to prove knowledge of"
+      },
+      includeSecret: {
+        argumentType: import_pcd_types.ArgumentTypeName.Boolean,
+        description: "Set to true when storing in ZuPass and false when proving from zupass"
       }
     }
   };
@@ -1143,6 +1141,9 @@ function getDisplayOptions(pcd) {
     displayName: `The Word: Secret Phrase #${phraseId}`
   };
 }
+function isSecretPhrasePCD(pcd) {
+  return pcd.type === SecretPhrasePCDTypeName;
+}
 var SecretPhrasePCDPackage = {
   name: SecretPhrasePCDTypeName,
   renderCardBody: SecretPhraseCardBody,
@@ -1163,6 +1164,7 @@ var SecretPhrasePCDPackage = {
   getDisplayOptions,
   getProveDisplayOptions,
   init,
+  isSecretPhrasePCD,
   prove,
   serialize,
   snarkInputForProof,
