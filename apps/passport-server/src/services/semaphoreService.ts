@@ -19,6 +19,7 @@ import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { zuconnectProductIdToZuzaluRole } from "../util/zuconnectTicket";
+import { MultiProcessService } from "./multiProcessService";
 import { traced } from "./telemetryService";
 
 type LoggedInZuzaluOrZuconnectUser = Pick<
@@ -34,6 +35,7 @@ export class SemaphoreService {
   private interval: NodeJS.Timer | undefined;
   private groups: NamedGroup[];
   private dbPool: Pool;
+  private readonly multiProcessService: MultiProcessService;
 
   public groupParticipants = (): NamedGroup => this.getNamedGroup("1");
   public groupResidents = (): NamedGroup => this.getNamedGroup("2");
@@ -43,9 +45,13 @@ export class SemaphoreService {
   public groupDevconnectAttendees = (): NamedGroup => this.getNamedGroup("6");
   public groupDevconnectOrganizers = (): NamedGroup => this.getNamedGroup("7");
 
-  public constructor(config: ApplicationContext) {
+  public constructor(
+    config: ApplicationContext,
+    multiProcessService: MultiProcessService
+  ) {
     this.dbPool = config.dbPool;
     this.groups = SemaphoreService.createGroups();
+    this.multiProcessService = multiProcessService;
   }
 
   private static createGroups(): NamedGroup[] {
@@ -160,19 +166,45 @@ export class SemaphoreService {
       );
 
       if (attendeesNamedGroup) {
-        attendeesNamedGroup.group = new Group(
-          attendeesNamedGroup.group.id,
-          attendeesNamedGroup.group.depth,
-          attendeesGroupUserIds
+        const existingAttendees = new Set(attendeesNamedGroup.group.members);
+        const attendeesToAdd = attendeesGroupUserIds.filter(
+          (id) => !existingAttendees.has(id)
         );
+        const latestAttendees = new Set(attendeesGroupUserIds);
+        const attendeesToRemove = attendeesNamedGroup.group.members.filter(
+          (id) => !latestAttendees.has(id.toString())
+        );
+
+        for (const newId of attendeesToAdd) {
+          attendeesNamedGroup.group.addMember(newId);
+        }
+
+        for (const deletedId of attendeesToRemove) {
+          attendeesNamedGroup.group.removeMember(
+            attendeesNamedGroup.group.indexOf(deletedId)
+          );
+        }
       }
 
       if (organizersNamedGroup) {
-        organizersNamedGroup.group = new Group(
-          organizersNamedGroup.group.id,
-          organizersNamedGroup.group.depth,
-          organizersGroupUserIds
+        const existingOrganizers = new Set(organizersNamedGroup.group.members);
+        const organizersToAdd = organizersGroupUserIds.filter(
+          (id) => !existingOrganizers.has(id)
         );
+        const latestOrganizers = new Set(organizersGroupUserIds);
+        const organizersToRemove = organizersNamedGroup.group.members.filter(
+          (id) => !latestOrganizers.has(id.toString())
+        );
+
+        for (const newId of organizersToAdd) {
+          organizersNamedGroup.group.addMember(newId);
+        }
+
+        for (const deletedId of organizersToRemove) {
+          organizersNamedGroup.group.removeMember(
+            organizersNamedGroup.group.indexOf(deletedId)
+          );
+        }
       }
     });
   }
@@ -338,9 +370,10 @@ export class SemaphoreService {
 }
 
 export function startSemaphoreService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  multiProcessService: MultiProcessService
 ): SemaphoreService {
-  const semaphoreService = new SemaphoreService(context);
+  const semaphoreService = new SemaphoreService(context, multiProcessService);
   semaphoreService.start();
   semaphoreService.scheduleReload();
   return semaphoreService;
