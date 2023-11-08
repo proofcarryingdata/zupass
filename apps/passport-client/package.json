@@ -12,6 +12,7 @@
     "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico"
   },
   "dependencies": {
+    "@pcd/secret-phrase-pcd": "file:../../packages/secret-phrase-pcd",
     "@pcd/eddsa-frog-pcd": "0.0.1",
     "@pcd/eddsa-pcd": "0.3.0",
     "@pcd/eddsa-ticket-pcd": "0.3.0",

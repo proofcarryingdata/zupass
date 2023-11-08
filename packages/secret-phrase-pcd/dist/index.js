@@ -809,6 +809,7 @@ __export(src_exports, {
   checkProofInputs: () => checkProofInputs,
   deserialize: () => deserialize,
   getDisplayOptions: () => getDisplayOptions,
+  getProveDisplayOptions: () => getProveDisplayOptions,
   init: () => init,
   prove: () => prove,
   serialize: () => serialize,
@@ -818,6 +819,7 @@ __export(src_exports, {
 module.exports = __toCommonJS(src_exports);
 
 // src/SecretPhrasePCD.ts
+var import_pcd_types = require("@pcd/pcd-types");
 var import_util = __toESM(require_dist());
 var import_groth16 = require("@zk-kit/groth16");
 var import_uuid = require("uuid");
@@ -932,12 +934,7 @@ function SecretPhraseCardBody({ pcd }) {
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)("p", { children: 'This PCD represents knowledge of a secret phrase in "The Word"' }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Separator, {}),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Round Number" }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
-      import_passport_ui.HiddenText,
-      {
-        text: pcd.claim.phraseId.toString()
-      }
-    ),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.TextContainer, { children: pcd.claim.phraseId.toString() }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Username" }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(
@@ -947,7 +944,7 @@ function SecretPhraseCardBody({ pcd }) {
       }
     ),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
-    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Secret Phrase" }),
+    /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Hash of the Secret Phrase" }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.HiddenText, { text: pcd.claim.secretHash.toString() })
   ] });
 }
@@ -1093,6 +1090,32 @@ function reviver(key, value) {
     return value;
   }
 }
+function getProveDisplayOptions() {
+  return {
+    defaultArgs: {
+      phraseId: {
+        argumentType: import_pcd_types.ArgumentTypeName.Number,
+        description: "The Round ID identifying the secret phrase"
+        // validate(value, params) {
+        //   if (value !== ArgumentTypeName.Number) {
+        //     return false;
+        //   },
+        //   if (params?.secret) {
+        //   }
+        // }
+      },
+      username: {
+        argumentType: import_pcd_types.ArgumentTypeName.String,
+        description: "The username associated with this secret phrase proof"
+      },
+      secret: {
+        argumentType: import_pcd_types.ArgumentTypeName.String,
+        defaultVisible: false,
+        description: "The secret phrase to prove knowledge of"
+      }
+    }
+  };
+}
 function serialize(pcd) {
   return __async(this, null, function* () {
     return {
@@ -1111,9 +1134,10 @@ function deserialize(serialized) {
   });
 }
 function getDisplayOptions(pcd) {
+  let phraseId = pcd.claim.phraseId;
   return {
-    header: "The Word Secret Phrase PCD",
-    displayName: `The Word #${pcd.claim.phraseId}`
+    header: `The Word: Secret Phrase #${phraseId}`,
+    displayName: `The Word: Secret Phrase #${phraseId}`
   };
 }
 var SecretPhrasePCDPackage = {
@@ -1134,6 +1158,7 @@ var SecretPhrasePCDPackage = {
   checkProofInputs,
   deserialize,
   getDisplayOptions,
+  getProveDisplayOptions,
   init,
   prove,
   serialize,

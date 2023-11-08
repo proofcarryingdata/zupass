@@ -1,8 +1,10 @@
 import {
+  ArgumentTypeName,
   DisplayOptions,
   NumberArgument,
   PCD,
   PCDPackage,
+  ProveDisplayOptions,
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
@@ -51,12 +53,6 @@ export type SecretPhrasePCDArgs = {
    * Constrained in ZK proof
    */
   secret: StringArgument,
-
-  /**
-   * The hash of the secret phrase that must be known to issue a PCD
-   * Outputted in ZK proof
-   */
-  secretHash: StringArgument
 }
 
 /**
@@ -253,77 +249,34 @@ function reviver(key: any, value: any): any {
   }
 }
 
-// export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicketPCDArgs> {
-//   return {
-//     defaultArgs: {
-//       ticket: {
-//         argumentType: ArgumentTypeName.PCD,
-//         description: "Generate a proof for the selected ticket",
-//         validate(value, params) {
-//           if (value.type !== EdDSAPCDTypeName || !value.claim) {
-//             return false;
-//           }
+export function getProveDisplayOptions(): ProveDisplayOptions<SecretPhrasePCDArgs> {
+  return {
+    defaultArgs: {
+      phraseId: {
+        argumentType: ArgumentTypeName.Number,
+        description: "The Round ID identifying the secret phrase",
+        // validate(value, params) {
+        //   if (value !== ArgumentTypeName.Number) {
+        //     return false;
+        //   },
 
-//           if (params?.eventIds?.length && params?.productIds?.length) {
-//             if (params.eventIds.length !== params.productIds.length) {
-//               // soft-error: dev passed invalid eventIds and productIds
-//               console.error(
-//                 "eventIds and productIds must have the same length"
-//               );
-//               return false;
-//             }
+        //   if (params?.secret) {
 
-//             return !!params.eventIds.find(
-//               (eventId, i) =>
-//                 eventId === value.claim.ticket.eventId &&
-//                 params.productIds?.[i] === value.claim.ticket.productId
-//             );
-//           }
-
-//           if (params?.eventIds?.length) {
-//             return params.eventIds.includes(value.claim.ticket.eventId);
-//           }
-
-//           if (params?.productIds?.length) {
-//             return params.productIds.includes(value.claim.ticket.productId);
-//           }
-
-//           return true;
-//         },
-//         validatorParams: {
-//           eventIds: [],
-//           productIds: [],
-//           notFoundMessage: "You do not have any eligible tickets."
-//         }
-//       },
-//       fieldsToReveal: {
-//         argumentType: ArgumentTypeName.ToggleList,
-//         displayName: "",
-//         description: "The following information will be revealed"
-//       },
-//       identity: {
-//         argumentType: ArgumentTypeName.PCD,
-//         defaultVisible: false,
-//         description:
-//           "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
-//       },
-//       validEventIds: {
-//         argumentType: ArgumentTypeName.StringArray,
-//         defaultVisible: false,
-//         description:
-//           "The list of valid event IDs that the ticket can be used for. If this is not provided, the proof will not check the validity of the event ID. When this is provided and event id is not directly revealed, the proof can only be used to prove that the ticket is valid for one of the events in the list."
-//       },
-//       watermark: {
-//         argumentType: ArgumentTypeName.BigInt,
-//         defaultVisible: false
-//       },
-//       externalNullifier: {
-//         argumentType: ArgumentTypeName.BigInt,
-//         defaultVisible: false
-//       }
-//     }
-//   };
-// }
+        //   }
+        // }
+      },
+      username: {
+        argumentType: ArgumentTypeName.String,
+        description: "The username associated with this secret phrase proof",
+      },
+      secret: {
+        argumentType: ArgumentTypeName.String,
+        defaultVisible: false,
+        description: "The secret phrase to prove knowledge of",
+      },
+    }
+  };
+}
 
 /**
  * Serializes an {@link EdDSAPCD}.
@@ -358,9 +311,10 @@ export async function deserialize(serialized: string): Promise<SecretPhrasePCD> 
  * Get display options for a SecretPhrasePCD.
  */
 export function getDisplayOptions(pcd: SecretPhrasePCD): DisplayOptions {
+  let phraseId = pcd.claim.phraseId;
   return {
-    header: "The Word Secret Phrase PCD",
-    displayName: `The Word #${pcd.claim.phraseId}`
+    header: `The Word: Secret Phrase #${phraseId}`,
+    displayName: `The Word: Secret Phrase #${phraseId}`
   };
 }
 

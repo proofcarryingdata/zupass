@@ -1,4 +1,4 @@
-import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
+import { FieldLabel, HiddenText, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
 import styled from "styled-components";
 import { SecretPhrasePCD } from "./SecretPhrasePCD";
 
@@ -13,9 +13,7 @@ export function SecretPhraseCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
       <Separator />
 
       <FieldLabel>Round Number</FieldLabel>
-      <HiddenText
-        text={pcd.claim.phraseId.toString()}
-      />
+      <TextContainer>{pcd.claim.phraseId.toString()}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Username</FieldLabel>
@@ -24,7 +22,7 @@ export function SecretPhraseCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
       />
       <Spacer h={8} />
 
-      <FieldLabel>Secret Phrase</FieldLabel>
+      <FieldLabel>Hash of the Secret Phrase</FieldLabel>
       <HiddenText text={pcd.claim.secretHash.toString()} />
     </Container>
   );
