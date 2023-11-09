@@ -1,7 +1,7 @@
 import {
   Biome,
   EdDSAFrogPCDPackage,
-  EdDSAPCDTypeName,
+  EdDSAFrogPCDTypeName,
   IFrogData,
   Rarity,
   Temperament
@@ -103,7 +103,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
       frog: {
         value: serializedFrogPCD,
         argumentType: ArgumentTypeName.PCD,
-        pcdType: EdDSAPCDTypeName
+        pcdType: EdDSAFrogPCDTypeName
       },
       identity: {
         value: serializedIdentityPCD,

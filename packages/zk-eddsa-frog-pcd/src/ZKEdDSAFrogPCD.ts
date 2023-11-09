@@ -1,7 +1,7 @@
 import {
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
-  EdDSAPCDTypeName,
+  EdDSAFrogPCDTypeName,
   IFrogData,
   frogDataToBigInts
 } from "@pcd/eddsa-frog-pcd";
@@ -120,7 +120,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
         argumentType: ArgumentTypeName.PCD,
         description: "Generate a proof for the selected frog",
         validate(value, _) {
-          if (value.type !== EdDSAPCDTypeName || !value.claim) {
+          if (value.type !== EdDSAFrogPCDTypeName || !value.claim) {
             return false;
           }
           return true;
