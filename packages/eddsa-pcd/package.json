@@ -20,11 +20,11 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/circomlibjs-eddsa": "0.0.1",
     "@pcd/passport-ui": "0.8.0",
     "@pcd/pcd-types": "0.8.0",
     "@pcd/util": "0.2.0",
     "chai": "^4.3.7",
-    "circomlibjs": "^0.1.7",
     "react": "^18.2.0",
     "styled-components": "^5.3.9",
     "uuid": "^9.0.0"

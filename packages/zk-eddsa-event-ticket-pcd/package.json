@@ -22,6 +22,7 @@
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd"
   },
   "dependencies": {
+    "@pcd/circomlibjs-eddsa": "0.0.1",
     "@pcd/eddsa-pcd": "0.3.0",
     "@pcd/eddsa-ticket-pcd": "0.3.0",
     "@pcd/passport-ui": "0.8.0",
@@ -31,7 +32,6 @@
     "@pcd/util": "0.2.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@zk-kit/groth16": "^0.3.0",
-    "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
     "styled-components": "^5.3.9",
     "uuid": "^9.0.0"

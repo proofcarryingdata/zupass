@@ -1,4 +1,5 @@
-import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { buildEddsa, Eddsa } from "@pcd/circomlibjs-eddsa";
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSAPCDTypeName,
   EdDSATicketPCD,
@@ -40,7 +41,6 @@ import {
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
-import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
@@ -285,6 +285,9 @@ function snarkInputForProof(
   const rawSig = eddsa.unpackSignature(
     fromHexString(ticketPCD.proof.eddsaPCD.proof.signature)
   );
+  if (!rawSig) {
+    throw new Error("ZkEdDSAEventTicketPCD: invalid signature");
+  }
 
   const checkValidEventIds = validEventIdsInput !== undefined;
 

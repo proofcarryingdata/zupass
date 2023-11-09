@@ -20,7 +20,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/eddsa-pcd": "0.2.2",
+    "@pcd/eddsa-pcd": "0.3.0",
     "@pcd/passport-ui": "0.8.0",
     "@pcd/pcd-types": "0.7.2",
     "@pcd/util": "0.1.2",

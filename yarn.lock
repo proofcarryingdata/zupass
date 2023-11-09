@@ -8493,6 +8493,15 @@ ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0
     wasmcurves "0.2.2"
     web-worker "^1.2.0"
 
+ffjavascript@^0.2.60:
+  version "0.2.62"
+  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.62.tgz#f508dfe662a70181598ec5eb8ce5127eb342f624"
+  integrity sha512-uJ7MTrdzhX/3f+hxn0XhdXbJCqYZJSBB6y2/ui4t21vKYVjyTMlU80pPXu40ir6qpqbrdzUeKdlOdJ0aFG9UNA==
+  dependencies:
+    wasmbuilder "0.0.16"
+    wasmcurves "0.2.2"
+    web-worker "^1.2.0"
+
 figures@^3.0.0:
   version "3.2.0"
   resolved "https://registry.yarnpkg.com/figures/-/figures-3.2.0.tgz#625c18bd293c604dc4a8ddb2febf0c88341746af"

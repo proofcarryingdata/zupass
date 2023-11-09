@@ -1,3 +1,4 @@
+import { Eddsa, Point, buildEddsa } from "@pcd/circomlibjs-eddsa";
 import {
   DisplayOptions,
   PCD,
@@ -7,7 +8,6 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
-import { buildEddsa, Eddsa, Point } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import { EdDSACardBody } from "./CardBody";
 
@@ -165,6 +165,9 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
     await ensureInitialized();
 
     const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
+    if (!signature) {
+      return false;
+    }
 
     // `F.fromObject` converts a point from standard format to Montgomery.
     const pubKey = pcd.claim.publicKey.map((p) =>
