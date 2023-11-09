@@ -1,22 +1,15 @@
-import {
-  DEVCONNECT_2023_END,
-  DEVCONNECT_2023_START
-} from "../../src/sharedConstants";
+import { isDuringDevconnect } from "../../src/devconnectUtils";
 import { H2, Spacer, TextCenter } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 
 export function NoWASMScreen() {
-  const currentTimeMs = new Date().getTime();
-  const isDuringDevconnect =
-    currentTimeMs >= DEVCONNECT_2023_START &&
-    currentTimeMs < DEVCONNECT_2023_END;
   return (
     <>
       <AppContainer bg="primary">
         <Spacer h={64} />
         <TextCenter>
           <H2>Browser not supported</H2>
-          {isDuringDevconnect && (
+          {isDuringDevconnect() && (
             <>
               <Spacer h={24} />
               If you are currently at Devconnect, please visit the Zupass Help
