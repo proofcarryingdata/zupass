@@ -38,6 +38,9 @@ import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { ZKEdDSAFrogCardBody } from "./CardBody";
 
+/*
+* This external nullifier will be used if one is not provided.
+*/
 export const STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER = generateSnarkMessageHash(
   "hard-coded-zk-eddsa-frog-pcd-nullifier"
 );
@@ -282,7 +285,7 @@ export async function prove(
 
   const { frogPCD, identityPCD } = await checkProveInputs(args);
 
-  const externalNullifier = args.externalNullifier.value?.toString() ||
+  const externalNullifier = args.externalNullifier.value?.toString() ??
     STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER.toString()
 
   const snarkInput = snarkInputForProof(

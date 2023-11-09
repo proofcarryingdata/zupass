@@ -121,8 +121,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
 
   this.beforeAll(async function () {
     await EdDSAFrogPCDPackage.init?.({});
-    if (!ZKEdDSAFrogPCDPackage.init) return;
-    await ZKEdDSAFrogPCDPackage.init({
+    await ZKEdDSAFrogPCDPackage.init?.({
       zkeyFilePath,
       wasmFilePath
     });
@@ -142,7 +141,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     expect(verificationRes).to.be.true;
   });
 
-  it("should prove using default external nullifier if non specified", async function () {
+  it("should prove using default external nullifier if one is not specified", async function () {
     const pcdArgs = await toArgs(frogData);
     pcdArgs.externalNullifier.value = undefined;
     pcd = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
