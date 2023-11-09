@@ -10,7 +10,10 @@ export enum PasswordStrength {
 }
 
 export const checkPasswordStrength = (password: string): boolean => {
-  const { score } = zxcvbn(password);
+  if (!window.zxcvbn) {
+    throw new Error("zxcvbn has not been loaded yet");
+  }
+  const { score } = window.zxcvbn(password);
   return score >= PasswordStrength.STRONG;
 };
 

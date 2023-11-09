@@ -10,11 +10,15 @@ interface PasswordStrengthProgressProps {
 const PasswordStrengthProgress: FC<PasswordStrengthProgressProps> = ({
   password
 }) => {
+  // Hide spinner if zxcvbn.js not loaded yet
+  if (!window.zxcvbn) {
+    return null;
+  }
   const getCircularProgressProps = (): CircularProgressProps => {
     if (!password) {
       return { progressColor: "none", progress: 0 };
     }
-    const { score } = zxcvbn(password);
+    const { score } = window.zxcvbn(password);
     switch (score) {
       case PasswordStrength.WEAK:
         return { progressColor: "red", progress: 25, tooltip: "Weak password" };

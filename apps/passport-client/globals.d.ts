@@ -1,5 +1,7 @@
-const zxcvbn = require("zxcvbn");
+import zxcvbn from "zxcvbn";
 
 declare global {
-  interface Window {}
+  interface Window {
+    zxcvbn?: typeof zxcvbn;
+  }
 }
