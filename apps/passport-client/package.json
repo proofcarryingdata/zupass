@@ -9,7 +9,8 @@
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico"
+    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico",
+    "analyze-bundle": "yarn build && esbuild-visualizer --metadata ./public/js/bundle-size.json --filename public/bundle-stats.html && open public/bundle-stats.html"
   },
   "dependencies": {
     "@pcd/eddsa-frog-pcd": "0.0.1",
@@ -75,6 +76,7 @@
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
     "esbuild": "^0.17.10",
+    "esbuild-visualizer": "^0.4.1",
     "eslint": "7.32.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",

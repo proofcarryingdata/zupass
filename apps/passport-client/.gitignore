@@ -4,3 +4,4 @@ public/js
 .env
 public/service-worker.js
 public/index.html
+public/bundle-stats.html
