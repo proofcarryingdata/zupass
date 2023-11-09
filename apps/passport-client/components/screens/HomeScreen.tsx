@@ -112,6 +112,7 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
+          <LoadingIssuedPCDs />
           {!(foldersInFolder.length === 0 && isRoot) && (
             <FolderExplorerContainer>
               {!isRoot && (
@@ -157,7 +158,6 @@ export function HomeScreenImpl() {
               )}
             </>
           )}
-          <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>
