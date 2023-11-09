@@ -1,6 +1,5 @@
 import { FC } from "react";
 import styled from "styled-components";
-import zxcvbn from "zxcvbn";
 import { PasswordStrength } from "../../src/password";
 
 interface PasswordStrengthProgressProps {
@@ -10,10 +9,14 @@ interface PasswordStrengthProgressProps {
 const PasswordStrengthProgress: FC<PasswordStrengthProgressProps> = ({
   password
 }) => {
+  // Hide spinner if zxcvbn.js not loaded yet
+  if (!window.zxcvbn) {
+    return null;
+  }
   if (!password) {
     return <ProgressPie progress={0} progressColor="transparent" />;
   }
-  const { score } = zxcvbn(password);
+  const { score } = window.zxcvbn(password);
   switch (score) {
     case PasswordStrength.WEAK:
       return (

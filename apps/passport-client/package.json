@@ -58,8 +58,7 @@
     "tsparticles-confetti": "^2.12.0",
     "tsparticles-engine": "^2.12.0",
     "typewriter-effect": "^2.21.0",
-    "uuid": "^9.0.0",
-    "zxcvbn": "^4.4.2"
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
@@ -71,7 +70,7 @@
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
-    "@types/zxcvbn": "^4.4.2",
+    "@types/zxcvbn": "^4.4.4",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
     "esbuild": "^0.17.10",
