@@ -1,3 +1,5 @@
+import { getAddress, isAddress } from "@ethersproject/address";
+import { verifyMessage } from "@ethersproject/wallet";
 import {
   ArgumentTypeName,
   DisplayOptions,
@@ -17,7 +19,6 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
-import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { EthereumOwnershipCardBody } from "./CardBody";
@@ -91,7 +92,7 @@ export async function prove(
     throw new Error(`missing argument ethereumAddress`);
   }
 
-  if (!ethers.utils.isAddress(args.ethereumAddress.value)) {
+  if (!isAddress(args.ethereumAddress.value)) {
     throw new Error(`${args.ethereumAddress} is not a valid Ethereum address`);
   }
 
@@ -100,15 +101,10 @@ export async function prove(
   );
   const message = deserializedIdentity.claim.identity.commitment.toString();
 
-  const address = ethers.utils.getAddress(
-    ethers.utils.verifyMessage(
-      message,
-      args.ethereumSignatureOfCommitment.value
-    )
+  const address = getAddress(
+    verifyMessage(message, args.ethereumSignatureOfCommitment.value)
   );
-  const formattedArgAddress = ethers.utils.getAddress(
-    args.ethereumAddress.value
-  );
+  const formattedArgAddress = getAddress(args.ethereumAddress.value);
 
   if (address !== formattedArgAddress) {
     throw new Error(
@@ -168,7 +164,7 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     );
 
   try {
-    const recoveredAddress = ethers.utils.verifyMessage(
+    const recoveredAddress = verifyMessage(
       deserializedSignatureProof.claim.identityCommitment,
       pcd.proof.ethereumSignatureOfCommitment
     );
@@ -176,8 +172,8 @@ export async function verify(pcd: EthereumOwnershipPCD): Promise<boolean> {
     // the signature of the commitment by the ethereum address must have been
     // signed by the claimed ethereum address
     if (
-      ethers.utils.getAddress(recoveredAddress) !==
-      ethers.utils.getAddress(pcd.claim.ethereumAddress.toLowerCase())
+      getAddress(recoveredAddress) !==
+      getAddress(pcd.claim.ethereumAddress.toLowerCase())
     ) {
       return false;
     }
