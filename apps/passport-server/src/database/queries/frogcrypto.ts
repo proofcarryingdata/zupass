@@ -227,15 +227,16 @@ function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
 
 export async function incrementScore(
   client: Client,
-  semaphoreId: string
+  semaphoreId: string,
+  increment = 1
 ): Promise<FrogCryptoScore> {
   const res = await client.query(
     `insert into frogcrypto_user_scores
     (semaphore_id, score)
-    values ($1, 1)
-    on conflict (semaphore_id) do update set score = frogcrypto_user_scores.score + 1
+    values ($1, $2)
+    on conflict (semaphore_id) do update set score = frogcrypto_user_scores.score + $2
     returning *`,
-    [semaphoreId]
+    [semaphoreId, increment]
   );
 
   return res.rows[0];

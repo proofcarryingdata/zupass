@@ -22,12 +22,13 @@ import { getDB } from "../src/database/postgresPool";
 import {
   getFeedData,
   getFrogData,
+  incrementScore,
   upsertFeedData,
   upsertFrogData
 } from "../src/database/queries/frogcrypto";
 import { Zupass } from "../src/types";
 import { overrideEnvironment, testingEnv } from "./util/env";
-import { testFeeds, testFrogs } from "./util/frogcrypto";
+import { testFeeds, testFrogs, testFrogsAndObjects } from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
@@ -288,6 +289,42 @@ describe("frogcrypto functionality", function () {
     MockDate.reset();
   });
 
+  it("should no longer give frog if user reaches score cap", async () => {
+    const feed = feeds[0];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.false;
+    expect(feed.cooldown).to.eq(60);
+
+    const client = await db.connect();
+    await incrementScore(client, identity.getCommitment().toString(), 1000);
+    await client.end();
+
+    await testGetFrogFail(feed, DATE_EPOCH_1H, "Frog faucet off.");
+  });
+
+  it("should not increment score if getting an object", async () => {
+    await upsertFrogData(db, testFrogsAndObjects);
+    const feed = feeds[5];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.true;
+    expect(feed.biomes).to.deep.eq({
+      Unknown: { dropWeightScaler: 1 }
+    });
+
+    await testGetFrog(feed, DATE_EPOCH_1H);
+
+    const userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    expect(userState.value?.myScore).to.deep.include({ score: 0 });
+    expect(userState.value?.feeds).to.have.length(1);
+    const feedState = userState.value?.feeds?.[0];
+    expectToExist(feedState);
+    expect(feedState.feedId).to.eq(feed.id);
+    expect(feedState.lastFetchedAt).to.eq(0);
+    expect(feedState.nextFetchAt).to.eq(feed.cooldown * 1000);
+    expect(feedState.active).to.be.true;
+  });
+
   it("should return hi scores", async () => {
     const response = await requestFrogCryptoGetScoreboard(
       application.expressContext.localEndpoint
@@ -297,7 +334,7 @@ describe("frogcrypto functionality", function () {
     expectToExist(scores);
     expect(scores.length).to.greaterThan(1);
     expect(scores[0].rank).to.eq(1);
-    expect(scores[0].score).to.eq(4);
+    expect(scores[0].score).to.eq(1000);
   });
 
   async function testGetFrog(
