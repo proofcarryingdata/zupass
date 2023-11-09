@@ -42,6 +42,7 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
   "/global-zupass.css",
   "/js/index.js"
 ]);
+const STALE_EPHEMERAL_CACHE_NAME = `${CACHE_VERSION}-ephemeral-stale`;
 
 /**
  * Stable cache is for resources which are expected not to change frequently,
@@ -56,6 +57,7 @@ const EPHEMERAL_CACHE_RESOURCES = new Set([
  */
 const STABLE_CACHE_NAME = `${CACHE_VERSION}-stable`;
 const STABLE_CACHE_RESOURCES = new Set([
+  "/zxcvbn.js",
   "/favicon.ico",
   "/semaphore-artifacts/16.wasm",
   "/semaphore-artifacts/16.zkey",
@@ -136,7 +138,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
   // Clean up any stray service workers from prior development.
   if (!SERVICE_WORKER_ENABLED) {
     swLog.I(
-      `service worker disabled: self-unregistering and refreshing client 
+      `service worker disabled: self-unregistering and refreshing client
       windows ${SW_BUILD_ID}`
     );
     event.waitUntil(
@@ -197,25 +199,35 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         return stableResp;
       }
 
+      // Check ephemeral cache next before fetch which will update the cache immediately.
+      const cacheResp = await checkEphemeralCache(event.request);
+      if (cacheResp) {
+        swLog.V(`cache hit fetching ${event.request?.url}`);
+        return cacheResp;
+      }
+
       // Next setup a network fetch to run asynchronously, along with a timeout.
       // We're not awaiting either promise yet, so shouldn't get exceptions.
       const timeoutPromise = startFetchTimeout();
-      const respPromise = startFetch(event);
+      const updateCacheAndResponsePromise = startFetch(event);
 
       try {
         // Wait for fetch to complete or timeout to expire.  Failure and
         // expiration both result in exceptions, so if we get a result
         // at all we can simply return it.
-        return await Promise.race([respPromise, timeoutPromise]);
+        return await Promise.race([
+          updateCacheAndResponsePromise,
+          timeoutPromise
+        ]);
       } catch (error: unknown) {
-        // If stable cache and network both failed, use ephemeral cache, but
+        // If stable cache and network both failed, use last ephemeral cache, but
         // still make sure the event waits for the fetch to finish and update
         // the cachee.
-        const cacheResp = await checkEphemeralCache(event.request);
-        if (cacheResp) {
+        const staleCacheResp = await checkStaleEphemeralCache(event.request);
+        if (staleCacheResp) {
           swLog.V(`cache fallback for ${event.request?.url} after ${error}`);
-          event.waitUntil(respPromise);
-          return cacheResp;
+          event.waitUntil(updateCacheAndResponsePromise);
+          return staleCacheResp;
         } else {
           swLog.V(`no fallback for ${event.request?.url} after ${error}`);
         }
@@ -223,7 +235,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         // If we have no cached entry available, we have no choice but to wait
         // for the fetch to complete, or to fail and throw an exeption.
         // This could be the same exception we already caught, which is fine.
-        return await respPromise;
+        return updateCacheAndResponsePromise;
       }
     })()
   );
@@ -268,13 +280,9 @@ async function startFetch(event: FetchEvent): Promise<Response> {
     // the cache updates happen asynchronously on the cloned Response while the
     // original response is returned.
     if (shouldUpdateStableCache(event.request, resp)) {
-      event.waitUntil(
-        updateCache(STABLE_CACHE_NAME, event.request, resp.clone())
-      );
+      await updateCache(STABLE_CACHE_NAME, event.request, resp.clone());
     } else if (shouldUpdateEphemeralCache(event.request, resp)) {
-      event.waitUntil(
-        updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone())
-      );
+      await updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone());
     }
 
     return resp;
@@ -298,7 +306,11 @@ async function prePopulateCaches(): Promise<void> {
 async function deleteOldCaches(): Promise<void> {
   // Delete old caches that don't match the current version.
   for (const cacheName of await caches.keys()) {
-    if (cacheName !== STABLE_CACHE_NAME && cacheName !== EPHEMERAL_CACHE_NAME) {
+    if (
+      cacheName !== STABLE_CACHE_NAME &&
+      cacheName !== EPHEMERAL_CACHE_NAME &&
+      cacheName !== STALE_EPHEMERAL_CACHE_NAME
+    ) {
       swLog.I(`Deleting unknown cache version: ${cacheName}`);
       await caches.delete(cacheName);
     }
@@ -317,6 +329,23 @@ async function deleteOldCaches(): Promise<void> {
         await stableCache.delete(request);
       } else {
         swLog.V(`${STABLE_CACHE_NAME} keeping ${urlKey}`);
+      }
+    })
+  );
+
+  // Copy any existing ephemeral cache entries to the stale cache.
+  // This allows us to fallback to stale entries if the network fails.
+  const ephemeralCache = await caches.open(EPHEMERAL_CACHE_NAME);
+  const staleEphemeralCache = await caches.open(STALE_EPHEMERAL_CACHE_NAME);
+  const ephemeralKeys = await ephemeralCache.keys();
+  await Promise.all(
+    ephemeralKeys.map(async (request: Request) => {
+      const urlKey = requestToItemCacheKey(request);
+      if (!EPHEMERAL_CACHE_RESOURCES.has(urlKey)) {
+        swLog.I(`${STALE_EPHEMERAL_CACHE_NAME} discarding ${urlKey}`);
+        await staleEphemeralCache.delete(request);
+      } else {
+        swLog.V(`${STALE_EPHEMERAL_CACHE_NAME} keeping ${urlKey}`);
       }
     })
   );
@@ -354,6 +383,12 @@ async function checkEphemeralCache(
   request: Request
 ): Promise<Response | undefined> {
   return await fetchFromCache(EPHEMERAL_CACHE_NAME, request);
+}
+
+async function checkStaleEphemeralCache(
+  request: Request
+): Promise<Response | undefined> {
+  return await fetchFromCache(STALE_EPHEMERAL_CACHE_NAME, request);
 }
 
 function shouldHandleFetch(request: Request): boolean {
