@@ -26,6 +26,16 @@ type LoggedInZuzaluOrZuconnectUser = Pick<
   "email" | "role" | "commitment"
 >;
 
+export const enum SemaphoreGroups {
+  ZuzaluParticipants = "1",
+  ZuzaluResidents = "2",
+  ZuzaluVisitors = "3",
+  ZuzaluOrganizers = "4",
+  Everyone = "5",
+  DevconnectAttendees = "6",
+  DevconnectOrganizers = "7"
+}
+
 /**
  * Responsible for maintaining semaphore groups for all the categories of users
  * that Zupass is aware of.
@@ -49,17 +59,37 @@ export class SemaphoreService {
   }
 
   private static createGroups(): Map<string, NamedGroup> {
-    return new Map([
+    return new Map(
       // @todo: deprecate groups 1-4
       // Blocked on Zupoll, Zucast, and zuzalu.city
-      ["1", { name: "Zuzalu Participants", group: new Group("1", 16) }],
-      ["2", { name: "Zuzalu Residents", group: new Group("2", 16) }],
-      ["3", { name: "Zuzalu Visitors", group: new Group("3", 16) }],
-      ["4", { name: "Zuzalu Organizers", group: new Group("4", 16) }],
-      ["5", { name: "Everyone", group: new Group("5", 16) }],
-      ["6", { name: "Devconnect Attendees", group: new Group("6", 16) }],
-      ["7", { name: "Devconnect Organizers", group: new Group("7", 16) }]
-    ]);
+      [
+        {
+          name: "Zuzalu Participants",
+          group: new Group(SemaphoreGroups.ZuzaluParticipants, 16)
+        },
+        {
+          name: "Zuzalu Residents",
+          group: new Group(SemaphoreGroups.ZuzaluResidents, 16)
+        },
+        {
+          name: "Zuzalu Visitors",
+          group: new Group(SemaphoreGroups.ZuzaluVisitors, 16)
+        },
+        {
+          name: "Zuzalu Organizers",
+          group: new Group(SemaphoreGroups.ZuzaluOrganizers, 16)
+        },
+        { name: "Everyone", group: new Group(SemaphoreGroups.Everyone, 16) },
+        {
+          name: "Devconnect Attendees",
+          group: new Group(SemaphoreGroups.DevconnectAttendees, 16)
+        },
+        {
+          name: "Devconnect Organizers",
+          group: new Group(SemaphoreGroups.DevconnectOrganizers, 16)
+        }
+      ].map((namedGroup) => [namedGroup.group.id.toString(), namedGroup])
+    );
   }
 
   public getNamedGroup(id: string): NamedGroup {
@@ -174,8 +204,12 @@ export class SemaphoreService {
         (user) => user.commitment
       );
 
-      const attendeesNamedGroup = this.groups.get("6");
-      const organizersNamedGroup = this.groups.get("7");
+      const attendeesNamedGroup = this.groups.get(
+        SemaphoreGroups.DevconnectAttendees
+      );
+      const organizersNamedGroup = this.groups.get(
+        SemaphoreGroups.DevconnectOrganizers
+      );
 
       if (attendeesNamedGroup) {
         const { toAdd, toRemove } = this.calculateGroupChanges(
@@ -309,7 +343,12 @@ export class SemaphoreService {
       // Zuzalu groups get totally re-created
       const newGroups = SemaphoreService.createGroups();
       const zuzaluGroups = [];
-      for (const id of ["1", "2", "3", "4"]) {
+      for (const id of [
+        SemaphoreGroups.ZuzaluParticipants,
+        SemaphoreGroups.ZuzaluResidents,
+        SemaphoreGroups.ZuzaluVisitors,
+        SemaphoreGroups.ZuzaluOrganizers
+      ]) {
         const group = newGroups.get(id) as NamedGroup;
         zuzaluGroups.push(group);
         this.groups.set(id, group);
