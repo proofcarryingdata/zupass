@@ -1,5 +1,4 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
-import zxcvbn from "zxcvbn";
 import { Dispatcher, ZuUpdate } from "./dispatch";
 import { updateBlobKeyForEncryptedStorage } from "./useSyncE2EEStorage";
 

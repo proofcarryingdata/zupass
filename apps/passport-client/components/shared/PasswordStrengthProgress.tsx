@@ -1,7 +1,6 @@
 import { CircularProgress, Size } from "@skiff-org/skiff-ui";
 import { CircularProgressProps } from "@skiff-org/skiff-ui/built/src/components/CircularProgress/CircularProgress.types";
 import { FC } from "react";
-import zxcvbn from "zxcvbn";
 import { PasswordStrength } from "../../src/password";
 
 interface PasswordStrengthProgressProps {
