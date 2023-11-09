@@ -152,6 +152,10 @@ export class SemaphoreService {
     });
   }
 
+  /**
+   * Calculates the changes to the group compared to the latest set of
+   * members.
+   */
   private calculateGroupChanges(
     group: NamedGroup,
     latestMembers: string[]
@@ -189,6 +193,7 @@ export class SemaphoreService {
 
       span?.setAttribute("attendees", devconnectAttendees.length);
       span?.setAttribute("organizers", devconnectOrganizers.length);
+      const start = performance.now();
 
       logger(
         `[SEMA] Rebuilding Devconnect attendee group, ${devconnectAttendees.length} total users.`
@@ -256,6 +261,10 @@ export class SemaphoreService {
           );
         }
       }
+
+      const duration = performance.now() - start;
+      span?.setAttribute("duration", duration);
+      logger(`[SEMA] Took ${duration}ms to update Devconnect semaphore groups`);
     });
   }
 
