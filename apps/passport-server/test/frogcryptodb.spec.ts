@@ -1,5 +1,6 @@
 import { FrogCryptoDbFeedData } from "@pcd/passport-interface";
 import { expect } from "chai";
+import _ from "lodash";
 import "mocha";
 import { step } from "mocha-steps";
 import { Client } from "pg";
@@ -79,6 +80,31 @@ describe("database reads and writes for frogcrypto features", function () {
     expect(frog?.biome).to.eq("Jungle");
   });
 
+  step("sample a frog from complexly named biome", async function () {
+    const frog = await sampleFrogData(db, {
+      TheCapital: { dropWeightScaler: 1 }
+    });
+
+    expect(frog?.biome).to.eq("The Capital");
+  });
+
+  step("sample a frog from weighted biomes", async function () {
+    const frogs = await Promise.all(
+      _.range(0, 1000).map(() =>
+        sampleFrogData(db, {
+          TheCapital: { dropWeightScaler: 100 },
+          Desert: { dropWeightScaler: 0.01 },
+          Jungle: { dropWeightScaler: 0 } // 0 weight should be ignored
+        })
+      )
+    );
+
+    // sample 1000 frogs with Capital frog expect to show up 99.98% chance each time. there is < 1e-14 chance for non capital frog to show up more than 10 times
+    expect(
+      frogs.filter((frog) => frog?.biome === "The Capital").length
+    ).to.be.greaterThanOrEqual(990);
+  });
+
   step("return undefined if there is no frog to sample", async function () {
     const frog = await sampleFrogData(db, {});
 
@@ -128,7 +154,7 @@ describe("database reads and writes for frogcrypto features", function () {
     await upsertFrogData(db, testFrogsAndObjects);
 
     const possibleFrogIds = await getPossibleFrogIds(db);
-    expect(possibleFrogIds).to.deep.eq([1, 2, 3, 7, 8]);
+    expect(possibleFrogIds).to.deep.eq([1, 2, 3, 5, 8, 9]);
   });
 
   step("insert feeds", async function () {

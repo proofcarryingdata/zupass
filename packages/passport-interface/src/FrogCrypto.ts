@@ -4,6 +4,20 @@ import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
 
 /**
+ * Number of free rolls that a user globally
+ *
+ * User's lastFetchedAt is set to 0 if their score is less than this value
+ */
+export const FROG_FREEROLLS = 2;
+
+/**
+ * The maximum score that a user can have
+ *
+ * Once a user reaches this score, they will no longer be able to earn more PCDs from this feed
+ */
+export const FROG_SCORE_CAP = 1000;
+
+/**
  * Map of configs for Biome(s) where PCDs can be issued from this feed
  */
 export const FrogCryptoFeedBiomeConfigSchema = z.object({
@@ -110,14 +124,14 @@ export const FrogCryptoFrogDataSchema = z.object({
    */
   temperament: z.string().optional(),
   drop_weight: z.number().nonnegative(),
-  jump_min: z.number().gte(0).lte(10).optional(),
-  jump_max: z.number().gte(0).lte(10).optional(),
-  speed_min: z.number().gte(0).lte(10).optional(),
-  speed_max: z.number().gte(0).lte(10).optional(),
-  intelligence_min: z.number().gte(0).lte(10).optional(),
-  intelligence_max: z.number().gte(0).lte(10).optional(),
-  beauty_min: z.number().gte(0).lte(10).optional(),
-  beauty_max: z.number().gte(0).lte(10).optional()
+  jump_min: z.number().gte(0).lte(15).optional(),
+  jump_max: z.number().gte(0).lte(15).optional(),
+  speed_min: z.number().gte(0).lte(15).optional(),
+  speed_max: z.number().gte(0).lte(15).optional(),
+  intelligence_min: z.number().gte(0).lte(15).optional(),
+  intelligence_max: z.number().gte(0).lte(15).optional(),
+  beauty_min: z.number().gte(0).lte(15).optional(),
+  beauty_max: z.number().gte(0).lte(15).optional()
 });
 
 export type FrogCryptoFrogData = z.infer<typeof FrogCryptoFrogDataSchema>;

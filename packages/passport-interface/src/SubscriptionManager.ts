@@ -8,6 +8,7 @@ import {
 } from "@pcd/pcd-collection";
 import { ArgsOf, PCDPackage, PCDTypeNameOf } from "@pcd/pcd-types";
 import { isFulfilled } from "@pcd/util";
+import stringify from "fast-json-stable-stringify";
 import { v4 as uuid } from "uuid";
 import { CredentialManagerAPI } from "./CredentialManager";
 import { IFeedApi } from "./FeedAPI";
@@ -164,7 +165,8 @@ export class FeedSubscriptionManager {
       });
     } catch (e) {
       this.setError(subscription.id, {
-        type: SubscriptionErrorType.FetchError
+        type: SubscriptionErrorType.FetchError,
+        e: e instanceof Error ? e : undefined
       });
     }
 
@@ -386,7 +388,7 @@ export class FeedSubscriptionManager {
   }
 
   public serialize(): string {
-    return JSON.stringify({
+    return stringify({
       providers: this.providers,
       subscribedFeeds: this.activeSubscriptions,
       _storage_version: "v1"
@@ -475,6 +477,7 @@ export interface SubscriptionPermissionError {
 
 export interface SubscriptionFetchError {
   type: SubscriptionErrorType.FetchError;
+  e: Error | undefined;
 }
 
 export type SubscriptionError =

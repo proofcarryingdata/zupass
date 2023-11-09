@@ -5,6 +5,8 @@ interface AppConfig {
   devMode: boolean;
   // The URL of the Zupass server.
   zupassServer: string;
+  // The URL of the FrogCrypto feed host server.
+  frogCryptoServer: string;
   // The amount of time a zuzalu qr code proof is valid for
   maxIdentityProofAgeMs: number;
   // token that allows the client to upload errors to rollbar
@@ -16,6 +18,7 @@ interface AppConfig {
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL,
+  frogCryptoServer: process.env.FROGCRYPTO_SERVER_URL,
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME

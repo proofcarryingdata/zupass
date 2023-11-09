@@ -8,7 +8,8 @@ export const ZUCONNECT_TICKET_NAMES = [
   "1st Week Pass",
   "ZuConnect Scholarship",
   "ZuConnect Organizer Pass",
-  "For people only using Day Passes (add-ons)"
+  "For people only using Day Passes (add-ons)",
+  "Latecomer Pass"
 ] as const;
 
 export type ZuconnectTicketType = (typeof ZUCONNECT_TICKET_NAMES)[number];
@@ -78,5 +79,11 @@ export const ZUCONNECT_PRODUCT_ID_MAPPINGS: {
     eventId: ZUCONNECT_23_DAY_PASS_EVENT_ID,
     name: "Visitor",
     zuzaluRoleEquivalent: ZuzaluUserRole.Visitor
+  },
+  "Latecomer Pass": {
+    id: ZUCONNECT_23_RESIDENT_PRODUCT_ID,
+    eventId: ZUCONNECT_23_RESIDENT_EVENT_ID,
+    name: "Resident",
+    zuzaluRoleEquivalent: ZuzaluUserRole.Resident
   }
 };

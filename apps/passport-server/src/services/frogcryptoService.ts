@@ -1,5 +1,7 @@
 import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
+  FROG_FREEROLLS,
+  FROG_SCORE_CAP,
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
@@ -137,21 +139,26 @@ export class FrogcryptoService {
   public async getUserState(
     req: FrogCryptoUserStateRequest
   ): Promise<FrogCryptoUserStateResponseValue> {
+    if (!("feedIds" in req)) throw new PCDHTTPError(400, "missing feedIds");
+    if (!Array.isArray(req.feedIds)) {
+      throw new PCDHTTPError(400, "feedIds must be an array");
+    }
+
     const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
-    const userFeeds = await fetchUserFeedsState(
-      this.context.dbPool,
-      semaphoreId
+    const userFeeds = _.keyBy(
+      await fetchUserFeedsState(this.context.dbPool, semaphoreId),
+      "feed_id"
     );
 
-    const allFeeds = _.keyBy(this.feedHost.getAllFeeds(), "id");
+    const allFeeds = this.feedHost
+      .getAllFeeds()
+      .filter((feed) => req.feedIds.includes(feed.id));
 
     return {
-      feeds: userFeeds
-        .filter((userFeed) => allFeeds[userFeed.feed_id])
-        .map((userFeed) =>
-          this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
-        ),
+      feeds: allFeeds.map((feed) =>
+        this.computeUserFeedState(userFeeds[feed.id], feed)
+      ),
       possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
@@ -200,13 +207,36 @@ export class FrogcryptoService {
           throw new PCDHTTPError(403, `Next fetch available at ${nextFetchAt}`);
         }
 
-        const frogData = await sampleFrogData(this.context.dbPool, feed.biomes);
-        if (!frogData) {
+        const frogDataSpec = await sampleFrogData(
+          this.context.dbPool,
+          feed.biomes
+        );
+        if (!frogDataSpec) {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
-        await incrementScore(client, semaphoreId);
 
-        return this.generateFrogData(frogData, semaphoreId);
+        const frogData = this.generateFrogData(frogDataSpec, semaphoreId);
+
+        const { score: scoreAfterRoll } = await incrementScore(
+          client,
+          semaphoreId,
+          // non-frog frog doesn't get point
+          frogData.biome === Biome.Unknown ? 0 : 1
+        );
+        if (scoreAfterRoll > FROG_SCORE_CAP) {
+          throw new PCDHTTPError(403, "Frog faucet off.");
+        }
+        // rollback last fetched timestamp if user has free rolls left
+        if (scoreAfterRoll <= FROG_FREEROLLS) {
+          await updateUserFeedState(
+            client,
+            semaphoreId,
+            feed.id,
+            lastFetchedAt.toUTCString()
+          );
+        }
+
+        return frogData;
       }
     );
   }

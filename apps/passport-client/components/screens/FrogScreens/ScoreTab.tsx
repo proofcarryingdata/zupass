@@ -23,17 +23,21 @@ export function ScoreTab({ score }: { score?: FrogCryptoScore }) {
   return (
     <Container>
       <ScoreTable title="You" scores={[score]} />
-      {scores.length > 0 && <ScoreTable title="Leaderboard" scores={scores} />}
+      {scores.length > 0 && (
+        <ScoreTable title="Leaderboard" scores={scores} myScore={score} />
+      )}
     </Container>
   );
 }
 
 function ScoreTable({
   title,
-  scores
+  scores,
+  myScore
 }: {
   title: string;
   scores: FrogCryptoScore[];
+  myScore?: FrogCryptoScore;
 }) {
   return (
     <table>
@@ -51,7 +55,17 @@ function ScoreTable({
       </thead>
       <tbody>
         {scores.map((score) => (
-          <tr key={score.rank}>
+          <tr
+            key={score.rank}
+            style={
+              score.semaphore_id === myScore?.semaphore_id
+                ? {
+                    fontWeight: "bold",
+                    color: "var(--accent-darker)"
+                  }
+                : {}
+            }
+          >
             <td>{score.rank}</td>
             <td>{getUserShortId(score.semaphore_id)}</td>
             <td style={{ textAlign: "right" }}>{score.score}</td>

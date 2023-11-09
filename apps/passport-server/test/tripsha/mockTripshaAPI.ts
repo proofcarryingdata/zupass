@@ -60,7 +60,7 @@ export const goodResponse = {
     },
     {
       id: "65018a79b5f4a42c6649604d",
-      ticketName: "ZuConnect Resident Pass",
+      ticketName: "Latecomer Pass",
       email: "test4@example.com",
       first: "Test Four",
       last: ""

@@ -152,11 +152,20 @@ export function savePrivacyNoticeAgreed(version: number): void {
 const PersistentSyncStatusSchema = z.object({
   /**
    * Represents the most recent revision returned by the server when
-   * downloading E2EE storage.  Should change once that download has been
-   * integrated and saved into local storage.  Can be used to detect changes
-   * on future download, and conflicts on future upload.
+   * downloading or uploading E2EE storage.  Should change in local storage
+   * after upload is complete, or once that download has been integrated and
+   * saved into local storage.  Can be used to allow the server to detect
+   * changes on future download, and conflicts on future upload.
    */
-  serverStorageRevision: z.string().optional()
+  serverStorageRevision: z.string().optional(),
+
+  /**
+   * The client-calculated hash of the most recent storage uploaded to or
+   * downloaded from the server.  Should always correspond to the same contents
+   * as serverStorage Revision.  Can be used by the client to know whether
+   * its local state has changed since it was last in sync with the server.
+   */
+  serverStorageHash: z.string().optional()
 });
 export type PersistentSyncStatus = z.infer<typeof PersistentSyncStatusSchema>;
 

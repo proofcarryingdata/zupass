@@ -13,3 +13,6 @@ export const DEVCONNECT_2023_START = Date.parse(
 export const DEVCONNECT_2023_END = Date.parse(
   "November 20, 2023, 00:00:00 UTC+3"
 );
+
+export const OUTDATED_BROWSER_ERROR_MESSAGE =
+  "SecurityError: The operation is insecure";

@@ -1,17 +1,19 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
-import zxcvbn from "zxcvbn";
-import { Dispatcher } from "./dispatch";
+import { Dispatcher, ZuUpdate } from "./dispatch";
 import { updateBlobKeyForEncryptedStorage } from "./useSyncE2EEStorage";
 
 // From https://dropbox.tech/security/zxcvbn-realistic-password-strength-estimation.
 export enum PasswordStrength {
-  WEAK = 0, 
+  WEAK = 0,
   MODERATE = 1,
-  STRONG = 2 
+  STRONG = 2
 }
 
 export const checkPasswordStrength = (password: string): boolean => {
-  const { score } = zxcvbn(password);
+  if (!window.zxcvbn) {
+    throw new Error("zxcvbn has not been loaded yet");
+  }
+  const { score } = window.zxcvbn(password);
   return score >= PasswordStrength.STRONG;
 };
 
@@ -21,7 +23,8 @@ export const PASSWORD_MINIMUM_LENGTH = 8;
 export const setPassword = async (
   newPassword: string,
   currentEncryptionKey: HexString,
-  dispatch: Dispatcher
+  dispatch: Dispatcher,
+  update: ZuUpdate
 ) => {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: newEncryptionKey } =
@@ -47,5 +50,9 @@ export const setPassword = async (
     type: "change-password",
     newEncryptionKey,
     newSalt
+  });
+  update({
+    serverStorageRevision: res.value.revision,
+    serverStorageHash: res.value.storageHash
   });
 };

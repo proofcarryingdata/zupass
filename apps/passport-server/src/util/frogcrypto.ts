@@ -1,8 +1,4 @@
-import {
-  TEMPERAMENT_MAX,
-  TEMPERAMENT_MIN,
-  Temperament
-} from "@pcd/eddsa-frog-pcd";
+import { COMMON_TEMPERAMENT_SET, Temperament } from "@pcd/eddsa-frog-pcd";
 import {
   FeedHost,
   FrogCryptoFeed,
@@ -107,14 +103,19 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
 }
 
 export function sampleFrogAttribute(min?: number, max?: number): number {
-  return _.random(Math.round(min || 0), Math.round(max || 10));
+  return _.random(Math.round(min ?? 0), Math.round(max ?? 15));
 }
 
 export function parseFrogEnum(
   e: Record<number, string>,
   value: string
 ): number {
-  const key = _.findKey(e, (v) => v.toLowerCase() === value.toLowerCase());
+  const key = _.findKey(
+    e,
+    (v) =>
+      typeof v === "string" &&
+      v.toLowerCase() === value.toLowerCase().replace(/ /g, "")
+  );
   if (key === undefined) {
     throw new Error(`invalid enum value ${value}`);
   }
@@ -123,7 +124,7 @@ export function parseFrogEnum(
 
 export function parseFrogTemperament(value?: string): Temperament {
   if (!value) {
-    return _.random(TEMPERAMENT_MIN, TEMPERAMENT_MAX);
+    return _.sample(COMMON_TEMPERAMENT_SET) ?? Temperament.N_A; // fallback makes TS happy
   }
   if (value === "N/A") {
     return Temperament.N_A;

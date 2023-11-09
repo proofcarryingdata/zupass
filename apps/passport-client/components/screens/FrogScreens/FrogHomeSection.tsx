@@ -4,6 +4,7 @@ import {
   FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   IFrogCryptoFeedSchema,
+  Subscription,
   requestFrogCryptoGetUserState
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useMemo, useState } from "react";
@@ -19,11 +20,13 @@ import {
   useSubscriptions
 } from "../../../src/appHooks";
 import { H1 } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 import { ActionButton, Button, ButtonGroup } from "./Button";
 import { DexTab } from "./DexTab";
 import { SuperFunkyFont } from "./FrogFolder";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab } from "./ScoreTab";
+import { TypistText } from "./TypistText";
 
 const TABS = [
   {
@@ -46,7 +49,6 @@ type TabId = (typeof TABS)[number]["tab"];
  */
 export function FrogHomeSection() {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
-  const { userState, refreshUserState } = useUserFeedState();
   const subs = useSubscriptions();
   const frogSubs = useMemo(
     () =>
@@ -57,6 +59,12 @@ export function FrogHomeSection() {
   );
   const initFrog = useInitializeFrogSubscriptions();
   const [tab, setTab] = useState<TabId>("get");
+  const { userState, refreshUserState } = useUserFeedState(frogSubs);
+  const myScore = userState?.myScore?.score ?? 0;
+
+  if (!userState) {
+    return <RippleLoader />;
+  }
 
   return (
     <Container>
@@ -64,30 +72,73 @@ export function FrogHomeSection() {
         <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
       </SuperFunkyFont>
 
-      {userState?.myScore?.score && (
-        <Score>Score {userState?.myScore?.score}</Score>
+      {myScore > 0 && (
+        <Score>
+          Score {myScore} | {scoreToEmoji(myScore)}
+        </Score>
       )}
 
       {frogSubs.length === 0 && (
-        <ActionButton onClick={initFrog}>light fire</ActionButton>
+        <TypistText
+          onInit={(typewriter) =>
+            typewriter
+              .typeString(
+                "you are walking through the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+              )
+              .pauseFor(500)
+              .typeString(
+                "a sultry CROAK beckons you closer. it is like music to your ears.<br/><br/>"
+              )
+              .pauseFor(500)
+              .typeString("will you enter the world of FROGCRYPTO?")
+          }
+        >
+          <ActionButton onClick={initFrog}>enter SWAMP</ActionButton>
+        </TypistText>
       )}
+
       {frogSubs.length > 0 &&
-        (frogPCDs.length === 0 ? (
-          <GetFrogTab
-            subscriptions={frogSubs}
-            userState={userState}
-            refreshUserState={refreshUserState}
-            pcds={frogPCDs}
-          />
+        (frogPCDs.length === 0 && !myScore ? (
+          <>
+            <TypistText
+              onInit={(typewriter) =>
+                typewriter
+                  .typeString(
+                    "you're certain you saw a frog wearing a monocle."
+                  )
+                  .pauseFor(500)
+                  .changeDeleteSpeed(20)
+                  .deleteAll()
+                  .typeString("you enter the SWAMP.")
+              }
+            >
+              <GetFrogTab
+                subscriptions={frogSubs}
+                userState={userState}
+                refreshUserState={refreshUserState}
+                pcds={frogPCDs}
+              />
+            </TypistText>
+          </>
         ) : (
           <>
-            <ButtonGroup>
-              {TABS.map(({ tab: t, label }) => (
-                <Button key={t} disabled={tab === t} onClick={() => setTab(t)}>
-                  {label}
-                </Button>
-              ))}
-            </ButtonGroup>
+            {
+              // show frog card on first pull
+              // show tabs on second pull
+              myScore >= 2 && (
+                <ButtonGroup>
+                  {TABS.map(({ tab: t, label }) => (
+                    <Button
+                      key={t}
+                      disabled={tab === t}
+                      onClick={() => setTab(t)}
+                    >
+                      {label}
+                    </Button>
+                  ))}
+                </ButtonGroup>
+              )
+            }
 
             {tab === "get" && (
               <GetFrogTab
@@ -113,9 +164,9 @@ export function FrogHomeSection() {
 /**
  * Fetch the user's frog crypto state as well as the ability to refetch.
  */
-function useUserFeedState() {
+function useUserFeedState(subscriptions: Subscription[]) {
   const [userState, setUserState] =
-    useState<FrogCryptoUserStateResponseValue>();
+    useState<FrogCryptoUserStateResponseValue | null>(null);
   const identity = useIdentity();
   const pcds = usePCDCollection();
   const credentialCache = useCredentialCache();
@@ -123,17 +174,23 @@ function useUserFeedState() {
     () => new CredentialManager(identity, pcds, credentialCache),
     [credentialCache, identity, pcds]
   );
+  // coerce to string to avoid unnecessary rerenders
+  const feedIdsString = useMemo(
+    () => JSON.stringify(subscriptions.map((sub) => sub.feed.id)),
+    [subscriptions]
+  );
   const refreshUserState = useCallback(async () => {
     const pcd = await credentialManager.requestCredential({
       signatureType: "sempahore-signature-pcd"
     });
 
     const state = await requestFrogCryptoGetUserState(appConfig.zupassServer, {
-      pcd
+      pcd,
+      feedIds: JSON.parse(feedIdsString)
     });
 
     setUserState(state.value);
-  }, [credentialManager]);
+  }, [credentialManager, feedIdsString]);
   useEffect(() => {
     refreshUserState();
   }, [refreshUserState]);
@@ -147,7 +204,7 @@ function useUserFeedState() {
   );
 }
 
-export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
+export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.frogCryptoServer}/frogcrypto/feeds`;
 
 /**
  * Returns a callback to register the default frog subscription provider and
@@ -165,7 +222,14 @@ const useInitializeFrogSubscriptions: () => () => Promise<void> = () => {
 
     // Subscribe to public feeds. We don't check for duplicates here because
     // this function should only be called if user has no frog subscriptions.
-    await subs.listFeeds(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL).then((res) =>
+    await subs.listFeeds(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL).then((res) => {
+      if (res.feeds.length === 0) {
+        toast.error(
+          "Hop, hop, hooray! But wait – the adventure isn't ready to ignite just yet. The fireflies haven't finished their dance. Come back shortly, and we'll leap into the fun together!"
+        );
+        return;
+      }
+
       res.feeds.forEach((feed) => {
         const parsed = IFrogCryptoFeedSchema.safeParse(feed);
         if (parsed.success) {
@@ -177,7 +241,7 @@ const useInitializeFrogSubscriptions: () => () => Promise<void> = () => {
           });
 
           if (parsed.data.activeUntil > Date.now() / 1000) {
-            toast(
+            toast.success(
               `Croak and awe! The ${feed.name} awaits your adventurous leap!`,
               {
                 icon: "🏕️"
@@ -191,8 +255,8 @@ const useInitializeFrogSubscriptions: () => () => Promise<void> = () => {
             parsed["error"]
           );
         }
-      })
-    );
+      });
+    });
   }, [dispatch, subs]);
 };
 
@@ -201,6 +265,7 @@ const Container = styled.div`
   width: 100%;
   height: 100%;
   max-width: 100%;
+  font-family: monospace;
 
   display: flex;
   flex-direction: column;
@@ -211,3 +276,27 @@ const Score = styled.div`
   font-size: 16px;
   text-align: center;
 `;
+
+const SCORES = [
+  { score: 0, emoji: "⚪️", title: "NOVICE" },
+  { score: 5, emoji: "🟡", title: "APPRENTICE" },
+  { score: 10, emoji: "🟠", title: "JOURNEYMAN" },
+  { score: 19, emoji: "🔴", title: "EXPERT" },
+  { score: 36, emoji: "🟣", title: "MASTER" },
+  { score: 69, emoji: "🔵", title: "GRANDMASTER" },
+  { score: 133, emoji: "🟢", title: "LEGEND" }
+];
+function scoreToEmoji(score: number) {
+  const index = SCORES.findIndex((item) => item.score >= score);
+  if (index === -1) {
+    return `${SCORES[SCORES.length - 1].emoji} ${
+      SCORES[SCORES.length - 1].title
+    }`;
+  }
+  const prev = SCORES[index - 1];
+  const next = SCORES[index];
+  const percent = Math.floor(
+    ((score - prev.score) / (next.score - prev.score)) * 100
+  );
+  return `${prev.emoji} ${prev.title} - ${percent}%`;
+}

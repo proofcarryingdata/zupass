@@ -1,7 +1,7 @@
 import { sleep } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch, useSelf } from "../../src/appHooks";
+import { useDispatch, useSelf, useUpdate } from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { BigInput, H2, Spacer } from "../core";
@@ -15,6 +15,7 @@ import { ScreenLoader } from "../shared/ScreenLoader";
 export function RequireAddPasswordModal() {
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
+  const update = useUpdate();
   const self = useSelf();
 
   const [newPassword, setNewPassword] = useState("");
@@ -28,7 +29,7 @@ export function RequireAddPasswordModal() {
     await sleep();
     try {
       const currentEncryptionKey = loadEncryptionKey();
-      await setPassword(newPassword, currentEncryptionKey, dispatch);
+      await setPassword(newPassword, currentEncryptionKey, dispatch, update);
 
       dispatch({
         type: "set-modal",
@@ -39,7 +40,7 @@ export function RequireAddPasswordModal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, dispatch]);
+  }, [loading, newPassword, dispatch, update]);
 
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;

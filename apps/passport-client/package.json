@@ -9,7 +9,8 @@
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico"
+    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico",
+    "analyze-bundle": "yarn build && esbuild-visualizer --metadata ./public/js/bundle-size.json --filename public/bundle-stats.html && open public/bundle-stats.html"
   },
   "dependencies": {
     "@pcd/eddsa-frog-pcd": "0.0.1",
@@ -39,6 +40,7 @@
     "broadcast-channel": "^5.3.0",
     "dotenv": "^16.0.3",
     "email-validator": "^2.0.4",
+    "fast-json-stable-stringify": "^2.1.0",
     "handlebars": "^4.7.7",
     "isomorphic-timers-promises": "^1.0.1",
     "lodash": "^4.17.21",
@@ -54,9 +56,10 @@
     "rollbar": "^2.26.1",
     "styled-components": "^5.3.6",
     "tsparticles": "^2.12.0",
+    "tsparticles-confetti": "^2.12.0",
     "tsparticles-engine": "^2.12.0",
-    "uuid": "^9.0.0",
-    "zxcvbn": "^4.4.2"
+    "typewriter-effect": "^2.21.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
@@ -68,10 +71,11 @@
     "@types/react": "^18.2.6",
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
-    "@types/zxcvbn": "^4.4.2",
+    "@types/zxcvbn": "^4.4.4",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
     "esbuild": "^0.17.10",
+    "esbuild-visualizer": "^0.4.1",
     "eslint": "7.32.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",

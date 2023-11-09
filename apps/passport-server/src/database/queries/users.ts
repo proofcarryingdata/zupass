@@ -100,3 +100,46 @@ export async function fetchUsersByMinimumAgreedTerms(
 
   return result.rows;
 }
+
+/**
+ * Fetch all users with Devconnect tickets
+ */
+export async function fetchAllUsersWithDevconnectTickets(
+  client: Pool
+): Promise<UserRow[]> {
+  const result = await sqlQuery(
+    client,
+    `
+  SELECT u.* FROM users u
+  INNER JOIN devconnect_pretix_tickets t
+  ON u.email = t.email
+  WHERE t.is_deleted = false
+  GROUP BY u.uuid
+  `
+  );
+
+  return result.rows;
+}
+
+/**
+ * Fetch all users with superuser Devconnect tickets
+ */
+export async function fetchAllUsersWithDevconnectSuperuserTickets(
+  client: Pool
+): Promise<UserRow[]> {
+  const result = await sqlQuery(
+    client,
+    `
+  SELECT u.* FROM users u
+  INNER JOIN devconnect_pretix_tickets t
+  ON u.email = t.email
+  INNER JOIN devconnect_pretix_items_info i ON t.devconnect_pretix_items_info_id = i.id
+  INNER JOIN devconnect_pretix_events_info e ON i.devconnect_pretix_events_info_id = e.id
+  INNER JOIN pretix_events_config ec ON e.pretix_events_config_id = ec.id
+  WHERE t.is_deleted = false AND i.item_id = ANY(ec.superuser_item_ids)
+  GROUP BY u.uuid
+  `
+  );
+
+  return result.rows;
+}

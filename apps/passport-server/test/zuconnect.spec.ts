@@ -115,7 +115,9 @@ describe("zuconnect functionality", function () {
       r: [],
       v: [],
       o: [],
-      g: []
+      g: [],
+      d: [],
+      s: []
     });
   });
 
@@ -297,7 +299,9 @@ describe("zuconnect functionality", function () {
       r: [user.commitment],
       v: [],
       o: [],
-      g: [user.commitment]
+      g: [user.commitment],
+      d: [],
+      s: []
     });
   });
 
@@ -317,7 +321,9 @@ describe("zuconnect functionality", function () {
       v: [],
       // Here we see the user is now also in the Organizer group
       o: [user.commitment],
-      g: [user.commitment]
+      g: [user.commitment],
+      d: [],
+      s: []
     });
   });
 

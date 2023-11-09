@@ -31,7 +31,18 @@ export function AppContainer({
       <GlobalBackground color={col} />
       <Background>
         <Container>
-          {children && <Toaster />}
+          {children && (
+            <Toaster
+              toastOptions={{
+                success: {
+                  duration: 5000
+                },
+                error: {
+                  duration: 8000
+                }
+              }}
+            />
+          )}
           {children ?? <ScreenLoader text="Zupass" />}
           {error && <ErrorPopup error={error} onClose={onClose} />}
         </Container>

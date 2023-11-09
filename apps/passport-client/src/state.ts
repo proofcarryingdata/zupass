@@ -55,7 +55,6 @@ export interface AppState {
   // TODO(artwyman): The parts of this not needed by the rest of the app
   // might be better stored elsewhere, to avoid issues with reentrancy
   // and stale snapshots delivered via dispatch().
-  uploadedUploadId?: string;
   downloadedPCDs?: boolean;
   loadedIssuedPCDs?: boolean;
   loadingIssuedPCDs?: boolean; // Used only to update UI
@@ -67,6 +66,7 @@ export interface AppState {
   // fields to be added later.  See the docs in that type for the meaning of
   // individual fields.
   serverStorageRevision?: string;
+  serverStorageHash?: string;
 
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;

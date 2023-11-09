@@ -1,6 +1,7 @@
 import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import stringify from "fast-json-stable-stringify";
 import _ from "lodash";
 import {
   AppendToFolderAction,
@@ -326,7 +327,7 @@ export class PCDCollection {
   }
 
   public async serializeCollection(): Promise<string> {
-    return JSON.stringify({
+    return stringify({
       pcds: await Promise.all(this.pcds.map(this.serialize.bind(this))),
       folders: this.folders
     } satisfies SerializedPCDCollection);

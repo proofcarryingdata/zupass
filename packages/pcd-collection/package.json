@@ -21,15 +21,16 @@
   },
   "dependencies": {
     "@pcd/emitter": "0.2.0",
+    "@pcd/passport-crypto": "0.8.0",
     "@pcd/pcd-types": "0.8.0",
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "chai": "^4.3.7",
+    "fast-json-stable-stringify": "^2.1.0",
     "lodash": "^4.17.21",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/passport-crypto": "0.8.0",
     "@pcd/rsa-pcd": "0.3.0",
     "@pcd/tsconfig": "*",
     "@types/chai": "^4.3.5",
