@@ -15,6 +15,8 @@ import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
+import { getOutdatedBrowserErrorMessage } from "../../../src/devconnectUtils";
+import { OUTDATED_BROWSER_ERROR_MESSAGE } from "../../../src/sharedConstants";
 import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
@@ -83,7 +85,11 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 
       if (!pendingPCDResult.success) {
         rollbar?.error(pendingPCDResult.error);
-        setError(pendingPCDResult.error);
+        if (pendingPCDResult.error.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
+          setError(getOutdatedBrowserErrorMessage());
+        } else {
+          setError(pendingPCDResult.error);
+        }
         return;
       }
 
@@ -94,7 +100,12 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         const serializedPCD = await pcdPackage.serialize(pcd);
         onProve(pcd as any, serializedPCD, undefined);
       } catch (e) {
-        setError(getErrorMessage(e));
+        const errorMessage = getErrorMessage(e);
+        if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
+          setError(getOutdatedBrowserErrorMessage());
+        } else {
+          setError(errorMessage);
+        }
         // NB: Only re-enable the 'Prove' button if there was an error. If
         // the proving operation succeeded, we want to leave the button
         // disabled while onProve redirects user.
