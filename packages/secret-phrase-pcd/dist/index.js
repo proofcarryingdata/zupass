@@ -837,9 +837,11 @@ __export(src_exports, {
   getProveDisplayOptions: () => getProveDisplayOptions,
   init: () => init,
   isSecretPhrasePCD: () => isSecretPhrasePCD,
+  phraseToBigints: () => phraseToBigints,
   prove: () => prove,
   serialize: () => serialize,
   snarkInputForProof: () => snarkInputForProof,
+  usernameToBigint: () => usernameToBigint,
   verify: () => verify
 });
 module.exports = __toCommonJS(src_exports);
@@ -968,7 +970,7 @@ function SecretPhraseCardBody({ pcd }) {
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
     !isSecret && /* @__PURE__ */ (0, import_jsx_runtime.jsxs)(import_jsx_runtime.Fragment, { children: [
       /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Secret Phrase" }),
-      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.HiddenText, { text: pcd.claim.secret })
+      /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.HiddenText, { text: pcd.claim.secret || "" })
     ] }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.Spacer, { h: 8 }),
     /* @__PURE__ */ (0, import_jsx_runtime.jsx)(import_passport_ui.FieldLabel, { children: "Hash of the Secret Phrase" }),
@@ -1012,7 +1014,6 @@ function usernameToBigint(username) {
 
 // src/SecretPhrasePCD.ts
 var SecretPhrasePCDTypeName = "secret-phrase-pcd";
-var depsInitializedPromise;
 var savedInitArgs = void 0;
 var SecretPhrasePCD = class {
   constructor(id, claim, proof) {
@@ -1030,11 +1031,6 @@ function init(args) {
     savedInitArgs = args;
   });
 }
-function ensureDepsInitialized() {
-  return __async(this, null, function* () {
-    yield depsInitializedPromise;
-  });
-}
 function ensureInitialized() {
   return __async(this, null, function* () {
     if (!savedInitArgs) {
@@ -1042,7 +1038,6 @@ function ensureInitialized() {
         "Cannot initialize SecretPhrasePCDPacakge: init has not been called yet"
       );
     }
-    yield ensureDepsInitialized();
     return savedInitArgs;
   });
 }
@@ -1160,10 +1155,9 @@ function deserialize(serialized) {
   });
 }
 function getDisplayOptions(pcd) {
-  let phraseId = pcd.claim.phraseId;
   return {
-    header: `The Word: Secret Phrase #${phraseId}`,
-    displayName: `The Word: Secret Phrase #${phraseId}`
+    header: `The Word: Secret Phrase #${pcd.claim.phraseId}`,
+    displayName: `The Word: Secret Phrase #${pcd.claim.phraseId}`
   };
 }
 function isSecretPhrasePCD(pcd) {
@@ -1190,9 +1184,11 @@ var SecretPhrasePCDPackage = {
   getProveDisplayOptions,
   init,
   isSecretPhrasePCD,
+  phraseToBigints,
   prove,
   serialize,
   snarkInputForProof,
+  usernameToBigint,
   verify
 });
 /*! Bundled license information:

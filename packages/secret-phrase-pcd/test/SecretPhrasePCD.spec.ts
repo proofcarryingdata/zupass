@@ -32,7 +32,7 @@ describe("RSA Ticket PCD should work", function () {
     // convert the phrase to serialized field elements on Fr (BN254)
     const serializedPhrase = phraseToBigints(phrase);
     // compute the hash of the phrase to expect
-    const expectedHash: BigInt = poseidon.F.toObject(poseidon(serializedPhrase));
+    const expectedHash: bigint = poseidon.F.toObject(poseidon(serializedPhrase));
 
     // create the pcd by proving
     const pcd = await SecretPhrasePCDPackage.prove({

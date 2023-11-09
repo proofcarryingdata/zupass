@@ -15,7 +15,6 @@ import {
   prove as groth16Prove,
   verify as groth16Verify
 } from "@zk-kit/groth16";
-// import { Poseidon, buildPoseidon } from "circomlibjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 import { SecretPhraseCardBody } from "./CardBody";
@@ -23,8 +22,6 @@ import { phraseToBigints, usernameToBigint } from "./utils";
 
 
 export const SecretPhrasePCDTypeName = "secret-phrase-pcd";
-let depsInitializedPromise: Promise<void> | undefined;
-// let poseidon: Poseidon;
 let savedInitArgs: SecretPhrasePCDInitArgs | undefined = undefined;
 
 /**
@@ -68,6 +65,7 @@ export type SecretPhrasePCDArgs = {
 export interface SecretPhrasePCDClaim {
   phraseId: number,
   username: string,
+  // include secret when issuing PCD, do not include secret when proving from zupass
   secret?: string,
   secretHash: string
 }
@@ -92,16 +90,6 @@ export async function init(args: SecretPhrasePCDInitArgs) {
   savedInitArgs = args;
 }
 
-async function ensureDepsInitialized(): Promise<void> {
-  // if (!depsInitializedPromise) {
-  //   depsInitializedPromise = (async () => {
-  //     poseidon = await buildPoseidon();
-  //   })();
-  // }
-
-  await depsInitializedPromise;
-}
-
 async function ensureInitialized(): Promise<SecretPhrasePCDInitArgs> {
   if (!savedInitArgs) {
     throw new Error(
@@ -109,7 +97,6 @@ async function ensureInitialized(): Promise<SecretPhrasePCDInitArgs> {
     );
   }
 
-  await ensureDepsInitialized();
   return savedInitArgs;
 }
 
@@ -141,11 +128,13 @@ export function checkProofInputs(args: SecretPhrasePCDArgs): {
     throw new Error("Cannot make The Word proof: secret too long (must be < 180 characters)");
   }
 
+  // check phraseId field
   const phraseId = args.phraseId.value;
   if (!phraseId) {
     throw new Error("Cannot make The Word proof: missing phraseId");
   }
 
+  // set include secret to false by default if not included
   const includeSecret = args.includeSecret.value ? args.includeSecret.value : false;
 
   // return valid inputs
@@ -185,7 +174,10 @@ export function snarkInputForProof(username: string, secret: string):
 }
 
 /**
- * Creates a new ZKEdDSAEventTicketPCD.
+ * Creates a new SecretPhrasePCD
+ * 
+ * @params args - the arguments to prove knowledge of a secret phrase
+ * @return - a new SecretPhrasePCD
  */
 export async function prove(
   args: SecretPhrasePCDArgs,
@@ -261,6 +253,9 @@ function reviver(key: any, value: any): any {
   }
 }
 
+/**
+ * Get display options for a SecretPhrasePCD to show when proving a new PCD
+ */
 export function getProveDisplayOptions(): ProveDisplayOptions<SecretPhrasePCDArgs> {
   return {
     defaultArgs: {
@@ -318,10 +313,9 @@ export async function deserialize(serialized: string): Promise<SecretPhrasePCD> 
  * Get display options for a SecretPhrasePCD.
  */
 export function getDisplayOptions(pcd: SecretPhrasePCD): DisplayOptions {
-  let phraseId = pcd.claim.phraseId;
   return {
-    header: `The Word: Secret Phrase #${phraseId}`,
-    displayName: `The Word: Secret Phrase #${phraseId}`
+    header: `The Word: Secret Phrase #${pcd.claim.phraseId}`,
+    displayName: `The Word: Secret Phrase #${pcd.claim.phraseId}`
   };
 }
 

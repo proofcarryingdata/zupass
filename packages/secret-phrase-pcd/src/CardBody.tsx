@@ -24,7 +24,7 @@ export function SecretPhraseCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
       {!isSecret && (
         <>
           <FieldLabel>Secret Phrase</FieldLabel>
-          <HiddenText text={pcd.claim.secret!} />
+          <HiddenText text={pcd.claim.secret || ""} />
         </>
       )}
       <Spacer h={8} />

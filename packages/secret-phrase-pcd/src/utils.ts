@@ -1,8 +1,8 @@
 /**
- * Converts a given word to array of 7 field elements
+ * Converts a given word to array of 6 field elements
  * 
  * @param phrase - the string entered by user to compute hash for (will be length checked)
- * @return - array of 7 bigints compatible with noir field element api
+ * @return - array of 6 bigints compatible with noir field element api
  */
 export function phraseToBigints(phrase: string): Array<bigint> {
   // check length of title does not exceed spotify's requirements
