@@ -11,7 +11,7 @@ export function ZKEdDSAFrogCardBody({
     <Container>
       <p>
         This PCD represents an EdDSA signed frog issued to a user's semaphore
-        idenity, with proven claims about that frog.
+        identity, with proven claims about that frog.
       </p>
 
       <Separator />

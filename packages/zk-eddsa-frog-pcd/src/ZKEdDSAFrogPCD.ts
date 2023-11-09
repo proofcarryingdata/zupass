@@ -43,7 +43,7 @@ export const STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER = generateSnarkMessageHash(
 );
 
 /**
- * The global unique type name of the {@link ZKEdDSAEventTicketPCD}.
+ * The global unique type name of the {@link ZKEdDSAFrogPCD}.
  */
 export const ZKEdDSAFrogPCDTypeName = "zk-eddsa-frog-pcd";
 
@@ -60,7 +60,7 @@ export interface ZKEdDSAFrogPCDInitArgs {
 let initArgs: ZKEdDSAFrogPCDInitArgs | undefined = undefined;
 
 /**
- * Defines the essential paratmeters required for creating an {@link ZKEdDSAEventTicketPCD}.
+ * Defines the essential paratmeters required for creating an {@link ZKEdDSAFrogPCD}.
  */
 export type ZKEdDSAFrogPCDArgs = {
   frog: PCDArgument<EdDSAFrogPCD>;
@@ -76,7 +76,13 @@ export type ZKEdDSAFrogPCDArgs = {
 export interface ZKEdDSAFrogPCDClaim {
   frogOmitOwner: Omit<IFrogData, "ownerSemaphoreId">;
   signerPublicKey: EdDSAPublicKey;
+  /**
+   * Stringified `BigInt`.
+   */
   externalNullifier: string;
+  /**
+   * Stringified `BigInt`.
+   */
   nullifierHash: string;
 }
 
@@ -117,7 +123,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
           return true;
         },
         validatorParams: {
-          notFoundMessage: "You do not have any eligible frogs."
+          notFoundMessage: "You do not have any frogs."
         }
       },
       identity: {
@@ -370,7 +376,7 @@ export function getDisplayOptions(pcd: ZKEdDSAFrogPCD): DisplayOptions {
 }
 
 /**
- * Returns true if a PCD is an ZK EdDSA Frog PCD, or false otherwise.
+ * Returns true if a PCD is an ZKEdDSAFrogPCD, or false otherwise.
  */
 export function isZKEdDSAFrogPCD(
   pcd: PCD
