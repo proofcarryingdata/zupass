@@ -12,7 +12,6 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
-import request from "request";
 import urljoin from "url-join";
 import { FrogcryptoService } from "../../services/frogcryptoService";
 import { ApplicationContext, GlobalServices } from "../../types";
@@ -92,16 +91,7 @@ export function initFrogcryptoRoutes(
       throw new PCDHTTPError(503, "FrogCrypto Assets Unavailable");
     }
 
-    req
-      .pipe(
-        request(
-          urljoin(process.env.FROGCRYPTO_ASSETS_URL, `${imageId}.png`)
-        ).on("error", (err) => {
-          logger(`[FrogCrypto] Error fetching FrogCrypto Assets: ${err}`);
-          res.sendStatus(503);
-        })
-      )
-      .pipe(res);
+    res.redirect(urljoin(process.env.FROGCRYPTO_ASSETS_URL, `${imageId}.png`));
   });
 
   app.post("/frogcrypto/admin/frogs", async (req, res) => {
