@@ -99,29 +99,11 @@ export const testFrogs: FrogCryptoFrogData[] = [
 
 export const testFrogsAndObjects: FrogCryptoFrogData[] = [
   {
-    id: 5,
+    id: 6,
     uuid: uuid(),
     name: "Object 1",
     description: "A object",
-    biome: "N/A",
-    rarity: "object",
-    temperament: undefined,
-    drop_weight: 1,
-    jump_min: 1,
-    jump_max: 1,
-    speed_min: 1,
-    speed_max: 1,
-    intelligence_min: 1,
-    intelligence_max: 1,
-    beauty_min: 1,
-    beauty_max: 1
-  },
-  {
-    id: 6,
-    uuid: uuid(),
-    name: "Object 2",
-    description: "A object",
-    biome: "N/A",
+    biome: "Unknown",
     rarity: "object",
     temperament: undefined,
     drop_weight: 1,
@@ -136,6 +118,24 @@ export const testFrogsAndObjects: FrogCryptoFrogData[] = [
   },
   {
     id: 7,
+    uuid: uuid(),
+    name: "Object 2",
+    description: "A object",
+    biome: "Unknown",
+    rarity: "object",
+    temperament: undefined,
+    drop_weight: 1,
+    jump_min: 1,
+    jump_max: 1,
+    speed_min: 1,
+    speed_max: 1,
+    intelligence_min: 1,
+    intelligence_max: 1,
+    beauty_min: 1,
+    beauty_max: 1
+  },
+  {
+    id: 8,
     uuid: uuid(),
     name: "Frog 7",
     description: "A frog",
@@ -153,7 +153,7 @@ export const testFrogsAndObjects: FrogCryptoFrogData[] = [
     beauty_max: 1
   },
   {
-    id: 8,
+    id: 9,
     uuid: uuid(),
     name: "Frog 8",
     description: "A frog",
@@ -241,6 +241,19 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       cooldown: 600,
       biomes: {
         TheCapital: { dropWeightScaler: 1 }
+      }
+    }
+  },
+  {
+    uuid: "2e65575e-87b8-4777-a770-22ced16ecba8",
+    feed: {
+      name: "Bat",
+      description: "Bat",
+      private: true,
+      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      cooldown: 600,
+      biomes: {
+        Unknown: { dropWeightScaler: 1 }
       }
     }
   }

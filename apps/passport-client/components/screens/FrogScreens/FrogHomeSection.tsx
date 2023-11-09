@@ -74,7 +74,7 @@ export function FrogHomeSection() {
 
       {myScore > 0 && (
         <Score>
-          Score {myScore} | Rank #{userState?.myScore?.rank}
+          Score {myScore} | {scoreToEmoji(myScore)}
         </Score>
       )}
 
@@ -276,3 +276,27 @@ const Score = styled.div`
   font-size: 16px;
   text-align: center;
 `;
+
+const SCORES = [
+  { score: 0, emoji: "⚪️", title: "NOVICE" },
+  { score: 5, emoji: "🟡", title: "APPRENTICE" },
+  { score: 10, emoji: "🟠", title: "JOURNEYMAN" },
+  { score: 19, emoji: "🔴", title: "EXPERT" },
+  { score: 36, emoji: "🟣", title: "MASTER" },
+  { score: 69, emoji: "🔵", title: "GRANDMASTER" },
+  { score: 133, emoji: "🟢", title: "LEGEND" }
+];
+function scoreToEmoji(score: number) {
+  const index = SCORES.findIndex((item) => item.score >= score);
+  if (index === -1) {
+    return `${SCORES[SCORES.length - 1].emoji} ${
+      SCORES[SCORES.length - 1].title
+    }`;
+  }
+  const prev = SCORES[index - 1];
+  const next = SCORES[index];
+  const percent = Math.floor(
+    ((score - prev.score) / (next.score - prev.score)) * 100
+  );
+  return `${prev.emoji} ${prev.title} - ${percent}%`;
+}

@@ -2,6 +2,7 @@ import {
   FrogCryptoFolderName,
   IFrogCryptoFeedSchema
 } from "@pcd/passport-interface";
+import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useRef, useState } from "react";
 import styled from "styled-components";
@@ -49,9 +50,9 @@ export function FrogFolder({
           </BounceText>
         ))}
       </SuperFunkyFont>
-      {gameOn === false && (
+      {typeof gameOn === "boolean" && (
         <NewFont>
-          <CountDown setGameOn={setGameOn} />
+          <CountDown gameOn={gameOn} setGameOn={setGameOn} />
         </NewFont>
       )}
     </Container>
@@ -106,17 +107,27 @@ function useFetchGameOn(): {
 /**
  * A countdown to a hard coded game start date.
  */
-function CountDown({ setGameOn }: { setGameOn: (gameOn: boolean) => void }) {
+function CountDown({
+  gameOn,
+  setGameOn
+}: {
+  gameOn: boolean;
+  setGameOn: (gameOn: boolean) => void;
+}) {
   const end = useMemo(() => {
     return new Date("13 Nov 2023 23:00:00 PST");
   }, []);
-  const [diffText, setDiffText] = useState("");
+  const [diffText, setDiffText] = useState(
+    gameOn ? _.upperCase("Available Now") : ""
+  );
 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const diffMs = end.getTime() - now.getTime();
-      if (diffMs < 0) {
+      if (gameOn) {
+        setDiffText(_.upperCase("Available Now"));
+      } else if (diffMs < 0) {
         setDiffText("");
         setGameOn(true);
       } else {
@@ -132,7 +143,7 @@ function CountDown({ setGameOn }: { setGameOn: (gameOn: boolean) => void }) {
     return () => {
       clearInterval(interval);
     };
-  }, [end, setGameOn]);
+  }, [end, gameOn, setGameOn]);
 
   return <>{diffText}</>;
 }

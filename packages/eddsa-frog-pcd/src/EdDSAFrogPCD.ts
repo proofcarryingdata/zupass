@@ -316,11 +316,10 @@ export function getDisplayOptions(pcd: EdDSAFrogPCD): DisplayOptions {
     };
   }
 
-  const header = `#${frogData.frogId} ${frogData.name}`;
-
   return {
-    header,
-    displayName: header
+    displayName: `#${String(frogData.frogId).padStart(3, "00")} ${
+      frogData.name
+    }`
   };
 }
 
