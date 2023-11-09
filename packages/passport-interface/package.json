@@ -20,6 +20,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/eddsa-frog-pcd": "0.0.1",
     "@pcd/eddsa-ticket-pcd": "0.3.0",
     "@pcd/emitter": "0.2.0",
     "@pcd/passport-crypto": "0.8.0",
@@ -33,6 +34,7 @@
     "@semaphore-protocol/group": "^3.14.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@semaphore-protocol/proof": "^3.14.0",
+    "fast-json-stable-stringify": "^2.1.0",
     "js-sha256": "^0.9.0",
     "react": "^18.2.0",
     "url-join": "4.0.1",

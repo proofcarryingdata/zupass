@@ -1,5 +1,7 @@
+import { getHash } from "@pcd/passport-crypto";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import stringify from "fast-json-stable-stringify";
 import { NetworkFeedApi } from "./FeedAPI";
 import { FeedSubscriptionManager } from "./SubscriptionManager";
 import { User } from "./zuzalu";
@@ -70,6 +72,7 @@ export async function deserializeStorage(
 ): Promise<{
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
+  storageHash: string;
 }> {
   let pcds: PCDCollection;
   let subscriptions: FeedSubscriptionManager;
@@ -94,5 +97,38 @@ export async function deserializeStorage(
     );
   }
 
-  return { pcds, subscriptions };
+  return {
+    pcds,
+    subscriptions,
+    storageHash: await getStorageHash(storage)
+  };
+}
+
+/**
+ * Serializes a user's PCDs and relates state for storage.  The result is
+ * unencrypted, and always uses the latest format.  The hash uniquely identifies
+ * the content, as described in getStorageHash.
+ */
+export async function serializeStorage(
+  user: User,
+  pcds: PCDCollection,
+  subscriptions: FeedSubscriptionManager
+): Promise<{ serializedStorage: SyncedEncryptedStorage; storageHash: string }> {
+  const serializedStorage: SyncedEncryptedStorage = {
+    pcds: await pcds.serializeCollection(),
+    self: user,
+    subscriptions: subscriptions.serialize(),
+    _storage_version: "v3"
+  };
+  return {
+    serializedStorage: serializedStorage,
+    storageHash: await getStorageHash(serializedStorage)
+  };
+}
+
+/**
+ * Calculates a hash to uniquely identify the given seralized storage.
+ */
+export async function getStorageHash(storage: SyncedEncryptedStorage) {
+  return await getHash(stringify(storage));
 }

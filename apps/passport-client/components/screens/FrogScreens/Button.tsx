@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
+import { useFrogParticles } from "./useFrogParticles";
 
 /**
  * A button that shows a loading spinner while the action is in progress.
@@ -7,7 +8,8 @@ import styled from "styled-components";
 export function ActionButton({
   children,
   onClick,
-  disabled
+  disabled,
+  ButtonComponent = Button
 }: {
   children: string;
   /**
@@ -16,6 +18,10 @@ export function ActionButton({
    */
   onClick: () => Promise<void>;
   disabled?: boolean;
+  /**
+   * The component to use for the button. Defaults to Button.
+   */
+  ButtonComponent?: React.ComponentType<React.ComponentProps<typeof Button>>;
 }) {
   const [loading, setLoading] = useState(false);
   // Every user click increment the trigger count, which will trigger the
@@ -77,17 +83,59 @@ export function ActionButton({
   }, []);
 
   return (
-    <Button
+    <ButtonComponent
       onClick={handleClick}
       disabled={loading || disabled}
-      loading={loading}
+      pending={loading}
     >
       {children}
-    </Button>
+    </ButtonComponent>
   );
 }
 
-export const Button = styled.button<{ loading?: boolean }>`
+/**
+ * The FrogSearchButton allows a frog confetti animation when the button is disabled.
+ */
+export const FrogSearchButton = ({
+  disabled,
+  children,
+  ...props
+}: React.ComponentPropsWithRef<typeof Button>) => {
+  const ref = useRef<HTMLDivElement>(null);
+  const container = useFrogParticles(ref);
+
+  useEffect(() => {
+    if (!container) {
+      return;
+    }
+
+    if (disabled) {
+      container.start();
+    }
+
+    // nb: we always need this so we can disable animation when button starts as
+    // enabled
+    return () => {
+      container.stop();
+    };
+  }, [container, disabled]);
+
+  return (
+    <div
+      style={{
+        display: "flex",
+        alignItems: "stretch"
+      }}
+      ref={ref}
+    >
+      <Button disabled={disabled} {...props}>
+        {children}
+      </Button>
+    </div>
+  );
+};
+
+export const Button = styled.button<{ pending?: boolean }>`
   font-size: 16px;
   padding: 8px;
   border: none;
@@ -96,10 +144,17 @@ export const Button = styled.button<{ loading?: boolean }>`
   color: var(--white);
   cursor: pointer;
   flex: 1;
+  user-select: none;
+  font-family: monospace;
 
   &:disabled {
     background-color: rgba(var(--white-rgb), 0.2);
     filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-    cursor: ${(props) => (props.loading ? "wait" : "unset")};
+    cursor: ${(props) => (props.pending ? "wait" : "unset")};
   }
+`;
+
+export const ButtonGroup = styled.div`
+  display: flex;
+  gap: 8px;
 `;

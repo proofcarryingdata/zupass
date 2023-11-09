@@ -25,7 +25,7 @@ export const EdDSAPCDTypeName = "eddsa-frog-pcd";
 export enum Biome {
   Unknown,
   Jungle,
-  Dessert,
+  Desert,
   Swamp,
   TheCapital,
   PutridSwamp,
@@ -74,8 +74,16 @@ export enum Temperament {
   YOLO
 }
 
-export const TEMPERAMENT_MIN = Temperament.ANGY;
-export const TEMPERAMENT_MAX = Temperament.YOLO;
+export const COMMON_TEMPERAMENT_SET = [
+  Temperament.HNGY,
+  Temperament.ANGY,
+  Temperament.SADG,
+  Temperament.CALM,
+  Temperament.BORD,
+  Temperament.DARK,
+  Temperament.SLPY,
+  Temperament.CALM
+];
 
 /**
  * FROGCRYPTO Data Model
@@ -308,11 +316,10 @@ export function getDisplayOptions(pcd: EdDSAFrogPCD): DisplayOptions {
     };
   }
 
-  const header = `#${frogData.frogId} ${frogData.name}`;
-
   return {
-    header,
-    displayName: header
+    displayName: `#${String(frogData.frogId).padStart(3, "00")} ${
+      frogData.name
+    }`
   };
 }
 

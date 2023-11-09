@@ -1,6 +1,9 @@
 import {
+  defaultOfflineTickets,
   FeedSubscriptionManager,
   NetworkFeedApi,
+  OfflineDevconnectTicket,
+  OfflineTickets,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -43,6 +46,61 @@ export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
     new NetworkFeedApi(),
     window.localStorage["subscriptions"] ?? "{}"
   );
+}
+
+const OFFLINE_TICKETS_KEY = "offline_tickets";
+export function saveOfflineTickets(offlineTickets: OfflineTickets | undefined) {
+  if (!offlineTickets) {
+    window.localStorage.removeItem(OFFLINE_TICKETS_KEY);
+  } else {
+    window.localStorage.setItem(
+      OFFLINE_TICKETS_KEY,
+      JSON.stringify(offlineTickets)
+    );
+  }
+}
+export function loadOfflineTickets(): OfflineTickets {
+  let tickets = defaultOfflineTickets();
+
+  try {
+    tickets = JSON.parse(
+      window.localStorage.getItem(OFFLINE_TICKETS_KEY) ??
+        JSON.stringify(defaultOfflineTickets())
+    );
+  } catch (e) {
+    //
+  }
+
+  return tickets;
+}
+
+const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_devconnect_tickets";
+export function saveCheckedInOfflineTickets(
+  offlineTickets: OfflineDevconnectTicket[]
+) {
+  if (!offlineTickets) {
+    window.localStorage.removeItem(CHECKED_IN_OFFLINE_TICKETS_KEY);
+  } else {
+    window.localStorage.setItem(
+      CHECKED_IN_OFFLINE_TICKETS_KEY,
+      JSON.stringify(offlineTickets)
+    );
+  }
+}
+export function loadCheckedInOfflineDevconnectTickets():
+  | OfflineDevconnectTicket[]
+  | undefined {
+  let tickets = [];
+
+  try {
+    tickets = JSON.parse(
+      window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY) ?? "[]"
+    );
+  } catch (e) {
+    //
+  }
+
+  return tickets;
 }
 
 export function saveEncryptionKey(key: string): void {
@@ -94,11 +152,20 @@ export function savePrivacyNoticeAgreed(version: number): void {
 const PersistentSyncStatusSchema = z.object({
   /**
    * Represents the most recent revision returned by the server when
-   * downloading E2EE storage.  Should change once that download has been
-   * integrated and saved into local storage.  Can be used to detect changes
-   * on future download, and conflicts on future upload.
+   * downloading or uploading E2EE storage.  Should change in local storage
+   * after upload is complete, or once that download has been integrated and
+   * saved into local storage.  Can be used to allow the server to detect
+   * changes on future download, and conflicts on future upload.
    */
-  serverStorageRevision: z.string().optional()
+  serverStorageRevision: z.string().optional(),
+
+  /**
+   * The client-calculated hash of the most recent storage uploaded to or
+   * downloaded from the server.  Should always correspond to the same contents
+   * as serverStorage Revision.  Can be used by the client to know whether
+   * its local state has changed since it was last in sync with the server.
+   */
+  serverStorageHash: z.string().optional()
 });
 export type PersistentSyncStatus = z.infer<typeof PersistentSyncStatusSchema>;
 
@@ -120,4 +187,12 @@ export function loadPersistentSyncStatus(): PersistentSyncStatus {
     );
     return {};
   }
+}
+
+export function saveUsingLaserScanner(usingLaserScanner: boolean) {
+  window.localStorage["using_laser_scanner"] = usingLaserScanner.toString();
+}
+
+export function loadUsingLaserScanner() {
+  return window.localStorage["using_laser_scanner"] === "true";
 }

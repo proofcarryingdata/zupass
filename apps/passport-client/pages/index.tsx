@@ -1,16 +1,20 @@
-import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
+import {
+  createStorageBackedCredentialCache,
+  offlineTickets,
+  offlineTicketsCheckin
+} from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { AppThemeProvider } from "@skiff-org/skiff-ui";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
+import { toast } from "react-hot-toast";
 import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
-import { FrogHomeScreen } from "../components/screens/FrogScreens/FrogHomeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
@@ -31,6 +35,7 @@ import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -38,19 +43,24 @@ import {
 import {
   Action,
   StateContext,
-  StateContextState,
+  StateContextValue,
   dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
+  loadCheckedInOfflineDevconnectTickets,
   loadEncryptionKey,
   loadIdentity,
+  loadOfflineTickets,
   loadPCDs,
   loadPersistentSyncStatus,
   loadSelf,
   loadSubscriptions,
+  saveCheckedInOfflineTickets,
   saveIdentity,
-  saveSubscriptions
+  saveOfflineTickets,
+  saveSubscriptions,
+  saveUsingLaserScanner
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
@@ -73,14 +83,16 @@ class App extends React.Component<object, AppState> {
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
     setupBroadcastChannel(this.dispatch);
+    setupUsingLaserScanning();
   }
   componentWillUnmount(): void {
     closeBroadcastChannel();
   }
-  stateContextState: StateContextState = {
+  stateContextState: StateContextValue = {
     getState: () => this.state,
     stateEmitter: this.stateEmitter,
-    dispatch: this.dispatch
+    dispatch: this.dispatch,
+    update: this.update
   };
 
   render() {
@@ -139,7 +151,37 @@ class App extends React.Component<object, AppState> {
       this.setupPolling();
     });
     this.setupPolling();
+    this.startJobSyncOfflineCheckins();
+    this.jobCheckConnectivity();
   };
+
+  jobCheckConnectivity = async () => {
+    window.addEventListener("offline", () => this.setIsOffline(true));
+    window.addEventListener("online", () => this.setIsOffline(false));
+  };
+
+  setIsOffline(offline: boolean) {
+    console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
+    this.update({
+      ...this.state,
+      offline: offline
+    });
+    if (offline) {
+      toast("Offline", {
+        icon: "❌",
+        style: {
+          width: "80vw"
+        }
+      });
+    } else {
+      toast("Back Online", {
+        icon: "👍",
+        style: {
+          width: "80vw"
+        }
+      });
+    }
+  }
 
   /**
    * Idempotently enables or disables periodic polling of jobPollServerUpdates,
@@ -215,6 +257,46 @@ class App extends React.Component<object, AppState> {
       this.update({ ...this.state, extraDownloadRequested: true });
     }
   };
+
+  async startJobSyncOfflineCheckins() {
+    await this.jobSyncOfflineCheckins();
+    setInterval(this.jobSyncOfflineCheckins, 1000 * 60);
+  }
+
+  jobSyncOfflineCheckins = async () => {
+    if (!this.state.self || this.state.offline) {
+      return;
+    }
+
+    if (this.state.checkedinOfflineDevconnectTickets.length > 0) {
+      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+        appConfig.zupassServer,
+        this.state.identity,
+        this.state.checkedinOfflineDevconnectTickets
+      );
+
+      if (checkinOfflineTicketsResult.success) {
+        this.update({
+          ...this.state,
+          checkedinOfflineDevconnectTickets: []
+        });
+        saveCheckedInOfflineTickets(undefined);
+      }
+    }
+
+    const offlineTicketsResult = await offlineTickets(
+      appConfig.zupassServer,
+      this.state.identity
+    );
+
+    if (offlineTicketsResult.success) {
+      this.update({
+        ...this.state,
+        offlineTickets: offlineTicketsResult.value.offlineTickets
+      });
+      saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
+    }
+  };
 }
 
 const Router = React.memo(RouterImpl);
@@ -263,7 +345,6 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
-          <Route path="frog" element={<FrogHomeScreen />} />
           <Route path="frog-admin" element={<FrogManagerScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
@@ -272,6 +353,23 @@ function RouterImpl() {
   );
 }
 
+/**
+ * To set up usingLaserScanning local storage, which turns off the camera
+ * on the scan screen so the laser scanner can be used. This flag will be
+ * exclusively used on the Devconnect laser scanning devices.
+ */
+function setupUsingLaserScanning() {
+  const queryParams = new URLSearchParams(window.location.search.slice(1));
+  const laserQueryParam = queryParams.get("laser");
+  if (laserQueryParam === "true") {
+    saveUsingLaserScanner(true);
+  } else if (laserQueryParam === "false") {
+    // We may want to use this to forcibly make this state false
+    saveUsingLaserScanner(false);
+  }
+}
+
+// TODO: move to a separate file
 async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
 
@@ -285,6 +383,9 @@ async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs();
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
+  const offlineTickets = loadOfflineTickets();
+  const checkedInOfflineDevconnectTickets =
+    loadCheckedInOfflineDevconnectTickets();
 
   subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
@@ -313,7 +414,11 @@ async function loadInitialState(): Promise<AppState> {
     subscriptions,
     resolvingSubscriptionId: undefined,
     credentialCache,
-    serverStorageRevision: persistentSyncStatus.serverStorageRevision
+    offlineTickets,
+    checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
+    offline: !window.navigator.onLine,
+    serverStorageRevision: persistentSyncStatus.serverStorageRevision,
+    serverStorageHash: persistentSyncStatus.serverStorageHash
   };
 }
 

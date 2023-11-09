@@ -911,11 +911,15 @@ export class OrganizerSync {
             await upsertDevconnectPretixRedactedTicket(this.db, redactedTicket);
           }
 
-          await deleteDevconnectPretixRedactedTickets(
-            this.db,
-            eventConfigID,
-            redactionChanges.removed.map((t) => t.position_id)
-          );
+          if (redactionChanges.removed.length > 0) {
+            // Passing in an empty array is harmless, but we can avoid the
+            // call if it's not neeeded
+            await deleteDevconnectPretixRedactedTickets(
+              this.db,
+              eventConfigID,
+              redactionChanges.removed.map((t) => t.position_id)
+            );
+          }
 
           span?.setAttribute(
             "redactedTicketsInserted",

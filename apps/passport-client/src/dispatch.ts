@@ -5,12 +5,12 @@ import {
   CredentialManager,
   deserializeStorage,
   Feed,
-  FeedSubscriptionManager,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
+  serializeStorage,
   StorageWithRevision,
   User
 } from "@pcd/passport-interface";
@@ -46,7 +46,11 @@ import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { hasSetupPassword } from "./user";
-import { downloadStorage, uploadStorage } from "./useSyncE2EEStorage";
+import {
+  downloadStorage,
+  uploadSerializedStorage,
+  uploadStorage
+} from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
 
 export type Dispatcher = (action: Action) => void;
@@ -127,12 +131,14 @@ export type Action =
       onError?: (e: Error) => void;
     };
 
-export type StateContextState = {
+export type StateContextValue = {
   getState: GetState;
   stateEmitter: StateEmitter;
   dispatch: Dispatcher;
+  update: ZuUpdate;
 };
-export const StateContext = createContext<StateContextState>({} as any);
+
+export const StateContext = createContext<StateContextValue>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;
 
@@ -337,9 +343,7 @@ async function finishAccountCreation(
 ) {
   // Verify that the identity is correct.
   const { identity } = state;
-
-  console.log("Save self", identity, user);
-
+  console.log("[ACCOUNT] Check user", identity, user);
   if (identity == null || identity.commitment.toString() !== user.commitment) {
     update({
       error: {
@@ -347,17 +351,32 @@ async function finishAccountCreation(
         message: "Something went wrong saving your Zupass. Contact support."
       }
     });
+    return; // Don't save the bad identity.  User must reset account.
   }
 
-  // Save to local storage.
+  // Save PCDs to E2EE storage.
+  console.log("[ACCOUNT] Upload initial PCDs");
+  const uploadResult = await uploadStorage(
+    user,
+    state.pcds,
+    state.subscriptions
+  );
+  if (uploadResult.success) {
+    update({
+      modal: { modalType: "none" },
+      serverStorageRevision: uploadResult.value.revision,
+      serverStorageHash: uploadResult.value.storageHash
+    });
+  }
+
+  // Save user to local storage.  This is done last because it unblocks
+  // background sync, which is best delayed until after the upload above.
+  console.log("[ACCOUNT] Save self");
   await setSelf(user, state, update);
 
-  // Save PCDs to E2EE storage.
-  await uploadStorage(user, state.pcds, state.subscriptions);
-
-  // Close any existing modal, if it exists
+  // Account creation is complete.  Close any existing modal, and redirect
+  // user if they were in the middle of something.
   update({ modal: { modalType: "none" } });
-
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
@@ -474,7 +493,7 @@ async function loadAfterLogin(
   storage: StorageWithRevision,
   update: ZuUpdate
 ) {
-  const { pcds, subscriptions } = await deserializeStorage(
+  const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
     await getPackages()
   );
@@ -514,7 +533,10 @@ async function loadAfterLogin(
 
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);
-  savePersistentSyncStatus({ serverStorageRevision: storage.revision });
+  savePersistentSyncStatus({
+    serverStorageRevision: storage.revision,
+    serverStorageHash: storageHash
+  });
   saveEncryptionKey(encryptionKey);
   saveSelf(userResponse.value);
   saveIdentity(identityPCD.claim.identity);
@@ -522,7 +544,9 @@ async function loadAfterLogin(
   update({
     encryptionKey,
     pcds,
+    subscriptions,
     serverStorageRevision: storage.revision,
+    serverStorageHash: storageHash,
     identity: identityPCD.claim.identity,
     self: userResponse.value,
     modal
@@ -559,7 +583,7 @@ async function saveNewPasswordAndBroadcast(
   saveSelf(newSelf);
   saveEncryptionKey(newEncryptionKey);
   notifyPasswordChangeToOtherTabs();
-  return update({
+  update({
     encryptionKey: newEncryptionKey,
     self: newSelf
   });
@@ -577,13 +601,6 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
     anotherDeviceChangedPassword: true,
     modal: { modalType: "another-device-changed-password" }
   });
-}
-
-async function makeUploadId(
-  pcds: PCDCollection,
-  subscriptions: FeedSubscriptionManager
-): Promise<string> {
-  return `${await pcds.getHash()}-${await subscriptions.getHash()}`;
 }
 
 /**
@@ -647,6 +664,11 @@ async function doSync(
   state: AppState,
   update: ZuUpdate
 ): Promise<Partial<AppState> | undefined> {
+  // Check pre-requisites which would indicate if we're not fully logged in yet.
+  if (!state.self) {
+    console.log("[SYNC] no user available to sync");
+    return undefined;
+  }
   if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
@@ -666,21 +688,13 @@ async function doSync(
     // on the last revision we downloaded.
     const dlRes = await downloadStorage(state.serverStorageRevision);
     if (dlRes.success && dlRes.value != null) {
-      const { pcds, subscriptions, revision } = dlRes.value;
-
-      // Calculating this ID tracks that there's no need to upload what we
-      // just downloaded, which reduces unnecessary revision conflicts.
-      // TODO(artwyman): Tracking the "dirty" state corresponding to this
-      // variable in local storage would allow us to avoid unnecessary
-      // uploads even when download is skipped.
-      const uploadedUploadId = await makeUploadId(pcds, subscriptions);
-
+      const { pcds, subscriptions, revision, storageHash } = dlRes.value;
       return {
         downloadedPCDs: true,
-        uploadedUploadId,
         pcds,
         subscriptions,
         serverStorageRevision: revision,
+        serverStorageHash: storageHash,
         extraDownloadRequested: false
       };
     } else {
@@ -712,7 +726,7 @@ async function doSync(
       console.log("[SYNC] initalized credentialManager", credentialManager);
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
-      console.log("[SYNC] fetched actions", actions);
+      console.log(`[SYNC] fetched ${actions.length} actions`);
 
       await applyActions(state.pcds, actions);
       console.log("[SYNC] applied pcd actions");
@@ -731,29 +745,25 @@ async function doSync(
     };
   }
 
-  // Generate an upload ID from the state of PCDs and subscriptions.
-  // Upload only if the ID is different, meaning changes to upload.
-  const uploadId = await makeUploadId(state.pcds, state.subscriptions);
-  if (state.uploadedUploadId !== uploadId) {
-    // Uploading requires state.self be set, which should be set by now.  If
-    // it's not, wait to upload on another sync triggered when self changes.
-    if (!state.self) {
-      console.error("[SYNC] no user available to upload");
-      return undefined;
-    }
-
+  // Generate a hash from our in-memory state.  Upload only if the hash is
+  // different, meaning there are some changes to upload.
+  const appStorage = await serializeStorage(
+    state.self,
+    state.pcds,
+    state.subscriptions
+  );
+  if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
-    // TODO(artwyman): Add serverStorageRevision input here, but only after
-    // we're able to respond to a conflict by downloading.
-    const upRes = await uploadStorage(
-      state.self,
-      state.pcds,
-      state.subscriptions
+    // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
+    // but only after we're able to respond to a conflict by downloading.
+    const upRes = await uploadSerializedStorage(
+      appStorage.serializedStorage,
+      appStorage.storageHash
     );
     if (upRes.success) {
       return {
-        uploadedUploadId: uploadId,
-        serverStorageRevision: upRes.value.revision
+        serverStorageRevision: upRes.value.revision,
+        serverStorageHash: upRes.value.storageHash
       };
     } else {
       return {
@@ -792,7 +802,7 @@ async function syncSubscription(
       subscription,
       credentialManager
     );
-    console.log("[SYNC] fetched actions", actions);
+    console.log(`[SYNC] fetched ${actions.length} actions`);
 
     await applyActions(state.pcds, actions);
     console.log("[SYNC] applied pcd actions");

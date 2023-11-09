@@ -15,7 +15,7 @@ export function checkQueryParam(req: Request, paramName: string): string {
     );
   }
 
-  return value;
+  return decodeURIComponent(value);
 }
 
 /**
@@ -39,7 +39,7 @@ export function checkOptionalQueryParam(
     );
   }
 
-  return value;
+  return decodeURIComponent(value);
 }
 
 /**

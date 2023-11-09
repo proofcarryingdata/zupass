@@ -1,9 +1,20 @@
 import { MenuRange } from "@grammyjs/menu";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
+import {
+  AnonTopicDataPayload,
+  AnonWebAppPayload,
+  PayloadType,
+  ReactDataPayload,
+  constructZupassPcdGetRequestUrl
+} from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import {
+  ZUPASS_SUPPORT_EMAIL,
+  encodeAnonMessageIdAndReaction,
+  getAnonTopicNullifier,
+  getMessageWatermark
+} from "@pcd/util";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
@@ -18,9 +29,9 @@ import {
 } from "grammy/types";
 import { Pool } from "postgres-pool";
 import {
-  ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
+  TelegramEvent,
   TelegramTopicFetch,
   TelegramTopicWithFwdInfo
 } from "../database/models";
@@ -129,25 +140,8 @@ const adminGroupChatCommands: BotCommandWithAnon[] = [
   }
 ];
 
-export const base64EncodeTopicData = (
-  chatId: number | string,
-  topicName: string,
-  topicId: number | string,
-  validEventIds: string[]
-): string => {
-  const topicData = Buffer.from(
-    encodeURIComponent(
-      JSON.stringify({
-        chatId,
-        topicName,
-        topicId,
-        validEventIds
-      })
-    ),
-    "utf-8"
-  );
-  const encodedTopicData = topicData.toString("base64");
-  return encodedTopicData;
+export const encodeTopicData = (topicData: AnonTopicDataPayload): string => {
+  return encodeURIComponent(JSON.stringify(topicData));
 };
 
 function isFulfilled<T>(
@@ -279,17 +273,14 @@ export const chatIDsToChats = async <T extends { telegramChatID?: string }>(
   });
 };
 
-export const findChatByEventIds = (
-  chats: ChatIDWithEventIDs[],
-  eventIds: string[]
-): string | null => {
-  if (eventIds.length === 0) return null;
-  for (const chat of chats) {
-    if (eventIds.every((eventId) => chat.ticketEventIds.includes(eventId))) {
-      return chat.telegramChatID;
-    }
-  }
-  return null;
+export const verifyUserEventIds = (
+  chats: TelegramEvent[],
+  userEventIds: string[]
+): boolean => {
+  if (userEventIds.length === 0) return false;
+  const set = new Set(chats.map((chat) => chat.ticket_event_id));
+  // userEventIds is a subset or equal to the known events associated with the chat
+  return userEventIds.every((userEventId) => set.has(userEventId));
 };
 
 export const senderIsAdmin = async (
@@ -356,6 +347,7 @@ const editOrSendMessage = async (
 
 const generateTicketProofUrl = async (
   telegramUserId: string,
+  telegramChatId: string,
   validEventIds: string[],
   telegramUsername?: string
 ): Promise<string> => {
@@ -427,10 +419,10 @@ const generateTicketProofUrl = async (
     }
 
     // pass telegram username as path param if nonempty
-    const returnUrl =
-      telegramUsername && telegramUsername.length > 0
-        ? `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}/${telegramUsername}`
-        : `${process.env.PASSPORT_SERVER_URL}/telegram/verify/${telegramUserId}`;
+    let returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/verify?chatId=${telegramChatId}&userId=${telegramUserId}`;
+    if (telegramUsername && telegramUsername.length > 0)
+      returnUrl += `&username=${telegramUsername}`;
+
     span?.setAttribute("returnUrl", returnUrl);
 
     const proofUrl = constructZupassPcdGetRequestUrl<
@@ -440,6 +432,102 @@ const generateTicketProofUrl = async (
       title: "",
       description:
         "ZuKat requests a zero-knowledge proof of your ticket to join a Telegram group."
+    });
+    span?.setAttribute("proofUrl", proofUrl);
+
+    return proofUrl;
+  });
+};
+
+export const generateReactProofUrl = async (
+  validEventIds: string[],
+  telegramChatId: string,
+  anonMessageId: string,
+  reaction: string
+): Promise<string> => {
+  return traced("telegram", "generateReactProofUrl", async (span) => {
+    span?.setAttribute("validEventIds", validEventIds);
+
+    // Construct watermark:
+    const watermark = getMessageWatermark(
+      encodeAnonMessageIdAndReaction(anonMessageId, reaction)
+    ).toString();
+    span?.setAttribute("watermark", watermark);
+    const fieldsToReveal: EdDSATicketFieldsToReveal = {
+      revealTicketId: false,
+      revealEventId: false,
+      revealProductId: false,
+      revealTimestampConsumed: false,
+      revealTimestampSigned: false,
+      revealAttendeeSemaphoreId: false,
+      revealIsConsumed: false,
+      revealIsRevoked: false
+    };
+
+    const args: ZKEdDSAEventTicketPCDArgs = {
+      ticket: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: EdDSATicketPCDPackage.name,
+        value: undefined,
+        userProvided: true,
+        displayName: "Your Ticket",
+        description: "",
+        validatorParams: {
+          eventIds: validEventIds,
+          productIds: [],
+          // TODO: surface which event ticket we are looking for
+          notFoundMessage: "You don't have a ticket to this event."
+        },
+        hideIcon: true
+      },
+      identity: {
+        argumentType: ArgumentTypeName.PCD,
+        pcdType: SemaphoreIdentityPCDPackage.name,
+        value: undefined,
+        userProvided: true
+      },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        description: "No ticket information will be revealed",
+        userProvided: false,
+        hideIcon: true
+      },
+      externalNullifier: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: getAnonTopicNullifier().toString(),
+        userProvided: false
+      },
+      validEventIds: {
+        argumentType: ArgumentTypeName.StringArray,
+        value: validEventIds,
+        userProvided: false
+      },
+      watermark: {
+        argumentType: ArgumentTypeName.BigInt,
+        value: watermark,
+        userProvided: false,
+        description: `The reaction type and post you are reacting to.`
+      }
+    };
+
+    let passportOrigin = `${process.env.PASSPORT_CLIENT_URL}/`;
+    if (passportOrigin === "http://localhost:3000/") {
+      // TG bot doesn't like localhost URLs
+      passportOrigin = "http://127.0.0.1:3000/";
+    }
+
+    // pass telegram username as path param if nonempty
+    const returnUrl = `${process.env.PASSPORT_SERVER_URL}/telegram/anonreact?anonMessageId=${anonMessageId}&reaction=${reaction}&chatId=${telegramChatId}`;
+    span?.setAttribute("returnUrl", returnUrl);
+
+    const proofUrl = constructZupassPcdGetRequestUrl<
+      typeof ZKEdDSAEventTicketPCDPackage
+    >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+      genericProveScreen: true,
+      title: `${decodeURIComponent(reaction)} ZK React`,
+      description:
+        "ZuRat requests a zero-knowledge proof of your ticket to react to a message."
     });
     span?.setAttribute("proofUrl", proofUrl);
 
@@ -525,7 +613,7 @@ export const eventsToLink = async (
   }
   // Otherwise, display all events to add or remove.
   else {
-    const events = await fetchEventsWithTelegramChats(db, chatId);
+    const events = await fetchEventsWithTelegramChats(db, true, chatId);
     for (const event of events) {
       range
         .text(
@@ -588,6 +676,7 @@ export const chatsToJoin = async (
       } else {
         const proofUrl = await generateTicketProofUrl(
           userId.toString(),
+          chat.telegramChatID,
           chat.ticketEventIds,
           telegramUsername
         );
@@ -650,12 +739,15 @@ export const chatsToPostIn = async (
             .row();
           for (const topic of topics) {
             if (topic.topic_id) {
-              const encodedTopicData = base64EncodeTopicData(
-                chat.id,
-                topic.topic_name,
-                topic.topic_id,
-                validEventIds
-              );
+              const encodedTopicData = encodeTopicData({
+                type: PayloadType.AnonTopicDataPayload,
+                value: {
+                  chatId: chat.id,
+                  topicName: topic.topic_name,
+                  topicId: parseInt(topic.topic_id),
+                  validEventIds
+                }
+              });
               range
                 .webApp(
                   `${topic.topic_name}`,
@@ -922,3 +1014,31 @@ const reduceFwdList = (
 
   return reducedList;
 };
+
+export const encodePayload = (data: AnonWebAppPayload): string => {
+  return Buffer.from(JSON.stringify(data), "utf-8").toString("base64");
+};
+
+export const buildReactPayload = (
+  emoji: string,
+  anonMessageId: string
+): ReactDataPayload => {
+  return {
+    type: PayloadType.ReactData,
+    react: encodeURIComponent(emoji),
+    anonMessageId
+  };
+};
+
+export function getDisplayEmojis(messageTimestamp?: Date): string[] {
+  const frogCryptoDeployTimestamp = new Date(
+    "Wed Nov 08 2023 16:30:00 GMT+0300 (GMT+03:00)"
+  );
+  if (
+    messageTimestamp &&
+    messageTimestamp.getTime() < frogCryptoDeployTimestamp.getTime()
+  ) {
+    return ["👍", "❤️", "🦔"];
+  }
+  return ["👍", "❤️", "🐸"];
+}

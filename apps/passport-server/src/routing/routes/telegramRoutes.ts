@@ -1,3 +1,4 @@
+import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -6,7 +7,7 @@ import {
   errorHtmlWithDetails
 } from "../../util/telegramWebApp";
 import {
-  checkOptionalUrlParam,
+  checkOptionalQueryParam,
   checkQueryParam,
   checkUrlParam
 } from "../params";
@@ -28,22 +29,31 @@ export function initTelegramRoutes(
    * Telegram.
    */
   app.get(
-    "/telegram/verify/:id/:username?",
+    [
+      "/telegram/verify",
+      "/telegram/verify/:id",
+      "/telegram/verify/:id/:username"
+    ],
     async (req: Request, res: Response) => {
       try {
         const proof = checkQueryParam(req, "proof");
-        const telegram_user_id = checkUrlParam(req, "id");
-        let telegram_username = checkOptionalUrlParam(req, "username");
+        const telegram_user_id = checkOptionalQueryParam(req, "userId");
+        const telegram_chat_id = checkOptionalQueryParam(req, "chatId");
+        const telegram_username = checkOptionalQueryParam(req, "username");
+
+        if (!telegram_chat_id || !telegram_chat_id)
+          throw new Error(
+            `Missing chat Id or user Id. Type /start and try again.`
+          );
+
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
 
         if (!telegram_user_id || !/^-?\d+$/.test(telegram_user_id)) {
           throw new Error(
             "telegram_user_id field needs to be a numeric string and be non-empty"
           );
-        }
-
-        // express path param value should always be undefined rather than empty string, but adding this just in case
-        if (telegram_username?.length === 0) {
-          telegram_username = undefined;
         }
 
         logger(
@@ -57,6 +67,7 @@ export function initTelegramRoutes(
         await telegramService.handleVerification(
           proof,
           parseInt(telegram_user_id),
+          telegram_chat_id,
           telegram_username
         );
         logger(
@@ -90,6 +101,7 @@ export function initTelegramRoutes(
       const proof = checkQueryParam(req, "proof");
       const message = checkQueryParam(req, "message");
       const topicId = checkQueryParam(req, "topicId");
+      const chatId = checkQueryParam(req, "chatId");
 
       if (!proof || typeof proof !== "string") {
         throw new Error("proof field needs to be a string and be non-empty");
@@ -103,11 +115,20 @@ export function initTelegramRoutes(
         throw new Error("topicId field needs to be a string and be non-empty");
       }
 
+      if (!chatId || typeof chatId !== "string") {
+        throw new Error("chatId field needs to be a string and be non-empty");
+      }
+
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
 
-      await telegramService.handleSendAnonymousMessage(proof, message, topicId);
+      await telegramService.handleSendAnonymousMessage(
+        proof,
+        message,
+        chatId,
+        topicId
+      );
       logger(`[TELEGRAM] Posted anonymous message: ${message}`);
       res.setHeader("Content-Type", "text/html");
       res.send(closeWebviewHtml);
@@ -121,26 +142,134 @@ export function initTelegramRoutes(
 
   app.get("/telegram/anon", async (req: Request, res: Response) => {
     try {
-      const { tgWebAppStartParam } = req.query;
+      const tgWebAppStartParam = checkQueryParam(req, "tgWebAppStartParam");
       if (!tgWebAppStartParam) throw new Error(`No start param received`);
+      if (!telegramService) {
+        throw new Error("Telegram service not initialized");
+      }
 
-      const [chatId, topicId] = tgWebAppStartParam.toString().split("_");
-      if (!chatId || !topicId) throw new Error(`No chatId or topicId received`);
+      const isLegacyPayloadType = /^-?\d+_\d+$/.test(tgWebAppStartParam);
+
+      if (isLegacyPayloadType) {
+        logger(`[TELEGRAM] handling legacy payload: ${tgWebAppStartParam}`);
+        const [chatId, topicId] = tgWebAppStartParam.split("_");
+        if (!chatId || !topicId)
+          throw new Error(`No chatId or topicId received`);
+
+        const redirectUrl =
+          await telegramService.handleRequestAnonymousMessageLink(
+            parseInt(chatId),
+            parseInt(topicId)
+          );
+
+        if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+        logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+        res.redirect(redirectUrl);
+        return;
+      }
+
+      const anonPayload: AnonWebAppPayload = JSON.parse(
+        Buffer.from(tgWebAppStartParam, "base64").toString()
+      );
+
+      switch (anonPayload.type) {
+        case PayloadType.RedirectTopicData: {
+          const { chatId, topicId } = anonPayload.value;
+          if (!chatId || !topicId)
+            throw new Error(`No chatId or topicId received`);
+
+          const redirectUrl =
+            await telegramService.handleRequestAnonymousMessageLink(
+              chatId,
+              topicId
+            );
+
+          if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
+          logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
+          res.redirect(redirectUrl);
+          break;
+        }
+
+        case PayloadType.NullifierHash: {
+          logger(
+            `[TELEGRAM] Redirecting for anonymous profile for nullifier hash ${anonPayload.value}`
+          );
+          if (!process.env.TELEGRAM_ANON_WEBSITE) {
+            throw new Error(
+              "TELEGRAM_ANON_WEBSITE environment variable not set"
+            );
+          }
+          res.redirect(
+            `${process.env.TELEGRAM_ANON_WEBSITE}/profile?nullifierHash=${anonPayload.value}`
+          );
+          break;
+        }
+
+        case PayloadType.ReactData: {
+          const proofUrl =
+            await telegramService.handleRequestReactProofLink(anonPayload);
+          res.redirect(proofUrl);
+          break;
+        }
+
+        default: {
+          throw new Error(
+            `Unhandled payload type ${(anonPayload as AnonWebAppPayload).type}`
+          );
+        }
+      }
+    } catch (e) {
+      logger("[TELEGRAM] generate link for anonymous message", e);
+      rollbarService?.reportError(e);
+      res.set("Content-Type", "text/html");
+      res.status(500).send(errorHtmlWithDetails(e as Error));
+    }
+  });
+
+  app.get(
+    "/telegram/anonget/:nullifier",
+    async (req: Request, res: Response) => {
+      try {
+        if (!telegramService) {
+          throw new Error("Telegram service not initialized");
+        }
+        const nullifierHash = checkUrlParam(req, "nullifier");
+        if (!nullifierHash || typeof nullifierHash !== "string") {
+          throw new Error(
+            "nullifierHash field needs to be a string and be non-empty"
+          );
+        }
+        const messages =
+          await telegramService.handleGetAnonMessages(nullifierHash);
+        const totalKarma =
+          await telegramService.handleGetAnonTotalKarma(nullifierHash);
+        res.json({ messages, totalKarma });
+      } catch (e) {
+        logger("[TELEGRAM] failed to get posts", e);
+      }
+    }
+  );
+
+  app.get("/telegram/anonreact", async (req: Request, res: Response) => {
+    try {
+      const proof = checkQueryParam(req, "proof");
+      const chatId = checkQueryParam(req, "chatId");
+      const anonMessageId = checkQueryParam(req, "anonMessageId");
+      const reaction = checkQueryParam(req, "reaction");
 
       if (!telegramService) {
         throw new Error("Telegram service not initialized");
       }
-      const redirectUrl =
-        await telegramService.handleRequestAnonymousMessageLink(
-          parseInt(chatId),
-          parseInt(topicId)
-        );
-
-      if (!redirectUrl) throw new Error(`Couldn't load redirect url`);
-      logger(`[TELEGRAM] Redirecting for anonymous post to chat ${chatId}`);
-      res.redirect(redirectUrl);
+      await telegramService.handleReactAnonymousMessage(
+        proof,
+        chatId,
+        anonMessageId,
+        reaction
+      );
+      res.setHeader("Content-Type", "text/html");
+      res.send(closeWebviewHtml);
     } catch (e) {
-      logger("[TELEGRAM] generate link for anonymous message", e);
+      logger("[TELEGRAM] failed to verify", e);
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
       res.status(500).send(errorHtmlWithDetails(e as Error));

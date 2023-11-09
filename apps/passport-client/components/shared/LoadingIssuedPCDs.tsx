@@ -14,7 +14,7 @@ export function LoadingIssuedPCDs() {
       <LoaderContainer>
         <RippleLoader />
       </LoaderContainer>
-      Loading Issued PCDs
+      Loading Tickets
     </Container>
   );
 }

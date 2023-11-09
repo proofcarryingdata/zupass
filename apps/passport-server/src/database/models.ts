@@ -16,6 +16,11 @@ export interface ZuzaluPretixTicket {
   visitor_date_ranges?: DateRange[] | null;
 }
 
+export interface TelegramReactionCount {
+  reaction: string;
+  count: number;
+}
+
 /**
  * A conversation between the Telegram bot and a user, and associated params.
  */
@@ -64,6 +69,11 @@ export interface DevconnectPretixTicketWithCheckin
   extends DevconnectPretixTicket {
   checker: string | null;
   zupass_checkin_timestamp: Date | null;
+}
+
+export interface DevconnectPretixTicketWithCheckinDB
+  extends DevconnectPretixTicketWithCheckin {
+  id: string;
 }
 
 export interface DevconnectPretixTicketDB
@@ -229,6 +239,7 @@ export interface KnownTicketTypeWithKey extends KnownTicketType {
 export interface AnonNullifierInfo {
   nullifier: string;
   message_timestamps: string[];
+  chat_topic_id: number;
 }
 
 /**
@@ -300,4 +311,21 @@ export interface FrogCryptoUserFeedState {
    * Timestamp of the last time the user fetched from this feed
    */
   last_fetched_at: Date;
+}
+
+export interface AnonMessage {
+  id: number;
+  nullifier: string;
+  chat_topic_id: number;
+  content: string;
+  proof: string;
+  message_timestamp: string;
+  sent_message_id: string;
+}
+
+export interface AnonMessageWithDetails extends AnonMessage {
+  telegram_chat_id: number;
+  chat_name: string;
+  topic_name: string;
+  reactions: string[];
 }

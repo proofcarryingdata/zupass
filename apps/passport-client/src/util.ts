@@ -1,3 +1,5 @@
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
 import validator from "email-validator";
 import { v4 as uuid } from "uuid";
@@ -65,4 +67,29 @@ export function getLastValidURL(inputString: string) {
   } else {
     return null;
   }
+}
+
+export function maybeRedirect(text: string): string | null {
+  const verifyUrlPrefixes = [
+    `${window.location.origin}/#/verify`,
+    `${window.location.origin}#/verify`,
+    `${window.location.origin}/#/checkin`,
+    `${window.location.origin}#/checkin`,
+    `${window.location.origin}/#/checkin-by-id`,
+    `${window.location.origin}#/checkin-by-id`
+  ];
+  if (verifyUrlPrefixes.find((prefix) => text.startsWith(prefix))) {
+    const hash = text.substring(text.indexOf("#") + 1);
+    console.log(`Redirecting to ${hash}`);
+    return hash;
+  }
+  return null;
+}
+
+/**
+ * Check if a folder path is a FrogCrypto (sub)folder.
+ */
+export function isFrogCryptoFolder(folderPath: string): boolean {
+  const parts = splitPath(folderPath);
+  return parts[0] === FrogCryptoFolderName;
 }

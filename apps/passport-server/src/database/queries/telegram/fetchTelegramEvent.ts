@@ -1,5 +1,7 @@
 import { Pool } from "postgres-pool";
 import {
+  AnonMessage,
+  AnonMessageWithDetails,
   ChatIDWithEventIDs,
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
@@ -66,7 +68,7 @@ export async function fetchTelegramChat(
 
 export async function fetchTelegramEventsByChatId(
   client: Pool,
-  telegramChatId: number
+  telegramChatId: number | string
 ): Promise<TelegramEvent[]> {
   const result = await sqlQuery(
     client,
@@ -82,12 +84,13 @@ export async function fetchTelegramEventsByChatId(
 
 export async function fetchEventsWithTelegramChats(
   client: Pool,
+  distinct = true,
   currentTelegramChatId?: number
 ): Promise<LinkedPretixTelegramEvent[]> {
   const result = await sqlQuery(
     client,
     `
-    SELECT DISTINCT ON (tbe.ticket_event_id)
+    SELECT ${distinct ? `DISTINCT ON (tbe.ticket_event_id)` : ""}
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
       dpe.pretix_events_config_id AS "configEventID",
@@ -269,6 +272,71 @@ export async function fetchTelegramTopicForwarding(
     WHERE tct.telegram_chat_id = $1 AND (tct.topic_id = $2 OR ($2 IS NULL AND tct.topic_id IS NULL));
     `,
     [sendingChatID, sendingTopicID || null]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramAnonMessagesByNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonMessage[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select * from telegram_chat_anon_messages 
+    where nullifier = $1
+    `,
+    [nullifierHash]
+  );
+  return result.rows;
+}
+
+export async function fetchTelegramAnonMessagesById(
+  client: Pool,
+  id: string
+): Promise<(AnonMessage & { telegram_chat_id: string }) | null> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT tam.*, tct.telegram_chat_id
+    FROM telegram_chat_anon_messages tam
+    LEFT JOIN telegram_chat_topics tct ON tam.chat_topic_id = tct.id
+    WHERE tam.id = $1
+    `,
+    [id]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function fetchTelegramChatTopicById(
+  client: Pool,
+  chatTopicId: number
+): Promise<TelegramTopicFetch> {
+  const result = await sqlQuery(
+    client,
+    `
+    select telegram_chat_id AS "telegramChatID", * from telegram_chat_topics
+    where id = $1
+    `,
+    [chatTopicId]
+  );
+  return result.rows[0];
+}
+
+export async function fetchTelegramAnonMessagesWithTopicByNullifier(
+  client: Pool,
+  nullifierHash: string
+): Promise<AnonMessageWithDetails[]> {
+  const result = await sqlQuery(
+    client,
+    `
+    select m.*, t.topic_name, t.telegram_chat_id, coalesce(r.reactions, '{}') as reactions
+      from telegram_chat_anon_messages m
+      inner join telegram_chat_topics t on m.chat_topic_id = t.id
+      left join (select anon_message_id, array_agg(reaction) as reactions from telegram_chat_reactions group by anon_message_id) r on r.anon_message_id = m.id
+      where m.nullifier = $1
+    `,
+    [nullifierHash]
   );
   return result.rows;
 }

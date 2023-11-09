@@ -1,3 +1,4 @@
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import {
   getNameFromPath,
   getParentFolder,
@@ -7,12 +8,19 @@ import React, {
   useCallback,
   useEffect,
   useLayoutEffect,
+  useMemo,
   useState
 } from "react";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
-import { useFolders, usePCDsInFolder, useSelf } from "../../src/appHooks";
+import {
+  useFolders,
+  usePCDCollection,
+  usePCDsInFolder,
+  useSelf
+} from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
+import { isFrogCryptoFolder } from "../../src/util";
 import { Placeholder, Spacer } from "../core";
 import { icons } from "../icons";
 import { MaybeModal } from "../modals/Modal";
@@ -21,8 +29,11 @@ import { AppHeader } from "../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../shared/PCDCardList";
 import { FrogFolder } from "./FrogScreens/FrogFolder";
+import { FrogHomeSection } from "./FrogScreens/FrogHomeSection";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
+
+const FOLDER_QUERY_PARAM = "folder";
 
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
@@ -32,7 +43,22 @@ export function HomeScreenImpl() {
   const self = useSelf();
   const navigate = useNavigate();
 
-  const [browsingFolder, setBrowsingFolder] = useState("/");
+  const pcdCollection = usePCDCollection();
+  const [searchParams, setSearchParams] = useSearchParams();
+  const defaultBrowsingFolder = useMemo(() => {
+    let folderPathFromQuery = decodeURIComponent(
+      searchParams.get(FOLDER_QUERY_PARAM)
+    );
+    if (
+      !folderPathFromQuery ||
+      !pcdCollection.isValidFolder(folderPathFromQuery)
+    ) {
+      folderPathFromQuery = "";
+    }
+    return folderPathFromQuery;
+  }, [pcdCollection, searchParams]);
+
+  const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
@@ -54,11 +80,22 @@ export function HomeScreenImpl() {
     }
   });
 
+  useEffect(() => {
+    if (!browsingFolder) {
+      setSearchParams(undefined);
+    } else {
+      setSearchParams({
+        [FOLDER_QUERY_PARAM]: encodeURIComponent(browsingFolder)
+      });
+    }
+  }, [browsingFolder, setSearchParams]);
+
   const onFolderClick = useCallback((folder: string) => {
     setBrowsingFolder(folder);
   }, []);
 
   const isRoot = isRootFolder(browsingFolder);
+  const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
@@ -75,6 +112,7 @@ export function HomeScreenImpl() {
         <AppHeader />
         <Spacer h={24} />
         <Placeholder minH={540}>
+          <LoadingIssuedPCDs />
           {!(foldersInFolder.length === 0 && isRoot) && (
             <FolderExplorerContainer>
               {!isRoot && (
@@ -85,6 +123,10 @@ export function HomeScreenImpl() {
                 />
               )}
               {foldersInFolder
+                .filter(
+                  // /FrogCrypto is a special and rendered by <FrogFolder />
+                  (folder) => folder !== FrogCryptoFolderName
+                )
                 .sort((a, b) => a.localeCompare(b))
                 .map((folder) => {
                   return (
@@ -95,19 +137,27 @@ export function HomeScreenImpl() {
                     />
                   );
                 })}
-              <FrogFolder
-                folder={browsingFolder}
-                Container={FolderEntryContainer}
-              />
+              {isRoot && (
+                <FrogFolder
+                  Container={FolderEntryContainer}
+                  onFolderClick={onFolderClick}
+                />
+              )}
             </FolderExplorerContainer>
           )}
-          {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
-          {pcdsInFolder.length > 0 ? (
-            <PCDCardList pcds={pcdsInFolder} />
+
+          {isFrogCrypto ? (
+            <FrogHomeSection />
           ) : (
-            <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+            <>
+              {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
+              {pcdsInFolder.length > 0 ? (
+                <PCDCardList pcds={pcdsInFolder} />
+              ) : (
+                <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+              )}
+            </>
           )}
-          <LoadingIssuedPCDs />
         </Placeholder>
         <Spacer h={24} />
       </AppContainer>

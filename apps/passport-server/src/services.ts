@@ -66,13 +66,16 @@ export async function startServices(
     context.dbPool,
     rollbarService
   );
-  const frogcryptoService = startFrogcryptoService(context, rollbarService);
   const issuanceService = await startIssuanceService(
     context,
     persistentCacheService,
     rollbarService,
-    multiprocessService,
-    frogcryptoService
+    multiprocessService
+  );
+  const frogcryptoService = await startFrogcryptoService(
+    context,
+    rollbarService,
+    issuanceService
   );
   const services: GlobalServices = {
     semaphoreService,
@@ -106,6 +109,7 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
   services.zuconnectTripshaSyncService?.stop();
+  services.frogcryptoService?.stop();
   await services.discordService?.stop();
   await services.multiprocessService.stop();
 }

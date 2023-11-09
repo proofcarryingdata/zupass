@@ -75,16 +75,21 @@ set topic_name = $3, is_anon_topic = $4;`,
 export async function insertOrUpdateTelegramNullifier(
   client: Pool,
   nullifierHash: string,
-  messageTimestamps: string[]
+  messageTimestamps: string[],
+  chatTopicId: number
 ): Promise<void> {
   const query = `
-    insert into telegram_chat_anon_nullifiers (nullifier, message_timestamps)
-    values ($1, $2)
-    on conflict (nullifier) do update
+    insert into telegram_chat_anon_nullifiers (nullifier, message_timestamps, chat_topic_id)
+    values ($1, $2, $3)
+    on conflict (nullifier, chat_topic_id) do update
       set message_timestamps = $2
   `;
 
-  await sqlQuery(client, query, [nullifierHash, messageTimestamps]);
+  await sqlQuery(client, query, [
+    nullifierHash,
+    messageTimestamps,
+    chatTopicId
+  ]);
 }
 
 export async function updateTelegramUsername(
@@ -114,6 +119,35 @@ insert into telegram_forwarding (sender_chat_topic_id, receiver_chat_topic_id)
 values ($1, $2)
 on conflict (sender_chat_topic_id, receiver_chat_topic_id) do nothing`,
     [senderChatTopicID, receiverChatTopicID]
+  );
+  return result.rowCount;
+}
+
+export async function insertTelegramAnonMessage(
+  client: Pool,
+  id: string,
+  nullifierHash: string,
+  chatTopicId: number,
+  message: string,
+  proof: string,
+  timestamp: string,
+  sentMessageId?: number
+): Promise<number> {
+  const result = await sqlQuery(
+    client,
+    `\
+    insert into telegram_chat_anon_messages (id, nullifier, chat_topic_id, content, proof, message_timestamp, sent_message_id)
+    values ($1, $2, $3, $4, $5, $6, $7)
+    `,
+    [
+      id,
+      nullifierHash,
+      chatTopicId,
+      message,
+      proof,
+      timestamp,
+      sentMessageId || null
+    ]
   );
   return result.rowCount;
 }

@@ -1,26 +1,27 @@
 import { getHash, passportEncrypt } from "@pcd/passport-crypto";
 import {
   APIResult,
-  ChangeBlobKeyResult,
+  ChangeBlobKeyError,
   FeedSubscriptionManager,
-  SyncedEncryptedStorageV2,
-  SyncedEncryptedStorageV3,
-  UploadEncryptedStorageResult,
+  NamedAPIError,
+  SyncedEncryptedStorage,
   User,
   deserializeStorage,
   requestChangeBlobKey,
   requestDownloadAndDecryptUpdatedStorage,
-  requestUploadEncryptedStorage
+  requestUploadEncryptedStorage,
+  serializeStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { useCallback, useContext, useEffect, useState } from "react";
+import stringify from "fast-json-stable-stringify";
+import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
-import { usePCDCollectionWithHash, useUploadedId } from "./appHooks";
 import { StateContext } from "./dispatch";
 import {
   loadEncryptionKey,
   loadPCDs,
   loadSelf,
+  loadSubscriptions,
   savePCDs,
   savePersistentSyncStatus,
   saveSubscriptions
@@ -28,35 +29,74 @@ import {
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 
+export type UpdateBlobKeyStorageInfo = {
+  revision: string;
+  storageHash: string;
+};
+export type UpdateBlobKeyResult = APIResult<
+  UpdateBlobKeyStorageInfo,
+  ChangeBlobKeyError
+>;
+
 export async function updateBlobKeyForEncryptedStorage(
   oldEncryptionKey: string,
   newEncryptionKey: string,
   newSalt: string
-): Promise<ChangeBlobKeyResult> {
-  const user = loadSelf();
+): Promise<UpdateBlobKeyResult> {
+  const oldUser = loadSelf();
+  const newUser = { ...oldUser, salt: newSalt };
   const pcds = await loadPCDs();
+  const subscriptions = await loadSubscriptions();
 
+  const { serializedStorage, storageHash } = await serializeStorage(
+    newUser,
+    pcds,
+    subscriptions
+  );
   const encryptedStorage = await passportEncrypt(
-    JSON.stringify({
-      pcds: await pcds.serializeCollection(),
-      self: user,
-      _storage_version: "v2"
-    } satisfies SyncedEncryptedStorageV2),
+    stringify(serializedStorage),
     newEncryptionKey
   );
 
   const oldBlobKey = await getHash(oldEncryptionKey);
   const newBlobKey = await getHash(newEncryptionKey);
 
-  return requestChangeBlobKey(
+  // TODO(artwyman): Pass in knownRevison here, but only once this code is
+  // ready to respond to a conflict.  For now, without a revision, this
+  // password change could clobber PCD changed which haven't downloaded yet.
+  const changeResult = await requestChangeBlobKey(
     appConfig.zupassServer,
     oldBlobKey,
     newBlobKey,
-    user.uuid,
+    newUser.uuid,
     newSalt,
     encryptedStorage
   );
+  if (changeResult.success) {
+    console.log(
+      `[SYNC] changed e2ee storage key (revision ${changeResult.value.revision})`
+    );
+    savePersistentSyncStatus({
+      serverStorageRevision: changeResult.value.revision,
+      serverStorageHash: storageHash
+    });
+    return {
+      success: true,
+      value: { revision: changeResult.value.revision, storageHash: storageHash }
+    };
+  } else {
+    console.error(
+      "[SYNC] failed to change e2ee storage key",
+      changeResult.error
+    );
+    return { success: false, error: changeResult.error };
+  }
 }
+
+export type UploadStorageResult = APIResult<
+  { revision: string; storageHash: string },
+  NamedAPIError
+>;
 
 /**
  * Uploads the state of this passport which is contained in localstorage
@@ -66,17 +106,28 @@ export async function uploadStorage(
   user: User,
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager
-): Promise<UploadEncryptedStorageResult> {
+): Promise<UploadStorageResult> {
+  const { serializedStorage, storageHash } = await serializeStorage(
+    user,
+    pcds,
+    subscriptions
+  );
+  return uploadSerializedStorage(serializedStorage, storageHash);
+}
+
+/**
+ * Uploads the state of this passport, in serialied form as produced by
+ * serializeStorage().
+ */
+export async function uploadSerializedStorage(
+  serializedStorage: SyncedEncryptedStorage,
+  storageHash: string
+): Promise<UploadStorageResult> {
   const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
 
   const encryptedStorage = await passportEncrypt(
-    JSON.stringify({
-      pcds: await pcds.serializeCollection(),
-      self: user,
-      subscriptions: subscriptions.serialize(),
-      _storage_version: "v3"
-    } satisfies SyncedEncryptedStorageV3),
+    stringify(serializedStorage),
     encryptionKey
   );
 
@@ -93,12 +144,17 @@ export async function uploadStorage(
       `[SYNC] uploaded e2ee storage (revision ${uploadResult.value.revision})`
     );
     savePersistentSyncStatus({
-      serverStorageRevision: uploadResult.value.revision
+      serverStorageRevision: uploadResult.value.revision,
+      serverStorageHash: storageHash
     });
+    return {
+      success: true,
+      value: { revision: uploadResult.value.revision, storageHash: storageHash }
+    };
   } else {
     console.error("[SYNC] failed to upload e2ee storage", uploadResult.error);
+    return { success: false, error: uploadResult.error };
   }
-  return uploadResult;
 }
 
 export type SyncStorageResult = APIResult<
@@ -106,6 +162,7 @@ export type SyncStorageResult = APIResult<
     pcds: PCDCollection;
     subscriptions: FeedSubscriptionManager;
     revision: string;
+    storageHash: string;
   } | null,
   null
 >;
@@ -142,20 +199,26 @@ export async function downloadStorage(
   }
 
   try {
-    const { pcds, subscriptions } = await deserializeStorage(
+    const { pcds, subscriptions, storageHash } = await deserializeStorage(
       storageResult.value.storage,
       await getPackages()
     );
     await savePCDs(pcds);
     await saveSubscriptions(subscriptions);
     savePersistentSyncStatus({
-      serverStorageRevision: storageResult.value.revision
+      serverStorageRevision: storageResult.value.revision,
+      serverStorageHash: storageHash
     });
     console.log(
       `[SYNC] downloaded e2ee storage (revision ${storageResult.value.revision})`
     );
     return {
-      value: { pcds, subscriptions, revision: storageResult.value.revision },
+      value: {
+        pcds,
+        subscriptions,
+        revision: storageResult.value.revision,
+        storageHash: storageHash
+      },
       success: true
     };
   } catch (e) {
@@ -180,16 +243,4 @@ export function useSyncE2EEStorage() {
   useEffect(() => {
     load();
   }, [load]);
-}
-
-export function useHasUploaded() {
-  const [hasUploaded, setHasUploaded] = useState<boolean | undefined>();
-  const { hash } = usePCDCollectionWithHash();
-  const uploadedId = useUploadedId();
-
-  useEffect(() => {
-    setHasUploaded(hash === uploadedId);
-  }, [hash, uploadedId]);
-
-  return hasUploaded;
 }

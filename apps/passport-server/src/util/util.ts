@@ -129,3 +129,9 @@ export function compareArrays<T>(
     removed: removedItems
   };
 }
+
+export function isValidEmoji(str: string): boolean {
+  const emojiRegex =
+    /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?\uFE0F?|\p{Emoji_Component}\uFE0F?)?$/u;
+  return emojiRegex.test(str);
+}

@@ -3,20 +3,25 @@ import {
   QRDisplayWithRegenerateAndStorage
 } from "@pcd/passport-ui";
 import { useCallback } from "react";
-import styled from "styled-components";
+import styled, { css } from "styled-components";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  initArgs
+  initArgs,
+  TicketCategory
 } from "./EdDSATicketPCD";
 import { getEdDSATicketData, getQRCodeColorOverride } from "./utils";
 
 export function EdDSATicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
   const ticketData = getEdDSATicketData(pcd);
+  const showImage =
+    ticketData?.ticketCategory === TicketCategory.Generic ||
+    ticketData?.ticketCategory === TicketCategory.Zuzalu;
 
   return (
-    <Container>
-      <TicketQR pcd={pcd} />
+    <Container padding={!showImage}>
+      {showImage && <TicketImage pcd={pcd} />}
+      {!showImage && <TicketQR pcd={pcd} />}
       <TicketInfo>
         <span>{ticketData?.attendeeName}</span>
         <span>{ticketData?.attendeeEmail}</span>
@@ -25,12 +30,15 @@ export function EdDSATicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
   );
 }
 
+function TicketImage({ pcd }: { pcd: EdDSATicketPCD }) {
+  const { imageUrl, imageAltText } = pcd.claim.ticket;
+  return <img src={imageUrl} alt={imageAltText} />;
+}
+
 function TicketQR({ pcd }: { pcd: EdDSATicketPCD }) {
   const generate = useCallback(async () => {
-    console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     const serialized = await EdDSATicketPCDPackage.serialize(pcd);
     const serializedPCD = JSON.stringify(serialized);
-    console.log(`[QR] generated proof, length ${serializedPCD.length}`);
     const encodedPCD = encodeQRPayload(serializedPCD);
     if (!initArgs.makeEncodedVerifyLink) {
       throw new Error("must provide makeEncodedVerifyLink");
@@ -49,8 +57,13 @@ function TicketQR({ pcd }: { pcd: EdDSATicketPCD }) {
   );
 }
 
-const Container = styled.span`
-  padding: 16px;
+const Container = styled.span<{ padding: boolean }>`
+  ${({ padding }) =>
+    padding
+      ? css`
+          padding: 16px;
+        `
+      : css``}
   overflow: hidden;
   width: 100%;
 `;

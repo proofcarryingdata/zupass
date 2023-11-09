@@ -3,7 +3,11 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
-import { FrogCryptoFrogData } from "./FrogCrypto";
+import {
+  FrogCryptoDbFeedData,
+  FrogCryptoFrogData,
+  FrogCryptoScore
+} from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
@@ -287,6 +291,54 @@ export interface CheckTicketInByIdRequest {
    */
   ticketId: string;
 }
+
+/**
+ * Ask the server for tickets relevant to this user for offline storage,
+ * so that offline verification and checkin can work on the client.
+ */
+export interface GetOfflineTicketsRequest {
+  /**
+   * A semaphore signature from the checker, used by the server to
+   * determine which tickets should be returned.
+   */
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+}
+
+/**
+ * Result value server sends client in response to a {@link GetOfflineTicketsRequest}.
+ */
+export interface GetOfflineTicketsResponseValue {
+  /**
+   * Collection of tickets the client should save to localstorage so that
+   * they work offline.
+   */
+  offlineTickets: OfflineTickets;
+}
+
+/**
+ * Asks the server to checkin the given tickets. Only affects valid
+ * un-checked-in tickets check-in-able by the given user. Silently
+ * skips tickets the given user can't check in for any reason.
+ */
+export interface UploadOfflineCheckinsRequest {
+  /**
+   * A semaphore signature from the checker, used by the server to
+   * determine which tickets can actually be checked in.
+   */
+  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * List of ticket ids to attempt to check in.
+   */
+  checkedOfflineInDevconnectTicketIDs: string[];
+}
+
+/**
+ * Server gives no feedback in response to a {@link UploadOfflineCheckinsRequest}.
+ * That request only fails in the case of a network error, internal server error,
+ * and the like.
+ */
+export interface UploadOfflineCheckinsResponseValue {}
 
 /**
  * On the happy path, {@link CheckTicketInByIdRequest} has nothing to say and
@@ -615,8 +667,40 @@ export interface AgreeToTermsResponseValue {
 export const ISSUANCE_STRING = "Issue me PCDs please.";
 
 /**
- * User asks metadata about themselves such as when they can get next frog and
- * how many frogs in Frogedex.
+ * Collection of tickets that some clients keep track of so that the tickets
+ * contained within it function offline.
+ */
+export interface OfflineTickets {
+  devconnectTickets: OfflineDevconnectTicket[];
+}
+
+/**
+ * New empty {@link OfflineTickets}.
+ */
+export function defaultOfflineTickets(): OfflineTickets {
+  return {
+    devconnectTickets: []
+  };
+}
+
+/**
+ * Shown to checkers with valid permissions when they are in offline mode.
+ */
+export interface OfflineDevconnectTicket {
+  id: string;
+  attendeeEmail: string;
+  attendeeName: string;
+  eventName: string;
+  ticketName: string;
+  checkinTimestamp?: string;
+  checker: string | null;
+}
+
+/**
+ * User requests about
+ * 1. for the feeds they are subscribed to, when they can get next frog and
+ *    whether it is active
+ * 2. how many frogs in Frogedex
  *
  * NB: The number of possible frogs are currently not user specific. It is
  * possible that we will introduce series unlock in the future where the number
@@ -624,6 +708,7 @@ export const ISSUANCE_STRING = "Issue me PCDs please.";
  */
 export interface FrogCryptoUserStateRequest {
   pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  feedIds: string[];
 }
 
 /**
@@ -633,6 +718,7 @@ export interface FrogCryptoComputedUserState {
   feedId: string;
   lastFetchedAt: number;
   nextFetchAt: number;
+  active: boolean;
 }
 
 /**
@@ -640,7 +726,11 @@ export interface FrogCryptoComputedUserState {
  */
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
-  possibleFrogCount: number;
+  /**
+   * A list of possible frog ids
+   */
+  possibleFrogIds: number[];
+  myScore?: FrogCryptoScore;
 }
 
 /**
@@ -674,4 +764,22 @@ export type FrogCryptoDeleteFrogsRequest = {
  */
 export interface FrogCryptoDeleteFrogsResponseValue {
   frogs: FrogCryptoFrogData[];
+}
+
+/**
+ * Admin request to manage feeds in the databse.
+ */
+export type FrogCryptoUpdateFeedsRequest = {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  /**
+   * Pass empty array for no-op and return all feeds.
+   */
+  feeds: FrogCryptoDbFeedData[];
+};
+
+/**
+ * Response to {@link FrogCryptoUpdateFeedsRequest} and returns all feeds.
+ */
+export interface FrogCryptoUpdateFeedsResponseValue {
+  feeds: FrogCryptoDbFeedData[];
 }

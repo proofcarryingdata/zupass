@@ -1,8 +1,13 @@
-import { Biome } from "@pcd/eddsa-frog-pcd";
 import {
+  FrogCryptoDbFeedData,
   FrogCryptoDbFrogData,
-  FrogCryptoFrogData
-} from "@pcd/passport-interface/src/FrogCrypto";
+  FrogCryptoFeed,
+  FrogCryptoFeedBiomeConfigs,
+  FrogCryptoFolderName,
+  FrogCryptoFrogData,
+  FrogCryptoScore
+} from "@pcd/passport-interface";
+import { PCDPermissionType } from "@pcd/pcd-collection";
 import _ from "lodash";
 import { Client } from "pg";
 import { Pool } from "postgres-pool";
@@ -86,7 +91,11 @@ export async function initializeUserFeedState(
 export async function updateUserFeedState(
   client: Client,
   semaphoreId: string,
-  feedId: string
+  feedId: string,
+  /**
+   *  can be used to reset cooldown to give a free roll
+   */
+  lastFetchedAt: string = new Date().toUTCString()
 ): Promise<Date | undefined> {
   const result = await client.query(
     `
@@ -96,7 +105,7 @@ export async function updateUserFeedState(
     where old.id = new.id
     returning old.last_fetched_at
     `,
-    [semaphoreId, feedId, new Date().toUTCString()]
+    [semaphoreId, feedId, lastFetchedAt]
   );
 
   return result.rows[0]?.last_fetched_at;
@@ -129,8 +138,7 @@ export async function upsertFrogData(
 export async function getFrogData(pool: Pool): Promise<FrogCryptoFrogData[]> {
   const result = await sqlQuery(
     pool,
-    `select * from frogcrypto_frogs order by id`,
-    []
+    `select * from frogcrypto_frogs order by id`
   );
 
   return result.rows.map(toFrogData);
@@ -150,34 +158,56 @@ export async function deleteFrogData(
   );
 }
 
-export async function getPossibleFrogCount(pool: Pool): Promise<number> {
+/**
+ * Returns a list of possible frog ids
+ */
+export async function getPossibleFrogIds(pool: Pool): Promise<number[]> {
   const result = await sqlQuery(
     pool,
-    `select count(*) as count from frogcrypto_frogs`,
-    []
+    `
+  select id
+  from frogcrypto_frogs
+  where frog->>'rarity' <> 'object'
+  order by id
+    `
   );
 
-  return +result.rows[0].count;
+  return result.rows.map((row) => row.id);
 }
 
 /**
- * Sample a single frog based on drop_weight
+ * Sample a single frog based on drop_weight scaled by biome specific scaling factor.
  *
  * https://utopia.duth.gr/~pefraimi/research/data/2007EncOfAlg.pdf
  */
 export async function sampleFrogData(
   pool: Pool,
-  biomes: Biome[]
+  biomes: FrogCryptoFeedBiomeConfigs
 ): Promise<FrogCryptoFrogData | undefined> {
-  const biomeSet = biomes.map((biome) => Biome[biome]).filter(Boolean);
+  const [biomeKeys, scalingFactors] = _.chain(biomes)
+    .toPairs()
+    .map(([biome, config]) => [biome, config?.dropWeightScaler])
+    .filter(([, scalingFactor]) => !!scalingFactor)
+    .unzip()
+    .value();
 
   const result = await sqlQuery(
     pool,
-    `select * from frogcrypto_frogs
-    where frog->>'biome' ilike any($1)
-    order by random() ^ (1.0 / cast(frog->>'drop_weight' as double precision))
+    `
+    with biome_scaling as (
+      select unnest($1::text[]) as biome, unnest($2::float[]) as scaling_factor
+    )
+
+    select * from frogcrypto_frogs
+    join biome_scaling on replace(lower(frog->>'biome'), ' ', '') = lower(biome_scaling.biome)
+
+    order by
+    -- prevent underflow
+    random() ^ least(1.0 / cast(frog->>'drop_weight' as double precision) / scaling_factor, 10)
+    desc
+
     limit 1`,
-    [biomeSet]
+    [biomeKeys, scalingFactors]
   );
 
   if (result.rowCount === 0) {
@@ -192,5 +222,123 @@ function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
     id: dbFrogData.id,
     uuid: dbFrogData.uuid,
     ...dbFrogData.frog
+  };
+}
+
+export async function incrementScore(
+  client: Client,
+  semaphoreId: string,
+  increment = 1
+): Promise<FrogCryptoScore> {
+  const res = await client.query(
+    `insert into frogcrypto_user_scores
+    (semaphore_id, score)
+    values ($1, $2)
+    on conflict (semaphore_id) do update set score = frogcrypto_user_scores.score + $2
+    returning *`,
+    [semaphoreId, increment]
+  );
+
+  return res.rows[0];
+}
+
+export async function getScoreboard(
+  pool: Pool,
+  limit = 50
+): Promise<FrogCryptoScore[]> {
+  const result = await sqlQuery(
+    pool,
+    `select
+    cast(score as int) as score,
+    cast(rank as int) as rank,
+    semaphore_id
+    from (
+      select *, rank() over (order by score desc) from frogcrypto_user_scores
+      order by score desc
+      limit $1
+    ) scores
+    order by rank asc`,
+    [limit]
+  );
+
+  return result.rows;
+}
+
+/**
+ * Upsert feed data into the database.
+ */
+export async function upsertFeedData(
+  client: Pool,
+  feedDataList: FrogCryptoDbFeedData[]
+): Promise<void> {
+  for (const feedData of feedDataList) {
+    await sqlQuery(
+      client,
+      `insert into frogcrypto_feeds
+    (uuid, feed)
+    values ($1, $2)
+    on conflict (uuid) do update
+    set feed = $2
+    `,
+      [feedData.uuid, feedData.feed]
+    );
+  }
+}
+
+/**
+ * Returns all the raw feeds in the database.
+ */
+export async function getRawFeedData(
+  pool: Pool
+): Promise<FrogCryptoDbFeedData[]> {
+  const result = await sqlQuery(pool, `select * from frogcrypto_feeds`);
+
+  return result.rows;
+}
+
+export async function getUserScore(
+  pool: Pool,
+  semaphoreId: string
+): Promise<FrogCryptoScore | undefined> {
+  const result = await sqlQuery(
+    pool,
+    `select
+    cast(score as int) as score,
+    cast(rank as int) as rank,
+    semaphore_id
+    from (
+      select *, rank() over (order by score desc) from frogcrypto_user_scores
+    ) scores
+    where semaphore_id = $1`,
+    [semaphoreId]
+  );
+
+  return result.rows[0];
+}
+
+/**
+ * Returns all the feeds in the database.
+ */
+export async function getFeedData(pool: Pool): Promise<FrogCryptoFeed[]> {
+  return (await getRawFeedData(pool)).map(toFeedData);
+}
+
+function toFeedData(dbFeedData: FrogCryptoDbFeedData): FrogCryptoFeed {
+  return {
+    // hydrate with default values
+    autoPoll: false,
+    inputPCDType: undefined,
+    partialArgs: undefined,
+    credentialRequest: {
+      signatureType: "sempahore-signature-pcd"
+    },
+    permissions: [
+      {
+        folder: FrogCryptoFolderName,
+        type: PCDPermissionType.AppendToFolder
+      }
+    ],
+    ...dbFeedData.feed,
+    id: dbFeedData.uuid
   };
 }

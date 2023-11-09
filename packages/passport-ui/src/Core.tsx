@@ -27,7 +27,7 @@ export const FieldLabel = styled.span`
 `;
 
 export const LinkButton = styled.a`
-  color: var(--accent-darker);
+  color: #e6a50f;
   cursor: pointer;
   text-decoration: none;
 `;

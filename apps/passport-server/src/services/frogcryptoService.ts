@@ -1,31 +1,45 @@
 import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
+  FROG_FREEROLLS,
+  FROG_SCORE_CAP,
   FrogCryptoComputedUserState,
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
+  FrogCryptoFeed,
+  FrogCryptoFolderName,
+  FrogCryptoFrogData,
+  FrogCryptoScore,
+  FrogCryptoUpdateFeedsRequest,
+  FrogCryptoUpdateFeedsResponseValue,
   FrogCryptoUpdateFrogsRequest,
   FrogCryptoUpdateFrogsResponseValue,
   FrogCryptoUserStateRequest,
   FrogCryptoUserStateResponseValue,
+  ListFeedsRequest,
+  ListFeedsResponseValue,
+  ListSingleFeedRequest,
+  PollFeedRequest,
+  PollFeedResponseValue,
   verifyFeedCredential
 } from "@pcd/passport-interface";
-import { FrogCryptoFrogData } from "@pcd/passport-interface/src/FrogCrypto";
+import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
-import { LRUCache } from "lru-cache";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
-  getPossibleFrogCount,
+  getPossibleFrogIds,
+  getRawFeedData,
+  getScoreboard,
+  getUserScore,
+  incrementScore,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
+  upsertFeedData,
   upsertFrogData
 } from "../database/queries/frogcrypto";
 import { fetchUserByCommitment } from "../database/queries/users";
@@ -33,35 +47,93 @@ import { sqlTransaction } from "../database/sqlQuery";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import {
-  FROGCRYPTO_FEEDS,
-  FrogCryptoFeed,
+  FrogCryptoFeedHost,
   parseFrogEnum,
   parseFrogTemperament,
   sampleFrogAttribute
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
+import { IssuanceService } from "./issuanceService";
 import { RollbarService } from "./rollbarService";
 
 export class FrogcryptoService {
   private readonly context: ApplicationContext;
   private readonly rollbarService: RollbarService | null;
-  private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
+  private readonly issuanceService: IssuanceService;
+  private readonly feedHost: FrogCryptoFeedHost;
   private readonly adminUsers: string[];
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService | null
+    rollbarService: RollbarService | null,
+    issuanceService: IssuanceService
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
-      max: 1000
-    });
+    this.issuanceService = issuanceService;
+    this.feedHost = new FrogCryptoFeedHost(
+      this.context.dbPool,
+      (feed: FrogCryptoFeed) =>
+        async (req: PollFeedRequest): Promise<PollFeedResponseValue> => {
+          try {
+            if (feed.activeUntil <= Date.now() / 1000) {
+              throw new PCDHTTPError(403, "Feed is not active");
+            }
+
+            if (req.pcd === undefined) {
+              throw new PCDHTTPError(400, `Missing credential`);
+            }
+            await verifyFeedCredential(
+              req.pcd,
+              this.issuanceService.cachedVerifySignaturePCD
+            );
+
+            return {
+              actions: [
+                {
+                  pcds: await this.issuanceService.issueEdDSAFrogPCDs(
+                    req.pcd,
+                    await this.reserveFrogData(req.pcd, feed)
+                  ),
+                  folder: FrogCryptoFolderName,
+                  type: PCDActionType.AppendToFolder
+                }
+              ]
+            };
+          } catch (e) {
+            if (e instanceof PCDHTTPError) {
+              throw e;
+            }
+
+            logger(`Error encountered while serving feed:`, e);
+            this.rollbarService?.reportError(e);
+          }
+          return { actions: [] };
+        }
+    );
     this.adminUsers = this.getAdminUsers();
   }
 
-  public async getFeeds(): Promise<FrogCryptoFeed[]> {
-    return FROGCRYPTO_FEEDS;
+  public async handleListFeedsRequest(
+    request: ListFeedsRequest
+  ): Promise<ListFeedsResponseValue> {
+    return this.feedHost.handleListFeedsRequest(request);
+  }
+
+  public async handleListSingleFeedRequest(
+    request: ListSingleFeedRequest
+  ): Promise<ListFeedsResponseValue> {
+    return this.feedHost.handleListSingleFeedRequest(request);
+  }
+
+  public async handleFeedRequest(
+    request: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
+    return this.feedHost.handleFeedRequest(request);
+  }
+
+  public hasFeedWithId(feedId: string): boolean {
+    return this.feedHost.hasFeedWithId(feedId);
   }
 
   public async getUserState(
@@ -69,22 +141,25 @@ export class FrogcryptoService {
   ): Promise<FrogCryptoUserStateResponseValue> {
     const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
-    const userFeeds = await fetchUserFeedsState(
-      this.context.dbPool,
-      semaphoreId
+    const userFeeds = _.keyBy(
+      await fetchUserFeedsState(this.context.dbPool, semaphoreId),
+      "feed_id"
     );
 
-    const allFeeds = _.keyBy(await this.getFeeds(), "id");
+    const allFeeds = this.feedHost
+      .getAllFeeds()
+      .filter((feed) => req.feedIds.includes(feed.id));
 
     return {
-      feeds: userFeeds.map((userFeed) =>
-        this.computeUserFeedState(userFeed, allFeeds[userFeed.feed_id])
+      feeds: allFeeds.map((feed) =>
+        this.computeUserFeedState(userFeeds[feed.id], feed)
       ),
-      possibleFrogCount: await getPossibleFrogCount(this.context.dbPool)
+      possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
+      myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
   }
 
-  public async reserveFrogData(
+  private async reserveFrogData(
     pcd: SerializedPCD<SemaphoreSignaturePCD>,
     feed: FrogCryptoFeed
   ): Promise<IFrogData> {
@@ -127,12 +202,36 @@ export class FrogcryptoService {
           throw new PCDHTTPError(403, `Next fetch available at ${nextFetchAt}`);
         }
 
-        const frogData = await sampleFrogData(this.context.dbPool, feed.biomes);
-        if (!frogData) {
+        const frogDataSpec = await sampleFrogData(
+          this.context.dbPool,
+          feed.biomes
+        );
+        if (!frogDataSpec) {
           throw new PCDHTTPError(404, "Frog Not Found");
         }
 
-        return this.generateFrogData(frogData, semaphoreId);
+        const frogData = this.generateFrogData(frogDataSpec, semaphoreId);
+
+        const { score: scoreAfterRoll } = await incrementScore(
+          client,
+          semaphoreId,
+          // non-frog frog doesn't get point
+          frogData.biome === Biome.Unknown ? 0 : 1
+        );
+        if (scoreAfterRoll > FROG_SCORE_CAP) {
+          throw new PCDHTTPError(403, "Frog faucet off.");
+        }
+        // rollback last fetched timestamp if user has free rolls left
+        if (scoreAfterRoll <= FROG_FREEROLLS) {
+          await updateUserFeedState(
+            client,
+            semaphoreId,
+            feed.id,
+            lastFetchedAt.toUTCString()
+          );
+        }
+
+        return frogData;
       }
     );
   }
@@ -149,7 +248,6 @@ export class FrogcryptoService {
       await upsertFrogData(this.context.dbPool, req.frogs);
     } catch (e) {
       logger(`Error encountered while inserting frog data:`, e);
-      this.rollbarService?.reportError(e);
       throw new PCDHTTPError(500, `Error inserting frog data: ${e}`);
     }
 
@@ -173,6 +271,45 @@ export class FrogcryptoService {
     };
   }
 
+  /**
+   * Return default number of top scores.
+   */
+  public async getScoreboard(): Promise<FrogCryptoScore[]> {
+    return getScoreboard(this.context.dbPool);
+  }
+
+  /**
+   * Upsert feed data into the database and return all raw feed data.
+   */
+  public async updateFeedData(
+    req: FrogCryptoUpdateFeedsRequest
+  ): Promise<FrogCryptoUpdateFeedsResponseValue> {
+    await this.cachedVerifyAdminSignaturePCD(req.pcd);
+
+    try {
+      await upsertFeedData(this.context.dbPool, req.feeds);
+      // nb: refresh in-memory feed cache. As of 2023/11, we run a single
+      // server. Once we scale out, servers may return stale data. See @{link
+      // feedHost#refreshFeeds} on how to fix.
+      await this.feedHost.refreshFeeds();
+    } catch (e) {
+      logger(`Error encountered while inserting frog data:`, e);
+      throw new PCDHTTPError(500, `Error inserting frog data: ${e}`);
+    }
+
+    return {
+      feeds: await getRawFeedData(this.context.dbPool)
+    };
+  }
+
+  public async start(): Promise<void> {
+    await this.feedHost.start();
+  }
+
+  public stop(): void {
+    this.feedHost.stop();
+  }
+
   private computeUserFeedState(
     state: FrogCryptoUserFeedState | undefined,
     feed: FrogCryptoFeed
@@ -183,7 +320,8 @@ export class FrogcryptoService {
     return {
       feedId: feed.id,
       lastFetchedAt,
-      nextFetchAt
+      nextFetchAt,
+      active: feed.activeUntil > Date.now() / 1000
     };
   }
 
@@ -216,34 +354,11 @@ export class FrogcryptoService {
     try {
       const { pcd } = await verifyFeedCredential(
         serializedPCD,
-        this.cachedVerifySignaturePCD.bind(this)
+        this.issuanceService.cachedVerifySignaturePCD
       );
       return pcd.claim.identityCommitment;
     } catch (e) {
       throw new PCDHTTPError(400, "invalid PCD");
-    }
-  }
-
-  /**
-   * Returns a promised verification of a PCD, either from the cache or,
-   * if there is no cache entry, from the multiprocess service.
-   */
-  private async cachedVerifySignaturePCD(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<boolean> {
-    const key = JSON.stringify(serializedPCD);
-    const cached = this.verificationPromiseCache.get(key);
-    if (cached) {
-      return cached;
-    } else {
-      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
-        serializedPCD.pcd
-      );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
-      this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache
-      promise.catch(() => this.verificationPromiseCache.delete(key));
-      return promise;
     }
   }
 
@@ -281,11 +396,22 @@ export class FrogcryptoService {
   }
 }
 
-export function startFrogcryptoService(
+export async function startFrogcryptoService(
   context: ApplicationContext,
-  rollbarService: RollbarService | null
-): FrogcryptoService {
-  const service = new FrogcryptoService(context, rollbarService);
+  rollbarService: RollbarService | null,
+  issuanceService: IssuanceService | null
+): Promise<FrogcryptoService | null> {
+  if (!issuanceService) {
+    logger("[FROGCRYPTO] Issuance service not configured");
+    return null;
+  }
+
+  const service = new FrogcryptoService(
+    context,
+    rollbarService,
+    issuanceService
+  );
+  await service.start();
 
   return service;
 }
