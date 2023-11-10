@@ -709,7 +709,10 @@ async function doSync(
     }
   }
 
-  if (!state.loadedIssuedPCDs) {
+  if (
+    !state.loadedIssuedPCDs ||
+    (state.completedFirstSync && state.extraSubscriptionFetchRequested)
+  ) {
     update({ loadingIssuedPCDs: true });
     try {
       console.log("[SYNC] loading issued pcds");
@@ -740,6 +743,7 @@ async function doSync(
     return {
       loadedIssuedPCDs: true,
       loadingIssuedPCDs: false,
+      extraSubscriptionFetchRequested: false,
       pcds: state.pcds,
       subscriptions: state.subscriptions
     };

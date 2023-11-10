@@ -1,14 +1,13 @@
-import {
-  FrogCryptoFolderName,
-  IFrogCryptoFeedSchema
-} from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
-import { useEffect, useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
-import { DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL } from "./FrogHomeSection";
-import { useFrogParticles } from "./useFrogParticles";
+import {
+  DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
+  useUserFeedState
+} from "./FrogHomeSection";
 
 /**
  * Render the FrogCrypto folder in the home screen.
@@ -28,15 +27,10 @@ export function FrogFolder({
   onFolderClick: (folder: string) => void;
   Container: React.ComponentType<any>;
 }) {
-  const divRef = useRef<HTMLDivElement>(null);
-  const { gameOn, setGameOn } = useFetchGameOn();
-  useFrogParticles(gameOn === false ? divRef : null);
+  const fetchTimestamp = useFetchTimestamp();
 
   return (
-    <Container
-      ref={divRef}
-      onClick={gameOn ? () => onFolderClick(FrogCryptoFolderName) : undefined}
-    >
+    <Container onClick={() => onFolderClick(FrogCryptoFolderName)}>
       <img
         draggable="false"
         src="/images/frogs/pixel_frog.png"
@@ -50,9 +44,9 @@ export function FrogFolder({
           </BounceText>
         ))}
       </SuperFunkyFont>
-      {typeof gameOn === "boolean" && (
+      {typeof fetchTimestamp === "number" && (
         <NewFont>
-          <CountDown gameOn={gameOn} setGameOn={setGameOn} />
+          <CountDown timestamp={fetchTimestamp} />
         </NewFont>
       )}
     </Container>
@@ -60,76 +54,58 @@ export function FrogFolder({
 }
 
 /**
- * Return whether the game has started.
- *
- * This is a temporary function and will be removed once the game is live.
+ * Return when user can fetch next.
  */
-function useFetchGameOn(): {
-  gameOn: boolean | null;
-  setGameOn: (gameOn: boolean) => void;
-} {
-  const [gameOn, setGameOn] = useState<boolean | null>(null);
+function useFetchTimestamp(): number | null {
   const { value: subs } = useSubscriptions();
+  const frogSubs = useMemo(
+    () =>
+      subs.getSubscriptionsForProvider(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL),
+    [subs]
+  );
+  const { userState } = useUserFeedState(frogSubs);
 
-  useEffect(() => {
-    const fetchGameOn = async () => {
-      if (
-        subs.getSubscriptionsForProvider(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL)
-          .length > 0
-      ) {
-        setGameOn(true);
-      } else {
-        const { feeds } = await subs.listFeeds(
-          DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL
-        );
-        setGameOn(
-          !!feeds.find((feed) => {
-            const parsed = IFrogCryptoFeedSchema.safeParse(feed);
-            return (
-              parsed.success &&
-              !parsed.data.private &&
-              parsed.data.activeUntil > Date.now() / 1000
-            );
-          })
-        );
+  return useMemo(() => {
+    try {
+      if (!userState) {
+        return null;
       }
-    };
 
-    fetchGameOn();
-  }, [subs]);
+      // if user has no feeds, they can fetch now
+      if (userState.feeds.length === 0) {
+        return Date.now();
+      }
 
-  return {
-    gameOn,
-    setGameOn
-  };
+      const activeFeeds = userState.feeds.filter((feed) => feed.active);
+      if (activeFeeds.length === 0) {
+        return null;
+      }
+
+      return _.min(activeFeeds.map((feed) => feed.nextFetchAt));
+    } catch (e) {
+      console.error(e);
+      return null;
+    }
+  }, [userState]);
 }
 
 /**
  * A countdown to a hard coded game start date.
  */
-function CountDown({
-  gameOn,
-  setGameOn
-}: {
-  gameOn: boolean;
-  setGameOn: (gameOn: boolean) => void;
-}) {
+function CountDown({ timestamp }: { timestamp: number }) {
   const end = useMemo(() => {
-    return new Date("13 Nov 2023 23:00:00 PST");
-  }, []);
+    return new Date(timestamp);
+  }, [timestamp]);
   const [diffText, setDiffText] = useState(
-    gameOn ? _.upperCase("Available Now") : ""
+    timestamp < Date.now() ? _.upperCase("Available Now") : ""
   );
 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const diffMs = end.getTime() - now.getTime();
-      if (gameOn) {
+      if (diffMs < 0) {
         setDiffText(_.upperCase("Available Now"));
-      } else if (diffMs < 0) {
-        setDiffText("");
-        setGameOn(true);
       } else {
         const diffString = prettyMilliseconds(diffMs, {
           millisecondsDecimalDigits: 0,
@@ -143,7 +119,7 @@ function CountDown({
     return () => {
       clearInterval(interval);
     };
-  }, [end, gameOn, setGameOn]);
+  }, [end]);
 
   return <>{diffText}</>;
 }

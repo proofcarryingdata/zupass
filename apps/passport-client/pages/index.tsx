@@ -241,10 +241,14 @@ class App extends React.Component<object, AppState> {
       console.log("[JOB] failed poll user", e);
     }
 
-    // Trigger sync of E2EE storage, but only if the first-time sync had time
-    // to complete.
+    // Trigger extra download from E2EE storage, and extra fetch of
+    // subscriptions, but only if the first-time sync had time to complete.
     if (this.state.completedFirstSync) {
-      this.update({ ...this.state, extraDownloadRequested: true });
+      this.update({
+        ...this.state,
+        extraDownloadRequested: true,
+        extraSubscriptionFetchRequested: true
+      });
     }
   };
 
