@@ -191,6 +191,13 @@ export class TelegramService {
               await this.authBot.api.sendMessage(userId, `🚀`, {
                 parse_mode: "HTML"
               });
+              this.authBot.api.sendMessage(
+                userId,
+                `To join another group, type /start 😽`,
+                {
+                  parse_mode: "HTML"
+                }
+              );
             } else {
               await this.authBot.api.sendMessage(
                 userId,
@@ -256,6 +263,7 @@ export class TelegramService {
     this.authBot.command("start", async (ctx) => {
       return traced("telegram", "start", async (span) => {
         const userId = ctx?.from?.id;
+        ctx.session.chatToJoin = undefined;
         if (userId) span?.setAttribute("userId", userId?.toString());
         try {
           // Only process the command if it comes as a private message.
@@ -273,7 +281,7 @@ export class TelegramService {
           if (userId)
             ctx.api.sendMessage(
               userId,
-              `Start command failed.\nPlease email support@zupass.org for help.`
+              `Start command failed.\nPlease join https://t.me/zupass_help for help.`
             );
           logger("[TELEGRAM] start error", JSON.stringify(e));
           this.rollbarService?.reportError(e);
