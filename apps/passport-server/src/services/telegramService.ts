@@ -273,9 +273,7 @@ export class TelegramService {
           if (userId)
             ctx.api.sendMessage(
               userId,
-              `Start failed with error: ${JSON.stringify(
-                e
-              )}\nPlease email support@zupass.org with a screenshot of this error.`
+              `Start command failed.\nPlease email support@zupass.org for help.`
             );
           logger("[TELEGRAM] start error", JSON.stringify(e));
           this.rollbarService?.reportError(e);
