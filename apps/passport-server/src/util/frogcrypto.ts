@@ -1,4 +1,8 @@
-import { COMMON_TEMPERAMENT_SET, Temperament } from "@pcd/eddsa-frog-pcd";
+import {
+  COMMON_TEMPERAMENT_SET,
+  Rarity,
+  Temperament
+} from "@pcd/eddsa-frog-pcd";
 import {
   FeedHost,
   FrogCryptoFeed,
@@ -102,8 +106,15 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
   }
 }
 
-export function sampleFrogAttribute(min?: number, max?: number): number {
-  return _.random(Math.round(min ?? 0), Math.round(max ?? 15));
+export function sampleFrogAttribute(
+  min?: number,
+  max?: number,
+  rarity?: Rarity
+): number {
+  return _.random(
+    Math.round(min ?? 0),
+    Math.round(max ?? (rarity === Rarity.Common ? 7 : 15))
+  );
 }
 
 export function parseFrogEnum(

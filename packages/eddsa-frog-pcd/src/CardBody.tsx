@@ -36,7 +36,7 @@ export function EdDSAFrogCardBody({
     }
 
     const rarityColors = {
-      [Rarity.Common]: "#168675",
+      [Rarity.Common]: "#2D9061",
       [Rarity.Rare]: "#1197B5",
       [Rarity.Epic]: "#6F3BB0",
       [Rarity.Legendary]: "#FF9900",

@@ -334,20 +334,31 @@ export class FrogcryptoService {
     frogData: FrogCryptoFrogData,
     ownerSemaphoreId: string
   ): IFrogData {
+    const rarity = parseFrogEnum(Rarity, frogData.rarity);
+
     return {
       ..._.pick(frogData, "name", "description"),
       imageUrl: `${process.env.PASSPORT_SERVER_URL}/frogcrypto/images/${frogData.uuid}`,
       frogId: frogData.id,
       biome: parseFrogEnum(Biome, frogData.biome),
-      rarity: parseFrogEnum(Rarity, frogData.rarity),
+      rarity,
       temperament: parseFrogTemperament(frogData.temperament),
-      jump: sampleFrogAttribute(frogData.jump_min, frogData.jump_max),
-      speed: sampleFrogAttribute(frogData.speed_min, frogData.speed_max),
+      jump: sampleFrogAttribute(frogData.jump_min, frogData.jump_max, rarity),
+      speed: sampleFrogAttribute(
+        frogData.speed_min,
+        frogData.speed_max,
+        rarity
+      ),
       intelligence: sampleFrogAttribute(
         frogData.intelligence_min,
-        frogData.intelligence_max
+        frogData.intelligence_max,
+        rarity
       ),
-      beauty: sampleFrogAttribute(frogData.beauty_min, frogData.beauty_max),
+      beauty: sampleFrogAttribute(
+        frogData.beauty_min,
+        frogData.beauty_max,
+        rarity
+      ),
       timestampSigned: Date.now(),
       ownerSemaphoreId
     };
