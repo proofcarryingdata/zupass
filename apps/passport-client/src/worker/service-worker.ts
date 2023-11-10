@@ -68,7 +68,8 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/fonts/IBMPlexSans-Medium.woff",
   "/fonts/IBMPlexSans-SemiBold.woff",
   "/fonts/SuperFunky.ttf",
-  "/images/frogs/pixel_frog.png"
+  "/images/frogs/pixel_frog.png",
+  "/zxcvbn.js"
 ]);
 
 /**
@@ -197,6 +198,13 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         return stableResp;
       }
 
+      // Check ephemeral cache next.  We'll only use this if the network
+      // request fails or times out, but fetching it first is safer
+      // than racing against an update of the same entry.
+      // TODO(artwyman): Investigate how the cache works and whether this is
+      // really necessary or safe.
+      const cacheResp = await checkEphemeralCache(event.request);
+
       // Next setup a network fetch to run asynchronously, along with a timeout.
       // We're not awaiting either promise yet, so shouldn't get exceptions.
       const timeoutPromise = startFetchTimeout();
@@ -211,7 +219,6 @@ self.addEventListener("fetch", (event: FetchEvent) => {
         // If stable cache and network both failed, use ephemeral cache, but
         // still make sure the event waits for the fetch to finish and update
         // the cachee.
-        const cacheResp = await checkEphemeralCache(event.request);
         if (cacheResp) {
           swLog.V(`cache fallback for ${event.request?.url} after ${error}`);
           event.waitUntil(respPromise);
@@ -263,20 +270,26 @@ async function startFetch(event: FetchEvent): Promise<Response> {
     // The stable cache update should only happen if pre-populating failed at
     // install time, or the cache was cleared by the user, causing a cache miss.
     // The ephemeral cache update happens after every network fetch.
-    // Note that Response can be read only once, so needs to be cloned to be
-    // added to cache.  The clone() has to happen synchronously to be safe, but
-    // the cache updates happen asynchronously on the cloned Response while the
-    // original response is returned.
+    // Note that Response can be read only once, so needs to be cloned
+    // (synchronously) to be added to cache.  This lets the orignal still be
+    // readable when returned.
+    // We're explicitly awaiting the cache update here rather than letting it
+    // run asynchronously.  This ensures we wait for the full download, not
+    // just the initial response headers.  That means the timeout can still
+    // trigger while we're waiting for the download.
     if (shouldUpdateStableCache(event.request, resp)) {
-      event.waitUntil(
-        updateCache(STABLE_CACHE_NAME, event.request, resp.clone())
-      );
+      await updateCache(STABLE_CACHE_NAME, event.request, resp.clone());
     } else if (shouldUpdateEphemeralCache(event.request, resp)) {
-      event.waitUntil(
-        updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone())
-      );
+      await updateCache(EPHEMERAL_CACHE_NAME, event.request, resp.clone());
     }
 
+    // Cache has been updated if relevant, so we return the response, which
+    // should be ready to be read in its entirety.  For uncached resources,
+    // this is just the ordinary response, not yet fully downloaded.
+    // TODO(artwyman): Is it safer to return the original response here, or to
+    // read from the now-updated cache?  Where does the body of the large
+    // response stream get stored when read twice?
+    swLog.V(`fetch response completed for ${event.request?.url}`);
     return resp;
   } catch (error) {
     swLog.V(`failed to fetch ${event.request?.url}: ${error}`);
