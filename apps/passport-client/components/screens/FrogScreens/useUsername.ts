@@ -1,30 +1,30 @@
-import { Sodium, getSodium } from "@pcd/passport-crypto/src/libsodium";
+import { PCDCrypto } from "@pcd/passport-crypto";
 import _ from "lodash";
 import { useCallback, useEffect, useState } from "react";
+import { bigintToUint8Array, uint8arrayToBigint } from "../../../src/util";
 
 export function useUsernameGenerator():
   | ((sempahoreId: string) => string)
   | null {
-  const [sodium, setSodium] = useState<Sodium | undefined>(undefined);
+  const [pcdCrypto, setPCDCrypto] = useState<PCDCrypto | null>(null);
   useEffect(() => {
-    getSodium().then(setSodium);
+    PCDCrypto.newInstance().then(setPCDCrypto);
   }, []);
 
   const generator = useCallback(
     (sempahoreId: string) => {
-      if (!sodium) {
-        throw new Error("libsodium is not initialized");
+      if (!pcdCrypto) {
+        throw new Error("pcdCrypto is not initialized");
       }
 
-      const bigint = BigInt(sempahoreId);
-      const uint8array = new Uint8Array(32);
-      for (let i = 0; i < 32; i++) {
-        uint8array[i] = Number((bigint >> BigInt(8 * i)) & BigInt(255));
-      }
-      const randomBytes = sodium.randombytes_buf_deterministic(32, uint8array);
-      const randomBigInt = BigInt(
-        randomBytes.reduce((acc, curr) => acc + curr.toString(16), "0x")
+      const randomBytes = pcdCrypto.randombytesDeterministic(
+        32,
+        bigintToUint8Array(BigInt(sempahoreId))
       );
+      if (!randomBytes) {
+        return "An Unknown Toad";
+      }
+      const randomBigInt = uint8arrayToBigint(randomBytes);
 
       const randomAdjective: string =
         adjectives[
@@ -37,10 +37,10 @@ export function useUsernameGenerator():
 
       return _.startCase(`${randomAdjective} ${randomAnimal}`);
     },
-    [sodium]
+    [pcdCrypto]
   );
 
-  return sodium ? generator : null;
+  return pcdCrypto ? generator : null;
 }
 
 export const adjectives = [

@@ -93,3 +93,16 @@ export function isFrogCryptoFolder(folderPath: string): boolean {
   const parts = splitPath(folderPath);
   return parts[0] === FrogCryptoFolderName;
 }
+
+export function bigintToUint8Array(bigint: bigint): Uint8Array {
+  const hex = bigint.toString(16).padStart(32, "0");
+  const bytes = [];
+  for (let i = 0; i < hex.length; i += 2) {
+    bytes.push(parseInt(hex.slice(i, i + 2), 16));
+  }
+  return new Uint8Array(bytes);
+}
+
+export function uint8arrayToBigint(uint8Array: Uint8Array): bigint {
+  return BigInt("0x" + Buffer.from(uint8Array).toString("hex"));
+}
