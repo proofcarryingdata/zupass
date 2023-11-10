@@ -1,21 +1,32 @@
-import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { TicketCategory, isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import {
+  CheckTicketByIdResult,
   KnownTicketGroup,
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
-import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
+import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
-import { usePCDCollection, useQuery } from "../../src/appHooks";
+import {
+  usePCDCollection,
+  useQuery,
+  useStateContext
+} from "../../src/appHooks";
+import { devconnectCheckByIdWithOffline } from "../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
 import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
+import {
+  TicketError,
+  UserReadyForCheckin
+} from "./DevconnectCheckinByIdScreen";
 
 enum VerifyOutcome {
   // We recognize this ticket
@@ -31,12 +42,29 @@ type VerifyResult =
       group: KnownTicketGroup;
       publicKeyName: string;
       ticketName?: string;
+      ticketId: string;
     }
   | {
       outcome: VerifyOutcome.NotVerified;
       // For unverified tickets there is an error message
       message: string;
     };
+
+function isDevconnectTicket(pcd: PCD): boolean {
+  if (
+    isEdDSATicketPCD(pcd) &&
+    pcd.claim.ticket.ticketCategory === TicketCategory.Devconnect
+  ) {
+    return true;
+  } else if (
+    isZKEdDSAEventTicketPCD(pcd) &&
+    pcd.claim.partialTicket.ticketCategory === TicketCategory.Devconnect
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
 
 // Shows whether a ticket can be verified, and whether it is a known ticket
 // about which we can show extra information. "Known tickets" are tickets such
@@ -50,36 +78,159 @@ export function SecondPartyTicketVerifyScreen() {
   const encodedQRPayload = query.get("pcd");
   const id = query.get("id");
 
+  const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload);
+
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
-  const pcds = usePCDCollection();
+  const [checkResult, setCheckResult] = useState<
+    CheckTicketByIdResult | undefined
+  >();
+
+  const stateContext = useStateContext();
+
+  let ticketId = null;
+  if (id) {
+    ticketId = id;
+  } else if (pcd && isEdDSATicketPCD(pcd)) {
+    ticketId = pcd.claim.ticket.ticketId;
+  } else if (pcd && isZKEdDSAEventTicketPCD(pcd)) {
+    ticketId = pcd.claim.partialTicket.ticketId;
+  }
 
   useEffect(() => {
     (async () => {
-      if (encodedQRPayload) {
-        const result = await deserializeAndVerify(encodedQRPayload, pcds);
+      if (pcd) {
+        const result = await verify(pcd, serializedPCD);
         setVerifyResult(result);
-      } else {
+      } else if (id) {
         const payload = JSON.parse(Buffer.from(id, "base64").toString());
         const result = await verifyById(payload.ticketId, payload.timestamp);
         setVerifyResult(result);
       }
     })();
-  }, [setVerifyResult, pcds, encodedQRPayload, id]);
+  }, [setVerifyResult, id, pcd, serializedPCD]);
 
-  const bg =
-    verifyResult && verifyResult.outcome === VerifyOutcome.KnownTicketType
-      ? "primary"
-      : "gray";
+  useEffect(() => {
+    (async () => {
+      if (pcd && isZKEdDSAEventTicketPCD(pcd) && isDevconnectTicket(pcd)) {
+        const result = await devconnectCheckByIdWithOffline(
+          pcd.claim.partialTicket.ticketId,
+          stateContext
+        );
+        setCheckResult(result);
+      }
+    })();
+  }, [setCheckResult, pcd, stateContext]);
+
+  const bg = checkResult && checkResult.success === true ? "primary" : "gray";
+
+  let connectionError = false;
+
+  const checkAndVerifyComplete =
+    verifyResult !== undefined && (!pcd || checkResult !== undefined);
 
   let icon = icons.verifyInProgress;
-  if (verifyResult) {
+
+  if (checkAndVerifyComplete) {
     if (verifyResult.outcome === VerifyOutcome.NotVerified) {
       // The "invalid" icon is used for PCDs which are formally valid but
       // unknown
       icon = icons.verifyInvalid;
+      if (
+        verifyResult.message ===
+        "NetworkError when attempting to fetch resource."
+      ) {
+        connectionError = true;
+      }
     } else {
       icon = icons.verifyValid;
     }
+  }
+
+  const showCheckin =
+    checkAndVerifyComplete &&
+    checkResult &&
+    (checkResult.success === true || checkResult.error.name !== "NotSuperuser");
+
+  if (!checkAndVerifyComplete) {
+    return <WaitingForCheckAndVerify />;
+  }
+
+  if (showCheckin) {
+    return (
+      <AppContainer bg={"primary"}>
+        <Container>
+          <TextCenter>
+            {checkResult.success && (
+              <UserReadyForCheckin
+                ticketData={checkResult.value}
+                ticketId={ticketId}
+              />
+            )}
+            {!checkResult.success && <TicketError error={checkResult.error} />}
+          </TextCenter>
+        </Container>
+      </AppContainer>
+    );
+  }
+
+  if (
+    pcd &&
+    isZKEdDSAEventTicketPCD(pcd) &&
+    isDevconnectTicket(pcd) &&
+    verifyResult.outcome === VerifyOutcome.KnownTicketType
+  ) {
+    return (
+      <AppContainer bg={bg}>
+        <Spacer h={48} />
+
+        <ZKNoticeContainer>
+          <h2>Zero-knowledge ticket</h2>
+          <p>
+            You can't check this ticket in, as you're not an organizer for the
+            event.
+          </p>
+          <p>However, you can see the following ticket information:</p>
+          <dl>
+            {verifyResult.ticketId && (
+              <>
+                <dt>Ticket ID</dt>
+                <dd>{verifyResult.ticketId}</dd>
+              </>
+            )}
+            {verifyResult.ticketName && (
+              <>
+                <dt>Ticket name</dt>
+                <dd>{verifyResult.ticketName}</dd>
+              </>
+            )}
+            {pcd.claim.partialTicket.eventId && (
+              <>
+                <dt>Event ID</dt>
+                <dd>{pcd.claim.partialTicket.eventId}</dd>
+              </>
+            )}
+            {pcd.claim.partialTicket.productId && (
+              <>
+                <dt>Product ID</dt>
+                <dd>{pcd.claim.partialTicket.productId}</dd>
+              </>
+            )}
+            {verifyResult.ticketName && (
+              <>
+                <dt>Ticket name</dt>
+                <dd>{verifyResult.ticketName}</dd>
+              </>
+            )}
+            {verifyResult.publicKeyName && (
+              <>
+                <dt>Signed by</dt>
+                <dd>{verifyResult.publicKeyName}</dd>
+              </>
+            )}
+          </dl>
+        </ZKNoticeContainer>
+      </AppContainer>
+    );
   }
 
   return (
@@ -89,34 +240,36 @@ export function SecondPartyTicketVerifyScreen() {
       <TextCenter>
         <img draggable="false" width="90" height="90" src={icon} />
         <Spacer h={24} />
-        {!verifyResult && <H4>VERIFYING PROOF...</H4>}
-        {verifyResult &&
+        {checkResult.success === false &&
           verifyResult.outcome === VerifyOutcome.KnownTicketType && (
             <>
               <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
             </>
           )}
-        {verifyResult && verifyResult.outcome === VerifyOutcome.NotVerified && (
-          <H4>PROOF INVALID.</H4>
+
+        {verifyResult.outcome === VerifyOutcome.NotVerified && (
+          <>
+            {!connectionError && <H4>PROOF UNKNOWN.</H4>}
+            {connectionError && <H4>OFFLINE.</H4>}
+          </>
         )}
       </TextCenter>
       <Spacer h={48} />
       <Placeholder minH={160}>
-        {verifyResult && verifyResult.outcome === VerifyOutcome.NotVerified && (
+        {verifyResult.outcome === VerifyOutcome.NotVerified && (
           <TextCenter>{verifyResult.message}</TextCenter>
         )}
-        {verifyResult &&
-          verifyResult.outcome === VerifyOutcome.KnownTicketType && (
-            <VerifiedAndKnownTicket
-              productId={verifyResult.productId}
-              category={verifyResult.group}
-              publicKeyName={verifyResult.publicKeyName}
-              ticketName={verifyResult.ticketName}
-            />
-          )}
+        {verifyResult.outcome === VerifyOutcome.KnownTicketType && (
+          <VerifiedAndKnownTicket
+            productId={verifyResult.productId}
+            category={verifyResult.group}
+            publicKeyName={verifyResult.publicKeyName}
+            ticketName={verifyResult.ticketName}
+          />
+        )}
       </Placeholder>
       <Spacer h={64} />
-      {verifyResult && (
+      {checkResult.success === false && (
         <CenterColumn w={280}>
           <LinkButton to="/scan">Verify another</LinkButton>
           <Spacer h={8} />
@@ -124,6 +277,25 @@ export function SecondPartyTicketVerifyScreen() {
           <Spacer h={24} />
         </CenterColumn>
       )}
+    </AppContainer>
+  );
+}
+
+function WaitingForCheckAndVerify() {
+  return (
+    <AppContainer bg={"gray"}>
+      <Spacer h={48} />
+
+      <TextCenter>
+        <img
+          draggable="false"
+          width="90"
+          height="90"
+          src={icons.verifyInProgress}
+        />
+        <Spacer h={24} />
+        <H4>VERIFYING PROOF...</H4>
+      </TextCenter>
     </AppContainer>
   );
 }
@@ -158,6 +330,29 @@ function VerifiedAndKnownTicket({
   }
 }
 
+function useDecodedPayload(encodedQRPayload: string) {
+  // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
+  const decodedPayload = decodeQRPayload(encodedQRPayload);
+  const [pcd, setPcd] = useState(null);
+  const [serializedPCD, setSerializedPCD] = useState(null);
+  const pcds = usePCDCollection();
+
+  useEffect(() => {
+    (async () => {
+      try {
+        const serializedPCD = JSON.parse(decodedPayload);
+        const pcd = await pcds.deserialize(serializedPCD);
+        setPcd(pcd);
+        setSerializedPCD(serializedPCD);
+      } catch (e) {
+        console.log("Could not deserialize PCD:", e);
+      }
+    })();
+  }, [decodedPayload, pcds]);
+
+  return { pcd, serializedPCD };
+}
+
 /**
  * Deserialize the PCD, and send it to the server for verification.
  * This checks both that the PCD has a valid structure, with a proof that
@@ -166,20 +361,12 @@ function VerifiedAndKnownTicket({
  *
  * Returns a {@link VerifyResult}
  */
-async function deserializeAndVerify(
-  pcdStr: string,
-  pcds: PCDCollection
-): Promise<VerifyResult> {
-  // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
-  const decodedPCD = decodeQRPayload(pcdStr);
-
+async function verify(pcd: PCD, serializedPCD: string): Promise<VerifyResult> {
   const result = await requestVerifyTicket(appConfig.zupassServer, {
-    pcd: decodedPCD
+    pcd: JSON.stringify(serializedPCD)
   });
 
   if (result.success && result.value.verified) {
-    const pcd = await pcds.deserialize(JSON.parse(decodedPCD));
-
     // This check is mostly for the benefit of the TypeScript type-checker
     // If requestVerifyTicket() succeeded then the PCD type must be
     // EdDSATicketPCD or ZKEdDSAEventTicketPCD
@@ -191,7 +378,10 @@ async function deserializeAndVerify(
             ? pcd.claim.ticket.productId
             : pcd.claim.partialTicket.productId,
           publicKeyName: result.value.publicKeyName,
-          group: result.value.group
+          group: result.value.group,
+          ticketId: isEdDSATicketPCD(pcd)
+            ? pcd.claim.ticket.ticketId
+            : pcd.claim.partialTicket.ticketId
         };
       }
     }
@@ -221,7 +411,8 @@ async function verifyById(
       productId: result.value.productId,
       publicKeyName: result.value.publicKeyName,
       group: result.value.group,
-      ticketName: result.value.ticketName
+      ticketName: result.value.ticketName,
+      ticketId
     };
   }
 
@@ -233,3 +424,54 @@ async function verifyById(
         : null) ?? "Could not verify ticket"
   };
 }
+
+const Container = styled.div`
+  margin-top: 64px;
+  color: var(--bg-dark-primary);
+  width: 400px;
+  padding: 0px 32px;
+`;
+
+const ZKNoticeContainer = styled.div`
+  padding: 16px;
+  min-width: 400px;
+  margin-top: 16px;
+  margin-bottom: 16px;
+  border-radius: 12px;
+  border: 2px solid var(--accent-dark);
+  color: var(--accent-dark);
+
+  h2 {
+    font-family: monospace;
+    font-weight: bold;
+    text-transform: uppercase;
+    margin: 16px 0px;
+    text-align: center;
+  }
+
+  p {
+    margin: 8px 0px;
+
+    em {
+      display: inline-block;
+      border-radius: 4px;
+      background-color: var(--bg-dark);
+      color: var(--white);
+      font-weight: bold;
+      font-style: normal;
+    }
+  }
+
+  dt {
+    display: inline-block;
+    width: 30%;
+    vertical-align: top;
+  }
+
+  dd {
+    display: inline-block;
+    width: 70%;
+    color: var(--accent-lite);
+    margin-bottom: 8px;
+  }
+`;
