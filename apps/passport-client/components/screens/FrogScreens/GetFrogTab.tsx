@@ -241,7 +241,9 @@ const LoadingMessages = ({ biome }: { biome: string }) => {
       `Searching ${biome}...`,
       `Froggy radar scanning ${biome}...`,
       `Frogs, where are you?`,
-      `Pond-ering where the frogs are hiding...`
+      `Pond-ering where the frogs are hiding...`,
+      `DID YOU KNOW? Frogs are amphibians!`,
+      `DID YOU KNOW? You can only get a frog once every 15 minutes.`
     ],
     [biome]
   );
