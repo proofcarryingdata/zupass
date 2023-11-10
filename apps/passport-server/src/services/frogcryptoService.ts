@@ -31,7 +31,7 @@ import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
-  getPossibleFrogIds,
+  getPossibleFrogs,
   getRawFeedData,
   getScoreboard,
   getUserScore,
@@ -159,7 +159,7 @@ export class FrogcryptoService {
       feeds: allFeeds.map((feed) =>
         this.computeUserFeedState(userFeeds[feed.id], feed)
       ),
-      possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
+      possibleFrogs: await getPossibleFrogs(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
   }
