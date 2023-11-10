@@ -3,6 +3,7 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
+import { IRecaptchaAPI } from "./apis/recaptchaAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import {
@@ -70,6 +71,7 @@ export interface APIs {
   zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
+  recaptchaAPI: IRecaptchaAPI | null;
 }
 
 export interface EnvironmentVariables {

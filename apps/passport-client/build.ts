@@ -34,6 +34,13 @@ const define = {
           process.env.FROGCRYPTO_SERVER_URL
         )
       }
+    : {}),
+  ...(process.env.RECAPTCHA_SITE_KEY !== undefined
+    ? {
+        "process.env.RECAPTCHA_SITE_KEY": JSON.stringify(
+          process.env.RECAPTCHA_SITE_KEY
+        )
+      }
     : {})
 };
 
@@ -149,7 +156,9 @@ function compileHtml() {
     .toString();
   const template = Handlebars.compile(indexHtmlTemplateSource);
 
-  const html = template({});
+  const html = template({
+    recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY
+  });
 
   fs.writeFileSync(path.join("public", "index.html"), html);
 }

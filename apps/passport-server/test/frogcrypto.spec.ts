@@ -22,6 +22,7 @@ import { getDB } from "../src/database/postgresPool";
 import {
   getFeedData,
   getFrogData,
+  getUserRecaptchaScore,
   incrementScore,
   upsertFeedData,
   upsertFrogData
@@ -337,6 +338,19 @@ describe("frogcrypto functionality", function () {
     expect(scores[0].score).to.eq(1000);
   });
 
+  it("should update recaptcha score", async () => {
+    await application.services.frogcryptoService?.updateRecaptchaScore(
+      identity.getCommitment().toString(),
+      "fake-recaptcha-token"
+    );
+
+    const score = await getUserRecaptchaScore(
+      db,
+      identity.getCommitment().toString()
+    );
+    expect(score).to.eq(0.9);
+  });
+
   async function testGetFrog(
     feed: FrogCryptoFeed,
     now: Date
@@ -394,7 +408,8 @@ describe("frogcrypto functionality", function () {
       application.expressContext.localEndpoint,
       identity,
       payload,
-      feedIds
+      feedIds,
+      "fake-recaptcha-token"
     );
   }
 });

@@ -6,6 +6,7 @@ import urljoin from "url-join";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
+import { IRecaptchaAPI, verifyRecaptcha } from "./apis/recaptchaAPI";
 import {
   IZuconnectTripshaAPI,
   getZuconnectTripshaAPI
@@ -126,10 +127,20 @@ async function getOverridenApis(
     zuconnectTripshaAPI = getZuconnectTripshaAPI();
   }
 
+  let recaptchaAPI: IRecaptchaAPI | null = null;
+
+  if (apiOverrides?.recaptchaAPI) {
+    logger("[INIT] overriding Recaptcha API");
+    recaptchaAPI = apiOverrides.recaptchaAPI;
+  } else {
+    recaptchaAPI = { send: verifyRecaptcha };
+  }
+
   return {
     emailAPI,
     zuzaluPretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI
+    zuconnectTripshaAPI,
+    recaptchaAPI
   };
 }

@@ -26,6 +26,7 @@ import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
+import { IRecaptchaAPI } from "../apis/recaptchaAPI";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
   deleteFrogData,
@@ -39,6 +40,7 @@ import {
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
+  updateUserRecaptchaScore,
   upsertFeedData,
   upsertFrogData
 } from "../database/queries/frogcrypto";
@@ -60,17 +62,20 @@ export class FrogcryptoService {
   private readonly context: ApplicationContext;
   private readonly rollbarService: RollbarService | null;
   private readonly issuanceService: IssuanceService;
+  private readonly recaptchaApi: IRecaptchaAPI | null;
   private readonly feedHost: FrogCryptoFeedHost;
   private readonly adminUsers: string[];
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
-    issuanceService: IssuanceService
+    issuanceService: IssuanceService,
+    recaptchaApi: IRecaptchaAPI | null
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
     this.issuanceService = issuanceService;
+    this.recaptchaApi = recaptchaApi;
     this.feedHost = new FrogCryptoFeedHost(
       this.context.dbPool,
       (feed: FrogCryptoFeed) =>
@@ -146,6 +151,9 @@ export class FrogcryptoService {
 
     const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
+    // update recaptcha score async
+    this.updateRecaptchaScore(semaphoreId, req.recaptchaToken);
+
     const userFeeds = _.keyBy(
       await fetchUserFeedsState(this.context.dbPool, semaphoreId),
       "feed_id"
@@ -162,6 +170,40 @@ export class FrogcryptoService {
       possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
+  }
+
+  public async updateRecaptchaScore(
+    semaphoreId: string,
+    recaptchaToken: string | undefined
+  ): Promise<void> {
+    if (!this.recaptchaApi) {
+      logger("[FROGCRYPTO] Recaptcha not configured");
+      return;
+    }
+
+    if (!recaptchaToken) {
+      logger("[FROGCRYPTO] Recaptcha token not found");
+      return;
+    }
+
+    const res = await this.recaptchaApi.send({
+      response: recaptchaToken
+    });
+
+    if (res.error) {
+      logger("[FROGCRYPTO] Recaptcha error", res.error);
+      this.rollbarService?.reportError(res.error);
+      return;
+    }
+
+    const { score } = res.value || {};
+    if (typeof score !== "number") {
+      logger("[FROGCRYPTO] Recaptcha score not found");
+      this.rollbarService?.reportError(new Error("Recaptcha score not found"));
+      return;
+    }
+
+    await updateUserRecaptchaScore(this.context.dbPool, semaphoreId, score);
   }
 
   private async reserveFrogData(
@@ -404,7 +446,8 @@ export class FrogcryptoService {
 export async function startFrogcryptoService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
-  issuanceService: IssuanceService | null
+  issuanceService: IssuanceService | null,
+  recaptchaApi: IRecaptchaAPI | null
 ): Promise<FrogcryptoService | null> {
   if (!issuanceService) {
     logger("[FROGCRYPTO] Issuance service not configured");
@@ -414,7 +457,8 @@ export async function startFrogcryptoService(
   const service = new FrogcryptoService(
     context,
     rollbarService,
-    issuanceService
+    issuanceService,
+    recaptchaApi
   );
   await service.start();
 

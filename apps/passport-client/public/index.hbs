@@ -28,7 +28,8 @@
     />
     <script defer src="/js/index.js"></script>
     {{!-- Lazily load zxcvbn.js since it contains 700KB+ of data --}}
-    <script async type="text/javascript" src="zxcvbn.js"></script>
+    <script async defer type="text/javascript" src="zxcvbn.js"></script>
+    <script async defer src="https://www.google.com/recaptcha/api.js?render={{recaptchaSiteKey}}"></script>
   </head>
   <body>
     <div id="root">

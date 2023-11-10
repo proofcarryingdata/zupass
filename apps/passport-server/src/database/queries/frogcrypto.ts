@@ -342,3 +342,41 @@ function toFeedData(dbFeedData: FrogCryptoDbFeedData): FrogCryptoFeed {
     id: dbFeedData.uuid
   };
 }
+
+/**
+ * Update user's recaptcha score
+ */
+export async function updateUserRecaptchaScore(
+  client: Pool,
+  semaphoreId: string,
+  score: number
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `insert into frogcrypto_user_recaptcha_scores
+    (semaphore_id, score, updated_at)
+    values ($1, $2, now())
+    on conflict (semaphore_id)
+    do update set
+    score = $2,
+    updated_at = now()
+    `,
+    [semaphoreId, score]
+  );
+}
+
+/**
+ * Get user's recaptcha score
+ */
+export async function getUserRecaptchaScore(
+  client: Pool,
+  semaphoreId: string
+): Promise<number | undefined> {
+  const result = await sqlQuery(
+    client,
+    `select score from frogcrypto_user_recaptcha_scores where semaphore_id = $1`,
+    [semaphoreId]
+  );
+
+  return result.rows[0]?.score;
+}

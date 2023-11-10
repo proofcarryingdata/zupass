@@ -13,6 +13,8 @@ interface AppConfig {
   rollbarToken: string | undefined;
   // the environment to which the client uploads errors in rollbar
   rollbarEnvName: string | undefined;
+  // the recaptcha site key
+  recaptchaSiteKey: string | undefined;
 }
 
 export const appConfig: AppConfig = {
@@ -21,7 +23,8 @@ export const appConfig: AppConfig = {
   frogCryptoServer: process.env.FROGCRYPTO_SERVER_URL,
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
-  rollbarEnvName: process.env.ROLLBAR_ENV_NAME
+  rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
+  recaptchaSiteKey: process.env.RECAPTCHA_SITE_KEY
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

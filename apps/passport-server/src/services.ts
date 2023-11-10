@@ -75,7 +75,8 @@ export async function startServices(
   const frogcryptoService = await startFrogcryptoService(
     context,
     rollbarService,
-    issuanceService
+    issuanceService,
+    apis.recaptchaAPI
   );
   const services: GlobalServices = {
     semaphoreService,

@@ -33,7 +33,8 @@ export async function frogCryptoGetUserState(
   zupassServerUrl: string,
   identity: Identity,
   signedMessage: string,
-  feedIds: string[]
+  feedIds: string[],
+  recaptchaToken: string
 ): Promise<FrogCryptoUserStateResult> {
   return requestFrogCryptoGetUserState(zupassServerUrl, {
     pcd: await SemaphoreSignaturePCDPackage.serialize(
@@ -52,7 +53,8 @@ export async function frogCryptoGetUserState(
         }
       })
     ),
-    feedIds
+    feedIds,
+    recaptchaToken
   });
 }
 

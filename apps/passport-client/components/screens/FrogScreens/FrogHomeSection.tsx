@@ -157,6 +157,26 @@ export function FrogHomeSection() {
             )}
           </>
         ))}
+
+      <RecaptchaNotice>
+        This site is protected by reCAPTCHA and the Google{" "}
+        <a
+          href="https://policies.google.com/privacy"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Privacy Policy
+        </a>{" "}
+        and{" "}
+        <a
+          href="https://policies.google.com/terms"
+          target="_blank"
+          rel="noopener noreferrer"
+        >
+          Terms of Service
+        </a>{" "}
+        apply.
+      </RecaptchaNotice>
     </Container>
   );
 }
@@ -184,9 +204,40 @@ function useUserFeedState(subscriptions: Subscription[]) {
       signatureType: "sempahore-signature-pcd"
     });
 
+    // try to get recaptcha token with a 2sec timeout
+    const recaptchaToken = await Promise.race([
+      new Promise<string>((resolve) => {
+        try {
+          if (!appConfig.recaptchaSiteKey) {
+            console.debug("No recaptcha site key configured");
+            resolve("");
+            return;
+          }
+
+          if (!grecaptcha) {
+            console.debug("No recaptcha script loaded");
+            resolve("");
+            return;
+          }
+
+          grecaptcha
+            .execute(appConfig.recaptchaSiteKey, { action: "getUserState" })
+            .then(resolve, (e) => {
+              console.error(e);
+              resolve("");
+            });
+        } catch (e) {
+          console.error(e);
+          resolve("");
+        }
+      }),
+      new Promise<string>((resolve) => setTimeout(() => resolve(""), 2000))
+    ]);
+
     const state = await requestFrogCryptoGetUserState(appConfig.zupassServer, {
       pcd,
-      feedIds: JSON.parse(feedIdsString)
+      feedIds: JSON.parse(feedIdsString),
+      recaptchaToken
     });
 
     setUserState(state.value);
@@ -300,3 +351,8 @@ function scoreToEmoji(score: number) {
   );
   return `${prev.emoji} ${prev.title} - ${percent}%`;
 }
+
+const RecaptchaNotice = styled.div`
+  font-size: 12px;
+  color: rgba(var(--white-rgb), 0.5);
+`;
