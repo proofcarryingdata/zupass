@@ -123,7 +123,11 @@ export const SCORES = [
   { score: 19, emoji: "🔴", title: "EXPERT" },
   { score: 36, emoji: "🟣", title: "MASTER" },
   { score: 69, emoji: "🔵", title: "GRANDMASTER" },
-  { score: 133, emoji: "🟢", title: "LEGEND" }
+  { score: 133, emoji: "🟢", title: "LEGEND" },
+  { score: 256, emoji: "👑", title: "SOVEREIGN" },
+  { score: 420, emoji: "🦉", title: "SAGE" },
+  { score: 701, emoji: "🐸", title: "AVATAR OF FROGELION" },
+  { score: 1000, emoji: "⌨️", title: "<scripter />" }
 ];
 
 /**
