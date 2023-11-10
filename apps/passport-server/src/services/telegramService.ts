@@ -270,7 +270,14 @@ export class TelegramService {
             );
           }
         } catch (e) {
-          logger("[TELEGRAM] start error", e);
+          if (userId)
+            ctx.api.sendMessage(
+              userId,
+              `Start failed with error: ${JSON.stringify(
+                e
+              )}\nPlease email support@zupass.org with a screenshot of this error.`
+            );
+          logger("[TELEGRAM] start error", JSON.stringify(e));
           this.rollbarService?.reportError(e);
         }
       });
