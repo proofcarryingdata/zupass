@@ -1,8 +1,11 @@
+import { Rarity } from "@pcd/eddsa-frog-pcd";
 import {
+  DexFrog,
   FrogCryptoDbFeedData,
   FrogCryptoFrogData
 } from "@pcd/passport-interface";
 import { v4 as uuid } from "uuid";
+import { parseFrogEnum } from "../../src/util/frogcrypto";
 
 export const testFrogs: FrogCryptoFrogData[] = [
   {
@@ -97,6 +100,11 @@ export const testFrogs: FrogCryptoFrogData[] = [
   }
 ];
 
+export const testDexFrogs: DexFrog[] = testFrogs.map((frog) => ({
+  id: frog.id,
+  rarity: parseFrogEnum(Rarity, frog.rarity)
+}));
+
 export const testFrogsAndObjects: FrogCryptoFrogData[] = [
   {
     id: 6,
@@ -171,6 +179,13 @@ export const testFrogsAndObjects: FrogCryptoFrogData[] = [
     beauty_max: 1
   }
 ];
+
+export const testDexFrogsAndObjects: DexFrog[] = testFrogsAndObjects.map(
+  (frog) => ({
+    id: frog.id,
+    rarity: parseFrogEnum(Rarity, frog.rarity)
+  })
+);
 
 export const testFeeds: FrogCryptoDbFeedData[] = [
   {

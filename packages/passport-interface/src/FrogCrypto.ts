@@ -158,3 +158,11 @@ export interface FrogCryptoScore {
   score: number;
   rank: number;
 }
+
+/**
+ * A subset of frog attributes relevant in the DEX
+ */
+export interface DexFrog {
+  id: number;
+  rarity: number;
+}

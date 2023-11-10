@@ -150,10 +150,7 @@ export function FrogHomeSection() {
             )}
             {tab === "score" && <ScoreTab score={userState?.myScore} />}
             {tab === "dex" && (
-              <DexTab
-                possibleFrogIds={userState.possibleFrogIds}
-                pcds={frogPCDs}
-              />
+              <DexTab possibleFrogs={userState.possibleFrogs} pcds={frogPCDs} />
             )}
           </>
         ))}

@@ -11,7 +11,7 @@ import {
   fetchUserFeedsState,
   getFeedData,
   getFrogData,
-  getPossibleFrogIds,
+  getPossibleFrogs,
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
@@ -19,7 +19,13 @@ import {
   upsertFrogData
 } from "../src/database/queries/frogcrypto";
 import { overrideEnvironment, testingEnv } from "./util/env";
-import { testFeeds, testFrogs, testFrogsAndObjects } from "./util/frogcrypto";
+import {
+  testDexFrogs,
+  testDexFrogsAndObjects,
+  testFeeds,
+  testFrogs,
+  testFrogsAndObjects
+} from "./util/frogcrypto";
 
 describe("database reads and writes for frogcrypto features", function () {
   this.timeout(15_000);
@@ -153,8 +159,12 @@ describe("database reads and writes for frogcrypto features", function () {
   step("returns possible frog ids excluding objects", async function () {
     await upsertFrogData(db, testFrogsAndObjects);
 
-    const possibleFrogIds = await getPossibleFrogIds(db);
-    expect(possibleFrogIds).to.deep.eq([1, 2, 3, 5, 8, 9]);
+    const possibleFrogs = await getPossibleFrogs(db);
+    expect(possibleFrogs).to.deep.eq(
+      [...testDexFrogs, ...testDexFrogsAndObjects].filter(
+        ({ id }) => ![4, 6, 7].includes(id)
+      )
+    );
   });
 
   step("insert feeds", async function () {
