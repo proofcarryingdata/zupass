@@ -139,6 +139,11 @@ export class FrogcryptoService {
   public async getUserState(
     req: FrogCryptoUserStateRequest
   ): Promise<FrogCryptoUserStateResponseValue> {
+    if (!("feedIds" in req)) throw new PCDHTTPError(400, "missing feedIds");
+    if (!Array.isArray(req.feedIds)) {
+      throw new PCDHTTPError(400, "feedIds must be an array");
+    }
+
     const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
     const userFeeds = _.keyBy(

@@ -70,7 +70,7 @@ import {
   buildReactPayload,
   chatIDsToChats,
   chatsToForwardTo,
-  chatsToJoin,
+  chatsToJoinV2,
   chatsToPostIn,
   encodePayload,
   encodeTopicData,
@@ -133,7 +133,7 @@ export class TelegramService {
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(eventsToLink);
-    zupassMenu.dynamic(chatsToJoin);
+    zupassMenu.dynamic(chatsToJoinV2);
     anonSendMenu.dynamic(chatsToPostIn);
     forwardMenu.dynamic(chatsToForwardTo);
 
@@ -270,7 +270,12 @@ export class TelegramService {
             );
           }
         } catch (e) {
-          logger("[TELEGRAM] start error", e);
+          if (userId)
+            ctx.api.sendMessage(
+              userId,
+              `Start command failed.\nPlease email support@zupass.org for help.`
+            );
+          logger("[TELEGRAM] start error", JSON.stringify(e));
           this.rollbarService?.reportError(e);
         }
       });

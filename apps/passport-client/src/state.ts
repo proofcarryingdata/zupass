@@ -60,6 +60,7 @@ export interface AppState {
   loadingIssuedPCDs?: boolean; // Used only to update UI
   completedFirstSync?: boolean;
   extraDownloadRequested?: boolean;
+  extraSubscriptionFetchRequested?: boolean;
 
   // Persistent sync state-machine fields, saved in local storage as a
   // PersistentSyncStatus object.  This is structured to allow for more
