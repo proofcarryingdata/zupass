@@ -70,7 +70,7 @@ import {
   buildReactPayload,
   chatIDsToChats,
   chatsToForwardTo,
-  chatsToJoin,
+  chatsToJoinV2,
   chatsToPostIn,
   encodePayload,
   encodeTopicData,
@@ -133,7 +133,7 @@ export class TelegramService {
     // Uses the dynamic range feature of Grammy menus https://grammy.dev/plugins/menu#dynamic-ranges
     // /link and /unlink are unstable right now, pending fixes
     eventsMenu.dynamic(eventsToLink);
-    zupassMenu.dynamic(chatsToJoin);
+    zupassMenu.dynamic(chatsToJoinV2);
     anonSendMenu.dynamic(chatsToPostIn);
     forwardMenu.dynamic(chatsToForwardTo);
 
