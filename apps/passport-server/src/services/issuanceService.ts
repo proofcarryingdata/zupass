@@ -837,7 +837,7 @@ export class IssuanceService {
   }
 
   private async issueFrogPCDs(): Promise<SerializedPCD[]> {
-    const FROG_INTERVAL_MS = 1000 * 60 * 10; // one new frog every ten minutes
+    const FROG_INTERVAL_MS = 1000 * 60 * 60 * 24; // one new frog every 24h
     // Images are served from passport-client's web host
     const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
 
