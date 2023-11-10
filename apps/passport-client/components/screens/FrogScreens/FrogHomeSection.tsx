@@ -164,7 +164,7 @@ export function FrogHomeSection() {
 /**
  * Fetch the user's frog crypto state as well as the ability to refetch.
  */
-function useUserFeedState(subscriptions: Subscription[]) {
+export function useUserFeedState(subscriptions: Subscription[]) {
   const [userState, setUserState] =
     useState<FrogCryptoUserStateResponseValue | null>(null);
   const identity = useIdentity();
@@ -180,16 +180,28 @@ function useUserFeedState(subscriptions: Subscription[]) {
     [subscriptions]
   );
   const refreshUserState = useCallback(async () => {
-    const pcd = await credentialManager.requestCredential({
-      signatureType: "sempahore-signature-pcd"
-    });
+    try {
+      const pcd = await credentialManager.requestCredential({
+        signatureType: "sempahore-signature-pcd"
+      });
 
-    const state = await requestFrogCryptoGetUserState(appConfig.zupassServer, {
-      pcd,
-      feedIds: JSON.parse(feedIdsString)
-    });
+      const state = await requestFrogCryptoGetUserState(
+        appConfig.zupassServer,
+        {
+          pcd,
+          feedIds: JSON.parse(feedIdsString)
+        }
+      );
 
-    setUserState(state.value);
+      if (state.error) {
+        console.error("Failed to get user state", state.error);
+        return;
+      }
+
+      setUserState(state.value);
+    } catch (e) {
+      console.error(e);
+    }
   }, [credentialManager, feedIdsString]);
   useEffect(() => {
     refreshUserState();
