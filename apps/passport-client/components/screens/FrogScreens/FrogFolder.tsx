@@ -2,7 +2,7 @@ import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
+import styled, { keyframes } from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
 import {
   DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
@@ -160,54 +160,31 @@ export const SuperFunkyFont = styled.div`
   }
 `;
 
+const bounceKeyframes = keyframes`
+  0% {
+      transform: scale(1, 1) translateY(0);
+    }
+    2% {
+      transform: scale(1.1, 0.9) translateY(0);
+    }
+    5% {
+      transform: scale(0.9, 1.1) translateY(-10px);
+    }
+    10% {
+      transform: scale(1.05, 0.95) translateY(0);
+    }
+    12% {
+      transform: scale(1, 1) translateY(-2px);
+    }
+    15% {
+      transform: scale(1, 1) translateY(0);
+    }
+    100% {
+      transform: scale(1, 1) translateY(0);
+    }
+`;
+
 const BounceText = styled.span<{ delay: number }>`
-  animation: bounce 5s infinite ${(p) => p.delay}s;
-
-  @keyframes bounce {
-    0% {
-      transform: scale(1, 1) translateY(0);
-    }
-    2% {
-      transform: scale(1.1, 0.9) translateY(0);
-    }
-    5% {
-      transform: scale(0.9, 1.1) translateY(-10px);
-    }
-    10% {
-      transform: scale(1.05, 0.95) translateY(0);
-    }
-    12% {
-      transform: scale(1, 1) translateY(-2px);
-    }
-    15% {
-      transform: scale(1, 1) translateY(0);
-    }
-    100% {
-      transform: scale(1, 1) translateY(0);
-    }
-  }
-
-  @-webkit-keyframes bounce {
-    0% {
-      transform: scale(1, 1) translateY(0);
-    }
-    2% {
-      transform: scale(1.1, 0.9) translateY(0);
-    }
-    5% {
-      transform: scale(0.9, 1.1) translateY(-10px);
-    }
-    10% {
-      transform: scale(1.05, 0.95) translateY(0);
-    }
-    12% {
-      transform: scale(1, 1) translateY(-2px);
-    }
-    15% {
-      transform: scale(1, 1) translateY(0);
-    }
-    100% {
-      transform: scale(1, 1) translateY(0);
-    }
-  }
+  animation: ${bounceKeyframes} 5s infinite ${(p) => p.delay}s;
+  -webkit-animation: ${bounceKeyframes} 5s infinite ${(p) => p.delay}s;
 `;
