@@ -5,6 +5,7 @@ import { useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { RippleLoader } from "../../core/RippleLoader";
+import { useUsernameGenerator } from "./useUsername";
 
 /**
  * The Score tab shows the user their score and the leaderboard.
@@ -16,16 +17,22 @@ export function ScoreTab({ score }: { score?: FrogCryptoScore }) {
       setScores(res.value || []);
     });
   }, []);
+  const getUsername = useUsernameGenerator();
 
-  if (!score) {
+  if (!score || !getUsername) {
     return <RippleLoader />;
   }
 
   return (
     <Container>
-      <ScoreTable title="You" scores={[score]} />
+      <ScoreTable title="You" scores={[score]} getUsername={getUsername} />
       {scores.length > 0 && (
-        <ScoreTable title="Leaderboard" scores={scores} myScore={score} />
+        <ScoreTable
+          title="Leaderboard"
+          scores={scores}
+          myScore={score}
+          getUsername={getUsername}
+        />
       )}
     </Container>
   );
@@ -34,8 +41,10 @@ export function ScoreTab({ score }: { score?: FrogCryptoScore }) {
 function ScoreTable({
   title,
   scores,
-  myScore
+  myScore,
+  getUsername
 }: {
+  getUsername: (semaphoreId: string) => string;
   title: string;
   scores: FrogCryptoScore[];
   myScore?: FrogCryptoScore;
@@ -84,7 +93,7 @@ function ScoreTable({
                   }
                 >
                   <td>{score.rank}</td>
-                  <td>{getUserShortId(score.semaphore_id)}</td>
+                  <td>{getUsername(score.semaphore_id)}</td>
                   <td style={{ textAlign: "right" }}>{score.score}</td>
                 </tr>
               ))}
@@ -94,16 +103,6 @@ function ScoreTable({
       </tbody>
     </table>
   );
-}
-
-/**
- * Returns a short username for a given semaphore id.
- *
- * TODO: replace with an unique username generator instead
- */
-function getUserShortId(id: string) {
-  const hexString = Buffer.from(id, "utf8").toString("hex");
-  return `0x${hexString.slice(0, 4)}...${hexString.slice(-4)}`;
 }
 
 const Container = styled.div`
