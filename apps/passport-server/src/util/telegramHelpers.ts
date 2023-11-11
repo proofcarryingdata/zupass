@@ -53,6 +53,7 @@ import {
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
 import { traced } from "../services/telemetryService";
+import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
 
 export type TopicChat = Chat.SupergroupChat | null;
@@ -346,14 +347,37 @@ const editOrSendMessage = async (
   }
 };
 
+const generateProofUrl = async (
+  telegramUserId: number,
+  telegramChatId: string,
+  validEventIds: string[],
+  telegramUsername?: string
+): Promise<string> => {
+  // TODO (veronica): check valid event ids
+  if (validEventIds.length === 1 && validEventIds[0] === "frogs") {
+    return await generateFrogProofUrl(
+      telegramUserId,
+      telegramChatId,
+      telegramUsername
+    );
+  }
+
+  return await generateTicketProofUrl(
+    telegramUserId,
+    telegramChatId,
+    validEventIds,
+    telegramUsername
+  );
+};
+
 const generateTicketProofUrl = async (
-  telegramUserId: string,
+  telegramUserId: number,
   telegramChatId: string,
   validEventIds: string[],
   telegramUsername?: string
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
-    span?.setAttribute("userId", telegramUserId);
+    span?.setAttribute("userId", telegramUserId.toString());
     span?.setAttribute("validEventIds", validEventIds);
 
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
@@ -675,8 +699,8 @@ export const chatsToJoin = async (
         range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
         range.row();
       } else {
-        const proofUrl = await generateTicketProofUrl(
-          userId.toString(),
+        const proofUrl = await generateProofUrl(
+          userId,
           chat.telegramChatID,
           chat.ticketEventIds,
           telegramUsername
@@ -709,8 +733,8 @@ export const chatsToJoinV2 = async (
       if (ctx.session.chatToJoin) {
         const chat = ctx.session.chatToJoin;
         const telegramUsername = ctx.from?.username;
-        const proofUrl = await generateTicketProofUrl(
-          userId.toString(),
+        const proofUrl = await generateProofUrl(
+          userId,
           chat.telegramChatID,
           chat.ticketEventIds,
           telegramUsername
