@@ -5,6 +5,7 @@ import eyeClosed from "./eye-closed.svg";
 import eyeOpen from "./eye-open.svg";
 import folder from "./folder.svg";
 import github from "./github.svg";
+import grid from "./grid.svg";
 import infoAccent from "./info-accent.svg";
 import infoPrimary from "./info-primary.svg";
 import info from "./info.svg";
@@ -32,6 +33,7 @@ export const icons = {
   eyeClosed,
   eyeOpen,
   folder,
+  grid,
   infoAccent,
   infoPrimary,
   info,

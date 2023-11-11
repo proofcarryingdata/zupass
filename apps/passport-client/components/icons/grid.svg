@@ -1,0 +1,9 @@
+<svg id="Layer_1" data-name="Layer 1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 16 16">
+  <defs>
+    <style>.cls-1{fill-rule:evenodd;fill:white}</style>
+  </defs>
+  <path class="cls-1" d="M.5 8.5v-1h15v1z" />
+  <path class="cls-1" d="M8.5 15.5h-1V.5h1z" />
+  <path class="cls-1" d="M.5 3.5v-1h15v1zM7.5 15.5V.5m1 0v15M.5 13.5v-1h15v1zM7.5 15.5V.5m1 0v15" />
+  <path class="cls-1" d="M3.5 15.5h-1V.5h1zM7.5 15.5V.5m1 0v15M13.5 15.5h-1V.5h1z" />
+</svg>
