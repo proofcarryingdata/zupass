@@ -3,7 +3,7 @@ import {
   CheckTicketByIdResult,
   TicketError
 } from "@pcd/passport-interface";
-import { decodeQRPayload, Spacer } from "@pcd/passport-ui";
+import { Spacer, decodeQRPayload } from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
@@ -12,6 +12,7 @@ import {
   devconnectCheckByIdWithOffline,
   devconnectCheckInByIdWithOffline
 } from "../../src/checkin";
+import { loadUsingLaserScanner } from "../../src/localstorage";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -198,6 +199,7 @@ function TicketErrorContent({ error }: { error: TicketError }) {
 }
 
 function TicketError({ error }: { error: TicketError }) {
+  const usingLaserScanner = loadUsingLaserScanner();
   return (
     <>
       <TicketErrorContent error={error} />
@@ -208,7 +210,7 @@ function TicketError({ error }: { error: TicketError }) {
         }}
       >
         <ScanAnotherTicket />
-        <Home />
+        {!usingLaserScanner && <Home />}
       </div>
     </>
   );
@@ -304,6 +306,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
   const [checkinError, setCheckinError] = useState<TicketError | null>(null);
+  const usingLaserScanner = loadUsingLaserScanner();
 
   const onCheckInClick = useCallback(async () => {
     if (inProgress) {
@@ -333,7 +336,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
           <Button onClick={onCheckInClick}>Check In</Button>
           <Spacer h={8} />
           <ScanAnotherTicket />
-          <Home />
+          {!usingLaserScanner && <Home />}
         </>
       )}
       {inProgress && <RippleLoader />}
@@ -345,14 +348,14 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
                 <CheckinSuccess>Checked In ✅</CheckinSuccess>
               </StatusContainer>
               <ScanAnotherTicket />
-              <Home />
+              {!usingLaserScanner && <Home />}
             </>
           ) : (
             <>
               <TicketErrorContent error={checkinError} />
               <Spacer h={16} />
               <ScanAnotherTicket />
-              <Home />
+              {!usingLaserScanner && <Home />}
             </>
           )}
         </>

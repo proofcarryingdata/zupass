@@ -45,7 +45,6 @@ export function ScanScreen() {
       {usingLaserScanner && (
         <>
           <FullWidthRow>
-            <CloseButton />
             <Spacer h={32} />
             <TextCenter>
               Press and hold down the <Orange>orange</Orange> scan button and
