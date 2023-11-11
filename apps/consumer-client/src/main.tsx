@@ -25,8 +25,10 @@ const router = createHashRouter([
     element: <ZkEDdSAEventTicketProof />
   },
   {
-    path: "examples/zu-auth", element: <ZuAuthExample />},
-  { path: "examples/zk-eddsa-frog-proof", element: <ZkEDdSAFrogProof />},
+    path: "examples/zu-auth",
+    element: <ZuAuthExample />
+  },
+  { path: "examples/zk-eddsa-frog-proof", element: <ZkEDdSAFrogProof /> }
 ]);
 
 createRoot(document.getElementById("root") as HTMLElement).render(
