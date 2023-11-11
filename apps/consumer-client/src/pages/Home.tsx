@@ -42,7 +42,7 @@ function Page() {
           </li>
           <li>
             <Link to="/examples/zk-eddsa-frog-proof">
-              Prove and Get a ZK EdDSA Frog Proof from Zupass
+              Prove and Get a ZKEdDSA Frog Proof from Zupass
             </Link>
           </li>
         </ol>

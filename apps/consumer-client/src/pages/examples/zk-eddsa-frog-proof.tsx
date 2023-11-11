@@ -43,7 +43,7 @@ export default function Page() {
   return (
     <>
       <HomeLink />
-      <h2>ZK EdDSA Frog Proof</h2>
+      <h2>ZKEdDSA Frog Proof</h2>
       <p>
         This page shows a working example of an integration with Zupass which
         requests and verifies that the user has an EdDSA-signed frog, without
@@ -61,13 +61,13 @@ export default function Page() {
           }
           disabled={valid}
         >
-          Request ZK EdDSA Frog Proof from Zupass
+          Request ZKEdDSA Frog Proof from Zupass
         </button>
         <br />
         <br />
         {!!pcd && (
           <>
-            <p>Got ZK EdDSA Frog Proof from Zupass</p>
+            <p>Got ZKEdDSA Frog Proof from Zupass</p>
             <CollapsableCode code={JSON.stringify(pcd, null, 2)} />
             {valid === undefined && <p>❓ Proof verifying</p>}
             {valid === false && <p>❌ Proof is invalid</p>}
@@ -142,7 +142,7 @@ export function openZKEdDSAFrogPopup(
     typeof ZKEdDSAFrogPCDPackage
   >(urlToZupassWebsite, popupUrl, ZKEdDSAFrogPCDPackage.name, args, {
     genericProveScreen: true,
-    title: "ZK EdDSA Frog Proof",
+    title: "ZKEdDSA Frog Proof",
     description: "zk eddsa frog pcd request"
   });
 
