@@ -8,6 +8,8 @@ import {
   ZKEdDSAFrogPCDArgs,
   ZKEdDSAFrogPCDPackage
 } from "@pcd/zk-eddsa-frog-pcd";
+import { Pool } from "postgres-pool";
+import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 
@@ -83,9 +85,10 @@ export const generateFrogProofUrl = async (
  * Verify that a PCD relates to a frog. If so, invite the user to the chat.
  */
 export const handleFrogVerification = async (
+  dbPool: Pool,
   serializedZKEdDSAFrogPCD: string,
   telegramUserId: number,
-  telegramChatId: string,
+  telegramChatId: number,
   telegramUsername?: string
 ): Promise<void> => {
   return traced("telegram", "handleFrogVerification", async (span) => {
@@ -101,8 +104,6 @@ export const handleFrogVerification = async (
     }
 
     // Check signer
-    let signerMatch = false;
-
     if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
       throw new Error(`Missing server eddsa private key .env value`);
 
@@ -111,20 +112,37 @@ export const handleFrogVerification = async (
       process.env.SERVER_EDDSA_PRIVATE_KEY
     );
 
-    signerMatch =
+    const signerMatch =
       pcd.claim.signerPublicKey[0] === SERVER_EDDSA_PUBKEY[0] &&
       pcd.claim.signerPublicKey[1] === SERVER_EDDSA_PUBKEY[1];
+    if (!signerMatch) {
+      throw new Error(
+        `PCD claim signer public key ${pcd.claim.signerPublicKey} does not match server public key ${SERVER_EDDSA_PUBKEY}`
+      );
+    }
     span?.setAttribute("signerMatch", signerMatch);
 
     // Check watermark
     const watermarkMatch = pcd.claim.watermark === telegramUserId.toString();
+    if (!watermarkMatch) {
+      throw new Error(
+        `Telegram User id ${telegramUserId} does not match given watermark ${pcd.claim.watermark}`
+      );
+    }
     span?.setAttribute("watermarkMatch", watermarkMatch);
+
+    // Check owner semaphore id
+    const { ownerSemaphoreId } = pcd.claim.partialFrog;
+    if (!ownerSemaphoreId) {
+      throw new Error(
+        `User ${telegramUserId} did not reveal their semaphore id`
+      );
+    }
+    span?.setAttribute("semaphoreId", ownerSemaphoreId);
 
     if (
       // TODO: wrap in a MultiProcessService?
-      !(await ZKEdDSAFrogPCDPackage.verify(pcd)) ||
-      !signerMatch ||
-      !watermarkMatch
+      !(await ZKEdDSAFrogPCDPackage.verify(pcd))
     ) {
       throw new Error(`Could not verify PCD for ${telegramUserId}`);
     }
@@ -133,6 +151,16 @@ export const handleFrogVerification = async (
     logger(
       `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${telegramChatId}` +
         (telegramUsername && `, username ${telegramUsername}`)
+    );
+
+    // We've verified that the chat exists, now add the user to our list.
+    // This will be important later when the user requests to join.
+    await insertTelegramVerification(
+      dbPool,
+      telegramUserId,
+      telegramChatId,
+      ownerSemaphoreId,
+      telegramUsername
     );
   });
 };
