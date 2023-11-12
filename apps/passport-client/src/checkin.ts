@@ -6,9 +6,13 @@ import {
   requestCheckInById,
   requestCheckTicketById
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
+import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
@@ -18,6 +22,34 @@ import {
   saveCheckinCredential,
   saveOfflineTickets
 } from "./localstorage";
+
+export async function getOrGenerateCheckinCredential(
+  identity: Identity
+): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+  let cachedSignaturePCD = loadCheckinCredential();
+  if (!cachedSignaturePCD) {
+    cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
+      await SemaphoreSignaturePCDPackage.prove({
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await SemaphoreIdentityPCDPackage.serialize(
+            await SemaphoreIdentityPCDPackage.prove({
+              identity
+            })
+          )
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: ISSUANCE_STRING
+        }
+      })
+    );
+
+    saveCheckinCredential(cachedSignaturePCD);
+  }
+
+  return cachedSignaturePCD;
+}
 
 /**
  * For debugging purposes, makes the checkin flow go through the offline-mode
@@ -144,31 +176,11 @@ export async function devconnectCheckByIdWithOffline(
       }
     };
   } else {
-    let cachedSignaturePCD = await loadCheckinCredential();
-    if (!cachedSignaturePCD) {
-      cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
-        await SemaphoreSignaturePCDPackage.prove({
-          identity: {
-            argumentType: ArgumentTypeName.PCD,
-            value: await SemaphoreIdentityPCDPackage.serialize(
-              await SemaphoreIdentityPCDPackage.prove({
-                identity: stateContext.getState().identity
-              })
-            )
-          },
-          signedMessage: {
-            argumentType: ArgumentTypeName.String,
-            value: ISSUANCE_STRING
-          }
-        })
-      );
-
-      saveCheckinCredential(cachedSignaturePCD);
-    }
-
     return await requestCheckTicketById(appConfig.zupassServer, {
       ticketId,
-      signature: cachedSignaturePCD
+      signature: await getOrGenerateCheckinCredential(
+        stateContext.getState().identity
+      )
     });
   }
 }
@@ -201,31 +213,11 @@ export async function devconnectCheckInByIdWithOffline(
       value: undefined
     };
   } else {
-    let cachedSignaturePCD = loadCheckinCredential();
-    if (!cachedSignaturePCD) {
-      cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
-        await SemaphoreSignaturePCDPackage.prove({
-          identity: {
-            argumentType: ArgumentTypeName.PCD,
-            value: await SemaphoreIdentityPCDPackage.serialize(
-              await SemaphoreIdentityPCDPackage.prove({
-                identity: stateContext.getState().identity
-              })
-            )
-          },
-          signedMessage: {
-            argumentType: ArgumentTypeName.String,
-            value: ISSUANCE_STRING
-          }
-        })
-      );
-
-      saveCheckinCredential(cachedSignaturePCD);
-    }
-
     return await requestCheckInById(appConfig.zupassServer, {
       ticketId,
-      checkerProof: cachedSignaturePCD
+      checkerProof: await getOrGenerateCheckinCredential(
+        stateContext.getState().identity
+      )
     });
   }
 }
