@@ -1,17 +1,60 @@
 import {
-  checkinTicketById,
-  checkTicketById,
   CheckTicketByIdResult,
   CheckTicketInByIdResult,
-  OfflineDevconnectTicket
+  ISSUANCE_STRING,
+  OfflineDevconnectTicket,
+  requestCheckInById,
+  requestCheckTicketById
 } from "@pcd/passport-interface";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
+import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
 import {
+  loadCheckinCredential,
   saveCheckedInOfflineTickets,
+  saveCheckinCredential,
   saveOfflineTickets
 } from "./localstorage";
+
+export async function getOrGenerateCheckinCredential(
+  identity: Identity
+): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+  let cachedSignaturePCD = loadCheckinCredential(
+    identity.getCommitment().toString()
+  );
+  if (!cachedSignaturePCD) {
+    cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
+      await SemaphoreSignaturePCDPackage.prove({
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          value: await SemaphoreIdentityPCDPackage.serialize(
+            await SemaphoreIdentityPCDPackage.prove({
+              identity
+            })
+          )
+        },
+        signedMessage: {
+          argumentType: ArgumentTypeName.String,
+          value: ISSUANCE_STRING
+        }
+      })
+    );
+
+    saveCheckinCredential(
+      identity.getCommitment().toString(),
+      cachedSignaturePCD
+    );
+  }
+
+  return cachedSignaturePCD;
+}
 
 /**
  * For debugging purposes, makes the checkin flow go through the offline-mode
@@ -138,11 +181,12 @@ export async function devconnectCheckByIdWithOffline(
       }
     };
   } else {
-    return await checkTicketById(
-      appConfig.zupassServer,
+    return await requestCheckTicketById(appConfig.zupassServer, {
       ticketId,
-      stateContext.getState().identity
-    );
+      signature: await getOrGenerateCheckinCredential(
+        stateContext.getState().identity
+      )
+    });
   }
 }
 
@@ -174,10 +218,11 @@ export async function devconnectCheckInByIdWithOffline(
       value: undefined
     };
   } else {
-    return await checkinTicketById(
-      appConfig.zupassServer,
+    return await requestCheckInById(appConfig.zupassServer, {
       ticketId,
-      stateContext.getState().identity
-    );
+      checkerProof: await getOrGenerateCheckinCredential(
+        stateContext.getState().identity
+      )
+    });
   }
 }
