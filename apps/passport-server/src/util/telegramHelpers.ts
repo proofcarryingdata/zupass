@@ -102,7 +102,7 @@ export const getGroupChat = async (
 const privateChatCommands: BotCommandWithAnon[] = [
   {
     command: "/start",
-    description: "Join a group with a proof of ticket",
+    description: "Join a group with a proof of ticket or frog",
     isAnon: false
   },
   {
@@ -353,8 +353,10 @@ const generateProofUrl = async (
   validEventIds: string[],
   telegramUsername?: string
 ): Promise<string> => {
-  // TODO (veronica): check valid event ids
-  if (validEventIds.length === 1 && validEventIds[0] === "frogs") {
+  if (
+    process.env.FROG_OWNERS_TELEGRAM_CHAT_ID &&
+    telegramChatId === process.env.FROG_OWNERS_TELEGRAM_CHAT_ID
+  ) {
     return await generateFrogProofUrl(
       telegramUserId,
       telegramChatId,

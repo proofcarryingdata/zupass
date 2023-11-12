@@ -244,7 +244,7 @@ yargs
       const activeItemIds = [itemId];
       const checkinListId = "0";
       const chatId: number = parseInt(
-        process.env.SCRATCH_FROG_OWNERS_TELEGRAM_CHAT_ID!
+        process.env.FROG_OWNERS_TELEGRAM_CHAT_ID!
       );
 
       logger(`Creating event and link with chat id: ${chatId}`);
