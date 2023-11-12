@@ -6,6 +6,7 @@ import {
   Rarity,
   Temperament
 } from "@pcd/eddsa-frog-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -135,7 +136,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
 
     const claim = pcd.claim;
     expect(claim.frogOmitOwner.frogId).to.be.equal(0);
-    expect(claim.signerPublicKey).to.not.be.undefined;
+
+    const pubKey = await getEdDSAPublicKey(prvKey);
+    expect(claim.signerPublicKey).to.be.deep.equal(pubKey);
+
     expect(claim.externalNullifier).to.be.equal(EXTERNAL_NULLIFIER.toString());
     expect(claim.nullifierHash).to.be.not.be.undefined;
     expect(claim.watermark).to.be.equal(WATERMARK.toString());

@@ -280,7 +280,7 @@ function claimFromProofResult(
 
   return {
     frogOmitOwner,
-    signerPublicKey: [publicSignals[13], publicSignals[14]],
+    signerPublicKey: frogPCD.proof.eddsaPCD.claim.publicKey,
     externalNullifier: publicSignals[15],
     watermark: publicSignals[16],
     nullifierHash: publicSignals[0]
@@ -342,8 +342,8 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
     "0",
     "0",
     "0",
-    pcd.claim.signerPublicKey[0],
-    pcd.claim.signerPublicKey[1],
+    hexToBigInt(pcd.claim.signerPublicKey[0]).toString(),
+    hexToBigInt(pcd.claim.signerPublicKey[1]).toString(),
     pcd.claim.externalNullifier,
     pcd.claim.watermark
   ];
