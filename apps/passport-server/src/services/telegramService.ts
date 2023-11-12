@@ -1004,26 +1004,37 @@ export class TelegramService {
     telegramUsername?: string
   ): Promise<void> {
     return traced("telegram", "handleVerification", async (span) => {
+      const parsed = JSON.parse(serializedPCD) as SerializedPCD;
+      if (parsed.type == ZKEdDSAEventTicketPCDTypeName) {
+        await this.handleTicketVerification(
+          serializedPCD,
+          telegramUserId,
+          telegramChatId,
+          telegramUsername
+        );
+      } else if (parsed.type == ZKEdDSAFrogPCDTypeName) {
+        await handleFrogVerification(
+          serializedPCD,
+          telegramUserId,
+          telegramChatId,
+          telegramUsername
+        );
+      }
+
       span?.setAttribute("chatId", telegramChatId);
       const chat = await getGroupChat(this.authBot.api, telegramChatId);
       span?.setAttribute("chatTitle", chat.title);
 
-      const parsed = JSON.parse(serializedPCD) as SerializedPCD;
-      if (parsed.type == ZKEdDSAEventTicketPCDTypeName) {
-        return await this.handleTicketVerification(
-          serializedPCD,
-          telegramUserId,
-          chat,
-          telegramUsername
-        );
-      } else if (parsed.type == ZKEdDSAFrogPCDTypeName) {
-        return await handleFrogVerification(
-          serializedPCD,
-          telegramUserId,
-          chat,
-          telegramUsername
-        );
-      }
+      // We've verified that the chat exists, now add the user to our list.
+      // This will be important later when the user requests to join.
+      // TODO (Veronica): semaphore_id???
+      await insertTelegramVerification(
+        this.context.dbPool,
+        telegramUserId,
+        chat.id,
+        "semaphore_id",
+        telegramUsername
+      );
 
       // Send invite link
       await this.sendInviteLink(telegramUserId, chat);
@@ -1038,7 +1049,7 @@ export class TelegramService {
   public async handleTicketVerification(
     serializedZKEdDSATicket: string,
     telegramUserId: number,
-    chat: Chat.SupergroupChat,
+    telegramChatId: string,
     telegramUsername?: string
   ): Promise<void> {
     return traced("telegram", "handleTicketVerification", async (span) => {
@@ -1084,7 +1095,7 @@ export class TelegramService {
 
       const eventsByChat = await fetchTelegramEventsByChatId(
         this.context.dbPool,
-        chat.id
+        telegramChatId
       );
       if (eventsByChat.length == 0)
         throw new Error(`No valid events found for given chat`);
@@ -1093,18 +1104,8 @@ export class TelegramService {
       }
 
       logger(
-        `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat.id}` +
+        `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${telegramChatId}` +
           (telegramUsername && `, username ${telegramUsername}`)
-      );
-
-      // We've verified that the chat exists, now add the user to our list.
-      // This will be important later when the user requests to join.
-      await insertTelegramVerification(
-        this.context.dbPool,
-        telegramUserId,
-        chat.id,
-        attendeeSemaphoreId,
-        telegramUsername
       );
     });
   }

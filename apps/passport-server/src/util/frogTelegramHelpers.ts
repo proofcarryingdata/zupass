@@ -8,7 +8,6 @@ import {
   ZKEdDSAFrogPCDArgs,
   ZKEdDSAFrogPCDPackage
 } from "@pcd/zk-eddsa-frog-pcd";
-import { Chat } from "grammy/types";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 
@@ -86,7 +85,7 @@ export const generateFrogProofUrl = async (
 export const handleFrogVerification = async (
   serializedZKEdDSAFrogPCD: string,
   telegramUserId: number,
-  chat: Chat.SupergroupChat,
+  telegramChatId: string,
   telegramUsername?: string
 ): Promise<void> => {
   return traced("telegram", "handleFrogVerification", async (span) => {
@@ -132,7 +131,7 @@ export const handleFrogVerification = async (
     span?.setAttribute("verifiedPCD", true);
 
     logger(
-      `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat.id}` +
+      `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${telegramChatId}` +
         (telegramUsername && `, username ${telegramUsername}`)
     );
   });
