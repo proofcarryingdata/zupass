@@ -1,7 +1,7 @@
 import {
   createStorageBackedCredentialCache,
-  offlineTickets,
-  offlineTicketsCheckin
+  requestOfflineTickets,
+  requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -39,6 +39,7 @@ import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
+import { getOrGenerateCheckinCredential } from "../src/checkin";
 import {
   Action,
   StateContext,
@@ -143,6 +144,17 @@ class App extends React.Component<object, AppState> {
     this.setupPolling();
     this.startJobSyncOfflineCheckins();
     this.jobCheckConnectivity();
+    this.generateCheckinCredential();
+  };
+
+  generateCheckinCredential = async () => {
+    // This ensures that the check-in credential is pre-cached before the
+    // first check-in attempt.
+    try {
+      await getOrGenerateCheckinCredential(this.state.identity);
+    } catch (e) {
+      console.log("Could not get or generate checkin credential:", e);
+    }
   };
 
   jobCheckConnectivity = async () => {
@@ -263,10 +275,15 @@ class App extends React.Component<object, AppState> {
     }
 
     if (this.state.checkedinOfflineDevconnectTickets.length > 0) {
-      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+      const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
         appConfig.zupassServer,
-        this.state.identity,
-        this.state.checkedinOfflineDevconnectTickets
+        {
+          checkedOfflineInDevconnectTicketIDs:
+            this.state.checkedinOfflineDevconnectTickets.map((t) => t.id),
+          checkerProof: await getOrGenerateCheckinCredential(
+            this.state.identity
+          )
+        }
       );
 
       if (checkinOfflineTicketsResult.success) {
@@ -278,9 +295,11 @@ class App extends React.Component<object, AppState> {
       }
     }
 
-    const offlineTicketsResult = await offlineTickets(
+    const offlineTicketsResult = await requestOfflineTickets(
       appConfig.zupassServer,
-      this.state.identity
+      {
+        checkerProof: await getOrGenerateCheckinCredential(this.state.identity)
+      }
     );
 
     if (offlineTicketsResult.success) {
