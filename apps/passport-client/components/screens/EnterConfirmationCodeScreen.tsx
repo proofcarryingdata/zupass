@@ -22,6 +22,7 @@ import { ResendCodeButton } from "../shared/ResendCodeButton";
 export function EnterConfirmationCodeScreen() {
   const query = useQuery();
   const email = query?.get("email");
+  const isReset = query?.get("isReset");
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");
   const [error, setError] = useState<string | undefined>();
@@ -80,7 +81,14 @@ export function EnterConfirmationCodeScreen() {
           <H2>Enter Confirmation Code</H2>
           <Spacer h={24} />
           Check your inbox for an email from <span>{ZUPASS_SENDER_EMAIL}</span>.
-          Use the most recent code you received to continue.
+          Use the most recent code you received to continue. If you don't see
+          the email in your inbox, make sure to check your spam folder.
+          <Spacer h={16} />
+          {isReset && (
+            <>
+              Once you reset your account, you'll lose access to all your PCDs!
+            </>
+          )}
         </TextCenter>
         <Spacer h={24} />
         <CenterColumn>
