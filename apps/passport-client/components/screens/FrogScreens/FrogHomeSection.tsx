@@ -217,6 +217,7 @@ const Container = styled.div`
   height: 100%;
   max-width: 100%;
   font-family: monospace;
+  font-variant-numeric: tabular-nums;
 
   display: flex;
   flex-direction: column;
