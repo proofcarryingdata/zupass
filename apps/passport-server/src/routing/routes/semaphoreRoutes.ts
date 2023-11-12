@@ -110,13 +110,6 @@ export function initSemaphoreRoutes(
 
     const result = serializeSemaphoreGroup(namedGroup.group, namedGroup.name);
 
-    // Removing a member from a Semaphore group causes their entry in the
-    // members list to be replaced with a "zero value", so we should filter
-    // out removed members before sending the response.
-    result.members = result.members.filter(
-      (m) => m !== namedGroup.group.zeroValue.toString()
-    );
-
     res.json(result satisfies SerializedSemaphoreGroup);
   });
 }
