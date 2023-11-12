@@ -119,7 +119,8 @@ export function ChangePasswordScreen() {
           <H2>{isChangePassword ? "Change" : "Add"} Password</H2>
           <Spacer h={24} />
           Make sure that your {isChangePassword ? "new" : ""} password is
-          secure, unique, and memorable.
+          secure, unique, and memorable. If you forget your password, you'll
+          have to reset your account, and you will lose access to all your PCDs.
         </TextCenter>
         <Spacer h={24} />
         {isChangePassword && (
