@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { loadFull } from "tsparticles";
 import {
   Container,
@@ -119,6 +119,7 @@ export function useFrogParticles(ref: React.RefObject<HTMLDivElement> | null) {
 
 export function useFrogConfetti() {
   const [container, setContainer] = useState<Container | null>(null);
+  const mounted = useRef(true);
   // destroy confetti when component unmounts. this stops the confetti but if we
   // don't do this, confetii plays again when we switch back to GetFrog
   useEffect(() => {
@@ -130,6 +131,12 @@ export function useFrogConfetti() {
       container.destroy();
     };
   }, [container]);
+  // once the component unmounts, we don't want to animate the confetti
+  useEffect(() => {
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
 
   const [ready, setReady] = useState(false);
   useEffect(() => {
@@ -208,6 +215,11 @@ export function useFrogConfetti() {
         destroy: "min"
       }
     };
+
+    // don't animate confetti if component unmounted
+    if (!mounted.current) {
+      return;
+    }
 
     if (container && !container.destroyed) {
       const alias = container as EmitterContainer;
@@ -330,7 +342,17 @@ export function useFrogConfetti() {
           }
         }
       })
-      .then(setContainer);
+      .then((container) => {
+        if (mounted.current) {
+          setContainer(container);
+        } else {
+          // if component unmounted while confetti was loading, destroy it in 5
+          // seconds for animation to play
+          setTimeout(() => {
+            container.destroy();
+          }, 5000);
+        }
+      });
   }, [container]);
 
   return ready ? confetti : null;
