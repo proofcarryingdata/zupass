@@ -7,7 +7,11 @@ import { Spacer, decodeQRPayload } from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
-import { useQuery, useStateContext } from "../../src/appHooks";
+import {
+  useLaserScannerKeystrokeInput,
+  useQuery,
+  useStateContext
+} from "../../src/appHooks";
 import {
   devconnectCheckByIdWithOffline,
   devconnectCheckInByIdWithOffline
@@ -24,6 +28,7 @@ import {
 } from "../shared/PCDCard";
 
 export function DevconnectCheckinByIdScreen() {
+  useLaserScannerKeystrokeInput();
   const { loading: verifyingTicketId, ticketId } = useTicketId();
 
   let content = null;
