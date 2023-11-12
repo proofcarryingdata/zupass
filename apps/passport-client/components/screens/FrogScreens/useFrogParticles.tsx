@@ -186,8 +186,8 @@ export function useFrogConfetti() {
         acceleration: 9.81
       },
       speed: {
-        min: 30,
-        max: 60
+        min: 20,
+        max: 40
       },
       decay: 0.05,
       direction: "none",
