@@ -65,7 +65,7 @@ function SendEmailVerification({ email }: { email: string }) {
         email,
         token
       );
-      setVerifyingCode(false);
+
       if (verifyTokenResult.success) {
         const encryptionKey = verifyTokenResult.value?.encryptionKey;
         if (encryptionKey) {
@@ -78,7 +78,7 @@ function SendEmailVerification({ email }: { email: string }) {
             setError("An error occurred while downloading encrypted storage.");
           }
 
-          dispatch({
+          await dispatch({
             type: "load-after-login",
             storage: storageResult.value,
             encryptionKey
@@ -91,6 +91,8 @@ function SendEmailVerification({ email }: { email: string }) {
       } else {
         setError("Invalid confirmation code");
       }
+
+      setVerifyingCode(false);
     },
     [email, verifyingCode, dispatch]
   );
