@@ -41,7 +41,7 @@ export const generateFrogProofUrl = async (
       },
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
-        value: telegramChatId,
+        value: undefined,
         userProvided: false
       },
       watermark: {
@@ -117,11 +117,6 @@ export const handleFrogVerification = async (
       pcd.claim.signerPublicKey[1] === SERVER_EDDSA_PUBKEY[1];
     span?.setAttribute("signerMatch", signerMatch);
 
-    // Check external nullifier
-    const externalNullifierMatch =
-      pcd.claim.externalNullifier === chat.id.toString();
-    span?.setAttribute("externalNullifierMatch", externalNullifierMatch);
-
     // Check watermark
     const watermarkMatch = pcd.claim.watermark === telegramUserId.toString();
     span?.setAttribute("watermarkMatch", watermarkMatch);
@@ -130,7 +125,6 @@ export const handleFrogVerification = async (
       // TODO: wrap in a MultiProcessService?
       !(await ZKEdDSAFrogPCDPackage.verify(pcd)) ||
       !signerMatch ||
-      !externalNullifierMatch ||
       !watermarkMatch
     ) {
       throw new Error(`Could not verify PCD for ${telegramUserId}`);
