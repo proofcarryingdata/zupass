@@ -20,7 +20,7 @@ import { loadUsingLaserScanner } from "./localstorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
-import { getLastValidURL, maybeRedirect } from "./util";
+import { getLastValidVerifyUrl, maybeRedirect } from "./util";
 
 export function usePCDCollectionWithHash(): {
   pcds: PCDCollection;
@@ -208,11 +208,13 @@ export function useLaserScannerKeystrokeInput() {
     function handleKeyDown(event: KeyboardEvent) {
       if (!usingLaserScanner) return;
       if (event.key === "Enter") {
-        // Check URL regex and navigate to the last match, if it exists
-        const url = getLastValidURL(typedText);
-        const newLoc = maybeRedirect(url);
-        if (newLoc) {
-          nav(newLoc);
+        // Get the verify URL from the keystroke input and navigate to the last match, if it exists
+        const url = getLastValidVerifyUrl(typedText);
+        if (url) {
+          const newLoc = maybeRedirect(url);
+          if (newLoc) {
+            nav(newLoc);
+          }
         }
       }
       // Ignore characters that could not be in a valid URL

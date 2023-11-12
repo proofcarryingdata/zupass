@@ -2,6 +2,7 @@ import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
 import validator from "email-validator";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
@@ -57,20 +58,8 @@ export function validateEmail(email: string): boolean {
   return validator.validate(email);
 }
 
-// Given an input string, fetches the last substring that matches a valid http(s) URL
-export function getLastValidURL(inputString: string) {
-  const urlRegex = /(https?:\/\/[^\s/$.?#].[^\s]*)$/i;
-  const matches = inputString.match(urlRegex);
-
-  if (matches) {
-    return matches[matches.length - 1];
-  } else {
-    return null;
-  }
-}
-
-export function maybeRedirect(text: string): string | null {
-  const verifyUrlPrefixes = [
+function getVerifyUrlPrefixes(): string[] {
+  return [
     `${window.location.origin}/#/verify`,
     `${window.location.origin}#/verify`,
     `${window.location.origin}/#/checkin`,
@@ -78,7 +67,23 @@ export function maybeRedirect(text: string): string | null {
     `${window.location.origin}/#/checkin-by-id`,
     `${window.location.origin}#/checkin-by-id`
   ];
-  if (verifyUrlPrefixes.find((prefix) => text.startsWith(prefix))) {
+}
+
+// Given an input string, check if there exists a ticket verify URL within it.
+// If so, return the last occurance of a verify URL. If not, return null.
+export function getLastValidVerifyUrl(inputString: string) {
+  const lastValidUrlStartIdx = _.chain(getVerifyUrlPrefixes())
+    .map((verifyUrlPrefix) => inputString.lastIndexOf(verifyUrlPrefix))
+    .max()
+    .value();
+  if (lastValidUrlStartIdx !== -1) {
+    return inputString.slice(lastValidUrlStartIdx);
+  }
+  return null;
+}
+
+export function maybeRedirect(text: string): string | null {
+  if (getVerifyUrlPrefixes().find((prefix) => text.startsWith(prefix))) {
     const hash = text.substring(text.indexOf("#") + 1);
     console.log(`Redirecting to ${hash}`);
     return hash;
