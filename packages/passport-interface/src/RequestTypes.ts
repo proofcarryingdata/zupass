@@ -695,6 +695,7 @@ export interface OfflineDevconnectTicket {
   ticketName: string;
   checkinTimestamp?: string;
   checker: string | null;
+  is_consumed?: boolean;
 }
 
 /**

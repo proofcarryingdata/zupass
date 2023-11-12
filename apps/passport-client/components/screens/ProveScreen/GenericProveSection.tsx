@@ -1,4 +1,5 @@
 import {
+  ISSUANCE_STRING,
   PendingPCD,
   ProveOptions,
   requestProveOnServer
@@ -10,6 +11,10 @@ import {
   SerializedPCD,
   isPCDArgument
 } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDTypeName
+} from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -21,6 +26,7 @@ import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { ErrorContainer } from "../../core/error";
 import { PCDArgs } from "../../shared/PCDArgs";
 
 /**
@@ -72,6 +78,15 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     // Give the UI has a chance to update to the 'loading' state before the
     // potentially blocking proving operation kicks off
     await nextFrame();
+
+    if (pcdType === SemaphoreSignaturePCDTypeName) {
+      const signatureArgs = args as ArgsOf<typeof SemaphoreSignaturePCDPackage>;
+      if (signatureArgs?.signedMessage?.value === ISSUANCE_STRING) {
+        setError("Can't sign this message");
+        setProving(false);
+        return;
+      }
+    }
 
     if (options?.proveOnServer === true) {
       const pendingPCDResult = await requestProveOnServer(
@@ -142,15 +157,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
 const Description = styled.div`
   font-size: 14px;
   color: rgba(var(--white-rgb), 0.8);
-`;
-
-const ErrorContainer = styled.div`
-  width: 100%;
-  padding: 16px;
-  background-color: white;
-  color: var(--danger);
-  border-radius: 16px;
-  border: 1px solid var(--danger);
 `;
 
 const Container = styled.div`

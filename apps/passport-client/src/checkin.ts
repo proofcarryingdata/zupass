@@ -148,7 +148,7 @@ export async function devconnectCheckByIdWithOffline(
     const ticket = getOfflineDevconnectTicket(ticketId, stateContext);
 
     if (ticket) {
-      if (ticket.checkinTimestamp) {
+      if (ticket.is_consumed) {
         return {
           success: false,
           error: {

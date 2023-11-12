@@ -1,4 +1,5 @@
 import {
+  ISSUANCE_STRING,
   PCDGetRequest,
   ProveOptions,
   requestProveOnServer,
@@ -22,6 +23,7 @@ import {
 } from "../../../src/passportRequest";
 import { getHost, getOrigin, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
+import { ErrorContainer } from "../../core/error";
 import { RippleLoader } from "../../core/RippleLoader";
 
 export function SemaphoreSignatureProveScreen({
@@ -33,7 +35,7 @@ export function SemaphoreSignatureProveScreen({
   const self = useSelf();
   const identity = useIdentity();
   const [proving, setProving] = useState(false);
-  const [_error, setError] = useState<string | undefined>();
+  const [error, setError] = useState<string | undefined>();
 
   const onProve = useCallback(async () => {
     setProving(true);
@@ -41,6 +43,12 @@ export function SemaphoreSignatureProveScreen({
     // Give the UI has a chance to update to the 'loading' state before the
     // potentially blocking proving operation kicks off
     await nextFrame();
+
+    if (req.args.signedMessage.value === ISSUANCE_STRING) {
+      setError("Can't sign this message");
+      setProving(false);
+      return;
+    }
 
     const args = await fillArgs(
       identity,
@@ -86,7 +94,9 @@ export function SemaphoreSignatureProveScreen({
       </p>
     );
 
-    if (!proving) {
+    if (error) {
+      lines.push(<ErrorContainer>{error}</ErrorContainer>);
+    } else if (!proving) {
       lines.push(<Button onClick={onProve}>Continue</Button>);
     } else {
       lines.push(<RippleLoader />);
@@ -98,7 +108,10 @@ export function SemaphoreSignatureProveScreen({
         Signing message: <b>{req.args.signedMessage.value}</b>
       </p>
     );
-    if (!proving) {
+
+    if (error) {
+      lines.push(<ErrorContainer>{error}</ErrorContainer>);
+    } else if (!proving) {
       lines.push(<Button onClick={onProve}>Prove</Button>);
     } else {
       lines.push(<RippleLoader />);

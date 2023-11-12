@@ -233,7 +233,8 @@ describe("offline checkin database queries should work", function () {
               eventName: progCryptoEventName,
               ticketName: gaItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user1AwGA.id,
@@ -242,7 +243,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: gaItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user2ProgCryptoGA.id,
@@ -251,7 +253,8 @@ describe("offline checkin database queries should work", function () {
               eventName: progCryptoEventName,
               ticketName: gaItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user2ProgCryptoSuper.id,
@@ -260,7 +263,8 @@ describe("offline checkin database queries should work", function () {
               eventName: progCryptoEventName,
               ticketName: superItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user2AwSuper.id,
@@ -269,7 +273,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: superItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user3AwSuper.id,
@@ -278,7 +283,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: superItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             }
           ]
         }
@@ -298,7 +304,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: gaItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user2AwSuper.id,
@@ -307,7 +314,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: superItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             },
             {
               id: user3AwSuper.id,
@@ -316,7 +324,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: superItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             }
           ]
         }
@@ -348,7 +357,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: gaItemName,
               checkinTimestamp: now.toISOString(),
-              checker: user3.email
+              checker: user3.email,
+              is_consumed: true
             },
             {
               id: user2AwSuper.id,
@@ -357,7 +367,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: superItemName,
               checkinTimestamp: now.toISOString(),
-              checker: user3.email
+              checker: user3.email,
+              is_consumed: true
             },
             {
               id: user3AwSuper.id,
@@ -366,7 +377,8 @@ describe("offline checkin database queries should work", function () {
               eventName: awEventName,
               ticketName: superItemName,
               checkinTimestamp: undefined,
-              checker: null
+              checker: null,
+              is_consumed: false
             }
           ]
         }
