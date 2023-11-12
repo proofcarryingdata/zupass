@@ -12,6 +12,7 @@ import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { ZKEdDSAFrogPCDPackage } from "@pcd/zk-eddsa-frog-pcd";
 import { makeEncodedVerifyLink } from "./qr";
 
 let pcdPackages: Promise<PCDPackage[]> | undefined;
@@ -58,6 +59,11 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey"
   });
 
+  await ZKEdDSAFrogPCDPackage.init({
+    wasmFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.wasm",
+    zkeyFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.zkey"
+  });
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -68,6 +74,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     RSATicketPCDPackage,
     EdDSAPCDPackage,
     EdDSAFrogPCDPackage,
+    ZKEdDSAFrogPCDPackage,
     EdDSATicketPCDPackage,
     ZKEdDSAEventTicketPCDPackage,
     RSAImagePCDPackage,

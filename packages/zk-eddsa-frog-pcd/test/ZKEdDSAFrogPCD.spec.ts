@@ -6,6 +6,7 @@ import {
   Rarity,
   Temperament
 } from "@pcd/eddsa-frog-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
@@ -41,6 +42,7 @@ const prvKey =
   "0001020304050607080900010203040506070809000102030405060708090001";
 
 const EXTERNAL_NULLIFIER = BigInt(42);
+const WATERMARK = BigInt(6);
 
 describe("ZKEdDSAFrogPCD should work", function () {
   this.timeout(1000 * 30);
@@ -76,9 +78,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     return await SemaphoreIdentityPCDPackage.serialize(identityPCD);
   }
 
-  async function toArgs(
-    frogData: IFrogData
-  ): Promise<ZKEdDSAFrogPCDArgs> {
+  async function toArgs(frogData: IFrogData): Promise<ZKEdDSAFrogPCDArgs> {
     const frogPCD = await EdDSAFrogPCDPackage.prove({
       data: {
         value: frogData,
@@ -94,8 +94,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
       }
     });
 
-    const serializedFrogPCD =
-      await EdDSAFrogPCDPackage.serialize(frogPCD);
+    const serializedFrogPCD = await EdDSAFrogPCDPackage.serialize(frogPCD);
 
     const serializedIdentityPCD = await makeSerializedIdentityPCD(identity1);
 
@@ -112,6 +111,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
       },
       externalNullifier: {
         value: EXTERNAL_NULLIFIER.toString(),
+        argumentType: ArgumentTypeName.BigInt
+      },
+      watermark: {
+        value: WATERMARK.toString(),
         argumentType: ArgumentTypeName.BigInt
       }
     };
@@ -133,9 +136,13 @@ describe("ZKEdDSAFrogPCD should work", function () {
 
     const claim = pcd.claim;
     expect(claim.frogOmitOwner.frogId).to.be.equal(0);
-    expect(claim.signerPublicKey).to.not.be.undefined;
+
+    const pubKey = await getEdDSAPublicKey(prvKey);
+    expect(claim.signerPublicKey).to.be.deep.equal(pubKey);
+
     expect(claim.externalNullifier).to.be.equal(EXTERNAL_NULLIFIER.toString());
     expect(claim.nullifierHash).to.be.not.be.undefined;
+    expect(claim.watermark).to.be.equal(WATERMARK.toString());
 
     const verificationRes = await ZKEdDSAFrogPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;
@@ -147,13 +154,14 @@ describe("ZKEdDSAFrogPCD should work", function () {
     pcd = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
 
     const claim = pcd.claim;
-    expect(claim.externalNullifier).to.be.equal(STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER.toString());
+    expect(claim.externalNullifier).to.be.equal(
+      STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER.toString()
+    );
     expect(claim.nullifierHash).to.be.not.be.undefined;
 
     const verificationRes = await ZKEdDSAFrogPCDPackage.verify(pcd);
     expect(verificationRes).to.be.true;
   });
-
 
   async function testProveBadArgs(
     validArgs: ZKEdDSAFrogPCDArgs,
@@ -173,19 +181,16 @@ describe("ZKEdDSAFrogPCD should work", function () {
     validArgs: ZKEdDSAFrogPCDArgs,
     mutateFrog: (frog: IFrogData) => Promise<void>
   ): Promise<void> {
-    await testProveBadArgs(
-      validArgs,
-      async (args: ZKEdDSAFrogPCDArgs) => {
-        if (!args.frog.value?.pcd) {
-          throw new Error("bad test data?");
-        }
-        const frogPCD = await EdDSAFrogPCDPackage.deserialize(
-          args.frog.value.pcd
-        );
-        mutateFrog(frogPCD.claim.data);
-        args.frog.value = await EdDSAFrogPCDPackage.serialize(frogPCD);
+    await testProveBadArgs(validArgs, async (args: ZKEdDSAFrogPCDArgs) => {
+      if (!args.frog.value?.pcd) {
+        throw new Error("bad test data?");
       }
-    );
+      const frogPCD = await EdDSAFrogPCDPackage.deserialize(
+        args.frog.value.pcd
+      );
+      mutateFrog(frogPCD.claim.data);
+      args.frog.value = await EdDSAFrogPCDPackage.serialize(frogPCD);
+    });
   }
 
   // The frog data is signed using the signer's private eddsa key,
@@ -231,7 +236,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     });
 
     await testProveBadFrogArgs(validArgs, async (frog: IFrogData) => {
-      frog.ownerSemaphoreId = identity2.getCommitment().toString()
+      frog.ownerSemaphoreId = identity2.getCommitment().toString();
     });
   });
 
@@ -239,12 +244,9 @@ describe("ZKEdDSAFrogPCD should work", function () {
     const validArgs = await toArgs(frogData);
 
     const otherIdentityPCD = await makeSerializedIdentityPCD(identity2);
-    await testProveBadArgs(
-      validArgs,
-      async (args: ZKEdDSAFrogPCDArgs) => {
-        args.identity.value = otherIdentityPCD;
-      }
-    );
+    await testProveBadArgs(validArgs, async (args: ZKEdDSAFrogPCDArgs) => {
+      args.identity.value = otherIdentityPCD;
+    });
   });
 
   async function testVerifyBadClaim(
@@ -252,13 +254,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
     mutateClaim: (claim: ZKEdDSAFrogPCDClaim) => void
   ): Promise<void> {
     // Clone the valid PCD so we can mutate it to be invalid.
-    const invalidPCD: ZKEdDSAFrogPCD = JSON.parse(
-      JSON.stringify(validPCD)
-    );
+    const invalidPCD: ZKEdDSAFrogPCD = JSON.parse(JSON.stringify(validPCD));
     mutateClaim(invalidPCD.claim);
 
-    const verificationRes =
-      await ZKEdDSAFrogPCDPackage.verify(invalidPCD);
+    const verificationRes = await ZKEdDSAFrogPCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;
   }
 
@@ -322,6 +321,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
       claim.nullifierHash = "123";
     });
+
+    await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
+      claim.watermark = "123";
+    });
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {
@@ -331,8 +334,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     );
     expect(pcd).to.deep.eq(deserialized);
 
-    const deserializedValid =
-      await ZKEdDSAFrogPCDPackage.verify(deserialized);
+    const deserializedValid = await ZKEdDSAFrogPCDPackage.verify(deserialized);
     expect(deserializedValid).to.eq(true);
   });
 });

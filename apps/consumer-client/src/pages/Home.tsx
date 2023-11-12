@@ -40,6 +40,11 @@ function Page() {
               Zupass
             </Link>
           </li>
+          <li>
+            <Link to="/examples/zk-eddsa-frog-proof">
+              Prove and Get a ZKEdDSA Frog Proof from Zupass
+            </Link>
+          </li>
         </ol>
       </div>
     </div>

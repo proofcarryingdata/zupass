@@ -19,7 +19,7 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules",
-    "artifacts:generate": "pcd-artifacts generate"
+    "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.3.0",
