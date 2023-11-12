@@ -77,6 +77,7 @@ function devconnectTicketToOfflineTicket(
     attendeeEmail: ticket.email,
     attendeeName: ticket.full_name,
     eventName: ticket.event_name,
-    ticketName: ticket.item_name
+    ticketName: ticket.item_name,
+    is_consumed: ticket.is_consumed
   };
 }
