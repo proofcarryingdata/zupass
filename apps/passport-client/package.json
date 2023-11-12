@@ -47,6 +47,7 @@
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
+    "react-intersection-observer": "^9.5.3",
     "react-qr-reader": "^3.0.0-beta-1",
     "react-router-dom": "^6.9.0",
     "react-select": "^5.7.7",
@@ -55,7 +56,6 @@
     "rollbar": "^2.26.1",
     "styled-components": "^5.3.6",
     "tsparticles": "^2.12.0",
-    "tsparticles-confetti": "^2.12.0",
     "tsparticles-engine": "^2.12.0",
     "typewriter-effect": "^2.21.0",
     "uuid": "^9.0.0"
@@ -82,6 +82,7 @@
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "ts-node": "^10.9.1",
+    "tsparticles-plugin-emitters": "^2.12.0",
     "typescript": "^4.9.5"
   }
 }
