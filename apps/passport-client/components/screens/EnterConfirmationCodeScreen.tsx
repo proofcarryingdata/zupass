@@ -80,7 +80,8 @@ export function EnterConfirmationCodeScreen() {
           <H2>Enter Confirmation Code</H2>
           <Spacer h={24} />
           Check your inbox for an email from <span>{ZUPASS_SENDER_EMAIL}</span>.
-          Use the most recent code you received to continue.
+          Use the most recent code you received to continue. If you don't see
+          the email in your inbox, make sure to check your spam folder.
         </TextCenter>
         <Spacer h={24} />
         <CenterColumn>
