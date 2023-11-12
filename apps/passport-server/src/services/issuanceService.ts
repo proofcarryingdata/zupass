@@ -1339,7 +1339,7 @@ export class IssuanceService {
       req.checkerProof.pcd
     );
     const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-    if (!valid) {
+    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
@@ -1362,7 +1362,7 @@ export class IssuanceService {
     );
     const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
 
-    if (!valid) {
+    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
