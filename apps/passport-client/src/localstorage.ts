@@ -7,6 +7,8 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
 import { getPackages } from "./pcdPackages";
@@ -195,4 +197,24 @@ export function saveUsingLaserScanner(usingLaserScanner: boolean) {
 
 export function loadUsingLaserScanner() {
   return window.localStorage["using_laser_scanner"] === "true";
+}
+
+export function saveCheckinCredential(
+  serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+): void {
+  window.localStorage["checkin_credential"] = JSON.stringify(serializedPCD);
+}
+
+export function loadCheckinCredential():
+  | SerializedPCD<SemaphoreSignaturePCD>
+  | undefined {
+  try {
+    const serializedPCD = JSON.parse(window.localStorage["checkin_credential"]);
+    if (serializedPCD) {
+      return serializedPCD;
+    }
+  } catch (e) {
+    // Do nothing
+  }
+  return undefined;
 }

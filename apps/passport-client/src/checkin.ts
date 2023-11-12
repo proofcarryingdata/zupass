@@ -1,15 +1,21 @@
 import {
-  checkinTicketById,
-  checkTicketById,
   CheckTicketByIdResult,
   CheckTicketInByIdResult,
-  OfflineDevconnectTicket
+  ISSUANCE_STRING,
+  OfflineDevconnectTicket,
+  requestCheckInById,
+  requestCheckTicketById
 } from "@pcd/passport-interface";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
 import {
+  loadCheckinCredential,
   saveCheckedInOfflineTickets,
+  saveCheckinCredential,
   saveOfflineTickets
 } from "./localstorage";
 
@@ -138,11 +144,32 @@ export async function devconnectCheckByIdWithOffline(
       }
     };
   } else {
-    return await checkTicketById(
-      appConfig.zupassServer,
+    let cachedSignaturePCD = await loadCheckinCredential();
+    if (!cachedSignaturePCD) {
+      cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
+        await SemaphoreSignaturePCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            value: await SemaphoreIdentityPCDPackage.serialize(
+              await SemaphoreIdentityPCDPackage.prove({
+                identity: stateContext.getState().identity
+              })
+            )
+          },
+          signedMessage: {
+            argumentType: ArgumentTypeName.String,
+            value: ISSUANCE_STRING
+          }
+        })
+      );
+
+      saveCheckinCredential(cachedSignaturePCD);
+    }
+
+    return await requestCheckTicketById(appConfig.zupassServer, {
       ticketId,
-      stateContext.getState().identity
-    );
+      signature: cachedSignaturePCD
+    });
   }
 }
 
@@ -174,10 +201,31 @@ export async function devconnectCheckInByIdWithOffline(
       value: undefined
     };
   } else {
-    return await checkinTicketById(
-      appConfig.zupassServer,
+    let cachedSignaturePCD = loadCheckinCredential();
+    if (!cachedSignaturePCD) {
+      cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
+        await SemaphoreSignaturePCDPackage.prove({
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            value: await SemaphoreIdentityPCDPackage.serialize(
+              await SemaphoreIdentityPCDPackage.prove({
+                identity: stateContext.getState().identity
+              })
+            )
+          },
+          signedMessage: {
+            argumentType: ArgumentTypeName.String,
+            value: ISSUANCE_STRING
+          }
+        })
+      );
+
+      saveCheckinCredential(cachedSignaturePCD);
+    }
+
+    return await requestCheckInById(appConfig.zupassServer, {
       ticketId,
-      stateContext.getState().identity
-    );
+      checkerProof: cachedSignaturePCD
+    });
   }
 }
