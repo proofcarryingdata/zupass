@@ -1,7 +1,7 @@
 import { requestFrogCryptoGetScoreboard } from "@pcd/passport-interface";
 import { FrogCryptoScore } from "@pcd/passport-interface/src/FrogCrypto";
 import _ from "lodash";
-import { useEffect, useMemo, useState } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import { RippleLoader } from "../../core/RippleLoader";
@@ -68,9 +68,9 @@ function ScoreTable({
       <tbody>
         {scoresByLevel.map((group) => {
           return (
-            <>
+            <Fragment key={group.title}>
               {myScore && (
-                <tr key={group.title}>
+                <tr>
                   <td
                     colSpan={3}
                     style={{ textAlign: "center", padding: "4px 0" }}
@@ -97,7 +97,7 @@ function ScoreTable({
                   <td style={{ textAlign: "right" }}>{score.score}</td>
                 </tr>
               ))}
-            </>
+            </Fragment>
           );
         })}
       </tbody>

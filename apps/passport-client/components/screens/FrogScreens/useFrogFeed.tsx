@@ -43,14 +43,15 @@ export function useInitializeFrogSubscriptions(): (
 
         const parsed = IFrogCryptoFeedSchema.safeParse(feed);
         if (parsed.success) {
-          dispatch({
-            type: "add-subscription",
-            providerUrl: DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
-            providerName: FrogCryptoFolderName,
-            feed
-          });
-
           if (parsed.data.activeUntil > Date.now() / 1000) {
+            // only add a feed if it is active
+            dispatch({
+              type: "add-subscription",
+              providerUrl: DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
+              providerName: FrogCryptoFolderName,
+              feed
+            });
+
             // don't show toast if feedId is specified
             if (feed.id !== feedId) {
               toast.success(
@@ -62,6 +63,16 @@ export function useInitializeFrogSubscriptions(): (
             }
 
             return true;
+          } else if (feed.id === feedId) {
+            // if we are adding an expired from deeplink, show error toast
+            toast.error(
+              <span>
+                Oh no! You've found a secret froggy passage to{" "}
+                <b>{feed.name}</b>. But our fireflies are in another castle.
+                Maybe explore elsewhere and return here when the stars align?
+              </span>
+            );
+            throw new Error("Feed no longer available");
           }
         } else {
           console.error(
