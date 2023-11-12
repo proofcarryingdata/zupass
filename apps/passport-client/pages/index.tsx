@@ -150,7 +150,11 @@ class App extends React.Component<object, AppState> {
   generateCheckinCredential = async () => {
     // This ensures that the check-in credential is pre-cached before the
     // first check-in attempt.
-    await getOrGenerateCheckinCredential(this.state.identity);
+    try {
+      await getOrGenerateCheckinCredential(this.state.identity);
+    } catch (e) {
+      console.log("Could not get or generate checkin credential:", e);
+    }
   };
 
   jobCheckConnectivity = async () => {
