@@ -9,11 +9,18 @@ import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { getDB } from "../src/database/postgresPool";
-import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
+import {
+  fetchPretixEventInfo,
+  insertPretixEventsInfo
+} from "../src/database/queries/pretixEventInfo";
 import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
+import {
+  insertTelegramChat,
+  insertTelegramEvent
+} from "../src/database/queries/telegram/insertTelegramConversation";
 import { logger } from "../src/util/logger";
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
@@ -222,6 +229,63 @@ yargs
           console.error(`Error copying ${src} to ${dest}: ${e}`);
         }
       }
+    }
+  )
+  .command(
+    "new-fake-frog-event",
+    "Create a new fake event for frog owners",
+    () => {},
+    async function () {
+      const orgUrl = "frogs.org";
+      const token = "frogs-token";
+      const eventId = "frog-owners-event-id";
+      const eventName = "frog-owners-event";
+      const itemId = "1";
+      const activeItemIds = [itemId];
+      const checkinListId = "0";
+      const chatId: number = parseInt(
+        process.env.SCRATCH_FROG_OWNERS_TELEGRAM_CHAT_ID!
+      );
+
+      logger(`Creating event and link with chat id: ${chatId}`);
+
+      const db = await getDB();
+
+      const organizerConfigId = await insertPretixOrganizerConfig(
+        db,
+        orgUrl,
+        token
+      );
+      logger(`organizerConfigId: ${organizerConfigId}`);
+
+      const eventConfigId = await insertPretixEventConfig(
+        db,
+        organizerConfigId,
+        activeItemIds,
+        [],
+        eventId
+      );
+      logger(`eventConfigId: ${eventConfigId}`);
+
+      const eventsInfoId = await insertPretixEventsInfo(
+        db,
+        eventName,
+        eventConfigId,
+        checkinListId
+      );
+      logger(`eventsInfoId: ${eventsInfoId}`);
+
+      const telegramChatId = await insertTelegramChat(db, chatId);
+      logger(`telegramChatId: ${telegramChatId}`);
+
+      const telegramEventId = await insertTelegramEvent(
+        db,
+        eventConfigId,
+        chatId
+      );
+      logger(`telegramEventId: ${telegramEventId}`);
+
+      await db.end();
     }
   )
   .command(
