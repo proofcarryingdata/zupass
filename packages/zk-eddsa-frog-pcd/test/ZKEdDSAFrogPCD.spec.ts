@@ -135,7 +135,10 @@ describe("ZKEdDSAFrogPCD should work", function () {
     pcd = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
 
     const claim = pcd.claim;
-    expect(claim.frogOmitOwner.frogId).to.be.equal(0);
+    expect(claim.partialFrog.frogId).to.be.equal(0);
+    expect(claim.partialFrog.ownerSemaphoreId).to.be.equal(
+      identity1.getCommitment().toString()
+    );
 
     const pubKey = await getEdDSAPublicKey(prvKey);
     expect(claim.signerPublicKey).to.be.deep.equal(pubKey);
@@ -266,39 +269,39 @@ describe("ZKEdDSAFrogPCD should work", function () {
     const validPCD = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.frogId = 1;
+      claim.partialFrog.frogId = 1;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.biome = Biome.Jungle;
+      claim.partialFrog.biome = Biome.Jungle;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.rarity = Rarity.Common;
+      claim.partialFrog.rarity = Rarity.Common;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.temperament = Temperament.ANGY;
+      claim.partialFrog.temperament = Temperament.ANGY;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.jump = 1;
+      claim.partialFrog.jump = 1;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.speed = 1;
+      claim.partialFrog.speed = 1;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.intelligence = 1;
+      claim.partialFrog.intelligence = 1;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.beauty = 1;
+      claim.partialFrog.beauty = 1;
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.frogOmitOwner.timestampSigned = Date.now() + 10000;
+      claim.partialFrog.timestampSigned = Date.now() + 10000;
     });
   });
 
