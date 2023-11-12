@@ -1,4 +1,5 @@
 import {
+  ISSUANCE_STRING,
   PCDGetRequest,
   ProveOptions,
   requestProveOnServer,
@@ -41,6 +42,10 @@ export function SemaphoreSignatureProveScreen({
     // Give the UI has a chance to update to the 'loading' state before the
     // potentially blocking proving operation kicks off
     await nextFrame();
+
+    if (req.args.signedMessage.value === ISSUANCE_STRING) {
+      throw new Error("Can't sign this message");
+    }
 
     const args = await fillArgs(
       identity,

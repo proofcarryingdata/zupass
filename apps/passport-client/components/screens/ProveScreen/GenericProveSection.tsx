@@ -1,4 +1,5 @@
 import {
+  ISSUANCE_STRING,
   PendingPCD,
   ProveOptions,
   requestProveOnServer
@@ -10,6 +11,10 @@ import {
   SerializedPCD,
   isPCDArgument
 } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDTypeName
+} from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -72,6 +77,13 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     // Give the UI has a chance to update to the 'loading' state before the
     // potentially blocking proving operation kicks off
     await nextFrame();
+
+    if (pcdType === SemaphoreSignaturePCDTypeName) {
+      const signatureArgs = args as ArgsOf<typeof SemaphoreSignaturePCDPackage>;
+      if (signatureArgs.signedMessage.value === ISSUANCE_STRING) {
+        throw new Error("Can't sign this message");
+      }
+    }
 
     if (options?.proveOnServer === true) {
       const pendingPCDResult = await requestProveOnServer(
