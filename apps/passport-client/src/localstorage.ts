@@ -200,16 +200,20 @@ export function loadUsingLaserScanner() {
 }
 
 export function saveCheckinCredential(
+  key: string,
   serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
 ): void {
-  window.localStorage["checkin_credential"] = JSON.stringify(serializedPCD);
+  window.localStorage[`checkin_credential_${key}`] =
+    JSON.stringify(serializedPCD);
 }
 
-export function loadCheckinCredential():
-  | SerializedPCD<SemaphoreSignaturePCD>
-  | undefined {
+export function loadCheckinCredential(
+  key: string
+): SerializedPCD<SemaphoreSignaturePCD> | undefined {
   try {
-    const serializedPCD = JSON.parse(window.localStorage["checkin_credential"]);
+    const serializedPCD = JSON.parse(
+      window.localStorage[`checkin_credential_${key}`]
+    );
     if (serializedPCD) {
       return serializedPCD;
     }

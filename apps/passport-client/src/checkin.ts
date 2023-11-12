@@ -26,7 +26,9 @@ import {
 export async function getOrGenerateCheckinCredential(
   identity: Identity
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
-  let cachedSignaturePCD = loadCheckinCredential();
+  let cachedSignaturePCD = loadCheckinCredential(
+    identity.getCommitment().toString()
+  );
   if (!cachedSignaturePCD) {
     cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
@@ -45,7 +47,10 @@ export async function getOrGenerateCheckinCredential(
       })
     );
 
-    saveCheckinCredential(cachedSignaturePCD);
+    saveCheckinCredential(
+      identity.getCommitment().toString(),
+      cachedSignaturePCD
+    );
   }
 
   return cachedSignaturePCD;
