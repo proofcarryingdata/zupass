@@ -132,7 +132,7 @@ export const handleFrogVerification = async (
     span?.setAttribute("verifiedPCD", true);
 
     logger(
-      `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}` +
+      `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat.id}` +
         (telegramUsername && `, username ${telegramUsername}`)
     );
   });
