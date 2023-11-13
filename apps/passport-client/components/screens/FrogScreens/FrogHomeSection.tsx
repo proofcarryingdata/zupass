@@ -6,7 +6,8 @@ import {
   Subscription,
   requestFrogCryptoGetUserState
 } from "@pcd/passport-interface";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -21,6 +22,7 @@ import { RippleLoader } from "../../core/RippleLoader";
 import { ActionButton, Button, ButtonGroup } from "./Button";
 import { DexTab } from "./DexTab";
 import { SuperFunkyFont } from "./FrogFolder";
+import { FROM_SUBSCRIPTION_PARAM_KEY } from "./FrogSubscriptionScreen";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab, scoreToEmoji } from "./ScoreTab";
 import { TypistText } from "./TypistText";
@@ -60,6 +62,23 @@ export function FrogHomeSection() {
   const { userState, refreshUserState } = useUserFeedState(frogSubs);
   const myScore = userState?.myScore?.score ?? 0;
 
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isFromSubscriptionRef = useRef<boolean>(
+    !!searchParams.get(FROM_SUBSCRIPTION_PARAM_KEY)
+  );
+  const retreatRef = useRef<boolean>(false);
+  useEffect(() => {
+    if (isFromSubscriptionRef.current) {
+      setSearchParams(
+        (prev) => {
+          prev.delete(FROM_SUBSCRIPTION_PARAM_KEY);
+          return prev;
+        },
+        { replace: true }
+      );
+    }
+  }, [setSearchParams]);
+
   if (!userState) {
     return <RippleLoader />;
   }
@@ -81,7 +100,9 @@ export function FrogHomeSection() {
           onInit={(typewriter) =>
             typewriter
               .typeString(
-                "you are walking through the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+                isFromSubscriptionRef.current
+                  ? "a mysterious QR code portals you to the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+                  : "you are walking through the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
               )
               .pauseFor(500)
               .typeString(
@@ -92,6 +113,19 @@ export function FrogHomeSection() {
           }
         >
           <ActionButton onClick={initFrog}>enter SWAMP</ActionButton>
+          {
+            // frog holders cannot retreat
+            frogPCDs.length === 0 && !myScore && (
+              <ActionButton
+                onClick={() => {
+                  retreatRef.current = true;
+                  return initFrog();
+                }}
+              >
+                retreat
+              </ActionButton>
+            )
+          }
         </TypistText>
       )}
 
@@ -99,16 +133,22 @@ export function FrogHomeSection() {
         (frogPCDs.length === 0 && !myScore ? (
           <>
             <TypistText
-              onInit={(typewriter) =>
-                typewriter
-                  .typeString(
-                    "you're certain you saw a frog wearing a monocle."
-                  )
+              onInit={(typewriter) => {
+                const text = isFromSubscriptionRef.current
+                  ? `you hear a whisper. "come back again when you're stronger."`
+                  : "you're certain you saw a frog wearing a monocle.";
+
+                return typewriter
+                  .typeString(text)
                   .pauseFor(500)
                   .changeDeleteSpeed(20)
-                  .deleteAll()
-                  .typeString("you enter the SWAMP.")
-              }
+                  .deleteChars(text.length)
+                  .typeString(
+                    retreatRef.current
+                      ? "retreat was ineffective. you enter the SWAMP."
+                      : "you enter the SWAMP."
+                  );
+              }}
             >
               <GetFrogTab
                 subscriptions={frogSubs}

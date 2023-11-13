@@ -361,7 +361,7 @@ function RouterImpl() {
           <Route path="telegram" element={<HomeScreen />} />
           <Route path="pond-control" element={<FrogManagerScreen />} />
           <Route
-            path="frogscriptions/:feedAlias"
+            path="frogscriptions/:feedCode"
             element={<FrogSubscriptionScreen />}
           />
           <Route path="*" element={<MissingScreen />} />
