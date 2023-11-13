@@ -8,10 +8,11 @@ import { SecretPhrasePCD, SecretPhrasePCDPackage } from "./SecretPhrasePCD";
  * Make the URI for verifying a secret phrase pcd
  * 
  * @param pcdStr - the serialized pcd
+ * @param baseURI - the base uri to point verification to
  * @returns - the verification link
  */
-function makeSecretPhraseVerifyLink(pcdStr: string): string {
-  return `${window.location.origin}/#/check-phrase?id=${encodeURIComponent(pcdStr)}`;
+function makeSecretPhraseVerifyLink(baseURI: string, pcdStr: string): string {
+  return `${baseURI}/#/check-phrase?id=${encodeURIComponent(pcdStr)}`;
 }
 
 /**
@@ -54,9 +55,10 @@ export function SecretPhraseInfoDisplay({ pcd }: { pcd: SecretPhrasePCD }) {
  * Expects the secret phrase pcd to contain a secret and creates a secret phrase pcd with the secret redacted
  * 
  * @param pcd - the SecretPhrasePCD used to prove and generate a new PCD to encode in the QR
+ * @param baseURI - the base uri to point the verification link to
  * @return - QR code component that points to verification link with serialized PCD
  */
-function SecretPhraseQR({ pcd }: { pcd: SecretPhrasePCD }) {
+function SecretPhraseQR({ pcd, baseURI }: { pcd: SecretPhrasePCD, baseURI: string }) {
   const generate = useCallback(async () => {
     console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     // check that the claim includes the secret needed to construct the proof
@@ -84,7 +86,10 @@ function SecretPhraseQR({ pcd }: { pcd: SecretPhrasePCD }) {
 
     // serialize pcd and encode in a QR
     const serializedZKPCD = await SecretPhrasePCDPackage.serialize(zkPCD);
-    return makeSecretPhraseVerifyLink(encodeQRPayload(JSON.stringify(serializedZKPCD)));
+    return makeSecretPhraseVerifyLink(
+      encodeQRPayload(JSON.stringify(serializedZKPCD)),
+      baseURI
+    );
   }, [pcd]);
 
   return (
@@ -97,11 +102,11 @@ function SecretPhraseQR({ pcd }: { pcd: SecretPhrasePCD }) {
   );
 }
 
-export function SecretPhraseCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
+export function SecretPhraseCardBody({ pcd, baseURI }: { pcd: SecretPhrasePCD, baseURI: string }) {
   return (
     <Container>
       <PhraseInfo>
-        <SecretPhraseQR pcd={pcd} />
+        <SecretPhraseQR pcd={pcd} baseURI={baseURI} />
         <SecretPhraseInfoDisplay pcd={pcd} />
       </PhraseInfo>
     </Container>

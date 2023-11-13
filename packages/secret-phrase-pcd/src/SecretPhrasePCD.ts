@@ -28,8 +28,18 @@ let savedInitArgs: SecretPhrasePCDInitArgs | undefined = undefined;
  * associated with the circom circuit.
  */
 export interface SecretPhrasePCDInitArgs {
+  /**
+   * Relative path to proving key file
+   */
   zkeyFilePath: string;
+  /**
+   * Relative path to witness/ proving wasm file
+   */
   wasmFilePath: string;
+  /**
+   * The base URI to use in QR when verifying the PCD
+   */
+  verifyBaseURI: string;
 }
 
 export type SecretPhrasePCDArgs = {
@@ -325,6 +335,21 @@ export function isSecretPhrasePCD(pcd: PCD): pcd is SecretPhrasePCD {
   return pcd.type === SecretPhrasePCDTypeName;
 }
 
+/**
+ * Wraps the SecretPhraseCardBody component with the initialized baseURI
+ * @param pcd - the SecretPhrasePCD to render 
+ * @returns the renderCardBody function returning the pcd component
+ */
+export function renderCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
+  // check the pcd package has been initialized
+  if (!savedInitArgs) {
+    throw new Error("Cannot render SecretPhrasePCD: init has not been called yet");
+  }
+  // render the secret phrase pcd card
+  return SecretPhraseCardBody({ pcd, baseURI: savedInitArgs.verifyBaseURI });
+}
+
+
 export const SecretPhrasePCDPackage: PCDPackage<
   SecretPhrasePCDClaim,
   Groth16Proof,
@@ -332,7 +357,7 @@ export const SecretPhrasePCDPackage: PCDPackage<
   SecretPhrasePCDInitArgs
 > = {
   name: SecretPhrasePCDTypeName,
-  renderCardBody: SecretPhraseCardBody,
+  renderCardBody,
   getDisplayOptions,
   init,
   prove,

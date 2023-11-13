@@ -18,6 +18,7 @@ describe("RSA Ticket PCD should work", function () {
 
     // initialize the PCD package with the circuit artifacts
     await SecretPhrasePCDPackage.init?.({
+      verifyBaseURI: "https://localhost:3000", // not used in test
       wasmFilePath: `${fullPath}/../artifacts/circuit.wasm`,
       zkeyFilePath: `${fullPath}/../artifacts/circuit.zkey`
     });
