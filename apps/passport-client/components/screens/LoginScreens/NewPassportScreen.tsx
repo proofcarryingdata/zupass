@@ -5,7 +5,7 @@ import {
   requestPasswordSalt,
   requestVerifyToken
 } from "@pcd/passport-interface";
-import { ZUPASS_SENDER_EMAIL } from "@pcd/util";
+import { ZUPASS_SENDER_EMAIL, getErrorMessage } from "@pcd/util";
 import { FormEvent, useCallback, useEffect, useState } from "react";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useIdentity, useQuery } from "../../../src/appHooks";
@@ -47,7 +47,7 @@ function SendEmailVerification({ email }: { email: string }) {
   const [emailSent, setEmailSent] = useState(false);
   const [emailSending, setEmailSending] = useState(false);
   const [verifyingCode, setVerifyingCode] = useState(false);
-  const [loadingSalt, setLoadingSalt] = useState(false);
+  const [loadingAccount, setLoadingAccount] = useState(false);
   const [token, setToken] = useState("");
 
   const verifyToken = useCallback(
@@ -66,33 +66,45 @@ function SendEmailVerification({ email }: { email: string }) {
         token
       );
 
+      setVerifyingCode(false);
+
       if (verifyTokenResult.success) {
-        const encryptionKey = verifyTokenResult.value?.encryptionKey;
-        if (encryptionKey) {
-          const storageResult = await requestDownloadAndDecryptStorage(
-            appConfig.zupassServer,
-            encryptionKey
-          );
+        setLoadingAccount(true);
+        try {
+          const encryptionKey = verifyTokenResult.value?.encryptionKey;
+          if (encryptionKey) {
+            const storageResult = await requestDownloadAndDecryptStorage(
+              appConfig.zupassServer,
+              encryptionKey
+            );
 
-          if (!storageResult.success) {
-            setError("An error occurred while downloading encrypted storage.");
+            if (storageResult.success) {
+              await dispatch({
+                type: "load-after-login",
+                storage: storageResult.value,
+                encryptionKey
+              });
+            } else {
+              setError(
+                "An error occurred while downloading encrypted storage."
+              );
+            }
+          } else {
+            window.location.hash = `#/privacy-notice?email=${encodeURIComponent(
+              email
+            )}&token=${encodeURIComponent(token)}`;
           }
-
-          await dispatch({
-            type: "load-after-login",
-            storage: storageResult.value,
-            encryptionKey
-          });
-        } else {
-          window.location.hash = `#/privacy-notice?email=${encodeURIComponent(
-            email
-          )}&token=${encodeURIComponent(token)}`;
+        } catch (e) {
+          setError(
+            "An error occurred loading account info: [" +
+              getErrorMessage(e) +
+              "].  Email support@zupass.org to resolve this."
+          );
         }
+        setLoadingAccount(false);
       } else {
         setError("Invalid confirmation code");
       }
-
-      setVerifyingCode(false);
     },
     [email, verifyingCode, dispatch]
   );
@@ -104,12 +116,12 @@ function SendEmailVerification({ email }: { email: string }) {
           return err(dispatch, "Email failed", result.error);
         }
 
-        setLoadingSalt(true);
+        setLoadingAccount(true);
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
           email
         );
-        setLoadingSalt(false);
+        setLoadingAccount(false);
 
         if (saltResult.success) {
           window.location.href = `#/already-registered?email=${encodeURIComponent(
@@ -161,7 +173,7 @@ function SendEmailVerification({ email }: { email: string }) {
 
   if (verifyingCode) {
     content = <ScreenLoader text="Verifying token..." />;
-  } else if (loadingSalt) {
+  } else if (loadingAccount) {
     content = <ScreenLoader text="Loading account information..." />;
   } else if (emailSending) {
     content = (
