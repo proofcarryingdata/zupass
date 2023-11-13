@@ -1,4 +1,6 @@
+import { Rarity } from "@pcd/eddsa-frog-pcd";
 import {
+  DexFrog,
   FrogCryptoDbFeedData,
   FrogCryptoDbFrogData,
   FrogCryptoFeed,
@@ -11,6 +13,7 @@ import { PCDPermissionType } from "@pcd/pcd-collection";
 import _ from "lodash";
 import { Client } from "pg";
 import { Pool } from "postgres-pool";
+import { parseFrogEnum } from "../../util/frogcrypto";
 import { FrogCryptoUserFeedState } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
@@ -159,20 +162,23 @@ export async function deleteFrogData(
 }
 
 /**
- * Returns a list of possible frog ids
+ * Returns a list of possible frogs
  */
-export async function getPossibleFrogIds(pool: Pool): Promise<number[]> {
+export async function getPossibleFrogs(pool: Pool): Promise<DexFrog[]> {
   const result = await sqlQuery(
     pool,
     `
-  select id
+  select id, frog->>'rarity' as rarity
   from frogcrypto_frogs
   where frog->>'rarity' <> 'object'
   order by id
     `
   );
 
-  return result.rows.map((row) => row.id);
+  return result.rows.map((row) => ({
+    id: parseInt(row.id),
+    rarity: parseFrogEnum(Rarity, row.rarity)
+  }));
 }
 
 /**

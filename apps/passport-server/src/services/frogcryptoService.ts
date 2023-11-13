@@ -31,7 +31,7 @@ import {
   deleteFrogData,
   fetchUserFeedsState,
   getFrogData,
-  getPossibleFrogIds,
+  getPossibleFrogs,
   getRawFeedData,
   getScoreboard,
   getUserScore,
@@ -139,6 +139,11 @@ export class FrogcryptoService {
   public async getUserState(
     req: FrogCryptoUserStateRequest
   ): Promise<FrogCryptoUserStateResponseValue> {
+    if (!("feedIds" in req)) throw new PCDHTTPError(400, "missing feedIds");
+    if (!Array.isArray(req.feedIds)) {
+      throw new PCDHTTPError(400, "feedIds must be an array");
+    }
+
     const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
 
     const userFeeds = _.keyBy(
@@ -154,7 +159,7 @@ export class FrogcryptoService {
       feeds: allFeeds.map((feed) =>
         this.computeUserFeedState(userFeeds[feed.id], feed)
       ),
-      possibleFrogIds: await getPossibleFrogIds(this.context.dbPool),
+      possibleFrogs: await getPossibleFrogs(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
     };
   }
@@ -329,20 +334,31 @@ export class FrogcryptoService {
     frogData: FrogCryptoFrogData,
     ownerSemaphoreId: string
   ): IFrogData {
+    const rarity = parseFrogEnum(Rarity, frogData.rarity);
+
     return {
       ..._.pick(frogData, "name", "description"),
       imageUrl: `${process.env.PASSPORT_SERVER_URL}/frogcrypto/images/${frogData.uuid}`,
       frogId: frogData.id,
       biome: parseFrogEnum(Biome, frogData.biome),
-      rarity: parseFrogEnum(Rarity, frogData.rarity),
+      rarity,
       temperament: parseFrogTemperament(frogData.temperament),
-      jump: sampleFrogAttribute(frogData.jump_min, frogData.jump_max),
-      speed: sampleFrogAttribute(frogData.speed_min, frogData.speed_max),
+      jump: sampleFrogAttribute(frogData.jump_min, frogData.jump_max, rarity),
+      speed: sampleFrogAttribute(
+        frogData.speed_min,
+        frogData.speed_max,
+        rarity
+      ),
       intelligence: sampleFrogAttribute(
         frogData.intelligence_min,
-        frogData.intelligence_max
+        frogData.intelligence_max,
+        rarity
       ),
-      beauty: sampleFrogAttribute(frogData.beauty_min, frogData.beauty_max),
+      beauty: sampleFrogAttribute(
+        frogData.beauty_min,
+        frogData.beauty_max,
+        rarity
+      ),
       timestampSigned: Date.now(),
       ownerSemaphoreId
     };

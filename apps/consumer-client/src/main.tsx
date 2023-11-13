@@ -7,6 +7,7 @@ import GetWithoutProving from "./pages/examples/get-without-proving";
 import GroupProof from "./pages/examples/group-proof";
 import SignatureProof from "./pages/examples/signature-proof";
 import ZkEDdSAEventTicketProof from "./pages/examples/zk-eddsa-event-ticket-proof";
+import ZkEDdSAFrogProof from "./pages/examples/zk-eddsa-frog-proof";
 import ZuAuthExample from "./pages/examples/zu-auth/example";
 import Home from "./pages/Home";
 import ZupassPopupRedirect from "./pages/popup";
@@ -26,7 +27,8 @@ const router = createHashRouter([
   {
     path: "examples/zu-auth",
     element: <ZuAuthExample />
-  }
+  },
+  { path: "examples/zk-eddsa-frog-proof", element: <ZkEDdSAFrogProof /> }
 ]);
 
 createRoot(document.getElementById("root") as HTMLElement).render(

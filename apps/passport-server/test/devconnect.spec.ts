@@ -1824,9 +1824,11 @@ describe("devconnect functionality", function () {
     );
     expect(attendeeGroupResult.success).to.be.true;
     if (attendeeGroupResult.success) {
-      expect(attendeeGroupResult.value.members).to.deep.eq([
-        ...loggedInIdentityCommitments
-      ]);
+      expect(
+        attendeeGroupResult.value.members.filter(
+          (member) => member !== attendeeGroupResult.value.zeroValue
+        )
+      ).to.deep.eq([...loggedInIdentityCommitments]);
     }
 
     const organizerGroupResult = await requestSemaphoreGroup(
@@ -1834,9 +1836,11 @@ describe("devconnect functionality", function () {
     );
     expect(organizerGroupResult.success).to.be.true;
     if (organizerGroupResult.success) {
-      expect(organizerGroupResult.value.members).to.deep.eq([
-        ...loggedInIdentityCommitments
-      ]);
+      expect(
+        organizerGroupResult.value.members.filter(
+          (member) => member !== organizerGroupResult.value.zeroValue
+        )
+      ).to.deep.eq([...loggedInIdentityCommitments]);
     }
   });
 

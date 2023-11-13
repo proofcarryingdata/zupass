@@ -114,4 +114,15 @@ export class PCDCrypto {
       return null;
     }
   }
+
+  public randombytesDeterministic(
+    length: number,
+    seed: Uint8Array
+  ): Uint8Array | null {
+    try {
+      return this.sodium.randombytes_buf_deterministic(length, seed);
+    } catch {
+      return null;
+    }
+  }
 }

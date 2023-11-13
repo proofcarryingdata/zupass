@@ -4,6 +4,7 @@ import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import {
+  DexFrog,
   FrogCryptoDbFeedData,
   FrogCryptoFrogData,
   FrogCryptoScore
@@ -694,6 +695,7 @@ export interface OfflineDevconnectTicket {
   ticketName: string;
   checkinTimestamp?: string;
   checker: string | null;
+  is_consumed?: boolean;
 }
 
 /**
@@ -727,9 +729,9 @@ export interface FrogCryptoComputedUserState {
 export interface FrogCryptoUserStateResponseValue {
   feeds: FrogCryptoComputedUserState[];
   /**
-   * A list of possible frog ids
+   * A list of possible frogs
    */
-  possibleFrogIds: number[];
+  possibleFrogs: DexFrog[];
   myScore?: FrogCryptoScore;
 }
 

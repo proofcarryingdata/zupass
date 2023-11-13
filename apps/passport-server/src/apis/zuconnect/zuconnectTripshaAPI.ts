@@ -21,7 +21,7 @@ const DAY_PASSES: Record<string, string> = {
  */
 const ZuconnectTripshaSchema = z.object({
   id: z.string(),
-  email: z.string().email(),
+  email: z.string().email().toLowerCase().trim(),
   // Ticket type can only match the set given in TRIPSHA_TICKET_TYPES
   ticketName: z.enum(ZUCONNECT_TICKET_NAMES).default("ZuConnect Resident Pass"),
   first: z.string(),

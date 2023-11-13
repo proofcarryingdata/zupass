@@ -1,11 +1,10 @@
 import {
   createStorageBackedCredentialCache,
-  offlineTickets,
-  offlineTicketsCheckin
+  requestOfflineTickets,
+  requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import { AppThemeProvider } from "@skiff-org/skiff-ui";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "react-hot-toast";
@@ -16,6 +15,7 @@ import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen
 import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
+import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -40,6 +40,7 @@ import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
+import { getOrGenerateCheckinCredential } from "../src/checkin";
 import {
   Action,
   StateContext,
@@ -105,31 +106,22 @@ class App extends React.Component<object, AppState> {
     const hasStack = state.error?.stack != null;
     return (
       <StateContext.Provider value={this.stateContextState}>
-        {/*
-         * <AppThemeProvider /> currently has the wrong prop typing.
-         * This will be fixed once this pull request is merged:
-         * https://github.com/skiff-org/skiff-ui/pull/392.
-         */}
-        {/* eslint-disable-next-line @typescript-eslint/ban-ts-comment */}
-        {/* @ts-ignore */}
-        <AppThemeProvider>
-          {!isWebAssemblySupported() ? (
-            <HashRouter>
-              <Routes>
-                <Route path="/terms" element={<TermsScreen />} />
-                <Route path="*" element={<NoWASMScreen />} />
-              </Routes>
-            </HashRouter>
-          ) : !hasStack ? (
-            <Router />
-          ) : (
-            <HashRouter>
-              <Routes>
-                <Route path="*" element={<AppContainer bg="gray" />} />
-              </Routes>
-            </HashRouter>
-          )}
-        </AppThemeProvider>
+        {!isWebAssemblySupported() ? (
+          <HashRouter>
+            <Routes>
+              <Route path="/terms" element={<TermsScreen />} />
+              <Route path="*" element={<NoWASMScreen />} />
+            </Routes>
+          </HashRouter>
+        ) : !hasStack ? (
+          <Router />
+        ) : (
+          <HashRouter>
+            <Routes>
+              <Route path="*" element={<AppContainer bg="gray" />} />
+            </Routes>
+          </HashRouter>
+        )}
       </StateContext.Provider>
     );
   }
@@ -153,6 +145,17 @@ class App extends React.Component<object, AppState> {
     this.setupPolling();
     this.startJobSyncOfflineCheckins();
     this.jobCheckConnectivity();
+    this.generateCheckinCredential();
+  };
+
+  generateCheckinCredential = async () => {
+    // This ensures that the check-in credential is pre-cached before the
+    // first check-in attempt.
+    try {
+      await getOrGenerateCheckinCredential(this.state.identity);
+    } catch (e) {
+      console.log("Could not get or generate checkin credential:", e);
+    }
   };
 
   jobCheckConnectivity = async () => {
@@ -251,10 +254,14 @@ class App extends React.Component<object, AppState> {
       console.log("[JOB] failed poll user", e);
     }
 
-    // Trigger sync of E2EE storage, but only if the first-time sync had time
-    // to complete.
+    // Trigger extra download from E2EE storage, and extra fetch of
+    // subscriptions, but only if the first-time sync had time to complete.
     if (this.state.completedFirstSync) {
-      this.update({ ...this.state, extraDownloadRequested: true });
+      this.update({
+        ...this.state,
+        extraDownloadRequested: true,
+        extraSubscriptionFetchRequested: true
+      });
     }
   };
 
@@ -269,10 +276,15 @@ class App extends React.Component<object, AppState> {
     }
 
     if (this.state.checkedinOfflineDevconnectTickets.length > 0) {
-      const checkinOfflineTicketsResult = await offlineTicketsCheckin(
+      const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
         appConfig.zupassServer,
-        this.state.identity,
-        this.state.checkedinOfflineDevconnectTickets
+        {
+          checkedOfflineInDevconnectTicketIDs:
+            this.state.checkedinOfflineDevconnectTickets.map((t) => t.id),
+          checkerProof: await getOrGenerateCheckinCredential(
+            this.state.identity
+          )
+        }
       );
 
       if (checkinOfflineTicketsResult.success) {
@@ -284,9 +296,11 @@ class App extends React.Component<object, AppState> {
       }
     }
 
-    const offlineTicketsResult = await offlineTickets(
+    const offlineTicketsResult = await requestOfflineTickets(
       appConfig.zupassServer,
-      this.state.identity
+      {
+        checkerProof: await getOrGenerateCheckinCredential(this.state.identity)
+      }
     );
 
     if (offlineTicketsResult.success) {
@@ -345,7 +359,11 @@ function RouterImpl() {
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
-          <Route path="frog-admin" element={<FrogManagerScreen />} />
+          <Route path="pond-control" element={<FrogManagerScreen />} />
+          <Route
+            path="frogscriptions/:feedAlias"
+            element={<FrogSubscriptionScreen />}
+          />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

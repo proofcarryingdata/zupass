@@ -13,7 +13,6 @@ import {
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
-import _ from "lodash";
 import "mocha";
 import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
@@ -28,7 +27,12 @@ import {
 } from "../src/database/queries/frogcrypto";
 import { Zupass } from "../src/types";
 import { overrideEnvironment, testingEnv } from "./util/env";
-import { testFeeds, testFrogs, testFrogsAndObjects } from "./util/frogcrypto";
+import {
+  testDexFrogs,
+  testFeeds,
+  testFrogs,
+  testFrogsAndObjects
+} from "./util/frogcrypto";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
@@ -204,9 +208,7 @@ describe("frogcrypto functionality", function () {
 
     let userState = await getUserState([feed.id]);
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogIds).to.deep.equal(
-      _.range(1, testFrogs.length + 1)
-    );
+    expect(userState.value?.possibleFrogs).to.deep.equal(testDexFrogs);
     expect(userState.value?.myScore).to.be.undefined;
     expect(userState.value?.feeds).to.have.length(1);
     let feedState = userState.value?.feeds?.[0];
@@ -222,9 +224,7 @@ describe("frogcrypto functionality", function () {
 
     userState = await getUserState([feed.id]);
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogIds).to.deep.equal(
-      _.range(1, testFrogs.length + 1)
-    );
+    expect(userState.value?.possibleFrogs).to.deep.equal(testDexFrogs);
     expect(userState.value?.myScore?.score).to.eq(1);
     expect(userState.value?.myScore?.semaphore_id).to.be.eq(
       identity.getCommitment().toString()
@@ -245,9 +245,7 @@ describe("frogcrypto functionality", function () {
 
     userState = await getUserState([feed.id]);
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogIds).to.deep.equal(
-      _.range(1, testFrogs.length + 1)
-    );
+    expect(userState.value?.possibleFrogs).to.deep.equal(testDexFrogs);
     expect(userState.value?.myScore?.score).to.eq(3);
     expect(userState.value?.myScore?.semaphore_id).to.be.eq(
       identity.getCommitment().toString()
@@ -274,9 +272,7 @@ describe("frogcrypto functionality", function () {
 
     const userState = await getUserState([newFeed.id]);
     expect(userState.success).to.be.true;
-    expect(userState.value?.possibleFrogIds).to.deep.equal(
-      _.range(1, testFrogs.length + 1)
-    );
+    expect(userState.value?.possibleFrogs).to.deep.equal(testDexFrogs);
     expect(userState.value?.myScore).to.be.undefined;
     expect(userState.value?.feeds).to.have.length(1);
     const feedState = userState.value?.feeds?.[0];

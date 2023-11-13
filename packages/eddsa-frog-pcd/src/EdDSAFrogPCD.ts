@@ -17,7 +17,7 @@ import { frogDataToBigInts, getEdDSAFrogData } from "./utils";
 /**
  * The globally unique type name of the {@link EdDSAFrogPCD}.
  */
-export const EdDSAPCDTypeName = "eddsa-frog-pcd";
+export const EdDSAFrogPCDTypeName = "eddsa-frog-pcd";
 
 /**
  * Assigns each currently supported Biome a unique value.
@@ -174,7 +174,7 @@ export interface EdDSAFrogPCDProof {
  * PCD and serves as the signature.
  */
 export class EdDSAFrogPCD implements PCD<EdDSAFrogPCDClaim, EdDSAFrogPCDProof> {
-  type = EdDSAPCDTypeName;
+  type = EdDSAFrogPCDTypeName;
   claim: EdDSAFrogPCDClaim;
   proof: EdDSAFrogPCDProof;
   id: string;
@@ -267,7 +267,7 @@ export async function serialize(
   );
 
   return {
-    type: EdDSAPCDTypeName,
+    type: EdDSAFrogPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
       eddsaPCD: serializedEdDSAPCD,
@@ -327,7 +327,7 @@ export function getDisplayOptions(pcd: EdDSAFrogPCD): DisplayOptions {
  * Returns true if a PCD is an EdDSA Ticket PCD, or false otherwise.
  */
 export function isEdDSAFrogPCD(pcd: PCD): pcd is EdDSAFrogPCD {
-  return pcd.type === EdDSAPCDTypeName;
+  return pcd.type === EdDSAFrogPCDTypeName;
 }
 
 /**
@@ -340,7 +340,7 @@ export const EdDSAFrogPCDPackage: PCDPackage<
   EdDSAFrogPCDArgs,
   EdDSAFrogPCDInitArgs
 > = {
-  name: EdDSAPCDTypeName,
+  name: EdDSAFrogPCDTypeName,
   renderCardBody: EdDSAFrogCardBody,
   getDisplayOptions,
   init,

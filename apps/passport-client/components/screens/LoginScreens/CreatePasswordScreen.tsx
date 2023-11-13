@@ -120,6 +120,8 @@ export function CreatePasswordScreen() {
           <Spacer h={24} />
           This password will be used to generate an encryption key that secures
           your data. Save your password somewhere you'll be able to find later.
+          If you lose your password, you will have to reset your account, and
+          you'll lose access to your old Zupass Identity and all of your PCDs.
         </TextCenter>
         <Spacer h={24} />
 

@@ -1,4 +1,11 @@
-import { useCallback, useEffect, useRef, useState } from "react";
+import React, {
+  forwardRef,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
+import { useInView } from "react-intersection-observer";
 import styled from "styled-components";
 import { useFrogParticles } from "./useFrogParticles";
 
@@ -16,7 +23,7 @@ export function ActionButton({
    * The action to perform when the button is clicked. This should return a
    * promise that resolves when the action is complete.
    */
-  onClick: () => Promise<void>;
+  onClick: () => Promise<unknown>;
   disabled?: boolean;
   /**
    * The component to use for the button. Defaults to Button.
@@ -36,6 +43,14 @@ export function ActionButton({
     onClickRef.current = onClick;
   }, [onClick]);
 
+  // monitor if a button is visible in the viewport and only trigger onClick
+  // action when it is visible. low effort way to prevent low effort scripting
+  const { ref, inView } = useInView();
+  const inViewRef = useRef(inView);
+  useEffect(() => {
+    inViewRef.current = inView;
+  }, [inView]);
+
   // nb: This useEffect is the core logic of this component. It will trigger
   // onClick action when trigger count is incremented. It will also set loading
   // state to true when onClick action is triggered, and set loading state to
@@ -53,6 +68,10 @@ export function ActionButton({
   //
   // This would be incorrect and is handled by the abortController below.
   useEffect(() => {
+    if (!inViewRef.current) {
+      return;
+    }
+
     const abortController = new AbortController();
 
     if (trigger > 0) {
@@ -87,6 +106,7 @@ export function ActionButton({
       onClick={handleClick}
       disabled={loading || disabled}
       pending={loading}
+      ref={ref}
     >
       {children}
     </ButtonComponent>
@@ -96,44 +116,49 @@ export function ActionButton({
 /**
  * The FrogSearchButton allows a frog confetti animation when the button is disabled.
  */
-export const FrogSearchButton = ({
-  disabled,
-  children,
-  ...props
-}: React.ComponentPropsWithRef<typeof Button>) => {
-  const ref = useRef<HTMLDivElement>(null);
-  const container = useFrogParticles(ref);
+export const FrogSearchButton = forwardRef(
+  (
+    {
+      disabled,
+      children,
+      ...props
+    }: React.ComponentPropsWithRef<typeof Button>,
+    buttonRef: React.Ref<HTMLButtonElement>
+  ) => {
+    const ref = useRef<HTMLDivElement>(null);
+    const container = useFrogParticles(ref);
 
-  useEffect(() => {
-    if (!container) {
-      return;
-    }
+    useEffect(() => {
+      if (!container) {
+        return;
+      }
 
-    if (disabled) {
-      container.start();
-    }
+      if (disabled) {
+        container.start();
+      }
 
-    // nb: we always need this so we can disable animation when button starts as
-    // enabled
-    return () => {
-      container.stop();
-    };
-  }, [container, disabled]);
+      // nb: we always need this so we can disable animation when button starts as
+      // enabled
+      return () => {
+        container.stop();
+      };
+    }, [container, disabled]);
 
-  return (
-    <div
-      style={{
-        display: "flex",
-        alignItems: "stretch"
-      }}
-      ref={ref}
-    >
-      <Button disabled={disabled} {...props}>
-        {children}
-      </Button>
-    </div>
-  );
-};
+    return (
+      <div
+        style={{
+          display: "flex",
+          alignItems: "stretch"
+        }}
+        ref={ref}
+      >
+        <Button disabled={disabled} {...props} ref={buttonRef}>
+          {children}
+        </Button>
+      </div>
+    );
+  }
+);
 
 export const Button = styled.button<{ pending?: boolean }>`
   font-size: 16px;

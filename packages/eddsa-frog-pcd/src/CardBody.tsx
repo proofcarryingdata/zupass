@@ -1,4 +1,4 @@
-import { LinkButton, encodeQRPayload } from "@pcd/passport-ui";
+import { ImageZoom, LinkButton, encodeQRPayload } from "@pcd/passport-ui";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
@@ -36,7 +36,7 @@ export function EdDSAFrogCardBody({
     }
 
     const rarityColors = {
-      [Rarity.Common]: "#168675",
+      [Rarity.Common]: "#2D9061",
       [Rarity.Rare]: "#1197B5",
       [Rarity.Epic]: "#6F3BB0",
       [Rarity.Legendary]: "#FF9900",
@@ -75,7 +75,15 @@ export function EdDSAFrogCardBody({
       <LinkButton onClick={() => setShowPCD(true)}>
         View as proof-carrying data
       </LinkButton>
-      <FrogImg src={frogData?.imageUrl} draggable={false} loading="lazy" />
+      <ImageZoom
+        src={frogData?.imageUrl}
+        draggable={false}
+        loading="lazy"
+        style={{ width: "100%", height: "auto" }}
+        options={{
+          background: "rgba(0, 0, 0, 0.5)"
+        }}
+      />
       <FrogInfo>
         <FrogAttribute label="JMP" title="Jump" value={frogData.jump} />
         <FrogAttribute
@@ -210,11 +218,6 @@ const FrogInfo = styled.div`
   display: flex;
   justify-content: space-around;
   gap: 20px;
-`;
-
-const FrogImg = styled.img`
-  width: 100%;
-  height: auto;
 `;
 
 const Description = styled.div`

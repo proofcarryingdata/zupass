@@ -74,6 +74,7 @@ export interface SessionData {
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
+  chatToJoin?: ChatIDWithChat<ChatIDWithEventsAndMembership>;
   kudosData?: {
     senderSemaphoreId: string;
     recipientSemaphoreId: string;
@@ -682,6 +683,81 @@ export const chatsToJoin = async (
         );
         range.webApp(`${chat.chat?.title}`, proofUrl).row();
       }
+    }
+  });
+};
+
+export const chatsToJoinV2 = async (
+  ctx: BotContext,
+  range: MenuRange<BotContext>
+): Promise<void> => {
+  return traced("telegram", "chatsToJoinV2", async (span) => {
+    const db = ctx.session.dbPool;
+    if (!db) {
+      range.text(`Database not connected. Try again...`);
+      return;
+    }
+    const userId = ctx.from?.id;
+    if (!userId) {
+      range.text(`User not found. Try again...`);
+      return;
+    }
+    span?.setAttribute("userId", userId?.toString());
+    if (ctx.chat?.id) span?.setAttribute("chatId", ctx.chat.id);
+
+    try {
+      if (ctx.session.chatToJoin) {
+        const chat = ctx.session.chatToJoin;
+        const telegramUsername = ctx.from?.username;
+        const proofUrl = await generateTicketProofUrl(
+          userId.toString(),
+          chat.telegramChatID,
+          chat.ticketEventIds,
+          telegramUsername
+        );
+
+        range.webApp(`Join ${chat.chat?.title}`, proofUrl).row();
+        range.text(`↰  Back`, async (ctx) => {
+          ctx.session.chatToJoin = undefined;
+          ctx.menu.update();
+        });
+      } else {
+        const chatsWithMembership = await getChatsWithMembershipStatus(
+          db,
+          ctx,
+          userId
+        );
+
+        if (chatsWithMembership.length === 0) {
+          range.text(`No groups to join at this time`);
+          return;
+        }
+
+        for (const chat of chatsWithMembership) {
+          if (chat.isChatMember) {
+            const invite = await ctx.api.createChatInviteLink(
+              chat.telegramChatID,
+              {
+                creates_join_request: true
+              }
+            );
+            range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
+            range.row();
+          } else {
+            range
+              .text(` ${chat.chat?.title}`, async (ctx) => {
+                ctx.session.chatToJoin = chat;
+                ctx.menu.update();
+              })
+              .row();
+          }
+
+          range.row();
+        }
+      }
+    } catch (error) {
+      range.text(`Action failed ${error}`);
+      return;
     }
   });
 };

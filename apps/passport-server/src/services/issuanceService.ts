@@ -837,7 +837,7 @@ export class IssuanceService {
   }
 
   private async issueFrogPCDs(): Promise<SerializedPCD[]> {
-    const FROG_INTERVAL_MS = 1000 * 60 * 10; // one new frog every ten minutes
+    const FROG_INTERVAL_MS = 1000 * 60 * 60 * 24; // one new frog every 24h
     // Images are served from passport-client's web host
     const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
 
@@ -1339,7 +1339,7 @@ export class IssuanceService {
       req.checkerProof.pcd
     );
     const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-    if (!valid) {
+    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
@@ -1362,7 +1362,7 @@ export class IssuanceService {
     );
     const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
 
-    if (!valid) {
+    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 

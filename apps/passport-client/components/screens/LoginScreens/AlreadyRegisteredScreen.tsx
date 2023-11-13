@@ -81,7 +81,9 @@ export function AlreadyRegisteredScreen() {
       } else {
         window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
           email
-        )}&identityCommitment=${encodeURIComponent(identityCommitment)}`;
+        )}&identityCommitment=${encodeURIComponent(
+          identityCommitment
+        )}&isReset=true`;
       }
     },
     [email, identityCommitment, verifyToken]

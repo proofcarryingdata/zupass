@@ -80,7 +80,7 @@ export function getQRCodeColorOverride(
 ): string | undefined {
   const ticketData = getEdDSATicketData(pcd);
 
-  if (!ticketData || ticketData.isConsumed || ticketData.isRevoked) {
+  if (!ticketData || ticketData.isRevoked) {
     return INVALID_TICKET_QR_CODE_COLOR;
   }
 
