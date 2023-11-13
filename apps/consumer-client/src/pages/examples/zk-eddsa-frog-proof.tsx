@@ -114,6 +114,7 @@ export default function Page() {
           Request ZKEdDSA Frog Proof from Zupass
         </button>
         <br />
+        <br />
 
         <label>
           <input
@@ -123,8 +124,9 @@ export default function Page() {
               setRevealFieldsUserProvided((checked) => !checked);
             }}
           />
-          allow reveal fields customization?
+          allow customized reveal fields?
         </label>
+        <br />
         <br />
 
         <label>
@@ -134,8 +136,9 @@ export default function Page() {
             onChange={() => {
               setRevealFrogId((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request frogId?
+          reveal frogId?
         </label>
         <br />
         <label>
@@ -145,8 +148,9 @@ export default function Page() {
             onChange={() => {
               setRevealBiome((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request biome?
+          reveal biome?
         </label>
         <br />
         <label>
@@ -156,8 +160,9 @@ export default function Page() {
             onChange={() => {
               setRevealRarity((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request rarity?
+          reveal rarity?
         </label>
         <br />
         <label>
@@ -167,8 +172,9 @@ export default function Page() {
             onChange={() => {
               setRevealTemperament((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request temperament?
+          reveal temperament?
         </label>
         <br />
         <label>
@@ -178,8 +184,9 @@ export default function Page() {
             onChange={() => {
               setRevealJump((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request jump?
+          reveal jump?
         </label>
         <br />
         <label>
@@ -189,8 +196,9 @@ export default function Page() {
             onChange={() => {
               setRevealSpeed((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request speed?
+          reveal speed?
         </label>
         <br />
         <label>
@@ -200,8 +208,9 @@ export default function Page() {
             onChange={() => {
               setRevealIntelligence((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request intelligence?
+          reveal intelligence?
         </label>
         <br />
         <label>
@@ -211,8 +220,9 @@ export default function Page() {
             onChange={() => {
               setRevealBeauty((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request beauty?
+          reveal beauty?
         </label>
         <br />
         <label>
@@ -222,8 +232,9 @@ export default function Page() {
             onChange={() => {
               setRevealTimestampSigned((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request timestampSigned?
+          reveal timestampSigned?
         </label>
         <br />
         <label>
@@ -233,8 +244,9 @@ export default function Page() {
             onChange={() => {
               setRevealOwnerSemaphoreId((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request ownerSemaphoreId?
+          reveal ownerSemaphoreId?
         </label>
         <br />
         <label>
@@ -244,8 +256,9 @@ export default function Page() {
             onChange={() => {
               setRevealNullifierHash((checked) => !checked);
             }}
+            disabled={!revealFieldsUserProvided}
           />
-          request nullifierHash?
+          reveal nullifierHash?
         </label>
         <br />
 
