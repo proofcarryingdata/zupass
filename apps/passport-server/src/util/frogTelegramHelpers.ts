@@ -10,6 +10,7 @@ import {
 } from "@pcd/zk-eddsa-frog-pcd";
 import { Pool } from "postgres-pool";
 import { insertTelegramVerification } from "../database/queries/telegram/insertTelegramConversation";
+import { loadRSAPrivateKey } from "../services/issuanceService";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
 
@@ -108,8 +109,10 @@ export const handleFrogVerification = async (
       throw new Error(`Missing server eddsa private key .env value`);
 
     // This Pubkey value should work for staging + prod as well, but needs to be tested
+    const rsaPrivateKey = loadRSAPrivateKey();
+    if (!rsaPrivateKey) throw new Error(`No RSA private key found`);
     const SERVER_EDDSA_PUBKEY = await getEdDSAPublicKey(
-      process.env.SERVER_EDDSA_PRIVATE_KEY
+      rsaPrivateKey.exportKey("private")
     );
 
     const signerMatch =

@@ -1476,7 +1476,7 @@ async function setupKnownTicketTypes(
   }
 }
 
-function loadRSAPrivateKey(): NodeRSA | null {
+export function loadRSAPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
   if (pkeyEnv == null) {
