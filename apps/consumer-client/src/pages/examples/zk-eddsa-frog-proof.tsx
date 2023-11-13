@@ -9,11 +9,12 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash } from "@pcd/util";
 import {
+  EdDSAFrogFieldsToReveal,
   ZKEdDSAFrogPCD,
   ZKEdDSAFrogPCDArgs,
   ZKEdDSAFrogPCDPackage
 } from "@pcd/zk-eddsa-frog-pcd";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
@@ -26,6 +27,50 @@ export default function Page() {
     "consumer-client-watermark"
   ).toString();
 
+  const [revealFieldsUserProvided, setRevealFieldsUserProvided] =
+    useState<boolean>(false);
+  const [revealFrogId, setRevealFrogId] = useState<boolean>(false);
+  const [revealBiome, setRevealBiome] = useState<boolean>(false);
+  const [revealRarity, setRevealRarity] = useState<boolean>(false);
+  const [revealTemperament, setRevealTemperament] = useState<boolean>(false);
+  const [revealJump, setRevealJump] = useState<boolean>(false);
+  const [revealSpeed, setRevealSpeed] = useState<boolean>(false);
+  const [revealIntelligence, setRevealIntelligence] = useState<boolean>(false);
+  const [revealBeauty, setRevealBeauty] = useState<boolean>(false);
+  const [revealTimestampSigned, setRevealTimestampSigned] =
+    useState<boolean>(false);
+  const [revealOwnerSemaphoreId, setRevealOwnerSemaphoreId] =
+    useState<boolean>(false);
+  const [revealNullifierHash, setRevealNullifierHash] =
+    useState<boolean>(false);
+
+  const fieldsToReveal: EdDSAFrogFieldsToReveal = useMemo(
+    () => ({
+      revealFrogId,
+      revealBiome,
+      revealRarity,
+      revealTemperament,
+      revealJump,
+      revealSpeed,
+      revealIntelligence,
+      revealBeauty,
+      revealTimestampSigned,
+      revealOwnerSemaphoreId
+    }),
+    [
+      revealFrogId,
+      revealBiome,
+      revealRarity,
+      revealTemperament,
+      revealJump,
+      revealSpeed,
+      revealIntelligence,
+      revealBeauty,
+      revealTimestampSigned,
+      revealOwnerSemaphoreId
+    ]
+  );
+
   // Populate PCD from either client-side or server-side proving using the Zupass popup
   const [pcdStr] = useZupassPopupMessages();
 
@@ -37,7 +82,9 @@ export default function Page() {
   const { pcd } = useZKEdDSAFrogProof(
     pcdStr,
     onVerified,
+    fieldsToReveal,
     externalNullifier,
+    revealNullifierHash,
     watermark
   );
 
@@ -47,8 +94,7 @@ export default function Page() {
       <h2>ZKEdDSA Frog Proof</h2>
       <p>
         This page shows a working example of an integration with Zupass which
-        requests and verifies that the user has an EdDSA-signed frog, without
-        revealing the user's semaphore identity.
+        requests and verifies that the user has an EdDSA-signed frog.
       </p>
       <ExampleContainer>
         <button
@@ -56,7 +102,10 @@ export default function Page() {
             openZKEdDSAFrogPopup(
               ZUPASS_URL,
               window.location.origin + "#/popup",
+              fieldsToReveal,
+              revealFieldsUserProvided,
               externalNullifier,
+              revealNullifierHash,
               watermark
             )
           }
@@ -65,7 +114,141 @@ export default function Page() {
           Request ZKEdDSA Frog Proof from Zupass
         </button>
         <br />
+
+        <label>
+          <input
+            type="checkbox"
+            checked={revealFieldsUserProvided}
+            onChange={() => {
+              setRevealFieldsUserProvided((checked) => !checked);
+            }}
+          />
+          allow reveal fields customization?
+        </label>
         <br />
+
+        <label>
+          <input
+            type="checkbox"
+            checked={revealFrogId}
+            onChange={() => {
+              setRevealFrogId((checked) => !checked);
+            }}
+          />
+          request frogId?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealBiome}
+            onChange={() => {
+              setRevealBiome((checked) => !checked);
+            }}
+          />
+          request biome?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealRarity}
+            onChange={() => {
+              setRevealRarity((checked) => !checked);
+            }}
+          />
+          request rarity?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealTemperament}
+            onChange={() => {
+              setRevealTemperament((checked) => !checked);
+            }}
+          />
+          request temperament?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealJump}
+            onChange={() => {
+              setRevealJump((checked) => !checked);
+            }}
+          />
+          request jump?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealSpeed}
+            onChange={() => {
+              setRevealSpeed((checked) => !checked);
+            }}
+          />
+          request speed?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealIntelligence}
+            onChange={() => {
+              setRevealIntelligence((checked) => !checked);
+            }}
+          />
+          request intelligence?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealBeauty}
+            onChange={() => {
+              setRevealBeauty((checked) => !checked);
+            }}
+          />
+          request beauty?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealTimestampSigned}
+            onChange={() => {
+              setRevealTimestampSigned((checked) => !checked);
+            }}
+          />
+          request timestampSigned?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealOwnerSemaphoreId}
+            onChange={() => {
+              setRevealOwnerSemaphoreId((checked) => !checked);
+            }}
+          />
+          request ownerSemaphoreId?
+        </label>
+        <br />
+        <label>
+          <input
+            type="checkbox"
+            checked={revealNullifierHash}
+            onChange={() => {
+              setRevealNullifierHash((checked) => !checked);
+            }}
+          />
+          request nullifierHash?
+        </label>
+        <br />
+
         {!!pcd && (
           <>
             <p>Got ZKEdDSA Frog Proof from Zupass</p>
@@ -75,19 +258,29 @@ export default function Page() {
             {valid === true && (
               <>
                 <p>✅ Proof is valid</p>
-                <p>{`Frog ID: ${pcd.claim.partialFrog.frogId}`}</p>
-                <p>{`Biome: ${pcd.claim.partialFrog.biome}`}</p>
-                <p>{`Rarity: ${pcd.claim.partialFrog.rarity}`}</p>
-                <p>{`Temperament: ${pcd.claim.partialFrog.temperament}`}</p>
-                <p>{`Jump: ${pcd.claim.partialFrog.jump}`}</p>
-                <p>{`Speed: ${pcd.claim.partialFrog.speed}`}</p>
-                <p>{`Intelligence: ${pcd.claim.partialFrog.intelligence}`}</p>
-                <p>{`Beauty: ${pcd.claim.partialFrog.beauty}`}</p>
-                <p>{`Timestamp Signed: ${pcd.claim.partialFrog.timestampSigned}`}</p>
-                <p>{`Owner Semaphore Id: ${pcd.claim.partialFrog.ownerSemaphoreId}`}</p>
+                <p>{`Frog ID: ${pcd.claim.partialFrog.frogId || "HIDDEN"}`}</p>
+                <p>{`Biome: ${pcd.claim.partialFrog.biome || "HIDDEN"}`}</p>
+                <p>{`Rarity: ${pcd.claim.partialFrog.rarity || "HIDDEN"}`}</p>
+                <p>{`Temperament: ${
+                  pcd.claim.partialFrog.temperament || "HIDDEN"
+                }`}</p>
+                <p>{`Jump: ${pcd.claim.partialFrog.jump || "HIDDEN"}`}</p>
+                <p>{`Speed: ${pcd.claim.partialFrog.speed || "HIDDEN"}`}</p>
+                <p>{`Intelligence: ${
+                  pcd.claim.partialFrog.intelligence || "HIDDEN"
+                }`}</p>
+                <p>{`Beauty: ${pcd.claim.partialFrog.beauty || "HIDDEN"}`}</p>
+                <p>{`Timestamp Signed: ${
+                  pcd.claim.partialFrog.timestampSigned || "HIDDEN"
+                }`}</p>
+                <p>{`Owner Semaphore Id: ${
+                  pcd.claim.partialFrog.ownerSemaphoreId || "HIDDEN"
+                }`}</p>
                 <p>{`Signer: ${pcd.claim.signerPublicKey}`}</p>
                 <p>{`External Nullifier: ${pcd.claim.externalNullifier}`}</p>
-                <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
+                <p>{`Nullifier Hash: ${
+                  pcd.claim.nullifierHash || "HIDDEN"
+                }`}</p>
                 <p>{`Watermark: ${pcd.claim.watermark}`}</p>
               </>
             )}
@@ -104,12 +297,19 @@ export default function Page() {
  *
  * @param urlToZupassWebsite URL of the Zupass website
  * @param popupUrl Route where the useZupassPopupSetup hook is being served from
+ * @param fieldsToReveal Frog data fields that site is requesting for user to reveal
+ * @param fieldsToRevealUserProvided Whether the user can customize the fields to reveal
  * @param externalNullifier Optional unique identifier for this ZKEdDSAFrogPCD
+ * @param revealNullifierHash Whether to reveal the nullifier hash
+ * @param watermark Challenge to watermark this proof to
  */
 export function openZKEdDSAFrogPopup(
   urlToZupassWebsite: string,
   popupUrl: string,
+  fieldsToReveal: EdDSAFrogFieldsToReveal,
+  revealFieldsUserProvided: boolean,
   externalNullifier: string,
+  revealNullifierHash: boolean,
   watermark: string
 ) {
   const args: ZKEdDSAFrogPCDArgs = {
@@ -128,10 +328,20 @@ export function openZKEdDSAFrogPopup(
       value: undefined,
       userProvided: true
     },
+    fieldsToReveal: {
+      argumentType: ArgumentTypeName.ToggleList,
+      value: fieldsToReveal,
+      userProvided: revealFieldsUserProvided
+    },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
       value: externalNullifier,
       userProvided: false
+    },
+    revealNullifierHash: {
+      argumentType: ArgumentTypeName.Boolean,
+      value: revealNullifierHash,
+      userProvided: revealFieldsUserProvided
     },
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
@@ -158,7 +368,9 @@ export function openZKEdDSAFrogPopup(
 function useZKEdDSAFrogProof(
   pcdStr: string,
   onVerified: (valid: boolean) => void,
+  fieldsToReveal: EdDSAFrogFieldsToReveal,
   externalNullifier: string,
+  revealNullifierHash: boolean,
   watermark: string
 ): { pcd: ZKEdDSAFrogPCD | undefined; error: any } {
   const [error, _setError] = useState<Error | undefined>();
@@ -166,11 +378,22 @@ function useZKEdDSAFrogProof(
 
   useEffect(() => {
     if (zkEdDSAFrogPCD) {
-      verifyProof(zkEdDSAFrogPCD, externalNullifier, watermark).then(
-        onVerified
-      );
+      verifyProof(
+        zkEdDSAFrogPCD,
+        fieldsToReveal,
+        externalNullifier,
+        revealNullifierHash,
+        watermark
+      ).then(onVerified);
     }
-  }, [zkEdDSAFrogPCD, externalNullifier, watermark, onVerified]);
+  }, [
+    zkEdDSAFrogPCD,
+    fieldsToReveal,
+    externalNullifier,
+    revealNullifierHash,
+    watermark,
+    onVerified
+  ]);
 
   return {
     pcd: zkEdDSAFrogPCD,
@@ -180,17 +403,38 @@ function useZKEdDSAFrogProof(
 
 async function verifyProof(
   pcd: ZKEdDSAFrogPCD,
+  fieldsToReveal: EdDSAFrogFieldsToReveal,
   externalNullifier: string,
+  revealNullifierHash: boolean,
   watermark: string
 ): Promise<boolean> {
   const { verify } = ZKEdDSAFrogPCDPackage;
   const verified = await verify(pcd);
   if (!verified) return false;
 
-  // verify the claim is for the correct externalNullifier
+  // verify the claim is for the correct externalNullifier, watermark,
+  // and the correct fields requested
   const sameExternalNullifier =
     pcd.claim.externalNullifier === externalNullifier ||
     (!pcd.claim.externalNullifier && !externalNullifier);
+
   const sameWatermark = pcd.claim.watermark === watermark;
-  return sameExternalNullifier && sameWatermark;
+
+  const frog = pcd.claim.partialFrog;
+  const sameFieldsToReveal =
+    (frog.frogId !== undefined) === fieldsToReveal.revealFrogId &&
+    (frog.biome !== undefined) === fieldsToReveal.revealBiome &&
+    (frog.rarity !== undefined) === fieldsToReveal.revealRarity &&
+    (frog.temperament !== undefined) === fieldsToReveal.revealTemperament &&
+    (frog.jump !== undefined) === fieldsToReveal.revealJump &&
+    (frog.speed !== undefined) === fieldsToReveal.revealSpeed &&
+    (frog.intelligence !== undefined) === fieldsToReveal.revealIntelligence &&
+    (frog.beauty !== undefined) === fieldsToReveal.revealBeauty &&
+    (frog.timestampSigned !== undefined) ===
+      fieldsToReveal.revealTimestampSigned &&
+    (frog.ownerSemaphoreId !== undefined) ===
+      fieldsToReveal.revealOwnerSemaphoreId &&
+    (pcd.claim.nullifierHash !== undefined) === revealNullifierHash;
+
+  return sameExternalNullifier && sameWatermark && sameFieldsToReveal;
 }
