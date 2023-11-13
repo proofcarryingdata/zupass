@@ -13,29 +13,32 @@ export function useUsernameGenerator():
 
   const generator = useCallback(
     (sempahoreId: string) => {
-      if (!pcdCrypto) {
-        throw new Error("pcdCrypto is not initialized");
-      }
+      try {
+        if (!pcdCrypto) {
+          throw new Error("pcdCrypto is not initialized");
+        }
 
-      const randomBytes = pcdCrypto.randombytesDeterministic(
-        32,
-        bigintToUint8Array(BigInt(sempahoreId))
-      );
-      if (!randomBytes) {
+        const randomBytes = pcdCrypto.randombytesDeterministic(
+          32,
+          bigintToUint8Array(BigInt(sempahoreId))
+        );
+        const randomBigInt = uint8arrayToBigint(randomBytes);
+
+        const randomAdjective: string =
+          adjectives[
+            Number(
+              (randomBigInt / BigInt(animals.length)) %
+                BigInt(adjectives.length)
+            )
+          ];
+        const randomAnimal: string =
+          animals[Number(randomBigInt % BigInt(animals.length))];
+
+        return _.startCase(`${randomAdjective} ${randomAnimal}`);
+      } catch (e) {
+        console.debug("Error in useUsernameGenerator", e);
         return "An Unknown Toad";
       }
-      const randomBigInt = uint8arrayToBigint(randomBytes);
-
-      const randomAdjective: string =
-        adjectives[
-          Number(
-            (randomBigInt / BigInt(animals.length)) % BigInt(adjectives.length)
-          )
-        ];
-      const randomAnimal: string =
-        animals[Number(randomBigInt % BigInt(animals.length))];
-
-      return _.startCase(`${randomAdjective} ${randomAnimal}`);
     },
     [pcdCrypto]
   );

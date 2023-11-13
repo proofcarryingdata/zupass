@@ -248,26 +248,89 @@ export async function incrementScore(
   return res.rows[0];
 }
 
+/**
+ * Common table expressions for scoreboard queries.
+ *
+ * Postgres will optimize the query by pushing the where clause into the CTEs.
+ */
+const ScoreCTEs = `
+with tg as (
+  select distinct on (semaphore_id)
+  telegram_username,
+  semaphore_id
+  from telegram_bot_conversations
+  order by semaphore_id, id desc
+),
+scores as (
+  select
+  semaphore_id,
+  '0x' || encode(sha256('frogcrypto_' || semaphore_id::bytea), 'hex') as semaphore_id_hash,
+  cast(rank() over (order by score desc) as int) as rank,
+  cast(score as int) as score,
+  telegram_sharing_allowed
+  from frogcrypto_user_scores
+  order by score desc
+),
+scores_with_username as (
+  select
+  scores.semaphore_id,
+  semaphore_id_hash,
+  CASE WHEN scores.telegram_sharing_allowed THEN telegram_username END as telegram_username,
+  telegram_username is not null as has_telegram_username,
+  rank,
+  score
+  from scores
+  left join tg on scores.semaphore_id = tg.semaphore_id
+)
+`;
+
+/**
+ * Returns the top scores.
+ */
 export async function getScoreboard(
   pool: Pool,
   limit = 50
 ): Promise<FrogCryptoScore[]> {
   const result = await sqlQuery(
     pool,
-    `select
-    cast(score as int) as score,
-    cast(rank as int) as rank,
-    semaphore_id
-    from (
-      select *, rank() over (order by score desc) from frogcrypto_user_scores
-      order by score desc
-      limit $1
-    ) scores
-    order by rank asc`,
+    ScoreCTEs + `select * from scores_with_username limit $1`,
     [limit]
   );
 
-  return result.rows;
+  return result.rows.map<any>((row) => _.omit(row, ["semaphore_id"]));
+}
+
+/**
+ * Returns the user's score and rank.
+ */
+export async function getUserScore(
+  pool: Pool,
+  semaphoreId: string
+): Promise<FrogCryptoScore | undefined> {
+  const result = await sqlQuery(
+    pool,
+    ScoreCTEs + `select * from scores_with_username where semaphore_id = $1`,
+    [semaphoreId]
+  );
+
+  return result.rows.map<any>((row) => _.omit(row, ["semaphore_id"]))[0];
+}
+
+/**
+ * Update the user's preference to reveal their TG username on the scoreboard.
+ */
+export async function updateUserScoreboardPreference(
+  pool: Pool,
+  semaphoreId: string,
+  allow: boolean
+): Promise<void> {
+  await sqlQuery(
+    pool,
+    `update frogcrypto_user_scores
+    set telegram_sharing_allowed = $1
+    where semaphore_id = $2`,
+    [allow, semaphoreId]
+  );
 }
 
 /**
@@ -300,26 +363,6 @@ export async function getRawFeedData(
   const result = await sqlQuery(pool, `select * from frogcrypto_feeds`);
 
   return result.rows;
-}
-
-export async function getUserScore(
-  pool: Pool,
-  semaphoreId: string
-): Promise<FrogCryptoScore | undefined> {
-  const result = await sqlQuery(
-    pool,
-    `select
-    cast(score as int) as score,
-    cast(rank as int) as rank,
-    semaphore_id
-    from (
-      select *, rank() over (order by score desc) from frogcrypto_user_scores
-    ) scores
-    where semaphore_id = $1`,
-    [semaphoreId]
-  );
-
-  return result.rows[0];
 }
 
 /**

@@ -1,22 +1,39 @@
-import { requestFrogCryptoGetScoreboard } from "@pcd/passport-interface";
+import {
+  requestFrogCryptoGetScoreboard,
+  requestFrogCryptoUpdateTelegramHandleSharing
+} from "@pcd/passport-interface";
 import { FrogCryptoScore } from "@pcd/passport-interface/src/FrogCrypto";
 import _ from "lodash";
-import { Fragment, useEffect, useMemo, useState } from "react";
+import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
+import { useCredentialManager } from "../../../src/appHooks";
+import { H2 } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { AdhocModal } from "../../modals/AdhocModal";
+import { ActionButton } from "./Button";
 import { useUsernameGenerator } from "./useUsername";
 
 /**
  * The Score tab shows the user their score and the leaderboard.
  */
-export function ScoreTab({ score }: { score?: FrogCryptoScore }) {
+export function ScoreTab({
+  score,
+  refreshScore
+}: {
+  score?: FrogCryptoScore;
+  refreshScore: () => Promise<void>;
+}) {
   const [scores, setScores] = useState<FrogCryptoScore[]>([]);
-  useEffect(() => {
+  const refreshScores = useCallback(async () => {
     requestFrogCryptoGetScoreboard(appConfig.zupassServer).then((res) => {
       setScores(res.value || []);
     });
   }, []);
+  useEffect(() => {
+    refreshScores();
+  }, [refreshScores]);
+
   const getUsername = useUsernameGenerator();
 
   if (!score || !getUsername) {
@@ -25,6 +42,17 @@ export function ScoreTab({ score }: { score?: FrogCryptoScore }) {
 
   return (
     <Container>
+      {
+        // only show share button if user has a telegram username
+        score.has_telegram_username && (
+          <TelegramShareButton
+            score={score}
+            refreshAll={async () => {
+              Promise.all([refreshScore(), refreshScores()]);
+            }}
+          />
+        )
+      }
       <ScoreTable title="You" scores={[score]} getUsername={getUsername} />
       {scores.length > 0 && (
         <ScoreTable
@@ -69,22 +97,25 @@ function ScoreTable({
         {scoresByLevel.map((group) => {
           return (
             <Fragment key={group.title}>
-              {myScore && (
-                <tr>
-                  <td
-                    colSpan={3}
-                    style={{ textAlign: "center", padding: "4px 0" }}
-                  >
-                    {group.emoji} {group.title}
-                  </td>
-                </tr>
-              )}
+              {
+                // if myScore is not provided, we are showing the user only view
+                myScore && (
+                  <tr>
+                    <td
+                      colSpan={3}
+                      style={{ textAlign: "center", padding: "4px 0" }}
+                    >
+                      {group.emoji} {group.title}
+                    </td>
+                  </tr>
+                )
+              }
 
               {group.scores.map((score) => (
                 <tr
-                  key={score.semaphore_id}
+                  key={score.semaphore_id_hash}
                   style={
-                    score.semaphore_id === myScore?.semaphore_id
+                    score.semaphore_id_hash === myScore?.semaphore_id_hash
                       ? {
                           fontWeight: "bold",
                           color: "var(--accent-darker)"
@@ -93,7 +124,10 @@ function ScoreTable({
                   }
                 >
                   <td>{score.rank}</td>
-                  <td>{getUsername(score.semaphore_id)}</td>
+                  <td>
+                    {score.telegram_username ??
+                      getUsername(score.semaphore_id_hash)}
+                  </td>
                   <td style={{ textAlign: "right" }}>{score.score}</td>
                 </tr>
               ))}
@@ -102,6 +136,77 @@ function ScoreTable({
         })}
       </tbody>
     </table>
+  );
+}
+
+/**
+ * Share button and modal for telegram username.
+ */
+function TelegramShareButton({
+  score,
+  refreshAll
+}: {
+  score: FrogCryptoScore;
+  refreshAll: () => Promise<void>;
+}) {
+  const [showModal, setShowModal] = useState(false);
+  const credentialManager = useCredentialManager();
+  const revealed = !!score.telegram_username;
+
+  return (
+    <>
+      <ActionButton
+        onClick={async () => {
+          setShowModal(true);
+        }}
+      >
+        {score.telegram_username
+          ? "Hide Telegram Username"
+          : "Pubilsh Telegram Username"}
+      </ActionButton>
+
+      <AdhocModal
+        open={showModal}
+        onClose={() => setShowModal(false)}
+        closeOnEsc
+      >
+        <Container>
+          <H2>
+            {revealed
+              ? "Your Telegram Username Sharing"
+              : "Share Your Telegram Username?"}
+          </H2>
+          <div>
+            {revealed
+              ? "Your Telegram username is shared with FrogCrypto via ZuKat and is visible on the leaderboard. If you prefer more privacy, you can choose to hide your Telegram username at any time. When hidden, you'll be assigned a pseudo-anonymous name based on your Semaphore ID."
+              : "You're currently using a pseudo-anonymous name based on your Semaphore ID. You can share your Telegram username with FrogCrypto via ZuKat. ZuKat will have access to your username only if you've joined a ZuKat-gated Telegram chat. You can revert to a pseudo-anonymous name anytime."}
+          </div>
+          <ActionButton
+            onClick={async () => {
+              await requestFrogCryptoUpdateTelegramHandleSharing(
+                appConfig.zupassServer,
+                {
+                  pcd: await credentialManager.requestCredential({
+                    signatureType: "sempahore-signature-pcd"
+                  }),
+                  reveal: !revealed
+                }
+              );
+
+              // once user preference is updated, we need to refetch both user's
+              // score and leaderboard to fetch TG username
+              await refreshAll();
+
+              setShowModal(false);
+            }}
+          >
+            {revealed
+              ? "Hide My Telegram Username"
+              : "Share My Telegram Username"}
+          </ActionButton>
+        </Container>
+      </AdhocModal>
+    </>
   );
 }
 
@@ -151,7 +256,10 @@ export function scoreToEmoji(score: number) {
  * Group the scores by level.
  */
 export function groupScores(scores: FrogCryptoScore[]) {
-  const groups = SCORES.map((item) => ({ ...item, scores: [] })).reverse();
+  const groups = SCORES.map((item) => ({
+    ...item,
+    scores: [] as FrogCryptoScore[]
+  })).reverse();
 
   _.orderBy(scores, ["score"], ["desc"]).forEach((score) => {
     const index = SCORES.findIndex((item) => item.score > score.score);

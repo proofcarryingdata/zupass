@@ -2,10 +2,12 @@ import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoFeed,
   FrogCryptoFolderName,
+  FrogCryptoShareTelegramHandleResult,
   FrogCryptoUserStateResult,
   PollFeedResult,
   createFeedCredentialPayload,
   frogCryptoGetUserState,
+  frogCryptoUpdateTelegramHandleSharing,
   pollFeed,
   requestFrogCryptoGetScoreboard,
   requestListFeeds
@@ -13,6 +15,7 @@ import {
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import { sha256 } from "js-sha256";
 import "mocha";
 import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
@@ -25,7 +28,12 @@ import {
   upsertFeedData,
   upsertFrogData
 } from "../src/database/queries/frogcrypto";
+import {
+  insertTelegramChat,
+  insertTelegramVerification
+} from "../src/database/queries/telegram/insertTelegramConversation";
 import { Zupass } from "../src/types";
+import { testLogin } from "./user/testLoginPCDPass";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import {
   testDexFrogs,
@@ -276,8 +284,8 @@ describe("frogcrypto functionality", function () {
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogs).to.deep.equal(testDexFrogs);
     expect(userState.value?.myScore?.score).to.eq(1);
-    expect(userState.value?.myScore?.semaphore_id).to.be.eq(
-      identity.getCommitment().toString()
+    expect(userState.value?.myScore?.semaphore_id_hash).to.be.eq(
+      getSemaphoreIdHash(identity)
     );
     expect(userState.value?.feeds).to.be.not.empty;
     feedState = userState.value?.feeds?.[0];
@@ -297,8 +305,8 @@ describe("frogcrypto functionality", function () {
     expect(userState.success).to.be.true;
     expect(userState.value?.possibleFrogs).to.deep.equal(testDexFrogs);
     expect(userState.value?.myScore?.score).to.eq(3);
-    expect(userState.value?.myScore?.semaphore_id).to.be.eq(
-      identity.getCommitment().toString()
+    expect(userState.value?.myScore?.semaphore_id_hash).to.be.eq(
+      getSemaphoreIdHash(identity)
     );
     expect(userState.value?.feeds).to.be.not.empty;
     feedState = userState.value?.feeds?.[0];
@@ -383,6 +391,99 @@ describe("frogcrypto functionality", function () {
     expect(scores[0].score).to.eq(1000);
   });
 
+  it("should return has_telegram_username and share tg username", async () => {
+    const loginResult = await testLogin(application, "frog1@crypto.xyz", {
+      force: true,
+      expectUserAlreadyLoggedIn: false,
+      expectEmailIncorrect: false,
+      skipSetupPassword: true
+    });
+
+    expect(loginResult?.identity).to.not.be.empty;
+    identity = loginResult?.identity as Identity;
+
+    await insertTelegramChat(db, 101);
+    await insertTelegramVerification(
+      db,
+      11,
+      101,
+      identity.getCommitment().toString(),
+      "test"
+    );
+
+    const feed = feeds[0];
+    await testGetFrog(feed, DATE_EPOCH_1H);
+
+    let userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    let score = userState.value?.myScore;
+    expectToExist(score);
+    expect(score.has_telegram_username).to.be.true;
+    expect(score.telegram_username).to.be.null;
+
+    await updateTelegramHandleSharing(true);
+    userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    score = userState.value?.myScore;
+    expectToExist(score);
+    expect(score.has_telegram_username).to.be.true;
+    expect(score.telegram_username).to.eq("test");
+
+    await updateTelegramHandleSharing(false);
+    userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    score = userState.value?.myScore;
+    expectToExist(score);
+    expect(score.has_telegram_username).to.be.true;
+    expect(score.telegram_username).to.be.null;
+  });
+
+  it("should return has_telegram_username false if username does not exists", async () => {
+    const loginResult = await testLogin(application, "frog2@crypto.xyz", {
+      force: true,
+      expectUserAlreadyLoggedIn: false,
+      expectEmailIncorrect: false,
+      skipSetupPassword: true
+    });
+
+    expect(loginResult?.identity).to.not.be.empty;
+    identity = loginResult?.identity as Identity;
+
+    await insertTelegramChat(db, 102);
+    await insertTelegramVerification(
+      db,
+      12,
+      102,
+      identity.getCommitment().toString()
+    );
+
+    const feed = feeds[0];
+    await testGetFrog(feed, DATE_EPOCH_1H);
+
+    let userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    let score = userState.value?.myScore;
+    expectToExist(score);
+    expect(score.has_telegram_username).to.be.false;
+    expect(score.telegram_username).to.be.null;
+
+    await updateTelegramHandleSharing(true);
+    userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    score = userState.value?.myScore;
+    expectToExist(score);
+    expect(score.has_telegram_username).to.be.false;
+    expect(score.telegram_username).to.be.null;
+
+    await updateTelegramHandleSharing(false);
+    userState = await getUserState([feed.id]);
+    expect(userState.success).to.be.true;
+    score = userState.value?.myScore;
+    expectToExist(score);
+    expect(score.has_telegram_username).to.be.false;
+    expect(score.telegram_username).to.be.null;
+  });
+
   async function testGetFrog(
     feed: FrogCryptoFeed,
     now: Date
@@ -442,5 +543,21 @@ describe("frogcrypto functionality", function () {
       payload,
       feedIds
     );
+  }
+
+  async function updateTelegramHandleSharing(
+    shareTelegramHandle: boolean
+  ): Promise<FrogCryptoShareTelegramHandleResult> {
+    const payload = JSON.stringify(createFeedCredentialPayload());
+    return frogCryptoUpdateTelegramHandleSharing(
+      application.expressContext.localEndpoint,
+      identity,
+      payload,
+      shareTelegramHandle
+    );
+  }
+
+  function getSemaphoreIdHash(identity: Identity): string {
+    return "0x" + sha256("frogcrypto_" + identity.getCommitment().toString());
   }
 });

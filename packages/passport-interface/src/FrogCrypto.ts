@@ -174,7 +174,9 @@ export const FrogCryptoFolderName = "FrogCrypto";
  * User score data and computed rank
  */
 export interface FrogCryptoScore {
-  semaphore_id: string;
+  semaphore_id_hash: string;
+  telegram_username?: string;
+  has_telegram_username: boolean;
   score: number;
   rank: number;
 }
