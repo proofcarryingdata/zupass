@@ -259,8 +259,11 @@ class App extends React.Component<object, AppState> {
     if (this.state.completedFirstSync) {
       this.update({
         ...this.state,
-        extraDownloadRequested: true,
-        extraSubscriptionFetchRequested: true
+        extraDownloadRequested: true
+        // TODO: evaluate if this made a difference for the disappearing
+        // ticket problem we encountered during devconnect coworking space
+        // checkin
+        // extraSubscriptionFetchRequested: true
       });
     }
   };
