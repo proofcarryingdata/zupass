@@ -2630,6 +2630,9 @@ describe("devconnect functionality", function () {
     // Set up the case where nobody has not agreed to legal terms
     await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
 
+    // Remove synced tickets from previous tests
+    await sqlQuery(db, "DELETE FROM devconnect_pretix_tickets");
+
     await os.run();
 
     // eslint-disable-next-line @typescript-eslint/no-unused-vars
@@ -2805,6 +2808,9 @@ describe("devconnect functionality", function () {
 
     // Set up the case where nobody has not agreed to legal terms
     await sqlQuery(db, "UPDATE users SET terms_agreed = 0");
+
+    // Remove synced tickets from previous tests
+    await sqlQuery(db, "DELETE FROM devconnect_pretix_tickets");
 
     await os.run();
 
