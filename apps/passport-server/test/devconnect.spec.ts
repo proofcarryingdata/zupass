@@ -937,6 +937,7 @@ describe("devconnect functionality", function () {
 
     await devconnectPretixSyncService.trySync();
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const tickets = await fetchAllNonDeletedDevconnectPretixTickets(
       application.context.dbPool
     );
@@ -2631,6 +2632,7 @@ describe("devconnect functionality", function () {
 
     await os.run();
 
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
     const tickets = await fetchDevconnectPretixTicketsByEvent(
       db,
       eventConfigID
