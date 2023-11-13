@@ -1,4 +1,12 @@
-import { FieldLabel, HiddenText, QRDisplayWithRegenerateAndStorage, Separator, Spacer, TextContainer, encodeQRPayload } from "@pcd/passport-ui";
+import {
+  FieldLabel,
+  HiddenText,
+  QRDisplayWithRegenerateAndStorage,
+  Separator,
+  Spacer,
+  TextContainer,
+  encodeQRPayload
+} from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { useCallback } from "react";
 import styled from "styled-components";
@@ -6,24 +14,26 @@ import { SecretPhrasePCD, SecretPhrasePCDPackage } from "./SecretPhrasePCD";
 
 /**
  * Make the URI for verifying a secret phrase pcd
- * 
+ *
  * @param pcdStr - the serialized pcd
  * @param baseURI - the base uri to point verification to
  * @returns - the verification link
  */
-function makeSecretPhraseVerifyLink(baseURI: string, pcdStr: string): string {
-  return `${baseURI}/#/check-phrase?id=${encodeURIComponent(pcdStr)}`;
+export function makeSecretPhraseVerifyLink(
+  baseURI: string,
+  pcdStr: string
+): string {
+  return `${baseURI}/#/verify-phrase?pcd=${encodeURIComponent(pcdStr)}`;
 }
 
 /**
  * Component renders the secret phrase info for the PCD
- * 
+ *
  * @param pcd - the SecretPhrasePCD to render
  * @returns - the component showing info about the known secret phrase
  */
 export function SecretPhraseInfoDisplay({ pcd }: { pcd: SecretPhrasePCD }) {
-  // determine whether or not to show the secret hash
-  const isSecret = pcd.claim.secret ? false : true;
+  // render
   return (
     <Container>
       <p>PCD proving knowledge of a secret phrase for "The Word"</p>
@@ -37,7 +47,7 @@ export function SecretPhraseInfoDisplay({ pcd }: { pcd: SecretPhrasePCD }) {
       <TextContainer>{pcd.claim.username}</TextContainer>
       <Spacer h={8} />
 
-      {!isSecret && (
+      {(pcd.claim.secret ? true : false) && (
         <>
           <FieldLabel>Secret Phrase</FieldLabel>
           <HiddenText text={pcd.claim.secret || ""} />
@@ -53,17 +63,25 @@ export function SecretPhraseInfoDisplay({ pcd }: { pcd: SecretPhrasePCD }) {
 /**
  * Renders a QR code always in ZK
  * Expects the secret phrase pcd to contain a secret and creates a secret phrase pcd with the secret redacted
- * 
+ *
  * @param pcd - the SecretPhrasePCD used to prove and generate a new PCD to encode in the QR
  * @param baseURI - the base uri to point the verification link to
  * @return - QR code component that points to verification link with serialized PCD
  */
-function SecretPhraseQR({ pcd, baseURI }: { pcd: SecretPhrasePCD, baseURI: string }) {
+function SecretPhraseQR({
+  pcd,
+  baseURI
+}: {
+  pcd: SecretPhrasePCD;
+  baseURI: string;
+}) {
   const generate = useCallback(async () => {
     console.log(`[QR] generating proof, timestamp ${Date.now()}`);
     // check that the claim includes the secret needed to construct the proof
     if (!pcd.claim.secret)
-      throw new Error("Could not generate a Secret Phrase proof - missing secret!")
+      throw new Error(
+        "Could not generate a Secret Phrase proof - missing secret!"
+      );
 
     const zkPCD = await SecretPhrasePCDPackage.prove({
       includeSecret: {
@@ -72,25 +90,25 @@ function SecretPhraseQR({ pcd, baseURI }: { pcd: SecretPhrasePCD, baseURI: strin
       },
       phraseId: {
         value: pcd.claim.phraseId.toString(),
-        argumentType: ArgumentTypeName.Number,
+        argumentType: ArgumentTypeName.Number
       },
       username: {
         value: pcd.claim.username,
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.String
       },
       secret: {
         value: pcd.claim.secret,
-        argumentType: ArgumentTypeName.String,
+        argumentType: ArgumentTypeName.String
       }
     });
 
     // serialize pcd and encode in a QR
     const serializedZKPCD = await SecretPhrasePCDPackage.serialize(zkPCD);
     return makeSecretPhraseVerifyLink(
-      encodeQRPayload(JSON.stringify(serializedZKPCD)),
-      baseURI
+      baseURI,
+      encodeQRPayload(JSON.stringify(serializedZKPCD))
     );
-  }, [pcd]);
+  }, [pcd, baseURI]);
 
   return (
     <QRDisplayWithRegenerateAndStorage
@@ -102,7 +120,13 @@ function SecretPhraseQR({ pcd, baseURI }: { pcd: SecretPhrasePCD, baseURI: strin
   );
 }
 
-export function SecretPhraseCardBody({ pcd, baseURI }: { pcd: SecretPhrasePCD, baseURI: string }) {
+export function SecretPhraseCardBody({
+  pcd,
+  baseURI
+}: {
+  pcd: SecretPhrasePCD;
+  baseURI: string;
+}) {
   return (
     <Container>
       <PhraseInfo>

@@ -47,42 +47,44 @@ export type SecretPhrasePCDArgs = {
    * Determines whether the PCD should include the secret or not in the claim
    * Not used in ZK proof
    */
-  includeSecret: BooleanArgument,
+  includeSecret: BooleanArgument;
 
   /**
    * Publicly known Phrase ID that is used to look up rounds
    * Not used in ZK proof
    */
-  phraseId: NumberArgument,
+  phraseId: NumberArgument;
 
   /**
    * Publicly known username that is associated with phrase whisperers
    * Constrained in ZK proof
    */
-  username: StringArgument,
+  username: StringArgument;
 
   /**
    * The secret phrase that must be known to issue a PCD
    * Constrained in ZK proof
    */
-  secret: StringArgument,
-}
+  secret: StringArgument;
+};
 
 /**
  * Claim part of a SecretPhrasePCD contains all public/revealed fields.
  */
 export interface SecretPhrasePCDClaim {
-  phraseId: number,
-  username: string,
+  phraseId: number;
+  username: string;
   // include secret when issuing PCD, do not include secret when proving from zupass
-  secret?: string,
-  secretHash: string
+  secret?: string;
+  secretHash: string;
 }
 
 /**
  * SecretPhrasePCD PCD type representation.
  */
-export class SecretPhrasePCD implements PCD<SecretPhrasePCDClaim, Groth16Proof> {
+export class SecretPhrasePCD
+  implements PCD<SecretPhrasePCDClaim, Groth16Proof>
+{
   type = SecretPhrasePCDTypeName;
   public constructor(
     readonly id: string,
@@ -111,22 +113,24 @@ async function ensureInitialized(): Promise<SecretPhrasePCDInitArgs> {
 
 /**
  * Ensure that inputs needed for the proof exist
- * 
+ *
  * @param args - args used in a SecretPhrase PCD
  * @returns - extracted proof inputs (must be marshalled into bigints)
  */
 export function checkProofInputs(args: SecretPhrasePCDArgs): {
-  includeSecret: boolean,
-  username: string,
-  secret: string,
-  phraseId: number
+  includeSecret: boolean;
+  username: string;
+  secret: string;
+  phraseId: number;
 } {
   // check username field
   const username = args.username.value;
   if (!username) {
     throw new Error("Cannot make The Word proof: missing username");
   } else if (username.length > 30) {
-    throw new Error("Cannot make The Word proof: username too long (must be < 30 characters)");
+    throw new Error(
+      "Cannot make The Word proof: username too long (must be < 30 characters)"
+    );
   }
 
   // check secret field
@@ -134,7 +138,9 @@ export function checkProofInputs(args: SecretPhrasePCDArgs): {
   if (!secret) {
     throw new Error("Cannot make The Word proof: missing secret");
   } else if (secret.length > 180) {
-    throw new Error("Cannot make The Word proof: secret too long (must be < 180 characters)");
+    throw new Error(
+      "Cannot make The Word proof: secret too long (must be < 180 characters)"
+    );
   }
 
   // check phraseId field
@@ -144,7 +150,9 @@ export function checkProofInputs(args: SecretPhrasePCDArgs): {
   }
 
   // set include secret to false by default if not included
-  const includeSecret = args.includeSecret.value ? args.includeSecret.value : false;
+  const includeSecret = args.includeSecret.value
+    ? args.includeSecret.value
+    : false;
 
   // return valid inputs
   return { username, secret, phraseId: Number(phraseId), includeSecret };
@@ -152,7 +160,7 @@ export function checkProofInputs(args: SecretPhrasePCDArgs): {
 
 /**
  * Return the public signals needed to verify the claim's groth16 proof
- * 
+ *
  * @param claim - a PCD claim to knowledge of a secret phrase
  * @returns - the public signals in snarkjs-readable format
  */
@@ -164,15 +172,17 @@ function publicSignalsFromClaim(claim: SecretPhrasePCDClaim): string[] {
 
 /**
  * Converts the proof inputs from strings to bigints that can fit in Bn254 field elements
- * 
+ *
  * @param username - the username to associate with the proof
  * @param secret - the secret phrase to prove knowledge of
  * @returns - the proof inputs in a format usable by the ZK circuit
  */
-export function snarkInputForProof(username: string, secret: string):
-  Record<string, `${number}` | `${number}`[]> {
+export function snarkInputForProof(
+  username: string,
+  secret: string
+): Record<string, `${number}` | `${number}`[]> {
   // marshall inputs into bn254 field elements
-  const usernameBigint = usernameToBigint(username)
+  const usernameBigint = usernameToBigint(username);
   const secretBigints = phraseToBigints(secret);
 
   // return as an object usable by the ZK circuit as inputs
@@ -184,12 +194,12 @@ export function snarkInputForProof(username: string, secret: string):
 
 /**
  * Creates a new SecretPhrasePCD
- * 
+ *
  * @params args - the arguments to prove knowledge of a secret phrase
  * @return - a new SecretPhrasePCD
  */
 export async function prove(
-  args: SecretPhrasePCDArgs,
+  args: SecretPhrasePCDArgs
 ): Promise<SecretPhrasePCD> {
   // check that preliminary steps and conditions are met
   const initArgs = await ensureInitialized();
@@ -216,7 +226,7 @@ export async function prove(
     username,
     secret: includeSecret ? secret : undefined,
     secretHash
-  }
+  };
 
   return new SecretPhrasePCD(uuid(), claim, proof);
 }
@@ -237,7 +247,7 @@ export async function verify(pcd: SecretPhrasePCD): Promise<boolean> {
  * @param value The object property value.
  * @returns The original value of the property or the converted one.
  */
-function replacer(key: any, value: any): any {
+export function replacer(key: any, value: any): any {
   if (key === "message") {
     return value.map((num: bigint) => num.toString(16));
   } else {
@@ -254,7 +264,7 @@ function replacer(key: any, value: any): any {
  * @param value The object property value.
  * @returns The original value of the property or the converted one.
  */
-function reviver(key: any, value: any): any {
+export function reviver(key: any, value: any): any {
   if (key === "message") {
     return value.map((str: string) => BigInt(`0x${str}`));
   } else {
@@ -270,20 +280,21 @@ export function getProveDisplayOptions(): ProveDisplayOptions<SecretPhrasePCDArg
     defaultArgs: {
       phraseId: {
         argumentType: ArgumentTypeName.Number,
-        description: "The Round ID identifying the secret phrase",
+        description: "The Round ID identifying the secret phrase"
       },
       username: {
         argumentType: ArgumentTypeName.String,
-        description: "The username associated with this secret phrase proof",
+        description: "The username associated with this secret phrase proof"
       },
       secret: {
         argumentType: ArgumentTypeName.String,
         defaultVisible: false,
-        description: "The secret phrase to prove knowledge of",
+        description: "The secret phrase to prove knowledge of"
       },
       includeSecret: {
         argumentType: ArgumentTypeName.Boolean,
-        description: "Set to true when storing in ZuPass and false when proving from zupass"
+        description:
+          "Set to true when storing in ZuPass and false when proving from zupass"
       }
     }
   };
@@ -308,9 +319,10 @@ export async function serialize(
  * @param serialized The serialized PCD to deserialize.
  * @returns The deserialized version of the EdDSA PCD.
  */
-export async function deserialize(serialized: string): Promise<SecretPhrasePCD> {
+export async function deserialize(
+  serialized: string
+): Promise<SecretPhrasePCD> {
   const { id, claim, proof } = JSON.parse(serialized, reviver);
-
   requireDefinedParameter(id, "id");
   requireDefinedParameter(claim, "claim");
   requireDefinedParameter(proof, "proof");
@@ -337,18 +349,19 @@ export function isSecretPhrasePCD(pcd: PCD): pcd is SecretPhrasePCD {
 
 /**
  * Wraps the SecretPhraseCardBody component with the initialized baseURI
- * @param pcd - the SecretPhrasePCD to render 
+ * @param pcd - the SecretPhrasePCD to render
  * @returns the renderCardBody function returning the pcd component
  */
 export function renderCardBody({ pcd }: { pcd: SecretPhrasePCD }) {
   // check the pcd package has been initialized
   if (!savedInitArgs) {
-    throw new Error("Cannot render SecretPhrasePCD: init has not been called yet");
+    throw new Error(
+      "Cannot render SecretPhrasePCD: init has not been called yet"
+    );
   }
   // render the secret phrase pcd card
   return SecretPhraseCardBody({ pcd, baseURI: savedInitArgs.verifyBaseURI });
 }
-
 
 export const SecretPhrasePCDPackage: PCDPackage<
   SecretPhrasePCDClaim,
@@ -364,4 +377,4 @@ export const SecretPhrasePCDPackage: PCDPackage<
   verify,
   serialize,
   deserialize
-}
+};

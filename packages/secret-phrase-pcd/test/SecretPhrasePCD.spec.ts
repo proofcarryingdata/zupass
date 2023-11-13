@@ -1,9 +1,11 @@
+import { decodeQRPayload, encodeQRPayload } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SecretPhrasePCDPackage } from "@pcd/secret-phrase-pcd";
 import assert from "assert";
 import { Poseidon, buildPoseidon } from "circomlibjs";
 import "mocha";
 import path from "path";
+import { makeSecretPhraseVerifyLink } from "../src/CardBody";
 import { phraseToBigints } from "../src/utils";
 
 
@@ -26,6 +28,47 @@ describe("RSA Ticket PCD should work", function () {
     // initialize the Poseidon hash function
     poseidon = await buildPoseidon();
   });
+
+  it("Test QR link generation", async function () {
+    // generate pcd
+    const pcd = await SecretPhrasePCDPackage.prove({
+      includeSecret: {
+        argumentType: ArgumentTypeName.Boolean,
+        value: false,
+      },
+      phraseId: {
+        argumentType: ArgumentTypeName.Number,
+        value: "1",
+      },
+      username: {
+        argumentType: ArgumentTypeName.String,
+        value: "username",
+      },
+      secret: {
+        argumentType: ArgumentTypeName.String,
+        value: "hunter2",
+      },
+    });
+    // serialize
+    const serialized = await SecretPhrasePCDPackage.serialize(pcd);
+    // make link
+    const qrEncodedLink = makeSecretPhraseVerifyLink(
+      "https://localhost:3000",
+      encodeQRPayload(JSON.stringify(serialized))
+    );
+    // decode the serialzied pcd from the QR link
+    const qrEncoded = decodeURIComponent(qrEncodedLink.split("?pcd=")[1]);
+    const qrDecoded = decodeQRPayload(qrEncoded);
+    // unclear as to why JSON.parse must be done twice
+    const urlPCDSerialzied = JSON.parse(qrDecoded).pcd;
+    const urlPCD = await SecretPhrasePCDPackage.deserialize(urlPCDSerialzied);
+    // secret field doesn't exist on urlPCD but is undefined on pcd. check to make sure it does not exist
+    assert(!urlPCD.claim.secret);
+    // then set it to be explicitly undefined to match the exact shape
+    urlPCD.claim.secret = undefined;
+    // check equality of pcds
+    assert.deepEqual(urlPCD, pcd);
+  })
 
   it("Check that PCD proving creates the right secet hash", async function () {
     // set the secret phrase to prove knowledge of

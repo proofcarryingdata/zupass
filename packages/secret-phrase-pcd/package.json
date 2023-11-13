@@ -33,6 +33,7 @@
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.8.0",
+    "@pcd/passport-ui": "^0.8.0",
     "@pcd/tsconfig": "0.8.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",

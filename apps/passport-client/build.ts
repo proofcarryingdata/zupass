@@ -34,6 +34,13 @@ const define = {
           process.env.FROGCRYPTO_SERVER_URL
         )
       }
+    : {}),
+  ...(process.env.SECRET_PHRASE_CLIENT_URL !== undefined
+    ? {
+        "process.env.SECRET_PHRASE_CLIENT_URL": JSON.stringify(
+          process.env.SECRET_PHRASE_CLIENT_URL
+        )
+      }
     : {})
 };
 
