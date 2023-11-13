@@ -34,7 +34,6 @@ import {
   fetchDevconnectTicketsAwaitingSync
 } from "../../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { insertDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/insertDevconnectPretixTicket";
-import { softDeleteDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { updateDevconnectPretixTicket } from "../../database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
 import {
   fetchPretixEventInfo,
@@ -894,7 +893,7 @@ export class OrganizerSync {
               eventInfo.event_name
             }] Deleting ticket ${JSON.stringify(removedTicket)}`
           );
-          await softDeleteDevconnectPretixTicket(this.db, removedTicket);
+          //await softDeleteDevconnectPretixTicket(this.db, removedTicket);
         }
 
         if (this.enableRedaction) {
