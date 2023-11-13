@@ -51,6 +51,17 @@ export interface NamedAPIError {
 }
 
 /**
+ * Format a user-readable error message from a NamedAPIError instance.
+ */
+export function getNamedAPIErrorMessage(e: NamedAPIError) {
+  if (e.detailedMessage) {
+    return e.name + ": " + e.detailedMessage;
+  } else {
+    return e.name;
+  }
+}
+
+/**
  * Default value for `NamedAPIError.name` for cases when a more
  * specific name cannot be determined.
  */

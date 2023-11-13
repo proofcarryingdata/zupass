@@ -1,5 +1,6 @@
 import {
   ConfirmEmailResult,
+  getNamedAPIErrorMessage,
   requestConfirmationEmail,
   requestDownloadAndDecryptStorage,
   requestPasswordSalt,
@@ -86,7 +87,10 @@ function SendEmailVerification({ email }: { email: string }) {
               });
             } else {
               setError(
-                "An error occurred while downloading encrypted storage."
+                `An error occurred while downloading encrypted storage [
+                  ${getNamedAPIErrorMessage(
+                    storageResult.error
+                  )}].  If this persists, contact support@zupass.org.`
               );
             }
           } else {
@@ -96,9 +100,8 @@ function SendEmailVerification({ email }: { email: string }) {
           }
         } catch (e) {
           setError(
-            "An error occurred loading account info: [" +
-              getErrorMessage(e) +
-              "].  Email support@zupass.org to resolve this."
+            `An error occurred loading account info: [${getErrorMessage(e)}
+            ].  If this persists, contact support@zupass.org.`
           );
         }
         setLoadingAccount(false);
