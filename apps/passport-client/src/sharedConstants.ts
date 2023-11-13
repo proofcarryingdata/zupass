@@ -2,7 +2,7 @@
  * Single constant shared between the service worker and the page code which
  * registers it.
  */
-export const SERVICE_WORKER_ENABLED = true; // process.env.NODE_ENV !== "development";
+export const SERVICE_WORKER_ENABLED = process.env.NODE_ENV !== "development";
 
 /** Start time of Devconnect 2023, from https://devconnect.org/schedule */
 export const DEVCONNECT_2023_START = Date.parse(

@@ -160,6 +160,10 @@ export function SecondPartyTicketVerifyScreen() {
       <AppContainer bg={"primary"}>
         <Container>
           <TextCenter>
+            <ZKCheckinNotice>
+              As an event organizer, you can see this check-in information from
+              the Pretix API:
+            </ZKCheckinNotice>
             {checkResult.success && (
               <UserReadyForCheckin
                 ticketData={checkResult.value}
@@ -228,12 +232,11 @@ export function SecondPartyTicketVerifyScreen() {
       <TextCenter>
         <img draggable="false" width="90" height="90" src={icon} />
         <Spacer h={24} />
-        {checkResult.success === false &&
-          verifyResult.outcome === VerifyOutcome.KnownTicketType && (
-            <>
-              <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
-            </>
-          )}
+        {verifyResult.outcome === VerifyOutcome.KnownTicketType && (
+          <>
+            <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
+          </>
+        )}
 
         {verifyResult.outcome === VerifyOutcome.NotVerified && (
           <>
@@ -257,14 +260,12 @@ export function SecondPartyTicketVerifyScreen() {
         )}
       </Placeholder>
       <Spacer h={64} />
-      {checkResult.success === false && (
-        <CenterColumn w={280}>
-          <LinkButton to="/scan">Verify another</LinkButton>
-          <Spacer h={8} />
-          <LinkButton to="/">Back to Zupass</LinkButton>
-          <Spacer h={24} />
-        </CenterColumn>
-      )}
+      <CenterColumn w={280}>
+        <LinkButton to="/scan">Verify another</LinkButton>
+        <Spacer h={8} />
+        <LinkButton to="/">Back to Zupass</LinkButton>
+        <Spacer h={24} />
+      </CenterColumn>
     </AppContainer>
   );
 }
@@ -319,8 +320,6 @@ function VerifiedAndKnownTicket({
 }
 
 function useDecodedPayload(encodedQRPayload: string) {
-  // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
-  const decodedPayload = decodeQRPayload(encodedQRPayload);
   const [pcd, setPcd] = useState(null);
   const [serializedPCD, setSerializedPCD] = useState(null);
   const pcds = usePCDCollection();
@@ -328,15 +327,19 @@ function useDecodedPayload(encodedQRPayload: string) {
   useEffect(() => {
     (async () => {
       try {
-        const serializedPCD = JSON.parse(decodedPayload);
-        const pcd = await pcds.deserialize(serializedPCD);
-        setPcd(pcd);
-        setSerializedPCD(serializedPCD);
+        if (encodedQRPayload) {
+          // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
+          const decodedPayload = decodeQRPayload(encodedQRPayload);
+          const serializedPCD = JSON.parse(decodedPayload);
+          const pcd = await pcds.deserialize(serializedPCD);
+          setPcd(pcd);
+          setSerializedPCD(serializedPCD);
+        }
       } catch (e) {
         console.log("Could not deserialize PCD:", e);
       }
     })();
-  }, [decodedPayload, pcds]);
+  }, [encodedQRPayload, pcds]);
 
   return { pcd, serializedPCD };
 }
@@ -462,4 +465,9 @@ const ZKNoticeContainer = styled.div`
     color: var(--accent-lite);
     margin-bottom: 8px;
   }
+`;
+
+const ZKCheckinNotice = styled.div`
+  margin-bottom: 16px;
+  color: var(--accent-dark);
 `;
