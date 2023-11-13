@@ -12,7 +12,7 @@ import { validate } from "uuid";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSubscriptions } from "../../../src/appHooks";
 
-export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.zupassServer}/frogcrypto/feeds`;
+export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.frogCryptoServer}/frogcrypto/feeds`;
 
 /**
  * Returns a callback to register the default frog subscription provider and
@@ -32,12 +32,11 @@ export function useInitializeFrogSubscriptions(): (
       );
 
       function parseAndAddFeed(feed: Feed, deeplink: boolean): boolean {
-        // skip any feeds that are already subscribed to
+        // skip any feeds that are already subscribed to.
+        // due to a merge conflict, we have users who have subscribed to a different feed provider url.
+        // because frog feed is uuid, it is safe to compare across the feeds.
         if (
-          subs.getSubscriptionsByProviderAndFeedId(
-            DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
-            feed.id
-          ).length > 0
+          subs.getActiveSubscriptions().find((sub) => sub.feed.id === feed.id)
         ) {
           return false;
         }
