@@ -4,6 +4,7 @@ import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
+  EdDSAFrogFieldsToReveal,
   ZKEdDSAFrogPCD,
   ZKEdDSAFrogPCDArgs,
   ZKEdDSAFrogPCDPackage
@@ -21,6 +22,21 @@ export const generateFrogProofUrl = async (
 ): Promise<string> => {
   return traced("telegram", "generateFrogProofUrl", async (span) => {
     span?.setAttribute("userId", telegramUserId.toString());
+
+    // only reveal the ownerSemaphoreId,
+    // will be used to insert into telegram_bot_conversations
+    const fieldsToReveal: EdDSAFrogFieldsToReveal = {
+      revealFrogId: false,
+      revealBiome: false,
+      revealRarity: false,
+      revealTemperament: false,
+      revealJump: false,
+      revealSpeed: false,
+      revealIntelligence: false,
+      revealBeauty: false,
+      revealTimestampSigned: false,
+      revealOwnerSemaphoreId: true
+    };
 
     const args: ZKEdDSAFrogPCDArgs = {
       frog: {
@@ -41,9 +57,19 @@ export const generateFrogProofUrl = async (
         value: undefined,
         userProvided: true
       },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        value: fieldsToReveal,
+        userProvided: false
+      },
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
         value: undefined,
+        userProvided: false
+      },
+      revealNullifierHash: {
+        argumentType: ArgumentTypeName.Boolean,
+        value: true,
         userProvided: false
       },
       watermark: {
