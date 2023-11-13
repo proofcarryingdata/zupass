@@ -1,13 +1,14 @@
 import {
   Feed,
   FrogCryptoFolderName,
-  IFrogCryptoFeedSchema,
+  IFrogCryptoClientFeedSchema,
   requestListFeeds
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useMemo } from "react";
 import toast from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
 import urljoin from "url-join";
+import { validate } from "uuid";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSubscriptions } from "../../../src/appHooks";
 
@@ -30,7 +31,7 @@ export function useInitializeFrogSubscriptions(): (
         FrogCryptoFolderName
       );
 
-      function parseAndAddFeed(feed: Feed): boolean {
+      function parseAndAddFeed(feed: Feed, deeplink: boolean): boolean {
         // skip any feeds that are already subscribed to
         if (
           subs.getSubscriptionsByProviderAndFeedId(
@@ -41,7 +42,7 @@ export function useInitializeFrogSubscriptions(): (
           return false;
         }
 
-        const parsed = IFrogCryptoFeedSchema.safeParse(feed);
+        const parsed = IFrogCryptoClientFeedSchema.safeParse(feed);
         if (parsed.success) {
           if (parsed.data.activeUntil > Date.now() / 1000) {
             // only add a feed if it is active
@@ -53,7 +54,7 @@ export function useInitializeFrogSubscriptions(): (
             });
 
             // don't show toast if feedId is specified
-            if (feed.id !== feedId) {
+            if (!deeplink) {
               toast.success(
                 `Croak and awe! The ${feed.name} awaits your adventurous leap!`,
                 {
@@ -63,7 +64,7 @@ export function useInitializeFrogSubscriptions(): (
             }
 
             return true;
-          } else if (feed.id === feedId) {
+          } else if (deeplink) {
             // if we are adding an expired from deeplink, show error toast
             toast.error(
               <span>
@@ -97,7 +98,7 @@ export function useInitializeFrogSubscriptions(): (
       feeds
         // remove any feeds that we want to custom add
         .filter((feed) => feed.id !== feedId)
-        .forEach(parseAndAddFeed);
+        .forEach((feed) => parseAndAddFeed(feed, false));
 
       if (feedId) {
         try {
@@ -109,7 +110,7 @@ export function useInitializeFrogSubscriptions(): (
           );
           const feed = res?.value?.feeds?.[0];
           if (feed) {
-            return parseAndAddFeed(feed) ? feed : null;
+            return parseAndAddFeed(feed, true) ? feed : null;
           } else {
             throw new Error(res?.error || "Feed not found");
           }
@@ -133,10 +134,15 @@ export function useInitializeFrogSubscriptions(): (
     if (feedId) {
       toast.promise(
         new Promise((resolve) => setTimeout(resolve, 3000)).then(() => {
-          setSearchParams((prev) => {
-            prev.delete("feedId");
-            return prev;
-          });
+          setSearchParams(
+            (prev) => {
+              prev.delete("feedId");
+              return prev;
+            },
+            {
+              replace: true
+            }
+          );
 
           return initializeFrogSubscriptions(feedId);
         }),
@@ -152,7 +158,9 @@ export function useInitializeFrogSubscriptions(): (
             ) : (
               <>You look familiar. Have we met before? No need to leap again.</>
             ),
-          error: "Seems like this froggy code is a tadpole tad off."
+          error: validate(feedId)
+            ? "Seems like this froggy code is a tadpole off."
+            : "We tried to look for this froggy code, but we got lost in the mist. Maybe come back after a few bug snacks?"
         }
       );
     }

@@ -64,10 +64,13 @@ export function initFrogcryptoRoutes(
   app.get("/frogcrypto/feeds/:feedId", async (req: Request, res: Response) => {
     checkFrogcryptoServiceStarted(frogcryptoService);
     const feedId = checkUrlParam(req, "feedId");
-    if (!frogcryptoService.hasFeedWithId(feedId)) {
+    const result = await frogcryptoService.handleListSingleFeedRequest({
+      feedId
+    });
+    if (result.feeds.length === 0) {
       throw new PCDHTTPError(404);
     }
-    res.json(await frogcryptoService.handleListSingleFeedRequest({ feedId }));
+    res.json(result);
   });
 
   app.get("/frogcrypto/scoreboard", async (req, res) => {
