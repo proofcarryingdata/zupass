@@ -20,7 +20,6 @@ import vkey from "../artifacts/circuit.json";
 import { SecretPhraseCardBody } from "./CardBody";
 import { phraseToBigints, usernameToBigint } from "./utils";
 
-
 export const SecretPhrasePCDTypeName = "secret-phrase-pcd";
 let savedInitArgs: SecretPhrasePCDInitArgs | undefined = undefined;
 

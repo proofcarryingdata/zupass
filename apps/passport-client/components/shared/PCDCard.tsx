@@ -5,9 +5,6 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import { PCD } from "@pcd/pcd-types";
-import {
-  isSecretPhrasePCD
-} from "@pcd/secret-phrase-pcd";
 import React, { useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
@@ -16,7 +13,6 @@ import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 import { DevconnectCardBody } from "./cards/DevconnectTicket";
-import { SecretPhraseCardBody } from "./cards/SecretPhrase";
 import { ZKTicketPCDCard } from "./cards/ZKTicket";
 
 export const PCDCard = React.memo(PCDCardImpl);
@@ -171,10 +167,6 @@ function CardBody({
       pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect)
   ) {
     return <TicketCardBody pcd={pcd} />;
-  }
-
-  if (isSecretPhrasePCD(pcd)) {
-    return <SecretPhraseCardBody pcd={pcd} />
   }
 
   if (pcdCollection.hasPackage(pcd.type)) {
