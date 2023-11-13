@@ -52,7 +52,7 @@ function SendEmailVerification({ email }: { email: string }) {
 
   const verifyToken = useCallback(
     async (token: string) => {
-      if (verifyingCode) return;
+      if (verifyingCode || loadingAccount) return;
 
       if (token === "") {
         setError("Enter confirmation code");
@@ -106,7 +106,7 @@ function SendEmailVerification({ email }: { email: string }) {
         setError("Invalid confirmation code");
       }
     },
-    [email, verifyingCode, dispatch]
+    [email, verifyingCode, loadingAccount, dispatch]
   );
 
   const handleConfirmationEmailResult = useCallback(
