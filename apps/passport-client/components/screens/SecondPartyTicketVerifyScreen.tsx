@@ -191,16 +191,10 @@ export function SecondPartyTicketVerifyScreen() {
           </p>
           <p>However, you can see the following ticket information:</p>
           <dl>
-            {verifyResult.ticketId && (
+            {pcd.claim.partialTicket.ticketId && (
               <>
                 <dt>Ticket ID</dt>
-                <dd>{verifyResult.ticketId}</dd>
-              </>
-            )}
-            {verifyResult.ticketName && (
-              <>
-                <dt>Ticket name</dt>
-                <dd>{verifyResult.ticketName}</dd>
+                <dd>{pcd.claim.partialTicket.ticketId}</dd>
               </>
             )}
             {pcd.claim.partialTicket.eventId && (
@@ -213,12 +207,6 @@ export function SecondPartyTicketVerifyScreen() {
               <>
                 <dt>Product ID</dt>
                 <dd>{pcd.claim.partialTicket.productId}</dd>
-              </>
-            )}
-            {verifyResult.ticketName && (
-              <>
-                <dt>Ticket name</dt>
-                <dd>{verifyResult.ticketName}</dd>
               </>
             )}
             {verifyResult.publicKeyName && (
