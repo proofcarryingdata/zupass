@@ -2,8 +2,8 @@ import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
 import { getDB } from "../../database/postgresPool";
 import {
-  fetchUserBySemaphoreId,
-  fetchUserByTelegramId
+  fetchConversationBySemaphoreId,
+  fetchConversationByTelegramId
 } from "../../database/queries/telegram/fetchTelegramEvent";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -16,6 +16,7 @@ import {
   checkQueryParam,
   checkUrlParam
 } from "../params";
+import { PCDHTTPError } from "../pcdHttpError";
 
 export function initTelegramRoutes(
   app: express.Application,
@@ -281,11 +282,12 @@ export function initTelegramRoutes(
     }
   });
 
-  app.get("/telegram/user", async (req: Request, res: Response) => {
+  app.get("/telegram/conversation", async (req: Request, res: Response) => {
     const authToken = req.headers.authorization;
 
     try {
-      if (!process.env.API_AUTH_TOKEN) throw new Error(`No Auth token found`);
+      if (!process.env.API_AUTH_TOKEN)
+        throw new PCDHTTPError(500, `No Auth token found`);
       if (authToken !== `Bearer ${process.env.API_AUTH_TOKEN}`) {
         return res.status(401).send("Unauthorized");
       }
@@ -295,13 +297,13 @@ export function initTelegramRoutes(
       if (telegramId || semaphoreId) {
         const db = await getDB();
         if (telegramId) {
-          const user = await fetchUserByTelegramId(db, telegramId);
-          if (!user) throw new Error(`No user found`);
+          const user = await fetchConversationByTelegramId(db, telegramId);
+          if (!user) throw new Error(`No convo found`);
           res.json(user);
           //
         } else if (semaphoreId) {
-          const user = await fetchUserBySemaphoreId(db, semaphoreId);
-          if (!user) throw new Error(`No user found`);
+          const user = await fetchConversationBySemaphoreId(db, semaphoreId);
+          if (!user) throw new Error(`No convo found`);
           res.json(user);
         }
       }

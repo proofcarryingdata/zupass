@@ -342,7 +342,7 @@ export async function fetchTelegramAnonMessagesWithTopicByNullifier(
   return result.rows;
 }
 
-export async function fetchUserBySemaphoreId(
+export async function fetchConversationBySemaphoreId(
   client: Pool,
   semaphoreId: string
 ): Promise<TelegramConversation> {
@@ -358,7 +358,7 @@ export async function fetchUserBySemaphoreId(
   return result.rows[0] ?? null;
 }
 
-export async function fetchUserByTelegramId(
+export async function fetchConversationByTelegramId(
   client: Pool,
   telegramId: string
 ): Promise<TelegramConversation> {
