@@ -1,5 +1,10 @@
 import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import { getDB } from "../../database/postgresPool";
+import {
+  fetchUserBySemaphoreId,
+  fetchUserByTelegramId
+} from "../../database/queries/telegram/fetchTelegramEvent";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import {
@@ -273,6 +278,30 @@ export function initTelegramRoutes(
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
       res.status(500).send(errorHtmlWithDetails(e as Error));
+    }
+  });
+
+  app.get("/telegram/user", async (req: Request, res: Response) => {
+    try {
+      const telegramId = checkOptionalQueryParam(req, "telegramId");
+      const semaphoreId = checkOptionalQueryParam(req, "semaphoreId");
+      if (telegramId || semaphoreId) {
+        const db = await getDB();
+        if (telegramId) {
+          const user = await fetchUserByTelegramId(db, telegramId);
+          if (!user) throw new Error(`No user found`);
+          res.json(user);
+          //
+        } else if (semaphoreId) {
+          const user = await fetchUserBySemaphoreId(db, semaphoreId);
+          if (!user) throw new Error(`No user found`);
+          res.json(user);
+        }
+      }
+    } catch (e) {
+      logger("[TELEGRAM] failed to fetch", e);
+      rollbarService?.reportError(e);
+      res.status(500).send(e);
     }
   });
 }

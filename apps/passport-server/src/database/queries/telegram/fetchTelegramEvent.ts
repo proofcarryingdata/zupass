@@ -6,6 +6,7 @@ import {
   ChatIDWithEventsAndMembership,
   LinkedPretixTelegramEvent,
   TelegramChat,
+  TelegramConversation,
   TelegramEvent,
   TelegramForwardFetch,
   TelegramTopicFetch,
@@ -339,4 +340,36 @@ export async function fetchTelegramAnonMessagesWithTopicByNullifier(
     [nullifierHash]
   );
   return result.rows;
+}
+
+export async function fetchUserBySemaphoreId(
+  client: Pool,
+  semaphoreId: string
+): Promise<TelegramConversation> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT *
+    FROM telegram_bot_conversations 
+    WHERE semaphore_id = $1
+    `,
+    [semaphoreId]
+  );
+  return result.rows[0] ?? null;
+}
+
+export async function fetchUserByTelegramId(
+  client: Pool,
+  telegramId: string
+): Promise<TelegramConversation> {
+  const result = await sqlQuery(
+    client,
+    `
+    SELECT *
+    FROM telegram_bot_conversations 
+    WHERE telegram_user_id = $1
+    `,
+    [telegramId]
+  );
+  return result.rows[0] ?? null;
 }
