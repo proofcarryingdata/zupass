@@ -825,6 +825,15 @@ export class OrganizerSync {
           eventConfigID
         );
 
+        const pretixTicketsByPositionId = new Map(
+          ticketsFromPretix.map((ticket) => [ticket.position_id, ticket])
+        );
+
+        // Only remove tickets if they aren't in the Pretix response
+        const ticketsToRemove = existingTickets.filter((ticket) => {
+          return !pretixTicketsByPositionId.has(ticket.position_id);
+        });
+
         const changes = compareArrays(
           existingTickets,
           approvedTickets,
@@ -879,7 +888,7 @@ export class OrganizerSync {
         logger(
           `[DEVCONNECT PRETIX] [${eventInfo.event_name}] Deleting ${changes.removed.length} tickets`
         );
-        for (const removedTicket of changes.removed) {
+        for (const removedTicket of ticketsToRemove) {
           logger(
             `[DEVCONNECT PRETIX] [${
               eventInfo.event_name

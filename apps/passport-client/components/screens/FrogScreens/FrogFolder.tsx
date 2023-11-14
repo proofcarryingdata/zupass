@@ -5,7 +5,6 @@ import { useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
 import { useUserFeedState } from "./FrogHomeSection";
-import { DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL } from "./useFrogFeed";
 
 /**
  * Render the FrogCrypto folder in the home screen.
@@ -58,7 +57,9 @@ function useFetchTimestamp(): number | null {
   const { value: subs } = useSubscriptions();
   const frogSubs = useMemo(
     () =>
-      subs.getSubscriptionsForProvider(DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL),
+      subs
+        .getActiveSubscriptions()
+        .filter((sub) => sub.providerUrl.includes("frogcrypto")),
     [subs]
   );
   const { userState } = useUserFeedState(frogSubs);
@@ -122,7 +123,7 @@ function CountDown({ timestamp }: { timestamp: number }) {
   return <>{diffText}</>;
 }
 
-const NewFont = styled.div`
+export const NewFont = styled.div`
   font-size: 14px;
   animation: color-change 1s infinite;
   font-family: monospace;

@@ -46,16 +46,20 @@ export function HomeScreenImpl() {
   const pcdCollection = usePCDCollection();
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
-    let folderPathFromQuery = decodeURIComponent(
+    const folderPathFromQuery = decodeURIComponent(
       searchParams.get(FOLDER_QUERY_PARAM)
     );
-    if (
-      !folderPathFromQuery ||
-      !pcdCollection.isValidFolder(folderPathFromQuery)
-    ) {
-      folderPathFromQuery = "";
+    if (!folderPathFromQuery) {
+      return "";
     }
-    return folderPathFromQuery;
+    // FrogCrypto is always valid even if user doesn't have any FrogPCD
+    if (folderPathFromQuery === FrogCryptoFolderName) {
+      return folderPathFromQuery;
+    }
+
+    return pcdCollection.isValidFolder(folderPathFromQuery)
+      ? folderPathFromQuery
+      : "";
   }, [pcdCollection, searchParams]);
 
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);

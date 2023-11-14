@@ -269,7 +269,8 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       cooldown: 600,
       biomes: {
         Unknown: { dropWeightScaler: 1 }
-      }
+      },
+      codes: ["imbatman", "imbatman2"]
     }
   }
 ];
