@@ -34,6 +34,7 @@
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "@pcd/semaphore-signature-pcd": "0.8.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.2.1",
+    "@pcd/zk-eddsa-frog-pcd": "0.0.1",
     "@semaphore-protocol/group": "^3.14.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@sendgrid/mail": "^7.7.0",

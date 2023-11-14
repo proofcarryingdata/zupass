@@ -894,6 +894,10 @@ export class IssuanceService {
       await EdDSAFrogPCDPackage.prove({
         privateKey: {
           argumentType: ArgumentTypeName.String,
+          // NOTE: Incorrect key. Should be eddsaPrivateKey.
+          // We correct for this later on by deriving the eddsa public key from the rsa public key.
+          // Due to the fact that RSA is 1024 bit and EdDSA is 256 bits, the RSA gets modded by 256
+          // and we have a deterministicly generated EdDSA key
           value: this.exportedRSAPrivateKey
         },
         data: {
@@ -1475,7 +1479,7 @@ async function setupKnownTicketTypes(
   }
 }
 
-function loadRSAPrivateKey(): NodeRSA | null {
+export function loadRSAPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
   if (pkeyEnv == null) {
