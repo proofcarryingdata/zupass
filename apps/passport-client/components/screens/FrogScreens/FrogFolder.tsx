@@ -123,7 +123,7 @@ function CountDown({ timestamp }: { timestamp: number }) {
   return <>{diffText}</>;
 }
 
-const NewFont = styled.div`
+export const NewFont = styled.div`
   font-size: 14px;
   animation: color-change 1s infinite;
   font-family: monospace;
