@@ -220,6 +220,19 @@ export function SecondPartyTicketVerifyScreen() {
               </>
             )}
           </dl>
+          <p>
+            The following information is <strong>NOT</strong> revealed:
+          </p>
+          <dl>
+            <dt>Ticket-holder email</dt>
+            <dd>
+              <strong>HIDDEN</strong>
+            </dd>
+            <dt>Ticket-holder name</dt>
+            <dd>
+              <strong>HIDDEN</strong>
+            </dd>
+          </dl>
         </ZKNoticeContainer>
       </AppContainer>
     );
@@ -457,6 +470,7 @@ const ZKNoticeContainer = styled.div`
     display: inline-block;
     width: 30%;
     vertical-align: top;
+    margin-bottom: 8px;
   }
 
   dd {
