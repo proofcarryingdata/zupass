@@ -13,39 +13,43 @@ export function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }) {
       <Separator />
 
       <FieldLabel>Frog ID</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.frogId}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.frogId}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Biome</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.biome}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.biome}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Rarity</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.rarity}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.rarity}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Temperament</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.temperament}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.temperament}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Jump</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.jump}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.jump}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Speed</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.speed}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.speed}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Intelligence</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.intelligence}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.intelligence}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Beauty</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.beauty}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.beauty}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>Timestamp Signed</FieldLabel>
-      <TextContainer>{pcd.claim.frogOmitOwner.timestampSigned}</TextContainer>
+      <TextContainer>{pcd.claim.partialFrog.timestampSigned}</TextContainer>
+      <Spacer h={8} />
+
+      <FieldLabel>Owner Semaphore Id</FieldLabel>
+      <TextContainer>{pcd.claim.partialFrog.ownerSemaphoreId}</TextContainer>
       <Spacer h={8} />
 
       <FieldLabel>External Nullifier</FieldLabel>

@@ -4,9 +4,9 @@ import {
   getQRCodeColorOverride
 } from "@pcd/eddsa-ticket-pcd";
 import {
-  encodeQRPayload,
   QRDisplayWithRegenerateAndStorage,
-  Spacer
+  Spacer,
+  encodeQRPayload
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -26,9 +26,9 @@ function makeTicketIdVerifyLink(ticketId: string): string {
 }
 
 function makeTicketIdPCDVerifyLink(pcdStr: string): string {
-  const link = `${
-    window.location.origin
-  }/#/checkin-by-id?pcd=${encodeURIComponent(pcdStr)}`;
+  const link = `${window.location.origin}/#/verify?pcd=${encodeURIComponent(
+    pcdStr
+  )}`;
   return link;
 }
 
@@ -61,7 +61,8 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
           value: {
             revealEventId: true,
             revealProductId: true,
-            revealTicketId: true
+            revealTicketId: true,
+            revealTicketCategory: true
           },
           argumentType: ArgumentTypeName.ToggleList
         },
