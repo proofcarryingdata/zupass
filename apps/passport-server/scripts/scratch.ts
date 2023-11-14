@@ -18,6 +18,7 @@ import {
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { logger } from "../src/util/logger";
+import { FROG_SLUG } from "../src/util/telegramHelpers";
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
@@ -235,7 +236,7 @@ yargs
       const orgUrl = "frogs.org";
       const token = "frogs-token";
       const eventId = "frog-owners-event-id";
-      const eventName = "frog-owners-event";
+      const eventName = "frog-owners-event-" + FROG_SLUG;
       const itemId = "1";
       const activeItemIds = [itemId];
       const checkinListId = "0";

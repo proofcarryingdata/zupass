@@ -57,7 +57,7 @@ import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
 
 // If an event name contains this value, we will use frog proof instead of ticket proof
-const FROG_SLUG = "frog";
+export const FROG_SLUG = "71209";
 
 export type TopicChat = Chat.SupergroupChat | null;
 
@@ -357,7 +357,7 @@ const generateProofUrl = async (
   eventNames: string[],
   telegramUsername?: string
 ): Promise<string> => {
-  if (eventNames.find((e) => e.includes(FROG_SLUG))) {
+  if (eventNames.find((e) => e.endsWith(FROG_SLUG))) {
     logger(`[TELEGRAM] found frog event`, eventNames);
     return await generateFrogProofUrl(
       telegramUserId,
