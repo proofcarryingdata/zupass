@@ -119,7 +119,7 @@ export function SecondPartyTicketVerifyScreen() {
         setCheckResult(result);
       }
     })();
-  }, [setCheckResult, pcd, stateContext]);
+  }, [pcd, stateContext]);
 
   const bg = checkResult && checkResult.success === true ? "primary" : "gray";
 
