@@ -526,31 +526,6 @@ export class IssuanceService {
         };
       }
 
-      if (ticketInDb.is_deleted) {
-        return {
-          error: {
-            name: "TicketRevoked",
-            revokedTimestamp: Date.now(),
-            detailedMessage:
-              "The ticket has been revoked. Please check with the event host."
-          },
-          success: false
-        };
-      }
-
-      if (ticketInDb.is_consumed) {
-        return {
-          error: {
-            name: "AlreadyCheckedIn",
-            checker: ticketInDb.checker ?? undefined,
-            checkinTimestamp: (
-              ticketInDb.zupass_checkin_timestamp ?? new Date()
-            ).toISOString()
-          },
-          success: false
-        };
-      }
-
       if (
         !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
         signature.claim.signedMessage !== ISSUANCE_STRING
@@ -596,6 +571,31 @@ export class IssuanceService {
             name: "NotSuperuser",
             detailedMessage:
               "You do not have permission to check this ticket in. Please check with the event host."
+          },
+          success: false
+        };
+      }
+
+      if (ticketInDb.is_deleted) {
+        return {
+          error: {
+            name: "TicketRevoked",
+            revokedTimestamp: Date.now(),
+            detailedMessage:
+              "The ticket has been revoked. Please check with the event host."
+          },
+          success: false
+        };
+      }
+
+      if (ticketInDb.is_consumed) {
+        return {
+          error: {
+            name: "AlreadyCheckedIn",
+            checker: ticketInDb.checker ?? undefined,
+            checkinTimestamp: (
+              ticketInDb.zupass_checkin_timestamp ?? new Date()
+            ).toISOString()
           },
           success: false
         };
@@ -1274,7 +1274,6 @@ export class IssuanceService {
     req: VerifyTicketRequest
   ): Promise<VerifyTicketResult> {
     const pcdStr = req.pcd;
-
     try {
       return this.verifyZuconnect23OrZuzalu23Ticket(JSON.parse(pcdStr));
     } catch (e) {

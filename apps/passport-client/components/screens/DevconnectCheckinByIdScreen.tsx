@@ -132,7 +132,6 @@ function useTicketId(): TicketId {
 function TicketErrorContent({ error }: { error: TicketError }) {
   let errorContent = null;
 
-  console.log(error);
   switch (error.name) {
     case "AlreadyCheckedIn":
       errorContent = (
@@ -203,7 +202,7 @@ function TicketErrorContent({ error }: { error: TicketError }) {
   return <ErrorContainer>{errorContent}</ErrorContainer>;
 }
 
-function TicketError({ error }: { error: TicketError }) {
+export function TicketError({ error }: { error: TicketError }) {
   const usingLaserScanner = loadUsingLaserScanner();
   return (
     <>
@@ -248,7 +247,7 @@ function Home() {
   );
 }
 
-function UserReadyForCheckin({
+export function UserReadyForCheckin({
   ticketData,
   ticketId
 }: {
@@ -263,7 +262,7 @@ function UserReadyForCheckin({
   );
 }
 
-function useCheckTicketById(ticketId: string | undefined):
+export function useCheckTicketById(ticketId: string | undefined):
   | {
       loading: true;
       result: undefined;
