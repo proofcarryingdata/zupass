@@ -282,7 +282,14 @@ export function initTelegramRoutes(
   });
 
   app.get("/telegram/user", async (req: Request, res: Response) => {
+    const authToken = req.headers.authorization;
+
     try {
+      if (!process.env.API_AUTH_TOKEN) throw new Error(`No Auth token found`);
+      if (authToken !== `Bearer ${process.env.API_AUTH_TOKEN}`) {
+        return res.status(401).send("Unauthorized");
+      }
+
       const telegramId = checkOptionalQueryParam(req, "telegramId");
       const semaphoreId = checkOptionalQueryParam(req, "semaphoreId");
       if (telegramId || semaphoreId) {
