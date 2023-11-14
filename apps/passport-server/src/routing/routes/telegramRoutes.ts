@@ -285,32 +285,25 @@ export function initTelegramRoutes(
   app.get("/telegram/conversation", async (req: Request, res: Response) => {
     const authToken = req.headers.authorization;
 
-    try {
-      if (!process.env.API_AUTH_TOKEN)
-        throw new PCDHTTPError(500, `No Auth token found`);
-      if (authToken !== `Bearer ${process.env.API_AUTH_TOKEN}`) {
-        return res.status(401).send("Unauthorized");
-      }
+    if (!process.env.API_AUTH_TOKEN)
+      throw new PCDHTTPError(500, `No Auth token found`);
+    if (authToken !== `Bearer ${process.env.API_AUTH_TOKEN}`)
+      return res.status(401).send("Unauthorized");
 
-      const telegramId = checkOptionalQueryParam(req, "telegramId");
-      const semaphoreId = checkOptionalQueryParam(req, "semaphoreId");
-      if (telegramId || semaphoreId) {
-        const db = await getDB();
-        if (telegramId) {
-          const user = await fetchConversationByTelegramId(db, telegramId);
-          if (!user) throw new Error(`No convo found`);
-          res.json(user);
-          //
-        } else if (semaphoreId) {
-          const user = await fetchConversationBySemaphoreId(db, semaphoreId);
-          if (!user) throw new Error(`No convo found`);
-          res.json(user);
-        }
+    const telegramId = checkOptionalQueryParam(req, "telegramId");
+    const semaphoreId = checkOptionalQueryParam(req, "semaphoreId");
+    if (telegramId || semaphoreId) {
+      const db = await getDB();
+      if (telegramId) {
+        const user = await fetchConversationByTelegramId(db, telegramId);
+        if (!user) throw new Error(`No convo found`);
+        res.json(user);
+        //
+      } else if (semaphoreId) {
+        const user = await fetchConversationBySemaphoreId(db, semaphoreId);
+        if (!user) throw new Error(`No convo found`);
+        res.json(user);
       }
-    } catch (e) {
-      logger("[TELEGRAM] failed to fetch", e);
-      rollbarService?.reportError(e);
-      res.status(500).send(e);
     }
   });
 }
