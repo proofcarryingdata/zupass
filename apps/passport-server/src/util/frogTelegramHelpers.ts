@@ -111,6 +111,9 @@ export const handleFrogVerification = async (
     // This Pubkey value should work for staging + prod as well, but needs to be tested
     const rsaPrivateKey = loadRSAPrivateKey();
     if (!rsaPrivateKey) throw new Error(`No RSA private key found`);
+    // NOTE: Correct for Issuance Service error by generating the EdDSA public key from the RSA private key.
+    // Due to the fact that RSA is 1024 bit and EdDSA is 256 bits, the RSA gets modded by 256
+    // and we have a deterministicly generated EdDSA key
     const serverEddsaPublicKey = await getEdDSAPublicKey(
       rsaPrivateKey.exportKey("private")
     );
