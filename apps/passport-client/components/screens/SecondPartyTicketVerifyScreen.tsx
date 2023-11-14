@@ -6,7 +6,7 @@ import {
   requestVerifyTicketById
 } from "@pcd/passport-interface";
 import { decodeQRPayload } from "@pcd/passport-ui";
-import { PCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -333,8 +333,8 @@ function VerifiedAndKnownTicket({
 }
 
 function useDecodedPayload(encodedQRPayload: string) {
-  const [pcd, setPcd] = useState(null);
-  const [serializedPCD, setSerializedPCD] = useState(null);
+  const [pcd, setPcd] = useState<PCD>(null);
+  const [serializedPCD, setSerializedPCD] = useState<SerializedPCD>(null);
   const pcds = usePCDCollection();
 
   useEffect(() => {
@@ -343,7 +343,7 @@ function useDecodedPayload(encodedQRPayload: string) {
         if (encodedQRPayload) {
           // decodedPCD is a JSON.stringify'd {@link SerializedPCD}
           const decodedPayload = decodeQRPayload(encodedQRPayload);
-          const serializedPCD = JSON.parse(decodedPayload);
+          const serializedPCD: SerializedPCD = JSON.parse(decodedPayload);
           const pcd = await pcds.deserialize(serializedPCD);
           setPcd(pcd);
           setSerializedPCD(serializedPCD);
@@ -365,7 +365,10 @@ function useDecodedPayload(encodedQRPayload: string) {
  *
  * Returns a {@link VerifyResult}
  */
-async function verify(pcd: PCD, serializedPCD: string): Promise<VerifyResult> {
+async function verify(
+  pcd: PCD,
+  serializedPCD: SerializedPCD
+): Promise<VerifyResult> {
   const result = await requestVerifyTicket(appConfig.zupassServer, {
     pcd: JSON.stringify(serializedPCD)
   });
