@@ -20,6 +20,7 @@ import {
 } from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { ActionButton, FrogSearchButton } from "./Button";
+import { NewFont } from "./FrogFolder";
 import { useFrogConfetti } from "./useFrogParticles";
 
 /**
@@ -202,9 +203,16 @@ const SearchButton = ({
       disabled={!canFetch}
       ButtonComponent={FrogSearchButton}
     >
-      {canFetch
-        ? `${name}${freerolls > 0 ? ` (${freerolls} remaining)` : ""}`
-        : `${name}${countDown}`}
+      {canFetch &&
+        (freerolls > 0 ? (
+          <NewFont>
+            {name} ({freerolls} remaining)
+          </NewFont>
+        ) : (
+          name
+        ))}
+
+      {!canFetch && `${name}${countDown}`}
     </ActionButton>
   );
 };

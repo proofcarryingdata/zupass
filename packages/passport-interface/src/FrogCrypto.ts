@@ -75,7 +75,20 @@ export const IFrogCryptoFeedSchema = z.object({
   /**
    * Map of configs for Biome(s) where PCDs can be issued from this feed
    */
-  biomes: FrogCryptoFeedBiomeConfigsSchema
+  biomes: FrogCryptoFeedBiomeConfigsSchema,
+  /**
+   * A list of secret codes that can be used to look up this feed
+   */
+  codes: z.array(z.string()).optional()
+});
+
+/**
+ * A subset of `IFrogCryptoFeed` that is exposed to the client
+ */
+export const IFrogCryptoClientFeedSchema = z.object({
+  private: IFrogCryptoFeedSchema.shape.private,
+  activeUntil: IFrogCryptoFeedSchema.shape.activeUntil,
+  cooldown: IFrogCryptoFeedSchema.shape.cooldown
 });
 
 /**
@@ -85,6 +98,12 @@ export const IFrogCryptoFeedSchema = z.object({
  */
 export type FrogCryptoFeed = Feed<typeof EdDSAFrogPCDPackage> &
   z.infer<typeof IFrogCryptoFeedSchema>;
+
+/**
+ * FrogCrypto specific feed configuration that is exposed to the client
+ */
+export type FrogCryptoClientFeed = Feed<typeof EdDSAFrogPCDPackage> &
+  z.infer<typeof IFrogCryptoClientFeedSchema>;
 
 /**
  * DB schema for feed data
@@ -97,7 +116,8 @@ export const FrogCryptoDbFeedDataSchema = z.object({
     private: z.boolean(),
     activeUntil: z.number().nonnegative().int(),
     cooldown: z.number().nonnegative().int(),
-    biomes: FrogCryptoFeedBiomeConfigsSchema
+    biomes: FrogCryptoFeedBiomeConfigsSchema,
+    codes: z.array(z.string()).optional()
   })
 });
 

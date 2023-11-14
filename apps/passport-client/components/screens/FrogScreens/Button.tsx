@@ -18,7 +18,7 @@ export function ActionButton({
   disabled,
   ButtonComponent = Button
 }: {
-  children: string;
+  children: React.ReactNode;
   /**
    * The action to perform when the button is clicked. This should return a
    * promise that resolves when the action is complete.

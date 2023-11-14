@@ -259,11 +259,8 @@ class App extends React.Component<object, AppState> {
     if (this.state.completedFirstSync) {
       this.update({
         ...this.state,
-        extraDownloadRequested: true
-        // TODO: evaluate if this made a difference for the disappearing
-        // ticket problem we encountered during devconnect coworking space
-        // checkin
-        // extraSubscriptionFetchRequested: true
+        extraDownloadRequested: true,
+        extraSubscriptionFetchRequested: true
       });
     }
   };
@@ -364,7 +361,7 @@ function RouterImpl() {
           <Route path="telegram" element={<HomeScreen />} />
           <Route path="pond-control" element={<FrogManagerScreen />} />
           <Route
-            path="frogscriptions/:feedAlias"
+            path="frogscriptions/:feedCode"
             element={<FrogSubscriptionScreen />}
           />
           <Route path="*" element={<MissingScreen />} />
