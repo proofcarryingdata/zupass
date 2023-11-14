@@ -4,7 +4,6 @@ import { useParams } from "react-router-dom";
 import { useIsSyncSettled, useSubscriptions } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { RippleLoader } from "../../core/RippleLoader";
-import { DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL } from "./useFrogFeed";
 
 export const FROM_SUBSCRIPTION_PARAM_KEY = "fromFrogSubscription";
 
@@ -17,9 +16,9 @@ export function FrogSubscriptionScreen() {
 
   // get current frog subscriptions
   const { value: subs } = useSubscriptions();
-  const frogSubs = subs.getSubscriptionsForProvider(
-    DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL
-  );
+  const frogSubs = subs
+    .getActiveSubscriptions()
+    .filter((sub) => sub.providerUrl.includes("frogcrypto"));
   const hasFrogSubs = frogSubs.length > 0;
 
   const { feedCode } = useParams();
