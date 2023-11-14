@@ -190,7 +190,7 @@ export function SecondPartyTicketVerifyScreen() {
         <ZKNoticeContainer>
           <h2>Zero-knowledge ticket</h2>
           <p>
-            You can't check this ticket in, as you're not an organizer for the
+            You can't check this ticket in, as you're not event staff for the
             event.
           </p>
           <p>However, you can see the following ticket information:</p>
