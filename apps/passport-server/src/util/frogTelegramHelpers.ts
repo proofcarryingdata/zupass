@@ -111,16 +111,16 @@ export const handleFrogVerification = async (
     // This Pubkey value should work for staging + prod as well, but needs to be tested
     const rsaPrivateKey = loadRSAPrivateKey();
     if (!rsaPrivateKey) throw new Error(`No RSA private key found`);
-    const SERVER_EDDSA_PUBKEY = await getEdDSAPublicKey(
+    const serverEddsaPublicKey = await getEdDSAPublicKey(
       rsaPrivateKey.exportKey("private")
     );
 
     const signerMatch =
-      pcd.claim.signerPublicKey[0] === SERVER_EDDSA_PUBKEY[0] &&
-      pcd.claim.signerPublicKey[1] === SERVER_EDDSA_PUBKEY[1];
+      pcd.claim.signerPublicKey[0] === serverEddsaPublicKey[0] &&
+      pcd.claim.signerPublicKey[1] === serverEddsaPublicKey[1];
     if (!signerMatch) {
       throw new Error(
-        `PCD claim signer public key ${pcd.claim.signerPublicKey} does not match server public key ${SERVER_EDDSA_PUBKEY}`
+        `PCD claim signer public key ${pcd.claim.signerPublicKey} does not match server public key ${serverEddsaPublicKey}`
       );
     }
     span?.setAttribute("signerMatch", signerMatch);

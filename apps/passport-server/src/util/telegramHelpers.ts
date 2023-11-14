@@ -358,7 +358,7 @@ const generateProofUrl = async (
   telegramUsername?: string
 ): Promise<string> => {
   if (eventNames.find((e) => e.includes(FROG_SLUG))) {
-    logger(`[FOUND EVENT WITH FROG]`, eventNames);
+    logger(`[TELEGRAM] found frog event`, eventNames);
     return await generateFrogProofUrl(
       telegramUserId,
       telegramChatId,

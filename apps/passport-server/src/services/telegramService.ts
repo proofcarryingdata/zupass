@@ -1024,6 +1024,8 @@ export class TelegramService {
           chat.id,
           telegramUsername
         );
+      } else {
+        throw new Error(`Invalid PCD Type`);
       }
 
       // Send invite link
