@@ -56,6 +56,9 @@ import { traced } from "../services/telemetryService";
 import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
 
+// If an event name contains this value, we will use frog proof instead of ticket proof
+const FROG_SLUG = "frog";
+
 export type TopicChat = Chat.SupergroupChat | null;
 
 type ChatIDWithChat<T extends { telegramChatID?: string }> = T & {
@@ -351,12 +354,11 @@ const generateProofUrl = async (
   telegramUserId: number,
   telegramChatId: string,
   validEventIds: string[],
+  eventNames: string[],
   telegramUsername?: string
 ): Promise<string> => {
-  if (
-    process.env.FROG_OWNERS_TELEGRAM_CHAT_ID &&
-    telegramChatId === process.env.FROG_OWNERS_TELEGRAM_CHAT_ID
-  ) {
+  if (eventNames.find((e) => e.includes(FROG_SLUG))) {
+    logger(`[FOUND EVENT WITH FROG]`, eventNames);
     return await generateFrogProofUrl(
       telegramUserId,
       telegramChatId,
@@ -574,7 +576,6 @@ const getChatsWithMembershipStatus = async (
       db,
       userId
     );
-
     const chatsWithMembership = await chatIDsToChats(
       ctx,
       chatIdsWithMembership
@@ -705,6 +706,7 @@ export const chatsToJoin = async (
           userId,
           chat.telegramChatID,
           chat.ticketEventIds,
+          chat.eventNames,
           telegramUsername
         );
         range.webApp(`${chat.chat?.title}`, proofUrl).row();
@@ -739,6 +741,7 @@ export const chatsToJoinV2 = async (
           userId,
           chat.telegramChatID,
           chat.ticketEventIds,
+          chat.eventNames,
           telegramUsername
         );
 

@@ -17,10 +17,6 @@ import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
-import {
-  insertTelegramChat,
-  insertTelegramEvent
-} from "../src/database/queries/telegram/insertTelegramConversation";
 import { logger } from "../src/util/logger";
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
@@ -243,11 +239,6 @@ yargs
       const itemId = "1";
       const activeItemIds = [itemId];
       const checkinListId = "0";
-      const chatId: number = parseInt(
-        process.env.FROG_OWNERS_TELEGRAM_CHAT_ID!
-      );
-
-      logger(`Creating event and link with chat id: ${chatId}`);
 
       const db = await getDB();
 
@@ -274,16 +265,6 @@ yargs
         checkinListId
       );
       logger(`eventsInfoId: ${eventsInfoId}`);
-
-      const telegramChatId = await insertTelegramChat(db, chatId);
-      logger(`telegramChatId: ${telegramChatId}`);
-
-      const telegramEventId = await insertTelegramEvent(
-        db,
-        eventConfigId,
-        chatId
-      );
-      logger(`telegramEventId: ${telegramEventId}`);
 
       await db.end();
     }
