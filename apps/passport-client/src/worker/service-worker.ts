@@ -61,6 +61,8 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/semaphore-artifacts/16.zkey",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
   "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey",
+  "/artifacts/zk-eddsa-frog-pcd/circuit.wasm",
+  "/artifacts/zk-eddsa-frog-pcd/circuit.zkey",
   "/fonts/IBMPlexSans-ExtraLight.woff",
   "/fonts/IBMPlexSans-Light.woff",
   "/fonts/IBMPlexSans-LightItalic.woff",
