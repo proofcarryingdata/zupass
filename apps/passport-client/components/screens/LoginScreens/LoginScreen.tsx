@@ -13,11 +13,13 @@ import {
   pendingAddSubscriptionRequestKey,
   pendingGetWithoutProvingRequestKey,
   pendingProofRequestKey,
+  pendingViewFrogCryptoRequestKey,
   pendingViewSubscriptionsRequestKey,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
+  setPendingViewFrogCryptoRequest,
   setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
 import { validateEmail } from "../../../src/util";
@@ -50,6 +52,9 @@ export function LoginScreen() {
   const pendingAddSubscriptionRequest = query?.get(
     pendingAddSubscriptionRequestKey
   );
+  const pendingViewFrogCryptoRequest = query?.get(
+    pendingViewFrogCryptoRequestKey
+  );
 
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
@@ -69,6 +74,9 @@ export function LoginScreen() {
     } else if (pendingAddSubscriptionRequest != null) {
       setPendingAddSubscriptionRequest(pendingAddSubscriptionRequest);
       pendingRequestForLogging = pendingAddSubscriptionRequestKey;
+    } else if (pendingViewFrogCryptoRequest != null) {
+      setPendingViewFrogCryptoRequest(pendingViewFrogCryptoRequest);
+      pendingRequestForLogging = pendingViewFrogCryptoRequestKey;
     }
 
     if (pendingRequestForLogging != null) {
@@ -81,7 +89,8 @@ export function LoginScreen() {
     pendingAddRequest,
     pendingProveRequest,
     pendingViewSubscriptionsRequest,
-    pendingAddSubscriptionRequest
+    pendingAddSubscriptionRequest,
+    pendingViewFrogCryptoRequest
   ]);
 
   const self = useSelf();
