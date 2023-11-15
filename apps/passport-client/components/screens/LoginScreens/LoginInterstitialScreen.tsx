@@ -9,6 +9,7 @@ import {
   getPendingGetWithoutProvingRequest,
   getPendingHaloRequest,
   getPendingProofRequest,
+  getPendingViewFrogCryptoPageRequest,
   getPendingViewSubscriptionsPageRequest
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
@@ -53,6 +54,13 @@ export function LoginInterstitialScreen() {
         );
         clearAllPendingRequests();
         navigate(`/add-subscription?url=${encReq}`, { replace: true });
+      } else if (getPendingViewFrogCryptoPageRequest() != null) {
+        console.log("Redirecting to frog crypto screen");
+        const encReq = encodeURIComponent(
+          JSON.parse(getPendingViewFrogCryptoPageRequest())
+        );
+        clearAllPendingRequests();
+        navigate(`/frogscriptions/${encReq}`, { replace: true });
       } else {
         window.location.hash = "#/";
       }

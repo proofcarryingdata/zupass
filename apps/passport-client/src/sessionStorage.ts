@@ -14,7 +14,8 @@ export function hasPendingRequest(): boolean {
     getPendingHaloRequest() ||
     getPendingProofRequest() ||
     getPendingViewSubscriptionsPageRequest() ||
-    getPendingAddSubscriptionPageRequest()
+    getPendingAddSubscriptionPageRequest() ||
+    getPendingViewFrogCryptoPageRequest()
   );
 }
 
@@ -105,5 +106,20 @@ export function clearPendingAddSubscriptionRequest(): void {
 
 export function getPendingAddSubscriptionPageRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingAddSubscriptionRequestKey);
+  return value == null ? undefined : value;
+}
+
+export const pendingViewFrogCryptoRequestKey = "pendingViewFrogCrypto";
+
+export function setPendingViewFrogCryptoRequest(request: string): void {
+  sessionStorage.setItem(pendingViewFrogCryptoRequestKey, request);
+}
+
+export function clearPendingViewFrogCryptoRequest(): void {
+  sessionStorage.removeItem(pendingViewFrogCryptoRequestKey);
+}
+
+export function getPendingViewFrogCryptoPageRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingViewFrogCryptoRequestKey);
   return value == null ? undefined : value;
 }
