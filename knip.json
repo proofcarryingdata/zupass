@@ -10,7 +10,7 @@
     }
   },
   "ignore": ["**/*.d.ts", "**/dist"],
-  "ignoreWorkspaces": ["packages/artifacts"],
+  "ignoreWorkspaces": ["packages/artifacts", "apps/kudosbot-server"],
   "rules": {
     "binaries": "off",
     "dependencies": "error",
