@@ -43,7 +43,7 @@
     "@pcd/pcd-types": "^0.8.0",
     "@pcd/semaphore-identity-pcd": "0.8.0",
     "@pcd/semaphore-signature-pcd": "0.8.0",
-    "@pcd/util": "0.1.2",
+    "@pcd/util": "0.2.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@zk-kit/groth16": "^0.3.0",
     "circomlibjs": "^0.1.7",

@@ -29,8 +29,8 @@
   "dependencies": {
     "@pcd/eddsa-pcd": "0.3.0",
     "@pcd/passport-ui": "0.8.0",
-    "@pcd/pcd-types": "0.7.2",
-    "@pcd/util": "0.1.2",
+    "@pcd/pcd-types": "0.8.0",
+    "@pcd/util": "0.2.0",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",
