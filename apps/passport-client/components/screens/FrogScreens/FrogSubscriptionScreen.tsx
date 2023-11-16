@@ -1,7 +1,17 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import { useEffect } from "react";
 import { useParams } from "react-router-dom";
-import { useIsSyncSettled, useSubscriptions } from "../../../src/appHooks";
+import {
+  useIsSyncSettled,
+  useSelf,
+  useSubscriptions,
+  useUserForcedToLogout
+} from "../../../src/appHooks";
+import {
+  clearAllPendingRequests,
+  pendingViewFrogCryptoRequestKey,
+  setPendingViewFrogCryptoRequest
+} from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { RippleLoader } from "../../core/RippleLoader";
 
@@ -38,6 +48,22 @@ export function FrogSubscriptionScreen() {
       }
     }
   }, [feedCode, hasFrogSubs, syncSettled]);
+
+  const self = useSelf();
+  const userForcedToLogout = useUserForcedToLogout();
+
+  useEffect(() => {
+    if (self == null || userForcedToLogout) {
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify(feedCode);
+      setPendingViewFrogCryptoRequest(stringifiedRequest);
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingViewFrogCryptoRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
+    }
+  }, [feedCode, self, userForcedToLogout]);
 
   return <RippleLoader />;
 }

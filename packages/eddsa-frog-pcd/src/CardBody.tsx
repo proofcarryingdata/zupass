@@ -82,7 +82,7 @@ export function EdDSAFrogCardBody({
         src={frogData?.imageUrl}
         draggable={false}
         loading="lazy"
-        style={{ width: "100%", height: "auto" }}
+        style={{ width: "100%", height: "auto", zIndex: "1000" }}
         options={{
           background: "rgba(0, 0, 0, 0.5)"
         }}
