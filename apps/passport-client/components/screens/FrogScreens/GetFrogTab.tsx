@@ -21,6 +21,7 @@ import {
 import { PCDCardList } from "../../shared/PCDCardList";
 import {
   ActionButton,
+  CelestialPondSearchButton,
   DesertSearchButton,
   FrogSearchButton,
   JungleSearchButton,
@@ -209,6 +210,8 @@ const SearchButton = ({
         return DesertSearchButton;
       case "Jungle":
         return JungleSearchButton;
+      case "Celestial Pond":
+        return CelestialPondSearchButton;
       default:
         return FrogSearchButton;
     }

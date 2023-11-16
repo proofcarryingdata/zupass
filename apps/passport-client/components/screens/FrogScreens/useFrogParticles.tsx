@@ -335,3 +335,97 @@ export function useFrogConfetti() {
 
   return ready ? confetti : null;
 }
+
+export function useCelestialPondParticles(
+  ref: React.RefObject<HTMLDivElement> | null
+) {
+  const [ready, setReady] = useState(false);
+  const [container, setContainer] = useState<Container | null>(null);
+  useEffect(() => {
+    const load = async () => {
+      await loadFull(tsParticles);
+      setReady(true);
+    };
+    load();
+  }, []);
+
+  useEffect(() => {
+    if (!ready || !ref) {
+      return;
+    }
+
+    tsParticles
+      .load({
+        element: ref.current,
+        options: {
+          detectRetina: true,
+          fullScreen: {
+            enable: false,
+            zIndex: 1
+          },
+          particles: {
+            number: {
+              value: 700,
+              density: {
+                enable: true
+              }
+            },
+            color: {
+              value: "#ffffff"
+            },
+            shape: {
+              type: "circle"
+            },
+            opacity: {
+              value: { min: 0.1, max: 0.5 },
+              animation: {
+                enable: true,
+                speed: 3,
+                sync: false
+              }
+            },
+            size: {
+              value: { min: 0.1, max: 5 },
+              animation: {
+                enable: true,
+                speed: 20,
+                sync: false
+              }
+            },
+            links: {
+              enable: true,
+              distance: 150,
+              color: "#ffffff",
+              opacity: 0.4,
+              width: 1
+            },
+            move: {
+              enable: true,
+              speed: 0.5,
+              direction: "none",
+              random: false,
+              straight: false,
+              outModes: "out"
+            },
+            twinkle: {
+              particles: {
+                enable: true,
+                color: "#ffff6a",
+                frequency: 0.005,
+                opacity: 0.5
+              },
+              lines: {
+                enable: true,
+                color: "#0d47a1",
+                frequency: 0.0005,
+                opacity: 1
+              }
+            }
+          }
+        }
+      })
+      .then(setContainer);
+  }, [ready, ref]);
+
+  return container;
+}

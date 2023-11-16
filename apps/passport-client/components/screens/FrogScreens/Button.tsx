@@ -1,4 +1,5 @@
 import React, {
+  CSSProperties,
   forwardRef,
   useCallback,
   useEffect,
@@ -8,7 +9,10 @@ import React, {
 import { useInView } from "react-intersection-observer";
 import { ParallaxBanner, ParallaxProvider } from "react-scroll-parallax";
 import styled from "styled-components";
-import { useFrogParticles } from "./useFrogParticles";
+import {
+  useCelestialPondParticles,
+  useFrogParticles
+} from "./useFrogParticles";
 
 /**
  * A button that shows a loading spinner while the action is in progress.
@@ -192,14 +196,21 @@ export const TheCapitalSearchButton = forwardRef(
   ) => {
     return (
       <ParallaxProvider>
-        <FrogSearchButton {...props} ref={buttonRef} style={{ padding: 0 }}>
+        <FrogSearchButton
+          {...props}
+          ref={buttonRef}
+          style={{
+            padding: 0,
+            filter: props.disabled ? "brightness(80%)" : ""
+          }}
+        >
           <ParallaxBanner
             layers={[
               {
                 image: "/images/frogs/thecapital.jpg",
                 speed: -10,
                 style: {
-                  filter: "brightness(50%)"
+                  filter: props.disabled ? "brightness(30%)" : "brightness(50%)"
                 },
                 shouldAlwaysCompleteAnimation: true
               },
@@ -235,6 +246,7 @@ const TextureSearchButton = forwardRef(
       ...props
     }: React.ComponentPropsWithRef<typeof Button> & {
       backgroundImage: string;
+      padding?: CSSProperties["padding"];
     },
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
@@ -245,7 +257,8 @@ const TextureSearchButton = forwardRef(
         style={{
           backgroundImage,
           backgroundRepeat: "repeat",
-          backdropFilter: "brightness(60%)"
+          filter: props.disabled ? "brightness(70%)" : "",
+          padding: props.padding ?? "8px"
         }}
       >
         {children}
@@ -280,6 +293,52 @@ export const JungleSearchButton = forwardRef(
         backgroundImage="url(/images/frogs/jungle.jpg)"
         {...props}
       />
+    );
+  }
+);
+
+export const CelestialPondSearchButton = forwardRef(
+  (
+    {
+      children,
+      ...props
+    }: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    buttonRef: React.Ref<HTMLButtonElement>
+  ) => {
+    const ref = useRef<HTMLDivElement>(null);
+    useCelestialPondParticles(ref);
+
+    return (
+      <TextureSearchButton
+        ref={buttonRef}
+        padding={0}
+        backgroundImage="url(/images/frogs/celestialpond.jpg)"
+        {...props}
+      >
+        <div style={{ position: "relative", width: "100%", height: "48px" }}>
+          <div
+            ref={ref}
+            style={{
+              width: "100%",
+              height: "100%",
+              position: "absolute",
+              left: 0,
+              right: 0
+            }}
+          />
+          <div
+            style={{
+              position: "absolute",
+              top: "50%",
+              transform: "translateY(-50%)",
+              width: "100%",
+              textAlign: "center"
+            }}
+          >
+            {children}
+          </div>
+        </div>
+      </TextureSearchButton>
     );
   }
 );
