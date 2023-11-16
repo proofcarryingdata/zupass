@@ -1,9 +1,9 @@
 import {
   encodeQRPayload,
-  QRDisplayWithRegenerateAndStorage
+  QRDisplayWithRegenerateAndStorage,
+  styled
 } from "@pcd/passport-ui";
 import { useCallback } from "react";
-import styled from "styled-components";
 import { initArgs, RSATicketPCD, RSATicketPCDPackage } from "./RSATicketPCD";
 import { getQRCodeColorOverride, getTicketData } from "./utils";
 

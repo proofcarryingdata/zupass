@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import { styled } from "@pcd/passport-ui";
 import { RSAImagePCD } from "./RSAImagePCD";
 
 export function RSAImageCardBody({ pcd }: { pcd: RSAImagePCD }) {

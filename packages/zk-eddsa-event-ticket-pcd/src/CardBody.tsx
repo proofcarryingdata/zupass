@@ -1,5 +1,10 @@
-import { FieldLabel, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
-import styled from "styled-components";
+import {
+  FieldLabel,
+  Separator,
+  Spacer,
+  TextContainer,
+  styled
+} from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCD } from "./ZKEdDSAEventTicketPCD";
 
 export function ZKEdDSAEventTicketCardBody({

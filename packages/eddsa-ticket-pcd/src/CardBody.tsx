@@ -1,14 +1,15 @@
 import {
+  QRDisplayWithRegenerateAndStorage,
+  css,
   encodeQRPayload,
-  QRDisplayWithRegenerateAndStorage
+  styled
 } from "@pcd/passport-ui";
 import { useCallback } from "react";
-import styled, { css } from "styled-components";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  initArgs,
-  TicketCategory
+  TicketCategory,
+  initArgs
 } from "./EdDSATicketPCD";
 import { getEdDSATicketData, getQRCodeColorOverride } from "./utils";
 

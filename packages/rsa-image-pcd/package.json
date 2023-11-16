@@ -27,6 +27,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/passport-ui": "^0.8.0",
     "@pcd/pcd-types": "0.8.0",
     "@pcd/rsa-pcd": "0.3.0",
     "chai": "^4.3.7",

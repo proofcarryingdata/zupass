@@ -14,6 +14,7 @@
     "@pcd/passport-interface": "^0.8.0",
     "@pcd/pcd-types": "0.8.0",
     "@pcd/semaphore-identity-pcd": "0.8.0",
+    "@pcd/util": "^0.2.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.2.1",
     "@types/node": "20.4.10",
     "@types/react": "18.2.20",

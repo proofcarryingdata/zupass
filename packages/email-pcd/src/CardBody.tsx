@@ -1,4 +1,4 @@
-import styled from "styled-components";
+import { styled } from "@pcd/passport-ui";
 import { EmailPCD } from "./EmailPCD";
 import { getEmailAddress } from "./utils";
 

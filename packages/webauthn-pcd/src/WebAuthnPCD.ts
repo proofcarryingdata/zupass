@@ -1,7 +1,4 @@
-import {
-  arrayBufferToBase64,
-  base64ToArrayBuffer
-} from "@pcd/passport-crypto/src/utils";
+import { arrayBufferToBase64, base64ToArrayBuffer } from "@pcd/passport-crypto";
 import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
 import { startAuthentication } from "@simplewebauthn/browser";

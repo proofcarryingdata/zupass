@@ -1,5 +1,10 @@
-import { FieldLabel, HiddenText, Separator, Spacer } from "@pcd/passport-ui";
-import styled from "styled-components";
+import {
+  FieldLabel,
+  HiddenText,
+  Separator,
+  Spacer,
+  styled
+} from "@pcd/passport-ui";
 import { EdDSAPCD } from "./EdDSAPCD";
 
 /**

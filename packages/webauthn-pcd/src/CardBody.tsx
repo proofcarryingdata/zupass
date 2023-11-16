@@ -1,6 +1,10 @@
-import { FieldLabel, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
-import React from "react";
-import styled from "styled-components";
+import {
+  FieldLabel,
+  Separator,
+  Spacer,
+  TextContainer,
+  styled
+} from "@pcd/passport-ui";
 import { WebAuthnPCD } from "./WebAuthnPCD";
 
 export function WebAuthnCardBody({ pcd }: { pcd: WebAuthnPCD }) {

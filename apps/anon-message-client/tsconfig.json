@@ -23,6 +23,16 @@
     },
     "forceConsistentCasingInFileNames": true
   },
+  "ts-node": {
+    "compilerOptions": {
+      "module": "commonjs",
+      "outDir": "dist",
+      "lib": ["es2019"],
+      "target": "es2019",
+      "isolatedModules": false,
+      "noEmit": false
+    }
+  },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"]
 }

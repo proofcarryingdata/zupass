@@ -4,14 +4,14 @@ import {
   Separator,
   Spacer,
   TextContainer,
+  styled
 } from "@pcd/passport-ui";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
-import styled from "styled-components";
 import { EthereumOwnershipPCD } from "./EthereumOwnershipPCD";
 
 export function EthereumOwnershipCardBody({
-  pcd,
+  pcd
 }: {
   pcd: EthereumOwnershipPCD;
 }) {
