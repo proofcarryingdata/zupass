@@ -2,10 +2,17 @@
   "name": "@pcd/passport-crypto",
   "version": "0.8.0",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/node/index.js",
+  "module": "./dist/node/index.mjs",
+  "types": "./dist/node/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/node/index.d.ts",
+      "import": "./dist/node/index.mjs",
+      "require": "./dist/node/index.js"
+    }
+  },
   "files": [
-    "./src/*",
     "./dist/*",
     "./README.md",
     "./LICENSE"
@@ -13,7 +20,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "build": "tsup src/index.ts",
+    "build": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --dts --clean",
     "dev": "tsup src/index.ts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
