@@ -491,15 +491,17 @@ const WrithingImage = styled.div<{ visible: boolean }>`
   border-radius: 50%;
 
   opacity: ${({ visible }) => (visible ? "100%" : "20%")};
-  width: ${({ visible }) => (visible ? "min(80vw, 80vw)" : "0")};
-  height: ${({ visible }) => (visible ? "min(80vw, 80vw)" : "0")};
+  width: ${({ visible }) => (visible ? "min(80vw, 80vh)" : "0")};
+  height: ${({ visible }) => (visible ? "min(80vw, 80vh)" : "0")};
+  box-shadow: 0 0 0 0 rgba(255, 255, 255, 0.2) inset,
+    0 0 0 0 rgba(255, 255, 255, 0.2);
 
   transition: ${({ visible }) =>
     visible
       ? "width 16s ease-in, height 16s ease-in, opacity 4s ease-in"
       : "all 4s cubic-bezier(1,0,1,.6)"};
-  animation: ${rotating} 600s linear 1,
-    ${pulse} 8s linear ${({ visible }) => (visible ? "16s infiite" : "0")};
+  animation: ${rotating} 600s linear infinite,
+    ${pulse} 8s linear ${({ visible }) => (visible ? "16s infinite" : "0")};
   -webkit-animation: ${rotating} 600s linear infinite,
     ${pulse} 8s linear ${({ visible }) => (visible ? "16s infinite" : "0")};
 `;

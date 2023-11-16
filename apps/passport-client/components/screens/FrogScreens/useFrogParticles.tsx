@@ -421,6 +421,20 @@ export function useCelestialPondParticles(
                 frequency: 0.0005,
                 opacity: 1
               }
+            },
+            interactivity: {
+              events: {
+                onHover: {
+                  enable: true,
+                  mode: "repulse"
+                },
+                resize: true
+              },
+              modes: {
+                repulse: {
+                  distance: 200
+                }
+              }
             }
           }
         }
