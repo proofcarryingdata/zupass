@@ -2,6 +2,7 @@ import {
   fetchEmailToken,
   insertEmailToken
 } from "../database/queries/emailToken";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { randomEmailToken } from "../util/util";
 
@@ -11,15 +12,27 @@ import { randomEmailToken } from "../util/util";
  */
 export class EmailTokenService {
   private context: ApplicationContext;
+  private attempts: Record<string, number>;
 
   public constructor(context: ApplicationContext) {
     this.context = context;
+    this.attempts = {};
   }
 
   public async checkTokenCorrect(
     email: string,
     token: string
   ): Promise<boolean> {
+    if (this.attempts[email] !== undefined) {
+      this.attempts[email]++;
+    } else {
+      this.attempts[email] = 1;
+    }
+
+    if (this.attempts[email] >= 100) {
+      throw new PCDHTTPError(401, "Too many attempts. Come back later.");
+    }
+
     const savedToken = await this.getTokenForEmail(email);
     return token === savedToken;
   }
