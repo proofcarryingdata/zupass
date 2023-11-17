@@ -5761,6 +5761,11 @@ better-path-resolve@1.0.0:
   dependencies:
     is-windows "^1.0.0"
 
+bezier-easing@^2.1.0:
+  version "2.1.0"
+  resolved "https://registry.yarnpkg.com/bezier-easing/-/bezier-easing-2.1.0.tgz#c04dfe8b926d6ecaca1813d69ff179b7c2025d86"
+  integrity sha512-gbIqZ/eslnUFC1tjEvtz0sgx+xTK20wDnYMIA27VA04R7w6xxXQPZDbibjA9DTWZRA2CXtwHykkVzlCaAJAZig==
+
 bfj@^7.0.2:
   version "7.1.0"
   resolved "https://registry.yarnpkg.com/bfj/-/bfj-7.1.0.tgz#c5177d522103f9040e1b12980fe8c38cf41d3f8b"
@@ -11750,6 +11755,13 @@ pako@^2.0.3, pako@^2.1.0:
   resolved "https://registry.yarnpkg.com/pako/-/pako-2.1.0.tgz#266cc37f98c7d883545d11335c00fbd4062c9a86"
   integrity sha512-w+eufiZ1WuJYgPXbV/PO3NCMEc3xqylkKHzp8bxp1uW4qaSNQUkwmLLEc3kKsfz8lpV1F8Ht3U1Cm+9Srog2ug==
 
+parallax-controller@^1.7.0:
+  version "1.7.0"
+  resolved "https://registry.yarnpkg.com/parallax-controller/-/parallax-controller-1.7.0.tgz#659e8176922034ac548009ac544951432330aa0a"
+  integrity sha512-tIU/LgH9oIrvC6o+rvGQis8/NXxsHNuF5LODmcc5TjvEDUi2qiR/iisFmyaqI9LImQ3psdAv28k2ZEAnFekiig==
+  dependencies:
+    bezier-easing "^2.1.0"
+
 parent-module@^1.0.0:
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/parent-module/-/parent-module-1.0.1.tgz#691d2709e78c79fae3a156622452d00762caaaa2"
@@ -12549,6 +12561,13 @@ react-router@6.15.0:
   integrity sha512-NIytlzvzLwJkCQj2HLefmeakxxWHWAP+02EGqWEZy+DgfHHKQMUoBBjUQLOtFInBMhWtb3hiUy6MfFgwLjXhqg==
   dependencies:
     "@remix-run/router" "1.8.0"
+
+react-scroll-parallax@^3.4.3:
+  version "3.4.3"
+  resolved "https://registry.yarnpkg.com/react-scroll-parallax/-/react-scroll-parallax-3.4.3.tgz#0710e292c0fe369f28e5bbdaa9a9cc50061e6185"
+  integrity sha512-64H5qw9UbhSP9ZD0bePorH0rML+O7Yyopa9lU9CE0+dd19zvK2B/FFFjKcY9Ozz0s047AEwWrBIOrKzpWW+i9w==
+  dependencies:
+    parallax-controller "^1.7.0"
 
 react-select@^5.7.7:
   version "5.7.7"

@@ -80,7 +80,57 @@ describe("frogcrypto functionality", function () {
     const feed = feeds[0] as FrogCryptoFeed;
     expectToExist(feed);
     expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.autoPoll).to.be.false;
     expect(feed.private).to.be.false;
+    // secret value is not returned
+    expect(feed.biomes).to.be.undefined;
+  });
+
+  it("should be able to look up feed even it is private", async function () {
+    const feed = feeds[5];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.true;
+
+    const response = await requestListFeeds(
+      `${application.expressContext.localEndpoint}/frogcrypto/feeds/${feed.id}`
+    );
+    expect(response.success).to.be.true;
+    const resFeeds = response.value?.feeds;
+    expectToExist(resFeeds);
+    expect(resFeeds.length).to.eq(1);
+    const resFeed = resFeeds[0] as FrogCryptoFeed;
+    expectToExist(resFeed);
+    expect(resFeed.id).to.eq(feed.id);
+    expect(resFeed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.autoPoll).to.be.false;
+    expect(resFeed.private).to.be.true;
+    // secret value is not returned
+    expect(resFeed.codes).to.be.undefined;
+    expect(resFeed.biomes).to.be.undefined;
+  });
+
+  it("should be able to look up feed by its secret code", async function () {
+    const feed = feeds[5];
+    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.private).to.be.true;
+    const code = feed.codes?.[1];
+    expectToExist(code);
+
+    const response = await requestListFeeds(
+      `${application.expressContext.localEndpoint}/frogcrypto/feeds/${code}`
+    );
+    expect(response.success).to.be.true;
+    const resFeeds = response.value?.feeds;
+    expectToExist(resFeeds);
+    expect(resFeeds.length).to.eq(1);
+    const resFeed = resFeeds[0] as FrogCryptoFeed;
+    expectToExist(resFeed);
+    expect(resFeed.id).to.eq(feed.id);
+    expect(resFeed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(resFeed.private).to.be.true;
+    // secret value is not returned
+    expect(resFeed.codes).to.be.undefined;
+    expect(resFeed.biomes).to.be.undefined;
   });
 
   it("should be able to get frog", async () => {

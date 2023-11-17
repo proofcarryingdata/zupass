@@ -6,9 +6,9 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import {
-  encodeQRPayload,
   QRDisplayWithRegenerateAndStorage,
-  Spacer
+  Spacer,
+  encodeQRPayload
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";

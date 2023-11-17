@@ -6,6 +6,7 @@ import React, {
   useState
 } from "react";
 import { useInView } from "react-intersection-observer";
+import { ParallaxBanner, ParallaxProvider } from "react-scroll-parallax";
 import styled from "styled-components";
 import { useFrogParticles } from "./useFrogParticles";
 
@@ -18,7 +19,7 @@ export function ActionButton({
   disabled,
   ButtonComponent = Button
 }: {
-  children: string;
+  children: React.ReactNode;
   /**
    * The action to perform when the button is clicked. This should return a
    * promise that resolves when the action is complete.
@@ -183,3 +184,102 @@ export const ButtonGroup = styled.div`
   display: flex;
   gap: 8px;
 `;
+
+export const TheCapitalSearchButton = forwardRef(
+  (
+    { children, ...props }: React.ComponentPropsWithRef<typeof Button>,
+    buttonRef: React.Ref<HTMLButtonElement>
+  ) => {
+    return (
+      <ParallaxProvider>
+        <FrogSearchButton {...props} ref={buttonRef} style={{ padding: 0 }}>
+          <ParallaxBanner
+            layers={[
+              {
+                image: "/images/frogs/thecapital.jpg",
+                speed: -10,
+                style: {
+                  filter: "brightness(50%)"
+                },
+                shouldAlwaysCompleteAnimation: true
+              },
+              {
+                children: (
+                  <div
+                    style={{
+                      display: "flex",
+                      alignItems: "center",
+                      justifyContent: "center",
+                      width: "100%",
+                      height: "100%"
+                    }}
+                  >
+                    <div>{children}</div>
+                  </div>
+                )
+              }
+            ]}
+            style={{ height: "48px", borderRadius: "4px" }}
+          ></ParallaxBanner>
+        </FrogSearchButton>
+      </ParallaxProvider>
+    );
+  }
+);
+
+const TextureSearchButton = forwardRef(
+  (
+    {
+      backgroundImage,
+      children,
+      ...props
+    }: React.ComponentPropsWithRef<typeof Button> & {
+      backgroundImage: string;
+    },
+    buttonRef: React.Ref<HTMLButtonElement>
+  ) => {
+    return (
+      <FrogSearchButton
+        {...props}
+        ref={buttonRef}
+        style={{
+          backgroundImage,
+          backgroundRepeat: "repeat",
+          backdropFilter: "brightness(60%)"
+        }}
+      >
+        {children}
+      </FrogSearchButton>
+    );
+  }
+);
+
+export const DesertSearchButton = forwardRef(
+  (
+    props: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    buttonRef: React.Ref<HTMLButtonElement>
+  ) => {
+    return (
+      <TextureSearchButton
+        ref={buttonRef}
+        backgroundImage="url(/images/frogs/desert.jpg)"
+        {...props}
+      />
+    );
+  }
+);
+
+export const JungleSearchButton = forwardRef(
+  (
+    props: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    buttonRef: React.Ref<HTMLButtonElement>
+  ) => {
+    return (
+      <TextureSearchButton
+        ref={buttonRef}
+        backgroundImage="url(/images/frogs/jungle.jpg)"
+        {...props}
+      />
+    );
+  }
+);

@@ -79,7 +79,7 @@ export type ZKEdDSAFrogPCDArgs = {
  * Defines the ZKEdDSAEventTicketPCD claim.
  */
 export interface ZKEdDSAFrogPCDClaim {
-  frogOmitOwner: Omit<IFrogData, "ownerSemaphoreId">;
+  partialFrog: Partial<IFrogData>;
   signerPublicKey: EdDSAPublicKey;
   /**
    * Stringified `BigInt`.
@@ -261,7 +261,7 @@ function claimFromProofResult(
   frogPCD: EdDSAFrogPCD,
   publicSignals: string[]
 ): ZKEdDSAFrogPCDClaim {
-  const frogOmitOwner: Omit<IFrogData, "ownerSemaphoreId"> = {
+  const partialFrog: Partial<IFrogData> = {
     name: frogPCD.claim.data.name,
     description: frogPCD.claim.data.description,
     imageUrl: frogPCD.claim.data.imageUrl,
@@ -275,14 +275,15 @@ function claimFromProofResult(
     speed: parseInt(publicSignals[6]),
     intelligence: parseInt(publicSignals[7]),
     beauty: parseInt(publicSignals[8]),
-    timestampSigned: parseInt(publicSignals[9])
+    timestampSigned: parseInt(publicSignals[9]),
+    ownerSemaphoreId: publicSignals[10]
   };
 
   return {
-    frogOmitOwner,
+    partialFrog,
     signerPublicKey: frogPCD.proof.eddsaPCD.claim.publicKey,
-    externalNullifier: publicSignals[15],
-    watermark: publicSignals[16],
+    externalNullifier: publicSignals[16],
+    watermark: publicSignals[17],
     nullifierHash: publicSignals[0]
   };
 }
@@ -326,7 +327,7 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
   // is available in code as vkey imported above), so doesn't require
   // full package initialization.
 
-  const t = pcd.claim.frogOmitOwner;
+  const t = pcd.claim.partialFrog;
   // Outputs appear in public signals first
   const publicSignals = [
     pcd.claim.nullifierHash,
@@ -339,6 +340,7 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
     t.intelligence?.toString() || "0",
     t.beauty?.toString() || "0",
     t.timestampSigned?.toString() || "0",
+    t.ownerSemaphoreId?.toString() || "0",
     "0",
     "0",
     "0",

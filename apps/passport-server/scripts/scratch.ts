@@ -9,12 +9,16 @@ import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { getDB } from "../src/database/postgresPool";
-import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
+import {
+  fetchPretixEventInfo,
+  insertPretixEventsInfo
+} from "../src/database/queries/pretixEventInfo";
 import {
   insertPretixEventConfig,
   insertPretixOrganizerConfig
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { logger } from "../src/util/logger";
+import { FROG_SLUG } from "../src/util/telegramHelpers";
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
@@ -222,6 +226,48 @@ yargs
           console.error(`Error copying ${src} to ${dest}: ${e}`);
         }
       }
+    }
+  )
+  .command(
+    "new-fake-frog-event",
+    "Create a new fake event for frog owners",
+    () => {},
+    async function () {
+      const orgUrl = "frogs.org";
+      const token = "frogs-token";
+      const eventId = "frog-owners-event-id";
+      const eventName = "frog-owners-event-" + FROG_SLUG;
+      const itemId = "1";
+      const activeItemIds = [itemId];
+      const checkinListId = "0";
+
+      const db = await getDB();
+
+      const organizerConfigId = await insertPretixOrganizerConfig(
+        db,
+        orgUrl,
+        token
+      );
+      logger(`organizerConfigId: ${organizerConfigId}`);
+
+      const eventConfigId = await insertPretixEventConfig(
+        db,
+        organizerConfigId,
+        activeItemIds,
+        [],
+        eventId
+      );
+      logger(`eventConfigId: ${eventConfigId}`);
+
+      const eventsInfoId = await insertPretixEventsInfo(
+        db,
+        eventName,
+        eventConfigId,
+        checkinListId
+      );
+      logger(`eventsInfoId: ${eventsInfoId}`);
+
+      await db.end();
     }
   )
   .command(

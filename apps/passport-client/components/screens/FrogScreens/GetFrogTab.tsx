@@ -19,7 +19,14 @@ import {
   useSubscriptions
 } from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { ActionButton, FrogSearchButton } from "./Button";
+import {
+  ActionButton,
+  DesertSearchButton,
+  FrogSearchButton,
+  JungleSearchButton,
+  TheCapitalSearchButton
+} from "./Button";
+import { NewFont } from "./FrogFolder";
 import { useFrogConfetti } from "./useFrogParticles";
 
 /**
@@ -194,17 +201,36 @@ const SearchButton = ({
   ]);
   const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
   const freerolls = FROG_FREEROLLS + 1 - score;
+  const ButtonComponent = useMemo(() => {
+    switch (feed.name) {
+      case "The Capital":
+        return TheCapitalSearchButton;
+      case "Desert":
+        return DesertSearchButton;
+      case "Jungle":
+        return JungleSearchButton;
+      default:
+        return FrogSearchButton;
+    }
+  }, [feed.name]);
 
   return (
     <ActionButton
       key={id}
       onClick={onClick}
       disabled={!canFetch}
-      ButtonComponent={FrogSearchButton}
+      ButtonComponent={ButtonComponent}
     >
-      {canFetch
-        ? `${name}${freerolls > 0 ? ` (${freerolls} remaining)` : ""}`
-        : `${name}${countDown}`}
+      {canFetch &&
+        (freerolls > 0 ? (
+          <NewFont>
+            {name} ({freerolls} remaining)
+          </NewFont>
+        ) : (
+          name
+        ))}
+
+      {!canFetch && `${name}${countDown}`}
     </ActionButton>
   );
 };

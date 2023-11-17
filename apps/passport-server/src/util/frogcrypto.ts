@@ -5,9 +5,11 @@ import {
 } from "@pcd/eddsa-frog-pcd";
 import {
   FeedHost,
+  FrogCryptoClientFeed,
   FrogCryptoFeed,
   ListFeedsRequest,
   ListFeedsResponseValue,
+  ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -101,7 +103,32 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
     return {
       providerName: this.providerName,
       providerUrl: this.providerUrl,
-      feeds: this.hostedFeed.map((f) => f.feed).filter((f) => !f.private)
+      feeds: this.hostedFeed
+        .map((f) => f.feed)
+        .filter((f) => !f.private)
+        .map(sanitizeFeed)
+    };
+  }
+
+  /**
+   * List a single feed that this server is hosting.
+   *
+   * This also accept secret codes to look up a feed.
+   */
+  public async handleListSingleFeedRequest(
+    _request: ListSingleFeedRequest
+  ): Promise<ListFeedsResponseValue> {
+    return {
+      providerUrl: this.providerUrl,
+      providerName: this.providerName,
+      feeds: this.hostedFeed
+        .filter(
+          (f) =>
+            f.feed.id === _request.feedId ||
+            f.feed.codes?.includes(_request.feedId)
+        )
+        .map((f) => f.feed)
+        .map(sanitizeFeed)
     };
   }
 }
@@ -144,4 +171,21 @@ export function parseFrogTemperament(value?: string): Temperament {
     return Temperament.UNKNOWN;
   }
   return parseFrogEnum(Temperament, value);
+}
+
+/**
+ * Sanitize a feed object to return only feed data to the client.
+ */
+export function sanitizeFeed(feed: FrogCryptoFeed): FrogCryptoClientFeed {
+  return {
+    id: feed.id,
+    name: feed.name,
+    description: feed.description,
+    permissions: feed.permissions,
+    credentialRequest: feed.credentialRequest,
+    autoPoll: feed.autoPoll,
+    private: feed.private,
+    activeUntil: feed.activeUntil,
+    cooldown: feed.cooldown
+  };
 }

@@ -270,6 +270,7 @@ export interface LinkedPretixTelegramEvent {
 export interface ChatIDWithEventIDs {
   telegramChatID: string;
   ticketEventIds: string[];
+  eventNames: string[];
 }
 export interface UserIDWithChatIDs {
   telegramUserID: string;

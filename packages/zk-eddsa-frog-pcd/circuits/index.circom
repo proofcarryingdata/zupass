@@ -19,7 +19,6 @@ template EdDSAFrogPCD () {
     signal input intelligence;
     signal input beauty;
     signal input timestampSigned;
-    // To hide
     signal input ownerSemaphoreId;
     // reserved fields
     signal input reservedField1;
@@ -99,6 +98,7 @@ component main { public [
     intelligence,
     beauty,
     timestampSigned,
+    ownerSemaphoreId,
     reservedField1,
     reservedField2,
     reservedField3,

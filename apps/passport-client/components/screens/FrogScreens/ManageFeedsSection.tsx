@@ -231,7 +231,11 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
         private: Boolean(rawFeed.private),
         activeUntil: Math.round(new Date(rawFeed.activeUntil).getTime() / 1000),
         cooldown: Number.parseInt(rawFeed.cooldown),
-        biomes: parseBiomes(rawFeed)
+        biomes: parseBiomes(rawFeed),
+        codes: rawFeed.codes
+          ?.split(",")
+          ?.map((code: string) => code.trim())
+          ?.filter(Boolean)
       }
     } satisfies FrogCryptoDbFeedData;
 
@@ -271,7 +275,8 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
           return acc;
         },
         {} as Record<string, any>
-      )
+      ),
+      codes: feed.feed.codes?.join(",")
     })),
     null,
     2
@@ -370,6 +375,19 @@ export function DataTable({
                 <p key={biome}>
                   {biome}: {JSON.stringify(biomes[biome])}
                 </p>
+              ))}
+            </div>
+          );
+        },
+        codes: (row) => {
+          const codes = row["codes"];
+          if (!codes) {
+            return "<undefined>";
+          }
+          return (
+            <div>
+              {codes.map((code) => (
+                <p key={code}>{code}</p>
               ))}
             </div>
           );

@@ -1,6 +1,4 @@
-import {
-  EdDSAFrogPCDPackage
-} from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import {
   constructZupassPcdGetRequestUrl,
   openZupassPopup,
@@ -21,9 +19,12 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
 
 export default function Page() {
-  const externalNullifier =
-    generateSnarkMessageHash("consumer-client-nullifier").toString();
-  const watermark = generateSnarkMessageHash("consumer-client-watermark").toString();
+  const externalNullifier = generateSnarkMessageHash(
+    "consumer-client-nullifier"
+  ).toString();
+  const watermark = generateSnarkMessageHash(
+    "consumer-client-watermark"
+  ).toString();
 
   // Populate PCD from either client-side or server-side proving using the Zupass popup
   const [pcdStr] = useZupassPopupMessages();
@@ -74,15 +75,16 @@ export default function Page() {
             {valid === true && (
               <>
                 <p>✅ Proof is valid</p>
-                <p>{`Frog ID: ${pcd.claim.frogOmitOwner.frogId}`}</p>
-                <p>{`Biome: ${pcd.claim.frogOmitOwner.biome}`}</p>
-                <p>{`Rarity: ${pcd.claim.frogOmitOwner.rarity}`}</p>
-                <p>{`Temperament: ${pcd.claim.frogOmitOwner.temperament}`}</p>
-                <p>{`Jump: ${pcd.claim.frogOmitOwner.jump}`}</p>
-                <p>{`Speed: ${pcd.claim.frogOmitOwner.speed}`}</p>
-                <p>{`Intelligence: ${pcd.claim.frogOmitOwner.intelligence}`}</p>
-                <p>{`Beauty: ${pcd.claim.frogOmitOwner.beauty}`}</p>
-                <p>{`Timestamp Signed: ${pcd.claim.frogOmitOwner.timestampSigned}`}</p>
+                <p>{`Frog ID: ${pcd.claim.partialFrog.frogId}`}</p>
+                <p>{`Biome: ${pcd.claim.partialFrog.biome}`}</p>
+                <p>{`Rarity: ${pcd.claim.partialFrog.rarity}`}</p>
+                <p>{`Temperament: ${pcd.claim.partialFrog.temperament}`}</p>
+                <p>{`Jump: ${pcd.claim.partialFrog.jump}`}</p>
+                <p>{`Speed: ${pcd.claim.partialFrog.speed}`}</p>
+                <p>{`Intelligence: ${pcd.claim.partialFrog.intelligence}`}</p>
+                <p>{`Beauty: ${pcd.claim.partialFrog.beauty}`}</p>
+                <p>{`Timestamp Signed: ${pcd.claim.partialFrog.timestampSigned}`}</p>
+                <p>{`Owner Semaphore Id: ${pcd.claim.partialFrog.ownerSemaphoreId}`}</p>
                 <p>{`Signer: ${pcd.claim.signerPublicKey}`}</p>
                 <p>{`External Nullifier: ${pcd.claim.externalNullifier}`}</p>
                 <p>{`Nullifier Hash: ${pcd.claim.nullifierHash}`}</p>
@@ -135,7 +137,7 @@ export function openZKEdDSAFrogPopup(
       argumentType: ArgumentTypeName.BigInt,
       value: watermark,
       userProvided: false
-    },
+    }
   };
 
   const proofUrl = constructZupassPcdGetRequestUrl<
@@ -160,25 +162,15 @@ function useZKEdDSAFrogProof(
   watermark: string
 ): { pcd: ZKEdDSAFrogPCD | undefined; error: any } {
   const [error, _setError] = useState<Error | undefined>();
-  const zkEdDSAFrogPCD = useSerializedPCD(
-    ZKEdDSAFrogPCDPackage,
-    pcdStr
-  );
+  const zkEdDSAFrogPCD = useSerializedPCD(ZKEdDSAFrogPCDPackage, pcdStr);
 
   useEffect(() => {
     if (zkEdDSAFrogPCD) {
-      verifyProof(
-        zkEdDSAFrogPCD,
-        externalNullifier,
-        watermark
-      ).then(onVerified);
+      verifyProof(zkEdDSAFrogPCD, externalNullifier, watermark).then(
+        onVerified
+      );
     }
-  }, [
-    zkEdDSAFrogPCD,
-    externalNullifier,
-    watermark,
-    onVerified
-  ]);
+  }, [zkEdDSAFrogPCD, externalNullifier, watermark, onVerified]);
 
   return {
     pcd: zkEdDSAFrogPCD,

@@ -90,7 +90,11 @@ export async function fetchEventsWithTelegramChats(
   const result = await sqlQuery(
     client,
     `
-    SELECT ${distinct ? `DISTINCT ON (tbe.ticket_event_id)` : ""}
+    SELECT ${
+      distinct
+        ? `DISTINCT ON (COALESCE(tbe.ticket_event_id, dpe.pretix_events_config_id))`
+        : ""
+    }
       tbe.telegram_chat_id AS "telegramChatID",
       dpe.event_name AS "eventName",
       dpe.pretix_events_config_id AS "configEventID",
@@ -99,7 +103,8 @@ export async function fetchEventsWithTelegramChats(
       devconnect_pretix_events_info dpe 
     LEFT JOIN 
       telegram_bot_events tbe ON dpe.pretix_events_config_id = tbe.ticket_event_id
-    ORDER BY tbe.ticket_event_id, 
+    ORDER BY 
+      COALESCE(tbe.ticket_event_id, dpe.pretix_events_config_id),
       CASE WHEN tbe.telegram_chat_id = $1 THEN true ELSE false END DESC,
       tbe.telegram_chat_id;
     `,
@@ -188,15 +193,20 @@ export async function fetchTelegramChatsWithMembershipStatus(
     client,
     `
     SELECT
-      tbe.telegram_chat_id AS "telegramChatID",
+        tbe.telegram_chat_id AS "telegramChatID",
+        ARRAY_AGG(dpei.event_name) AS "eventNames",
         ARRAY_AGG(tbe.ticket_event_id) AS "ticketEventIds",
         CASE WHEN tbc.telegram_user_id IS NOT NULL THEN true ELSE false END AS "isChatMember"
     FROM 
-        telegram_bot_events tbe 
+        telegram_bot_events tbe
     LEFT JOIN 
         telegram_bot_conversations tbc 
     ON 
         tbe.telegram_chat_id = tbc.telegram_chat_id AND tbc.telegram_user_id = $1
+    LEFT JOIN
+        devconnect_pretix_events_info dpei
+    ON
+        tbe.ticket_event_id = dpei.pretix_events_config_id
     GROUP BY 
         tbe.telegram_chat_id, tbc.telegram_user_id
     ORDER BY 

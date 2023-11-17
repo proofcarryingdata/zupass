@@ -53,7 +53,11 @@ import {
   insertTelegramForward
 } from "../database/queries/telegram/insertTelegramConversation";
 import { traced } from "../services/telemetryService";
+import { generateFrogProofUrl } from "./frogTelegramHelpers";
 import { logger } from "./logger";
+
+// If an event name contains this value, we will use frog proof instead of ticket proof
+export const FROG_SLUG = "71209";
 
 export type TopicChat = Chat.SupergroupChat | null;
 
@@ -101,7 +105,7 @@ export const getGroupChat = async (
 const privateChatCommands: BotCommandWithAnon[] = [
   {
     command: "/start",
-    description: "Join a group with a proof of ticket",
+    description: "Join a group with a proof of ticket or frog",
     isAnon: false
   },
   {
@@ -346,14 +350,38 @@ const editOrSendMessage = async (
   }
 };
 
+const generateProofUrl = async (
+  telegramUserId: number,
+  telegramChatId: string,
+  validEventIds: string[],
+  eventNames: string[],
+  telegramUsername?: string
+): Promise<string> => {
+  if (eventNames.find((e) => e.endsWith(FROG_SLUG))) {
+    logger(`[TELEGRAM] found frog event`, eventNames);
+    return await generateFrogProofUrl(
+      telegramUserId,
+      telegramChatId,
+      telegramUsername
+    );
+  }
+
+  return await generateTicketProofUrl(
+    telegramUserId,
+    telegramChatId,
+    validEventIds,
+    telegramUsername
+  );
+};
+
 const generateTicketProofUrl = async (
-  telegramUserId: string,
+  telegramUserId: number,
   telegramChatId: string,
   validEventIds: string[],
   telegramUsername?: string
 ): Promise<string> => {
   return traced("telegram", "generateTicketProofUrl", async (span) => {
-    span?.setAttribute("userId", telegramUserId);
+    span?.setAttribute("userId", telegramUserId.toString());
     span?.setAttribute("validEventIds", validEventIds);
 
     const fieldsToReveal: EdDSATicketFieldsToReveal = {
@@ -548,7 +576,6 @@ const getChatsWithMembershipStatus = async (
       db,
       userId
     );
-
     const chatsWithMembership = await chatIDsToChats(
       ctx,
       chatIdsWithMembership
@@ -675,10 +702,11 @@ export const chatsToJoin = async (
         range.url(`✅ ${chat.chat?.title}`, invite.invite_link).row();
         range.row();
       } else {
-        const proofUrl = await generateTicketProofUrl(
-          userId.toString(),
+        const proofUrl = await generateProofUrl(
+          userId,
           chat.telegramChatID,
           chat.ticketEventIds,
+          chat.eventNames,
           telegramUsername
         );
         range.webApp(`${chat.chat?.title}`, proofUrl).row();
@@ -709,10 +737,11 @@ export const chatsToJoinV2 = async (
       if (ctx.session.chatToJoin) {
         const chat = ctx.session.chatToJoin;
         const telegramUsername = ctx.from?.username;
-        const proofUrl = await generateTicketProofUrl(
-          userId.toString(),
+        const proofUrl = await generateProofUrl(
+          userId,
           chat.telegramChatID,
           chat.ticketEventIds,
+          chat.eventNames,
           telegramUsername
         );
 

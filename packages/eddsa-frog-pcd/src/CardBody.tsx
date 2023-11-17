@@ -72,14 +72,17 @@ export function EdDSAFrogCardBody({
     </Container>
   ) : (
     <Container>
-      <LinkButton onClick={() => setShowPCD(true)}>
-        View as proof-carrying data
+      <LinkButton
+        style={{ textAlign: "center" }}
+        onClick={() => setShowPCD(true)}
+      >
+        View as proof&#x2011;carrying data
       </LinkButton>
       <ImageZoom
         src={frogData?.imageUrl}
         draggable={false}
         loading="lazy"
-        style={{ width: "100%", height: "auto" }}
+        style={{ width: "100%", height: "auto", zIndex: "1000" }}
         options={{
           background: "rgba(0, 0, 0, 0.5)"
         }}

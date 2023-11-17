@@ -7,6 +7,7 @@ import {
   ReactDataPayload,
   RedirectTopicDataPayload
 } from "@pcd/passport-interface";
+import { SerializedPCD } from "@pcd/pcd-types";
 import {
   ONE_HOUR_MS,
   bigIntToPseudonymEmoji,
@@ -19,8 +20,10 @@ import {
 } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
-  ZKEdDSAEventTicketPCDPackage
+  ZKEdDSAEventTicketPCDPackage,
+  ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { ZKEdDSAFrogPCDTypeName } from "@pcd/zk-eddsa-frog-pcd";
 import { Api, Bot, InlineKeyboard, RawApi, session } from "grammy";
 import {
   Chat,
@@ -62,6 +65,7 @@ import {
 } from "../database/queries/telegram/insertTelegramConversation";
 import { insertTelegramReaction } from "../database/queries/telegram/insertTelegramReaction";
 import { ApplicationContext } from "../types";
+import { handleFrogVerification } from "../util/frogTelegramHelpers";
 import { logger } from "../util/logger";
 import {
   BotContext,
@@ -991,19 +995,56 @@ export class TelegramService {
   }
 
   /**
-   * Verify that a PCD relates to an event, and that the event has an
-   * associated chat. If so, invite the user to the chat and record them
-   * for later approval when they request to join.
-   *
    * This is called from the /telegram/verify route.
    */
   public async handleVerification(
-    serializedZKEdDSATicket: string,
+    serializedPCD: string,
     telegramUserId: number,
     telegramChatId: string,
     telegramUsername?: string
   ): Promise<void> {
     return traced("telegram", "handleVerification", async (span) => {
+      span?.setAttribute("chatId", telegramChatId);
+      const chat = await getGroupChat(this.authBot.api, telegramChatId);
+      span?.setAttribute("chatTitle", chat.title);
+
+      const parsed = JSON.parse(serializedPCD) as SerializedPCD;
+      if (parsed.type == ZKEdDSAEventTicketPCDTypeName) {
+        await this.handleTicketVerification(
+          serializedPCD,
+          telegramUserId,
+          chat.id,
+          telegramUsername
+        );
+      } else if (parsed.type == ZKEdDSAFrogPCDTypeName) {
+        await handleFrogVerification(
+          this.context.dbPool,
+          serializedPCD,
+          telegramUserId,
+          chat.id,
+          telegramUsername
+        );
+      } else {
+        throw new Error(`Unsupported PCD Type`);
+      }
+
+      // Send invite link
+      await this.sendInviteLink(telegramUserId, chat);
+    });
+  }
+
+  /**
+   * Verify that a PCD relates to an event, and that the event has an
+   * associated chat. If so, invite the user to the chat and record them
+   * for later approval when they request to join.
+   */
+  public async handleTicketVerification(
+    serializedZKEdDSATicket: string,
+    telegramUserId: number,
+    telegramChatId: number,
+    telegramUsername?: string
+  ): Promise<void> {
+    return traced("telegram", "handleTicketVerification", async (span) => {
       span?.setAttribute("userId", telegramUserId.toString());
       // Verify PCD
       const pcd = await this.verifyZKEdDSAEventTicketPCD(
@@ -1054,14 +1095,8 @@ export class TelegramService {
         throw new Error(`User submitted event Ids are invalid `);
       }
 
-      span?.setAttribute("chatId", telegramChatId);
-
-      const chat = await getGroupChat(this.authBot.api, telegramChatId);
-
-      span?.setAttribute("chatTitle", chat.title);
-
       logger(
-        `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${chat}` +
+        `[TELEGRAM] Verified PCD for ${telegramUserId}, chat ${telegramChatId}` +
           (telegramUsername && `, username ${telegramUsername}`)
       );
 
@@ -1070,13 +1105,10 @@ export class TelegramService {
       await insertTelegramVerification(
         this.context.dbPool,
         telegramUserId,
-        parseInt(telegramChatId),
+        telegramChatId,
         attendeeSemaphoreId,
         telegramUsername
       );
-
-      // Send invite link
-      await this.sendInviteLink(telegramUserId, chat);
     });
   }
 
