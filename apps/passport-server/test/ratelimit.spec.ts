@@ -29,14 +29,14 @@ describe("generic rate-limiting features", function () {
   });
 
   /**
-   * At the time of writing, 10 password reset attempts are allowed per-hour.
+   * At the time of writing, 10 token check attempts are allowed per-hour.
    */
   step(
     "password reset should not be rate-limited at first attempt",
     async function () {
       const result = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
 
@@ -50,7 +50,7 @@ describe("generic rate-limiting features", function () {
       for (let i = 0; i < 9; i++) {
         const result = await checkRateLimit(
           db,
-          "PASSWORD_RESET_ATTEMPT",
+          "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
 
@@ -59,7 +59,7 @@ describe("generic rate-limiting features", function () {
 
       const exceededLimitResult = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
 
@@ -72,7 +72,7 @@ describe("generic rate-limiting features", function () {
     async function () {
       const result = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "differentemail@example.com"
       );
 
@@ -85,7 +85,7 @@ describe("generic rate-limiting features", function () {
     async function () {
       const exceededLimitResult = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
 
@@ -107,7 +107,7 @@ describe("generic rate-limiting features", function () {
       for (let i = 0; i < 5; i++) {
         const result = await checkRateLimit(
           db,
-          "PASSWORD_RESET_ATTEMPT",
+          "CHECK_EMAIL_TOKEN",
           "test@example.com"
         );
 
@@ -117,7 +117,7 @@ describe("generic rate-limiting features", function () {
       // But the 6th attempt should fail
       const exceededLimitResult = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
 
@@ -131,7 +131,7 @@ describe("generic rate-limiting features", function () {
       // One more should succeed
       const result = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
 
@@ -140,7 +140,7 @@ describe("generic rate-limiting features", function () {
       // But only one more; this should fail.
       const finalExceededLimitResult = await checkRateLimit(
         db,
-        "PASSWORD_RESET_ATTEMPT",
+        "CHECK_EMAIL_TOKEN",
         "test@example.com"
       );
 

@@ -332,7 +332,7 @@ export interface AnonMessageWithDetails extends AnonMessage {
 }
 
 export interface RateLimit {
-  type: "PASSWORD_RESET_ATTEMPT";
+  type: "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
   name: string;
   count: number;
   expiry: number;

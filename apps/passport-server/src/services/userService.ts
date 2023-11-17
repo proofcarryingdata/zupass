@@ -16,6 +16,7 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
+import { checkRateLimit } from "../database/queries/rateLimit";
 import {
   updateUserAccountRestTimestamps,
   upsertUser
@@ -101,6 +102,12 @@ export class UserService {
 
     if (!validateEmail(email)) {
       throw new PCDHTTPError(400, `'${email}' is not a valid email`);
+    }
+
+    if (
+      !(await checkRateLimit(this.context.dbPool, "REQUEST_EMAIL_TOKEN", email))
+    ) {
+      throw new PCDHTTPError(401, "Too many attempts. Come back later.");
     }
 
     const newEmailToken =

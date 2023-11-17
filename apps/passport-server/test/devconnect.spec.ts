@@ -20,12 +20,14 @@ import {
   checkinTicketById,
   createFeedCredentialPayload,
   pollFeed,
+  requestConfirmationEmail,
   requestKnownTicketTypes,
   requestSemaphoreGroup,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey,
   requestVerifyTicket,
-  requestVerifyTicketById
+  requestVerifyTicketById,
+  requestVerifyToken
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -1741,6 +1743,72 @@ describe("devconnect functionality", function () {
 
     identity = result.identity;
     await application.services.semaphoreService.reload();
+  });
+
+  step("new email token requests have a rate limit", async function () {
+    await sqlQuery(db, "DELETE FROM rate_limit_buckets");
+
+    const email = mocker.get().organizer1.EMAIL_1;
+
+    for (let i = 0; i < 10; i++) {
+      const confirmationResult = await requestConfirmationEmail(
+        application.expressContext.localEndpoint,
+        email,
+        identity.commitment.toString(),
+        true
+      );
+
+      expect(confirmationResult.success).to.be.true;
+    }
+
+    // We have used up our 10 requests, so this should fail
+    const confirmationResult = await requestConfirmationEmail(
+      application.expressContext.localEndpoint,
+      email,
+      identity.commitment.toString(),
+      true
+    );
+
+    expect(confirmationResult.success).to.be.false;
+    if (!confirmationResult.success) {
+      expect(confirmationResult.error).to.eq(
+        "Too many attempts. Come back later."
+      );
+    }
+  });
+
+  step("token verification has a rate limit", async function () {
+    await sqlQuery(db, "DELETE FROM rate_limit_buckets");
+
+    const email = mocker.get().organizer1.EMAIL_1;
+    const incorrectToken = "12345";
+
+    for (let i = 0; i < 10; i++) {
+      const verifyResult = await requestVerifyToken(
+        application.expressContext.localEndpoint,
+        email,
+        incorrectToken
+      );
+
+      expect(verifyResult.success).to.be.false;
+      if (!verifyResult.success) {
+        expect(verifyResult.error).to.eq(
+          "Wrong token. If you got more than one email, use the latest one."
+        );
+      }
+    }
+
+    // We have used up our 10 requests, so this should fail for a different reason.
+    const verifyResult = await requestVerifyToken(
+      application.expressContext.localEndpoint,
+      email,
+      incorrectToken
+    );
+
+    expect(verifyResult.success).to.be.false;
+    if (!verifyResult.success) {
+      expect(verifyResult.error).to.eq("Too many attempts. Come back later.");
+    }
   });
 
   step(

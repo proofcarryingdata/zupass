@@ -14,7 +14,8 @@ CREATE TABLE rate_limit_buckets(
 );
 
 -- Allow 10 password reset attempts per hour
-INSERT INTO rate_limit_types VALUES('PASSWORD_RESET_ATTEMPT', 10);
+INSERT INTO rate_limit_types VALUES('CHECK_EMAIL_TOKEN', 10);
+INSERT INTO rate_limit_types VALUES('REQUEST_EMAIL_TOKEN', 10);
 
 -- MIT License
 
