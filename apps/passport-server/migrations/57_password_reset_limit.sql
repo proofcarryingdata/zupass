@@ -13,8 +13,10 @@ CREATE TABLE rate_limit_buckets(
   FOREIGN KEY(event_type) REFERENCES rate_limit_types
 );
 
--- Allow 10 password reset attempts per hour
+-- Allow 10 attempts per hour to verify tokens for the same email
 INSERT INTO rate_limit_types VALUES('CHECK_EMAIL_TOKEN', 10);
+-- Allow 10 attempts per hour to request a new email token, either
+-- as part of creating or re-creating an account.
 INSERT INTO rate_limit_types VALUES('REQUEST_EMAIL_TOKEN', 10);
 
 -- MIT License
@@ -44,6 +46,8 @@ INSERT INTO rate_limit_types VALUES('REQUEST_EMAIL_TOKEN', 10);
 -- based on time elapsed since the last refill. This allows us to ensure that
 -- requests are limited to a certain rate, without hard cut-offs around expiry
 -- or without needing to track each individual request.
+--
+-- Based on code here: https://github.com/fafl/token-bucket-postgres
 
 DROP FUNCTION IF EXISTS take_token(VARCHAR, VARCHAR);
 CREATE OR REPLACE FUNCTION take_token (event_type VARCHAR(100), event_id VARCHAR(100)) RETURNS boolean AS $$
