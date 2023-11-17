@@ -21,10 +21,12 @@ import {
 import { PCDCardList } from "../../shared/PCDCardList";
 import {
   ActionButton,
+  CelestialPondSearchButton,
   DesertSearchButton,
   FrogSearchButton,
   JungleSearchButton,
-  TheCapitalSearchButton
+  TheCapitalSearchButton,
+  WrithingVoidSearchButton
 } from "./Button";
 import { NewFont } from "./FrogFolder";
 import { useFrogConfetti } from "./useFrogParticles";
@@ -130,6 +132,11 @@ const SearchButton = ({
   const getLastFrogRef = useGetLastFrog();
 
   const onClick = useCallback(async () => {
+    // nb: special case for doomy writhing void
+    if (feed.name === "The Writhing Void") {
+      await new Promise((resolve) => setTimeout(resolve, 16 * 1000));
+    }
+
     await toast
       .promise(
         new Promise<void>((resolve) => {
@@ -166,7 +173,11 @@ const SearchButton = ({
                   }
 
                   resolve();
-                  confetti();
+
+                  // nb: special case for doomy writhing void
+                  if (feed.name !== "The Writhing Void") {
+                    confetti();
+                  }
                 },
                 onError: reject
               });
@@ -209,6 +220,10 @@ const SearchButton = ({
         return DesertSearchButton;
       case "Jungle":
         return JungleSearchButton;
+      case "Celestial Pond":
+        return CelestialPondSearchButton;
+      case "The Writhing Void":
+        return WrithingVoidSearchButton;
       default:
         return FrogSearchButton;
     }

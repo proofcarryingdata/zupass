@@ -51,7 +51,10 @@ export function DexTab({
 
   return (
     <>
-      <ButtonGroup style={{ marginLeft: "auto", maxWidth: "100px" }}>
+      <ButtonGroup style={{ marginLeft: "auto" }}>
+        <span style={{ marginRight: "16px" }}>
+          Owned: {Object.keys(groupedPCDs).length.toString().padStart(3, "0")}
+        </span>
         <Button onClick={() => setMode("list")} disabled={mode === "list"}>
           <img
             src={icons.inputObject}
@@ -80,8 +83,10 @@ export function DexTab({
       )}
 
       {focusedFrogs && (
-        <FrogsModal pcds={focusedFrogs} onClose={() => setFocusedFrogs(null)}
-        color={RARITIES[focusedFrogs[0].claim.data.rarity].color}
+        <FrogsModal
+          pcds={focusedFrogs}
+          onClose={() => setFocusedFrogs(null)}
+          color={RARITIES[focusedFrogs[0].claim.data.rarity].color}
         />
       )}
     </>

@@ -256,6 +256,7 @@ const ClockIcon = styled.div`
   position: relative;
   display: block;
   opacity: 0.8;
+  z-index: -1;
 
   &::before {
     content: "";
@@ -298,6 +299,7 @@ const NameIcon = styled.div`
     position: absolute;
     top: 0px;
     opacity: 0.8;
+    z-index: -1;
   }
   &::after {
     content: "Z";
@@ -310,5 +312,6 @@ const NameIcon = styled.div`
     right: 0px;
     bottom: 0px;
     opacity: 0.8;
+    z-index: -1;
   }
 `;
