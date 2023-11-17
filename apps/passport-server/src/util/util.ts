@@ -1,4 +1,5 @@
 import { exec } from "child_process";
+import { randomBytes } from "crypto";
 import validator from "email-validator";
 import { promisify } from "util";
 import { logger } from "./logger";
@@ -25,12 +26,10 @@ export function normalizeEmail(email: string): string {
 }
 
 /**
- * Generate a random 6-digit random token for use as a token.
+ * Generate a random 64-bit token for use in email validation/reset.
  */
 export function randomEmailToken(): string {
-  const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
-  if (token.length !== 6) throw new Error("Unreachable");
-  return token;
+  return randomBytes(8).toString("base64url");
 }
 
 export function validateEmail(email: string): boolean {

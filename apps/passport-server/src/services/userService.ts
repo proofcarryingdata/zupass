@@ -103,9 +103,8 @@ export class UserService {
       throw new PCDHTTPError(400, `'${email}' is not a valid email`);
     }
 
-    const newEmailToken = await this.emailTokenService.saveNewTokenForEmail(
-      email
-    );
+    const newEmailToken =
+      await this.emailTokenService.saveNewTokenForEmail(email);
 
     const existingCommitment = await fetchUserByEmail(
       this.context.dbPool,

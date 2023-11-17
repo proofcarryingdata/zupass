@@ -330,3 +330,10 @@ export interface AnonMessageWithDetails extends AnonMessage {
   topic_name: string;
   reactions: string[];
 }
+
+export interface RateLimit {
+  type: "PASSWORD_RESET_ATTEMPT";
+  name: string;
+  count: number;
+  expiry: number;
+}
