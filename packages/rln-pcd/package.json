@@ -7,7 +7,7 @@
   "files": [
     "./artifacts/*",
     "./src/*",
-    "./dist/*",
+    "dist",
     "./README.md",
     "./LICENSE"
   ],
