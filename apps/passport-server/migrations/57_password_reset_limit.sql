@@ -39,6 +39,12 @@ INSERT INTO rate_limit_types VALUES('REQUEST_EMAIL_TOKEN', 10);
 -- OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 -- SOFTWARE.
 
+-- This implements a "token bucket" approach to rate limiting, where each
+-- request causes a counter to decrease, where that counter is also re-filled
+-- based on time elapsed since the last refill. This allows us to ensure that
+-- requests are limited to a certain rate, without hard cut-offs around expiry
+-- or without needing to track each individual request.
+
 DROP FUNCTION IF EXISTS take_token(VARCHAR, VARCHAR);
 CREATE OR REPLACE FUNCTION take_token (event_type VARCHAR(100), event_id VARCHAR(100)) RETURNS boolean AS $$
 DECLARE
