@@ -7,15 +7,18 @@
   "types": "./dist/node/index.d.ts",
   "exports": {
     ".": {
+      "browser": {
+        "types": "./dist/browser/index.d.ts",
+        "import": "./dist/browser/index.mjs"
+      },
       "node": {
         "types": "./dist/node/index.d.ts",
         "import": "./dist/node/index.mjs",
         "require": "./dist/node/index.js"
       },
-      "browser": {
+      "default": {
         "types": "./dist/browser/index.d.ts",
-        "import": "./dist/browser/index.mjs",
-        "require": "./dist/browser/index.js"
+        "import": "./dist/browser/index.mjs"
       }
     }
   },
