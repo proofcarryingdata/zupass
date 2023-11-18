@@ -132,11 +132,6 @@ const SearchButton = ({
   const getLastFrogRef = useGetLastFrog();
 
   const onClick = useCallback(async () => {
-    // nb: special case for doomy writhing void
-    if (feed.name === "The Writhing Void") {
-      await new Promise((resolve) => setTimeout(resolve, 16 * 1000));
-    }
-
     await toast
       .promise(
         new Promise<void>((resolve) => {

@@ -9,6 +9,7 @@ import React, {
 import { useInView } from "react-intersection-observer";
 import { ParallaxBanner, ParallaxProvider } from "react-scroll-parallax";
 import styled, { keyframes } from "styled-components";
+import { Container } from "tsparticles-engine";
 import {
   useCelestialPondParticles,
   useFrogParticles,
@@ -126,9 +127,10 @@ export const FrogSearchButton = forwardRef(
   (
     {
       disabled,
+      pending,
       children,
       ...props
-    }: React.ComponentPropsWithRef<typeof Button>,
+    }: React.ComponentPropsWithRef<"button"> & { pending?: boolean },
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     const ref = useRef<HTMLDivElement>(null);
@@ -139,7 +141,7 @@ export const FrogSearchButton = forwardRef(
         return;
       }
 
-      if (disabled) {
+      if (disabled && !pending) {
         container.start();
       }
 
@@ -148,7 +150,7 @@ export const FrogSearchButton = forwardRef(
       return () => {
         container.stop();
       };
-    }, [container, disabled]);
+    }, [container, disabled, pending]);
 
     return (
       <div
@@ -158,7 +160,12 @@ export const FrogSearchButton = forwardRef(
         }}
         ref={ref}
       >
-        <Button disabled={disabled} {...props} ref={buttonRef}>
+        <Button
+          disabled={disabled}
+          pending={pending}
+          {...props}
+          ref={buttonRef}
+        >
           {children}
         </Button>
       </div>
@@ -193,7 +200,7 @@ export const ButtonGroup = styled.div`
 
 export const TheCapitalSearchButton = forwardRef(
   (
-    { children, ...props }: React.ComponentPropsWithRef<typeof Button>,
+    { children, ...props }: React.ComponentPropsWithRef<"button">,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     return (
@@ -247,7 +254,8 @@ const TextureSearchButton = forwardRef(
       children,
       buttonStyle,
       ...props
-    }: React.ComponentPropsWithRef<typeof Button> & {
+    }: React.ComponentPropsWithRef<"button"> & {
+      pending?: boolean;
       backgroundImage: string;
       buttonStyle?: CSSProperties;
     },
@@ -354,36 +362,55 @@ export const WrithingVoidSearchButton = forwardRef(
     {
       children,
       onClick,
+      disabled,
       ...props
     }: React.ComponentPropsWithRef<typeof TextureSearchButton>,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     const ref = useRef<HTMLDivElement>(null);
     const animate = useWrithingVoidParticles(ref);
+
     const [animating, setAnimating] = useState(false);
-    const onClickAnimated = useCallback(async () => {
-      setAnimating(true);
-      let container;
-      try {
-        container = await animate();
-      } catch {
-        console.error("Unable to start animation");
-      }
+    // required to ensure we don't race
+    const animatingRef = useRef(false);
 
-      await onClick();
-
-      setTimeout(() => {
-        setAnimating(false);
-
-        try {
-          if (container && !container.destroyed) {
-            container.destroy();
+    const onClickAnimated: React.MouseEventHandler<HTMLButtonElement> =
+      useCallback(
+        async (e) => {
+          if (animatingRef.current) {
+            return;
           }
-        } catch {
-          console.debug("Failed to destroy container");
-        }
-      }, 25 * 1000);
-    }, [animate, onClick]);
+          animatingRef.current = true;
+          setAnimating(true);
+
+          let container: Container | undefined;
+          try {
+            try {
+              container = await animate();
+            } catch {
+              console.error("Unable to start animation");
+            }
+
+            await new Promise((resolve) => setTimeout(resolve, 16 * 1000));
+
+            await onClick(e);
+
+            await new Promise((resolve) => setTimeout(resolve, 8 * 1000));
+          } finally {
+            try {
+              if (container && !container.destroyed) {
+                container.destroy();
+              }
+            } catch {
+              console.debug("Failed to destroy container");
+            }
+
+            setAnimating(false);
+            animatingRef.current = false;
+          }
+        },
+        [animate, onClick]
+      );
 
     return (
       <>
@@ -398,6 +425,7 @@ export const WrithingVoidSearchButton = forwardRef(
             backgroundPosition: "center center"
           }}
           onClick={onClickAnimated}
+          disabled={disabled || animating}
           {...props}
         >
           <div style={{ position: "relative", width: "100%", height: "48px" }}>
@@ -433,7 +461,7 @@ export const WrithingVoidSearchButton = forwardRef(
 );
 
 const WrithingVoidCover = styled.div<{ visible: boolean }>`
-  pointer-events: none;
+  pointer-events: ${({ visible }) => (visible ? "auto" : "none")};
   position: fixed;
   width: 100%;
   height: 100%;
@@ -482,6 +510,8 @@ const pulse = keyframes`
   opacity: 100% }
 `;
 
+const noop = keyframes``;
+
 const WrithingImage = styled.div<{ visible: boolean }>`
   background-image: url("/images/frogs/writhingvoid.png");
   background-size: cover;
@@ -503,8 +533,8 @@ const WrithingImage = styled.div<{ visible: boolean }>`
       : "all 4s cubic-bezier(1,0,1,.6)"};
   animation:
     ${rotating} 600s linear infinite,
-    ${pulse} 8s linear ${({ visible }) => (visible ? "16s infinite" : "0")};
+    ${({ visible }) => (visible ? pulse : noop)} 8s linear 16s infinite;
   -webkit-animation:
     ${rotating} 600s linear infinite,
-    ${pulse} 8s linear ${({ visible }) => (visible ? "16s infinite" : "0")};
+    ${({ visible }) => (visible ? pulse : noop)} 8s linear 16s infinite;
 `;

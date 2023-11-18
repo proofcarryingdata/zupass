@@ -6,6 +6,7 @@ import {
   IOpacity,
   IRangedCoordinates,
   IShape,
+  ParticlesOptions,
   RecursivePartial,
   tsParticles
 } from "tsparticles-engine";
@@ -462,58 +463,63 @@ export function useWrithingVoidParticles(
       return;
     }
 
+    const absorberBaseSize =
+      Math.min(window.innerWidth, window.innerHeight) / 5 ?? 50;
+    const particles: RecursivePartial<ParticlesOptions> = {
+      shape: {
+        type: "image",
+        image: {
+          replaceColor: true,
+          src: "/images/frogs/frog.svg"
+        }
+      },
+      color: {
+        value: [
+          "#004b23",
+          "#006400",
+          "#007200",
+          "#008000",
+          "#38b000",
+          "#70e000",
+          "#9ef01a",
+          "#ccff33"
+        ],
+        animation: {
+          h: {
+            enable: false,
+            speed: 0
+          },
+          s: {
+            enable: false,
+            speed: 0
+          },
+          l: {
+            enable: true,
+            speed: 5,
+            sync: false,
+            offset: {
+              min: 0,
+              max: 80
+            }
+          }
+        }
+      },
+      lineLinked: {
+        enable: false
+      },
+      size: {
+        value: 10,
+        random: {
+          enable: true,
+          minimumValue: 5
+        }
+      }
+    };
     const emitter = (
       move: RecursivePartial<IMove>
     ): RecursivePartial<Emitter> => ({
       particles: {
-        shape: {
-          type: "image",
-          image: {
-            replaceColor: true,
-            src: "/images/frogs/frog.svg"
-          }
-        },
-        color: {
-          value: [
-            "#004b23",
-            "#006400",
-            "#007200",
-            "#008000",
-            "#38b000",
-            "#70e000",
-            "#9ef01a",
-            "#ccff33"
-          ],
-          animation: {
-            h: {
-              enable: false,
-              speed: 0
-            },
-            s: {
-              enable: false,
-              speed: 0
-            },
-            l: {
-              enable: true,
-              speed: 5,
-              sync: false,
-              offset: {
-                min: 0,
-                max: 80
-              }
-            }
-          }
-        },
-        lineLinked: {
-          enable: false
-        },
-        size: {
-          value: 10,
-          random: {
-            enable: true,
-            minimumValue: 5
-          }
-        },
+        ...particles,
         move: {
           enable: true,
           speed: {
@@ -545,6 +551,18 @@ export function useWrithingVoidParticles(
         zIndex: 2000
       },
       particles: {
+        ...particles,
+        move: {
+          enable: true,
+          speed: {
+            min: 5,
+            max: 10
+          },
+          direction: "none",
+          random: false,
+          straight: false,
+          outModes: "none"
+        },
         number: {
           value: 0
         }
@@ -552,10 +570,9 @@ export function useWrithingVoidParticles(
       absorbers: {
         size: {
           density: 15,
-          value: Math.min(window.innerWidth, window.innerHeight) / 4 ?? 75,
+          value: absorberBaseSize,
           limit: {
-            radius:
-              (Math.min(window.innerWidth, window.innerHeight) * 0.8) / 2 ?? 100
+            radius: absorberBaseSize * 2
           }
         },
         position: {
@@ -564,6 +581,28 @@ export function useWrithingVoidParticles(
         },
         opacity: 0,
         orbit: true
+      },
+      interactivity: {
+        detectsOn: "canvas",
+        events: {
+          onHover: {
+            enable: true,
+            mode: "repulse"
+          },
+          onClick: {
+            enable: true,
+            mode: "push"
+          },
+          resize: true
+        },
+        modes: {
+          repulse: {
+            distance: 100
+          },
+          push: {
+            quantity: 20
+          }
+        }
       },
       emitters: [
         {
