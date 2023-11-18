@@ -9,6 +9,7 @@ import { icons } from "../icons";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
+import { FrogCryptoExportPCDsModal } from "./FrogCryptoExportPCDsModal";
 import { FrogCryptoUpdateTelegramModal } from "./FrogCryptoUpdateTelegramModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
@@ -103,6 +104,8 @@ function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
           refreshAll={modal.refreshAll}
         />
       );
+    case "frogcrypto-export-pcds":
+      return <FrogCryptoExportPCDsModal />;
     case "none":
       return null;
     default:

@@ -2,6 +2,7 @@ import { EdDSAFrogPCD, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import { DexFrog } from "@pcd/passport-interface";
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import styled from "styled-components";
+import { useDispatch } from "../../../src/appHooks";
 import { RippleLoader } from "../../core/RippleLoader";
 import { icons } from "../../icons";
 import { Button, ButtonGroup } from "./Button";
@@ -40,6 +41,7 @@ export function DexTab({
   possibleFrogs?: DexFrog[];
   pcds: EdDSAFrogPCD[];
 }) {
+  const dispatch = useDispatch();
   const [mode, setMode] = useState<"grid" | "list">("list");
   const groupedPCDs = useGroupedPCDs(pcds || []);
 
@@ -51,6 +53,19 @@ export function DexTab({
 
   return (
     <>
+      <Button
+        onClick={() =>
+          dispatch({
+            type: "set-modal",
+            modal: {
+              modalType: "frogcrypto-export-pcds"
+            }
+          })
+        }
+      >
+        Export FrogPCDs
+      </Button>
+
       <ButtonGroup style={{ marginLeft: "auto" }}>
         <span style={{ marginRight: "16px" }}>
           Owned: {Object.keys(groupedPCDs).length.toString().padStart(3, "0")}

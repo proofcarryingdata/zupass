@@ -40,7 +40,8 @@ export interface AppState {
         modalType: "frogcrypto-update-telegram";
         revealed: boolean;
         refreshAll: () => Promise<void>;
-      };
+      }
+    | { modalType: "frogcrypto-export-pcds" };
 
   // User metadata.
   self?: User;
