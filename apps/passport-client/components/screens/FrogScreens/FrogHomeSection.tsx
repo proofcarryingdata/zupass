@@ -19,7 +19,10 @@ import { RippleLoader } from "../../core/RippleLoader";
 import { ActionButton, Button, ButtonGroup } from "./Button";
 import { DexTab } from "./DexTab";
 import { SuperFunkyFont } from "./FrogFolder";
-import { FROM_SUBSCRIPTION_PARAM_KEY } from "./FrogSubscriptionScreen";
+import {
+  FROM_SUBSCRIPTION_PARAM_KEY,
+  useCheatCodeActivation
+} from "./FrogSubscriptionScreen";
 import { GetFrogTab } from "./GetFrogTab";
 import { ScoreTab, scoreToEmoji } from "./ScoreTab";
 import { TypistText } from "./TypistText";
@@ -75,6 +78,8 @@ export function FrogHomeSection() {
       );
     }
   }, [setSearchParams]);
+
+  useCheatCodeActivation();
 
   if (!userState) {
     return <RippleLoader />;

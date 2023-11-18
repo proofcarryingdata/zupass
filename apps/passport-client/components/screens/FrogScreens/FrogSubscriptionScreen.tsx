@@ -1,6 +1,8 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
-import { useEffect } from "react";
+import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import { useSwipeable } from "react-swipeable";
+import styled from "styled-components";
 import {
   useIsSyncSettled,
   useSelf,
@@ -14,6 +16,8 @@ import {
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
+import { TypistText } from "./TypistText";
 
 export const FROM_SUBSCRIPTION_PARAM_KEY = "fromFrogSubscription";
 
@@ -34,18 +38,22 @@ export function FrogSubscriptionScreen() {
   const { feedCode } = useParams();
 
   useEffect(() => {
-    if (syncSettled) {
-      // if the user has no frog subscriptions,
-      // redirect to the frog manager screen
-      if (!hasFrogSubs || !feedCode) {
-        window.location.replace(
-          `/#/?folder=${FrogCryptoFolderName}&${FROM_SUBSCRIPTION_PARAM_KEY}=true`
-        );
-      } else {
-        window.location.replace(
-          `/#/?folder=${FrogCryptoFolderName}&feedId=${feedCode}`
-        );
-      }
+    if (!syncSettled) {
+      return;
+    }
+    // if the user has no frog subscriptions,
+    // redirect to the frog manager screen
+    if (!hasFrogSubs) {
+      window.location.replace(
+        `/#/?folder=${FrogCryptoFolderName}&${FROM_SUBSCRIPTION_PARAM_KEY}=true`
+      );
+      return;
+    }
+
+    if (feedCode) {
+      window.location.replace(
+        `/#/?folder=${FrogCryptoFolderName}&feedId=${feedCode}`
+      );
     }
   }, [feedCode, hasFrogSubs, syncSettled]);
 
@@ -55,7 +63,7 @@ export function FrogSubscriptionScreen() {
   useEffect(() => {
     if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(feedCode);
+      const stringifiedRequest = feedCode ? JSON.stringify(feedCode) : "";
       setPendingViewFrogCryptoRequest(stringifiedRequest);
       if (self == null) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingViewFrogCryptoRequestKey}=${encodeURIComponent(
@@ -65,5 +73,123 @@ export function FrogSubscriptionScreen() {
     }
   }, [feedCode, self, userForcedToLogout]);
 
-  return <RippleLoader />;
+  if (!syncSettled) {
+    return <RippleLoader />;
+  }
+
+  return (
+    <AppContainer bg="gray">
+      <Container>
+        <TypistText
+          onInit={(typewriter) =>
+            typewriter.typeString(
+              "You have chosen the path less traveled. What do you desire? Speak, and they shall be yours"
+            )
+          }
+        >
+          <Form
+            onSubmit={(e) => {
+              e.preventDefault();
+              window.location.href = `/#/frogscriptions/${e.target["feedCode"]?.value}`;
+            }}
+          >
+            <input type="text" id="feedCode" name="feedCode" />
+            <input type="submit" value="Continue" />
+          </Form>
+        </TypistText>
+      </Container>
+    </AppContainer>
+  );
+}
+
+const Container = styled.div`
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  justify-content: center;
+  gap: 32px;
+`;
+
+const Form = styled.form`
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 16px;
+`;
+
+const CHEAT_CODE_ACTIVATION_SEQUENCE = [
+  "ArrowUp",
+  "ArrowUp",
+  "ArrowDown",
+  "ArrowDown",
+  "ArrowLeft",
+  "ArrowRight",
+  "ArrowLeft",
+  "ArrowRight",
+  "a",
+  "b",
+  "Enter"
+] as const;
+
+/**
+ * A ambient module that listens for cheatcode and redirect user to frogscription
+ */
+export function useCheatCodeActivation() {
+  const redirect = useCallback(() => {
+    window.location.replace(`/#/frogscriptions`);
+  }, []);
+
+  // keep track of progress through cheat code
+  const [_, setProgress] = useState(0);
+
+  const checkProgress = useCallback(
+    (key: string, swipe?: boolean) => {
+      setProgress((prev) => {
+        // nb: this should not happen
+        if (prev >= CHEAT_CODE_ACTIVATION_SEQUENCE.length) {
+          return 0;
+        }
+        if (CHEAT_CODE_ACTIVATION_SEQUENCE[prev] === key) {
+          // complete sequence where swipe gesture don't need A,B,Enter
+          if (
+            prev ===
+            CHEAT_CODE_ACTIVATION_SEQUENCE.length - (swipe ? 4 : 1)
+          ) {
+            redirect();
+            return 0;
+          }
+          return prev + 1;
+        }
+        return 0;
+      });
+    },
+    [redirect]
+  );
+  const onSwipe = useCallback(
+    (key: string) => () => checkProgress(key, true),
+    [checkProgress]
+  );
+
+  const { ref } = useSwipeable({
+    onSwipedUp: onSwipe("ArrowUp"),
+    onSwipedDown: onSwipe("ArrowDown"),
+    onSwipedLeft: onSwipe("ArrowLeft"),
+    onSwipedRight: onSwipe("ArrowRight")
+  });
+  useEffect(() => {
+    // @ts-expect-error https://github.com/FormidableLabs/react-swipeable/issues/180#issuecomment-649677983
+    ref(document);
+  }, [ref]);
+
+  useEffect(() => {
+    const listener = (e) => {
+      checkProgress(e.key);
+    };
+    document.addEventListener("keydown", listener);
+
+    return () => {
+      document.removeEventListener("keydown", listener);
+    };
+  }, [checkProgress]);
 }
