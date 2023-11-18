@@ -17,17 +17,17 @@ export function FrogCryptoExportPCDsModal() {
       <H3>Export Your FrogPCDs</H3>
 
       <p>
-        Each Frog is a PCD (Proof Carry Data), with attributes securely signed
-        by Zupass, making them tamper-proof. They are end-to-end encrypted,
-        meaning they cannot be recovered without your password, including by
-        Zupass.
+        Each Frog is a PCD (Proof Carrying Data), with attributes securely
+        signed by Zupass, making them tamper-proof. They are end-to-end
+        encrypted, meaning they cannot be recovered without your password,
+        including by Zupass.
       </p>
       <p>
         By clicking Download, you will receive an unencrypted, plaintext copy of
         all your Frogs. Although this file contains minimal sensitive
         information, we recommend safeguarding it for privacy reasons. It can be
         used to recover your FrogPCDs in case you forget your password or
-        encounter a glitch in the universe.
+        encounter a glitch in the Zuniverse.
       </p>
 
       <ActionButton
