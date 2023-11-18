@@ -9,6 +9,8 @@ import {
   FrogCryptoFolderName,
   FrogCryptoFrogData,
   FrogCryptoScore,
+  FrogCryptoShareTelegramHandleRequest,
+  FrogCryptoShareTelegramHandleResponseValue,
   FrogCryptoUpdateFeedsRequest,
   FrogCryptoUpdateFeedsResponseValue,
   FrogCryptoUpdateFrogsRequest,
@@ -39,6 +41,7 @@ import {
   initializeUserFeedState,
   sampleFrogData,
   updateUserFeedState,
+  updateUserScoreboardPreference,
   upsertFeedData,
   upsertFrogData
 } from "../database/queries/frogcrypto";
@@ -161,6 +164,27 @@ export class FrogcryptoService {
       ),
       possibleFrogs: await getPossibleFrogs(this.context.dbPool),
       myScore: await getUserScore(this.context.dbPool, semaphoreId)
+    };
+  }
+
+  public async updateTelegramHandleSharing(
+    req: FrogCryptoShareTelegramHandleRequest
+  ): Promise<FrogCryptoShareTelegramHandleResponseValue> {
+    const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
+
+    await updateUserScoreboardPreference(
+      this.context.dbPool,
+      semaphoreId,
+      req.reveal
+    );
+
+    const myScore = await getUserScore(this.context.dbPool, semaphoreId);
+    if (!myScore) {
+      throw new PCDHTTPError(404, "User not found");
+    }
+
+    return {
+      myScore
     };
   }
 

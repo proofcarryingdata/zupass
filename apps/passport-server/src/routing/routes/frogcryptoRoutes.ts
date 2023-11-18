@@ -1,6 +1,8 @@
 import {
   FrogCryptoDeleteFrogsRequest,
   FrogCryptoDeleteFrogsResponseValue,
+  FrogCryptoShareTelegramHandleRequest,
+  FrogCryptoShareTelegramHandleResponseValue,
   FrogCryptoUpdateFeedsRequest,
   FrogCryptoUpdateFeedsResponseValue,
   FrogCryptoUpdateFrogsRequest,
@@ -77,6 +79,14 @@ export function initFrogcryptoRoutes(
     checkFrogcryptoServiceStarted(frogcryptoService);
     const result = await frogcryptoService.getScoreboard();
     res.json(result);
+  });
+
+  app.post("/frogcrypto/telegram-handle-sharing", async (req, res) => {
+    checkFrogcryptoServiceStarted(frogcryptoService);
+    const result = await frogcryptoService.updateTelegramHandleSharing(
+      req.body as FrogCryptoShareTelegramHandleRequest
+    );
+    res.json(result satisfies FrogCryptoShareTelegramHandleResponseValue);
   });
 
   app.post("/frogcrypto/user-state", async (req, res) => {

@@ -1,6 +1,7 @@
 import { wrap, Wrapper } from "@pcd/emitter";
 import {
   CredentialCache,
+  CredentialManager,
   FeedSubscriptionManager,
   LATEST_PRIVACY_NOTICE,
   User
@@ -8,7 +9,7 @@ import {
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import {
   Dispatcher,
@@ -149,6 +150,16 @@ export function useResolvingSubscriptionId(): string | undefined {
 
 export function useCredentialCache(): CredentialCache {
   return useSelector<CredentialCache>((s) => s.credentialCache);
+}
+
+export function useCredentialManager(): CredentialManager {
+  const identity = useIdentity();
+  const pcds = usePCDCollection();
+  const credentialCache = useCredentialCache();
+  return useMemo(
+    () => new CredentialManager(identity, pcds, credentialCache),
+    [credentialCache, identity, pcds]
+  );
 }
 
 export function useQuery(): URLSearchParams | undefined {

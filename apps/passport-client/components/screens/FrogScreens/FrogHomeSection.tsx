@@ -1,6 +1,5 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
-  CredentialManager,
   FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   Subscription,
@@ -11,9 +10,7 @@ import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
-  useCredentialCache,
-  useIdentity,
-  usePCDCollection,
+  useCredentialManager,
   usePCDsInFolder,
   useSubscriptions
 } from "../../../src/appHooks";
@@ -186,7 +183,12 @@ export function FrogHomeSection() {
                 pcds={frogPCDs}
               />
             )}
-            {tab === "score" && <ScoreTab score={userState?.myScore} />}
+            {tab === "score" && (
+              <ScoreTab
+                score={userState?.myScore}
+                refreshScore={refreshUserState}
+              />
+            )}
             {tab === "dex" && (
               <DexTab possibleFrogs={userState.possibleFrogs} pcds={frogPCDs} />
             )}
@@ -202,13 +204,7 @@ export function FrogHomeSection() {
 export function useUserFeedState(subscriptions: Subscription[]) {
   const [userState, setUserState] =
     useState<FrogCryptoUserStateResponseValue | null>(null);
-  const identity = useIdentity();
-  const pcds = usePCDCollection();
-  const credentialCache = useCredentialCache();
-  const credentialManager = useMemo(
-    () => new CredentialManager(identity, pcds, credentialCache),
-    [credentialCache, identity, pcds]
-  );
+  const credentialManager = useCredentialManager();
   // coerce to string to avoid unnecessary rerenders
   const feedIdsString = useMemo(
     () => JSON.stringify(subscriptions.map((sub) => sub.feed.id)),

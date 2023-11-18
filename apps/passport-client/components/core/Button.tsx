@@ -51,7 +51,7 @@ const buttonStyle = `
   }
 `;
 
-const BtnBase = styled.button<{ size?: "large" | "small" }>`
+export const BtnBase = styled.button<{ size?: "large" | "small" }>`
   ${buttonStyle}
   ${({ disabled }) =>
     disabled === true

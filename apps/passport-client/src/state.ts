@@ -35,7 +35,12 @@ export interface AppState {
     | { modalType: "confirm-setup-later"; onConfirm: () => void }
     | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
-    | { modalType: "none" };
+    | { modalType: "none" }
+    | {
+        modalType: "frogcrypto-update-telegram";
+        revealed: boolean;
+        refreshAll: () => Promise<void>;
+      };
 
   // User metadata.
   self?: User;

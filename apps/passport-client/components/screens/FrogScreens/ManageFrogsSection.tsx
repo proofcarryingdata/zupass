@@ -1,5 +1,4 @@
 import {
-  CredentialManager,
   FrogCryptoFrogData,
   FrogCryptoFrogDataSchema,
   requestFrogCryptoDeleteFrogs,
@@ -8,15 +7,11 @@ import {
 import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
-import { Dispatch, SetStateAction, useEffect, useMemo, useState } from "react";
+import { Dispatch, SetStateAction, useEffect, useState } from "react";
 import Table from "react-table-lite";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
-import {
-  useCredentialCache,
-  useIdentity,
-  usePCDCollection
-} from "../../../src/appHooks";
+import { useCredentialManager } from "../../../src/appHooks";
 import { ErrorMessage } from "../../core/error";
 import { useAdminError } from "./useAdminError";
 
@@ -112,13 +107,7 @@ function useFrogs(): {
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string>();
 
-  const identity = useIdentity();
-  const pcds = usePCDCollection();
-  const credentialCache = useCredentialCache();
-  const credentialManager = useMemo(
-    () => new CredentialManager(identity, pcds, credentialCache),
-    [credentialCache, identity, pcds]
-  );
+  const credentialManager = useCredentialManager();
   const [pcd, setPcd] = useState<SerializedPCD>();
   useEffect(() => {
     const fetchPcd = async () => {

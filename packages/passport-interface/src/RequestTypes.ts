@@ -736,6 +736,21 @@ export interface FrogCryptoUserStateResponseValue {
 }
 
 /**
+ * Request to reveal or redact telegram handle of a user on the leaderboard.
+ */
+export interface FrogCryptoShareTelegramHandleRequest {
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  reveal: boolean;
+}
+
+/**
+ * Response to {@link FrogCryptoShareTelegramHandleRequest}
+ */
+export interface FrogCryptoShareTelegramHandleResponseValue {
+  myScore: FrogCryptoScore;
+}
+
+/**
  * Admin request to manage frogs in the databse.
  */
 export type FrogCryptoUpdateFrogsRequest = {
