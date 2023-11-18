@@ -9,6 +9,7 @@ import { icons } from "../icons";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
+import { FrogCryptoUpdateTelegramModal } from "./FrogCryptoUpdateTelegramModal";
 import { InfoModal } from "./InfoModal";
 import { InvalidUserModal } from "./InvalidUserModal";
 import { PrivacyNoticeModal } from "./PrivacyNoticeModal";
@@ -95,6 +96,13 @@ function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
       return <RequireAddPasswordModal />;
     case "privacy-notice":
       return <PrivacyNoticeModal />;
+    case "frogcrypto-update-telegram":
+      return (
+        <FrogCryptoUpdateTelegramModal
+          revealed={modal.revealed}
+          refreshAll={modal.refreshAll}
+        />
+      );
     case "none":
       return null;
     default:
