@@ -360,6 +360,7 @@ function RouterImpl() {
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
           <Route path="pond-control" element={<FrogManagerScreen />} />
+          <Route path="frogscriptions" element={<FrogSubscriptionScreen />} />
           <Route
             path="frogscriptions/:feedCode"
             element={<FrogSubscriptionScreen />}
