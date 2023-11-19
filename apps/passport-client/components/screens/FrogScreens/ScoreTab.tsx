@@ -162,7 +162,7 @@ function TelegramShareButton({
     >
       {score.telegram_username
         ? "Hide Telegram Username"
-        : "Pubilsh Telegram Username"}
+        : "Publish Telegram Username"}
     </ActionButton>
   );
 }
