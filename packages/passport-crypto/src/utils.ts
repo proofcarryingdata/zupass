@@ -26,23 +26,6 @@ export function getCrypto(): any {
 }
 
 /**
- * Determines whether we are in an Internet Explorer or Edge environment
- */
-export function ieOrEdge(): boolean {
-  return (
-    (typeof document !== "undefined" && !!(document as any).documentMode) ||
-    /Edge/.test(navigator.userAgent)
-  );
-}
-
-/**
- * Returns true if WebCrypto is available
- */
-export function isWebCryptoAvailable(): boolean {
-  return !ieOrEdge() && getCrypto().crypto && !!getCrypto().crypto.subtle;
-}
-
-/**
  * Converts a plain string into an ArrayBuffer
  * @param {string} string - A plain string
  */
