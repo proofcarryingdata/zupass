@@ -1,6 +1,8 @@
-# Getting Started with Create React App
+# Create-React-App Zupass Example
 
 This project was bootstrapped with [Create React App](https://github.com/facebook/create-react-app).
+
+It demonstrates how to use Zupass for client-side verification of a ticket PCD, and also demonstrates the configuration necessary for Zupass and its dependencies to be correctly bundled and deployed.
 
 ## Available Scripts
 
