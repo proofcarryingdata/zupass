@@ -211,7 +211,7 @@ export const TheCapitalSearchButton = forwardRef(
           ref={buttonRef}
           style={{
             padding: 0,
-            filter: props.disabled ? "brightness(80%)" : ""
+            filter: props.disabled ? "brightness(80%) grayscale(80%)" : ""
           }}
         >
           <ParallaxBanner
@@ -220,7 +220,9 @@ export const TheCapitalSearchButton = forwardRef(
                 image: "/images/frogs/thecapital.jpg",
                 speed: -10,
                 style: {
-                  filter: props.disabled ? "brightness(30%)" : "brightness(50%)"
+                  filter: props.disabled
+                    ? "brightness(30%) grayscale(80%)"
+                    : "brightness(50%)"
                 },
                 shouldAlwaysCompleteAnimation: true
               },
@@ -269,7 +271,7 @@ const TextureSearchButton = forwardRef(
         style={{
           backgroundImage,
           backgroundRepeat: "repeat",
-          filter: props.disabled ? "brightness(70%)" : "",
+          filter: props.disabled ? "brightness(70%) grayscale(80%)" : "",
           padding: "8px",
           ...buttonStyle
         }}
