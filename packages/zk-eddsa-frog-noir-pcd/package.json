@@ -1,0 +1,55 @@
+{
+  "name": "@pcd/zk-eddsa-frog-pcd-noir",
+  "version": "0.0.1",
+  "license": "GPL-3.0-or-later",
+  "main": "./dist/index.js",
+  "types": "./src/index.ts",
+  "files": [
+    "./artifacts/*",
+    "./src/*",
+    "./dist/*",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "scripts": {
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsup src/index.ts",
+    "dev": "tsup src/index.ts --watch",
+    "typecheck": "yarn tsc --noEmit",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "prepublishOnly": "yarn build",
+    "clean": "rm -rf dist node_modules",
+    "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd"
+  },
+  "dependencies": {
+    "@pcd/eddsa-pcd": "0.3.0",
+    "@pcd/eddsa-frog-pcd": "^0.0.1",
+    "@pcd/passport-ui": "0.8.0",
+    "@pcd/pcd-types": "^0.8.0",
+    "@pcd/semaphore-identity-pcd": "0.8.0",
+    "@pcd/semaphore-signature-pcd": "0.8.0",
+    "@pcd/util": "0.1.2",
+    "@semaphore-protocol/identity": "^3.14.0",
+    "@zk-kit/groth16": "^0.3.0",
+    "circomlibjs": "^0.1.7",
+    "json-bigint": "^1.0.0",
+    "styled-components": "^5.3.9",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@pcd/artifacts": "0.2.0",
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
+    "@types/json-bigint": "^1.0.1",
+    "@types/mocha": "^10.0.1",
+    "@types/uuid": "^9.0.0",
+    "chai": "^4.3.7",
+    "eslint": "^7.32.0",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.9.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}
