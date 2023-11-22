@@ -147,7 +147,7 @@ describe("ZKEdDSAFrogNoirPCD should work", function () {
   it("should prove using default external nullifier if one is not specified", async function () {
     const pcdArgs = await toArgs(frogData);
     pcdArgs.externalNullifier.value = undefined;
-    pcd = await ZKEdDSAFrogNoirPCDPackage.prove(pcdArgs);
+    const pcd = await ZKEdDSAFrogNoirPCDPackage.prove(pcdArgs);
 
     const claim = pcd.claim;
     expect(claim.externalNullifier).to.be.equal(
