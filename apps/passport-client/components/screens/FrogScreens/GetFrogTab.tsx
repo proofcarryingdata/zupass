@@ -50,32 +50,12 @@ export function GetFrogTab({
     () => _.keyBy(userState.feeds, (feed) => feed.feedId),
     [userState]
   );
-  const activeSubs = useMemo(
-    () => subscriptions.filter((sub) => userStateByFeedId[sub.feed.id]?.active),
-    [subscriptions, userStateByFeedId]
-  );
 
   return (
     <>
       <SearchGroup>
-        {activeSubs.length === 0 &&
-          // nb: workaround where feed state is not updated instantly when the
-          // first feed is added. we look for a sub that has been added 5sec ago
-          // and has not been active. we might find a more elegant solution
-          // later
-          !!subscriptions.find(
-            (sub) => sub.subscribedTimestamp < Date.now() - 5000
-          ) && (
-            <ErrorBox>
-              Oopsie-toad! We're sprucing up the lily pads. Return soon for
-              leaps and bounds of fun!
-            </ErrorBox>
-          )}
-
-        {activeSubs.map((sub) => {
-          const userFeedState = userState?.feeds?.find(
-            (feed) => feed.feedId === sub.feed.id
-          );
+        {subscriptions.map((sub) => {
+          const userFeedState = userStateByFeedId[sub.feed.id];
 
           return (
             <SearchButton
@@ -85,6 +65,7 @@ export function GetFrogTab({
               nextFetchAt={userFeedState?.nextFetchAt}
               subManager={subManager}
               score={userState?.myScore?.score}
+              active={!!userFeedState?.active}
             />
           );
         })}
@@ -116,17 +97,19 @@ const SearchButton = ({
   nextFetchAt,
   refreshUserState,
   score,
-  subManager
+  subManager,
+  active
 }: {
   sub: Subscription;
   nextFetchAt?: number;
   refreshUserState: () => Promise<void>;
   score: number | undefined;
   subManager: FeedSubscriptionManager;
+  active: boolean;
 }) => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
-  const canFetch = !nextFetchAt || nextFetchAt < Date.now();
+  const canFetch = active && (!nextFetchAt || nextFetchAt < Date.now());
   const confetti = useFrogConfetti();
 
   const getLastFrogRef = useGetLastFrog();
@@ -240,7 +223,7 @@ const SearchButton = ({
           name
         ))}
 
-      {!canFetch && `${name}${countDown}`}
+      {!canFetch && (active ? `${name}${countDown}` : `${name} is closed`)}
     </ActionButton>
   );
 };
@@ -352,12 +335,4 @@ const SearchGroup = styled.div`
   display: flex;
   gap: 8px;
   flex-direction: column;
-`;
-
-const ErrorBox = styled.div`
-  user-select: none;
-  padding: 16px;
-  background-color: rgba(var(--white-rgb), 0.05);
-  border-radius: 16px;
-  color: var(--danger-bright);
 `;

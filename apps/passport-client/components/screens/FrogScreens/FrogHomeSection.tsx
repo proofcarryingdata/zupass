@@ -17,6 +17,7 @@ import {
 import { H1 } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { ActionButton, Button, ButtonGroup } from "./Button";
+import { Countdown } from "./Countdown";
 import { DexTab } from "./DexTab";
 import { SuperFunkyFont } from "./FrogFolder";
 import {
@@ -90,6 +91,8 @@ export function FrogHomeSection() {
       <SuperFunkyFont>
         <H1 style={{ margin: "0 auto" }}>{FrogCryptoFolderName}</H1>
       </SuperFunkyFont>
+
+      <Countdown />
 
       {myScore > 0 && (
         <Score>
