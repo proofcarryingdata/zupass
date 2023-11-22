@@ -41,7 +41,7 @@ const EXTERNAL_NULLIFIER = BigInt(42);
 const WATERMARK = BigInt(6);
 
 describe("ZKEdDSAFrogNoirPCD should work", function () {
-  this.timeout(1000 * 300);
+  this.timeout(1000 * 150);
 
   let pcd: ZKEdDSAFrogNoirPCD;
 

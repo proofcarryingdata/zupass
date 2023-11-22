@@ -322,7 +322,7 @@ export async function prove(
   // Known issue with types. We're working on addressing this.
   const program = artifact as unknown as CompiledCircuit;
 
-  const backend = new BarretenbergBackend(program);
+  const backend = new BarretenbergBackend(program, { threads: 8 });
   const noirProgram = new Noir(program, backend);
 
   const proof = await noirProgram.generateFinalProof(snarkInput);
@@ -359,7 +359,7 @@ export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
   // Known issue with types. We're working on addressing this.
   const program = artifact as unknown as CompiledCircuit;
 
-  const backend = new BarretenbergBackend(program);
+  const backend = new BarretenbergBackend(program, { threads: 8 });
   const noirProgram = new Noir(program, backend);
 
   const claimed_proof = {
