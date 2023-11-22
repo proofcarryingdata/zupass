@@ -17,7 +17,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { expect } from "chai";
 import "mocha";
-import * as path from "path";
 import {
   STATIC_ZK_EDDSA_FROG_NOIR_PCD_NULLIFIER,
   ZKEdDSAFrogNoirPCD,
@@ -25,8 +24,6 @@ import {
   ZKEdDSAFrogNoirPCDClaim,
   ZKEdDSAFrogNoirPCDPackage
 } from "../src";
-const zkeyFilePath = path.join(__dirname, `../artifacts/circuit.zkey`);
-const wasmFilePath = path.join(__dirname, `../artifacts/circuit.wasm`);
 
 const identity1 = new Identity(
   '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
@@ -43,8 +40,8 @@ const prvKey =
 const EXTERNAL_NULLIFIER = BigInt(42);
 const WATERMARK = BigInt(6);
 
-describe("ZKEdDSAFrogPCD should work", function () {
-  this.timeout(1000 * 30);
+describe("ZKEdDSAFrogNoirPCD should work", function () {
+  this.timeout(1000 * 300);
 
   let pcd: ZKEdDSAFrogNoirPCD;
 
@@ -123,10 +120,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
 
   this.beforeAll(async function () {
     await EdDSAFrogPCDPackage.init?.({});
-    await ZKEdDSAFrogNoirPCDPackage.init?.({
-      zkeyFilePath,
-      wasmFilePath
-    });
+    await ZKEdDSAFrogNoirPCDPackage.init?.({});
   });
 
   it("should be able to generate and verify a valid proof", async function () {
@@ -256,8 +250,12 @@ describe("ZKEdDSAFrogPCD should work", function () {
     mutateClaim: (claim: ZKEdDSAFrogNoirPCDClaim) => void
   ): Promise<void> {
     // Clone the valid PCD so we can mutate it to be invalid.
-    const invalidPCD: ZKEdDSAFrogNoirPCD = JSON.parse(JSON.stringify(validPCD));
-    mutateClaim(invalidPCD.claim);
+    const { id, claim, proof } = validPCD;
+    const invalidClaim: ZKEdDSAFrogNoirPCDClaim = JSON.parse(
+      JSON.stringify(claim)
+    );
+    mutateClaim(invalidClaim);
+    const invalidPCD = new ZKEdDSAFrogNoirPCD(id, invalidClaim, proof);
 
     const verificationRes = await ZKEdDSAFrogNoirPCDPackage.verify(invalidPCD);
     expect(verificationRes).to.be.false;

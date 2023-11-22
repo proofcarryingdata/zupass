@@ -1,8 +1,8 @@
 import { FieldLabel, Separator, Spacer, TextContainer } from "@pcd/passport-ui";
 import styled from "styled-components";
-import { ZKEdDSAFrogPCD } from "./ZKEdDSAFrogNoirPCD";
+import { ZKEdDSAFrogNoirPCD } from "./ZKEdDSAFrogNoirPCD";
 
-export function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }) {
+export function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogNoirPCD }) {
   return (
     <Container>
       <p>

@@ -1,9 +1,12 @@
+import { BarretenbergBackend } from "@noir-lang/backend_barretenberg";
+import { InputMap } from "@noir-lang/noirc_abi";
+import { CompiledCircuit, Noir, ProofData } from "@noir-lang/noir_js";
 import {
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
   EdDSAFrogPCDTypeName,
-  frogDataToBigInts,
-  IFrogData
+  IFrogData,
+  semaphoreIdToBigInt
 } from "@pcd/eddsa-frog-pcd";
 import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
@@ -25,17 +28,13 @@ import {
   fromHexString,
   generateSnarkMessageHash,
   hexToBigInt,
+  numberToBigInt,
   requireDefinedParameter
 } from "@pcd/util";
-import {
-  Groth16Proof,
-  prove as groth16Prove,
-  verify as groth16Verify
-} from "@zk-kit/groth16";
 import { buildEddsa, Eddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import vkey from "../artifacts/circuit.json";
+import artifact from "../circuits/target/zk_eddsa_frog_noir_pcd.json";
 import { ZKEdDSAFrogCardBody } from "./CardBody";
 
 /*
@@ -55,15 +54,12 @@ export const ZKEdDSAFrogNoirPCDTypeName = "zk-eddsa-frog-noir-pcd";
  * initialize this PCD package.
  * These are the artifacts associated with the circom circuit.
  */
-export interface ZKEdDSAFrogNoirPCDInitArgs {
-  zkeyFilePath: string;
-  wasmFilePath: string;
-}
+export interface ZKEdDSAFrogNoirPCDInitArgs {}
 
 let initArgs: ZKEdDSAFrogNoirPCDInitArgs | undefined = undefined;
 
 /**
- * Defines the essential paratmeters required for creating an {@link ZKEdDSAFrogNoirPCD}.
+ * Defines the essential parameters required for creating an {@link ZKEdDSAFrogNoirPCD}.
  */
 export type ZKEdDSAFrogNoirPCDArgs = {
   frog: PCDArgument<EdDSAFrogPCD>;
@@ -97,14 +93,14 @@ export interface ZKEdDSAFrogNoirPCDClaim {
  * identity owns the EdDSA Frog PCD while keeping the owner's semaphore identity private.
  */
 export class ZKEdDSAFrogNoirPCD
-  implements PCD<ZKEdDSAFrogNoirPCDClaim, Groth16Proof>
+  implements PCD<ZKEdDSAFrogNoirPCDClaim, ProofData>
 {
   type = ZKEdDSAFrogNoirPCDTypeName;
 
   public constructor(
     readonly id: string,
     readonly claim: ZKEdDSAFrogNoirPCDClaim,
-    readonly proof: Groth16Proof
+    readonly proof: ProofData
   ) {
     this.id = id;
     this.claim = claim;
@@ -216,77 +212,88 @@ function snarkInputForProof(
   identityPCD: SemaphoreIdentityPCD,
   externalNullifer: string,
   watermark: string
-): Record<string, `${number}` | `${number}`[]> {
-  const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
+): InputMap {
   const signerPubKey = frogPCD.proof.eddsaPCD.claim.publicKey;
   const rawSig = eddsa.unpackSignature(
     fromHexString(frogPCD.proof.eddsaPCD.proof.signature)
   );
 
+  const frogData = frogPCD.claim.data;
+  const frog = {
+    id: numberToBigInt(frogData.frogId).toString(),
+    biome: numberToBigInt(frogData.biome).toString(),
+    rarity: numberToBigInt(frogData.rarity).toString(),
+    temperament: numberToBigInt(frogData.temperament).toString(),
+    jump: numberToBigInt(frogData.jump).toString(),
+    speed: numberToBigInt(frogData.speed).toString(),
+    intelligence: numberToBigInt(frogData.intelligence).toString(),
+    beauty: numberToBigInt(frogData.beauty).toString(),
+    timestamp_signed: numberToBigInt(frogData.timestampSigned).toString(),
+    owner_semaphore_id: semaphoreIdToBigInt(
+      frogData.ownerSemaphoreId
+    ).toString(),
+    reserved_field1: numberToBigInt(0).toString(),
+    reserved_field2: numberToBigInt(0).toString(),
+    reserved_field3: numberToBigInt(0).toString()
+  };
+
+  const semaphore_identity = {
+    nullifier: identityPCD.claim.identity.getNullifier().toString(),
+    trapdoor: identityPCD.claim.identity.getTrapdoor().toString()
+  };
+
   return {
     // Frog data fields
-    frogId: frogAsBigIntArray[0].toString(),
-    biome: frogAsBigIntArray[1].toString(),
-    rarity: frogAsBigIntArray[2].toString(),
-    temperament: frogAsBigIntArray[3].toString(),
-    jump: frogAsBigIntArray[4].toString(),
-    speed: frogAsBigIntArray[5].toString(),
-    intelligence: frogAsBigIntArray[6].toString(),
-    beauty: frogAsBigIntArray[7].toString(),
-    timestampSigned: frogAsBigIntArray[8].toString(),
-    ownerSemaphoreId: frogAsBigIntArray[9].toString(),
-    reservedField1: frogAsBigIntArray[10].toString(),
-    reservedField2: frogAsBigIntArray[11].toString(),
-    reservedField3: frogAsBigIntArray[12].toString(),
-
+    frog,
     // Frog signature fields
-    frogSignerPubkeyAx: hexToBigInt(signerPubKey[0]).toString(),
-    frogSignerPubkeyAy: hexToBigInt(signerPubKey[1]).toString(),
-    frogSignatureR8x: eddsa.F.toObject(rawSig.R8[0]).toString(),
-    frogSignatureR8y: eddsa.F.toObject(rawSig.R8[1]).toString(),
-    frogSignatureS: rawSig.S.toString(),
+    frog_signer_pubkey_A_x: hexToBigInt(signerPubKey[0]).toString(),
+    frog_signer_pubkey_A_y: hexToBigInt(signerPubKey[1]).toString(),
+    frog_signature_r8_x: eddsa.F.toObject(rawSig.R8[0]).toString(),
+    frog_signature_r8_y: eddsa.F.toObject(rawSig.R8[1]).toString(),
+    frog_signature_s: rawSig.S.toString(),
 
     // Owner identity secret
-    semaphoreIdentityNullifier: identityPCD.claim.identity
-      .getNullifier()
-      .toString(),
-    semaphoreIdentityTrapdoor: identityPCD.claim.identity
-      .getTrapdoor()
-      .toString(),
+    semaphore_identity,
 
-    externalNullifier: externalNullifer,
+    external_nullifier: externalNullifer,
     watermark: watermark
-  } as Record<string, `${number}` | `${number}`[]>;
+  } as InputMap;
 }
 
 function claimFromProofResult(
   frogPCD: EdDSAFrogPCD,
-  publicSignals: string[]
+  publicSignals: Uint8Array[]
 ): ZKEdDSAFrogNoirPCDClaim {
+  // TODO: This ordering of public inputs is not immediately obvious without knowledge of Noir internals.
+
   const partialFrog: Partial<IFrogData> = {
     name: frogPCD.claim.data.name,
     description: frogPCD.claim.data.description,
     imageUrl: frogPCD.claim.data.imageUrl,
 
-    // Outputs appear in public signals first
-    frogId: parseInt(publicSignals[1]),
-    biome: parseInt(publicSignals[2]),
-    rarity: parseInt(publicSignals[3]),
-    temperament: parseInt(publicSignals[4]),
-    jump: parseInt(publicSignals[5]),
-    speed: parseInt(publicSignals[6]),
-    intelligence: parseInt(publicSignals[7]),
-    beauty: parseInt(publicSignals[8]),
-    timestampSigned: parseInt(publicSignals[9]),
-    ownerSemaphoreId: publicSignals[10]
+    frogId: Number(bufToBigInt(publicSignals[0])),
+    biome: Number(bufToBigInt(publicSignals[1])),
+    rarity: Number(bufToBigInt(publicSignals[2])),
+    temperament: Number(bufToBigInt(publicSignals[3])),
+    jump: Number(bufToBigInt(publicSignals[4])),
+    speed: Number(bufToBigInt(publicSignals[5])),
+    intelligence: Number(bufToBigInt(publicSignals[6])),
+    beauty: Number(bufToBigInt(publicSignals[7])),
+    timestampSigned: Number(bufToBigInt(publicSignals[8])),
+    ownerSemaphoreId: bufToBigInt(publicSignals[9]).toString()
   };
+
+  // Skip two for the pub key
+  const externalNullifier = bufToBigInt(publicSignals[12]).toString();
+  const watermark = bufToBigInt(publicSignals[13]).toString();
+  const nullifierHash = bufToBigInt(publicSignals[14]).toString();
 
   return {
     partialFrog,
     signerPublicKey: frogPCD.proof.eddsaPCD.claim.publicKey,
-    externalNullifier: publicSignals[16],
-    watermark: publicSignals[17],
-    nullifierHash: publicSignals[0]
+    externalNullifier,
+    watermark,
+    nullifierHash
   };
 }
 
@@ -312,13 +319,15 @@ export async function prove(
     watermark.toString()
   );
 
-  const { proof, publicSignals } = await groth16Prove(
-    snarkInput,
-    initArgs.wasmFilePath,
-    initArgs.zkeyFilePath
-  );
+  // Known issue with types. We're working on addressing this.
+  const program = artifact as unknown as CompiledCircuit;
 
-  const claim = claimFromProofResult(frogPCD, publicSignals);
+  const backend = new BarretenbergBackend(program);
+  const noirProgram = new Noir(program, backend);
+
+  const proof = await noirProgram.generateFinalProof(snarkInput);
+
+  const claim = claimFromProofResult(frogPCD, proof.publicInputs);
 
   return new ZKEdDSAFrogNoirPCD(uuid(), claim, proof);
 }
@@ -327,14 +336,8 @@ export async function prove(
  * Verify the claims and proof of a ZKEdDSAFrogPCD.
  */
 export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
-  // verify() requires dependencies but not artifacts (verification key
-  // is available in code as vkey imported above), so doesn't require
-  // full package initialization.
-
   const t = pcd.claim.partialFrog;
-  // Outputs appear in public signals first
   const publicSignals = [
-    pcd.claim.nullifierHash,
     t.frogId?.toString() || "0",
     t.biome?.toString() || "0",
     t.rarity?.toString() || "0",
@@ -345,15 +348,26 @@ export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
     t.beauty?.toString() || "0",
     t.timestampSigned?.toString() || "0",
     t.ownerSemaphoreId?.toString() || "0",
-    "0",
-    "0",
-    "0",
     hexToBigInt(pcd.claim.signerPublicKey[0]).toString(),
     hexToBigInt(pcd.claim.signerPublicKey[1]).toString(),
     pcd.claim.externalNullifier,
-    pcd.claim.watermark
-  ];
-  return groth16Verify(vkey, { publicSignals, proof: pcd.proof });
+    pcd.claim.watermark,
+    pcd.claim.nullifierHash,
+    "0"
+  ].map((string) => bigIntToBuf(BigInt(string)));
+
+  // Known issue with types. We're working on addressing this.
+  const program = artifact as unknown as CompiledCircuit;
+
+  const backend = new BarretenbergBackend(program);
+  const noirProgram = new Noir(program, backend);
+
+  const claimed_proof = {
+    proof: pcd.proof.proof,
+    publicInputs: publicSignals
+  };
+
+  return noirProgram.verifyFinalProof(claimed_proof);
 }
 
 /**
@@ -362,9 +376,20 @@ export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
 export async function serialize(
   pcd: ZKEdDSAFrogNoirPCD
 ): Promise<SerializedPCD<ZKEdDSAFrogNoirPCD>> {
+  const serializeable_pcd = {
+    id: pcd.id,
+    type: pcd.type,
+    claim: pcd.claim,
+    proof: {
+      proof: "0x" + bufToBigInt(pcd.proof.proof).toString(16),
+      publicInputs: pcd.proof.publicInputs.map(
+        (element) => "0x" + bufToBigInt(element).toString(16)
+      )
+    }
+  };
   return {
     type: ZKEdDSAFrogNoirPCDTypeName,
-    pcd: JSONBig({ useNativeBigInt: true }).stringify(pcd)
+    pcd: JSONBig({ useNativeBigInt: true }).stringify(serializeable_pcd)
   } as SerializedPCD<ZKEdDSAFrogNoirPCD>;
 }
 
@@ -374,15 +399,27 @@ export async function serialize(
 export async function deserialize(
   serialized: string
 ): Promise<ZKEdDSAFrogNoirPCD> {
-  const { id, claim, proof } = JSONBig({ useNativeBigInt: true }).parse(
-    serialized
-  );
+  const {
+    id,
+    claim,
+    proof: serializable_proof
+  } = JSONBig({ useNativeBigInt: true }).parse(serialized);
 
   requireDefinedParameter(id, "id");
   requireDefinedParameter(claim, "claim");
-  requireDefinedParameter(proof, "proof");
+  requireDefinedParameter(serializable_proof, "proof");
 
-  return new ZKEdDSAFrogNoirPCD(id, claim, proof);
+  requireDefinedParameter(serializable_proof.proof, "proof.proof");
+  requireDefinedParameter(
+    serializable_proof.publicInputs,
+    "proof.publicInputs"
+  );
+  const proof = bigIntToBuf(BigInt(serializable_proof.proof));
+  const publicInputs = serializable_proof.publicInputs.map((element: string) =>
+    bigIntToBuf(BigInt(element))
+  );
+
+  return new ZKEdDSAFrogNoirPCD(id, claim, { proof, publicInputs });
 }
 
 /**
@@ -410,7 +447,7 @@ export function isZKEdDSAFrogNoirPCD(pcd: PCD): pcd is ZKEdDSAFrogNoirPCD {
  */
 export const ZKEdDSAFrogNoirPCDPackage: PCDPackage<
   ZKEdDSAFrogNoirPCDClaim,
-  Groth16Proof,
+  ProofData,
   ZKEdDSAFrogNoirPCDArgs,
   ZKEdDSAFrogNoirPCDInitArgs
 > = {
@@ -424,3 +461,34 @@ export const ZKEdDSAFrogNoirPCDPackage: PCDPackage<
   serialize,
   deserialize
 };
+
+function bufToBigInt(buffer: Uint8Array) {
+  const hex: string[] = [];
+
+  buffer.forEach(function (i) {
+    let h = i.toString(16);
+    if (h.length % 2) {
+      h = "0" + h;
+    }
+    hex.push(h);
+  });
+
+  return BigInt("0x" + hex.join(""));
+}
+
+function bigIntToBuf(bn: bigint): Uint8Array {
+  const hex = bn.toString(16).padStart(64, "0");
+
+  const len = hex.length / 2;
+  const u8 = new Uint8Array(len);
+
+  let i = 0;
+  let j = 0;
+  while (i < len) {
+    u8[i] = parseInt(hex.slice(j, j + 2), 16);
+    i += 1;
+    j += 2;
+  }
+
+  return u8;
+}
