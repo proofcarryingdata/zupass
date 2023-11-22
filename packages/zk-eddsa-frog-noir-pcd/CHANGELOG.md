@@ -1,7 +1,7 @@
-# @pcd/zk-eddsa-frog-pcd
+# @pcd/zk-eddsa-frog-noir-pcd
 
 ## 0.0.1
 
 ### Patch Changes
 
-- Introduce zk-eddsa-frog-pcd.
+- Introduce zk-eddsa-frog-noir-pcd.

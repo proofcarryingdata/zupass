@@ -1,5 +1,5 @@
 {
-  "name": "@pcd/zk-eddsa-frog-pcd-noir",
+  "name": "@pcd/zk-eddsa-frog-noir-pcd",
   "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
