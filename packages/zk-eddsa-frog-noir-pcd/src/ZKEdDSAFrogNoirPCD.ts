@@ -1,5 +1,6 @@
 import { BarretenbergBackend } from "@noir-lang/backend_barretenberg";
-import { CompiledCircuit, Noir, ProofData } from "@noir-lang/noir_js";
+import { Abi, abiDecode, abiEncode, Field } from "@noir-lang/noirc_abi";
+import { Noir, ProofData, WitnessMap } from "@noir-lang/noir_js";
 import {
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
@@ -272,37 +273,44 @@ function snarkInputForProof(
     semaphore_identity,
 
     external_nullifier: externalNullifer,
-    watermark: watermark
+    watermark
   };
 }
 
 function claimFromProofResult(
   frogPCD: EdDSAFrogPCD,
-  publicSignals: Uint8Array[]
+  publicWitnesses: WitnessMap
 ): ZKEdDSAFrogNoirPCDClaim {
-  // TODO: This ordering of public inputs is not immediately obvious without knowledge of Noir internals.
+  // TODO: better decoding of public inputs from witness map.
+  const { abi } = JSON.parse(JSON.stringify(zk_eddsa_frog_noir_pcd_circuit));
+  const public_parameters = abi.parameters.filter(
+    (param) => param.visibility === "public"
+  );
+  abi.parameters = public_parameters;
+
+  const { inputs, return_value } = abiDecode(abi, publicWitnesses);
+  const [nullifierHashHex, watermarkHex, revealed_frog] = return_value;
 
   const partialFrog: Partial<IFrogData> = {
     name: frogPCD.claim.data.name,
     description: frogPCD.claim.data.description,
     imageUrl: frogPCD.claim.data.imageUrl,
 
-    frogId: Number(bufToBigInt(publicSignals[0])),
-    biome: Number(bufToBigInt(publicSignals[1])),
-    rarity: Number(bufToBigInt(publicSignals[2])),
-    temperament: Number(bufToBigInt(publicSignals[3])),
-    jump: Number(bufToBigInt(publicSignals[4])),
-    speed: Number(bufToBigInt(publicSignals[5])),
-    intelligence: Number(bufToBigInt(publicSignals[6])),
-    beauty: Number(bufToBigInt(publicSignals[7])),
-    timestampSigned: Number(bufToBigInt(publicSignals[8])),
-    ownerSemaphoreId: bufToBigInt(publicSignals[9]).toString()
+    frogId: parseInt(revealed_frog.id),
+    biome: parseInt(revealed_frog.biome),
+    rarity: parseInt(revealed_frog.rarity),
+    temperament: parseInt(revealed_frog.temperament),
+    jump: parseInt(revealed_frog.jump),
+    speed: parseInt(revealed_frog.speed),
+    intelligence: parseInt(revealed_frog.intelligence),
+    beauty: parseInt(revealed_frog.beauty),
+    timestampSigned: parseInt(revealed_frog.timestamp_signed),
+    ownerSemaphoreId: BigInt(revealed_frog.owner_semaphore_id).toString()
   };
 
-  // Skip two for the pub key
-  const externalNullifier = bufToBigInt(publicSignals[12]).toString();
-  const watermark = bufToBigInt(publicSignals[13]).toString();
-  const nullifierHash = bufToBigInt(publicSignals[14]).toString();
+  const externalNullifier = BigInt(inputs.external_nullifier).toString();
+  const watermark = BigInt(watermarkHex).toString();
+  const nullifierHash = BigInt(nullifierHashHex).toString();
 
   return {
     partialFrog,
@@ -351,33 +359,56 @@ export async function prove(
  */
 export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
   const t = pcd.claim.partialFrog;
-  const publicSignals = [
-    t.frogId?.toString() || "0",
-    t.biome?.toString() || "0",
-    t.rarity?.toString() || "0",
-    t.temperament?.toString() || "0",
-    t.jump?.toString() || "0",
-    t.speed?.toString() || "0",
-    t.intelligence?.toString() || "0",
-    t.beauty?.toString() || "0",
-    t.timestampSigned?.toString() || "0",
-    t.ownerSemaphoreId?.toString() || "0",
-    hexToBigInt(pcd.claim.signerPublicKey[0]).toString(),
-    hexToBigInt(pcd.claim.signerPublicKey[1]).toString(),
-    pcd.claim.externalNullifier,
-    pcd.claim.watermark,
+  const frog: Frog = {
+    id: t.frogId?.toString() || "0",
+    biome: t.biome?.toString() || "0",
+    rarity: t.rarity?.toString() || "0",
+    temperament: t.temperament?.toString() || "0",
+    jump: t.jump?.toString() || "0",
+    speed: t.speed?.toString() || "0",
+    intelligence: t.intelligence?.toString() || "0",
+    beauty: t.beauty?.toString() || "0",
+    timestamp_signed: t.timestampSigned?.toString() || "0",
+    owner_semaphore_id: t.ownerSemaphoreId?.toString() || "0",
+    reserved_field1: "0",
+    reserved_field2: "0",
+    reserved_field3: "0"
+  };
+
+  const publicParameters: {
+    frog_signer_pubkey: PublicKey;
+    external_nullifier: Field;
+  } = {
+    frog_signer_pubkey: {
+      x: "0x" + pcd.claim.signerPublicKey[0],
+      y: "0x" + pcd.claim.signerPublicKey[1]
+    },
+    external_nullifier: pcd.claim.externalNullifier
+  };
+  const returnValue: [Field, Field, Frog] = [
     pcd.claim.nullifierHash,
-    "0"
-  ].map((string) => bigIntToBuf(BigInt(string)));
+    pcd.claim.watermark,
+    frog
+  ];
 
   const program = zk_eddsa_frog_noir_pcd_circuit;
+  const public_abi: Abi = JSON.parse(JSON.stringify(program.abi));
+  public_abi.parameters = public_abi.parameters.filter(
+    (param) => param.visibility === "public"
+  );
+
+  const publicInputs = abiEncode(
+    public_abi,
+    publicParameters,
+    returnValue as any
+  );
 
   const backend = new BarretenbergBackend(program, { threads: 8 });
   const noirProgram = new Noir(program, backend);
 
   const claimed_proof = {
     proof: pcd.proof.proof,
-    publicInputs: publicSignals
+    publicInputs
   };
 
   return noirProgram.verifyFinalProof(claimed_proof);
@@ -389,25 +420,24 @@ export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
 export async function serialize(
   pcd: ZKEdDSAFrogNoirPCD
 ): Promise<SerializedPCD<ZKEdDSAFrogNoirPCD>> {
-  const serializeable_pcd = {
+  const serializable_pcd = {
     id: pcd.id,
     type: pcd.type,
     claim: pcd.claim,
     proof: {
       proof: "0x" + bufToBigInt(pcd.proof.proof).toString(16),
-      publicInputs: pcd.proof.publicInputs.map(
-        (element) => "0x" + bufToBigInt(element).toString(16)
-      )
+      publicInputs: [...pcd.proof.publicInputs.entries()]
     }
   };
+
   return {
     type: ZKEdDSAFrogNoirPCDTypeName,
-    pcd: JSONBig({ useNativeBigInt: true }).stringify(serializeable_pcd)
+    pcd: JSONBig({ useNativeBigInt: true }).stringify(serializable_pcd)
   } as SerializedPCD<ZKEdDSAFrogNoirPCD>;
 }
 
 /**
- * Deserializes a serialized {@link ZKEdDSAFrogPCD}.
+ * Deserializes a serialized {@link ZKEdDSAFrogNoirPCD}.
  */
 export async function deserialize(
   serialized: string
@@ -428,9 +458,7 @@ export async function deserialize(
     "proof.publicInputs"
   );
   const proof = bigIntToBuf(BigInt(serializable_proof.proof));
-  const publicInputs = serializable_proof.publicInputs.map((element: string) =>
-    bigIntToBuf(BigInt(element))
-  );
+  const publicInputs: WitnessMap = new Map(serializable_proof.publicInputs);
 
   return new ZKEdDSAFrogNoirPCD(id, claim, { proof, publicInputs });
 }

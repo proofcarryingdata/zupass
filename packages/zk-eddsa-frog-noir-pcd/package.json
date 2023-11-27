@@ -22,9 +22,9 @@
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd"
   },
   "dependencies": {
-    "@noir-lang/backend_barretenberg": "0.19.3-70ee787.nightly",
-    "@noir-lang/noir_js": "0.19.3-70ee787.nightly",
-    "@noir-lang/noirc_abi": "0.19.3-70ee787.nightly",
+    "@noir-lang/backend_barretenberg": "0.19.4-a1f6343.nightly",
+    "@noir-lang/noir_js": "0.19.4-a1f6343.nightly",
+    "@noir-lang/noirc_abi": "0.19.4-a1f6343.nightly",
     "@pcd/eddsa-frog-pcd": "^0.0.1",
     "@pcd/eddsa-pcd": "0.3.0",
     "@pcd/passport-ui": "0.8.0",

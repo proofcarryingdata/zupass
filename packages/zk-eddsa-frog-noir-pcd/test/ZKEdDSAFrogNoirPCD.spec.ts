@@ -43,8 +43,6 @@ const WATERMARK = BigInt(6);
 describe("ZKEdDSAFrogNoirPCD should work", function () {
   this.timeout(1000 * 150);
 
-  let pcd: ZKEdDSAFrogNoirPCD;
-
   const frogData: IFrogData = {
     // the fields below are not signed and are used for display purposes
     name: "test name",
@@ -125,7 +123,7 @@ describe("ZKEdDSAFrogNoirPCD should work", function () {
 
   it("should be able to generate and verify a valid proof", async function () {
     const pcdArgs = await toArgs(frogData);
-    pcd = await ZKEdDSAFrogNoirPCDPackage.prove(pcdArgs);
+    const pcd = await ZKEdDSAFrogNoirPCDPackage.prove(pcdArgs);
 
     const claim = pcd.claim;
     expect(claim.partialFrog.frogId).to.be.equal(0);
@@ -328,6 +326,9 @@ describe("ZKEdDSAFrogNoirPCD should work", function () {
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {
+    const pcdArgs = await toArgs(frogData);
+    const pcd = await ZKEdDSAFrogNoirPCDPackage.prove(pcdArgs);
+
     const serialized = await ZKEdDSAFrogNoirPCDPackage.serialize(pcd);
     const deserialized = await ZKEdDSAFrogNoirPCDPackage.deserialize(
       serialized.pcd
