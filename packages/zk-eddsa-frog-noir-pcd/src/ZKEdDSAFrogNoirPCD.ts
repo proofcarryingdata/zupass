@@ -1,5 +1,4 @@
 import { BarretenbergBackend } from "@noir-lang/backend_barretenberg";
-import { InputMap } from "@noir-lang/noirc_abi";
 import { CompiledCircuit, Noir, ProofData } from "@noir-lang/noir_js";
 import {
   EdDSAFrogPCD,
@@ -34,8 +33,14 @@ import {
 import { buildEddsa, Eddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import artifact from "../circuits/target/zk_eddsa_frog_noir_pcd.json";
 import { ZKEdDSAFrogCardBody } from "./CardBody";
+import {
+  EddsaSignature,
+  Frog,
+  PublicKey,
+  SemaphoreIdentity,
+  zk_eddsa_frog_noir_pcd_circuit
+} from "./codegen";
 
 /*
  * This external nullifier will be used if one is not provided.
@@ -212,14 +217,21 @@ function snarkInputForProof(
   identityPCD: SemaphoreIdentityPCD,
   externalNullifer: string,
   watermark: string
-): InputMap {
+): {
+  frog: Frog;
+  frog_signer_pubkey: PublicKey;
+  frog_signature: EddsaSignature;
+  semaphore_identity: SemaphoreIdentity;
+  external_nullifier: string;
+  watermark: string;
+} {
   const signerPubKey = frogPCD.proof.eddsaPCD.claim.publicKey;
   const rawSig = eddsa.unpackSignature(
     fromHexString(frogPCD.proof.eddsaPCD.proof.signature)
   );
 
   const frogData = frogPCD.claim.data;
-  const frog = {
+  const frog: Frog = {
     id: numberToBigInt(frogData.frogId).toString(),
     biome: numberToBigInt(frogData.biome).toString(),
     rarity: numberToBigInt(frogData.rarity).toString(),
@@ -237,7 +249,7 @@ function snarkInputForProof(
     reserved_field3: numberToBigInt(0).toString()
   };
 
-  const semaphore_identity = {
+  const semaphore_identity: SemaphoreIdentity = {
     nullifier: identityPCD.claim.identity.getNullifier().toString(),
     trapdoor: identityPCD.claim.identity.getTrapdoor().toString()
   };
@@ -246,18 +258,22 @@ function snarkInputForProof(
     // Frog data fields
     frog,
     // Frog signature fields
-    frog_signer_pubkey_A_x: hexToBigInt(signerPubKey[0]).toString(),
-    frog_signer_pubkey_A_y: hexToBigInt(signerPubKey[1]).toString(),
-    frog_signature_r8_x: eddsa.F.toObject(rawSig.R8[0]).toString(),
-    frog_signature_r8_y: eddsa.F.toObject(rawSig.R8[1]).toString(),
-    frog_signature_s: rawSig.S.toString(),
+    frog_signer_pubkey: {
+      x: hexToBigInt(signerPubKey[0]).toString(),
+      y: hexToBigInt(signerPubKey[1]).toString()
+    },
+    frog_signature: {
+      r8_x: eddsa.F.toObject(rawSig.R8[0]).toString(),
+      r8_y: eddsa.F.toObject(rawSig.R8[1]).toString(),
+      s: rawSig.S.toString()
+    },
 
     // Owner identity secret
     semaphore_identity,
 
     external_nullifier: externalNullifer,
     watermark: watermark
-  } as InputMap;
+  };
 }
 
 function claimFromProofResult(
@@ -319,9 +335,7 @@ export async function prove(
     watermark.toString()
   );
 
-  // Known issue with types. We're working on addressing this.
-  const program = artifact as unknown as CompiledCircuit;
-
+  const program = zk_eddsa_frog_noir_pcd_circuit;
   const backend = new BarretenbergBackend(program, { threads: 8 });
   const noirProgram = new Noir(program, backend);
 
@@ -356,8 +370,7 @@ export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
     "0"
   ].map((string) => bigIntToBuf(BigInt(string)));
 
-  // Known issue with types. We're working on addressing this.
-  const program = artifact as unknown as CompiledCircuit;
+  const program = zk_eddsa_frog_noir_pcd_circuit;
 
   const backend = new BarretenbergBackend(program, { threads: 8 });
   const noirProgram = new Noir(program, backend);
