@@ -148,6 +148,12 @@ const SearchButton = ({
                         "Froggy hall of fame! You've won... but your lily pad's full. No room for more buddies!"
                       );
                     }
+                    if (fetchErrorMsg?.includes("frog not found")) {
+                      subManager.resetError(id);
+                      return reject(
+                        "Alas, there is nothing but a lily pad here."
+                      );
+                    }
                   }
 
                   resolve();
