@@ -29,7 +29,8 @@ import {
   Chat,
   InlineKeyboardButton,
   InlineKeyboardMarkup,
-  Message
+  Message,
+  UserFromGetMe
 } from "grammy/types";
 import _ from "lodash";
 import { v1 as uuidV1 } from "uuid";
@@ -859,7 +860,7 @@ export class TelegramService {
       await sleep(startDelay);
     }
 
-    logger(`[TELEGRAM] Starting authBot`);
+    logger(`[TELEGRAM] Starting ${bot.botInfo.username}`);
 
     try {
       // This will not resolve while the authBot remains running.
@@ -875,7 +876,7 @@ export class TelegramService {
         }
       });
     } catch (e) {
-      logger(`[TELEGRAM] Error starting authBot`, e);
+      logger(`[TELEGRAM] Error starting ${bot.botInfo.username}`, e);
       this.rollbarService?.reportError(e);
     }
   }
@@ -1576,8 +1577,14 @@ export class TelegramService {
     });
   }
 
-  public stop(): void {
-    this.authBot.stop();
+  public async stop(): Promise<void> {
+    await this.authBot.stop();
+    await this.anonBot.stop();
+    await this.forwardBot?.stop();
+  }
+
+  public ping(): UserFromGetMe {
+    return this.authBot.botInfo;
   }
 }
 

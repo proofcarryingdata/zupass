@@ -1,5 +1,6 @@
 import { AnonWebAppPayload, PayloadType } from "@pcd/passport-interface";
 import express, { Request, Response } from "express";
+import { startTelegramService } from "../../services/telegramService";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import {
@@ -273,6 +274,21 @@ export function initTelegramRoutes(
       rollbarService?.reportError(e);
       res.set("Content-Type", "text/html");
       res.status(500).send(errorHtmlWithDetails(e as Error));
+    }
+  });
+
+  app.get("/telegram/bot", async (req: Request, res: Response) => {
+    if (!telegramService) {
+      throw new Error("Telegram service not initialized");
+    }
+    const ping = telegramService.ping();
+    if (ping) return res.status(200).send(`Auth bot is running`);
+    if (!ping) {
+      logger(`[TELEGRAM] stopping bots`);
+      await telegramService.stop();
+      logger(`[TELEGRAM] restarting bots`);
+      startTelegramService(_context, null);
+      res.status(200).send(`Started bots`);
     }
   });
 }
