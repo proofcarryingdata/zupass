@@ -278,11 +278,14 @@ export function initTelegramRoutes(
   });
 
   app.get("/telegram/bot", async (req: Request, res: Response) => {
-    const ping = telegramService?.ping();
+    if (!telegramService) {
+      throw new Error("Telegram service not initialized");
+    }
+    const ping = telegramService.ping();
     if (ping) return res.status(200).send(`Auth bot is running`);
     if (!ping) {
       logger(`[TELEGRAM] stopping bots`);
-      await telegramService?.stop();
+      await telegramService.stop();
       logger(`[TELEGRAM] restarting bots`);
       startTelegramService(_context, null);
       res.status(200).send(`Started bots`);
