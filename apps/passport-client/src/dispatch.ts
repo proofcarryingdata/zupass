@@ -24,6 +24,7 @@ import {
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { createContext } from "react";
+import toast from "react-hot-toast";
 import { appConfig } from "./appConfig";
 import {
   notifyLoginToOtherTabs,
@@ -129,6 +130,9 @@ export type Action =
       subscriptionId: string;
       onSucess?: () => void;
       onError?: (e: Error) => void;
+    }
+  | {
+      type: "export-data";
     };
 
 export type StateContextValue = {
@@ -233,6 +237,8 @@ export async function dispatch(
         action.onSucess,
         action.onError
       );
+    case "export-data":
+      return exportData(state, update);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -941,4 +947,37 @@ async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
       }
     });
   }
+}
+
+/**
+ * Formats the user's data as JSON, then creates a data URL link and
+ * simulates a click on that link in order to trigger a download.
+ */
+async function exportData(state: AppState, _update: ZuUpdate) {
+  const { self: user, pcds, subscriptions } = state;
+
+  // Since we already use this data for remote sync, we know that it's
+  // sufficient for loading an account on to a new device.
+  const { serializedStorage, storageHash } = await serializeStorage(
+    user,
+    pcds,
+    subscriptions
+  );
+
+  // Data in a data URL must be Base64-encoded
+  const data = Buffer.from(JSON.stringify(serializedStorage)).toString(
+    "base64"
+  );
+
+  const dataURL = `data://text/json;base64,${data}`;
+
+  const link = document.createElement("a");
+  link.href = dataURL;
+  // Give the browser a meaningful filename to use for the file
+  link.download = `zupass-${storageHash}.json`;
+  // Trigger download
+  link.click();
+  link.remove();
+
+  toast("Account data exported", { position: "bottom-center" });
 }

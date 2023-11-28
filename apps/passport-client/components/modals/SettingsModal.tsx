@@ -23,6 +23,10 @@ export function SettingsModal({
     }
   }, [dispatch]);
 
+  const exportData = useCallback(() => {
+    dispatch({ type: "export-data" });
+  }, [dispatch]);
+
   return (
     <>
       <TextCenter>
@@ -49,6 +53,8 @@ export function SettingsModal({
             <Spacer h={16} />
           </>
         )}
+        <Button onClick={exportData}>Export Account Data</Button>
+        <Spacer h={16} />
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
