@@ -277,18 +277,24 @@ function snarkInputForProof(
   };
 }
 
-function claimFromProofResult(
-  frogPCD: EdDSAFrogPCD,
-  publicWitnesses: WitnessMap
-): ZKEdDSAFrogNoirPCDClaim {
-  // TODO: better decoding of public inputs from witness map.
-  const { abi } = JSON.parse(JSON.stringify(zk_eddsa_frog_noir_pcd_circuit));
+// TODO: shift an analog of this into NoirJS
+function get_public_abi(): Abi {
+  const abi: Abi = JSON.parse(
+    JSON.stringify(zk_eddsa_frog_noir_pcd_circuit.abi)
+  );
   const public_parameters = abi.parameters.filter(
     (param) => param.visibility === "public"
   );
   abi.parameters = public_parameters;
+  return abi;
+}
 
-  const { inputs, return_value } = abiDecode(abi, publicWitnesses);
+function claimFromProofResult(
+  frogPCD: EdDSAFrogPCD,
+  publicWitnesses: WitnessMap
+): ZKEdDSAFrogNoirPCDClaim {
+  const public_abi = get_public_abi();
+  const { inputs, return_value } = abiDecode(public_abi, publicWitnesses);
   const [nullifierHashHex, watermarkHex, revealed_frog] = return_value;
 
   const partialFrog: Partial<IFrogData> = {
@@ -391,18 +397,13 @@ export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
     frog
   ];
 
-  const program = zk_eddsa_frog_noir_pcd_circuit;
-  const public_abi: Abi = JSON.parse(JSON.stringify(program.abi));
-  public_abi.parameters = public_abi.parameters.filter(
-    (param) => param.visibility === "public"
-  );
-
   const publicInputs = abiEncode(
-    public_abi,
+    get_public_abi(),
     publicParameters,
     returnValue as any
   );
 
+  const program = zk_eddsa_frog_noir_pcd_circuit;
   const backend = new BarretenbergBackend(program, { threads: 8 });
   const noirProgram = new Noir(program, backend);
 
