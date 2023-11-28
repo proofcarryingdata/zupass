@@ -322,7 +322,7 @@ function claimFromProofResult(
 }
 
 /**
- * Creates a new ZKEdDSAFrogPCD.
+ * Creates a new ZKEdDSAFrogNoirPCD.
  */
 export async function prove(
   args: ZKEdDSAFrogNoirPCDArgs
@@ -355,7 +355,7 @@ export async function prove(
 }
 
 /**
- * Verify the claims and proof of a ZKEdDSAFrogPCD.
+ * Verify the claims and proof of a ZKEdDSAFrogNoirPCD.
  */
 export async function verify(pcd: ZKEdDSAFrogNoirPCD): Promise<boolean> {
   const t = pcd.claim.partialFrog;
@@ -464,7 +464,7 @@ export async function deserialize(
 }
 
 /**
- * Get display options for a ZKEdDSAFrogPCD.
+ * Get display options for a ZKEdDSAFrogNoirPCD.
  */
 export function getDisplayOptions(pcd: ZKEdDSAFrogNoirPCD): DisplayOptions {
   return {
@@ -474,7 +474,7 @@ export function getDisplayOptions(pcd: ZKEdDSAFrogNoirPCD): DisplayOptions {
 }
 
 /**
- * Returns true if a PCD is an ZKEdDSAFrogPCD, or false otherwise.
+ * Returns true if a PCD is an ZKEdDSAFrogNoirPCD, or false otherwise.
  */
 export function isZKEdDSAFrogNoirPCD(pcd: PCD): pcd is ZKEdDSAFrogNoirPCD {
   return pcd.type === ZKEdDSAFrogNoirPCDTypeName;
