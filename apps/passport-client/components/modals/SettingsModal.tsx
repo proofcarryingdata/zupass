@@ -3,6 +3,7 @@ import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
+import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function SettingsModal({
   isProveOrAddScreen
@@ -49,6 +50,8 @@ export function SettingsModal({
             <Spacer h={16} />
           </>
         )}
+        <AccountExportButton />
+        <Spacer h={16} />
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
