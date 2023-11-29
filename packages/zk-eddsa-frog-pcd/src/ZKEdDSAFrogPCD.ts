@@ -9,11 +9,13 @@ import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
   BigIntArgument,
+  BooleanArgument,
   DisplayOptions,
   PCD,
   PCDArgument,
   PCDPackage,
   ProveDisplayOptions,
+  RevealListArgument,
   SerializedPCD
 } from "@pcd/pcd-types";
 import {
@@ -22,6 +24,8 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
+  BABY_JUB_NEGATIVE_ONE,
+  babyJubIsNegativeOne,
   fromHexString,
   generateSnarkMessageHash,
   hexToBigInt,
@@ -51,6 +55,22 @@ export const STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER = generateSnarkMessageHash(
 export const ZKEdDSAFrogPCDTypeName = "zk-eddsa-frog-pcd";
 
 /**
+ * Specifies which fields of an EdDSAFrog should be revealed in a proof.
+ */
+export type EdDSAFrogFieldsToReveal = {
+  revealFrogId?: boolean;
+  revealBiome?: boolean;
+  revealRarity?: boolean;
+  revealTemperament?: boolean;
+  revealJump?: boolean;
+  revealSpeed?: boolean;
+  revealIntelligence?: boolean;
+  revealBeauty?: boolean;
+  revealTimestampSigned?: boolean;
+  revealOwnerSemaphoreId?: boolean;
+};
+
+/**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
  * These are the artifacts associated with the circom circuit.
@@ -70,17 +90,24 @@ export type ZKEdDSAFrogPCDArgs = {
 
   identity: PCDArgument<SemaphoreIdentityPCD>;
 
+  // `fieldsToReveal`, `externalNullifier`, `revealNullifierHash`, and `watermark`
+  // are usually app-specified
+  fieldsToReveal: RevealListArgument<EdDSAFrogFieldsToReveal>;
+
+  // A default external nullifier will be used if one is not provided.
   externalNullifier: BigIntArgument;
+  revealNullifierHash: BooleanArgument;
 
   watermark: BigIntArgument;
 };
 
 /**
- * Defines the ZKEdDSAEventTicketPCD claim.
+ * Defines the ZKEdDSAFrogPCD claim.
  */
 export interface ZKEdDSAFrogPCDClaim {
   partialFrog: Partial<IFrogData>;
   signerPublicKey: EdDSAPublicKey;
+  watermark: string;
   /**
    * Stringified `BigInt`.
    */
@@ -88,13 +115,11 @@ export interface ZKEdDSAFrogPCDClaim {
   /**
    * Stringified `BigInt`.
    */
-  nullifierHash: string;
-  watermark: string;
+  nullifierHash?: string;
 }
 
 /**
- * The ZK EdDSA Frog PCD enables the verification that an owner with a Semaphore
- * identity owns the EdDSA Frog PCD while keeping the owner's semaphore identity private.
+ * ZKEdDSAFrogPCD PCD type representation.
  */
 export class ZKEdDSAFrogPCD implements PCD<ZKEdDSAFrogPCDClaim, Groth16Proof> {
   type = ZKEdDSAFrogPCDTypeName;
@@ -136,8 +161,17 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
         description:
           "Your Zupass comes with a primary Semaphore Identity which represents an user in the Semaphore protocol."
       },
+      fieldsToReveal: {
+        argumentType: ArgumentTypeName.ToggleList,
+        displayName: "",
+        description: "The following information will be revealed"
+      },
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
+        defaultVisible: false
+      },
+      revealNullifierHash: {
+        argumentType: ArgumentTypeName.Boolean,
         defaultVisible: false
       },
       watermark: {
@@ -169,6 +203,7 @@ async function ensureEddsaInitialized() {
 async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
   frogPCD: EdDSAFrogPCD;
   identityPCD: SemaphoreIdentityPCD;
+  fieldsToReveal: EdDSAFrogFieldsToReveal;
   externalNullifier: string;
   watermark: bigint;
 }> {
@@ -180,6 +215,11 @@ async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
   const serializedIdentityPCD = args.identity.value?.pcd;
   if (!serializedIdentityPCD) {
     throw new Error("Cannot make proof: missing identity PCD");
+  }
+
+  const fieldsToReveal = args.fieldsToReveal.value;
+  if (!fieldsToReveal) {
+    throw new Error("Cannot make proof: missing fields request object");
   }
 
   const externalNullifier =
@@ -204,6 +244,7 @@ async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
   return {
     frogPCD,
     identityPCD,
+    fieldsToReveal,
     externalNullifier,
     watermark: BigInt(args.watermark.value)
   };
@@ -212,7 +253,9 @@ async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
 function snarkInputForProof(
   frogPCD: EdDSAFrogPCD,
   identityPCD: SemaphoreIdentityPCD,
+  fieldsToReveal: EdDSAFrogFieldsToReveal,
   externalNullifer: string,
+  revealNullifierHash: boolean,
   watermark: string
 ): Record<string, `${number}` | `${number}`[]> {
   const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
@@ -224,18 +267,36 @@ function snarkInputForProof(
   return {
     // Frog data fields
     frogId: frogAsBigIntArray[0].toString(),
+    revealFrogId: fieldsToReveal.revealFrogId ? "1" : "0",
     biome: frogAsBigIntArray[1].toString(),
+    revealBiome: fieldsToReveal.revealBiome ? "1" : "0",
     rarity: frogAsBigIntArray[2].toString(),
+    revealRarity: fieldsToReveal.revealRarity ? "1" : "0",
     temperament: frogAsBigIntArray[3].toString(),
+    revealTemperament: fieldsToReveal.revealTemperament ? "1" : "0",
     jump: frogAsBigIntArray[4].toString(),
+    revealJump: fieldsToReveal.revealJump ? "1" : "0",
     speed: frogAsBigIntArray[5].toString(),
+    revealSpeed: fieldsToReveal.revealSpeed ? "1" : "0",
     intelligence: frogAsBigIntArray[6].toString(),
+    revealIntelligence: fieldsToReveal.revealIntelligence ? "1" : "0",
     beauty: frogAsBigIntArray[7].toString(),
+    revealBeauty: fieldsToReveal.revealBeauty ? "1" : "0",
     timestampSigned: frogAsBigIntArray[8].toString(),
+    revealTimestampSigned: fieldsToReveal.revealTimestampSigned ? "1" : "0",
     ownerSemaphoreId: frogAsBigIntArray[9].toString(),
+    revealOwnerSemaphoreId: fieldsToReveal.revealOwnerSemaphoreId ? "1" : "0",
+    // These fields currently do not have any preset semantic meaning, although the intention
+    // is for it to convert into a meaningful field in the future. We are reserving it now
+    // so that we can keep the Circom configuration (.zkey and .wasm) as we add new fields,
+    // and we would only need to change the TypeScript. For now, we will treat the inputs as
+    // 0 in terms of signatures.
     reservedField1: frogAsBigIntArray[10].toString(),
+    revealReservedField1: "0",
     reservedField2: frogAsBigIntArray[11].toString(),
+    revealReservedField2: "0",
     reservedField3: frogAsBigIntArray[12].toString(),
+    revealReservedField3: "0",
 
     // Frog signature fields
     frogSignerPubkeyAx: hexToBigInt(signerPubKey[0]).toString(),
@@ -252,7 +313,9 @@ function snarkInputForProof(
       .getTrapdoor()
       .toString(),
 
+    // Security features
     externalNullifier: externalNullifer,
+    revealNullifierHash: revealNullifierHash ? "1" : "0",
     watermark: watermark
   } as Record<string, `${number}` | `${number}`[]>;
 }
@@ -264,27 +327,65 @@ function claimFromProofResult(
   const partialFrog: Partial<IFrogData> = {
     name: frogPCD.claim.data.name,
     description: frogPCD.claim.data.description,
-    imageUrl: frogPCD.claim.data.imageUrl,
-
-    // Outputs appear in public signals first
-    frogId: parseInt(publicSignals[1]),
-    biome: parseInt(publicSignals[2]),
-    rarity: parseInt(publicSignals[3]),
-    temperament: parseInt(publicSignals[4]),
-    jump: parseInt(publicSignals[5]),
-    speed: parseInt(publicSignals[6]),
-    intelligence: parseInt(publicSignals[7]),
-    beauty: parseInt(publicSignals[8]),
-    timestampSigned: parseInt(publicSignals[9]),
-    ownerSemaphoreId: publicSignals[10]
+    imageUrl: frogPCD.claim.data.imageUrl
   };
+
+  if (!babyJubIsNegativeOne(publicSignals[0])) {
+    partialFrog.frogId = parseInt(publicSignals[0]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[1])) {
+    partialFrog.biome = parseInt(publicSignals[1]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[2])) {
+    partialFrog.rarity = parseInt(publicSignals[2]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[3])) {
+    partialFrog.temperament = parseInt(publicSignals[3]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[4])) {
+    partialFrog.jump = parseInt(publicSignals[4]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[5])) {
+    partialFrog.speed = parseInt(publicSignals[5]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[6])) {
+    partialFrog.intelligence = parseInt(publicSignals[6]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[7])) {
+    partialFrog.beauty = parseInt(publicSignals[7]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[8])) {
+    partialFrog.timestampSigned = parseInt(publicSignals[8]);
+  }
+  if (!babyJubIsNegativeOne(publicSignals[9])) {
+    partialFrog.ownerSemaphoreId = publicSignals[9];
+  }
+
+  // These fields are currently not typed or being used, but are being kept as
+  // reserved fields that are hardcoded to zero and included in the preimage
+  // of the hashed signature. As such, the flags for revealing these reserved
+  // signed fields should always be -1 until they are being typed and used.
+  if (!babyJubIsNegativeOne(publicSignals[10])) {
+    throw new Error("ZkEdDSAFrogPCD: reservedField1 is not in use");
+  }
+  if (!babyJubIsNegativeOne(publicSignals[11])) {
+    throw new Error("ZkEdDSAFrogPCD: reservedField2 is not in use");
+  }
+  if (!babyJubIsNegativeOne(publicSignals[12])) {
+    throw new Error("ZkEdDSAFrogPCD: reservedField3 is not in use");
+  }
+
+  let nullifierHash = undefined;
+  if (!babyJubIsNegativeOne(publicSignals[13])) {
+    nullifierHash = publicSignals[13];
+  }
 
   return {
     partialFrog,
     signerPublicKey: frogPCD.proof.eddsaPCD.claim.publicKey,
     externalNullifier: publicSignals[16],
     watermark: publicSignals[17],
-    nullifierHash: publicSignals[0]
+    nullifierHash: nullifierHash
   };
 }
 
@@ -298,13 +399,15 @@ export async function prove(args: ZKEdDSAFrogPCDArgs): Promise<ZKEdDSAFrogPCD> {
 
   await ensureEddsaInitialized();
 
-  const { frogPCD, identityPCD, externalNullifier, watermark } =
+  const { frogPCD, identityPCD, fieldsToReveal, externalNullifier, watermark } =
     await checkProveInputs(args);
 
   const snarkInput = snarkInputForProof(
     frogPCD,
     identityPCD,
+    fieldsToReveal,
     externalNullifier,
+    args.revealNullifierHash.value || false,
     watermark.toString()
   );
 
@@ -328,22 +431,25 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
   // full package initialization.
 
   const t = pcd.claim.partialFrog;
+
+  const negOne = BABY_JUB_NEGATIVE_ONE.toString();
+
   // Outputs appear in public signals first
   const publicSignals = [
-    pcd.claim.nullifierHash,
-    t.frogId?.toString() || "0",
-    t.biome?.toString() || "0",
-    t.rarity?.toString() || "0",
-    t.temperament?.toString() || "0",
-    t.jump?.toString() || "0",
-    t.speed?.toString() || "0",
-    t.intelligence?.toString() || "0",
-    t.beauty?.toString() || "0",
-    t.timestampSigned?.toString() || "0",
-    t.ownerSemaphoreId?.toString() || "0",
-    "0",
-    "0",
-    "0",
+    t.frogId?.toString() || negOne,
+    t.biome?.toString() || negOne,
+    t.rarity?.toString() || negOne,
+    t.temperament?.toString() || negOne,
+    t.jump?.toString() || negOne,
+    t.speed?.toString() || negOne,
+    t.intelligence?.toString() || negOne,
+    t.beauty?.toString() || negOne,
+    t.timestampSigned?.toString() || negOne,
+    t.ownerSemaphoreId?.toString() || negOne,
+    negOne,
+    negOne,
+    negOne,
+    pcd.claim.nullifierHash || negOne,
     hexToBigInt(pcd.claim.signerPublicKey[0]).toString(),
     hexToBigInt(pcd.claim.signerPublicKey[1]).toString(),
     pcd.claim.externalNullifier,
@@ -384,7 +490,7 @@ export async function deserialize(serialized: string): Promise<ZKEdDSAFrogPCD> {
  */
 export function getDisplayOptions(pcd: ZKEdDSAFrogPCD): DisplayOptions {
   return {
-    header: "ZK EdDSA Frog PCD",
+    header: "ZKEdDSAFrogPCD",
     displayName: "zk-eddsa-frog-" + pcd.id.substring(0, 4)
   };
 }
@@ -399,8 +505,9 @@ export function isZKEdDSAFrogPCD(pcd: PCD): pcd is ZKEdDSAFrogPCD {
 /**
  * A PCD representing a proof of ownership of an EdDSA-signed frog.
  * The prover is able to prove ownership of a frog corresponding to their
- * semaphore identity, and keep their identity private.
- * The proof can also include a nullifier.
+ * semaphore identity. The prover can keep their identity private, and selectively
+ * reveal some or none of the individual frog fields. To harden against
+ * various abuses, the proof can be watermarked, and can include a nullifier.
  */
 export const ZKEdDSAFrogPCDPackage: PCDPackage<
   ZKEdDSAFrogPCDClaim,
