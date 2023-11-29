@@ -5,8 +5,7 @@ import {
   EdDSAFrogPCD,
   EdDSAFrogPCDPackage,
   EdDSAFrogPCDTypeName,
-  IFrogData,
-  semaphoreIdToBigInt
+  IFrogData
 } from "@pcd/eddsa-frog-pcd";
 import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
@@ -27,8 +26,6 @@ import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   fromHexString,
   generateSnarkMessageHash,
-  hexToBigInt,
-  numberToBigInt,
   requireDefinedParameter
 } from "@pcd/util";
 import { buildEddsa, Eddsa } from "circomlibjs";
@@ -233,21 +230,19 @@ function snarkInputForProof(
 
   const frogData = frogPCD.claim.data;
   const frog: Frog = {
-    id: numberToBigInt(frogData.frogId).toString(),
-    biome: numberToBigInt(frogData.biome).toString(),
-    rarity: numberToBigInt(frogData.rarity).toString(),
-    temperament: numberToBigInt(frogData.temperament).toString(),
-    jump: numberToBigInt(frogData.jump).toString(),
-    speed: numberToBigInt(frogData.speed).toString(),
-    intelligence: numberToBigInt(frogData.intelligence).toString(),
-    beauty: numberToBigInt(frogData.beauty).toString(),
-    timestamp_signed: numberToBigInt(frogData.timestampSigned).toString(),
-    owner_semaphore_id: semaphoreIdToBigInt(
-      frogData.ownerSemaphoreId
-    ).toString(),
-    reserved_field1: numberToBigInt(0).toString(),
-    reserved_field2: numberToBigInt(0).toString(),
-    reserved_field3: numberToBigInt(0).toString()
+    id: frogData.frogId.toString(),
+    biome: frogData.biome.toString(),
+    rarity: frogData.rarity.toString(),
+    temperament: frogData.temperament.toString(),
+    jump: frogData.jump.toString(),
+    speed: frogData.speed.toString(),
+    intelligence: frogData.intelligence.toString(),
+    beauty: frogData.beauty.toString(),
+    timestamp_signed: frogData.timestampSigned.toString(),
+    owner_semaphore_id: frogData.ownerSemaphoreId,
+    reserved_field1: "0",
+    reserved_field2: "0",
+    reserved_field3: "0"
   };
 
   const semaphore_identity: SemaphoreIdentity = {
@@ -260,8 +255,8 @@ function snarkInputForProof(
     frog,
     // Frog signature fields
     frog_signer_pubkey: {
-      x: hexToBigInt(signerPubKey[0]).toString(),
-      y: hexToBigInt(signerPubKey[1]).toString()
+      x: "0x" + signerPubKey[0],
+      y: "0x" + signerPubKey[1]
     },
     frog_signature: {
       r8_x: eddsa.F.toObject(rawSig.R8[0]).toString(),
