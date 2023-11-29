@@ -6,6 +6,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "start": "NODE_ENV=production PORT=3000 ts-node src/main.ts"
   },
+  "private": true,
   "devDependencies": {
     "@pcd/eslint-config-custom": "^0.8.0",
     "@types/circomlibjs": "^0.1.2",
@@ -19,6 +20,7 @@
     "@types/qr-image": "^3.2.7",
     "@types/react": "^18.2.22",
     "@types/styled-components": "^5.1.27",
+    "@types/url-join": "^4.0.2",
     "@types/uuid": "^9.0.4",
     "@typescript-eslint/eslint-plugin": "^6.7.2",
     "eslint": "^8.49.0",
@@ -38,7 +40,6 @@
     "@pcd/pcd-collection": "^0.8.0",
     "@pcd/pcd-types": "^0.8.0",
     "@pcd/semaphore-signature-pcd": "^0.8.0",
-    "@types/url-join": "^4.0.2",
     "cors": "^2.8.5",
     "dotenv": "^16.3.1",
     "express": "^4.18.2",
