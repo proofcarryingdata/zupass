@@ -34,20 +34,6 @@ fn main(
 
     let nullifier_hash = calculate_nullifier_hash(external_nullifier, semaphore_identity.nullifier);
 
-    let revealed_frog = Frog {
-        id: frog.id,
-        biome: frog.biome,
-        rarity: frog.rarity,
-        temperament: frog.temperament,
-        jump: frog.jump,
-        speed: frog.speed,
-        intelligence: frog.intelligence,
-        beauty: frog.beauty,
-        timestamp_signed: frog.timestamp_signed,
-        owner_semaphore_id: frog.owner_semaphore_id,
-        reserved_field1: 0,
-        reserved_field2: 0,
-        reserved_field3: 0,
-    };
-    (nullifier_hash, watermark, revealed_frog)
+    
+    (nullifier_hash, watermark, frog)
 }
