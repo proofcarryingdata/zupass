@@ -10,7 +10,7 @@
     }
   },
   "ignore": ["**/*.d.ts", "**/dist"],
-  "ignoreWorkspaces": ["packages/artifacts", "apps/kudosbot-server"],
+  "ignoreWorkspaces": ["packages/artifacts"],
   "rules": {
     "binaries": "off",
     "dependencies": "error",
@@ -20,7 +20,6 @@
     "exports": "warn",
     "enumMembers": "warn",
     "classMembers": "warn",
-    "exports": "warn",
     "nsExports": "warn",
     "types": "warn",
     "nsTypes": "warn",
