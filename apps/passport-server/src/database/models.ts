@@ -330,10 +330,3 @@ export interface AnonMessageWithDetails extends AnonMessage {
   topic_name: string;
   reactions: string[];
 }
-
-export interface RateLimit {
-  type: "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
-  name: string;
-  count: number;
-  expiry: number;
-}

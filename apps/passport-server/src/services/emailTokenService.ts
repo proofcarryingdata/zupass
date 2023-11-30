@@ -2,10 +2,10 @@ import {
   fetchEmailToken,
   insertEmailToken
 } from "../database/queries/emailToken";
-import { checkRateLimit } from "../database/queries/rateLimit";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { randomEmailToken } from "../util/util";
+import { RateLimitService } from "./rateLimitService";
 
 /**
  * Responsible for generating, storing, and retrieving single-use
@@ -13,9 +13,14 @@ import { randomEmailToken } from "../util/util";
  */
 export class EmailTokenService {
   private context: ApplicationContext;
+  private readonly rateLimitService: RateLimitService;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    rateLimitService: RateLimitService
+  ) {
     this.context = context;
+    this.rateLimitService = rateLimitService;
   }
 
   public async checkTokenCorrect(
@@ -23,7 +28,10 @@ export class EmailTokenService {
     token: string
   ): Promise<boolean> {
     if (
-      !(await checkRateLimit(this.context.dbPool, "CHECK_EMAIL_TOKEN", email))
+      !(await this.rateLimitService.requestRateLimitedAction(
+        "CHECK_EMAIL_TOKEN",
+        email
+      ))
     ) {
       throw new PCDHTTPError(401, "Too many attempts. Come back later.");
     }
@@ -45,8 +53,9 @@ export class EmailTokenService {
 }
 
 export function startEmailTokenService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  rateLimitService: RateLimitService
 ): EmailTokenService {
-  const emailTokenService = new EmailTokenService(context);
+  const emailTokenService = new EmailTokenService(context, rateLimitService);
   return emailTokenService;
 }

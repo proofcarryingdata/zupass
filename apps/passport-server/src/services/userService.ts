@@ -16,7 +16,6 @@ import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import { checkRateLimit } from "../database/queries/rateLimit";
 import {
   updateUserAccountRestTimestamps,
   upsertUser
@@ -33,6 +32,7 @@ import { validateEmail } from "../util/util";
 import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";
+import { RateLimitService } from "./rateLimitService";
 import { SemaphoreService } from "./semaphoreService";
 
 const AgreedTermsSchema = z.object({
@@ -48,17 +48,20 @@ export class UserService {
   private readonly semaphoreService: SemaphoreService;
   private readonly emailTokenService: EmailTokenService;
   private readonly emailService: EmailService;
+  private readonly rateLimitService: RateLimitService;
 
   public constructor(
     context: ApplicationContext,
     semaphoreService: SemaphoreService,
     emailTokenService: EmailTokenService,
-    emailService: EmailService
+    emailService: EmailService,
+    rateLimitService: RateLimitService
   ) {
     this.context = context;
     this.semaphoreService = semaphoreService;
     this.emailTokenService = emailTokenService;
     this.emailService = emailService;
+    this.rateLimitService = rateLimitService;
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
@@ -105,7 +108,10 @@ export class UserService {
     }
 
     if (
-      !(await checkRateLimit(this.context.dbPool, "REQUEST_EMAIL_TOKEN", email))
+      !(await this.rateLimitService.requestRateLimitedAction(
+        "REQUEST_EMAIL_TOKEN",
+        email
+      ))
     ) {
       throw new PCDHTTPError(401, "Too many attempts. Come back later.");
     }
@@ -406,12 +412,14 @@ export function startUserService(
   context: ApplicationContext,
   semaphoreService: SemaphoreService,
   emailTokenService: EmailTokenService,
-  emailService: EmailService
+  emailService: EmailService,
+  rateLimitService: RateLimitService
 ): UserService {
   return new UserService(
     context,
     semaphoreService,
     emailTokenService,
-    emailService
+    emailService,
+    rateLimitService
   );
 }
