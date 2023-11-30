@@ -1,0 +1,9 @@
+[package]
+name = "zk_eddsa_frog_noir_pcd"
+type = "bin"
+authors = [""]
+compiler_version = "0.19.3"
+
+[dependencies]
+frogcrypto = { git = "https://github.com/TomAFrench/frogcrypto", tag = "master" }
+semaphore = { git = "https://github.com/TomAFrench/semaphore-noir", tag = "master" }

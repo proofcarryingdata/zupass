@@ -576,6 +576,16 @@
   dependencies:
     tslib "^2.5.0"
 
+"@aztec/bb.js@0.16.0":
+  version "0.16.0"
+  resolved "https://registry.yarnpkg.com/@aztec/bb.js/-/bb.js-0.16.0.tgz#b99632ee378f4154111a865195ea88817f5e79d3"
+  integrity sha512-RWx0Oiml+bgOA+cqdh+/jynLIUOFHKFsPpk7L9gWz8Di0UZg9AoTSSOG+pR3il5EGWA4cJp5Wp3ikOSq62gC7g==
+  dependencies:
+    comlink "^4.4.1"
+    commander "^10.0.1"
+    debug "^4.3.4"
+    tslib "^2.4.0"
+
 "@babel/code-frame@7.12.11":
   version "7.12.11"
   resolved "https://registry.yarnpkg.com/@babel/code-frame/-/code-frame-7.12.11.tgz#f4ad435aa263db935b8f10f2c552d23fb716a63f"
@@ -2535,6 +2545,41 @@
   dependencies:
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
+
+"@noir-lang/acvm_js@0.35.0-a1f6343.nightly":
+  version "0.35.0-a1f6343.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/acvm_js/-/acvm_js-0.35.0-a1f6343.nightly.tgz#a393293aad1a8a510982059abbd07ec84088820f"
+  integrity sha512-bSqFh7ccN9zti28LoUMG6uYW4c01kUfjFPXAALiXUEBlGhANM2CcvLaUscR+XlUlQ9fs5upvZlzwhtqnqp1Kfg==
+
+"@noir-lang/backend_barretenberg@0.19.4-a1f6343.nightly":
+  version "0.19.4-a1f6343.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/backend_barretenberg/-/backend_barretenberg-0.19.4-a1f6343.nightly.tgz#4d8b54ad07f12ba98ea33f5eef3dfa9f383d5dd3"
+  integrity sha512-iy/MpCbkEGA/MbLfrjdOxyjlVRa9CmJnPQKCpQVDVckgKof803NydJgArribcD3L5n/P3YqEh3nDOnAi2abJ+g==
+  dependencies:
+    "@aztec/bb.js" "0.16.0"
+    "@noir-lang/types" "0.19.4-a1f6343.nightly"
+    fflate "^0.8.0"
+
+"@noir-lang/noir_js@0.19.4-a1f6343.nightly":
+  version "0.19.4-a1f6343.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/noir_js/-/noir_js-0.19.4-a1f6343.nightly.tgz#9e3ebf8bbd82425d842629c72962f0fbebfc3a19"
+  integrity sha512-x+lf2AsmOBIsdzNnKydZ/fqTaJ8cDYMXpS0vCun56iTax4qq5r/8eF7Y7nWTyVWjl3eI24NmuEwnJeSqPHzbcA==
+  dependencies:
+    "@noir-lang/acvm_js" "0.35.0-a1f6343.nightly"
+    "@noir-lang/noirc_abi" "0.19.4-a1f6343.nightly"
+    "@noir-lang/types" "0.19.4-a1f6343.nightly"
+
+"@noir-lang/noirc_abi@0.19.4-a1f6343.nightly":
+  version "0.19.4-a1f6343.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/noirc_abi/-/noirc_abi-0.19.4-a1f6343.nightly.tgz#83a71f390ad174e56dcb790543c6c2097a6a6a44"
+  integrity sha512-osSwCYVnTY2EYWnzjbFCb0lmzeUMX+l4fkJVZRY7XSF6E5JxnXHRBTvb4llOljhvfC4WamL4mj/4OdZxu3r8Ww==
+
+"@noir-lang/types@0.19.4-a1f6343.nightly":
+  version "0.19.4-a1f6343.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/types/-/types-0.19.4-a1f6343.nightly.tgz#f9901c4c2b15c5cc4d7f89105ed118973f5046fd"
+  integrity sha512-NkZTHwjDuzWjsiOONvNOlDKp3qjwHxcPEFEZqDcSVQZyZPfun1Vw+0fsjjYEOcObfuo853pPWD/kDxyClHJ2oQ==
+  dependencies:
+    "@noir-lang/noirc_abi" "0.19.4-a1f6343.nightly"
 
 "@open-draft/until@^1.0.3":
   version "1.0.3"
@@ -6556,6 +6601,16 @@ combined-stream@^1.0.6, combined-stream@^1.0.8, combined-stream@~1.0.6:
   dependencies:
     delayed-stream "~1.0.0"
 
+comlink@^4.4.1:
+  version "4.4.1"
+  resolved "https://registry.yarnpkg.com/comlink/-/comlink-4.4.1.tgz#e568b8e86410b809e8600eb2cf40c189371ef981"
+  integrity sha512-+1dlx0aY5Jo1vHy/tSsIGpSkN4tS9rZSW8FIhG0JH/crs9wwweswIo/POr451r7bZww3hFbPAKnTpimzL/mm4Q==
+
+commander@^10.0.1:
+  version "10.0.1"
+  resolved "https://registry.yarnpkg.com/commander/-/commander-10.0.1.tgz#881ee46b4f77d1c1dccc5823433aa39b022cbe06"
+  integrity sha512-y4Mg2tXshplEbSGzx7amzPwKKOCGuoSRP/CjEdwwk0FOGlUbq6lKuoyDZTNZkmxHdJtp54hdfY/JUrdL7Xfdug==
+
 commander@^11.0.0:
   version "11.0.0"
   resolved "https://registry.yarnpkg.com/commander/-/commander-11.0.0.tgz#43e19c25dbedc8256203538e8d7e9346877a6f67"
@@ -8421,6 +8476,11 @@ ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0
     wasmbuilder "0.0.16"
     wasmcurves "0.2.2"
     web-worker "^1.2.0"
+
+fflate@^0.8.0:
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/fflate/-/fflate-0.8.1.tgz#1ed92270674d2ad3c73f077cd0acf26486dae6c9"
+  integrity sha512-/exOvEuc+/iaUm105QIiOt4LpBdMTWsXxqR0HDF35vx3fmaKzw7354gTilCh5rkzEt8WYyG//ku3h3nRmd7CHQ==
 
 figures@^3.0.0:
   version "3.2.0"
