@@ -5,6 +5,7 @@ import {
 } from "../database/queries/rateLimit";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 export type RateLimitedActionType = "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
@@ -12,9 +13,14 @@ export type RateLimitedActionType = "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
 export class RateLimitService {
   private readonly context: ApplicationContext;
   private timeout: NodeJS.Timeout;
+  private readonly rollbarService: RollbarService | null;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    rollbarService: RollbarService | null
+  ) {
     this.context = context;
+    this.rollbarService = rollbarService;
     this.timeout = setTimeout(() => {
       // Every hour, clear out any expired actions from the DB.
       (async (): Promise<void> =>
@@ -59,6 +65,7 @@ export class RateLimitService {
       async (span) => {
         span?.setAttribute("actionType", actionType);
         span?.setAttribute("actionId", actionId);
+
         const result = checkRateLimit(
           this.context.dbPool,
           actionType,
@@ -69,6 +76,11 @@ export class RateLimitService {
           logger(
             `[RATELIMIT] Action "${actionId}" of type "${actionType}" was rate-limited`
           );
+          this.rollbarService?.reportError(
+            new Error(
+              `Action "${actionId}" of type "${actionType}" was rate-limited`
+            )
+          );
         }
 
         return result;
@@ -78,7 +90,8 @@ export class RateLimitService {
 }
 
 export function startRateLimitService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  rollbarService: RollbarService | null
 ): RateLimitService {
-  return new RateLimitService(context);
+  return new RateLimitService(context, rollbarService);
 }
