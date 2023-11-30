@@ -42,7 +42,6 @@
     "@pcd/util": "0.2.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "json-bigint": "^1.0.0",
-    "styled-components": "^5.3.9",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -51,7 +50,6 @@
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
-    "@types/styled-components": "^5.1.26",
     "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
