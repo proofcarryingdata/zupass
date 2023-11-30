@@ -27,6 +27,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/passport-ui": "0.8.0",
+    "@pcd/pcd-types": "0.8.0",
+    "@pcd/util": "0.2.0",
     "airtable": "^0.11.6",
     "elliptic": "^6.5.4",
     "js-sha256": "^0.10.1",
@@ -35,10 +38,7 @@
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/passport-ui": "0.8.0",
-    "@pcd/pcd-types": "0.8.0",
     "@pcd/tsconfig": "*",
-    "@pcd/util": "0.2.0",
     "@types/elliptic": "^6.4.14",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
