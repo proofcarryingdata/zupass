@@ -1,4 +1,3 @@
-import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -30,9 +29,6 @@ SemaphoreSignaturePCDPackage.init?.({
   zkeyFilePath: fullPath + "16.zkey",
   wasmFilePath: fullPath + "16.wasm"
 });
-
-EdDSAPCDPackage.init?.({});
-EdDSATicketPCDPackage.init?.({});
 
 export let feedHost: FeedHost;
 

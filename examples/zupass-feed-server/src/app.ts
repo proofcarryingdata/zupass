@@ -1,3 +1,5 @@
+import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
+import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import cors from "cors";
 import express from "express";
 import { initFeedHost } from "./feeds";
@@ -28,6 +30,8 @@ class Application {
 
   public async start({ port }: { port: number }) {
     console.log(`Server starting at http://localhost:${port}`);
+    await EdDSAPCDPackage.init?.({});
+    await EdDSATicketPCDPackage.init?.({});
     await initFeedHost();
     this.server.listen(port);
   }
