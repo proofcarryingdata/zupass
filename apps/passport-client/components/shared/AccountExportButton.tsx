@@ -1,6 +1,6 @@
 import { serializeStorage } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import {
   usePCDCollection,
   useSelf,

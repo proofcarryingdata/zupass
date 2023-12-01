@@ -1,5 +1,4 @@
-import { requestFrogCryptoGetScoreboard } from "@pcd/passport-interface";
-import { FrogCryptoScore } from "@pcd/passport-interface/src/FrogCrypto";
+import { FrogCryptoScore, requestFrogCryptoGetScoreboard } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Fragment, useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";

@@ -12,6 +12,7 @@
     "clean": "rm -rf node_modules public/js"
   },
   "dependencies": {
+    "@pcd/eddsa-frog-pcd": "0.0.1",
     "@pcd/eddsa-pcd": "0.3.0",
     "@pcd/eddsa-ticket-pcd": "0.3.0",
     "@pcd/ethereum-group-pcd": "0.2.0",
@@ -23,6 +24,7 @@
     "@pcd/semaphore-signature-pcd": "0.8.0",
     "@pcd/webauthn-pcd": "0.8.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "0.2.1",
+    "@pcd/zk-eddsa-frog-pcd": "0.0.1",
     "@pcd/util": "0.2.0",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/identity": "^3.14.0",

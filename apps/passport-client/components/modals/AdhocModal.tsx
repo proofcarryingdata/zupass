@@ -1,5 +1,5 @@
 import { ComponentProps } from "react";
-import Modal from "react-responsive-modal";
+import { Modal } from "react-responsive-modal";
 import { createGlobalStyle } from "styled-components";
 
 export function AdhocModal(props: ComponentProps<typeof Modal>) {

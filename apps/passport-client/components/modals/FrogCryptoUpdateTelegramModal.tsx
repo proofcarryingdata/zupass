@@ -1,5 +1,5 @@
 import { requestFrogCryptoUpdateTelegramHandleSharing } from "@pcd/passport-interface";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useCredentialManager, useDispatch } from "../../src/appHooks";

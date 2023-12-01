@@ -4,7 +4,9 @@ module.exports = {
     "turbo",
     "prettier",
     "turbo",
-    "plugin:@typescript-eslint/recommended"
+    "plugin:@typescript-eslint/recommended",
+    "plugin:import/recommended",
+    "plugin:import/typescript"
   ],
   parser: "@typescript-eslint/parser",
   plugins: ["@typescript-eslint", "react", "react-hooks"],
@@ -25,6 +27,14 @@ module.exports = {
     "react-hooks/rules-of-hooks": "error",
     "react-hooks/exhaustive-deps": "error",
     "@typescript-eslint/no-empty-interface": "off",
-    "react/no-unescaped-entities": "off"
+    "react/no-unescaped-entities": "off",
+    "import/no-named-as-default-member": "off",
+    "import/no-extraneous-dependencies": "error"
+  },
+  settings: {
+    "import/resolver": {
+      typescript: true,
+      node: true
+    }
   }
 };
