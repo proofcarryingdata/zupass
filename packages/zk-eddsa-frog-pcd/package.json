@@ -24,7 +24,6 @@
   },
   "files": [
     "./artifacts/*",
-    "./src/*",
     "dist",
     "./README.md",
     "./LICENSE"

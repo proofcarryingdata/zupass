@@ -1,0 +1,24 @@
+store:
+  # Use ephemeral verdaccio-memory storage instead of the default of filesystem.
+  memory:
+    # Increase maximum number of packages that can be stored (default 1000).
+    limit: 10000
+uplinks:
+  yarnpkg:
+    url: https://registry.yarnpkg.com/
+    # Increase number of failed requests before disabling uplink (default 2).
+    max_fails: 5
+    # Increase the time before cached package metadata is re-fetched (default 2m).
+    maxage: 10m
+    # Disable caching of package tarballs since it duplicates the local yarn cache.
+    cache: false
+packages:
+  "@pcd/*":
+    access: $anonymous
+    publish: $anonymous
+  "**":
+    access: $anonymous
+    proxy: yarnpkg
+log:
+  - { type: stdout, format: pretty, level: warn }
+max_body_size: 100mb
