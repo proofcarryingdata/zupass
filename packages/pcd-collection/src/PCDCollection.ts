@@ -1,3 +1,4 @@
+import { Emitter } from "@pcd/emitter";
 import { getHash } from "@pcd/passport-crypto";
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
@@ -72,6 +73,12 @@ export function matchActionToPermission(
  * PCDs.
  */
 export class PCDCollection {
+  /**
+   * Emits an event whenever the contents of this {@link PCDCollection} changes.
+   * Does not attempt to filter out changes which result in the same contents.
+   */
+  public readonly changeEmitter: Emitter;
+
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
   public folders: Record<string, string>; // pcd id -> folder
@@ -84,6 +91,7 @@ export class PCDCollection {
     this.packages = packages;
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
+    this.changeEmitter = new Emitter();
   }
 
   public getFoldersInFolder(folderPath: string): string[] {
@@ -100,6 +108,7 @@ export class PCDCollection {
     }
 
     this.folders[pcdId] = folder;
+    this.emitChange();
   }
 
   public async tryExec(
@@ -232,6 +241,8 @@ export class PCDCollection {
     pcdIds.forEach((pcdId) => {
       this.folders[pcdId] = folder;
     });
+
+    this.emitChange();
   }
 
   public setFolder(pcdId: string, folder: string): void {
@@ -347,6 +358,7 @@ export class PCDCollection {
     this.folders = Object.fromEntries(
       Object.entries(this.folders).filter(([id]) => id !== pcdId)
     );
+    this.emitChange();
   }
 
   public async deserializeAndAdd(
@@ -373,6 +385,8 @@ export class PCDCollection {
     }
 
     this.pcds = Array.from(currentMap.values());
+
+    this.emitChange();
   }
 
   public size(): number {
@@ -413,6 +427,12 @@ export class PCDCollection {
 
   public getPCDsByType(type: string) {
     return this.pcds.filter((pcd) => pcd.type === type);
+  }
+
+  private emitChange() {
+    // Emit the change asynchronously, so we don't need to delay until
+    // listeners are complete.
+    setTimeout(() => this.changeEmitter.emit(), 0);
   }
 
   public static async deserialize(

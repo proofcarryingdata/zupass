@@ -25,6 +25,19 @@ import { getLastValidVerifyUrl, maybeRedirect } from "./util";
 
 export function usePCDCollection(): PCDCollection {
   const pcds = useSelector<PCDCollection>((s) => s.pcds, []);
+
+  // Set to a new unique object each time PCDCollection changes, so that React
+  // sees a piece of state change and knows to re-render.  This may re-render
+  // unnecessarily if PCDCollection's change is a nop, but is much cheaper
+  // than analyzing and hashing the full PCDCollection contents.
+  const [_, setUnique] = useState<object>({});
+
+  useEffect(() => {
+    return pcds.changeEmitter.listen(() => {
+      setUnique({});
+    });
+  }, [pcds]);
+
   return pcds;
 }
 

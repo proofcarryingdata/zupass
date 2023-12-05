@@ -210,7 +210,7 @@ describe("PCDCollection", async function () {
     expect(hashAfterEdit).to.not.eq(hash);
   });
 
-  it("should have a new hash on mutation", async function () {
+  it("should emit a change and have a new hash on mutation", async function () {
     const pcdList = await Promise.all([newPCD(), newPCD(), newPCD()]);
 
     const serializedPCDs = await Promise.all(
@@ -219,19 +219,24 @@ describe("PCDCollection", async function () {
 
     const collection = new PCDCollection(packages);
     await collection.deserializeAllAndAdd(serializedPCDs);
-    const firstHash = await collection.getHash();
+    // The deserializeAllAndAdd mutation has emitted a change, but it's
+    // asynchronous and will end up caught inside the next waitForNewHash call.
+    const firstHash = await waitForNewHash(collection);
     const anotherPcd = await newPCD();
-    collection.add(anotherPcd);
-    const secondhash = await collection.getHash();
+    const secondhash = await waitForNewHash(collection, () => {
+      collection.add(anotherPcd);
+    });
     expect(secondhash).to.not.eq(firstHash);
 
-    collection.remove(anotherPcd.id);
-    const thirdHash = await collection.getHash();
+    const thirdHash = await waitForNewHash(collection, () => {
+      collection.remove(anotherPcd.id);
+    });
     expect(secondhash).to.not.eq(thirdHash);
     expect(thirdHash).to.eq(firstHash);
 
-    collection.setPCDFolder(pcdList[0].id, "folder");
-    const fourthHash = await collection.getHash();
+    const fourthHash = await waitForNewHash(collection, () => {
+      collection.setPCDFolder(pcdList[0].id, "folder");
+    });
     expect(fourthHash).to.not.eq(firstHash);
   });
 
@@ -267,3 +272,19 @@ describe("PCDCollection", async function () {
     expect(await deserializedCollection.getHash()).to.eq(firstHash);
   });
 });
+
+function waitForNewHash(
+  collection: PCDCollection,
+  mutation?: () => void
+): Promise<string> {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = collection.changeEmitter.listen(() => {
+      unsubscribe();
+      collection
+        .getHash()
+        .then((newHash) => resolve(newHash))
+        .catch((e) => reject(e));
+    });
+    mutation && mutation();
+  });
+}
