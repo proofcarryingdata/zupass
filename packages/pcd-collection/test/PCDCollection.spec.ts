@@ -210,7 +210,7 @@ describe("PCDCollection", async function () {
     expect(hashAfterEdit).to.not.eq(hash);
   });
 
-  it("should emit a new hash on mutation", async function () {
+  it("should have a new hash on mutation", async function () {
     const pcdList = await Promise.all([newPCD(), newPCD(), newPCD()]);
 
     const serializedPCDs = await Promise.all(
@@ -219,22 +219,19 @@ describe("PCDCollection", async function () {
 
     const collection = new PCDCollection(packages);
     await collection.deserializeAllAndAdd(serializedPCDs);
-    const firstHash = await waitForNewHash(collection);
+    const firstHash = collection.getHash();
     const anotherPcd = await newPCD();
-    const secondhash = await waitForNewHash(collection, () => {
-      collection.add(anotherPcd);
-    });
+    collection.add(anotherPcd);
+    const secondhash = collection.getHash();
     expect(secondhash).to.not.eq(firstHash);
 
-    const thirdHash = await waitForNewHash(collection, () => {
-      collection.remove(anotherPcd.id);
-    });
+    collection.remove(anotherPcd.id);
+    const thirdHash = collection.getHash();
     expect(secondhash).to.not.eq(thirdHash);
     expect(thirdHash).to.eq(firstHash);
 
-    const fourthHash = await waitForNewHash(collection, () => {
-      collection.setPCDFolder(pcdList[0].id, "folder");
-    });
+    collection.setPCDFolder(pcdList[0].id, "folder");
+    const fourthHash = collection.getHash();
     expect(fourthHash).to.not.eq(firstHash);
   });
 
@@ -270,16 +267,3 @@ describe("PCDCollection", async function () {
     expect(await deserializedCollection.getHash()).to.eq(firstHash);
   });
 });
-
-function waitForNewHash(
-  collection: PCDCollection,
-  mutation?: () => void
-): Promise<string> {
-  return new Promise((resolve) => {
-    const unsubscribe = collection.hashEmitter.listen((newHash) => {
-      unsubscribe();
-      resolve(newHash);
-    });
-    mutation && mutation();
-  });
-}

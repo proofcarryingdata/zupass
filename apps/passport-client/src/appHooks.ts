@@ -23,43 +23,24 @@ import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
 import { getLastValidVerifyUrl, maybeRedirect } from "./util";
 
-export function usePCDCollectionWithHash(): {
-  pcds: PCDCollection;
-  hash: string | undefined;
-} {
+export function usePCDCollection(): PCDCollection {
   const pcds = useSelector<PCDCollection>((s) => s.pcds, []);
-  const [hash, setHash] = useState<string | undefined>();
-
-  useEffect(() => {
-    return pcds.hashEmitter.listen((newHash: string) => {
-      setHash(newHash);
-    });
-  }, [pcds]);
-
-  return {
-    pcds,
-    hash
-  };
+  return pcds;
 }
 
 export function usePCDs(): PCD[] {
-  const { pcds } = usePCDCollectionWithHash();
+  const pcds = usePCDCollection();
   return [...pcds.getAll()];
 }
 
 export function usePCDsInFolder(folder: string): PCD[] {
-  const { pcds } = usePCDCollectionWithHash();
+  const pcds = usePCDCollection();
   return [...pcds.getAllPCDsInFolder(folder)];
 }
 
 export function useFolders(path: string) {
-  const { pcds } = usePCDCollectionWithHash();
+  const pcds = usePCDCollection();
   return pcds.getFoldersInFolder(path);
-}
-
-export function usePCDCollection(): PCDCollection {
-  const { pcds } = usePCDCollectionWithHash();
-  return pcds;
 }
 
 export function useSelf(): User | undefined {
