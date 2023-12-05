@@ -730,12 +730,8 @@ async function doSync(
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
       console.log(`[SYNC] fetched ${actions.length} actions`);
-      const startTime = performance.now();
+
       await applyActions(state.pcds, actions);
-      const endTime = performance.now();
-      console.log(
-        `[ART_DBG] applyActions took ${endTime - startTime} milliseconds`
-      );
       console.log("[SYNC] applied pcd actions");
       await savePCDs(state.pcds);
       await saveSubscriptions(state.subscriptions);
@@ -799,25 +795,24 @@ async function syncSubscription(
   onError?: (e: Error) => void
 ) {
   try {
-    for (let i = 0; i < 1; ++i) {
-      console.log("[SYNC] loading pcds from subscription", subscriptionId);
-      const subscription = state.subscriptions.getSubscription(subscriptionId);
-      const credentialManager = new CredentialManager(
-        state.identity,
-        state.pcds,
-        state.credentialCache
-      );
-      const actions = await state.subscriptions.pollSingleSubscription(
-        subscription,
-        credentialManager
-      );
-      console.log(`[SYNC] fetched ${actions.length} actions`);
+    console.log("[SYNC] loading pcds from subscription", subscriptionId);
+    const subscription = state.subscriptions.getSubscription(subscriptionId);
+    const credentialManager = new CredentialManager(
+      state.identity,
+      state.pcds,
+      state.credentialCache
+    );
+    const actions = await state.subscriptions.pollSingleSubscription(
+      subscription,
+      credentialManager
+    );
+    console.log(`[SYNC] fetched ${actions.length} actions`);
 
-      await applyActions(state.pcds, actions);
-      console.log("[SYNC] applied pcd actions");
-      await savePCDs(state.pcds);
-      console.log("[SYNC] loaded and saved issued pcds");
-    }
+    await applyActions(state.pcds, actions);
+    console.log("[SYNC] applied pcd actions");
+    await savePCDs(state.pcds);
+    console.log("[SYNC] loaded and saved issued pcds");
+
     update({
       pcds: state.pcds
     });
