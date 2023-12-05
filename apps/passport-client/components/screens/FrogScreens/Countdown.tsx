@@ -73,7 +73,7 @@ function TheEnd() {
   }, [dismiss]);
 
   return (
-    <Container visible={visible} onClick={visible && dismiss}>
+    <Container visible={visible} onClick={visible ? dismiss : undefined}>
       <img src="/images/frogs/frogelion.jpg" draggable={false} />
       <GameOver>IT IS DONE.</GameOver>
     </Container>
