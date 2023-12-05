@@ -219,19 +219,19 @@ describe("PCDCollection", async function () {
 
     const collection = new PCDCollection(packages);
     await collection.deserializeAllAndAdd(serializedPCDs);
-    const firstHash = collection.getHash();
+    const firstHash = await collection.getHash();
     const anotherPcd = await newPCD();
     collection.add(anotherPcd);
-    const secondhash = collection.getHash();
+    const secondhash = await collection.getHash();
     expect(secondhash).to.not.eq(firstHash);
 
     collection.remove(anotherPcd.id);
-    const thirdHash = collection.getHash();
+    const thirdHash = await collection.getHash();
     expect(secondhash).to.not.eq(thirdHash);
     expect(thirdHash).to.eq(firstHash);
 
     collection.setPCDFolder(pcdList[0].id, "folder");
-    const fourthHash = collection.getHash();
+    const fourthHash = await collection.getHash();
     expect(fourthHash).to.not.eq(firstHash);
   });
 
