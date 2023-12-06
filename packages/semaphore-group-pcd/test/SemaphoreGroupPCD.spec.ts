@@ -7,7 +7,7 @@ import "mocha";
 import * as path from "path";
 import {
   SemaphoreGroupPCDArgs,
-  SemaphoreGroupPCDPackage,
+  SemaphoreGroupPCDPackage
 } from "../src/SemaphoreGroupPCD";
 import { serializeSemaphoreGroup } from "../src/SerializedSemaphoreGroup";
 
@@ -23,7 +23,7 @@ describe("semaphore group identity should work", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await SemaphoreGroupPCDPackage.init!({
       zkeyFilePath,
-      wasmFilePath,
+      wasmFilePath
     });
 
     const identity = new Identity();
@@ -39,21 +39,21 @@ describe("semaphore group identity should work", function () {
     args = {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
-        value: externalNullifier + "",
+        value: externalNullifier + ""
       },
       signal: {
         argumentType: ArgumentTypeName.BigInt,
-        value: signal + "",
+        value: signal + ""
       },
       group: {
         argumentType: ArgumentTypeName.Object,
-        value: serializeSemaphoreGroup(group, "test name"),
+        value: serializeSemaphoreGroup(group, "test name")
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
-        value: identityPCD,
-      },
+        value: identityPCD
+      }
     };
   });
 

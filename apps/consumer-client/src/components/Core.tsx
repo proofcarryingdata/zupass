@@ -17,7 +17,7 @@ export const HomeLink = () => {
 
 export const CodeLink = ({
   file,
-  children,
+  children
 }: {
   file: string;
   children: React.ReactNode;
@@ -27,7 +27,7 @@ export const CodeLink = ({
 
 export const CollapsableCode = ({
   code,
-  label,
+  label
 }: {
   code: string;
   label?: string;

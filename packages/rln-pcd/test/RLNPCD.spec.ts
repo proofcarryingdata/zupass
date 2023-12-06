@@ -20,7 +20,7 @@ describe("rln-pcd should work", function () {
     if (!RLNPCDPackage.init) return;
     await RLNPCDPackage.init({
       zkeyFilePath,
-      wasmFilePath,
+      wasmFilePath
     });
   });
 
@@ -42,24 +42,24 @@ describe("rln-pcd should work", function () {
     args = {
       rlnIdentifier: {
         argumentType: ArgumentTypeName.BigInt,
-        value: String(rlnIdentifier),
+        value: String(rlnIdentifier)
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
-        value: identityPCD,
+        value: identityPCD
       },
       group: {
         argumentType: ArgumentTypeName.Object,
-        value: serializeSemaphoreGroup(group, "test name"),
+        value: serializeSemaphoreGroup(group, "test name")
       },
       signal: {
         argumentType: ArgumentTypeName.String,
-        value: signal,
+        value: signal
       },
       epoch: {
         argumentType: ArgumentTypeName.BigInt,
-        value: String(epoch),
-      },
+        value: String(epoch)
+      }
     };
   });
 

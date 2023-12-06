@@ -37,7 +37,7 @@ function pretixConfigDBToDevconnectPretixConfig(
             superuserItemIds: eventDB.superuser_item_ids
           })),
           token: organizerDB.token
-        } satisfies DevconnectPretixOrganizerConfig)
+        }) satisfies DevconnectPretixOrganizerConfig
     )
   };
 }

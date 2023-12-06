@@ -9,7 +9,7 @@ module.exports = {
     "plugin:import/typescript"
   ],
   parser: "@typescript-eslint/parser",
-  plugins: ["@typescript-eslint", "react", "react-hooks"],
+  plugins: ["@typescript-eslint", "react", "react-hooks", "prettier"],
   ignorePatterns: ["*.d.ts"],
   rules: {
     "no-case-declarations": "off",
@@ -29,7 +29,8 @@ module.exports = {
     "@typescript-eslint/no-empty-interface": "off",
     "react/no-unescaped-entities": "off",
     "import/no-named-as-default-member": "off",
-    "import/no-extraneous-dependencies": "error"
+    "import/no-extraneous-dependencies": "error",
+    "prettier/prettier": "error"
   },
   settings: {
     "import/resolver": {

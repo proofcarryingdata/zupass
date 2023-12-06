@@ -9,5 +9,5 @@ export interface Metric {
 }
 
 export enum MetricName {
-  GITHUB_RATE_LIMIT = "GITHUB_RATE_LIMIT",
+  GITHUB_RATE_LIMIT = "GITHUB_RATE_LIMIT"
 }

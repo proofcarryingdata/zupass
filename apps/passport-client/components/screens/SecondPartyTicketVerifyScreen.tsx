@@ -161,8 +161,8 @@ export function SecondPartyTicketVerifyScreen() {
         <Container>
           <TextCenter>
             <ZKCheckinNotice>
-              As event staff, you can see this check-in information from
-              the Pretix API:
+              As event staff, you can see this check-in information from the
+              Pretix API:
             </ZKCheckinNotice>
             {checkResult.success && (
               <UserReadyForCheckin
