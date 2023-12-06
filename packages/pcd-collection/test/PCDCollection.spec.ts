@@ -210,7 +210,7 @@ describe("PCDCollection", async function () {
     expect(hashAfterEdit).to.not.eq(hash);
   });
 
-  it("should emit a new hash on mutation", async function () {
+  it("should emit a change and have a new hash on mutation", async function () {
     const pcdList = await Promise.all([newPCD(), newPCD(), newPCD()]);
 
     const serializedPCDs = await Promise.all(
@@ -219,6 +219,8 @@ describe("PCDCollection", async function () {
 
     const collection = new PCDCollection(packages);
     await collection.deserializeAllAndAdd(serializedPCDs);
+    // The deserializeAllAndAdd mutation has emitted a change, but it's
+    // asynchronous and will end up caught inside the next waitForNewHash call.
     const firstHash = await waitForNewHash(collection);
     const anotherPcd = await newPCD();
     const secondhash = await waitForNewHash(collection, () => {
@@ -275,10 +277,13 @@ function waitForNewHash(
   collection: PCDCollection,
   mutation?: () => void
 ): Promise<string> {
-  return new Promise((resolve) => {
-    const unsubscribe = collection.hashEmitter.listen((newHash) => {
+  return new Promise((resolve, reject) => {
+    const unsubscribe = collection.changeEmitter.listen(() => {
       unsubscribe();
-      resolve(newHash);
+      collection
+        .getHash()
+        .then((newHash) => resolve(newHash))
+        .catch((e) => reject(e));
     });
     mutation && mutation();
   });

@@ -74,9 +74,10 @@ export function matchActionToPermission(
  */
 export class PCDCollection {
   /**
-   * Emits an event whenever the hash of this {@link PCDCollection} changes.
+   * Emits an event whenever the contents of this {@link PCDCollection} changes.
+   * Does not attempt to filter out changes which result in the same contents.
    */
-  public readonly hashEmitter: Emitter<string>;
+  public readonly changeEmitter: Emitter;
 
   private packages: PCDPackage[];
   private pcds: PCD<any, any>[];
@@ -90,7 +91,7 @@ export class PCDCollection {
     this.packages = packages;
     this.pcds = pcds ?? [];
     this.folders = folders ?? {};
-    this.hashEmitter = new Emitter();
+    this.changeEmitter = new Emitter();
   }
 
   public getFoldersInFolder(folderPath: string): string[] {
@@ -107,7 +108,7 @@ export class PCDCollection {
     }
 
     this.folders[pcdId] = folder;
-    this.recalculateAndEmitHash();
+    this.emitChange();
   }
 
   public async tryExec(
@@ -241,7 +242,7 @@ export class PCDCollection {
       this.folders[pcdId] = folder;
     });
 
-    this.recalculateAndEmitHash();
+    this.emitChange();
   }
 
   public setFolder(pcdId: string, folder: string): void {
@@ -357,7 +358,7 @@ export class PCDCollection {
     this.folders = Object.fromEntries(
       Object.entries(this.folders).filter(([id]) => id !== pcdId)
     );
-    this.recalculateAndEmitHash();
+    this.emitChange();
   }
 
   public async deserializeAndAdd(
@@ -385,7 +386,7 @@ export class PCDCollection {
 
     this.pcds = Array.from(currentMap.values());
 
-    this.recalculateAndEmitHash();
+    this.emitChange();
   }
 
   public size(): number {
@@ -428,8 +429,10 @@ export class PCDCollection {
     return this.pcds.filter((pcd) => pcd.type === type);
   }
 
-  private recalculateAndEmitHash() {
-    this.getHash().then((newHash) => this.hashEmitter.emit(newHash));
+  private emitChange() {
+    // Emit the change asynchronously, so we don't need to delay until
+    // listeners are complete.
+    setTimeout(() => this.changeEmitter.emit(), 0);
   }
 
   public static async deserialize(
