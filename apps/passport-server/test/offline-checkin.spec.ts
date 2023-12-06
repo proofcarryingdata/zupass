@@ -58,7 +58,8 @@ describe("offline checkin database queries should work", function () {
       commitment: user1.identity.commitment.toString(),
       encryptionKey: undefined,
       salt: undefined,
-      terms_agreed: 1
+      terms_agreed: 1,
+      extra_issuance: false
     });
 
     await upsertUser(db, {
@@ -66,7 +67,8 @@ describe("offline checkin database queries should work", function () {
       commitment: user2.identity.commitment.toString(),
       encryptionKey: undefined,
       salt: undefined,
-      terms_agreed: 1
+      terms_agreed: 1,
+      extra_issuance: false
     });
 
     await upsertUser(db, {
@@ -74,7 +76,8 @@ describe("offline checkin database queries should work", function () {
       commitment: user3.identity.commitment.toString(),
       encryptionKey: undefined,
       salt: undefined,
-      terms_agreed: 1
+      terms_agreed: 1,
+      extra_issuance: false
     });
   });
 

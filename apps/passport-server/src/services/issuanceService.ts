@@ -85,6 +85,7 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../database/queries/knownTicketTypes";
+import { upsertUser } from "../database/queries/saveUser";
 import { fetchUserByCommitment } from "../database/queries/users";
 import {
   fetchZuconnectTicketById,
@@ -213,7 +214,7 @@ export class IssuanceService {
               );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
-              this.rollbarService?.reportError(e);
+              throw e;
             }
 
             return { actions };
@@ -687,6 +688,19 @@ export class IssuanceService {
           return [];
         }
 
+        if (this.ticketIssuanceDisabled()) {
+          if (commitmentRow.extra_issuance) {
+            commitmentRow.extra_issuance = false;
+            await upsertUser(this.context.dbPool, commitmentRow);
+          } else {
+            throw new PCDHTTPError(
+              401,
+              `Issuance of Devconnect tickets was turned off on ${this.getTicketIssuanceCutoffDate()?.toDateString()}.` +
+                ` Contact support@0xparc.org if you've lost access to your tickets.`
+            );
+          }
+        }
+
         const commitmentId = commitmentRow.commitment.toString();
         const ticketsDB = await fetchDevconnectPretixTicketsByEmail(
           this.context.dbPool,
@@ -704,6 +718,30 @@ export class IssuanceService {
         return tickets;
       }
     );
+  }
+
+  private getTicketIssuanceCutoffDate(): Date | null {
+    const cutoffDate = process.env.TICKET_ISSUANCE_CUTOFF_DATE;
+
+    if (cutoffDate !== undefined) {
+      const cutoffDateTimestamp = Date.parse(cutoffDate);
+      if (isNaN(cutoffDateTimestamp)) {
+        return null;
+      }
+      return new Date(cutoffDateTimestamp);
+    }
+
+    return null;
+  }
+
+  private ticketIssuanceDisabled(): boolean {
+    const cutoffDate = this.getTicketIssuanceCutoffDate();
+
+    if (cutoffDate === null) {
+      return false;
+    }
+
+    return Date.now() > cutoffDate.getTime();
   }
 
   private async getOrGenerateTicket(
