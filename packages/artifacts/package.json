@@ -1,7 +1,7 @@
 {
   "name": "@pcd/artifacts",
   "type": "module",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "description": "A command line utility designed to manage PCD artifacts.",
   "license": "GPL-3.0-or-later",
   "bin": {

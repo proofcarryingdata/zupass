@@ -1,5 +1,16 @@
 # @pcd/input-test-pcd
 
+## 0.9.0
+
+### Minor Changes
+
+- esm+commonjs, compatibility, type declarations.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.9.0
+
 ## 0.8.0
 
 ### Minor Changes
