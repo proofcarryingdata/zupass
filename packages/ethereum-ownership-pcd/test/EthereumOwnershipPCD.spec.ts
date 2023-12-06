@@ -156,7 +156,9 @@ describe("Ethereum ownership PCD", function () {
         value: serializedIdentity
       }
     });
-    const finalCharacter = pcd.claim.ethereumAddress.substring(pcd.claim.ethereumAddress.length - 1);
+    const finalCharacter = pcd.claim.ethereumAddress.substring(
+      pcd.claim.ethereumAddress.length - 1
+    );
     const replacementCharacter = finalCharacter === "0" ? "1" : "0";
     const mangledAddress =
       pcd.claim.ethereumAddress.substring(

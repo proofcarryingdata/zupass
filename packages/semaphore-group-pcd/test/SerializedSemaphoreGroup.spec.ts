@@ -3,7 +3,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import {
   deserializeSemaphoreGroup,
-  serializeSemaphoreGroup,
+  serializeSemaphoreGroup
 } from "../src/SerializedSemaphoreGroup";
 
 describe("Serializing Semaphore groups", function () {
