@@ -20,7 +20,6 @@
     "exports": "warn",
     "enumMembers": "warn",
     "classMembers": "warn",
-    "exports": "warn",
     "nsExports": "warn",
     "types": "warn",
     "nsTypes": "warn",

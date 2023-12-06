@@ -1,0 +1,11 @@
+{
+  "trailingComma": "none",
+  "overrides": [
+    {
+      "files": "*.hbs",
+      "options": {
+        "parser": "html"
+      }
+    }
+  ]
+}

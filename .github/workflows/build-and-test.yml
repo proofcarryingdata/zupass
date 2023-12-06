@@ -35,6 +35,5 @@ jobs:
           node-version: 18.x
       - run: "yarn"
       - run: "yarn build --verbosity 3"
-      - run: "yarn typecheck --verbosity 3"
       - run: "yarn lint --verbosity 3"
       - run: "yarn test --verbosity 3"

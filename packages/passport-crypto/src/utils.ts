@@ -1,13 +1,18 @@
 import { Buffer } from "buffer";
-import {
+import sodium from "libsodium-wrappers-sumo";
+
+// This is necessary as libsodium-wrappers-sumo is a CommonJS package and
+// doesn't support importing individual items properly.
+const {
   base64_variants,
   from_base64,
-  from_hex,
   from_string,
   to_base64,
-  to_hex,
-  to_string
-} from "libsodium-wrappers-sumo";
+  to_string,
+  from_hex,
+  to_hex
+} = sodium;
+
 /**
  * Returns built in crypto if available, otherwise polyfill
  */
@@ -18,23 +23,6 @@ export function getCrypto(): any {
   } else {
     return require("crypto");
   }
-}
-
-/**
- * Determines whether we are in an Internet Explorer or Edge environment
- */
-export function ieOrEdge(): boolean {
-  return (
-    (typeof document !== "undefined" && !!(document as any).documentMode) ||
-    /Edge/.test(navigator.userAgent)
-  );
-}
-
-/**
- * Returns true if WebCrypto is available
- */
-export function isWebCryptoAvailable(): boolean {
-  return !ieOrEdge() && getCrypto().crypto && !!getCrypto().crypto.subtle;
 }
 
 /**

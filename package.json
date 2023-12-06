@@ -33,7 +33,9 @@
     "concurrently": "^8.2.0",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
-    "typedoc": "^0.25.1"
+    "typedoc": "^0.25.1",
+    "verdaccio": "^5.27.0",
+    "verdaccio-memory": "^10.3.2"
   },
   "engines": {
     "node": ">=18"

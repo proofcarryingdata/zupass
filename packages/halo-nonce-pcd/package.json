@@ -3,41 +3,45 @@
   "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "files": [
-    "./src/*",
-    "./dist/*",
+    "dist",
     "./README.md",
     "./LICENSE"
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
+    "@pcd/passport-ui": "0.8.0",
+    "@pcd/pcd-types": "0.8.0",
+    "@pcd/util": "0.2.0",
     "airtable": "^0.11.6",
     "elliptic": "^6.5.4",
-    "js-sha256": "^0.9.0",
-    "react": "^18.2.0",
-    "styled-components": "^5.3.9",
+    "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/passport-ui": "0.8.0",
-    "@pcd/pcd-types": "0.8.0",
     "@pcd/tsconfig": "*",
-    "@pcd/util": "0.2.0",
     "@types/elliptic": "^6.4.14",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
-    "@types/styled-components": "^5.1.26",
     "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
@@ -46,5 +50,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

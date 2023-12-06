@@ -28,7 +28,6 @@ export class PCDCrypto {
     const arrayBuffer = utils
       .getCrypto()
       .getRandomValues(new Uint8Array(bytes));
-
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 

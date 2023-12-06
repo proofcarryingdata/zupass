@@ -1,7 +1,7 @@
 import { gzip, ungzip } from "pako";
 import qr from "qr-image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import styled, { css } from "styled-components";
+import styled, { css } from "./StyledWrapper";
 
 export function encodeQRPayload(unencoded: string): string {
   console.log(`encoding payload with length ${unencoded.length}`);

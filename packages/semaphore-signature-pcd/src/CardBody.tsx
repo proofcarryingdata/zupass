@@ -4,12 +4,12 @@ import {
   Separator,
   Spacer,
   TextContainer,
+  styled
 } from "@pcd/passport-ui";
-import styled from "styled-components";
 import { SemaphoreSignaturePCD } from "./SemaphoreSignaturePCD";
 
 export function SemaphoreIdentityCardBody({
-  pcd,
+  pcd
 }: {
   pcd: SemaphoreSignaturePCD;
 }) {

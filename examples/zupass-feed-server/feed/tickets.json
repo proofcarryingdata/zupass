@@ -1,0 +1,26 @@
+{
+  "First folder": [
+    {
+      "attendeeEmail": "test@example.com",
+      "attendeeName": "Test user",
+      "eventName": "Test event",
+      "ticketName": "Attendee",
+      "ticketId": "f65d8af8-e4c8-41c1-b9e2-0fb5d197c2ba",
+      "eventId": "3e8970cf-499b-4679-967b-8aa6647b288e",
+      "productId": "a9f5e8a9-5a6e-4419-aa80-5c0f18efb6dd",
+      "ticketCategory": "Generic"
+    }
+  ],
+  "Second folder": [
+    {
+      "attendeeEmail": "test@example.com",
+      "attendeeName": "Test user",
+      "eventName": "Another event",
+      "ticketName": "Organizer",
+      "ticketId": "f4831ea1-6781-4427-bdd9-c61fbb695d87",
+      "eventId": "8f8f02fd-9977-431e-ae80-0ed5e19f6ec9",
+      "productId": "d10bb7bf-d8b8-4214-afc7-0af9199d2b18",
+      "ticketCategory": "Generic"
+    }
+  ]
+}

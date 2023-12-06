@@ -7,7 +7,7 @@
   "files": [
     "./artifacts/*",
     "./src/*",
-    "./dist/*",
+    "dist",
     "./README.md",
     "./LICENSE"
   ],
@@ -26,8 +26,8 @@
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "build": "tsup --platform=browser src/index.ts --out-dir ./dist/browser && tsup --platform=node src/index.ts --out-dir ./dist/node",
     "dev": "concurrently \"yarn dev:browser\" \"yarn dev:node\"",
-    "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --watch",
-    "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --watch",
+    "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --format esm --dts --watch",
+    "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --format cjs,esm --dts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules"

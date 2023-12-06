@@ -5,7 +5,7 @@ import {
   requestListFeeds
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useMemo } from "react";
-import toast from "react-hot-toast";
+import { toast } from "react-hot-toast";
 import { useSearchParams } from "react-router-dom";
 import urljoin from "url-join";
 import { validate } from "uuid";

@@ -3,17 +3,24 @@
   "version": "0.8.0",
   "license": "MIT",
   "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
   "files": [
-    "./src/*",
-    "./dist/*",
+    "dist",
     "./README.md",
     "./LICENSE"
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup src/index.ts --format cjs,esm --dts --clean",
+    "dev": "tsup src/index.ts --format cjs,esm --dts --watch",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",

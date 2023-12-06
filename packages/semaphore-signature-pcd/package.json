@@ -2,22 +2,41 @@
   "name": "@pcd/semaphore-signature-pcd",
   "version": "0.8.0",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
-  "types": "./src/index.ts",
+  "main": "./dist/node/index.js",
+  "module": "./dist/node/index.mjs",
+  "types": "./dist/node/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./dist/browser/index.d.ts",
+        "import": "./dist/browser/index.mjs"
+      },
+      "node": {
+        "types": "./dist/node/index.d.ts",
+        "import": "./dist/node/index.mjs",
+        "require": "./dist/node/index.js"
+      },
+      "default": {
+        "types": "./dist/browser/index.d.ts",
+        "import": "./dist/browser/index.mjs"
+      }
+    }
+  },
   "files": [
     "./artifacts/*",
-    "./src/*",
-    "./dist/*",
+    "dist",
     "./README.md",
     "./LICENSE"
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "tsup src/index.ts",
-    "dev": "tsup src/index.ts --watch",
+    "build": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format cjs,esm --dts --clean && tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --dts --clean",
+    "dev": "concurrently \"yarn dev:browser\" \"yarn dev:node\"",
+    "dev:browser": "tsup --platform=browser src/index.ts --out-dir ./dist/browser --format cjs,esm --dts --watch",
+    "dev:node": "tsup --platform=node src/index.ts --out-dir ./dist/node --format cjs,esm --dts --watch",
     "typecheck": "yarn tsc --noEmit",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build",
+    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
@@ -29,8 +48,6 @@
     "@semaphore-protocol/identity": "^3.14.0",
     "@semaphore-protocol/proof": "^3.14.0",
     "json-bigint": "^1.0.0",
-    "react": "^18.2.0",
-    "styled-components": "^5.3.9",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
@@ -40,7 +57,6 @@
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
-    "@types/styled-components": "^5.1.26",
     "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
@@ -49,5 +65,9 @@
   },
   "publishConfig": {
     "access": "public"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
   }
 }

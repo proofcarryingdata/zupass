@@ -1,7 +1,6 @@
-import { FieldLabel, Spacer, TextContainer } from "@pcd/passport-ui";
+import { FieldLabel, Spacer, TextContainer, styled } from "@pcd/passport-ui";
 import Airtable from "airtable";
 import { useEffect, useState } from "react";
-import styled from "styled-components";
 import { HaLoNoncePCD } from "./HaLoNoncePCD";
 
 // Read-only API key into Airtable with no sensitive data

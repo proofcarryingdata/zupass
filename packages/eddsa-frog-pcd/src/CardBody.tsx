@@ -1,7 +1,11 @@
-import { ImageZoom, LinkButton, encodeQRPayload } from "@pcd/passport-ui";
+import {
+  ImageZoom,
+  LinkButton,
+  encodeQRPayload,
+  styled
+} from "@pcd/passport-ui";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
 import {
   Biome,
   EdDSAFrogPCD,
