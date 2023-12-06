@@ -10,6 +10,7 @@ import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
 import { startProvingService } from "./services/provingService";
+import { startRateLimitService } from "./services/rateLimitService";
 import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelegramService } from "./services/telegramService";
@@ -30,11 +31,12 @@ export async function startServices(
   const multiprocessService = startMultiProcessService();
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
+  const rateLimitService = startRateLimitService(context, rollbarService);
   const telegramService = await startTelegramService(context, rollbarService);
   const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
-  const emailTokenService = startEmailTokenService(context);
+  const emailTokenService = startEmailTokenService(context, rateLimitService);
   const semaphoreService = startSemaphoreService(context);
   const zuzaluPretixSyncService = startZuzaluPretixSyncService(
     context,
@@ -58,7 +60,8 @@ export async function startServices(
     context,
     semaphoreService,
     emailTokenService,
-    emailService
+    emailService,
+    rateLimitService
   );
   const e2eeService = startE2EEService(context);
   const metricsService = startMetricsService(context, rollbarService);
@@ -94,7 +97,8 @@ export async function startServices(
     kudosbotService,
     frogcryptoService,
     persistentCacheService,
-    multiprocessService
+    multiprocessService,
+    rateLimitService
   };
   return services;
 }
@@ -112,4 +116,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.frogcryptoService?.stop();
   await services.discordService?.stop();
   await services.multiprocessService.stop();
+  services.rateLimitService?.stop();
 }

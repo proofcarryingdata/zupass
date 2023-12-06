@@ -19,6 +19,7 @@ import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PersistentCacheService } from "./services/persistentCacheService";
 import { ProvingService } from "./services/provingService";
+import { RateLimitService } from "./services/rateLimitService";
 import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { TelegramService } from "./services/telegramService";
@@ -52,6 +53,7 @@ export interface GlobalServices {
   frogcryptoService: FrogcryptoService | null;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
+  rateLimitService: RateLimitService;
 }
 
 export interface Zupass {
