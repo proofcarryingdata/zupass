@@ -2218,8 +2218,7 @@ describe("devconnect functionality", function () {
       );
       MockDate.reset();
 
-      const response = expressResponse.value as PollFeedResponseValue;
-      expect(response.actions).to.deep.eq([]);
+      expect(expressResponse.success).to.eq(false);
     }
   );
 
@@ -2240,8 +2239,7 @@ describe("devconnect functionality", function () {
       );
       MockDate.reset();
 
-      const response = expressResponse.value as PollFeedResponseValue;
-      expect(response.actions).to.deep.eq([]);
+      expect(expressResponse.success).to.eq(false);
     }
   );
 
