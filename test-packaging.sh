@@ -9,6 +9,15 @@ trap "trap - SIGTERM && kill -- -$$" SIGINT SIGTERM EXIT
 # Run Verdaccio
 yarn verdaccio --config verdaccio.yml > /dev/null 2>&1 & pid=$!
 
+# Verdaccio is configured to allow anonymous uploads. However, the npm client
+# won't even try to publish unless it has an auth token.
+# We can solve this problem by adding a dummy auth token to ~/.npmrc.
+# See https://github.com/verdaccio/verdaccio/issues/212#issuecomment-308578500
+if ! grep -q "//localhost:4873/" ~/.npmrc ; then
+  echo "Adding dummy auth token to ~/.npmrc"
+  echo '//localhost:4873/:_authToken="dummy"' >> ~/.npmrc
+fi
+
 # Verdaccio isn't ready to immediately accept connections, so we need to wait
 while ! nc -zw 1 localhost 4873; do sleep 1; done
 
