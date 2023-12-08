@@ -1,3 +1,4 @@
+import { startBulkEmailService } from "./services/bulkEmailService";
 import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";
@@ -37,6 +38,7 @@ export async function startServices(
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context, rateLimitService);
+  const bulkEmailService = startBulkEmailService(context, emailService);
   const semaphoreService = startSemaphoreService(context);
   const zuzaluPretixSyncService = startZuzaluPretixSyncService(
     context,
@@ -98,7 +100,8 @@ export async function startServices(
     frogcryptoService,
     persistentCacheService,
     multiprocessService,
-    rateLimitService
+    rateLimitService,
+    bulkEmailService
   };
   return services;
 }
@@ -117,4 +120,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   await services.discordService?.stop();
   await services.multiprocessService.stop();
   services.rateLimitService?.stop();
+  services.bulkEmailService.stop();
 }

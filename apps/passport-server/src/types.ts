@@ -5,6 +5,7 @@ import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
+import { BulkEmailService } from "./services/bulkEmailService";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -54,6 +55,7 @@ export interface GlobalServices {
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
+  bulkEmailService: BulkEmailService;
 }
 
 export interface Zupass {
