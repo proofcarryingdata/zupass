@@ -4,6 +4,7 @@ import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { icons } from "../icons";
 import { AccountExportButton } from "../shared/AccountExportButton";
+import { AccountImportButton } from "../shared/AccountImportButton";
 
 export function SettingsModal({
   isProveOrAddScreen
@@ -34,7 +35,7 @@ export function SettingsModal({
           height={34}
         />
       </TextCenter>
-      <Spacer h={24} />
+      <Spacer h={16} />
       <CenterColumn>
         <TextCenter>{self.email}</TextCenter>
         <Spacer h={16} />
@@ -48,13 +49,17 @@ export function SettingsModal({
               {hasSetupPassword ? "Change" : "Add"} Password
             </LinkButton>
             <Spacer h={16} />
+            <AccountExportButton />
+            <Spacer h={16} />
+            <AccountImportButton />
+            <Spacer h={16} />
           </>
         )}
-        <AccountExportButton />
-        <Spacer h={16} />
+
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
+        <Spacer h={16} />
       </CenterColumn>
     </>
   );

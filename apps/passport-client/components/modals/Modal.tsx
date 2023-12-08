@@ -18,6 +18,7 @@ import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
 import { UpgradeAccountModal } from "./UpgradeAccountModal";
+import { AccountImportModal } from "./AccountImportModal";
 
 export function MaybeModal({
   fullScreen,
@@ -106,6 +107,8 @@ function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
       );
     case "frogcrypto-export-pcds":
       return <FrogCryptoExportPCDsModal />;
+    case "account-import":
+      return <AccountImportModal />;
     case "none":
       return null;
     default:

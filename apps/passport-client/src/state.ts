@@ -41,7 +41,8 @@ export interface AppState {
         revealed: boolean;
         refreshAll: () => Promise<void>;
       }
-    | { modalType: "frogcrypto-export-pcds" };
+    | { modalType: "frogcrypto-export-pcds" }
+    | { modalType: "account-import" };
 
   // User metadata.
   self?: User;
