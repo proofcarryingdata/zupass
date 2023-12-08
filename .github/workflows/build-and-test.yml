@@ -38,7 +38,7 @@ jobs:
       - name: Configure Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
 
-      - run: "yarn install --frozen-lockfile --prefer-offline"
-      - run: "yarn build --verbosity 3"
-      - run: "yarn lint --verbosity 3"
-      - run: "yarn test --verbosity 3"
+      - run: "yarn install --frozen-lockfile"
+      - run: "yarn build"
+      - run: "yarn lint"
+      - run: "yarn test"

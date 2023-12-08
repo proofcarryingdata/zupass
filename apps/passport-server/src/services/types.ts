@@ -14,5 +14,5 @@ export interface ExpressContext {
 export enum PretixSyncStatus {
   NotSynced = "NotSynced",
   Synced = "Synced",
-  NoPretix = "NoPretix",
+  NoPretix = "NoPretix"
 }

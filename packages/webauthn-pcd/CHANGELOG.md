@@ -1,5 +1,19 @@
 # @pcd/webauthn-pcd
 
+## 0.9.0
+
+### Minor Changes
+
+- esm+commonjs, compatibility, type declarations.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/passport-crypto@0.9.0
+  - @pcd/passport-ui@0.9.0
+  - @pcd/pcd-types@0.9.0
+  - @pcd/util@0.3.0
+
 ## 0.8.0
 
 ### Minor Changes

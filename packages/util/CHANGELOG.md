@@ -1,5 +1,11 @@
 # @pcd/util
 
+## 0.3.0
+
+### Minor Changes
+
+- esm+commonjs, compatibility, type declarations.
+
 ## 0.2.0
 
 ### Minor Changes

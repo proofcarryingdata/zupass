@@ -1,6 +1,6 @@
 {
   "name": "@pcd/webauthn-pcd",
-  "version": "0.8.0",
+  "version": "0.9.0",
   "license": "GPL-3.0-or-later",
   "main": "./index.ts",
   "types": "./index.ts",
@@ -11,10 +11,10 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/passport-crypto": "0.8.0",
-    "@pcd/passport-ui": "0.8.0",
-    "@pcd/pcd-types": "0.8.0",
-    "@pcd/util": "0.2.0",
+    "@pcd/passport-crypto": "0.9.0",
+    "@pcd/passport-ui": "0.9.0",
+    "@pcd/pcd-types": "0.9.0",
+    "@pcd/util": "0.3.0",
     "@simplewebauthn/browser": "^7.2.0",
     "@simplewebauthn/server": "^7.2.0",
     "@simplewebauthn/typescript-types": "^7.0.0",

@@ -7,7 +7,7 @@ import "mocha";
 import * as path from "path";
 import {
   SemaphoreSignaturePCDArgs,
-  SemaphoreSignaturePCDPackage,
+  SemaphoreSignaturePCDPackage
 } from "../src/SemaphoreSignaturePCD";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
@@ -22,7 +22,7 @@ describe("semaphore signature PCD should work", function () {
     // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     await SemaphoreSignaturePCDPackage.init!({
       zkeyFilePath,
-      wasmFilePath,
+      wasmFilePath
     });
 
     const identity = new Identity();
@@ -34,12 +34,12 @@ describe("semaphore signature PCD should work", function () {
       identity: {
         argumentType: ArgumentTypeName.PCD,
         pcdType: SemaphoreIdentityPCDPackage.name,
-        value: identityPCD,
+        value: identityPCD
       },
       signedMessage: {
         argumentType: ArgumentTypeName.String,
-        value: "Test message",
-      },
+        value: "Test message"
+      }
     };
   });
 

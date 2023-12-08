@@ -1,5 +1,19 @@
 # @pcd/rln-pcd
 
+## 0.8.0
+
+### Minor Changes
+
+- esm+commonjs, compatibility, type declarations.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.9.0
+  - @pcd/semaphore-group-pcd@0.9.0
+  - @pcd/semaphore-identity-pcd@0.9.0
+  - @pcd/util@0.3.0
+
 ## 0.7.0
 
 ### Minor Changes

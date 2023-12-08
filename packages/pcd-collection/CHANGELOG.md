@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.9.0
+
+### Minor Changes
+
+- esm+commonjs, compatibility, type declarations.
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.3.0
+  - @pcd/passport-crypto@0.9.0
+  - @pcd/pcd-types@0.9.0
+  - @pcd/semaphore-identity-pcd@0.9.0
+
 ## 0.8.0
 
 ### Minor Changes

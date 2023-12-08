@@ -15,8 +15,8 @@ import * as path from "path";
 import {
   EthereumGroupPCD,
   EthereumGroupPCDPackage,
-  getRawPubKeyBuffer,
-  GroupType
+  GroupType,
+  getRawPubKeyBuffer
 } from "../src/EthereumGroupPCD";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
@@ -92,9 +92,8 @@ async function happyPathEthGroupPCD(groupType: GroupType) {
   const identity = await SemaphoreIdentityPCDPackage.prove({
     identity: new Identity()
   });
-  const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
-    identity
-  );
+  const serializedIdentity =
+    await SemaphoreIdentityPCDPackage.serialize(identity);
   const wallet = ethers.Wallet.createRandom();
   const { signatureOfIdentityCommitment, merkleProof } = await groupProof(
     identity,
@@ -243,9 +242,8 @@ describe("Ethereum Group PCD", function () {
     const identity2 = await SemaphoreIdentityPCDPackage.prove({
       identity: new Identity()
     });
-    const serializedIdentity2 = await SemaphoreIdentityPCDPackage.serialize(
-      identity2
-    );
+    const serializedIdentity2 =
+      await SemaphoreIdentityPCDPackage.serialize(identity2);
 
     await assert.rejects(
       async () =>
@@ -277,9 +275,8 @@ describe("Ethereum Group PCD", function () {
     const identity = await SemaphoreIdentityPCDPackage.prove({
       identity: new Identity()
     });
-    const serializedIdentity = await SemaphoreIdentityPCDPackage.serialize(
-      identity
-    );
+    const serializedIdentity =
+      await SemaphoreIdentityPCDPackage.serialize(identity);
     const wallet = ethers.Wallet.createRandom();
     const { merkleProof, signatureOfIdentityCommitment } = await groupProof(
       identity,
