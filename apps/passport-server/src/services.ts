@@ -1,4 +1,4 @@
-import { startBulkEmailService } from "./services/bulkEmailService";
+import { startBulkEmailService } from "./services/bulkEmailService/bulkEmailService";
 import { startDevconnectPretixSyncService } from "./services/devconnectPretixSyncService";
 import { startDiscordService } from "./services/discordService";
 import { startE2EEService } from "./services/e2eeService";

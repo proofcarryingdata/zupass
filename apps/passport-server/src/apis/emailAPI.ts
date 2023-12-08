@@ -2,7 +2,7 @@ import sendgrid from "@sendgrid/mail";
 import request from "request";
 import { logger } from "../util/logger";
 
-interface SendEmailParams {
+export interface SendEmailParams {
   from: string;
   to: string;
   subject: string;

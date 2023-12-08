@@ -5,7 +5,7 @@ import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
-import { BulkEmailService } from "./services/bulkEmailService";
+import { BulkEmailService } from "./services/bulkEmailService/bulkEmailService";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
