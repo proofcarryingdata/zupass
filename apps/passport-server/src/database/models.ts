@@ -330,3 +330,17 @@ export interface AnonMessageWithDetails extends AnonMessage {
   topic_name: string;
   reactions: string[];
 }
+
+export enum EmailTaskStage {
+  CREATED = "created",
+  CALCULATING_RECIPIENTS = "calculating_recipients",
+  SENDING_EMAILS = "sending_emails",
+  COMPLETE = "complete"
+}
+
+export interface EmailTaskEntry {
+  name: string;
+  stage: EmailTaskStage;
+  timeCreated: Date;
+  timeUpdated: Date;
+}

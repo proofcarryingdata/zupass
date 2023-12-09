@@ -1,7 +1,7 @@
 import { SendEmailParams } from "../../apis/emailAPI";
 import { ApplicationContext } from "../../types";
 
-export interface EmailTask {
+export interface EmailTaskDefinition {
   name: string;
   sendTimestamp: Date;
 

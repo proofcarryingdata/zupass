@@ -1,9 +1,9 @@
 import { ZUPASS_SENDER_EMAIL } from "@pcd/util";
 import { SendEmailParams } from "../../../apis/emailAPI";
 import { getPacificTimeStamp } from "../../../util/date";
-import { EmailTask } from "../emailTask";
+import { EmailTaskDefinition } from "../emailTask";
 
-export const ADMIN_HELLO_EMAIL: EmailTask = {
+export const ADMIN_HELLO_EMAIL: EmailTaskDefinition = {
   name: "ADMIN_HELLO",
   sendTimestamp: getPacificTimeStamp({
     year: 2023,
