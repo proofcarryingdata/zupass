@@ -8,9 +8,10 @@ import { appConfig } from "./appConfig";
 import { AppState } from "./state";
 
 /**
- * Determines whether the appState object contains valid data. If it does not,
- * returns the set of things that are incorrect about it in an array of human
- * interpretable strings.
+ * Determines whether the app's global state as represented by {@link AppState} object
+ * contains valid data. If it does not, returns the set of things that are incorrect about
+ * it in an array of human interpretable strings. If there are no errors, returns an
+ * empty array.
  */
 export function validateState(state: AppState): string[] {
   const validationErrors: string[] = [];
@@ -75,6 +76,11 @@ export function validateState(state: AppState): string[] {
   return validationErrors;
 }
 
+/**
+ * Validates a {@link PCDCollection} by checking its contents. Does verify that the collection
+ * contains PCDs that are consistent with the rest of the application state. Returns a list of
+ * strings representing individual errors. If there are no errors, returns an empty array.
+ */
 export function validatePCDCollection(pcds?: PCDCollection): string[] {
   const validationErrors: string[] = [];
 
@@ -123,6 +129,13 @@ export function validateUpload(user?: User, pcds?: PCDCollection): string[] {
   return validationErrors;
 }
 
+/**
+ * Validates whether a user returned by the Zupass server API is consistent
+ * with the local application state representation. Returns errors as strings,
+ * and returns an empty array if the two are not inconsistent. Does not validate
+ * {@link state} in its entirety, only that the {@link user} and {@link state}
+ * are consistent.
+ */
 export function validateNewAccount(user: User, state: AppState): string[] {
   const validationErrors: string[] = [];
 
@@ -142,6 +155,11 @@ export function validateNewAccount(user: User, state: AppState): string[] {
   return validationErrors;
 }
 
+/**
+ * Logs validation errors to the console, and uploads them to the server so that
+ * we have records and are able to identify common types of errors. Does not leak
+ * sensitive information, such as decrypted versions of e2ee storage.
+ */
 export async function logAndUploadValidationErrors(
   errors: string[]
 ): Promise<void> {
