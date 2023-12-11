@@ -1,23 +1,33 @@
+import { deserializeStorage } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
+import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
 import { useDispatch, usePCDCollection } from "../../src/appHooks";
+import { getPackages } from "../../src/pcdPackages";
 import { Button } from "../core";
 
+// There are three main UI states that can occur after a user selects a file
+// to import.
 type ImportState =
+  // The selected file is valid, and the user can decide whether to import it.
   | {
       valid: true;
       imported: false;
+      // The PCDs contained in the import which do *not* already exist in the
+      // user's PCD collection (as determined by ID-match).
       pcds: PCD[];
       folders: FolderMap;
-      conflicts: number;
     }
+  // The import has been carried out, and `added` is the number of PCDs
+  // imported.
   | { valid: true; imported: true; added: number }
+  // The selected file is not valid.
   | { valid: false };
 
-type FolderMap = { [pcdId: string]: string };
+type FolderMap = PCDCollection["folders"];
 
 export function AccountImportModal() {
   const { openFilePicker, filesContent } = useFilePicker({
@@ -30,6 +40,8 @@ export function AccountImportModal() {
 
   const [importState, setImportState] = useState<ImportState | undefined>();
 
+  // Called when a valid file has been selected, and the user chooses to import
+  // PCDs from it.
   const importPCDs = useCallback(() => {
     // Should never happen, but makes TypeScript happy that we checked for it
     if (!importState.valid || importState.imported === true) return;
@@ -53,45 +65,35 @@ export function AccountImportModal() {
     }
   }, [importState, pcdCollection]);
 
+  // Responds to the user having selected a file to import
   useEffect(() => {
     (async () => {
+      // If a file has been selected
       if (filesContent.length > 0) {
         try {
-          const file = filesContent[0];
-          const data = JSON.parse(file.content);
+          // Parse the file content as JSON
+          const storageExport = JSON.parse(filesContent[0].content);
+          // Deserialize the storage - throws an error if the content is not
+          // recognized
+          const importedBackup = await deserializeStorage(
+            storageExport,
+            await getPackages()
+          );
 
-          if (data.pcds) {
-            const serializedPcdCollection = JSON.parse(data.pcds);
-            if (
-              serializedPcdCollection.pcds &&
-              serializedPcdCollection.folders
-            ) {
-              const pcds = await pcdCollection.deserializeAll(
-                serializedPcdCollection.pcds
-              );
+          // Filter out PCDs whose IDs are already present in the user's PCD
+          // collection
+          const pcds = importedBackup.pcds.getAll().filter((pcd) => {
+            return !pcdCollection.hasPCDWithId(pcd.id);
+          });
 
-              const folders: { [pcdId: string]: string } =
-                serializedPcdCollection.folders;
+          const folders = importedBackup.pcds.folders;
 
-              let conflicts = 0;
-              for (const pcd of pcds) {
-                if (pcdCollection.hasPCDWithId(pcd.id)) {
-                  conflicts++;
-                }
-              }
-
-              setImportState({
-                valid: true,
-                imported: false,
-                pcds,
-                folders,
-                conflicts
-              });
-              return;
-            }
-          }
-
-          setImportState({ valid: false });
+          setImportState({
+            valid: true,
+            imported: false,
+            pcds,
+            folders
+          });
         } catch (e) {
           setImportState({ valid: false });
         }
@@ -119,7 +121,7 @@ export function AccountImportModal() {
       )}
       {importState && importState.valid && !(importState.imported === true) && (
         <>
-          {importState.pcds.length <= importState.conflicts && (
+          {importState.pcds.length == 0 && (
             <>
               <p>
                 The selected file does not contain any new PCDs. You may try to
@@ -130,14 +132,11 @@ export function AccountImportModal() {
               <Spacer h={8} />
             </>
           )}
-          {importState.pcds.length > importState.conflicts && (
+          {importState.pcds.length > 0 && (
             <>
               <p>
                 The selected file contains{" "}
-                <strong>
-                  {importState.pcds.length - importState.conflicts}
-                </strong>{" "}
-                new PCDs.
+                <strong>{importState.pcds.length}</strong> new PCDs.
               </p>
               <Spacer h={8} />
               <Button onClick={importPCDs}>Import PCDs</Button>
