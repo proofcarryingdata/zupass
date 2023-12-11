@@ -1,4 +1,5 @@
 import { requestLogToServer } from "@pcd/passport-interface";
+import { PCDCollection } from "@pcd/pcd-collection";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
@@ -69,6 +70,30 @@ export function validateState(appState: AppState): string[] {
     validationErrors.push(
       `commitment of 'identity' field of app state (${commitmentFromIdentityField})` +
         ` does not match commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})`
+    );
+  }
+
+  return validationErrors;
+}
+
+export function validatePCDCollection(pcdCollection?: PCDCollection): string[] {
+  const validationErrors: string[] = [];
+
+  if (!pcdCollection) {
+    validationErrors.push("missing 'pcds' field from app state");
+  }
+
+  if (pcdCollection.size() === 0) {
+    validationErrors.push("'pcds' field in app state contains no pcds");
+  }
+
+  const identityPCDFromCollection = pcdCollection.getPCDsByType(
+    SemaphoreIdentityPCDPackage.name
+  )[0] as SemaphoreIdentityPCD | undefined;
+
+  if (!identityPCDFromCollection) {
+    validationErrors.push(
+      "'pcds' field in app state does not contain an identity PCD"
     );
   }
 

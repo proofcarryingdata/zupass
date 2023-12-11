@@ -28,6 +28,10 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
+import {
+  logAndUploadValidationErrors,
+  validatePCDCollection
+} from "./validateState";
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -204,6 +208,13 @@ export async function downloadStorage(
       storageResult.value.storage,
       await getPackages()
     );
+
+    const validationErrors = validatePCDCollection(pcds);
+    if (validationErrors.length > 0) {
+      logAndUploadValidationErrors(validationErrors);
+      throw new Error("validation errors:\n" + validationErrors.join("\n"));
+    }
+
     await savePCDs(pcds);
     await saveSubscriptions(subscriptions);
     savePersistentSyncStatus({
