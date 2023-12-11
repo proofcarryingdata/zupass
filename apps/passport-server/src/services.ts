@@ -9,6 +9,7 @@ import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
+import { startPoapService } from "./services/poapService";
 import { startProvingService } from "./services/provingService";
 import { startRateLimitService } from "./services/rateLimitService";
 import { startRollbarService } from "./services/rollbarService";
@@ -80,6 +81,7 @@ export async function startServices(
     rollbarService,
     issuanceService
   );
+  const poapService = await startPoapService(context);
   const services: GlobalServices = {
     semaphoreService,
     userService,
@@ -96,6 +98,7 @@ export async function startServices(
     telegramService,
     kudosbotService,
     frogcryptoService,
+    poapService,
     persistentCacheService,
     multiprocessService,
     rateLimitService
@@ -114,6 +117,7 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.devconnectPretixSyncService?.stop();
   services.zuconnectTripshaSyncService?.stop();
   services.frogcryptoService?.stop();
+  services.poapService?.stop();
   await services.discordService?.stop();
   await services.multiprocessService.stop();
   services.rateLimitService?.stop();
