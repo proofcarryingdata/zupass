@@ -10,7 +10,7 @@ export function initPoapRoutes(
 ): void {
   logger("[INIT] initializing poap routes");
 
-  app.get("/poap/callback", async (req: Request, res: Response) => {
+  app.get("/poap/devconnect/callback", async (req: Request, res: Response) => {
     const proof = checkQueryParam(req, "proof");
     if (!proof || typeof proof !== "string") {
       throw new Error("proof field needs to be a string and be non-empty");
@@ -20,6 +20,6 @@ export function initPoapRoutes(
       throw new Error("POAP service not initalized");
     }
 
-    res.redirect(await poapService.getPoapClaimUrl(proof));
+    res.redirect(await poapService.getDevconnectPoapClaimUrl(proof));
   });
 }
