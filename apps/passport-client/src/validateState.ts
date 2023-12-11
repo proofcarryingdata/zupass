@@ -12,30 +12,30 @@ import { AppState } from "./state";
  * returns the set of things that are incorrect about it in an array of human
  * interpretable strings.
  */
-export function validateState(appState: AppState): string[] {
+export function validateState(state: AppState): string[] {
   const validationErrors: string[] = [];
 
-  if (!appState.self) {
+  if (!state.self) {
     validationErrors.push("missing 'self' field from app state");
   }
 
-  if (!appState.identity) {
+  if (!state.identity) {
     validationErrors.push("missing 'identity' field from app state");
   }
 
-  if (!appState.encryptionKey) {
+  if (!state.encryptionKey) {
     validationErrors.push("missing 'encryption' field from app state key");
   }
 
-  if (!appState.pcds) {
+  if (!state.pcds) {
     validationErrors.push("missing 'pcds' field from app state");
   }
 
-  if (appState.pcds.size() === 0) {
+  if (state.pcds.size() === 0) {
     validationErrors.push("'pcds' field in app state contains no pcds");
   }
 
-  const identityPCDFromCollection = appState.pcds.getPCDsByType(
+  const identityPCDFromCollection = state.pcds.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
   )[0] as SemaphoreIdentityPCD | undefined;
 
@@ -48,9 +48,8 @@ export function validateState(appState: AppState): string[] {
   const identityFromPCDCollection = identityPCDFromCollection?.claim?.identity;
   const commitmentOfIdentityPCDInCollection =
     identityFromPCDCollection?.commitment?.toString();
-  const commitmentFromSelfField = appState?.self?.commitment;
-  const commitmentFromIdentityField =
-    appState?.identity?.commitment?.toString();
+  const commitmentFromSelfField = state?.self?.commitment;
+  const commitmentFromIdentityField = state?.identity?.commitment?.toString();
 
   if (commitmentOfIdentityPCDInCollection !== commitmentFromSelfField) {
     validationErrors.push(
@@ -118,6 +117,25 @@ export function validateUpload(user?: User, pcds?: PCDCollection): string[] {
   if (user?.commitment !== commitmentFromPCDCollection) {
     validationErrors.push(
       "user commitment does not equal to commitment of identity pcd in pcd collection"
+    );
+  }
+
+  return validationErrors;
+}
+
+export function validateNewAccount(user: User, state: AppState): string[] {
+  const validationErrors: string[] = [];
+
+  if (!state.identity) {
+    validationErrors.push("app state missing identity field");
+  }
+
+  const stateIdentityCommitment = state.identity?.commitment?.toString();
+  const userIdentityCommitment = user?.commitment;
+
+  if (stateIdentityCommitment !== userIdentityCommitment) {
+    validationErrors.push(
+      `app state identity (${stateIdentityCommitment}) does not match newly created user's commitment (${userIdentityCommitment})`
     );
   }
 

@@ -54,6 +54,7 @@ import {
 import { assertUnreachable } from "./util";
 import {
   logAndUploadValidationErrors,
+  validateNewAccount,
   validatePCDCollection,
   validateUpload
 } from "./validateState";
@@ -346,18 +347,17 @@ async function finishAccountCreation(
   state: AppState,
   update: ZuUpdate
 ) {
-  // validation point
   // Verify that the identity is correct.
-  const { identity } = state;
-  console.log("[ACCOUNT] Check user", identity, user);
-  if (identity == null || identity.commitment.toString() !== user.commitment) {
+  const validationErrors = validateNewAccount(user, state);
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
     update({
       error: {
         title: "Invalid identity",
         message: "Something went wrong saving your Zupass. Contact support."
       }
     });
-    return; // Don't save the bad identity.  User must reset account.
+    return;
   }
 
   // Save PCDs to E2EE storage.
@@ -373,6 +373,8 @@ async function finishAccountCreation(
       serverStorageRevision: uploadResult.value.revision,
       serverStorageHash: uploadResult.value.storageHash
     });
+  } else {
+    // TODO: anything to add here?
   }
 
   // Save user to local storage.  This is done last because it unblocks
