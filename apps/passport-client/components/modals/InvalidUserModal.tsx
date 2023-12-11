@@ -3,11 +3,12 @@ import { useCallback } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { Button, H2 } from "../core";
+import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function InvalidUserModal() {
   const dispatch = useDispatch();
 
-  const onClick = useCallback(() => {
+  const onExitClick = useCallback(() => {
     dispatch({ type: "reset-passport" });
   }, [dispatch]);
 
@@ -21,7 +22,9 @@ export function InvalidUserModal() {
         existing Zupass account onto this device.
       </p>
       <Spacer h={24} />
-      <Button onClick={onClick}>Exit</Button>
+      <AccountExportButton />
+      <Spacer h={16} />
+      <Button onClick={onExitClick}>Exit</Button>
     </Container>
   );
 }
