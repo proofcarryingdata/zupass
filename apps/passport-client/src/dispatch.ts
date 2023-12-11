@@ -341,6 +341,7 @@ async function finishAccountCreation(
   state: AppState,
   update: ZuUpdate
 ) {
+  // validation point
   // Verify that the identity is correct.
   const { identity } = state;
   console.log("[ACCOUNT] Check user", identity, user);
@@ -493,6 +494,7 @@ async function loadAfterLogin(
   storage: StorageWithRevision,
   update: ZuUpdate
 ) {
+  // validation point
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
     await getPackages()

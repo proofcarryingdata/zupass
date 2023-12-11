@@ -116,7 +116,7 @@ export async function uploadStorage(
 }
 
 /**
- * Uploads the state of this passport, in serialied form as produced by
+ * Uploads the state of this passport, in serialized form as produced by
  * serializeStorage().
  */
 export async function uploadSerializedStorage(
@@ -131,6 +131,7 @@ export async function uploadSerializedStorage(
     encryptionKey
   );
 
+  // validation point
   const uploadResult = await requestUploadEncryptedStorage(
     appConfig.zupassServer,
     blobKey,
