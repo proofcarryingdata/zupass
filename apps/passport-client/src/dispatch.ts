@@ -52,7 +52,11 @@ import {
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
-import { logAndUploadValidationErrors, validateUpload } from "./validateState";
+import {
+  logAndUploadValidationErrors,
+  validatePCDCollection,
+  validateUpload
+} from "./validateState";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -495,11 +499,16 @@ async function loadAfterLogin(
   storage: StorageWithRevision,
   update: ZuUpdate
 ) {
-  // validation point
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
     await getPackages()
   );
+  const validationErrors = validatePCDCollection(pcds);
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
+    // TODO: what's the right error message here?
+    throw new Error("saved storage failed to validate");
+  }
 
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(
