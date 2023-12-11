@@ -7,10 +7,12 @@ import {
   useDispatch,
   useHasSetupPassword,
   useSelf,
+  useServerStorageRevision,
   useUpdate
 } from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { RippleLoader } from "../core/RippleLoader";
@@ -20,8 +22,11 @@ import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { PasswordInput } from "../shared/PasswordInput";
 
 export function ChangePasswordScreen() {
+  useSyncE2EEStorage();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
+  const serverStorageRevision = useServerStorageRevision();
+
   // We want the `isChangePassword` state to persist on future renders,
   // otherwise we may show the invalid copy on the "finished" screen
   // after a password is set for the first time.
@@ -66,7 +71,13 @@ export function ChangePasswordScreen() {
           saltResult.value
         );
       }
-      await setPassword(newPassword, currentEncryptionKey, dispatch, update);
+      await setPassword(
+        newPassword,
+        currentEncryptionKey,
+        serverStorageRevision,
+        dispatch,
+        update
+      );
 
       setFinished(true);
 
@@ -79,6 +90,7 @@ export function ChangePasswordScreen() {
   }, [
     currentPassword,
     newPassword,
+    serverStorageRevision,
     dispatch,
     update,
     loading,

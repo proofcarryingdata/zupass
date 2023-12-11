@@ -23,6 +23,7 @@ export const PASSWORD_MINIMUM_LENGTH = 8;
 export const setPassword = async (
   newPassword: string,
   currentEncryptionKey: HexString,
+  knownServerStorageRevision: string | undefined,
   dispatch: Dispatcher,
   update: ZuUpdate
 ) => {
@@ -32,18 +33,22 @@ export const setPassword = async (
   const res = await updateBlobKeyForEncryptedStorage(
     currentEncryptionKey,
     newEncryptionKey,
-    newSalt
+    newSalt,
+    knownServerStorageRevision
   );
 
-  // Meaning password is incorrect, as old row is not found
-  if (!res.success && res.error.name === "PasswordIncorrect") {
-    throw new Error(
-      "Incorrect password. If you've lost your password, reset your account below."
-    );
-  }
-
   if (!res.success) {
-    throw new Error(`Request failed with message ${res.error}`);
+    if (res.error.name === "PasswordIncorrect") {
+      throw new Error(
+        "Incorrect password. If you've lost your password, reset your account below."
+      );
+    } else if (res.error.name === "Conflict") {
+      update({ extraDownloadRequested: true });
+      throw new Error(`Cannot change password while PCDs are syncing.  
+        Wait for download to complete or reload the page and try again.`);
+    } else {
+      throw new Error(`Request failed with message ${res.error}`);
+    }
   }
 
   dispatch({

@@ -1,9 +1,15 @@
 import { sleep } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { useDispatch, useSelf, useUpdate } from "../../src/appHooks";
+import {
+  useDispatch,
+  useSelf,
+  useServerStorageRevision,
+  useUpdate
+} from "../../src/appHooks";
 import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
+import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, H2, Spacer } from "../core";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { ScreenLoader } from "../shared/ScreenLoader";
@@ -13,10 +19,12 @@ import { ScreenLoader } from "../shared/ScreenLoader";
  * and have never created a password. It asks them to create a password.
  */
 export function RequireAddPasswordModal() {
+  useSyncE2EEStorage();
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
   const update = useUpdate();
   const self = useSelf();
+  const serverStorageRevision = useServerStorageRevision();
 
   const [newPassword, setNewPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -29,7 +37,13 @@ export function RequireAddPasswordModal() {
     await sleep();
     try {
       const currentEncryptionKey = loadEncryptionKey();
-      await setPassword(newPassword, currentEncryptionKey, dispatch, update);
+      await setPassword(
+        newPassword,
+        currentEncryptionKey,
+        serverStorageRevision,
+        dispatch,
+        update
+      );
 
       dispatch({
         type: "set-modal",
@@ -40,7 +54,7 @@ export function RequireAddPasswordModal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, dispatch, update]);
+  }, [loading, newPassword, serverStorageRevision, dispatch, update]);
 
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;
