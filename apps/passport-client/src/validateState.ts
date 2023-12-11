@@ -1,7 +1,9 @@
+import { requestLogToServer } from "@pcd/passport-interface";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
+import { appConfig } from "./appConfig";
 import { AppState } from "./state";
 
 /**
@@ -71,4 +73,17 @@ export function validateState(appState: AppState): string[] {
   }
 
   return validationErrors;
+}
+
+export async function logAndUploadValidationErrors(
+  errors: string[]
+): Promise<void> {
+  try {
+    console.log(`encountered state validation errors: `, errors);
+    await requestLogToServer(appConfig.zupassServer, "state-validation-error", {
+      errors
+    });
+  } catch (e) {
+    console.log("error reporting errors", e);
+  }
 }

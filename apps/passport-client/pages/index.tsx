@@ -66,6 +66,10 @@ import {
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
+import {
+  logAndUploadValidationErrors,
+  validateState
+} from "../src/validateState";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
@@ -424,7 +428,7 @@ async function loadInitialState(): Promise<AppState> {
 
   const persistentSyncStatus = loadPersistentSyncStatus();
 
-  return {
+  const state: AppState = {
     self,
     encryptionKey,
     pcds,
@@ -439,6 +443,14 @@ async function loadInitialState(): Promise<AppState> {
     serverStorageRevision: persistentSyncStatus.serverStorageRevision,
     serverStorageHash: persistentSyncStatus.serverStorageHash
   };
+
+  const validationErrors = validateState(state);
+  if (validationErrors.length > 0) {
+    state.userInvalid = true;
+    logAndUploadValidationErrors(validationErrors);
+  }
+
+  return state;
 }
 
 registerServiceWorker();
