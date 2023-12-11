@@ -83,7 +83,6 @@ export async function requestDownloadAndDecryptUpdatedStorage(
   encryptionKey: string,
   knownRevision: string | undefined
 ): Promise<DownloadAndDecryptUpdateResult> {
-  // validation point
   try {
     const encryptionKeyHash = await getHash(encryptionKey);
     const storageResult = await requestEncryptedStorage(
