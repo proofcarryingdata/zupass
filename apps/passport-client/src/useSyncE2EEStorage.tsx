@@ -30,7 +30,8 @@ import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 import {
   logAndUploadValidationErrors,
-  validatePCDCollection
+  validatePCDCollection,
+  validateUpload
 } from "./validateState";
 
 export type UpdateBlobKeyStorageInfo = {
@@ -111,6 +112,19 @@ export async function uploadStorage(
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager
 ): Promise<UploadStorageResult> {
+  const validationErrors = validateUpload(user, pcds);
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
+    return {
+      success: false,
+      error: {
+        name: "ValidationError",
+        detailedMessage:
+          "upload validation failed because\n: " + validationErrors.join("\n"),
+        code: undefined
+      }
+    };
+  }
   const { serializedStorage, storageHash } = await serializeStorage(
     user,
     pcds,
@@ -135,7 +149,6 @@ export async function uploadSerializedStorage(
     encryptionKey
   );
 
-  // validation point
   const uploadResult = await requestUploadEncryptedStorage(
     appConfig.zupassServer,
     blobKey,

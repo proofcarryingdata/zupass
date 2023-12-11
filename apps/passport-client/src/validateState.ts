@@ -1,4 +1,4 @@
-import { requestLogToServer } from "@pcd/passport-interface";
+import { User, requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import {
   SemaphoreIdentityPCD,
@@ -76,24 +76,48 @@ export function validateState(appState: AppState): string[] {
   return validationErrors;
 }
 
-export function validatePCDCollection(pcdCollection?: PCDCollection): string[] {
+export function validatePCDCollection(pcds?: PCDCollection): string[] {
   const validationErrors: string[] = [];
 
-  if (!pcdCollection) {
-    validationErrors.push("missing 'pcds' field from app state");
+  if (!pcds) {
+    validationErrors.push("pcd collection is absent");
   }
 
-  if (pcdCollection.size() === 0) {
-    validationErrors.push("'pcds' field in app state contains no pcds");
+  if (pcds.size() === 0) {
+    validationErrors.push("pcd collection is empty");
   }
 
-  const identityPCDFromCollection = pcdCollection.getPCDsByType(
+  const identityPCDFromCollection = pcds.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
   )[0] as SemaphoreIdentityPCD | undefined;
 
   if (!identityPCDFromCollection) {
+    validationErrors.push("pcd collection does not contain an identity pcd");
+  }
+
+  return validationErrors;
+}
+
+export function validateUpload(user?: User, pcds?: PCDCollection): string[] {
+  const validationErrors: string[] = [];
+
+  if (!user) {
+    validationErrors.push(`upload must include a user`);
+  }
+
+  if (!pcds) {
+    validationErrors.push(`upload must include a pcd collection`);
+  }
+
+  const identityPCDFromCollection = pcds.getPCDsByType(
+    SemaphoreIdentityPCDPackage.name
+  )[0] as SemaphoreIdentityPCD | undefined;
+  const commitmentFromPCDCollection =
+    identityPCDFromCollection?.claim?.identity?.commitment?.toString();
+
+  if (user?.commitment !== commitmentFromPCDCollection) {
     validationErrors.push(
-      "'pcds' field in app state does not contain an identity PCD"
+      "user commitment does not equal to commitment of identity pcd in pcd collection"
     );
   }
 

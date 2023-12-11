@@ -52,6 +52,7 @@ import {
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
+import { logAndUploadValidationErrors, validateUpload } from "./validateState";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -758,6 +759,12 @@ async function doSync(
     state.pcds,
     state.subscriptions
   );
+  const validationErrors = validateUpload(state.self, state.pcds);
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
+    // TODO: what's the proper thing to do here?
+  }
+
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
     // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
