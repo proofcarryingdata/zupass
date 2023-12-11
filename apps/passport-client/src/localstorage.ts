@@ -12,6 +12,10 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
 import { getPackages } from "./pcdPackages";
+import {
+  logAndUploadValidationErrors,
+  validatePCDCollection
+} from "./validateState";
 
 // validation points in this file
 
@@ -19,6 +23,11 @@ const OLD_PCDS_KEY = "pcds"; // deprecated
 const COLLECTION_KEY = "pcd_collection";
 
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
+  const validationErrors = validatePCDCollection(pcds);
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
+    throw new Error("couldn't save PCDs\n:" + validationErrors.join("\n"));
+  }
   const serialized = await pcds.serializeCollection();
   window.localStorage[COLLECTION_KEY] = serialized;
 }
@@ -33,10 +42,18 @@ export async function loadPCDs(): Promise<PCDCollection> {
   }
 
   const serializedCollection = window.localStorage[COLLECTION_KEY];
-  return await PCDCollection.deserialize(
+  const collection = await PCDCollection.deserialize(
     await getPackages(),
     serializedCollection ?? "{}"
   );
+
+  const validationErrors = validatePCDCollection(collection);
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
+    throw new Error("couldn't save PCDs\n:" + validationErrors.join("\n"));
+  }
+
+  return collection;
 }
 
 export async function saveSubscriptions(
