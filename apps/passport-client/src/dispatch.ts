@@ -15,7 +15,7 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
@@ -129,6 +129,11 @@ export type Action =
       subscriptionId: string;
       onSucess?: () => void;
       onError?: (e: Error) => void;
+    }
+  | {
+      type: "merge-import";
+      collection: PCDCollection;
+      filter: (pcd: PCD) => boolean;
     };
 
 export type StateContextValue = {
@@ -233,6 +238,8 @@ export async function dispatch(
         action.onSucess,
         action.onError
       );
+    case "merge-import":
+      return mergeImport(state, update, action.collection, action.filter);
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -971,4 +978,17 @@ async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
       }
     });
   }
+}
+
+/**
+ * Merge in a PCD collection from an import of backed-up data.
+ */
+function mergeImport(
+  state: AppState,
+  update: ZuUpdate,
+  collection: PCDCollection,
+  filter: (pcd: PCD) => boolean
+) {
+  state.pcds.merge(collection, { filter, setFolders: true });
+  update({ pcds: state.pcds });
 }

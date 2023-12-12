@@ -453,6 +453,38 @@ export class PCDCollection {
 
     return collection;
   }
+
+  /**
+   * Merges another PCD collection into this one.
+   * There are two options:
+   * - `filter` is a function used to filter out PCDs from the other
+   *   collection during merging, e.g. to filter out duplicates or PCDs of
+   *   a type that should not be copied.
+   * - `setFolders` is a boolean controlling whether or not the PCDs from
+   *   the other collection should be added to the same folders in this
+   *   collection.
+   */
+  public merge(
+    other: PCDCollection,
+    options?: { filter?: (pcd: PCD) => boolean; setFolders?: boolean }
+  ): void {
+    let pcds = other.getAll();
+
+    // If the caller has specified a filter function, run that first to filter
+    // out unwanted PCDs from the merge.
+    if (options?.filter) {
+      pcds = pcds.filter(options.filter);
+    }
+
+    this.addAll(pcds, { upsert: true });
+
+    // If the caller wants folders to be merged too
+    if (options?.setFolders) {
+      for (const pcd of pcds) {
+        this.setFolder(pcd.id, other.folders[pcd.id]);
+      }
+    }
+  }
 }
 
 /**
