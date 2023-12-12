@@ -7,9 +7,10 @@ import {
   claimNewPoapUrl,
   getExistingClaimUrlByTicketId
 } from "../database/queries/poap";
-import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
+import { getServerErrorUrl } from "../util/util";
+import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 const DEVCONNECT_COWORK_SPACE_EVENT_ID = "a1c822c4-60bd-11ee-8732-763dbf30819c";
@@ -36,9 +37,14 @@ const DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS = [
 
 export class PoapService {
   private readonly context: ApplicationContext;
+  private readonly rollbarService: RollbarService | null;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    rollbarService: RollbarService | null
+  ) {
     this.context = context;
+    this.rollbarService = rollbarService;
   }
 
   /**
@@ -52,13 +58,13 @@ export class PoapService {
     return traced("poap", "validateDevconnectPCD", async (span) => {
       const parsed = JSON.parse(serializedPCD) as SerializedPCD;
       if (parsed.type !== ZKEdDSAEventTicketPCDPackage.name) {
-        throw new Error("[POAP] proof must be ZKEdDSAEventTicketPCD type");
+        throw new Error("proof must be ZKEdDSAEventTicketPCD type");
       }
 
       const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(parsed.pcd);
 
       if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
-        throw new Error(`Missing server eddsa private key .env value`);
+        throw new Error(`missing server eddsa private key .env value`);
 
       const TICKETING_PUBKEY = await getEdDSAPublicKey(
         process.env.SERVER_EDDSA_PRIVATE_KEY
@@ -71,11 +77,11 @@ export class PoapService {
       span?.setAttribute("signerMatch", signerMatch);
 
       if (!signerMatch) {
-        throw new Error("[POAP] signer of PCD is invalid");
+        throw new Error("signer of PCD is invalid");
       }
 
       if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
-        throw new Error("[POAP] pcd invalid");
+        throw new Error("pcd invalid");
       }
 
       const {
@@ -84,7 +90,7 @@ export class PoapService {
       } = pcd.claim;
 
       if (ticketId == null) {
-        throw new Error("[POAP] ticket ID must be revealed");
+        throw new Error("ticket ID must be revealed");
       }
       const devconnectPretixTicket =
         await fetchDevconnectPretixTicketByTicketId(
@@ -92,10 +98,12 @@ export class PoapService {
           ticketId
         );
       if (devconnectPretixTicket == null) {
-        throw new Error("[POAP] ticket ID does not exist");
+        throw new Error("ticket ID does not exist");
       }
       const { devconnect_pretix_items_info_id, is_consumed } =
         devconnectPretixTicket;
+
+      span?.setAttribute("ticketId", ticketId);
 
       if (
         !(
@@ -105,21 +113,24 @@ export class PoapService {
         )
       ) {
         throw new Error(
-          "[POAP] valid event IDs of PCD does not match Devconnect Cowork space"
+          "valid event IDs of PCD does not match Devconnect Cowork space"
         );
       }
 
+      span?.setAttribute("isConsumed", is_consumed);
+
       if (!is_consumed) {
-        throw new Error("[POAP] ticket has not been consumed");
+        throw new Error("ticket has not been consumed");
       }
+
+      span?.setAttribute("productId", devconnect_pretix_items_info_id);
 
       if (
         !DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS.includes(
           devconnect_pretix_items_info_id
         )
       ) {
-        logger("hey", devconnect_pretix_items_info_id);
-        throw new Error("[POAP] item ID is invalid");
+        throw new Error("product ID is invalid");
       }
 
       return ticketId;
@@ -129,36 +140,47 @@ export class PoapService {
   public async getDevconnectPoapClaimUrl(
     serializedPCD: string
   ): Promise<string> {
-    const ticketId = await this.validateDevconnectTicket(serializedPCD);
+    try {
+      const ticketId = await this.validateDevconnectTicket(serializedPCD);
 
-    // We have already checked that `ticketId` is defined in validateDevconnectPCD
-    const hashedTicketId = await getHash(ticketId);
-    const existingPoapLink = await getExistingClaimUrlByTicketId(
-      this.context.dbPool,
-      hashedTicketId
-    );
-    if (existingPoapLink != null) {
-      return existingPoapLink;
+      // We have already checked that `ticketId` is defined in validateDevconnectPCD
+      const hashedTicketId = await getHash(ticketId);
+      const existingPoapLink = await getExistingClaimUrlByTicketId(
+        this.context.dbPool,
+        hashedTicketId
+      );
+      if (existingPoapLink != null) {
+        return existingPoapLink;
+      }
+
+      const newPoapLink = await claimNewPoapUrl(
+        this.context.dbPool,
+        "devconnect",
+        hashedTicketId
+      );
+      if (newPoapLink == null) {
+        throw new Error("Not enough Devconnect POAP links");
+      }
+
+      return newPoapLink;
+    } catch (e) {
+      logger("[POAP] getDevconnectPoapClaimUrl error", e);
+      this.rollbarService?.reportError(e);
+      // Return the generic /server-error page instead for the route to redirect to,
+      // with a title and description informing the user to contact support.
+      return getServerErrorUrl(
+        "Contact support",
+        "An error occurred while fetching your POAP mint link for Devconnect 2023."
+      );
     }
-
-    const newPoapLink = await claimNewPoapUrl(
-      this.context.dbPool,
-      "devconnect",
-      hashedTicketId
-    );
-    if (newPoapLink == null) {
-      // TODO: Have an error page that looks way better
-      throw new PCDHTTPError(500, "[POAP] ran out of Devconnect links");
-    }
-
-    return newPoapLink;
   }
 }
 
 export async function startPoapService(
-  context: ApplicationContext
+  context: ApplicationContext,
+  rollbarService: RollbarService | null
 ): Promise<PoapService | null> {
   logger(`[INIT] initializing POAP`);
 
-  return new PoapService(context);
+  return new PoapService(context, rollbarService);
 }
