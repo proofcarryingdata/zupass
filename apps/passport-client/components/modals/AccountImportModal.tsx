@@ -2,6 +2,7 @@ import { deserializeStorage } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
@@ -16,18 +17,14 @@ type ImportState =
   | {
       valid: true;
       imported: false;
-      // The PCDs contained in the import which do *not* already exist in the
-      // user's PCD collection (as determined by ID-match).
-      pcds: PCD[];
-      folders: FolderMap;
+      collection: PCDCollection;
+      pcdsToMergeCount: number;
     }
   // The import has been carried out, and `added` is the number of PCDs
   // imported.
-  | { valid: true; imported: true; added: number }
+  | { valid: true; imported: true }
   // The selected file is not valid.
   | { valid: false };
-
-type FolderMap = PCDCollection["folders"];
 
 export function AccountImportModal() {
   const { openFilePicker, filesContent } = useFilePicker({
@@ -40,30 +37,35 @@ export function AccountImportModal() {
 
   const [importState, setImportState] = useState<ImportState | undefined>();
 
+  // Create the function to filter out unwanted PCDs during merging
+  const filterPCDs = useCallback(
+    (pcd: PCD) => {
+      return (
+        // Do not merge in a Semaphore identity PCD
+        pcd.type !== SemaphoreIdentityPCD.name ||
+        // Do not merge PCDs we already have
+        pcdCollection.hasPCDWithId(pcd.id)
+      );
+    },
+    [pcdCollection]
+  );
+
   // Called when a valid file has been selected, and the user chooses to import
   // PCDs from it.
   const importPCDs = useCallback(() => {
     // Should never happen, but makes TypeScript happy that we checked for it
     if (!importState.valid || importState.imported === true) return;
 
-    const addedPCDs: PCD[] = [];
-    for (const pcd of importState.pcds) {
-      if (!pcdCollection.hasPCDWithId(pcd.id)) {
-        try {
-          pcdCollection.add(pcd);
-          if (importState.folders[pcd.id]) {
-            pcdCollection.setFolder(pcd.id, importState.folders[pcd.id]);
-          }
+    // It would be nice if we could get data back from `dispatch` more
+    // straightforwardly, e.g. the number of PCDs that were added.
+    dispatch({
+      type: "merge-import",
+      collection: importState.collection,
+      filter: filterPCDs
+    });
 
-          addedPCDs.push(pcd);
-        } catch (e) {
-          console.log(e);
-        }
-      }
-
-      setImportState({ valid: true, imported: true, added: addedPCDs.length });
-    }
-  }, [importState, pcdCollection]);
+    setImportState({ valid: true, imported: true });
+  }, [dispatch, filterPCDs, importState]);
 
   // Responds to the user having selected a file to import
   useEffect(() => {
@@ -80,26 +82,19 @@ export function AccountImportModal() {
             await getPackages()
           );
 
-          // Filter out PCDs whose IDs are already present in the user's PCD
-          // collection
-          const pcds = importedBackup.pcds.getAll().filter((pcd) => {
-            return !pcdCollection.hasPCDWithId(pcd.id);
-          });
-
-          const folders = importedBackup.pcds.folders;
-
           setImportState({
             valid: true,
             imported: false,
-            pcds,
-            folders
+            collection: importedBackup.pcds,
+            pcdsToMergeCount: importedBackup.pcds.getAll().filter(filterPCDs)
+              .length
           });
         } catch (e) {
           setImportState({ valid: false });
         }
       }
     })();
-  }, [filesContent, pcdCollection]);
+  }, [filesContent, filterPCDs, pcdCollection]);
 
   console.log(importState);
 
@@ -121,7 +116,7 @@ export function AccountImportModal() {
       )}
       {importState && importState.valid && !(importState.imported === true) && (
         <>
-          {importState.pcds.length == 0 && (
+          {importState.pcdsToMergeCount == 0 && (
             <>
               <p>
                 The selected file does not contain any new PCDs. You may try to
@@ -132,11 +127,11 @@ export function AccountImportModal() {
               <Spacer h={8} />
             </>
           )}
-          {importState.pcds.length > 0 && (
+          {importState.pcdsToMergeCount > 0 && (
             <>
               <p>
                 The selected file contains{" "}
-                <strong>{importState.pcds.length}</strong> new PCDs.
+                <strong>{importState.pcdsToMergeCount}</strong> new PCDs.
               </p>
               <Spacer h={8} />
               <Button onClick={importPCDs}>Import PCDs</Button>
@@ -147,10 +142,7 @@ export function AccountImportModal() {
       )}
       {importState && importState.valid && importState.imported && (
         <>
-          <p>
-            Successfully added <strong>{importState.added}</strong> PCDs from
-            the selected file.
-          </p>
+          <p>Successfully imported backed-up data from the selected file.</p>
           <Spacer h={8} />
           <Button
             onClick={() =>
