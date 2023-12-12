@@ -4,18 +4,18 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
-      "cache": false
+      "cache": true
     },
     "lint": {
       "outputs": [],
-      "cache": false
+      "cache": true
     },
     "dev": {
       "cache": false
     },
     "test": {
       "outputs": [],
-      "cache": false
+      "cache": true
     },
     "clean": {
       "outputs": [],
