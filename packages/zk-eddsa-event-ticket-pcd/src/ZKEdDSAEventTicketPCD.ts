@@ -1,8 +1,8 @@
 import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  EdDSAPCDTypeName,
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName,
   ITicketData,
   ticketDataToBigInts
 } from "@pcd/eddsa-ticket-pcd";
@@ -44,7 +44,6 @@ import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
-import { ZKEdDSAEventTicketCardBody } from "./CardBody";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
   "dummy-nullifier-for-eddsa-event-ticket-pcds"
@@ -434,7 +433,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
         argumentType: ArgumentTypeName.PCD,
         description: "Generate a proof for the selected ticket",
         validate(value, params) {
-          if (value.type !== EdDSAPCDTypeName || !value.claim) {
+          if (value.type !== EdDSATicketPCDTypeName || !value.claim) {
             return false;
           }
 
@@ -680,7 +679,6 @@ export const ZKEdDSAEventTicketPCDPackage: PCDPackage<
 > = {
   name: ZKEdDSAEventTicketPCDTypeName,
   getDisplayOptions,
-  renderCardBody: ZKEdDSAEventTicketCardBody,
   init,
   getProveDisplayOptions,
   prove,

@@ -31,7 +31,6 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/passport-ui": "^0.9.0",
     "@pcd/pcd-types": "0.9.0",
     "@pcd/rsa-pcd": "0.4.0",
     "chai": "^4.3.7",
@@ -46,8 +45,6 @@
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node-rsa": "^1.1.1",
-    "@types/react": "^18.0.22",
-    "@types/react-dom": "^18.0.7",
     "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",

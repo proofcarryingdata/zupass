@@ -9,7 +9,6 @@ import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
-import { RSACardBody } from "./CardBody";
 
 export const RSAPCDTypeName = "rsa-pcd";
 
@@ -124,7 +123,6 @@ export const RSAPCDPackage: PCDPackage<
   undefined
 > = {
   name: RSAPCDTypeName,
-  renderCardBody: RSACardBody,
   getDisplayOptions,
   prove,
   verify,

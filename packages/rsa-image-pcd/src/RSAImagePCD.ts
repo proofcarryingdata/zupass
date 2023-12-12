@@ -9,7 +9,6 @@ import {
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { RSAImageCardBody } from "./CardBody";
 
 export const RSAPCDTypeName = "rsa-image-pcd";
 
@@ -128,7 +127,6 @@ export const RSAImagePCDPackage: PCDPackage<
   RSAImagePCDArgs
 > = {
   name: RSAPCDTypeName,
-  renderCardBody: RSAImageCardBody,
   getDisplayOptions,
   prove,
   verify,

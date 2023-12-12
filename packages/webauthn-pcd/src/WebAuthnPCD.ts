@@ -13,7 +13,6 @@ import {
 } from "@simplewebauthn/typescript-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { WebAuthnCardBody } from "./CardBody";
 
 export const WebAuthnPCDTypeName = "webauthn-pcd";
 
@@ -163,6 +162,5 @@ export const WebAuthnPCDPackage: PCDPackage<
   verify,
   serialize,
   deserialize,
-  renderCardBody: WebAuthnCardBody,
   getDisplayOptions
 };

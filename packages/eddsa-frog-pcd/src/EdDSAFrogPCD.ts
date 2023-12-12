@@ -11,7 +11,6 @@ import {
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { EdDSAFrogCardBody } from "./CardBody";
 import { frogDataToBigInts, getEdDSAFrogData } from "./utils";
 
 /**
@@ -341,7 +340,6 @@ export const EdDSAFrogPCDPackage: PCDPackage<
   EdDSAFrogPCDInitArgs
 > = {
   name: EdDSAFrogPCDTypeName,
-  renderCardBody: EdDSAFrogCardBody,
   getDisplayOptions,
   init,
   prove,

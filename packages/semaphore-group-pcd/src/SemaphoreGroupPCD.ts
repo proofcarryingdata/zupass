@@ -14,14 +14,13 @@ import {
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import {
-  generateProof,
   PackedProof,
   SemaphoreProof,
+  generateProof,
   verifyProof
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { SemaphoreGroupCardBody } from "./CardBody";
 import {
   SerializedSemaphoreGroup,
   deserializeSemaphoreGroup
@@ -225,7 +224,6 @@ export const SemaphoreGroupPCDPackage: PCDPackage<
 > = {
   name: SemaphoreGroupPCDTypeName,
   getDisplayOptions,
-  renderCardBody: SemaphoreGroupCardBody,
   init,
   prove,
   verify,

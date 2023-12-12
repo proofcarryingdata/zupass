@@ -13,14 +13,13 @@ import {
 import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
 import {
-  generateProof,
   PackedProof,
   SemaphoreProof,
+  generateProof,
   verifyProof
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { SemaphoreIdentityCardBody } from "./CardBody";
 
 /**
  * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
@@ -213,7 +212,6 @@ export const SemaphoreSignaturePCDPackage: PCDPackage<
   SemaphoreSignaturePCDInitArgs
 > = {
   name: SemaphoreSignaturePCDTypeName,
-  renderCardBody: SemaphoreIdentityCardBody,
   getDisplayOptions,
   init,
   prove,

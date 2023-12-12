@@ -27,7 +27,6 @@ import {
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { EthereumGroupCardBody } from "./CardBody";
 
 export const EthereumGroupPCDTypeName = "ethereum-group-pcd";
 
@@ -328,7 +327,6 @@ export const EthereumGroupPCDPackage: PCDPackage<
   EthereumGroupPCDInitArgs
 > = {
   name: EthereumGroupPCDTypeName,
-  renderCardBody: EthereumGroupCardBody,
   getDisplayOptions,
   init,
   prove,

@@ -4,18 +4,19 @@ import {
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
-import { PCD } from "@pcd/pcd-types";
-import React, { useCallback, useContext, useMemo } from "react";
+import { PCD, PCDUI } from "@pcd/pcd-types";
+import { memo, useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
+import { pcdRenderers } from "../../src/pcdRenderers";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
 import { DevconnectCardBody } from "./cards/DevconnectTicket";
 import { ZKTicketPCDCard } from "./cards/ZKTicket";
 
-export const PCDCard = React.memo(PCDCardImpl);
+export const PCDCard = memo(PCDCardImpl);
 
 /**
  * Shows a card representing a PCD in Zupass. If expanded, the full card, otherwise
@@ -96,17 +97,12 @@ function HeaderContent({
   ) {
     header = "ZUCONNECT '23 DAY PASS";
   }
-
-  const headerContent = header ? (
-    <>{header}</>
-  ) : (
-    pcdPackage?.renderCardBody({ pcd, returnHeader: true })
-  );
+  const headerContent = header ? <>{header}</> : <></>;
 
   return headerContent;
 }
 
-const CardFooter = React.memo(CardFooterImpl);
+const CardFooter = memo(CardFooterImpl);
 
 function CardFooterImpl({
   pcd,
@@ -148,6 +144,10 @@ function TicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
   return <ZKTicketPCDCard pcd={pcd} />;
 }
 
+function getRender(name: string): PCDUI | undefined {
+  return pcdRenderers[name];
+}
+
 function CardBody({
   pcd,
   isMainIdentity
@@ -170,9 +170,9 @@ function CardBody({
   }
 
   if (pcdCollection.hasPackage(pcd.type)) {
-    const pcdPackage = pcdCollection.getPackage(pcd.type);
-    if (pcdPackage.renderCardBody) {
-      const Component = pcdPackage.renderCardBody;
+    const render = getRender(pcd.type);
+    if (render) {
+      const Component = render.renderCardBody;
       return <Component pcd={pcd} />;
     }
   }

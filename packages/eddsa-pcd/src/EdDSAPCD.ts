@@ -7,9 +7,8 @@ import {
   StringArrayArgument
 } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
-import { buildEddsa, Eddsa, Point } from "circomlibjs";
+import { Eddsa, Point, buildEddsa } from "circomlibjs";
 import { v4 as uuid } from "uuid";
-import { EdDSACardBody } from "./CardBody";
 
 /**
  * The globally unique type name of the {@link EdDSAPCD}.
@@ -266,7 +265,6 @@ export const EdDSAPCDPackage: PCDPackage<
   EdDSAInitArgs
 > = {
   name: EdDSAPCDTypeName,
-  renderCardBody: EdDSACardBody,
   getDisplayOptions,
   prove,
   verify,

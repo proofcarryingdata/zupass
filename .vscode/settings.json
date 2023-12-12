@@ -22,5 +22,10 @@
       "source.organizeImports": true
     }
   },
-  "editor.tabSize": 2
+  "editor.tabSize": 2,
+  "[typescript][typescriptreact]": {
+    "editor.codeActionsOnSave": {
+      "source.organizeImports": "explicit"
+    }
+  }
 }

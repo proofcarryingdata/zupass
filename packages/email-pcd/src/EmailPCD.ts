@@ -11,7 +11,6 @@ import { generateSnarkMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { EmailCardBody } from "./CardBody";
 
 export const EmailPCDTypeName = "email-pcd";
 
@@ -164,7 +163,6 @@ export const EmailPCDPackage: PCDPackage<
   undefined
 > = {
   name: EmailPCDTypeName,
-  renderCardBody: EmailCardBody,
   getDisplayOptions,
   prove,
   verify,

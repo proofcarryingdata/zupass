@@ -11,13 +11,12 @@ import {
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { EdDSATicketCardBody } from "./CardBody";
 import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 
 /**
  * The globally unique type name of the {@link EdDSATicketPCD}.
  */
-export const EdDSAPCDTypeName = "eddsa-ticket-pcd";
+export const EdDSATicketPCDTypeName = "eddsa-ticket-pcd";
 
 /**
  * Assigns each currently supported category a unique value.
@@ -144,7 +143,7 @@ export interface EdDSATicketPCDProof {
 export class EdDSATicketPCD
   implements PCD<EdDSATicketPCDClaim, EdDSATicketPCDProof>
 {
-  type = EdDSAPCDTypeName;
+  type = EdDSATicketPCDTypeName;
   claim: EdDSATicketPCDClaim;
   proof: EdDSATicketPCDProof;
   id: string;
@@ -239,7 +238,7 @@ export async function serialize(
   );
 
   return {
-    type: EdDSAPCDTypeName,
+    type: EdDSATicketPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
       eddsaPCD: serializedEdDSAPCD,
@@ -308,7 +307,7 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
  * Returns true if a PCD is an EdDSA Ticket PCD, or false otherwise.
  */
 export function isEdDSATicketPCD(pcd: PCD): pcd is EdDSATicketPCD {
-  return pcd.type === EdDSAPCDTypeName;
+  return pcd.type === EdDSATicketPCDTypeName;
 }
 
 /**
@@ -321,8 +320,7 @@ export const EdDSATicketPCDPackage: PCDPackage<
   EdDSATicketPCDArgs,
   EdDSATicketPCDInitArgs
 > = {
-  name: EdDSAPCDTypeName,
-  renderCardBody: EdDSATicketCardBody,
+  name: EdDSATicketPCDTypeName,
   getDisplayOptions,
   init,
   prove,

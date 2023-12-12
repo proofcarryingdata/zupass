@@ -85,22 +85,6 @@ export interface PCDPackage<
   getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
 
   /**
-   * Intended to be used by Zupass. Given a {@link PCD}, renders the body of a card
-   * that appears in Zupass representing this {@link PCD}.
-   *
-   * If the {@link DisplayOptions#header} returned by {@link PCDPackage#getDisplayOptions}
-   * is undefined, Zupass will call this function with the `returnHeader` field set to true,
-   * and use the result as the header of the card.
-   */
-  renderCardBody?: ({
-    pcd,
-    returnHeader
-  }: {
-    pcd: PCD<C, P>;
-    returnHeader?: boolean;
-  }) => React.ReactElement;
-
-  /**
    * Initializes this {@link PCDPackage} so that it can be used in the current context.
    * This is an optional field, because not all packages need to be initialized.
    */
@@ -144,6 +128,32 @@ export interface PCDPackage<
 }
 
 /**
+ * When displaying a {@link PCD} in Zupass, the PCDUI methods will be used to generate a
+ * card and, optionally, a header (used only when {@link PCDPackage.getDisplayOptions} does
+ * not return a header).
+ *
+ * @typeParam {@link C} the type of {@link PCD.claim} for the {@link PCD} encapsulated
+ *   by this {@link PCDUI}
+ *
+ * @typeParam {@link P} the type of {@link PCD.proof} for the {@link PCD} encapsulated
+ *   by this {@link PCDUI}
+ */
+export interface PCDUI<C = any, P = any> {
+  /**
+   * Intended to be used by Zupass. Given a {@link PCD}, renders the body of a card
+   * that appears in Zupass representing this {@link PCD}.
+   */
+  renderCardBody({ pcd }: { pcd: PCD<C, P> }): React.ReactElement;
+
+  /**
+   * If the {@link DisplayOptions#header} returned by {@link PCDPackage#getDisplayOptions}
+   * is undefined, Zupass will call this function and use the result as the header of the
+   * card.
+   */
+  getHeader?({ pcd }: { pcd: PCD<C, P> }): React.ReactElement;
+}
+
+/**
  * The input and output of a {@link PCDPackage}'s {@link PCDPackage.serialize} and
  * {@link PCDPackage.deserialize} methods.
  */
@@ -175,7 +185,7 @@ export interface DisplayOptions {
   /**
    * Shown to the user in the main page of Zupass, where they can
    * see all of their cards. If `header` is undefined, the Zupass will use
-   * `renderCardBody` with `returnHeader` set to true.
+   * `getHeader` on {@link PCDUI}.
    */
   header?: string;
 

@@ -9,7 +9,6 @@ import { requireDefinedParameter } from "@pcd/util";
 import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
 import { v4 as uuid } from "uuid";
-import { HaLoNonceCardBody } from "./CardBody";
 
 const secp256k1 = new ec("secp256k1");
 
@@ -183,7 +182,6 @@ export const HaLoNoncePCDPackage: PCDPackage<
   HaLoNoncePCDArgs
 > = {
   name: HaLoNoncePCDTypeName,
-  renderCardBody: HaLoNonceCardBody,
   getDisplayOptions,
   prove,
   verify,

@@ -9,10 +9,9 @@ import {
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { RSATicketCardBody } from "./CardBody";
 import { getTicketData } from "./utils";
 
-export const RSAPCDTypeName = "rsa-ticket-pcd";
+export const RSATicketPCDTypeName = "rsa-ticket-pcd";
 
 export interface IRSATicketData {
   timestamp?: number;
@@ -47,7 +46,7 @@ export interface RSATicketPCDProof {
 }
 
 export class RSATicketPCD implements PCD<RSATicketPCDClaim, RSATicketPCDProof> {
-  type = RSAPCDTypeName;
+  type = RSATicketPCDTypeName;
   claim: RSATicketPCDClaim;
   proof: RSATicketPCDProof;
   id: string;
@@ -107,7 +106,7 @@ export async function serialize(
   const serializedRSAPCD = await RSAPCDPackage.serialize(pcd.proof.rsaPCD);
 
   return {
-    type: RSAPCDTypeName,
+    type: RSATicketPCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
       rsaPCD: serializedRSAPCD
@@ -162,8 +161,7 @@ export const RSATicketPCDPackage: PCDPackage<
   RSATicketPCDArgs,
   RSATicketPCDInitArgs
 > = {
-  name: RSAPCDTypeName,
-  renderCardBody: RSATicketCardBody,
+  name: RSATicketPCDTypeName,
   getDisplayOptions,
   init,
   prove,
