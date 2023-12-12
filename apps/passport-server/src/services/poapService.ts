@@ -1,10 +1,7 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import { SerializedPCD } from "@pcd/pcd-types";
-import {
-  ZKEdDSAEventTicketPCD,
-  ZKEdDSAEventTicketPCDPackage
-} from "@pcd/zk-eddsa-event-ticket-pcd";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   claimNewPoapUrl,
@@ -44,9 +41,14 @@ export class PoapService {
     this.context = context;
   }
 
-  private async validateDevconnectPCD(
+  /**
+   * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
+   * Devconnect Cowork ticket that has been checked in, and returns
+   * the ID of that ticket.
+   */
+  private async validateDevconnectTicket(
     serializedPCD: string
-  ): Promise<ZKEdDSAEventTicketPCD> {
+  ): Promise<string> {
     return traced("poap", "validateDevconnectPCD", async (span) => {
       const parsed = JSON.parse(serializedPCD) as SerializedPCD;
       if (parsed.type !== ZKEdDSAEventTicketPCDPackage.name) {
@@ -120,17 +122,17 @@ export class PoapService {
         throw new Error("[POAP] item ID is invalid");
       }
 
-      return pcd;
+      return ticketId;
     });
   }
 
   public async getDevconnectPoapClaimUrl(
     serializedPCD: string
   ): Promise<string> {
-    const pcd = await this.validateDevconnectPCD(serializedPCD);
+    const ticketId = await this.validateDevconnectTicket(serializedPCD);
 
     // We have already checked that `ticketId` is defined in validateDevconnectPCD
-    const hashedTicketId = await getHash(pcd.claim.partialTicket.ticketId!);
+    const hashedTicketId = await getHash(ticketId);
     const existingPoapLink = await getExistingClaimUrlByTicketId(
       this.context.dbPool,
       hashedTicketId
