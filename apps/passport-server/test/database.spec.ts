@@ -45,6 +45,11 @@ import {
   setKnownPublicKey,
   setKnownTicketType
 } from "../src/database/queries/knownTicketTypes";
+import {
+  claimNewPoapUrl,
+  getExistingClaimUrlByTicketId,
+  insertNewPoapUrl
+} from "../src/database/queries/poap";
 import { upsertUser } from "../src/database/queries/saveUser";
 import {
   deleteUserByEmail,
@@ -790,5 +795,41 @@ describe("database reads and writes", function () {
     );
 
     expect(ticketTypes.length).to.eq(0);
+  });
+
+  step("should be able to claim poap links", async function () {
+    const TEST_POAP_A1 = "https://poap.xyz/mint/qwerty";
+    const TEST_POAP_A2 = "https://poap.xyz/mint/zxcvbn";
+    const TEST_POAP_B1 = "https://poap.xyz/mint/asdfgh";
+
+    // Before urls are claimed, getExistingClaimUrlByTicketId returns null
+    expect(await getExistingClaimUrlByTicketId(db, "hash-1")).to.be.null;
+    expect(await getExistingClaimUrlByTicketId(db, "hash-2")).to.be.null;
+    expect(await getExistingClaimUrlByTicketId(db, "hash-3")).to.be.null;
+
+    // Setup
+    await insertNewPoapUrl(db, TEST_POAP_A1, "event-a");
+    await insertNewPoapUrl(db, TEST_POAP_A2, "event-a");
+    await insertNewPoapUrl(db, TEST_POAP_B1, "event-b");
+
+    // Check event-a
+    const url1 = await claimNewPoapUrl(db, "event-a", "hash-1");
+    const url2 = await claimNewPoapUrl(db, "event-a", "hash-2");
+    // Ignore order of claiming so long as both are claimed
+    expect(
+      (url1 === TEST_POAP_A1 && url2 === TEST_POAP_A2) ||
+        (url1 === TEST_POAP_A2 && url2 === TEST_POAP_A1)
+    ).to.be.true;
+    expect(await claimNewPoapUrl(db, "event-a", "hash-9")).to.be.null;
+
+    // Check event-b
+    const url3 = await claimNewPoapUrl(db, "event-b", "hash-3");
+    expect(url3).to.eq(TEST_POAP_B1);
+    expect(await claimNewPoapUrl(db, "event-a", "hash-8")).to.be.null;
+
+    // After urls are claimed, getExistingClaimUrlByTicketId returns correct url
+    expect(await getExistingClaimUrlByTicketId(db, "hash-1")).to.eq(url1);
+    expect(await getExistingClaimUrlByTicketId(db, "hash-2")).to.eq(url2);
+    expect(await getExistingClaimUrlByTicketId(db, "hash-3")).to.eq(url3);
   });
 });

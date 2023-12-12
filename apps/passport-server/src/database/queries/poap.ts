@@ -32,6 +32,27 @@ WHERE claim_url =
 }
 
 /**
+ * Insert a new POAP claim URL. Returns the claim URL if successful, NULL if not.
+ */
+export async function insertNewPoapUrl(
+  client: Pool,
+  claimUrl: string,
+  poapEvent: string
+): Promise<string | null> {
+  const result = await sqlQuery(
+    client,
+    `\
+INSERT INTO poap_claim_links
+  (claim_url, poap_event)
+VALUES
+  ($1, $2)
+RETURNING claim_url`,
+    [claimUrl, poapEvent]
+  );
+  return result.rowCount > 0 ? result.rows[0].claim_url : null;
+}
+
+/**
  * Returns the POAP claim URL associated with this hashed ticket ID
  * if it exists; otherwise, return NULL.
  */
