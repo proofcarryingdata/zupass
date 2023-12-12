@@ -5,16 +5,19 @@ import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
-  claimPoapLink,
-  getExistingClaimUrlByTicketId,
-  getNewPoapUrl
+  claimNewPoapUrl,
+  getExistingClaimUrlByTicketId
 } from "../database/queries/poap";
+import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { traced } from "./telemetryService";
 
 const DEVCONNECT_COWORK_SPACE_EVENT_ID = "a1c822c4-60bd-11ee-8732-763dbf30819c";
+
+// All valid Cowork products that can claim a POAP. This excludes add-on products, like the Turkish Towel.
 const DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS = [
   "67687bda-986f-11ee-abf3-126a2f5f3c5c",
   "67689552-986f-11ee-abf3-126a2f5f3c5c",
@@ -75,8 +78,22 @@ export class PoapService {
 
       const {
         validEventIds,
-        partialTicket: { productId, isConsumed }
+        partialTicket: { ticketId }
       } = pcd.claim;
+
+      if (ticketId == null) {
+        throw new Error("[POAP] ticket ID must be revealed");
+      }
+      const devconnectPretixTicket =
+        await fetchDevconnectPretixTicketByTicketId(
+          this.context.dbPool,
+          ticketId
+        );
+      if (devconnectPretixTicket == null) {
+        throw new Error("[POAP] ticket ID does not exist");
+      }
+      const { devconnect_pretix_items_info_id, is_consumed } =
+        devconnectPretixTicket;
 
       if (
         !(
@@ -90,15 +107,17 @@ export class PoapService {
         );
       }
 
-      if (!isConsumed) {
-        throw new Error("[POAP] isConsumed field of PCD must be true");
+      if (!is_consumed) {
+        throw new Error("[POAP] ticket has not been consumed");
       }
 
       if (
-        !productId ||
-        !DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS.includes(productId)
+        !DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS.includes(
+          devconnect_pretix_items_info_id
+        )
       ) {
-        throw new Error("[POAP] product ID is invalid");
+        logger("hey", devconnect_pretix_items_info_id);
+        throw new Error("[POAP] item ID is invalid");
       }
 
       return pcd;
@@ -110,12 +129,8 @@ export class PoapService {
   ): Promise<string> {
     const pcd = await this.validateDevconnectPCD(serializedPCD);
 
-    const { ticketId } = pcd.claim.partialTicket;
-    if (ticketId == null) {
-      throw new Error("[POAP] ticket ID must be revealed");
-    }
-
-    const hashedTicketId = await getHash(ticketId);
+    // We have already checked that `ticketId` is defined in validateDevconnectPCD
+    const hashedTicketId = await getHash(pcd.claim.partialTicket.ticketId!);
     const existingPoapLink = await getExistingClaimUrlByTicketId(
       this.context.dbPool,
       hashedTicketId
@@ -124,17 +139,18 @@ export class PoapService {
       return existingPoapLink;
     }
 
-    const newPoapLink = await getNewPoapUrl(this.context.dbPool, "devconnect");
+    const newPoapLink = await claimNewPoapUrl(
+      this.context.dbPool,
+      "devconnect",
+      hashedTicketId
+    );
     if (newPoapLink == null) {
-      throw new Error("[POAP] ran out of Devconnect links");
+      // TODO: Have an error page that looks way better
+      throw new PCDHTTPError(500, "[POAP] ran out of Devconnect links");
     }
-
-    await claimPoapLink(this.context.dbPool, newPoapLink, hashedTicketId);
 
     return newPoapLink;
   }
-
-  public async stop(): Promise<void> {}
 }
 
 export async function startPoapService(
