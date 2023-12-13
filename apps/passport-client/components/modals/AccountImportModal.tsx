@@ -31,7 +31,10 @@ type ImportState =
 export function AccountImportModal() {
   const { openFilePicker, filesContent } = useFilePicker({
     accept: ".json",
-    multiple: false
+    multiple: false,
+    onFilesSelected: () => {
+      setImportState({ state: "ready" });
+    }
   });
 
   const modal = useModal();
@@ -57,10 +60,11 @@ export function AccountImportModal() {
     setImportState({ state: "import-complete" });
   }, [dispatch, importState]);
 
-  // Responds to the user having selected a file to import
+  // Responds to the user having selected a file to import, or to changes in
+  // the user's current PCD collection.
   useEffect(() => {
     (async () => {
-      // If a file has been selected
+      // If a file has been selected, and isn't invalid or already imported
       if (
         filesContent.length > 0 &&
         importState.state !== "import-complete" &&
@@ -68,6 +72,7 @@ export function AccountImportModal() {
       ) {
         let importedCollection: PCDCollection;
 
+        // If the file hasn't been processed yet, process it
         if (importState.state === "ready") {
           try {
             // Parse the file content as JSON
@@ -79,8 +84,13 @@ export function AccountImportModal() {
               await getPackages()
             );
             importedCollection = importedBackup.pcds;
+            if (!(importedCollection instanceof PCDCollection)) {
+              throw new Error("Did not deserialize a valid PCD collection");
+            }
           } catch (e) {
+            // The file is not valid, so bail out
             setImportState({ state: "invalid-file" });
+            return;
           }
         } else {
           importedCollection = importState.collection;
@@ -93,7 +103,8 @@ export function AccountImportModal() {
           pcdCollection.getPCDsByType(EmailPCDTypeName).length > 0;
 
         // Before importing, we want to filter the PCDs down to those which
-        // are valid to import
+        // are valid to import, so we can tell the user how many new PCDs to
+        // expect
         const preImportFilter = (pcd: PCD) => {
           // If the user has a semaphore identity PCD, don't import another
           if (
@@ -120,9 +131,14 @@ export function AccountImportModal() {
         const pcdsToMerge = importedCollection.getAll().filter(preImportFilter);
         const pcdsToMergeIds = new Set(pcdsToMerge.map((pcd) => pcd.id));
 
+        // Because this hook can be called multiple times, we should only
+        // update the state if something has really changed
         if (
+          // If the previous state was "ready", there's definitely a change
           importState.state === "ready" ||
+          // If we have a new imported collection object, that's a change
           importState.collection !== importedCollection ||
+          // If the set of PCDs to merge is different, that's a change
           importState.pcdsToMergeIds.size !== pcdsToMergeIds.size ||
           [...pcdsToMergeIds].find((id) => !importState.pcdsToMergeIds.has(id))
         ) {
