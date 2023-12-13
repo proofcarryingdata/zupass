@@ -38,7 +38,7 @@ export function AccountImportModal() {
   });
 
   const modal = useModal();
-  const pcdCollection = usePCDCollection();
+  const existingPcdCollection = usePCDCollection();
   const dispatch = useDispatch();
 
   const [importState, setImportState] = useState<ImportState>({
@@ -70,7 +70,7 @@ export function AccountImportModal() {
         importState.state !== "import-complete" &&
         importState.state !== "invalid-file"
       ) {
-        let importedCollection: PCDCollection;
+        let parsedCollection: PCDCollection;
 
         // If the file hasn't been processed yet, process it
         if (importState.state === "ready") {
@@ -79,18 +79,16 @@ export function AccountImportModal() {
             const storageExport = JSON.parse(filesContent[0].content);
             // Deserialize the storage - throws an error if the content is not
             // recognized
-            const importedBackup = await deserializeStorage(
-              storageExport,
-              await getPackages()
-            );
-            importedCollection = importedBackup.pcds;
+            parsedCollection = (
+              await deserializeStorage(storageExport, await getPackages())
+            ).pcds;
           } catch (e) {
             // The file is not valid, so bail out
             setImportState({ state: "invalid-file" });
             return;
           }
         } else {
-          importedCollection = importState.collection;
+          parsedCollection = importState.collection;
         }
 
         // Because this hook can be called multiple times, we should only
@@ -99,16 +97,17 @@ export function AccountImportModal() {
           // If the previous state was "ready", there's definitely a change
           importState.state === "ready" ||
           // If we have a new imported collection object, that's a change
-          importState.collection !== importedCollection ||
+          importState.collection !== parsedCollection ||
           // If the set of PCDs to merge is different, that's a change
           (await importState.collection.getHash()) !==
-            (await importedCollection.getHash())
+            (await parsedCollection.getHash())
         ) {
           const userHasSemaphoreIdentity =
-            pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
+            existingPcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName)
+              .length > 0;
 
           const userHasEmailPCD =
-            pcdCollection.getPCDsByType(EmailPCDTypeName).length > 0;
+            existingPcdCollection.getPCDsByType(EmailPCDTypeName).length > 0;
 
           // Before importing, we want to filter the PCDs down to those which
           // are valid to import, so we can tell the user how many new PCDs to
@@ -128,7 +127,7 @@ export function AccountImportModal() {
             }
 
             // If a PCD with this ID exists already, don't import it
-            if (pcdCollection.hasPCDWithId(pcd.id)) {
+            if (existingPcdCollection.hasPCDWithId(pcd.id)) {
               return false;
             }
 
@@ -136,19 +135,17 @@ export function AccountImportModal() {
             return true;
           };
 
-          const pcdsToMerge = importedCollection
-            .getAll()
-            .filter(preImportFilter);
+          const pcdsToMerge = parsedCollection.getAll().filter(preImportFilter);
 
           setImportState({
             state: "valid-file-selected",
-            collection: importedCollection,
+            collection: parsedCollection,
             pcdsToMergeIds: new Set(pcdsToMerge.map((pcd) => pcd.id))
           });
         }
       }
     })();
-  }, [filesContent, importState, pcdCollection]);
+  }, [filesContent, importState, existingPcdCollection]);
 
   return (
     <Container>
