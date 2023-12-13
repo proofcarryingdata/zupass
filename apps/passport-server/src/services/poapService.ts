@@ -120,7 +120,7 @@ export class PoapService {
       span?.setAttribute("isConsumed", is_consumed);
 
       if (!is_consumed) {
-        throw new Error("ticket has not been consumed");
+        throw new Error("ticket was not checked in at Devconnect");
       }
 
       span?.setAttribute("productId", devconnect_pretix_items_info_id);
