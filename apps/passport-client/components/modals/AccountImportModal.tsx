@@ -1,3 +1,4 @@
+import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { deserializeStorage } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -88,6 +89,9 @@ export function AccountImportModal() {
         const userHasSemaphoreIdentity =
           pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
 
+        const userHasEmailPCD =
+          pcdCollection.getPCDsByType(EmailPCDTypeName).length > 0;
+
         // Before importing, we want to filter the PCDs down to those which
         // are valid to import
         const preImportFilter = (pcd: PCD) => {
@@ -96,6 +100,11 @@ export function AccountImportModal() {
             userHasSemaphoreIdentity &&
             pcd.type === SemaphoreIdentityPCDTypeName
           ) {
+            return false;
+          }
+
+          // If the user has an email PCD, don't import another
+          if (userHasEmailPCD && pcd.type === EmailPCDTypeName) {
             return false;
           }
 

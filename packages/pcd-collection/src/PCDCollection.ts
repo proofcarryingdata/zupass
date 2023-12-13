@@ -30,11 +30,7 @@ export type MatchingActionPermission =
 
 type AddPCDOptions = { upsert?: boolean };
 
-export type MergeFilterFunction = (
-  pcd: PCD,
-  target: PCDCollection,
-  source: PCDCollection
-) => boolean;
+export type MergeFilterFunction = (pcd: PCD, target: PCDCollection) => boolean;
 
 export function matchActionToPermission(
   action: PCDAction,
@@ -466,9 +462,6 @@ export class PCDCollection {
    * - `filter` is a function used to filter out PCDs from the other
    *   collection during merging, e.g. to filter out duplicates or PCDs of
    *   a type that should not be copied.
-   * - `setFolders` is a boolean controlling whether or not the PCDs from
-   *   the other collection should be added to the same folders in this
-   *   collection.
    */
   public merge(
     other: PCDCollection,
@@ -481,7 +474,7 @@ export class PCDCollection {
     // If the caller has specified a filter function, run that first to filter
     // out unwanted PCDs from the merge.
     if (options?.filter) {
-      pcds = pcds.filter((pcd: PCD) => options.filter?.(pcd, this, other));
+      pcds = pcds.filter((pcd: PCD) => options.filter?.(pcd, this));
     }
 
     this.addAll(pcds, { upsert: true });
