@@ -47,7 +47,7 @@ import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
 import { hasSetupPassword } from "./user";
 import {
-  downloadStorage,
+  downloadAndMergeStorage,
   uploadSerializedStorage,
   uploadStorage
 } from "./useSyncE2EEStorage";
@@ -354,12 +354,16 @@ async function finishAccountCreation(
     return; // Don't save the bad identity.  User must reset account.
   }
 
-  // Save PCDs to E2EE storage.
+  // Save PCDs to E2EE storage.  knownRevision=undefined is the way to create
+  // a new entry.  It would also overwrite any conflicting data which may
+  // already exist, but that should be impossible for a new account with
+  // a new encryption key.
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
     state.pcds,
-    state.subscriptions
+    state.subscriptions,
+    undefined // knownRevision
   );
   if (uploadResult.success) {
     update({
@@ -531,6 +535,7 @@ async function loadAfterLogin(
     modal = { modalType: "upgrade-account-modal" };
   }
 
+  console.log(`[SYNC] saving state at login: revision ${storage.revision}`);
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);
   savePersistentSyncStatus({
@@ -569,7 +574,13 @@ async function handlePasswordChangeOnOtherTab(update: ZuUpdate) {
   const encryptionKey = loadEncryptionKey();
   return update({
     self,
-    encryptionKey
+    encryptionKey,
+
+    // Extra download helps to get our in-memory sync state up-to-date faster.
+    // The password change on the other tab is an upload of a new revision so
+    // a download is necessary.  Otherwise loading our new self object above
+    // will make this tab think it needs to upload and cause a conflict.
+    extraDownloadRequested: true
   });
 }
 
@@ -656,9 +667,16 @@ let syncInProgress = false;
 let skippedSyncUpdates = 0;
 
 /**
- * Does the real work of sync(), inside of reentrancy protection.
- * Returns the changes to be made to AppState.  If changes were made,
- * this function should be run again.
+ * Does the real work of sync(), inside of reentrancy protection.  If action
+ * is needed, this function takes one action and returns, expecting to be
+ * run again until no further action is needed.
+ *
+ * Returns the changes to be made to AppState, which the caller is expected
+ * to applly via update().  If the result is defined, this function should be
+ * run again.
+ *
+ * Further calls to update() will also occur inside of this function, to update
+ * fields which allow the UI to track progress.
  */
 async function doSync(
   state: AppState,
@@ -686,15 +704,21 @@ async function doSync(
     // Download user's E2EE storage, which includes both PCDs and subscriptions.
     // We'll skip this if it fails, or if the server indicates no changes based
     // on the last revision we downloaded.
-    const dlRes = await downloadStorage(state.serverStorageRevision);
+    const dlRes = await downloadAndMergeStorage(
+      state.serverStorageRevision,
+      state.serverStorageHash,
+      state.self,
+      state.pcds,
+      state.subscriptions
+    );
     if (dlRes.success && dlRes.value != null) {
-      const { pcds, subscriptions, revision, storageHash } = dlRes.value;
+      const { pcds, subscriptions, serverRevision, serverHash } = dlRes.value;
       return {
         downloadedPCDs: true,
         pcds,
         subscriptions,
-        serverStorageRevision: revision,
-        serverStorageHash: storageHash,
+        serverStorageRevision: serverRevision,
+        serverStorageHash: serverHash,
         extraDownloadRequested: false
       };
     } else {
@@ -758,18 +782,24 @@ async function doSync(
   );
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
-    // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
-    // but only after we're able to respond to a conflict by downloading.
     const upRes = await uploadSerializedStorage(
       appStorage.serializedStorage,
-      appStorage.storageHash
+      appStorage.storageHash,
+      state.serverStorageRevision
     );
     if (upRes.success) {
       return {
         serverStorageRevision: upRes.value.revision,
         serverStorageHash: upRes.value.storageHash
       };
+    } else if (upRes.error.name === "Conflict") {
+      // Conflicts are resolved at download time, so ensure another download.
+      return {
+        completedFirstSync: true,
+        extraDownloadRequested: true
+      };
     } else {
+      // We completed a first attempt at sync, even if it failed.  We'll retry.
       return {
         completedFirstSync: true
       };

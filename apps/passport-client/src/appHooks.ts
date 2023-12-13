@@ -106,6 +106,10 @@ export function useIsDownloaded(): boolean | undefined {
   return useSelector<boolean | undefined>((s) => s.downloadedPCDs, []);
 }
 
+export function useServerStorageRevision(): string | undefined {
+  return useSelector<string | undefined>((s) => s.serverStorageRevision, []);
+}
+
 export function useUserForcedToLogout(): boolean {
   const userForcedToLogout = useSelector<boolean>(
     (s) => !!s.userInvalid || !!s.anotherDeviceChangedPassword,

@@ -58,21 +58,59 @@ export interface AppState {
   anotherDeviceChangedPassword?: boolean;
 
   // Dynamic (in-memory-only) state-machine for sync of E2EE encrypted data.
+  // The background sync will always perform all steps (download, fetch feeds,
+  // upload) on its initial run, after which it will repeat each step only
+  // when requested (for download and feeds), or when the hash of stored
+  // state changes (for upload).
   // TODO(artwyman): The parts of this not needed by the rest of the app
   // might be better stored elsewhere, to avoid issues with reentrancy
   // and stale snapshots delivered via dispatch().
+
+  // (Dynamic sync state) Output variable indicating whether the first attempt
+  // to download from E2EE storage has completed (whether success or failure).
+  // Also used within the sync engine to avoid repeating this attempt.
   downloadedPCDs?: boolean;
+
+  // (Dynamic sync state) Output variable indicating whether the first attempt
+  // to fetch PCDs from subscription feeds has completed (whether success or
+  // failure).
+  // Also used within the sync engine to avoid repeating this attempt.
   loadedIssuedPCDs?: boolean;
-  loadingIssuedPCDs?: boolean; // Used only to update UI
+
+  // (Dynamic sync state) Output variable indicating when a fetch from
+  // subscription feeds is in progress.
+  // Only used to update UI, not to control the behavior of the sync itself.
+  loadingIssuedPCDs?: boolean;
+
+  // (Dynamic sync state) Output variable indicating when all stages of the
+  // initial sync are complete.
+  // Also used within the sync engine so that the behavior of future syncs
+  // differs from the first.
   completedFirstSync?: boolean;
+
+  // (Dynamic sync state) Input variable to indicate to the sync engine that
+  // it should download again.  Will trigger at most one download, after which
+  // it will be set back to false (whether the download succeeded or failed).
   extraDownloadRequested?: boolean;
+
+  // (Dynamic sync state) Input variable to indicate to the sync engine that
+  // it should fetch subscription feeds again.  Will trigger at most one fetch,
+  // after which it will be set back to false (whether the fetch succeeded or
+  // failed).
   extraSubscriptionFetchRequested?: boolean;
 
   // Persistent sync state-machine fields, saved in local storage as a
   // PersistentSyncStatus object.  This is structured to allow for more
-  // fields to be added later.  See the docs in that type for the meaning of
-  // individual fields.
+  // fields to be added later.
+
+  // (Persistent sync state) The revision (assigned by the server) of the most
+  // recent storage uploaded or downloaded.  Represents the most recent
+  // point where we know our state was the same as the server.
   serverStorageRevision?: string;
+
+  // (Persistent sync state) The hash (calculated by the client) of the most
+  // recent storage uploaded or downloaded.  Represents the most recent
+  // point where we know our state was the same as the server.
   serverStorageHash?: string;
 
   knownTicketTypes?: KnownTicketType[];
