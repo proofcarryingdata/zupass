@@ -149,8 +149,8 @@ function TicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
   return <ZKTicketPCDCard pcd={pcd} />;
 }
 
-function getUI(name: string): PCDUI | undefined {
-  return pcdRenderers[name];
+function getUI(pcdPackageName: string): PCDUI | undefined {
+  return pcdRenderers[pcdPackageName];
 }
 
 function CardBody({
