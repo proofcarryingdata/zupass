@@ -59,7 +59,7 @@ export function SettingsModal({
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
-        <Spacer h={16} />
+        <Spacer h={24} />
       </CenterColumn>
     </>
   );

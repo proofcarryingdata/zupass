@@ -10,7 +10,7 @@ import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
 import { useDispatch, useModal, usePCDCollection } from "../../src/appHooks";
 import { getPackages } from "../../src/pcdPackages";
-import { Button } from "../core";
+import { Button, H2 } from "../core";
 
 // There are three main UI states that can occur after a user selects a file
 // to import.
@@ -84,9 +84,6 @@ export function AccountImportModal() {
               await getPackages()
             );
             importedCollection = importedBackup.pcds;
-            if (!(importedCollection instanceof PCDCollection)) {
-              throw new Error("Did not deserialize a valid PCD collection");
-            }
           } catch (e) {
             // The file is not valid, so bail out
             setImportState({ state: "invalid-file" });
@@ -96,41 +93,6 @@ export function AccountImportModal() {
           importedCollection = importState.collection;
         }
 
-        const userHasSemaphoreIdentity =
-          pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
-
-        const userHasEmailPCD =
-          pcdCollection.getPCDsByType(EmailPCDTypeName).length > 0;
-
-        // Before importing, we want to filter the PCDs down to those which
-        // are valid to import, so we can tell the user how many new PCDs to
-        // expect
-        const preImportFilter = (pcd: PCD) => {
-          // If the user has a semaphore identity PCD, don't import another
-          if (
-            userHasSemaphoreIdentity &&
-            pcd.type === SemaphoreIdentityPCDTypeName
-          ) {
-            return false;
-          }
-
-          // If the user has an email PCD, don't import another
-          if (userHasEmailPCD && pcd.type === EmailPCDTypeName) {
-            return false;
-          }
-
-          // If a PCD with this ID exists already, don't import it
-          if (pcdCollection.hasPCDWithId(pcd.id)) {
-            return false;
-          }
-
-          // Otherwise, do import it
-          return true;
-        };
-
-        const pcdsToMerge = importedCollection.getAll().filter(preImportFilter);
-        const pcdsToMergeIds = new Set(pcdsToMerge.map((pcd) => pcd.id));
-
         // Because this hook can be called multiple times, we should only
         // update the state if something has really changed
         if (
@@ -139,9 +101,45 @@ export function AccountImportModal() {
           // If we have a new imported collection object, that's a change
           importState.collection !== importedCollection ||
           // If the set of PCDs to merge is different, that's a change
-          importState.pcdsToMergeIds.size !== pcdsToMergeIds.size ||
-          [...pcdsToMergeIds].find((id) => !importState.pcdsToMergeIds.has(id))
+          (await importState.collection.getHash()) !==
+            (await importedCollection.getHash())
         ) {
+          const userHasSemaphoreIdentity =
+            pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
+
+          const userHasEmailPCD =
+            pcdCollection.getPCDsByType(EmailPCDTypeName).length > 0;
+
+          // Before importing, we want to filter the PCDs down to those which
+          // are valid to import, so we can tell the user how many new PCDs to
+          // expect
+          const preImportFilter = (pcd: PCD) => {
+            // If the user has a semaphore identity PCD, don't import another
+            if (
+              userHasSemaphoreIdentity &&
+              pcd.type === SemaphoreIdentityPCDTypeName
+            ) {
+              return false;
+            }
+
+            // If the user has an email PCD, don't import another
+            if (userHasEmailPCD && pcd.type === EmailPCDTypeName) {
+              return false;
+            }
+
+            // If a PCD with this ID exists already, don't import it
+            if (pcdCollection.hasPCDWithId(pcd.id)) {
+              return false;
+            }
+
+            // Otherwise, do import it
+            return true;
+          };
+
+          const pcdsToMerge = importedCollection
+            .getAll()
+            .filter(preImportFilter);
+
           setImportState({
             state: "valid-file-selected",
             collection: importedCollection,
@@ -154,6 +152,8 @@ export function AccountImportModal() {
 
   return (
     <Container>
+      <Spacer h={8} />
+      <H2>Import Backup Data</H2>
       <Spacer h={24} />
       {importState.state === "ready" && (
         <>
