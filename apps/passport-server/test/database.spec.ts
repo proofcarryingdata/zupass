@@ -18,6 +18,7 @@ import { step } from "mocha-steps";
 import { Pool } from "postgres-pool";
 import {
   KnownTicketTypeWithKey,
+  PoapEvent,
   ZuzaluPretixTicket
 } from "../src/database/models";
 import { getDB } from "../src/database/postgresPool";
@@ -808,24 +809,26 @@ describe("database reads and writes", function () {
     expect(await getExistingClaimUrlByTicketId(db, "hash-3")).to.be.null;
 
     // Setup
-    await insertNewPoapUrl(db, TEST_POAP_A1, "event-a");
-    await insertNewPoapUrl(db, TEST_POAP_A2, "event-a");
-    await insertNewPoapUrl(db, TEST_POAP_B1, "event-b");
+    await insertNewPoapUrl(db, TEST_POAP_A1, "event-a" as PoapEvent);
+    await insertNewPoapUrl(db, TEST_POAP_A2, "event-a" as PoapEvent);
+    await insertNewPoapUrl(db, TEST_POAP_B1, "event-b" as PoapEvent);
 
     // Check event-a
-    const url1 = await claimNewPoapUrl(db, "event-a", "hash-1");
-    const url2 = await claimNewPoapUrl(db, "event-a", "hash-2");
+    const url1 = await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-1");
+    const url2 = await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-2");
     // Ignore order of claiming so long as both are claimed
     expect(
       (url1 === TEST_POAP_A1 && url2 === TEST_POAP_A2) ||
         (url1 === TEST_POAP_A2 && url2 === TEST_POAP_A1)
     ).to.be.true;
-    expect(await claimNewPoapUrl(db, "event-a", "hash-9")).to.be.null;
+    expect(await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-9")).to.be
+      .null;
 
     // Check event-b
-    const url3 = await claimNewPoapUrl(db, "event-b", "hash-3");
+    const url3 = await claimNewPoapUrl(db, "event-b" as PoapEvent, "hash-3");
     expect(url3).to.eq(TEST_POAP_B1);
-    expect(await claimNewPoapUrl(db, "event-a", "hash-8")).to.be.null;
+    expect(await claimNewPoapUrl(db, "event-a" as PoapEvent, "hash-8")).to.be
+      .null;
 
     // After urls are claimed, getExistingClaimUrlByTicketId returns correct url
     expect(await getExistingClaimUrlByTicketId(db, "hash-1")).to.eq(url1);

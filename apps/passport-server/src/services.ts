@@ -81,7 +81,7 @@ export async function startServices(
     rollbarService,
     issuanceService
   );
-  const poapService = await startPoapService(context, rollbarService);
+  const poapService = startPoapService(context, rollbarService);
   const services: GlobalServices = {
     semaphoreService,
     userService,

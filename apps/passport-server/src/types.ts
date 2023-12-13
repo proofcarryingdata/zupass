@@ -52,7 +52,7 @@ export interface GlobalServices {
   telegramService: TelegramService | null;
   kudosbotService: KudosbotService | null;
   frogcryptoService: FrogcryptoService | null;
-  poapService: PoapService | null;
+  poapService: PoapService;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;

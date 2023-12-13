@@ -1,4 +1,5 @@
 import { Pool } from "postgres-pool";
+import { PoapEvent } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
 /**
@@ -12,7 +13,7 @@ import { sqlQuery } from "../sqlQuery";
  */
 export async function claimNewPoapUrl(
   client: Pool,
-  poapEvent: string,
+  poapEvent: PoapEvent,
   hashedTicketId: string
 ): Promise<string | null> {
   const result = await sqlQuery(
@@ -32,24 +33,22 @@ WHERE claim_url =
 }
 
 /**
- * Insert a new POAP claim URL. Returns the claim URL if successful, NULL if not.
+ * Insert a new POAP claim URL.
  */
 export async function insertNewPoapUrl(
   client: Pool,
   claimUrl: string,
-  poapEvent: string
-): Promise<string | null> {
-  const result = await sqlQuery(
+  poapEvent: PoapEvent
+): Promise<void> {
+  await sqlQuery(
     client,
     `\
 INSERT INTO poap_claim_links
   (claim_url, poap_event)
 VALUES
-  ($1, $2)
-RETURNING claim_url`,
+  ($1, $2)`,
     [claimUrl, poapEvent]
   );
-  return result.rowCount > 0 ? result.rows[0].claim_url : null;
 }
 
 /**

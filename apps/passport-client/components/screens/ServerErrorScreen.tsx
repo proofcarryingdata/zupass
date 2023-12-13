@@ -1,10 +1,17 @@
 import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import { useSearchParams } from "react-router-dom";
 import { CenterColumn, H1, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
+/**
+ * A generic error screen on the client that the server could redirect to on an error.
+ * Items on the screen can be filled in via the `title` and `description` query params,
+ * e.g., https://zupass.org/#/server-error?title=Custom+Error&description=Your+text+here.
+ */
 export function ServerErrorScreen() {
-  const query = new URLSearchParams(window.location.search);
+  // TODO: Check if this works properly
+  const [query] = useSearchParams();
   const title = query.get("title");
   const description = query.get("description");
 

@@ -2,6 +2,7 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import AsyncLock from "async-lock";
 import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   claimNewPoapUrl,
@@ -12,6 +13,11 @@ import { logger } from "../util/logger";
 import { getServerErrorUrl } from "../util/util";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
+
+// Set up an async-lock to prevent concurrency issues when two threads
+// are simultaneously calling `getDevconnectPoapClaimUrl()`.
+const lock = new AsyncLock();
+const POAP_CLAIM_LOCK_KEY = "poap-claim-lock-key";
 
 const DEVCONNECT_COWORK_SPACE_EVENT_ID = "a1c822c4-60bd-11ee-8732-763dbf30819c";
 
@@ -35,6 +41,10 @@ const DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS = [
   "676961d0-986f-11ee-abf3-126a2f5f3c5c"
 ];
 
+/**
+ * Responsible for issuing POAP (poap.xyz) mint links to users
+ * who have attended a certain event, e.g. Devconnect.
+ */
 export class PoapService {
   private readonly context: ApplicationContext;
   private readonly rollbarService: RollbarService | null;
@@ -51,11 +61,22 @@ export class PoapService {
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
    * Devconnect Cowork ticket that has been checked in, and returns
    * the ID of that ticket.
+   *
+   * This function throws an error in the case that the PCD is not
+   * valid; for example, here are a few invalid cases
+   *  1. Wrong PCD type
+   *  2. Wrong EdDSA public key
+   *  3. PCD proof is invalid
+   *  4. Tjcket does not exist
+   *  5. Ticket has not been checked in
+   *  6. Event of ticket is not Cowork space
+   *  7. Invalid product for claiming a poap, e.g. EF Towel
    */
   private async validateDevconnectTicket(
     serializedPCD: string
   ): Promise<string> {
     return traced("poap", "validateDevconnectPCD", async (span) => {
+      logger("[POAP] checking that PCD type is ZKEdDSAEventTicketPCD");
       const parsed = JSON.parse(serializedPCD) as SerializedPCD;
       if (parsed.type !== ZKEdDSAEventTicketPCDPackage.name) {
         throw new Error("proof must be ZKEdDSAEventTicketPCD type");
@@ -63,6 +84,7 @@ export class PoapService {
 
       const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(parsed.pcd);
 
+      logger("[POAP] checking that signer of ticket is passport-server");
       if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
         throw new Error(`missing server eddsa private key .env value`);
 
@@ -74,12 +96,11 @@ export class PoapService {
         pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
         pcd.claim.signer[1] === TICKETING_PUBKEY[1];
 
-      span?.setAttribute("signerMatch", signerMatch);
-
       if (!signerMatch) {
         throw new Error("signer of PCD is invalid");
       }
 
+      logger("[POAP] verifying PCD proof and claim");
       if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
         throw new Error("pcd invalid");
       }
@@ -89,22 +110,7 @@ export class PoapService {
         partialTicket: { ticketId }
       } = pcd.claim;
 
-      if (ticketId == null) {
-        throw new Error("ticket ID must be revealed");
-      }
-      const devconnectPretixTicket =
-        await fetchDevconnectPretixTicketByTicketId(
-          this.context.dbPool,
-          ticketId
-        );
-      if (devconnectPretixTicket == null) {
-        throw new Error("ticket ID does not exist");
-      }
-      const { devconnect_pretix_items_info_id, is_consumed } =
-        devconnectPretixTicket;
-
-      span?.setAttribute("ticketId", ticketId);
-
+      logger("[POAP] checking that validEventds matches cowork space");
       if (
         !(
           validEventIds &&
@@ -117,7 +123,26 @@ export class PoapService {
         );
       }
 
+      logger("[POAP] fetching devconnect ticket from database");
+      if (ticketId == null) {
+        throw new Error("ticket ID must be revealed");
+      }
+      const devconnectPretixTicket =
+        await fetchDevconnectPretixTicketByTicketId(
+          this.context.dbPool,
+          ticketId
+        );
+      if (devconnectPretixTicket == null) {
+        throw new Error("ticket ID does not exist");
+      }
+      const { devconnect_pretix_items_info_id, is_consumed, email } =
+        devconnectPretixTicket;
+
+      span?.setAttribute("ticketId", ticketId);
+      span?.setAttribute("email", email);
       span?.setAttribute("isConsumed", is_consumed);
+
+      logger("[POAP] checking that devconnect ticket has been consumed");
 
       if (!is_consumed) {
         throw new Error("ticket was not checked in at Devconnect");
@@ -125,6 +150,7 @@ export class PoapService {
 
       span?.setAttribute("productId", devconnect_pretix_items_info_id);
 
+      logger("[POAP] checking that devconnect ticket has a valid product id");
       if (
         !DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS.includes(
           devconnect_pretix_items_info_id
@@ -137,32 +163,25 @@ export class PoapService {
     });
   }
 
-  public async getDevconnectPoapClaimUrl(
+  /**
+   * Given a ZKEdDSAEventTicketPCD sent to the server for claiming a Devconnect POAP,
+   * returns the valid redirect URL to the response handler.
+   *  1. If this ticket is already associated with a POAP mint link, return that link.
+   *  2. If this ticket is not associated with a POAP mint link and more unclaimed POAP
+   *     links exist, then associate that unclaimed link with this ticket and return it.
+   *  3. If this ticket is not associated with a POAP mint link and no more unclaimed
+   *     POAP links exist, return a custom server error URL.
+   */
+  public async getDevconnectPoapRedirectUrl(
     serializedPCD: string
   ): Promise<string> {
     try {
       const ticketId = await this.validateDevconnectTicket(serializedPCD);
-
-      // We have already checked that `ticketId` is defined in validateDevconnectPCD
-      const hashedTicketId = await getHash(ticketId);
-      const existingPoapLink = await getExistingClaimUrlByTicketId(
-        this.context.dbPool,
-        hashedTicketId
-      );
-      if (existingPoapLink != null) {
-        return existingPoapLink;
-      }
-
-      const newPoapLink = await claimNewPoapUrl(
-        this.context.dbPool,
-        "devconnect",
-        hashedTicketId
-      );
-      if (newPoapLink == null) {
+      const poapLink = await this.getDevconnectPoapClaimUrlByTicketId(ticketId);
+      if (poapLink == null) {
         throw new Error("Not enough Devconnect POAP links");
       }
-
-      return newPoapLink;
+      return poapLink;
     } catch (e) {
       logger("[POAP] getDevconnectPoapClaimUrl error", e);
       this.rollbarService?.reportError(e);
@@ -174,12 +193,43 @@ export class PoapService {
       );
     }
   }
+
+  /**
+   * Helper function to handle the logic of retrieving the correct POAP mint link
+   * given the ticket ID. Returns NULL if the ticket is not associate with a link
+   * and no more unclaimed links exist.
+   */
+  public async getDevconnectPoapClaimUrlByTicketId(
+    ticketId: string
+  ): Promise<string | null> {
+    const hashedTicketId = await getHash(ticketId);
+    // This critical section executes within a lock to prevent the case where two
+    // concurrent threads both end up on the `claimNewPoapUrl()` function. The lock
+    // ensures that at least one thread will hit `getExistingClaimUrlByTicketId()`.
+    const poapLink = await lock.acquire(POAP_CLAIM_LOCK_KEY, async () => {
+      const existingPoapLink = await getExistingClaimUrlByTicketId(
+        this.context.dbPool,
+        hashedTicketId
+      );
+      if (existingPoapLink != null) {
+        return existingPoapLink;
+      }
+
+      return await claimNewPoapUrl(
+        this.context.dbPool,
+        "devconnect",
+        hashedTicketId
+      );
+    });
+
+    return poapLink;
+  }
 }
 
-export async function startPoapService(
+export function startPoapService(
   context: ApplicationContext,
   rollbarService: RollbarService | null
-): Promise<PoapService | null> {
+): PoapService {
   logger(`[INIT] initializing POAP`);
 
   return new PoapService(context, rollbarService);
