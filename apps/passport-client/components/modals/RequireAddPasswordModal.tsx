@@ -50,7 +50,8 @@ export function RequireAddPasswordModal() {
         modal: { modalType: "none" }
       });
     } catch (e) {
-      setError("Couldn't set a password - try again later");
+      console.log("error setting password", e);
+      setError(e.message);
     } finally {
       setLoading(false);
     }

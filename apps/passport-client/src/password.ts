@@ -47,7 +47,9 @@ export const setPassword = async (
       throw new Error(`Cannot change password while PCDs are syncing.  
         Wait for download to complete or reload the page and try again.`);
     } else {
-      throw new Error(`Request failed with message ${res.error}`);
+      throw new Error(
+        `Failed to set password - try again later.  Request failed with message ${res.error}`
+      );
     }
   }
 
