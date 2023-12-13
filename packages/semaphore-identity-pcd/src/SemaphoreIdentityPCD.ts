@@ -17,6 +17,10 @@ export interface SemaphoreIdentityPCDClaim {
 
 export type SemaphoreIdentityPCDProof = undefined;
 
+export function isSemaphoreIdentityPCD(pcd: PCD): pcd is SemaphoreIdentityPCD {
+  return pcd.type === SemaphoreIdentityPCDTypeName;
+}
+
 export class SemaphoreIdentityPCD
   implements PCD<SemaphoreIdentityPCDClaim, SemaphoreIdentityPCDProof>
 {

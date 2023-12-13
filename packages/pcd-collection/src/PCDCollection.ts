@@ -30,6 +30,12 @@ export type MatchingActionPermission =
 
 type AddPCDOptions = { upsert?: boolean };
 
+export type MergeFilterFunction = (
+  pcd: PCD,
+  target: PCDCollection,
+  source: PCDCollection
+) => boolean;
+
 export function matchActionToPermission(
   action: PCDAction,
   permissions: PCDPermission[]
@@ -466,23 +472,22 @@ export class PCDCollection {
    */
   public merge(
     other: PCDCollection,
-    options?: { filter?: (pcd: PCD) => boolean; setFolders?: boolean }
+    options?: {
+      filter?: MergeFilterFunction;
+    }
   ): void {
     let pcds = other.getAll();
 
     // If the caller has specified a filter function, run that first to filter
     // out unwanted PCDs from the merge.
     if (options?.filter) {
-      pcds = pcds.filter(options.filter);
+      pcds = pcds.filter((pcd: PCD) => options.filter?.(pcd, this, other));
     }
 
     this.addAll(pcds, { upsert: true });
 
-    // If the caller wants folders to be merged too
-    if (options?.setFolders) {
-      for (const pcd of pcds) {
-        this.setFolder(pcd.id, other.folders[pcd.id]);
-      }
+    for (const pcd of pcds) {
+      this.setFolder(pcd.id, other.folders[pcd.id]);
     }
   }
 }

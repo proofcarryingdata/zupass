@@ -9,7 +9,6 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
-import React from "react";
 import { Emitter } from "./emitter";
 
 export type GetState = () => AppState;
@@ -42,7 +41,11 @@ export interface AppState {
         refreshAll: () => Promise<void>;
       }
     | { modalType: "frogcrypto-export-pcds" }
-    | { modalType: "account-import" };
+    | {
+        modalType: "account-import";
+        imported?: number;
+        error?: string;
+      };
 
   // User metadata.
   self?: User;

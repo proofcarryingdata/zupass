@@ -17,6 +17,7 @@ import {
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import {
+  isSemaphoreIdentityPCD,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
@@ -133,7 +134,7 @@ export type Action =
   | {
       type: "merge-import";
       collection: PCDCollection;
-      filter: (pcd: PCD) => boolean;
+      pcdsToMergeIds: Set<PCD["id"]>;
     };
 
 export type StateContextValue = {
@@ -239,7 +240,12 @@ export async function dispatch(
         action.onError
       );
     case "merge-import":
-      return mergeImport(state, update, action.collection, action.filter);
+      return mergeImport(
+        state,
+        update,
+        action.collection,
+        action.pcdsToMergeIds
+      );
     default:
       // We can ensure that we never get here using the type system
       assertUnreachable(action);
@@ -983,12 +989,63 @@ async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
 /**
  * Merge in a PCD collection from an import of backed-up data.
  */
-function mergeImport(
+async function mergeImport(
   state: AppState,
   update: ZuUpdate,
   collection: PCDCollection,
-  filter: (pcd: PCD) => boolean
+  pcdsToMergeIds: Set<PCD["id"]>
 ) {
-  state.pcds.merge(collection, { filter, setFolders: true });
-  update({ pcds: state.pcds });
+  const userHasExistingSemaphoreIdentityPCD =
+    state.pcds.getPCDsByType(SemaphoreIdentityPCDTypeName).length > 0;
+
+  const pcdCountBeforeMerge = state.pcds.getAll().length;
+
+  const filterFunction = (
+    pcd: PCD,
+    target: PCDCollection,
+    _source: PCDCollection
+  ): boolean => {
+    return (
+      pcdsToMergeIds.has(pcd.id) &&
+      !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
+      !(
+        isSemaphoreIdentityPCD(pcd) &&
+        pcd.claim.identity.getCommitment().toString() !== state.self.commitment
+      ) &&
+      !target.hasPCDWithId(pcd.id)
+    );
+  };
+
+  const packages = await getPackages();
+
+  // This is a clunky way to clone an object.
+  // It is also asynchronous, so there is the infinitessimal possibility of
+  // an update changing state.pcds while we're in the middle of deserializing.
+  const pcds = await PCDCollection.deserialize(
+    packages,
+    await state.pcds.serializeCollection()
+  );
+
+  try {
+    pcds.merge(collection, {
+      filter: filterFunction
+    });
+
+    await savePCDs(pcds);
+    update({
+      pcds,
+      modal: {
+        modalType: "account-import",
+        imported: pcds.getAll().length - pcdCountBeforeMerge
+      }
+    });
+  } catch (e) {
+    update({
+      modal: {
+        modalType: "account-import",
+        error:
+          "An unexpected error was encountered when importing your backup. No changes have been made to your account."
+      }
+    });
+  }
 }
