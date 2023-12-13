@@ -1,3 +1,4 @@
+import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
   agreeTerms,
@@ -998,15 +999,15 @@ async function mergeImport(
   const userHasExistingSemaphoreIdentityPCD =
     state.pcds.getPCDsByType(SemaphoreIdentityPCDTypeName).length > 0;
 
+  const userHasExistingEmailPCD =
+    state.pcds.getPCDsByType(EmailPCDTypeName).length > 0;
+
   const pcdCountBeforeMerge = state.pcds.getAll().length;
 
-  const filterFunction = (
-    pcd: PCD,
-    target: PCDCollection,
-    _source: PCDCollection
-  ): boolean => {
+  const filterFunction = (pcd: PCD, target: PCDCollection): boolean => {
     return (
       pcdsToMergeIds.has(pcd.id) &&
+      !(pcd.type === EmailPCDTypeName && userHasExistingEmailPCD) &&
       !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
       !(
         isSemaphoreIdentityPCD(pcd) &&
