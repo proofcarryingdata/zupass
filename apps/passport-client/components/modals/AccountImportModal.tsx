@@ -14,18 +14,18 @@ import { Button } from "../core";
 // There are three main UI states that can occur after a user selects a file
 // to import.
 type ImportState =
+  | { state: "ready" }
   // The selected file is valid, and the user can decide whether to import it.
   | {
-      valid: true;
-      imported: false;
+      state: "valid-file-selected";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
     }
   // The import has been carried out, and `added` is the number of PCDs
   // imported.
-  | { valid: true; imported: true }
+  | { state: "import-complete" }
   // The selected file is not valid.
-  | { valid: false };
+  | { state: "invalid-file" };
 
 export function AccountImportModal() {
   const { openFilePicker, filesContent } = useFilePicker({
@@ -37,13 +37,15 @@ export function AccountImportModal() {
   const pcdCollection = usePCDCollection();
   const dispatch = useDispatch();
 
-  const [importState, setImportState] = useState<ImportState | undefined>();
+  const [importState, setImportState] = useState<ImportState>({
+    state: "ready"
+  });
 
   // Called when a valid file has been selected, and the user chooses to import
   // PCDs from it.
   const importPCDs = useCallback(() => {
     // Should never happen, but makes TypeScript happy that we checked for it
-    if (!importState.valid || importState.imported === true) return;
+    if (importState.state !== "valid-file-selected") return;
 
     dispatch({
       type: "merge-import",
@@ -51,59 +53,75 @@ export function AccountImportModal() {
       pcdsToMergeIds: importState.pcdsToMergeIds
     });
 
-    setImportState({ valid: true, imported: true });
+    setImportState({ state: "import-complete" });
   }, [dispatch, importState]);
 
   // Responds to the user having selected a file to import
   useEffect(() => {
     (async () => {
       // If a file has been selected
-      if (filesContent.length > 0 && !importState?.valid) {
-        try {
-          // Parse the file content as JSON
-          const storageExport = JSON.parse(filesContent[0].content);
-          // Deserialize the storage - throws an error if the content is not
-          // recognized
-          const importedBackup = await deserializeStorage(
-            storageExport,
-            await getPackages()
-          );
+      if (
+        filesContent.length > 0 &&
+        importState.state !== "import-complete" &&
+        importState.state !== "invalid-file"
+      ) {
+        let importedCollection: PCDCollection;
 
-          const userHasSemaphoreIdentity =
-            pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
+        if (importState.state === "ready") {
+          try {
+            // Parse the file content as JSON
+            const storageExport = JSON.parse(filesContent[0].content);
+            // Deserialize the storage - throws an error if the content is not
+            // recognized
+            const importedBackup = await deserializeStorage(
+              storageExport,
+              await getPackages()
+            );
+            importedCollection = importedBackup.pcds;
+          } catch (e) {
+            setImportState({ state: "invalid-file" });
+          }
+        } else {
+          importedCollection = importState.collection;
+        }
 
-          // Before importing, we want to filter the PCDs down to those which
-          // are valid to import
-          const preImportFilter = (pcd: PCD) => {
-            // If the user has a semaphore identity PCD, don't import another
-            if (
-              userHasSemaphoreIdentity &&
-              pcd.type === SemaphoreIdentityPCDTypeName
-            ) {
-              return false;
-            }
+        const userHasSemaphoreIdentity =
+          pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
 
-            // If a PCD with this ID exists already, don't import it
-            if (pcdCollection.hasPCDWithId(pcd.id)) {
-              return false;
-            }
+        // Before importing, we want to filter the PCDs down to those which
+        // are valid to import
+        const preImportFilter = (pcd: PCD) => {
+          // If the user has a semaphore identity PCD, don't import another
+          if (
+            userHasSemaphoreIdentity &&
+            pcd.type === SemaphoreIdentityPCDTypeName
+          ) {
+            return false;
+          }
 
-            // Otherwise, do import it
-            return true;
-          };
+          // If a PCD with this ID exists already, don't import it
+          if (pcdCollection.hasPCDWithId(pcd.id)) {
+            return false;
+          }
 
-          const pcdsToMerge = importedBackup.pcds
-            .getAll()
-            .filter(preImportFilter);
+          // Otherwise, do import it
+          return true;
+        };
 
+        const pcdsToMerge = importedCollection.getAll().filter(preImportFilter);
+        const pcdsToMergeIds = new Set(pcdsToMerge.map((pcd) => pcd.id));
+
+        if (
+          importState.state === "ready" ||
+          importState.collection !== importedCollection ||
+          importState.pcdsToMergeIds.size !== pcdsToMergeIds.size ||
+          [...pcdsToMergeIds].find((id) => !importState.pcdsToMergeIds.has(id))
+        ) {
           setImportState({
-            valid: true,
-            imported: false,
-            collection: importedBackup.pcds,
+            state: "valid-file-selected",
+            collection: importedCollection,
             pcdsToMergeIds: new Set(pcdsToMerge.map((pcd) => pcd.id))
           });
-        } catch (e) {
-          setImportState({ valid: false });
         }
       }
     })();
@@ -112,7 +130,7 @@ export function AccountImportModal() {
   return (
     <Container>
       <Spacer h={24} />
-      {!importState && (
+      {importState.state === "ready" && (
         <>
           <p>
             If you have previously exported a backup of your account, you can
@@ -125,7 +143,7 @@ export function AccountImportModal() {
           <Spacer h={8} />
         </>
       )}
-      {importState && importState.valid && !(importState.imported === true) && (
+      {importState.state === "valid-file-selected" && (
         <>
           {importState.pcdsToMergeIds.size == 0 && (
             <>
@@ -151,9 +169,7 @@ export function AccountImportModal() {
           )}
         </>
       )}
-      {importState &&
-        importState.valid &&
-        importState.imported &&
+      {importState.state === "import-complete" &&
         modal.modalType === "account-import" &&
         !modal.error && (
           <>
@@ -172,9 +188,7 @@ export function AccountImportModal() {
             <Spacer h={8} />
           </>
         )}
-      {importState &&
-        importState.valid &&
-        importState.imported &&
+      {importState.state === "import-complete" &&
         modal.modalType === "account-import" &&
         modal.error && (
           <>
@@ -190,7 +204,7 @@ export function AccountImportModal() {
             <Spacer h={8} />
           </>
         )}
-      {importState && !importState.valid && (
+      {importState.state === "invalid-file" && (
         <>
           <p>
             The selected file is not a valid Zupass account backup. Please
