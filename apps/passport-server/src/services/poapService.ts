@@ -202,27 +202,44 @@ export class PoapService {
   public async getDevconnectPoapClaimUrlByTicketId(
     ticketId: string
   ): Promise<string | null> {
-    const hashedTicketId = await getHash(ticketId);
-    // This critical section executes within a lock to prevent the case where two
-    // concurrent threads both end up on the `claimNewPoapUrl()` function. The lock
-    // ensures that at least one thread will hit `getExistingClaimUrlByTicketId()`.
-    const poapLink = await lock.acquire(POAP_CLAIM_LOCK_KEY, async () => {
-      const existingPoapLink = await getExistingClaimUrlByTicketId(
-        this.context.dbPool,
-        hashedTicketId
-      );
-      if (existingPoapLink != null) {
-        return existingPoapLink;
+    return traced(
+      "poap",
+      "getDevconnectPoapClaimUrlByTicketId",
+      async (span) => {
+        span?.setAttribute("ticketId", ticketId);
+        const hashedTicketId = await getHash(ticketId);
+        span?.setAttribute("hashedTicketId", hashedTicketId);
+        // This critical section executes within a lock to prevent the case where two
+        // concurrent threads both end up on the `claimNewPoapUrl()` function. The lock
+        // ensures that at least one thread will hit `getExistingClaimUrlByTicketId()`.
+        const poapLink = await lock.acquire(POAP_CLAIM_LOCK_KEY, async () => {
+          const existingPoapLink = await getExistingClaimUrlByTicketId(
+            this.context.dbPool,
+            hashedTicketId
+          );
+          if (existingPoapLink != null) {
+            span?.setAttribute("alreadyClaimed", true);
+            span?.setAttribute("poapLink", existingPoapLink);
+            return existingPoapLink;
+          }
+
+          const newPoapLink = await claimNewPoapUrl(
+            this.context.dbPool,
+            "devconnect",
+            hashedTicketId
+          );
+
+          span?.setAttribute("alreadyClaimed", false);
+          if (newPoapLink) {
+            span?.setAttribute("poapLink", newPoapLink);
+          }
+
+          return newPoapLink;
+        });
+
+        return poapLink;
       }
-
-      return await claimNewPoapUrl(
-        this.context.dbPool,
-        "devconnect",
-        hashedTicketId
-      );
-    });
-
-    return poapLink;
+    );
   }
 }
 
