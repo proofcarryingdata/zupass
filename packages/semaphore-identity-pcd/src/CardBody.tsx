@@ -1,5 +1,5 @@
 import { FieldLabel, HiddenText, Separator, styled } from "@pcd/passport-ui";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityPCD } from "./SemaphoreIdentityPCD";
 
 export function SemaphoreIdentityCardBody({
   pcd
