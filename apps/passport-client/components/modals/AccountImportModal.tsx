@@ -2,11 +2,12 @@ import { deserializeStorage } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
-import { useDispatch, usePCDCollection } from "../../src/appHooks";
+import { useDispatch, useModal, usePCDCollection } from "../../src/appHooks";
 import { getPackages } from "../../src/pcdPackages";
 import { Button } from "../core";
 
@@ -18,7 +19,7 @@ type ImportState =
       valid: true;
       imported: false;
       collection: PCDCollection;
-      pcdsToMergeCount: number;
+      pcdsToMergeIds: Set<PCD["id"]>;
     }
   // The import has been carried out, and `added` is the number of PCDs
   // imported.
@@ -32,23 +33,11 @@ export function AccountImportModal() {
     multiple: false
   });
 
+  const modal = useModal();
   const pcdCollection = usePCDCollection();
   const dispatch = useDispatch();
 
   const [importState, setImportState] = useState<ImportState | undefined>();
-
-  // Create the function to filter out unwanted PCDs during merging
-  const filterPCDs = useCallback(
-    (pcd: PCD) => {
-      return (
-        // Do not merge in a Semaphore identity PCD
-        pcd.type !== SemaphoreIdentityPCD.name ||
-        // Do not merge PCDs we already have
-        pcdCollection.hasPCDWithId(pcd.id)
-      );
-    },
-    [pcdCollection]
-  );
 
   // Called when a valid file has been selected, and the user chooses to import
   // PCDs from it.
@@ -56,22 +45,20 @@ export function AccountImportModal() {
     // Should never happen, but makes TypeScript happy that we checked for it
     if (!importState.valid || importState.imported === true) return;
 
-    // It would be nice if we could get data back from `dispatch` more
-    // straightforwardly, e.g. the number of PCDs that were added.
     dispatch({
       type: "merge-import",
       collection: importState.collection,
-      filter: filterPCDs
+      pcdsToMergeIds: importState.pcdsToMergeIds
     });
 
     setImportState({ valid: true, imported: true });
-  }, [dispatch, filterPCDs, importState]);
+  }, [dispatch, importState]);
 
   // Responds to the user having selected a file to import
   useEffect(() => {
     (async () => {
       // If a file has been selected
-      if (filesContent.length > 0) {
+      if (filesContent.length > 0 && !importState?.valid) {
         try {
           // Parse the file content as JSON
           const storageExport = JSON.parse(filesContent[0].content);
@@ -82,21 +69,45 @@ export function AccountImportModal() {
             await getPackages()
           );
 
+          const userHasSemaphoreIdentity =
+            pcdCollection.getPCDsByType(SemaphoreGroupPCDTypeName).length > 0;
+
+          // Before importing, we want to filter the PCDs down to those which
+          // are valid to import
+          const preImportFilter = (pcd: PCD) => {
+            // If the user has a semaphore identity PCD, don't import another
+            if (
+              userHasSemaphoreIdentity &&
+              pcd.type === SemaphoreIdentityPCDTypeName
+            ) {
+              return false;
+            }
+
+            // If a PCD with this ID exists already, don't import it
+            if (pcdCollection.hasPCDWithId(pcd.id)) {
+              return false;
+            }
+
+            // Otherwise, do import it
+            return true;
+          };
+
+          const pcdsToMerge = importedBackup.pcds
+            .getAll()
+            .filter(preImportFilter);
+
           setImportState({
             valid: true,
             imported: false,
             collection: importedBackup.pcds,
-            pcdsToMergeCount: importedBackup.pcds.getAll().filter(filterPCDs)
-              .length
+            pcdsToMergeIds: new Set(pcdsToMerge.map((pcd) => pcd.id))
           });
         } catch (e) {
           setImportState({ valid: false });
         }
       }
     })();
-  }, [filesContent, filterPCDs, pcdCollection]);
-
-  console.log(importState);
+  }, [filesContent, importState, pcdCollection]);
 
   return (
     <Container>
@@ -116,7 +127,7 @@ export function AccountImportModal() {
       )}
       {importState && importState.valid && !(importState.imported === true) && (
         <>
-          {importState.pcdsToMergeCount == 0 && (
+          {importState.pcdsToMergeIds.size == 0 && (
             <>
               <p>
                 The selected file does not contain any new PCDs. You may try to
@@ -127,11 +138,11 @@ export function AccountImportModal() {
               <Spacer h={8} />
             </>
           )}
-          {importState.pcdsToMergeCount > 0 && (
+          {importState.pcdsToMergeIds.size > 0 && (
             <>
               <p>
                 The selected file contains{" "}
-                <strong>{importState.pcdsToMergeCount}</strong> new PCDs.
+                <strong>{importState.pcdsToMergeIds.size}</strong> new PCDs.
               </p>
               <Spacer h={8} />
               <Button onClick={importPCDs}>Import PCDs</Button>
@@ -140,20 +151,45 @@ export function AccountImportModal() {
           )}
         </>
       )}
-      {importState && importState.valid && importState.imported && (
-        <>
-          <p>Successfully imported backed-up data from the selected file.</p>
-          <Spacer h={8} />
-          <Button
-            onClick={() =>
-              dispatch({ type: "set-modal", modal: { modalType: "none" } })
-            }
-          >
-            Close
-          </Button>
-          <Spacer h={8} />
-        </>
-      )}
+      {importState &&
+        importState.valid &&
+        importState.imported &&
+        modal.modalType === "account-import" &&
+        !modal.error && (
+          <>
+            <p>
+              Successfully imported <strong>{modal.imported}</strong> PCDs from
+              the selected file.
+            </p>
+            <Spacer h={8} />
+            <Button
+              onClick={() =>
+                dispatch({ type: "set-modal", modal: { modalType: "none" } })
+              }
+            >
+              Close
+            </Button>
+            <Spacer h={8} />
+          </>
+        )}
+      {importState &&
+        importState.valid &&
+        importState.imported &&
+        modal.modalType === "account-import" &&
+        modal.error && (
+          <>
+            <p>{modal.error}</p>
+            <Spacer h={8} />
+            <Button
+              onClick={() =>
+                dispatch({ type: "set-modal", modal: { modalType: "none" } })
+              }
+            >
+              Close
+            </Button>
+            <Spacer h={8} />
+          </>
+        )}
       {importState && !importState.valid && (
         <>
           <p>

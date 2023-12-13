@@ -355,7 +355,7 @@ describe("PCDCollection", async function () {
     ]);
   });
 
-  it("should not copy folder details by default", async function () {
+  it("should copy folder details", async function () {
     const pcdList = await Promise.all([newPCD(), newPCD()]);
 
     const firstCollection = new PCDCollection(packages);
@@ -369,27 +369,10 @@ describe("PCDCollection", async function () {
     firstCollection.merge(secondCollection);
 
     expect(firstCollection.getAll()).to.deep.eq(pcdList);
-    expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.be.undefined;
-  });
-
-  it("should copy folder details when option is set", async function () {
-    const pcdList = await Promise.all([newPCD(), newPCD()]);
-
-    const firstCollection = new PCDCollection(packages);
-    const secondCollection = new PCDCollection(packages);
-
-    firstCollection.add(pcdList[0]);
-    firstCollection.setPCDFolder(pcdList[0].id, "A");
-    secondCollection.add(pcdList[1]);
-    secondCollection.setPCDFolder(pcdList[1].id, "B");
-
-    firstCollection.merge(secondCollection, { setFolders: true });
-
-    expect(firstCollection.getAll()).to.deep.eq(pcdList);
     expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.eq("B");
   });
 
-  it("should copy folder details when option is set and folder exists in both collections", async function () {
+  it("should copy folder details when folder exists in both collections", async function () {
     const pcdList = await Promise.all([newPCD(), newPCD()]);
 
     const firstCollection = new PCDCollection(packages);
@@ -400,7 +383,7 @@ describe("PCDCollection", async function () {
     secondCollection.add(pcdList[1]);
     secondCollection.setPCDFolder(pcdList[1].id, "A");
 
-    firstCollection.merge(secondCollection, { setFolders: true });
+    firstCollection.merge(secondCollection);
 
     expect(firstCollection.getAll()).to.deep.eq(pcdList);
     expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.eq("A");
