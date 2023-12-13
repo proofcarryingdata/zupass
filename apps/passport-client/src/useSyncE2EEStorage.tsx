@@ -110,7 +110,7 @@ export type UploadStorageResult = APIResult<
  * Uploads the state of this passport which is contained in localstorage
  * to the server, end to end encrypted.
  *
- * If knownRevision is specified, it will is used to abort the upload in
+ * If knownRevision is specified, it is used to abort the upload in
  * case of conflict.  If it is undefined, the upload will overwrite
  * any revision.
  */
@@ -132,7 +132,7 @@ export async function uploadStorage(
  * Uploads the state of this passport, in serialied form as produced by
  * serializeStorage().
  *
- * If knownRevision is specified, it will is used to abort the upload in
+ * If knownRevision is specified, it is used to abort the upload in
  * case of conflict.  If it is undefined, the upload will overwrite
  * any revision.
  */
