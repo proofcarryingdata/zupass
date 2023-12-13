@@ -179,6 +179,8 @@ function CardBody({
     if (ui) {
       const Component = ui.renderCardBody;
       return <Component pcd={pcd} />;
+    } else {
+      console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
     }
   }
 
