@@ -6,7 +6,7 @@ import { sqlQuery } from "../sqlQuery";
  * otherwise, returns NULL if there are no more unclaimed POAPs available for the
  * given event.
  *
- * If there is a new unclaimed POAP, we associates the provided hashed ticket ID
+ * If there is a new unclaimed POAP, we associate the provided hashed ticket ID
  * with a POAP claim URL such that in the future, that hashed ticket ID will be
  * redirected to this POAP claim URL.
  */
