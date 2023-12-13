@@ -97,7 +97,12 @@ function HeaderContent({
   ) {
     header = "ZUCONNECT '23 DAY PASS";
   }
-  const headerContent = header ? <>{header}</> : <></>;
+
+  const headerContent = header ? (
+    <>{header}</>
+  ) : (
+    getUI(pcdPackage.name)?.getHeader?.({ pcd })
+  );
 
   return headerContent;
 }
@@ -144,7 +149,7 @@ function TicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
   return <ZKTicketPCDCard pcd={pcd} />;
 }
 
-function getRender(name: string): PCDUI | undefined {
+function getUI(name: string): PCDUI | undefined {
   return pcdRenderers[name];
 }
 
@@ -170,9 +175,9 @@ function CardBody({
   }
 
   if (pcdCollection.hasPackage(pcd.type)) {
-    const render = getRender(pcd.type);
-    if (render) {
-      const Component = render.renderCardBody;
+    const ui = getUI(pcd.type);
+    if (ui) {
+      const Component = ui.renderCardBody;
       return <Component pcd={pcd} />;
     }
   }
