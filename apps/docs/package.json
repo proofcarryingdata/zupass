@@ -6,8 +6,8 @@
   "private": true,
   "main": "index.js",
   "scripts": {
-    "build": "retype build",
-    "watch": "retype watch"
+    "build": "",
+    "watch": ""
   },
   "keywords": [],
   "author": "",
