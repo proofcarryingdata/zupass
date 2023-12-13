@@ -43,8 +43,7 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "libsodium-wrappers-sumo": "^0.7.11",
-    "react": "^18.2.0"
+    "libsodium-wrappers-sumo": "^0.7.11"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
