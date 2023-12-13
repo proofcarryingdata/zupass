@@ -354,8 +354,10 @@ async function finishAccountCreation(
     return; // Don't save the bad identity.  User must reset account.
   }
 
-  // Save PCDs to E2EE storage.  knownRevision=undefined will overwrite
-  // any conflicting data which may already exist.
+  // Save PCDs to E2EE storage.  knownRevision=undefined is the way to create
+  // a new entry.  It would also overwrite any conflicting data which may
+  // already exist, but that should be impossible for a new account with
+  // a new encryption key.
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
@@ -669,8 +671,12 @@ let skippedSyncUpdates = 0;
  * is needed, this function takes one action and returns, expecting to be
  * run again until no further action is needed.
  *
- * Returns the changes to be made to AppState.  If the result is defined, this
- * function should be run again.
+ * Returns the changes to be made to AppState, which the caller is expected
+ * to applly via update().  If the result is defined, this function should be
+ * run again.
+ *
+ * Further calls to update() will also occur inside of this function, to update
+ * fields which allow the UI to track progress.
  */
 async function doSync(
   state: AppState,

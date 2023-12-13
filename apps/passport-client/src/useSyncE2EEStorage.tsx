@@ -169,12 +169,12 @@ export async function uploadSerializedStorage(
   }
 }
 
-export type MergeState = {
+export type MergeableFields = {
   pcds: PCDCollection;
   subscriptions: FeedSubscriptionManager;
 };
 
-export type MergeStorageResult = APIResult<MergeState, NamedAPIError>;
+export type MergeStorageResult = APIResult<MergeableFields, NamedAPIError>;
 
 /**
  * Merge the contents of local and remote states, both of which have potential
@@ -183,8 +183,8 @@ export type MergeStorageResult = APIResult<MergeState, NamedAPIError>;
  * TODO(artwyman): Describe merge algorithm.
  */
 export async function mergeStorage(
-  _localState: MergeState,
-  remoteState: MergeState,
+  _localFields: MergeableFields,
+  remoteFields: MergeableFields,
   self: User
 ): Promise<MergeStorageResult> {
   console.error(
@@ -195,7 +195,7 @@ export async function mergeStorage(
     user: self.uuid
     // TODO(artwyman): more details for tracking.
   });
-  return { value: remoteState, success: true };
+  return { value: remoteFields, success: true };
 }
 
 export type SyncStorageResult = APIResult<
