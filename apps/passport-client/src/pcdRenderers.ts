@@ -39,15 +39,15 @@ const renderablePCDs = [
 type RenderablePCDType = (typeof renderablePCDs)[number];
 
 export const pcdRenderers: { [key in RenderablePCDType]: PCDUI } = {
-  "eddsa-ticket-pcd": EdDSATicketPCDUI,
-  "eddsa-pcd": EdDSATicketPCDUI,
-  "eddsa-frog-pcd": EdDSAFrogPCDUI,
-  "email-pcd": EmailPCDUI,
-  "ethereum-ownership-pcd": EthereumOwnershipPCDUI,
-  "halo-nonce-pcd": HaLoNoncePCDUI,
-  "rsa-pcd": RSAPCDUI,
-  "rsa-ticket-pcd": RSATicketPCDUI,
-  "semaphore-group-signal": SemaphoreGroupPCDUI,
-  "semaphore-signature-pcd": SemaphoreSignaturePCDUI,
-  "zk-eddsa-event-ticket-pcd": ZKEdDSAEventTicketPCDUI
+  [EdDSATicketPCDTypeName]: EdDSATicketPCDUI,
+  [EdDSAPCDTypeName]: EdDSATicketPCDUI,
+  [EdDSAFrogPCDTypeName]: EdDSAFrogPCDUI,
+  [EmailPCDTypeName]: EmailPCDUI,
+  [EthereumOwnershipPCDTypeName]: EthereumOwnershipPCDUI,
+  [HaLoNoncePCDTypeName]: HaLoNoncePCDUI,
+  [RSAPCDTypeName]: RSAPCDUI,
+  [RSATicketPCDTypeName]: RSATicketPCDUI,
+  [SemaphoreGroupPCDTypeName]: SemaphoreGroupPCDUI,
+  [SemaphoreSignaturePCDTypeName]: SemaphoreSignaturePCDUI,
+  [ZKEdDSAEventTicketPCDTypeName]: ZKEdDSAEventTicketPCDUI
 };
