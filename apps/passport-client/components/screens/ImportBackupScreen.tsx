@@ -20,6 +20,8 @@ export function useImportScreenData() {
   return useSelector<AppState["importScreen"]>((s) => s.importScreen, []);
 }
 
+const NoFolderSymbol = Symbol("None");
+
 // There are four main UI states that can occur after a user selects a file
 // to import.
 type ImportState =
@@ -28,8 +30,16 @@ type ImportState =
   // The selected file is valid, and the user can decide whether to import it.
   | {
       state: "valid-file-selected";
+      // The collection parsed from the selected file
       collection: PCDCollection;
-      pcdsToMergeIds: Set<PCD["id"]>;
+      // The PCD IDs referring to PCDs which are valid to import
+      mergeablePcdIds: Set<PCD["id"]>;
+      // The folders the user has selected in the UI
+      selectedFolders: Set<string | symbol>;
+      // The PCD IDs that are valid and within the selected folders
+      selectedPcdIds: Set<PCD["id"]>;
+      // The count of valid PCDs in each importable folder
+      folderCounts: Record<string | symbol, number>;
     }
   // The import has been carried out, and `added` is the number of PCDs
   // imported.
@@ -42,6 +52,8 @@ export function ImportBackupScreen() {
     state: "initial"
   });
 
+  // Global application state, used to report the success or failure of the
+  // import.
   const importScreenState = useImportScreenData();
 
   const { openFilePicker, filesContent } = useFilePicker({
@@ -64,7 +76,7 @@ export function ImportBackupScreen() {
     dispatch({
       type: "merge-import",
       collection: importState.collection,
-      pcdsToMergeIds: importState.pcdsToMergeIds
+      pcdsToMergeIds: importState.selectedPcdIds
     });
 
     setImportState({ state: "import-complete" });
@@ -145,17 +157,87 @@ export function ImportBackupScreen() {
             return true;
           };
 
-          const pcdsToMerge = parsedCollection.getAll().filter(preImportFilter);
+          // These are the PCDs that could be merged, e.g. not duplicates of
+          // existing PCDs, or secondary semaphore identities or emails.
+          const mergeablePcds: PCD[] = parsedCollection
+            .getAll()
+            .filter(preImportFilter);
+
+          // Create a map of the folders these PCDs belong to, to a count of
+          // the number of PCDs in each folder, with `NoFolderSymbol` used for
+          // PCDs belonging to no folder.
+          const pcdFolders: Record<string | symbol, number> =
+            mergeablePcds.reduce((folders, pcd) => {
+              const folder =
+                parsedCollection.getFolderOfPCD(pcd.id) ?? NoFolderSymbol;
+              if (folder in folders) {
+                folders[folder]++;
+              } else {
+                folders[folder] = 1;
+              }
+              return folders;
+            }, {});
+
+          // The set of folders that the user has chosen to import.
+          let selectedFolders: Set<string | symbol>;
+
+          if (importState.state === "initial") {
+            // By default all folders are selected.
+            selectedFolders = new Set([
+              NoFolderSymbol,
+              ...Object.keys(pcdFolders)
+            ]);
+          } else {
+            // Otherwise, make sure previously selected folders are still
+            // valid given current parsed file contents.
+            selectedFolders = importState.selectedFolders;
+            for (const folder of selectedFolders) {
+              // Do we have a selected folder that doesn't exist any more
+              // for some reason?
+              if (!(folder in pcdFolders)) {
+                selectedFolders.delete(folder);
+              }
+            }
+          }
 
           setImportState({
             state: "valid-file-selected",
             collection: parsedCollection,
-            pcdsToMergeIds: new Set(pcdsToMerge.map((pcd) => pcd.id))
+            mergeablePcdIds: new Set(mergeablePcds.map((pcd) => pcd.id)),
+            selectedFolders,
+            // Check which of the mergeable PCDs are in selected folders, and
+            // create a set of their IDs
+            selectedPcdIds: new Set(
+              mergeablePcds
+                .filter((pcd) => {
+                  const folder =
+                    parsedCollection.getFolderOfPCD(pcd.id) ?? NoFolderSymbol;
+                  return selectedFolders.has(folder);
+                })
+                .map((pcd) => pcd.id)
+            ),
+            folderCounts: pcdFolders
           });
         }
       }
     })();
   }, [filesContent, importState, existingPcdCollection]);
+
+  // When the user selects or de-selects a folder for inclusion in the merge
+  const toggleFolder = useCallback(
+    (folder: string | symbol) => {
+      if (importState.state === "valid-file-selected") {
+        const { selectedFolders } = importState;
+        if (selectedFolders.has(folder) && selectedFolders.size > 1) {
+          selectedFolders.delete(folder);
+        } else {
+          selectedFolders.add(folder);
+        }
+        setImportState({ ...importState, selectedFolders });
+      }
+    },
+    [importState]
+  );
 
   return (
     <>
@@ -185,7 +267,7 @@ export function ImportBackupScreen() {
           )}
           {importState.state === "valid-file-selected" && (
             <>
-              {importState.pcdsToMergeIds.size == 0 && (
+              {importState.mergeablePcdIds.size == 0 && (
                 <>
                   <p>
                     The selected file does not contain any new PCDs. You may try
@@ -196,14 +278,53 @@ export function ImportBackupScreen() {
                   <Spacer h={8} />
                 </>
               )}
-              {importState.pcdsToMergeIds.size > 0 && (
+              {importState.mergeablePcdIds.size > 0 && (
                 <>
                   <p>
                     The selected file contains{" "}
-                    <strong>{importState.pcdsToMergeIds.size}</strong> new PCDs.
+                    <strong>{importState.mergeablePcdIds.size}</strong> new
+                    PCDs.
                   </p>
+                  <div>
+                    Import PCDs from the following backed-up folders:
+                    <Folders>
+                      {[
+                        [NoFolderSymbol, 1] as [symbol, number],
+                        ...Object.entries(importState.folderCounts)
+                      ].map(([folder, count]) => {
+                        return (
+                          <Folder key={folder.toString()}>
+                            <input
+                              type="checkbox"
+                              checked={importState.selectedFolders.has(folder)}
+                              onChange={() => toggleFolder(folder)}
+                            ></input>
+                            <span>
+                              {folder === NoFolderSymbol
+                                ? "None"
+                                : (folder as string)}{" "}
+                              ({count})
+                            </span>
+                          </Folder>
+                        );
+                      })}
+                    </Folders>
+                  </div>
+
                   <Spacer h={8} />
-                  <Button onClick={importPCDs}>Import PCDs</Button>
+                  <Button onClick={importPCDs}>
+                    Import{" "}
+                    {[
+                      [NoFolderSymbol, 1] as [symbol, number],
+                      ...Object.entries(importState.folderCounts)
+                    ].reduce(
+                      (total, [folder, count]) =>
+                        total +
+                        (importState.selectedFolders.has(folder) ? count : 0),
+                      0
+                    )}{" "}
+                    PCDs
+                  </Button>
                   <Spacer h={8} />
                 </>
               )}
@@ -252,4 +373,14 @@ const Container = styled.div`
   p {
     margin-bottom: 1rem;
   }
+`;
+
+const Folder = styled.label`
+  display: flex;
+  column-gap: 0.5rem;
+`;
+
+const Folders = styled.div`
+  margin-top: 0.5rem;
+  margin-bottom: 1rem;
 `;
