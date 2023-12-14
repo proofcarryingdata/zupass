@@ -11,6 +11,7 @@ import urljoin from "url-join";
 import { validate } from "uuid";
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useSubscriptions } from "../../../src/appHooks";
+import { saveSubscriptions } from "../../../src/localstorage";
 
 export const DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL = `${appConfig.frogCryptoServer}/frogcrypto/feeds`;
 
@@ -30,6 +31,7 @@ export function useInitializeFrogSubscriptions(): (
         DEFAULT_FROG_SUBSCRIPTION_PROVIDER_URL,
         FrogCryptoFolderName
       );
+      saveSubscriptions(subs); // If the subscription was new, make sure it's saved.
 
       function parseAndAddFeed(feed: Feed, deeplink: boolean): boolean {
         // skip any feeds that are already subscribed to.

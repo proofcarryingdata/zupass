@@ -25,6 +25,7 @@ import {
   useUserForcedToLogout
 } from "../../src/appHooks";
 import { isDefaultSubscription } from "../../src/defaultSubscriptions";
+import { saveSubscriptions } from "../../src/localstorage";
 import {
   clearAllPendingRequests,
   pendingAddSubscriptionRequestKey,
@@ -89,6 +90,7 @@ export function AddSubscriptionScreen() {
         setFetchedProviderName(response.providerName);
         if (!subs.getProvider(response.providerUrl)) {
           subs.addProvider(response.providerUrl, response.providerName);
+          saveSubscriptions(subs);
         }
       })
       .catch((e) => {
