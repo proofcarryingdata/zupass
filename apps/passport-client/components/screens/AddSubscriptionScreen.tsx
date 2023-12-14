@@ -33,8 +33,8 @@ import {
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, Button, H2, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
+import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { Spinner } from "../shared/Spinner";
-import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
@@ -104,10 +104,10 @@ export function AddSubscriptionScreen() {
 
   return (
     <AppContainer bg="gray">
-      <SubscriptionNavigation
+      <ScreenNavigation
         label={"Subscriptions"}
         to="/subscriptions"
-      ></SubscriptionNavigation>
+      ></ScreenNavigation>
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
         <H2>Add subscription</H2>

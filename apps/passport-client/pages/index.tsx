@@ -19,6 +19,7 @@ import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSu
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
+import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
@@ -367,6 +368,7 @@ function RouterImpl() {
             element={<FrogSubscriptionScreen />}
           />
           <Route path="server-error" element={<ServerErrorScreen />} />
+          <Route path="import" element={<ImportBackupScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -439,7 +441,8 @@ async function loadInitialState(): Promise<AppState> {
     checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
     offline: !window.navigator.onLine,
     serverStorageRevision: persistentSyncStatus.serverStorageRevision,
-    serverStorageHash: persistentSyncStatus.serverStorageHash
+    serverStorageHash: persistentSyncStatus.serverStorageHash,
+    importScreen: {}
   };
 }
 

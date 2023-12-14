@@ -1035,15 +1035,13 @@ async function mergeImport(
     await savePCDs(pcds);
     update({
       pcds,
-      modal: {
-        modalType: "account-import",
+      importScreen: {
         imported: pcds.getAll().length - pcdCountBeforeMerge
       }
     });
   } catch (e) {
     update({
-      modal: {
-        modalType: "account-import",
+      importScreen: {
         error:
           "An unexpected error was encountered when importing your backup. No changes have been made to your account."
       }
