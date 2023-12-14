@@ -28,6 +28,7 @@
     "knip": "knip --no-gitignore"
   },
   "devDependencies": {
+    "@roarr/cli": "^5.12.4",
     "@types/circomlibjs": "0.1.4",
     "@types/snarkjs": "0.7.5",
     "concurrently": "^8.2.0",
@@ -43,7 +44,11 @@
   "dependencies": {
     "@changesets/cli": "^2.26.0",
     "@types/react": "^18.0.22",
-    "turbo": "^1.8.5"
+    "tsx": "^4.6.2",
+    "turbo": "^1.8.5",
+    "turbowatch": "^2.29.4",
+    "workspace-tools": "^0.36.4",
+    "zx": "^7.2.3"
   },
   "resolutions": {
     "@types/react": "^18.0.22",

@@ -21,13 +21,11 @@ function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
       <p>This PCD represents an EdDSA signature of some bigint values</p>
 
       <Separator />
-
       <FieldLabel>Signed Message</FieldLabel>
       <HiddenText
         text={pcd.claim.message.map((num: bigint) => num.toString()).join(",")}
       />
       <Spacer h={8} />
-
       <FieldLabel>EdDSA Public Key</FieldLabel>
       <HiddenText text={pcd.claim.publicKey.join(",")} />
     </Container>
