@@ -341,7 +341,7 @@ describe("PCDCollection", async function () {
     // secondCollection contains two PCDs, but we want to filter one of them
     // out.
     firstCollection.merge(secondCollection, {
-      filter: (pcd) => {
+      predicate: (pcd) => {
         return pcd.id !== pcdList[4].id;
       }
     });

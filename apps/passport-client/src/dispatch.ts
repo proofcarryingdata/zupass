@@ -1004,7 +1004,7 @@ async function mergeImport(
 
   const pcdCountBeforeMerge = state.pcds.getAll().length;
 
-  const filterFunction = (pcd: PCD, target: PCDCollection): boolean => {
+  const predicate = (pcd: PCD, target: PCDCollection): boolean => {
     return (
       pcdsToMergeIds.has(pcd.id) &&
       !(pcd.type === EmailPCDTypeName && userHasExistingEmailPCD) &&
@@ -1029,7 +1029,7 @@ async function mergeImport(
 
   try {
     pcds.merge(collection, {
-      filter: filterFunction
+      shouldInclude: predicate
     });
 
     await savePCDs(pcds);
