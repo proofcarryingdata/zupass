@@ -459,22 +459,22 @@ export class PCDCollection {
   /**
    * Merges another PCD collection into this one.
    * There are two options:
-   * - `filter` is a function used to filter out PCDs from the other
+   * - `shouldInclude` is a function used to filter out PCDs from the other
    *   collection during merging, e.g. to filter out duplicates or PCDs of
    *   a type that should not be copied.
    */
   public merge(
     other: PCDCollection,
     options?: {
-      filter?: MergeFilterPredicate;
+      shouldInclude?: MergeFilterPredicate;
     }
   ): void {
     let pcds = other.getAll();
 
     // If the caller has specified a filter function, run that first to filter
     // out unwanted PCDs from the merge.
-    if (options?.filter) {
-      pcds = pcds.filter((pcd: PCD) => options.filter?.(pcd, this));
+    if (options?.shouldInclude) {
+      pcds = pcds.filter((pcd: PCD) => options.shouldInclude?.(pcd, this));
     }
 
     this.addAll(pcds, { upsert: true });
