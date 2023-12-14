@@ -143,6 +143,5 @@ export function isValidEmoji(str: string): boolean {
 export function getServerErrorUrl(title: string, description: string): string {
   const searchParams = new URLSearchParams({ title, description });
   const url = new URL("/#/server-error", requireEnv("PASSPORT_CLIENT_URL"));
-  url.search = searchParams.toString();
-  return url.toString();
+  return `${url}?${searchParams.toString()}`;
 }
