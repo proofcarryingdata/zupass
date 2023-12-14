@@ -40,12 +40,7 @@ export interface AppState {
         revealed: boolean;
         refreshAll: () => Promise<void>;
       }
-    | { modalType: "frogcrypto-export-pcds" }
-    | {
-        modalType: "account-import";
-        imported?: number;
-        error?: string;
-      };
+    | { modalType: "frogcrypto-export-pcds" };
 
   // User metadata.
   self?: User;
@@ -123,6 +118,13 @@ export interface AppState {
   offlineTickets: OfflineTickets;
   checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
   offline: boolean;
+
+  // @todo screen-specific data should perhaps have a structure similar to
+  // that of modals
+  importScreen: {
+    imported?: number;
+    error?: string;
+  };
 }
 
 export interface AppError {

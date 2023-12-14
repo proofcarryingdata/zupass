@@ -1,21 +1,30 @@
 import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { deserializeStorage } from "@pcd/passport-interface";
-import { Spacer } from "@pcd/passport-ui";
+import { Spacer, styled } from "@pcd/passport-ui";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useEffect, useState } from "react";
-import styled from "styled-components";
 import { useFilePicker } from "use-file-picker";
-import { useDispatch, useModal, usePCDCollection } from "../../src/appHooks";
+import { useDispatch, usePCDCollection } from "../../src/appHooks";
 import { getPackages } from "../../src/pcdPackages";
+import { AppState } from "../../src/state";
+import { useSelector } from "../../src/subscribe";
 import { Button, H2 } from "../core";
+import { MaybeModal } from "../modals/Modal";
+import { AppContainer } from "../shared/AppContainer";
+import { ScreenNavigation } from "../shared/ScreenNavigation";
 
-// There are three main UI states that can occur after a user selects a file
+export function useImportScreenData() {
+  return useSelector<AppState["importScreen"]>((s) => s.importScreen, []);
+}
+
+// There are four main UI states that can occur after a user selects a file
 // to import.
 type ImportState =
-  | { state: "ready" }
+  // Initial state
+  | { state: "initial" }
   // The selected file is valid, and the user can decide whether to import it.
   | {
       state: "valid-file-selected";
@@ -28,22 +37,23 @@ type ImportState =
   // The selected file is not valid.
   | { state: "invalid-file" };
 
-export function AccountImportModal() {
+export function ImportBackupScreen() {
+  const [importState, setImportState] = useState<ImportState>({
+    state: "initial"
+  });
+
+  const importScreenState = useImportScreenData();
+
   const { openFilePicker, filesContent } = useFilePicker({
     accept: ".json",
     multiple: false,
     onFilesSelected: () => {
-      setImportState({ state: "ready" });
+      setImportState({ state: "initial" });
     }
   });
 
-  const modal = useModal();
   const existingPcdCollection = usePCDCollection();
   const dispatch = useDispatch();
-
-  const [importState, setImportState] = useState<ImportState>({
-    state: "ready"
-  });
 
   // Called when a valid file has been selected, and the user chooses to import
   // PCDs from it.
@@ -73,7 +83,7 @@ export function AccountImportModal() {
         let parsedCollection: PCDCollection;
 
         // If the file hasn't been processed yet, process it
-        if (importState.state === "ready") {
+        if (importState.state === "initial") {
           try {
             // Parse the file content as JSON
             const storageExport = JSON.parse(filesContent[0].content);
@@ -94,8 +104,8 @@ export function AccountImportModal() {
         // Because this hook can be called multiple times, we should only
         // update the state if something has really changed
         if (
-          // If the previous state was "ready", there's definitely a change
-          importState.state === "ready" ||
+          // If the previous state was "initial", there's definitely a change
+          importState.state === "initial" ||
           // If we have a new imported collection object, that's a change
           importState.collection !== parsedCollection ||
           // If the set of PCDs to merge is different, that's a change
@@ -148,96 +158,91 @@ export function AccountImportModal() {
   }, [filesContent, importState, existingPcdCollection]);
 
   return (
-    <Container>
-      <Spacer h={8} />
-      <H2>Import Backup Data</H2>
-      <Spacer h={24} />
-      {importState.state === "ready" && (
-        <>
-          <p>
-            If you have previously exported a backup of your account, you can
-            restore any lost PCDs by importing the backup data.
-          </p>
-          <p>Importing data will not overwrite any of your existing PCDs.</p>
-          <p>To begin, select a backup file by clicking the button below.</p>
+    <>
+      <MaybeModal />
+      <AppContainer bg="gray">
+        <ScreenNavigation label={"Home"} to="/"></ScreenNavigation>
+        <Container>
           <Spacer h={8} />
-          <Button onClick={() => openFilePicker()}>Select file</Button>
-          <Spacer h={8} />
-        </>
-      )}
-      {importState.state === "valid-file-selected" && (
-        <>
-          {importState.pcdsToMergeIds.size == 0 && (
+          <H2>Import Backup Data</H2>
+          <Spacer h={24} />
+          {importState.state === "initial" && (
             <>
               <p>
-                The selected file does not contain any new PCDs. You may try to
-                restore from another backup.
+                If you have previously exported a backup of your account, you
+                can restore any lost PCDs by importing the backup data.
+              </p>
+              <p>
+                Importing data will not overwrite any of your existing PCDs.
+              </p>
+              <p>
+                To begin, select a backup file by clicking the button below.
               </p>
               <Spacer h={8} />
               <Button onClick={() => openFilePicker()}>Select file</Button>
               <Spacer h={8} />
             </>
           )}
-          {importState.pcdsToMergeIds.size > 0 && (
+          {importState.state === "valid-file-selected" && (
+            <>
+              {importState.pcdsToMergeIds.size == 0 && (
+                <>
+                  <p>
+                    The selected file does not contain any new PCDs. You may try
+                    to restore from another backup.
+                  </p>
+                  <Spacer h={8} />
+                  <Button onClick={() => openFilePicker()}>Select file</Button>
+                  <Spacer h={8} />
+                </>
+              )}
+              {importState.pcdsToMergeIds.size > 0 && (
+                <>
+                  <p>
+                    The selected file contains{" "}
+                    <strong>{importState.pcdsToMergeIds.size}</strong> new PCDs.
+                  </p>
+                  <Spacer h={8} />
+                  <Button onClick={importPCDs}>Import PCDs</Button>
+                  <Spacer h={8} />
+                </>
+              )}
+            </>
+          )}
+          {importState.state === "import-complete" &&
+            importScreenState &&
+            !importScreenState.error && (
+              <>
+                <p>
+                  Successfully imported{" "}
+                  <strong>{importScreenState.imported}</strong> PCDs from the
+                  selected file.
+                </p>
+                <Spacer h={8} />
+              </>
+            )}
+          {importState.state === "import-complete" &&
+            importScreenState &&
+            importScreenState.error && (
+              <>
+                <p>{importScreenState.error}</p>
+                <Spacer h={8} />
+              </>
+            )}
+          {importState.state === "invalid-file" && (
             <>
               <p>
-                The selected file contains{" "}
-                <strong>{importState.pcdsToMergeIds.size}</strong> new PCDs.
+                The selected file is not a valid Zupass account backup. Please
+                select a valid Zupass backup to import your data from.
               </p>
               <Spacer h={8} />
-              <Button onClick={importPCDs}>Import PCDs</Button>
+              <Button onClick={() => openFilePicker()}>Select file</Button>
               <Spacer h={8} />
             </>
           )}
-        </>
-      )}
-      {importState.state === "import-complete" &&
-        modal.modalType === "account-import" &&
-        !modal.error && (
-          <>
-            <p>
-              Successfully imported <strong>{modal.imported}</strong> PCDs from
-              the selected file.
-            </p>
-            <Spacer h={8} />
-            <Button
-              onClick={() =>
-                dispatch({ type: "set-modal", modal: { modalType: "none" } })
-              }
-            >
-              Close
-            </Button>
-            <Spacer h={8} />
-          </>
-        )}
-      {importState.state === "import-complete" &&
-        modal.modalType === "account-import" &&
-        modal.error && (
-          <>
-            <p>{modal.error}</p>
-            <Spacer h={8} />
-            <Button
-              onClick={() =>
-                dispatch({ type: "set-modal", modal: { modalType: "none" } })
-              }
-            >
-              Close
-            </Button>
-            <Spacer h={8} />
-          </>
-        )}
-      {importState.state === "invalid-file" && (
-        <>
-          <p>
-            The selected file is not a valid Zupass account backup. Please
-            select a valid Zupass backup to import your data from.
-          </p>
-          <Spacer h={8} />
-          <Button onClick={() => openFilePicker()}>Select file</Button>
-          <Spacer h={8} />
-        </>
-      )}
-    </Container>
+        </Container>
+      </AppContainer>
+    </>
   );
 }
 
