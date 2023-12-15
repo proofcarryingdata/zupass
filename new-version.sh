@@ -15,7 +15,7 @@ dir_path=$(dirname $full_path)
 cyan_bold='\033[36;1m'
 
 # Loop over each package
-for dir in $dir_path/packages/*;
+for dir in $dir_path/packages/*/*;
 do
   # Extract the package name from the path
   package_name=$(basename $dir)

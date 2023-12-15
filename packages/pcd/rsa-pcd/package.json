@@ -1,6 +1,6 @@
 {
   "name": "@pcd/rsa-pcd",
-  "version": "0.4.0",
+  "version": "0.5.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
@@ -31,8 +31,8 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.9.0",
-    "@pcd/util": "0.3.0",
+    "@pcd/pcd-types": "0.10.0",
+    "@pcd/util": "0.4.0",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "node-rsa": "^1.1.1",
