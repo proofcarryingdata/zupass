@@ -13,6 +13,7 @@ import {
   serializeStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { Identity } from "@semaphore-protocol/identity";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
@@ -28,11 +29,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
-import {
-  logAndUploadValidationErrors,
-  validatePCDCollection,
-  validateUpload
-} from "./validateState";
+import { validateAndLogStateErrors } from "./validateState";
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -109,19 +106,16 @@ export type UploadStorageResult = APIResult<
  */
 export async function uploadStorage(
   user: User,
+  userIdentity: Identity,
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager
 ): Promise<UploadStorageResult> {
-  const validationErrors = validateUpload(user, pcds);
-  if (validationErrors.errors.length > 0) {
-    logAndUploadValidationErrors(validationErrors);
+  if (!validateAndLogStateErrors(user, userIdentity, pcds)) {
     return {
       success: false,
       error: {
         name: "ValidationError",
-        detailedMessage:
-          "upload validation failed because\n: " +
-          validationErrors.errors.join("\n"),
+        detailedMessage: "upload validation failed",
         code: undefined
       }
     };
@@ -223,12 +217,8 @@ export async function downloadStorage(
       await getPackages()
     );
 
-    const validationErrors = validatePCDCollection(pcds);
-    if (validationErrors.errors.length > 0) {
-      logAndUploadValidationErrors(validationErrors);
-      throw new Error(
-        "validation errors:\n" + validationErrors.errors.join("\n")
-      );
+    if (!validateAndLogStateErrors(undefined, undefined, pcds, true)) {
+      throw new Error("downloaded e2ee state failed to validate");
     }
 
     await savePCDs(pcds);

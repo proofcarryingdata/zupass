@@ -52,12 +52,7 @@ import {
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
-import {
-  logAndUploadValidationErrors,
-  validateNewAccount,
-  validatePCDCollection,
-  validateUpload
-} from "./validateState";
+import { validateAndLogStateErrors } from "./validateState";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -180,7 +175,12 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(action.encryptionKey, action.storage, update);
+      return loadAfterLogin(
+        state,
+        action.encryptionKey,
+        action.storage,
+        update
+      );
     case "set-modal":
       return update({
         modal: action.modal
@@ -348,9 +348,7 @@ async function finishAccountCreation(
   update: ZuUpdate
 ) {
   // Verify that the identity is correct.
-  const validationErrors = validateNewAccount(user, state);
-  if (validationErrors.errors.length > 0) {
-    logAndUploadValidationErrors(validationErrors);
+  if (!validateAndLogStateErrors(user, state.identity, state.pcds)) {
     update({
       error: {
         title: "Invalid identity",
@@ -364,6 +362,7 @@ async function finishAccountCreation(
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
+    state.identity,
     state.pcds,
     state.subscriptions
   );
@@ -502,6 +501,7 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
 }
 
 async function loadAfterLogin(
+  state: AppState,
   encryptionKey: string,
   storage: StorageWithRevision,
   update: ZuUpdate
@@ -510,9 +510,8 @@ async function loadAfterLogin(
     storage.storage,
     await getPackages()
   );
-  const validationErrors = validatePCDCollection(pcds);
-  if (validationErrors.errors.length > 0) {
-    logAndUploadValidationErrors(validationErrors);
+
+  if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
     // TODO: what's the right error message here?
     throw new Error("saved storage failed to validate");
   }
@@ -777,9 +776,7 @@ async function doSync(
   );
 
   if (state.serverStorageHash !== appStorage.storageHash) {
-    const validationErrors = validateUpload(state.self, state.pcds);
-    if (validationErrors.errors.length > 0) {
-      logAndUploadValidationErrors(validationErrors);
+    if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
       state.userInvalid = true;
       return;
     }

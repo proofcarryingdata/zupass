@@ -4,20 +4,25 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
+import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
-import { AppState } from "./state";
 
-export interface ValidationErrors {
-  errors: string[];
-  userUUID?: string;
-}
-
-export function validateAndLogState(state: AppState): boolean {
-  const validationErrors = validateAppState(state);
+export function validateAndLogStateErrors(
+  self: User | undefined,
+  identity: Identity | undefined,
+  pcds: PCDCollection | undefined,
+  forceCheckPCDs?: boolean
+): boolean {
+  const validationErrors = validateAppState(
+    self,
+    identity,
+    pcds,
+    forceCheckPCDs
+  );
 
   if (validationErrors.errors.length > 0) {
-    logAndUploadValidationErrors(validationErrors);
+    logValidationErrors(validationErrors);
     return false;
   }
 
@@ -30,44 +35,56 @@ export function validateAndLogState(state: AppState): boolean {
  * it in an array of human interpretable strings. If there are no errors, returns an
  * empty array.
  */
-export function validateAppState(state: AppState): ValidationErrors {
+function validateAppState(
+  self: User | undefined,
+  identity: Identity | undefined,
+  pcds: PCDCollection | undefined,
+  forceCheckPCDs?: boolean
+): ValidationErrors {
   const validationErrors: string[] = [];
 
-  if (!state.self) {
-    validationErrors.push("missing 'self' field from app state");
-  }
+  const loggedOut = !self && !identity;
 
-  if (!state.identity) {
-    validationErrors.push("missing 'identity' field from app state");
-  }
-
-  if (!state.encryptionKey) {
-    validationErrors.push("missing 'encryption' field from app state key");
-  }
-
-  if (!state.pcds) {
-    validationErrors.push("missing 'pcds' field from app state");
-  }
-
-  if (state.pcds.size() === 0) {
-    validationErrors.push("'pcds' field in app state contains no pcds");
-  }
-
-  const identityPCDFromCollection = state.pcds.getPCDsByType(
+  const identityPCDFromCollection = pcds?.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
-  )[0] as SemaphoreIdentityPCD | undefined;
+  )?.[0] as SemaphoreIdentityPCD | undefined;
 
-  if (!identityPCDFromCollection) {
-    validationErrors.push(
-      "'pcds' field in app state does not contain an identity PCD"
-    );
+  if (forceCheckPCDs || !loggedOut) {
+    if (!identityPCDFromCollection) {
+      validationErrors.push(
+        "'pcds' field in app state does not contain an identity PCD"
+      );
+    }
+  }
+
+  if (loggedOut) {
+    return {
+      errors: validationErrors,
+      userUUID: undefined
+    };
+  }
+
+  if (!self) {
+    validationErrors.push("missing 'self'");
+  }
+
+  if (!identity) {
+    validationErrors.push("missing 'identity'");
+  }
+
+  if (!pcds) {
+    validationErrors.push("missing 'pcds'");
+  }
+
+  if (pcds.size() === 0) {
+    validationErrors.push("'pcds' contains no pcds");
   }
 
   const identityFromPCDCollection = identityPCDFromCollection?.claim?.identity;
   const commitmentOfIdentityPCDInCollection =
     identityFromPCDCollection?.commitment?.toString();
-  const commitmentFromSelfField = state?.self?.commitment;
-  const commitmentFromIdentityField = state?.identity?.commitment?.toString();
+  const commitmentFromSelfField = self?.commitment;
+  const commitmentFromIdentityField = identity?.commitment?.toString();
 
   if (commitmentOfIdentityPCDInCollection !== commitmentFromSelfField) {
     validationErrors.push(
@@ -92,101 +109,7 @@ export function validateAppState(state: AppState): ValidationErrors {
 
   return {
     errors: validationErrors,
-    userUUID: state.self?.uuid
-  };
-}
-
-/**
- * Validates a {@link PCDCollection} by checking its contents. Does verify that the collection
- * contains PCDs that are consistent with the rest of the application state. Returns a list of
- * strings representing individual errors. If there are no errors, returns an empty array.
- */
-export function validatePCDCollection(pcds?: PCDCollection): ValidationErrors {
-  const validationErrors: string[] = [];
-
-  if (!pcds) {
-    validationErrors.push("pcd collection is absent");
-  }
-
-  if (pcds.size() === 0) {
-    validationErrors.push("pcd collection is empty");
-  }
-
-  const identityPCDFromCollection = pcds.getPCDsByType(
-    SemaphoreIdentityPCDPackage.name
-  )[0] as SemaphoreIdentityPCD | undefined;
-
-  if (!identityPCDFromCollection) {
-    validationErrors.push("pcd collection does not contain an identity pcd");
-  }
-
-  return {
-    errors: validationErrors,
-    userUUID: ""
-  };
-}
-
-export function validateUpload(
-  user?: User,
-  pcds?: PCDCollection
-): ValidationErrors {
-  const validationErrors: string[] = [];
-
-  if (!user) {
-    validationErrors.push(`upload must include a user`);
-  }
-
-  if (!pcds) {
-    validationErrors.push(`upload must include a pcd collection`);
-  }
-
-  const identityPCDFromCollection = pcds.getPCDsByType(
-    SemaphoreIdentityPCDPackage.name
-  )[0] as SemaphoreIdentityPCD | undefined;
-  const commitmentFromPCDCollection =
-    identityPCDFromCollection?.claim?.identity?.commitment?.toString();
-
-  if (user?.commitment !== commitmentFromPCDCollection) {
-    validationErrors.push(
-      "user commitment does not equal to commitment of identity pcd in pcd collection"
-    );
-  }
-
-  return {
-    errors: validationErrors,
-    userUUID: user?.uuid
-  };
-}
-
-/**
- * Validates whether a user returned by the Zupass server API is consistent
- * with the local application state representation. Returns errors as strings,
- * and returns an empty array if the two are not inconsistent. Does not validate
- * {@link state} in its entirety, only that the {@link user} and {@link state}
- * are consistent.
- */
-export function validateNewAccount(
-  user: User,
-  state: AppState
-): ValidationErrors {
-  const validationErrors: string[] = [];
-
-  if (!state.identity) {
-    validationErrors.push("app state missing identity field");
-  }
-
-  const stateIdentityCommitment = state.identity?.commitment?.toString();
-  const userIdentityCommitment = user?.commitment;
-
-  if (stateIdentityCommitment !== userIdentityCommitment) {
-    validationErrors.push(
-      `app state identity (${stateIdentityCommitment}) does not match newly created user's commitment (${userIdentityCommitment})`
-    );
-  }
-
-  return {
-    errors: validationErrors,
-    userUUID: user.uuid
+    userUUID: self?.uuid
   };
 }
 
@@ -195,9 +118,7 @@ export function validateNewAccount(
  * we have records and are able to identify common types of errors. Does not leak
  * sensitive information, such as decrypted versions of e2ee storage.
  */
-export async function logAndUploadValidationErrors(
-  errors: ValidationErrors
-): Promise<void> {
+async function logValidationErrors(errors: ValidationErrors): Promise<void> {
   try {
     const user = loadSelf();
     errors.userUUID = errors.userUUID ?? user.uuid;
@@ -208,4 +129,12 @@ export async function logAndUploadValidationErrors(
   } catch (e) {
     console.log("error reporting errors", e);
   }
+}
+
+/**
+ * Uploaded to server in case of a state validation error.
+ */
+export interface ValidationErrors {
+  errors: string[];
+  userUUID?: string;
 }

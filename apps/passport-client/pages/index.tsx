@@ -66,7 +66,7 @@ import {
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
-import { validateAndLogState } from "../src/validateState";
+import { validateAndLogStateErrors } from "../src/validateState";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
@@ -441,7 +441,7 @@ async function loadInitialState(): Promise<AppState> {
     serverStorageHash: persistentSyncStatus.serverStorageHash
   };
 
-  if (!validateAndLogState(state)) {
+  if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
     state.userInvalid = true;
   }
 
