@@ -17,8 +17,6 @@ import {
   validatePCDCollection
 } from "./validateState";
 
-// validation points in this file
-
 const OLD_PCDS_KEY = "pcds"; // deprecated
 const COLLECTION_KEY = "pcd_collection";
 

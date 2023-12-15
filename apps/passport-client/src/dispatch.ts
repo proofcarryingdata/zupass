@@ -768,6 +768,7 @@ async function doSync(
     state.pcds,
     state.subscriptions
   );
+
   const validationErrors = validateUpload(state.self, state.pcds);
   if (validationErrors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
