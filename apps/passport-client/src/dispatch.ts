@@ -775,6 +775,11 @@ async function doSync(
     state.subscriptions
   );
 
+  if (state.userInvalid) {
+    console.log("[SYNC] userInvalid=true, exiting sync");
+    return;
+  }
+
   if (state.serverStorageHash !== appStorage.storageHash) {
     if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
       state.userInvalid = true;
