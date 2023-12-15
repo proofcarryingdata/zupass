@@ -44,13 +44,11 @@ export async function loadPCDs(): Promise<PCDCollection> {
     serializedCollection ?? "{}"
   );
 
-  // const validationErrors = validatePCDCollection(collection);
-  // if (validationErrors.errors.length > 0) {
-  //   logAndUploadValidationErrors(validationErrors);
-  //   throw new Error(
-  //     "couldn't load PCDs\n:" + validationErrors.errors.join("\n")
-  //   );
-  // }
+  if (validateAndLogStateErrors(undefined, undefined, collection, true)) {
+    console.log(
+      "PCD Collection failed to validate when loading from localstorage"
+    );
+  }
 
   return collection;
 }

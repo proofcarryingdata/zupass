@@ -175,12 +175,7 @@ export async function dispatch(
     case "reset-passport":
       return resetPassport(state, update);
     case "load-after-login":
-      return loadAfterLogin(
-        state,
-        action.encryptionKey,
-        action.storage,
-        update
-      );
+      return loadAfterLogin(action.encryptionKey, action.storage, update);
     case "set-modal":
       return update({
         modal: action.modal
@@ -501,7 +496,6 @@ async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
 }
 
 async function loadAfterLogin(
-  state: AppState,
   encryptionKey: string,
   storage: StorageWithRevision,
   update: ZuUpdate
@@ -532,7 +526,7 @@ async function loadAfterLogin(
     !validateAndLogStateErrors(
       userResponse.value,
       identityPCD.claim.identity,
-      state.pcds
+      pcds
     )
   ) {
     update({ userInvalid: true });
