@@ -10,7 +10,6 @@ import { AppContainer } from "../shared/AppContainer";
  * e.g., https://zupass.org/#/server-error?title=Custom+Error&description=Your+text+here.
  */
 export function ServerErrorScreen() {
-  // TODO: Check if this works properly
   const [query] = useSearchParams();
   const title = query.get("title");
   const description = query.get("description");

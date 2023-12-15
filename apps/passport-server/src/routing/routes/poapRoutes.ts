@@ -20,10 +20,6 @@ export function initPoapRoutes(
       );
     }
 
-    if (!poapService) {
-      throw new PCDHTTPError(500, "POAP service not initalized");
-    }
-
     res.redirect(await poapService.getDevconnectPoapRedirectUrl(proof));
   });
 }
