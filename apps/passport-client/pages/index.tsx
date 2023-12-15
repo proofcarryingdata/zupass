@@ -66,7 +66,10 @@ import {
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
-import { validateAndLogStateErrors } from "../src/validateState";
+import {
+  logValidationErrors,
+  validateAndLogStateErrors
+} from "../src/validateState";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
@@ -443,6 +446,28 @@ async function loadInitialState(): Promise<AppState> {
 
   if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
     state.userInvalid = true;
+  } else {
+    const extraValidationErrors = [];
+
+    // this case covers a logged in user. the only way the app can get a 'self'
+    // is by requesting one from the server, to do which one has to be logged in.
+    if (state.self) {
+      if (!state.encryptionKey) {
+        extraValidationErrors.push(`logged in user missing encryption key`);
+      }
+
+      if (!state.identity) {
+        extraValidationErrors.push(`logged in user missing identity`);
+      }
+    }
+
+    if (extraValidationErrors.length > 0) {
+      logValidationErrors({
+        errors: extraValidationErrors,
+        userUUID: self?.uuid
+      });
+      state.userInvalid = true;
+    }
   }
 
   return state;

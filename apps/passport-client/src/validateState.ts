@@ -128,7 +128,9 @@ function validateAppState(
  * we have records and are able to identify common types of errors. Does not leak
  * sensitive information, such as decrypted versions of e2ee storage.
  */
-async function logValidationErrors(errors: ValidationErrors): Promise<void> {
+export async function logValidationErrors(
+  errors: ValidationErrors
+): Promise<void> {
   try {
     const user = loadSelf();
     errors.userUUID = errors.userUUID ?? user?.uuid;
