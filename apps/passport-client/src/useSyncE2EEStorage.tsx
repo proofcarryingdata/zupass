@@ -142,7 +142,7 @@ export async function uploadSerializedStorage(
       success: false,
       error: {
         name: "ValidationError",
-        detailedMessage: "upload validation failed",
+        detailedMessage: "validation before upload failed",
         code: undefined
       }
     };
