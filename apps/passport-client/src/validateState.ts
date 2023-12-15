@@ -45,7 +45,7 @@ export function validateAndLogStateErrors(
  * The provided {@link PCDCollection} is not checked unless either this function
  * determines the user is logged in or the {@link forceCheckPCDs} argument is `true`.
  */
-function validateAppState(
+export function validateAppState(
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
