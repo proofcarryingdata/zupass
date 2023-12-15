@@ -20,7 +20,6 @@ function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }) {
         identity, with proven claims about that frog.
       </p>
       <Separator />
-      <div></div>
 
       <FieldLabel>Frog ID</FieldLabel>
       <TextContainer>{pcd.claim.partialFrog.frogId}</TextContainer>
