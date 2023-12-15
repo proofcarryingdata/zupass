@@ -35,6 +35,7 @@ import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { PersistenceManager } from "../src/PersistenceManager";
+import { StateChecker } from "../src/StateChecker";
 import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
@@ -64,10 +65,22 @@ class App extends React.Component<object, AppState> {
   private activePollTimout: NodeJS.Timeout | undefined = undefined;
   private stateEmitter: StateEmitter = new Emitter();
   private persistenceManager = new PersistenceManager();
+  private stateChecker = new StateChecker();
 
   private update = (diff: Pick<AppState, keyof AppState>) => {
-    this.setState(diff, () => {
-      this.stateEmitter.emit(this.state);
+    const newState = Object.assign({}, this.state, diff);
+    this.stateChecker.checkState(newState).then((valid) => {
+      if (valid) {
+        this.persistenceManager.saveState(newState).then(() => {
+          this.setState(newState, () => {
+            this.stateEmitter.emit(this.state);
+          });
+        });
+      } else {
+        this.setState({
+          userInvalid: true
+        });
+      }
     });
   };
 

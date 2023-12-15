@@ -19,6 +19,10 @@ export class PersistenceManager {
     //
   }
 
+  public async saveState(state: AppState): Promise<void> {
+    //
+  }
+
   public async loadInitialState(): Promise<AppState> {
     let identity = loadIdentity();
 
