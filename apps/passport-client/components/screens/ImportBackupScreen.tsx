@@ -16,11 +16,9 @@ import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 
-export function useImportScreenData() {
+export function useImportScreenState() {
   return useSelector<AppState["importScreen"]>((s) => s.importScreen, []);
 }
-
-const NoFolderSymbol = Symbol("None");
 
 // There are four main UI states that can occur after a user selects a file
 // to import.
@@ -35,11 +33,11 @@ type ImportState =
       // The PCD IDs referring to PCDs which are valid to import
       mergeablePcdIds: Set<PCD["id"]>;
       // The folders the user has selected in the UI
-      selectedFolders: Set<string | symbol>;
+      selectedFolders: Set<string>;
       // The PCD IDs that are valid and within the selected folders
       selectedPcdIds: Set<PCD["id"]>;
       // The count of valid PCDs in each importable folder
-      folderCounts: Record<string | symbol, number>;
+      folderCounts: Record<string, number>;
     }
   // The import has been carried out, and `added` is the number of PCDs
   // imported.
@@ -48,13 +46,16 @@ type ImportState =
   | { state: "invalid-file" };
 
 export function ImportBackupScreen() {
+  // We intentionally avoid the use of useSyncE2EEStorage here, to avoid
+  // background changes to the PCD collection during import
+
   const [importState, setImportState] = useState<ImportState>({
     state: "initial"
   });
 
   // Global application state, used to report the success or failure of the
   // import.
-  const importScreenState = useImportScreenData();
+  const importScreenState = useImportScreenState();
 
   const { openFilePicker, filesContent } = useFilePicker({
     accept: ".json",
@@ -89,8 +90,8 @@ export function ImportBackupScreen() {
       // If a file has been selected, and isn't invalid or already imported
       if (
         filesContent.length > 0 &&
-        importState.state !== "import-complete" &&
-        importState.state !== "invalid-file"
+        (importState.state === "initial" ||
+          importState.state === "valid-file-selected")
       ) {
         let parsedCollection: PCDCollection;
 
@@ -164,29 +165,27 @@ export function ImportBackupScreen() {
             .filter(preImportFilter);
 
           // Create a map of the folders these PCDs belong to, to a count of
-          // the number of PCDs in each folder, with `NoFolderSymbol` used for
+          // the number of PCDs in each folder, with the string "" used for
           // PCDs belonging to no folder.
-          const pcdFolders: Record<string | symbol, number> =
-            mergeablePcds.reduce((folders, pcd) => {
-              const folder =
-                parsedCollection.getFolderOfPCD(pcd.id) ?? NoFolderSymbol;
+          const pcdFolders: Record<string, number> = mergeablePcds.reduce(
+            (folders, pcd) => {
+              const folder = parsedCollection.getFolderOfPCD(pcd.id) ?? "";
               if (folder in folders) {
                 folders[folder]++;
               } else {
                 folders[folder] = 1;
               }
               return folders;
-            }, {});
+            },
+            {}
+          );
 
           // The set of folders that the user has chosen to import.
-          let selectedFolders: Set<string | symbol>;
+          let selectedFolders: Set<string>;
 
           if (importState.state === "initial") {
             // By default all folders are selected.
-            selectedFolders = new Set([
-              NoFolderSymbol,
-              ...Object.keys(pcdFolders)
-            ]);
+            selectedFolders = new Set(["", ...Object.keys(pcdFolders)]);
           } else {
             // Otherwise, make sure previously selected folders are still
             // valid given current parsed file contents.
@@ -210,8 +209,7 @@ export function ImportBackupScreen() {
             selectedPcdIds: new Set(
               mergeablePcds
                 .filter((pcd) => {
-                  const folder =
-                    parsedCollection.getFolderOfPCD(pcd.id) ?? NoFolderSymbol;
+                  const folder = parsedCollection.getFolderOfPCD(pcd.id) ?? "";
                   return selectedFolders.has(folder);
                 })
                 .map((pcd) => pcd.id)
@@ -225,10 +223,10 @@ export function ImportBackupScreen() {
 
   // When the user selects or de-selects a folder for inclusion in the merge
   const toggleFolder = useCallback(
-    (folder: string | symbol) => {
+    (folder: string) => {
       if (importState.state === "valid-file-selected") {
         const { selectedFolders } = importState;
-        if (selectedFolders.has(folder) && selectedFolders.size > 1) {
+        if (selectedFolders.has(folder)) {
           selectedFolders.delete(folder);
         } else {
           selectedFolders.add(folder);
@@ -243,7 +241,7 @@ export function ImportBackupScreen() {
     <>
       <MaybeModal />
       <AppContainer bg="gray">
-        <ScreenNavigation label={"Home"} to="/"></ScreenNavigation>
+        <ScreenNavigation label={"Home"} to="/" />
         <Container>
           <Spacer h={8} />
           <H2>Import Backup Data</H2>
@@ -252,7 +250,7 @@ export function ImportBackupScreen() {
             <>
               <p>
                 If you have previously exported a backup of your account, you
-                can restore any lost PCDs by importing the backup data.
+                can import the backed-up PCDs by selecting the backup file.
               </p>
               <p>
                 Importing data will not overwrite any of your existing PCDs.
@@ -261,7 +259,7 @@ export function ImportBackupScreen() {
                 To begin, select a backup file by clicking the button below.
               </p>
               <Spacer h={8} />
-              <Button onClick={() => openFilePicker()}>Select file</Button>
+              <Button onClick={() => openFilePicker()}>Select File</Button>
               <Spacer h={8} />
             </>
           )}
@@ -270,11 +268,11 @@ export function ImportBackupScreen() {
               {importState.mergeablePcdIds.size == 0 && (
                 <>
                   <p>
-                    The selected file does not contain any new PCDs. You may try
-                    to restore from another backup.
+                    The selected file does not contain any PCDs you don't
+                    already have. You may try to restore from another backup.
                   </p>
                   <Spacer h={8} />
-                  <Button onClick={() => openFilePicker()}>Select file</Button>
+                  <Button onClick={() => openFilePicker()}>Select File</Button>
                   <Spacer h={8} />
                 </>
               )}
@@ -288,36 +286,37 @@ export function ImportBackupScreen() {
                   <div>
                     Import PCDs from the following backed-up folders:
                     <Folders>
-                      {[
-                        [NoFolderSymbol, 1] as [symbol, number],
-                        ...Object.entries(importState.folderCounts)
-                      ].map(([folder, count]) => {
-                        return (
-                          <Folder key={folder.toString()}>
-                            <input
-                              type="checkbox"
-                              checked={importState.selectedFolders.has(folder)}
-                              onChange={() => toggleFolder(folder)}
-                            ></input>
-                            <span>
-                              {folder === NoFolderSymbol
-                                ? "None"
-                                : (folder as string)}{" "}
-                              ({count})
-                            </span>
-                          </Folder>
-                        );
-                      })}
+                      {Object.entries(importState.folderCounts).map(
+                        ([folder, count]) => {
+                          return (
+                            <Folder
+                              key={folder === "" ? "Main Folder" : folder}
+                            >
+                              <input
+                                type="checkbox"
+                                checked={importState.selectedFolders.has(
+                                  folder
+                                )}
+                                onChange={() => toggleFolder(folder)}
+                              ></input>
+                              <span>
+                                {folder === "" ? "Main Folder" : folder} (
+                                {count})
+                              </span>
+                            </Folder>
+                          );
+                        }
+                      )}
                     </Folders>
                   </div>
 
                   <Spacer h={8} />
-                  <Button onClick={importPCDs}>
+                  <Button
+                    onClick={importPCDs}
+                    disabled={importState.selectedFolders.size === 0}
+                  >
                     Import{" "}
-                    {[
-                      [NoFolderSymbol, 1] as [symbol, number],
-                      ...Object.entries(importState.folderCounts)
-                    ].reduce(
+                    {Object.entries(importState.folderCounts).reduce(
                       (total, [folder, count]) =>
                         total +
                         (importState.selectedFolders.has(folder) ? count : 0),
@@ -357,7 +356,7 @@ export function ImportBackupScreen() {
                 select a valid Zupass backup to import your data from.
               </p>
               <Spacer h={8} />
-              <Button onClick={() => openFilePicker()}>Select file</Button>
+              <Button onClick={() => openFilePicker()}>Select File</Button>
               <Spacer h={8} />
             </>
           )}

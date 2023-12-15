@@ -121,7 +121,7 @@ export interface AppState {
 
   // @todo screen-specific data should perhaps have a structure similar to
   // that of modals
-  importScreen: {
+  importScreen?: {
     imported?: number;
     error?: string;
   };

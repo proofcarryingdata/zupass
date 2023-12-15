@@ -45,7 +45,7 @@ export function SubscriptionsScreen() {
     <>
       <MaybeModal />
       <AppContainer bg="gray">
-        <ScreenNavigation label={"Home"} to="/"></ScreenNavigation>
+        <ScreenNavigation label={"Home"} to="/" />
         <Container>
           <H2>Your Subscriptions</H2>
           <Spacer h={32} />

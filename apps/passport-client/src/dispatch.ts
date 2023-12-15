@@ -1017,14 +1017,15 @@ async function mergeImport(
     );
   };
 
+  // This async call could mean that another dispatch()'ed event could
+  // interfere with app state, including the state we want to change.
+  // This risk has been mitigated by not calling the useSyncE2EEStorage
+  // hook on ImportBackupScreen.
   const packages = await getPackages();
-
-  // This is a clunky way to clone an object.
-  // It is also asynchronous, so there is the infinitessimal possibility of
-  // an update changing state.pcds while we're in the middle of deserializing.
-  const pcds = await PCDCollection.deserialize(
+  const pcds = new PCDCollection(
     packages,
-    await state.pcds.serializeCollection()
+    state.pcds.getAll(),
+    state.pcds.folders
   );
 
   try {
@@ -1032,14 +1033,16 @@ async function mergeImport(
       shouldInclude: predicate
     });
 
-    await savePCDs(pcds);
     update({
       pcds,
       importScreen: {
         imported: pcds.getAll().length - pcdCountBeforeMerge
       }
     });
+
+    await savePCDs(pcds);
   } catch (e) {
+    console.log(e);
     update({
       importScreen: {
         error:

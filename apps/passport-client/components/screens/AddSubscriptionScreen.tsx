@@ -104,10 +104,7 @@ export function AddSubscriptionScreen() {
 
   return (
     <AppContainer bg="gray">
-      <ScreenNavigation
-        label={"Subscriptions"}
-        to="/subscriptions"
-      ></ScreenNavigation>
+      <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
         <H2>Add subscription</H2>
