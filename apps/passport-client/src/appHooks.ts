@@ -17,7 +17,6 @@ import {
   StateContextValue,
   ZuUpdate
 } from "./dispatch";
-import { loadUsingLaserScanner } from "./localstorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { hasSetupPassword } from "./user";
@@ -86,8 +85,12 @@ export function useModal(): AppState["modal"] {
   return useSelector<AppState["modal"]>((s) => s.modal, []);
 }
 
-export function useSyncKey(): string | undefined {
+export function useEncryptionKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
+}
+
+export function useUsingLaserScanner(): boolean {
+  return useSelector<boolean>((s) => s.usingLaserScanner, []);
 }
 
 export function useSalt(): string | undefined {
@@ -211,7 +214,7 @@ export function useRequirePassword() {
 export function useLaserScannerKeystrokeInput() {
   const [typedText, setTypedText] = useState("");
   const nav = useNavigate();
-  const usingLaserScanner = loadUsingLaserScanner();
+  const usingLaserScanner = useUsingLaserScanner();
 
   useEffect(() => {
     function handleKeyDown(event: KeyboardEvent) {

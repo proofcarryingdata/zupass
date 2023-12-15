@@ -50,7 +50,11 @@ export class PersistenceManager {
   }
 
   public async saveState(state: AppState): Promise<void> {
-    //
+    this.savePrivacyNoticeAgreed(state.latestAgreedTerms);
+    this.saveEncryptionKey(state.encryptionKey);
+    this.saveCheckedInOfflineTickets(state.checkedinOfflineDevconnectTickets);
+    this.saveCheckinCredential(state.checkinCredential);
+    this.saveIdentity(state.identity);
   }
 
   public async loadInitialState(): Promise<AppState> {
@@ -67,8 +71,10 @@ export class PersistenceManager {
     const encryptionKey = this.loadEncryptionKey();
     const subscriptions = await this.loadSubscriptions();
     const offlineTickets = this.loadOfflineTickets();
+    const usingLaserScanner = this.loadUsingLaserScanner();
     const checkedInOfflineDevconnectTickets =
       this.loadCheckedInOfflineDevconnectTickets();
+    const latestAgreedTerms = this.loadPrivacyNoticeAgreed();
 
     subscriptions.updatedEmitter.listen(() =>
       this.saveSubscriptions(subscriptions)
@@ -104,8 +110,28 @@ export class PersistenceManager {
       offline: !window.navigator.onLine,
       serverStorageRevision: persistentSyncStatus.serverStorageRevision,
       serverStorageHash: persistentSyncStatus.serverStorageHash,
-      importScreen: {}
+      importScreen: {},
+      usingLaserScanner:
+        this.getIsUsingLaserScanningFromUrl() ?? usingLaserScanner,
+      latestAgreedTerms: latestAgreedTerms,
+      checkinCredentials: {} // todo: load as object, previously was this.loadCheckinCredential()
     };
+  }
+
+  /**
+   * To set up usingLaserScanning local storage, which turns off the camera
+   * on the scan screen so the laser scanner can be used. This flag will be
+   * exclusively used on the Devconnect laser scanning devices.
+   */
+  private getIsUsingLaserScanningFromUrl(): boolean | undefined {
+    const queryParams = new URLSearchParams(window.location.search.slice(1));
+    const laserQueryParam = queryParams.get("laser");
+    if (laserQueryParam === "true") {
+      return true;
+    } else if (laserQueryParam === "false") {
+      return false;
+    }
+    return undefined;
   }
 
   private readonly OLD_PCDS_KEY = "pcds"; // deprecated

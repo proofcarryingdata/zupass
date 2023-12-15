@@ -18,16 +18,8 @@ import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
 import { StateContext } from "./dispatch";
-import {
-  loadEncryptionKey,
-  loadPCDs,
-  loadSelf,
-  loadSubscriptions,
-  savePCDs,
-  savePersistentSyncStatus,
-  saveSubscriptions
-} from "./localstorage";
 import { getPackages } from "./pcdPackages";
+import { AppState } from "./state";
 import { useOnStateChange } from "./subscribe";
 
 // Temporary feature flag to allow the sync-merge code to be on the main branch
@@ -47,7 +39,9 @@ export type UpdateBlobKeyResult = APIResult<
   ChangeBlobKeyError
 >;
 
+// TODO: move into persistence manager
 export async function updateBlobKeyForEncryptedStorage(
+  state: AppState,
   oldEncryptionKey: string,
   newEncryptionKey: string,
   newSalt: string,

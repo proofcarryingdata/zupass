@@ -2,8 +2,10 @@ import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
-import { loadUsingLaserScanner } from "../../src/localstorage";
+import {
+  useLaserScannerKeystrokeInput,
+  useUsingLaserScanner
+} from "../../src/appHooks";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
@@ -13,7 +15,7 @@ import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen() {
-  const usingLaserScanner = loadUsingLaserScanner();
+  const usingLaserScanner = useUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
 

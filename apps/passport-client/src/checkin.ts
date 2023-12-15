@@ -16,12 +16,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
-import {
-  loadCheckinCredential,
-  saveCheckedInOfflineTickets,
-  saveCheckinCredential,
-  saveOfflineTickets
-} from "./localstorage";
 
 export async function getOrGenerateCheckinCredential(
   identity: Identity
@@ -29,6 +23,7 @@ export async function getOrGenerateCheckinCredential(
   let cachedSignaturePCD = loadCheckinCredential(
     identity.getCommitment().toString()
   );
+
   if (!cachedSignaturePCD) {
     cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
       await SemaphoreSignaturePCDPackage.prove({
@@ -115,12 +110,11 @@ function checkinOfflineDevconnectTicket(
   ticketCopy.checkinTimestamp = new Date().toISOString();
   checkedinOfflineDevconnectTickets.push(ticketCopy);
 
-  saveOfflineTickets(offlineTickets);
-  saveCheckedInOfflineTickets(checkedinOfflineDevconnectTickets);
   stateContext.update({
     offlineTickets,
     checkedinOfflineDevconnectTickets
   });
+
   return ticketCopy;
 }
 

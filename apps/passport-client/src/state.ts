@@ -8,6 +8,8 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { Emitter } from "./emitter";
 
@@ -125,6 +127,11 @@ export interface AppState {
     imported?: number;
     error?: string;
   };
+
+  // stuff that was moved to state by me
+  latestAgreedTerms: number | null;
+  usingLaserScanner: boolean;
+  checkinCredentials: Record<string, SerializedPCD<SemaphoreSignaturePCD>>;
 }
 
 export interface AppError {

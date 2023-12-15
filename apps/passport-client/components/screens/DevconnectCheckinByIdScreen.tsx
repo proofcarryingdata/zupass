@@ -10,13 +10,13 @@ import styled from "styled-components";
 import {
   useLaserScannerKeystrokeInput,
   useQuery,
-  useStateContext
+  useStateContext,
+  useUsingLaserScanner
 } from "../../src/appHooks";
 import {
   devconnectCheckByIdWithOffline,
   devconnectCheckInByIdWithOffline
 } from "../../src/checkin";
-import { loadUsingLaserScanner } from "../../src/localstorage";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -203,7 +203,7 @@ function TicketErrorContent({ error }: { error: TicketError }) {
 }
 
 export function TicketError({ error }: { error: TicketError }) {
-  const usingLaserScanner = loadUsingLaserScanner();
+  const usingLaserScanner = useUsingLaserScanner();
   return (
     <>
       <TicketErrorContent error={error} />
@@ -310,7 +310,7 @@ function CheckInSection({ ticketId }: { ticketId: string }) {
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
   const [checkinError, setCheckinError] = useState<TicketError | null>(null);
-  const usingLaserScanner = loadUsingLaserScanner();
+  const usingLaserScanner = useUsingLaserScanner();
 
   const onCheckInClick = useCallback(async () => {
     if (inProgress) {

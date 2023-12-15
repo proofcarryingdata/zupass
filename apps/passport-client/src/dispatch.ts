@@ -33,17 +33,7 @@ import {
   notifyPasswordChangeToOtherTabs
 } from "./broadcastChannel";
 import { addDefaultSubscriptions } from "./defaultSubscriptions";
-import {
-  loadEncryptionKey,
-  loadPrivacyNoticeAgreed,
-  loadSelf,
-  saveEncryptionKey,
-  saveIdentity,
-  savePCDs,
-  savePersistentSyncStatus,
-  saveSelf,
-  saveSubscriptions
-} from "./localstorage";
+
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
@@ -187,7 +177,7 @@ export async function dispatch(
         modal: action.modal
       });
     case "password-change-on-other-tab":
-      return handlePasswordChangeOnOtherTab(update);
+      return handlePasswordChangeOnOtherTab(state, update);
     case "change-password":
       return saveNewPasswordAndBroadcast(
         action.newEncryptionKey,
@@ -261,8 +251,6 @@ async function genPassport(
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
-  await savePCDs(pcds);
-
   window.location.hash = "#/new-passport?email=" + encodeURIComponent(email);
 
   update({ pcds });
@@ -279,7 +267,6 @@ async function createNewUserSkipPassword(
   });
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = await crypto.generateRandomKey();
-  await saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -317,8 +304,6 @@ async function createNewUserWithPassword(
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
     await crypto.generateSaltAndEncryptionKey(password);
-
-  await saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -448,7 +433,6 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
     return;
   }
 
-  saveSelf(self); // Save to local storage.
   update({ self }); // Update in-memory state.
 }
 
@@ -496,13 +480,11 @@ async function addPCDs(
     });
   }
   await state.pcds.deserializeAllAndAdd(pcds, { upsert });
-  await savePCDs(state.pcds);
   update({ pcds: state.pcds });
 }
 
 async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
   state.pcds.remove(pcdId);
-  await savePCDs(state.pcds);
   update({ pcds: state.pcds });
 }
 
@@ -550,15 +532,6 @@ async function loadAfterLogin(
   }
 
   console.log(`[SYNC] saving state at login: revision ${storage.revision}`);
-  await savePCDs(pcds);
-  await saveSubscriptions(subscriptions);
-  savePersistentSyncStatus({
-    serverStorageRevision: storage.revision,
-    serverStorageHash: storageHash
-  });
-  saveEncryptionKey(encryptionKey);
-  saveSelf(userResponse.value);
-  saveIdentity(identityPCD.claim.identity);
 
   update({
     encryptionKey,
@@ -570,6 +543,7 @@ async function loadAfterLogin(
     self: userResponse.value,
     modal
   });
+
   notifyLoginToOtherTabs();
 
   await sleep(1);
@@ -583,9 +557,15 @@ async function loadAfterLogin(
 }
 
 // Update `self` and `encryptionKey` in-memory fields from their saved values in localStorage
-async function handlePasswordChangeOnOtherTab(update: ZuUpdate) {
-  const self = loadSelf();
-  const encryptionKey = loadEncryptionKey();
+// TODO: figure out how to handle this
+async function handlePasswordChangeOnOtherTab(
+  state: AppState,
+  update: ZuUpdate
+) {
+  // the following two loads should load from localstorage.
+  // not sure how.
+  const self = state.self;
+  const encryptionKey = state.encryptionKey;
   return update({
     self,
     encryptionKey,
@@ -605,13 +585,11 @@ async function saveNewPasswordAndBroadcast(
   update: ZuUpdate
 ) {
   const newSelf = { ...state.self, salt: newSalt };
-  saveSelf(newSelf);
-  saveEncryptionKey(newEncryptionKey);
-  notifyPasswordChangeToOtherTabs();
   update({
     encryptionKey: newEncryptionKey,
     self: newSelf
   });
+  notifyPasswordChangeToOtherTabs();
 }
 
 function userInvalid(update: ZuUpdate) {
@@ -701,7 +679,7 @@ async function doSync(
     console.log("[SYNC] no user available to sync");
     return undefined;
   }
-  if (loadEncryptionKey() == null) {
+  if (state.encryptionKey == null) {
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
   }
@@ -771,8 +749,10 @@ async function doSync(
 
       await applyActions(state.pcds, actions);
       console.log("[SYNC] applied pcd actions");
-      await savePCDs(state.pcds);
-      await saveSubscriptions(state.subscriptions);
+      update({
+        pcds: state.pcds,
+        subscriptions: state.subscriptions
+      });
       console.log("[SYNC] saved issued pcds and updated subscriptions");
     } catch (e) {
       console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
@@ -854,7 +834,6 @@ async function syncSubscription(
 
     await applyActions(state.pcds, actions);
     console.log("[SYNC] applied pcd actions");
-    await savePCDs(state.pcds);
     console.log("[SYNC] loaded and saved issued pcds");
 
     update({
@@ -889,7 +868,6 @@ async function addSubscription(
     state.subscriptions.addProvider(providerUrl, providerName);
   }
   await state.subscriptions.subscribe(providerUrl, feed, true);
-  await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false
@@ -902,7 +880,6 @@ async function removeSubscription(
   subscriptionId: string
 ) {
   state.subscriptions.unsubscribe(subscriptionId);
-  await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions
   });
@@ -919,7 +896,6 @@ async function updateSubscriptionPermissions(
     permisisons
   );
   state.subscriptions.resetError(subscriptionId);
-  await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false
@@ -955,11 +931,11 @@ async function handleAgreedPrivacyNotice(
   update: ZuUpdate,
   version: number
 ) {
-  await saveSelf({ ...state.self, terms_agreed: version });
   update({
     self: { ...state.self, terms_agreed: version },
     loadedIssuedPCDs: false,
-    modal: { modalType: "none" }
+    modal: { modalType: "none" },
+    latestAgreedTerms: version
   });
 }
 
@@ -970,8 +946,7 @@ async function handleAgreedPrivacyNotice(
  * un-dismissable modal.
  */
 async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
-  const cachedTerms = loadPrivacyNoticeAgreed();
-  if (cachedTerms === LATEST_PRIVACY_NOTICE) {
+  if (state.latestAgreedTerms === LATEST_PRIVACY_NOTICE) {
     // sync to server
     await agreeTerms(
       appConfig.zupassServer,
@@ -1032,7 +1007,6 @@ async function mergeImport(
       shouldInclude: predicate
     });
 
-    await savePCDs(pcds);
     update({
       pcds,
       importScreen: {

@@ -49,11 +49,6 @@ import {
   dispatch
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
-import {
-  saveCheckedInOfflineTickets,
-  saveOfflineTickets,
-  saveUsingLaserScanner
-} from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
@@ -87,25 +82,26 @@ class App extends React.Component<object, AppState> {
   private dispatch = (action: Action) =>
     dispatch(action, this.state, this.update);
 
-  componentDidMount() {
+  public componentDidMount() {
     this.persistenceManager
       .loadInitialState()
       .then((s) => this.setState(s, this.startBackgroundJobs));
 
     setupBroadcastChannel(this.dispatch);
-    setupUsingLaserScanning();
   }
-  componentWillUnmount(): void {
+
+  public componentWillUnmount(): void {
     closeBroadcastChannel();
   }
-  stateContextState: StateContextValue = {
+
+  private stateContextState: StateContextValue = {
     getState: () => this.state,
     stateEmitter: this.stateEmitter,
     dispatch: this.dispatch,
     update: this.update
   };
 
-  render() {
+  public render() {
     const { state } = this;
 
     if (!state) {
@@ -136,7 +132,7 @@ class App extends React.Component<object, AppState> {
   }
 
   // Create a React error boundary
-  static getDerivedStateFromError(error: Error) {
+  public static getDerivedStateFromError(error: Error) {
     console.log("App caught error", error);
     const { message, stack } = error;
     let shortStack = stack.substring(0, 280);
@@ -146,7 +142,7 @@ class App extends React.Component<object, AppState> {
     } as Partial<AppState>;
   }
 
-  startBackgroundJobs = () => {
+  private startBackgroundJobs = () => {
     console.log("[JOB] Starting background jobs...");
     document.addEventListener("visibilitychange", () => {
       this.setupPolling();
@@ -157,7 +153,7 @@ class App extends React.Component<object, AppState> {
     this.generateCheckinCredential();
   };
 
-  generateCheckinCredential = async () => {
+  private generateCheckinCredential = async () => {
     // This ensures that the check-in credential is pre-cached before the
     // first check-in attempt.
     try {
@@ -167,12 +163,12 @@ class App extends React.Component<object, AppState> {
     }
   };
 
-  jobCheckConnectivity = async () => {
+  private jobCheckConnectivity = async () => {
     window.addEventListener("offline", () => this.setIsOffline(true));
     window.addEventListener("online", () => this.setIsOffline(false));
   };
 
-  setIsOffline(offline: boolean) {
+  private setIsOffline(offline: boolean) {
     console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
     this.update({
       ...this.state,
@@ -204,7 +200,7 @@ class App extends React.Component<object, AppState> {
    * scheduled.  It may happen immediately after the window becomes visible,
    * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
    */
-  setupPolling = async () => {
+  private setupPolling = async () => {
     if (!document.hidden) {
       if (!this.activePollTimout) {
         const nextPollDelay = Math.max(
@@ -232,7 +228,7 @@ class App extends React.Component<object, AppState> {
    * Periodic job for polling the server.  Is scheduled by setupPolling, and
    * will reschedule itself in the same way.
    */
-  jobPollServerUpdates = async () => {
+  private jobPollServerUpdates = async () => {
     // Mark that poll has started.
     console.log("[JOB] polling server for updates");
     this.activePollTimout = undefined;
@@ -246,7 +242,7 @@ class App extends React.Component<object, AppState> {
     }
   };
 
-  doPollServerUpdates = async () => {
+  private doPollServerUpdates = async () => {
     if (
       !this.state?.self ||
       !!this.state.userInvalid ||
@@ -274,12 +270,12 @@ class App extends React.Component<object, AppState> {
     }
   };
 
-  async startJobSyncOfflineCheckins() {
+  private async startJobSyncOfflineCheckins() {
     await this.jobSyncOfflineCheckins();
     setInterval(this.jobSyncOfflineCheckins, 1000 * 60);
   }
 
-  jobSyncOfflineCheckins = async () => {
+  private jobSyncOfflineCheckins = async () => {
     if (!this.state.self || this.state.offline) {
       return;
     }
@@ -301,7 +297,6 @@ class App extends React.Component<object, AppState> {
           ...this.state,
           checkedinOfflineDevconnectTickets: []
         });
-        saveCheckedInOfflineTickets(undefined);
       }
     }
 
@@ -317,7 +312,6 @@ class App extends React.Component<object, AppState> {
         ...this.state,
         offlineTickets: offlineTicketsResult.value.offlineTickets
       });
-      saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
     }
   };
 }
@@ -380,22 +374,6 @@ function RouterImpl() {
       </Routes>
     </HashRouter>
   );
-}
-
-/**
- * To set up usingLaserScanning local storage, which turns off the camera
- * on the scan screen so the laser scanner can be used. This flag will be
- * exclusively used on the Devconnect laser scanning devices.
- */
-function setupUsingLaserScanning() {
-  const queryParams = new URLSearchParams(window.location.search.slice(1));
-  const laserQueryParam = queryParams.get("laser");
-  if (laserQueryParam === "true") {
-    saveUsingLaserScanner(true);
-  } else if (laserQueryParam === "false") {
-    // We may want to use this to forcibly make this state false
-    saveUsingLaserScanner(false);
-  }
 }
 
 registerServiceWorker();

@@ -4,7 +4,6 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import { useDispatch, useIdentity } from "../../src/appHooks";
-import { savePrivacyNoticeAgreed } from "../../src/localstorage";
 import { Button, H2 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { PrivacyNotice } from "../shared/PrivacyNotice";
@@ -30,7 +29,6 @@ export function PrivacyNoticeModal() {
       });
     } else {
       // Persist to local storage and sync this later
-      savePrivacyNoticeAgreed(LATEST_PRIVACY_NOTICE);
       dispatch({
         type: "handle-agreed-privacy-notice",
         version: result.value.version

@@ -3,11 +3,11 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
   useDispatch,
+  useEncryptionKey,
   useSelf,
   useServerStorageRevision,
   useUpdate
 } from "../../src/appHooks";
-import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, H2, Spacer } from "../core";
@@ -30,16 +30,16 @@ export function UpgradeAccountModal() {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
+  const encryptionKey = useEncryptionKey();
 
   const onAddPassword = useCallback(async () => {
     if (loading) return;
     setLoading(true);
     await sleep();
     try {
-      const currentEncryptionKey = loadEncryptionKey();
       await setPassword(
         newPassword,
-        currentEncryptionKey,
+        encryptionKey,
         serverStorageRevision,
         dispatch,
         update
@@ -55,7 +55,14 @@ export function UpgradeAccountModal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, serverStorageRevision, dispatch, update]);
+  }, [
+    loading,
+    newPassword,
+    encryptionKey,
+    serverStorageRevision,
+    dispatch,
+    update
+  ]);
 
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;

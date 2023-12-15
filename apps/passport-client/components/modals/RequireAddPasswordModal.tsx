@@ -3,11 +3,11 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
   useDispatch,
+  useEncryptionKey,
   useSelf,
   useServerStorageRevision,
   useUpdate
 } from "../../src/appHooks";
-import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, H2, Spacer } from "../core";
@@ -24,6 +24,7 @@ export function RequireAddPasswordModal() {
   const dispatch = useDispatch();
   const update = useUpdate();
   const self = useSelf();
+  const encryptionKey = useEncryptionKey();
   const serverStorageRevision = useServerStorageRevision();
 
   const [newPassword, setNewPassword] = useState("");
@@ -36,10 +37,9 @@ export function RequireAddPasswordModal() {
     setLoading(true);
     await sleep();
     try {
-      const currentEncryptionKey = loadEncryptionKey();
       await setPassword(
         newPassword,
-        currentEncryptionKey,
+        encryptionKey,
         serverStorageRevision,
         dispatch,
         update
@@ -55,7 +55,14 @@ export function RequireAddPasswordModal() {
     } finally {
       setLoading(false);
     }
-  }, [loading, newPassword, serverStorageRevision, dispatch, update]);
+  }, [
+    loading,
+    newPassword,
+    encryptionKey,
+    serverStorageRevision,
+    dispatch,
+    update
+  ]);
 
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;

@@ -5,12 +5,12 @@ import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
 import {
   useDispatch,
+  useEncryptionKey,
   useHasSetupPassword,
   useSelf,
   useServerStorageRevision,
   useUpdate
 } from "../../src/appHooks";
-import { loadEncryptionKey } from "../../src/localstorage";
 import { setPassword } from "../../src/password";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { CenterColumn, H2, HR, Spacer, TextCenter } from "../core";
@@ -41,6 +41,7 @@ export function ChangePasswordScreen() {
   const [revealPassword, setRevealPassword] = useState(false);
   const [error, setError] = useState<string | undefined>();
   const [finished, setFinished] = useState(false);
+  const encryptionKey = useEncryptionKey();
 
   useEffect(() => {
     if (self == null) {
@@ -54,7 +55,7 @@ export function ChangePasswordScreen() {
     try {
       let currentEncryptionKey: HexString;
       if (!isChangePassword) {
-        currentEncryptionKey = loadEncryptionKey();
+        currentEncryptionKey = encryptionKey;
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
@@ -88,14 +89,15 @@ export function ChangePasswordScreen() {
       setError(e.message);
     }
   }, [
-    currentPassword,
+    loading,
+    isChangePassword,
     newPassword,
     serverStorageRevision,
     dispatch,
     update,
-    loading,
+    encryptionKey,
     self.email,
-    isChangePassword
+    currentPassword
   ]);
 
   let content = null;
