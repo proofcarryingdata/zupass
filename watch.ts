@@ -85,7 +85,7 @@ const main = async () => {
           `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
         );
         const filterFlags = makeFilterFlags(leaves[p]);
-        await spawn`yarn turbo build --output-logs=new-only --concurrency=4 --filter="@pcd/*"`;
+        await spawn`yarn turbo build --output-logs=new-only --parallel --concurrency=4 --filter="@pcd/*"`;
       }
     }))
   });
