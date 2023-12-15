@@ -107,9 +107,8 @@ function validateAppState(
     );
   }
 
-  console.log("VALIDATION ERRORS", validationErrors);
   return {
-    errors: [],
+    errors: validationErrors,
     userUUID: self?.uuid
   };
 }

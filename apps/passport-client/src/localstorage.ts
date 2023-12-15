@@ -18,7 +18,7 @@ const OLD_PCDS_KEY = "pcds"; // deprecated
 const COLLECTION_KEY = "pcd_collection";
 
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
-  if (validateAndLogStateErrors(undefined, undefined, pcds, true)) {
+  if (!validateAndLogStateErrors(undefined, undefined, pcds, true)) {
     console.log(
       "PCD Collection failed to validate - not writing it to localstorage"
     );
@@ -44,7 +44,7 @@ export async function loadPCDs(): Promise<PCDCollection> {
     serializedCollection ?? "{}"
   );
 
-  if (validateAndLogStateErrors(undefined, undefined, collection, true)) {
+  if (!validateAndLogStateErrors(undefined, undefined, collection, true)) {
     console.log(
       "PCD Collection failed to validate when loading from localstorage"
     );
