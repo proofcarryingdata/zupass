@@ -14,7 +14,7 @@ import { v4 as uuid } from "uuid";
  * The globally unique type name of the {@link EdDSAPCD}.
  */
 export const EdDSAPCDTypeName = "eddsa-pcd";
-//sdxccccfaffvvgfgvin
+
 /**
  * An EdDSA public key is represented as a point on the elliptic curve, with each point being
  * a pair of coordinates consisting of hexadecimal strings. The public key is maintained in a standard
