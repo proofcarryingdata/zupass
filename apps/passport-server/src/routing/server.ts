@@ -17,6 +17,7 @@ import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initKudosbotRoutes } from "./routes/kudosbotRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
+import { initPoapRoutes } from "./routes/poapRoutes";
 import { initProvingRoutes } from "./routes/provingRoutes";
 import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
@@ -121,6 +122,7 @@ function initAllRoutes(
   initTelegramRoutes(app, context, globalServices);
   initKudosbotRoutes(app, context, globalServices);
   initFrogcryptoRoutes(app, context, globalServices);
+  initPoapRoutes(app, context, globalServices);
   initLogRoutes(app);
 }
 

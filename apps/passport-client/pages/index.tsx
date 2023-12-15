@@ -31,6 +31,7 @@ import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
+import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
@@ -365,6 +366,7 @@ function RouterImpl() {
             path="frogscriptions/:feedCode"
             element={<FrogSubscriptionScreen />}
           />
+          <Route path="server-error" element={<ServerErrorScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
