@@ -2,13 +2,7 @@ import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { icons } from "../icons/index";
 
-export function SubscriptionNavigation({
-  to,
-  label
-}: {
-  to: string;
-  label: string;
-}) {
+export function ScreenNavigation({ to, label }: { to: string; label: string }) {
   return (
     <Navigation>
       <BackLink to={to}>

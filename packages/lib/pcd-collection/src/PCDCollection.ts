@@ -30,6 +30,8 @@ export type MatchingActionPermission =
 
 type AddPCDOptions = { upsert?: boolean };
 
+export type MergeFilterPredicate = (pcd: PCD, target: PCDCollection) => boolean;
+
 export function matchActionToPermission(
   action: PCDAction,
   permissions: PCDPermission[]
@@ -452,6 +454,36 @@ export class PCDCollection {
     collection.folders = parsedFolders;
 
     return collection;
+  }
+
+  /**
+   * Merges another PCD collection into this one.
+   * There is one option:
+   * - `shouldInclude` is a function used to filter out PCDs from the other
+   *   collection during merging, e.g. to filter out duplicates or PCDs of
+   *   a type that should not be copied.
+   */
+  public merge(
+    other: PCDCollection,
+    options?: {
+      shouldInclude?: MergeFilterPredicate;
+    }
+  ): void {
+    let pcds = other.getAll();
+
+    // If the caller has specified a filter function, run that first to filter
+    // out unwanted PCDs from the merge.
+    if (options?.shouldInclude) {
+      pcds = pcds.filter((pcd: PCD) => options.shouldInclude?.(pcd, this));
+    }
+
+    this.addAll(pcds, { upsert: true });
+
+    for (const pcd of pcds) {
+      if (other.folders[pcd.id]) {
+        this.setFolder(pcd.id, other.folders[pcd.id]);
+      }
+    }
   }
 }
 
