@@ -5,6 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import PQueue from "p-queue";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "react-hot-toast";
@@ -82,7 +83,10 @@ class App extends React.Component<object, AppState> {
     });
   };
 
-  dispatch = (action: Action) => dispatch(action, this.state, this.update);
+  dispatchQueue = new PQueue({ concurrency: 1 });
+
+  dispatch = (action: Action) =>
+    this.dispatchQueue.add(() => dispatch(action, this.state, this.update));
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
     setupBroadcastChannel(this.dispatch);
