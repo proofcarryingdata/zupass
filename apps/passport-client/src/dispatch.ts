@@ -772,7 +772,8 @@ async function doSync(
   const validationErrors = validateUpload(state.self, state.pcds);
   if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
-    // TODO: what's the proper thing to do here?
+    state.userInvalid = true;
+    return;
   }
 
   if (state.serverStorageHash !== appStorage.storageHash) {
