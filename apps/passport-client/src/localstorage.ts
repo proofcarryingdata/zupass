@@ -50,7 +50,7 @@ export async function loadPCDs(): Promise<PCDCollection> {
   const validationErrors = validatePCDCollection(collection);
   if (validationErrors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
-    throw new Error("couldn't save PCDs\n:" + validationErrors.join("\n"));
+    throw new Error("couldn't load PCDs\n:" + validationErrors.join("\n"));
   }
 
   return collection;

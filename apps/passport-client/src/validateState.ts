@@ -7,6 +7,17 @@ import {
 import { appConfig } from "./appConfig";
 import { AppState } from "./state";
 
+export function validateAndLogState(state: AppState): boolean {
+  const validationErrors = validateState(state);
+
+  if (validationErrors.length > 0) {
+    logAndUploadValidationErrors(validationErrors);
+    return false;
+  }
+
+  return true;
+}
+
 /**
  * Determines whether the app's global state as represented by {@link AppState} object
  * contains valid data. If it does not, returns the set of things that are incorrect about

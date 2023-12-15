@@ -357,7 +357,7 @@ async function finishAccountCreation(
         message: "Something went wrong saving your Zupass. Contact support."
       }
     });
-    return;
+    return; // Don't save the bad identity. User must reset account.
   }
 
   // Save PCDs to E2EE storage.
@@ -373,8 +373,6 @@ async function finishAccountCreation(
       serverStorageRevision: uploadResult.value.revision,
       serverStorageHash: uploadResult.value.storageHash
     });
-  } else {
-    // TODO: anything to add here?
   }
 
   // Save user to local storage.  This is done last because it unblocks
