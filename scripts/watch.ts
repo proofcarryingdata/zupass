@@ -58,7 +58,7 @@ const main = async () => {
         // Only trigger a rebuild if matching files change
         expression: [
           "allof",
-          ["not", ["anyof", ["dirname", "node_modules"], ["dirname", "lib"]]],
+          ["not", ["anyof", ["dirname", "node_modules"]]],
           ["dirname", path.join(relativePaths[p], "src")],
           [
             "anyof",
