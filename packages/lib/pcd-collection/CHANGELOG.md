@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.10.0
+
+### Minor Changes
+
+- Split out React dependencies
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.4.0
+  - @pcd/passport-crypto@0.10.0
+  - @pcd/pcd-types@0.10.0
+  - @pcd/semaphore-identity-pcd@0.10.0
+
 ## 0.9.0
 
 ### Minor Changes

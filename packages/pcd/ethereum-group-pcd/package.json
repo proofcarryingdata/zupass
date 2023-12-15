@@ -1,6 +1,6 @@
 {
   "name": "@pcd/ethereum-group-pcd",
-  "version": "0.3.0",
+  "version": "0.4.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/node/index.js",
   "module": "./dist/node/index.mjs",
@@ -40,10 +40,10 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.9.0",
-    "@pcd/semaphore-identity-pcd": "0.9.0",
-    "@pcd/semaphore-signature-pcd": "0.9.0",
-    "@pcd/util": "0.3.0",
+    "@pcd/pcd-types": "0.10.0",
+    "@pcd/semaphore-identity-pcd": "0.10.0",
+    "@pcd/semaphore-signature-pcd": "0.10.0",
+    "@pcd/util": "0.4.0",
     "@personaelabs/spartan-ecdsa": "^2.1.4",
     "@semaphore-protocol/identity": "^3.14.0",
     "ethers": "^5.7.2",
@@ -51,8 +51,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.9.0",
-    "@pcd/tsconfig": "0.9.0",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "concurrently": "^8.2.0",

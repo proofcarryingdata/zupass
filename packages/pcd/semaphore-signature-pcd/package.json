@@ -1,6 +1,6 @@
 {
   "name": "@pcd/semaphore-signature-pcd",
-  "version": "0.9.0",
+  "version": "0.10.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/node/index.js",
   "module": "./dist/node/index.mjs",
@@ -40,9 +40,9 @@
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.9.0",
-    "@pcd/semaphore-identity-pcd": "0.9.0",
-    "@pcd/util": "0.3.0",
+    "@pcd/pcd-types": "0.10.0",
+    "@pcd/semaphore-identity-pcd": "0.10.0",
+    "@pcd/util": "0.4.0",
     "@semaphore-protocol/group": "^3.14.0",
     "@semaphore-protocol/identity": "^3.14.0",
     "@semaphore-protocol/proof": "^3.14.0",
