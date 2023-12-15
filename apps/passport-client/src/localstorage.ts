@@ -22,9 +22,11 @@ const COLLECTION_KEY = "pcd_collection";
 
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
   const validationErrors = validatePCDCollection(pcds);
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
-    throw new Error("couldn't save PCDs\n:" + validationErrors.join("\n"));
+    throw new Error(
+      "couldn't save PCDs\n:" + validationErrors.errors.join("\n")
+    );
   }
   const serialized = await pcds.serializeCollection();
   window.localStorage[COLLECTION_KEY] = serialized;
@@ -46,9 +48,11 @@ export async function loadPCDs(): Promise<PCDCollection> {
   );
 
   const validationErrors = validatePCDCollection(collection);
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
-    throw new Error("couldn't load PCDs\n:" + validationErrors.join("\n"));
+    throw new Error(
+      "couldn't load PCDs\n:" + validationErrors.errors.join("\n")
+    );
   }
 
   return collection;

@@ -7,10 +7,15 @@ import {
 import { appConfig } from "./appConfig";
 import { AppState } from "./state";
 
+export interface ValidationErrors {
+  errors: string[];
+  userUUID: string;
+}
+
 export function validateAndLogState(state: AppState): boolean {
   const validationErrors = validateState(state);
 
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
     return false;
   }
@@ -24,7 +29,7 @@ export function validateAndLogState(state: AppState): boolean {
  * it in an array of human interpretable strings. If there are no errors, returns an
  * empty array.
  */
-export function validateState(state: AppState): string[] {
+export function validateState(state: AppState): ValidationErrors {
   const validationErrors: string[] = [];
 
   if (!state.self) {
@@ -84,7 +89,10 @@ export function validateState(state: AppState): string[] {
     );
   }
 
-  return validationErrors;
+  return {
+    errors: validationErrors,
+    userUUID: state.self?.uuid
+  };
 }
 
 /**
@@ -92,7 +100,7 @@ export function validateState(state: AppState): string[] {
  * contains PCDs that are consistent with the rest of the application state. Returns a list of
  * strings representing individual errors. If there are no errors, returns an empty array.
  */
-export function validatePCDCollection(pcds?: PCDCollection): string[] {
+export function validatePCDCollection(pcds?: PCDCollection): ValidationErrors {
   const validationErrors: string[] = [];
 
   if (!pcds) {
@@ -111,10 +119,16 @@ export function validatePCDCollection(pcds?: PCDCollection): string[] {
     validationErrors.push("pcd collection does not contain an identity pcd");
   }
 
-  return validationErrors;
+  return {
+    errors: validationErrors,
+    userUUID: ""
+  };
 }
 
-export function validateUpload(user?: User, pcds?: PCDCollection): string[] {
+export function validateUpload(
+  user?: User,
+  pcds?: PCDCollection
+): ValidationErrors {
   const validationErrors: string[] = [];
 
   if (!user) {
@@ -137,7 +151,10 @@ export function validateUpload(user?: User, pcds?: PCDCollection): string[] {
     );
   }
 
-  return validationErrors;
+  return {
+    errors: validationErrors,
+    userUUID: user?.uuid
+  };
 }
 
 /**
@@ -147,7 +164,10 @@ export function validateUpload(user?: User, pcds?: PCDCollection): string[] {
  * {@link state} in its entirety, only that the {@link user} and {@link state}
  * are consistent.
  */
-export function validateNewAccount(user: User, state: AppState): string[] {
+export function validateNewAccount(
+  user: User,
+  state: AppState
+): ValidationErrors {
   const validationErrors: string[] = [];
 
   if (!state.identity) {
@@ -163,7 +183,10 @@ export function validateNewAccount(user: User, state: AppState): string[] {
     );
   }
 
-  return validationErrors;
+  return {
+    errors: validationErrors,
+    userUUID: user.uuid
+  };
 }
 
 /**
@@ -172,7 +195,7 @@ export function validateNewAccount(user: User, state: AppState): string[] {
  * sensitive information, such as decrypted versions of e2ee storage.
  */
 export async function logAndUploadValidationErrors(
-  errors: string[]
+  errors: ValidationErrors
 ): Promise<void> {
   try {
     console.log(`encountered state validation errors: `, errors);

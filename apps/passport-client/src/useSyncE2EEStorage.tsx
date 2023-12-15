@@ -113,14 +113,15 @@ export async function uploadStorage(
   subscriptions: FeedSubscriptionManager
 ): Promise<UploadStorageResult> {
   const validationErrors = validateUpload(user, pcds);
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
     return {
       success: false,
       error: {
         name: "ValidationError",
         detailedMessage:
-          "upload validation failed because\n: " + validationErrors.join("\n"),
+          "upload validation failed because\n: " +
+          validationErrors.errors.join("\n"),
         code: undefined
       }
     };
@@ -223,9 +224,11 @@ export async function downloadStorage(
     );
 
     const validationErrors = validatePCDCollection(pcds);
-    if (validationErrors.length > 0) {
+    if (validationErrors.errors.length > 0) {
       logAndUploadValidationErrors(validationErrors);
-      throw new Error("validation errors:\n" + validationErrors.join("\n"));
+      throw new Error(
+        "validation errors:\n" + validationErrors.errors.join("\n")
+      );
     }
 
     await savePCDs(pcds);

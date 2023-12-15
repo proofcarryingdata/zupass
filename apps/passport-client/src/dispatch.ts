@@ -349,7 +349,7 @@ async function finishAccountCreation(
 ) {
   // Verify that the identity is correct.
   const validationErrors = validateNewAccount(user, state);
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
     update({
       error: {
@@ -504,7 +504,7 @@ async function loadAfterLogin(
     await getPackages()
   );
   const validationErrors = validatePCDCollection(pcds);
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
     // TODO: what's the right error message here?
     throw new Error("saved storage failed to validate");
@@ -770,7 +770,7 @@ async function doSync(
   );
 
   const validationErrors = validateUpload(state.self, state.pcds);
-  if (validationErrors.length > 0) {
+  if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
     // TODO: what's the proper thing to do here?
   }
