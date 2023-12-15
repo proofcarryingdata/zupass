@@ -776,14 +776,14 @@ async function doSync(
     state.subscriptions
   );
 
-  const validationErrors = validateUpload(state.self, state.pcds);
-  if (validationErrors.errors.length > 0) {
-    logAndUploadValidationErrors(validationErrors);
-    state.userInvalid = true;
-    return;
-  }
-
   if (state.serverStorageHash !== appStorage.storageHash) {
+    const validationErrors = validateUpload(state.self, state.pcds);
+    if (validationErrors.errors.length > 0) {
+      logAndUploadValidationErrors(validationErrors);
+      state.userInvalid = true;
+      return;
+    }
+
     console.log("[SYNC] sync action: upload");
     // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
     // but only after we're able to respond to a conflict by downloading.
