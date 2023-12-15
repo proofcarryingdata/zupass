@@ -373,6 +373,13 @@ async function finishAccountCreation(
       serverStorageRevision: uploadResult.value.revision,
       serverStorageHash: uploadResult.value.storageHash
     });
+  } else if (
+    !uploadResult.success &&
+    uploadResult.error.name === "ValidationError"
+  ) {
+    update({
+      userInvalid: true
+    });
   }
 
   // Save user to local storage.  This is done last because it unblocks
