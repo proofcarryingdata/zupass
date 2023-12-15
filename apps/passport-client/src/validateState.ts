@@ -8,6 +8,13 @@ import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 
+/**
+ * Validates the application state using {@link validateAppState}. In the case
+ * that the state is invalid, returns `true`, and concurrently uploads the validation
+ * errors to the server for further inspection.
+ *
+ * In the case there are no validation errors, returns `false`.
+ */
 export function validateAndLogStateErrors(
   self: User | undefined,
   identity: Identity | undefined,
@@ -30,10 +37,13 @@ export function validateAndLogStateErrors(
 }
 
 /**
- * Determines whether the app's global state as represented by {@link AppState} object
- * contains valid data. If it does not, returns the set of things that are incorrect about
- * it in an array of human interpretable strings. If there are no errors, returns an
- * empty array.
+ * Determines whether the app's global state contains valid data. If it does not,
+ * returns the set of things that are incorrect about it in a {@link ValidationErrors}
+ * object. If there were no validation errors the result will contain an empty array
+ * of errors.
+ *
+ * The provided {@link PCDCollection} is not checked unless either this function
+ * determines the user is logged in or the {@link forceCheckPCDs} argument is `true`.
  */
 function validateAppState(
   self: User | undefined,
@@ -135,6 +145,14 @@ async function logValidationErrors(errors: ValidationErrors): Promise<void> {
  * Uploaded to server in case of a state validation error.
  */
 export interface ValidationErrors {
+  /**
+   * Human readable non-sensitive-information-leaking errors. If this array is empty,
+   * it represents a state that has no errors.
+   */
   errors: string[];
+
+  /**
+   * Used to identify the user on the server-side.
+   */
   userUUID?: string;
 }
