@@ -14,7 +14,7 @@
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
-    "dev": "tsx watch.ts",
+    "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\" \"yarn workspace anon-message-client dev\"",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn passport:dev",
