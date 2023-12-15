@@ -5,8 +5,8 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "packages/*/src"
+    "packages/*/*",
+    "packages/*/*/src"
   ],
   "scripts": {
     "localdb:restart": "yarn localdb:down && yarn localdb:init && yarn localdb:up",
