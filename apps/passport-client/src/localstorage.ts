@@ -47,13 +47,13 @@ export async function loadPCDs(): Promise<PCDCollection> {
     serializedCollection ?? "{}"
   );
 
-  const validationErrors = validatePCDCollection(collection);
-  if (validationErrors.errors.length > 0) {
-    logAndUploadValidationErrors(validationErrors);
-    throw new Error(
-      "couldn't load PCDs\n:" + validationErrors.errors.join("\n")
-    );
-  }
+  // const validationErrors = validatePCDCollection(collection);
+  // if (validationErrors.errors.length > 0) {
+  //   logAndUploadValidationErrors(validationErrors);
+  //   throw new Error(
+  //     "couldn't load PCDs\n:" + validationErrors.errors.join("\n")
+  //   );
+  // }
 
   return collection;
 }

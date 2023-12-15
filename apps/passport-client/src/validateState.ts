@@ -14,7 +14,7 @@ export interface ValidationErrors {
 }
 
 export function validateAndLogState(state: AppState): boolean {
-  const validationErrors = validateState(state);
+  const validationErrors = validateAppState(state);
 
   if (validationErrors.errors.length > 0) {
     logAndUploadValidationErrors(validationErrors);
@@ -30,7 +30,7 @@ export function validateAndLogState(state: AppState): boolean {
  * it in an array of human interpretable strings. If there are no errors, returns an
  * empty array.
  */
-export function validateState(state: AppState): ValidationErrors {
+export function validateAppState(state: AppState): ValidationErrors {
   const validationErrors: string[] = [];
 
   if (!state.self) {
