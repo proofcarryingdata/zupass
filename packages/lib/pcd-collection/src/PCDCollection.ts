@@ -458,7 +458,7 @@ export class PCDCollection {
 
   /**
    * Merges another PCD collection into this one.
-   * There are two options:
+   * There is one option:
    * - `shouldInclude` is a function used to filter out PCDs from the other
    *   collection during merging, e.g. to filter out duplicates or PCDs of
    *   a type that should not be copied.

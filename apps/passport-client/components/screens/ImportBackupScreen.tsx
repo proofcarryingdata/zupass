@@ -204,12 +204,16 @@ export function ImportBackupScreen() {
             collection: parsedCollection,
             mergeablePcdIds: new Set(mergeablePcds.map((pcd) => pcd.id)),
             selectedFolders,
-            // Check which of the mergeable PCDs are in selected folders, and
-            // create a set of their IDs
+            // mergeablePcds is the set of valid PCDs
+            // We want to filter this to remove any PCDs that belong to
+            // folders *not* selected by the user.
             selectedPcdIds: new Set(
               mergeablePcds
                 .filter((pcd) => {
+                  // Get the folder for the PCD (using "" to represent the
+                  // main folder).
                   const folder = parsedCollection.getFolderOfPCD(pcd.id) ?? "";
+                  // Keep this PCD in the merge if its folder was selected
                   return selectedFolders.has(folder);
                 })
                 .map((pcd) => pcd.id)

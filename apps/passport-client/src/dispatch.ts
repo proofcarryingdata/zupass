@@ -996,6 +996,7 @@ async function mergeImport(
   collection: PCDCollection,
   pcdsToMergeIds: Set<PCD["id"]>
 ) {
+  console.log("Merging imported PCD Collection");
   const userHasExistingSemaphoreIdentityPCD =
     state.pcds.getPCDsByType(SemaphoreIdentityPCDTypeName).length > 0;
 
@@ -1039,6 +1040,10 @@ async function mergeImport(
         imported: pcds.getAll().length - pcdCountBeforeMerge
       }
     });
+
+    console.log(
+      `Completed merge ${pcds.getAll().length - pcdCountBeforeMerge} of PCDs`
+    );
 
     await savePCDs(pcds);
   } catch (e) {
