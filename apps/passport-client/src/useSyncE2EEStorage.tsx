@@ -110,6 +110,33 @@ export async function uploadStorage(
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager
 ): Promise<UploadStorageResult> {
+  const { serializedStorage, storageHash } = await serializeStorage(
+    user,
+    pcds,
+    subscriptions
+  );
+  return uploadSerializedStorage(
+    user,
+    userIdentity,
+    pcds,
+    serializedStorage,
+    storageHash
+  );
+}
+
+/**
+ * Uploads the state of this passport, in serialized form as produced by
+ * serializeStorage(). The parameters {@link user}, {@link userIdentity}, and
+ * {@link pcds} are used only to validate the consistency between the three
+ * before attempting an upload, to help prevent uploading inconsistent state.
+ */
+export async function uploadSerializedStorage(
+  user: User,
+  userIdentity: Identity,
+  pcds: PCDCollection,
+  serializedStorage: SyncedEncryptedStorage,
+  storageHash: string
+): Promise<UploadStorageResult> {
   if (!validateAndLogStateErrors(user, userIdentity, pcds)) {
     return {
       success: false,
@@ -120,22 +147,7 @@ export async function uploadStorage(
       }
     };
   }
-  const { serializedStorage, storageHash } = await serializeStorage(
-    user,
-    pcds,
-    subscriptions
-  );
-  return uploadSerializedStorage(serializedStorage, storageHash);
-}
 
-/**
- * Uploads the state of this passport, in serialized form as produced by
- * serializeStorage().
- */
-export async function uploadSerializedStorage(
-  serializedStorage: SyncedEncryptedStorage,
-  storageHash: string
-): Promise<UploadStorageResult> {
   const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
 

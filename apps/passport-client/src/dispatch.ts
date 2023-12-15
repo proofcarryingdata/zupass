@@ -790,6 +790,9 @@ async function doSync(
     // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
     // but only after we're able to respond to a conflict by downloading.
     const upRes = await uploadSerializedStorage(
+      state.self,
+      state.identity,
+      state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash
     );
