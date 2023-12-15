@@ -21,7 +21,12 @@ export function InvalidUserModal() {
         one. Click the button below to log out. Then you'll be able to sync your
         existing Zupass account onto this device.
       </p>
-      <Spacer h={24} />
+      <Spacer h={16} />
+      <p>
+        You can export your account data using the button below in case you need
+        it later.
+      </p>
+      <Spacer h={16} />
       <AccountExportButton />
       <Spacer h={16} />
       <Button onClick={onExitClick}>Exit</Button>
