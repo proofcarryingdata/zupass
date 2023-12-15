@@ -19,8 +19,8 @@ function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }) {
         This PCD represents an EdDSA signed frog issued to a user's semaphore
         identity, with proven claims about that frog.
       </p>
-
       <Separator />
+      <div></div>
 
       <FieldLabel>Frog ID</FieldLabel>
       <TextContainer>{pcd.claim.partialFrog.frogId}</TextContainer>

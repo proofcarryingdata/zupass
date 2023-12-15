@@ -19,7 +19,6 @@ function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
   return (
     <Container>
       <p>This PCD represents an EdDSA signature of some bigint values</p>
-
       <Separator />
       <FieldLabel>Signed Message</FieldLabel>
       <HiddenText

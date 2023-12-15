@@ -61,7 +61,7 @@ const main = async () => {
   const makeFilterFlags = buildMakeFilterFlags(relativePaths);
 
   const filterFlags = makeFilterFlags(allLeaves);
-  await $`yarn turbo build --output-logs=new-only ${filterFlags}`;
+  await $`yarn turbo build --output-logs=new-only --concurrency=4 --filter="@pcd/*"`;
 
   watch({
     project: workspaceRoot,
@@ -70,7 +70,13 @@ const main = async () => {
         "allof",
         ["not", ["anyof", ["dirname", "node_modules"], ["dirname", "lib"]]],
         ["dirname", path.join(relativePaths[p], "src")],
-        ["match", "*.ts", "basename"]
+        [
+          "anyof",
+          ["match", "*.ts", "basename"],
+          ["match", "*.tsx", "basename"],
+          ["match", "*.js", "basename"],
+          ["match", "*.json", "basename"]
+        ]
       ],
       name: relativePaths[p],
       initialRun: false,
@@ -79,8 +85,7 @@ const main = async () => {
           `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
         );
         const filterFlags = makeFilterFlags(leaves[p]);
-        await spawn`yarn turbo build --output-logs=new-only ${filterFlags}`;
-        console.log("Build complete");
+        await spawn`yarn turbo build --output-logs=new-only --concurrency=4 --filter="@pcd/*"`;
       }
     }))
   });
