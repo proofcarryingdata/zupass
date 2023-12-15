@@ -14,6 +14,7 @@ import {
   serializeStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
@@ -36,7 +37,7 @@ import { useOnStateChange } from "./subscribe";
 // always overwrite existing contents, and downloads will always take new
 // contents without merging.
 // TODO(artwyman): Remove this when #1342 is complete.
-const ENABLE_SYNC_MERGE = false;
+const ENABLE_SYNC_MERGE = true;
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -191,19 +192,95 @@ export type MergeStorageResult = APIResult<MergeableFields, NamedAPIError>;
  * TODO(artwyman): Describe merge algorithm.
  */
 export async function mergeStorage(
-  _localFields: MergeableFields,
+  localFields: MergeableFields,
   remoteFields: MergeableFields,
   self: User
 ): Promise<MergeStorageResult> {
-  console.error(
-    "[SYNC] sync conflict needs merge!  Keeping only remote state."
-  );
-  // TODO(artwyman): Refactor this out to implement and test real merge.
-  requestLogToServer(appConfig.zupassServer, "sync-merge", {
-    user: self.uuid
-    // TODO(artwyman): more details for tracking.
+  // TODO(artwyman): Detect and report on cases where objects differ with the
+  // same ID.
+  let identical = true;
+  let anyPCDDiffs = false;
+  let anySubDiffs = false;
+
+  const pcdMergeStats = {
+    localOnly: 0,
+    remoteOnly: remoteFields.pcds.size() - localFields.pcds.size(),
+    both: localFields.pcds.size(),
+    final: remoteFields.pcds.size()
+  };
+  const pcds = remoteFields.pcds;
+  if (
+    (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
+  ) {
+    identical = false;
+    const pcdMergePredicate = (pcd: PCD, remotePCDs: PCDCollection) => {
+      if (remotePCDs.hasPCDWithId(pcd.id)) {
+        return false;
+      } else {
+        pcdMergeStats.localOnly++;
+        pcdMergeStats.remoteOnly++;
+        pcdMergeStats.both--;
+        return true;
+      }
+    };
+    // TODO(artwyman): Attempt to preserve order while merging?
+    pcds.merge(localFields.pcds, { shouldInclude: pcdMergePredicate });
+    pcdMergeStats.final = pcds.size();
+    anyPCDDiffs = pcdMergeStats.localOnly > 0 || pcdMergeStats.remoteOnly > 0;
+
+    if (anyPCDDiffs) {
+      console.log("[SYNC] merged PCDS:", pcdMergeStats);
+    } else {
+      console.log(
+        "[SYNC] PCD merge made no changes to downloaded set: IDs are identical"
+      );
+    }
+  } else {
+    console.log("[SYNC] no merge of PCDs: hashes are identical");
+  }
+
+  const subscriptions = remoteFields.subscriptions;
+  const localCount = localFields.subscriptions.getActiveSubscriptions().length;
+  const remoteCount =
+    remoteFields.subscriptions.getActiveSubscriptions().length;
+  const subMergeStats = {
+    localOnly: 0,
+    remoteOnly: remoteCount - localCount,
+    both: localCount,
+    final: remoteCount
+  };
+  if (
+    (await localFields.subscriptions.getHash()) !=
+    (await remoteFields.subscriptions.getHash())
+  ) {
+    identical = false;
+    const subMergeResults = subscriptions.merge(localFields.subscriptions);
+    subMergeStats.localOnly += subMergeResults.newSubscriptions;
+    subMergeStats.remoteOnly += subMergeResults.newSubscriptions;
+    subMergeStats.both -= subMergeResults.newSubscriptions;
+    subMergeStats.final = subscriptions.getActiveSubscriptions().length;
+    anySubDiffs = subMergeStats.localOnly > 0 || subMergeStats.remoteOnly > 0;
+
+    if (anySubDiffs) {
+      console.log("[SYNC] merged subscriptions:", subMergeStats);
+    } else {
+      console.log(
+        "[SYNC] subscription merge made no changes to downloaded set: IDs are identical"
+      );
+    }
+  } else {
+    console.log("[SYNC] no merge of subscriptions: hashes are identical");
+  }
+
+  await requestLogToServer(appConfig.zupassServer, "sync-merge", {
+    user: self.uuid,
+    identical: identical,
+    changedPcds: anyPCDDiffs,
+    changedSubscriptions: anySubDiffs,
+    pcdMergeStats: pcdMergeStats,
+    subscriptionMergeStats: subMergeStats
   });
-  return { value: remoteFields, success: true };
+  return { value: { pcds, subscriptions }, success: true };
 }
 
 export type SyncStorageResult = APIResult<
@@ -276,6 +353,7 @@ export async function downloadAndMergeStorage(
       appSubscriptions
     );
     if (appStorage.storageHash !== knownServerHash) {
+      console.warn("[SYNC] revision conflict on download needs merge!");
       const mergeResult = await mergeStorage(
         { pcds: appPCDs, subscriptions: appSubscriptions },
         {
