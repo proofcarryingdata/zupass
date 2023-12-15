@@ -1,10 +1,8 @@
 import {
-  createStorageBackedCredentialCache,
   requestOfflineTickets,
   requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
 import { isWebAssemblySupported } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "react-hot-toast";
@@ -36,6 +34,7 @@ import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { PersistenceManager } from "../src/PersistenceManager";
 import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
@@ -50,18 +49,8 @@ import {
 } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
-  loadCheckedInOfflineDevconnectTickets,
-  loadEncryptionKey,
-  loadIdentity,
-  loadOfflineTickets,
-  loadPCDs,
-  loadPersistentSyncStatus,
-  loadSelf,
-  loadSubscriptions,
   saveCheckedInOfflineTickets,
-  saveIdentity,
   saveOfflineTickets,
-  saveSubscriptions,
   saveUsingLaserScanner
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
@@ -69,21 +58,27 @@ import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
 
 class App extends React.Component<object, AppState> {
-  state = undefined as AppState | undefined;
+  public state = undefined as AppState | undefined;
   readonly BG_POLL_INTERVAL_MS = 1000 * 60;
-  lastBackgroundPoll = 0;
-  activePollTimout: NodeJS.Timeout | undefined = undefined;
+  private lastBackgroundPoll = 0;
+  private activePollTimout: NodeJS.Timeout | undefined = undefined;
+  private stateEmitter: StateEmitter = new Emitter();
+  private persistenceManager = new PersistenceManager();
 
-  stateEmitter: StateEmitter = new Emitter();
-  update = (diff: Pick<AppState, keyof AppState>) => {
+  private update = (diff: Pick<AppState, keyof AppState>) => {
     this.setState(diff, () => {
       this.stateEmitter.emit(this.state);
     });
   };
 
-  dispatch = (action: Action) => dispatch(action, this.state, this.update);
+  private dispatch = (action: Action) =>
+    dispatch(action, this.state, this.update);
+
   componentDidMount() {
-    loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    this.persistenceManager
+      .loadInitialState()
+      .then((s) => this.setState(s, this.startBackgroundJobs));
+
     setupBroadcastChannel(this.dispatch);
     setupUsingLaserScanning();
   }
@@ -388,60 +383,6 @@ function setupUsingLaserScanning() {
     // We may want to use this to forcibly make this state false
     saveUsingLaserScanner(false);
   }
-}
-
-// TODO: move to a separate file
-async function loadInitialState(): Promise<AppState> {
-  let identity = loadIdentity();
-
-  if (identity == null) {
-    console.log("Generating a new Semaphore identity...");
-    identity = new Identity();
-    saveIdentity(identity);
-  }
-
-  const self = loadSelf();
-  const pcds = await loadPCDs();
-  const encryptionKey = loadEncryptionKey();
-  const subscriptions = await loadSubscriptions();
-  const offlineTickets = loadOfflineTickets();
-  const checkedInOfflineDevconnectTickets =
-    loadCheckedInOfflineDevconnectTickets();
-
-  subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
-
-  let modal = { modalType: "none" } as AppState["modal"];
-
-  if (
-    // If on Zupass legacy login, ask user to set password
-    self != null &&
-    encryptionKey == null &&
-    self.salt == null
-  ) {
-    console.log("Asking existing user to set a password");
-    modal = { modalType: "upgrade-account-modal" };
-  }
-
-  const credentialCache = createStorageBackedCredentialCache();
-
-  const persistentSyncStatus = loadPersistentSyncStatus();
-
-  return {
-    self,
-    encryptionKey,
-    pcds,
-    identity,
-    modal,
-    subscriptions,
-    resolvingSubscriptionId: undefined,
-    credentialCache,
-    offlineTickets,
-    checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
-    offline: !window.navigator.onLine,
-    serverStorageRevision: persistentSyncStatus.serverStorageRevision,
-    serverStorageHash: persistentSyncStatus.serverStorageHash,
-    importScreen: {}
-  };
 }
 
 registerServiceWorker();
