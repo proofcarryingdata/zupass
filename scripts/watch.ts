@@ -1,3 +1,14 @@
+/**
+ * Watches the project during development mode, and triggers builds of our
+ * packages when they change.
+ *
+ * Begins by running a build of the packages, then sets up a watcher to run
+ * the build again if any package changes.
+ *
+ * In parallel, runs the apps using their `dev` scripts, which will cause them
+ * to reload/rebuild when they detect changes in their dependencies.
+ */
+
 import path from "path";
 import { watch } from "turbowatch";
 import {
@@ -33,8 +44,10 @@ const main = async () => {
     ])
   );
 
+  // Do an initial build, which will also populate the Turborepo cache
   await $`yarn turbo build --output-logs=new-only --filter="@pcd/*"`;
 
+  // See documentation at https://github.com/gajus/turbowatch
   watch({
     project: workspaceRoot,
     // Detect changes in any of the @pcd/ packages
@@ -52,7 +65,8 @@ const main = async () => {
             ["match", "*.ts", "basename"],
             ["match", "*.tsx", "basename"],
             ["match", "*.js", "basename"],
-            ["match", "*.json", "basename"]
+            ["match", "*.json", "basename"],
+            ["match", "*.wasm", "basename"]
           ]
         ],
         name: relativePaths[p],
