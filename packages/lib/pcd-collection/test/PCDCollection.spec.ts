@@ -271,6 +271,123 @@ describe("PCDCollection", async function () {
     );
     expect(await deserializedCollection.getHash()).to.eq(firstHash);
   });
+
+  it("should merge two PCD collections", async function () {
+    const pcdList = await Promise.all([
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD()
+    ]);
+
+    const firstCollection = new PCDCollection(packages);
+    const secondCollection = new PCDCollection(packages);
+
+    firstCollection.add(pcdList[0]);
+    firstCollection.add(pcdList[1]);
+    firstCollection.add(pcdList[2]);
+    secondCollection.add(pcdList[3]);
+    secondCollection.add(pcdList[4]);
+
+    firstCollection.merge(secondCollection);
+
+    expect(firstCollection.getAll()).to.deep.eq(pcdList);
+  });
+
+  it("should upsert PCDs with the same ID by default", async function () {
+    const pcdList = await Promise.all([
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD()
+    ]);
+
+    const firstCollection = new PCDCollection(packages);
+    const secondCollection = new PCDCollection(packages);
+
+    firstCollection.add(pcdList[0]);
+    firstCollection.add(pcdList[1]);
+    firstCollection.add(pcdList[2]);
+    firstCollection.add(pcdList[3]);
+    firstCollection.add(pcdList[4]);
+    secondCollection.add(pcdList[3]);
+    secondCollection.add(pcdList[4]);
+
+    firstCollection.merge(secondCollection);
+
+    expect(firstCollection.getAll()).to.deep.eq(pcdList);
+  });
+
+  it("should filter out PCDs during merge", async function () {
+    const pcdList = await Promise.all([
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD(),
+      newPCD()
+    ]);
+
+    const firstCollection = new PCDCollection(packages);
+    const secondCollection = new PCDCollection(packages);
+
+    firstCollection.add(pcdList[0]);
+    firstCollection.add(pcdList[1]);
+    firstCollection.add(pcdList[2]);
+    secondCollection.add(pcdList[3]);
+    secondCollection.add(pcdList[4]);
+
+    // secondCollection contains two PCDs, but we want to filter one of them
+    // out.
+    firstCollection.merge(secondCollection, {
+      shouldInclude: (pcd) => {
+        return pcd.id !== pcdList[4].id;
+      }
+    });
+
+    expect(firstCollection.getAll()).to.deep.eq([
+      pcdList[0],
+      pcdList[1],
+      pcdList[2],
+      pcdList[3]
+      // pcdList[4] should have been filtered out
+    ]);
+  });
+
+  it("should copy folder details", async function () {
+    const pcdList = await Promise.all([newPCD(), newPCD()]);
+
+    const firstCollection = new PCDCollection(packages);
+    const secondCollection = new PCDCollection(packages);
+
+    firstCollection.add(pcdList[0]);
+    firstCollection.setPCDFolder(pcdList[0].id, "A");
+    secondCollection.add(pcdList[1]);
+    secondCollection.setPCDFolder(pcdList[1].id, "B");
+
+    firstCollection.merge(secondCollection);
+
+    expect(firstCollection.getAll()).to.deep.eq(pcdList);
+    expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.eq("B");
+  });
+
+  it("should copy folder details when folder exists in both collections", async function () {
+    const pcdList = await Promise.all([newPCD(), newPCD()]);
+
+    const firstCollection = new PCDCollection(packages);
+    const secondCollection = new PCDCollection(packages);
+
+    firstCollection.add(pcdList[0]);
+    firstCollection.setPCDFolder(pcdList[0].id, "A");
+    secondCollection.add(pcdList[1]);
+    secondCollection.setPCDFolder(pcdList[1].id, "A");
+
+    firstCollection.merge(secondCollection);
+
+    expect(firstCollection.getAll()).to.deep.eq(pcdList);
+    expect(firstCollection.getFolderOfPCD(pcdList[1].id)).to.eq("A");
+  });
 });
 
 function waitForNewHash(

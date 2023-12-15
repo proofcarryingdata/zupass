@@ -9,7 +9,6 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
-import React from "react";
 import { Emitter } from "./emitter";
 
 export type GetState = () => AppState;
@@ -119,6 +118,13 @@ export interface AppState {
   offlineTickets: OfflineTickets;
   checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
   offline: boolean;
+
+  // @todo screen-specific data should perhaps have a structure similar to
+  // that of modals
+  importScreen?: {
+    imported?: number;
+    error?: string;
+  };
 }
 
 export interface AppError {

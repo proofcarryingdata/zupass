@@ -1,3 +1,4 @@
+import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
   agreeTerms,
@@ -15,8 +16,9 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import {
+  isSemaphoreIdentityPCD,
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
@@ -129,6 +131,11 @@ export type Action =
       subscriptionId: string;
       onSucess?: () => void;
       onError?: (e: Error) => void;
+    }
+  | {
+      type: "merge-import";
+      collection: PCDCollection;
+      pcdsToMergeIds: Set<PCD["id"]>;
     };
 
 export type StateContextValue = {
@@ -232,6 +239,13 @@ export async function dispatch(
         action.subscriptionId,
         action.onSucess,
         action.onError
+      );
+    case "merge-import":
+      return mergeImport(
+        state,
+        update,
+        action.collection,
+        action.pcdsToMergeIds
       );
     default:
       // We can ensure that we never get here using the type system
@@ -968,6 +982,76 @@ async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
     update({
       modal: {
         modalType: "privacy-notice"
+      }
+    });
+  }
+}
+
+/**
+ * Merge in a PCD collection from an import of backed-up data.
+ */
+async function mergeImport(
+  state: AppState,
+  update: ZuUpdate,
+  collection: PCDCollection,
+  pcdsToMergeIds: Set<PCD["id"]>
+) {
+  console.log("Merging imported PCD Collection");
+  const userHasExistingSemaphoreIdentityPCD =
+    state.pcds.getPCDsByType(SemaphoreIdentityPCDTypeName).length > 0;
+
+  const userHasExistingEmailPCD =
+    state.pcds.getPCDsByType(EmailPCDTypeName).length > 0;
+
+  const pcdCountBeforeMerge = state.pcds.getAll().length;
+
+  const predicate = (pcd: PCD, target: PCDCollection): boolean => {
+    return (
+      pcdsToMergeIds.has(pcd.id) &&
+      !(pcd.type === EmailPCDTypeName && userHasExistingEmailPCD) &&
+      !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
+      !(
+        isSemaphoreIdentityPCD(pcd) &&
+        pcd.claim.identity.getCommitment().toString() !== state.self.commitment
+      ) &&
+      !target.hasPCDWithId(pcd.id)
+    );
+  };
+
+  // This async call could mean that another dispatch()'ed event could
+  // interfere with app state, including the state we want to change.
+  // This risk has been mitigated by not calling the useSyncE2EEStorage
+  // hook on ImportBackupScreen.
+  const packages = await getPackages();
+  const pcds = new PCDCollection(
+    packages,
+    state.pcds.getAll(),
+    state.pcds.folders
+  );
+
+  try {
+    pcds.merge(collection, {
+      shouldInclude: predicate
+    });
+
+    update({
+      pcds,
+      importScreen: {
+        imported: pcds.getAll().length - pcdCountBeforeMerge
+      }
+    });
+
+    console.log(
+      `Completed merge ${pcds.getAll().length - pcdCountBeforeMerge} of PCDs`
+    );
+
+    await savePCDs(pcds);
+  } catch (e) {
+    console.log(e);
+    update({
+      importScreen: {
+        error:
+          "An unexpected error was encountered when importing your backup. No changes have been made to your account."
       }
     });
   }
