@@ -1,5 +1,17 @@
 # @pcd/rsa-image-pcd
 
+## 0.4.0
+
+### Minor Changes
+
+- Split out React dependencies
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.10.0
+  - @pcd/rsa-pcd@0.5.0
+
 ## 0.3.0
 
 ### Minor Changes

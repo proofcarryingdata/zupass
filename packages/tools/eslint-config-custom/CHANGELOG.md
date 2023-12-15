@@ -1,5 +1,11 @@
 # @pcd/eslint-config-custom
 
+## 0.10.0
+
+### Minor Changes
+
+- Split out React dependencies
+
 ## 0.9.0
 
 ### Minor Changes
