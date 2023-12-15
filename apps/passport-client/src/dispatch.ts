@@ -511,11 +511,6 @@ async function loadAfterLogin(
     await getPackages()
   );
 
-  if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
-    // TODO: what's the right error message here?
-    throw new Error("saved storage failed to validate");
-  }
-
   // Poll the latest user stored from the database rather than using the `self` object from e2ee storage.
   const userResponse = await requestUser(
     appConfig.zupassServer,
@@ -532,6 +527,17 @@ async function loadAfterLogin(
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
+
+  if (
+    !validateAndLogStateErrors(
+      userResponse.value,
+      identityPCD.claim.identity,
+      state.pcds
+    )
+  ) {
+    update({ userInvalid: true });
+    return;
+  }
 
   let modal: AppState["modal"] = { modalType: "none" };
   if (!identityPCD) {

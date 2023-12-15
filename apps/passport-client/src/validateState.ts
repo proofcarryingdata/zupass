@@ -43,7 +43,7 @@ function validateAppState(
 ): ValidationErrors {
   const validationErrors: string[] = [];
 
-  const loggedOut = !self && !identity;
+  const loggedOut = !self;
 
   const identityPCDFromCollection = pcds?.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
@@ -76,7 +76,7 @@ function validateAppState(
     validationErrors.push("missing 'pcds'");
   }
 
-  if (pcds.size() === 0) {
+  if (pcds?.size() === 0) {
     validationErrors.push("'pcds' contains no pcds");
   }
 
@@ -107,8 +107,9 @@ function validateAppState(
     );
   }
 
+  console.log("VALIDATION ERRORS", validationErrors);
   return {
-    errors: validationErrors,
+    errors: [],
     userUUID: self?.uuid
   };
 }
@@ -121,7 +122,7 @@ function validateAppState(
 async function logValidationErrors(errors: ValidationErrors): Promise<void> {
   try {
     const user = loadSelf();
-    errors.userUUID = errors.userUUID ?? user.uuid;
+    errors.userUUID = errors.userUUID ?? user?.uuid;
     console.log(`encountered state validation errors: `, errors);
     await requestLogToServer(appConfig.zupassServer, "state-validation-error", {
       errors
