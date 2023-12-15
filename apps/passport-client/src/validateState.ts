@@ -5,11 +5,12 @@ import {
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
 import { appConfig } from "./appConfig";
+import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
 
 export interface ValidationErrors {
   errors: string[];
-  userUUID: string;
+  userUUID?: string;
 }
 
 export function validateAndLogState(state: AppState): boolean {
@@ -198,6 +199,8 @@ export async function logAndUploadValidationErrors(
   errors: ValidationErrors
 ): Promise<void> {
   try {
+    const user = loadSelf();
+    errors.userUUID = errors.userUUID ?? user.uuid;
     console.log(`encountered state validation errors: `, errors);
     await requestLogToServer(appConfig.zupassServer, "state-validation-error", {
       errors
