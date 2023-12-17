@@ -75,6 +75,21 @@ class App extends React.Component<object, AppState> {
   lastBackgroundPoll = 0;
   activePollTimout: NodeJS.Timeout | undefined = undefined;
 
+  // If the user has the Redux Dev Tools extension installed, we can log actions and
+  // state changes to it, with a UI designed to show diffs between states.
+  // This only requires that we test for the extension being present, and set up a
+  // connection so that we can send notifications of state changes to it.
+  // See https://github.com/reduxjs/redux-devtools for more details.
+  devTools = (window as any).__REDUX_DEVTOOLS_EXTENSION__
+    ? (window as any).__REDUX_DEVTOOLS_EXTENSION__.connect({
+        serialize: {
+          replacer: function (_key, value: any) {
+            return typeof value === "bigint" ? value.toString() : value;
+          }
+        }
+      })
+    : undefined;
+
   stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>) => {
     this.setState(diff, () => {
@@ -82,14 +97,28 @@ class App extends React.Component<object, AppState> {
     });
   };
 
-  dispatch = (action: Action) => dispatch(action, this.state, this.update);
+  dispatch = (action: Action) => {
+    const result = dispatch(action, this.state, this.update);
+    // Tell Redux Dev Tools about the action that just occurred, once the
+    // promise resolves.
+    // Actions will appear in the order in which they complete, not in the
+    // order in which they are dispatched, because we allow actions to occur
+    // in parallel, rather than enforcing serial application.
+    if (this.devTools) {
+      result.then(() => this.devTools.send(action, this.state));
+    }
+    return result;
+  };
+
   componentDidMount() {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
+    this.devTools?.init(this.state);
     setupBroadcastChannel(this.dispatch);
     setupUsingLaserScanning();
   }
   componentWillUnmount(): void {
     closeBroadcastChannel();
+    this.devTools?.disconnect();
   }
   stateContextState: StateContextValue = {
     getState: () => this.state,
