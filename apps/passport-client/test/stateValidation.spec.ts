@@ -47,9 +47,7 @@ describe("validateAppState", async function () {
         TAG_STR,
         undefined,
         undefined,
-        await (async () => {
-          return new PCDCollection(pcdPackages);
-        })(),
+        new PCDCollection(pcdPackages),
         true
       )
     ).to.deep.eq({
