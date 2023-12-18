@@ -52,7 +52,7 @@ import {
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
-import { validateAndLogStateErrors } from "./validateState";
+import { validateAndLogRunningAppState } from "./validateState";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -344,7 +344,7 @@ async function finishAccountCreation(
 ) {
   // Verify that the identity is correct.
   if (
-    !validateAndLogStateErrors(
+    !validateAndLogRunningAppState(
       "finishAccountCreation",
       user,
       state.identity,
@@ -530,7 +530,7 @@ async function loadAfterLogin(
   )[0] as SemaphoreIdentityPCD;
 
   if (
-    !validateAndLogStateErrors(
+    !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
       identityPCD.claim.identity,

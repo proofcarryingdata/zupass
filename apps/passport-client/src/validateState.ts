@@ -7,22 +7,30 @@ import {
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
+import { AppState } from "./state";
 
-/**
- * Validates the application state using {@link validateAppState}. In the case
- * that the state is invalid, returns `true`, and concurrently uploads the validation
- * errors to the server for further inspection.
- *
- * In the case there are no validation errors, returns `false`.
- */
-export function validateAndLogStateErrors(
+export function validateAndLogInitialAppState(
+  tag: string,
+  state: AppState
+): boolean {
+  const validationErrors = validateInitialAppState(tag, state);
+
+  if (validationErrors.errors.length > 0) {
+    logValidationErrors(validationErrors);
+    return false;
+  }
+
+  return true;
+}
+
+export function validateAndLogRunningAppState(
   tag: string,
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): boolean {
-  const validationErrors = validateAppState(
+  const validationErrors = validateRunningAppState(
     tag,
     self,
     identity,
@@ -38,26 +46,67 @@ export function validateAndLogStateErrors(
   return true;
 }
 
-/**
- * Determines whether the app's global state contains valid data. If it does not,
- * returns the set of things that are incorrect about it in a {@link ErrorReport}
- * object. If there were no validation errors the result will contain an empty array
- * of errors.
- *
- * The provided {@link PCDCollection} is not checked unless either this function
- * determines the user is logged in or the {@link forceCheckPCDs} argument is `true`.
- *
- * Depending on where this function is called, pass in a unique {@link tag}, so
- * that on the backend we can figure out where the validation failed.
- */
-export function validateAppState(
+export function validateInitialAppState(
+  tag: string,
+  appState: AppState | undefined
+): ErrorReport {
+  return {
+    errors: getInitialAppStateValidationErrors(appState),
+    userUUID: appState?.self?.uuid,
+    tag
+  };
+}
+
+export function validateRunningAppState(
   tag: string,
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): ErrorReport {
-  const validationErrors: string[] = [];
+  return {
+    errors: getRunningAppStateValidationErrors(
+      self,
+      identity,
+      pcds,
+      forceCheckPCDs
+    ),
+    userUUID: self?.uuid,
+    tag
+  };
+}
+
+export function getInitialAppStateValidationErrors(state: AppState): string[] {
+  const errors = [
+    ...getRunningAppStateValidationErrors(
+      state.self,
+      state.identity,
+      state.pcds
+    )
+  ];
+
+  // this case covers a logged in user. the only way the app can get a 'self'
+  // is by requesting one from the server, to do which one has to be logged in.
+  if (state.self) {
+    if (!state.encryptionKey) {
+      errors.push(`logged in user missing encryption key`);
+    }
+
+    if (!state.identity) {
+      errors.push(`logged in user missing identity`);
+    }
+  }
+
+  return errors;
+}
+
+export function getRunningAppStateValidationErrors(
+  self: User | undefined,
+  identity: Identity | undefined,
+  pcds: PCDCollection | undefined,
+  forceCheckPCDs?: boolean
+): string[] {
+  const errors: string[] = [];
   const loggedOut = !self;
   const identityPCDFromCollection = pcds?.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
@@ -65,30 +114,24 @@ export function validateAppState(
 
   if (forceCheckPCDs || !loggedOut) {
     if (!pcds) {
-      validationErrors.push("missing 'pcds'");
+      errors.push("missing 'pcds'");
     }
 
     if (pcds?.size() === 0) {
-      validationErrors.push("'pcds' contains no pcds");
+      errors.push("'pcds' contains no pcds");
     }
 
     if (!identityPCDFromCollection) {
-      validationErrors.push(
-        "'pcds' field in app state does not contain an identity PCD"
-      );
+      errors.push("'pcds' field in app state does not contain an identity PCD");
     }
   }
 
   if (loggedOut) {
-    return {
-      errors: validationErrors,
-      userUUID: undefined,
-      tag
-    };
+    errors;
   }
 
   if (!identity) {
-    validationErrors.push("missing 'identity'");
+    errors.push("missing 'identity'");
   }
 
   const identityFromPCDCollection = identityPCDFromCollection?.claim?.identity;
@@ -98,7 +141,7 @@ export function validateAppState(
   const commitmentFromIdentityField = identity?.commitment?.toString();
 
   if (commitmentFromSelfField === undefined) {
-    validationErrors.push(`'self' missing a commitment`);
+    errors.push(`'self' missing a commitment`);
   }
 
   if (
@@ -113,31 +156,27 @@ export function validateAppState(
     // identity, and in the pcd collection
 
     if (commitmentOfIdentityPCDInCollection !== commitmentFromSelfField) {
-      validationErrors.push(
+      errors.push(
         `commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})` +
           ` does not match commitment in 'self' field of app state (${commitmentFromSelfField})`
       );
     }
     if (commitmentFromSelfField !== commitmentFromIdentityField) {
-      validationErrors.push(
+      errors.push(
         `commitment in 'self' field of app state (${commitmentFromSelfField})` +
           ` does not match commitment of 'identity' field of app state (${commitmentFromIdentityField})`
       );
     }
 
     if (commitmentFromIdentityField !== commitmentOfIdentityPCDInCollection) {
-      validationErrors.push(
+      errors.push(
         `commitment of 'identity' field of app state (${commitmentFromIdentityField})` +
           ` does not match commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})`
       );
     }
   }
 
-  return {
-    errors: validationErrors,
-    userUUID: self?.uuid,
-    tag
-  };
+  return errors;
 }
 
 /**

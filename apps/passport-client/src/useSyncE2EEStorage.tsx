@@ -29,7 +29,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
-import { validateAndLogStateErrors } from "./validateState";
+import { validateAndLogRunningAppState } from "./validateState";
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -138,7 +138,7 @@ export async function uploadSerializedStorage(
   storageHash: string
 ): Promise<UploadStorageResult> {
   if (
-    !validateAndLogStateErrors(
+    !validateAndLogRunningAppState(
       "uploadSerializedStorage",
       user,
       userIdentity,
@@ -237,7 +237,7 @@ export async function downloadStorage(
     );
 
     if (
-      !validateAndLogStateErrors(
+      !validateAndLogRunningAppState(
         "downloadStorage",
         undefined,
         undefined,

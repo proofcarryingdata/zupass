@@ -12,14 +12,14 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
 import { getPackages } from "./pcdPackages";
-import { validateAndLogStateErrors } from "./validateState";
+import { validateAndLogRunningAppState } from "./validateState";
 
 const OLD_PCDS_KEY = "pcds"; // deprecated
 const COLLECTION_KEY = "pcd_collection";
 
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
   if (
-    !validateAndLogStateErrors("savePCDs", undefined, undefined, pcds, true)
+    !validateAndLogRunningAppState("savePCDs", undefined, undefined, pcds, true)
   ) {
     console.error(
       "PCD Collection failed to validate - not writing it to localstorage"
@@ -47,7 +47,7 @@ export async function loadPCDs(): Promise<PCDCollection> {
   );
 
   if (
-    !validateAndLogStateErrors(
+    !validateAndLogRunningAppState(
       "loadPCDs",
       undefined,
       undefined,
