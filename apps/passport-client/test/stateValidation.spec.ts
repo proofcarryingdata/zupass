@@ -32,9 +32,13 @@ describe("validateAppState", async function () {
   const pcdPackages = [SemaphoreIdentityPCDPackage, EdDSAPCDPackage];
 
   it("logged out ; no errors", async function () {
-    const errors = validateAppState(TAG_STR, undefined, undefined, undefined);
-    expect(errors.errors.length).to.eq(0);
-    expect(errors.userUUID).to.eq(undefined);
+    expect(
+      validateAppState(TAG_STR, undefined, undefined, undefined)
+    ).to.deep.eq({
+      errors: [],
+      userUUID: undefined,
+      ...TAG
+    } satisfies ErrorReport);
   });
 
   it("logged out ; forceCheckPCDs=true; all error states caught", async function () {
