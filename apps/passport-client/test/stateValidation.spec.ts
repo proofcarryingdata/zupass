@@ -29,6 +29,9 @@ function newEdSAPCD(): Promise<EdDSAPCD> {
 
 describe("validateAppState", async function () {
   const crypto = await PCDCrypto.newInstance();
+  const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+    "testpassword123!@#asdf"
+  );
   const pcdPackages = [SemaphoreIdentityPCDPackage, EdDSAPCDPackage];
   const identity1 = new Identity(
     '["0xaa5fa3165e1ca129bd7a2b3bada18c5f81350faacf2edff59cf44eeba2e2d",' +
@@ -105,9 +108,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; no errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -129,9 +129,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; empty pcd collection ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -151,9 +148,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; missing pcd collection ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -172,9 +166,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; missing identity ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -196,9 +187,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; self missing commitment ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -221,9 +209,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; self commitment wrong ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity2.commitment.toString(),
       email: randomEmail(),
@@ -248,9 +233,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; pcd collection identity wrong ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -275,9 +257,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; appState identity wrong ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
@@ -302,9 +281,6 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; all identities mistmatched ; errors", async function () {
-    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
-      "testpassword123!@#asdf"
-    );
     const self: ZupassUserJson = {
       commitment: identity1.commitment.toString(),
       email: randomEmail(),
