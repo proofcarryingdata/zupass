@@ -21,7 +21,7 @@ export async function savePCDs(pcds: PCDCollection): Promise<void> {
   if (
     !validateAndLogStateErrors("savePCDs", undefined, undefined, pcds, true)
   ) {
-    console.log(
+    console.error(
       "PCD Collection failed to validate - not writing it to localstorage"
     );
     return;
@@ -55,7 +55,7 @@ export async function loadPCDs(): Promise<PCDCollection> {
       true
     )
   ) {
-    console.log(
+    console.error(
       "PCD Collection failed to validate when loading from localstorage"
     );
   }
