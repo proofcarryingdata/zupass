@@ -31,13 +31,13 @@ describe("validateAppState", async function () {
   const crypto = await PCDCrypto.newInstance();
   const pcdPackages = [SemaphoreIdentityPCDPackage, EdDSAPCDPackage];
 
-  it("validateState returns no errors on valid logged out state", async function () {
+  it("logged out ; no errors", async function () {
     const errors = validateAppState("test", undefined, undefined, undefined);
     expect(errors.errors.length).to.eq(0);
     expect(errors.userUUID).to.eq(undefined);
   });
 
-  it("validateState returns errors for logged out state with invalid PCD collections", async function () {
+  it("logged out ; forceCheckPCDs=true; all error states caught", async function () {
     expect(
       validateAppState(
         "test",
@@ -77,14 +77,14 @@ describe("validateAppState", async function () {
       validateAppState("test", undefined, undefined, undefined, true)
     ).to.deep.eq({
       errors: [
-        "'pcds' field in app state does not contain an identity PCD",
-        "missing 'pcds'"
+        "missing 'pcds'",
+        "'pcds' field in app state does not contain an identity PCD"
       ],
       userUUID: undefined
     } satisfies ValidationErrors);
   });
 
-  it("validateState returns no errors on valid logged in state", async function () {
+  it("logged in ; no errors", async function () {
     const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
@@ -102,12 +102,13 @@ describe("validateAppState", async function () {
         identity
       })
     );
-    const errors = validateAppState("test", self, identity, pcds);
-    expect(errors.errors.length).to.eq(0);
-    expect(errors.userUUID).to.eq(self.uuid);
+    expect(validateAppState("test", self, identity, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: []
+    } satisfies ValidationErrors);
   });
 
-  it("validateState returns errors for situation where the pcd collection is empty", async function () {
+  it("logged in ; empty pcd collection ; errors", async function () {
     const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
@@ -120,12 +121,33 @@ describe("validateAppState", async function () {
       uuid: uuid()
     };
     const pcds = new PCDCollection(pcdPackages);
-    // deliberately create empty pcd collection
-    const errors = validateAppState("test", self, identity, pcds);
-    expect(errors.errors).to.deep.eq([
-      "'pcds' contains no pcds",
-      "'pcds' field in app state does not contain an identity PCD"
-    ]);
-    expect(errors.userUUID).to.eq(self.uuid);
+    expect(validateAppState("test", self, identity, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [
+        "'pcds' contains no pcds",
+        "'pcds' field in app state does not contain an identity PCD"
+      ]
+    } satisfies ValidationErrors);
+  });
+
+  it("logged in ; missing pcd collection ; errors", async function () {
+    const identity = new Identity();
+    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+      "testpassword123!@#asdf"
+    );
+    const self: ZupassUserJson = {
+      commitment: identity.commitment.toString(),
+      email: randomEmail(),
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    expect(validateAppState("test", self, identity, undefined)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [
+        "missing 'pcds'",
+        "'pcds' field in app state does not contain an identity PCD"
+      ]
+    } satisfies ValidationErrors);
   });
 });
