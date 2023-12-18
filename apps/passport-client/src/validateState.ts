@@ -142,7 +142,7 @@ export async function logValidationErrors(
     errors.userUUID = errors.userUUID ?? user?.uuid;
     console.log(`encountered state validation errors: `, errors);
     await requestLogToServer(appConfig.zupassServer, "state-validation-error", {
-      errors
+      ...errors
     });
   } catch (e) {
     console.log("error reporting errors", e);
