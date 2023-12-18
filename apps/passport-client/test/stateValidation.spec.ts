@@ -150,4 +150,28 @@ describe("validateAppState", async function () {
       ]
     } satisfies ValidationErrors);
   });
+
+  it("logged in ; missing identity ; errors", async function () {
+    const identity = new Identity();
+    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+      "testpassword123!@#asdf"
+    );
+    const self: ZupassUserJson = {
+      commitment: identity.commitment.toString(),
+      email: randomEmail(),
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity
+      })
+    );
+    expect(validateAppState("test", self, undefined, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: ["missing 'identity'"]
+    } satisfies ValidationErrors);
+  });
 });

@@ -86,10 +86,6 @@ export function validateAppState(
     };
   }
 
-  if (!self) {
-    validationErrors.push("missing 'self'");
-  }
-
   if (!identity) {
     validationErrors.push("missing 'identity'");
   }
