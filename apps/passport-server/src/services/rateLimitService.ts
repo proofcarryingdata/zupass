@@ -14,10 +14,12 @@ export class RateLimitService {
   private readonly context: ApplicationContext;
   private timeout: NodeJS.Timeout;
   private readonly rollbarService: RollbarService | null;
+  private disabled: boolean;
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService | null
+    rollbarService: RollbarService | null,
+    disabled: boolean
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
@@ -26,6 +28,7 @@ export class RateLimitService {
       (async (): Promise<void> =>
         await clearExpiredActions(this.context.dbPool))();
     }, ONE_HOUR_MS);
+    this.disabled = disabled;
   }
 
   public stop(): void {
@@ -66,6 +69,11 @@ export class RateLimitService {
         span?.setAttribute("actionType", actionType);
         span?.setAttribute("actionId", actionId);
 
+        if (this.disabled) {
+          span?.setAttribute("rateLimitCheckDisabled", true);
+          return true;
+        }
+
         const result = checkRateLimit(
           this.context.dbPool,
           actionType,
@@ -91,7 +99,8 @@ export class RateLimitService {
 
 export function startRateLimitService(
   context: ApplicationContext,
-  rollbarService: RollbarService | null
+  rollbarService: RollbarService | null,
+  disabled: boolean
 ): RateLimitService {
-  return new RateLimitService(context, rollbarService);
+  return new RateLimitService(context, rollbarService, disabled);
 }
