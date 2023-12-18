@@ -19,7 +19,7 @@ export async function requestEncryptedStorage(
   knownRevision?: string
 ): Promise<EncryptedStorageResult> {
   return httpGet<EncryptedStorageResult>(
-    urlJoin(zupassServerUrl, "/sync/v2/load"),
+    urlJoin(zupassServerUrl, "/sync/v3/load"),
     {
       onValue: async (resText) => ({
         value: JSON.parse(resText) as DownloadEncryptedStorageResponseValue,
