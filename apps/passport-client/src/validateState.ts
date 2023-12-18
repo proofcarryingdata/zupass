@@ -9,6 +9,11 @@ import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
 
+/**
+ * Returns `true` if {@link validateInitialAppState} returns no errors, and `false`
+ * otherwise. In the case that errors were encountered, uploads an error report to
+ * the Zupass backend.
+ */
 export function validateAndLogInitialAppState(
   tag: string,
   state: AppState
@@ -23,6 +28,11 @@ export function validateAndLogInitialAppState(
   return true;
 }
 
+/**
+ * Returns `true` if {@link validateRunningAppState} returns no errors, and `false`
+ * otherwise. In the case that errors were encountered, uploads an error report to
+ * the Zupass backend.
+ */
 export function validateAndLogRunningAppState(
   tag: string,
   self: User | undefined,
@@ -46,6 +56,10 @@ export function validateAndLogRunningAppState(
   return true;
 }
 
+/**
+ * Validates state of a Zupass application that is just starting up (using the running
+ * app state checks alongside some extra ones), and returns an {@link ErrorReport}.
+ */
 export function validateInitialAppState(
   tag: string,
   appState: AppState | undefined
@@ -57,6 +71,9 @@ export function validateInitialAppState(
   };
 }
 
+/**
+ * Validates state of a running Zupass application and returns an {@link ErrorReport}.
+ */
 export function validateRunningAppState(
   tag: string,
   self: User | undefined,
@@ -76,6 +93,11 @@ export function validateRunningAppState(
   };
 }
 
+/**
+ * Validates state of a Zupass application that is just starting up. Uses
+ * {@link getRunningAppStateValidationErrors}, and performs some extra checks
+ * on top of it.
+ */
 export function getInitialAppStateValidationErrors(state: AppState): string[] {
   const errors = [
     ...getRunningAppStateValidationErrors(
@@ -100,6 +122,10 @@ export function getInitialAppStateValidationErrors(state: AppState): string[] {
   return errors;
 }
 
+/**
+ * Validates state of a running Zupass application. Returns a list of errors
+ * represented by strings. If the state is not invalid, returns an empty list.
+ */
 export function getRunningAppStateValidationErrors(
   self: User | undefined,
   identity: Identity | undefined,
