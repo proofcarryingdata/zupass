@@ -60,6 +60,14 @@ export function validateAppState(
   )?.[0] as SemaphoreIdentityPCD | undefined;
 
   if (forceCheckPCDs || !loggedOut) {
+    if (!pcds) {
+      validationErrors.push("missing 'pcds'");
+    }
+
+    if (pcds?.size() === 0) {
+      validationErrors.push("'pcds' contains no pcds");
+    }
+
     if (!identityPCDFromCollection) {
       validationErrors.push(
         "'pcds' field in app state does not contain an identity PCD"
@@ -80,14 +88,6 @@ export function validateAppState(
 
   if (!identity) {
     validationErrors.push("missing 'identity'");
-  }
-
-  if (!pcds) {
-    validationErrors.push("missing 'pcds'");
-  }
-
-  if (pcds?.size() === 0) {
-    validationErrors.push("'pcds' contains no pcds");
   }
 
   const identityFromPCDCollection = identityPCDFromCollection?.claim?.identity;
