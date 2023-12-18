@@ -9,6 +9,7 @@ import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
+import { startPoapService } from "./services/poapService";
 import { startProvingService } from "./services/provingService";
 import { startRateLimitService } from "./services/rateLimitService";
 import { startRollbarService } from "./services/rollbarService";
@@ -80,6 +81,7 @@ export async function startServices(
     rollbarService,
     issuanceService
   );
+  const poapService = startPoapService(context, rollbarService);
   const services: GlobalServices = {
     semaphoreService,
     userService,
@@ -96,6 +98,7 @@ export async function startServices(
     telegramService,
     kudosbotService,
     frogcryptoService,
+    poapService,
     persistentCacheService,
     multiprocessService,
     rateLimitService

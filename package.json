@@ -5,15 +5,15 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*",
-    "packages/*/src"
+    "packages/*/*",
+    "packages/*/*/src"
   ],
   "scripts": {
     "localdb:restart": "yarn localdb:down && yarn localdb:init && yarn localdb:up",
     "localdb:init": "bash -c 'rm -rf apps/passport-server/local-db-data/ && initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
-    "build": "turbo run build",
+    "build": "./scripts/build.sh",
     "dev": "turbo run dev --parallel",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "passport:dev": "concurrently -c auto \"yarn workspace passport-client dev\" \"yarn workspace passport-server dev\" \"yarn workspace anon-message-client dev\"",

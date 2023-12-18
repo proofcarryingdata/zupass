@@ -74,6 +74,7 @@ import {
 } from "../src/database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import { softDeleteDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/softDeleteDevconnectPretixTicket";
 import { consumeDevconnectPretixTicket } from "../src/database/queries/devconnect_pretix_tickets/updateDevconnectPretixTicket";
+import { insertNewPoapUrl } from "../src/database/queries/poap";
 import { fetchPretixEventInfo } from "../src/database/queries/pretixEventInfo";
 import { fetchPretixItemsInfoByEvent } from "../src/database/queries/pretixItemInfo";
 import {
@@ -92,6 +93,7 @@ import {
 } from "../src/services/devconnect/organizerSync";
 import { DevconnectPretixSyncService } from "../src/services/devconnectPretixSyncService";
 import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "../src/services/issuanceService";
+import { PoapService } from "../src/services/poapService";
 import { PretixSyncStatus } from "../src/services/types";
 import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
@@ -135,6 +137,7 @@ describe("devconnect functionality", function () {
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;
   let devconnectPretixSyncService: DevconnectPretixSyncService;
+  let poapService: PoapService;
   let db: Pool;
   let server: SetupServer;
   let backupData: IMockDevconnectPretixData;
@@ -237,6 +240,7 @@ describe("devconnect functionality", function () {
 
     devconnectPretixSyncService =
       application.services.devconnectPretixSyncService;
+    poapService = application.services.poapService;
   });
 
   this.afterAll(async () => {
@@ -2906,6 +2910,36 @@ describe("devconnect functionality", function () {
     // Redacted tickets should now be unredacted
     expect(unredactedTickets.length).to.eq(redactedTickets.length);
     expect(unredactedTickets.length).to.eq(3);
+  });
+
+  step("get poap claim urls from devconnect ticket ids", async () => {
+    // No POAP mint links in DB yet - all links return NULL
+    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("1")).to.be
+      .null;
+    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("2")).to.be
+      .null;
+
+    const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
+    const TEST_POAP_LINK_2 = "https://poap.xyz/mint/zxcvbn";
+
+    await insertNewPoapUrl(db, TEST_POAP_LINK_1, "devconnect");
+
+    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("1")).to.eq(
+      TEST_POAP_LINK_1
+    );
+    // Ran out of mint links
+    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("2")).to.be
+      .null;
+
+    await insertNewPoapUrl(db, TEST_POAP_LINK_2, "devconnect");
+
+    // Still maps to existing link
+    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("1")).to.eq(
+      TEST_POAP_LINK_1
+    );
+    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("2")).to.eq(
+      TEST_POAP_LINK_2
+    );
   });
 
   // TODO: More tests

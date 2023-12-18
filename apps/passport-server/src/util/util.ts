@@ -135,3 +135,13 @@ export function isValidEmoji(str: string): boolean {
     /^(\p{Emoji_Presentation}|\p{Emoji}\uFE0F)(\p{Emoji_Modifier_Base}\p{Emoji_Modifier}?\uFE0F?|\p{Emoji_Component}\uFE0F?)?$/u;
   return emojiRegex.test(str);
 }
+
+/**
+ * Returns a URL that displays a custom error page on passport-client,
+ * containing a title and description.
+ */
+export function getServerErrorUrl(title: string, description: string): string {
+  const searchParams = new URLSearchParams({ title, description });
+  const url = new URL("/#/server-error", requireEnv("PASSPORT_CLIENT_URL"));
+  return `${url}?${searchParams.toString()}`;
+}

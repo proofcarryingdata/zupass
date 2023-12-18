@@ -9,6 +9,7 @@ import {
   deserializeStorage,
   requestChangeBlobKey,
   requestDownloadAndDecryptUpdatedStorage,
+  requestLogToServer,
   requestUploadEncryptedStorage,
   serializeStorage
 } from "@pcd/passport-interface";
@@ -31,6 +32,14 @@ import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 import { validateAndLogRunningAppState } from "./validateState";
 
+// Temporary feature flag to allow the sync-merge code to be on the main branch
+// before it's fully complete.  When this is set to false, the behavior should
+// remain as it was before sync-merge was implemented at all.  Uploads will
+// always overwrite existing contents, and downloads will always take new
+// contents without merging.
+// TODO(artwyman): Remove this when #1342 is complete.
+const ENABLE_SYNC_MERGE = false;
+
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
   storageHash: string;
@@ -43,7 +52,8 @@ export type UpdateBlobKeyResult = APIResult<
 export async function updateBlobKeyForEncryptedStorage(
   oldEncryptionKey: string,
   newEncryptionKey: string,
-  newSalt: string
+  newSalt: string,
+  knownServerStorageRevision?: string
 ): Promise<UpdateBlobKeyResult> {
   const oldUser = loadSelf();
   const newUser = { ...oldUser, salt: newSalt };
@@ -63,16 +73,14 @@ export async function updateBlobKeyForEncryptedStorage(
   const oldBlobKey = await getHash(oldEncryptionKey);
   const newBlobKey = await getHash(newEncryptionKey);
 
-  // TODO(artwyman): Pass in knownRevison here, but only once this code is
-  // ready to respond to a conflict.  For now, without a revision, this
-  // password change could clobber PCD changed which haven't downloaded yet.
   const changeResult = await requestChangeBlobKey(
     appConfig.zupassServer,
     oldBlobKey,
     newBlobKey,
     newUser.uuid,
     newSalt,
-    encryptedStorage
+    encryptedStorage,
+    ENABLE_SYNC_MERGE ? knownServerStorageRevision : undefined
   );
   if (changeResult.success) {
     console.log(
@@ -103,12 +111,17 @@ export type UploadStorageResult = APIResult<
 /**
  * Uploads the state of this passport which is contained in localstorage
  * to the server, end to end encrypted.
+ *
+ * If knownRevision is specified, it is used to abort the upload in
+ * case of conflict.  If it is undefined, the upload will overwrite
+ * any revision.
  */
 export async function uploadStorage(
   user: User,
   userIdentity: Identity,
   pcds: PCDCollection,
-  subscriptions: FeedSubscriptionManager
+  subscriptions: FeedSubscriptionManager,
+  knownRevision?: string
 ): Promise<UploadStorageResult> {
   const { serializedStorage, storageHash } = await serializeStorage(
     user,
@@ -125,17 +138,24 @@ export async function uploadStorage(
 }
 
 /**
- * Uploads the state of this passport, in serialized form as produced by
- * serializeStorage(). The parameters {@link user}, {@link userIdentity}, and
+ * Uploads the state of this passport, in serialied form as produced by
+ * serializeStorage().
+ *
+ * The parameters {@link user}, {@link userIdentity}, and
  * {@link pcds} are used only to validate the consistency between the three
  * before attempting an upload, to help prevent uploading inconsistent state.
+ *
+ * If knownRevision is specified, it is used to abort the upload in
+ * case of conflict.  If it is undefined, the upload will overwrite
+ * any revision.
  */
 export async function uploadSerializedStorage(
   user: User,
   userIdentity: Identity,
   pcds: PCDCollection,
   serializedStorage: SyncedEncryptedStorage,
-  storageHash: string
+  storageHash: string,
+  knownRevision?: string
 ): Promise<UploadStorageResult> {
   if (
     !validateAndLogRunningAppState(
@@ -166,9 +186,8 @@ export async function uploadSerializedStorage(
   const uploadResult = await requestUploadEncryptedStorage(
     appConfig.zupassServer,
     blobKey,
-    encryptedStorage
-    // TODO(artwyman): Expose access to knownRevision when a caller is ready
-    // to handle conflicts.
+    encryptedStorage,
+    ENABLE_SYNC_MERGE ? knownRevision : undefined
   );
 
   if (uploadResult.success) {
@@ -183,18 +202,50 @@ export async function uploadSerializedStorage(
       success: true,
       value: { revision: uploadResult.value.revision, storageHash: storageHash }
     };
+  } else if (uploadResult.error.name === "Conflict") {
+    console.warn("[SYNC] conflict uploading e2ee storage", uploadResult.error);
+    return { success: false, error: uploadResult.error };
   } else {
     console.error("[SYNC] failed to upload e2ee storage", uploadResult.error);
     return { success: false, error: uploadResult.error };
   }
 }
 
+export type MergeableFields = {
+  pcds: PCDCollection;
+  subscriptions: FeedSubscriptionManager;
+};
+
+export type MergeStorageResult = APIResult<MergeableFields, NamedAPIError>;
+
+/**
+ * Merge the contents of local and remote states, both of which have potential
+ * changes from a common base state.
+ *
+ * TODO(artwyman): Describe merge algorithm.
+ */
+export async function mergeStorage(
+  _localFields: MergeableFields,
+  remoteFields: MergeableFields,
+  self: User
+): Promise<MergeStorageResult> {
+  console.error(
+    "[SYNC] sync conflict needs merge!  Keeping only remote state."
+  );
+  // TODO(artwyman): Refactor this out to implement and test real merge.
+  requestLogToServer(appConfig.zupassServer, "sync-merge", {
+    user: self.uuid
+    // TODO(artwyman): more details for tracking.
+  });
+  return { value: remoteFields, success: true };
+}
+
 export type SyncStorageResult = APIResult<
   {
     pcds: PCDCollection;
     subscriptions: FeedSubscriptionManager;
-    revision: string;
-    storageHash: string;
+    serverRevision: string;
+    serverHash: string;
   } | null,
   null
 >;
@@ -205,11 +256,16 @@ export type SyncStorageResult = APIResult<
  * result if the download detects that storage is unchanged from the
  * last saved revision.
  */
-export async function downloadStorage(
-  knownServerRevision: string | undefined
+export async function downloadAndMergeStorage(
+  knownServerRevision: string | undefined,
+  knownServerHash: string | undefined,
+  appSelf: User,
+  appPCDs: PCDCollection,
+  appSubscriptions: FeedSubscriptionManager
 ): Promise<SyncStorageResult> {
   console.log("[SYNC] downloading e2ee storage");
 
+  // Download latest revision from server, if it's newer than what's known.
   const encryptionKey = loadEncryptionKey();
   const storageResult = await requestDownloadAndDecryptUpdatedStorage(
     appConfig.zupassServer,
@@ -230,9 +286,84 @@ export async function downloadStorage(
     return { value: null, success: true };
   }
 
+  // Deserialize downloaded storage, which becomes the default new state if no
+  // merge is necessary.
+  const downloaded = await tryDeserializeNewStorage(
+    storageResult.value.storage
+  );
+  if (downloaded === undefined) {
+    return { error: null, success: false };
+  }
+  const { dlPCDs, dlSubscriptions, dlServerHash } = downloaded;
+
+  // Check if local app state has changes since the last server revision, in
+  // which case a merge is necessary.  Otherwise we keep the downloaded state.
+  let [newPCDs, newSubscriptions] = [dlPCDs, dlSubscriptions];
+  if (
+    ENABLE_SYNC_MERGE &&
+    knownServerRevision !== undefined &&
+    knownServerHash !== undefined
+  ) {
+    const appStorage = await serializeStorage(
+      appSelf,
+      appPCDs,
+      appSubscriptions
+    );
+    if (appStorage.storageHash !== knownServerHash) {
+      const mergeResult = await mergeStorage(
+        { pcds: appPCDs, subscriptions: appSubscriptions },
+        {
+          pcds: downloaded.dlPCDs,
+          subscriptions: downloaded.dlSubscriptions
+        },
+        appSelf
+      );
+      if (!mergeResult.success) {
+        console.error(
+          "[SYNC] unable to merge new e2ee storage",
+          mergeResult.error
+        );
+        return { error: null, success: false };
+      }
+      ({ pcds: newPCDs, subscriptions: newSubscriptions } = mergeResult.value);
+    }
+  }
+
+  // We've successfully either accepted a new state, or created a merged state.
+  // Save and return results.
+  await savePCDs(newPCDs);
+  await saveSubscriptions(newSubscriptions);
+  savePersistentSyncStatus({
+    serverStorageRevision: storageResult.value.revision,
+    serverStorageHash: dlServerHash
+  });
+  console.log(
+    `[SYNC] downloaded e2ee storage (revision ${storageResult.value.revision})`
+  );
+  return {
+    value: {
+      pcds: newPCDs,
+      subscriptions: newSubscriptions,
+      serverRevision: storageResult.value.revision,
+      serverHash: dlServerHash
+    },
+    success: true
+  };
+}
+
+export async function tryDeserializeNewStorage(
+  storage: SyncedEncryptedStorage
+): Promise<
+  | undefined
+  | {
+      dlPCDs: PCDCollection;
+      dlSubscriptions: FeedSubscriptionManager;
+      dlServerHash: string;
+    }
+> {
   try {
     const { pcds, subscriptions, storageHash } = await deserializeStorage(
-      storageResult.value.storage,
+      storage,
       await getPackages()
     );
 
@@ -248,27 +379,14 @@ export async function downloadStorage(
       throw new Error("downloaded e2ee state failed to validate");
     }
 
-    await savePCDs(pcds);
-    await saveSubscriptions(subscriptions);
-    savePersistentSyncStatus({
-      serverStorageRevision: storageResult.value.revision,
-      serverStorageHash: storageHash
-    });
-    console.log(
-      `[SYNC] downloaded e2ee storage (revision ${storageResult.value.revision})`
-    );
     return {
-      value: {
-        pcds,
-        subscriptions,
-        revision: storageResult.value.revision,
-        storageHash: storageHash
-      },
-      success: true
+      dlPCDs: pcds,
+      dlSubscriptions: subscriptions,
+      dlServerHash: storageHash
     };
   } catch (e) {
     console.error("[SYNC] uploaded storage is corrupted - ignoring it", e);
-    return { error: null, success: false };
+    return undefined;
   }
 }
 
