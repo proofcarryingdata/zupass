@@ -888,12 +888,17 @@ async function addSubscription(
   if (!state.subscriptions.getProvider(providerUrl)) {
     state.subscriptions.addProvider(providerUrl, providerName);
   }
-  await state.subscriptions.subscribe(providerUrl, feed, true);
+  const sub = await state.subscriptions.subscribe(providerUrl, feed, true);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false
   });
+  dispatch(
+    { type: "sync-subscription", subscriptionId: sub.id },
+    state,
+    update
+  );
 }
 
 async function removeSubscription(
