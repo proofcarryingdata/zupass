@@ -148,7 +148,7 @@ export function getRunningAppStateValidationErrors(
   }
 
   if (loggedOut) {
-    errors;
+    return errors;
   }
 
   if (!identity) {
