@@ -41,7 +41,7 @@ describe("validateAppState", async function () {
     expect(errors.userUUID).to.eq(self.uuid);
   });
 
-  it("validateState returns no errors on valid logged in state", async function () {
+  it("validateState returns errors for situation where the pcd collection is empty", async function () {
     const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
@@ -56,7 +56,10 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     // deliberately create empty pcd collection
     const errors = validateAppState("test", self, identity, pcds);
-    expect(errors.errors.length).to.eq(0);
+    expect(errors.errors).to.deep.eq([
+      "'pcds' contains no pcds",
+      "'pcds' field in app state does not contain an identity PCD"
+    ]);
     expect(errors.userUUID).to.eq(self.uuid);
   });
 });

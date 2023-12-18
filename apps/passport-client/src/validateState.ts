@@ -58,9 +58,7 @@ export function validateAppState(
   forceCheckPCDs?: boolean
 ): ValidationErrors {
   const validationErrors: string[] = [];
-
   const loggedOut = !self;
-
   const identityPCDFromCollection = pcds?.getPCDsByType(
     SemaphoreIdentityPCDPackage.name
   )?.[0] as SemaphoreIdentityPCD | undefined;
