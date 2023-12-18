@@ -691,6 +691,10 @@ async function doSync(
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
   }
+  if (state.userInvalid) {
+    console.log("[SYNC] userInvalid=true, exiting sync");
+    return undefined;
+  }
 
   // If we haven't downloaded from storage, do that first.  After that we'll
   // download again when requested to poll, but only after the first full sync
@@ -774,11 +778,6 @@ async function doSync(
     state.pcds,
     state.subscriptions
   );
-
-  if (state.userInvalid) {
-    console.log("[SYNC] userInvalid=true, exiting sync");
-    return;
-  }
 
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
