@@ -13,7 +13,7 @@ describe("validateAppState", async function () {
   const pcdPackages = [SemaphoreIdentityPCDPackage];
 
   it("validateState returns no errors on valid logged out state", async function () {
-    const errors = validateAppState(undefined, undefined, undefined);
+    const errors = validateAppState("test", undefined, undefined, undefined);
     expect(errors.errors.length).to.eq(0);
     expect(errors.userUUID).to.eq(undefined);
   });
@@ -36,7 +36,7 @@ describe("validateAppState", async function () {
         identity
       })
     );
-    const errors = validateAppState(self, identity, pcds);
+    const errors = validateAppState("test", self, identity, pcds);
     expect(errors.errors.length).to.eq(0);
     expect(errors.userUUID).to.eq(self.uuid);
   });
@@ -55,7 +55,7 @@ describe("validateAppState", async function () {
     };
     const pcds = new PCDCollection(pcdPackages);
     // deliberately create empty pcd collection
-    const errors = validateAppState(self, identity, pcds);
+    const errors = validateAppState("test", self, identity, pcds);
     expect(errors.errors.length).to.eq(0);
     expect(errors.userUUID).to.eq(self.uuid);
   });

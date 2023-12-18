@@ -137,7 +137,14 @@ export async function uploadSerializedStorage(
   serializedStorage: SyncedEncryptedStorage,
   storageHash: string
 ): Promise<UploadStorageResult> {
-  if (!validateAndLogStateErrors(user, userIdentity, pcds)) {
+  if (
+    !validateAndLogStateErrors(
+      "uploadSerializedStorage",
+      user,
+      userIdentity,
+      pcds
+    )
+  ) {
     return {
       success: false,
       error: {
@@ -229,7 +236,15 @@ export async function downloadStorage(
       await getPackages()
     );
 
-    if (!validateAndLogStateErrors(undefined, undefined, pcds, true)) {
+    if (
+      !validateAndLogStateErrors(
+        "downloadStorage",
+        undefined,
+        undefined,
+        pcds,
+        true
+      )
+    ) {
       throw new Error("downloaded e2ee state failed to validate");
     }
 

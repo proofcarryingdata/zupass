@@ -343,7 +343,14 @@ async function finishAccountCreation(
   update: ZuUpdate
 ) {
   // Verify that the identity is correct.
-  if (!validateAndLogStateErrors(user, state.identity, state.pcds)) {
+  if (
+    !validateAndLogStateErrors(
+      "finishAccountCreation",
+      user,
+      state.identity,
+      state.pcds
+    )
+  ) {
     update({
       error: {
         title: "Invalid identity",
@@ -524,6 +531,7 @@ async function loadAfterLogin(
 
   if (
     !validateAndLogStateErrors(
+      "loadAfterLogin",
       userResponse.value,
       identityPCD.claim.identity,
       pcds

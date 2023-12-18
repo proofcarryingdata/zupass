@@ -444,7 +444,14 @@ async function loadInitialState(): Promise<AppState> {
     serverStorageHash: persistentSyncStatus.serverStorageHash
   };
 
-  if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
+  if (
+    !validateAndLogStateErrors(
+      "loadInitialState",
+      state.self,
+      state.identity,
+      state.pcds
+    )
+  ) {
     state.userInvalid = true;
   } else {
     const extraValidationErrors = [];

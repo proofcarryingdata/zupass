@@ -16,12 +16,14 @@ import { loadSelf } from "./localstorage";
  * In the case there are no validation errors, returns `false`.
  */
 export function validateAndLogStateErrors(
+  validationTag: string,
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): boolean {
   const validationErrors = validateAppState(
+    validationTag,
     self,
     identity,
     pcds,
@@ -44,8 +46,12 @@ export function validateAndLogStateErrors(
  *
  * The provided {@link PCDCollection} is not checked unless either this function
  * determines the user is logged in or the {@link forceCheckPCDs} argument is `true`.
+ *
+ * Depending on where this function is called, pass in a unique {@link validationTag}, so
+ * that on the backend we can figure out where the validation failed.
  */
 export function validateAppState(
+  validationTag: string,
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
