@@ -8,7 +8,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { v4 as uuid } from "uuid";
 import { randomEmail } from "../src/util";
-import { ValidationErrors, validateAppState } from "../src/validateState";
+import { ErrorReport, validateAppState } from "../src/validateState";
 
 function newEdSAPCD(): Promise<EdDSAPCD> {
   return EdDSAPCDPackage.prove({
@@ -32,7 +32,7 @@ describe("validateAppState", async function () {
   const pcdPackages = [SemaphoreIdentityPCDPackage, EdDSAPCDPackage];
 
   it("logged out ; no errors", async function () {
-    const errors = validateAppState("test", undefined, undefined, undefined);
+    const errors = validateAppState(TAG_STR, undefined, undefined, undefined);
     expect(errors.errors.length).to.eq(0);
     expect(errors.userUUID).to.eq(undefined);
   });
@@ -40,7 +40,7 @@ describe("validateAppState", async function () {
   it("logged out ; forceCheckPCDs=true; all error states caught", async function () {
     expect(
       validateAppState(
-        "test",
+        TAG_STR,
         undefined,
         undefined,
         await (async () => {
@@ -53,12 +53,13 @@ describe("validateAppState", async function () {
         "'pcds' contains no pcds",
         "'pcds' field in app state does not contain an identity PCD"
       ],
-      userUUID: undefined
-    } satisfies ValidationErrors);
+      userUUID: undefined,
+      ...TAG
+    } satisfies ErrorReport);
 
     expect(
       validateAppState(
-        "test",
+        TAG_STR,
         undefined,
         undefined,
         await (async () => {
@@ -70,18 +71,20 @@ describe("validateAppState", async function () {
       )
     ).to.deep.eq({
       errors: ["'pcds' field in app state does not contain an identity PCD"],
-      userUUID: undefined
-    } satisfies ValidationErrors);
+      userUUID: undefined,
+      ...TAG
+    } satisfies ErrorReport);
 
     expect(
-      validateAppState("test", undefined, undefined, undefined, true)
+      validateAppState(TAG_STR, undefined, undefined, undefined, true)
     ).to.deep.eq({
       errors: [
         "missing 'pcds'",
         "'pcds' field in app state does not contain an identity PCD"
       ],
-      userUUID: undefined
-    } satisfies ValidationErrors);
+      userUUID: undefined,
+      ...TAG
+    } satisfies ErrorReport);
   });
 
   it("logged in ; no errors", async function () {
@@ -102,10 +105,11 @@ describe("validateAppState", async function () {
         identity
       })
     );
-    expect(validateAppState("test", self, identity, pcds)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity, pcds)).to.deep.eq({
       userUUID: self.uuid,
-      errors: []
-    } satisfies ValidationErrors);
+      errors: [],
+      ...TAG
+    } satisfies ErrorReport);
   });
 
   it("logged in ; empty pcd collection ; errors", async function () {
@@ -121,13 +125,14 @@ describe("validateAppState", async function () {
       uuid: uuid()
     };
     const pcds = new PCDCollection(pcdPackages);
-    expect(validateAppState("test", self, identity, pcds)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
         "'pcds' field in app state does not contain an identity PCD"
-      ]
-    } satisfies ValidationErrors);
+      ],
+      ...TAG
+    } satisfies ErrorReport);
   });
 
   it("logged in ; missing pcd collection ; errors", async function () {
@@ -142,13 +147,14 @@ describe("validateAppState", async function () {
       terms_agreed: 1,
       uuid: uuid()
     };
-    expect(validateAppState("test", self, identity, undefined)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity, undefined)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "missing 'pcds'",
         "'pcds' field in app state does not contain an identity PCD"
-      ]
-    } satisfies ValidationErrors);
+      ],
+      ...TAG
+    } satisfies ErrorReport);
   });
 
   it("logged in ; missing identity ; errors", async function () {
@@ -169,9 +175,13 @@ describe("validateAppState", async function () {
         identity
       })
     );
-    expect(validateAppState("test", self, undefined, pcds)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, undefined, pcds)).to.deep.eq({
       userUUID: self.uuid,
-      errors: ["missing 'identity'"]
-    } satisfies ValidationErrors);
+      errors: ["missing 'identity'"],
+      ...TAG
+    } satisfies ErrorReport);
   });
 });
+
+const TAG_STR = "test";
+const TAG = { tag: TAG_STR };

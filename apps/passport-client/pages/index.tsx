@@ -470,6 +470,7 @@ async function loadInitialState(): Promise<AppState> {
 
     if (extraValidationErrors.length > 0) {
       logValidationErrors({
+        tag: "afterLoadInitialState",
         errors: extraValidationErrors,
         userUUID: self?.uuid
       });

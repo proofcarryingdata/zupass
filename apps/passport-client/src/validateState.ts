@@ -16,14 +16,14 @@ import { loadSelf } from "./localstorage";
  * In the case there are no validation errors, returns `false`.
  */
 export function validateAndLogStateErrors(
-  validationTag: string,
+  tag: string,
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
 ): boolean {
   const validationErrors = validateAppState(
-    validationTag,
+    tag,
     self,
     identity,
     pcds,
@@ -40,23 +40,23 @@ export function validateAndLogStateErrors(
 
 /**
  * Determines whether the app's global state contains valid data. If it does not,
- * returns the set of things that are incorrect about it in a {@link ValidationErrors}
+ * returns the set of things that are incorrect about it in a {@link ErrorReport}
  * object. If there were no validation errors the result will contain an empty array
  * of errors.
  *
  * The provided {@link PCDCollection} is not checked unless either this function
  * determines the user is logged in or the {@link forceCheckPCDs} argument is `true`.
  *
- * Depending on where this function is called, pass in a unique {@link validationTag}, so
+ * Depending on where this function is called, pass in a unique {@link tag}, so
  * that on the backend we can figure out where the validation failed.
  */
 export function validateAppState(
-  validationTag: string,
+  tag: string,
   self: User | undefined,
   identity: Identity | undefined,
   pcds: PCDCollection | undefined,
   forceCheckPCDs?: boolean
-): ValidationErrors {
+): ErrorReport {
   const validationErrors: string[] = [];
   const loggedOut = !self;
   const identityPCDFromCollection = pcds?.getPCDsByType(
@@ -82,7 +82,8 @@ export function validateAppState(
   if (loggedOut) {
     return {
       errors: validationErrors,
-      userUUID: undefined
+      userUUID: undefined,
+      tag
     };
   }
 
@@ -134,7 +135,8 @@ export function validateAppState(
 
   return {
     errors: validationErrors,
-    userUUID: self?.uuid
+    userUUID: self?.uuid,
+    tag
   };
 }
 
@@ -143,9 +145,7 @@ export function validateAppState(
  * we have records and are able to identify common types of errors. Does not leak
  * sensitive information, such as decrypted versions of e2ee storage.
  */
-export async function logValidationErrors(
-  errors: ValidationErrors
-): Promise<void> {
+export async function logValidationErrors(errors: ErrorReport): Promise<void> {
   try {
     const user = loadSelf();
     errors.userUUID = errors.userUUID ?? user?.uuid;
@@ -161,7 +161,7 @@ export async function logValidationErrors(
 /**
  * Uploaded to server in case of a state validation error.
  */
-export interface ValidationErrors {
+export interface ErrorReport {
   /**
    * Human readable non-sensitive-information-leaking errors. If this array is empty,
    * it represents a state that has no errors.
@@ -172,4 +172,10 @@ export interface ValidationErrors {
    * Used to identify the user on the server-side.
    */
   userUUID?: string;
+
+  /**
+   * Uniquely identifies the location in the code from which this error report
+   * was initiated.
+   */
+  tag: string;
 }
