@@ -8,24 +8,29 @@ import { randomEmail } from "../src/util";
 import { validateAppState } from "../src/validateState";
 
 describe("validateAppState", async function () {
+  const crypto = await PCDCrypto.newInstance();
+  const pcdPackages = [SemaphoreIdentityPCDPackage];
+
   it("validateState works properly", async function () {
     const identity = new Identity();
-    const crypto = await PCDCrypto.newInstance();
-    const password = "testpassword123!@#asdf";
-    const saltAndEncryptionKey =
-      await crypto.generateSaltAndEncryptionKey(password);
-    const id = uuid();
-
+    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+      "testpassword123!@#asdf"
+    );
     const self: ZupassUserJson = {
       commitment: identity.commitment.toString(),
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
-      uuid: id
+      uuid: uuid()
     };
-    const pcdPackages = [SemaphoreIdentityPCDPackage];
-    const collection = new PCDCollection(pcdPackages);
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity
+      })
+    );
+    const errors = validateAppState(self, identity, pcds);
 
-    validateAppState(self, identity, collection);
+    console.log(errors);
   });
 });
