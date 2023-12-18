@@ -183,6 +183,32 @@ describe("validateAppState", async function () {
       ...TAG
     } satisfies ErrorReport);
   });
+
+  it("logged in ; self missing commitment ; errors", async function () {
+    const identity = new Identity();
+    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+      "testpassword123!@#asdf"
+    );
+    const self: ZupassUserJson = {
+      commitment: identity.commitment.toString(),
+      email: randomEmail(),
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity
+      })
+    );
+    delete self.commitment;
+    expect(validateAppState(TAG_STR, self, identity, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: ["'self' missing a commitment"],
+      ...TAG
+    } satisfies ErrorReport);
+  });
 });
 
 const TAG_STR = "test";
