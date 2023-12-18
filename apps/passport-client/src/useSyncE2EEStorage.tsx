@@ -181,19 +181,52 @@ export type MergeStorageResult = APIResult<MergeableFields, NamedAPIError>;
  * Merge the contents of local and remote states, both of which have potential
  * changes from a common base state.
  *
- * TODO(artwyman): Describe merge algorithm.
+ * PCDs and subscriptions are each merged independently, using the same basic
+ * algorithm.  If there are no differences (identical hash) then this merge
+ * always returns the "remote" fields, making it equivalent to a simple
+ * download-and-replace.
+ *
+ * The merge performed here is limited by the lack of historical revisions, or
+ * other information which could clarify the user's intent.  E.g. we can't tell
+ * a remote "add" from a local "remove", and in case of replacement we don't
+ * know which version is newer.  Without that, we can't know which version of
+ * data is "better".  Instead we're opinionated on these tradeoffs:
+ * 1) Keeping data is always better than losing data.  If we can't tell if an
+ *    object was added or removed, assume it was added.  This means a conflict
+ *    may cause a removed object to reappear, but shouldn't cause a new object
+ *    to be lost.  This preference is chosen to avoid losing user data, but may
+ *    not always be ideal, e.g. in the case of subscriptions granting
+ *    permissions the user intended to revoke.
+ * 2) By default, prefer data downloaded from the server.  This is mostly
+ *    arbitrary, but given that we upload more aggressively than we download
+ *    it approximates a "first to reach the server wins" policy.  This means if
+ *    an object is modified (with the same ID) and involved in a conflict, one
+ *    of the two copies will be kept, determined by the timing of uploads.
+ *
+ * As a side-effect of the implementation of #2, this merge algorithm always
+ * replaces the PCDCollection and FeedsSubscriptionManager with new objects,
+ * discarding non-serialized state (like listeners on emitters, and
+ * subscription errors).
+ *
+ * This function always uploads a report to the server that a merge occurred,
+ * with some stats which we hope will be helpful to detect future problems
+ * and tune better merge algorithms.
  */
 export async function mergeStorage(
   localFields: MergeableFields,
   remoteFields: MergeableFields,
   self: User
 ): Promise<MergeStorageResult> {
-  // TODO(artwyman): Detect and report on cases where objects differ with the
+  // Merge PCDs and Subscriptions independently, and gather a unified set of
+  // stats to include in a report to the server.
+  // TODO(#1372): Detect and report on cases where objects differ with the
   // same ID.
   let identical = true;
   let anyPCDDiffs = false;
   let anySubDiffs = false;
 
+  // PCD merge: Based on PCDCollection.merge, with predicate providing filtering
+  // by ID, and updating stats based on how many PCDs were added.
   const pcdMergeStats = {
     localOnly: 0,
     remoteOnly: remoteFields.pcds.size() - localFields.pcds.size(),
@@ -215,7 +248,7 @@ export async function mergeStorage(
         return true;
       }
     };
-    // TODO(artwyman): Attempt to preserve order while merging?
+    // TODO(#1373): Attempt to preserve order while merging?
     pcds.merge(localFields.pcds, { shouldInclude: pcdMergePredicate });
     pcdMergeStats.final = pcds.size();
     anyPCDDiffs = pcdMergeStats.localOnly > 0 || pcdMergeStats.remoteOnly > 0;
@@ -231,6 +264,8 @@ export async function mergeStorage(
     console.log("[SYNC] no merge of PCDs: hashes are identical");
   }
 
+  // Subscription merge: Based on FeedSubscriptionManager.merge, with stats
+  // calculated based on the returned counts.
   const subscriptions = remoteFields.subscriptions;
   const localCount = localFields.subscriptions.getActiveSubscriptions().length;
   const remoteCount =
@@ -264,6 +299,7 @@ export async function mergeStorage(
     console.log("[SYNC] no merge of subscriptions: hashes are identical");
   }
 
+  // Report stats to the server for analysis.
   await requestLogToServer(appConfig.zupassServer, "sync-merge", {
     user: self.uuid,
     identical: identical,
