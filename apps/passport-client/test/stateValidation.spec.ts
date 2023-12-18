@@ -6,7 +6,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { v4 as uuid } from "uuid";
 import { randomEmail } from "../src/util";
-import { validateAppState } from "../src/validateState";
+import { ValidationErrors, validateAppState } from "../src/validateState";
 
 describe("validateAppState", async function () {
   const crypto = await PCDCrypto.newInstance();
@@ -16,6 +16,26 @@ describe("validateAppState", async function () {
     const errors = validateAppState("test", undefined, undefined, undefined);
     expect(errors.errors.length).to.eq(0);
     expect(errors.userUUID).to.eq(undefined);
+  });
+
+  it("validateState returns errors for logged out state with invalid PCD collections", async function () {
+    expect(
+      validateAppState(
+        "test",
+        undefined,
+        undefined,
+        (() => {
+          return new PCDCollection(pcdPackages);
+        })(),
+        true
+      )
+    ).to.deep.eq({
+      errors: [
+        "'pcds' contains no pcds",
+        "'pcds' field in app state does not contain an identity PCD"
+      ],
+      userUUID: undefined
+    } satisfies ValidationErrors);
   });
 
   it("validateState returns no errors on valid logged in state", async function () {
