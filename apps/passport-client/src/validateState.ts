@@ -102,25 +102,40 @@ export function validateAppState(
   const commitmentFromSelfField = self?.commitment;
   const commitmentFromIdentityField = identity?.commitment?.toString();
 
-  if (commitmentOfIdentityPCDInCollection !== commitmentFromSelfField) {
-    validationErrors.push(
-      `commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})` +
-        ` does not match commitment in 'self' field of app state (${commitmentFromSelfField})`
-    );
+  if (commitmentFromSelfField === undefined) {
+    validationErrors.push(`'self' missing a commitment`);
   }
 
-  if (commitmentFromSelfField !== commitmentFromIdentityField) {
-    validationErrors.push(
-      `commitment in 'self' field of app state (${commitmentFromSelfField})` +
-        ` does not match commitment of 'identity' field of app state (${commitmentFromIdentityField})`
-    );
-  }
+  if (
+    commitmentFromSelfField === undefined ||
+    commitmentOfIdentityPCDInCollection === undefined ||
+    commitmentFromIdentityField === undefined
+  ) {
+    // these cases are validated earlier in this function
+  } else {
+    // in 'else' block we check that the commitments from all three
+    // places that the user's commitment exists match - in the self, the
+    // identity, and in the pcd collection
 
-  if (commitmentFromIdentityField !== commitmentOfIdentityPCDInCollection) {
-    validationErrors.push(
-      `commitment of 'identity' field of app state (${commitmentFromIdentityField})` +
-        ` does not match commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})`
-    );
+    if (commitmentOfIdentityPCDInCollection !== commitmentFromSelfField) {
+      validationErrors.push(
+        `commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})` +
+          ` does not match commitment in 'self' field of app state (${commitmentFromSelfField})`
+      );
+    }
+    if (commitmentFromSelfField !== commitmentFromIdentityField) {
+      validationErrors.push(
+        `commitment in 'self' field of app state (${commitmentFromSelfField})` +
+          ` does not match commitment of 'identity' field of app state (${commitmentFromIdentityField})`
+      );
+    }
+
+    if (commitmentFromIdentityField !== commitmentOfIdentityPCDInCollection) {
+      validationErrors.push(
+        `commitment of 'identity' field of app state (${commitmentFromIdentityField})` +
+          ` does not match commitment of identity pcd in collection (${commitmentOfIdentityPCDInCollection})`
+      );
+    }
   }
 
   return {
