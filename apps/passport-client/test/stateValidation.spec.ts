@@ -12,6 +12,12 @@ describe("validateAppState", async function () {
   const crypto = await PCDCrypto.newInstance();
   const pcdPackages = [SemaphoreIdentityPCDPackage];
 
+  it("validateState returns no errors on valid logged out state", async function () {
+    const errors = validateAppState(undefined, undefined, undefined);
+    expect(errors.errors.length).to.eq(0);
+    expect(errors.userUUID).to.eq(undefined);
+  });
+
   it("validateState returns no errors on valid logged in state", async function () {
     const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
@@ -35,9 +41,22 @@ describe("validateAppState", async function () {
     expect(errors.userUUID).to.eq(self.uuid);
   });
 
-  it("validateState returns no errors on valid logged out state", async function () {
-    const errors = validateAppState(undefined, undefined, undefined);
+  it("validateState returns no errors on valid logged in state", async function () {
+    const identity = new Identity();
+    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+      "testpassword123!@#asdf"
+    );
+    const self: ZupassUserJson = {
+      commitment: identity.commitment.toString(),
+      email: randomEmail(),
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    // deliberately create empty pcd collection
+    const errors = validateAppState(self, identity, pcds);
     expect(errors.errors.length).to.eq(0);
-    expect(errors.userUUID).to.eq(undefined);
+    expect(errors.userUUID).to.eq(self.uuid);
   });
 });
