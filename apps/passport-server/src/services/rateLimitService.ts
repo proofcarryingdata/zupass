@@ -1,7 +1,12 @@
 import { ONE_HOUR_MS } from "@pcd/util";
-import { clearExpiredActions } from "../database/queries/rateLimit";
+import {
+  checkRateLimit,
+  clearExpiredActions
+} from "../database/queries/rateLimit";
 import { ApplicationContext } from "../types";
+import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
+import { traced } from "./telemetryService";
 
 export type RateLimitedActionType = "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
 
@@ -54,35 +59,33 @@ export class RateLimitService {
     actionType: RateLimitedActionType,
     actionId: string
   ): Promise<boolean> {
-    return true;
+    return traced(
+      "RateLimitService",
+      "requestRateLimitedAction",
+      async (span) => {
+        span?.setAttribute("actionType", actionType);
+        span?.setAttribute("actionId", actionId);
 
-    // return traced(
-    //   "RateLimitService",
-    //   "requestRateLimitedAction",
-    //   async (span) => {
-    //     span?.setAttribute("actionType", actionType);
-    //     span?.setAttribute("actionId", actionId);
+        const result = checkRateLimit(
+          this.context.dbPool,
+          actionType,
+          actionId
+        );
 
-    //     const result = checkRateLimit(
-    //       this.context.dbPool,
-    //       actionType,
-    //       actionId
-    //     );
+        if (!result) {
+          logger(
+            `[RATELIMIT] Action "${actionId}" of type "${actionType}" was rate-limited`
+          );
+          this.rollbarService?.reportError(
+            new Error(
+              `Action "${actionId}" of type "${actionType}" was rate-limited`
+            )
+          );
+        }
 
-    //     if (!result) {
-    //       logger(
-    //         `[RATELIMIT] Action "${actionId}" of type "${actionType}" was rate-limited`
-    //       );
-    //       this.rollbarService?.reportError(
-    //         new Error(
-    //           `Action "${actionId}" of type "${actionType}" was rate-limited`
-    //         )
-    //       );
-    //     }
-
-    //     return result;
-    //   }
-    // );
+        return result;
+      }
+    );
   }
 }
 
