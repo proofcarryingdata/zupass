@@ -57,8 +57,8 @@ export function validateAndLogRunningAppState(
 }
 
 /**
- * Validates state of a Zupass application that is just starting up (using the running
- * app state checks alongside some extra ones), and returns an {@link ErrorReport}.
+ * Validates state of a Zupass application that is just starting up (using the
+ * {@link validateRunningAppState} alongside some extra ones), and returns an {@link ErrorReport}.
  */
 export function validateInitialAppState(
   tag: string,
@@ -110,13 +110,8 @@ export function getInitialAppStateValidationErrors(state: AppState): string[] {
   // this case covers a logged in user. the only way the app can get a 'self'
   // is by requesting one from the server, to do which one has to be logged in.
   if (state.self) {
-    if (!state.encryptionKey) {
-      errors.push(`logged in user missing encryption key`);
-    }
-
-    if (!state.identity) {
-      errors.push(`logged in user missing identity`);
-    }
+    // TODO: any extra checks that need to happen on immediate app startup should
+    // be put here.
   }
 
   return errors;
