@@ -3,6 +3,7 @@ import { ZupassUserJson } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
+import { expect } from "chai";
 import { v4 as uuid } from "uuid";
 import { randomEmail } from "../src/util";
 import { validateAppState } from "../src/validateState";
@@ -30,7 +31,7 @@ describe("validateAppState", async function () {
       })
     );
     const errors = validateAppState(self, identity, pcds);
-
-    console.log(errors);
+    expect(errors.errors.length).to.eq(0);
+    expect(errors.userUUID).to.eq(self.uuid);
   });
 });
