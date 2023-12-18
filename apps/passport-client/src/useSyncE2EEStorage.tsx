@@ -211,6 +211,16 @@ export type MergeStorageResult = APIResult<MergeableFields, NamedAPIError>;
  * This function always uploads a report to the server that a merge occurred,
  * with some stats which we hope will be helpful to detect future problems
  * and tune better merge algorithms.
+ *
+ * @param localFields the local PCDs and subscriptions currently in use.  These
+ *   are unmodified by the current merge algorithm.
+ * @param remoteFields the new PCDs and subscriptions downloaded from the
+ *   server.  These are modified and returned by the current merge algorithm.
+ * @param self a user object used to populate log messages.
+ * @returns the resulting PCDs and subscriptions to be used going forward.
+ *   In the current merge algorithm, these are always modified versions of the
+ *   `remoteFields`.
+ *
  */
 export async function mergeStorage(
   localFields: MergeableFields,
@@ -233,7 +243,6 @@ export async function mergeStorage(
     both: localFields.pcds.size(),
     final: remoteFields.pcds.size()
   };
-  const pcds = remoteFields.pcds;
   if (
     (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
   ) {
@@ -249,8 +258,10 @@ export async function mergeStorage(
       }
     };
     // TODO(#1373): Attempt to preserve order while merging?
-    pcds.merge(localFields.pcds, { shouldInclude: pcdMergePredicate });
-    pcdMergeStats.final = pcds.size();
+    remoteFields.pcds.merge(localFields.pcds, {
+      shouldInclude: pcdMergePredicate
+    });
+    pcdMergeStats.final = remoteFields.pcds.size();
     anyPCDDiffs = pcdMergeStats.localOnly > 0 || pcdMergeStats.remoteOnly > 0;
 
     if (anyPCDDiffs) {
@@ -266,7 +277,6 @@ export async function mergeStorage(
 
   // Subscription merge: Based on FeedSubscriptionManager.merge, with stats
   // calculated based on the returned counts.
-  const subscriptions = remoteFields.subscriptions;
   const localCount = localFields.subscriptions.getActiveSubscriptions().length;
   const remoteCount =
     remoteFields.subscriptions.getActiveSubscriptions().length;
@@ -281,11 +291,14 @@ export async function mergeStorage(
     (await remoteFields.subscriptions.getHash())
   ) {
     identical = false;
-    const subMergeResults = subscriptions.merge(localFields.subscriptions);
+    const subMergeResults = remoteFields.subscriptions.merge(
+      localFields.subscriptions
+    );
     subMergeStats.localOnly += subMergeResults.newSubscriptions;
     subMergeStats.remoteOnly += subMergeResults.newSubscriptions;
     subMergeStats.both -= subMergeResults.newSubscriptions;
-    subMergeStats.final = subscriptions.getActiveSubscriptions().length;
+    subMergeStats.final =
+      remoteFields.subscriptions.getActiveSubscriptions().length;
     anySubDiffs = subMergeStats.localOnly > 0 || subMergeStats.remoteOnly > 0;
 
     if (anySubDiffs) {
@@ -308,7 +321,13 @@ export async function mergeStorage(
     pcdMergeStats: pcdMergeStats,
     subscriptionMergeStats: subMergeStats
   });
-  return { value: { pcds, subscriptions }, success: true };
+  return {
+    value: {
+      pcds: remoteFields.pcds,
+      subscriptions: remoteFields.subscriptions
+    },
+    success: true
+  };
 }
 
 export type SyncStorageResult = APIResult<

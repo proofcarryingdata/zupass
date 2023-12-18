@@ -75,6 +75,8 @@ describe("Subscription Manager", async function () {
         feed
       );
       expect(subs1).to.have.length(1);
+      expect(subs1[0].providerUrl).to.eq("https://" + provider);
+      expect(subs1[0].feed.id).to.eq(feed);
     }
   }
 
@@ -217,7 +219,7 @@ describe("Subscription Manager", async function () {
       }
     };
 
-    const sub = await manager.subscribe(providerUrl, feed, undefined);
+    const sub = await manager.subscribe(providerUrl, feed);
 
     const action = {
       type: PCDActionType.ReplaceInFolder,
@@ -258,6 +260,8 @@ describe("Subscription Manager", async function () {
   });
 
   it("merging unique data should work", async function () {
+    // There are some collisions on provider ID, but all (provider, feed) pairs
+    // are unique, so we expect all of them to be maintained in a merge.
     const entries1 = [
       { provider: "1", feed: "1A" },
       { provider: "1", feed: "1B" },
@@ -277,7 +281,7 @@ describe("Subscription Manager", async function () {
       newProviders: 2,
       newSubscriptions: 4
     });
-    expect(mgr1.getActiveSubscriptions()).to.have.length(7);
+    expect(mgr1.getActiveSubscriptions()).to.have.length(allSubs.length);
     expectAllTestSubs(mgr1, allSubs);
 
     expect(mgr2.merge(mgr1)).to.deep.eq({
