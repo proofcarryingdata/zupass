@@ -752,6 +752,7 @@ async function doSync(
       state.serverStorageRevision,
       state.serverStorageHash,
       state.self,
+      state.identity,
       state.pcds,
       state.subscriptions
     );

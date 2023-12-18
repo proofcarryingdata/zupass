@@ -261,6 +261,7 @@ export async function downloadAndMergeStorage(
   knownServerRevision: string | undefined,
   knownServerHash: string | undefined,
   appSelf: User,
+  appIdentity: Identity,
   appPCDs: PCDCollection,
   appSubscriptions: FeedSubscriptionManager
 ): Promise<SyncStorageResult> {
@@ -290,6 +291,8 @@ export async function downloadAndMergeStorage(
   // Deserialize downloaded storage, which becomes the default new state if no
   // merge is necessary.
   const downloaded = await tryDeserializeNewStorage(
+    appSelf,
+    appIdentity,
     storageResult.value.storage
   );
   if (downloaded === undefined) {
@@ -352,7 +355,12 @@ export async function downloadAndMergeStorage(
   };
 }
 
+/**
+ * {@link appSelf} and {@link appIdentity} are used solely for validation purposes.
+ */
 export async function tryDeserializeNewStorage(
+  appSelf: User,
+  appIdentity: Identity,
   storage: SyncedEncryptedStorage
 ): Promise<
   | undefined
@@ -371,10 +379,9 @@ export async function tryDeserializeNewStorage(
     if (
       !validateAndLogRunningAppState(
         "downloadStorage",
-        undefined,
-        undefined,
-        pcds,
-        true
+        appSelf,
+        appIdentity,
+        pcds
       )
     ) {
       throw new Error("downloaded e2ee state failed to validate");
