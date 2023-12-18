@@ -133,7 +133,8 @@ export async function uploadStorage(
     userIdentity,
     pcds,
     serializedStorage,
-    storageHash
+    storageHash,
+    knownRevision
   );
 }
 
