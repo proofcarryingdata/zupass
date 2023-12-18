@@ -31,14 +31,6 @@ import {
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 
-// Temporary feature flag to allow the sync-merge code to be on the main branch
-// before it's fully complete.  When this is set to false, the behavior should
-// remain as it was before sync-merge was implemented at all.  Uploads will
-// always overwrite existing contents, and downloads will always take new
-// contents without merging.
-// TODO(artwyman): Remove this when #1342 is complete.
-const ENABLE_SYNC_MERGE = true;
-
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
   storageHash: string;
@@ -79,7 +71,7 @@ export async function updateBlobKeyForEncryptedStorage(
     newUser.uuid,
     newSalt,
     encryptedStorage,
-    ENABLE_SYNC_MERGE ? knownServerStorageRevision : undefined
+    knownServerStorageRevision
   );
   if (changeResult.success) {
     console.log(
@@ -154,7 +146,7 @@ export async function uploadSerializedStorage(
     appConfig.zupassServer,
     blobKey,
     encryptedStorage,
-    ENABLE_SYNC_MERGE ? knownRevision : undefined
+    knownRevision
   );
 
   if (uploadResult.success) {
@@ -342,11 +334,7 @@ export async function downloadAndMergeStorage(
   // Check if local app state has changes since the last server revision, in
   // which case a merge is necessary.  Otherwise we keep the downloaded state.
   let [newPCDs, newSubscriptions] = [dlPCDs, dlSubscriptions];
-  if (
-    ENABLE_SYNC_MERGE &&
-    knownServerRevision !== undefined &&
-    knownServerHash !== undefined
-  ) {
+  if (knownServerRevision !== undefined && knownServerHash !== undefined) {
     const appStorage = await serializeStorage(
       appSelf,
       appPCDs,
