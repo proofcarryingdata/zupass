@@ -781,11 +781,6 @@ async function doSync(
   }
 
   if (state.serverStorageHash !== appStorage.storageHash) {
-    if (!validateAndLogStateErrors(state.self, state.identity, state.pcds)) {
-      state.userInvalid = true;
-      return;
-    }
-
     console.log("[SYNC] sync action: upload");
     // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
     // but only after we're able to respond to a conflict by downloading.
@@ -802,9 +797,15 @@ async function doSync(
         serverStorageHash: upRes.value.storageHash
       };
     } else {
-      return {
+      const res: Partial<AppState> = {
         completedFirstSync: true
       };
+
+      if (upRes.error.name === "ValidationError") {
+        res.userInvalid = true;
+      }
+
+      return res;
     }
   }
 
