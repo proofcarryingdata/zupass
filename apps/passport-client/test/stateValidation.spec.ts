@@ -30,6 +30,12 @@ function newEdSAPCD(): Promise<EdDSAPCD> {
 describe("validateAppState", async function () {
   const crypto = await PCDCrypto.newInstance();
   const pcdPackages = [SemaphoreIdentityPCDPackage, EdDSAPCDPackage];
+  const identity1 = new Identity(
+    '["0xaa5fa3165e1ca129bd7a2b3bada18c5f81350faacf2edff59cf44eeba2e2d","0xa944ed90153fc2be5759a0d18eda47266885aea0966ef4dbb96ff979c29ed4"]'
+  );
+  const identity2 = new Identity(
+    '["0x8526e030dbd593833f24bf73b60f0bcc58690c590b9953acc741f2eb71394d","0x520e4ae6f5d5e4526dd517e61defe16f90bd4aef72b41394285e77463e0c69"]'
+  );
 
   it("logged out ; no errors", async function () {
     expect(
@@ -90,12 +96,11 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; no errors", async function () {
-    const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
     );
     const self: ZupassUserJson = {
-      commitment: identity.commitment.toString(),
+      commitment: identity1.commitment.toString(),
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -104,10 +109,10 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity
+        identity: identity1
       })
     );
-    expect(validateAppState(TAG_STR, self, identity, pcds)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [],
       ...TAG
@@ -115,19 +120,18 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; empty pcd collection ; errors", async function () {
-    const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
     );
     const self: ZupassUserJson = {
-      commitment: identity.commitment.toString(),
+      commitment: identity1.commitment.toString(),
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
     };
     const pcds = new PCDCollection(pcdPackages);
-    expect(validateAppState(TAG_STR, self, identity, pcds)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "'pcds' contains no pcds",
@@ -138,18 +142,17 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; missing pcd collection ; errors", async function () {
-    const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
     );
     const self: ZupassUserJson = {
-      commitment: identity.commitment.toString(),
+      commitment: identity1.commitment.toString(),
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
     };
-    expect(validateAppState(TAG_STR, self, identity, undefined)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity1, undefined)).to.deep.eq({
       userUUID: self.uuid,
       errors: [
         "missing 'pcds'",
@@ -160,12 +163,11 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; missing identity ; errors", async function () {
-    const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
     );
     const self: ZupassUserJson = {
-      commitment: identity.commitment.toString(),
+      commitment: identity1.commitment.toString(),
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -174,7 +176,7 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity
+        identity: identity1
       })
     );
     expect(validateAppState(TAG_STR, self, undefined, pcds)).to.deep.eq({
@@ -185,12 +187,11 @@ describe("validateAppState", async function () {
   });
 
   it("logged in ; self missing commitment ; errors", async function () {
-    const identity = new Identity();
     const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
       "testpassword123!@#asdf"
     );
     const self: ZupassUserJson = {
-      commitment: identity.commitment.toString(),
+      commitment: identity1.commitment.toString(),
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
@@ -199,13 +200,37 @@ describe("validateAppState", async function () {
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
-        identity
+        identity: identity1
       })
     );
     delete self.commitment;
-    expect(validateAppState(TAG_STR, self, identity, pcds)).to.deep.eq({
+    expect(validateAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: ["'self' missing a commitment"],
+      ...TAG
+    } satisfies ErrorReport);
+  });
+
+  it("logged in ; no errors", async function () {
+    const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
+      "testpassword123!@#asdf"
+    );
+    const self: ZupassUserJson = {
+      commitment: identity1.commitment.toString(),
+      email: randomEmail(),
+      salt: saltAndEncryptionKey.salt,
+      terms_agreed: 1,
+      uuid: uuid()
+    };
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity: identity1
+      })
+    );
+    expect(validateAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [],
       ...TAG
     } satisfies ErrorReport);
   });
