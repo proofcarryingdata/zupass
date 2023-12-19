@@ -20,7 +20,7 @@ export function initE2EERoutes(
    * storage, storing the new encrypted storage, and updating the user's
    * salt so they can re-derive their key.
    */
-  app.post("/sync/v2/changeBlobKey", async (req: Request, res: Response) => {
+  app.post("/sync/v3/changeBlobKey", async (req: Request, res: Response) => {
     const request = req.body as ChangeBlobKeyRequest;
     await e2eeService.handleChangeBlobKey(request, res);
   });
@@ -35,7 +35,7 @@ export function initE2EERoutes(
    *
    * @todo - restrict the calling of this api somehow? at least a rate limit.
    */
-  app.get("/sync/v2/load/", async (req: Request, res: Response) => {
+  app.get("/sync/v3/load/", async (req: Request, res: Response) => {
     await e2eeService.handleLoad(
       checkQueryParam(req, "blobKey"),
       checkOptionalQueryParam(req, "knownRevision"),
@@ -55,7 +55,7 @@ export function initE2EERoutes(
    * @todo - restrict + rate limit this?
    * @todo - size limits?
    */
-  app.post("/sync/v2/save", async (req: Request, res: Response) => {
+  app.post("/sync/v3/save", async (req: Request, res: Response) => {
     const request = req.body as UploadEncryptedStorageRequest;
     await e2eeService.handleSave(request, res);
   });
