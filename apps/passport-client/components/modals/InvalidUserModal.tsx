@@ -7,8 +7,15 @@ import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function InvalidUserModal() {
   const dispatch = useDispatch();
-
-  const onExitClick = useCallback(() => {
+  const onLogoutClick = useCallback(() => {
+    if (
+      !confirm(
+        "Are you sure you want to log out? " +
+          "We recommend that you export your account before doing so."
+      )
+    ) {
+      return;
+    }
     dispatch({ type: "reset-passport" });
   }, [dispatch]);
 
@@ -16,24 +23,37 @@ export function InvalidUserModal() {
     <Container>
       <H2>Invalid Zupass</H2>
       <Spacer h={24} />
-      <p>
-        You've reset your Zupass account on another device, or your app has
-        ended up in an invalid state. Click the button below to log out. Then
-        you'll be able to sync your existing Zupass account onto this device.
-      </p>
+      <p>Your Zupass is in an invalid state. This can happen because:</p>
+      <ul>
+        <li>You reset your account on another device.</li>
+        <li>Zupass application state was corrupted on this device.</li>
+      </ul>
+      <p>To resolve this, we recommend you either:</p>
+      <ul>
+        <li>Reload this page.</li>
+        <li>
+          Export your account data, log out of this account, and log in again.
+        </li>
+      </ul>
       <Spacer h={16} />
-      <p>
-        You can export a copy of your local account data using the button below
-        in case you need it later.
-      </p>
       <Spacer h={16} />
       <AccountExportButton />
       <Spacer h={16} />
-      <Button onClick={onExitClick}>Exit</Button>
+      <Button onClick={onLogoutClick}>Log Out</Button>
     </Container>
   );
 }
 
 const Container = styled.div`
   padding: 24px;
+  p {
+    margin-bottom: 8px;
+  }
+  ul {
+    list-style: circle;
+    margin-bottom: 8px;
+    li {
+      margin-left: 32px;
+    }
+  }
 `;
