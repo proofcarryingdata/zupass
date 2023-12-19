@@ -842,6 +842,10 @@ async function doSync(
         serverStorageHash: upRes.value.storageHash
       };
     } else {
+      if (upRes.error.name === "ValidationError") {
+        return { userInvalid: true };
+      }
+
       // Upload failed.  Update AppState if necessary, but not unnecessarily.
       // AppState updates will trigger another upload attempt.
       const needExtraDownload = upRes.error.name === "Conflict";
@@ -859,9 +863,6 @@ async function doSync(
       }
       if (needExtraDownload && !state.extraDownloadRequested) {
         updates.extraDownloadRequested = true;
-      }
-      if (upRes.error.name === "ValidationError") {
-        updates.userInvalid = true;
       }
 
       return updates;
