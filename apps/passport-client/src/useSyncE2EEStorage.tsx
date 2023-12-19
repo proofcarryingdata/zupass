@@ -14,6 +14,7 @@ import {
   serializeStorage
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
+import { PCD } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
@@ -31,14 +32,6 @@ import {
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
 import { validateAndLogRunningAppState } from "./validateState";
-
-// Temporary feature flag to allow the sync-merge code to be on the main branch
-// before it's fully complete.  When this is set to false, the behavior should
-// remain as it was before sync-merge was implemented at all.  Uploads will
-// always overwrite existing contents, and downloads will always take new
-// contents without merging.
-// TODO(artwyman): Remove this when #1342 is complete.
-const ENABLE_SYNC_MERGE = false;
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -80,7 +73,7 @@ export async function updateBlobKeyForEncryptedStorage(
     newUser.uuid,
     newSalt,
     encryptedStorage,
-    ENABLE_SYNC_MERGE ? knownServerStorageRevision : undefined
+    knownServerStorageRevision
   );
   if (changeResult.success) {
     console.log(
@@ -188,7 +181,7 @@ export async function uploadSerializedStorage(
     appConfig.zupassServer,
     blobKey,
     encryptedStorage,
-    ENABLE_SYNC_MERGE ? knownRevision : undefined
+    knownRevision
   );
 
   if (uploadResult.success) {
@@ -223,22 +216,153 @@ export type MergeStorageResult = APIResult<MergeableFields, NamedAPIError>;
  * Merge the contents of local and remote states, both of which have potential
  * changes from a common base state.
  *
- * TODO(artwyman): Describe merge algorithm.
+ * PCDs and subscriptions are each merged independently, using the same basic
+ * algorithm.  If there are no differences (identical hash) then this merge
+ * always returns the "remote" fields, making it equivalent to a simple
+ * download-and-replace.
+ *
+ * The merge performed here is limited by the lack of historical revisions, or
+ * other information which could clarify the user's intent.  E.g. we can't tell
+ * a remote "add" from a local "remove", and in case of replacement we don't
+ * know which version is newer.  Without that, we can't know which version of
+ * data is "better".  Instead we're opinionated on these tradeoffs:
+ * 1) Keeping data is always better than losing data.  If we can't tell if an
+ *    object was added or removed, assume it was added.  This means a conflict
+ *    may cause a removed object to reappear, but shouldn't cause a new object
+ *    to be lost.  This preference is chosen to avoid losing user data, but may
+ *    not always be ideal, e.g. in the case of subscriptions granting
+ *    permissions the user intended to revoke.
+ * 2) By default, prefer data downloaded from the server.  This is mostly
+ *    arbitrary, but given that we upload more aggressively than we download
+ *    it approximates a "first to reach the server wins" policy.  This means if
+ *    an object is modified (with the same ID) and involved in a conflict, one
+ *    of the two copies will be kept, determined by the timing of uploads.
+ *
+ * As a side-effect of the implementation of #2, this merge algorithm always
+ * replaces the PCDCollection and FeedsSubscriptionManager with new objects,
+ * discarding non-serialized state (like listeners on emitters, and
+ * subscription errors).
+ *
+ * This function always uploads a report to the server that a merge occurred,
+ * with some stats which we hope will be helpful to detect future problems
+ * and tune better merge algorithms.
+ *
+ * @param localFields the local PCDs and subscriptions currently in use.  These
+ *   are unmodified by the current merge algorithm.
+ * @param remoteFields the new PCDs and subscriptions downloaded from the
+ *   server.  These are modified and returned by the current merge algorithm.
+ * @param self a user object used to populate log messages.
+ * @returns the resulting PCDs and subscriptions to be used going forward.
+ *   In the current merge algorithm, these are always modified versions of the
+ *   `remoteFields`.
+ *
  */
 export async function mergeStorage(
-  _localFields: MergeableFields,
+  localFields: MergeableFields,
   remoteFields: MergeableFields,
   self: User
 ): Promise<MergeStorageResult> {
-  console.error(
-    "[SYNC] sync conflict needs merge!  Keeping only remote state."
-  );
-  // TODO(artwyman): Refactor this out to implement and test real merge.
-  requestLogToServer(appConfig.zupassServer, "sync-merge", {
-    user: self.uuid
-    // TODO(artwyman): more details for tracking.
+  // Merge PCDs and Subscriptions independently, and gather a unified set of
+  // stats to include in a report to the server.
+  // TODO(#1372): Detect and report on cases where objects differ with the
+  // same ID.
+  let identical = true;
+  let anyPCDDiffs = false;
+  let anySubDiffs = false;
+
+  // PCD merge: Based on PCDCollection.merge, with predicate providing filtering
+  // by ID, and updating stats based on how many PCDs were added.
+  const pcdMergeStats = {
+    localOnly: 0,
+    remoteOnly: remoteFields.pcds.size() - localFields.pcds.size(),
+    both: localFields.pcds.size(),
+    final: remoteFields.pcds.size()
+  };
+  if (
+    (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
+  ) {
+    identical = false;
+    const pcdMergePredicate = (pcd: PCD, remotePCDs: PCDCollection) => {
+      if (remotePCDs.hasPCDWithId(pcd.id)) {
+        return false;
+      } else {
+        pcdMergeStats.localOnly++;
+        pcdMergeStats.remoteOnly++;
+        pcdMergeStats.both--;
+        return true;
+      }
+    };
+    // TODO(#1373): Attempt to preserve order while merging?
+    remoteFields.pcds.merge(localFields.pcds, {
+      shouldInclude: pcdMergePredicate
+    });
+    pcdMergeStats.final = remoteFields.pcds.size();
+    anyPCDDiffs = pcdMergeStats.localOnly > 0 || pcdMergeStats.remoteOnly > 0;
+
+    if (anyPCDDiffs) {
+      console.log("[SYNC] merged PCDS:", pcdMergeStats);
+    } else {
+      console.log(
+        "[SYNC] PCD merge made no changes to downloaded set: IDs are identical"
+      );
+    }
+  } else {
+    console.log("[SYNC] no merge of PCDs: hashes are identical");
+  }
+
+  // Subscription merge: Based on FeedSubscriptionManager.merge, with stats
+  // calculated based on the returned counts.
+  const localCount = localFields.subscriptions.getActiveSubscriptions().length;
+  const remoteCount =
+    remoteFields.subscriptions.getActiveSubscriptions().length;
+  const subMergeStats = {
+    localOnly: 0,
+    remoteOnly: remoteCount - localCount,
+    both: localCount,
+    final: remoteCount
+  };
+  if (
+    (await localFields.subscriptions.getHash()) !=
+    (await remoteFields.subscriptions.getHash())
+  ) {
+    identical = false;
+    const subMergeResults = remoteFields.subscriptions.merge(
+      localFields.subscriptions
+    );
+    subMergeStats.localOnly += subMergeResults.newSubscriptions;
+    subMergeStats.remoteOnly += subMergeResults.newSubscriptions;
+    subMergeStats.both -= subMergeResults.newSubscriptions;
+    subMergeStats.final =
+      remoteFields.subscriptions.getActiveSubscriptions().length;
+    anySubDiffs = subMergeStats.localOnly > 0 || subMergeStats.remoteOnly > 0;
+
+    if (anySubDiffs) {
+      console.log("[SYNC] merged subscriptions:", subMergeStats);
+    } else {
+      console.log(
+        "[SYNC] subscription merge made no changes to downloaded set: IDs are identical"
+      );
+    }
+  } else {
+    console.log("[SYNC] no merge of subscriptions: hashes are identical");
+  }
+
+  // Report stats to the server for analysis.
+  await requestLogToServer(appConfig.zupassServer, "sync-merge", {
+    user: self.uuid,
+    identical: identical,
+    changedPcds: anyPCDDiffs,
+    changedSubscriptions: anySubDiffs,
+    pcdMergeStats: pcdMergeStats,
+    subscriptionMergeStats: subMergeStats
   });
-  return { value: remoteFields, success: true };
+  return {
+    value: {
+      pcds: remoteFields.pcds,
+      subscriptions: remoteFields.subscriptions
+    },
+    success: true
+  };
 }
 
 export type SyncStorageResult = APIResult<
@@ -303,17 +427,14 @@ export async function downloadAndMergeStorage(
   // Check if local app state has changes since the last server revision, in
   // which case a merge is necessary.  Otherwise we keep the downloaded state.
   let [newPCDs, newSubscriptions] = [dlPCDs, dlSubscriptions];
-  if (
-    ENABLE_SYNC_MERGE &&
-    knownServerRevision !== undefined &&
-    knownServerHash !== undefined
-  ) {
+  if (knownServerRevision !== undefined && knownServerHash !== undefined) {
     const appStorage = await serializeStorage(
       appSelf,
       appPCDs,
       appSubscriptions
     );
     if (appStorage.storageHash !== knownServerHash) {
+      console.warn("[SYNC] revision conflict on download needs merge!");
       const mergeResult = await mergeStorage(
         { pcds: appPCDs, subscriptions: appSubscriptions },
         {

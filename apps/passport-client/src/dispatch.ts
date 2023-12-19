@@ -841,22 +841,30 @@ async function doSync(
         serverStorageRevision: upRes.value.revision,
         serverStorageHash: upRes.value.storageHash
       };
-    } else if (upRes.error.name === "Conflict") {
-      // Conflicts are resolved at download time, so ensure another download.
-      return {
-        completedFirstSync: true,
-        extraDownloadRequested: true
-      };
     } else {
-      const res: Partial<AppState> = {
-        completedFirstSync: true
-      };
-
-      if (upRes.error.name === "ValidationError") {
-        res.userInvalid = true;
+      // Upload failed.  Update AppState if necessary, but not unnecessarily.
+      // AppState updates will trigger another upload attempt.
+      const needExtraDownload = upRes.error.name === "Conflict";
+      if (
+        state.completedFirstSync &&
+        (!needExtraDownload || state.extraDownloadRequested)
+      ) {
+        return undefined;
       }
 
-      return res;
+      const updates: Partial<AppState> = {};
+      if (!state.completedFirstSync) {
+        // We completed a first attempt at sync, even if it failed.
+        updates.completedFirstSync = true;
+      }
+      if (needExtraDownload && !state.extraDownloadRequested) {
+        updates.extraDownloadRequested = true;
+      }
+      if (upRes.error.name === "ValidationError") {
+        updates.userInvalid = true;
+      }
+
+      return updates;
     }
   }
 
@@ -928,12 +936,17 @@ async function addSubscription(
   if (!state.subscriptions.getProvider(providerUrl)) {
     state.subscriptions.addProvider(providerUrl, providerName);
   }
-  await state.subscriptions.subscribe(providerUrl, feed, true);
+  const sub = await state.subscriptions.subscribe(providerUrl, feed, true);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false
   });
+  dispatch(
+    { type: "sync-subscription", subscriptionId: sub.id },
+    state,
+    update
+  );
 }
 
 async function removeSubscription(

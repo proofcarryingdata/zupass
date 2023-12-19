@@ -61,15 +61,102 @@ export class FeedSubscriptionManager {
   public constructor(
     api: IFeedApi,
     providers?: SubscriptionProvider[],
-    activeSubscriptions?: Subscription[]
+    activeSubscriptions?: Subscription[],
+    errors?: Map<string, SubscriptionError>
   ) {
     this.updatedEmitter = new Emitter();
     this.api = api;
     this.providers = providers ?? [];
     this.activeSubscriptions = (activeSubscriptions ?? []).map(ensureHasId);
-    this.errors = new Map();
+    this.errors = errors !== undefined ? new Map(errors) : new Map();
   }
 
+  /**
+   * Creates a new FeedSubscriptionManager with the data from this one.
+   *
+   * This includes all data (subscriptions, providers, and errors, but doesn't
+   * include dynamic state (listeners on the emitter).
+   *
+   * This is a shallow clone.  The resulting object has new containers but
+   * the same underlying objects, which are expected to be immutable.  If you
+   * need a deep clone, use serialization.
+   */
+  public clone(): FeedSubscriptionManager {
+    return new FeedSubscriptionManager(
+      this.api,
+      [...this.providers],
+      [...this.activeSubscriptions],
+      this.errors
+    );
+  }
+
+  /**
+   * Merges subscriptions from `other` into `this`, returning an object with
+   * a count of the number of new providers and subscriptions added.
+   *
+   * Only subscriptions and providers are included in the merge.  Other
+   * non-persistent state (listeners, errors) is ignored.
+   *
+   * The merge only ever adds new providers and/or subscriptions which do not
+   * already exist.  Existing entries are never mutated.  Subscriptions will be
+   * added only if their subscription ID is globally unique, and their feed ID
+   * is unique within the scope of their provider URL.  Providers are added
+   * only if there is a new subscription to add and no existing provider
+   * for its URL.
+   */
+  public merge(other: FeedSubscriptionManager): {
+    newProviders: number;
+    newSubscriptions: number;
+  } {
+    // Prepare a set of IDs of the feeds ands subs we have, for quick lookup.
+    const haveSubIDs = new Set();
+    const haveFeeds = new Set();
+    for (const sub of this.activeSubscriptions) {
+      haveSubIDs.add(sub.id);
+      haveFeeds.add(sub.providerUrl + "|" + sub.feed.id);
+    }
+
+    let newProviders = 0;
+    let newSubscriptions = 0;
+    for (const [providerUrl, subs] of other
+      .getSubscriptionsByProvider()
+      .entries()) {
+      // Copy provider if not already known.
+      const ensureProvider = () => {
+        if (!this.hasProvider(providerUrl)) {
+          const otherProvider = other.getProvider(providerUrl);
+          if (otherProvider === undefined) return; // other's state is illegal?
+
+          this.addProvider(
+            providerUrl,
+            otherProvider.providerName,
+            otherProvider.timestampAdded
+          );
+          newProviders++;
+        }
+      };
+
+      // Copy each subscription if it doesn't already exist.  We eliminate
+      // duplicates of either the same subscription ID or feed ID.
+      for (const sub of subs) {
+        const feedString = sub.providerUrl + "|" + sub.feed.id;
+        if (!haveSubIDs.has(sub.id) && !haveFeeds.has(feedString)) {
+          ensureProvider();
+          this.activeSubscriptions.push({ ...sub });
+          haveSubIDs.add(sub.id);
+          haveFeeds.add(feedString);
+          newSubscriptions++;
+        }
+      }
+    }
+
+    this.updatedEmitter.emit();
+    return { newProviders, newSubscriptions };
+  }
+
+  /**
+   * Fetches a list of all feeds from the given provider URL.
+   */
   public async listFeeds(providerUrl: string): Promise<ListFeedsResponseValue> {
     return this.api.listFeeds(providerUrl).then((r) => {
       if (r.success) {
@@ -354,16 +441,21 @@ export class FeedSubscriptionManager {
 
   public getOrAddProvider(
     providerUrl: string,
-    providerName: string
+    providerName: string,
+    timestampAdded?: number
   ): SubscriptionProvider {
     const existingProvider = this.getProvider(providerUrl);
     if (existingProvider) {
       return existingProvider;
     }
-    return this.addProvider(providerUrl, providerName);
+    return this.addProvider(providerUrl, providerName, timestampAdded);
   }
 
-  public addProvider(providerUrl: string, providerName: string) {
+  public addProvider(
+    providerUrl: string,
+    providerName: string,
+    timestampAdded?: number
+  ) {
     if (this.hasProvider(providerUrl)) {
       throw new Error(`provider ${providerUrl} already exists`);
     }
@@ -371,7 +463,7 @@ export class FeedSubscriptionManager {
     const newProvider: SubscriptionProvider = {
       providerUrl,
       providerName,
-      timestampAdded: Date.now()
+      timestampAdded: timestampAdded ?? Date.now()
     };
 
     this.providers.push(newProvider);

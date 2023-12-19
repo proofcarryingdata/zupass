@@ -62,7 +62,6 @@ import {
   saveCheckedInOfflineTickets,
   saveIdentity,
   saveOfflineTickets,
-  saveSubscriptions,
   saveUsingLaserScanner
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
@@ -410,8 +409,6 @@ async function loadInitialState(): Promise<AppState> {
   const offlineTickets = loadOfflineTickets();
   const checkedInOfflineDevconnectTickets =
     loadCheckedInOfflineDevconnectTickets();
-
-  subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   let modal = { modalType: "none" } as AppState["modal"];
 
