@@ -205,13 +205,20 @@ export function getRunningAppStateValidationErrors(
  * we have records and are able to identify common types of errors. Does not leak
  * sensitive information, such as decrypted versions of e2ee storage.
  */
-export async function logValidationErrors(errors: ErrorReport): Promise<void> {
+export async function logValidationErrors(
+  errorReport: ErrorReport
+): Promise<void> {
+  if (errorReport?.errors?.length === 0) {
+    console.log(`not logging empty error report`);
+    return;
+  }
+
   try {
     const user = loadSelf();
-    errors.userUUID = errors.userUUID ?? user?.uuid;
-    console.log(`encountered state validation errors: `, errors);
+    errorReport.userUUID = errorReport.userUUID ?? user?.uuid;
+    console.log(`encountered state validation errors: `, errorReport);
     await requestLogToServer(appConfig.zupassServer, "state-validation-error", {
-      ...errors
+      ...errorReport
     });
   } catch (e) {
     console.log("error reporting errors", e);
