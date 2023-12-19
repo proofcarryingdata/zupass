@@ -1,6 +1,6 @@
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { Button, Spacer } from "../core";
+import { Button, Spacer, SupportLink } from "../core";
 
 export function PrivacyNoticeText() {
   return (
@@ -244,8 +244,7 @@ export function PrivacyNoticeText() {
       <h3>8. HOW TO CONTACT US</h3>
       <p>
         Should you have any questions about our privacy practices or this
-        Privacy Notice, please email us at{" "}
-        <a href="mailto:support@zupass.org">support@zupass.org</a>.
+        Privacy Notice, please email us at <SupportLink />.
       </p>
     </Prose>
   );
