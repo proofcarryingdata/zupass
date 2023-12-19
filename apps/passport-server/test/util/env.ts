@@ -29,7 +29,8 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_SYNC_DISABLED: undefined,
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   ACCOUNT_RESET_LIMIT_QUANTITY: "3",
-  ACCOUNT_RESET_LIMIT_DURATION_MS: "3000"
+  ACCOUNT_RESET_LIMIT_DURATION_MS: "3000",
+  GENERIC_RATE_LIMIT_DISABLED: undefined
 });
 
 export async function overrideEnvironment(
