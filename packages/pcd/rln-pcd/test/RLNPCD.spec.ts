@@ -1,5 +1,4 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RLNPCDArgs, RLNPCDPackage } from "@pcd/rln-pcd";
 import { serializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Group } from "@semaphore-protocol/group";
@@ -7,6 +6,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import "mocha";
 import * as path from "path";
+import { RLNPCDArgs, RLNPCDPackage } from "../src";
 
 const TREE_DEPTH = 16;
 

@@ -19,7 +19,6 @@ function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }) {
         This PCD represents an EdDSA signed frog issued to a user's semaphore
         identity, with proven claims about that frog.
       </p>
-
       <Separator />
 
       <FieldLabel>Frog ID</FieldLabel>
