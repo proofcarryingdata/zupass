@@ -10,7 +10,7 @@ import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
-export const RSAPCDTypeName = "rsa-image-pcd";
+export const RSAImagePCDTypeName = "rsa-image-pcd";
 
 export type RSAImagePCDArgs = {
   privateKey: StringArgument;
@@ -26,7 +26,7 @@ export interface RSAImagePCDProof {
 }
 
 export class RSAImagePCD implements PCD<RSAImagePCDClaim, RSAImagePCDProof> {
-  type = RSAPCDTypeName;
+  type = RSAImagePCDTypeName;
   claim: RSAImagePCDClaim;
   proof: RSAImagePCDProof;
   id: string;
@@ -87,7 +87,7 @@ export async function serialize(
   const serializedRSAPCD = await RSAPCDPackage.serialize(pcd.proof.rsaPCD);
 
   return {
-    type: RSAPCDTypeName,
+    type: RSAImagePCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
       rsaPCD: serializedRSAPCD
@@ -126,7 +126,7 @@ export const RSAImagePCDPackage: PCDPackage<
   RSAImagePCDProof,
   RSAImagePCDArgs
 > = {
-  name: RSAPCDTypeName,
+  name: RSAImagePCDTypeName,
   getDisplayOptions,
   prove,
   verify,
