@@ -842,6 +842,9 @@ async function doSync(
       };
     } else {
       if (upRes.error.name === "ValidationError") {
+        // early return on upload validation error; this doesn't cause upload
+        // loop b/c there is an even earlier early return that exits the sync
+        // code in the case that the userInvalid flag is set
         userInvalid(update);
         return;
       }
