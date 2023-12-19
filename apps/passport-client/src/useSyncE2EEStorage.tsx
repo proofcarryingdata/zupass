@@ -15,6 +15,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import { Identity } from "@semaphore-protocol/identity";
 import stringify from "fast-json-stable-stringify";
 import { useCallback, useContext, useEffect } from "react";
 import { appConfig } from "./appConfig";
@@ -30,6 +31,7 @@ import {
 } from "./localstorage";
 import { getPackages } from "./pcdPackages";
 import { useOnStateChange } from "./subscribe";
+import { validateAndLogRunningAppState } from "./validateState";
 
 export type UpdateBlobKeyStorageInfo = {
   revision: string;
@@ -48,7 +50,7 @@ export async function updateBlobKeyForEncryptedStorage(
 ): Promise<UpdateBlobKeyResult> {
   const oldUser = loadSelf();
   const newUser = { ...oldUser, salt: newSalt };
-  const pcds = await loadPCDs();
+  const pcds = await loadPCDs(oldUser);
   const subscriptions = await loadSubscriptions();
 
   const { serializedStorage, storageHash } = await serializeStorage(
@@ -109,6 +111,7 @@ export type UploadStorageResult = APIResult<
  */
 export async function uploadStorage(
   user: User,
+  userIdentity: Identity,
   pcds: PCDCollection,
   subscriptions: FeedSubscriptionManager,
   knownRevision?: string
@@ -118,22 +121,54 @@ export async function uploadStorage(
     pcds,
     subscriptions
   );
-  return uploadSerializedStorage(serializedStorage, storageHash, knownRevision);
+  return uploadSerializedStorage(
+    user,
+    userIdentity,
+    pcds,
+    serializedStorage,
+    storageHash,
+    knownRevision
+  );
 }
 
 /**
  * Uploads the state of this passport, in serialied form as produced by
  * serializeStorage().
  *
+ * The parameters {@link user}, {@link userIdentity}, and
+ * {@link pcds} are used only to validate the consistency between the three
+ * before attempting an upload, to help prevent uploading inconsistent state.
+ *
  * If knownRevision is specified, it is used to abort the upload in
  * case of conflict.  If it is undefined, the upload will overwrite
  * any revision.
  */
 export async function uploadSerializedStorage(
+  user: User,
+  userIdentity: Identity,
+  pcds: PCDCollection,
   serializedStorage: SyncedEncryptedStorage,
   storageHash: string,
   knownRevision?: string
 ): Promise<UploadStorageResult> {
+  if (
+    !validateAndLogRunningAppState(
+      "uploadSerializedStorage",
+      user,
+      userIdentity,
+      pcds
+    )
+  ) {
+    return {
+      success: false,
+      error: {
+        name: "ValidationError",
+        detailedMessage: "validation before upload failed",
+        code: undefined
+      }
+    };
+  }
+
   const encryptionKey = loadEncryptionKey();
   const blobKey = await getHash(encryptionKey);
 
@@ -350,6 +385,7 @@ export async function downloadAndMergeStorage(
   knownServerRevision: string | undefined,
   knownServerHash: string | undefined,
   appSelf: User,
+  appIdentity: Identity,
   appPCDs: PCDCollection,
   appSubscriptions: FeedSubscriptionManager
 ): Promise<SyncStorageResult> {
@@ -379,6 +415,8 @@ export async function downloadAndMergeStorage(
   // Deserialize downloaded storage, which becomes the default new state if no
   // merge is necessary.
   const downloaded = await tryDeserializeNewStorage(
+    appSelf,
+    appIdentity,
     storageResult.value.storage
   );
   if (downloaded === undefined) {
@@ -438,7 +476,12 @@ export async function downloadAndMergeStorage(
   };
 }
 
+/**
+ * {@link appSelf} and {@link appIdentity} are used solely for validation purposes.
+ */
 export async function tryDeserializeNewStorage(
+  appSelf: User,
+  appIdentity: Identity,
   storage: SyncedEncryptedStorage
 ): Promise<
   | undefined
@@ -453,6 +496,18 @@ export async function tryDeserializeNewStorage(
       storage,
       await getPackages()
     );
+
+    if (
+      !validateAndLogRunningAppState(
+        "downloadStorage",
+        appSelf,
+        appIdentity,
+        pcds
+      )
+    ) {
+      throw new Error("downloaded e2ee state failed to validate");
+    }
+
     return {
       dlPCDs: pcds,
       dlSubscriptions: subscriptions,

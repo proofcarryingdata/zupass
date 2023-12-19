@@ -54,6 +54,7 @@ import {
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
+import { validateAndLogRunningAppState } from "./validateState";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -356,16 +357,21 @@ async function finishAccountCreation(
   update: ZuUpdate
 ) {
   // Verify that the identity is correct.
-  const { identity } = state;
-  console.log("[ACCOUNT] Check user", identity, user);
-  if (identity == null || identity.commitment.toString() !== user.commitment) {
+  if (
+    !validateAndLogRunningAppState(
+      "finishAccountCreation",
+      user,
+      state.identity,
+      state.pcds
+    )
+  ) {
     update({
       error: {
         title: "Invalid identity",
         message: "Something went wrong saving your Zupass. Contact support."
       }
     });
-    return; // Don't save the bad identity.  User must reset account.
+    return; // Don't save the bad identity. User must reset account.
   }
 
   // Save PCDs to E2EE storage.  knownRevision=undefined is the way to create
@@ -375,6 +381,7 @@ async function finishAccountCreation(
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
+    state.identity,
     state.pcds,
     state.subscriptions,
     undefined // knownRevision
@@ -385,6 +392,12 @@ async function finishAccountCreation(
       serverStorageRevision: uploadResult.value.revision,
       serverStorageHash: uploadResult.value.storageHash
     });
+  } else if (
+    !uploadResult.success &&
+    uploadResult.error.name === "ValidationError"
+  ) {
+    userInvalid(update);
+    return;
   }
 
   // Save user to local storage.  This is done last because it unblocks
@@ -532,6 +545,18 @@ async function loadAfterLogin(
   const identityPCD = pcds.getPCDsByType(
     SemaphoreIdentityPCDTypeName
   )[0] as SemaphoreIdentityPCD;
+
+  if (
+    !validateAndLogRunningAppState(
+      "loadAfterLogin",
+      userResponse.value,
+      identityPCD.claim.identity,
+      pcds
+    )
+  ) {
+    userInvalid(update);
+    return;
+  }
 
   let modal: AppState["modal"] = { modalType: "none" };
   if (!identityPCD) {
@@ -705,6 +730,10 @@ async function doSync(
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
   }
+  if (state.userInvalid) {
+    console.log("[SYNC] userInvalid=true, exiting sync");
+    return undefined;
+  }
 
   // If we haven't downloaded from storage, do that first.  After that we'll
   // download again when requested to poll, but only after the first full sync
@@ -722,6 +751,7 @@ async function doSync(
       state.serverStorageRevision,
       state.serverStorageHash,
       state.self,
+      state.identity,
       state.pcds,
       state.subscriptions
     );
@@ -794,9 +824,13 @@ async function doSync(
     state.pcds,
     state.subscriptions
   );
+
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
     const upRes = await uploadSerializedStorage(
+      state.self,
+      state.identity,
+      state.pcds,
       appStorage.serializedStorage,
       appStorage.storageHash,
       state.serverStorageRevision
@@ -807,6 +841,14 @@ async function doSync(
         serverStorageHash: upRes.value.storageHash
       };
     } else {
+      if (upRes.error.name === "ValidationError") {
+        // early return on upload validation error; this doesn't cause upload
+        // loop b/c there is an even earlier early return that exits the sync
+        // code in the case that the userInvalid flag is set
+        userInvalid(update);
+        return;
+      }
+
       // Upload failed.  Update AppState if necessary, but not unnecessarily.
       // AppState updates will trigger another upload attempt.
       const needExtraDownload = upRes.error.name === "Conflict";
@@ -825,6 +867,7 @@ async function doSync(
       if (needExtraDownload && !state.extraDownloadRequested) {
         updates.extraDownloadRequested = true;
       }
+
       return updates;
     }
   }

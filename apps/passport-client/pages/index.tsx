@@ -67,6 +67,7 @@ import {
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
+import { validateAndLogInitialAppState } from "../src/validateState";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
@@ -402,7 +403,7 @@ async function loadInitialState(): Promise<AppState> {
   }
 
   const self = loadSelf();
-  const pcds = await loadPCDs();
+  const pcds = await loadPCDs(self);
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
   const offlineTickets = loadOfflineTickets();
@@ -425,7 +426,7 @@ async function loadInitialState(): Promise<AppState> {
 
   const persistentSyncStatus = loadPersistentSyncStatus();
 
-  return {
+  const state: AppState = {
     self,
     encryptionKey,
     pcds,
@@ -441,6 +442,13 @@ async function loadInitialState(): Promise<AppState> {
     serverStorageHash: persistentSyncStatus.serverStorageHash,
     importScreen: undefined
   };
+
+  if (!validateAndLogInitialAppState("loadInitialState", state)) {
+    state.userInvalid = true;
+    state.modal = { modalType: "invalid-participant" };
+  }
+
+  return state;
 }
 
 registerServiceWorker();
