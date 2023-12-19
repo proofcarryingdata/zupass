@@ -396,9 +396,8 @@ async function finishAccountCreation(
     !uploadResult.success &&
     uploadResult.error.name === "ValidationError"
   ) {
-    update({
-      userInvalid: true
-    });
+    userInvalid(update);
+    return;
   }
 
   // Save user to local storage.  This is done last because it unblocks
@@ -555,7 +554,7 @@ async function loadAfterLogin(
       pcds
     )
   ) {
-    update({ userInvalid: true });
+    userInvalid(update);
     return;
   }
 
@@ -843,7 +842,8 @@ async function doSync(
       };
     } else {
       if (upRes.error.name === "ValidationError") {
-        return { userInvalid: true };
+        userInvalid(update);
+        return;
       }
 
       // Upload failed.  Update AppState if necessary, but not unnecessarily.
