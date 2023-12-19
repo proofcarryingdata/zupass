@@ -99,8 +99,11 @@ export class RateLimitService {
 
 export function startRateLimitService(
   context: ApplicationContext,
-  rollbarService: RollbarService | null,
-  disabled: boolean
+  rollbarService: RollbarService | null
 ): RateLimitService {
-  return new RateLimitService(context, rollbarService, disabled);
+  return new RateLimitService(
+    context,
+    rollbarService,
+    process.env.GENERIC_RATE_LIMIT_DISABLED === "true"
+  );
 }

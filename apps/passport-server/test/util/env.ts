@@ -30,7 +30,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   ACCOUNT_RESET_LIMIT_QUANTITY: "3",
   ACCOUNT_RESET_LIMIT_DURATION_MS: "3000",
-  RATE_LIMIT_DISABLED: undefined
+  GENERIC_RATE_LIMIT_DISABLED: undefined
 });
 
 export async function overrideEnvironment(

@@ -197,7 +197,10 @@ describe("generic rate-limiting features", function () {
     async function () {
       await stopApplication(application);
       await db.end();
-      await overrideEnvironment({ ...testingEnv, RATE_LIMIT_DISABLED: "true" });
+      await overrideEnvironment({
+        ...testingEnv,
+        GENERIC_RATE_LIMIT_DISABLED: "true"
+      });
 
       db = await getDB();
       application = await startTestingApp({});
