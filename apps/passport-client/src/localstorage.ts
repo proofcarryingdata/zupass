@@ -31,7 +31,10 @@ export async function savePCDs(pcds: PCDCollection): Promise<void> {
   window.localStorage[COLLECTION_KEY] = serialized;
 }
 
-export async function loadPCDs(): Promise<PCDCollection> {
+/**
+ * {@link self} argument used only to modify validation behavior.
+ */
+export async function loadPCDs(self?: User): Promise<PCDCollection> {
   const oldPCDs = window.localStorage[OLD_PCDS_KEY];
   if (oldPCDs) {
     const collection = new PCDCollection(await getPackages());
@@ -52,7 +55,7 @@ export async function loadPCDs(): Promise<PCDCollection> {
       undefined,
       undefined,
       collection,
-      true
+      self !== undefined
     )
   ) {
     console.error(

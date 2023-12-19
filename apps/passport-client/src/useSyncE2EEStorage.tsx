@@ -57,7 +57,7 @@ export async function updateBlobKeyForEncryptedStorage(
 ): Promise<UpdateBlobKeyResult> {
   const oldUser = loadSelf();
   const newUser = { ...oldUser, salt: newSalt };
-  const pcds = await loadPCDs();
+  const pcds = await loadPCDs(oldUser);
   const subscriptions = await loadSubscriptions();
 
   const { serializedStorage, storageHash } = await serializeStorage(

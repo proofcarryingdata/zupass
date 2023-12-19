@@ -404,7 +404,7 @@ async function loadInitialState(): Promise<AppState> {
   }
 
   const self = loadSelf();
-  const pcds = await loadPCDs();
+  const pcds = await loadPCDs(self);
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
   const offlineTickets = loadOfflineTickets();
