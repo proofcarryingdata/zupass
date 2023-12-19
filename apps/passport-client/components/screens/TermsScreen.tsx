@@ -1,5 +1,5 @@
 import styled, { createGlobalStyle } from "styled-components";
-import { PrivacyNoticeText } from "../shared/PrivacyNoticeText";
+import { PrivacyNoticeText } from "../shared/PrivacyNotice";
 
 export function TermsScreen() {
   return (

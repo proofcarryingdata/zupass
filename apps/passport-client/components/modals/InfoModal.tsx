@@ -1,5 +1,5 @@
 import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
-import { CenterColumn, Spacer, TextCenter } from "../core";
+import { CenterColumn, Spacer, SupportLink, TextCenter } from "../core";
 import { icons } from "../icons";
 
 export function InfoModal() {
