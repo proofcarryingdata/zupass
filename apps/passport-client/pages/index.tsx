@@ -443,7 +443,7 @@ async function loadInitialState(): Promise<AppState> {
     importScreen: undefined
   };
 
-  if (!validateAndLogInitialAppState("loadInitialState", state) || true) {
+  if (!validateAndLogInitialAppState("loadInitialState", state)) {
     state.userInvalid = true;
     state.modal = { modalType: "invalid-participant" };
   }
