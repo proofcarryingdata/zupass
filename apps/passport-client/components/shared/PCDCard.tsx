@@ -51,6 +51,7 @@ function PCDCardImpl({
             {!hideRemoveButton && (
               <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
             )}
+            {hideRemoveButton && <Spacer h={8} />}
           </CardBodyContainer>
         </CardOutlineExpanded>
       </CardContainerExpanded>
