@@ -25,21 +25,18 @@ import { findUserIdentityPCD, hasSetupPassword } from "./user";
 import { getLastValidVerifyUrl, maybeRedirect } from "./util";
 
 /**
- * Returns the user's PCDCollection, and also a wrapped version of the same
- * collection.  The wrapped version is guaranteed to change (be replaced with
- * a new object wrapping the same PCDCollection) each time the contents of
- * PCDCollection changes.  It can be used in dependency lists for React code
- * which needs to recalculate any time the contents of the PCDCollection change,
- * even if the PCDCollection itself is not replaced.
+ * Returns the user's PCDCollection, in a wrapper for use in dependencies.
+ * The wrapper is guaranteed to change (be replaced with a new object, possibly
+ * wrapping the same PCDCollection) each time the contents of PCDCollection
+ * changes.  It can be used in dependency lists for React code which needs to
+ * recalculate any time the contents of the PCDCollection change, even if the
+ * PCDCollection itself is not replaced.
  *
  * This wrapper-based approach may re-render unnecessarily if PCDCollection's
  * change is a nop (such as re-issuing the same tickets), but is much cheaper
  * than analyzing and hashing the full PCDCollection contents.
  */
-export function usePCDCollectionWithWrapper(): [
-  PCDCollection,
-  Wrapper<PCDCollection>
-] {
+export function useWrappedPCDCollection(): Wrapper<PCDCollection> {
   const pcds = useSelector<PCDCollection>((s) => s.pcds, []);
 
   const [wrapper, setWrapper] = useState<Wrapper<PCDCollection>>(wrap(pcds));
@@ -50,12 +47,12 @@ export function usePCDCollectionWithWrapper(): [
     });
   }, [pcds]);
 
-  return [pcds, wrapper];
+  return wrapper;
 }
 
 export function usePCDCollection(): PCDCollection {
-  const [pcds, _] = usePCDCollectionWithWrapper();
-  return pcds;
+  const wrappedPCDs = useWrappedPCDCollection();
+  return wrappedPCDs.value;
 }
 
 export function usePCDs(): PCD[] {
@@ -74,7 +71,7 @@ export function useFolders(path: string) {
 }
 
 export function useUserIdentityPCD(): SemaphoreIdentityPCD | undefined {
-  const [_, wrappedPCDs] = usePCDCollectionWithWrapper();
+  const wrappedPCDs = useWrappedPCDCollection();
   const self = useSelf();
   const identityPCD = useMemo(() => {
     // Using wrapped PCDCollection ensures this memo updates when contents
