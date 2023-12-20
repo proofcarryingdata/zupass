@@ -19,7 +19,6 @@ import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import {
   isSemaphoreIdentityPCD,
-  SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
@@ -47,7 +46,7 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { hasSetupPassword } from "./user";
+import { findUserIdentityPCD, hasSetupPassword } from "./user";
 import {
   downloadAndMergeStorage,
   uploadSerializedStorage,
@@ -537,34 +536,33 @@ async function loadAfterLogin(
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage);
   }
+  const self: User = userResponse.value;
+  if (!self) {
+    throw new Error("No User returned by server.");
+  }
 
-  // TODO: This fragile mechanism of fetching the user's identity PCD assumes
-  // it's always the first one created, and that changes never cause the order
-  // to change.  We should do something more robust, probably tied to the
-  // commitment stored in self.
-  const identityPCD = pcds.getPCDsByType(
-    SemaphoreIdentityPCDTypeName
-  )[0] as SemaphoreIdentityPCD;
-
+  // Validate stored state against the user response.
+  const identityPCD = findUserIdentityPCD(pcds, userResponse.value);
   if (
     !validateAndLogRunningAppState(
       "loadAfterLogin",
       userResponse.value,
-      identityPCD.claim.identity,
+      identityPCD?.claim?.identity,
       pcds
     )
   ) {
     userInvalid(update);
     return;
   }
+  if (!identityPCD) {
+    // Validation should've caught this, but the compiler doesn't know that.
+    console.error("No identity PCD found in encrypted storage.");
+    userInvalid(update);
+    return;
+  }
 
   let modal: AppState["modal"] = { modalType: "none" };
-  if (!identityPCD) {
-    // TODO: handle error gracefully
-    // TODO: Also check that identityPCD's commitment matches the one
-    // in storage.self
-    throw new Error("no identity found in encrypted storage");
-  } else if (
+  if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
     encryptionKey == null &&
@@ -582,7 +580,7 @@ async function loadAfterLogin(
     serverStorageHash: storageHash
   });
   saveEncryptionKey(encryptionKey);
-  saveSelf(userResponse.value);
+  saveSelf(self);
   saveIdentity(identityPCD.claim.identity);
 
   update({
@@ -592,7 +590,7 @@ async function loadAfterLogin(
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
     identity: identityPCD.claim.identity,
-    self: userResponse.value,
+    self,
     modal
   });
   notifyLoginToOtherTabs();

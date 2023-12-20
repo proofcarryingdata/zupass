@@ -1,9 +1,8 @@
 import { PCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
-import { usePCDCollection } from "../../src/appHooks";
+import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { PCDCard } from "./PCDCard";
 
 type Sortable<T = unknown> = {
@@ -44,13 +43,9 @@ export function PCDCardList({
    */
   allExpanded?: boolean;
 }) {
-  const mainPCDId = useMemo(() => {
-    if (pcds[0]?.type === SemaphoreIdentityPCDTypeName) {
-      return pcds[0]?.id;
-    }
-  }, [pcds]);
-
   const pcdCollection = usePCDCollection();
+  const userIdentityPCD = useUserIdentityPCD();
+  const userIdentityPCDId = userIdentityPCD?.id;
   const sortablePCDs = useMemo<Sortable<PCD>[]>(
     () =>
       pcds.map((pcd, i) => ({
@@ -123,7 +118,7 @@ export function PCDCardList({
         <PCDCard
           key={pcd.id}
           pcd={pcd}
-          isMainIdentity={pcd.id === mainPCDId}
+          isMainIdentity={pcd.id === userIdentityPCDId}
           onClick={allExpanded ? undefined : onClick}
           expanded={allExpanded || pcd.id === selectedPCD?.id}
         />

@@ -18,6 +18,8 @@ import { RSATicketPCDTypeName } from "@pcd/rsa-ticket-pcd";
 import { RSATicketPCDUI } from "@pcd/rsa-ticket-pcd-ui";
 import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd";
 import { SemaphoreGroupPCDUI } from "@pcd/semaphore-group-pcd-ui";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityPCDUI } from "@pcd/semaphore-identity-pcd-ui";
 import { SemaphoreSignaturePCDTypeName } from "@pcd/semaphore-signature-pcd";
 import { SemaphoreSignaturePCDUI } from "@pcd/semaphore-signature-pcd-ui";
 import { ZKEdDSAEventTicketPCDTypeName } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -34,6 +36,7 @@ const renderablePCDs = [
   RSATicketPCDTypeName,
   RSATicketPCDTypeName,
   SemaphoreGroupPCDTypeName,
+  SemaphoreIdentityPCDTypeName,
   SemaphoreSignaturePCDTypeName,
   ZKEdDSAEventTicketPCDTypeName,
   RSAImagePCDTypeName
@@ -51,6 +54,7 @@ export const pcdRenderers: { [key in RenderablePCDType]: PCDUI } = {
   [RSAPCDTypeName]: RSAPCDUI,
   [RSATicketPCDTypeName]: RSATicketPCDUI,
   [SemaphoreGroupPCDTypeName]: SemaphoreGroupPCDUI,
+  [SemaphoreIdentityPCDTypeName]: SemaphoreIdentityPCDUI,
   [SemaphoreSignaturePCDTypeName]: SemaphoreSignaturePCDUI,
   [ZKEdDSAEventTicketPCDTypeName]: ZKEdDSAEventTicketPCDUI,
   [RSAImagePCDTypeName]: RSAImagePCDUI
