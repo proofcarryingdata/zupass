@@ -95,6 +95,20 @@ describe("validateAppState", async function () {
       ...TAG
     } satisfies ErrorReport);
 
+    const pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity: identity1
+      })
+    );
+    expect(
+      validateRunningAppState(TAG_STR, undefined, undefined, pcds, true)
+    ).to.deep.eq({
+      errors: [],
+      userUUID: undefined,
+      ...TAG
+    } satisfies ErrorReport);
+
     expect(
       validateRunningAppState(TAG_STR, undefined, undefined, undefined, true)
     ).to.deep.eq({
@@ -115,7 +129,37 @@ describe("validateAppState", async function () {
       terms_agreed: 1,
       uuid: uuid()
     };
-    const pcds = new PCDCollection(pcdPackages);
+    let pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity: identity1
+      })
+    );
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [],
+      ...TAG
+    } satisfies ErrorReport);
+
+    // Extra identity PCD comes second and is ignored.
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity: identity2
+      })
+    );
+    expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
+      userUUID: self.uuid,
+      errors: [],
+      ...TAG
+    } satisfies ErrorReport);
+
+    // Extra identity PCD comes first and is ignored.
+    pcds = new PCDCollection(pcdPackages);
+    pcds.add(
+      await SemaphoreIdentityPCDPackage.prove({
+        identity: identity2
+      })
+    );
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1

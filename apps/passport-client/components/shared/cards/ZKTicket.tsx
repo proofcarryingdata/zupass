@@ -15,7 +15,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
-import { usePCDCollection } from "../../../src/appHooks";
+import { useUserIdentityPCD } from "../../../src/appHooks";
 import { makeEncodedVerifyLink } from "../../../src/qr";
 import { TextCenter } from "../../core";
 import { RedactedText } from "../../core/RedactedText";
@@ -38,13 +38,13 @@ function makeTicketIdVerifyLink(ticketId: string): string {
  * ZKEdDSAEventTicketPCD.
  */
 function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
-  const pcds = usePCDCollection();
+  const identityPCD = useUserIdentityPCD();
+
   const generate = useCallback(async () => {
     if (zk) {
       const serializedTicketPCD = await EdDSATicketPCDPackage.serialize(pcd);
-      const serializedIdentityPCD = await SemaphoreIdentityPCDPackage.serialize(
-        pcds.getPCDsByType(SemaphoreIdentityPCDPackage.name)[0]
-      );
+      const serializedIdentityPCD =
+        await SemaphoreIdentityPCDPackage.serialize(identityPCD);
       const zkPCD = await ZKEdDSAEventTicketPCDPackage.prove({
         ticket: {
           value: serializedTicketPCD,
@@ -86,7 +86,7 @@ function TicketQR({ pcd, zk }: { pcd: EdDSATicketPCD; zk: boolean }) {
       const verificationLink = makeTicketIdVerifyLink(ticketId);
       return verificationLink;
     }
-  }, [pcd, pcds, zk]);
+  }, [pcd, identityPCD, zk]);
 
   if (zk) {
     return (

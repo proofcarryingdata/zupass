@@ -1,13 +1,11 @@
 import { User, requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
 import { AppState } from "./state";
+import { findIdentityPCD, findUserIdentityPCD } from "./user";
 
 /**
  * Returns `true` if {@link validateInitialAppState} returns no errors, and `false`
@@ -129,9 +127,26 @@ export function getRunningAppStateValidationErrors(
 ): string[] {
   const errors: string[] = [];
   const loggedOut = !self;
-  const identityPCDFromCollection = pcds?.getPCDsByType(
-    SemaphoreIdentityPCDPackage.name
-  )?.[0] as SemaphoreIdentityPCD | undefined;
+
+  // Find identity PCD in the standard way, using a known commitment.
+  let identityPCDFromCollection = undefined;
+  if (self && pcds) {
+    identityPCDFromCollection = findUserIdentityPCD(pcds, self);
+  } else if (identity && pcds) {
+    identityPCDFromCollection = findIdentityPCD(
+      pcds,
+      identity.commitment.toString()
+    );
+  }
+
+  // If identity PCD doesn't match, or we don't have a known commitment,
+  // grab any available identity PCD so we can report whether it's missing vs.
+  // mismatch.
+  if (pcds && !identityPCDFromCollection) {
+    identityPCDFromCollection = pcds.getPCDsByType(
+      SemaphoreIdentityPCDPackage.name
+    )?.[0];
+  }
 
   if (forceCheckPCDs || !loggedOut) {
     if (!pcds) {
