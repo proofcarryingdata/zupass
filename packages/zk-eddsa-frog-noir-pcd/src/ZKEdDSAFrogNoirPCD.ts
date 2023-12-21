@@ -213,7 +213,7 @@ async function checkProveInputs(args: ZKEdDSAFrogNoirPCDArgs): Promise<{
 function snarkInputForProof(
   frogPCD: EdDSAFrogPCD,
   identityPCD: SemaphoreIdentityPCD,
-  externalNullifer: string,
+  externalNullifier: string,
   watermark: string
 ): {
   frog: Frog;
@@ -267,7 +267,7 @@ function snarkInputForProof(
     // Owner identity secret
     semaphore_identity,
 
-    external_nullifier: externalNullifer,
+    external_nullifier: externalNullifier,
     watermark
   };
 }

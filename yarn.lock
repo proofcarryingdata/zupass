@@ -2546,40 +2546,40 @@
     "@nodelib/fs.scandir" "2.1.5"
     fastq "^1.6.0"
 
-"@noir-lang/acvm_js@0.35.0-a1f6343.nightly":
-  version "0.35.0-a1f6343.nightly"
-  resolved "https://registry.yarnpkg.com/@noir-lang/acvm_js/-/acvm_js-0.35.0-a1f6343.nightly.tgz#a393293aad1a8a510982059abbd07ec84088820f"
-  integrity sha512-bSqFh7ccN9zti28LoUMG6uYW4c01kUfjFPXAALiXUEBlGhANM2CcvLaUscR+XlUlQ9fs5upvZlzwhtqnqp1Kfg==
+"@noir-lang/acvm_js@0.38.0-d025731.nightly":
+  version "0.38.0-d025731.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/acvm_js/-/acvm_js-0.38.0-d025731.nightly.tgz#fb69bcb8dc955a158e16fea105c96b5a9d2be8f1"
+  integrity sha512-bG6HNQXFYZAnoT6UX2iF9rX7LB579L+EuAtI90I9/HJjXI4USv3hoBRujX/gV6Y/r/Nkuki1N82X/kGoDL89Gg==
 
-"@noir-lang/backend_barretenberg@0.19.4-a1f6343.nightly":
-  version "0.19.4-a1f6343.nightly"
-  resolved "https://registry.yarnpkg.com/@noir-lang/backend_barretenberg/-/backend_barretenberg-0.19.4-a1f6343.nightly.tgz#4d8b54ad07f12ba98ea33f5eef3dfa9f383d5dd3"
-  integrity sha512-iy/MpCbkEGA/MbLfrjdOxyjlVRa9CmJnPQKCpQVDVckgKof803NydJgArribcD3L5n/P3YqEh3nDOnAi2abJ+g==
+"@noir-lang/backend_barretenberg@0.22.0-d025731.nightly":
+  version "0.22.0-d025731.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/backend_barretenberg/-/backend_barretenberg-0.22.0-d025731.nightly.tgz#27e2f7eb4f3f3ca5cecda66f7f9cee6aea921a6d"
+  integrity sha512-ChFpgfBwBrFlYz1Cn/Oj5dF4vrKxYU7f2BJnuPo0y/qrDb/9DkqImMf1860qiaO3FT1sHmaq+FynY0vknrFShA==
   dependencies:
     "@aztec/bb.js" "0.16.0"
-    "@noir-lang/types" "0.19.4-a1f6343.nightly"
+    "@noir-lang/types" "0.22.0-d025731.nightly"
     fflate "^0.8.0"
 
-"@noir-lang/noir_js@0.19.4-a1f6343.nightly":
-  version "0.19.4-a1f6343.nightly"
-  resolved "https://registry.yarnpkg.com/@noir-lang/noir_js/-/noir_js-0.19.4-a1f6343.nightly.tgz#9e3ebf8bbd82425d842629c72962f0fbebfc3a19"
-  integrity sha512-x+lf2AsmOBIsdzNnKydZ/fqTaJ8cDYMXpS0vCun56iTax4qq5r/8eF7Y7nWTyVWjl3eI24NmuEwnJeSqPHzbcA==
+"@noir-lang/noir_js@0.22.0-d025731.nightly":
+  version "0.22.0-d025731.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/noir_js/-/noir_js-0.22.0-d025731.nightly.tgz#2bbbb6d8570d2bc70aac076bc07e38b605f01686"
+  integrity sha512-cASZsZOq6a2m+giSVZUpAMjAnp1xlRfvvA1vPqOuvPh1cgHhfDmQ1PRqEWQzxL8XpFeoEljOAMv48dKF2lNOaA==
   dependencies:
-    "@noir-lang/acvm_js" "0.35.0-a1f6343.nightly"
-    "@noir-lang/noirc_abi" "0.19.4-a1f6343.nightly"
-    "@noir-lang/types" "0.19.4-a1f6343.nightly"
+    "@noir-lang/acvm_js" "0.38.0-d025731.nightly"
+    "@noir-lang/noirc_abi" "0.22.0-d025731.nightly"
+    "@noir-lang/types" "0.22.0-d025731.nightly"
 
-"@noir-lang/noirc_abi@0.19.4-a1f6343.nightly":
-  version "0.19.4-a1f6343.nightly"
-  resolved "https://registry.yarnpkg.com/@noir-lang/noirc_abi/-/noirc_abi-0.19.4-a1f6343.nightly.tgz#83a71f390ad174e56dcb790543c6c2097a6a6a44"
-  integrity sha512-osSwCYVnTY2EYWnzjbFCb0lmzeUMX+l4fkJVZRY7XSF6E5JxnXHRBTvb4llOljhvfC4WamL4mj/4OdZxu3r8Ww==
+"@noir-lang/noirc_abi@0.22.0-d025731.nightly":
+  version "0.22.0-d025731.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/noirc_abi/-/noirc_abi-0.22.0-d025731.nightly.tgz#a5ad87f572d1d5da76e2cf9daeca65ff59dea688"
+  integrity sha512-84Lgi2OYQB8m8gXGK9jFrqTG62rRoUXAzevwfe9qzsm+xEhDjMtwUlVzXoxZliCvluusUt7J9SbrlBEZPymBXA==
 
-"@noir-lang/types@0.19.4-a1f6343.nightly":
-  version "0.19.4-a1f6343.nightly"
-  resolved "https://registry.yarnpkg.com/@noir-lang/types/-/types-0.19.4-a1f6343.nightly.tgz#f9901c4c2b15c5cc4d7f89105ed118973f5046fd"
-  integrity sha512-NkZTHwjDuzWjsiOONvNOlDKp3qjwHxcPEFEZqDcSVQZyZPfun1Vw+0fsjjYEOcObfuo853pPWD/kDxyClHJ2oQ==
+"@noir-lang/types@0.22.0-d025731.nightly":
+  version "0.22.0-d025731.nightly"
+  resolved "https://registry.yarnpkg.com/@noir-lang/types/-/types-0.22.0-d025731.nightly.tgz#ae01935b9de79813eaf74dad1f44f6d8ffd9a532"
+  integrity sha512-69n5Hl/Yt2n+eK2fA7cL+hOsIyw387pKJJ9Aj/vidYJ2m1rNZ+iUPsX6FFGtEGv9irWrJE+QhOXzlYsiQk99SA==
   dependencies:
-    "@noir-lang/noirc_abi" "0.19.4-a1f6343.nightly"
+    "@noir-lang/noirc_abi" "0.22.0-d025731.nightly"
 
 "@open-draft/until@^1.0.3":
   version "1.0.3"
