@@ -1,4 +1,5 @@
 import express, { Request, Response } from "express";
+import { flatten } from "flat";
 import { traced } from "../../services/telemetryService";
 import { logger } from "../../util/logger";
 
@@ -12,12 +13,16 @@ export function initLogRoutes(app: express.Application): void {
    */
   app.post("/client-log", (req: Request, res: Response) => {
     traced("ClientLog", "log", async (span) => {
-      for (const entry of Object.entries(
-        req.body as Record<string, string | number>
-      )) {
-        span?.setAttribute("client." + entry[0], entry[1]);
+      const flattenedBody = flatten({ client: req.body }) as Record<
+        string,
+        string | number
+      >;
+
+      logger("[CLIENT_LOG]", JSON.stringify(flattenedBody));
+
+      for (const entry of Object.entries(flattenedBody)) {
+        span?.setAttribute(entry[0], entry[1]);
       }
-      logger("[CLIENT_LOG]", JSON.stringify(req.body));
     });
 
     res.sendStatus(200);
