@@ -266,7 +266,8 @@ export async function mergeStorage(
   // stats to include in a report to the server.
   // TODO(#1372): Detect and report on cases where objects differ with the
   // same ID.
-  let identical = true;
+  let identicalPCDs = true;
+  let identicalSubs = true;
   let anyPCDDiffs = false;
   let anySubDiffs = false;
 
@@ -281,7 +282,7 @@ export async function mergeStorage(
   if (
     (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
   ) {
-    identical = false;
+    identicalPCDs = false;
     const pcdMergePredicate = (pcd: PCD, remotePCDs: PCDCollection) => {
       if (remotePCDs.hasPCDWithId(pcd.id)) {
         return false;
@@ -325,7 +326,7 @@ export async function mergeStorage(
     (await localFields.subscriptions.getHash()) !=
     (await remoteFields.subscriptions.getHash())
   ) {
-    identical = false;
+    identicalSubs = false;
     const subMergeResults = remoteFields.subscriptions.merge(
       localFields.subscriptions
     );
@@ -350,7 +351,9 @@ export async function mergeStorage(
   // Report stats to the server for analysis.
   await requestLogToServer(appConfig.zupassServer, "sync-merge", {
     user: self.uuid,
-    identical: identical,
+    identical: identicalPCDs && identicalSubs,
+    identicalPCDs: identicalPCDs,
+    identicalSubs: identicalSubs,
     changedPcds: anyPCDDiffs,
     changedSubscriptions: anySubDiffs,
     pcdMergeStats: pcdMergeStats,
@@ -424,8 +427,15 @@ export async function downloadAndMergeStorage(
   }
   const { dlPCDs, dlSubscriptions, dlServerHash } = downloaded;
 
-  // Check if local app state has changes since the last server revision, in
-  // which case a merge is necessary.  Otherwise we keep the downloaded state.
+  // Check the hash of local app state to detect changes and determine if
+  // a merge is necessary.  We can skip the merge in 3 cases:
+  // - If there is no last known server state, this is a first-time download
+  //   on login, so local state should be overwritten.
+  // - If app-state is the same as last known server state, there have been
+  //   no local changes to merge.
+  // - If app-state is the same as downloaded state, the merge inputs are
+  //   identical so there is no need to merge.
+  // If merge is skipped, we take the downloaded state as the new state.
   let [newPCDs, newSubscriptions] = [dlPCDs, dlSubscriptions];
   if (knownServerRevision !== undefined && knownServerHash !== undefined) {
     const appStorage = await serializeStorage(
@@ -433,7 +443,10 @@ export async function downloadAndMergeStorage(
       appPCDs,
       appSubscriptions
     );
-    if (appStorage.storageHash !== knownServerHash) {
+    if (
+      appStorage.storageHash !== dlServerHash &&
+      appStorage.storageHash !== knownServerHash
+    ) {
       console.warn("[SYNC] revision conflict on download needs merge!");
       const mergeResult = await mergeStorage(
         { pcds: appPCDs, subscriptions: appSubscriptions },
