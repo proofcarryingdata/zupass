@@ -132,11 +132,8 @@ export interface PCDPackage<
  * card and, optionally, a header (used only when {@link PCDPackage.getDisplayOptions} does
  * not return a header).
  *
- * @typeParam {@link C} the type of {@link PCD.claim} for the {@link PCD} encapsulated
- *   by this {@link PCDUI}
- *
- * @typeParam {@link P} the type of {@link PCD.proof} for the {@link PCD} encapsulated
- *   by this {@link PCDUI}
+ * @typeParam {@link P} the type of {@link PCD} rendered by this {@link PCDUI}
+ * @typeParam {@link E} any extended props required to render the {@link PCD} card
  */
 
 export interface PCDUI<P extends PCD, E = unknown> {
