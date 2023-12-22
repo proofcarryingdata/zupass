@@ -71,7 +71,6 @@ const main = async () => {
         ],
         name: relativePaths[p],
         initialRun: false,
-        interruptible: true,
         onChange: async ({ spawn, files }) => {
           console.log(
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
