@@ -39,8 +39,15 @@ export function TicketQR({
 }: { pcd: EdDSATicketPCD; zk: boolean } & EdDSATicketPCDCardProps) {
   const generate = useCallback(async () => {
     if (idBasedVerifyURL && !zk) {
-      // ID-based verification is just a URL with the ticket ID in it
-      return makeIdBasedVerifyLink(idBasedVerifyURL, pcd.claim.ticket.ticketId);
+      // For ID-based verification, we encode the ID with a timestamp to
+      // mitigate QR code re-use.
+      const encodedId = Buffer.from(
+        JSON.stringify({
+          ticketId: pcd.claim.ticket.ticketId,
+          timestamp: Date.now().toString()
+        })
+      ).toString("base64");
+      return makeIdBasedVerifyLink(idBasedVerifyURL, encodedId);
     } else {
       // If we're not doing ID-based verification, then we need a ZK proof
       const serializedZKPCD = await makeSerializedZKProof(pcd, identityPCD);
