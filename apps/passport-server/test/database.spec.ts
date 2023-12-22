@@ -677,7 +677,8 @@ describe("database reads and writes", function () {
       knownProductId,
       testPublicKeyName,
       KnownPublicKeyType.EdDSA,
-      KnownTicketGroup.Zuconnect23
+      KnownTicketGroup.Zuconnect23,
+      "ZuConnect '23"
     );
 
     const knownTicketType = (await fetchKnownTicketByEventAndProductId(
@@ -714,7 +715,8 @@ describe("database reads and writes", function () {
       newProductId,
       testPublicKeyName,
       KnownPublicKeyType.EdDSA,
-      KnownTicketGroup.Zuconnect23
+      KnownTicketGroup.Zuconnect23,
+      "ZuConnect '23"
     );
 
     let knownTicketType = await fetchKnownTicketByEventAndProductId(
@@ -753,7 +755,8 @@ describe("database reads and writes", function () {
       knownProductId,
       testPublicKeyName,
       KnownPublicKeyType.EdDSA,
-      KnownTicketGroup.Zuconnect23
+      KnownTicketGroup.Zuconnect23,
+      "ZuConnect '23"
     );
 
     knownTicketType = (await fetchKnownTicketByEventAndProductId(

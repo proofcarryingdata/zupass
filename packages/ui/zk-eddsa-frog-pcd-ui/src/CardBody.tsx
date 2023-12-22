@@ -8,7 +8,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { ZKEdDSAFrogPCD } from "@pcd/zk-eddsa-frog-pcd";
 
-export const ZkEdDSAFrogPCDUI: PCDUI = {
+export const ZkEdDSAFrogPCDUI: PCDUI<ZKEdDSAFrogPCD> = {
   renderCardBody: ZKEdDSAFrogCardBody
 };
 

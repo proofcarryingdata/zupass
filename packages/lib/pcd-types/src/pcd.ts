@@ -132,25 +132,23 @@ export interface PCDPackage<
  * card and, optionally, a header (used only when {@link PCDPackage.getDisplayOptions} does
  * not return a header).
  *
- * @typeParam {@link C} the type of {@link PCD.claim} for the {@link PCD} encapsulated
- *   by this {@link PCDUI}
- *
- * @typeParam {@link P} the type of {@link PCD.proof} for the {@link PCD} encapsulated
- *   by this {@link PCDUI}
+ * @typeParam {@link P} the type of {@link PCD} rendered by this {@link PCDUI}
+ * @typeParam {@link E} any extended props required to render the {@link PCD} card
  */
-export interface PCDUI<C = any, P = any> {
+
+export interface PCDUI<P extends PCD, E = never> {
   /**
    * Intended to be used by Zupass. Given a {@link PCD}, renders the body of a card
    * that appears in Zupass representing this {@link PCD}.
    */
-  renderCardBody({ pcd }: { pcd: PCD<C, P> }): React.ReactElement;
+  renderCardBody({ pcd }: { pcd: P } & E): React.ReactElement;
 
   /**
    * If the {@link DisplayOptions#header} returned by {@link PCDPackage#getDisplayOptions}
    * is undefined, Zupass will call this function and use the result as the header of the
    * card.
    */
-  getHeader?({ pcd }: { pcd: PCD<C, P> }): React.ReactElement;
+  getHeader?({ pcd }: { pcd: P }): React.ReactElement;
 }
 
 /**

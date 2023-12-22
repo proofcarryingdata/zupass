@@ -228,6 +228,7 @@ export interface KnownTicketType {
   product_id: string;
   known_public_key_name: string;
   ticket_group: KnownTicketGroup;
+  event_name: string;
 }
 
 // Known ticket type with the actual public key

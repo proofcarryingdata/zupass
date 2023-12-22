@@ -4,7 +4,7 @@ import { PCDUI } from "@pcd/pcd-types";
 import Airtable from "airtable";
 import { useEffect, useState } from "react";
 
-export const HaLoNoncePCDUI: PCDUI = {
+export const HaLoNoncePCDUI: PCDUI<HaLoNoncePCD> = {
   renderCardBody: HaLoNonceCardBody,
   getHeader: Header
 };

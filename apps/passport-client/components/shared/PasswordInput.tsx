@@ -1,3 +1,4 @@
+import { icons } from "@pcd/passport-ui";
 import {
   Dispatch,
   KeyboardEvent,
@@ -6,7 +7,6 @@ import {
 } from "react";
 import styled from "styled-components";
 import { BigInput } from "../core";
-import { icons } from "../icons";
 import PasswordStrengthProgress from "./PasswordStrengthProgress";
 
 interface SetPasswordInputProps {

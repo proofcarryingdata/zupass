@@ -1,6 +1,6 @@
+import { icons } from "@pcd/passport-ui";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { icons } from "../icons/index";
 
 export function ScreenNavigation({ to, label }: { to: string; label: string }) {
   return (

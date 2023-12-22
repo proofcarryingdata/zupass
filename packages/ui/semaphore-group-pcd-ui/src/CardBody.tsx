@@ -8,7 +8,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreGroupPCD } from "@pcd/semaphore-group-pcd";
 
-export const SemaphoreGroupPCDUI: PCDUI = {
+export const SemaphoreGroupPCDUI: PCDUI<SemaphoreGroupPCD> = {
   renderCardBody: SemaphoreGroupCardBody
 };
 

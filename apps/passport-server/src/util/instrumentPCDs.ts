@@ -38,12 +38,14 @@ function instrumentSingleFunction(
   const packageAsAny = pcdPackage as any;
   const uninstrumentedFunction = packageAsAny[functionName];
 
-  packageAsAny[functionName] = (...args: any[]): any => {
-    return traced("PCDPackage", functionName, async (span) => {
-      span?.setAttribute("pcd_package_name", pcdPackage.name);
-      span?.setAttribute("function_name", functionName);
+  if (uninstrumentedFunction) {
+    packageAsAny[functionName] = (...args: any[]): any => {
+      return traced("PCDPackage", functionName, async (span) => {
+        span?.setAttribute("pcd_package_name", pcdPackage.name);
+        span?.setAttribute("function_name", functionName);
 
-      return uninstrumentedFunction(...args);
-    });
-  };
+        return uninstrumentedFunction(...args);
+      });
+    };
+  }
 }

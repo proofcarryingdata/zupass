@@ -11,7 +11,7 @@ import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useEffect, useState } from "react";
 
-export const EthereumOwnershipPCDUI: PCDUI = {
+export const EthereumOwnershipPCDUI: PCDUI<EthereumOwnershipPCD> = {
   renderCardBody: EthereumOwnershipCardBody
 };
 

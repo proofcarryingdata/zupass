@@ -1106,7 +1106,7 @@ export class IssuanceService {
    * standard QR code, but only Zuconnect/Zuzalu '23 tickets will be returned
    * as verified.
    */
-  private async verifyZuconnect23OrZuzalu23Ticket(
+  private async verifyKnownTicket(
     serializedPCD: SerializedPCD
   ): Promise<VerifyTicketResult> {
     if (!serializedPCD.type) {
@@ -1197,7 +1197,8 @@ export class IssuanceService {
         value: {
           verified: true,
           publicKeyName: knownTicketType.known_public_key_name,
-          group: knownTicketType.ticket_group
+          group: knownTicketType.ticket_group,
+          eventName: knownTicketType.event_name
         }
       };
     } else {
@@ -1205,12 +1206,17 @@ export class IssuanceService {
         success: true,
         value: {
           verified: false,
-          message: "Not a valid ticket"
+          message: "Not a recognized ticket"
         }
       };
     }
   }
 
+  /**
+   * Only Zuzalu '23 and Zuconnect '23 tickets support this verification
+   * mechanism, which exists to support short verification URLs for small
+   * QR codes, and relies on server-side knowledge of ticket details.
+   */
   private async verifyZuconnect23OrZuzalu23TicketById(
     ticketId: string,
     timestamp: string
@@ -1241,7 +1247,8 @@ export class IssuanceService {
           ticketName:
             zuconnectTicket.product_id === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
               ? zuconnectTicket.extra_info.join("\n")
-              : zuconnectProductIdToName(zuconnectTicket.product_id)
+              : zuconnectProductIdToName(zuconnectTicket.product_id),
+          eventName: "ZuConnect '23"
         }
       };
     } else {
@@ -1262,7 +1269,13 @@ export class IssuanceService {
                 : zuzaluTicket.role === ZuzaluUserRole.Organizer
                 ? ZUZALU_23_ORGANIZER_PRODUCT_ID
                 : ZUZALU_23_RESIDENT_PRODUCT_ID,
-            ticketName: undefined
+            ticketName:
+              zuzaluTicket.role === ZuzaluUserRole.Visitor
+                ? "Visitor"
+                : zuzaluTicket.role === ZuzaluUserRole.Organizer
+                ? "Organizer"
+                : "Resident",
+            eventName: "Zuzalu '23"
           }
         };
       }
@@ -1279,7 +1292,7 @@ export class IssuanceService {
   ): Promise<VerifyTicketResult> {
     const pcdStr = req.pcd;
     try {
-      return this.verifyZuconnect23OrZuzalu23Ticket(JSON.parse(pcdStr));
+      return this.verifyKnownTicket(JSON.parse(pcdStr));
     } catch (e) {
       throw new PCDHTTPError(500, "The ticket could not be verified", {
         cause: e
@@ -1442,7 +1455,8 @@ async function setupKnownTicketTypes(
     ZUZALU_23_VISITOR_PRODUCT_ID,
     ZUPASS_TICKET_PUBLIC_KEY_NAME,
     KnownPublicKeyType.EdDSA,
-    KnownTicketGroup.Zuzalu23
+    KnownTicketGroup.Zuzalu23,
+    "Zuzalu '23"
   );
 
   await setKnownTicketType(
@@ -1452,7 +1466,8 @@ async function setupKnownTicketTypes(
     ZUZALU_23_RESIDENT_PRODUCT_ID,
     ZUPASS_TICKET_PUBLIC_KEY_NAME,
     KnownPublicKeyType.EdDSA,
-    KnownTicketGroup.Zuzalu23
+    KnownTicketGroup.Zuzalu23,
+    "Zuzalu '23"
   );
 
   await setKnownTicketType(
@@ -1462,7 +1477,8 @@ async function setupKnownTicketTypes(
     ZUZALU_23_ORGANIZER_PRODUCT_ID,
     ZUPASS_TICKET_PUBLIC_KEY_NAME,
     KnownPublicKeyType.EdDSA,
-    KnownTicketGroup.Zuzalu23
+    KnownTicketGroup.Zuzalu23,
+    "Zuzalu '23"
   );
 
   // Store Zuconnect ticket types
@@ -1474,7 +1490,8 @@ async function setupKnownTicketTypes(
       id,
       ZUPASS_TICKET_PUBLIC_KEY_NAME,
       KnownPublicKeyType.EdDSA,
-      KnownTicketGroup.Zuconnect23
+      KnownTicketGroup.Zuconnect23,
+      "ZuConnect '23"
     );
   }
 }

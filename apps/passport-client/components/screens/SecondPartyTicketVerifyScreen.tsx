@@ -5,7 +5,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import { decodeQRPayload } from "@pcd/passport-ui";
+import { decodeQRPayload, icons } from "@pcd/passport-ui";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
@@ -19,10 +19,12 @@ import {
 import { devconnectCheckByIdWithOffline } from "../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
-import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
-import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
-import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
+import {
+  CardContainerExpanded,
+  CardHeader,
+  CardOutlineExpanded
+} from "../shared/PCDCard";
 import {
   TicketError,
   UserReadyForCheckin
@@ -43,6 +45,7 @@ type VerifyResult =
       publicKeyName: string;
       ticketName?: string;
       ticketId: string;
+      eventName: string;
     }
   | {
       outcome: VerifyOutcome.NotVerified;
@@ -80,7 +83,11 @@ export function SecondPartyTicketVerifyScreen() {
 
   const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload);
 
+  // We always perform a 'verify' request on all tickets that reach this point
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
+  // We also 'check' Devconnect tickets, and *only* Devconnect tickets
+  // This returns different information, e.g. about whether the scanning user
+  // has permission to perform check-in on the ticket.
   const [checkResult, setCheckResult] = useState<
     CheckTicketByIdResult | undefined
   >();
@@ -96,6 +103,7 @@ export function SecondPartyTicketVerifyScreen() {
     ticketId = pcd.claim.partialTicket.ticketId;
   }
 
+  // Verify the ticket and record the result
   useEffect(() => {
     (async () => {
       if (pcd) {
@@ -109,6 +117,7 @@ export function SecondPartyTicketVerifyScreen() {
     })();
   }, [setVerifyResult, id, pcd, serializedPCD]);
 
+  // If this is a Devconnect ticket, check the ticket
   useEffect(() => {
     (async () => {
       if (pcd && isZKEdDSAEventTicketPCD(pcd) && isDevconnectTicket(pcd)) {
@@ -125,8 +134,17 @@ export function SecondPartyTicketVerifyScreen() {
 
   let connectionError = false;
 
+  // Have we performed all of the verify/check actions we need to?
   const checkAndVerifyComplete =
-    verifyResult !== undefined && (!pcd || checkResult !== undefined);
+    // If we have a verify result
+    verifyResult !== undefined &&
+    // If we received only a ticket ID, that means that the ticket is not a
+    // Devconnect ticket, because ID-only Devconnect QR codes go to a different
+    // route.
+    // So, if there's no PCD, or there *is* a PCD but it's not a Devconnect
+    // one, or if we have also completed the 'check' request, then we have
+    // completed all of the requests we need to begin rendering results.
+    (!pcd || !isDevconnectTicket(pcd) || checkResult !== undefined);
 
   let icon = icons.verifyInProgress;
 
@@ -265,10 +283,9 @@ export function SecondPartyTicketVerifyScreen() {
         )}
         {verifyResult.outcome === VerifyOutcome.KnownTicketType && (
           <VerifiedAndKnownTicket
-            productId={verifyResult.productId}
-            category={verifyResult.group}
             publicKeyName={verifyResult.publicKeyName}
             ticketName={verifyResult.ticketName}
+            eventName={verifyResult.eventName}
           />
         )}
       </Placeholder>
@@ -307,29 +324,29 @@ function WaitingForCheckAndVerify() {
  * ticket, display a ticket-specific message to the user.
  */
 function VerifiedAndKnownTicket({
-  productId,
   publicKeyName,
-  category,
-  ticketName
+  ticketName,
+  eventName
 }: {
-  productId: string;
   publicKeyName: string;
-  category: KnownTicketGroup;
   ticketName: string | undefined;
+  eventName: string;
 }) {
-  // Devconnect tickets with the "simple" QR code have a separate "check-in"
-  // flow and never come here.
-  if (category === KnownTicketGroup.Zuzalu23) {
-    return <ZuzaluKnownTicketDetails publicKeyName={publicKeyName} />;
-  } else if (category === KnownTicketGroup.Zuconnect23) {
-    return (
-      <ZuconnectKnownTicketDetails
-        productId={productId}
-        publicKeyName={publicKeyName}
-        ticketName={ticketName}
-      />
-    );
-  }
+  return (
+    <CardContainerExpanded>
+      <CardOutlineExpanded>
+        <CardHeader col="var(--accent-lite)">
+          <VerifyLine>Verified {eventName} Ticket</VerifyLine>
+          <VerifyLine>
+            {ticketName?.split("\n").map((line) => {
+              return <NameLine>{line}</NameLine>;
+            })}
+          </VerifyLine>
+          <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
+        </CardHeader>
+      </CardOutlineExpanded>
+    </CardContainerExpanded>
+  );
 }
 
 function useDecodedPayload(encodedQRPayload: string) {
@@ -388,7 +405,8 @@ async function verify(
           group: result.value.group,
           ticketId: isEdDSATicketPCD(pcd)
             ? pcd.claim.ticket.ticketId
-            : pcd.claim.partialTicket.ticketId
+            : pcd.claim.partialTicket.ticketId,
+          eventName: result.value.eventName
         };
       }
     }
@@ -419,7 +437,8 @@ async function verifyById(
       publicKeyName: result.value.publicKeyName,
       group: result.value.group,
       ticketName: result.value.ticketName,
-      ticketId
+      ticketId,
+      eventName: result.value.eventName
     };
   }
 
@@ -487,4 +506,13 @@ const ZKNoticeContainer = styled.div`
 const ZKCheckinNotice = styled.div`
   margin-bottom: 16px;
   color: var(--accent-dark);
+`;
+
+const VerifyLine = styled.div`
+  text-transform: capitalize;
+  margin: 12px 0px;
+`;
+
+const NameLine = styled.p`
+  margin: 2px 0px;
 `;
