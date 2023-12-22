@@ -106,12 +106,6 @@ export interface IFrogData {
 }
 
 /**
- * Interface containing the arguments that 3rd parties use to
- * initialize this PCD package.
- */
-export interface EdDSAFrogPCDInitArgs {}
-
-/**
  * Defines the essential parameters required for creating an {@link EdDSAFrogPCD}.
  */
 export type EdDSAFrogPCDArgs = {
@@ -298,8 +292,7 @@ export function isEdDSAFrogPCD(pcd: PCD): pcd is EdDSAFrogPCD {
 export const EdDSAFrogPCDPackage: PCDPackage<
   EdDSAFrogPCDClaim,
   EdDSAFrogPCDProof,
-  EdDSAFrogPCDArgs,
-  EdDSAFrogPCDInitArgs
+  EdDSAFrogPCDArgs
 > = {
   name: EdDSAFrogPCDTypeName,
   getDisplayOptions,

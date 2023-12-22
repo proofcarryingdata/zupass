@@ -42,14 +42,6 @@ function EdDSATicketPCDCardBody({
 }: {
   pcd: EdDSATicketPCD;
 } & EdDSATicketPCDCardProps) {
-  // const ticketCategory = pcd.claim.ticket.ticketCategory;
-
-  // if (ticketCategory === TicketCategory.Devconnect) {
-  //   return <DevconnectCardBody pcd={pcd} />;
-  // } else if (ticketCategory === TicketCategory.ZuConnect) {
-  //   return <ZKTicketPCDCard pcd={pcd} />;
-  // }
-
   const hasImage = pcd.claim.ticket.imageUrl !== undefined;
 
   const ticketData = getEdDSATicketData(pcd);

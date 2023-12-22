@@ -2,7 +2,7 @@ import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { RSAImagePCD } from "@pcd/rsa-image-pcd";
 
-export const RSAImagePCDUI: PCDUI<RSAImagePCD, unknown> = {
+export const RSAImagePCDUI: PCDUI<RSAImagePCD> = {
   renderCardBody: RSAImageCardBody
 };
 

@@ -74,12 +74,6 @@ export interface ITicketData {
 }
 
 /**
- * Interface containing the arguments that 3rd parties use to
- * initialize this PCD package.
- */
-export interface EdDSATicketPCDInitArgs {}
-
-/**
  * Defines the essential parameters required for creating an {@link EdDSATicketPCD}.
  */
 export type EdDSATicketPCDArgs = {
@@ -279,8 +273,7 @@ export function isEdDSATicketPCD(pcd: PCD): pcd is EdDSATicketPCD {
 export const EdDSATicketPCDPackage: PCDPackage<
   EdDSATicketPCDClaim,
   EdDSATicketPCDProof,
-  EdDSATicketPCDArgs,
-  EdDSATicketPCDInitArgs
+  EdDSATicketPCDArgs
 > = {
   name: EdDSATicketPCDTypeName,
   getDisplayOptions,

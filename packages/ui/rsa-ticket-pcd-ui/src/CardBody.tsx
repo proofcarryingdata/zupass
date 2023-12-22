@@ -13,7 +13,7 @@ import {
 } from "@pcd/rsa-ticket-pcd";
 import { useCallback } from "react";
 
-export const RSATicketPCDUI: PCDUI<RSATicketPCD, unknown> = {
+export const RSATicketPCDUI: PCDUI<RSATicketPCD> = {
   renderCardBody: RSATicketCardBody
 };
 

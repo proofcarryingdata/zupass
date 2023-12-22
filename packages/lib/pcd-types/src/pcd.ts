@@ -136,7 +136,7 @@ export interface PCDPackage<
  * @typeParam {@link E} any extended props required to render the {@link PCD} card
  */
 
-export interface PCDUI<P extends PCD, E = unknown> {
+export interface PCDUI<P extends PCD, E = never> {
   /**
    * Intended to be used by Zupass. Given a {@link PCD}, renders the body of a card
    * that appears in Zupass representing this {@link PCD}.

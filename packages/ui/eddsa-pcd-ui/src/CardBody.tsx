@@ -8,7 +8,7 @@ import {
 } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 
-export const EdDSAPCDUI: PCDUI<EdDSAPCD, unknown> = {
+export const EdDSAPCDUI: PCDUI<EdDSAPCD> = {
   renderCardBody: EdDSACardBody
 };
 

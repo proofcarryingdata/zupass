@@ -2,7 +2,7 @@ import { FieldLabel, HiddenText, Separator, styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 
-export const SemaphoreIdentityPCDUI: PCDUI<SemaphoreIdentityPCD, unknown> = {
+export const SemaphoreIdentityPCDUI: PCDUI<SemaphoreIdentityPCD> = {
   renderCardBody: SemaphoreIdentityCardBody
 };
 

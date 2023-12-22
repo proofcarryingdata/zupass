@@ -8,7 +8,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { ZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 
-export const ZKEdDSAEventTicketPCDUI: PCDUI<ZKEdDSAEventTicketPCD, unknown> = {
+export const ZKEdDSAEventTicketPCDUI: PCDUI<ZKEdDSAEventTicketPCD> = {
   renderCardBody: ZKEdDSAEventTicketCardBody
 };
 
