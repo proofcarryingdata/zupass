@@ -20,8 +20,11 @@ import { devconnectCheckByIdWithOffline } from "../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
-import { ZuconnectKnownTicketDetails } from "../shared/cards/ZuconnectTicket";
-import { ZuzaluKnownTicketDetails } from "../shared/cards/ZuzaluTicket";
+import {
+  CardContainerExpanded,
+  CardHeader,
+  CardOutlineExpanded
+} from "../shared/PCDCard";
 import {
   TicketError,
   UserReadyForCheckin
@@ -42,6 +45,7 @@ type VerifyResult =
       publicKeyName: string;
       ticketName?: string;
       ticketId: string;
+      eventName: string;
     }
   | {
       outcome: VerifyOutcome.NotVerified;
@@ -125,7 +129,8 @@ export function SecondPartyTicketVerifyScreen() {
   let connectionError = false;
 
   const checkAndVerifyComplete =
-    verifyResult !== undefined && (!pcd || checkResult !== undefined);
+    verifyResult !== undefined &&
+    (!pcd || !isDevconnectTicket(pcd) || checkResult !== undefined);
 
   let icon = icons.verifyInProgress;
 
@@ -264,10 +269,9 @@ export function SecondPartyTicketVerifyScreen() {
         )}
         {verifyResult.outcome === VerifyOutcome.KnownTicketType && (
           <VerifiedAndKnownTicket
-            productId={verifyResult.productId}
-            category={verifyResult.group}
             publicKeyName={verifyResult.publicKeyName}
             ticketName={verifyResult.ticketName}
+            eventName={verifyResult.eventName}
           />
         )}
       </Placeholder>
@@ -306,29 +310,29 @@ function WaitingForCheckAndVerify() {
  * ticket, display a ticket-specific message to the user.
  */
 function VerifiedAndKnownTicket({
-  productId,
   publicKeyName,
-  category,
-  ticketName
+  ticketName,
+  eventName
 }: {
-  productId: string;
   publicKeyName: string;
-  category: KnownTicketGroup;
   ticketName: string | undefined;
+  eventName: string;
 }) {
-  // Devconnect tickets with the "simple" QR code have a separate "check-in"
-  // flow and never come here.
-  if (category === KnownTicketGroup.Zuzalu23) {
-    return <ZuzaluKnownTicketDetails publicKeyName={publicKeyName} />;
-  } else if (category === KnownTicketGroup.Zuconnect23) {
-    return (
-      <ZuconnectKnownTicketDetails
-        productId={productId}
-        publicKeyName={publicKeyName}
-        ticketName={ticketName}
-      />
-    );
-  }
+  return (
+    <CardContainerExpanded>
+      <CardOutlineExpanded>
+        <CardHeader col="var(--accent-lite)">
+          <VerifyLine>Verified {eventName} Ticket</VerifyLine>
+          <VerifyLine>
+            {ticketName?.split("\n").map((line) => {
+              return <NameLine>{line}</NameLine>;
+            })}
+          </VerifyLine>
+          <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
+        </CardHeader>
+      </CardOutlineExpanded>
+    </CardContainerExpanded>
+  );
 }
 
 function useDecodedPayload(encodedQRPayload: string) {
@@ -387,7 +391,8 @@ async function verify(
           group: result.value.group,
           ticketId: isEdDSATicketPCD(pcd)
             ? pcd.claim.ticket.ticketId
-            : pcd.claim.partialTicket.ticketId
+            : pcd.claim.partialTicket.ticketId,
+          eventName: result.value.eventName
         };
       }
     }
@@ -418,7 +423,8 @@ async function verifyById(
       publicKeyName: result.value.publicKeyName,
       group: result.value.group,
       ticketName: result.value.ticketName,
-      ticketId
+      ticketId,
+      eventName: result.value.eventName
     };
   }
 
@@ -486,4 +492,13 @@ const ZKNoticeContainer = styled.div`
 const ZKCheckinNotice = styled.div`
   margin-bottom: 16px;
   color: var(--accent-dark);
+`;
+
+const VerifyLine = styled.div`
+  text-transform: capitalize;
+  margin: 12px 0px;
+`;
+
+const NameLine = styled.p`
+  margin: 2px 0px;
 `;

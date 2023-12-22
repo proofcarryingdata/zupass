@@ -370,7 +370,8 @@ export interface VerifyTicketRequest {
 export const enum KnownTicketGroup {
   Devconnect23 = "Devconnect23",
   Zuzalu23 = "Zuzalu23",
-  Zuconnect23 = "Zuconnect23"
+  Zuconnect23 = "Zuconnect23",
+  Other = "Other"
 }
 
 /**
@@ -381,6 +382,7 @@ export type VerifyTicketResponseValue =
       verified: true;
       publicKeyName: string;
       group: KnownTicketGroup;
+      eventName: string;
     }
   | {
       verified: false;
@@ -409,6 +411,7 @@ export type VerifyTicketByIdResponseValue =
       group: KnownTicketGroup;
       productId: string;
       ticketName?: string;
+      eventName: string;
     }
   | {
       verified: false;

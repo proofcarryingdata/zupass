@@ -227,7 +227,8 @@ export class DevconnectPretixSyncService {
         ZUPASS_TICKET_PUBLIC_KEY_NAME,
         KnownPublicKeyType.EdDSA,
         // This works since we're only using this sync service for Devconnect
-        KnownTicketGroup.Devconnect23
+        KnownTicketGroup.Devconnect23,
+        "Devconnect '23"
       );
 
       savedProductIds.push(product.product_id);
