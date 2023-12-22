@@ -1,3 +1,4 @@
+import { icons } from "@pcd/passport-ui";
 import React, { ReactNode, useCallback, useEffect } from "react";
 import styled, { createGlobalStyle, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
@@ -5,7 +6,6 @@ import { AppState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
-import { icons } from "../icons";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";

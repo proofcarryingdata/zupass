@@ -77,25 +77,7 @@ export interface ITicketData {
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
  */
-export interface EdDSATicketPCDInitArgs {
-  /**
-   * This function lets the PCD Card Body UI create a QR code from a PCD, which,
-   * when scanned, directs a scanner to a webpage that verifies whether this PCD
-   * is valid.
-   */
-  makeEncodedVerifyLink?: (encodedPCD: string) => string;
-}
-
-// Stores the initialization arguments for this PCD Package, which are used by
-// either `prove` or `verify` to initialize the required objects the first time either is called.
-export let initArgs: EdDSATicketPCDInitArgs;
-
-/**
- * Initializes this {@link EdDSATicketPCDPackage}.
- */
-async function init(args: EdDSATicketPCDInitArgs): Promise<void> {
-  initArgs = args;
-}
+export interface EdDSATicketPCDInitArgs {}
 
 /**
  * Defines the essential parameters required for creating an {@link EdDSATicketPCD}.
@@ -164,10 +146,6 @@ export class EdDSATicketPCD
  * and deriving an {@link EdDSATicketPCDClaim} from the given {@link EdDSATicketPCDArgs}.
  */
 export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   if (!args.privateKey.value) {
     throw new Error("missing private key");
   }
@@ -208,10 +186,6 @@ export async function prove(args: EdDSATicketPCDArgs): Promise<EdDSATicketPCD> {
  * entity that signed the ticket is indeed the authority for that event.
  */
 export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const messageDerivedFromClaim = ticketDataToBigInts(pcd.claim.ticket);
 
   if (!_.isEqual(messageDerivedFromClaim, pcd.proof.eddsaPCD.claim.message)) {
@@ -229,10 +203,6 @@ export async function verify(pcd: EdDSATicketPCD): Promise<boolean> {
 export async function serialize(
   pcd: EdDSATicketPCD
 ): Promise<SerializedPCD<EdDSATicketPCD>> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const serializedEdDSAPCD = await EdDSAPCDPackage.serialize(
     pcd.proof.eddsaPCD
   );
@@ -253,10 +223,6 @@ export async function serialize(
  * @returns The deserialized version of the EdDSA Ticket PCD.
  */
 export async function deserialize(serialized: string): Promise<EdDSATicketPCD> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const deserializedWrapper = JSONBig().parse(serialized);
   const deserializedEdDSAPCD = await EdDSAPCDPackage.deserialize(
     deserializedWrapper.eddsaPCD.pcd
@@ -275,10 +241,6 @@ export async function deserialize(serialized: string): Promise<EdDSATicketPCD> {
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const ticketData = getEdDSATicketData(pcd);
   if (!ticketData) {
     return {
@@ -322,7 +284,6 @@ export const EdDSATicketPCDPackage: PCDPackage<
 > = {
   name: EdDSATicketPCDTypeName,
   getDisplayOptions,
-  init,
   prove,
   verify,
   serialize,

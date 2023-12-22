@@ -1,6 +1,6 @@
+import { icons } from "@pcd/passport-ui";
 import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
 import { CenterColumn, Spacer, SupportLink, TextCenter } from "../core";
-import { icons } from "../icons";
 
 export function InfoModal() {
   return (

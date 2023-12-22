@@ -109,25 +109,7 @@ export interface IFrogData {
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
  */
-export interface EdDSAFrogPCDInitArgs {
-  /**
-   * This function lets the PCD Card Body UI create a QR code from a PCD, which,
-   * when scanned, directs a scanner to a webpage that verifies whether this PCD
-   * is valid.
-   */
-  makeEncodedVerifyLink?: (encodedPCD: string) => string;
-}
-
-// Stores the initialization arguments for this PCD Package, which are used by
-// either `prove` or `verify` to initialize the required objects the first time either is called.
-export let initArgs: EdDSAFrogPCDInitArgs;
-
-/**
- * Initializes this {@link EdDSAFrogPCDPackage}.
- */
-async function init(args: EdDSAFrogPCDInitArgs): Promise<void> {
-  initArgs = args;
-}
+export interface EdDSAFrogPCDInitArgs {}
 
 /**
  * Defines the essential parameters required for creating an {@link EdDSAFrogPCD}.
@@ -194,10 +176,6 @@ export class EdDSAFrogPCD implements PCD<EdDSAFrogPCDClaim, EdDSAFrogPCDProof> {
  * and deriving an {@link EdDSAFrogPCDClaim} from the given {@link EdDSAFrogPCDArgs}.
  */
 export async function prove(args: EdDSAFrogPCDArgs): Promise<EdDSAFrogPCD> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   if (!args.privateKey.value) {
     throw new Error("missing private key");
   }
@@ -237,10 +215,6 @@ export async function prove(args: EdDSAFrogPCDArgs): Promise<EdDSAFrogPCD> {
  * entity that signed the claim and verify the authenticity of the entity.
  */
 export async function verify(pcd: EdDSAFrogPCD): Promise<boolean> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const messageDerivedFromClaim = frogDataToBigInts(pcd.claim.data);
 
   return (
@@ -257,10 +231,6 @@ export async function verify(pcd: EdDSAFrogPCD): Promise<boolean> {
 export async function serialize(
   pcd: EdDSAFrogPCD
 ): Promise<SerializedPCD<EdDSAFrogPCD>> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const serializedEdDSAPCD = await EdDSAPCDPackage.serialize(
     pcd.proof.eddsaPCD
   );
@@ -281,10 +251,6 @@ export async function serialize(
  * @returns The deserialized version of the EdDSA Frog PCD.
  */
 export async function deserialize(serialized: string): Promise<EdDSAFrogPCD> {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const deserializedWrapper = JSONBig().parse(serialized);
   const deserializedEdDSAPCD = await EdDSAPCDPackage.deserialize(
     deserializedWrapper.eddsaPCD.pcd
@@ -303,10 +269,6 @@ export async function deserialize(serialized: string): Promise<EdDSAFrogPCD> {
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: EdDSAFrogPCD): DisplayOptions {
-  if (!initArgs) {
-    throw new Error("package not initialized");
-  }
-
   const frogData = getEdDSAFrogData(pcd);
   if (!frogData) {
     return {
@@ -341,7 +303,6 @@ export const EdDSAFrogPCDPackage: PCDPackage<
 > = {
   name: EdDSAFrogPCDTypeName,
   getDisplayOptions,
-  init,
   prove,
   verify,
   serialize,

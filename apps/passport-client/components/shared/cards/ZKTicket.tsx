@@ -8,7 +8,8 @@ import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
 import {
   QRDisplayWithRegenerateAndStorage,
   Spacer,
-  encodeQRPayload
+  encodeQRPayload,
+  icons
 } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -20,7 +21,6 @@ import { makeEncodedVerifyLink } from "../../../src/qr";
 import { TextCenter } from "../../core";
 import { RedactedText } from "../../core/RedactedText";
 import { ToggleSwitch } from "../../core/Toggle";
-import { icons } from "../../icons";
 
 function makeTicketIdVerifyLink(ticketId: string): string {
   const link = `${window.location.origin}/#/verify?id=${encodeURIComponent(

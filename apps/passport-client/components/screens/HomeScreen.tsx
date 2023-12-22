@@ -1,4 +1,5 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import { icons } from "@pcd/passport-ui";
 import {
   getNameFromPath,
   getParentFolder,
@@ -22,7 +23,6 @@ import {
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { isFrogCryptoFolder } from "../../src/util";
 import { Placeholder, Spacer } from "../core";
-import { icons } from "../icons";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";

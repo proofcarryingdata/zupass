@@ -8,7 +8,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { RSAPCD } from "@pcd/rsa-pcd";
 
-export const RSAPCDUI: PCDUI = {
+export const RSAPCDUI: PCDUI<RSAPCD, unknown> = {
   renderCardBody: RSACardBody
 };
 

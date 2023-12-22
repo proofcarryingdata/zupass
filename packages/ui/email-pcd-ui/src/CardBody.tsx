@@ -2,7 +2,7 @@ import { EmailPCD, getEmailAddress } from "@pcd/email-pcd";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 
-export const EmailPCDUI: PCDUI = {
+export const EmailPCDUI: PCDUI<EmailPCD, unknown> = {
   renderCardBody: EmailCardBody
 };
 

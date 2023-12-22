@@ -8,7 +8,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { WebAuthnPCD } from "@pcd/webauthn-pcd/src/WebAuthnPCD";
 
-export const WebAuthnPCDUI: PCDUI = {
+export const WebAuthnPCDUI: PCDUI<WebAuthnPCD, unknown> = {
   renderCardBody: WebAuthnCardBody
 };
 

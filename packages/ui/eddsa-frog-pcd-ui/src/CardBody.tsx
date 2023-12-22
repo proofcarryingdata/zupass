@@ -16,7 +16,7 @@ import { PCDUI } from "@pcd/pcd-types";
 import _ from "lodash";
 import { useCallback, useEffect, useMemo, useState } from "react";
 
-export const EdDSAFrogPCDUI: PCDUI = {
+export const EdDSAFrogPCDUI: PCDUI<EdDSAFrogPCD, unknown> = {
   renderCardBody: EdDSAFrogCardBody,
   getHeader: Header
 };

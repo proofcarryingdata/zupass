@@ -9,7 +9,7 @@ import {
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 
-export const SemaphoreSignaturePCDUI: PCDUI = {
+export const SemaphoreSignaturePCDUI: PCDUI<SemaphoreSignaturePCD, unknown> = {
   renderCardBody: SemaphoreSignatureCardBody
 };
 
