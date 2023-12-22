@@ -83,7 +83,11 @@ export function SecondPartyTicketVerifyScreen() {
 
   const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload);
 
+  // We always perform a 'verify' request on all tickets that reach this point
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
+  // We also 'check' Devconnect tickets, and *only* Devconnect tickets
+  // This returns different information, e.g. about whether the scanning user
+  // has permission to perform check-in on the ticket.
   const [checkResult, setCheckResult] = useState<
     CheckTicketByIdResult | undefined
   >();
@@ -99,6 +103,7 @@ export function SecondPartyTicketVerifyScreen() {
     ticketId = pcd.claim.partialTicket.ticketId;
   }
 
+  // Verify the ticket and record the result
   useEffect(() => {
     (async () => {
       if (pcd) {
@@ -112,6 +117,7 @@ export function SecondPartyTicketVerifyScreen() {
     })();
   }, [setVerifyResult, id, pcd, serializedPCD]);
 
+  // If this is a Devconnect ticket, check the ticket
   useEffect(() => {
     (async () => {
       if (pcd && isZKEdDSAEventTicketPCD(pcd) && isDevconnectTicket(pcd)) {
@@ -128,8 +134,16 @@ export function SecondPartyTicketVerifyScreen() {
 
   let connectionError = false;
 
+  // Have we performed all of the verify/check actions we need to?
   const checkAndVerifyComplete =
+    // If we have a verify result
     verifyResult !== undefined &&
+    // If we received only a ticket ID, that means that the ticket is not a
+    // Devconnect ticket, because ID-only Devconnect QR codes go to a different
+    // route.
+    // So, if there's no PCD, or there *is* a PCD but it's not a Devconnect
+    // one, or if we have also completed the 'check' request, then we have
+    // completed all of the requests we need to begin rendering results.
     (!pcd || !isDevconnectTicket(pcd) || checkResult !== undefined);
 
   let icon = icons.verifyInProgress;
