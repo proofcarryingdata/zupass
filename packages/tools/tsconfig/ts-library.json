@@ -3,6 +3,7 @@
   "display": "Typescript Library",
   "extends": "./base.json",
   "compilerOptions": {
+    "composite": true,
     "jsx": "react-jsx",
     "lib": ["ES2015", "DOM"],
     "module": "CommonJS",

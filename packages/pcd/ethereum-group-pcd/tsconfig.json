@@ -1,5 +1,26 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "./test"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": [
+    ".",
+    "./test"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../semaphore-identity-pcd"
+    },
+    {
+      "path": "../semaphore-signature-pcd"
+    },
+    {
+      "path": "../../lib/util"
+    }
+  ]
 }

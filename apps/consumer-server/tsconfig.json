@@ -1,7 +1,12 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": ["**/*.ts", "**/*.d.ts"],
-  "exclude": ["node_modules"],
+  "include": [
+    "**/*.ts",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "compilerOptions": {
     // We need to tell TypeScript to *only* include @types/mocha and not
     // indiscriminately include all @types/* packages, because one of our
@@ -14,5 +19,22 @@
       "./node_modules/@types/",
       "../../node_modules/@types/"
     ]
-  }
+  },
+  "references": [
+    {
+      "path": "../../packages/pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../packages/lib/passport-interface"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-signature-pcd"
+    },
+    {
+      "path": "../../packages/lib/util"
+    },
+    {
+      "path": "../../packages/pcd/zk-eddsa-event-ticket-pcd"
+    }
+  ]
 }

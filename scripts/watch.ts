@@ -9,6 +9,7 @@
  * to reload/rebuild when they detect changes in their dependencies.
  */
 
+import * as fs from "fs";
 import path from "path";
 import { watch } from "turbowatch";
 import {
@@ -52,7 +53,7 @@ const main = async () => {
     project: workspaceRoot,
     // Detect changes in any of the @pcd/ packages
     // This will ignore changes in apps, which are handled elsewhere
-    triggers: packageGraph.packages
+    triggers: [...new Set(packageGraph.packages).values()]
       .filter((p) => p.startsWith("@pcd/"))
       .map((p) => ({
         // Only trigger a rebuild if matching files change
@@ -75,6 +76,26 @@ const main = async () => {
           console.log(
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
           );
+
+          const pkg = packageInfos[p];
+          const pkgPath = path.dirname(pkg.packageJsonPath);
+
+          const deps = [
+            ...Object.keys(pkg.dependencies ?? {}),
+            ...Object.keys(pkg.devDependencies ?? {})
+          ];
+
+          const references = deps.reduce((refs, dep) => {
+            const depPkg = packageInfos[dep];
+            const depPkgPath = path.dirname(depPkg.packageJsonPath);
+            const depTsConfig = path.join(depPkgPath, "tsconfig.json");
+            if (fs.existsSync(depTsConfig)) {
+              refs.push(depTsConfig);
+            }
+            return refs;
+          }, [] as string[]);
+
+          console.log(references);
           // Tell Turbo to rebuild all @pcd/ packages, letting the cache skip
           // the ones that have not changed.
           //
@@ -88,30 +109,30 @@ const main = async () => {
   });
 
   // Run the dev builds for apps
-  watch({
-    project: workspaceRoot,
-    triggers: [
-      {
-        expression: ["dirname", __dirname],
-        // Marking this routine as non-interruptible will ensure that
-        // the apps are not restarted when file changes are detected.
-        interruptible: false,
-        name: "start-apps",
-        // Because this is not interruptible, there will never be a
-        // 'change', and so the below only runs once, at startup.
-        // The 'dev' commands for the apps have their own change
-        // monitoring, e.g. using ts-node or nodemon. We could
-        // replace that and handle it here, but it doesn't seem
-        // necessary to.
-        onChange: async ({ spawn }) => {
-          await spawn`yarn dev:apps`;
-        },
-        // Enabling this option modifies what Turbowatch logs and warns
-        // you if your configuration is incompatible with persistent tasks.
-        persistent: true
-      }
-    ]
-  });
+  // watch({
+  //   project: workspaceRoot,
+  //   triggers: [
+  //     {
+  //       expression: ["dirname", __dirname],
+  //       // Marking this routine as non-interruptible will ensure that
+  //       // the apps are not restarted when file changes are detected.
+  //       interruptible: false,
+  //       name: "start-apps",
+  //       // Because this is not interruptible, there will never be a
+  //       // 'change', and so the below only runs once, at startup.
+  //       // The 'dev' commands for the apps have their own change
+  //       // monitoring, e.g. using ts-node or nodemon. We could
+  //       // replace that and handle it here, but it doesn't seem
+  //       // necessary to.
+  //       onChange: async ({ spawn }) => {
+  //         await spawn`yarn dev:apps`;
+  //       },
+  //       // Enabling this option modifies what Turbowatch logs and warns
+  //       // you if your configuration is incompatible with persistent tasks.
+  //       persistent: true
+  //     }
+  //   ]
+  // });
 };
 
 main().catch((error) => {

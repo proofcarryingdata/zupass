@@ -1,7 +1,13 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": ["**/*.ts", "**/*.d.ts"],
-  "exclude": ["node_modules", "build"],
+  "include": [
+    "**/*.ts",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules",
+    "build"
+  ],
   "compilerOptions": {
     "outDir": "./build",
     "noEmit": false,
@@ -19,5 +25,61 @@
       "./node_modules/@types/",
       "../../node_modules/@types/"
     ]
-  }
+  },
+  "references": [
+    {
+      "path": "../../packages/pcd/eddsa-frog-pcd"
+    },
+    {
+      "path": "../../packages/pcd/eddsa-pcd"
+    },
+    {
+      "path": "../../packages/pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../packages/pcd/email-pcd"
+    },
+    {
+      "path": "../../packages/lib/passport-crypto"
+    },
+    {
+      "path": "../../packages/lib/passport-interface"
+    },
+    {
+      "path": "../../packages/lib/pcd-collection"
+    },
+    {
+      "path": "../../packages/lib/pcd-types"
+    },
+    {
+      "path": "../../packages/pcd/rln-pcd"
+    },
+    {
+      "path": "../../packages/pcd/rsa-image-pcd"
+    },
+    {
+      "path": "../../packages/pcd/rsa-pcd"
+    },
+    {
+      "path": "../../packages/pcd/rsa-ticket-pcd"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-group-pcd"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-signature-pcd"
+    },
+    {
+      "path": "../../packages/lib/util"
+    },
+    {
+      "path": "../../packages/pcd/zk-eddsa-event-ticket-pcd"
+    },
+    {
+      "path": "../../packages/pcd/zk-eddsa-frog-pcd"
+    }
+  ]
 }

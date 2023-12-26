@@ -1,5 +1,32 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "./test"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": [
+    ".",
+    "./test"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../lib/passport-interface"
+    },
+    {
+      "path": "../../lib/passport-ui"
+    },
+    {
+      "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd"
+    }
+  ]
 }

@@ -1,9 +1,29 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "test"],
+  "include": [".", "./artifacts/*.json", "test"],
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
     "resolveJsonModule": true,
     "lib": ["dom"]
-  }
+  },
+  "references": [
+    {
+      "path": "../eddsa-pcd"
+    },
+    {
+      "path": "../eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../semaphore-identity-pcd"
+    },
+    {
+      "path": "../semaphore-signature-pcd"
+    },
+    {
+      "path": "../../lib/util"
+    }
+  ]
 }
