@@ -4,6 +4,7 @@
   "extends": "./base.json",
   "compilerOptions": {
     "composite": true,
+    "outDir": "dist",
     "jsx": "react-jsx",
     "lib": ["ES2015", "DOM"],
     "module": "CommonJS",
