@@ -1,8 +1,58 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "./test"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    ".",
+    "./test"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   "compilerOptions": {
-    "lib": ["dom"]
-  }
+    "lib": [
+      "dom"
+    ]
+  },
+  "references": [
+    {
+      "path": "../../pcd/eddsa-frog-pcd"
+    },
+    {
+      "path": "../../pcd/eddsa-pcd"
+    },
+    {
+      "path": "../../pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../pcd/email-pcd"
+    },
+    {
+      "path": "../emitter"
+    },
+    {
+      "path": "../passport-crypto"
+    },
+    {
+      "path": "../pcd-collection"
+    },
+    {
+      "path": "../pcd-types"
+    },
+    {
+      "path": "../../pcd/rsa-ticket-pcd"
+    },
+    {
+      "path": "../../pcd/semaphore-group-pcd"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../pcd/semaphore-signature-pcd"
+    },
+    {
+      "path": "../util"
+    }
+  ]
 }

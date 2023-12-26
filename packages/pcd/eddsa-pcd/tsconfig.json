@@ -1,8 +1,25 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
   "compilerOptions": {
-    "lib": ["dom"]
+    "lib": [
+      "dom"
+    ]
   },
-  "include": [".", "./test"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": [
+    ".",
+    "./test"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../../lib/util"
+    }
+  ]
 }
