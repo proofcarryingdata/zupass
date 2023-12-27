@@ -1,13 +1,7 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": [
-    "**/*.ts",
-    "**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build"
-  ],
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules", "build"],
   "compilerOptions": {
     "outDir": "./build",
     "noEmit": false,

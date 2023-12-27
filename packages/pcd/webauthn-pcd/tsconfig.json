@@ -2,12 +2,13 @@
   "compilerOptions": {
     "lib": [
       "DOM"
-    ]
+    ],
+    "outDir": "dist",
+    "rootDir": "src"
   },
   "extends": "@pcd/tsconfig/ts-library.json",
   "include": [
-    ".",
-    "test"
+    "src"
   ],
   "exclude": [
     "dist",

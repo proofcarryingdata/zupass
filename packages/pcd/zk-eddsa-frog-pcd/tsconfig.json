@@ -1,7 +1,13 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "./artifacts/*.json", "./test"],
-  "exclude": ["dist", "build", "node_modules"],
+  "include": [
+    "src"
+  ],
+  "exclude": [
+    "dist",
+    "build",
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../eddsa-frog-pcd"
@@ -21,5 +27,9 @@
     {
       "path": "../../lib/util"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
 }

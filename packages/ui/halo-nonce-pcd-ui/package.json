@@ -4,10 +4,10 @@
   "license": "GPL-3.0-or-later",
   "main": "./dist/index.js",
   "module": "./dist/index.mjs",
-  "types": "./dist/types/src/index.d.ts",
+  "types": "./dist/index.d.ts",
   "exports": {
     ".": {
-      "types": "./dist/types/src/index.d.ts",
+      "types": "./dist/index.d.ts",
       "import": "./dist/index.mjs",
       "require": "./dist/index.js"
     }
@@ -21,7 +21,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "yarn build:ts && yarn build:types",
     "build:ts": "tsup src/index.ts --format cjs,esm --clean",
-    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist/types/src",
+    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules"
