@@ -1,8 +1,7 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
   "include": [
-    ".",
-    "./test"
+    "src"
   ],
   "exclude": [
     "dist",
@@ -25,5 +24,9 @@
     {
       "path": "../../pcd/rsa-pcd"
     }
-  ]
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "rootDir": "src"
+  }
 }

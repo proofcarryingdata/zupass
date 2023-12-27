@@ -3,7 +3,7 @@
   "version": "0.10.0",
   "license": "GPL-3.0-or-later",
   "main": "./index.ts",
-  "types": "./index.ts",
+  "types": "./dist/index.d.ts",
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "jest",

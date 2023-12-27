@@ -43,7 +43,8 @@ module.exports = {
         ]
       }
     ],
-    "@typescript-eslint/no-require-imports": "error"
+    "@typescript-eslint/no-require-imports": "error",
+    "import/no-unresolved": "off"
   },
   settings: {
     "import/resolver": {
