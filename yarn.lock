@@ -4612,7 +4612,7 @@
     "@types/jsonfile" "*"
     "@types/node" "*"
 
-"@types/generic-pool@^3.1.9", "@types/generic-pool@^3.8.1":
+"@types/generic-pool@^3.1.9":
   version "3.8.1"
   resolved "https://registry.yarnpkg.com/@types/generic-pool/-/generic-pool-3.8.1.tgz#b9b25b2ba4733057fa5df1818352d3205c48e87b"
   integrity sha512-eaMAbZS0EfKvaP5PUZ/Cdf5uJBO2t6T3RdvQTKuMqUwGhNpCnPAsKWEMyV+mCeCQG3UiHrtgdzni8X6DmhxRaQ==
