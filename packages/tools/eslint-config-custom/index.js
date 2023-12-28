@@ -30,6 +30,7 @@ module.exports = {
     "react/no-unescaped-entities": "off",
     "import/no-named-as-default-member": "off",
     "import/no-extraneous-dependencies": "error",
+<<<<<<< HEAD
     "prettier/prettier": "error",
     "no-restricted-imports": [
       "error",
@@ -44,7 +45,8 @@ module.exports = {
       }
     ],
     "@typescript-eslint/no-require-imports": "error",
-    "import/no-unresolved": "off"
+    "import/no-unresolved": "off",
+    "prettier/prettier": "error"
   },
   settings: {
     "import/resolver": {
