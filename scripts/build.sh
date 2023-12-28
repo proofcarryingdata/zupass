@@ -1,4 +1,6 @@
 #/bin/bash
+set -e
+
 if [[ -z $DISABLE_BUILD_CACHE ]]; then
   yarn turbo run build:ts
   yarn turbo run build:types
