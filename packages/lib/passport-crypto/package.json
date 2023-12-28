@@ -30,7 +30,8 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
-    "build": "yarn build:browser && yarn build:node && yarn build:types",
+    "build": "yarn build:ts && yarn build:types",
+    "build:ts": "yarn build:browser && yarn build:node",
     "build:browser": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format esm --clean",
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
     "build:types": "tsc --emitDeclarationOnly",
