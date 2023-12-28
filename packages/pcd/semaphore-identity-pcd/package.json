@@ -32,7 +32,7 @@
     "build": "yarn build:browser && yarn build:node && yarn build:types",
     "build:browser": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format esm --clean",
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
-    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist/types",
+    "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",

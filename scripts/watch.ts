@@ -9,7 +9,6 @@
  * to reload/rebuild when they detect changes in their dependencies.
  */
 
-import * as fs from "fs";
 import path from "path";
 import { watch } from "turbowatch";
 import {
@@ -77,25 +76,6 @@ const main = async () => {
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
           );
 
-          const pkg = packageInfos[p];
-          const pkgPath = path.dirname(pkg.packageJsonPath);
-
-          const deps = [
-            ...Object.keys(pkg.dependencies ?? {}),
-            ...Object.keys(pkg.devDependencies ?? {})
-          ];
-
-          const references = deps.reduce((refs, dep) => {
-            const depPkg = packageInfos[dep];
-            const depPkgPath = path.dirname(depPkg.packageJsonPath);
-            const depTsConfig = path.join(depPkgPath, "tsconfig.json");
-            if (fs.existsSync(depTsConfig)) {
-              refs.push(depTsConfig);
-            }
-            return refs;
-          }, [] as string[]);
-
-          console.log(references);
           // Tell Turbo to rebuild all @pcd/ packages, letting the cache skip
           // the ones that have not changed.
           //

@@ -21,7 +21,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "yarn build:ts && yarn build:types",
     "build:ts": "tsup src/index.ts --format cjs,esm --clean",
-    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist",
+    "build:types": "tsc --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules"
@@ -39,6 +39,7 @@
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
     "eslint": "^7.32.0",
+    "tsup": "^6.7.0",
     "typescript": "^4.9.5"
   },
   "publishConfig": {
