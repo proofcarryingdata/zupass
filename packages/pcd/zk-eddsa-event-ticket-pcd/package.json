@@ -36,10 +36,10 @@
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
     "build:types": "rm tsconfig.tsbuildinfo && tsc --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "yarn build && mkdir -p artifacts && cp src/artifacts/* ./artifacts/*",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules",
-    "artifacts:generate": "pcd-artifacts generate -o src/artifacts && cp src/artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp src/artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd"
+    "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
     "@pcd/eddsa-pcd": "0.5.0",
