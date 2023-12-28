@@ -1,20 +1,12 @@
 {
   "compilerOptions": {
-    "lib": [
-      "DOM"
-    ],
+    "lib": ["DOM"],
     "outDir": "dist",
     "rootDir": "src"
   },
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [
-    "src"
-  ],
-  "exclude": [
-    "dist",
-    "build",
-    "node_modules"
-  ],
+  "include": ["src"],
+  "exclude": ["dist", "build", "node_modules"],
   "references": [
     {
       "path": "../../lib/passport-crypto"

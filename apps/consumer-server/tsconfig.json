@@ -1,12 +1,7 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": [
-    "**/*.ts",
-    "**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     // We need to tell TypeScript to *only* include @types/mocha and not
     // indiscriminately include all @types/* packages, because one of our
