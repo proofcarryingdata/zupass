@@ -1,12 +1,7 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": [
-    "**/*.ts",
-    "**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules"
-  ],
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules"],
   "compilerOptions": {
     "typeRoots": [
       "src/util/declarations/",
