@@ -37,9 +37,9 @@
     "build:types": "rm tsconfig.tsbuildinfo && tsc --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "yarn build && mkdir -p artifacts && cp src/artifacts/* ./artifacts/*",
     "clean": "rm -rf dist node_modules",
-    "artifacts:generate": "pcd-artifacts generate -o src/artifacts && cp src/artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp src/artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd"
+    "artifacts:generate": "pcd-artifacts generate -o src/artifacts && cp src/artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp src/artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
     "@pcd/eddsa-frog-pcd": "^0.2.0",
