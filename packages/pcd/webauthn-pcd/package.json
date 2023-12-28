@@ -2,12 +2,29 @@
   "name": "@pcd/webauthn-pcd",
   "version": "0.10.0",
   "license": "GPL-3.0-or-later",
-  "main": "./index.ts",
+  "main": "./dist/index.js",
+  "module": "./dist/index.mjs",
   "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "./README.md",
+    "./LICENSE"
+  ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "yarn build:ts && yarn build:types",
+    "build:ts": "tsup src/index.ts --format cjs,esm --clean",
+    "build:types": "tsc --emitDeclarationOnly",
+    "typecheck": "yarn tsc --noEmit",
+    "prepublishOnly": "yarn build",
     "test": "jest",
-    "build": "tsc",
     "clean": "rm -rf dist node_modules"
   },
   "dependencies": {
