@@ -91,31 +91,31 @@ const main = async () => {
       }))
   });
 
-  // Run the dev builds for apps
-  // watch({
-  //   project: workspaceRoot,
-  //   triggers: [
-  //     {
-  //       expression: ["dirname", __dirname],
-  //       // Marking this routine as non-interruptible will ensure that
-  //       // the apps are not restarted when file changes are detected.
-  //       interruptible: false,
-  //       name: "start-apps",
-  //       // Because this is not interruptible, there will never be a
-  //       // 'change', and so the below only runs once, at startup.
-  //       // The 'dev' commands for the apps have their own change
-  //       // monitoring, e.g. using ts-node or nodemon. We could
-  //       // replace that and handle it here, but it doesn't seem
-  //       // necessary to.
-  //       onChange: async ({ spawn }) => {
-  //         await spawn`yarn dev:apps`;
-  //       },
-  //       // Enabling this option modifies what Turbowatch logs and warns
-  //       // you if your configuration is incompatible with persistent tasks.
-  //       persistent: true
-  //     }
-  //   ]
-  // });
+  //Run the dev builds for apps
+  watch({
+    project: workspaceRoot,
+    triggers: [
+      {
+        expression: ["dirname", __dirname],
+        // Marking this routine as non-interruptible will ensure that
+        // the apps are not restarted when file changes are detected.
+        interruptible: false,
+        name: "start-apps",
+        // Because this is not interruptible, there will never be a
+        // 'change', and so the below only runs once, at startup.
+        // The 'dev' commands for the apps have their own change
+        // monitoring, e.g. using ts-node or nodemon. We could
+        // replace that and handle it here, but it doesn't seem
+        // necessary to.
+        onChange: async ({ spawn }) => {
+          await spawn`yarn dev:apps`;
+        },
+        // Enabling this option modifies what Turbowatch logs and warns
+        // you if your configuration is incompatible with persistent tasks.
+        persistent: true
+      }
+    ]
+  });
 };
 
 main().catch((error) => {
