@@ -35,7 +35,7 @@
     "build:ts": "yarn build:browser && yarn build:node",
     "build:browser": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format esm --clean",
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
-    "build:types": "tsc --emitDeclarationOnly",
+    "build:types": "rm tsconfig.tsbuildinfo && tsc --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn build",
     "clean": "rm -rf dist node_modules"
