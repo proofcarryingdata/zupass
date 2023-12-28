@@ -24,7 +24,9 @@
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
-    "knip": "knip --no-gitignore"
+    "knip": "knip --no-gitignore",
+    "check-references": "workspaces-to-typescript-project-references --check",
+    "fix-references": "workspaces-to-typescript-project-references && prettier -w \"{apps/*,packages/*/*}/tsconfig.json\""
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",

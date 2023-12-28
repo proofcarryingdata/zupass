@@ -39,6 +39,7 @@ jobs:
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
 
       - run: "yarn install --frozen-lockfile"
+      - run: "yarn check-references"
       - run: "yarn build"
       - run: "yarn lint"
       - run: "yarn test"
