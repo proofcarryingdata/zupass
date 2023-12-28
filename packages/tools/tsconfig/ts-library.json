@@ -5,6 +5,7 @@
   "compilerOptions": {
     "composite": true,
     "outDir": "dist",
+    "declarationDir": "dist/types",
     "jsx": "react-jsx",
     "lib": ["ES2015", "DOM"],
     "module": "CommonJS",
