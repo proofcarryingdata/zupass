@@ -5,8 +5,6 @@
   "private": true,
   "scripts": {
     "build": "rm -rf ./build && yarn tsc -p ./tsconfig.json",
-    "oldstart:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development node -r source-map-support/register build/src/main.js",
-    "olddev": "yarn build && nodemon -w src -e ts --exec \"yarn build && yarn start:dev\"",
     "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --respawn --transpile-only src/main.ts",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
