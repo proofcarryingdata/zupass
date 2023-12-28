@@ -5,6 +5,7 @@
   "compilerOptions": {
     "resolveJsonModule": true,
     "outDir": "dist",
+    "declarationDir": "dist/types",
     "rootDir": "src"
   },
   "references": [

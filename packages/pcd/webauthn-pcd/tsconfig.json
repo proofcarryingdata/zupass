@@ -2,6 +2,7 @@
   "compilerOptions": {
     "lib": ["DOM"],
     "outDir": "dist",
+    "declarationDir": "dist/types",
     "rootDir": "src"
   },
   "extends": "@pcd/tsconfig/ts-library.json",

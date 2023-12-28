@@ -24,6 +24,7 @@
   ],
   "compilerOptions": {
     "outDir": "dist",
+    "declarationDir": "dist/types",
     "rootDir": "src"
   }
 }

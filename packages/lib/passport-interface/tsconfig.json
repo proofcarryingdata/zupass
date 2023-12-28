@@ -5,6 +5,7 @@
   "compilerOptions": {
     "lib": ["dom"],
     "outDir": "dist",
+    "declarationDir": "dist/types",
     "rootDir": "src"
   },
   "references": [
