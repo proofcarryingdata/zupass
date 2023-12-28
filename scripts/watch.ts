@@ -45,7 +45,7 @@ const main = async () => {
   );
 
   // Do an initial build, which will also populate the Turborepo cache
-  await $`yarn turbo build --output-logs=new-only --filter="@pcd/*"`;
+  await $`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
 
   // See documentation at https://github.com/gajus/turbowatch
   watch({
@@ -83,7 +83,10 @@ const main = async () => {
           // graph based on the package the change has happened in, and filter
           // down to the packages we want to rebuild, but letting Turbo handle
           // this is easier for now.
-          await spawn`yarn turbo build --output-logs=new-only --filter="@pcd/*"`;
+          // There may be some performance benefit in telling Turbo that it
+          // doesn't even need to check certain packages here, and this could
+          // be worth investigating. We want this to be as fast as it can be.
+          await spawn`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
         }
       }))
   });
