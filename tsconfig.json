@@ -3,24 +3,6 @@
   "files": [],
   "references": [
     {
-      "path": "apps/anon-message-client"
-    },
-    {
-      "path": "apps/consumer-client"
-    },
-    {
-      "path": "apps/consumer-server"
-    },
-    {
-      "path": "apps/kudosbot-client"
-    },
-    {
-      "path": "apps/passport-client"
-    },
-    {
-      "path": "apps/passport-server"
-    },
-    {
       "path": "packages/lib/emitter"
     },
     {

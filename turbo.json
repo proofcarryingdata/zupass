@@ -6,6 +6,16 @@
       "outputs": ["dist/**"],
       "cache": true
     },
+    "build:ts": {
+      "dependsOn": ["^build:ts"],
+      "outputs": ["dist/**"],
+      "cache": true
+    },
+    "build:types": {
+      "dependsOn": ["^build:types"],
+      "outputs": ["dist/**"],
+      "cache": true
+    },
     "lint": {
       "outputs": [],
       "cache": true

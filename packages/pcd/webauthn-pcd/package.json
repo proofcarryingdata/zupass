@@ -7,7 +7,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "jest",
-    "build": "tsc --noEmit",
+    "build": "tsc",
     "clean": "rm -rf dist node_modules"
   },
   "files": [

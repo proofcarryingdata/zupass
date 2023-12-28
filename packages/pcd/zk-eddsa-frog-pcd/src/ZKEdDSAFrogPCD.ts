@@ -35,7 +35,7 @@ import {
 import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import vkey from "../artifacts/circuit.json";
+import vkey from "./artifacts/circuit.json";
 
 /*
  * This external nullifier will be used if one is not provided.
