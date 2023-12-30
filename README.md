@@ -79,9 +79,6 @@ yarn
 # yarn localdb:restart
 yarn localdb:init && yarn localdb:up
 
-# builds the apps and packages located in the `/apps` and `/packages/` directories
-yarn build
-
 # starts all the applications contained in the `/apps` directory of the
 # repository. this includes the passport server and client, as well as
 # a server and client for an example application built on top of the
@@ -109,24 +106,24 @@ Some of these packages are used to share development configuration between the d
 
 #### pcd packages
 
-- [`@pcd/semaphore-group-pcd`](packages/semaphore-group-pcd): a pcd which wraps the [Semaphore](https://semaphore.appliedzkp.org/docs/introduction) protocol, which allows PCD-consuming applications to consume and generate Semaphore proofs.
-- [`@pcd/semaphore-identity-pcd`](packages/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
-- [`@pcd/semaphore-signature-pcd`](packages/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
-- [`@pcd/webauthn-pcd`](packages/webauthn-pcd): a pcd that can be used to make claims about [WebAuthn](https://webauthn.guide/) attestations, i.e. signing a particular challenge with a fingerprint, Yubikey, or another [authorization gesture](https://www.w3.org/TR/webauthn-2/#authorization-gesture).
-- [`@pcd/ethereum-ownership-pcd`](packages/ethereum-ownership-pcd): a pcd that can be used to claim that a Semaphore identity knows the private key of an ethereum address.
-- [`@pcd/ethereum-group-pcd`](packages/ethereum-group-pcd): a pcd that can be used to claim that a Semaphore identity knows the private key of an ethereum address or public key that is part of a merkle group of addresses or public keys, without revealing the specific one.
+- [`@pcd/semaphore-group-pcd`](packages/pcd/semaphore-group-pcd): a pcd which wraps the [Semaphore](https://semaphore.appliedzkp.org/docs/introduction) protocol, which allows PCD-consuming applications to consume and generate Semaphore proofs.
+- [`@pcd/semaphore-identity-pcd`](packages/pcd/semaphore-identity-pcd): a 'self-evident' PCD, representing the public and private components of a Semaphore identity
+- [`@pcd/semaphore-signature-pcd`](packages/pcd/semaphore-signature-pcd): like `@pcd/semaphore-group-pcd`, but with a more specific purpose of using the semaphore protocol to 'sign' a particular string message on behalf of a particular revealed commitment id.
+- [`@pcd/webauthn-pcd`](packages/pcd/webauthn-pcd): a pcd that can be used to make claims about [WebAuthn](https://webauthn.guide/) attestations, i.e. signing a particular challenge with a fingerprint, Yubikey, or another [authorization gesture](https://www.w3.org/TR/webauthn-2/#authorization-gesture).
+- [`@pcd/ethereum-ownership-pcd`](packages/pcd/ethereum-ownership-pcd): a pcd that can be used to claim that a Semaphore identity knows the private key of an ethereum address.
+- [`@pcd/ethereum-group-pcd`](packages/pcd/ethereum-group-pcd): a pcd that can be used to claim that a Semaphore identity knows the private key of an ethereum address or public key that is part of a merkle group of addresses or public keys, without revealing the specific one.
 - ... more to come!
 
 #### shared code packages
 
-- [`@pcd/passport-crypto`](packages/passport-crypto): package that implements cryptographic primitives like encryption and hashing, to be used by the passport server and client.
-- [`@pcd/passport-interface`](packages/passport-interface): package that contains interfaces (both types and functions) that facilitate communication between the various components involved in a PCD application.
-- [`@pcd/pcd-types`](packages/pcd-types): package that defines what a PCD _is_.
+- [`@pcd/passport-crypto`](packages/lib/passport-crypto): package that implements cryptographic primitives like encryption and hashing, to be used by the passport server and client.
+- [`@pcd/passport-interface`](packages/lib/passport-interface): package that contains interfaces (both types and functions) that facilitate communication between the various components involved in a PCD application.
+- [`@pcd/pcd-types`](packages/lib/pcd-types): package that defines what a PCD _is_.
 
 #### utility packages
 
-- [`@pcd/eslint-config-custom`](packages/eslint-config-custom): shared eslint configuration files
-- [`@pcd/tsconfig`](packages/tsconfig): shared tsconfig files
+- [`@pcd/eslint-config-custom`](packages/tools/eslint-config-custom): shared eslint configuration files
+- [`@pcd/tsconfig`](packages/tools/tsconfig): shared tsconfig files
 
 ### Testing
 
@@ -154,12 +151,12 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 
 Zupass can support many types of PCDs. In order to create a new type of PCD that can be interpreted, verified, created, shared, and stored by Zupass, the first thing you must create is a new `PCDPackage` - a concrete implementation of the `PCDPackage` typescript interface as defined here:
 
-https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd-types/src/pcd.ts#L34-L49
+https://github.com/proofcarryingdata/zupass/blob/main/packages/lib/pcd-types/src/pcd.ts#L34-L49
 
 Two example implementations of a `PCDPackage` that works with Zupass are:
 
-- https://github.com/proofcarryingdata/zupass/blob/main/packages/rsa-pcd/src/RSAPCD.ts
-- https://github.com/proofcarryingdata/zupass/blob/main/packages/semaphore-identity-pcd/src/SemaphoreIdentityPCD.ts
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd/rsa-pcd/src/RSAPCD.ts
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd/semaphore-identity-pcd/src/SemaphoreIdentityPCD.ts
 
 ### Integrating with Zupass
 
@@ -199,5 +196,5 @@ We recommend that you add an example for how a developer may create and consume 
 
 We also recommend that you create a comprehensive test suite for your new PCD, so that we can be confident in your implementation. A few test suites we think are good can be found in the following PCD implementations:
 
-- https://github.com/proofcarryingdata/zupass/blob/main/packages/semaphore-group-pcd/test/SemaphoreGroupPCD.spec.ts
-- https://github.com/proofcarryingdata/zupass/blob/main/packages/rsa-pcd/test/RSAPCD.spec.ts
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd/semaphore-group-pcd/test/SemaphoreGroupPCD.spec.ts
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd/rsa-pcd/test/RSAPCD.spec.ts
