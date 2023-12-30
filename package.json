@@ -5,8 +5,7 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*/*",
-    "packages/*/*/src"
+    "packages/*/*"
   ],
   "scripts": {
     "localdb:restart": "yarn localdb:down && yarn localdb:init && yarn localdb:up",
@@ -16,7 +15,6 @@
     "build": "./scripts/build.sh",
     "force-build": "DISABLE_BUILD_CACHE=1 ./scripts/build.sh",
     "dev": "tsx scripts/watch.ts",
-    "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
@@ -25,6 +23,7 @@
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
+    "clean:workspaces": "turbo run clean --parallel && yarn",
     "knip": "knip --no-gitignore",
     "check-references": "workspaces-to-typescript-project-references --check",
     "fix-references": "workspaces-to-typescript-project-references && prettier -w \"{apps/*,packages/*/*}/tsconfig.json\""
