@@ -30,6 +30,7 @@
     }
   },
   "eslint.rules.customizations": [
-    { "rule": "prettier/prettier", "severity": "off" }
+    { "rule": "prettier/prettier", "severity": "off" },
+    { "rule": "import/no-unresolved", "severity": "off" }
   ]
 }

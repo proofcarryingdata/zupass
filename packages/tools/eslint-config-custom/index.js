@@ -3,7 +3,6 @@ module.exports = {
     "eslint:recommended",
     "turbo",
     "prettier",
-    "turbo",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript"
