@@ -1,7 +1,7 @@
 pragma circom 2.1.4;
 
-include "../../../node_modules/circomlib/circuits/poseidon.circom";
-include "../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
+include "../../../../node_modules/circomlib/circuits/poseidon.circom";
+include "../../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
 
 // Claim being proved:
 // 1. The owner owns the frog: the owner's semaphore identity matches the

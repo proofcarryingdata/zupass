@@ -1,7 +1,7 @@
 pragma circom 2.1.4;
 
-include "../../../node_modules/circomlib/circuits/poseidon.circom";
-include "../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
+include "../../../../node_modules/circomlib/circuits/poseidon.circom";
+include "../../../../node_modules/circomlib/circuits/eddsaposeidon.circom";
 
 // Helper template for revealed fields. out will be set to value or to -1 if
 // not revealed.
