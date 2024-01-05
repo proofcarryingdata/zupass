@@ -1,6 +1,6 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": ["src", "src/*.json"],
+  "include": ["src", "test", "src/*.json"],
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
     "resolveJsonModule": true,
