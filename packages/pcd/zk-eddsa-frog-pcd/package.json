@@ -34,7 +34,7 @@
     "build:ts": "yarn build:browser && yarn build:node",
     "build:browser": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format esm --clean",
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
-    "build:types": "rm -f tsconfig.tsbuildinfo && tsc --emitDeclarationOnly",
+    "build:types": "rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "prepublishOnly": "yarn build && mkdir -p artifacts && cp src/artifacts/* ./artifacts/*",

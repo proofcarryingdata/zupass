@@ -6,7 +6,7 @@
     "rootDir": "src"
   },
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": ["src"],
+  "include": ["src", "test"],
   "exclude": ["dist", "build", "node_modules"],
   "references": [
     {
