@@ -3,25 +3,6 @@ import { logger } from "../../util/logger";
 import { sqlQuery } from "../sqlQuery";
 
 /**
- * We keep track of the last few times the user has reset their account,
- * so that we can rate limit this user action.
- */
-export async function updateUserAccountRestTimestamps(
-  client: Pool,
-  email: string,
-  resetTimestamps: string[]
-): Promise<void> {
-  await sqlQuery(
-    client,
-    `
-update users
-set account_reset_timestamps = $1
-where email = $2`,
-    [resetTimestamps, email]
-  );
-}
-
-/**
  * Saves a new user. If a user with the given email already exists, overwrites their
  * information. Returns the user's UUID.
  */

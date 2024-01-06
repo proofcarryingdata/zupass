@@ -8,7 +8,10 @@ import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
-export type RateLimitedActionType = "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
+export type RateLimitedActionType =
+  | "CHECK_EMAIL_TOKEN"
+  | "REQUEST_EMAIL_TOKEN"
+  | "ACCOUNT_RESET";
 
 export class RateLimitService {
   private readonly context: ApplicationContext;
@@ -74,7 +77,7 @@ export class RateLimitService {
           return true;
         }
 
-        const result = checkRateLimit(
+        const result = await checkRateLimit(
           this.context.dbPool,
           actionType,
           actionId

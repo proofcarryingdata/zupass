@@ -42,7 +42,7 @@ describe("generic rate-limiting features", function () {
     expect(db).to.not.eq(null);
   });
 
-  step("rate-limiting service should be runing", async function () {
+  step("rate-limiting service should be running", async function () {
     expect(application.services.rateLimitService).to.exist;
 
     rateLimitService = application.services.rateLimitService;
@@ -191,6 +191,57 @@ describe("generic rate-limiting features", function () {
       }
     }
   );
+
+  step("rate limits can have periods other than hourly", async function () {
+    // Set CHECK_EMAIL_TOKEN to allow 5 checks per day
+    await sqlQuery(
+      db,
+      `
+      UPDATE rate_limit_types
+      SET time_period_seconds = 86400, periodic_limit = 5
+      WHERE action_type = 'CHECK_EMAIL_TOKEN'`
+    );
+
+    // Exhaust the available checks
+    for (let i = 0; i < 5; i++) {
+      const result = await rateLimitService.requestRateLimitedAction(
+        "CHECK_EMAIL_TOKEN",
+        "test@example.com"
+      );
+
+      expect(result).to.be.true;
+    }
+
+    // Checks now fail
+    expect(
+      await rateLimitService.requestRateLimitedAction(
+        "CHECK_EMAIL_TOKEN",
+        "test@example.com"
+      )
+    ).to.be.false;
+
+    // With 5 checks per day, the next check is allowed after 86400/5 seconds
+    const timeToNextCheck = 86400 / 5;
+    const now = Date.now();
+
+    // One second before the next check is allowed, check should still fail
+    MockDate.set(now + (timeToNextCheck - 1) * 1000);
+    expect(
+      await rateLimitService.requestRateLimitedAction(
+        "CHECK_EMAIL_TOKEN",
+        "test@example.com"
+      )
+    ).to.be.false;
+
+    // Check should succeed once required time has elapsed
+    MockDate.set(now + timeToNextCheck * 1000);
+    expect(
+      await rateLimitService.requestRateLimitedAction(
+        "CHECK_EMAIL_TOKEN",
+        "test@example.com"
+      )
+    ).to.be.true;
+  });
 
   step(
     "rate-limiting can be disabled by an environment variable",

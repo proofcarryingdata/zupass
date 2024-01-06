@@ -145,7 +145,6 @@ export interface UserRow {
   email: string;
   salt: string | null;
   encryption_key: string | null;
-  account_reset_timestamps: string[];
   terms_agreed: number;
   /**
    * See {@link IssuanceService} - only relevant past the ticket re-issuance cutoff date. If this
