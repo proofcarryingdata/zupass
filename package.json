@@ -15,6 +15,7 @@
     "build": "./scripts/build.sh",
     "force-build": "DISABLE_BUILD_CACHE=1 ./scripts/build.sh",
     "dev": "tsx scripts/watch.ts",
+    "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
     "docs": "typedoc",
     "lint": "turbo run lint --concurrency=1",
