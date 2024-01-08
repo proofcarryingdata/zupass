@@ -6,22 +6,28 @@ import { sqlQuery } from "../sqlQuery";
  * available. If so, the action is permitted, otherwise it is denied due to
  * exceeding the rate limit.
  *
- * See 58_rate_limit.sql
+ * See apps/passport-server/migrations/61_rate_limit_variable_periods.sql
  *
  * @param client
  * @param actionType The type of action being attempted
  * @param actionId The identifier of this action
+ * @param maxActions The maximum number of actions allowed in a time period
+ * @param timePeriod The time period, in seconds
  * @returns Boolean indicating whether the action is permitted
  */
 export async function checkRateLimit(
   client: Pool,
   actionType: string,
-  actionId: string
+  actionId: string,
+  maxActions: number,
+  timePeriod: number
 ): Promise<boolean> {
   return (
-    await sqlQuery(client, `SELECT take_token($1, $2, $3)`, [
+    await sqlQuery(client, `SELECT take_token($1, $2, $3, $4, $5)`, [
       actionType,
       actionId,
+      maxActions,
+      timePeriod,
       new Date()
     ])
   ).rows[0].take_token;

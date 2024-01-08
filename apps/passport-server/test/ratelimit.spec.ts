@@ -3,12 +3,10 @@ import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
+import { v4 as uuid } from "uuid";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import {
-  checkRateLimit,
-  clearExpiredActions
-} from "../src/database/queries/rateLimit";
+import { clearExpiredActions } from "../src/database/queries/rateLimit";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { RateLimitService } from "../src/services/rateLimitService";
 import { Zupass } from "../src/types";
@@ -178,35 +176,14 @@ describe("generic rate-limiting features", function () {
     ).to.eq(0);
   });
 
-  step(
-    "checking the rate limit for a non-existent type should fail",
-    async function () {
-      const nonExistentType = "non-existent-type";
-      try {
-        expect(await checkRateLimit(db, nonExistentType, "123")).to.throw;
-      } catch (e) {
-        expect((e as any).message).to.eq(
-          `Action type ${nonExistentType} does not have a rate configured`
-        );
-      }
-    }
-  );
-
   step("rate limits can have periods other than hourly", async function () {
-    // Set CHECK_EMAIL_TOKEN to allow 5 checks per day
-    await sqlQuery(
-      db,
-      `
-      UPDATE rate_limit_types
-      SET time_period_seconds = 86400, periodic_limit = 5
-      WHERE action_type = 'CHECK_EMAIL_TOKEN'`
-    );
+    const dummyUuid = uuid();
 
     // Exhaust the available checks
     for (let i = 0; i < 5; i++) {
       const result = await rateLimitService.requestRateLimitedAction(
-        "CHECK_EMAIL_TOKEN",
-        "test@example.com"
+        "ACCOUNT_RESET",
+        dummyUuid
       );
 
       expect(result).to.be.true;
@@ -215,8 +192,8 @@ describe("generic rate-limiting features", function () {
     // Checks now fail
     expect(
       await rateLimitService.requestRateLimitedAction(
-        "CHECK_EMAIL_TOKEN",
-        "test@example.com"
+        "ACCOUNT_RESET",
+        dummyUuid
       )
     ).to.be.false;
 
@@ -228,8 +205,8 @@ describe("generic rate-limiting features", function () {
     MockDate.set(now + (timeToNextCheck - 1) * 1000);
     expect(
       await rateLimitService.requestRateLimitedAction(
-        "CHECK_EMAIL_TOKEN",
-        "test@example.com"
+        "ACCOUNT_RESET",
+        dummyUuid
       )
     ).to.be.false;
 
@@ -237,8 +214,8 @@ describe("generic rate-limiting features", function () {
     MockDate.set(now + timeToNextCheck * 1000);
     expect(
       await rateLimitService.requestRateLimitedAction(
-        "CHECK_EMAIL_TOKEN",
-        "test@example.com"
+        "ACCOUNT_RESET",
+        dummyUuid
       )
     ).to.be.true;
   });

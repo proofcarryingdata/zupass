@@ -13,11 +13,22 @@ export type RateLimitedActionType =
   | "REQUEST_EMAIL_TOKEN"
   | "ACCOUNT_RESET";
 
+const ONE_HOUR_SECONDS = 3600;
+const ONE_DAY_SECONDS = ONE_HOUR_SECONDS * 24;
+
 export class RateLimitService {
   private readonly context: ApplicationContext;
   private timeout: NodeJS.Timeout;
   private readonly rollbarService: RollbarService | null;
   private disabled: boolean;
+  private limits: Record<
+    RateLimitedActionType,
+    { maxActions: number; timePeriod: number }
+  > = {
+    CHECK_EMAIL_TOKEN: { maxActions: 10, timePeriod: ONE_HOUR_SECONDS },
+    REQUEST_EMAIL_TOKEN: { maxActions: 10, timePeriod: ONE_HOUR_SECONDS },
+    ACCOUNT_RESET: { maxActions: 5, timePeriod: ONE_DAY_SECONDS }
+  };
 
   public constructor(
     context: ApplicationContext,
@@ -77,10 +88,14 @@ export class RateLimitService {
           return true;
         }
 
+        const limit = this.limits[actionType];
+
         const result = await checkRateLimit(
           this.context.dbPool,
           actionType,
-          actionId
+          actionId,
+          limit.maxActions,
+          limit.timePeriod
         );
 
         if (!result) {
