@@ -1,4 +1,26 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../pcd/eddsa-ticket-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/passport-interface/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.build.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.build.json"
+    }
+  ]
 }

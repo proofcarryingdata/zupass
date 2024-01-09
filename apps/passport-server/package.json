@@ -63,7 +63,7 @@
     "rollbar": "^2.26.1",
     "source-map-support": "^0.5.21",
     "superagent": "^8.0.0",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "url-join": "4.0.1",
     "uuid": "^9.0.0",
     "worker-farm": "^1.7.0",
@@ -109,7 +109,7 @@
     "telegram": "^2.18.26",
     "ts-mocha": "^10.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.9.5",
+    "typescript": "^5.3.3",
     "yargs": "^17.7.2"
   }
 }

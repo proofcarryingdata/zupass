@@ -1,4 +1,18 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"]
+  "include": ["src"],
+  "compilerOptions": {
+    "module": "CommonJS"
+  },
+  "references": [
+    {
+      "path": "../eddsa-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.build.json"
+    }
+  ]
 }

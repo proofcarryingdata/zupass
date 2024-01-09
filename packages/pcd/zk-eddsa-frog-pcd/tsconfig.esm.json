@@ -1,0 +1,27 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src",
+    "src/*.json"
+  ],
+  "references": [
+    {
+      "path": "../eddsa-frog-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../eddsa-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../semaphore-signature-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.esm.json"
+    }
+  ]
+}

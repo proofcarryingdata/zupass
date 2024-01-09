@@ -1,4 +1,14 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../lib/pcd-types/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.build.json"
+    }
+  ]
 }

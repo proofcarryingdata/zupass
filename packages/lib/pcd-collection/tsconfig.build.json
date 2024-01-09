@@ -1,4 +1,23 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../emitter/tsconfig.build.json"
+    },
+    {
+      "path": "../passport-crypto/tsconfig.build.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.build.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../pcd/rsa-pcd/tsconfig.build.json"
+    }
+  ]
 }

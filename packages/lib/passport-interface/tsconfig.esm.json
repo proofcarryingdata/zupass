@@ -1,0 +1,51 @@
+{
+  "extends": "./tsconfig.json",
+  "include": [
+    "src"
+  ],
+  "compilerOptions": {
+    "module": "ESNext",
+    "outDir": "dist/esm"
+  },
+  "references": [
+    {
+      "path": "../../pcd/eddsa-frog-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/eddsa-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/eddsa-ticket-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/email-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../emitter/tsconfig.esm.json"
+    },
+    {
+      "path": "../passport-crypto/tsconfig.esm.json"
+    },
+    {
+      "path": "../pcd-collection/tsconfig.esm.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/rsa-ticket-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-group-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-signature-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../util/tsconfig.esm.json"
+    }
+  ]
+}

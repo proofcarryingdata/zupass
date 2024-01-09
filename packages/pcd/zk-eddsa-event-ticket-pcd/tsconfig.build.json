@@ -1,4 +1,27 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src", "src/*.json"]
+  "include": [
+    "src",
+    "src/*.json"
+  ],
+  "references": [
+    {
+      "path": "../eddsa-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../eddsa-ticket-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.build.json"
+    },
+    {
+      "path": "../semaphore-identity-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../semaphore-signature-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.build.json"
+    }
+  ]
 }

@@ -1,4 +1,20 @@
 {
   "extends": "./tsconfig.json",
-  "include": ["src"]
+  "include": [
+    "src"
+  ],
+  "references": [
+    {
+      "path": "../../pcd/ethereum-ownership-pcd/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.build.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.build.json"
+    },
+    {
+      "path": "../../pcd/semaphore-signature-pcd/tsconfig.build.json"
+    }
+  ]
 }
