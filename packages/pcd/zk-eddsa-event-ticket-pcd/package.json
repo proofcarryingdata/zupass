@@ -36,7 +36,7 @@
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
     "build:types": "rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build && mkdir -p artifacts && cp src/artifacts/* ./artifacts/*",
+    "prepublishOnly": "yarn clean && yarn build && mkdir -p artifacts && cp src/artifacts/* ./artifacts/*",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules",
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"

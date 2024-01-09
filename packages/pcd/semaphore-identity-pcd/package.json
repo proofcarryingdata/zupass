@@ -35,7 +35,7 @@
     "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
     "build:types": "rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules"
   },
