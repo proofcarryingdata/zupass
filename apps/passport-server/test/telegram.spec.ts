@@ -134,7 +134,8 @@ describe("telegram bot functionality", function () {
     const uuid = await upsertUser(db, {
       email: "ivan@0xparc.org",
       commitment: newCommitment,
-      terms_agreed: LATEST_PRIVACY_NOTICE
+      terms_agreed: LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
