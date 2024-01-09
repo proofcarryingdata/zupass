@@ -6,7 +6,8 @@
   "files.associations": {
     "*.env": "properties",
     "*.env.example": "properties",
-    "*.env.local.example": "properties"
+    "*.env.local.example": "properties",
+    "tsconfig.json": "jsonc"
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",

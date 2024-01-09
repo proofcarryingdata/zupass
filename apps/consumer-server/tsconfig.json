@@ -3,6 +3,12 @@
   "include": ["**/*.ts", "**/*.d.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
+    // We need to tell TypeScript to *only* include @types/mocha and not
+    // indiscriminately include all @types/* packages, because one of our
+    // dependencies includes @types/generic-pool, which is broken and causes
+    // build failures.
+    // See https://github.com/proofcarryingdata/zupass/pull/1400
+    "types": ["mocha"],
     "typeRoots": [
       "src/util/declarations/",
       "./node_modules/@types/",
