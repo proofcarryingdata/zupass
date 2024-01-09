@@ -7,7 +7,7 @@
     "lib": ["dom"],
     "outDir": "dist",
     "declarationDir": "dist/types",
-    "rootDir": "src"
+    "rootDir": "."
   },
   "references": [
     {
