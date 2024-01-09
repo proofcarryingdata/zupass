@@ -3,6 +3,9 @@
   "display": "Typescript Library",
   "extends": "./base.json",
   "compilerOptions": {
+    // Needed for TypeScript to be able to build a model of the entire
+    // project out of several packages.
+    // See https://www.typescriptlang.org/tsconfig#composite
     "composite": true,
     "outDir": "dist",
     "declarationDir": "dist/types",
