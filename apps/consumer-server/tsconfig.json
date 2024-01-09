@@ -3,7 +3,7 @@
   "include": ["**/*.ts", "**/*.d.ts"],
   "exclude": ["node_modules"],
   "compilerOptions": {
-    "types": ["express", "morgan", "mocha", "node", "react"],
+    "types": ["mocha"],
     "typeRoots": [
       "src/util/declarations/",
       "./node_modules/@types/",
