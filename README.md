@@ -15,7 +15,7 @@ _This README is generally aimed at developers interested in using, building on t
 Zupass allows users to store and organize PCDs, and to respond to queries from third-party applications about their PCDs. Here are some kinds of queries a third party can ask a user with a Zupass:
 
 - A gated Discord server can ask a user with a Zupass whether they possess a signed "ticket" authorizing them to join the server.
-- A community polling website like [Zupoll](https://zupoll.org/) can ask a user with a Zupass whether they are someone in a whitelisted set of voters (without the user revealing who they are!).
+- A community polling website like [Zupoll](https://zupoll.org/) can ask a user with a Zupass whether they are someone in an allowed set of voters (without the user revealing who they are!).
 - A game leaderboard can ask a user with a Zupass whether they have completed the necessary in-game requirements to be added to the leaderboard.
 - A new social media site could ask a user to import their posts, likes, follower count, and even [usernames](https://zkemail.xyz/) from other social platforms.
 - A financial service provider could ask a user with a Zupass to prove that they have a recently-signed bank statement, credit card statement, and tax return, and that running a publicly-known financial health formula on these statements results in a certain creditworthiness score.
