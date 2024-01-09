@@ -23,7 +23,7 @@
     "build:ts": "tsup src/index.ts --format cjs,esm --clean",
     "build:types": "rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json --emitDeclarationOnly",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "yarn clean && yarn build",
     "test": "jest",
     "clean": "rm -rf dist node_modules"
   },
