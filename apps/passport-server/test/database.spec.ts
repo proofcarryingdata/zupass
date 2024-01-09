@@ -141,7 +141,8 @@ describe("database reads and writes", function () {
       const newUuid = await upsertUser(db, {
         email: testTicket.email,
         commitment: newCommitment,
-        terms_agreed: LATEST_PRIVACY_NOTICE
+        terms_agreed: LATEST_PRIVACY_NOTICE,
+        extra_issuance: false
       });
 
       const loggedinUser = await fetchLoggedInZuzaluUser(db, { uuid: newUuid });
@@ -344,7 +345,8 @@ describe("database reads and writes", function () {
       commitment,
       email,
       salt: salt1,
-      terms_agreed: LATEST_PRIVACY_NOTICE
+      terms_agreed: LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
@@ -410,7 +412,8 @@ describe("database reads and writes", function () {
       commitment,
       email,
       salt: salt1,
-      terms_agreed: LATEST_PRIVACY_NOTICE
+      terms_agreed: LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");
@@ -500,7 +503,8 @@ describe("database reads and writes", function () {
     const uuid = await upsertUser(db, {
       commitment,
       email,
-      terms_agreed: LATEST_PRIVACY_NOTICE
+      terms_agreed: LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
     });
     if (!uuid) {
       throw new Error("expected to be able to insert a commitment");

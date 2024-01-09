@@ -3,6 +3,7 @@ import {
   FeedSubscriptionManager,
   Subscription,
   SubscriptionErrorType,
+  SubscriptionFetchError,
   SubscriptionPermissionError
 } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
@@ -69,6 +70,7 @@ function FetchError({
 }) {
   const [polling, setPolling] = useState<boolean>(false);
   const [stillFailing, setStillFailing] = useState<boolean>(false);
+  const [error, setError] = useState<SubscriptionFetchError>();
   const credentialCache = useCredentialCache();
 
   const identity = useIdentity();
@@ -87,16 +89,25 @@ function FetchError({
     const error = subscriptions.getError(subscription.id);
     if (error && error.type === SubscriptionErrorType.FetchError) {
       setStillFailing(true);
+      setError(error);
     } else {
       setStillFailing(false);
+      setError(undefined);
     }
   }, [identity, pcds, credentialCache, subscriptions, subscription]);
+
   return (
     <div>
       <div>
         Could not load the feed. This may be due to poor network connectivity,
         or because the feed is unavailable.
       </div>
+      {error?.e?.message && (
+        <>
+          <Spacer h={16} />
+          <div>{error?.e?.message}</div>
+        </>
+      )}
       <Spacer h={16} />
       <Button disabled={polling} onClick={onRefreshClick}>
         <Spinner text="Refresh feed" show={polling} />

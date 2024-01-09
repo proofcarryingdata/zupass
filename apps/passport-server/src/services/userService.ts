@@ -263,7 +263,8 @@ export class UserService {
       // preserve whichever version they already agreed to.
       terms_agreed: existingUser
         ? existingUser.terms_agreed
-        : LATEST_PRIVACY_NOTICE
+        : LATEST_PRIVACY_NOTICE,
+      extra_issuance: false
     });
 
     // Reload Merkle trees
