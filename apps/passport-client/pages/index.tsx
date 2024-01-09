@@ -19,6 +19,7 @@ import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSu
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
+import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
@@ -31,6 +32,7 @@ import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
+import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
@@ -60,12 +62,12 @@ import {
   saveCheckedInOfflineTickets,
   saveIdentity,
   saveOfflineTickets,
-  saveSubscriptions,
   saveUsingLaserScanner
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
+import { validateAndLogInitialAppState } from "../src/validateState";
 
 class App extends React.Component<object, AppState> {
   state = undefined as AppState | undefined;
@@ -365,6 +367,8 @@ function RouterImpl() {
             path="frogscriptions/:feedCode"
             element={<FrogSubscriptionScreen />}
           />
+          <Route path="server-error" element={<ServerErrorScreen />} />
+          <Route path="import" element={<ImportBackupScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
@@ -399,14 +403,12 @@ async function loadInitialState(): Promise<AppState> {
   }
 
   const self = loadSelf();
-  const pcds = await loadPCDs();
+  const pcds = await loadPCDs(self);
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
   const offlineTickets = loadOfflineTickets();
   const checkedInOfflineDevconnectTickets =
     loadCheckedInOfflineDevconnectTickets();
-
-  subscriptions.updatedEmitter.listen(() => saveSubscriptions(subscriptions));
 
   let modal = { modalType: "none" } as AppState["modal"];
 
@@ -424,7 +426,7 @@ async function loadInitialState(): Promise<AppState> {
 
   const persistentSyncStatus = loadPersistentSyncStatus();
 
-  return {
+  const state: AppState = {
     self,
     encryptionKey,
     pcds,
@@ -437,8 +439,16 @@ async function loadInitialState(): Promise<AppState> {
     checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
     offline: !window.navigator.onLine,
     serverStorageRevision: persistentSyncStatus.serverStorageRevision,
-    serverStorageHash: persistentSyncStatus.serverStorageHash
+    serverStorageHash: persistentSyncStatus.serverStorageHash,
+    importScreen: undefined
   };
+
+  if (!validateAndLogInitialAppState("loadInitialState", state)) {
+    state.userInvalid = true;
+    state.modal = { modalType: "invalid-participant" };
+  }
+
+  return state;
 }
 
 registerServiceWorker();

@@ -1,5 +1,5 @@
+import { icons } from "@pcd/passport-ui";
 import styled from "styled-components";
-import { icons } from "../icons";
 
 export function Spinner({ text, show }: { text: string; show: boolean }) {
   return (

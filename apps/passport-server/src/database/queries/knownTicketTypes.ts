@@ -92,21 +92,23 @@ export async function setKnownTicketType(
   productId: string,
   knownPublicKeyName: string,
   knownPublicKeyType: KnownPublicKeyType,
-  ticketGroup: KnownTicketGroup
+  ticketGroup: KnownTicketGroup,
+  eventName: string
 ): Promise<KnownTicketType> {
   const result = await sqlQuery(
     client,
-    `INSERT INTO known_ticket_types VALUES($1, $2, $3, $4, $5, $6)
+    `INSERT INTO known_ticket_types VALUES($1, $2, $3, $4, $5, $6, $7)
     ON CONFLICT (identifier) DO UPDATE 
     SET event_id = $2, product_id = $3, known_public_key_name = $4,
-    known_public_key_type = $5, ticket_group = $6`,
+    known_public_key_type = $5, ticket_group = $6, event_name = $7`,
     [
       identifier,
       eventId,
       productId,
       knownPublicKeyName,
       knownPublicKeyType,
-      ticketGroup
+      ticketGroup,
+      eventName
     ]
   );
 

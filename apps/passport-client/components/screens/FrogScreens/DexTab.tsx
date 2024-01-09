@@ -1,10 +1,10 @@
 import { EdDSAFrogPCD, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import { DexFrog } from "@pcd/passport-interface";
+import { icons } from "@pcd/passport-ui";
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import styled from "styled-components";
 import { useDispatch } from "../../../src/appHooks";
 import { RippleLoader } from "../../core/RippleLoader";
-import { icons } from "../../icons";
 import { Button, ButtonGroup } from "./Button";
 import { FrogsModal } from "./FrogsModal";
 

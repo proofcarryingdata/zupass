@@ -1,9 +1,9 @@
+import { icons } from "@pcd/passport-ui";
 import React, { useCallback } from "react";
 import styled from "styled-components";
 import { useDispatch, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { CircleButton } from "../core/Button";
-import { icons } from "../icons";
 
 export const AppHeader = React.memo(AppHeaderImpl);
 

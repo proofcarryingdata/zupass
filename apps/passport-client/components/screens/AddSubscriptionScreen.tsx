@@ -25,6 +25,7 @@ import {
   useUserForcedToLogout
 } from "../../src/appHooks";
 import { isDefaultSubscription } from "../../src/defaultSubscriptions";
+import { saveSubscriptions } from "../../src/localstorage";
 import {
   clearAllPendingRequests,
   pendingAddSubscriptionRequestKey,
@@ -33,8 +34,8 @@ import {
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, Button, H2, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
+import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { Spinner } from "../shared/Spinner";
-import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
 
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
@@ -89,6 +90,7 @@ export function AddSubscriptionScreen() {
         setFetchedProviderName(response.providerName);
         if (!subs.getProvider(response.providerUrl)) {
           subs.addProvider(response.providerUrl, response.providerName);
+          saveSubscriptions(subs);
         }
       })
       .catch((e) => {
@@ -104,10 +106,7 @@ export function AddSubscriptionScreen() {
 
   return (
     <AppContainer bg="gray">
-      <SubscriptionNavigation
-        label={"Subscriptions"}
-        to="/subscriptions"
-      ></SubscriptionNavigation>
+      <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
         <H2>Add subscription</H2>

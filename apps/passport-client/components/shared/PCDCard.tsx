@@ -3,19 +3,18 @@ import {
   TicketCategory,
   isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
-import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
-import { PCD } from "@pcd/pcd-types";
-import React, { useCallback, useContext, useMemo } from "react";
+import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
+import { PCD, PCDUI } from "@pcd/pcd-types";
+import { memo, useCallback, useContext, useMemo } from "react";
 import styled from "styled-components";
-import { usePCDCollection } from "../../src/appHooks";
+import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
+import { pcdRenderers } from "../../src/pcdRenderers";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
 import { MainIdentityCard } from "./MainIdentityCard";
-import { DevconnectCardBody } from "./cards/DevconnectTicket";
-import { ZKTicketPCDCard } from "./cards/ZKTicket";
 
-export const PCDCard = React.memo(PCDCardImpl);
+export const PCDCard = memo(PCDCardImpl);
 
 /**
  * Shows a card representing a PCD in Zupass. If expanded, the full card, otherwise
@@ -50,6 +49,7 @@ function PCDCardImpl({
             {!hideRemoveButton && (
               <CardFooter pcd={pcd} isMainIdentity={isMainIdentity} />
             )}
+            {hideRemoveButton && <Spacer h={8} />}
           </CardBodyContainer>
         </CardOutlineExpanded>
       </CardContainerExpanded>
@@ -82,31 +82,21 @@ function HeaderContent({
     }
   }, [pcd, pcdPackage]);
 
-  let header;
+  const ui = getUI(pcdPackage.name);
+
+  let header = null;
   if (isMainIdentity) {
-    header = "ZUPASS IDENTITY";
+    header = <>ZUPASS IDENTITY</>;
+  } else if (ui.getHeader) {
+    header = ui.getHeader({ pcd });
   } else if (displayOptions?.header) {
-    header = displayOptions.header.toUpperCase();
+    header = <>{displayOptions.header.toUpperCase()}</>;
   }
 
-  if (
-    isEdDSATicketPCD(pcd) &&
-    pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect &&
-    pcd.claim.ticket.productId === ZUCONNECT_23_DAY_PASS_PRODUCT_ID
-  ) {
-    header = "ZUCONNECT '23 DAY PASS";
-  }
-
-  const headerContent = header ? (
-    <>{header}</>
-  ) : (
-    pcdPackage?.renderCardBody({ pcd, returnHeader: true })
-  );
-
-  return headerContent;
+  return header;
 }
 
-const CardFooter = React.memo(CardFooterImpl);
+const CardFooter = memo(CardFooterImpl);
 
 function CardFooterImpl({
   pcd,
@@ -140,12 +130,36 @@ function CardFooterImpl({
   );
 }
 
-function TicketCardBody({ pcd }: { pcd: EdDSATicketPCD }) {
-  if (pcd.claim.ticket.ticketCategory === TicketCategory.Devconnect) {
-    return <DevconnectCardBody pcd={pcd} />;
-  }
+function getUI(
+  pcdPackageName: string
+): PCDUI<PCD<unknown, unknown>, unknown> | undefined {
+  return pcdRenderers[pcdPackageName];
+}
 
-  return <ZKTicketPCDCard pcd={pcd} />;
+/**
+ * EdDSATicketPCD cards require some extra context and configuration. In
+ * particular, they require access to the user's identity PCD for generation
+ * of ZK proofs, and can be configured to include different URLs in their QR
+ * codes based on the type of ticket provided.
+ */
+function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }) {
+  const Card = EdDSATicketPCDUI.renderCardBody;
+  const identityPCD = useUserIdentityPCD();
+  // Only Devconnect and ZuConnect tickets support ID-based verification
+  const idBasedVerifyURL =
+    pcd.claim.ticket.ticketCategory === TicketCategory.Devconnect
+      ? `${window.location.origin}/#/checkin-by-id`
+      : pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect
+      ? `${window.location.origin}/#/verify`
+      : undefined;
+  return (
+    <Card
+      pcd={pcd}
+      identityPCD={identityPCD}
+      verifyURL={`${window.location.origin}/#/verify`}
+      idBasedVerifyURL={idBasedVerifyURL}
+    />
+  );
 }
 
 function CardBody({
@@ -160,20 +174,16 @@ function CardBody({
   if (isMainIdentity) {
     return <MainIdentityCard />;
   }
-
-  if (
-    isEdDSATicketPCD(pcd) &&
-    (pcd.claim.ticket.ticketCategory === TicketCategory.Devconnect ||
-      pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect)
-  ) {
-    return <TicketCardBody pcd={pcd} />;
-  }
-
   if (pcdCollection.hasPackage(pcd.type)) {
-    const pcdPackage = pcdCollection.getPackage(pcd.type);
-    if (pcdPackage.renderCardBody) {
-      const Component = pcdPackage.renderCardBody;
+    const ui = getUI(pcd.type);
+    if (ui) {
+      if (isEdDSATicketPCD(pcd)) {
+        return <TicketWrapper pcd={pcd} />;
+      }
+      const Component = ui.renderCardBody;
       return <Component pcd={pcd} />;
+    } else {
+      console.warn(`Could not find a UI renderer for PCD type "${pcd.type}"`);
     }
   }
 

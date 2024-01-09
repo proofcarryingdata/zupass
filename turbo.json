@@ -4,18 +4,18 @@
     "build": {
       "dependsOn": ["^build"],
       "outputs": ["dist/**"],
-      "cache": false
+      "cache": true
     },
     "lint": {
       "outputs": [],
-      "cache": false
+      "cache": true
     },
     "dev": {
       "cache": false
     },
     "test": {
       "outputs": [],
-      "cache": false
+      "cache": true
     },
     "clean": {
       "outputs": [],
@@ -78,6 +78,7 @@
     "FROGCRYPTO_ADMIN_USER_EMAILS",
     "FROGCRYPTO_ASSETS_URL",
     "FROGCRYPTO_SERVER_URL",
-    "TICKET_ISSUANCE_CUTOFF_DATE"
+    "TICKET_ISSUANCE_CUTOFF_DATE",
+    "GENERIC_RATE_LIMIT_DISABLED"
   ]
 }

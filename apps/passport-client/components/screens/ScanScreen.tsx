@@ -1,3 +1,4 @@
+import { icons } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
@@ -7,7 +8,6 @@ import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
 import { CircleButton } from "../core/Button";
-import { icons } from "../icons";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 

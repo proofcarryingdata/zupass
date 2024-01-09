@@ -1,8 +1,8 @@
+import { icons } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
-import { icons } from "../icons";
 import { AccountExportButton } from "../shared/AccountExportButton";
 
 export function SettingsModal({
@@ -34,7 +34,7 @@ export function SettingsModal({
           height={34}
         />
       </TextCenter>
-      <Spacer h={24} />
+      <Spacer h={16} />
       <CenterColumn>
         <TextCenter>{self.email}</TextCenter>
         <Spacer h={16} />
@@ -48,13 +48,19 @@ export function SettingsModal({
               {hasSetupPassword ? "Change" : "Add"} Password
             </LinkButton>
             <Spacer h={16} />
+            <AccountExportButton />
+            <Spacer h={16} />
+            <LinkButton $primary={true} to="/import" onClick={close}>
+              Import Account Data
+            </LinkButton>
+            <Spacer h={16} />
           </>
         )}
-        <AccountExportButton />
-        <Spacer h={16} />
+
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
+        <Spacer h={24} />
       </CenterColumn>
     </>
   );

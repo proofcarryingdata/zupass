@@ -18,6 +18,7 @@ import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PersistentCacheService } from "./services/persistentCacheService";
+import { PoapService } from "./services/poapService";
 import { ProvingService } from "./services/provingService";
 import { RateLimitService } from "./services/rateLimitService";
 import { RollbarService } from "./services/rollbarService";
@@ -51,6 +52,7 @@ export interface GlobalServices {
   telegramService: TelegramService | null;
   kudosbotService: KudosbotService | null;
   frogcryptoService: FrogcryptoService | null;
+  poapService: PoapService;
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
@@ -99,4 +101,5 @@ export interface EnvironmentVariables {
   ACCOUNT_RESET_LIMIT_DURATION_MS?: string;
   TELEGRAM_KUDOSBOT_TOKEN?: string;
   TICKET_ISSUANCE_CUTOFF_DATE?: string;
+  GENERIC_RATE_LIMIT_DISABLED?: string;
 }

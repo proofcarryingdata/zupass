@@ -1,3 +1,4 @@
+import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
   agreeTerms,
@@ -15,9 +16,9 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import {
-  SemaphoreIdentityPCD,
+  isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
@@ -45,13 +46,14 @@ import {
 import { getPackages } from "./pcdPackages";
 import { hasPendingRequest } from "./sessionStorage";
 import { AppError, AppState, GetState, StateEmitter } from "./state";
-import { hasSetupPassword } from "./user";
+import { findUserIdentityPCD, hasSetupPassword } from "./user";
 import {
-  downloadStorage,
+  downloadAndMergeStorage,
   uploadSerializedStorage,
   uploadStorage
 } from "./useSyncE2EEStorage";
 import { assertUnreachable } from "./util";
+import { validateAndLogRunningAppState } from "./validateState";
 
 export type Dispatcher = (action: Action) => void;
 
@@ -129,6 +131,11 @@ export type Action =
       subscriptionId: string;
       onSucess?: () => void;
       onError?: (e: Error) => void;
+    }
+  | {
+      type: "merge-import";
+      collection: PCDCollection;
+      pcdsToMergeIds: Set<PCD["id"]>;
     };
 
 export type StateContextValue = {
@@ -232,6 +239,13 @@ export async function dispatch(
         action.subscriptionId,
         action.onSucess,
         action.onError
+      );
+    case "merge-import":
+      return mergeImport(
+        state,
+        update,
+        action.collection,
+        action.pcdsToMergeIds
       );
     default:
       // We can ensure that we never get here using the type system
@@ -342,24 +356,34 @@ async function finishAccountCreation(
   update: ZuUpdate
 ) {
   // Verify that the identity is correct.
-  const { identity } = state;
-  console.log("[ACCOUNT] Check user", identity, user);
-  if (identity == null || identity.commitment.toString() !== user.commitment) {
+  if (
+    !validateAndLogRunningAppState(
+      "finishAccountCreation",
+      user,
+      state.identity,
+      state.pcds
+    )
+  ) {
     update({
       error: {
         title: "Invalid identity",
         message: "Something went wrong saving your Zupass. Contact support."
       }
     });
-    return; // Don't save the bad identity.  User must reset account.
+    return; // Don't save the bad identity. User must reset account.
   }
 
-  // Save PCDs to E2EE storage.
+  // Save PCDs to E2EE storage.  knownRevision=undefined is the way to create
+  // a new entry.  It would also overwrite any conflicting data which may
+  // already exist, but that should be impossible for a new account with
+  // a new encryption key.
   console.log("[ACCOUNT] Upload initial PCDs");
   const uploadResult = await uploadStorage(
     user,
+    state.identity,
     state.pcds,
-    state.subscriptions
+    state.subscriptions,
+    undefined // knownRevision
   );
   if (uploadResult.success) {
     update({
@@ -367,6 +391,12 @@ async function finishAccountCreation(
       serverStorageRevision: uploadResult.value.revision,
       serverStorageHash: uploadResult.value.storageHash
     });
+  } else if (
+    !uploadResult.success &&
+    uploadResult.error.name === "ValidationError"
+  ) {
+    userInvalid(update);
+    return;
   }
 
   // Save user to local storage.  This is done last because it unblocks
@@ -506,22 +536,33 @@ async function loadAfterLogin(
   if (!userResponse.success) {
     throw new Error(userResponse.error.errorMessage);
   }
+  const self: User = userResponse.value;
+  if (!self) {
+    throw new Error("No User returned by server.");
+  }
 
-  // TODO: This fragile mechanism of fetching the user's identity PCD assumes
-  // it's always the first one created, and that changes never cause the order
-  // to change.  We should do something more robust, probably tied to the
-  // commitment stored in self.
-  const identityPCD = pcds.getPCDsByType(
-    SemaphoreIdentityPCDTypeName
-  )[0] as SemaphoreIdentityPCD;
+  // Validate stored state against the user response.
+  const identityPCD = findUserIdentityPCD(pcds, userResponse.value);
+  if (
+    !validateAndLogRunningAppState(
+      "loadAfterLogin",
+      userResponse.value,
+      identityPCD?.claim?.identity,
+      pcds
+    )
+  ) {
+    userInvalid(update);
+    return;
+  }
+  if (!identityPCD) {
+    // Validation should've caught this, but the compiler doesn't know that.
+    console.error("No identity PCD found in encrypted storage.");
+    userInvalid(update);
+    return;
+  }
 
   let modal: AppState["modal"] = { modalType: "none" };
-  if (!identityPCD) {
-    // TODO: handle error gracefully
-    // TODO: Also check that identityPCD's commitment matches the one
-    // in storage.self
-    throw new Error("no identity found in encrypted storage");
-  } else if (
+  if (
     // If on Zupass legacy login, ask user to set passwrod
     self != null &&
     encryptionKey == null &&
@@ -531,6 +572,7 @@ async function loadAfterLogin(
     modal = { modalType: "upgrade-account-modal" };
   }
 
+  console.log(`[SYNC] saving state at login: revision ${storage.revision}`);
   await savePCDs(pcds);
   await saveSubscriptions(subscriptions);
   savePersistentSyncStatus({
@@ -538,7 +580,7 @@ async function loadAfterLogin(
     serverStorageHash: storageHash
   });
   saveEncryptionKey(encryptionKey);
-  saveSelf(userResponse.value);
+  saveSelf(self);
   saveIdentity(identityPCD.claim.identity);
 
   update({
@@ -548,7 +590,7 @@ async function loadAfterLogin(
     serverStorageRevision: storage.revision,
     serverStorageHash: storageHash,
     identity: identityPCD.claim.identity,
-    self: userResponse.value,
+    self,
     modal
   });
   notifyLoginToOtherTabs();
@@ -569,7 +611,13 @@ async function handlePasswordChangeOnOtherTab(update: ZuUpdate) {
   const encryptionKey = loadEncryptionKey();
   return update({
     self,
-    encryptionKey
+    encryptionKey,
+
+    // Extra download helps to get our in-memory sync state up-to-date faster.
+    // The password change on the other tab is an upload of a new revision so
+    // a download is necessary.  Otherwise loading our new self object above
+    // will make this tab think it needs to upload and cause a conflict.
+    extraDownloadRequested: true
   });
 }
 
@@ -656,9 +704,16 @@ let syncInProgress = false;
 let skippedSyncUpdates = 0;
 
 /**
- * Does the real work of sync(), inside of reentrancy protection.
- * Returns the changes to be made to AppState.  If changes were made,
- * this function should be run again.
+ * Does the real work of sync(), inside of reentrancy protection.  If action
+ * is needed, this function takes one action and returns, expecting to be
+ * run again until no further action is needed.
+ *
+ * Returns the changes to be made to AppState, which the caller is expected
+ * to applly via update().  If the result is defined, this function should be
+ * run again.
+ *
+ * Further calls to update() will also occur inside of this function, to update
+ * fields which allow the UI to track progress.
  */
 async function doSync(
   state: AppState,
@@ -671,6 +726,10 @@ async function doSync(
   }
   if (loadEncryptionKey() == null) {
     console.log("[SYNC] no encryption key, can't sync");
+    return undefined;
+  }
+  if (state.userInvalid) {
+    console.log("[SYNC] userInvalid=true, exiting sync");
     return undefined;
   }
 
@@ -686,15 +745,22 @@ async function doSync(
     // Download user's E2EE storage, which includes both PCDs and subscriptions.
     // We'll skip this if it fails, or if the server indicates no changes based
     // on the last revision we downloaded.
-    const dlRes = await downloadStorage(state.serverStorageRevision);
+    const dlRes = await downloadAndMergeStorage(
+      state.serverStorageRevision,
+      state.serverStorageHash,
+      state.self,
+      state.identity,
+      state.pcds,
+      state.subscriptions
+    );
     if (dlRes.success && dlRes.value != null) {
-      const { pcds, subscriptions, revision, storageHash } = dlRes.value;
+      const { pcds, subscriptions, serverRevision, serverHash } = dlRes.value;
       return {
         downloadedPCDs: true,
         pcds,
         subscriptions,
-        serverStorageRevision: revision,
-        serverStorageHash: storageHash,
+        serverStorageRevision: serverRevision,
+        serverStorageHash: serverHash,
         extraDownloadRequested: false
       };
     } else {
@@ -756,13 +822,16 @@ async function doSync(
     state.pcds,
     state.subscriptions
   );
+
   if (state.serverStorageHash !== appStorage.storageHash) {
     console.log("[SYNC] sync action: upload");
-    // TODO(artwyman): Add serverStorageRevision input as knownRevision here,
-    // but only after we're able to respond to a conflict by downloading.
     const upRes = await uploadSerializedStorage(
+      state.self,
+      state.identity,
+      state.pcds,
       appStorage.serializedStorage,
-      appStorage.storageHash
+      appStorage.storageHash,
+      state.serverStorageRevision
     );
     if (upRes.success) {
       return {
@@ -770,9 +839,34 @@ async function doSync(
         serverStorageHash: upRes.value.storageHash
       };
     } else {
-      return {
-        completedFirstSync: true
-      };
+      if (upRes.error.name === "ValidationError") {
+        // early return on upload validation error; this doesn't cause upload
+        // loop b/c there is an even earlier early return that exits the sync
+        // code in the case that the userInvalid flag is set
+        userInvalid(update);
+        return;
+      }
+
+      // Upload failed.  Update AppState if necessary, but not unnecessarily.
+      // AppState updates will trigger another upload attempt.
+      const needExtraDownload = upRes.error.name === "Conflict";
+      if (
+        state.completedFirstSync &&
+        (!needExtraDownload || state.extraDownloadRequested)
+      ) {
+        return undefined;
+      }
+
+      const updates: Partial<AppState> = {};
+      if (!state.completedFirstSync) {
+        // We completed a first attempt at sync, even if it failed.
+        updates.completedFirstSync = true;
+      }
+      if (needExtraDownload && !state.extraDownloadRequested) {
+        updates.extraDownloadRequested = true;
+      }
+
+      return updates;
     }
   }
 
@@ -844,12 +938,17 @@ async function addSubscription(
   if (!state.subscriptions.getProvider(providerUrl)) {
     state.subscriptions.addProvider(providerUrl, providerName);
   }
-  await state.subscriptions.subscribe(providerUrl, feed, true);
+  const sub = await state.subscriptions.subscribe(providerUrl, feed, true);
   await saveSubscriptions(state.subscriptions);
   update({
     subscriptions: state.subscriptions,
     loadedIssuedPCDs: false
   });
+  dispatch(
+    { type: "sync-subscription", subscriptionId: sub.id },
+    state,
+    update
+  );
 }
 
 async function removeSubscription(
@@ -938,6 +1037,76 @@ async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
     update({
       modal: {
         modalType: "privacy-notice"
+      }
+    });
+  }
+}
+
+/**
+ * Merge in a PCD collection from an import of backed-up data.
+ */
+async function mergeImport(
+  state: AppState,
+  update: ZuUpdate,
+  collection: PCDCollection,
+  pcdsToMergeIds: Set<PCD["id"]>
+) {
+  console.log("Merging imported PCD Collection");
+  const userHasExistingSemaphoreIdentityPCD =
+    state.pcds.getPCDsByType(SemaphoreIdentityPCDTypeName).length > 0;
+
+  const userHasExistingEmailPCD =
+    state.pcds.getPCDsByType(EmailPCDTypeName).length > 0;
+
+  const pcdCountBeforeMerge = state.pcds.getAll().length;
+
+  const predicate = (pcd: PCD, target: PCDCollection): boolean => {
+    return (
+      pcdsToMergeIds.has(pcd.id) &&
+      !(pcd.type === EmailPCDTypeName && userHasExistingEmailPCD) &&
+      !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
+      !(
+        isSemaphoreIdentityPCD(pcd) &&
+        pcd.claim.identity.getCommitment().toString() !== state.self.commitment
+      ) &&
+      !target.hasPCDWithId(pcd.id)
+    );
+  };
+
+  // This async call could mean that another dispatch()'ed event could
+  // interfere with app state, including the state we want to change.
+  // This risk has been mitigated by not calling the useSyncE2EEStorage
+  // hook on ImportBackupScreen.
+  const packages = await getPackages();
+  const pcds = new PCDCollection(
+    packages,
+    state.pcds.getAll(),
+    state.pcds.folders
+  );
+
+  try {
+    pcds.merge(collection, {
+      shouldInclude: predicate
+    });
+
+    update({
+      pcds,
+      importScreen: {
+        imported: pcds.getAll().length - pcdCountBeforeMerge
+      }
+    });
+
+    console.log(
+      `Completed merge ${pcds.getAll().length - pcdCountBeforeMerge} of PCDs`
+    );
+
+    await savePCDs(pcds);
+  } catch (e) {
+    console.log(e);
+    update({
+      importScreen: {
+        error:
+          "An unexpected error was encountered when importing your backup. No changes have been made to your account."
       }
     });
   }

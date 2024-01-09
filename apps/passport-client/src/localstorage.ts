@@ -12,16 +12,29 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
 import { getPackages } from "./pcdPackages";
+import { validateAndLogRunningAppState } from "./validateState";
 
 const OLD_PCDS_KEY = "pcds"; // deprecated
 const COLLECTION_KEY = "pcd_collection";
 
 export async function savePCDs(pcds: PCDCollection): Promise<void> {
+  if (
+    !validateAndLogRunningAppState("savePCDs", undefined, undefined, pcds, true)
+  ) {
+    console.error(
+      "PCD Collection failed to validate - not writing it to localstorage"
+    );
+    return;
+  }
+
   const serialized = await pcds.serializeCollection();
   window.localStorage[COLLECTION_KEY] = serialized;
 }
 
-export async function loadPCDs(): Promise<PCDCollection> {
+/**
+ * {@link self} argument used only to modify validation behavior.
+ */
+export async function loadPCDs(self?: User): Promise<PCDCollection> {
   const oldPCDs = window.localStorage[OLD_PCDS_KEY];
   if (oldPCDs) {
     const collection = new PCDCollection(await getPackages());
@@ -31,10 +44,26 @@ export async function loadPCDs(): Promise<PCDCollection> {
   }
 
   const serializedCollection = window.localStorage[COLLECTION_KEY];
-  return await PCDCollection.deserialize(
+  const collection = await PCDCollection.deserialize(
     await getPackages(),
     serializedCollection ?? "{}"
   );
+
+  if (
+    !validateAndLogRunningAppState(
+      "loadPCDs",
+      undefined,
+      undefined,
+      collection,
+      self !== undefined
+    )
+  ) {
+    console.error(
+      "PCD Collection failed to validate when loading from localstorage"
+    );
+  }
+
+  return collection;
 }
 
 export async function saveSubscriptions(

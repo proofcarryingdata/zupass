@@ -1,6 +1,6 @@
-import { ZUPASS_GITHUB_REPOSITORY_URL, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
-import { CenterColumn, Spacer, TextCenter } from "../core";
-import { icons } from "../icons";
+import { icons } from "@pcd/passport-ui";
+import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
+import { CenterColumn, Spacer, SupportLink, TextCenter } from "../core";
 
 export function InfoModal() {
   return (
@@ -20,11 +20,7 @@ export function InfoModal() {
           </TextCenter>
           <Spacer h={16} />
           <TextCenter>
-            For app support, contact{" "}
-            <a href={`mailto:${ZUPASS_SUPPORT_EMAIL}`}>
-              {ZUPASS_SUPPORT_EMAIL}
-            </a>
-            .
+            For app support, contact <SupportLink />.
           </TextCenter>
         </>
       </CenterColumn>

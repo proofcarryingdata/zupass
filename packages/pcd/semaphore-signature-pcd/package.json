@@ -1,0 +1,66 @@
+{
+  "name": "@pcd/semaphore-signature-pcd",
+  "version": "0.10.0",
+  "license": "GPL-3.0-or-later",
+  "main": "./dist/node/index.js",
+  "module": "./dist/node/index.mjs",
+  "types": "./dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "browser": {
+        "types": "./dist/types/src/index.d.ts",
+        "import": "./dist/browser/index.mjs"
+      },
+      "node": {
+        "types": "./dist/types/src/index.d.ts",
+        "import": "./dist/node/index.mjs",
+        "require": "./dist/node/index.js"
+      },
+      "default": {
+        "types": "./dist/types/src/index.d.ts",
+        "import": "./dist/browser/index.mjs"
+      }
+    }
+  },
+  "files": [
+    "./artifacts/*",
+    "dist",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "scripts": {
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "yarn build:browser && yarn build:node && yarn build:types",
+    "build:browser": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format esm --clean",
+    "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
+    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist/types",
+    "typecheck": "yarn tsc --noEmit",
+    "prepublishOnly": "yarn build",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
+    "clean": "rm -rf dist node_modules"
+  },
+  "dependencies": {
+    "@pcd/pcd-types": "0.10.0",
+    "@pcd/semaphore-identity-pcd": "0.10.0",
+    "@pcd/util": "0.4.0",
+    "@semaphore-protocol/group": "^3.14.0",
+    "@semaphore-protocol/identity": "^3.14.0",
+    "@semaphore-protocol/proof": "^3.14.0",
+    "json-bigint": "^1.0.0",
+    "uuid": "^9.0.0"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
+    "@types/json-bigint": "^1.0.1",
+    "@types/mocha": "^10.0.1",
+    "@types/uuid": "^9.0.0",
+    "eslint": "^7.32.0",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^4.9.5"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

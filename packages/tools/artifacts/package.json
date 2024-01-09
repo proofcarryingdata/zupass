@@ -1,0 +1,42 @@
+{
+  "name": "@pcd/artifacts",
+  "type": "module",
+  "version": "0.4.0",
+  "description": "A command line utility designed to manage PCD artifacts.",
+  "license": "GPL-3.0-or-later",
+  "bin": {
+    "pcd-artifacts": "src/index.js"
+  },
+  "files": [
+    "./src/*",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "engines": {
+    "node": ">=14.16"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "lint": "eslint **/*.js",
+    "clean": "rm -rf node_modules"
+  },
+  "dependencies": {
+    "@aws-sdk/client-s3": "^3.414.0",
+    "circomlib": "^2.0.5",
+    "commander": "^11.0.0",
+    "conf": "^11.0.2",
+    "download": "^8.0.0",
+    "inquirer": "^9.2.11",
+    "js-logger": "^1.6.1",
+    "log-symbols": "^5.1.0",
+    "ora": "^7.0.1",
+    "snarkjs": "^0.7.0"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "*",
+    "eslint": "^7.32.0"
+  },
+  "publishConfig": {
+    "access": "public"
+  }
+}

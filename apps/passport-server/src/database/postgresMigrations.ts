@@ -8,9 +8,7 @@ const MIGRATIONS_PATH = path.join(process.cwd(), "migrations");
 
 export async function migrateDatabase(client: PoolClient): Promise<void> {
   await traced("DB", "migrate", async () => {
-    logger(
-      `[INIT] Executing migrations from directory ${MIGRATIONS_PATH}`
-    );
+    logger(`[INIT] Executing migrations from directory ${MIGRATIONS_PATH}`);
     await migrate({ client }, MIGRATIONS_PATH);
     logger(`[INIT] Migrations completed successfully`);
   });

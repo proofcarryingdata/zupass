@@ -160,10 +160,10 @@ export async function rekeyEncryptedStorage(
       }
 
       // Blob update succeeded.  Update the user's salt within the transaction.
-      await txClient.query("UPDATE users SET salt = $2, encryption_key = NULL WHERE uuid = $1", [
-        uuid,
-        newSalt
-      ]);
+      await txClient.query(
+        "UPDATE users SET salt = $2, encryption_key = NULL WHERE uuid = $1",
+        [uuid, newSalt]
+      );
 
       return updateResult.rows[0].revision;
     }

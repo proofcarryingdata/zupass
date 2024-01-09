@@ -46,14 +46,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     makeEncodedVerifyLink
   });
 
-  await EdDSAFrogPCDPackage.init({
-    makeEncodedVerifyLink
-  });
-
-  await EdDSATicketPCDPackage.init({
-    makeEncodedVerifyLink
-  });
-
   await ZKEdDSAEventTicketPCDPackage.init({
     wasmFilePath: "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
     zkeyFilePath: "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey"

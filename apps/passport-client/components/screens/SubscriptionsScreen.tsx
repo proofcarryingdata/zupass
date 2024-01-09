@@ -15,7 +15,7 @@ import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, H2, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
-import { SubscriptionNavigation } from "../shared/SubscriptionNavigation";
+import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
 export function SubscriptionsScreen() {
@@ -45,7 +45,7 @@ export function SubscriptionsScreen() {
     <>
       <MaybeModal />
       <AppContainer bg="gray">
-        <SubscriptionNavigation label={"Home"} to="/"></SubscriptionNavigation>
+        <ScreenNavigation label={"Home"} to="/" />
         <Container>
           <H2>Your Subscriptions</H2>
           <Spacer h={32} />

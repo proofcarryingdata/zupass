@@ -1,6 +1,6 @@
-import { Spacer } from "@pcd/passport-ui";
+import { Spacer, icons } from "@pcd/passport-ui";
+import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import styled from "styled-components";
-import { icons } from "../icons";
 import { Button } from "./Button";
 import { BigInput } from "./Input";
 
@@ -95,3 +95,7 @@ export function ZuLogo() {
     <img draggable="false" src={icons.logo} width="160px" height="155px" />
   );
 }
+
+export const SupportLink = () => {
+  return <a href={`mailto:${ZUPASS_SUPPORT_EMAIL}`}>{ZUPASS_SUPPORT_EMAIL}</a>;
+};

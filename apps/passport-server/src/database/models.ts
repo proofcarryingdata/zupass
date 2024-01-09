@@ -234,6 +234,7 @@ export interface KnownTicketType {
   product_id: string;
   known_public_key_name: string;
   ticket_group: KnownTicketGroup;
+  event_name: string;
 }
 
 // Known ticket type with the actual public key
@@ -336,3 +337,5 @@ export interface AnonMessageWithDetails extends AnonMessage {
   topic_name: string;
   reactions: string[];
 }
+
+export type PoapEvent = "devconnect";

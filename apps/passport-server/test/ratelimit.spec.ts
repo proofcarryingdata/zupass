@@ -191,4 +191,32 @@ describe("generic rate-limiting features", function () {
       }
     }
   );
+
+  step(
+    "rate-limiting can be disabled by an environment variable",
+    async function () {
+      await stopApplication(application);
+      await db.end();
+      await overrideEnvironment({
+        ...testingEnv,
+        GENERIC_RATE_LIMIT_DISABLED: "true"
+      });
+
+      db = await getDB();
+      application = await startTestingApp({});
+      expect(application.services.rateLimitService).to.exist;
+      rateLimitService = application.services.rateLimitService;
+
+      // Normally, the 10th request would fail, but here >10 requests will
+      // succeed due to the rate limiter being disabled.
+      for (let i = 0; i < 20; i++) {
+        const result = await rateLimitService.requestRateLimitedAction(
+          "CHECK_EMAIL_TOKEN",
+          "test@example.com"
+        );
+
+        expect(result).to.be.true;
+      }
+    }
+  );
 });

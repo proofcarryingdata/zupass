@@ -1,4 +1,9 @@
 import { requestLogToServer, requestUser, User } from "@pcd/passport-interface";
+import { PCDCollection } from "@pcd/pcd-collection";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDTypeName
+} from "@pcd/semaphore-identity-pcd";
 import { appConfig } from "./appConfig";
 import { Dispatcher } from "./dispatch";
 
@@ -35,4 +40,26 @@ export async function pollUser(self: User, dispatch: Dispatcher) {
 // Function that checks whether the user has set a password for their account
 export function hasSetupPassword(user: User) {
   return user != null && user.salt != null;
+}
+
+export function findUserIdentityPCD(
+  pcds: PCDCollection,
+  user: User
+): SemaphoreIdentityPCD | undefined {
+  return findIdentityPCD(pcds, user.commitment);
+}
+
+export function findIdentityPCD(
+  pcds: PCDCollection,
+  identityCommitment: string
+): SemaphoreIdentityPCD | undefined {
+  for (const pcd of pcds.getPCDsByType(SemaphoreIdentityPCDTypeName)) {
+    if (
+      (pcd as SemaphoreIdentityPCD).claim.identity.commitment.toString() ===
+      identityCommitment
+    ) {
+      return pcd;
+    }
+  }
+  return undefined;
 }

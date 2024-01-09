@@ -5,7 +5,7 @@ import { ApplicationContext } from "../types";
 
 export function startTelemetry(_context: ApplicationContext) {
   const sdk: NodeSDK = new HoneycombSDK({
-    instrumentations: [getNodeAutoInstrumentations()],
+    instrumentations: [getNodeAutoInstrumentations()]
   });
 
   console.log("[INIT] Starting telemetry");
