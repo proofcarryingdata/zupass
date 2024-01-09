@@ -4,7 +4,7 @@
     "lib": ["dom"],
     "outDir": "dist",
     "declarationDir": "dist/types",
-    "rootDir": "src"
+    "rootDir": "."
   },
   "include": ["src", "test"],
   "exclude": ["dist", "build", "node_modules"],

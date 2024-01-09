@@ -3,7 +3,7 @@
     "lib": ["DOM"],
     "outDir": "dist",
     "declarationDir": "dist/types",
-    "rootDir": "src"
+    "rootDir": "."
   },
   "extends": "@pcd/tsconfig/ts-library.json",
   "include": ["src", "test"],
