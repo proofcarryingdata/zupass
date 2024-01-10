@@ -1,11 +1,11 @@
-import { getRandomValues, toHexString } from "@pcd/util";
+import { getRandomValuesOfLength, toHexString } from "@pcd/util";
 import { EdDSAPublicKey } from "../EdDSAPCD";
 
 /**
  * Creates a new EdDSA private key generating a cryptographically strong random 32-byte value.
  */
 export function newEdDSAPrivateKey(): string {
-  return toHexString(getRandomValues(32));
+  return toHexString(getRandomValuesOfLength(32));
 }
 
 /**

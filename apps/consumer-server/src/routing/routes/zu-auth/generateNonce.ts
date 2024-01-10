@@ -1,4 +1,4 @@
-import { getRandomValues, hexToBigInt, toHexString } from "@pcd/util";
+import { getRandomValuesOfLength, hexToBigInt, toHexString } from "@pcd/util";
 import express, { Request, Response } from "express";
 import { ApplicationContext } from "../../../types";
 
@@ -17,7 +17,7 @@ export function generateNonce(
   app.get("/auth/nonce", async (req: Request, res: Response) => {
     try {
       req.session.nonce = hexToBigInt(
-        toHexString(getRandomValues(30))
+        toHexString(getRandomValuesOfLength(30))
       ).toString();
 
       await req.session.save();
