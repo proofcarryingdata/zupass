@@ -8,14 +8,11 @@
     "target": "ES2022",
     "module": "commonjs",
     "inlineSourceMap": true,
-<<<<<<< HEAD
     // We need to tell TypeScript to *only* include @types/mocha-steps and not
     // indiscriminately include all @types/* packages, because one of our
     // dependencies includes @types/generic-pool, which is broken and causes
     // build failures.
     // See https://github.com/proofcarryingdata/zupass/pull/1400
-=======
->>>>>>> ac7e8278 (ESM builds)
     "types": ["mocha-steps"],
     "typeRoots": [
       "src/util/declarations/",
