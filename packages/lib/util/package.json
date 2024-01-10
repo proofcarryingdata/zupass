@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "chai": "^4.3.7",
-    "get-random-values": "^3.0.0",
     "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"
   },

@@ -32,5 +32,7 @@ function initCryptoAPI(): Crypto {
  * @returns Random value.
  */
 export function getRandomValuesOfLength(numberOfBytes: number): Uint8Array {
-  return getRandomValues(new Uint8Array(numberOfBytes));
+  const crypto = initCryptoAPI();
+
+  return crypto.getRandomValues(new Uint8Array(numberOfBytes));
 }
