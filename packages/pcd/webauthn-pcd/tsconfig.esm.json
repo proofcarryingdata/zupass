@@ -5,7 +5,7 @@
     "module": "ESNext",
     "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
   },
-  "include": ["src", "src/*.json"],
+  "include": ["src", "artifacts/*.json"],
   "references": [
     {
       "path": "../../lib/passport-crypto/tsconfig.esm.json"

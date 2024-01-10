@@ -5,7 +5,7 @@
     "module": "CommonJS",
     "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
   },
-  "include": ["src", "src/*.json"],
+  "include": ["src", "artifacts/*.json"],
   "references": [
     {
       "path": "../eddsa-pcd/tsconfig.cjs.json"

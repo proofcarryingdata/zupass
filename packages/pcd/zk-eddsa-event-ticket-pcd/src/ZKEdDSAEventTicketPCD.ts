@@ -43,7 +43,7 @@ import {
 import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import vkey from "./circuit.json";
+import vkey from "../artifacts/circuit.json";
 
 export const STATIC_TICKET_PCD_NULLIFIER = generateSnarkMessageHash(
   "dummy-nullifier-for-eddsa-event-ticket-pcds"

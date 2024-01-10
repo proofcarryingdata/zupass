@@ -6,7 +6,7 @@
     "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
   },
   // Don't include tests for builds
-  "include": ["src", "src/*.json"],
+  "include": ["src", "artifacts/*.json"],
   // References will be populated automatically by `yarn fix-references`
   "references": []
 }
