@@ -45,8 +45,7 @@ const main = async () => {
   );
 
   // Do an initial build, which will also populate the Turborepo cache
-  //await $`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
-  await $`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
+  await $`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
 
   // See documentation at https://github.com/gajus/turbowatch
   watch({
@@ -77,18 +76,9 @@ const main = async () => {
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
           );
 
-          // Tell Turbo to rebuild all @pcd/ packages, letting the cache skip
-          // the ones that have not changed.
-          //
-          // If we decide not to use the cache, we could construct a dependency
-          // graph based on the package the change has happened in, and filter
-          // down to the packages we want to rebuild, but letting Turbo handle
-          // this is easier for now.
-          // There may be some performance benefit in telling Turbo that it
-          // doesn't even need to check certain packages here, and this could
-          // be worth investigating. We want this to be as fast as it can be.
-          // await spawn`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
-          // await spawn`yarn tsc -b --emitDeclarationOnly tsconfig.build.json`;
+          // Rebuild all of the packages which have tsconfig.cjs.json and
+          // tsconfig.esm.json files (that is, all of them excluding things
+          // like the "artifacts" package).
           await spawn`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
