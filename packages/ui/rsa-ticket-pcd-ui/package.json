@@ -22,7 +22,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
     "@pcd/rsa-ticket-pcd": "0.5.0",

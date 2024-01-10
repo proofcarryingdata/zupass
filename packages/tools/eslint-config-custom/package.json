@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {},
   "devDependencies": {

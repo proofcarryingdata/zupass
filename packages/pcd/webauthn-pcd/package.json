@@ -23,7 +23,7 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "jest",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "files": [
     "dist",

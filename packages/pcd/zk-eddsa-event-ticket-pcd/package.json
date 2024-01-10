@@ -23,7 +23,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "clean": "rm -rf dist node_modules",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo",
     "artifacts:generate": "pcd-artifacts generate && cp artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-event-ticket-pcd && cp artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-event-ticket-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
