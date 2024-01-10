@@ -4,5 +4,25 @@
     "outDir": "dist/esm",
     "module": "ESNext"
   },
-  "include": ["src", "src/*.json"]
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../pcd/eddsa-ticket-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/passport-interface/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.esm.json"
+    }
+  ]
 }

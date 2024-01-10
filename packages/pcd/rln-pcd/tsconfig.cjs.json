@@ -4,5 +4,19 @@
     "outDir": "dist/cjs",
     "module": "CommonJS"
   },
-  "include": ["src", "src/*.json"]
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../semaphore-group-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.cjs.json"
+    }
+  ]
 }

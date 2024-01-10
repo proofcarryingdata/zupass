@@ -4,5 +4,25 @@
     "outDir": "dist/cjs",
     "module": "CommonJS"
   },
-  "include": ["src", "src/*.json"]
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../pcd/eddsa-ticket-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/passport-interface/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.cjs.json"
+    }
+  ]
 }

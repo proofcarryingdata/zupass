@@ -13,7 +13,6 @@
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "turbo run build",
-    "force-build": "DISABLE_BUILD_CACHE=1 ./scripts/build.sh",
     "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
@@ -26,8 +25,8 @@
     "clean:root": "rm -rf node_modules",
     "clean:workspaces": "turbo run clean --parallel && yarn",
     "knip": "knip --no-gitignore",
-    "check-references": "workspaces-to-typescript-project-references --check",
-    "fix-references": "workspaces-to-typescript-project-references && prettier -w \"{apps/*,packages/*/*}/tsconfig.json\""
+    "check-references": "scripts/check-references.sh",
+    "fix-references": "scripts/fix-references.sh"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",

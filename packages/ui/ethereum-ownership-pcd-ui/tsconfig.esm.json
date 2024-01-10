@@ -4,5 +4,19 @@
     "outDir": "dist/esm",
     "module": "ESNext"
   },
-  "include": ["src", "src/*.json"]
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../pcd/ethereum-ownership-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-signature-pcd/tsconfig.esm.json"
+    }
+  ]
 }

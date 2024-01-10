@@ -4,5 +4,16 @@
     "outDir": "dist/cjs",
     "module": "CommonJS"
   },
-  "include": ["src", "src/*.json"]
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../pcd/webauthn-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    }
+  ]
 }
