@@ -338,3 +338,10 @@ export interface AnonMessageWithDetails extends AnonMessage {
 }
 
 export type PoapEvent = "devconnect" | "zuzalu23";
+
+export interface RateLimitBucketDB {
+  action_type: string;
+  action_id: string;
+  remaining: number;
+  expiry_time: Date;
+}

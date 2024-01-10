@@ -1,46 +1,49 @@
 import { Pool } from "postgres-pool";
+import { RateLimitBucketDB } from "../models";
 import { sqlQuery } from "../sqlQuery";
 
 /**
- * Calls the `take_token` stored procedure to determine if a "token" is
- * available. If so, the action is permitted, otherwise it is denied due to
- * exceeding the rate limit.
- *
- * See apps/passport-server/migrations/61_rate_limit_variable_periods.sql
- *
- * @param client
- * @param actionType The type of action being attempted
- * @param actionId The identifier of this action
- * @param maxActions The maximum number of actions allowed in a time period
- * @param timePeriod The time period, in seconds
- * @returns Boolean indicating whether the action is permitted
+ * Delete multiple rate limiting buckets.
  */
-export async function checkRateLimit(
+export async function deleteRateLimitBuckets(
   client: Pool,
   actionType: string,
-  actionId: string,
-  maxActions: number,
-  timePeriod: number
-): Promise<boolean> {
-  return (
-    await sqlQuery(client, `SELECT take_token($1, $2, $3, $4, $5)`, [
-      actionType,
-      actionId,
-      maxActions,
-      timePeriod,
-      new Date()
-    ])
-  ).rows[0].take_token;
+  actionIds: string[]
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `DELETE FROM rate_limit_buckets WHERE action_type = $1 AND action_id = ANY($2)`,
+    [actionType, actionIds]
+  );
 }
 
 /**
- * After one hour, it is no longer necessary to track actions for rate-limiting
- * purposes, so we can delete them.
+ * Fetch all rate limit buckets.
  */
-export async function clearExpiredActions(client: Pool): Promise<void> {
+export async function fetchRateLimitBuckets(
+  client: Pool
+): Promise<RateLimitBucketDB[]> {
+  const result = await sqlQuery(client, `SELECT * FROM rate_limit_buckets`);
+  return result.rows;
+}
+
+/**
+ * Insert or update a rate limit bucket.
+ */
+export async function saveRateLimitBucket(
+  client: Pool,
+  actionType: string,
+  actionId: string,
+  remaining: number,
+  expiryTime: number
+): Promise<void> {
   await sqlQuery(
     client,
-    `DELETE FROM rate_limit_buckets WHERE last_refill <= ($1::timestamptz - INTERVAL '1 HOUR')`,
-    [new Date()]
+    `
+    INSERT INTO rate_limit_buckets (action_type, action_id, remaining, expiry_time)
+    VALUES($1, $2, $3, $4)
+    ON CONFLICT (action_type, action_id) DO
+    UPDATE SET action_type = $1, action_id = $2, remaining = $3, expiry_time = $4`,
+    [actionType, actionId, remaining, new Date(expiryTime)]
   );
 }
