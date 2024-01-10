@@ -23,7 +23,6 @@
     "@pcd/zk-eddsa-event-ticket-pcd": "^0.4.0",
     "cors": "^2.8.5",
     "express": "^4.18.2",
-    "get-random-values": "^3.0.0",
     "iron-session": "^6.3.1",
     "morgan": "^1.10.0",
     "react": "^18.2.0",

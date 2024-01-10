@@ -30,7 +30,6 @@
     "@pcd/util": "0.4.0",
     "chai": "^4.3.7",
     "circomlibjs": "^0.1.7",
-    "get-random-values": "^3.0.0",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
