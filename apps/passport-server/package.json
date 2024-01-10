@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "rm -rf ./build && yarn tsc -p ./tsconfig.json",
-    "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --respawn --transpile-only --watch=.env,.env.local src/main.ts",
+    "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --respawn --watch=.env,.env.local src/main.ts",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit test/**/*.spec.ts",

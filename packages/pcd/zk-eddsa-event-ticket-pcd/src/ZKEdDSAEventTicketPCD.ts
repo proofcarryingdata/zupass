@@ -79,6 +79,7 @@ export type EdDSATicketFieldsToReveal = {
 export interface ZKEdDSAEventTicketPCDInitArgs {
   zkeyFilePath: string;
   wasmFilePath: string;
+  foo?: string;
 }
 
 /**
