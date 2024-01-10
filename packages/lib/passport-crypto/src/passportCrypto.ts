@@ -1,3 +1,4 @@
+import getRandomValues from "get-random-values";
 import { getSodium, Sodium } from "./libsodium";
 import { Base64String, HexString, Utf8String } from "./types";
 import * as utils from "./utils";
@@ -25,9 +26,7 @@ export class PCDCrypto {
 
   public generateRandomKey(bits = 256): HexString {
     const bytes = bits / 8;
-    const arrayBuffer = utils
-      .getCrypto()
-      .getRandomValues(new Uint8Array(bytes));
+    const arrayBuffer = getRandomValues(new Uint8Array(bytes));
     return utils.arrayBufferToHexString(arrayBuffer);
   }
 

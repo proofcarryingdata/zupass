@@ -9534,6 +9534,13 @@ get-package-type@^0.1.0:
   resolved "https://registry.yarnpkg.com/get-package-type/-/get-package-type-0.1.0.tgz#8de2d803cff44df3bc6c456e6668b36c3926e11a"
   integrity sha512-pjzuKtY64GYfWizNAJ0fr9VqttZkNiK2iS430LtIHzjBEr6bX8Am2zm4sW4Ro5wjWW5cAlRL1qAMTcXbjNAO2Q==
 
+get-random-values@^3.0.0:
+  version "3.0.0"
+  resolved "https://registry.yarnpkg.com/get-random-values/-/get-random-values-3.0.0.tgz#b80606fa7a904aae9c4d1afbbf4edbad7684017d"
+  integrity sha512-mNznaBdYcpz7UAdnOtDGcLdNwAa79mXl5htEyyZ51YaeAWNf2g4x/2yCVBdNNTbi35wX0Stc2PJXM7G6rcONOA==
+  dependencies:
+    global "^4.4.0"
+
 get-stream@3.0.0, get-stream@^3.0.0:
   version "3.0.0"
   resolved "https://registry.yarnpkg.com/get-stream/-/get-stream-3.0.0.tgz#8e943d1358dc37555054ecbe2edb05aa174ede14"
@@ -9708,7 +9715,7 @@ glob@^9.3.1:
     minipass "^4.2.4"
     path-scurry "^1.6.1"
 
-global@~4.4.0:
+global@^4.4.0, global@~4.4.0:
   version "4.4.0"
   resolved "https://registry.yarnpkg.com/global/-/global-4.4.0.tgz#3e7b105179006a323ed71aafca3e9c57a5cc6406"
   integrity sha512-wv/LAoHdRE3BeTGz53FAamhGlPLhlssK45usmGFThIi4XqnBmjKQ16u+RNbP7WvigRZDxUsM0J3gcQ5yicaL0w==
@@ -16265,7 +16272,7 @@ typedoc@^0.25.1:
     minimatch "^9.0.3"
     shiki "^0.14.1"
 
-typescript@5.1.6, typescript@^4.5.2, typescript@^5.3.3:
+typescript@5.1.6, typescript@^5.3.3:
   version "5.3.3"
   resolved "https://registry.yarnpkg.com/typescript/-/typescript-5.3.3.tgz#b3ce6ba258e72e6305ba66f5c9b452aaee3ffe37"
   integrity sha512-pXWcraxM0uxAS+tN0AG/BF2TyqmHO014Z070UsJ+pFvYuRSq8KH8DmWpnbXe0pEPDHXZV3FcAbJkijJ5oNEnWw==

@@ -1,0 +1,128 @@
+{
+  "files": [],
+  "references": [
+    {
+      "path": "packages/lib/emitter/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/passport-crypto/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/passport-interface/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/passport-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/pcd-collection/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/util/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/eddsa-frog-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/eddsa-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/eddsa-ticket-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/email-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/ethereum-group-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/ethereum-ownership-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/halo-nonce-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/input-test-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/rln-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/rsa-image-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/rsa-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/rsa-ticket-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/semaphore-group-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/semaphore-identity-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/semaphore-signature-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/webauthn-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/zk-eddsa-event-ticket-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/zk-eddsa-frog-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/eddsa-frog-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/eddsa-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/eddsa-ticket-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/email-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/ethereum-group-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/ethereum-ownership-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/halo-nonce-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/rsa-image-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/rsa-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/rsa-ticket-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/semaphore-group-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/semaphore-identity-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/semaphore-signature-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/webauthn-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/zk-eddsa-event-ticket-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/zk-eddsa-frog-pcd-ui/tsconfig.cjs.json"
+    }
+  ]
+}

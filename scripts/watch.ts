@@ -45,8 +45,8 @@ const main = async () => {
   );
 
   // Do an initial build, which will also populate the Turborepo cache
-  await $`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
-  await $`yarn tsc -b --emitDeclarationOnly tsconfig.build.json`;
+  //await $`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
+  await $`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
 
   // See documentation at https://github.com/gajus/turbowatch
   watch({
@@ -87,8 +87,9 @@ const main = async () => {
           // There may be some performance benefit in telling Turbo that it
           // doesn't even need to check certain packages here, and this could
           // be worth investigating. We want this to be as fast as it can be.
-          await spawn`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
-          await spawn`yarn tsc -b --emitDeclarationOnly tsconfig.build.json`;
+          // await spawn`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
+          // await spawn`yarn tsc -b --emitDeclarationOnly tsconfig.build.json`;
+          await spawn`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
   });

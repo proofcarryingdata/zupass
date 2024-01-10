@@ -2,24 +2,14 @@
   "name": "@pcd/zk-eddsa-event-ticket-pcd",
   "version": "0.4.0",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/node/index.js",
-  "module": "./dist/node/index.mjs",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",
   "exports": {
     ".": {
-      "browser": {
-        "types": "./dist/types/src/index.d.ts",
-        "import": "./dist/browser/index.mjs"
-      },
-      "node": {
-        "types": "./dist/types/src/index.d.ts",
-        "import": "./dist/node/index.mjs",
-        "require": "./dist/node/index.js"
-      },
-      "default": {
-        "types": "./dist/types/src/index.d.ts",
-        "import": "./dist/browser/index.mjs"
-      }
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
     }
   },
   "files": [
