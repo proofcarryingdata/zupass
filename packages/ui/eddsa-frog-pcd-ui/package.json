@@ -19,9 +19,7 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "yarn build:ts && yarn build:types",
-    "build:ts": "tsup src/index.ts --format cjs,esm --clean",
-    "build:types": "rm -f tsconfig.build.tsbuildinfo && tsc -p tsconfig.build.json --emitDeclarationOnly",
+    "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules"

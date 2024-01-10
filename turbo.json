@@ -15,6 +15,9 @@
       "outputs": [],
       "cache": true
     },
+    "build": {
+      "cache": false
+    },
     "dev": {
       "cache": false
     },

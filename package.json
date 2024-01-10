@@ -12,7 +12,7 @@
     "localdb:init": "bash -c 'rm -rf apps/passport-server/local-db-data/ && initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
-    "build": "./scripts/build.sh",
+    "build": "turbo run build",
     "force-build": "DISABLE_BUILD_CACHE=1 ./scripts/build.sh",
     "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
