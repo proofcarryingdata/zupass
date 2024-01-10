@@ -24,26 +24,29 @@
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules",
-    "convert-icons": "svgr --out-dir src/icons --typescript icons"
+    "convert-icons": "tsx convert-icons.ts"
   },
   "dependencies": {
     "medium-zoom": "^1.0.8",
     "pako": "^2.1.0",
     "qr-image": "^3.2.0",
     "react": "^18.2.0",
-    "styled-components": "^5.3.9"
+    "styled-components": "^5.3.9",
+    "tsx": "^4.7.0"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
-    "@svgr/cli": "^8.1.0",
     "@types/mocha": "^10.0.1",
     "@types/pako": "^2.0.0",
     "@types/qr-image": "^3.2.7",
     "@types/react": "^18.0.22",
     "@types/styled-components": "^5.1.26",
+    "camelcase": "^8.0.0",
     "eslint": "^7.32.0",
+    "glob": "^10.3.10",
     "mocha": "^10.2.0",
+    "svg-to-url": "^3.0.0",
     "ts-mocha": "^10.0.0",
     "tsup": "^8.0.1",
     "typescript": "^5.3.3"

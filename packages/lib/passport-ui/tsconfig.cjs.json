@@ -4,5 +4,5 @@
     "outDir": "dist/cjs",
     "module": "CommonJS"
   },
-  "include": ["src", "src/*.json", "src/icons/*"]
+  "include": ["src", "src/*.json", "src/icons/*.svg"]
 }
