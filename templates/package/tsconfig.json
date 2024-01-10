@@ -4,9 +4,11 @@
     "lib": ["dom"],
     "outDir": "dist",
     "declarationDir": "dist/types",
+    // Include all source files, including tests
     "rootDir": "."
   },
   "include": ["src", "test"],
   "exclude": ["dist", "build", "node_modules"],
+  // References will be populated automatically by `yarn fix-references`
   "references": []
 }

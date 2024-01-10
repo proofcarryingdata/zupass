@@ -5,6 +5,8 @@
     "module": "ESNext",
     "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
   },
+  // Don't include tests for builds
   "include": ["src", "src/*.json"],
+  // References will be populated automatically by `yarn fix-references`
   "references": []
 }
