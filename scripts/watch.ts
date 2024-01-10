@@ -89,7 +89,7 @@ const main = async () => {
           // be worth investigating. We want this to be as fast as it can be.
           // await spawn`yarn turbo build:ts --output-logs=new-only --filter="@pcd/*"`;
           // await spawn`yarn tsc -b --emitDeclarationOnly tsconfig.build.json`;
-          await spawn`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
+          await spawn`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
   });
