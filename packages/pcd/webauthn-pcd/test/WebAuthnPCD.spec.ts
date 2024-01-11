@@ -1,4 +1,4 @@
-import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server/./dist";
+import { VerifyAuthenticationResponseOpts } from "@simplewebauthn/server";
 import assert from "assert";
 import { WebAuthnPCDArgs, WebAuthnPCDPackage } from "../src/WebAuthnPCD";
 

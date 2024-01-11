@@ -6,7 +6,7 @@ import {
   styled
 } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
-import { WebAuthnPCD } from "@pcd/webauthn-pcd/src/WebAuthnPCD";
+import { WebAuthnPCD } from "@pcd/webauthn-pcd";
 
 export const WebAuthnPCDUI: PCDUI<WebAuthnPCD> = {
   renderCardBody: WebAuthnCardBody

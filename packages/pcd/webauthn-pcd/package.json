@@ -10,6 +10,11 @@
     "build": "tsc --noEmit",
     "clean": "rm -rf dist node_modules"
   },
+  "files": [
+    "dist",
+    "./README.md",
+    "./LICENSE"
+  ],
   "dependencies": {
     "@pcd/passport-crypto": "0.10.0",
     "@pcd/pcd-types": "0.10.0",
