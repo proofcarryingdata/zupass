@@ -38,7 +38,9 @@ jobs:
       - name: Configure Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
 
-      - run: "yarn install --frozen-lockfile"
+      - run: "yarn install"
+      - name: "Check that yarn install did not cause changes to yarn.lock"
+        run: "git diff --quiet -- yarn.lock"
       - run: "yarn build"
       - run: "yarn lint"
       - run: "yarn test"
