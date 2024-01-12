@@ -29,8 +29,7 @@ export enum Biome {
   TheCapital,
   PutridSwamp,
   CelestialPond,
-  TheWrithingVoid,
-  Foobar
+  TheWrithingVoid
 }
 
 /**

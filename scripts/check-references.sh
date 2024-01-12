@@ -9,7 +9,7 @@ yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.json --
 retVal=$?
 if [ $retVal -ne 0 ]; then
     echo "Missing tsconfig project reference. Run \"yarn fix-references\" to resolve this problem."
-    exit
+    exit 1
 fi
 
 yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.cjs.json --includesRoot --check 1>/dev/null 2>/dev/null
@@ -17,7 +17,7 @@ yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.cjs.jso
 retVal=$?
 if [ $retVal -ne 0 ]; then
     echo "Missing tsconfig project reference. Run \"yarn fix-references\" to resolve this problem."
-    exit
+    exit 1
 fi
 
 yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.esm.json --includesRoot --check 1>/dev/null 2>/dev/null
@@ -25,7 +25,7 @@ yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.esm.jso
 retVal=$?
 if [ $retVal -ne 0 ]; then
     echo "Missing tsconfig project reference. Run \"yarn fix-references\" to resolve this problem."
-    exit
+    exit 1
 fi
 
 echo "tsconfig project references up to date!"

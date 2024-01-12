@@ -11,6 +11,8 @@ import svgToUrl from "svg-to-url";
  * This performs the same task that a webpack/esbuild data loader would do, but
  * without requiring a bundler.
  * This is helpful because it means we can build this package using only tsc.
+ * It should not be necessary to run this script manually, as it is run
+ * automatically as part of the build process for this package.
  */
 async function main() {
   const iconPaths = await glob("icons/*.svg");
