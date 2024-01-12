@@ -11,6 +11,7 @@ import { sqlQuery } from "../src/database/sqlQuery";
 import { RateLimitService } from "../src/services/rateLimitService";
 import { Zupass } from "../src/types";
 import { overrideEnvironment, testingEnv } from "./util/env";
+import { resetRateLimits } from "./util/rateLimit";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("generic rate-limiting features", function () {
@@ -237,7 +238,7 @@ describe("generic rate-limiting features", function () {
   step(
     "rate limits are persisted to the DB and reloaded on startup",
     async function () {
-      await sqlQuery(db, "DELETE FROM rate_limit_buckets");
+      await resetRateLimits(application);
 
       await rateLimitService.requestRateLimitedAction(
         "CHECK_EMAIL_TOKEN",
