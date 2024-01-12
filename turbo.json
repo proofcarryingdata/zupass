@@ -34,6 +34,10 @@
       "cache": false
     }
   },
+  "globalDependencies": [
+    "packages/tools/eslint-config-custom/**",
+    "packages/tools/tsconfig/**"
+  ],
   "globalEnv": [
     "DATABASE_USERNAME",
     "DATABASE_PASSWORD",
