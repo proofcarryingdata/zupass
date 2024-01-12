@@ -11,6 +11,7 @@ import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
+// Types of actions a user might attempt.
 export type RateLimitedActionType =
   | "CHECK_EMAIL_TOKEN"
   | "REQUEST_EMAIL_TOKEN"
@@ -41,7 +42,10 @@ interface RateLimitConfiguration {
 }
 
 interface RateLimitBucket {
+  // When this reaches zero, future attempts will be denied
   attemptsRemaining: number;
+  // At this time or later, the rate limit bucket has expired and should be
+  // deleted or reset
   expiryTime: number;
 }
 
@@ -49,6 +53,7 @@ interface RateLimitBucket {
  * For each action we want to rate-limit, we have a RateLimitTracker.
  * It is responsible for maintaining a number of "buckets" which track how many
  * attempts are allowed for a given "action ID".
+ * There is one RateLimitTracker for each "action type".
  */
 class RateLimitTracker {
   private buckets: Map<string, RateLimitBucket>;
@@ -65,24 +70,32 @@ class RateLimitTracker {
   // Delete any rate limit trackers that have expired.
   public prune(): RateLimitedActionId[] {
     const now = Date.now();
-    const deletedBuckets = [];
+    const prunedBuckets = [];
 
     for (const [id, bucket] of this.buckets.entries()) {
       const expired = now >= bucket.expiryTime;
       if (expired) {
         this.buckets.delete(id);
-        deletedBuckets.push(id);
+        prunedBuckets.push(id);
       }
     }
 
-    return deletedBuckets;
+    return prunedBuckets;
   }
 
   public getBucket(actionId: RateLimitedActionId): RateLimitBucket | undefined {
     return this.buckets.get(actionId);
   }
 
-  public async requestAttempt(id: string): Promise<RateLimitResult> {
+  /**
+   * Request permission to perform an action.
+   * The result will state whether the action was allowed, and whether the
+   * state of the rate limit bucket has changed due to the request (in which
+   * case the RateLimitService ought to persist the change to the DB).
+   * This function in synchronous and therefore should not suffer from race
+   * conditions.
+   */
+  public requestAttempt(id: string): RateLimitResult {
     const now = Date.now();
     let bucket = this.buckets.get(id);
     let bucketChanged = false;
@@ -150,6 +163,8 @@ export class RateLimitService {
       ];
     };
 
+    // Set up trackers for each action type. Use the bucket state loaded from
+    // the DB, if any, to initialize the trackers.
     this.trackers.set(
       "CHECK_EMAIL_TOKEN",
       new RateLimitTracker(
@@ -158,6 +173,8 @@ export class RateLimitService {
           timePeriodMs: ONE_HOUR_MS
         },
         new Map(
+          // There might not have been any bucket state in the DB, hence the
+          // null coalescing operator.
           (bucketsByType["CHECK_EMAIL_TOKEN"] ?? []).map(bucketRecordToMapEntry)
         )
       )
@@ -243,10 +260,12 @@ export class RateLimitService {
         const tracker = this.trackers.get(actionType);
 
         if (!tracker) {
-          throw new Error(`Rate limit type "${actionType}" does not exist.`);
+          throw new Error(
+            `Tracker for rate limit type "${actionType}" does not exist.`
+          );
         }
 
-        const result = await tracker.requestAttempt(actionId);
+        const result = tracker.requestAttempt(actionId);
 
         // If this attempt caused the bucket to change, persist it to the DB
         // Not all requests cause a change: if the remaining attempts counter
