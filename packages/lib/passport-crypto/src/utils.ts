@@ -1,4 +1,5 @@
 import { Buffer } from "buffer";
+import nodeCrypto from "crypto";
 import sodium from "libsodium-wrappers-sumo";
 
 // This is necessary as libsodium-wrappers-sumo is a CommonJS package and
@@ -14,14 +15,16 @@ const {
 } = sodium;
 
 /**
- * Returns built in crypto if available, otherwise polyfill
+ * If in a web environment, return the global crypto object. If not, use the
+ * imported crypto library, which will either be present as a NodeJS built-in,
+ * or polyfilled by the final bundler.
  */
-export function getCrypto(): any {
+export function getCrypto(): Crypto {
   const g = globalThis as any;
   if (g.crypto) {
     return g.crypto;
   } else {
-    return require("crypto");
+    return nodeCrypto.webcrypto as Crypto;
   }
 }
 
