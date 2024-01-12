@@ -209,7 +209,7 @@ export class RateLimitService {
     );
 
     this.timeout = setTimeout(() => {
-      // Every hour, clear out any expired actions from the DB.
+      // Every hour, clear out any expired buckets from the DB.
       (async (): Promise<void> => await this.pruneBuckets())();
     }, ONE_HOUR_MS);
   }
@@ -315,7 +315,7 @@ export class RateLimitService {
   }
 
   /**
-   * Save a rate limiting bucket after update.
+   * Save a rate limiting bucket after its state has changed.
    */
   private async saveBucket(
     actionType: RateLimitedActionType,
