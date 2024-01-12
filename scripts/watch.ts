@@ -44,7 +44,10 @@ const main = async () => {
     ])
   );
 
-  // Do an initial build, which will also populate the Turborepo cache
+  // Builds the root tsconfig.cjs.json and tsconfig.esm.json files.
+  // Because these have references to all of our other TypeScript packages,
+  // this builds all of the TypeScript packages under packages/*.
+  // This does not build the apps, which have their own build commands.
   await $`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
 
   // See documentation at https://github.com/gajus/turbowatch
@@ -76,9 +79,16 @@ const main = async () => {
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
           );
 
-          // Rebuild all of the packages which have tsconfig.cjs.json and
-          // tsconfig.esm.json files (that is, all of them excluding things
-          // like the "artifacts" package).
+          // Builds the root tsconfig.cjs.json and tsconfig.esm.json files.
+          // Because these have references to all of our other TypeScript
+          // packages, this builds all of the TypeScript packages under
+          // packages/*. This does not build the apps, which have their own
+          // build commands.
+          // Packages which do not have tsconfig.cjs.json or tsconfig.esm.json
+          // files are not built here. These are the packages in the "tooling"
+          // directory, which are either command-line tools like `artifacts` or
+          // configuration packages like `tsconfig` and `eslint-config-custom`
+          // which do not have their own build/transpilation outputs.
           await spawn`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
