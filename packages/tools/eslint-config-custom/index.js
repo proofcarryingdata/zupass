@@ -42,7 +42,8 @@ module.exports = {
           }
         ]
       }
-    ]
+    ],
+    "@typescript-eslint/no-require-imports": "error"
   },
   settings: {
     "import/resolver": {

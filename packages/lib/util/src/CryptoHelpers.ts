@@ -1,3 +1,4 @@
+import nodeCrypto from "crypto";
 import { isBrowser, isNode } from "./Environment";
 
 // The 'crypto' variable provides access to the functions defined
@@ -16,10 +17,7 @@ function initCryptoAPI(): Crypto {
     if (isBrowser()) {
       crypto = globalThis.crypto;
     } else if (isNode()) {
-      // eslint-disable-next-line @typescript-eslint/no-var-requires
-      const { webcrypto } = require("node:crypto");
-
-      crypto = webcrypto as Crypto;
+      crypto = nodeCrypto.webcrypto as Crypto;
     } else {
       throw new Error("Crypto API is not defined");
     }
