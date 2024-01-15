@@ -27,7 +27,8 @@
     "knip": "knip --no-gitignore",
     "check-references": "scripts/check-references.sh",
     "fix-references": "scripts/fix-references.sh",
-    "test-template-package": "tsx scripts/testTemplatePackage.ts"
+    "generate-package": "plop --no-progress --plopfile 'templates/package/plopfile.mjs'",
+    "test-generated-package": "tsx scripts/testTemplatePackage.ts"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",

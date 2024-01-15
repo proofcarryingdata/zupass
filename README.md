@@ -147,6 +147,10 @@ All the packages and apps are linted using [eslint](https://eslint.org/). The li
 
 ## For Developers: Adding a new PCD Type
 
+### Creating a new package
+
+To generate a new package scaffold, run `yarn generate-package`. You will be prompted to choose a package type--when creating a new PCD, choose `pcd` as the type, then give your package an appropriate name. If you were creating a PCD to store digitally-signed driving licenses, you might choose the name `driving-license-pcd`. Your new package will be created at `packages/pcd/[package-name]`.
+
 ### `PCDPackage`
 
 Zupass can support many types of PCDs. In order to create a new type of PCD that can be interpreted, verified, created, shared, and stored by Zupass, the first thing you must create is a new `PCDPackage` - a concrete implementation of the `PCDPackage` typescript interface as defined here:
@@ -157,6 +161,14 @@ Two example implementations of a `PCDPackage` that works with Zupass are:
 
 - https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd/rsa-pcd/src/RSAPCD.ts
 - https://github.com/proofcarryingdata/zupass/blob/main/packages/pcd/semaphore-identity-pcd/src/SemaphoreIdentityPCD.ts
+
+### `PCDUI`
+
+To be shown in Zupass, a PCD needs a UI package that specifies how it should be rendered. As above, create a new package, this time in the `ui` group. By convention, the UI package shares the same name as the PCD package, so if you earlier created a `driving-license-pcd` then you should call your UI package `driving-license-pcd-ui`.
+
+The purpose of a PCD UI package is to provide an implementation of the `PCDUI` interface. A simple example of a `PCDUI` class can be found at:
+
+- https://github.com/proofcarryingdata/zupass/blob/main/packages/ui/email-pcd-ui/src/CardBody.tsx
 
 ### Integrating with Zupass
 
@@ -174,6 +186,12 @@ Here are a few example pull requests that integrate a new `PCDPackage` into Zupa
 - https://github.com/proofcarryingdata/zupass/pull/290
 - https://github.com/proofcarryingdata/zupass/pull/134
 - https://github.com/proofcarryingdata/zupass/pull/154
+
+In addition, you will also need to add your `PCDUI` class to the `passport-client` application here:
+
+- https://github.com/proofcarryingdata/zupass/blob/main/apps/passport-client/src/pcdRenderers.ts
+
+Remember to first add the relevant UI package as a dependency to `passport-client`'s `package.json`.
 
 The Zupass team reserves the right to reject any proposed PCD according to our discretion.
 

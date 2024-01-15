@@ -46,4 +46,4 @@ jobs:
       - run: "yarn lint"
       - run: "yarn test"
       - name: "Test that template package works out-of-the-box"
-        run: "yarn test-template-package"
+        run: "yarn test-generated-package"
