@@ -1,6 +1,5 @@
 import camelCase from "camelcase";
 import * as fs from "fs";
-import { glob } from "glob";
 import path from "path";
 import * as prettier from "prettier";
 import svgToUrl from "svg-to-url";
@@ -15,8 +14,9 @@ import svgToUrl from "svg-to-url";
  * automatically as part of the build process for this package.
  */
 async function main() {
-  const iconPaths = await glob("icons/*.svg");
-
+  const iconPaths = fs.readdirSync("icons")
+    .filter(filename => path.extname(filename) === ".svg")
+    .map(filename => `icons/${filename}`);
   const iconIndex = await Promise.all(
     iconPaths.map(async (iconPath) => {
       return [path.basename(iconPath, ".svg"), await svgToUrl(iconPath)];
