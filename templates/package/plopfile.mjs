@@ -2,12 +2,18 @@ import { readdirSync, existsSync } from "fs";
 import path from "path";
 import util from "util";
 import * as childProcess from "child_process";
+import { getWorkspaceRoot } from "workspace-tools";
+
+/**
+ * Heavily inspired by https://github.com/lomri123/monorepo-component-generator/blob/main/plop/plopfile.mjs
+ * This is a `plopfile`, used by Plop (https://plopjs.com/) to generate a
+ * package scaffold from template files (see the `templates` directory).
+*/
+
 const exec = util.promisify(childProcess.exec);
 
-const { PWD } = process.env;
-const pathPostfix = "packages";
-const basePath = PWD || "/";
-const packagesPath = path.resolve(basePath, pathPostfix);
+const workspaceRoot = getWorkspaceRoot(process.env.PWD);
+const packagesPath = path.resolve(workspaceRoot, "packages");
 
 const toKebabCase = (string) =>
   string
@@ -30,8 +36,10 @@ const getDirList = (path) => {
     .map((dirent) => dirent.name);
 };
 
+// The list of package "groups" (subdirectories of /packages/)
 const groupsList = getDirList(packagesPath);
 
+// Check validity of package names
 const validateInput = (input) => {
   if (input && input !== "") {
     return /^[a-zA-Z.-]+$/.test(input);
@@ -39,6 +47,7 @@ const validateInput = (input) => {
   return false;
 };
 
+// Check that nothing exists at the package's intended location
 const checkDuplicateComponent = (name) => {
   let message = "";
   const status = groupsList.some((group) => {
@@ -55,6 +64,7 @@ const checkDuplicateComponent = (name) => {
 export default function (plop) {
   plop.setDefaultInclude({ helpers: true });
 
+  // Set up the "validateFields" action
   plop.setActionType("validateFields", function (answers, config, plop) {
     const { group, name } = answers || {};
     const nameValid = validateInput(name);
@@ -85,6 +95,13 @@ export default function (plop) {
       .catch((err) => `error installing dependencies: ${err}`);
   });
 
+  /**
+   * Configures the "package" generator.
+   * This prompts for two inputs, then:
+   * - Validates the inputs
+   * - Generates a set of files from templates
+   * - Uses yarn to install dependencies for the new package
+   */
   plop.setGenerator("package", {
     description: "Creating new package",
     prompts: [
