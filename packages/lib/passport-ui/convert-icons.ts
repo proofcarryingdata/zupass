@@ -14,9 +14,10 @@ import svgToUrl from "svg-to-url";
  * automatically as part of the build process for this package.
  */
 async function main() {
-  const iconPaths = fs.readdirSync("icons")
-    .filter(filename => path.extname(filename) === ".svg")
-    .map(filename => `icons/${filename}`);
+  const iconPaths = fs
+    .readdirSync("icons")
+    .filter((filename) => path.extname(filename) === ".svg")
+    .map((filename) => `icons/${filename}`);
   const iconIndex = await Promise.all(
     iconPaths.map(async (iconPath) => {
       return [path.basename(iconPath, ".svg"), await svgToUrl(iconPath)];
