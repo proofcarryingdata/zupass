@@ -80,7 +80,7 @@ export default function (plop) {
 
   plop.setActionType("installDependencies", function (answers, config, plop) {
     console.log("installing dependencies");
-    return exec(`yarn`)
+    return exec(`yarn install --non-interactive`)
       .then(() => "dependencies installed successfully")
       .catch((err) => `error installing dependencies: ${err}`);
   });

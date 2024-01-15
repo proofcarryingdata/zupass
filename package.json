@@ -26,7 +26,8 @@
     "clean:workspaces": "turbo run clean --parallel && yarn",
     "knip": "knip --no-gitignore",
     "check-references": "scripts/check-references.sh",
-    "fix-references": "scripts/fix-references.sh"
+    "fix-references": "scripts/fix-references.sh",
+    "test-template-package": "tsx scripts/testTemplatePackage.ts"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",
