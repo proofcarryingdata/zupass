@@ -1,9 +1,16 @@
-import { $ } from "zx";
 import path from "path";
 import { getWorkspaceRoot } from "workspace-tools";
+import { $ } from "zx";
 
 // Prevent colors from being stripped out from child process output
 process.env.FORCE_COLOR = "3";
+
+const isUndefined = (value: any): value is undefined =>
+  typeof value === "undefined";
+const defined = <T>(value: T | undefined) => {
+  if (isUndefined(value)) throw new Error("undefined");
+  return value;
+};
 
 /**
  * This script tests the process of generating a new package and running some
@@ -20,7 +27,9 @@ process.env.FORCE_COLOR = "3";
  * that the configuration for newly-generated packages works out-of-the-box.
  */
 async function main() {
-  const workspaceRoot = getWorkspaceRoot(path.dirname(__filename));
+  const workspaceRoot = defined<string>(
+    getWorkspaceRoot(path.dirname(__filename))
+  );
   const testPackagePath = path.resolve(
     workspaceRoot,
     "packages/tools/test-package"
