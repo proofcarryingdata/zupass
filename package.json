@@ -12,7 +12,7 @@
     "localdb:init": "bash -c 'rm -rf apps/passport-server/local-db-data/ && initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
-    "build": "tsc -b tsconfig.esm.json tsconfig.cjs.json && turbo run build --filter=./apps/* --filter=./examples/*",
+    "build": "turbo run build",
     "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
