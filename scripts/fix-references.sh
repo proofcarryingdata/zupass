@@ -24,7 +24,7 @@
 # - Adding or removing dependencies between packages
 # - Adding or removing entire packages from the repository
 
-echo "Fixing generic references\r\n"
+echo "Fixing references for base tsconfig (used by the TS Language Server/VSCode)\r\n"
 yarn workspaces-to-typescript-project-references --tsconfigPath tsconfig.json && yarn prettier -w "{apps/*,packages/*/*}/tsconfig.esm.json"
 
 echo "\r\nFixing references for ESM builds\r\n"
