@@ -90,7 +90,7 @@ const main = async () => {
           // directory, which are either command-line tools like `artifacts` or
           // configuration packages like `tsconfig` and `eslint-config-custom`
           // which do not have their own build/transpilation outputs.
-          await spawn`time yarn tsc -b --extendedDiagnostics tsconfig.cjs.json tsconfig.esm.json`;
+          await spawn`yarn tsc -b --extendedDiagnostics tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
   });
