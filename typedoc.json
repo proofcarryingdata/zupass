@@ -1,5 +1,5 @@
 {
-  "entryPoints": ["packages/*"],
+  "entryPoints": ["packages/*/*"],
   "name": "PCD SDK",
   "entryPointStrategy": "packages",
   "exclude": [
