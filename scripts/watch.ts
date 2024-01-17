@@ -44,11 +44,11 @@ const main = async () => {
     ])
   );
 
-  // Builds the root tsconfig.cjs.json and tsconfig.esm.json files.
+  // Build the root tsconfig.cjs.json and tsconfig.esm.json files.
   // Because these have references to all of our other TypeScript packages,
   // this builds all of the TypeScript packages under packages/*.
   // This does not build the apps, which have their own build commands.
-  await $`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
+  await $`yarn tsc -b --extendedDiagnostics tsconfig.cjs.json tsconfig.esm.json`;
 
   // See documentation at https://github.com/gajus/turbowatch
   watch({
@@ -69,7 +69,8 @@ const main = async () => {
             ["match", "*.tsx", "basename"],
             ["match", "*.js", "basename"],
             ["match", "*.json", "basename"],
-            ["match", "*.wasm", "basename"]
+            ["match", "*.wasm", "basename"],
+            ["match", "*.svg", "basename"]
           ]
         ],
         name: relativePaths[p],
@@ -79,7 +80,7 @@ const main = async () => {
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
           );
 
-          // Builds the root tsconfig.cjs.json and tsconfig.esm.json files.
+          // Build the root tsconfig.cjs.json and tsconfig.esm.json files.
           // Because these have references to all of our other TypeScript
           // packages, this builds all of the TypeScript packages under
           // packages/*. This does not build the apps, which have their own
@@ -89,7 +90,7 @@ const main = async () => {
           // directory, which are either command-line tools like `artifacts` or
           // configuration packages like `tsconfig` and `eslint-config-custom`
           // which do not have their own build/transpilation outputs.
-          await spawn`time yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
+          await spawn`time yarn tsc -b --extendedDiagnostics tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
   });

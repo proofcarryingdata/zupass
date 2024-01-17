@@ -1,3 +1,6 @@
+export const anotherUpArrow =
+  "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' data-name='1-Arrow Up' viewBox='0 0 32 32'%3E%3Cpath fill='%23fff' stroke='%23fff' d='m26.71 10.29-10-10a1 1 0 0 0-1.41 0l-10 10 1.41 1.41L15 3.41V32h2V3.41l8.29 8.29Z'/%3E%3C/svg%3E";
+
 export const back =
   "data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' stroke='%23fcd270' stroke-width='1.5' viewBox='0 0 24 24'%3E%3Cpath stroke-linecap='round' stroke-linejoin='round' d='M9 15 3 9m0 0 6-6M3 9h12a6 6 0 0 1 0 12h-3'/%3E%3C/svg%3E";
 

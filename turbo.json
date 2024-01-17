@@ -2,19 +2,17 @@
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
     "lint": {
-      "outputs": [],
       "cache": true
     },
     "build": {
       "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
+      "outputs": ["apps/*dist/**", "packages/*/*/dist/**"],
       "cache": false
     },
     "dev": {
       "cache": false
     },
     "test": {
-      "outputs": [],
       "cache": true
     },
     "clean": {
