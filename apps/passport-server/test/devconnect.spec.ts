@@ -2910,45 +2910,71 @@ describe("devconnect functionality", function () {
     expect(unredactedTickets.length).to.eq(3);
   });
 
-  step("get poap claim urls from devconnect ticket ids", async () => {
-    // No POAP mint links in DB yet - all links return NULL
-    expect(await poapService.getPoapClaimUrlByTicketId("1", "devconnect")).to.be
-      .null;
-    expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to.be
-      .null;
-    expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to.be
-      .null;
+  step(
+    "get poap claim urls from devconnect and zuzalu ticket ids",
+    async () => {
+      // No POAP mint links in DB yet - all links return NULL
+      expect(await poapService.getPoapClaimUrlByTicketId("1", "devconnect")).to
+        .be.null;
+      expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to
+        .be.null;
+      expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to
+        .be.null;
+      expect(await poapService.getPoapClaimUrlByTicketId("1", "zuzalu23")).to.be
+        .null;
+      expect(await poapService.getPoapClaimUrlByTicketId("2", "zuzalu23")).to.be
+        .null;
+      expect(await poapService.getPoapClaimUrlByTicketId("3", "zuzalu23")).to.be
+        .null;
 
-    const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
-    const TEST_POAP_LINK_2 = "https://poap.xyz/mint/zxcvbn";
-    const TEST_POAP_LINK_3 = "https://poap.xyz/mint/asdfgh";
+      const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
+      const TEST_POAP_LINK_2 = "https://poap.xyz/mint/zxcvbn";
+      const TEST_POAP_LINK_3 = "https://poap.xyz/mint/asdfgh";
 
-    await insertNewPoapUrl(db, TEST_POAP_LINK_1, "devconnect");
-    // Insert a Zuzalu 2023 POAP URL, which should never be returned
-    // by poapService.getPoapClaimUrlByTicketId() when "devconnect"
-    // is the POAP event.
-    await insertNewPoapUrl(db, TEST_POAP_LINK_2, "zuzalu23");
+      await insertNewPoapUrl(db, TEST_POAP_LINK_1, "devconnect");
+      await insertNewPoapUrl(db, TEST_POAP_LINK_2, "zuzalu23");
 
-    expect(
-      await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
-    ).to.eq(TEST_POAP_LINK_1);
-    // Ran out of mint links
-    expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to.be
-      .null;
+      // Map ticket ID "1" to a devconnect ticket
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
+      ).to.eq(TEST_POAP_LINK_1);
+      // Ran out of mint links for Devconnect
+      expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to
+        .be.null;
 
-    await insertNewPoapUrl(db, TEST_POAP_LINK_3, "devconnect");
+      await insertNewPoapUrl(db, TEST_POAP_LINK_3, "devconnect");
 
-    // Still maps to existing link
-    expect(
-      await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
-    ).to.eq(TEST_POAP_LINK_1);
-    expect(
-      await poapService.getPoapClaimUrlByTicketId("2", "devconnect")
-    ).to.eq(TEST_POAP_LINK_3);
-    // Ran out of mint links
-    expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to.be
-      .null;
-  });
+      // Still maps to existing link, regardless of what the poapEvent parameter is
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
+      ).to.eq(TEST_POAP_LINK_1);
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("1", "zuzalu23")
+      ).to.eq(TEST_POAP_LINK_1);
+      // Map ticket ID "2" to a devconnect ticket
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("2", "devconnect")
+      ).to.eq(TEST_POAP_LINK_3);
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("2", "zuzalu23")
+      ).to.eq(TEST_POAP_LINK_3);
+      // Ran out of mint links for Devconnect
+      expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to
+        .be.null;
+
+      // Map ticket ID "3" to a zuzalu 2023 ticket
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("3", "zuzalu23")
+      ).to.be.eq(TEST_POAP_LINK_2);
+      // Still maps to existing link, regardless of what the poapEvent parameter is
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("3", "zuzalu23")
+      ).to.be.eq(TEST_POAP_LINK_2);
+      expect(
+        await poapService.getPoapClaimUrlByTicketId("3", "devconnect")
+      ).to.be.eq(TEST_POAP_LINK_2);
+    }
+  );
 
   // TODO: More tests
   // 1. Test that item_name in ItemInfo and event_name EventInfo always syncs with Pretix.
