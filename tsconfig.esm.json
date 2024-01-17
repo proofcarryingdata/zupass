@@ -1,5 +1,7 @@
 {
   "files": [],
+  // DO NOT MODIFY MANUALLY BEYOND THIS POINT
+  // References are automatically maintained by `yarn fix-references`
   "references": [
     {
       "path": "packages/lib/emitter/tsconfig.esm.json"
