@@ -338,4 +338,4 @@ export interface AnonMessageWithDetails extends AnonMessage {
   reactions: string[];
 }
 
-export type PoapEvent = "devconnect";
+export type PoapEvent = "devconnect" | "zuzalu23";

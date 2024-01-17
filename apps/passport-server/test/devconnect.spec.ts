@@ -2912,9 +2912,9 @@ describe("devconnect functionality", function () {
 
   step("get poap claim urls from devconnect ticket ids", async () => {
     // No POAP mint links in DB yet - all links return NULL
-    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("1")).to.be
+    expect(await poapService.getPoapClaimUrlByTicketId("1", "devconnect")).to.be
       .null;
-    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("2")).to.be
+    expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to.be
       .null;
 
     const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
@@ -2922,22 +2922,22 @@ describe("devconnect functionality", function () {
 
     await insertNewPoapUrl(db, TEST_POAP_LINK_1, "devconnect");
 
-    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("1")).to.eq(
-      TEST_POAP_LINK_1
-    );
+    expect(
+      await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
+    ).to.eq(TEST_POAP_LINK_1);
     // Ran out of mint links
-    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("2")).to.be
+    expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to.be
       .null;
 
     await insertNewPoapUrl(db, TEST_POAP_LINK_2, "devconnect");
 
     // Still maps to existing link
-    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("1")).to.eq(
-      TEST_POAP_LINK_1
-    );
-    expect(await poapService.getDevconnectPoapClaimUrlByTicketId("2")).to.eq(
-      TEST_POAP_LINK_2
-    );
+    expect(
+      await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
+    ).to.eq(TEST_POAP_LINK_1);
+    expect(
+      await poapService.getPoapClaimUrlByTicketId("2", "devconnect")
+    ).to.eq(TEST_POAP_LINK_2);
   });
 
   // TODO: More tests

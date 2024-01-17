@@ -1,13 +1,19 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getHash } from "@pcd/passport-crypto";
+import { ZUZALU_23_EVENT_ID } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import {
+  ZKEdDSAEventTicketPCD,
+  ZKEdDSAEventTicketPCDPackage
+} from "@pcd/zk-eddsa-event-ticket-pcd";
 import AsyncLock from "async-lock";
+import { PoapEvent } from "../database/models";
 import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   claimNewPoapUrl,
   getExistingClaimUrlByTicketId
 } from "../database/queries/poap";
+import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { getServerErrorUrl } from "../util/util";
@@ -24,7 +30,6 @@ const DEVCONNECT_COWORK_SPACE_EVENT_ID = "a1c822c4-60bd-11ee-8732-763dbf30819c";
 // All valid Cowork products that can claim a POAP. This excludes add-on products, like the Turkish Towel.
 const DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS = [
   "67687bda-986f-11ee-abf3-126a2f5f3c5c",
-  "67689552-986f-11ee-abf3-126a2f5f3c5c",
   "6768a2e0-986f-11ee-abf3-126a2f5f3c5c",
   "6768af1a-986f-11ee-abf3-126a2f5f3c5c",
   "6768c81a-986f-11ee-abf3-126a2f5f3c5c",
@@ -57,6 +62,90 @@ export class PoapService {
     this.rollbarService = rollbarService;
   }
 
+  private async validateSignedZKEdDSAEventTicketPCD(
+    serializedPCD: string
+  ): Promise<ZKEdDSAEventTicketPCD> {
+    logger(
+      "[POAP] checking that PCD type is ZKEdDSAEventTicketPCD",
+      serializedPCD
+    );
+    const parsed = JSON.parse(serializedPCD) as SerializedPCD;
+    if (parsed.type !== ZKEdDSAEventTicketPCDPackage.name) {
+      throw new Error("proof must be ZKEdDSAEventTicketPCD type");
+    }
+
+    const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(parsed.pcd);
+
+    logger(
+      `[POAP] checking that signer of ticket ${pcd.claim.partialTicket.ticketId} is passport-server`
+    );
+    if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
+      throw new Error(`missing server eddsa private key .env value`);
+
+    const TICKETING_PUBKEY = await getEdDSAPublicKey(
+      process.env.SERVER_EDDSA_PRIVATE_KEY
+    );
+
+    const signerMatch =
+      pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
+      pcd.claim.signer[1] === TICKETING_PUBKEY[1];
+
+    if (!signerMatch) {
+      throw new Error("signer of PCD is invalid");
+    }
+
+    logger("[POAP] verifying PCD proof and claim", pcd);
+    if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
+      throw new Error("pcd invalid");
+    }
+
+    return pcd;
+  }
+
+  private async validateZuzalu23Ticket(serializedPCD: string): Promise<string> {
+    return traced("poap", "validateZuzalu23Ticket", async (span) => {
+      const pcd = await this.validateSignedZKEdDSAEventTicketPCD(serializedPCD);
+
+      const {
+        validEventIds,
+        partialTicket: { ticketId }
+      } = pcd.claim;
+
+      logger(
+        `[POAP] checking that validEventds ${validEventIds} matches cowork space`
+      );
+      if (
+        !(
+          validEventIds &&
+          validEventIds.length === 1 &&
+          validEventIds[0] === ZUZALU_23_EVENT_ID
+        )
+      ) {
+        throw new Error("valid event IDs of PCD does not match Zuzalu 2023");
+      }
+
+      if (ticketId == null) {
+        throw new Error("ticket ID must be revealed");
+      }
+      span?.setAttribute("ticketId", ticketId);
+
+      logger(`[POAP] fetching zuzalu ticket ${ticketId} from database`);
+
+      // A bit of a hack given our implementation details - we know that the ticketId for
+      // a Zuzalu EdDSATicketPCD is always set to the user's uuid during issuance, which happens
+      // in the function {@link issueZuzaluTicketPCDs} within issuanceService.ts.
+      const zuzaluPretixTicket = await fetchLoggedInZuzaluUser(
+        this.context.dbPool,
+        { uuid: ticketId }
+      );
+      if (zuzaluPretixTicket == null) {
+        throw new Error("zuzalu ticket does not exist");
+      }
+
+      return ticketId;
+    });
+  }
+
   /**
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
    * Devconnect Cowork ticket that has been checked in, and returns
@@ -75,7 +164,8 @@ export class PoapService {
   private async validateDevconnectTicket(
     serializedPCD: string
   ): Promise<string> {
-    return traced("poap", "validateDevconnectPCD", async (span) => {
+    return traced("poap", "validateDevconnectTicket", async (span) => {
+      // TODO: Refactor this to use {@link validateSignedZKEdDSAEventTicketPCD}
       logger(
         "[POAP] checking that PCD type is ZKEdDSAEventTicketPCD",
         serializedPCD
@@ -188,7 +278,10 @@ export class PoapService {
   ): Promise<string> {
     try {
       const ticketId = await this.validateDevconnectTicket(serializedPCD);
-      const poapLink = await this.getDevconnectPoapClaimUrlByTicketId(ticketId);
+      const poapLink = await this.getPoapClaimUrlByTicketId(
+        ticketId,
+        "devconnect"
+      );
       if (poapLink == null) {
         throw new Error("Not enough Devconnect POAP links");
       }
@@ -205,13 +298,39 @@ export class PoapService {
     }
   }
 
+  public async getZuzalu23PoapRedirectUrl(
+    serializedPCD: string
+  ): Promise<string> {
+    try {
+      const ticketId = await this.validateZuzalu23Ticket(serializedPCD);
+      const poapLink = await this.getPoapClaimUrlByTicketId(
+        ticketId,
+        "zuzalu23"
+      );
+      if (poapLink == null) {
+        throw new Error("Not enough Zuzalu 2023 POAP links");
+      }
+      return poapLink;
+    } catch (e) {
+      logger("[POAP] getZuzalu23PoapRedirectUrl error", e);
+      this.rollbarService?.reportError(e);
+      // Return the generic /server-error page instead for the route to redirect to,
+      // with a title and description informing the user to contact support.
+      return getServerErrorUrl(
+        "Contact support",
+        "An error occurred while fetching your POAP mint link for Zuzalu 2023."
+      );
+    }
+  }
+
   /**
    * Helper function to handle the logic of retrieving the correct POAP mint link
    * given the ticket ID. Returns NULL if the ticket is not associate with a link
    * and no more unclaimed links exist.
    */
-  public async getDevconnectPoapClaimUrlByTicketId(
-    ticketId: string
+  public async getPoapClaimUrlByTicketId(
+    ticketId: string,
+    poapEvent: PoapEvent
   ): Promise<string | null> {
     return traced(
       "poap",
@@ -235,7 +354,7 @@ export class PoapService {
 
           const newPoapLink = await claimNewPoapUrl(
             this.context.dbPool,
-            "devconnect",
+            poapEvent,
             hashedTicketId
           );
 
