@@ -62,6 +62,15 @@ export class PoapService {
     this.rollbarService = rollbarService;
   }
 
+  /**
+   * This helper function checks that a serialized PCD satisfies
+   * the following properties:
+   *   1. The type of the PCD is ZKEdDSAEventTicketPCD
+   *   2. The signer of the PCD's claim matches this server's EdDSA public key
+   *   3. The proof of the PCD is valid when checked by the verify() function
+   * If the serialized PCD satisfies these three properties, the deserialized
+   * ZKEdDSAEventTicketPCD is returned.
+   */
   private async validateSignedZKEdDSAEventTicketPCD(
     serializedPCD: string
   ): Promise<ZKEdDSAEventTicketPCD> {
@@ -102,6 +111,18 @@ export class PoapService {
     return pcd;
   }
 
+  /**
+   * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
+   * Zuzalu 2023 Ticket and returns the ID of that ticket.
+   *
+   * This function throws an error in the case that the PCD is not
+   * valid; for example, here are a few invalid cases
+   *  1. Wrong PCD type
+   *  2. Wrong EdDSA public key
+   *  3. PCD proof is invalid
+   *  4. Event of ticket is not Zuzalu 2023
+   *  5. Ticket does not actually exist
+   */
   private async validateZuzalu23Ticket(serializedPCD: string): Promise<string> {
     return traced("poap", "validateZuzalu23Ticket", async (span) => {
       const pcd = await this.validateSignedZKEdDSAEventTicketPCD(serializedPCD);
@@ -165,40 +186,7 @@ export class PoapService {
     serializedPCD: string
   ): Promise<string> {
     return traced("poap", "validateDevconnectTicket", async (span) => {
-      // TODO: Refactor this to use {@link validateSignedZKEdDSAEventTicketPCD}
-      logger(
-        "[POAP] checking that PCD type is ZKEdDSAEventTicketPCD",
-        serializedPCD
-      );
-      const parsed = JSON.parse(serializedPCD) as SerializedPCD;
-      if (parsed.type !== ZKEdDSAEventTicketPCDPackage.name) {
-        throw new Error("proof must be ZKEdDSAEventTicketPCD type");
-      }
-
-      const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(parsed.pcd);
-
-      logger(
-        `[POAP] checking that signer of ticket ${pcd.claim.partialTicket.ticketId} is passport-server`
-      );
-      if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
-        throw new Error(`missing server eddsa private key .env value`);
-
-      const TICKETING_PUBKEY = await getEdDSAPublicKey(
-        process.env.SERVER_EDDSA_PRIVATE_KEY
-      );
-
-      const signerMatch =
-        pcd.claim.signer[0] === TICKETING_PUBKEY[0] &&
-        pcd.claim.signer[1] === TICKETING_PUBKEY[1];
-
-      if (!signerMatch) {
-        throw new Error("signer of PCD is invalid");
-      }
-
-      logger("[POAP] verifying PCD proof and claim", pcd);
-      if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
-        throw new Error("pcd invalid");
-      }
+      const pcd = await this.validateSignedZKEdDSAEventTicketPCD(serializedPCD);
 
       const {
         validEventIds,
@@ -298,6 +286,15 @@ export class PoapService {
     }
   }
 
+  /**
+   * Given a ZKEdDSAEventTicketPCD sent to the server for claiming a Zuzalu 2023 POAP,
+   * returns the valid redirect URL to the response handler.
+   *  1. If this ticket is already associated with a POAP mint link, return that link.
+   *  2. If this ticket is not associated with a POAP mint link and more unclaimed POAP
+   *     links exist, then associate that unclaimed link with this ticket and return it.
+   *  3. If this ticket is not associated with a POAP mint link and no more unclaimed
+   *     POAP links exist, return a custom server error URL.
+   */
   public async getZuzalu23PoapRedirectUrl(
     serializedPCD: string
   ): Promise<string> {
@@ -325,7 +322,7 @@ export class PoapService {
 
   /**
    * Helper function to handle the logic of retrieving the correct POAP mint link
-   * given the ticket ID. Returns NULL if the ticket is not associate with a link
+   * given the ticket ID. Returns NULL if the ticket is not associated with a link
    * and no more unclaimed links exist.
    */
   public async getPoapClaimUrlByTicketId(
