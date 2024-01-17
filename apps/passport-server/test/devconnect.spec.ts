@@ -2916,11 +2916,18 @@ describe("devconnect functionality", function () {
       .null;
     expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to.be
       .null;
+    expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to.be
+      .null;
 
     const TEST_POAP_LINK_1 = "https://poap.xyz/mint/qwerty";
     const TEST_POAP_LINK_2 = "https://poap.xyz/mint/zxcvbn";
+    const TEST_POAP_LINK_3 = "https://poap.xyz/mint/asdfgh";
 
     await insertNewPoapUrl(db, TEST_POAP_LINK_1, "devconnect");
+    // Insert a Zuzalu 2023 POAP URL, which should never be returned
+    // by poapService.getPoapClaimUrlByTicketId() when "devconnect"
+    // is the POAP event.
+    await insertNewPoapUrl(db, TEST_POAP_LINK_2, "zuzalu23");
 
     expect(
       await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
@@ -2929,7 +2936,7 @@ describe("devconnect functionality", function () {
     expect(await poapService.getPoapClaimUrlByTicketId("2", "devconnect")).to.be
       .null;
 
-    await insertNewPoapUrl(db, TEST_POAP_LINK_2, "devconnect");
+    await insertNewPoapUrl(db, TEST_POAP_LINK_3, "devconnect");
 
     // Still maps to existing link
     expect(
@@ -2937,7 +2944,10 @@ describe("devconnect functionality", function () {
     ).to.eq(TEST_POAP_LINK_1);
     expect(
       await poapService.getPoapClaimUrlByTicketId("2", "devconnect")
-    ).to.eq(TEST_POAP_LINK_2);
+    ).to.eq(TEST_POAP_LINK_3);
+    // Ran out of mint links
+    expect(await poapService.getPoapClaimUrlByTicketId("3", "devconnect")).to.be
+      .null;
   });
 
   // TODO: More tests
