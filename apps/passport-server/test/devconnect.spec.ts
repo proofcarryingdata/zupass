@@ -2944,7 +2944,10 @@ describe("devconnect functionality", function () {
 
       await insertNewPoapUrl(db, TEST_POAP_LINK_3, "devconnect");
 
-      // Still maps to existing link, regardless of what the poapEvent parameter is
+      // Still maps to existing link, regardless of what the poapEvent parameter is.
+      // The intended behavior is that the poapEvent parameter is only relevant when
+      // a new POAP mint link is being associated with a ticket ID. If an ticket ID
+      // is already associated with a POAP mint link, poapEvent should be irrelevant.
       expect(
         await poapService.getPoapClaimUrlByTicketId("1", "devconnect")
       ).to.eq(TEST_POAP_LINK_1);
