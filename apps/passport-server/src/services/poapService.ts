@@ -72,7 +72,7 @@ export class PoapService {
    * If the serialized PCD satisfies these three properties, the deserialized
    * ZKEdDSAEventTicketPCD is returned.
    */
-  private async validateSignedZKEdDSAEventTicketPCD(
+  private async validateZKEdDSAEventTicketPCD(
     serializedPCD: string
   ): Promise<ZKEdDSAEventTicketPCD> {
     logger(
@@ -126,7 +126,7 @@ export class PoapService {
    */
   private async validateZuzalu23Ticket(serializedPCD: string): Promise<string> {
     return traced("poap", "validateZuzalu23Ticket", async (span) => {
-      const pcd = await this.validateSignedZKEdDSAEventTicketPCD(serializedPCD);
+      const pcd = await this.validateZKEdDSAEventTicketPCD(serializedPCD);
 
       const {
         validEventIds,
@@ -134,7 +134,7 @@ export class PoapService {
       } = pcd.claim;
 
       logger(
-        `[POAP] checking that validEventds ${validEventIds} matches cowork space`
+        `[POAP] checking that validEventds ${validEventIds} matches Zuzalu 2023`
       );
       if (
         !(
@@ -187,7 +187,7 @@ export class PoapService {
     serializedPCD: string
   ): Promise<string> {
     return traced("poap", "validateDevconnectTicket", async (span) => {
-      const pcd = await this.validateSignedZKEdDSAEventTicketPCD(serializedPCD);
+      const pcd = await this.validateZKEdDSAEventTicketPCD(serializedPCD);
 
       const {
         validEventIds,
@@ -336,16 +336,16 @@ export class PoapService {
     ticketId: string,
     poapEvent: PoapEvent
   ): Promise<string | null> {
-    return traced(
-      "poap",
-      "getDevconnectPoapClaimUrlByTicketId",
-      async (span) => {
-        span?.setAttribute("ticketId", ticketId);
-        const hashedTicketId = await getHash(ticketId);
-        span?.setAttribute("hashedTicketId", hashedTicketId);
-        // This critical section executes within a lock to prevent the case where two
-        // separate invocations both end up on the `claimNewPoapUrl()` function.
-        const poapLink = await lock.acquire(ticketId, async () => {
+    return traced("poap", "getPoapClaimUrlByTicketId", async (span) => {
+      span?.setAttribute("ticketId", ticketId);
+      span?.setAttribute("poapEvent", poapEvent);
+      const hashedTicketId = await getHash(ticketId);
+      span?.setAttribute("hashedTicketId", hashedTicketId);
+      // This critical section executes within a lock to prevent the case where two
+      // separate invocations both end up on the `claimNewPoapUrl()` function.
+      const poapLink = await lock.acquire(
+        `${ticketId}-${poapEvent}`,
+        async () => {
           const existingPoapLink = await getExistingClaimUrlByTicketId(
             this.context.dbPool,
             hashedTicketId
@@ -368,11 +368,11 @@ export class PoapService {
           }
 
           return newPoapLink;
-        });
+        }
+      );
 
-        return poapLink;
-      }
-    );
+      return poapLink;
+    });
   }
 }
 
