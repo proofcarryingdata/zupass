@@ -1,4 +1,4 @@
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_HOUR_MS } from "@pcd/util";
 import {
   consumeRateLimitToken,
   pruneRateLimitBuckets
@@ -26,7 +26,7 @@ export class RateLimitService {
   > = {
     CHECK_EMAIL_TOKEN: { maxActions: 10, timePeriod: ONE_HOUR_MS },
     REQUEST_EMAIL_TOKEN: { maxActions: 10, timePeriod: ONE_HOUR_MS },
-    ACCOUNT_RESET: { maxActions: 5, timePeriod: ONE_HOUR_MS * 24 }
+    ACCOUNT_RESET: { maxActions: 5, timePeriod: ONE_DAY_MS }
   };
 
   public constructor(
