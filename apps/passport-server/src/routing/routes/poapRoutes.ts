@@ -22,4 +22,16 @@ export function initPoapRoutes(
 
     res.redirect(await poapService.getDevconnectPoapRedirectUrl(proof));
   });
+
+  app.get("/poap/zuzalu23/callback", async (req: Request, res: Response) => {
+    const proof = checkQueryParam(req, "proof");
+    if (!proof || typeof proof !== "string") {
+      throw new PCDHTTPError(
+        400,
+        "proof field needs to be a string and be non-empty"
+      );
+    }
+
+    res.redirect(await poapService.getZuzalu23PoapRedirectUrl(proof));
+  });
 }
