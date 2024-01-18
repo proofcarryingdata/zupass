@@ -30,6 +30,7 @@ const DEVCONNECT_COWORK_SPACE_EVENT_ID = "a1c822c4-60bd-11ee-8732-763dbf30819c";
 // All valid Cowork products that can claim a POAP. This excludes add-on products, like the Turkish Towel.
 const DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS = [
   "67687bda-986f-11ee-abf3-126a2f5f3c5c",
+  "67689552-986f-11ee-abf3-126a2f5f3c5c",
   "6768a2e0-986f-11ee-abf3-126a2f5f3c5c",
   "6768af1a-986f-11ee-abf3-126a2f5f3c5c",
   "6768c81a-986f-11ee-abf3-126a2f5f3c5c",
