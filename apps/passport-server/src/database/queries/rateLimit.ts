@@ -44,7 +44,8 @@ export async function consumeRateLimitToken(
   const now = Date.now();
 
   // This query does the following:
-  // 1) Attempt to insert a new row, with a single token having been consumed
+  // 1) Attempt to insert a new bucket, with a single token having been
+  //    consumed from the starting number
   // 2) If the insert failed because the bucket exists already, then we have to
   //    update the bucket
   // 3) Return the bucket state
@@ -76,8 +77,8 @@ export async function consumeRateLimitToken(
   // Consume a token.
   //
   // `last_take` is calculated by checking if we consumed a token. We consumed
-  // a token if either a) `remaining` was > 0 when we began the query, or if
-  // we have refilled the bucket during this query, which we can determine by
+  // a token if either `remaining` was > 0 when we began the query, or if we
+  // have refilled the bucket during this query, which we can determine by
   // checking if the `last_take` date was far enough in the past for this to
   // happen. If either condition applies, set `last_take` to the current time.
   // If neither of these conditions apply, then `last_take` remains unchanged.
