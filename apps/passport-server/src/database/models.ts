@@ -339,9 +339,10 @@ export interface AnonMessageWithDetails extends AnonMessage {
 
 export type PoapEvent = "devconnect" | "zuzalu23";
 
-export interface RateLimitBucketDB {
+export interface RateLimitBucket {
   action_type: string;
   action_id: string;
   remaining: number;
-  expiry_time: Date;
+  // last_take is a bigint in Postgres, which node-postgres turns into a string
+  last_take: string;
 }

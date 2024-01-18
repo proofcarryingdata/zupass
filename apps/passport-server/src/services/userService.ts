@@ -154,7 +154,7 @@ export class UserService {
   /**
    * Checks whether allowing a user to reset their account one more time
    * would cause them to exceed the account reset rate limit. If it does,
-   * throws an error. If it doesn't, the rate limit service will decrement
+   * throws an error. If it doesn't, the rate limit service will increment
    * a counter and allow the action to proceed. Can only be called on users
    * that have already created an account.
    */
