@@ -322,8 +322,14 @@ export class PoapService {
 
   /**
    * Helper function to handle the logic of retrieving the correct POAP mint link
-   * given the ticket ID. Returns NULL if the ticket is not associated with a link
-   * and no more unclaimed links exist.
+   * given the ticket ID.
+   *  1. If this ticket ID is already associated with a POAP mint link,
+   *     return that link.
+   *  2. If this ticket ID is not yet associated with a POAP mint link,
+   *     a new POAP mint link with the given poapEvent is associated with
+   *     the ticket ID, and that link is returned.
+   *  3. If this ticket ID is not associated with a POAP mint link and
+   *     no more unclaimed POAP mint links exist, return NULL.
    */
   public async getPoapClaimUrlByTicketId(
     ticketId: string,
