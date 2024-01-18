@@ -16,7 +16,7 @@ import { sqlQuery } from "../sqlQuery";
  *
  * This allows clients to continue to make requests, but only at a limited
  * rate. If the client waits for a whole hour, then 10 tokens will be due,
- * fully repleneshing the bucket.
+ * fully replenishing the bucket.
  *
  * Token refills are not performed on a timer, but instead we calculate how
  * many tokens are due to be refilled whenever we process a request, by
@@ -58,7 +58,7 @@ export async function consumeRateLimitToken(
   //
   // `remaining` has some important factors:
   //
-  //   LEAST($3,
+  //   LEAST($4,
   // Ensures that by adding tokens we never exceed the maximum for the bucket.
   //
   //   GREATEST(rate_limit_buckets.remaining, 0)
@@ -84,7 +84,6 @@ export async function consumeRateLimitToken(
 
   const result = await sqlQuery(
     client,
-
     `
     INSERT INTO rate_limit_buckets 
     VALUES ($1, $2, $3 - 1, $6)
