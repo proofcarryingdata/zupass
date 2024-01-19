@@ -1,18 +1,21 @@
+import { ONE_HOUR_MS, ONE_SECOND_MS } from "@pcd/util";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { Pool } from "postgres-pool";
+import { v4 as uuid } from "uuid";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
 import {
-  checkRateLimit,
-  clearExpiredActions
+  consumeRateLimitToken,
+  deleteUnsupportedRateLimitBuckets
 } from "../src/database/queries/rateLimit";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { RateLimitService } from "../src/services/rateLimitService";
 import { Zupass } from "../src/types";
 import { overrideEnvironment, testingEnv } from "./util/env";
+import { resetRateLimitBuckets } from "./util/rateLimit";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("generic rate-limiting features", function () {
@@ -42,7 +45,7 @@ describe("generic rate-limiting features", function () {
     expect(db).to.not.eq(null);
   });
 
-  step("rate-limiting service should be runing", async function () {
+  step("rate-limiting service should be running", async function () {
     expect(application.services.rateLimitService).to.exist;
 
     rateLimitService = application.services.rateLimitService;
@@ -66,7 +69,9 @@ describe("generic rate-limiting features", function () {
   step(
     "password reset should be rate-limited after >10 attempts",
     async function () {
-      for (let i = 0; i < 9; i++) {
+      await resetRateLimitBuckets(db);
+
+      for (let i = 0; i < 10; i++) {
         const result = await rateLimitService.requestRateLimitedAction(
           "CHECK_EMAIL_TOKEN",
           "test@example.com"
@@ -113,6 +118,16 @@ describe("generic rate-limiting features", function () {
   step(
     "after time has elapsed, more attempts should be allowed",
     async function () {
+      await resetRateLimitBuckets(db);
+
+      // Exhaust the rate-limit bucket
+      for (let i = 0; i < 10; i++) {
+        await rateLimitService.requestRateLimitedAction(
+          "CHECK_EMAIL_TOKEN",
+          "test@example.com"
+        );
+      }
+
       // This simulates the case where the "bucket" of available actions has
       // not been re-filled for 30 minutes. Since 10 such actions are allowed
       // per hour, a 30-minute wait should allow 5 new attempts.
@@ -160,37 +175,74 @@ describe("generic rate-limiting features", function () {
   );
 
   step("clearing expired rate limits works", async function () {
-    // Should not clear anything since neither of the above rate limit buckets
-    // have expired.
-    await clearExpiredActions(db);
+    await resetRateLimitBuckets(db);
+
+    // This should give us one bucket
+    await rateLimitService.requestRateLimitedAction(
+      "CHECK_EMAIL_TOKEN",
+      "test@example.com"
+    );
+
+    // Should not clear anything since the above bucket has not expired
+    await rateLimitService.pruneBuckets();
 
     expect(
       (await sqlQuery(db, "SELECT * FROM rate_limit_buckets")).rows.length
-    ).to.eq(2);
+    ).to.eq(1);
 
     // One hour later, the rate limits should have expired
     MockDate.set(Date.now() + 60 * 60 * 1000);
 
-    await clearExpiredActions(db);
+    await rateLimitService.pruneBuckets();
 
     expect(
       (await sqlQuery(db, "SELECT * FROM rate_limit_buckets")).rows.length
     ).to.eq(0);
   });
 
-  step(
-    "checking the rate limit for a non-existent type should fail",
-    async function () {
-      const nonExistentType = "non-existent-type";
-      try {
-        expect(await checkRateLimit(db, nonExistentType, "123")).to.throw;
-      } catch (e) {
-        expect((e as any).message).to.eq(
-          `Action type ${nonExistentType} does not have a rate configured`
-        );
-      }
+  step("rate limits can have periods other than hourly", async function () {
+    const dummyUuid = uuid();
+
+    // Exhaust the available checks
+    for (let i = 0; i < 5; i++) {
+      const result = await rateLimitService.requestRateLimitedAction(
+        "ACCOUNT_RESET",
+        dummyUuid
+      );
+
+      expect(result).to.be.true;
     }
-  );
+
+    // Checks now fail
+    expect(
+      await rateLimitService.requestRateLimitedAction(
+        "ACCOUNT_RESET",
+        dummyUuid
+      )
+    ).to.be.false;
+
+    // With 5 checks per day, the next check is allowed after 86400/5 seconds
+    const timeToNextCheck = 86400 / 5;
+    const now = Date.now();
+
+    // One second before the next check is allowed, check should still fail
+    MockDate.set(now + (timeToNextCheck - 1) * 1000);
+    expect(
+      await rateLimitService.requestRateLimitedAction(
+        "ACCOUNT_RESET",
+        dummyUuid
+      )
+    ).to.be.false;
+
+    // Check should succeed once required time has elapsed
+    MockDate.set(now + timeToNextCheck * 1000);
+    expect(
+      await rateLimitService.requestRateLimitedAction(
+        "ACCOUNT_RESET",
+        dummyUuid
+      )
+    ).to.be.true;
+  });
 
   step(
     "rate-limiting can be disabled by an environment variable",
@@ -216,6 +268,157 @@ describe("generic rate-limiting features", function () {
         );
 
         expect(result).to.be.true;
+      }
+    }
+  );
+
+  step("underlying data model behaves as expected", async function () {
+    const actionId = uuid();
+    const maxActions = 10;
+    const timePeriod = ONE_HOUR_MS;
+
+    // eslint-disable-next-line @typescript-eslint/explicit-function-return-type
+    const consumeToken = async () => {
+      // We are always going to consume the same token type
+      return consumeRateLimitToken(
+        db,
+        "TEST",
+        actionId,
+        maxActions,
+        timePeriod
+      );
+    };
+
+    const startTimestamp = Date.now();
+    for (let i = 1; i <= maxActions; i++) {
+      MockDate.set(Date.now() + ONE_SECOND_MS);
+      const result = await consumeToken();
+
+      expect(result.remaining).to.eq(maxActions - i);
+      expect(parseInt(result.last_take)).to.eq(Date.now());
+      expect(parseInt(result.last_take)).to.not.eq(startTimestamp);
+    }
+
+    // Save the time before advancing it again
+    // MockDate.set() will advance the clock, so future Date.now() calls will
+    // return a different, later value.
+    // We do this because if a token is taken in consumeToken() then last_take
+    // will be set to the current time, but if not token is taken then it will
+    // not be. We want to test that this works as expected by checking to see
+    // if last_take has or has not changed.
+    let lastSuccessfulTakeTime = Date.now();
+    MockDate.set(lastSuccessfulTakeTime + ONE_SECOND_MS);
+    {
+      const result = await consumeToken();
+
+      // -1 indicates no token was taken
+      expect(result.remaining).to.eq(-1);
+      // last_take should not have changed
+      expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
+      expect(parseInt(result.last_take)).to.not.eq(Date.now());
+    }
+
+    const timeOfFirstRefill = lastSuccessfulTakeTime + timePeriod / maxActions;
+    MockDate.set(timeOfFirstRefill);
+    {
+      const result = await consumeToken();
+
+      // Since a refill occurred, we should have consumed a token
+      // But since only *one* refill occurred, this should be only
+      expect(result.remaining).to.eq(0);
+      // last_take should have changed compared to previous call
+      expect(parseInt(result.last_take)).to.eq(timeOfFirstRefill);
+
+      MockDate.set(timeOfFirstRefill + ONE_SECOND_MS);
+      const failedResult = await consumeToken();
+
+      // -1 indicates no token was taken
+      expect(failedResult.remaining).to.eq(-1);
+      // last_take should not have changed
+      expect(parseInt(failedResult.last_take)).to.eq(timeOfFirstRefill);
+      expect(parseInt(result.last_take)).to.not.eq(Date.now());
+    }
+
+    // timeOfFirstRefill is also the last_take time in the DB
+    MockDate.set(timeOfFirstRefill + timePeriod);
+
+    // We should be able to take 10 tokens again
+    for (let i = 1; i <= maxActions; i++) {
+      MockDate.set(Date.now() + ONE_SECOND_MS);
+
+      const result = await consumeToken();
+
+      expect(result.remaining).to.eq(maxActions - i);
+      expect(parseInt(result.last_take)).to.eq(Date.now());
+    }
+    lastSuccessfulTakeTime = Date.now();
+    {
+      // Since we just exhaused the bucket, this should not consume a token.
+      const result = await consumeToken();
+
+      // -1 indicates no token was taken
+      expect(result.remaining).to.eq(-1);
+      // last_take should not have changed
+      expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
+    }
+    // Advance only half-way toward the time needed for the next refill
+    MockDate.set(lastSuccessfulTakeTime + timePeriod / maxActions / 2);
+    {
+      // Since there has not been enough time for a refill, this should not
+      // consume a token.
+      const result = await consumeToken();
+
+      // -1 indicates no token was taken
+      expect(result.remaining).to.eq(-1);
+      // last_take should not have changed
+      expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
+      expect(parseInt(result.last_take)).to.not.eq(Date.now());
+    }
+    // Advance enough for 5 refills
+    MockDate.set(lastSuccessfulTakeTime + (timePeriod / maxActions) * 5);
+
+    // We should be able to take 5 tokens
+    for (let i = 1; i <= 5; i++) {
+      const result = await consumeToken();
+
+      expect(result.remaining).to.eq(5 - i);
+      expect(parseInt(result.last_take)).to.eq(Date.now());
+    }
+
+    lastSuccessfulTakeTime = Date.now();
+    {
+      // Since we just exhaused the bucket again, this should not consume a
+      // token.
+      const result = await consumeToken();
+
+      // -1 indicates no token was taken
+      expect(result.remaining).to.eq(-1);
+      // last_take should not have changed
+      expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
+    }
+  });
+
+  step(
+    "buckets with unsupported action types can be deleted",
+    async function () {
+      await consumeRateLimitToken(db, "UNSUPPORTED", "test", 10, ONE_HOUR_MS);
+
+      {
+        const result = await sqlQuery(
+          db,
+          "SELECT * FROM rate_limit_buckets WHERE action_type = 'UNSUPPORTED'"
+        );
+        expect(result.rowCount).to.eq(1);
+      }
+
+      await deleteUnsupportedRateLimitBuckets(db, ["SUPPORTED"]);
+
+      {
+        const result = await sqlQuery(
+          db,
+          "SELECT * FROM rate_limit_buckets WHERE action_type = 'UNSUPPORTED'"
+        );
+        expect(result.rowCount).to.eq(0);
       }
     }
   );

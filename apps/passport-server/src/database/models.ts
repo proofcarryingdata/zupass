@@ -145,7 +145,6 @@ export interface UserRow {
   email: string;
   salt: string | null;
   encryption_key: string | null;
-  account_reset_timestamps: string[];
   terms_agreed: number;
   /**
    * See {@link IssuanceService} - only relevant past the ticket re-issuance cutoff date. If this
@@ -339,3 +338,11 @@ export interface AnonMessageWithDetails extends AnonMessage {
 }
 
 export type PoapEvent = "devconnect" | "zuzalu23";
+
+export interface RateLimitBucket {
+  action_type: string;
+  action_id: string;
+  remaining: number;
+  // last_take is a bigint in Postgres, which node-postgres turns into a string
+  last_take: string;
+}

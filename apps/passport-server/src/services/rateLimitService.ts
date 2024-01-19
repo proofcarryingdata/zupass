@@ -1,20 +1,34 @@
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_HOUR_MS } from "@pcd/util";
 import {
-  checkRateLimit,
-  clearExpiredActions
+  consumeRateLimitToken,
+  deleteUnsupportedRateLimitBuckets,
+  pruneRateLimitBuckets
 } from "../database/queries/rateLimit";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
-export type RateLimitedActionType = "CHECK_EMAIL_TOKEN" | "REQUEST_EMAIL_TOKEN";
+export type RateLimitedActionType =
+  | "CHECK_EMAIL_TOKEN"
+  | "REQUEST_EMAIL_TOKEN"
+  | "ACCOUNT_RESET";
 
 export class RateLimitService {
   private readonly context: ApplicationContext;
-  private timeout: NodeJS.Timeout;
+  private pruneTimeout: NodeJS.Timeout | undefined;
   private readonly rollbarService: RollbarService | null;
   private disabled: boolean;
+  private bucketConfig: Record<
+    RateLimitedActionType,
+    // Define the number of actions that can occur in a time period before
+    // rate-limiting begins.
+    { maxActions: number; timePeriodMs: number }
+  > = {
+    CHECK_EMAIL_TOKEN: { maxActions: 10, timePeriodMs: ONE_HOUR_MS },
+    REQUEST_EMAIL_TOKEN: { maxActions: 10, timePeriodMs: ONE_HOUR_MS },
+    ACCOUNT_RESET: { maxActions: 5, timePeriodMs: ONE_DAY_MS }
+  };
 
   public constructor(
     context: ApplicationContext,
@@ -23,16 +37,19 @@ export class RateLimitService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.timeout = setTimeout(() => {
-      // Every hour, clear out any expired actions from the DB.
-      (async (): Promise<void> =>
-        await clearExpiredActions(this.context.dbPool))();
-    }, ONE_HOUR_MS);
+    const pruneExpiredBuckets = async (): Promise<void> => {
+      await this.pruneBuckets();
+      this.pruneTimeout = setTimeout(() => pruneExpiredBuckets(), ONE_HOUR_MS);
+    };
+    pruneExpiredBuckets();
+    this.removeUnsupportedBuckets();
     this.disabled = disabled;
   }
 
   public stop(): void {
-    clearTimeout(this.timeout);
+    if (this.pruneTimeout) {
+      clearTimeout(this.pruneTimeout);
+    }
   }
 
   /**
@@ -49,10 +66,6 @@ export class RateLimitService {
    *
    * In other cases, the identifier could be something like a user ID, IP
    * address, or other means of categorizing requests.
-   *
-   * Rate limit types are defined in the database, and new ones are created by
-   * adding their type to the `RateLimitedActionType` union type, and by
-   * inserting a record into the DB in a migration.
    *
    * @param actionType The type of action being requested permission for
    * @param actionId The unique identifier of the action being requested
@@ -74,13 +87,20 @@ export class RateLimitService {
           return true;
         }
 
-        const result = checkRateLimit(
+        const limit = this.bucketConfig[actionType];
+
+        const result = await consumeRateLimitToken(
           this.context.dbPool,
           actionType,
-          actionId
+          actionId,
+          limit.maxActions,
+          limit.timePeriodMs
         );
 
-        if (!result) {
+        // -1 indicates that the action should be declined
+        const allowed = result.remaining > -1;
+
+        if (!allowed) {
           logger(
             `[RATELIMIT] Action "${actionId}" of type "${actionType}" was rate-limited`
           );
@@ -91,9 +111,50 @@ export class RateLimitService {
           );
         }
 
-        return result;
+        return allowed;
       }
     );
+  }
+
+  /**
+   * Delete expired rate-limiting buckets from the DB.
+   */
+  public async pruneBuckets(): Promise<void> {
+    for (const [actionType, bucketConfig] of Object.entries(
+      this.bucketConfig
+    )) {
+      try {
+        await pruneRateLimitBuckets(
+          this.context.dbPool,
+          actionType,
+          Date.now() - bucketConfig.timePeriodMs
+        );
+      } catch (e) {
+        logger(
+          `[RATELIMIT] Error encountered when pruning expired rate limit buckets:`,
+          e
+        );
+        this.rollbarService?.reportError(e);
+      }
+    }
+  }
+
+  /**
+   * Delete legacy unsupported buckets;
+   */
+  public async removeUnsupportedBuckets(): Promise<void> {
+    try {
+      await deleteUnsupportedRateLimitBuckets(
+        this.context.dbPool,
+        Object.keys(this.bucketConfig)
+      );
+    } catch (e) {
+      logger(
+        `[RATELIMIT] Error encountered when removing unsupported rate limit buckets:`,
+        e
+      );
+      this.rollbarService?.reportError(e);
+    }
   }
 }
 

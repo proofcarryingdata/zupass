@@ -11,15 +11,12 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ONE_HOUR_MS, ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
 import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
 import { agreeTermsAndUnredactTickets } from "../database/queries/devconnect_pretix_tickets/devconnectPretixRedactedTickets";
-import {
-  updateUserAccountRestTimestamps,
-  upsertUser
-} from "../database/queries/saveUser";
+import { upsertUser } from "../database/queries/saveUser";
 import {
   fetchUserByCommitment,
   fetchUserByEmail,
@@ -157,61 +154,28 @@ export class UserService {
   /**
    * Checks whether allowing a user to reset their account one more time
    * would cause them to exceed the account reset rate limit. If it does,
-   * throws an error. If it doesn't, saves this account reset timestamp
-   * to the database and proceeds. Can only be called on users that have
-   * already created an account.
+   * throws an error. If it doesn't, the rate limit service will increment
+   * a counter and allow the action to proceed. Can only be called on users
+   * that have already created an account.
    */
-  private async checkAndIncrementAccountRateLimit(
-    user: UserRow
-  ): Promise<void> {
+  private async checkAccountResetRateLimit(user: UserRow): Promise<void> {
     if (process.env.ACCOUNT_RESET_RATE_LIMIT_DISABLED === "true") {
       logger("[USER_SERVICE] account rate limit disabled");
       return;
     }
 
-    const now = Date.now();
-    const configuredRateLimitDurationMs = parseInt(
-      process.env.ACCOUNT_RESET_LIMIT_DURATION_MS ?? "",
-      10
-    );
-    const configuredAccountResetQuantity = parseInt(
-      process.env.ACCOUNT_RESET_LIMIT_QUANTITY ?? "",
-      10
-    );
-    const defaultRateLimitDurationMs = ONE_HOUR_MS * 24; // default 24 hours
-    const defaultRateLimitQuantity = 5; // default max 5 resets (not including 1st time account creation) in 24 hours
-    const rateLimitDurationMs = isNaN(configuredRateLimitDurationMs)
-      ? defaultRateLimitDurationMs
-      : configuredRateLimitDurationMs;
-    const rateLimitQuantity = isNaN(configuredAccountResetQuantity)
-      ? defaultRateLimitQuantity
-      : configuredAccountResetQuantity;
-
-    const parsedTimestamps: number[] = user.account_reset_timestamps.map((t) =>
-      new Date(t).getTime()
+    const allowed = await this.rateLimitService.requestRateLimitedAction(
+      "ACCOUNT_RESET",
+      user.uuid
     );
 
-    parsedTimestamps.push(now);
-
-    const maxAgeTimestamp = now - rateLimitDurationMs;
-    const resetsNewerThanMaxAge = parsedTimestamps.filter(
-      (t) => t > maxAgeTimestamp
-    );
-    const exceedsRateLimit = resetsNewerThanMaxAge.length > rateLimitQuantity;
-
-    if (exceedsRateLimit) {
+    if (!allowed) {
       throw new PCDHTTPError(
         429,
         "You've exceeded the maximum number of account resets." +
           ` Please contact ${ZUPASS_SUPPORT_EMAIL} for further assistance.`
       );
     }
-
-    await updateUserAccountRestTimestamps(
-      this.context.dbPool,
-      user.email,
-      resetsNewerThanMaxAge.map((t) => new Date(t).toISOString())
-    );
   }
 
   public async handleNewUser(
@@ -245,8 +209,9 @@ export class UserService {
     }
 
     const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+
     if (existingUser) {
-      await this.checkAndIncrementAccountRateLimit(existingUser);
+      await this.checkAccountResetRateLimit(existingUser);
     }
 
     await this.emailTokenService.saveNewTokenForEmail(email);

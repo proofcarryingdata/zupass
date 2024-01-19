@@ -126,6 +126,7 @@ import {
   testUserSyncWithRev
 } from "./user/testUserSync";
 import { overrideEnvironment, testingEnv } from "./util/env";
+import { resetRateLimitBuckets } from "./util/rateLimit";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
@@ -1683,31 +1684,19 @@ describe("devconnect functionality", function () {
   );
 
   step("account reset has a rate limit", async function () {
-    await sleep(4000);
+    await resetRateLimitBuckets(db);
 
-    // 1st reset
-    await testLogin(application, mocker.get().organizer1.EMAIL_1, {
-      force: true,
-      expectUserAlreadyLoggedIn: true,
-      expectEmailIncorrect: false,
-      skipSetupPassword: false
-    });
-
-    // 2nd reset
-    await testLogin(application, mocker.get().organizer1.EMAIL_1, {
-      force: true,
-      expectUserAlreadyLoggedIn: true,
-      expectEmailIncorrect: false,
-      skipSetupPassword: false
-    });
-
-    // 3rd reset
-    await testLogin(application, mocker.get().organizer1.EMAIL_1, {
-      force: true,
-      expectUserAlreadyLoggedIn: true,
-      expectEmailIncorrect: false,
-      skipSetupPassword: false
-    });
+    // Perform 5 account resets to exhaust the rate limit
+    for (let i = 0; i < 5; i++) {
+      expect(
+        await testLogin(application, mocker.get().organizer1.EMAIL_1, {
+          force: true,
+          expectUserAlreadyLoggedIn: true,
+          expectEmailIncorrect: false,
+          skipSetupPassword: false
+        })
+      ).to.not.throw;
+    }
 
     let threw = false;
     try {
@@ -1725,9 +1714,10 @@ describe("devconnect functionality", function () {
       }
     }
 
-    await sleep(4000); // see env.ts for where this number comes from
+    // 5 resets are allowed per day, so the next one will be in one day / 5
+    MockDate.set(Date.now() + (86400 / 5) * 1000);
 
-    // 4th reset should succeed
+    // 6th reset should succeed
     const result = await testLogin(
       application,
       mocker.get().organizer1.EMAIL_1,
@@ -1747,10 +1737,11 @@ describe("devconnect functionality", function () {
 
     identity = result.identity;
     await application.services.semaphoreService.reload();
+    MockDate.reset();
   });
 
   step("new email token requests have a rate limit", async function () {
-    await sqlQuery(db, "DELETE FROM rate_limit_buckets");
+    await resetRateLimitBuckets(db);
 
     const email = mocker.get().organizer1.EMAIL_1;
 
@@ -1782,7 +1773,7 @@ describe("devconnect functionality", function () {
   });
 
   step("token verification has a rate limit", async function () {
-    await sqlQuery(db, "DELETE FROM rate_limit_buckets");
+    await resetRateLimitBuckets(db);
 
     const email = mocker.get().organizer1.EMAIL_1;
     const incorrectToken = "12345";
