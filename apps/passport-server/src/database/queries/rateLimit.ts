@@ -27,7 +27,6 @@ import { sqlQuery } from "../sqlQuery";
  * @param actionType The type of action being attempted
  * @param actionId The identifier of this action
  * @param maxActions The maximum number of actions allowed in a time period
- * @param startingActions The number of actions to start the bucket with
  * @param timePeriodMs Period in milliseconds in which maxActions are allowed
  * @returns the RateLimitBucket
  */
@@ -35,7 +34,6 @@ export async function consumeRateLimitToken(
   client: Pool,
   actionType: string,
   actionId: string,
-  startingActions: number,
   maxActions: number,
   timePeriodMs: number
 ): Promise<RateLimitBucket> {
@@ -68,7 +66,7 @@ export async function consumeRateLimitToken(
   //
   // `remaining` has some important factors:
   //
-  //   LEAST($4,
+  //   LEAST($3,
   // Ensures that by adding tokens we never exceed the maximum for the bucket.
   //
   //   GREATEST(rate_limit_buckets.remaining, 0)
@@ -77,8 +75,8 @@ export async function consumeRateLimitToken(
   // calculation. Because we're going to subtract 1 again, we turn a -1 into a
   // zero, indicating that zero tokens remain at this point.
 
-  //  + FLOOR(($6 - rate_limit_buckets.last_take) / $5)
-  // Work out the difference between now ($6) and the last take, and divide by
+  //  + FLOOR(($5 - rate_limit_buckets.last_take) / $4)
+  // Work out the difference between now ($5) and the last take, and divide by
   // the period of time necessary for a single token to refill. This tells us
   // how many tokens are due to be refilled. FLOOR() is used to round down.
   //
@@ -96,21 +94,21 @@ export async function consumeRateLimitToken(
     client,
     `
     INSERT INTO rate_limit_buckets 
-    VALUES ($1, $2, $3 - 1, $6)
+    VALUES ($1, $2, $3 - 1, $5)
     ON CONFLICT (action_type, action_id)
     DO UPDATE SET
       remaining = 
-        LEAST($4,
+        LEAST($3,
           GREATEST(rate_limit_buckets.remaining, 0)
-          + FLOOR(($6 - rate_limit_buckets.last_take) / $5))
+          + FLOOR(($5 - rate_limit_buckets.last_take) / $4))
         - 1,
       last_take = CASE
-        WHEN rate_limit_buckets.remaining > 0 OR (($6 - rate_limit_buckets.last_take) >= $5) THEN $6
+        WHEN rate_limit_buckets.remaining > 0 OR (($5 - rate_limit_buckets.last_take) >= $4) THEN $5
         ELSE rate_limit_buckets.last_take
       END
     RETURNING *
     `,
-    [actionType, actionId, startingActions, maxActions, timePerAction, now]
+    [actionType, actionId, maxActions, timePerAction, now]
   );
   return result.rows[0];
 }

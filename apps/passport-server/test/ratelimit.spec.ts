@@ -285,7 +285,6 @@ describe("generic rate-limiting features", function () {
         "TEST",
         actionId,
         maxActions,
-        maxActions,
         timePeriod
       );
     };
@@ -402,14 +401,7 @@ describe("generic rate-limiting features", function () {
   step(
     "buckets with unsupported action types can be deleted",
     async function () {
-      await consumeRateLimitToken(
-        db,
-        "UNSUPPORTED",
-        "test",
-        10,
-        10,
-        ONE_HOUR_MS
-      );
+      await consumeRateLimitToken(db, "UNSUPPORTED", "test", 10, ONE_HOUR_MS);
 
       {
         const result = await sqlQuery(

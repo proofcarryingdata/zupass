@@ -93,9 +93,6 @@ export class RateLimitService {
           this.context.dbPool,
           actionType,
           actionId,
-          // By default, start the bucket with the maximum number of actions
-          // available to be performed immediately.
-          limit.maxActions,
           limit.maxActions,
           limit.timePeriodMs
         );
