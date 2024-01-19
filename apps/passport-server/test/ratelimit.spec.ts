@@ -290,19 +290,25 @@ describe("generic rate-limiting features", function () {
       );
     };
 
+    const startTimestamp = Date.now();
     for (let i = 1; i <= maxActions; i++) {
       MockDate.set(Date.now() + ONE_SECOND_MS);
-
       const result = await consumeToken();
 
       expect(result.remaining).to.eq(maxActions - i);
       expect(parseInt(result.last_take)).to.eq(Date.now());
+      expect(parseInt(result.last_take)).to.not.eq(startTimestamp);
     }
 
     // Save the time before advancing it again
+    // MockDate.set() will advance the clock, so future Date.now() calls will
+    // return a different, later value.
+    // We do this because if a token is taken in consumeToken() then last_take
+    // will be set to the current time, but if not token is taken then it will
+    // not be. We want to test that this works as expected by checking to see
+    // if last_take has or has not changed.
     let lastSuccessfulTakeTime = Date.now();
     MockDate.set(lastSuccessfulTakeTime + ONE_SECOND_MS);
-
     {
       const result = await consumeToken();
 
@@ -310,6 +316,7 @@ describe("generic rate-limiting features", function () {
       expect(result.remaining).to.eq(-1);
       // last_take should not have changed
       expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
+      expect(parseInt(result.last_take)).to.not.eq(Date.now());
     }
 
     const timeOfFirstRefill = lastSuccessfulTakeTime + timePeriod / maxActions;
@@ -320,7 +327,7 @@ describe("generic rate-limiting features", function () {
       // Since a refill occurred, we should have consumed a token
       // But since only *one* refill occurred, this should be only
       expect(result.remaining).to.eq(0);
-      // last_take should have changed
+      // last_take should have changed compared to previous call
       expect(parseInt(result.last_take)).to.eq(timeOfFirstRefill);
 
       MockDate.set(timeOfFirstRefill + ONE_SECOND_MS);
@@ -330,6 +337,7 @@ describe("generic rate-limiting features", function () {
       expect(failedResult.remaining).to.eq(-1);
       // last_take should not have changed
       expect(parseInt(failedResult.last_take)).to.eq(timeOfFirstRefill);
+      expect(parseInt(result.last_take)).to.not.eq(Date.now());
     }
 
     // timeOfFirstRefill is also the last_take time in the DB
@@ -365,6 +373,7 @@ describe("generic rate-limiting features", function () {
       expect(result.remaining).to.eq(-1);
       // last_take should not have changed
       expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
+      expect(parseInt(result.last_take)).to.not.eq(Date.now());
     }
     // Advance enough for 5 refills
     MockDate.set(lastSuccessfulTakeTime + (timePeriod / maxActions) * 5);
