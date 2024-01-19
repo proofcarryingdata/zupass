@@ -53,9 +53,18 @@ export async function consumeRateLimitToken(
   // Updates cover two fields:
   // `remaining` needs to be updated to the number of tokens remaining *after*
   // attempting to take a token, accounting for any tokens that are added due
-  // to refilling.
+  // to refilling. If the starting value was zero, then the final value will be
+  // -1, indicating that the action should be declined. If the starting value
+  // was -1, the final result will remain as -1, indicating the same. Repeated
+  // attempts to take a token when the value is -1, and when no tokens are
+  // refilled, will produce the same result. The result will not change until
+  // tokens are refilled. The final value will also never be higher than
+  // (maxActions - 1), indicating that the bucket was full and that a token has
+  // been consumed.
+  //
   // `last_take` should be updated to the most recent time a token was
-  // consumed.
+  // consumed. If no token is consumed (because there are no tokens available)
+  // then this value will not change.
   //
   // `remaining` has some important factors:
   //
