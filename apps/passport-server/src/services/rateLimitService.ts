@@ -16,7 +16,7 @@ export type RateLimitedActionType =
 
 export class RateLimitService {
   private readonly context: ApplicationContext;
-  private pruneInterval: NodeJS.Timeout;
+  private pruneTimeout: NodeJS.Timeout;
   private readonly rollbarService: RollbarService | null;
   private disabled: boolean;
   private bucketConfig: Record<
@@ -37,16 +37,17 @@ export class RateLimitService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.pruneInterval = setInterval(() => {
-      // Every hour, clear out any expired buckets from the DB.
-      (async (): Promise<void> => this.pruneBuckets())();
-    }, ONE_HOUR_MS);
+    const pruneExpiredBuckets = async (): Promise<void> => {
+      await this.pruneBuckets();
+      this.pruneTimeout = setTimeout(() => pruneExpiredBuckets(), ONE_HOUR_MS);
+    };
+    pruneExpiredBuckets();
     this.removeUnsupportedBuckets();
     this.disabled = disabled;
   }
 
   public stop(): void {
-    clearInterval(this.pruneInterval);
+    clearTimeout(this.pruneTimeout);
   }
 
   /**
