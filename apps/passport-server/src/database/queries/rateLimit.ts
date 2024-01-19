@@ -28,7 +28,7 @@ import { sqlQuery } from "../sqlQuery";
  * @param actionId The identifier of this action
  * @param maxActions The maximum number of actions allowed in a time period
  * @param startingActions The number of actions to start the bucket with
- * @param timePeriodMs The time period in which maxActions are allowed
+ * @param timePeriodMs Period in milliseconds in which maxActions are allowed
  * @returns the RateLimitBucket
  */
 export async function consumeRateLimitToken(
