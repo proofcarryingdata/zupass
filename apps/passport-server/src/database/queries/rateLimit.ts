@@ -29,7 +29,7 @@ import { sqlQuery } from "../sqlQuery";
  * @param maxActions The maximum number of actions allowed in a time period
  * @param startingActions The number of actions to start the bucket with
  * @param timePeriod The time period in which maxActions are allowed
- * @returns Boolean indicating whether the action is permitted
+ * @returns the RateLimitBucket
  */
 export async function consumeRateLimitToken(
   client: Pool,
@@ -107,16 +107,30 @@ export async function consumeRateLimitToken(
 }
 
 /**
- * Delete multiple rate limiting buckets.
+ * Delete multiple rate limit buckets
  */
 export async function pruneRateLimitBuckets(
   client: Pool,
   actionType: string,
-  expiredAgeMs: number
+  expiryDateMs: number
 ): Promise<void> {
   await sqlQuery(
     client,
     `DELETE FROM rate_limit_buckets WHERE action_type = $1 AND last_take <= $2`,
-    [actionType, expiredAgeMs]
+    [actionType, expiryDateMs]
+  );
+}
+
+/**
+ * Delete rate limit buckets not of given action types
+ */
+export async function deleteUnsupportedRateLimitBuckets(
+  client: Pool,
+  supportedActionTypes: string[]
+): Promise<void> {
+  await sqlQuery(
+    client,
+    `DELETE FROM rate_limit_buckets WHERE NOT (action_type = ANY($1))`,
+    [supportedActionTypes]
   );
 }

@@ -1,6 +1,7 @@
 import { ONE_DAY_MS, ONE_HOUR_MS } from "@pcd/util";
 import {
   consumeRateLimitToken,
+  deleteUnsupportedRateLimitBuckets,
   pruneRateLimitBuckets
 } from "../database/queries/rateLimit";
 import { ApplicationContext } from "../types";
@@ -15,10 +16,10 @@ export type RateLimitedActionType =
 
 export class RateLimitService {
   private readonly context: ApplicationContext;
-  private timeout: NodeJS.Timeout;
+  private pruneInterval: NodeJS.Timeout;
   private readonly rollbarService: RollbarService | null;
   private disabled: boolean;
-  private buckets: Record<
+  private bucketConfig: Record<
     RateLimitedActionType,
     // Define the number of actions that can occur in a time period before
     // rate-limiting begins.
@@ -36,15 +37,16 @@ export class RateLimitService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.timeout = setTimeout(() => {
-      // Every hour, clear out any expired actions from the DB.
+    this.pruneInterval = setInterval(() => {
+      // Every hour, clear out any expired buckets from the DB.
       (async (): Promise<void> => this.pruneBuckets())();
     }, ONE_HOUR_MS);
+    this.removeUnsupportedBuckets();
     this.disabled = disabled;
   }
 
   public stop(): void {
-    clearTimeout(this.timeout);
+    clearInterval(this.pruneInterval);
   }
 
   /**
@@ -82,7 +84,7 @@ export class RateLimitService {
           return true;
         }
 
-        const limit = this.buckets[actionType];
+        const limit = this.bucketConfig[actionType];
 
         const result = await consumeRateLimitToken(
           this.context.dbPool,
@@ -95,6 +97,7 @@ export class RateLimitService {
           limit.timePeriod
         );
 
+        // -1 indicates that the action should be declined
         const allowed = result.remaining > -1;
 
         if (!allowed) {
@@ -117,13 +120,23 @@ export class RateLimitService {
    * Delete expired rate-limiting buckets from the DB.
    */
   public async pruneBuckets(): Promise<void> {
-    for (const [actionType, bucket] of Object.entries(this.buckets)) {
+    for (const [actionType, bucket] of Object.entries(this.bucketConfig)) {
       await pruneRateLimitBuckets(
         this.context.dbPool,
         actionType,
         Date.now() - bucket.timePeriod
       );
     }
+  }
+
+  /**
+   * Delete legacy unsupported buckets;
+   */
+  public async removeUnsupportedBuckets(): Promise<void> {
+    await deleteUnsupportedRateLimitBuckets(
+      this.context.dbPool,
+      Object.keys(this.bucketConfig)
+    );
   }
 }
 

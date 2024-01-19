@@ -7,7 +7,10 @@ import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
 import { stopApplication } from "../src/application";
 import { getDB } from "../src/database/postgresPool";
-import { consumeRateLimitToken } from "../src/database/queries/rateLimit";
+import {
+  consumeRateLimitToken,
+  deleteUnsupportedRateLimitBuckets
+} from "../src/database/queries/rateLimit";
 import { sqlQuery } from "../src/database/sqlQuery";
 import { RateLimitService } from "../src/services/rateLimitService";
 import { Zupass } from "../src/types";
@@ -386,4 +389,36 @@ describe("generic rate-limiting features", function () {
       expect(parseInt(result.last_take)).to.eq(lastSuccessfulTakeTime);
     }
   });
+
+  step(
+    "buckets with unsupported action types can be deleted",
+    async function () {
+      await consumeRateLimitToken(
+        db,
+        "UNSUPPORTED",
+        "test",
+        10,
+        10,
+        ONE_HOUR_MS
+      );
+
+      {
+        const result = await sqlQuery(
+          db,
+          "SELECT * FROM rate_limit_buckets WHERE action_type = 'UNSUPPORTED'"
+        );
+        expect(result.rowCount).to.eq(1);
+      }
+
+      await deleteUnsupportedRateLimitBuckets(db, ["SUPPORTED"]);
+
+      {
+        const result = await sqlQuery(
+          db,
+          "SELECT * FROM rate_limit_buckets WHERE action_type = 'UNSUPPORTED'"
+        );
+        expect(result.rowCount).to.eq(0);
+      }
+    }
+  );
 });
