@@ -23,11 +23,11 @@ export class RateLimitService {
     RateLimitedActionType,
     // Define the number of actions that can occur in a time period before
     // rate-limiting begins.
-    { maxActions: number; timePeriod: number }
+    { maxActions: number; timePeriodMs: number }
   > = {
-    CHECK_EMAIL_TOKEN: { maxActions: 10, timePeriod: ONE_HOUR_MS },
-    REQUEST_EMAIL_TOKEN: { maxActions: 10, timePeriod: ONE_HOUR_MS },
-    ACCOUNT_RESET: { maxActions: 5, timePeriod: ONE_DAY_MS }
+    CHECK_EMAIL_TOKEN: { maxActions: 10, timePeriodMs: ONE_HOUR_MS },
+    REQUEST_EMAIL_TOKEN: { maxActions: 10, timePeriodMs: ONE_HOUR_MS },
+    ACCOUNT_RESET: { maxActions: 5, timePeriodMs: ONE_DAY_MS }
   };
 
   public constructor(
@@ -94,7 +94,7 @@ export class RateLimitService {
           // available to be performed immediately.
           limit.maxActions,
           limit.maxActions,
-          limit.timePeriod
+          limit.timePeriodMs
         );
 
         // -1 indicates that the action should be declined
@@ -120,11 +120,13 @@ export class RateLimitService {
    * Delete expired rate-limiting buckets from the DB.
    */
   public async pruneBuckets(): Promise<void> {
-    for (const [actionType, bucket] of Object.entries(this.bucketConfig)) {
+    for (const [actionType, bucketConfig] of Object.entries(
+      this.bucketConfig
+    )) {
       await pruneRateLimitBuckets(
         this.context.dbPool,
         actionType,
-        Date.now() - bucket.timePeriod
+        Date.now() - bucketConfig.timePeriodMs
       );
     }
   }

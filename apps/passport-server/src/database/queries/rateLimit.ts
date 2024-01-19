@@ -28,7 +28,7 @@ import { sqlQuery } from "../sqlQuery";
  * @param actionId The identifier of this action
  * @param maxActions The maximum number of actions allowed in a time period
  * @param startingActions The number of actions to start the bucket with
- * @param timePeriod The time period in which maxActions are allowed
+ * @param timePeriodMs The time period in which maxActions are allowed
  * @returns the RateLimitBucket
  */
 export async function consumeRateLimitToken(
@@ -37,10 +37,10 @@ export async function consumeRateLimitToken(
   actionId: string,
   startingActions: number,
   maxActions: number,
-  timePeriod: number
+  timePeriodMs: number
 ): Promise<RateLimitBucket> {
   // How long to wait before allowing an additional action?
-  const timePerAction = timePeriod / maxActions;
+  const timePerAction = timePeriodMs / maxActions;
   const now = Date.now();
 
   // This query does the following:
@@ -112,12 +112,15 @@ export async function consumeRateLimitToken(
 export async function pruneRateLimitBuckets(
   client: Pool,
   actionType: string,
-  expiryDateMs: number
+  // Expire all buckets whose last_take is less than or equal to this timestamp
+  // Appropriate timestamps must be calculated by the caller, using the bucket
+  // configuration.
+  expiryTimestampMs: number
 ): Promise<void> {
   await sqlQuery(
     client,
     `DELETE FROM rate_limit_buckets WHERE action_type = $1 AND last_take <= $2`,
-    [actionType, expiryDateMs]
+    [actionType, expiryTimestampMs]
   );
 }
 
