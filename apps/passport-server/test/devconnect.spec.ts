@@ -1737,6 +1737,7 @@ describe("devconnect functionality", function () {
 
     identity = result.identity;
     await application.services.semaphoreService.reload();
+    MockDate.reset();
   });
 
   step("new email token requests have a rate limit", async function () {
