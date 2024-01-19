@@ -16,7 +16,7 @@ export type RateLimitedActionType =
 
 export class RateLimitService {
   private readonly context: ApplicationContext;
-  private pruneTimeout: NodeJS.Timeout;
+  private pruneTimeout: NodeJS.Timeout | undefined;
   private readonly rollbarService: RollbarService | null;
   private disabled: boolean;
   private bucketConfig: Record<
@@ -47,7 +47,9 @@ export class RateLimitService {
   }
 
   public stop(): void {
-    clearTimeout(this.pruneTimeout);
+    if (this.pruneTimeout) {
+      clearTimeout(this.pruneTimeout);
+    }
   }
 
   /**
