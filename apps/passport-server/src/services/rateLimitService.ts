@@ -126,11 +126,19 @@ export class RateLimitService {
     for (const [actionType, bucketConfig] of Object.entries(
       this.bucketConfig
     )) {
-      await pruneRateLimitBuckets(
-        this.context.dbPool,
-        actionType,
-        Date.now() - bucketConfig.timePeriodMs
-      );
+      try {
+        await pruneRateLimitBuckets(
+          this.context.dbPool,
+          actionType,
+          Date.now() - bucketConfig.timePeriodMs
+        );
+      } catch (e) {
+        logger(
+          `[RATELIMIT] Error encountered when pruning expired rate limit buckets:`,
+          e
+        );
+        this.rollbarService?.reportError(e);
+      }
     }
   }
 
@@ -138,10 +146,18 @@ export class RateLimitService {
    * Delete legacy unsupported buckets;
    */
   public async removeUnsupportedBuckets(): Promise<void> {
-    await deleteUnsupportedRateLimitBuckets(
-      this.context.dbPool,
-      Object.keys(this.bucketConfig)
-    );
+    try {
+      await deleteUnsupportedRateLimitBuckets(
+        this.context.dbPool,
+        Object.keys(this.bucketConfig)
+      );
+    } catch (e) {
+      logger(
+        `[RATELIMIT] Error encountered when removing unsupported rate limit buckets:`,
+        e
+      );
+      this.rollbarService?.reportError(e);
+    }
   }
 }
 
