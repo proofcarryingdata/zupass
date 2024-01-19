@@ -1,4 +1,4 @@
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_HOUR_MS, ONE_SECOND_MS } from "@pcd/util";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -291,7 +291,7 @@ describe("generic rate-limiting features", function () {
     };
 
     for (let i = 1; i <= maxActions; i++) {
-      MockDate.set(Date.now() + 3600);
+      MockDate.set(Date.now() + ONE_SECOND_MS);
 
       const result = await consumeToken();
 
@@ -301,7 +301,7 @@ describe("generic rate-limiting features", function () {
 
     // Save the time before advancing it again
     let lastSuccessfulTakeTime = Date.now();
-    MockDate.set(lastSuccessfulTakeTime + 3600);
+    MockDate.set(lastSuccessfulTakeTime + ONE_SECOND_MS);
 
     {
       const result = await consumeToken();
@@ -323,7 +323,7 @@ describe("generic rate-limiting features", function () {
       // last_take should have changed
       expect(parseInt(result.last_take)).to.eq(timeOfFirstRefill);
 
-      MockDate.set(timeOfFirstRefill + 3600);
+      MockDate.set(timeOfFirstRefill + ONE_SECOND_MS);
       const failedResult = await consumeToken();
 
       // -1 indicates no token was taken
@@ -337,7 +337,7 @@ describe("generic rate-limiting features", function () {
 
     // We should be able to take 10 tokens again
     for (let i = 1; i <= maxActions; i++) {
-      MockDate.set(Date.now() + 3600);
+      MockDate.set(Date.now() + ONE_SECOND_MS);
 
       const result = await consumeToken();
 
