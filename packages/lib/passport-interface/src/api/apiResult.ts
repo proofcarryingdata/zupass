@@ -10,7 +10,7 @@ export type APIResult<TResult = unknown, TError = string> =
       error?: never;
       success: true;
     }
-  | { value?: never; error: TError; success: false };
+  | { value?: never; error: TError; success: false; code?: number };
 
 /**
  * Given the string result an HTTP endpoint responds with, return

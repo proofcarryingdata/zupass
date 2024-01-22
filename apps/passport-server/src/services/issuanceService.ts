@@ -219,7 +219,41 @@ export class IssuanceService {
 
             return { actions };
           },
-          feed: zupassDefaultSubscriptions[ZupassFeedIds.Devconnect]
+          feed: {
+            id: ZupassFeedIds.Devconnect,
+            name: "Devconnect Tickets",
+            description: "Get your Devconnect tickets here!",
+            partialArgs: undefined,
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd"
+            },
+            permissions: [
+              {
+                folder: "Devconnect",
+                type: PCDPermissionType.AppendToFolder
+              },
+              {
+                folder: "Devconnect",
+                type: PCDPermissionType.ReplaceInFolder
+              },
+              {
+                folder: "Devconnect",
+                type: PCDPermissionType.DeleteFolder
+              },
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.AppendToFolder
+              },
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.ReplaceInFolder
+              },
+              {
+                folder: "SBC SRW",
+                type: PCDPermissionType.DeleteFolder
+              }
+            ]
+          }
         },
         {
           handleRequest: async (
@@ -694,7 +728,7 @@ export class IssuanceService {
             await upsertUser(this.context.dbPool, commitmentRow);
           } else {
             throw new PCDHTTPError(
-              401,
+              410,
               `Issuance of Devconnect tickets was turned off on ${this.getTicketIssuanceCutoffDate()?.toDateString()}.` +
                 ` Contact support@0xparc.org if you've lost access to your tickets.`
             );
