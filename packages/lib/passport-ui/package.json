@@ -20,6 +20,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "disabledpreBuild": "yarn convert-icons",
+    "pre-build": "echo hi",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",

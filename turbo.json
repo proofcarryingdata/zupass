@@ -4,10 +4,14 @@
     "lint": {
       "cache": true
     },
+    "pre-build": {
+      "cache": true,
+      "outputs": []
+    },
     "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["apps/*dist/**", "packages/*/*/dist/**"],
-      "cache": false
+      "dependsOn": ["pre-build", "^build"],
+      "outputs": [],
+      "cache": true
     },
     "dev": {
       "cache": false
@@ -81,6 +85,7 @@
     "FROGCRYPTO_ASSETS_URL",
     "FROGCRYPTO_SERVER_URL",
     "TICKET_ISSUANCE_CUTOFF_DATE",
-    "GENERIC_RATE_LIMIT_DISABLED"
+    "GENERIC_RATE_LIMIT_DISABLED",
+    "WORKER_MODULE_PATH"
   ]
 }

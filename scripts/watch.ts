@@ -48,7 +48,7 @@ const main = async () => {
   // Because these have references to all of our other TypeScript packages,
   // this builds all of the TypeScript packages under packages/*.
   // This does not build the apps, which have their own build commands.
-  await $`yarn tsc -b --extendedDiagnostics tsconfig.cjs.json tsconfig.esm.json`;
+  await $`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
 
   // See documentation at https://github.com/gajus/turbowatch
   watch({
@@ -90,7 +90,7 @@ const main = async () => {
           // directory, which are either command-line tools like `artifacts` or
           // configuration packages like `tsconfig` and `eslint-config-custom`
           // which do not have their own build/transpilation outputs.
-          await spawn`yarn tsc -b --extendedDiagnostics tsconfig.cjs.json tsconfig.esm.json`;
+          await spawn`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
   });
