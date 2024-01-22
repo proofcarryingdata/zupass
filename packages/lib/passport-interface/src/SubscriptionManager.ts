@@ -184,6 +184,10 @@ export class FeedSubscriptionManager {
     );
 
     for (const subscription of this.activeSubscriptions) {
+      // Subscriptions which have ceased issuance should not be polled
+      if (subscription.ended) {
+        continue;
+      }
       // nb: undefined autoPoll defaults to true
       if (subscription.feed.autoPoll === false) {
         continue;
@@ -240,7 +244,7 @@ export class FeedSubscriptionManager {
 
       if (!result.success) {
         if (result.code === 410) {
-          this.unsubscribe(subscription.id);
+          this.flagSubscriptionAsEnded(subscription.id);
           return responses;
         }
 
@@ -256,7 +260,6 @@ export class FeedSubscriptionManager {
         subscription
       });
     } catch (e) {
-      console.log(e);
       this.setError(subscription.id, {
         type: SubscriptionErrorType.FetchError,
         e: e instanceof Error ? e : undefined
@@ -400,7 +403,8 @@ export class FeedSubscriptionManager {
         id: uuid(),
         feed: { ...info },
         providerUrl: providerUrl,
-        subscribedTimestamp: Date.now()
+        subscribedTimestamp: Date.now(),
+        ended: false
       };
 
       this.activeSubscriptions.push(sub);
@@ -421,6 +425,15 @@ export class FeedSubscriptionManager {
 
     sub.feed.permissions = permissions;
 
+    this.updatedEmitter.emit();
+  }
+
+  public flagSubscriptionAsEnded(subscriptionId: string): void {
+    const sub = this.getSubscription(subscriptionId);
+    if (!sub) {
+      throw new Error(`no subscription found matching ${subscriptionId}`);
+    }
+    sub.ended = true;
     this.updatedEmitter.emit();
   }
 
@@ -525,7 +538,8 @@ export class FeedSubscriptionManager {
             id: sub.id,
             feed,
             providerUrl: sub.providerUrl,
-            subscribedTimestamp: sub.subscribedTimestamp
+            subscribedTimestamp: sub.subscribedTimestamp,
+            ended: sub.ended ?? false
           };
         }
       );
@@ -636,4 +650,6 @@ export interface Subscription {
   feed: Feed;
   // Timestamp of when subscription was created
   subscribedTimestamp: number;
+  // Whether the subscription is to a feed which has ceased issuance
+  ended: boolean;
 }

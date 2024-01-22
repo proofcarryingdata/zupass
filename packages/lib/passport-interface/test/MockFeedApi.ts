@@ -196,7 +196,11 @@ export class MockFeedApi implements IFeedApi {
         success: true
       };
     } catch (e) {
-      return { error: getErrorMessage(e), success: false, code: e.code };
+      return {
+        error: getErrorMessage(e),
+        success: false,
+        code: (e as MockFeedError).code
+      };
     }
   }
 

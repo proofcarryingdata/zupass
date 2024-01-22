@@ -108,7 +108,7 @@ function SingleProvider({
             providerName={providerName}
             info={s.feed}
             subscriptions={subscriptions}
-            showErrors={true}
+            showErrors={!s.ended}
           />
         </React.Fragment>
       ))}

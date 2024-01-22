@@ -358,8 +358,19 @@ function AlreadySubscribed({
 
   return (
     <div>
-      <div>This feed has the following permissions:</div>
-      <PermissionsView permissions={existingSubscription.feed.permissions} />
+      {existingSubscription.ended && (
+        <div>
+          <strong>This feed is no longer active.</strong>
+        </div>
+      )}
+      {!existingSubscription.ended && (
+        <>
+          <div>This feed has the following permissions:</div>
+          <PermissionsView
+            permissions={existingSubscription.feed.permissions}
+          />
+        </>
+      )}
       <Spacer h={16} />
       You subscribed to this feed on{" "}
       {new Date(existingSubscription.subscribedTimestamp).toLocaleDateString(

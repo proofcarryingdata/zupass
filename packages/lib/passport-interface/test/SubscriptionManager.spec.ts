@@ -488,7 +488,7 @@ describe("Subscription Manager", async function () {
     expect(mockFeedApi.receivedPayload?.timestamp).to.eq(thirdDate.getTime());
   });
 
-  it("feeds returning a 410 error should automatically be unsubscribed from", async () => {
+  it("feeds returning a 410 error should be flagged as 'ended'", async () => {
     // First verify that we have a working subscription
     const manager = new FeedSubscriptionManager(mockFeedApi);
     const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
@@ -504,7 +504,7 @@ describe("Subscription Manager", async function () {
       credentialCache
     );
 
-    await manager.subscribe(firstProviderUrl, firstFeed);
+    const sub = await manager.subscribe(firstProviderUrl, firstFeed);
     const actions = await manager.pollSubscriptions(credentialManager);
     expect(actions.length).to.eq(1);
 
@@ -512,8 +512,8 @@ describe("Subscription Manager", async function () {
     mockFeedApi.issuanceDisabled = true;
 
     await manager.pollSubscriptions(credentialManager);
-    // Our feed returned a 410 error, so we should have unsubscribed
-    expect(manager.getActiveSubscriptions().length).to.eq(0);
+    // Our feed returned a 410 error, so it should be marked as 'ended'
+    expect(manager.getSubscription(sub.id)?.ended).to.eq(true);
 
     mockFeedApi.issuanceDisabled = false;
   });
