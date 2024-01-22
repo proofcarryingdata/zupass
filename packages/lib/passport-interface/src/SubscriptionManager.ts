@@ -244,7 +244,7 @@ export class FeedSubscriptionManager {
 
       if (!result.success) {
         if (result.code === 410) {
-          this.flagSubscriptionAsEnded(subscription.id);
+          this.flagSubscriptionAsEnded(subscription.id, result.error);
           return responses;
         }
 
@@ -428,12 +428,16 @@ export class FeedSubscriptionManager {
     this.updatedEmitter.emit();
   }
 
-  public flagSubscriptionAsEnded(subscriptionId: string): void {
+  public flagSubscriptionAsEnded(
+    subscriptionId: string,
+    message: string
+  ): void {
     const sub = this.getSubscription(subscriptionId);
     if (!sub) {
       throw new Error(`no subscription found matching ${subscriptionId}`);
     }
     sub.ended = true;
+    sub.ended_message = message;
     this.updatedEmitter.emit();
   }
 
@@ -652,4 +656,6 @@ export interface Subscription {
   subscribedTimestamp: number;
   // Whether the subscription is to a feed which has ceased issuance
   ended: boolean;
+  // Final message indicating what to do if the feed has ended
+  ended_message?: string;
 }

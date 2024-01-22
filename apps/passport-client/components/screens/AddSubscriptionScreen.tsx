@@ -361,6 +361,12 @@ function AlreadySubscribed({
       {existingSubscription.ended && (
         <div>
           <strong>This feed is no longer active.</strong>
+          {existingSubscription.ended_message && (
+            <>
+              <Spacer h={8} />
+              <p>{existingSubscription.ended_message}</p>
+            </>
+          )}
         </div>
       )}
       {!existingSubscription.ended && (
