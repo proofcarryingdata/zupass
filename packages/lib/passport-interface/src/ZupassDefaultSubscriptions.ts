@@ -1,10 +1,11 @@
 import { PCDPermissionType } from "@pcd/pcd-collection";
 import { Feed, ZupassFeedIds } from "./SubscriptionManager";
 
-export const zupassAutoUnsubscribeFeedIds = [ZupassFeedIds.Devconnect];
-
 export const zupassDefaultSubscriptions: Record<
-  ZupassFeedIds.Email | ZupassFeedIds.Zuzalu_23 | ZupassFeedIds.Zuconnect_23,
+  | ZupassFeedIds.Devconnect
+  | ZupassFeedIds.Email
+  | ZupassFeedIds.Zuzalu_23
+  | ZupassFeedIds.Zuconnect_23,
   Feed
 > = {
   [ZupassFeedIds.Zuzalu_23]: {
@@ -23,6 +24,41 @@ export const zupassDefaultSubscriptions: Record<
       {
         folder: "Zuzalu '23",
         type: PCDPermissionType.ReplaceInFolder
+      }
+    ]
+  },
+  [ZupassFeedIds.Devconnect]: {
+    id: ZupassFeedIds.Devconnect,
+    name: "Devconnect Tickets",
+    description: "Get your Devconnect tickets here!",
+    partialArgs: undefined,
+    credentialRequest: {
+      signatureType: "sempahore-signature-pcd"
+    },
+    permissions: [
+      {
+        folder: "Devconnect",
+        type: PCDPermissionType.AppendToFolder
+      },
+      {
+        folder: "Devconnect",
+        type: PCDPermissionType.ReplaceInFolder
+      },
+      {
+        folder: "Devconnect",
+        type: PCDPermissionType.DeleteFolder
+      },
+      {
+        folder: "SBC SRW",
+        type: PCDPermissionType.AppendToFolder
+      },
+      {
+        folder: "SBC SRW",
+        type: PCDPermissionType.ReplaceInFolder
+      },
+      {
+        folder: "SBC SRW",
+        type: PCDPermissionType.DeleteFolder
       }
     ]
   },

@@ -31,10 +31,7 @@ import {
   notifyLogoutToOtherTabs,
   notifyPasswordChangeToOtherTabs
 } from "./broadcastChannel";
-import {
-  addDefaultSubscriptions,
-  removeAutoUnsubscribedSubscriptions
-} from "./defaultSubscriptions";
+import { addDefaultSubscriptions } from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   loadPrivacyNoticeAgreed,
@@ -786,7 +783,6 @@ async function doSync(
     try {
       console.log("[SYNC] loading issued pcds");
       addDefaultSubscriptions(state.subscriptions);
-      removeAutoUnsubscribedSubscriptions(state.subscriptions);
       console.log(
         "[SYNC] active subscriptions",
         state.subscriptions.getActiveSubscriptions()

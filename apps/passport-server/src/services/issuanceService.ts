@@ -219,41 +219,7 @@ export class IssuanceService {
 
             return { actions };
           },
-          feed: {
-            id: ZupassFeedIds.Devconnect,
-            name: "Devconnect Tickets",
-            description: "Get your Devconnect tickets here!",
-            partialArgs: undefined,
-            credentialRequest: {
-              signatureType: "sempahore-signature-pcd"
-            },
-            permissions: [
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.AppendToFolder
-              },
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.ReplaceInFolder
-              },
-              {
-                folder: "Devconnect",
-                type: PCDPermissionType.DeleteFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.AppendToFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.ReplaceInFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.DeleteFolder
-              }
-            ]
-          }
+          feed: zupassDefaultSubscriptions[ZupassFeedIds.Devconnect]
         },
         {
           handleRequest: async (
