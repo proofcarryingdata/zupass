@@ -694,7 +694,7 @@ export class IssuanceService {
             await upsertUser(this.context.dbPool, commitmentRow);
           } else {
             throw new PCDHTTPError(
-              401,
+              410,
               `Issuance of Devconnect tickets was turned off on ${this.getTicketIssuanceCutoffDate()?.toDateString()}.` +
                 ` Contact support@0xparc.org if you've lost access to your tickets.`
             );

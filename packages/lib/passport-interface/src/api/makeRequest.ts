@@ -43,7 +43,11 @@ export async function httpGetSimple<TResult>(
     url,
     {
       onValue,
-      onError: async (resText) => ({ error: resText, success: false })
+      onError: async (resText, code) => ({
+        error: resText,
+        success: false,
+        code
+      })
     },
     query
   );
@@ -61,7 +65,11 @@ export async function httpPostSimple<TResult>(
     url,
     {
       onValue,
-      onError: async (resText) => ({ error: resText, success: false })
+      onError: async (resText, code) => ({
+        error: resText,
+        success: false,
+        code
+      })
     },
     postBody
   );

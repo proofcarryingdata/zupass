@@ -239,6 +239,11 @@ export class FeedSubscriptionManager {
       });
 
       if (!result.success) {
+        if (result.code === 410) {
+          this.unsubscribe(subscription.id);
+          return responses;
+        }
+
         throw new Error(result.error);
       }
 
@@ -251,6 +256,7 @@ export class FeedSubscriptionManager {
         subscription
       });
     } catch (e) {
+      console.log(e);
       this.setError(subscription.id, {
         type: SubscriptionErrorType.FetchError,
         e: e instanceof Error ? e : undefined
