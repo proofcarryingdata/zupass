@@ -112,7 +112,7 @@ const main = async () => {
         // replace that and handle it here, but it doesn't seem
         // necessary to.
         onChange: async ({ spawn }) => {
-          await spawn`yarn dev:apps`;
+          await spawn`yarn turbo run dev`;
         },
         // Enabling this option modifies what Turbowatch logs and warns
         // you if your configuration is incompatible with persistent tasks.
