@@ -12,7 +12,7 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules ./build"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",

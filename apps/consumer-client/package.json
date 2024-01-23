@@ -9,7 +9,7 @@
     "build:production": "NODE_ENV=production yarn build",
     "build:staging": "NODE_ENV=staging yarn build",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
-    "clean": "rm -rf node_modules public/js"
+    "clean": "rm -rf node_modules public/js tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@pcd/eddsa-frog-pcd": "0.2.0",

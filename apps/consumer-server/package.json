@@ -9,7 +9,7 @@
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",
