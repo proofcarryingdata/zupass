@@ -38,7 +38,7 @@
         delete the build artifacts in `dist` but don't update the source files,
         `tsc` will think that there is nothing to do and won't rebuild them, so
         when cleaning out a package it's necessary to delete these files. }}
-    "clean": "rm -rf dist node_modules *.tsbuildinfo",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
     {{! Other hooks that could be useful here:
       "dev": ""  - during development mode, run a specialized watcher that
                    updates the contents of this package. See passport-ui
