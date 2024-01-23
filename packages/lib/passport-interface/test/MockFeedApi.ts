@@ -16,10 +16,20 @@ import {
   verifyFeedCredential
 } from "../src/FeedCredential";
 
+class MockFeedError extends Error {
+  public code: number;
+  public constructor(message: string, code: number) {
+    super(message);
+    this.code = code;
+  }
+}
+
 export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
   public receivedPayload: FeedCredentialPayload | undefined;
+
+  public issuanceDisabled = false;
 
   public constructor(date?: Date) {
     this.feedHosts = new Map<string, FeedHost>([
@@ -49,6 +59,9 @@ export class MockFeedApi implements IFeedApi {
               handleRequest: async (req: PollFeedRequest) => {
                 if (date) {
                   MockDate.set(date);
+                }
+                if (this.issuanceDisabled) {
+                  throw new MockFeedError("Issuance disabled", 410);
                 }
                 const { payload } = await verifyFeedCredential(
                   req.pcd as SerializedPCD
@@ -93,6 +106,9 @@ export class MockFeedApi implements IFeedApi {
                 if (date) {
                   MockDate.set(date);
                 }
+                if (this.issuanceDisabled) {
+                  throw new MockFeedError("Issuance disabled", 410);
+                }
                 const { payload } = await verifyFeedCredential(
                   req.pcd as SerializedPCD
                 );
@@ -133,7 +149,9 @@ export class MockFeedApi implements IFeedApi {
                 if (date) {
                   MockDate.set(date);
                 }
-
+                if (this.issuanceDisabled) {
+                  throw new MockFeedError("Issuance disabled", 410);
+                }
                 const { payload } = await verifyFeedCredential(
                   req.pcd as SerializedPCD
                 );
@@ -178,7 +196,11 @@ export class MockFeedApi implements IFeedApi {
         success: true
       };
     } catch (e) {
-      return { error: getErrorMessage(e), success: false };
+      return {
+        error: getErrorMessage(e),
+        success: false,
+        code: (e as MockFeedError).code
+      };
     }
   }
 

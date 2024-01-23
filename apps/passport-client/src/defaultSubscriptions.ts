@@ -1,7 +1,6 @@
 import {
   FeedSubscriptionManager,
   Subscription,
-  ZupassFeedIds,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import { appConfig } from "../src/appConfig";
@@ -9,14 +8,7 @@ import { appConfig } from "../src/appConfig";
 const DEFAULT_FEED_URL = `${appConfig.zupassServer}/feeds`;
 const DEFAULT_FEED_PROVIDER_NAME = "Zupass";
 
-const DEFAULT_FEEDS = new Set(
-  [
-    ZupassFeedIds.Devconnect,
-    ZupassFeedIds.Email,
-    ZupassFeedIds.Zuzalu_23,
-    ZupassFeedIds.Zuconnect_23
-  ].map((s) => s.toString())
-);
+const DEFAULT_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
 export function isDefaultSubscription(sub: Subscription): boolean {
   return sub.providerUrl === DEFAULT_FEED_URL && DEFAULT_FEEDS.has(sub.feed.id);

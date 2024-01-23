@@ -487,4 +487,34 @@ describe("Subscription Manager", async function () {
     // But now it should have happened, as the original credential expired
     expect(mockFeedApi.receivedPayload?.timestamp).to.eq(thirdDate.getTime());
   });
+
+  it("feeds returning a 410 error should be flagged as 'ended'", async () => {
+    // First verify that we have a working subscription
+    const manager = new FeedSubscriptionManager(mockFeedApi);
+    const firstProviderUrl = mockFeedApi.getProviderUrls()[0];
+    manager.addProvider(firstProviderUrl, "Mock Provider");
+    const feeds = (await manager.listFeeds(firstProviderUrl)).feeds;
+    const firstFeed = feeds[0];
+
+    const collection = new PCDCollection([]);
+    const credentialCache = await createCredentialCache();
+    const credentialManager = new CredentialManager(
+      identity,
+      collection,
+      credentialCache
+    );
+
+    const sub = await manager.subscribe(firstProviderUrl, firstFeed);
+    const actions = await manager.pollSubscriptions(credentialManager);
+    expect(actions.length).to.eq(1);
+
+    // Now disable issuance
+    mockFeedApi.issuanceDisabled = true;
+
+    await manager.pollSubscriptions(credentialManager);
+    // Our feed returned a 410 error, so it should be marked as 'ended'
+    expect(manager.getSubscription(sub.id)?.ended).to.eq(true);
+
+    mockFeedApi.issuanceDisabled = false;
+  });
 });
