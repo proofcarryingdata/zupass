@@ -52,5 +52,6 @@ async function main() {
 }
 
 main().catch((error) => {
+  console.log(`Encountered error: `, error);
   process.exit(1);
 });

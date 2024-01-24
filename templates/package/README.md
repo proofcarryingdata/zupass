@@ -6,7 +6,7 @@ This directory contains template files for a new package, and a `plopfile` which
 
 To generate a new package, run:
 ```
-yarn yarn plop --no-progress --plopfile 'templates/package/plopfile.mjs'
+yarn plop --no-progress --plopfile 'templates/package/plopfile.mjs'
 ```
 As a shortcut, you can also run `yarn generate-package`.
 
