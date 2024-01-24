@@ -5,13 +5,14 @@
   "private": true,
   "scripts": {
     "build": "rm -rf ./build && yarn tsc -p ./tsconfig.json",
-    "start:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development node -r source-map-support/register build/src/main.js",
-    "dev": "yarn build && nodemon -w src -e ts --exec \"yarn build && yarn start:dev\"",
+    "start:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --respawn --watch=.env,.env.local src/main.ts",
+    "dev:worker": "nodemon -w src/multiprocess/worker.ts --exec \"yarn tsc -p ./tsconfig.json\"",
+    "dev": "yarn tsc -p ./tsconfig.json && concurrently -r \"yarn start:dev\" \"yarn dev:worker\"",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules ./build"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",
@@ -64,14 +65,13 @@
     "rollbar": "^2.26.1",
     "source-map-support": "^0.5.21",
     "superagent": "^8.0.0",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "url-join": "4.0.1",
     "uuid": "^9.0.0",
     "worker-farm": "^1.7.0",
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@babel/core": "^7.0.0",
     "@grammyjs/auto-retry": "^1.1.1",
     "@grammyjs/menu": "^1.2.1",
     "@pcd/eslint-config-custom": "0.10.0",
@@ -97,6 +97,7 @@
     "chai": "^4.3.7",
     "chai-as-promised": "^7.1.1",
     "chai-spies": "^1.0.0",
+    "concurrently": "^8.2.2",
     "deep-equal-in-any-order": "^2.0.6",
     "dotenv": "^16.0.3",
     "eslint": "7.32.0",
@@ -110,7 +111,7 @@
     "telegram": "^2.18.26",
     "ts-mocha": "^10.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.9.5",
+    "typescript": "^5.3.3",
     "yargs": "^17.7.2"
   }
 }

@@ -2,14 +2,14 @@
   "name": "@pcd/rsa-pcd",
   "version": "0.5.0",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/index.js",
-  "module": "./dist/index.mjs",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",
   "exports": {
     ".": {
       "types": "./dist/types/src/index.d.ts",
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.js"
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
     }
   },
   "files": [
@@ -19,13 +19,11 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "build": "yarn build:ts && yarn build:types",
-    "build:ts": "tsup src/index.ts --format cjs,esm --clean",
-    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist/types",
+    "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build",
+    "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
     "@pcd/pcd-types": "0.10.0",
@@ -45,7 +43,7 @@
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"

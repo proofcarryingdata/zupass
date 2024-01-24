@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "module": "CommonJS",
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+  },
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../pcd/email-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    }
+  ]
+}

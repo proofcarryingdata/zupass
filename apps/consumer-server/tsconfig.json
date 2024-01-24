@@ -14,5 +14,22 @@
       "./node_modules/@types/",
       "../../node_modules/@types/"
     ]
-  }
+  },
+  "references": [
+    {
+      "path": "../../packages/pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../packages/lib/passport-interface"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-signature-pcd"
+    },
+    {
+      "path": "../../packages/lib/util"
+    },
+    {
+      "path": "../../packages/pcd/zk-eddsa-event-ticket-pcd"
+    }
+  ]
 }

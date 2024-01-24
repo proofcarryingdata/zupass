@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/esm",
+    "module": "ESNext",
+    "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
+  },
+  "include": ["src", "artifacts/*.json"],
+  "references": [
+    {
+      "path": "../../lib/passport-crypto/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.esm.json"
+    }
+  ]
+}

@@ -2,24 +2,14 @@
   "name": "@pcd/rln-pcd",
   "version": "0.9.0",
   "license": "GPL-3.0-or-later",
-  "main": "./dist/node/index.js",
-  "module": "./dist/browser/index.mjs",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",
   "exports": {
     ".": {
-      "browser": {
-        "types": "./dist/types/src/index.d.ts",
-        "import": "./dist/browser/index.mjs"
-      },
-      "node": {
-        "types": "./dist/types/src/index.d.ts",
-        "import": "./dist/node/index.mjs",
-        "require": "./dist/node/index.js"
-      },
-      "default": {
-        "types": "./dist/types/src/index.d.ts",
-        "import": "./dist/browser/index.mjs"
-      }
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
     }
   },
   "files": [
@@ -31,13 +21,10 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
-    "build": "yarn build:browser && yarn build:node && yarn build:types",
-    "build:browser": "tsup src/index.ts --platform=browser --out-dir=./dist/browser --format esm --clean",
-    "build:node": "tsup src/index.ts --platform=node --out-dir=./dist/node --format cjs,esm --clean",
-    "build:types": "rm -rf dist/types && tsc --emitDeclarationOnly --outDir dist/types",
+    "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
-    "prepublishOnly": "yarn build",
-    "clean": "rm -rf dist node_modules"
+    "prepublishOnly": "yarn clean && yarn build",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
     "@pcd/pcd-types": "^0.10.0",
@@ -58,7 +45,7 @@
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"

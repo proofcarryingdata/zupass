@@ -1,0 +1,20 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "module": "CommonJS",
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+  },
+  "include": ["src", "artifacts/*.json"],
+  "references": [
+    {
+      "path": "../../lib/passport-crypto/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.cjs.json"
+    }
+  ]
+}

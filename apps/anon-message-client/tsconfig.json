@@ -34,5 +34,25 @@
     }
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
-  "exclude": ["node_modules"]
+  "exclude": ["node_modules"],
+  "references": [
+    {
+      "path": "../../packages/pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../../packages/lib/passport-interface"
+    },
+    {
+      "path": "../../packages/lib/pcd-types"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../packages/lib/util"
+    },
+    {
+      "path": "../../packages/pcd/zk-eddsa-event-ticket-pcd"
+    }
+  ]
 }

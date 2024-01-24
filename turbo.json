@@ -1,12 +1,15 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
-    "build": {
-      "dependsOn": ["^build"],
-      "outputs": ["dist/**"],
+    "lint": {
       "cache": true
     },
-    "lint": {
+    "pre-build": {
+      "cache": true,
+      "outputs": []
+    },
+    "build": {
+      "dependsOn": ["pre-build", "^build"],
       "outputs": [],
       "cache": true
     },
@@ -14,7 +17,6 @@
       "cache": false
     },
     "test": {
-      "outputs": [],
       "cache": true
     },
     "clean": {
@@ -83,6 +85,7 @@
     "FROGCRYPTO_ASSETS_URL",
     "FROGCRYPTO_SERVER_URL",
     "TICKET_ISSUANCE_CUTOFF_DATE",
-    "GENERIC_RATE_LIMIT_DISABLED"
+    "GENERIC_RATE_LIMIT_DISABLED",
+    "WORKER_MODULE_PATH"
   ]
 }

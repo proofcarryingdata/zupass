@@ -1,6 +1,6 @@
 {
   "workspaces": {
-    "packages/*": {
+    "packages/*/*": {
       "entry": ["src/index.ts", "test/*.ts"],
       "project": "**/*.{ts,tsx}"
     },

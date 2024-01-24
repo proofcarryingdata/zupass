@@ -27,7 +27,7 @@ for dir in ./packages/*/*; do (cd $dir && echo $dir && yarn publish --registry=h
 # Fully reinstall each example app, pulling @pcd packages from Verdaccio
 # All other packages will be proxied from yarnpkg as per verdaccio.yml config.
 # Remove the --registry flag to use the npm versions instead. 
-for dir in ./examples/*; do (cd $dir && yarn install --no-lockfile --registry=http://localhost:4873/); done
+for dir in ./examples/*; do (cd $dir && yarn install --no-lockfile --non-interactive --registry=http://localhost:4873/); done
 
 # Build create-react-app example
 yarn --cwd=./examples/cra build

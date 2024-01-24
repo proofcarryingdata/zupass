@@ -4,7 +4,7 @@
   "main": "index.js",
   "license": "MIT",
   "scripts": {
-    "clean": "rm -rf dist node_modules"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {},
   "devDependencies": {
@@ -18,7 +18,7 @@
     "eslint-plugin-import": "^2.29.0",
     "eslint-plugin-prettier": "^5.0.1",
     "eslint-plugin-react": "7.31.8",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"

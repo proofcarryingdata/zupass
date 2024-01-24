@@ -5,15 +5,14 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*/*",
-    "packages/*/*/src"
+    "packages/*/*"
   ],
   "scripts": {
     "localdb:restart": "yarn localdb:down && yarn localdb:init && yarn localdb:up",
     "localdb:init": "bash -c 'rm -rf apps/passport-server/local-db-data/ && initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
-    "build": "./scripts/build.sh",
+    "build": "scripts/build.sh",
     "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/*",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
@@ -24,11 +23,17 @@
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
     "clean:root": "rm -rf node_modules",
-    "knip": "knip --no-gitignore"
+    "clean:workspaces": "turbo run clean --parallel && yarn",
+    "knip": "knip --no-gitignore",
+    "check-references": "scripts/check-references.sh",
+    "fix-references": "scripts/fix-references.sh",
+    "generate-package": "plop --no-progress --plopfile 'templates/package/plopfile.mjs'",
+    "test-generated-package": "tsx scripts/testTemplatePackage.ts"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",
     "@types/snarkjs": "0.7.5",
+    "plop": "^4.0.1",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
     "typedoc": "^0.25.1",
@@ -40,6 +45,7 @@
   },
   "dependencies": {
     "@changesets/cli": "^2.26.0",
+    "@monorepo-utils/workspaces-to-typescript-project-references": "^2.10.4",
     "@types/react": "^18.0.22",
     "tsx": "^4.6.2",
     "turbo": "^1.8.5",
@@ -50,7 +56,8 @@
   "resolutions": {
     "@types/react": "^18.0.22",
     "react": "^18.2.0",
-    "typescript": "^4.9.5"
+    "ts-node": "^10.9.2",
+    "typescript": "^5.3.3"
   },
   "packageManager": "yarn@1.22.19"
 }

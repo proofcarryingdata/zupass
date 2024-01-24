@@ -1,0 +1,26 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/esm",
+    "module": "ESNext",
+    "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
+  },
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../emitter/tsconfig.esm.json"
+    },
+    {
+      "path": "../passport-crypto/tsconfig.esm.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/rsa-pcd/tsconfig.esm.json"
+    }
+  ]
+}

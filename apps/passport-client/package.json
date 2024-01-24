@@ -9,7 +9,7 @@
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico",
+    "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico tsconfig.tsbuildinfo",
     "analyze-bundle": "yarn build && esbuild-visualizer --metadata ./public/js/bundle-size.json --filename public/bundle-stats.html && open public/bundle-stats.html"
   },
   "dependencies": {
@@ -103,8 +103,8 @@
     "express": "^4.18.2",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
-    "ts-node": "^10.9.1",
+    "ts-node": "^10.9.2",
     "tsparticles-plugin-emitters": "^2.12.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   }
 }

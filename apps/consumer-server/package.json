@@ -4,12 +4,12 @@
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
-    "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev src/main.ts",
+    "dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --respawn --watch=.env,.env.local src/main.ts",
     "build": "tsc --noEmit",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
     "lint": "eslint \"**/*.ts{,x}\"",
     "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
-    "clean": "rm -rf node_modules"
+    "clean": "rm -rf node_modules tsconfig.tsbuildinfo"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",
@@ -26,7 +26,7 @@
     "iron-session": "^6.3.1",
     "morgan": "^1.10.0",
     "react": "^18.2.0",
-    "ts-node": "^10.9.1"
+    "ts-node": "^10.9.2"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.10.0",
@@ -41,6 +41,6 @@
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "ts-node-dev": "^2.0.0",
-    "typescript": "^4.9.5"
+    "typescript": "^5.3.3"
   }
 }

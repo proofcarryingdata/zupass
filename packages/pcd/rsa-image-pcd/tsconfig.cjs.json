@@ -1,0 +1,17 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "module": "CommonJS",
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+  },
+  "include": ["src", "artifacts/*.json"],
+  "references": [
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../rsa-pcd/tsconfig.cjs.json"
+    }
+  ]
+}

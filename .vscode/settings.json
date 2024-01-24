@@ -7,7 +7,8 @@
     "*.env": "properties",
     "*.env.example": "properties",
     "*.env.local.example": "properties",
-    "tsconfig.json": "jsonc"
+    "tsconfig.json": "jsonc",
+    "ts-library.json": "jsonc"
   },
   "editor.formatOnSave": true,
   "editor.defaultFormatter": "esbenp.prettier-vscode",
@@ -30,6 +31,7 @@
     }
   },
   "eslint.rules.customizations": [
-    { "rule": "prettier/prettier", "severity": "off" }
+    { "rule": "prettier/prettier", "severity": "off" },
+    { "rule": "import/no-unresolved", "severity": "off" }
   ]
 }

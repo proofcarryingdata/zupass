@@ -44,15 +44,18 @@ const main = async () => {
     ])
   );
 
-  // Do an initial build, which will also populate the Turborepo cache
-  await $`yarn turbo build --output-logs=new-only --filter="@pcd/*"`;
+  // Build the root tsconfig.cjs.json and tsconfig.esm.json files.
+  // Because these have references to all of our other TypeScript packages,
+  // this builds all of the TypeScript packages under packages/*.
+  // This does not build the apps, which have their own build commands.
+  await $`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
 
   // See documentation at https://github.com/gajus/turbowatch
   watch({
     project: workspaceRoot,
     // Detect changes in any of the @pcd/ packages
     // This will ignore changes in apps, which are handled elsewhere
-    triggers: packageGraph.packages
+    triggers: [...new Set(packageGraph.packages).values()]
       .filter((p) => p.startsWith("@pcd/"))
       .map((p) => ({
         // Only trigger a rebuild if matching files change
@@ -66,7 +69,8 @@ const main = async () => {
             ["match", "*.tsx", "basename"],
             ["match", "*.js", "basename"],
             ["match", "*.json", "basename"],
-            ["match", "*.wasm", "basename"]
+            ["match", "*.wasm", "basename"],
+            ["match", "*.svg", "basename"]
           ]
         ],
         name: relativePaths[p],
@@ -75,14 +79,18 @@ const main = async () => {
           console.log(
             `${relativePaths[p]}: changes detected: ${files.map((f) => f.name)}`
           );
-          // Tell Turbo to rebuild all @pcd/ packages, letting the cache skip
-          // the ones that have not changed.
-          //
-          // If we decide not to use the cache, we could construct a dependency
-          // graph based on the package the change has happened in, and filter
-          // down to the packages we want to rebuild, but letting Turbo handle
-          // this is easier for now.
-          await spawn`yarn turbo build --output-logs=new-only --filter="@pcd/*"`;
+
+          // Build the root tsconfig.cjs.json and tsconfig.esm.json files.
+          // Because these have references to all of our other TypeScript
+          // packages, this builds all of the TypeScript packages under
+          // packages/*. This does not build the apps, which have their own
+          // build commands.
+          // Packages which do not have tsconfig.cjs.json or tsconfig.esm.json
+          // files are not built here. These are the packages in the "tooling"
+          // directory, which are either command-line tools like `artifacts` or
+          // configuration packages like `tsconfig` and `eslint-config-custom`
+          // which do not have their own build/transpilation outputs.
+          await spawn`yarn tsc -b tsconfig.cjs.json tsconfig.esm.json`;
         }
       }))
   });
@@ -104,7 +112,7 @@ const main = async () => {
         // replace that and handle it here, but it doesn't seem
         // necessary to.
         onChange: async ({ spawn }) => {
-          await spawn`yarn dev:apps`;
+          await spawn`yarn turbo run dev`;
         },
         // Enabling this option modifies what Turbowatch logs and warns
         // you if your configuration is incompatible with persistent tasks.

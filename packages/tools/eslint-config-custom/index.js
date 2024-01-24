@@ -3,7 +3,6 @@ module.exports = {
     "eslint:recommended",
     "turbo",
     "prettier",
-    "turbo",
     "plugin:@typescript-eslint/recommended",
     "plugin:import/recommended",
     "plugin:import/typescript"
@@ -43,7 +42,9 @@ module.exports = {
         ]
       }
     ],
-    "@typescript-eslint/no-require-imports": "error"
+    "@typescript-eslint/no-require-imports": "error",
+    "import/no-unresolved": "off",
+    "prettier/prettier": "error"
   },
   settings: {
     "import/resolver": {

@@ -1,0 +1,23 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/cjs",
+    "module": "CommonJS",
+    "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
+  },
+  "include": ["src", "src/*.json"],
+  "references": [
+    {
+      "path": "../../pcd/ethereum-ownership-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/semaphore-signature-pcd/tsconfig.cjs.json"
+    }
+  ]
+}

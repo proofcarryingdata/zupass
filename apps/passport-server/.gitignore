@@ -4,3 +4,4 @@
 envs
 db
 *.ignore
+dev-build

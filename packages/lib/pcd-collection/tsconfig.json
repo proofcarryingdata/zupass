@@ -1,5 +1,27 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "./test"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": ["src", "test"],
+  "exclude": ["dist", "build", "node_modules"],
+  "references": [
+    {
+      "path": "../emitter"
+    },
+    {
+      "path": "../passport-crypto"
+    },
+    {
+      "path": "../pcd-types"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../pcd/rsa-pcd"
+    }
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "rootDir": "."
+  }
 }

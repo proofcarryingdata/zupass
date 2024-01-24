@@ -1,5 +1,21 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [".", "./test"],
-  "exclude": ["dist", "build", "node_modules"]
+  "include": ["src", "test"],
+  "exclude": ["dist", "build", "node_modules"],
+  "references": [
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd"
+    },
+    {
+      "path": "../../lib/passport-ui"
+    },
+    {
+      "path": "../../lib/pcd-types"
+    }
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "rootDir": "."
+  }
 }
