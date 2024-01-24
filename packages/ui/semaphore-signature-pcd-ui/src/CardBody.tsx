@@ -13,7 +13,11 @@ export const SemaphoreSignaturePCDUI: PCDUI<SemaphoreSignaturePCD> = {
   renderCardBody: SemaphoreSignatureCardBody
 };
 
-function SemaphoreSignatureCardBody({ pcd }: { pcd: SemaphoreSignaturePCD }) {
+function SemaphoreSignatureCardBody({
+  pcd
+}: {
+  pcd: SemaphoreSignaturePCD;
+}): JSX.Element {
   return (
     <Container>
       <p>

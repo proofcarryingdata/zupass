@@ -17,7 +17,7 @@ export const RSATicketPCDUI: PCDUI<RSATicketPCD> = {
   renderCardBody: RSATicketCardBody
 };
 
-function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }) {
+function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }): JSX.Element {
   const ticketData = getTicketData(pcd);
 
   return (
@@ -32,7 +32,7 @@ function RSATicketCardBody({ pcd }: { pcd: RSATicketPCD }) {
   );
 }
 
-function TicketQR({ pcd }: { pcd: RSATicketPCD }) {
+function TicketQR({ pcd }: { pcd: RSATicketPCD }): JSX.Element {
   const generate = useCallback(async () => {
     const serialized = await RSATicketPCDPackage.serialize(pcd);
     const serializedPCD = JSON.stringify(serialized);

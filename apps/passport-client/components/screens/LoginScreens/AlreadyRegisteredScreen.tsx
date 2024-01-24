@@ -32,7 +32,7 @@ import { InlineError } from "../../shared/InlineError";
 import { PasswordInput } from "../../shared/PasswordInput";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
-export function AlreadyRegisteredScreen() {
+export function AlreadyRegisteredScreen(): JSX.Element {
   const dispatch = useDispatch();
   const self = useSelf();
   const query = useQuery();

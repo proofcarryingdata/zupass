@@ -7,7 +7,7 @@ export const CollapsableCode = ({
 }: {
   code: string;
   label?: string;
-}) => {
+}): JSX.Element => {
   const [collapsed, setCollapsed] = useState(true);
 
   const toggle = useCallback(() => {

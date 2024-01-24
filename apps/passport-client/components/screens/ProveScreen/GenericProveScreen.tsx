@@ -25,7 +25,11 @@ import { GenericProveSection } from "./GenericProveSection";
  * HTML input fields that users will fill in by hand. For arguments that
  * are objects, supports loading from a URL.
  */
-export function GenericProveScreen({ req }: { req: PCDGetRequest }) {
+export function GenericProveScreen({
+  req
+}: {
+  req: PCDGetRequest;
+}): JSX.Element {
   const dispatch = useDispatch();
 
   const onProve = useCallback(

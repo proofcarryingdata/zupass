@@ -1,7 +1,7 @@
 import { gzip, ungzip } from "pako";
 import qr from "qr-image";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import styled, { css } from "./StyledWrapper";
+import styled, { FlattenSimpleInterpolation, css } from "./StyledWrapper";
 
 export function encodeQRPayload(unencoded: string): string {
   console.log(`encoding payload with length ${unencoded.length}`);
@@ -42,7 +42,7 @@ export function QRDisplayWithRegenerateAndStorage({
   loadedLogo?: React.ReactNode;
   fgColor?: string;
   bgColor?: string;
-}) {
+}): JSX.Element {
   /**
    * Generate a fresh identity-revealing proof every n ms. We regenerate before
    * the proof expires to allow for a few minutes of clock skew between prover
@@ -116,7 +116,7 @@ export function QRDisplay({
   fgColor?: string;
   bgColor?: string;
   saved: boolean;
-}) {
+}): JSX.Element {
   return (
     <QRWrap saved={saved}>
       {value !== undefined && (
@@ -133,7 +133,7 @@ export function QRDisplay({
 
 // Style constants
 const QRWrap = styled.div<{ saved: boolean }>`
-  ${({ saved }) => (saved ? css`` : css``)}
+  ${({ saved }): FlattenSimpleInterpolation => (saved ? css`` : css``)}
   height: 0;
   padding-bottom: 100%;
   position: relative;
@@ -149,7 +149,7 @@ export function QR({
   value: string;
   fgColor: string;
   bgColor: string;
-}) {
+}): JSX.Element {
   const [svgObject, setSvgObject] = useState<any | undefined>();
 
   useEffect(() => {

@@ -14,7 +14,7 @@ export function FrogsModal({
   pcds: EdDSAFrogPCD[];
   color;
   onClose: () => void;
-}) {
+}): JSX.Element {
   const [focused, setFocused] = useState<number | null>(0);
   const focusedPCD = pcds[focused ?? 0];
 
@@ -76,8 +76,8 @@ const Container = styled.div<{ index: number; count: number; color: string }>`
 
   > div > div {
     padding: 0;
-    border: 1px solid ${({ color }) => color};
-    box-shadow: ${({ index, count, color }) => {
+    border: 1px solid ${({ color }): string => color};
+    box-shadow: ${({ index, count, color }): string => {
       return [..._.range(-1, -index - 1, -1), ..._.range(1, count - index)]
         .map((i) => {
           const offset = i * 2;
@@ -97,15 +97,15 @@ const ButtonContainer = styled.div<{ disabled: boolean }>`
   justify-content: center;
   align-items: center;
   flex: 1 1 0;
-  cursor: ${({ disabled }) => (disabled ? "default" : "pointer")};
+  cursor: ${({ disabled }): string => (disabled ? "default" : "pointer")};
   user-select: none;
   font-size: 32px;
-  color: ${({ disabled }) =>
+  color: ${({ disabled }): string =>
     disabled ? "rgba(var(--white-rgb), 0.2)" : "rgba(var(--white-rgb), 0.8)"};
   padding: 8px;
 
   &:hover {
-    color: ${({ disabled }) =>
+    color: ${({ disabled }): string =>
       disabled ? "rgba(var(--white-rgb), 0.2)" : "rgba(var(--white-rgb), 1)"};
   }
 `;

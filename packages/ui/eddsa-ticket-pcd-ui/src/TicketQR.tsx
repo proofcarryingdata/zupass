@@ -36,7 +36,10 @@ export function TicketQR({
   identityPCD,
   verifyURL,
   idBasedVerifyURL
-}: { pcd: EdDSATicketPCD; zk: boolean } & EdDSATicketPCDCardProps) {
+}: {
+  pcd: EdDSATicketPCD;
+  zk: boolean;
+} & EdDSATicketPCDCardProps): JSX.Element {
   const generate = useCallback(async () => {
     if (idBasedVerifyURL && !zk) {
       // For ID-based verification, we encode the ID with a timestamp to

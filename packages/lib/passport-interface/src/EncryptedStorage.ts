@@ -129,6 +129,8 @@ export async function serializeStorage(
 /**
  * Calculates a hash to uniquely identify the given seralized storage.
  */
-export async function getStorageHash(storage: SyncedEncryptedStorage) {
+export async function getStorageHash(
+  storage: SyncedEncryptedStorage
+): Promise<string> {
   return await getHash(stringify(storage));
 }

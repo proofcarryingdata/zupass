@@ -20,7 +20,7 @@ export function ScoreTab({
 }: {
   score?: FrogCryptoScore;
   refreshScore: () => Promise<void>;
-}) {
+}): JSX.Element {
   const [scores, setScores] = useState<FrogCryptoScore[]>([]);
   const refreshScores = useCallback(async () => {
     requestFrogCryptoGetScoreboard(appConfig.zupassServer).then((res) => {
@@ -44,7 +44,7 @@ export function ScoreTab({
         score.has_telegram_username && (
           <TelegramShareButton
             score={score}
-            refreshAll={async () => {
+            refreshAll={async (): Promise<void> => {
               Promise.all([refreshScore(), refreshScores()]);
             }}
           />
@@ -73,7 +73,7 @@ function ScoreTable({
   title: string;
   scores: FrogCryptoScore[];
   myScore?: FrogCryptoScore;
-}) {
+}): JSX.Element {
   const scoresByLevel = useMemo(() => groupScores(scores), [scores]);
 
   return (
@@ -145,13 +145,13 @@ function TelegramShareButton({
 }: {
   score: FrogCryptoScore;
   refreshAll: () => Promise<void>;
-}) {
+}): JSX.Element {
   const revealed = !!score.telegram_username;
   const dispatch = useDispatch();
 
   return (
     <ActionButton
-      onClick={async () => {
+      onClick={async (): Promise<void> => {
         dispatch({
           type: "set-modal",
           modal: {
@@ -196,7 +196,7 @@ export const SCORES = [
 /**
  * Returns the emoji and title for a given score.
  */
-export function scoreToEmoji(score: number) {
+export function scoreToEmoji(score: number): string {
   const index = SCORES.findIndex((item) => item.score > score);
   if (index === -1) {
     return `${SCORES[SCORES.length - 1].emoji} ${
@@ -214,7 +214,12 @@ export function scoreToEmoji(score: number) {
 /**
  * Group the scores by level.
  */
-export function groupScores(scores: FrogCryptoScore[]) {
+export function groupScores(scores: FrogCryptoScore[]): {
+  scores: FrogCryptoScore[];
+  score: number;
+  emoji: string;
+  title: string;
+}[] {
   const groups = SCORES.map((item) => ({
     ...item,
     scores: [] as FrogCryptoScore[]

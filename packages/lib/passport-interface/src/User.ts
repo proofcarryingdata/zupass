@@ -6,13 +6,13 @@ export function useFetchUser(
   zupassServerUrl: string,
   isZuzalu: boolean,
   uuid?: string
-) {
+): { user: User | null; error: string | null; loading: boolean } {
   const [user, setUser] = useState<User | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    const doLoad = async () => {
+    const doLoad = async (): Promise<void> => {
       if (uuid == undefined) {
         setUser(null);
         setError(null);

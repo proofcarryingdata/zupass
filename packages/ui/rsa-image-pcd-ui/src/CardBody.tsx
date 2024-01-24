@@ -6,7 +6,7 @@ export const RSAImagePCDUI: PCDUI<RSAImagePCD> = {
   renderCardBody: RSAImageCardBody
 };
 
-export function RSAImageCardBody({ pcd }: { pcd: RSAImagePCD }) {
+export function RSAImageCardBody({ pcd }: { pcd: RSAImagePCD }): JSX.Element {
   const imageData = JSON.parse(pcd.proof.rsaPCD.claim.message);
 
   return (

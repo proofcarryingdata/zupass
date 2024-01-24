@@ -39,7 +39,7 @@ import { Spinner } from "../shared/Spinner";
 
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
-export function AddSubscriptionScreen() {
+export function AddSubscriptionScreen(): JSX.Element {
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
@@ -118,7 +118,7 @@ export function AddSubscriptionScreen() {
           autoCapitalize="off"
           disabled={fetching}
           value={providerUrl}
-          onChange={(e) => {
+          onChange={(e): void => {
             setProviderUrl(e.target.value);
           }}
         />
@@ -164,7 +164,7 @@ export function SubscriptionInfoRow({
   providerName: string;
   info: Feed;
   showErrors: boolean;
-}) {
+}): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
   const subscription = existingSubscriptions[0];
@@ -223,7 +223,7 @@ function SubscribeSection({
   providerUrl: string;
   providerName: string;
   info: Feed;
-}) {
+}): JSX.Element {
   const identity = useIdentity();
   const pcds = usePCDCollection();
   const dispatch = useDispatch();
@@ -241,7 +241,7 @@ function SubscribeSection({
   });
 
   const onSubscribeClick = useCallback(() => {
-    (async () => {
+    (async (): Promise<void> => {
       dispatch({
         type: "add-subscription",
         providerUrl,
@@ -292,7 +292,7 @@ export function PermissionsView({
   permissions
 }: {
   permissions: PCDPermission[];
-}) {
+}): JSX.Element {
   return (
     <ul>
       {permissions.map((p, i) => (
@@ -302,7 +302,11 @@ export function PermissionsView({
   );
 }
 
-function SinglePermission({ permission }: { permission: PCDPermission }) {
+function SinglePermission({
+  permission
+}: {
+  permission: PCDPermission;
+}): JSX.Element {
   if (isAppendToFolderPermission(permission)) {
     return (
       <PermissionListItem>
@@ -334,7 +338,7 @@ function AlreadySubscribed({
   existingSubscription
 }: {
   existingSubscription: Subscription;
-}) {
+}): JSX.Element {
   const dispatch = useDispatch();
   const onUnsubscribeClick = useCallback(() => {
     if (

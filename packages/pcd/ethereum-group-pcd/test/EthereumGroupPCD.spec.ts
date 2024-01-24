@@ -5,7 +5,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import { Poseidon, Tree } from "@personaelabs/spartan-ecdsa";
+import { MerkleProof, Poseidon, Tree } from "@personaelabs/spartan-ecdsa";
 import { Identity } from "@semaphore-protocol/identity";
 import assert from "assert";
 import { ethers } from "ethers";
@@ -26,7 +26,11 @@ async function groupProof(
   identity: SemaphoreIdentityPCD,
   wallet: ethers.Wallet,
   groupType: GroupType = GroupType.PUBLICKEY
-) {
+): Promise<{
+  signatureOfIdentityCommitment: string;
+  msgHash: Buffer;
+  merkleProof: MerkleProof;
+}> {
   const signatureOfIdentityCommitment = await wallet.signMessage(
     identity.claim.identity.commitment.toString()
   );
@@ -88,7 +92,9 @@ async function groupProof(
   };
 }
 
-async function happyPathEthGroupPCD(groupType: GroupType) {
+async function happyPathEthGroupPCD(
+  groupType: GroupType
+): Promise<EthereumGroupPCD> {
   const identity = await SemaphoreIdentityPCDPackage.prove({
     identity: new Identity()
   });

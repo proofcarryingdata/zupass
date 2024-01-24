@@ -10,7 +10,7 @@ interface ConfirmSkipSetupModalProps {
 
 export function ConfirmSkipSetupModal({
   onConfirm
-}: ConfirmSkipSetupModalProps) {
+}: ConfirmSkipSetupModalProps): JSX.Element {
   const dispatch = useDispatch();
 
   const close = useCallback(() => {

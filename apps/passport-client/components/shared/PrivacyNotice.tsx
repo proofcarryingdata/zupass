@@ -2,7 +2,7 @@ import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { Button, Spacer, SupportLink } from "../core";
 
-export function PrivacyNoticeText() {
+export function PrivacyNoticeText(): JSX.Element {
   return (
     <Prose>
       <h2>ZUPASS PRIVACY NOTICE</h2>
@@ -250,7 +250,7 @@ export function PrivacyNoticeText() {
   );
 }
 
-export function PrivacyNotice() {
+export function PrivacyNotice(): JSX.Element {
   const [expanded, setExpanded] = useState(false);
 
   const toggleExpand = useCallback(() => setExpanded(!expanded), [expanded]);

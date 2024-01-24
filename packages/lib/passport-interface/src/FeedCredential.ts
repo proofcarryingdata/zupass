@@ -54,7 +54,7 @@ async function deserializeAndVerify(
 export async function verifyFeedCredential(
   serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
   pcdVerifier?: (pcd: SerializedPCD<SemaphoreSignaturePCD>) => Promise<boolean>
-) {
+): Promise<{ pcd: SemaphoreSignaturePCD; payload: FeedCredentialPayload }> {
   if (pcdVerifier === undefined) {
     pcdVerifier = deserializeAndVerify;
   }

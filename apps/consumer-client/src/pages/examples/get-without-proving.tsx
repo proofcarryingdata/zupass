@@ -9,7 +9,7 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
 import { sendZupassRequest } from "../../util";
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const [zupassPCDStr] = useZupassPopupMessages();
 
   const formatted = useMemo(() => {
@@ -38,7 +38,7 @@ export default function Page() {
   );
 }
 
-function getProofWithoutProving() {
+function getProofWithoutProving(): void {
   const url = getWithoutProvingUrl(
     ZUPASS_URL,
     window.location.origin + "#/popup",

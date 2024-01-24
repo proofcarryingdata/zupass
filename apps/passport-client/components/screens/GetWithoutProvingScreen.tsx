@@ -32,7 +32,7 @@ import { SyncingPCDs } from "../shared/SyncingPCDs";
  * Screen that allows the user to respond to a request from a third
  * party website asking for a particular PCD.
  */
-export function GetWithoutProvingScreen() {
+export function GetWithoutProvingScreen(): JSX.Element {
   useSyncE2EEStorage();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -129,9 +129,9 @@ export function GetWithoutProvingScreen() {
           <Spacer h={16} />
           <Select
             value={options.find((o) => o.id === selectedPCDID)}
-            onChange={(o) => setSelectedPCDID(o.id)}
+            onChange={(o): void => setSelectedPCDID(o.id)}
             options={options}
-            noOptionsMessage={() => "No matching PCDs"}
+            noOptionsMessage={(): string => "No matching PCDs"}
           />
           <Spacer h={16} />
           <Button onClick={onSendClick}>Send</Button>

@@ -11,7 +11,7 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { PendingPCDStatusDisplay } from "../../components/PendingPCDStatusDisplay";
 import { ZUPASS_SERVER_URL, ZUPASS_URL } from "../../constants";
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const [zupassPCDStr, zupassPendingPCDStr] = useZupassPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     zupassPendingPCDStr,
@@ -22,7 +22,7 @@ export default function Page() {
   const [signatureProofValid, setSignatureProofValid] = useState<
     boolean | undefined
   >();
-  const onProofVerified = (valid: boolean) => {
+  const onProofVerified = (valid: boolean): void => {
     setSignatureProofValid(valid);
   };
 
@@ -48,7 +48,7 @@ export default function Page() {
           placeholder="Message to sign"
           type="text"
           value={messageToSign}
-          onChange={(e) => setMessageToSign(e.target.value)}
+          onChange={(e): void => setMessageToSign(e.target.value)}
         />
         <br />
         <button
@@ -70,7 +70,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={serverProving}
-            onChange={() => {
+            onChange={(): void => {
               setServerProving((checked: boolean) => !checked);
             }}
           />

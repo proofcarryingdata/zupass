@@ -15,7 +15,11 @@ export const EthereumGroupPCDUI: PCDUI<EthereumGroupPCD> = {
   renderCardBody: EthereumGroupCardBody
 };
 
-export function EthereumGroupCardBody({ pcd }: { pcd: EthereumGroupPCD }) {
+export function EthereumGroupCardBody({
+  pcd
+}: {
+  pcd: EthereumGroupPCD;
+}): JSX.Element {
   const [identityCommitment, setIdentityCommitment] =
     useState("<deserializing>");
 

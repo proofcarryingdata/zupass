@@ -1,6 +1,6 @@
 import { DEVCONNECT_2023_END, DEVCONNECT_2023_START } from "./sharedConstants";
 
-export function isDuringDevconnect() {
+export function isDuringDevconnect(): boolean {
   const currentTimeMs = new Date().getTime();
   return (
     currentTimeMs >= DEVCONNECT_2023_START &&
@@ -8,7 +8,7 @@ export function isDuringDevconnect() {
   );
 }
 
-export function getOutdatedBrowserErrorMessage() {
+export function getOutdatedBrowserErrorMessage(): string {
   let outdatedBrowserErrorMessage =
     "Proof failed. Please update your browser and device to the latest version. ";
   outdatedBrowserErrorMessage += isDuringDevconnect()

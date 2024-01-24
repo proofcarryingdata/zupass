@@ -10,21 +10,25 @@ export function assertUnreachable(_: never): never {
   throw new Error("Unreachable");
 }
 
-export function getHost(returnURL: string) {
+export function getHost(returnURL: string): string {
   const url = new URL(returnURL);
   return url.host;
 }
 
-export function getOrigin(returnURL: string) {
+export function getOrigin(returnURL: string): string {
   const url = new URL(returnURL);
   return url.origin;
 }
 
-export async function nextFrame() {
+export async function nextFrame(): Promise<void> {
   await sleep(50);
 }
 
-export function err(dispatch: Dispatcher, title: string, message: string) {
+export function err(
+  dispatch: Dispatcher,
+  title: string,
+  message: string
+): void {
   dispatch({
     type: "error",
     error: { title, message }
@@ -50,7 +54,7 @@ export function bigintToUuid(bigint: bigint): string {
   );
 }
 
-export function randomEmail() {
+export function randomEmail(): string {
   return uuid().slice(0, 8) + "@test.com";
 }
 
@@ -71,7 +75,7 @@ function getVerifyUrlPrefixes(): string[] {
 
 // Given an input string, check if there exists a ticket verify URL within it.
 // If so, return the last occurance of a verify URL. If not, return null.
-export function getLastValidVerifyUrl(inputString: string) {
+export function getLastValidVerifyUrl(inputString: string): string {
   const lastValidUrlStartIdx = _.chain(getVerifyUrlPrefixes())
     .map((verifyUrlPrefix) => inputString.lastIndexOf(verifyUrlPrefix))
     .max()

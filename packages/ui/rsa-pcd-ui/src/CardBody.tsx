@@ -12,7 +12,7 @@ export const RSAPCDUI: PCDUI<RSAPCD> = {
   renderCardBody: RSACardBody
 };
 
-export function RSACardBody({ pcd }: { pcd: RSAPCD }) {
+export function RSACardBody({ pcd }: { pcd: RSAPCD }): JSX.Element {
   return (
     <Container>
       <p>This PCD represents an RSA signature of some text</p>

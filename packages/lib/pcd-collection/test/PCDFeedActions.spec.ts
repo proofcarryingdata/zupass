@@ -13,7 +13,7 @@ import {
   PCDPermissionType
 } from "../src";
 
-async function newPCD(id?: string) {
+async function newPCD(id?: string): Promise<RSAPCD> {
   id = id ?? uuid();
   const pkey = new NodeRSA({ b: 512 });
 

@@ -114,7 +114,7 @@ export class RLNPCD implements PCD<RLNPCDClaim, RLNPCDProof> {
   }
 }
 
-function checkClaimProofMatching(claim: RLNPCDClaim, proof: RLNPCDProof) {
+function checkClaimProofMatching(claim: RLNPCDClaim, proof: RLNPCDProof): void {
   const claimExternalNullifier = RLN._genNullifier(
     claim.epoch,
     claim.rlnIdentifier
@@ -127,7 +127,7 @@ function checkClaimProofMatching(claim: RLNPCDClaim, proof: RLNPCDProof) {
   }
 }
 
-export async function init(args: RLNPCDInitArgs) {
+export async function init(args: RLNPCDInitArgs): Promise<void> {
   initArgs = args;
 }
 
@@ -175,7 +175,7 @@ export async function verify(pcd: RLNPCD): Promise<boolean> {
   return await RLN.verifySNARKProof(verificationKeyJSON, fullProof.snarkProof);
 }
 
-function getRLNInstance(rlnIdentifier: bigint, identity?: Identity) {
+function getRLNInstance(rlnIdentifier: bigint, identity?: Identity): RLN {
   if (!initArgs) {
     throw new Error("cannot make proof: init has not been called yet");
   }

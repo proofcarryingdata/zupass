@@ -3,7 +3,11 @@ import React from "react";
 import { Configuration } from "rollbar";
 import { appConfig } from "../../src/appConfig";
 
-export function RollbarProvider({ children }: { children: React.ReactNode }) {
+export function RollbarProvider({
+  children
+}: {
+  children: React.ReactNode;
+}): JSX.Element {
   if (
     appConfig.rollbarToken === undefined ||
     appConfig.rollbarEnvName === undefined

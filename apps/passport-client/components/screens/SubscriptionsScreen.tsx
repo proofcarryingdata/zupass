@@ -18,7 +18,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
-export function SubscriptionsScreen() {
+export function SubscriptionsScreen(): JSX.Element {
   useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
   const self = useSelf();
@@ -65,7 +65,7 @@ function SubscriptionTree({
   subscriptions
 }: {
   subscriptions: FeedSubscriptionManager;
-}) {
+}): JSX.Element {
   const byProvider = Array.from(
     subscriptions.getSubscriptionsByProvider().entries()
   );
@@ -92,7 +92,7 @@ function SingleProvider({
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   subscriptionsList: Subscription[];
-}) {
+}): JSX.Element {
   const providerName = subscriptions.getProvider(providerUrl).providerName;
   return (
     <ProviderContainer>

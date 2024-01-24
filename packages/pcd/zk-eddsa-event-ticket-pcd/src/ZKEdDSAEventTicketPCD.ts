@@ -161,13 +161,13 @@ export class ZKEdDSAEventTicketPCD
 /**
  * Initialize ZKEdDSAEventTicketPCDPackage.
  */
-export async function init(args: ZKEdDSAEventTicketPCDInitArgs) {
+export async function init(args: ZKEdDSAEventTicketPCDInitArgs): Promise<void> {
   savedInitArgs = args;
 }
 
 async function ensureDepsInitialized(): Promise<void> {
   if (!depsInitializedPromise) {
-    depsInitializedPromise = (async () => {
+    depsInitializedPromise = (async (): Promise<void> => {
       // TODO: This object is expensive to build, and duplicates some work,
       // including buiding curves which aren't cached and thus have to be
       // re-built by groth16.  We need this object only for eddsa.F.toObject
@@ -432,7 +432,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
       ticket: {
         argumentType: ArgumentTypeName.PCD,
         description: "Generate a proof for the selected ticket",
-        validate(value, params) {
+        validate(value, params): boolean {
           if (value.type !== EdDSATicketPCDTypeName || !value.claim) {
             return false;
           }

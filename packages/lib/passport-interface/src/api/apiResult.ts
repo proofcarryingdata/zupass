@@ -53,7 +53,7 @@ export interface NamedAPIError {
 /**
  * Format a user-readable error message from a NamedAPIError instance.
  */
-export function getNamedAPIErrorMessage(e: NamedAPIError) {
+export function getNamedAPIErrorMessage(e: NamedAPIError): string {
   if (e.detailedMessage) {
     return e.name + ": " + e.detailedMessage;
   } else {

@@ -108,9 +108,9 @@ let eddsa: Eddsa;
  * of the `circomlibjs` package has been properly initialized.
  * It only initializes them once.
  */
-async function ensureInitialized() {
+async function ensureInitialized(): Promise<void> {
   if (!initializedPromise) {
-    initializedPromise = (async () => {
+    initializedPromise = (async (): Promise<void> => {
       eddsa = await buildEddsa();
     })();
   }

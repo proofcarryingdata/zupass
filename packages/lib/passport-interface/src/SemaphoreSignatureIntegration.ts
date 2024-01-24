@@ -1,6 +1,9 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
 import { openZupassPopup } from "./PassportPopup";
@@ -19,7 +22,7 @@ export function openSemaphoreSignaturePopup(
   popupUrl: string,
   messageToSign: string,
   proveOnServer?: boolean
-) {
+): void {
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -64,7 +67,7 @@ export function openSignedZuzaluUUIDPopup(
   urlToZupassClient: string,
   popupUrl: string,
   originalSiteName: string
-) {
+): void {
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -107,7 +110,7 @@ export function openSignedZuzaluSignInPopup(
   zupassClientUrl: string,
   popupUrl: string,
   originalSiteName: string
-) {
+): void {
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -142,7 +145,7 @@ export function openSignedZuzaluSignInPopup(
 export function useSemaphoreSignatureProof(
   pcdStr: string,
   onVerified: (valid: boolean) => void
-) {
+): { signatureProof: SemaphoreSignaturePCD | undefined } {
   const semaphoreSignaturePCD = useSerializedPCD(
     SemaphoreSignaturePCDPackage,
     pcdStr

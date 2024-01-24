@@ -29,7 +29,9 @@ interface EmailCodeInputProps extends InputHTMLAttributes<HTMLInputElement> {
   ref?: Ref<HTMLInputElement>;
 }
 
-export const ConfirmationCodeInput = (inputProps: EmailCodeInputProps) => {
+export const ConfirmationCodeInput = (
+  inputProps: EmailCodeInputProps
+): JSX.Element => {
   return (
     <BigInput
       type="text"

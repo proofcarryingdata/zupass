@@ -1,7 +1,7 @@
 import { useCallback, useState } from "react";
 import styled from "./StyledWrapper";
 
-export function HiddenText({ text }: { text: string }) {
+export function HiddenText({ text }: { text: string }): JSX.Element {
   const [visible, setVisible] = useState(false);
 
   const onRevealClick = useCallback(() => {

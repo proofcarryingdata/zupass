@@ -8,7 +8,7 @@ import {
 } from "../../src/appHooks";
 import { LinkButton } from "../core/Button";
 
-export function AccountExportButton() {
+export function AccountExportButton(): JSX.Element {
   const user = useSelf();
   const pcds = usePCDCollection();
   const subscriptions = useSubscriptions();
@@ -21,7 +21,7 @@ export function AccountExportButton() {
   }, []);
 
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       // Since we already use this data for remote sync, we know that it's
       // sufficient for loading an account on to a new device.
       const { serializedStorage, storageHash } = await serializeStorage(

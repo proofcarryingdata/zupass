@@ -23,7 +23,7 @@ import { ScreenLoader } from "../../shared/ScreenLoader";
  * Show the user that we're generating their Zupass. Direct them to the email
  * verification link.
  */
-export function NewPassportScreen() {
+export function NewPassportScreen(): JSX.Element {
   const query = useQuery();
   const email = query.get("email");
 
@@ -40,7 +40,7 @@ export function NewPassportScreen() {
   return <SendEmailVerification email={email} />;
 }
 
-function SendEmailVerification({ email }: { email: string }) {
+function SendEmailVerification({ email }: { email: string }): JSX.Element {
   const identity = useIdentity();
   const dispatch = useDispatch();
   const [error, setError] = useState<string | undefined>();
@@ -200,7 +200,9 @@ function SendEmailVerification({ email }: { email: string }) {
             <Spacer h={8} />
             <ConfirmationCodeInput
               value={token}
-              onChange={(e) => setToken(e.target.value.replace(/\D/g, ""))}
+              onChange={(e): void =>
+                setToken(e.target.value.replace(/\D/g, ""))
+              }
               autoFocus
               placeholder="code from email"
             />

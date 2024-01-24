@@ -15,7 +15,7 @@ export function AppContainer({
 }: {
   bg: "primary" | "gray";
   children?: ReactNode;
-}) {
+}): JSX.Element {
   const dispatch = useDispatch();
   const error = useAppError();
   useUserShouldAgreeNewPrivacyNotice();
@@ -53,7 +53,7 @@ export function AppContainer({
 
 const GlobalBackground = createGlobalStyle<{ color: string }>`
   html {
-    background-color: ${(p) => p.color};
+    background-color: ${(p): string => p.color};
   }
 `;
 

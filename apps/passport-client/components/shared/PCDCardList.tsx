@@ -42,7 +42,7 @@ export function PCDCardList({
    * If true, all PCDs will be expanded. Otherwise, the last clicked PCD is expanded.
    */
   allExpanded?: boolean;
-}) {
+}): JSX.Element {
   const pcdCollection = usePCDCollection();
   const userIdentityPCD = useUserIdentityPCD();
   const userIdentityPCDId = userIdentityPCD?.id;
@@ -135,7 +135,7 @@ function ToolBar({
   sortOptions: SortOption[];
   sortState: SortState;
   onSortStateChange: (sortState: SortState) => void;
-}) {
+}): JSX.Element {
   if (sortOptions.length === 0) return null;
 
   return (
@@ -143,7 +143,7 @@ function ToolBar({
       <ToolBarText>Sort:</ToolBarText>
       {sortOptions.map((o) => {
         const active = sortState.sortBy === o.key;
-        const onClick = () => {
+        const onClick = (): void => {
           if (active && sortState.sortOrder === "asc") {
             onSortStateChange({
               sortBy: o.key,
@@ -170,7 +170,7 @@ function ToolBar({
   );
 }
 
-function SortIcon({ sortOrder }: { sortOrder?: "asc" | "desc" }) {
+function SortIcon({ sortOrder }: { sortOrder?: "asc" | "desc" }): JSX.Element {
   return (
     <SortIconContainer>
       <SortIconUp active={sortOrder === "asc"} />
@@ -225,7 +225,7 @@ const SortIconUp = styled.div<{ active: boolean }>`
   border: solid 5px transparent;
   background: transparent;
   border-bottom: solid 7px
-    ${(p) =>
+    ${(p): string =>
       p.active ? "var(--accent-darker)" : "rgba(var(--white-rgb), 0.8)"};
   border-top-width: 0;
 `;
@@ -238,7 +238,7 @@ const SortIconDown = styled.div<{ active: boolean }>`
   border: solid 5px transparent;
   background: transparent;
   border-top: solid 7px
-    ${(p) =>
+    ${(p): string =>
       p.active ? "var(--accent-darker)" : "rgba(var(--white-rgb), 0.8)"};
   border-bottom-width: 0;
 `;

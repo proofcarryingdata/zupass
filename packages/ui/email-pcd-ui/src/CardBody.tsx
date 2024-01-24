@@ -6,7 +6,7 @@ export const EmailPCDUI: PCDUI<EmailPCD> = {
   renderCardBody: EmailCardBody
 };
 
-function EmailCardBody({ pcd }: { pcd: EmailPCD }) {
+function EmailCardBody({ pcd }: { pcd: EmailPCD }): JSX.Element {
   const emailAddress = getEmailAddress(pcd);
 
   return (

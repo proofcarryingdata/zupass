@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useSelf } from "../../src/appHooks";
 import { Spacer, TextCenter } from "../core";
 
-export function MainIdentityCard({ user }: { user?: User }) {
+export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
   const self = useSelf();
   const actualUser = user ?? self;
 

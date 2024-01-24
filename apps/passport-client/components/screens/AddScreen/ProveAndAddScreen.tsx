@@ -19,7 +19,7 @@ export function ProveAndAddScreen({
   request
 }: {
   request: PCDProveAndAddRequest;
-}) {
+}): JSX.Element {
   const syncSettled = useIsSyncSettled();
   const dispatch = useDispatch();
   const [proved, setProved] = useState(false);
@@ -51,7 +51,7 @@ export function ProveAndAddScreen({
   } else {
     content = (
       <AddedPCD
-        onCloseClick={() => {
+        onCloseClick={(): void => {
           if (request.returnPCD) {
             safeRedirect(request.returnUrl, serializedPCD);
           } else {

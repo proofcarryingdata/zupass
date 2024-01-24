@@ -23,7 +23,7 @@ export function serializeSemaphoreGroup(
 
 export function deserializeSemaphoreGroup(
   serializedGroup: SerializedSemaphoreGroup
-) {
+): Group {
   const group = new Group(
     BigInt(serializedGroup.id),
     serializedGroup.depth,

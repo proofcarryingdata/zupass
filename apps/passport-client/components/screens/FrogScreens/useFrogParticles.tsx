@@ -15,11 +15,13 @@ import { Emitter } from "tsparticles-plugin-emitters/types/Options/Classes/Emitt
 
 const fpsLimit = 120;
 
-export function useFrogParticles(ref: React.RefObject<HTMLDivElement> | null) {
+export function useFrogParticles(
+  ref: React.RefObject<HTMLDivElement> | null
+): Container {
   const [ready, setReady] = useState(false);
   const [container, setContainer] = useState<Container | null>(null);
   useEffect(() => {
-    const load = async () => {
+    const load = async (): Promise<void> => {
       await loadFull(tsParticles);
       setReady(true);
     };
@@ -119,7 +121,7 @@ export function useFrogParticles(ref: React.RefObject<HTMLDivElement> | null) {
   return container;
 }
 
-export function useFrogConfetti() {
+export function useFrogConfetti(): () => Promise<void> {
   const [container, setContainer] = useState<Container | null>(null);
   // destroy confetti when component unmounts. this stops the confetti but if we
   // don't do this, confetii plays again when we switch back to GetFrog
@@ -135,7 +137,7 @@ export function useFrogConfetti() {
 
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const load = async () => {
+    const load = async (): Promise<void> => {
       await loadFull(tsParticles);
       setReady(true);
     };
@@ -340,11 +342,11 @@ export function useFrogConfetti() {
 
 export function useCelestialPondParticles(
   ref: React.RefObject<HTMLDivElement> | null
-) {
+): Container {
   const [ready, setReady] = useState(false);
   const [container, setContainer] = useState<Container | null>(null);
   useEffect(() => {
-    const load = async () => {
+    const load = async (): Promise<void> => {
       await loadFull(tsParticles);
       setReady(true);
     };
@@ -448,10 +450,10 @@ export function useCelestialPondParticles(
 
 export function useWrithingVoidParticles(
   ref: React.RefObject<HTMLDivElement> | null
-) {
+): () => Promise<Container> {
   const [ready, setReady] = useState(false);
   useEffect(() => {
-    const load = async () => {
+    const load = async (): Promise<void> => {
       await loadFull(tsParticles);
       setReady(true);
     };

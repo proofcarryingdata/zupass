@@ -8,7 +8,7 @@ import React, {
 } from "react";
 import { useInView } from "react-intersection-observer";
 import { ParallaxBanner, ParallaxProvider } from "react-scroll-parallax";
-import styled, { keyframes } from "styled-components";
+import styled, { Keyframes, keyframes } from "styled-components";
 import { Container } from "tsparticles-engine";
 import {
   useCelestialPondParticles,
@@ -36,7 +36,7 @@ export function ActionButton({
    * The component to use for the button. Defaults to Button.
    */
   ButtonComponent?: React.ComponentType<React.ComponentProps<typeof Button>>;
-}) {
+}): JSX.Element {
   const [loading, setLoading] = useState(false);
   // Every user click increment the trigger count, which will trigger the
   // useEffect to kick onClick action below.
@@ -147,7 +147,7 @@ export const FrogSearchButton = forwardRef(
 
       // nb: we always need this so we can disable animation when button starts as
       // enabled
-      return () => {
+      return (): void => {
         container.stop();
       };
     }, [container, disabled, pending]);
@@ -188,7 +188,7 @@ export const Button = styled.button<{ pending?: boolean }>`
   &:disabled {
     background-color: rgba(var(--white-rgb), 0.2);
     filter: drop-shadow(0px 4px 4px rgba(0, 0, 0, 0.25));
-    cursor: ${(props) => (props.pending ? "wait" : "unset")};
+    cursor: ${(props): string => (props.pending ? "wait" : "unset")};
   }
 `;
 
@@ -464,7 +464,7 @@ export const WrithingVoidSearchButton = forwardRef(
 );
 
 const WrithingVoidCover = styled.div<{ visible: boolean }>`
-  pointer-events: ${({ visible }) => (visible ? "auto" : "none")};
+  pointer-events: ${({ visible }): string => (visible ? "auto" : "none")};
   position: fixed;
   width: 100%;
   height: 100%;
@@ -476,8 +476,9 @@ const WrithingVoidCover = styled.div<{ visible: boolean }>`
   align-items: center;
   justify-content: center;
 
-  background-color: ${({ visible }) => (visible ? "#000000" : "transparent")};
-  transition: ${({ visible }) =>
+  background-color: ${({ visible }): string =>
+    visible ? "#000000" : "transparent"};
+  transition: ${({ visible }): string =>
     visible
       ? "background-color 4s ease-in"
       : "background-color 3s ease-out 1s"};
@@ -523,21 +524,23 @@ const WrithingImage = styled.div<{ visible: boolean }>`
 
   border-radius: 50%;
 
-  opacity: ${({ visible }) => (visible ? "100%" : "20%")};
-  width: ${({ visible }) => (visible ? "min(80vw, 80vh)" : "0")};
-  height: ${({ visible }) => (visible ? "min(80vw, 80vh)" : "0")};
+  opacity: ${({ visible }): string => (visible ? "100%" : "20%")};
+  width: ${({ visible }): string => (visible ? "min(80vw, 80vh)" : "0")};
+  height: ${({ visible }): string => (visible ? "min(80vw, 80vh)" : "0")};
   box-shadow:
     0 0 0 0 rgba(255, 255, 255, 0.2) inset,
     0 0 0 0 rgba(255, 255, 255, 0.2);
 
-  transition: ${({ visible }) =>
+  transition: ${({ visible }): string =>
     visible
       ? "width 16s ease-in, height 16s ease-in, opacity 4s ease-in"
       : "all 4s cubic-bezier(1,0,1,.6)"};
   animation:
     ${rotating} 600s linear infinite,
-    ${({ visible }) => (visible ? pulse : noop)} 8s linear 16s infinite;
+    ${({ visible }): Keyframes => (visible ? pulse : noop)} 8s linear 16s
+      infinite;
   -webkit-animation:
     ${rotating} 600s linear infinite,
-    ${({ visible }) => (visible ? pulse : noop)} 8s linear 16s infinite;
+    ${({ visible }): Keyframes => (visible ? pulse : noop)} 8s linear 16s
+      infinite;
 `;

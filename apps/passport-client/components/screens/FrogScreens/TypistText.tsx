@@ -18,14 +18,14 @@ export function TypistText({
    * Action button with the label will be rendered at the end of the adventure text.
    */
   children: React.ReactNode;
-}) {
+}): JSX.Element {
   const [ready, setReady] = useState(false);
 
   return (
     <>
       <TypewriterContainer>
         <Typewriter
-          onInit={(typewriter) => {
+          onInit={(typewriter): void => {
             onInit(typewriter)
               .callFunction(() => {
                 setReady(true);

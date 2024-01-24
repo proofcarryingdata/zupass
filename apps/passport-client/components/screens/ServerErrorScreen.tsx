@@ -8,7 +8,7 @@ import { AppContainer } from "../shared/AppContainer";
  * Items on the screen can be filled in via the `title` and `description` query params,
  * e.g., https://zupass.org/#/server-error?title=Custom+Error&description=Your+text+here.
  */
-export function ServerErrorScreen() {
+export function ServerErrorScreen(): JSX.Element {
   const [query] = useSearchParams();
   const title = query.get("title");
   const description = query.get("description");

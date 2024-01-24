@@ -65,7 +65,7 @@ export function usePCDsInFolder(folder: string): PCD[] {
   return [...pcds.getAllPCDsInFolder(folder)];
 }
 
-export function useFolders(path: string) {
+export function useFolders(path: string): string[] {
   const pcds = usePCDCollection();
   return pcds.getFoldersInFolder(path);
 }
@@ -212,13 +212,13 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
 }
 
 // Hook that checks whether the user has set a password for their account
-export function useHasSetupPassword() {
+export function useHasSetupPassword(): boolean {
   const self = useSelf();
   return hasSetupPassword(self);
 }
 
 // Hook that when invoked, requires the user to set a password if they haven't already
-export function useRequirePassword() {
+export function useRequirePassword(): void {
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
   const dispatch = useDispatch();
@@ -233,13 +233,13 @@ export function useRequirePassword() {
 }
 
 // Hook that enables keystrokes to properly listen to laser scanning inputs from supported devices
-export function useLaserScannerKeystrokeInput() {
+export function useLaserScannerKeystrokeInput(): string {
   const [typedText, setTypedText] = useState("");
   const nav = useNavigate();
   const usingLaserScanner = loadUsingLaserScanner();
 
   useEffect(() => {
-    function handleKeyDown(event: KeyboardEvent) {
+    function handleKeyDown(event: KeyboardEvent): void {
       if (!usingLaserScanner) return;
       if (event.key === "Enter") {
         // Get the verify URL from the keystroke input and navigate to the last match, if it exists

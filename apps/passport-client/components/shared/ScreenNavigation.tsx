@@ -2,7 +2,13 @@ import { icons } from "@pcd/passport-ui";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
 
-export function ScreenNavigation({ to, label }: { to: string; label: string }) {
+export function ScreenNavigation({
+  to,
+  label
+}: {
+  to: string;
+  label: string;
+}): JSX.Element {
   return (
     <Navigation>
       <BackLink to={to}>

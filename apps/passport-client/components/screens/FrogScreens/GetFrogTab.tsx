@@ -44,7 +44,7 @@ export function GetFrogTab({
   userState: FrogCryptoUserStateResponseValue;
   subscriptions: Subscription[];
   refreshUserState: () => Promise<void>;
-}) {
+}): JSX.Element {
   const { value: subManager } = useSubscriptions();
   const userStateByFeedId = useMemo(
     () => _.keyBy(userState.feeds, (feed) => feed.feedId),
@@ -106,7 +106,7 @@ const SearchButton = ({
   score: number | undefined;
   subManager: FeedSubscriptionManager;
   active: boolean;
-}) => {
+}): JSX.Element => {
   const dispatch = useDispatch();
   const countDown = useCountDown(nextFetchAt || 0);
   const canFetch = active && (!nextFetchAt || nextFetchAt < Date.now());
@@ -237,7 +237,7 @@ const SearchButton = ({
 /**
  * Returns the last issued frog PCD in the frog crypto folder.
  */
-const useGetLastFrog = () => {
+const useGetLastFrog = (): (() => EdDSAFrogPCD) => {
   const pcdCollection = usePCDCollection();
   const getLastFrog = useCallback(
     () =>
@@ -260,7 +260,7 @@ const useGetLastFrog = () => {
 /**
  * Returns a random loading message that changes every 3 seconds.
  */
-const LoadingMessages = ({ biome }: { biome: string }) => {
+const LoadingMessages = ({ biome }: { biome: string }): JSX.Element => {
   const messages = useMemo(
     () => [
       `Searching ${biome}...`,
@@ -308,7 +308,7 @@ const LoadingMessages = ({ biome }: { biome: string }) => {
  * readable duration until the timestamp. Returns an empty string if the
  * timestamp is in the past.
  */
-function useCountDown(timestamp: number) {
+function useCountDown(timestamp: number): string {
   const end = useMemo(() => new Date(timestamp), [timestamp]);
   const getDiffText = useCallback((end: Date) => {
     const now = new Date();

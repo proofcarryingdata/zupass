@@ -1,6 +1,6 @@
 import * as React from "react";
 import { Link } from "react-router-dom";
-import styled, { css } from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 
 export function Button({
   children,
@@ -16,7 +16,7 @@ export function Button({
   size?: "large" | "small";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
-}) {
+}): JSX.Element {
   const Btn =
     style === "danger"
       ? BtnDanger
@@ -53,7 +53,7 @@ const buttonStyle = `
 
 export const BtnBase = styled.button<{ size?: "large" | "small" }>`
   ${buttonStyle}
-  ${({ disabled }) =>
+  ${({ disabled }): FlattenSimpleInterpolation =>
     disabled === true
       ? css`
           cursor: not-allowed;
@@ -61,7 +61,7 @@ export const BtnBase = styled.button<{ size?: "large" | "small" }>`
         `
       : css``}
 
-  ${({ size }: { size?: "large" | "small" }) =>
+  ${({ size }: { size?: "large" | "small" }): FlattenSimpleInterpolation =>
     size === undefined || size === "large"
       ? css``
       : css`
@@ -92,7 +92,7 @@ const BtnSecondary = styled(BtnBase)`
 export const LinkButton = styled(Link)<{ $primary?: boolean }>`
   ${buttonStyle}
 
-  ${({ $primary }: { $primary?: boolean }) => css`
+  ${({ $primary }: { $primary?: boolean }): FlattenSimpleInterpolation => css`
     color: var(--bg-dark-primary) !important;
     display: block;
     width: 100%;
@@ -114,7 +114,7 @@ export const CircleButton = styled.button<{
   diameter: number;
   padding: number;
 }>`
-  ${(p) => {
+  ${(p): string => {
     const size = p.diameter + 2 * p.padding + "px";
     return `width: ${size};height: ${size};`;
   }};
@@ -122,7 +122,7 @@ export const CircleButton = styled.button<{
   border-radius: 99px;
   border: none;
   margin: 0;
-  padding: ${(p) => p.padding}px;
+  padding: ${(p): number => p.padding}px;
   background: transparent;
   user-select: none;
 

@@ -11,7 +11,7 @@ import { AccountExportButton } from "../shared/AccountExportButton";
  * setting {@link AppState.modal} to `{ modalType: "invalid-participant" }`. This modal
  * explains what's going on + suggest paths to resolve the problem.
  */
-export function InvalidUserModal() {
+export function InvalidUserModal(): JSX.Element {
   const dispatch = useDispatch();
   const onLogoutClick = useCallback(() => {
     if (

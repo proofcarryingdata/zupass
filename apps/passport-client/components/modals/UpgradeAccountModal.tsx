@@ -18,7 +18,7 @@ import { ScreenLoader } from "../shared/ScreenLoader";
  * This uncloseable modal is shown to users of Zupass who have a sync key,
  * and have never created a password. It asks them to create a password.
  */
-export function UpgradeAccountModal() {
+export function UpgradeAccountModal(): JSX.Element {
   useSyncE2EEStorage();
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();

@@ -12,7 +12,7 @@ export const ZkEdDSAFrogPCDUI: PCDUI<ZKEdDSAFrogPCD> = {
   renderCardBody: ZKEdDSAFrogCardBody
 };
 
-function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }) {
+function ZKEdDSAFrogCardBody({ pcd }: { pcd: ZKEdDSAFrogPCD }): JSX.Element {
   return (
     <Container>
       <p>

@@ -90,10 +90,10 @@ function cacheNameForLog(cacheName: string): string {
  */
 const swLog = {
   tag: `[SERVICE_WORKER][${SW_BUILD_ID.substring(0, 4)}]`,
-  I: function (msg: any) {
+  I: function (msg: any): void {
     console.log(this.tag, msg);
   },
-  V: function (msg: any) {
+  V: function (msg: any): void {
     console.debug(this.tag, msg);
   }
 };
@@ -120,7 +120,7 @@ self.addEventListener("install", (event: ExtendableEvent) => {
   }
 
   event.waitUntil(
-    (async () => {
+    (async (): Promise<void> => {
       // Pre-populate our cache with all the resources to operate offline.
       await prePopulateCaches();
 
@@ -141,7 +141,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
       windows ${SW_BUILD_ID}`
     );
     event.waitUntil(
-      (async () => {
+      (async (): any => {
         await swSelf.clients.claim();
         await swSelf.registration.unregister();
         for (const client of await swSelf.clients.matchAll()) {
@@ -155,7 +155,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
   swLog.V(`activating ${SW_BUILD_ID}`);
 
   event.waitUntil(
-    (async () => {
+    (async (): Promise<void> => {
       // If supported, NavigationPreload allows fetches to start in parallel to
       // the running of our fetch event handler, as well as the bootup time of
       // an idle service-worker.  It's worth enabling to reduce latency.
@@ -190,7 +190,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
   swLog.V(`fetching ${event.request?.url}`);
   event.respondWith(
-    (async () => {
+    (async (): Promise<void> => {
       // Check stable cache first.  If we get a hit, we never fetch.
       const stableResp = await checkStableCache(event.request);
       if (stableResp) {

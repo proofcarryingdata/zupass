@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { Button, H2 } from "../core";
 
-export function ChangedPasswordModal() {
+export function ChangedPasswordModal(): JSX.Element {
   const dispatch = useDispatch();
 
   const close = useCallback(() => {

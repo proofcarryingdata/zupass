@@ -8,6 +8,7 @@ import {
   FeedHost,
   ListFeedsResult,
   PollFeedRequest,
+  PollFeedResponseValue,
   PollFeedResult
 } from "../src";
 import { IFeedApi } from "../src/FeedAPI";
@@ -56,7 +57,9 @@ export class MockFeedApi implements IFeedApi {
                 }
               },
 
-              handleRequest: async (req: PollFeedRequest) => {
+              handleRequest: async (
+                req: PollFeedRequest
+              ): Promise<PollFeedResponseValue> => {
                 if (date) {
                   MockDate.set(date);
                 }
@@ -102,7 +105,9 @@ export class MockFeedApi implements IFeedApi {
                   signatureType: "sempahore-signature-pcd"
                 }
               },
-              handleRequest: async (req: PollFeedRequest) => {
+              handleRequest: async (
+                req: PollFeedRequest
+              ): Promise<PollFeedResponseValue> => {
                 if (date) {
                   MockDate.set(date);
                 }
@@ -145,7 +150,9 @@ export class MockFeedApi implements IFeedApi {
                 }
               },
 
-              handleRequest: async (req: PollFeedRequest) => {
+              handleRequest: async (
+                req: PollFeedRequest
+              ): Promise<PollFeedResponseValue> => {
                 if (date) {
                   MockDate.set(date);
                 }

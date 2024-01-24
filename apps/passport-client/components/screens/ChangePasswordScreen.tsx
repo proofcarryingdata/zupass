@@ -21,7 +21,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { PasswordInput } from "../shared/PasswordInput";
 
-export function ChangePasswordScreen() {
+export function ChangePasswordScreen(): JSX.Element {
   useSyncE2EEStorage();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();

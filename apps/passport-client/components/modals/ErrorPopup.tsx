@@ -9,7 +9,7 @@ export function ErrorPopup({
 }: {
   error: AppError;
   onClose: () => void;
-}) {
+}): JSX.Element {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
     <ErrorBg onClick={onClose}>

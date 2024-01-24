@@ -11,7 +11,7 @@ export const Container = styled.div`
   margin-bottom: 8px;
 `;
 
-export const HomeLink = () => {
+export const HomeLink = (): JSX.Element => {
   return <Link to={"/"}>Home</Link>;
 };
 
@@ -21,7 +21,7 @@ export const CodeLink = ({
 }: {
   file: string;
   children: React.ReactNode;
-}) => {
+}): JSX.Element => {
   return <a href={PCD_GITHUB_URL + file}>{children}</a>;
 };
 
@@ -31,7 +31,7 @@ export const CollapsableCode = ({
 }: {
   code: string;
   label?: string;
-}) => {
+}): JSX.Element => {
   const [collapsed, setCollapsed] = useState(true);
 
   const toggle = useCallback(() => {
