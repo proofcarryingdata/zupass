@@ -889,7 +889,7 @@ export class TelegramService {
    * except for the Edge City ticket PCDs, which should have the
    * Lemonade public key as a signer.
    */
-  private async getTicketExpectedSigner(
+  private async getExpectedTicketSigner(
     pcd: ZKEdDSAEventTicketPCD
   ): Promise<[string, string]> {
     const {
@@ -927,7 +927,7 @@ export class TelegramService {
 
       let signerMatch = false;
 
-      const expectedSigner = await this.getTicketExpectedSigner(pcd);
+      const expectedSigner = await this.getExpectedTicketSigner(pcd);
 
       signerMatch =
         pcd.claim.signer[0] === expectedSigner[0] &&
