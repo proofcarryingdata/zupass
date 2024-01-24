@@ -38,6 +38,14 @@ jobs:
       - name: Configure Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
 
+      - name: Restore cached node_modules
+        id: cache-node-modules-restore
+        uses: actions/cache/restore@v4
+        with:
+          path: |
+            **/node_modules
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
+
       - run: "yarn install"
       - name: "Check that yarn install did not cause changes to yarn.lock"
         run: "git diff --quiet -- yarn.lock"
@@ -47,3 +55,12 @@ jobs:
       - run: "yarn test"
       - name: "Test that template package works out-of-the-box"
         run: "yarn test-generated-package"
+
+      - name: Save cached node_modules
+        id: cache-primes-save
+        uses: actions/cache/save@v4
+        with:
+          path: |
+            **/node_modules
+            some/other/dependencies
+          key: ${{ runner.os }}-yarn-${{ hashFiles('**/yarn.lock') }}
