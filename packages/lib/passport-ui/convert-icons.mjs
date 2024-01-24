@@ -15,14 +15,6 @@ import svgToUrl from "svg-to-url";
  */
 async function main() {
   const iconFiles = fs.readdirSync("icons");
-  const newestIconTimestamp = iconFiles.reduce((newest, filename) => {
-    return Math.max(newest, fs.statSync(`icons/${filename}`).mtimeMs);
-  }, 0);
-
-  if (newestIconTimestamp <= fs.statSync("src/icons/index.ts").mtimeMs) {
-    console.log("No changed icons detected");
-    return;
-  }
 
   const iconPaths = iconFiles
     .filter((filename) => path.extname(filename) === ".svg")
@@ -34,16 +26,28 @@ async function main() {
     })
   );
 
+  console.log(`Read ${iconIndex.length} icons`);
+
   const output = iconIndex
     .map(([name, dataUrl]) => {
       return `export const ${camelCase(name)} = "${dataUrl}";`;
     })
     .join("\r\n\r\n");
 
-  fs.writeFileSync(
-    "src/icons/index.ts",
-    await prettier.format(output, { parser: "typescript" })
-  );
+  const formattedOutput = await prettier.format(output, {
+    parser: "typescript"
+  });
+
+  const indexFilePath = "src/icons/index.ts";
+
+  const currentIndexContent = fs.readFileSync(indexFilePath);
+
+  if (currentIndexContent.toString() !== formattedOutput) {
+    console.log(`Icon index file has changed, updating ${indexFilePath}`);
+    fs.writeFileSync(indexFilePath, formattedOutput);
+  } else {
+    console.log("No changes to icon index file");
+  }
 }
 
 main();
