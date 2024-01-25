@@ -226,10 +226,6 @@ export class PoapService {
 
       logger(`[POAP] fetching zuconnect ticket ${ticketId} from database`);
 
-      // A bit of a hack given our implementation details - we know that the ticketId for
-      // a Zuzalu EdDSATicketPCD is always set to the user's uuid during issuance, which happens
-      // in the function {@link issueZuzaluTicketPCDs} within issuanceService.ts.
-
       const zuconnectTicket = fetchZuconnectTicketById(
         this.context.dbPool,
         ticketId
