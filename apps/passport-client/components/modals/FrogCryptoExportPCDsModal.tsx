@@ -8,7 +8,7 @@ import { H3 } from "../core";
 import { BtnBase } from "../core/Button";
 import { ActionButton } from "../screens/FrogScreens/Button";
 
-export function FrogCryptoExportPCDsModal() {
+export function FrogCryptoExportPCDsModal(): JSX.Element {
   const dispatch = useDispatch();
   const pcds = usePCDsInFolder(FrogCryptoFolderName);
 
@@ -32,7 +32,7 @@ export function FrogCryptoExportPCDsModal() {
 
       <ActionButton
         ButtonComponent={BtnBase}
-        onClick={async () => {
+        onClick={async (): Promise<void> => {
           try {
             const serialized = stringify(
               await Promise.all(pcds.map(EdDSAFrogPCDPackage.serialize))

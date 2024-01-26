@@ -8,7 +8,9 @@ interface ResendCodeButtonProps {
   email: string;
 }
 
-export function ResendCodeButton({ email }: ResendCodeButtonProps) {
+export function ResendCodeButton({
+  email
+}: ResendCodeButtonProps): JSX.Element {
   const identity = useIdentity();
   // If not zero, this is the number of seconds the user will have
   // to wait before clicking this button again. Technically, this
@@ -37,7 +39,9 @@ export function ResendCodeButton({ email }: ResendCodeButtonProps) {
     startTimer();
   }, [startTimer]);
 
-  const handleClick = async (event: React.FormEvent<HTMLButtonElement>) => {
+  const handleClick = async (
+    event: React.FormEvent<HTMLButtonElement>
+  ): Promise<void> => {
     event.preventDefault();
     console.log("handling click");
     await requestConfirmationEmail(

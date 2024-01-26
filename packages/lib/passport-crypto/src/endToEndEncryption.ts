@@ -3,7 +3,7 @@ import { EncryptedPacket } from "./types";
 
 const cryptoPromise = PCDCrypto.newInstance();
 
-export async function getHash(str: string) {
+export async function getHash(str: string): Promise<string> {
   const crypto = await cryptoPromise;
   const hashed = crypto.cryptoHash(str);
   return hashed;

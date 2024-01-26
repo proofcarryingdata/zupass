@@ -56,7 +56,7 @@ export const ToggleSwitch = ({
   label: string;
   checked: boolean;
   onChange: () => void;
-}) => {
+}): JSX.Element => {
   const handleChange = useCallback(() => {
     onChange();
   }, [onChange]);

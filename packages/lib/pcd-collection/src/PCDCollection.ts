@@ -233,7 +233,7 @@ export class PCDCollection {
     return Array.from(result);
   }
 
-  public bulkSetFolder(pcdIds: string[], folder: string) {
+  public bulkSetFolder(pcdIds: string[], folder: string): void {
     pcdIds.forEach((pcdId) => {
       if (!this.hasPCDWithId(pcdId)) {
         throw new Error(`can't set folder of pcd ${pcdId} - pcd doesn't exist`);
@@ -355,7 +355,7 @@ export class PCDCollection {
     this.addAll(deserialized, options);
   }
 
-  public async remove(pcdId: string) {
+  public async remove(pcdId: string): Promise<void> {
     this.pcds = this.pcds.filter((pcd) => pcd.id !== pcdId);
     this.folders = Object.fromEntries(
       Object.entries(this.folders).filter(([id]) => id !== pcdId)
@@ -370,11 +370,11 @@ export class PCDCollection {
     await this.deserializeAllAndAdd([serialized], options);
   }
 
-  public add(pcd: PCD, options?: AddPCDOptions) {
+  public add(pcd: PCD, options?: AddPCDOptions): void {
     this.addAll([pcd], options);
   }
 
-  public addAll(pcds: PCD[], options?: AddPCDOptions) {
+  public addAll(pcds: PCD[], options?: AddPCDOptions): void {
     const currentMap = new Map(this.pcds.map((pcd) => [pcd.id, pcd]));
     const toAddMap = new Map(pcds.map((pcd) => [pcd.id, pcd]));
 
@@ -427,11 +427,11 @@ export class PCDCollection {
     return this.getById(id) !== undefined;
   }
 
-  public getPCDsByType(type: string) {
+  public getPCDsByType(type: string): PCD[] {
     return this.pcds.filter((pcd) => pcd.type === type);
   }
 
-  private emitChange() {
+  private emitChange(): void {
     // Emit the change asynchronously, so we don't need to delay until
     // listeners are complete.
     setTimeout(() => this.changeEmitter.emit(), 0);

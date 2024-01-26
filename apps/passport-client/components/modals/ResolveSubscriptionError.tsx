@@ -22,7 +22,7 @@ import { Button, H2 } from "../core";
 import { PermissionsView } from "../screens/AddSubscriptionScreen";
 import { Spinner } from "../shared/Spinner";
 
-export function ResolveSubscriptionErrorModal() {
+export function ResolveSubscriptionErrorModal(): JSX.Element {
   const subscriptions = useSubscriptions().value;
   const id = useResolvingSubscriptionId();
   const subscription = subscriptions.getSubscription(id);
@@ -67,7 +67,7 @@ function FetchError({
 }: {
   subscription: Subscription;
   subscriptions: FeedSubscriptionManager;
-}) {
+}): JSX.Element {
   const [polling, setPolling] = useState<boolean>(false);
   const [stillFailing, setStillFailing] = useState<boolean>(false);
   const [error, setError] = useState<SubscriptionFetchError>();
@@ -128,7 +128,7 @@ function PermissionError({
   subscription: Subscription;
   subscriptions: FeedSubscriptionManager;
   error: SubscriptionPermissionError;
-}) {
+}): JSX.Element {
   // We got here because the feed served an action for which permission has
   // not been granted. This has two possible causes:
   // 1. The feed has added new permissions since the subscription was
@@ -146,7 +146,7 @@ function PermissionError({
   useEffect(() => {
     setCheckingPermissions(true);
 
-    async function checkPermissions() {
+    async function checkPermissions(): Promise<void> {
       try {
         const response = await subscriptions.listFeeds(
           subscription.providerUrl
@@ -241,7 +241,7 @@ function PermissionUpdate({
 }: {
   subscription: Subscription;
   newPermissions: PCDPermission[];
-}) {
+}): JSX.Element {
   const [outcome, setOutcome] = useState<"fail" | "success" | "">("");
   const dispatch = useDispatch();
 

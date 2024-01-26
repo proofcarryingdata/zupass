@@ -20,7 +20,7 @@ import { InlineError } from "../../shared/InlineError";
  * already logged in before. Backups happen automatically
  * on first login.
  */
-export function SyncExistingScreen() {
+export function SyncExistingScreen(): JSX.Element {
   const dispatch = useDispatch();
   const [encryptionKey, setEncryptionKey] = useState("");
   const [isLoading, setIsLoading] = useState(false);
@@ -39,7 +39,7 @@ export function SyncExistingScreen() {
       return;
     }
 
-    const load = async () => {
+    const load = async (): Promise<void> => {
       setIsLoading(true);
       const storageResult = await requestDownloadAndDecryptStorage(
         appConfig.zupassServer,

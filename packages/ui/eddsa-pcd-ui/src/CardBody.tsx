@@ -15,7 +15,7 @@ export const EdDSAPCDUI: PCDUI<EdDSAPCD> = {
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
-function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }) {
+function EdDSACardBody({ pcd }: { pcd: EdDSAPCD }): JSX.Element {
   return (
     <Container>
       <p>This PCD represents an EdDSA signature of some bigint values</p>

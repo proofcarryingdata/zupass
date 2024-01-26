@@ -35,7 +35,7 @@ import {
 import { AppContainer } from "../../shared/AppContainer";
 import { InlineError } from "../../shared/InlineError";
 
-export function LoginScreen() {
+export function LoginScreen(): JSX.Element {
   const dispatch = useDispatch();
   const [error, setError] = useState<string | undefined>();
   const query = useQuery();

@@ -17,9 +17,11 @@ import { useCredentialManager } from "../../../src/appHooks";
 import { ErrorMessage } from "../../core/error";
 import { useAdminError } from "./useAdminError";
 
-export function ManageFeedsSection() {
+export function ManageFeedsSection(): JSX.Element {
   const [newFeedsText, setNewFeedsText] = useState<string>("");
-  const onTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const onTextChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ): void => {
     setNewFeedsText(event.target.value);
   };
   const { newFeeds, newFeedsError } = useMemo(() => {
@@ -64,7 +66,7 @@ export function ManageFeedsSection() {
         <>
           <h2>(Preview) New/Updated Feeds</h2>
           <DataTable data={newFeeds} />
-          <button onClick={() => updateFeeds(newFeeds)}>
+          <button onClick={(): void => updateFeeds(newFeeds)}>
             Add/Update Feeds
           </button>
         </>
@@ -77,7 +79,7 @@ export function ManageFeedsSection() {
       {error && <ErrorMessage>Error fetching feeds: {error}</ErrorMessage>}
       <DataTable
         data={feeds}
-        onEditFeed={(feed) => {
+        onEditFeed={(feed): void => {
           setNewFeedsText(feedUnparser([feed]));
         }}
       />
@@ -105,7 +107,7 @@ function useFeeds(): {
   const credentialManager = useCredentialManager();
   const [pcd, setPcd] = useState<SerializedPCD>();
   useEffect(() => {
-    const fetchPcd = async () => {
+    const fetchPcd = async (): Promise<void> => {
       const pcd = await credentialManager.requestCredential({
         signatureType: "sempahore-signature-pcd"
       });
@@ -122,7 +124,7 @@ function useFeeds(): {
   useEffect(() => {
     const abortController = new AbortController();
 
-    const doRequest = async () => {
+    const doRequest = async (): Promise<void> => {
       if (!pcd) {
         setError("Waiting for PCD to be ready");
         return;
@@ -278,7 +280,7 @@ export function DataTable({
 }: {
   data: FrogCryptoDbFeedData[];
   onEditFeed?: (feed: FrogCryptoDbFeedData) => void;
-}) {
+}): JSX.Element {
   const data = rawData.map(({ uuid, feed }) => ({
     uuid,
     ...feed
@@ -302,15 +304,15 @@ export function DataTable({
       noDataMessage="No Feeds"
       customRenderCell={{
         ...keys.reduce((acc, key) => {
-          acc[key] = (row) => {
+          acc[key] = (row): any => {
             return typeof row[key] === "undefined" ? "<undefined>" : row[key];
           };
           return acc;
         }, {}),
-        private: (row) => {
+        private: (row): string => {
           return String(row["private"]);
         },
-        activeUntil: (row) => {
+        activeUntil: (row): JSX.Element | string => {
           const activeUntil = row["activeUntil"];
           if (!activeUntil) {
             return "<undefined>";
@@ -346,14 +348,14 @@ export function DataTable({
             </div>
           );
         },
-        description: (row) => {
+        description: (row): JSX.Element => {
           return (
             <Description title={row["description"]}>
               {row["description"]}
             </Description>
           );
         },
-        biomes: (row) => {
+        biomes: (row): JSX.Element | string => {
           const biomes = row["biomes"];
           if (!biomes) {
             return "<undefined>";
@@ -368,7 +370,7 @@ export function DataTable({
             </div>
           );
         },
-        codes: (row) => {
+        codes: (row): JSX.Element | string => {
           const codes = row["codes"];
           if (!codes) {
             return "<undefined>";
@@ -385,7 +387,7 @@ export function DataTable({
       containerStyle={{ maxHeight: "400px", overflow: "auto" }}
       cellStyle={{ padding: "8px" }}
       headerStyle={{ padding: "8px" }}
-      onRowEdit={(args, row) => {
+      onRowEdit={(args, row): void => {
         const feed = rawData.find((feed) => feed.uuid === row.uuid);
         onEditFeed?.(feed);
       }}

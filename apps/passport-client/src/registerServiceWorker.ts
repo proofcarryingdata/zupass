@@ -12,7 +12,7 @@ import { SERVICE_WORKER_ENABLED } from "./sharedConstants";
  * its caching of application code does not interfere with quick
  * iteration loops.
  */
-export async function registerServiceWorker() {
+export async function registerServiceWorker(): Promise<void> {
   if (!("serviceWorker" in navigator)) {
     console.log(`[SERVICE_WORKER] service workers not supported`);
     return;

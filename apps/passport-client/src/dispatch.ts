@@ -153,7 +153,7 @@ export async function dispatch(
   action: Action,
   state: AppState,
   update: ZuUpdate
-) {
+): Promise<void> {
   switch (action.type) {
     case "new-passport":
       return genPassport(state.identity, action.email, update);
@@ -257,7 +257,7 @@ async function genPassport(
   identity: Identity,
   email: string,
   update: ZuUpdate
-) {
+): Promise<void> {
   const identityPCD = await SemaphoreIdentityPCDPackage.prove({ identity });
   const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
@@ -273,7 +273,7 @@ async function createNewUserSkipPassword(
   token: string,
   state: AppState,
   update: ZuUpdate
-) {
+): Promise<void> {
   update({
     modal: { modalType: "none" }
   });
@@ -313,7 +313,7 @@ async function createNewUserWithPassword(
   password: string,
   state: AppState,
   update: ZuUpdate
-) {
+): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
     await crypto.generateSaltAndEncryptionKey(password);
@@ -354,7 +354,7 @@ async function finishAccountCreation(
   user: User,
   state: AppState,
   update: ZuUpdate
-) {
+): Promise<void> {
   // Verify that the identity is correct.
   if (
     !validateAndLogRunningAppState(
@@ -415,7 +415,11 @@ async function finishAccountCreation(
 }
 
 // Runs periodically, whenever we poll new participant info and when we broadcast state updates.
-async function setSelf(self: User, state: AppState, update: ZuUpdate) {
+async function setSelf(
+  self: User,
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
   let userMismatched = false;
   let hasChangedPassword = false;
 
@@ -464,14 +468,14 @@ async function setSelf(self: User, state: AppState, update: ZuUpdate) {
   update({ self }); // Update in-memory state.
 }
 
-function clearError(state: AppState, update: ZuUpdate) {
+function clearError(state: AppState, update: ZuUpdate): void {
   if (!state.error?.dismissToCurrentPage) {
     window.location.hash = "#/";
   }
   update({ error: undefined });
 }
 
-async function resetPassport(state: AppState, update: ZuUpdate) {
+async function resetPassport(state: AppState, update: ZuUpdate): Promise<void> {
   await requestLogToServer(appConfig.zupassServer, "logout", {
     uuid: state.self?.uuid,
     email: state.self?.email,
@@ -498,7 +502,7 @@ async function addPCDs(
   update: ZuUpdate,
   pcds: SerializedPCD[],
   upsert?: boolean
-) {
+): Promise<void> {
   // Require user to set up a password before adding PCDs
   if (state.self && !hasSetupPassword(state.self)) {
     update({
@@ -512,7 +516,11 @@ async function addPCDs(
   update({ pcds: state.pcds });
 }
 
-async function removePCD(state: AppState, update: ZuUpdate, pcdId: string) {
+async function removePCD(
+  state: AppState,
+  update: ZuUpdate,
+  pcdId: string
+): Promise<void> {
   state.pcds.remove(pcdId);
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
@@ -522,7 +530,7 @@ async function loadAfterLogin(
   encryptionKey: string,
   storage: StorageWithRevision,
   update: ZuUpdate
-) {
+): Promise<void> {
   const { pcds, subscriptions, storageHash } = await deserializeStorage(
     storage.storage,
     await getPackages()
@@ -606,7 +614,7 @@ async function loadAfterLogin(
 }
 
 // Update `self` and `encryptionKey` in-memory fields from their saved values in localStorage
-async function handlePasswordChangeOnOtherTab(update: ZuUpdate) {
+async function handlePasswordChangeOnOtherTab(update: ZuUpdate): Promise<void> {
   const self = loadSelf();
   const encryptionKey = loadEncryptionKey();
   return update({
@@ -626,7 +634,7 @@ async function saveNewPasswordAndBroadcast(
   newSalt: string,
   state: AppState,
   update: ZuUpdate
-) {
+): Promise<void> {
   const newSelf = { ...state.self, salt: newSalt };
   saveSelf(newSelf);
   saveEncryptionKey(newEncryptionKey);
@@ -637,14 +645,14 @@ async function saveNewPasswordAndBroadcast(
   });
 }
 
-function userInvalid(update: ZuUpdate) {
+function userInvalid(update: ZuUpdate): void {
   update({
     userInvalid: true,
     modal: { modalType: "invalid-participant" }
   });
 }
 
-function anotherDeviceChangedPassword(update: ZuUpdate) {
+function anotherDeviceChangedPassword(update: ZuUpdate): void {
   update({
     anotherDeviceChangedPassword: true,
     modal: { modalType: "another-device-changed-password" }
@@ -664,7 +672,7 @@ function anotherDeviceChangedPassword(update: ZuUpdate) {
  *   Zupass is not currently uploading the current set of PCDs
  *   to e2ee, then uploads then to e2ee.
  */
-async function sync(state: AppState, update: ZuUpdate) {
+async function sync(state: AppState, update: ZuUpdate): Promise<void> {
   // This re-entrancy protection ensures only one event-sequence is
   // inside of doSync() at any time.  When doSync() completes, it will
   // run again if any state changes were made, or if any updates were skipped.
@@ -887,7 +895,7 @@ async function syncSubscription(
   subscriptionId: string,
   onSuccess?: () => void,
   onError?: (e: Error) => void
-) {
+): Promise<void> {
   try {
     console.log("[SYNC] loading pcds from subscription", subscriptionId);
     const subscription = state.subscriptions.getSubscription(subscriptionId);
@@ -921,7 +929,7 @@ async function resolveSubscriptionError(
   _state: AppState,
   update: ZuUpdate,
   subscriptionId: string
-) {
+): Promise<void> {
   update({
     resolvingSubscriptionId: subscriptionId,
     modal: { modalType: "resolve-subscription-error" }
@@ -934,7 +942,7 @@ async function addSubscription(
   providerUrl: string,
   providerName: string,
   feed: Feed
-) {
+): Promise<void> {
   if (!state.subscriptions.getProvider(providerUrl)) {
     state.subscriptions.addProvider(providerUrl, providerName);
   }
@@ -955,7 +963,7 @@ async function removeSubscription(
   state: AppState,
   update: ZuUpdate,
   subscriptionId: string
-) {
+): Promise<void> {
   state.subscriptions.unsubscribe(subscriptionId);
   await saveSubscriptions(state.subscriptions);
   update({
@@ -968,7 +976,7 @@ async function updateSubscriptionPermissions(
   update: ZuUpdate,
   subscriptionId: string,
   permisisons: PCDPermission[]
-) {
+): Promise<void> {
   state.subscriptions.updateFeedPermissionsForSubscription(
     subscriptionId,
     permisisons
@@ -985,7 +993,7 @@ async function setKnownTicketTypesAndKeys(
   _state: AppState,
   update: ZuUpdate,
   knownTicketTypesAndKeys: KnownTicketTypesAndKeys
-) {
+): Promise<void> {
   const keyMap = {};
   knownTicketTypesAndKeys.publicKeys.forEach((k) => {
     if (!keyMap[k.publicKeyType]) {
@@ -1009,7 +1017,7 @@ async function handleAgreedPrivacyNotice(
   state: AppState,
   update: ZuUpdate,
   version: number
-) {
+): Promise<void> {
   await saveSelf({ ...state.self, terms_agreed: version });
   update({
     self: { ...state.self, terms_agreed: version },
@@ -1024,7 +1032,10 @@ async function handleAgreedPrivacyNotice(
  * to sync it. If so, sync to server. If not, prompt user with an
  * un-dismissable modal.
  */
-async function promptToAgreePrivacyNotice(state: AppState, update: ZuUpdate) {
+async function promptToAgreePrivacyNotice(
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
   const cachedTerms = loadPrivacyNoticeAgreed();
   if (cachedTerms === LATEST_PRIVACY_NOTICE) {
     // sync to server
@@ -1050,7 +1061,7 @@ async function mergeImport(
   update: ZuUpdate,
   collection: PCDCollection,
   pcdsToMergeIds: Set<PCD["id"]>
-) {
+): Promise<void> {
   console.log("Merging imported PCD Collection");
   const userHasExistingSemaphoreIdentityPCD =
     state.pcds.getPCDsByType(SemaphoreIdentityPCDTypeName).length > 0;

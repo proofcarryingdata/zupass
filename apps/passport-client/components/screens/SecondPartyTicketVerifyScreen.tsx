@@ -76,7 +76,7 @@ function isDevconnectTicket(pcd: PCD): boolean {
 // truth of the claim being made, e.g. that a ticket is a Zuzalu ticket,
 // since the presented ticket does not match any known pattern of event ID,
 // product ID and signing key.
-export function SecondPartyTicketVerifyScreen() {
+export function SecondPartyTicketVerifyScreen(): JSX.Element {
   const query = useQuery();
   const encodedQRPayload = query.get("pcd");
   const id = query.get("id");
@@ -105,7 +105,7 @@ export function SecondPartyTicketVerifyScreen() {
 
   // Verify the ticket and record the result
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       if (pcd) {
         const result = await verify(pcd, serializedPCD);
         setVerifyResult(result);
@@ -119,7 +119,7 @@ export function SecondPartyTicketVerifyScreen() {
 
   // If this is a Devconnect ticket, check the ticket
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       if (pcd && isZKEdDSAEventTicketPCD(pcd) && isDevconnectTicket(pcd)) {
         const result = await devconnectCheckByIdWithOffline(
           pcd.claim.partialTicket.ticketId,
@@ -300,7 +300,7 @@ export function SecondPartyTicketVerifyScreen() {
   );
 }
 
-function WaitingForCheckAndVerify() {
+function WaitingForCheckAndVerify(): JSX.Element {
   return (
     <AppContainer bg={"gray"}>
       <Spacer h={48} />
@@ -331,7 +331,7 @@ function VerifiedAndKnownTicket({
   publicKeyName: string;
   ticketName: string | undefined;
   eventName: string;
-}) {
+}): JSX.Element {
   return (
     <CardContainerExpanded>
       <CardOutlineExpanded>
@@ -349,13 +349,16 @@ function VerifiedAndKnownTicket({
   );
 }
 
-function useDecodedPayload(encodedQRPayload: string) {
+function useDecodedPayload(encodedQRPayload: string): {
+  pcd: PCD;
+  serializedPCD: SerializedPCD<PCD>;
+} {
   const [pcd, setPcd] = useState<PCD>(null);
   const [serializedPCD, setSerializedPCD] = useState<SerializedPCD>(null);
   const pcds = usePCDCollection();
 
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       try {
         if (encodedQRPayload) {
           // decodedPCD is a JSON.stringify'd {@link SerializedPCD}

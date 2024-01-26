@@ -11,7 +11,7 @@ import { AddHaloScreen } from "./AddHaloScreen";
  * Specific landing page for adding a HaloNoncePCD, which in the case of Zupass
  * corresponds to a specific Zuzalu Experience.
  */
-export function HaloScreen() {
+export function HaloScreen(): JSX.Element {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
   const location = useLocation();
@@ -41,7 +41,7 @@ export function HaloScreen() {
   return screen;
 }
 
-function getScreen(params: URLSearchParams) {
+function getScreen(params: URLSearchParams): JSX.Element | null {
   const pk2 = params.get("pk2");
   const rnd = params.get("rnd");
   const rndsig = params.get("rndsig");

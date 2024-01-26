@@ -1,5 +1,6 @@
 import { isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import {
+  Feed,
   FrogCryptoFolderName,
   FrogCryptoUserStateResponseValue,
   Subscription,
@@ -8,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
+import { TypewriterClass } from "typewriter-effect";
 import { appConfig } from "../../../src/appConfig";
 import {
   useCredentialManager,
@@ -48,7 +50,7 @@ type TabId = (typeof TABS)[number]["tab"];
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
-export function FrogHomeSection() {
+export function FrogHomeSection(): JSX.Element {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const subs = useSubscriptions();
   const frogSubs = useMemo(
@@ -102,7 +104,7 @@ export function FrogHomeSection() {
 
       {frogSubs.length === 0 && (
         <TypistText
-          onInit={(typewriter) =>
+          onInit={(typewriter): TypewriterClass =>
             typewriter
               .typeString(
                 isFromSubscriptionRef.current
@@ -122,7 +124,7 @@ export function FrogHomeSection() {
             // frog holders cannot retreat
             frogPCDs.length === 0 && !myScore && (
               <ActionButton
-                onClick={() => {
+                onClick={(): Promise<Feed | null> => {
                   retreatRef.current = true;
                   return initFrog();
                 }}
@@ -138,7 +140,7 @@ export function FrogHomeSection() {
         (frogPCDs.length === 0 && !myScore ? (
           <>
             <TypistText
-              onInit={(typewriter) => {
+              onInit={(typewriter): TypewriterClass => {
                 const text = isFromSubscriptionRef.current
                   ? `you hear a whisper. "come back again when you're stronger."`
                   : "you're certain you saw a frog wearing a monocle.";
@@ -174,7 +176,7 @@ export function FrogHomeSection() {
                     <Button
                       key={t}
                       disabled={tab === t}
-                      onClick={() => setTab(t)}
+                      onClick={(): void => setTab(t)}
                     >
                       {label}
                     </Button>
@@ -209,7 +211,10 @@ export function FrogHomeSection() {
 /**
  * Fetch the user's frog crypto state as well as the ability to refetch.
  */
-export function useUserFeedState(subscriptions: Subscription[]) {
+export function useUserFeedState(subscriptions: Subscription[]): {
+  userState: FrogCryptoUserStateResponseValue;
+  refreshUserState: () => Promise<void>;
+} {
   const [userState, setUserState] =
     useState<FrogCryptoUserStateResponseValue | null>(null);
   const credentialManager = useCredentialManager();

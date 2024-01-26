@@ -10,7 +10,7 @@ export const PendingPCDStatusDisplay = ({
 }: {
   status: PendingPCDStatus;
   pendingPCDError: string;
-}) => {
+}): JSX.Element => {
   const StyledDiv = styled.div`
     margin: 10px 0 5px 0;
     border: 1px solid ${statusColor[status]};

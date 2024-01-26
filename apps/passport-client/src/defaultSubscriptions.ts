@@ -16,7 +16,7 @@ export function isDefaultSubscription(sub: Subscription): boolean {
 
 export async function addDefaultSubscriptions(
   subscriptions: FeedSubscriptionManager
-) {
+): Promise<void> {
   if (!subscriptions.hasProvider(DEFAULT_FEED_URL)) {
     subscriptions.addProvider(DEFAULT_FEED_URL, DEFAULT_FEED_PROVIDER_NAME);
   }

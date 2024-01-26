@@ -5,7 +5,7 @@ import { RippleLoader } from "../core/RippleLoader";
 
 const textDisplayTimeout = 2000;
 
-export function ScreenLoader({ text }: { text?: string }) {
+export function ScreenLoader({ text }: { text?: string }): JSX.Element {
   const [textVisible, setTextVisible] = useState(false);
 
   useEffect(() => {

@@ -2,7 +2,7 @@ import { isDuringDevconnect } from "../../src/devconnectUtils";
 import { H2, Spacer, TextCenter } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 
-export function NoWASMScreen() {
+export function NoWASMScreen(): JSX.Element {
   return (
     <>
       <AppContainer bg="primary">

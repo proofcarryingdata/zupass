@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { PCD_GITHUB_URL } from "../constants";
 
-function Page() {
+function Page(): JSX.Element {
   return (
     <div>
       <h1>Example Zupass Integrations</h1>

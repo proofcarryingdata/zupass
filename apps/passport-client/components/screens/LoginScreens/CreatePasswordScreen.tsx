@@ -12,7 +12,7 @@ import { AppContainer } from "../../shared/AppContainer";
 import { NewPasswordForm } from "../../shared/NewPasswordForm";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
-export function CreatePasswordScreen() {
+export function CreatePasswordScreen(): JSX.Element {
   const dispatch = useDispatch();
   const self = useSelf();
   const query = useQuery();
@@ -64,7 +64,7 @@ export function CreatePasswordScreen() {
     }
   }, [dispatch, email, token]);
 
-  const openSkipModal = () =>
+  const openSkipModal = (): void =>
     dispatch({
       type: "set-modal",
       modal: {

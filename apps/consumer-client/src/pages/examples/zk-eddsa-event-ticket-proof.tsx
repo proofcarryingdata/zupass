@@ -19,7 +19,7 @@ import { CodeLink, CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const watermark = generateSnarkMessageHash(
     "consumer-client zk-eddsa-event-ticket-pcd challenge"
   );
@@ -89,7 +89,7 @@ export default function Page() {
   const [pcdStr] = useZupassPopupMessages();
 
   const [valid, setValid] = useState<boolean | undefined>();
-  const onVerified = (valid: boolean) => {
+  const onVerified = (valid: boolean): void => {
     setValid(valid);
   };
 
@@ -121,7 +121,7 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() =>
+          onClick={(): void =>
             openZKEdDSAEventTicketPopup(
               ZUPASS_URL,
               window.location.origin + "#/popup",
@@ -144,7 +144,7 @@ export default function Page() {
           cols={45}
           rows={12}
           value={validEventIdsInput}
-          onChange={(e) => {
+          onChange={(e): void => {
             setValidEventIdsInput(e.target.value);
           }}
         />
@@ -153,7 +153,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealTicketId}
-            onChange={() => {
+            onChange={(): void => {
               setRevealTicketId((checked) => !checked);
             }}
           />
@@ -164,7 +164,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealEventId}
-            onChange={() => {
+            onChange={(): void => {
               setRevealEventId((checked) => !checked);
             }}
           />
@@ -175,7 +175,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealProductId}
-            onChange={() => {
+            onChange={(): void => {
               setRevealProductId((checked) => !checked);
             }}
           />
@@ -186,7 +186,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealTimestampConsumed}
-            onChange={() => {
+            onChange={(): void => {
               setRevealTimestampConsumed((checked) => !checked);
             }}
           />
@@ -197,7 +197,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealTimestampSigned}
-            onChange={() => {
+            onChange={(): void => {
               setRevealTimestampSigned((checked) => !checked);
             }}
           />
@@ -208,7 +208,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealAttendeeSemaphoreId}
-            onChange={() => {
+            onChange={(): void => {
               setRevealAttendeeSemaphoreId((checked) => !checked);
             }}
           />
@@ -219,7 +219,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealIsConsumed}
-            onChange={() => {
+            onChange={(): void => {
               setRevealIsConsumed((checked) => !checked);
             }}
           />
@@ -230,7 +230,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealIsRevoked}
-            onChange={() => {
+            onChange={(): void => {
               setRevealIsRevoked((checked) => !checked);
             }}
           />
@@ -241,7 +241,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealAttendeeEmail}
-            onChange={() => {
+            onChange={(): void => {
               setRevealAttendeeEmail((checked) => !checked);
             }}
           />
@@ -252,7 +252,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealAttendeeName}
-            onChange={() => {
+            onChange={(): void => {
               setRevealAttendeeName((checked) => !checked);
             }}
           />
@@ -263,7 +263,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={revealFieldsUserProvided}
-            onChange={() => {
+            onChange={(): void => {
               setRevealFieldsUserProvided((checked) => !checked);
             }}
           />
@@ -277,7 +277,7 @@ export default function Page() {
           cols={45}
           rows={12}
           value={validDisplayEventIdsInput}
-          onChange={(e) => {
+          onChange={(e): void => {
             setDisplayValidEventIdsInput(e.target.value);
           }}
         />
@@ -287,7 +287,7 @@ export default function Page() {
           cols={45}
           rows={12}
           value={validDisplayProductIdsInput}
-          onChange={(e) => {
+          onChange={(e): void => {
             setDisplayValidProductIdsInput(e.target.value);
           }}
         />
@@ -404,7 +404,7 @@ export function openZKEdDSAEventTicketPopup(
   displayValidEventIds: string[],
   displayValidProductIds: string[],
   externalNullifier?: string
-) {
+): void {
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,

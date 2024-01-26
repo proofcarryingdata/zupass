@@ -122,7 +122,7 @@ export class FeedSubscriptionManager {
       .getSubscriptionsByProvider()
       .entries()) {
       // Copy provider if not already known.
-      const ensureProvider = () => {
+      const ensureProvider = (): void => {
         if (!this.hasProvider(providerUrl)) {
           const otherProvider = other.getProvider(providerUrl);
           if (otherProvider === undefined) return; // other's state is illegal?
@@ -213,7 +213,7 @@ export class FeedSubscriptionManager {
   public async pollSingleSubscription(
     subscription: Subscription,
     credentialManager: CredentialManagerAPI
-  ) {
+  ): Promise<SubscriptionActions[]> {
     const actions = await this.fetchSingleSubscription(
       subscription,
       credentialManager
@@ -272,7 +272,10 @@ export class FeedSubscriptionManager {
   /**
    * Validates that the actions received in a feed are permitted by the user.
    */
-  private validateActions(subscription: Subscription, actions: PCDAction[]) {
+  private validateActions(
+    subscription: Subscription,
+    actions: PCDAction[]
+  ): void {
     const grantedPermissions = subscription.feed.permissions;
     const failedActions: PCDAction[] = [];
     for (const action of actions) {
@@ -478,7 +481,7 @@ export class FeedSubscriptionManager {
     providerUrl: string,
     providerName: string,
     timestampAdded?: number
-  ) {
+  ): SubscriptionProvider {
     if (this.hasProvider(providerUrl)) {
       throw new Error(`provider ${providerUrl} already exists`);
     }

@@ -10,7 +10,7 @@ import { arrayBufferToHexString } from "./utils";
 export class PCDCrypto {
   private sodium: Sodium;
 
-  public static async newInstance() {
+  public static async newInstance(): Promise<PCDCrypto> {
     const sodium = await getSodium();
     return new PCDCrypto(sodium);
   }
@@ -19,7 +19,7 @@ export class PCDCrypto {
     this.sodium = sodium;
   }
 
-  public cryptoHash(str: string) {
+  public cryptoHash(str: string): string {
     return arrayBufferToHexString(this.sodium.crypto_hash(str));
   }
 
@@ -35,7 +35,10 @@ export class PCDCrypto {
    * Combines generateSalt and argon2 function, returns both a random salt
    * and the resulting 32-byte encryption key.
    */
-  public generateSaltAndEncryptionKey(password: Utf8String) {
+  public generateSaltAndEncryptionKey(password: Utf8String): {
+    key: string;
+    salt: string;
+  } {
     const salt = this.generateSalt();
     const key = this.argon2(password, salt, 32);
     return { key, salt };

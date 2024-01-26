@@ -3,7 +3,7 @@ import styled from "styled-components";
 
 export default function Select<Option = unknown>(
   props: React.ComponentProps<typeof ReactSelect<Option>>
-) {
+): JSX.Element {
   return <StyledSelect classNamePrefix="Select" isSearchable {...props} />;
 }
 

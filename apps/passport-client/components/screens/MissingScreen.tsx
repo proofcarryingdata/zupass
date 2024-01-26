@@ -3,7 +3,7 @@ import { CenterColumn, H1, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 
-export function MissingScreen() {
+export function MissingScreen(): JSX.Element {
   const loc = useLocation();
 
   return (

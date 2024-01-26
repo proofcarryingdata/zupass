@@ -86,7 +86,7 @@ run(process.argv[2])
   .then(() => console.log("Built Zupass client"))
   .catch((err) => console.error(err));
 
-async function run(command: string) {
+async function run(command: string): Promise<void> {
   compileHtml();
 
   switch (command) {
@@ -143,7 +143,7 @@ async function run(command: string) {
   }
 }
 
-function compileHtml() {
+function compileHtml(): void {
   const indexHtmlTemplateSource = fs
     .readFileSync(path.join("public", "index.hbs"))
     .toString();

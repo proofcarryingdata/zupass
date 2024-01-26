@@ -30,7 +30,7 @@ export function SemaphoreSignatureProveScreen({
   req
 }: {
   req: PCDGetRequest<typeof SemaphoreSignaturePCDPackage>;
-}) {
+}): JSX.Element {
   // Create a zero-knowledge proof using the identity in DispatchContext
   const self = useSelf();
   const identity = useIdentity();

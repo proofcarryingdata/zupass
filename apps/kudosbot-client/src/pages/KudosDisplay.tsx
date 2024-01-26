@@ -2,10 +2,10 @@ import { useEffect, useState } from "react";
 import SingleKudosDisplay from "../components/SingleKudosDisplay";
 import { KUDOSBOT_LIST_URL } from "../constants";
 
-const KudosDisplay = () => {
+const KudosDisplay = (): JSX.Element => {
   const [rawProofs, setRawProofs] = useState<string[]>([]);
 
-  const fetchAllProofs = async () => {
+  const fetchAllProofs = async (): Promise<void> => {
     const response = await fetch(KUDOSBOT_LIST_URL);
     if (response.status !== 200) {
       return;

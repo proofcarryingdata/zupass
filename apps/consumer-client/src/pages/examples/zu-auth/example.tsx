@@ -10,7 +10,7 @@ import { isLoggedIn } from "./utils";
  * supporting both anonymous and non-anonymous authentication flows making
  * proofs on top of ZK EdDSA Ticket Event PCD.
  */
-export default function ZuAuthExample() {
+export default function ZuAuthExample(): JSX.Element {
   const [authenticated, setAuthenticated] = useState<any | false>(false);
 
   const [fieldsToReveal, setFieldsToReveal] =
@@ -33,7 +33,7 @@ export default function ZuAuthExample() {
   const exampleValidProductIds: string[] = [];
 
   useEffect(() => {
-    (async function () {
+    (async function (): Promise<void> {
       setAuthenticated(await isLoggedIn());
 
       const savedFields = JSON.parse(localStorage.getItem("fieldsToReveal"));
@@ -44,7 +44,7 @@ export default function ZuAuthExample() {
     })();
   }, []);
 
-  function toggleFieldToReveal(fieldName: string) {
+  function toggleFieldToReveal(fieldName: string): void {
     setFieldsToReveal((prevState: EdDSATicketFieldsToReveal) => {
       const revealedFields = {
         ...prevState,
@@ -85,7 +85,7 @@ export default function ZuAuthExample() {
                   type="checkbox"
                   disabled={!!authenticated}
                   checked={fieldsToReveal[fieldName]}
-                  onChange={() => toggleFieldToReveal(fieldName)}
+                  onChange={(): void => toggleFieldToReveal(fieldName)}
                 />
                 {fieldName}
               </label>

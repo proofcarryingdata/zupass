@@ -30,7 +30,7 @@ export function isBrowser(): boolean {
  * More info on: https://stackoverflow.com/questions/47879864/how-can-i-check-if-a-browser-supports-webassembly.
  * @returns true if WASM is supported, false otherwise.
  */
-export function isWebAssemblySupported() {
+export function isWebAssemblySupported(): boolean {
   try {
     if (
       typeof WebAssembly === "object" &&

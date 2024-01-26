@@ -14,7 +14,7 @@ export function useDeserialized(pcd: SerializedPCD): {
   const [error, setError] = useState<Error | undefined>();
 
   useEffect(() => {
-    async function process() {
+    async function process(): Promise<void> {
       try {
         console.log("deserializing", pcd);
         const pcdPackage = pcds.getPackage(pcd.type);

@@ -4,7 +4,7 @@ import { useEffect, useState } from "react";
 export function useSerializedPCD<T extends PCDPackage>(
   proofPackage: T,
   serializedPCD: string
-) {
+): PCDOf<T> | undefined {
   const [pcd, setPCD] = useState<PCDOf<T>>();
 
   useEffect(() => {

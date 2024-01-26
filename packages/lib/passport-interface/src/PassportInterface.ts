@@ -60,7 +60,7 @@ export function getWithoutProvingUrl(
   zupassClientUrl: string,
   returnUrl: string,
   pcdType: string
-) {
+): string {
   const req: PCDGetWithoutProvingRequest = {
     type: PCDRequestType.GetWithoutProving,
     pcdType,
@@ -76,7 +76,7 @@ export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
   pcdType: T["name"],
   args: ArgsOf<T>,
   options?: ProveOptions
-) {
+): string {
   const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
     returnUrl: returnUrl,
@@ -92,7 +92,7 @@ export function constructZupassPcdAddRequestUrl(
   zupassClientUrl: string,
   returnUrl: string,
   pcd: SerializedPCD
-) {
+): string {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
@@ -111,7 +111,7 @@ export function constructZupassPcdProveAndAddRequestUrl<
   args: ArgsOf<T>,
   options?: ProveOptions,
   returnPCD?: boolean
-) {
+): string {
   const req: PCDProveAndAddRequest = {
     type: PCDRequestType.ProveAndAdd,
     returnUrl: returnUrl,

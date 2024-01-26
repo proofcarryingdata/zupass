@@ -38,7 +38,7 @@ const FOLDER_QUERY_PARAM = "folder";
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
-export function HomeScreenImpl() {
+export function HomeScreenImpl(): JSX.Element {
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
@@ -186,7 +186,7 @@ function FolderDetails({
   folder: string;
   onFolderClick: (folder: string) => void;
   noChildFolders: boolean;
-}) {
+}): JSX.Element {
   const onUpOneClick = useCallback(() => {
     onFolderClick(getParentFolder(folder));
   }, [folder, onFolderClick]);
@@ -210,7 +210,7 @@ function FolderCard({
 }: {
   folder: string;
   onFolderClick: (folder: string) => void;
-}) {
+}): JSX.Element {
   const onClick = useCallback(() => {
     onFolderClick(folder);
   }, [folder, onFolderClick]);

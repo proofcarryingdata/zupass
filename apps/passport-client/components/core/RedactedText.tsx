@@ -1,7 +1,7 @@
-import styled, { css } from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 
 export const RedactedText = styled.div<{ redacted: boolean }>`
-  ${({ redacted }) =>
+  ${({ redacted }): FlattenSimpleInterpolation =>
     redacted
       ? css`
           color: transparent;

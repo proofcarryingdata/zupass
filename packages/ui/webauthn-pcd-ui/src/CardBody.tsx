@@ -12,7 +12,7 @@ export const WebAuthnPCDUI: PCDUI<WebAuthnPCD> = {
   renderCardBody: WebAuthnCardBody
 };
 
-function WebAuthnCardBody({ pcd }: { pcd: WebAuthnPCD }) {
+function WebAuthnCardBody({ pcd }: { pcd: WebAuthnPCD }): JSX.Element {
   return (
     <Container>
       <p>

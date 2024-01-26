@@ -21,7 +21,7 @@ export const EdDSAFrogPCDUI: PCDUI<EdDSAFrogPCD> = {
   getHeader: Header
 };
 
-function Header({ pcd }: { pcd: EdDSAFrogPCD }) {
+function Header({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
   const frogData = useMemo(() => getEdDSAFrogData(pcd), [pcd]);
   if (!frogData) {
     return <>Frog</>;
@@ -56,7 +56,7 @@ function Header({ pcd }: { pcd: EdDSAFrogPCD }) {
   );
 }
 
-function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
+function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
   const frogData = useMemo(() => getEdDSAFrogData(pcd), [pcd]);
   const [showMore, setShowMore] = useState(false);
   const [showPCD, setShowPCD] = useState(false);
@@ -71,7 +71,9 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
 
   return showPCD ? (
     <Container>
-      <LinkButton onClick={() => setShowPCD(false)}>View as frog</LinkButton>
+      <LinkButton onClick={(): void => setShowPCD(false)}>
+        View as frog
+      </LinkButton>
       <FrogQR pcd={pcd} />
       <CopyFrogPCD pcd={pcd} />
     </Container>
@@ -79,7 +81,7 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
     <Container>
       <LinkButton
         style={{ textAlign: "center" }}
-        onClick={() => setShowPCD(true)}
+        onClick={(): void => setShowPCD(true)}
       >
         View as proof&#x2011;carrying data
       </LinkButton>
@@ -107,7 +109,7 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }) {
         />
         <FrogAttribute label="BTY" title="Beauty" value={frogData.beauty} />
       </FrogInfo>
-      <LinkButton onClick={() => setShowMore(!showMore)}>
+      <LinkButton onClick={(): void => setShowMore(!showMore)}>
         {showMore ? "Collapse" : "See more"}
       </LinkButton>
       {showMore && (
@@ -139,7 +141,7 @@ function FrogAttribute({
   label: string;
   title: string;
   value: string | number | undefined;
-}) {
+}): JSX.Element {
   return (
     <Attribute>
       <AttrTitle title={title}>{label}</AttrTitle>
@@ -150,7 +152,7 @@ function FrogAttribute({
   );
 }
 
-function attrColor(value: string | number | undefined) {
+function attrColor(value: string | number | undefined): string | undefined {
   if (typeof value === "number") {
     if (value <= 3) {
       return "#a95940";
@@ -161,14 +163,16 @@ function attrColor(value: string | number | undefined) {
   }
 }
 
-function formatAttrValue(value: string | number | undefined) {
+function formatAttrValue(
+  value: string | number | undefined
+): string | undefined {
   if (typeof value === "number") {
     return String(value).padStart(2, "0");
   }
   return value;
 }
 
-function temperamentValue(temperament: Temperament) {
+function temperamentValue(temperament: Temperament): string {
   switch (temperament) {
     case Temperament.UNKNOWN:
       return "???";
@@ -179,11 +183,11 @@ function temperamentValue(temperament: Temperament) {
   }
 }
 
-function biomeValue(biome: Biome) {
+function biomeValue(biome: Biome): string {
   return _.startCase(Biome[biome]);
 }
 
-function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }) {
+function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
   const [hex, setHex] = useState("");
   const generate = useCallback(async () => {
     const serialized = await EdDSAFrogPCDPackage.serialize(pcd);
@@ -196,7 +200,7 @@ function FrogQR({ pcd }: { pcd: EdDSAFrogPCD }) {
   return <HexContainer>{hex}</HexContainer>;
 }
 
-function CopyFrogPCD({ pcd }: { pcd: EdDSAFrogPCD }) {
+function CopyFrogPCD({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
   const [copied, setCopied] = useState(false);
   const onClick = useCallback(async () => {
     const serialized = await EdDSAFrogPCDPackage.serialize(pcd);

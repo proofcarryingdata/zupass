@@ -28,7 +28,7 @@ run(process.argv[2])
   .then(() => console.log("Built consumer client"))
   .catch((err) => console.error(err));
 
-async function run(command: string) {
+async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
       const clientRes = await build({ ...consumerClientAppOpts, minify: true });

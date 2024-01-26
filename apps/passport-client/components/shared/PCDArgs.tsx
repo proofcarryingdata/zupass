@@ -50,7 +50,7 @@ export function PCDArgs<T extends PCDPackage>({
   args: ArgsOf<T>;
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   options?: ArgsDisplayOptions<ArgsOf<T>>;
-}) {
+}): JSX.Element {
   const [showAll, setShowAll] = useState(false);
   const [visible, hidden] = _.partition(
     Object.entries(args),
@@ -70,7 +70,9 @@ export function PCDArgs<T extends PCDPackage>({
       ))}
       {hidden.length > 0 && (
         <>
-          <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+          <ShowMoreButton
+            onClick={(): void => setShowAll((showAll) => !showAll)}
+          >
             {showAll ? "▼ Hide" : "▶ Show"} {hidden.length} more inputs
           </ShowMoreButton>
           {
@@ -107,7 +109,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   defaultArg?: DisplayArg<typeof arg>;
   hidden?: boolean;
-}) {
+}): JSX.Element {
   const setArg = React.useCallback(
     (value: (typeof arg)["value"]) => {
       setArgs((args) => ({
@@ -176,7 +178,7 @@ export function StringArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<StringArgument>) {
+}: ArgInputProps<StringArgument>): JSX.Element {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setArg(e.target.value);
@@ -199,7 +201,7 @@ export function NumberArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<NumberArgument>) {
+}: ArgInputProps<NumberArgument>): JSX.Element {
   const [valid, setValid] = useState(true);
   const validator = useCallback((arg: string): boolean => {
     try {
@@ -242,7 +244,7 @@ export function BigIntArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<BigIntArgument>) {
+}: ArgInputProps<BigIntArgument>): JSX.Element {
   const [valid, setValid] = useState(true);
   const validator = useCallback((arg: string): boolean => {
     try {
@@ -284,7 +286,7 @@ export function BooleanArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<BooleanArgument>) {
+}: ArgInputProps<BooleanArgument>): JSX.Element {
   const onChange = useCallback(
     (e: React.ChangeEvent<HTMLInputElement>) => {
       setArg(e.target.checked);
@@ -312,7 +314,7 @@ export function ObjectArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<ObjectArgument<any>>) {
+}: ArgInputProps<ObjectArgument<any>>): JSX.Element {
   const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
   const [loaded, setLoaded] = useState(false);
 
@@ -360,7 +362,7 @@ function ToggleListArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<ToogleListArgument<ToggleList>>) {
+}: ArgInputProps<ToogleListArgument<ToggleList>>): JSX.Element {
   const [showAll, setShowAll] = useState(arg.userProvided);
 
   const type = isRevealListArgument(arg) ? "reveal" : "default";
@@ -408,7 +410,9 @@ function ToggleListArgInput({
       {...rest}
       end={
         entries.length ? (
-          <ShowMoreButton onClick={() => setShowAll((showAll) => !showAll)}>
+          <ShowMoreButton
+            onClick={(): void => setShowAll((showAll) => !showAll)}
+          >
             {showAll ? "▲" : "▼"}
           </ShowMoreButton>
         ) : undefined
@@ -422,7 +426,7 @@ function ToggleListArgInput({
               label={getLabel(key)}
               onClick={
                 arg.userProvided
-                  ? () => setArg({ ...arg.value, [key]: !value })
+                  ? (): void => setArg({ ...arg.value, [key]: !value })
                   : undefined
               }
               checked={value}
@@ -440,7 +444,7 @@ export function PCDArgInput({
   setArg,
   isValid,
   ...rest
-}: ArgInputProps<PCDArgument>) {
+}: ArgInputProps<PCDArgument>): JSX.Element {
   const pcdCollection = usePCDCollection();
   const relevantPCDs = useMemo(
     () =>
@@ -532,7 +536,7 @@ function ArgContainer({
   children?: React.ReactNode;
   /* optional element place at the end */
   end?: React.ReactNode;
-}) {
+}): JSX.Element {
   return (
     <ArgItemContainer hidden={hidden} error={!!error}>
       {!hideIcon && (
@@ -610,13 +614,13 @@ const End = styled.div`
 const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   border-radius: 16px;
   border: 1px solid;
-  border-color: ${({ error }) =>
+  border-color: ${({ error }): string =>
     error ? "var(--danger)" : "var(--primary-lite)"};
   background-color: rgba(var(--white-rgb), 0.01);
   align-items: center;
   padding: 8px 16px;
   gap: 16px;
-  display: ${({ hidden }) => (hidden ? "none" : "flex")};
+  display: ${({ hidden }): string => (hidden ? "none" : "flex")};
 `;
 
 const ArgItemIcon = styled.img`

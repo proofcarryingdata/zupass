@@ -6,7 +6,11 @@ export const SemaphoreIdentityPCDUI: PCDUI<SemaphoreIdentityPCD> = {
   renderCardBody: SemaphoreIdentityCardBody
 };
 
-function SemaphoreIdentityCardBody({ pcd }: { pcd: SemaphoreIdentityPCD }) {
+function SemaphoreIdentityCardBody({
+  pcd
+}: {
+  pcd: SemaphoreIdentityPCD;
+}): JSX.Element {
   return (
     <Container>
       <p>

@@ -17,7 +17,7 @@ import { CenterColumn } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
 
-export function LoginInterstitialScreen() {
+export function LoginInterstitialScreen(): JSX.Element {
   useSyncE2EEStorage();
   const navigate = useNavigate();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();

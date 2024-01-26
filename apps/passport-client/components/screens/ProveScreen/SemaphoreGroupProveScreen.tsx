@@ -28,7 +28,7 @@ export function SemaphoreGroupProveScreen({
   req
 }: {
   req: PCDGetRequest<typeof SemaphoreGroupPCDPackage>;
-}) {
+}): JSX.Element {
   const [error, setError] = useState<string | undefined>();
   const [group, setGroup] = useState<SerializedSemaphoreGroup | null>(null);
   const identity = useIdentity();
@@ -36,7 +36,7 @@ export function SemaphoreGroupProveScreen({
   const isLoading = group === null;
 
   useEffect(() => {
-    const fetchGroup = async () => {
+    const fetchGroup = async (): Promise<void> => {
       console.log("fetching semaphore group", req.args.group.remoteUrl);
       const semaphoreGroupResult = await requestSemaphoreGroup(
         req.args.group.remoteUrl

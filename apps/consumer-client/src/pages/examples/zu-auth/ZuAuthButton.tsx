@@ -64,11 +64,11 @@ export default function ZuAuthButton({
   validProductIds,
   authenticated,
   setAuthenticated
-}: ZuAuthButtonProps) {
+}: ZuAuthButtonProps): JSX.Element {
   const [pcdStr] = useZupassPopupMessages();
 
   useEffect(() => {
-    (async function requestAuthentication() {
+    (async function requestAuthentication(): Promise<void> {
       if (pcdStr) {
         const authenticated = await authenticate(pcdStr);
 
@@ -81,7 +81,7 @@ export default function ZuAuthButton({
     <button
       onClick={
         !authenticated
-          ? async () => {
+          ? async (): Promise<void> => {
               openZKEdDSAEventTicketPopup(
                 ticketFieldsToReveal,
                 BigInt(await generateNonce()),
@@ -89,7 +89,7 @@ export default function ZuAuthButton({
                 validProductIds
               );
             }
-          : async () => {
+          : async (): Promise<void> => {
               await logout();
 
               setAuthenticated(false);

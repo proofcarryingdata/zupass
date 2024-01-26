@@ -14,7 +14,13 @@ const args: WebAuthnPCDArgs = {
 };
 
 jest.mock("@simplewebauthn/browser", () => ({
-  startRegistration: async () => ({
+  startRegistration: async (): Promise<{
+    id: string;
+    rawId: string;
+    response: { clientDataJSON: string; attestationObject: string };
+    clientExtensionResults: object;
+    type: string;
+  }> => ({
     id: "my-credential",
     rawId: "my-credential",
     response: {
@@ -24,7 +30,13 @@ jest.mock("@simplewebauthn/browser", () => ({
     clientExtensionResults: {},
     type: "public-key"
   }),
-  startAuthentication: async () => ({
+  startAuthentication: async (): Promise<{
+    id: string;
+    rawId: string;
+    response: { clientDataJSON: string; attestationObject: string };
+    clientExtensionResults: object;
+    type: string;
+  }> => ({
     id: "my-credential",
     rawId: "my-credential",
     response: {
@@ -40,16 +52,16 @@ jest.mock("@simplewebauthn/server", () => ({
   ...jest.requireActual("@simplewebauthn/server"),
   verifyAuthenticationResponse: async ({
     expectedChallenge
-  }: VerifyAuthenticationResponseOpts) => ({
+  }: VerifyAuthenticationResponseOpts): Promise<{ verified: boolean }> => ({
     verified: expectedChallenge === "valid_challenge"
   })
 }));
 
 // Mock out wasm-based utils function
 jest.mock("@pcd/passport-crypto", () => ({
-  arrayBufferToBase64: (arrayBuffer: ArrayBuffer) =>
+  arrayBufferToBase64: (arrayBuffer: ArrayBuffer): string =>
     btoa(String.fromCharCode(...new Uint8Array(arrayBuffer))),
-  base64ToArrayBuffer: (base64String: string) =>
+  base64ToArrayBuffer: (base64String: string): Uint8Array =>
     Uint8Array.from(atob(base64String), (c) => c.charCodeAt(0))
 }));
 

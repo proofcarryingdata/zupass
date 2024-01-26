@@ -37,10 +37,10 @@ export function NewPasswordForm({
   autoFocus,
   setError,
   error
-}: NewPasswordForm) {
+}: NewPasswordForm): JSX.Element {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
-  const checkPasswordAndSubmit = async (e: UIEvent) => {
+  const checkPasswordAndSubmit = async (e: UIEvent): Promise<void> => {
     e.preventDefault();
     if (password === "") {
       setError("Enter a password");
@@ -74,12 +74,12 @@ export function NewPasswordForm({
       <input hidden readOnly value={email} />
       <PasswordInput
         value={password}
-        setValue={(value) => {
+        setValue={(value): void => {
           setError("");
           setPassword(value);
         }}
         placeholder={passwordInputPlaceholder || "Password"}
-        onEnter={(e) => {
+        onEnter={(e): void => {
           e.preventDefault();
           confirmPasswordRef.current.focus();
         }}
@@ -93,7 +93,7 @@ export function NewPasswordForm({
         inputRef={confirmPasswordRef}
         onEnter={checkPasswordAndSubmit}
         value={confirmPassword}
-        setValue={(value) => {
+        setValue={(value): void => {
           setError("");
           setConfirmPassword(value);
         }}

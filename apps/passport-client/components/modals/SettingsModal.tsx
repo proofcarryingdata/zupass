@@ -9,7 +9,7 @@ export function SettingsModal({
   isProveOrAddScreen
 }: {
   isProveOrAddScreen: boolean;
-}) {
+}): JSX.Element {
   const dispatch = useDispatch();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();

@@ -15,7 +15,11 @@ export const EthereumOwnershipPCDUI: PCDUI<EthereumOwnershipPCD> = {
   renderCardBody: EthereumOwnershipCardBody
 };
 
-function EthereumOwnershipCardBody({ pcd }: { pcd: EthereumOwnershipPCD }) {
+function EthereumOwnershipCardBody({
+  pcd
+}: {
+  pcd: EthereumOwnershipPCD;
+}): JSX.Element {
   const [identityCommitment, setIdentityCommitment] =
     useState("<deserializing>");
 

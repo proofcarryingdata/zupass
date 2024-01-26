@@ -9,7 +9,7 @@ import { Button, H2 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { PrivacyNotice } from "../shared/PrivacyNotice";
 
-export function PrivacyNoticeModal() {
+export function PrivacyNoticeModal(): JSX.Element {
   const dispatch = useDispatch();
   const identity = useIdentity();
   const [isSubmitting, setIsSubmitting] = useState<boolean>(false);

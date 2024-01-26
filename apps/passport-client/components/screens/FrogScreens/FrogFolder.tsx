@@ -23,11 +23,11 @@ export function FrogFolder({
 }: {
   onFolderClick: (folder: string) => void;
   Container: React.ComponentType<any>;
-}) {
+}): JSX.Element {
   const fetchTimestamp = useFetchTimestamp();
 
   return (
-    <Container onClick={() => onFolderClick(FrogCryptoFolderName)}>
+    <Container onClick={(): void => onFolderClick(FrogCryptoFolderName)}>
       <img
         draggable="false"
         src="/images/frogs/pixel_frog.png"
@@ -91,7 +91,7 @@ function useFetchTimestamp(): number | null {
 /**
  * A countdown to a hard coded game start date.
  */
-function CountDown({ timestamp }: { timestamp: number }) {
+function CountDown({ timestamp }: { timestamp: number }): JSX.Element {
   const end = useMemo(() => {
     return new Date(timestamp);
   }, [timestamp]);
@@ -184,6 +184,6 @@ const bounceKeyframes = keyframes`
 `;
 
 const BounceText = styled.span<{ delay: number }>`
-  animation: ${bounceKeyframes} 5s infinite ${(p) => p.delay}s;
-  -webkit-animation: ${bounceKeyframes} 5s infinite ${(p) => p.delay}s;
+  animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
+  -webkit-animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
 `;

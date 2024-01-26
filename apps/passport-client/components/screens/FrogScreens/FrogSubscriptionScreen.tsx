@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import styled from "styled-components";
+import { TypewriterClass } from "typewriter-effect";
 import {
   useIsSyncSettled,
   useSelf,
@@ -24,7 +25,7 @@ export const FROM_SUBSCRIPTION_PARAM_KEY = "fromFrogSubscription";
 /**
  * A screen where the user can subscribe to new frog feeds via deeplink.
  */
-export function FrogSubscriptionScreen() {
+export function FrogSubscriptionScreen(): JSX.Element {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
 
@@ -81,14 +82,14 @@ export function FrogSubscriptionScreen() {
     <AppContainer bg="gray">
       <Container>
         <TypistText
-          onInit={(typewriter) =>
+          onInit={(typewriter): TypewriterClass =>
             typewriter.typeString(
               "You have chosen the path less traveled. What do you desire? Speak, and they shall be yours"
             )
           }
         >
           <Form
-            onSubmit={(e) => {
+            onSubmit={(e): void => {
               e.preventDefault();
               window.location.href = `/#/frogscriptions/${e.target["feedCode"]?.value}`;
             }}
@@ -135,7 +136,7 @@ const CHEAT_CODE_ACTIVATION_SEQUENCE = [
 /**
  * A ambient module that listens for cheatcode and redirect user to frogscription
  */
-export function useCheatCodeActivation() {
+export function useCheatCodeActivation(): void {
   const redirect = useCallback(() => {
     window.location.replace(`/#/frogscriptions`);
   }, []);
@@ -183,7 +184,7 @@ export function useCheatCodeActivation() {
   }, [ref]);
 
   useEffect(() => {
-    const listener = (e) => {
+    const listener = (e): void => {
       checkProgress(e.key);
     };
     document.addEventListener("keydown", listener);

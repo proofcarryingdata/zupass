@@ -1,7 +1,7 @@
 import styled from "styled-components";
 import { ScreenLoader } from "./ScreenLoader";
 
-export function SyncingPCDs() {
+export function SyncingPCDs(): JSX.Element {
   return (
     <SyncingPCDsContainer>
       <div>

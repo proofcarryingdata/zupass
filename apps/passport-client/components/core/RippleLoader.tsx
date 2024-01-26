@@ -1,6 +1,6 @@
 // See CSS in global-zupass.css
 
-export const RippleLoader = () => {
+export const RippleLoader = (): JSX.Element => {
   return (
     <div className="loaderWrapper">
       <div className="loader">

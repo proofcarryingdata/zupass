@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/explicit-function-return-type */
 import { S3Client } from "@aws-sdk/client-s3";
 import { exec } from "child_process";
 import Conf from "conf";
