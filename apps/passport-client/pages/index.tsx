@@ -76,14 +76,15 @@ class App extends React.Component<object, AppState> {
   activePollTimout: NodeJS.Timeout | undefined = undefined;
 
   stateEmitter: StateEmitter = new Emitter();
-  update = (diff: Pick<AppState, keyof AppState>) => {
+  update = (diff: Pick<AppState, keyof AppState>): void => {
     this.setState(diff, () => {
       this.stateEmitter.emit(this.state);
     });
   };
 
-  dispatch = (action: Action) => dispatch(action, this.state, this.update);
-  componentDidMount() {
+  dispatch = (action: Action): Promise<void> =>
+    dispatch(action, this.state, this.update);
+  componentDidMount(): void {
     loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
     setupBroadcastChannel(this.dispatch);
     setupUsingLaserScanning();
@@ -98,7 +99,7 @@ class App extends React.Component<object, AppState> {
     update: this.update
   };
 
-  render() {
+  render(): JSX.Element {
     const { state } = this;
 
     if (!state) {
@@ -129,7 +130,7 @@ class App extends React.Component<object, AppState> {
   }
 
   // Create a React error boundary
-  static getDerivedStateFromError(error: Error) {
+  static getDerivedStateFromError(error: Error): Partial<AppState> {
     console.log("App caught error", error);
     const { message, stack } = error;
     let shortStack = stack.substring(0, 280);
@@ -139,7 +140,7 @@ class App extends React.Component<object, AppState> {
     } as Partial<AppState>;
   }
 
-  startBackgroundJobs = () => {
+  startBackgroundJobs = (): void => {
     console.log("[JOB] Starting background jobs...");
     document.addEventListener("visibilitychange", () => {
       this.setupPolling();
@@ -150,7 +151,7 @@ class App extends React.Component<object, AppState> {
     this.generateCheckinCredential();
   };
 
-  generateCheckinCredential = async () => {
+  generateCheckinCredential = async (): Promise<void> => {
     // This ensures that the check-in credential is pre-cached before the
     // first check-in attempt.
     try {
@@ -160,12 +161,12 @@ class App extends React.Component<object, AppState> {
     }
   };
 
-  jobCheckConnectivity = async () => {
+  jobCheckConnectivity = async (): Promise<void> => {
     window.addEventListener("offline", () => this.setIsOffline(true));
     window.addEventListener("online", () => this.setIsOffline(false));
   };
 
-  setIsOffline(offline: boolean) {
+  setIsOffline(offline: boolean): void {
     console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
     this.update({
       ...this.state,
@@ -197,7 +198,7 @@ class App extends React.Component<object, AppState> {
    * scheduled.  It may happen immediately after the window becomes visible,
    * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
    */
-  setupPolling = async () => {
+  setupPolling = async (): Promise<void> => {
     if (!document.hidden) {
       if (!this.activePollTimout) {
         const nextPollDelay = Math.max(
@@ -225,7 +226,7 @@ class App extends React.Component<object, AppState> {
    * Periodic job for polling the server.  Is scheduled by setupPolling, and
    * will reschedule itself in the same way.
    */
-  jobPollServerUpdates = async () => {
+  jobPollServerUpdates = async (): Promise<void> => {
     // Mark that poll has started.
     console.log("[JOB] polling server for updates");
     this.activePollTimout = undefined;
@@ -239,7 +240,7 @@ class App extends React.Component<object, AppState> {
     }
   };
 
-  doPollServerUpdates = async () => {
+  doPollServerUpdates = async (): Promise<void> => {
     if (
       !this.state?.self ||
       !!this.state.userInvalid ||
@@ -267,12 +268,12 @@ class App extends React.Component<object, AppState> {
     }
   };
 
-  async startJobSyncOfflineCheckins() {
+  async startJobSyncOfflineCheckins(): Promise<void> {
     await this.jobSyncOfflineCheckins();
     setInterval(this.jobSyncOfflineCheckins, 1000 * 60);
   }
 
-  jobSyncOfflineCheckins = async () => {
+  jobSyncOfflineCheckins = async (): Promise<void> => {
     if (!this.state.self || this.state.offline) {
       return;
     }
@@ -317,7 +318,7 @@ class App extends React.Component<object, AppState> {
 
 const Router = React.memo(RouterImpl);
 
-function RouterImpl() {
+function RouterImpl(): JSX.Element {
   return (
     <HashRouter>
       <Routes>
@@ -381,7 +382,7 @@ function RouterImpl() {
  * on the scan screen so the laser scanner can be used. This flag will be
  * exclusively used on the Devconnect laser scanning devices.
  */
-function setupUsingLaserScanning() {
+function setupUsingLaserScanning(): void {
   const queryParams = new URLSearchParams(window.location.search.slice(1));
   const laserQueryParam = queryParams.get("laser");
   if (laserQueryParam === "true") {

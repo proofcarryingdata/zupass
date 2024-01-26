@@ -1,7 +1,13 @@
 import { icons } from "@pcd/passport-ui";
 import styled from "styled-components";
 
-export function Spinner({ text, show }: { text: string; show: boolean }) {
+export function Spinner({
+  text,
+  show
+}: {
+  text: string;
+  show: boolean;
+}): JSX.Element {
   return (
     <SpinnerWithText>
       <SpinnerContainer>

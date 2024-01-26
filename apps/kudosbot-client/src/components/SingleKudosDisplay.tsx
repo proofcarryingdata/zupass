@@ -2,7 +2,10 @@ import { useSemaphoreSignatureProof } from "@pcd/passport-interface";
 import { useState } from "react";
 import { CollapsableCode } from "./Core";
 
-const SingleKudosDisplay = (props: { proof: string; id: number }) => {
+const SingleKudosDisplay = (props: {
+  proof: string;
+  id: number;
+}): JSX.Element => {
   const [signatureProofValid, setSignatureProofValid] = useState<
     boolean | undefined
   >();

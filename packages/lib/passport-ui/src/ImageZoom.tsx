@@ -5,7 +5,7 @@ type ImageZoomProps = ComponentProps<"img"> & {
   options?: ZoomOptions;
 };
 
-export function ImageZoom({ options, ...props }: ImageZoomProps) {
+export function ImageZoom({ options, ...props }: ImageZoomProps): JSX.Element {
   const zoomRef = useRef<Zoom | null>(null);
 
   const getZoom = useCallback(() => {

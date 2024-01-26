@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { useDispatch } from "../../src/appHooks";
 import { Button, H2 } from "../core";
 
-export function AnotherDeviceChangedPasswordModal() {
+export function AnotherDeviceChangedPasswordModal(): JSX.Element {
   const dispatch = useDispatch();
 
   const onClick = useCallback(() => {

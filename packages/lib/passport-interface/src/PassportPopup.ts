@@ -4,13 +4,13 @@ import { useEffect, useState } from "react";
  * React hook that listens for PCDs and PendingPCDs from a Zupass popup window
  * using message passing and event listeners.
  */
-export function useZupassPopupMessages() {
+export function useZupassPopupMessages(): [string, string] {
   const [pcdStr, setPCDStr] = useState("");
   const [pendingPCDStr, setPendingPCDStr] = useState("");
 
   // Listen for PCDs coming back from the Zupass popup
   useEffect(() => {
-    function receiveMessage(ev: MessageEvent<any>) {
+    function receiveMessage(ev: MessageEvent<any>): void {
       // Extensions including Metamask apparently send messages to every page. Ignore those.
       if (ev.data.encodedPCD) {
         console.log("Received PCD", ev.data.encodedPCD);
@@ -21,7 +21,7 @@ export function useZupassPopupMessages() {
       }
     }
     window.addEventListener("message", receiveMessage, false);
-    return () => window.removeEventListener("message", receiveMessage);
+    return (): void => window.removeEventListener("message", receiveMessage);
   }, []);
 
   return [pcdStr, pendingPCDStr];
@@ -35,7 +35,7 @@ export function useZupassPopupMessages() {
  * that can be processed by the `useZupassPopupMessages` hook. PendingPCD requests
  * can further be processed by `usePendingPCD` and `usePCDMultiplexer`.
  */
-export function useZupassPopupSetup() {
+export function useZupassPopupSetup(): string {
   // Usually this page redirects immediately. If not, show an error.
   const [error, setError] = useState("");
 
@@ -99,7 +99,7 @@ export function useZupassPopupSetup() {
  * and popupUrl, which is the route where the useZupassPopupSetup hook is being
  * served from.
  */
-export function openZupassPopup(popupUrl: string, proofUrl: string) {
+export function openZupassPopup(popupUrl: string, proofUrl: string): void {
   const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
   window.open(url, "_blank", "width=450,height=600,top=100,popup");
 }

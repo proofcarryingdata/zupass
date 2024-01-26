@@ -12,7 +12,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
-export function ScanScreen() {
+export function ScanScreen(): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
@@ -22,7 +22,7 @@ export function ScanScreen() {
       {!usingLaserScanner && (
         <>
           <QrReader
-            onResult={(result, error) => {
+            onResult={(result, error): void => {
               if (result != null) {
                 console.log(
                   `Got result, considering redirect`,
@@ -73,7 +73,7 @@ export function ScanScreen() {
   );
 }
 
-function CloseButton() {
+function CloseButton(): JSX.Element {
   const nav = useNavigate();
   const onClose = useCallback(() => nav("/"), [nav]);
   return (
@@ -83,7 +83,7 @@ function CloseButton() {
   );
 }
 
-function ViewFinder() {
+function ViewFinder(): JSX.Element {
   return (
     <ScanOverlayWrap>
       <CloseButton />
@@ -128,15 +128,15 @@ const Guidebox = styled.div`
 
 const Corner = styled.div<{ top?: boolean; left?: boolean }>`
   position: absolute;
-  ${(p) => (p.top ? "top: 0" : "bottom: 0")};
-  ${(p) => (p.left ? "left: 0" : "right: 0")};
+  ${(p): string => (p.top ? "top: 0" : "bottom: 0")};
+  ${(p): string => (p.left ? "left: 0" : "right: 0")};
   border: 2px solid white;
-  ${(p) => (p.left ? "border-right: none" : "border-left: none")};
-  ${(p) => (p.top ? "border-bottom: none" : "border-top: none")};
+  ${(p): string => (p.left ? "border-right: none" : "border-left: none")};
+  ${(p): string => (p.top ? "border-bottom: none" : "border-top: none")};
   width: 16px;
   height: 16px;
-  ${(p) => (p.left && p.top ? "border-radius: 8px 0 0 0;" : "")};
-  ${(p) => (p.left && !p.top ? "border-radius: 0 0 0 8px;" : "")};
-  ${(p) => (!p.left && p.top ? "border-radius: 0 8px 0 0;" : "")};
-  ${(p) => (!p.left && !p.top ? "border-radius: 0 0 8px 0;" : "")};
+  ${(p): string => (p.left && p.top ? "border-radius: 8px 0 0 0;" : "")};
+  ${(p): string => (p.left && !p.top ? "border-radius: 0 0 0 8px;" : "")};
+  ${(p): string => (!p.left && p.top ? "border-radius: 0 8px 0 0;" : "")};
+  ${(p): string => (!p.left && !p.top ? "border-radius: 0 0 8px 0;" : "")};
 `;

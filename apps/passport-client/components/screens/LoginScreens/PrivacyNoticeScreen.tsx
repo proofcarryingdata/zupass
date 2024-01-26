@@ -5,7 +5,7 @@ import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { PrivacyNotice } from "../../shared/PrivacyNotice";
 
-export function PrivacyNoticeScreen() {
+export function PrivacyNoticeScreen(): JSX.Element {
   const query = useQuery();
   const email = query.get("email");
   const token = query.get("token");

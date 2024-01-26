@@ -31,12 +31,12 @@ export function PasswordInput({
   showStrengthProgress,
   inputRef,
   onEnter
-}: SetPasswordInputProps) {
+}: SetPasswordInputProps): JSX.Element {
   return (
     <Container>
       <PasswordBigInput
         $showStrengthProgress={showStrengthProgress}
-        onKeyDown={(e) => {
+        onKeyDown={(e): void => {
           if (e.key === "Enter") {
             onEnter?.(e);
           }
@@ -46,7 +46,7 @@ export function PasswordInput({
         type={revealPassword ? "text" : "password"}
         placeholder={placeholder}
         value={value}
-        onChange={(e) => setValue(e.target.value)}
+        onChange={(e): void => setValue(e.target.value)}
       />
       {showStrengthProgress && (
         <PasswordStrengthProgressContainer>
@@ -59,7 +59,7 @@ export function PasswordInput({
           src={revealPassword ? icons.eyeClosed : icons.eyeOpen}
           width={24}
           height={24}
-          onClick={() => setRevealPassword((curr) => !curr)}
+          onClick={(): void => setRevealPassword((curr) => !curr)}
         />
       </ShowHidePasswordIconContainer>
     </Container>
@@ -68,8 +68,10 @@ export function PasswordInput({
 
 const PasswordBigInput = styled(BigInput)<{ $showStrengthProgress?: boolean }>`
   /* To account for show/hide password icon. We add it to both sides to preserve center text alignment. */
-  padding-right: ${(props) => (props.$showStrengthProgress ? "64px" : "40px")};
-  padding-left: ${(props) => (props.$showStrengthProgress ? "64px" : "40px")};
+  padding-right: ${(props): string =>
+    props.$showStrengthProgress ? "64px" : "40px"};
+  padding-left: ${(props): string =>
+    props.$showStrengthProgress ? "64px" : "40px"};
 `;
 
 const Container = styled.div`

@@ -13,7 +13,7 @@ function AppHeaderImpl({
 }: {
   children?: React.ReactNode;
   isProveOrAddScreen?: boolean;
-}) {
+}): JSX.Element {
   const dispatch = useDispatch();
 
   const setModal = useCallback(

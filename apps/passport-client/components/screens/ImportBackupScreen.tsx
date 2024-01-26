@@ -16,7 +16,7 @@ import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 
-export function useImportScreenState() {
+export function useImportScreenState(): { imported?: number; error?: string } {
   return useSelector<AppState["importScreen"]>((s) => s.importScreen, []);
 }
 
@@ -45,7 +45,7 @@ type ImportState =
   // The selected file is not valid.
   | { state: "invalid-file" };
 
-export function ImportBackupScreen() {
+export function ImportBackupScreen(): JSX.Element {
   // We intentionally avoid the use of useSyncE2EEStorage here, to avoid
   // background changes to the PCD collection during import
 
@@ -86,7 +86,7 @@ export function ImportBackupScreen() {
   // Responds to the user having selected a file to import, or to changes in
   // the user's current PCD collection.
   useEffect(() => {
-    (async () => {
+    (async (): Promise<void> => {
       // If a file has been selected, and isn't invalid or already imported
       if (
         filesContent.length > 0 &&
@@ -135,7 +135,7 @@ export function ImportBackupScreen() {
           // Before importing, we want to filter the PCDs down to those which
           // are valid to import, so we can tell the user how many new PCDs to
           // expect
-          const preImportFilter = (pcd: PCD) => {
+          const preImportFilter = (pcd: PCD): boolean => {
             // If the user has a semaphore identity PCD, don't import another
             if (
               userHasSemaphoreIdentity &&
@@ -263,7 +263,9 @@ export function ImportBackupScreen() {
                 To begin, select a backup file by clicking the button below.
               </p>
               <Spacer h={8} />
-              <Button onClick={() => openFilePicker()}>Select File</Button>
+              <Button onClick={(): void => openFilePicker()}>
+                Select File
+              </Button>
               <Spacer h={8} />
             </>
           )}
@@ -276,7 +278,9 @@ export function ImportBackupScreen() {
                     already have. You may try to restore from another backup.
                   </p>
                   <Spacer h={8} />
-                  <Button onClick={() => openFilePicker()}>Select File</Button>
+                  <Button onClick={(): void => openFilePicker()}>
+                    Select File
+                  </Button>
                   <Spacer h={8} />
                 </>
               )}
@@ -301,7 +305,7 @@ export function ImportBackupScreen() {
                                 checked={importState.selectedFolders.has(
                                   folder
                                 )}
-                                onChange={() => toggleFolder(folder)}
+                                onChange={(): void => toggleFolder(folder)}
                               ></input>
                               <span>
                                 {folder === "" ? "Main Folder" : folder} (
@@ -360,7 +364,9 @@ export function ImportBackupScreen() {
                 select a valid Zupass backup to import your data from.
               </p>
               <Spacer h={8} />
-              <Button onClick={() => openFilePicker()}>Select File</Button>
+              <Button onClick={(): void => openFilePicker()}>
+                Select File
+              </Button>
               <Spacer h={8} />
             </>
           )}

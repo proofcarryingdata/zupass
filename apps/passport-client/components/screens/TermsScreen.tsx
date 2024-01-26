@@ -1,7 +1,7 @@
 import styled, { createGlobalStyle } from "styled-components";
 import { PrivacyNoticeText } from "../shared/PrivacyNotice";
 
-export function TermsScreen() {
+export function TermsScreen(): JSX.Element {
   return (
     <Container>
       <GlobalStyle />

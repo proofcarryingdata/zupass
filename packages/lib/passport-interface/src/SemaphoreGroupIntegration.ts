@@ -30,7 +30,7 @@ export function openGroupMembershipPopup(
   originalSiteName: string,
   signal?: string,
   externalNullifier?: string
-) {
+): void {
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -82,7 +82,11 @@ export function useSemaphoreGroupProof(
   originalSiteName: string,
   onVerified: (valid: boolean) => void,
   externalNullifier?: string
-) {
+): {
+  proof: SemaphoreGroupPCD | undefined;
+  group: SerializedSemaphoreGroup | undefined;
+  error: string | undefined;
+} {
   const semaphoreGroupPCD = useSerializedPCD(SemaphoreGroupPCDPackage, pcdStr);
   const [error, setError] = useState<string | undefined>();
   const [semaphoreGroup, setGroup] = useState<SerializedSemaphoreGroup>();

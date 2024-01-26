@@ -9,7 +9,7 @@ const MESSAGE_CUT_OFF = 60 * 60 * 24 * 2; // 2 days
 /**
  * A countdown timer towards the end of this season.
  */
-export function Countdown() {
+export function Countdown(): JSX.Element {
   const [timeLeft, setTimeLeft] = useState(
     (THE_END.getTime() - Date.now()) / 1000
   );
@@ -57,7 +57,7 @@ export function Countdown() {
 
 const THE_END_ANIMATION_SHOWN_KEY = "frogcrypto-the-end-animation-shown";
 
-function TheEnd() {
+function TheEnd(): JSX.Element {
   const [visible, setVisible] = useState(false);
   const dismiss = useCallback(() => {
     setVisible(false);
@@ -98,8 +98,8 @@ const Container = styled.div<{ visible: boolean }>`
   top: 0;
   left: 0;
   background-color: black;
-  pointer-events: ${({ visible }) => (visible ? "auto" : "none")};
-  opacity: ${({ visible }) => (visible ? 1 : 0)};
+  pointer-events: ${({ visible }): string => (visible ? "auto" : "none")};
+  opacity: ${({ visible }): number => (visible ? 1 : 0)};
   transition: opacity 2s ease-in-out;
 
   display: flex;

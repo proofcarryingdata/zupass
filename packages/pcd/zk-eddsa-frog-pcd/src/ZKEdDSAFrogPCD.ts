@@ -119,7 +119,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
       frog: {
         argumentType: ArgumentTypeName.PCD,
         description: "Generate a proof for the selected frog",
-        validate(value, _) {
+        validate(value, _): boolean {
           if (value.type !== EdDSAFrogPCDTypeName || !value.claim) {
             return false;
           }
@@ -155,9 +155,9 @@ let eddsa: Eddsa;
  * of the `circomlibjs` package has been properly initialized.
  * It only initializes them once.
  */
-async function ensureEddsaInitialized() {
+async function ensureEddsaInitialized(): Promise<void> {
   if (!initializedPromise) {
-    initializedPromise = (async () => {
+    initializedPromise = (async (): Promise<void> => {
       eddsa = await buildEddsa();
     })();
   }

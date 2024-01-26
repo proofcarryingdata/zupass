@@ -47,7 +47,7 @@ export function setupBroadcastChannel(
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
   }
-  channel.onmessage = (msg) => {
+  channel.onmessage = (msg): void => {
     // NOTE: We're using the "broadcast-channel" package which supports all
     // browsers, not the native BroadcastChannel API.  They have a subtly
     // different interface.  In particular, we get our message directly as an

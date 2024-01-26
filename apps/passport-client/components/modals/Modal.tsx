@@ -1,6 +1,10 @@
 import { icons } from "@pcd/passport-ui";
 import React, { ReactNode, useCallback, useEffect } from "react";
-import styled, { createGlobalStyle, css } from "styled-components";
+import styled, {
+  FlattenSimpleInterpolation,
+  createGlobalStyle,
+  css
+} from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
@@ -25,7 +29,7 @@ export function MaybeModal({
 }: {
   fullScreen?: boolean;
   isProveOrAddScreen?: boolean;
-}) {
+}): JSX.Element {
   const dispatch = useDispatch();
   const modal = useModal();
 
@@ -37,7 +41,7 @@ export function MaybeModal({
 
   // Close on escape
   useEffect(() => {
-    const listener = (e: KeyboardEvent) => {
+    const listener = (e: KeyboardEvent): void => {
       if (e.key === "Escape" && dismissable) {
         close();
       }
@@ -61,7 +65,7 @@ export function MaybeModal({
   );
 }
 
-function isModalDismissable(modal: AppState["modal"]) {
+function isModalDismissable(modal: AppState["modal"]): boolean {
   const nonDismissable: AppState["modal"]["modalType"][] = [
     "invalid-participant",
     "changed-password",
@@ -75,7 +79,10 @@ function isModalDismissable(modal: AppState["modal"]) {
   return !nonDismissable.includes(modal.modalType);
 }
 
-function getModalBody(modal: AppState["modal"], isProveOrAddScreen: boolean) {
+function getModalBody(
+  modal: AppState["modal"],
+  isProveOrAddScreen: boolean
+): JSX.Element | null {
   switch (modal.modalType) {
     case "info":
       return <InfoModal />;
@@ -117,7 +124,7 @@ export function Modal(props: {
   onClose?: () => void;
   children: ReactNode;
   fullScreen?: boolean;
-}) {
+}): JSX.Element {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
   return (
     <>
@@ -159,7 +166,7 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
-  padding: ${(props) => (props.$fullScreen ? "0" : "0 12px")};
+  padding: ${(props): string => (props.$fullScreen ? "0" : "0 12px")};
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
@@ -175,7 +182,7 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   padding: 12px;
   border-radius: 12px;
 
-  ${({ fullScreen }) =>
+  ${({ fullScreen }): FlattenSimpleInterpolation =>
     fullScreen &&
     css`
       width: 100vw;

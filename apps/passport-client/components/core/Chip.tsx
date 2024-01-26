@@ -20,7 +20,7 @@ export function Chip({
   onClick?: () => void;
   disabled?: boolean;
   checked?: boolean;
-}) {
+}): JSX.Element {
   return (
     <Container onClick={onClick} disabled={disabled} checked={checked}>
       {icon}
@@ -42,15 +42,16 @@ const Container = styled.div<{
   border-radius: 6px;
   padding: 2px 6px;
   border: 1px solid
-    ${(p) =>
+    ${(p): string =>
       p.checked
         ? "rgba(var(--white-rgb), 0.3)"
         : "rgba(var(--white-rgb), 0.1)"};
-  background: ${(p) =>
+  background: ${(p): string =>
     p.checked ? "rgba(var(--white-rgb), 0.05)" : "transparent"};
-  color: ${(p) => (p.checked ? "var(--white)" : "rgba(var(--white-rgb), 0.5)")};
-  cursor: ${(p) => !p.disabled && p.onClick && "pointer"};
-  pointer-events: ${(p) => (p.disabled ? "none" : "auto")};
+  color: ${(p): string =>
+    p.checked ? "var(--white)" : "rgba(var(--white-rgb), 0.5)"};
+  cursor: ${(p): string => !p.disabled && p.onClick && "pointer"};
+  pointer-events: ${(p): string => (p.disabled ? "none" : "auto")};
 `;
 
 const Label = styled.div`
@@ -59,9 +60,10 @@ const Label = styled.div`
 
 export const ChipsContainer = styled.div<{ direction: "row" | "column" }>`
   display: flex;
-  align-items: ${(p) => (p.direction === "row" ? "center" : "flex-start")};
+  align-items: ${(p): string =>
+    p.direction === "row" ? "center" : "flex-start"};
   justify-content: flex-start;
   flex-wrap: wrap;
   gap: 8px;
-  flex-direction: ${(p) => (p.direction === "row" ? "row" : "column")};
+  flex-direction: ${(p): string => (p.direction === "row" ? "row" : "column")};
 `;

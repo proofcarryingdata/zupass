@@ -24,7 +24,7 @@ import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
-export function ProveScreen() {
+export function ProveScreen(): JSX.Element {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
   const location = useLocation();
@@ -86,7 +86,7 @@ export function ProveScreen() {
   return screen;
 }
 
-function getScreen(request: PCDGetRequest) {
+function getScreen(request: PCDGetRequest): JSX.Element | null {
   if (request.type !== PCDRequestType.Get) {
     return null;
   }

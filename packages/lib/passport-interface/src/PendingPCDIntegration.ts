@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
-import { requestServerProofStatus } from "./api/requestServerProofStatus";
 import { PendingPCD, PendingPCDStatus } from "./PendingPCDUtils";
+import { requestServerProofStatus } from "./api/requestServerProofStatus";
 
 /**
  * React hook that pings server on status of a PendingPCD. Returns a serialized
@@ -19,7 +19,7 @@ export function usePendingPCD(
   useEffect(() => {
     let interval: NodeJS.Timeout | undefined = undefined;
 
-    const getProofStatus = async () => {
+    const getProofStatus = async (): Promise<void> => {
       if (pendingPCDStr !== undefined && pendingPCDStr !== "") {
         const pendingPCD: PendingPCD = JSON.parse(pendingPCDStr);
 

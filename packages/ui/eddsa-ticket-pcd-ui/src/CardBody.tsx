@@ -5,7 +5,13 @@ import {
   getEdDSATicketData
 } from "@pcd/eddsa-ticket-pcd";
 import { ZUCONNECT_23_DAY_PASS_PRODUCT_ID } from "@pcd/passport-interface";
-import { Spacer, ToggleSwitch, css, styled } from "@pcd/passport-ui";
+import {
+  FlattenSimpleInterpolation,
+  Spacer,
+  ToggleSwitch,
+  css,
+  styled
+} from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useState } from "react";
@@ -41,7 +47,7 @@ function EdDSATicketPCDCardBody({
   idBasedVerifyURL
 }: {
   pcd: EdDSATicketPCD;
-} & EdDSATicketPCDCardProps) {
+} & EdDSATicketPCDCardProps): JSX.Element {
   const hasImage = pcd.claim.ticket.imageUrl !== undefined;
 
   const ticketData = getEdDSATicketData(pcd);
@@ -91,12 +97,12 @@ function EdDSATicketPCDCardBody({
   );
 }
 
-function TicketImage({ pcd }: { pcd: EdDSATicketPCD }) {
+function TicketImage({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   const { imageUrl, imageAltText } = pcd.claim.ticket;
   return <img src={imageUrl} alt={imageAltText} />;
 }
 
-function getHeader({ pcd }: { pcd: EdDSATicketPCD }) {
+function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   let header;
   if (
     pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect &&
@@ -111,7 +117,7 @@ function getHeader({ pcd }: { pcd: EdDSATicketPCD }) {
 }
 
 const Container = styled.span<{ padding: boolean }>`
-  ${({ padding }) =>
+  ${({ padding }): FlattenSimpleInterpolation =>
     padding
       ? css`
           padding: 16px;
@@ -134,7 +140,7 @@ const Uppercase = styled.span`
 `;
 
 const RedactedText = styled.div<{ redacted: boolean }>`
-  ${({ redacted }) =>
+  ${({ redacted }): FlattenSimpleInterpolation =>
     redacted
       ? css`
           color: transparent;

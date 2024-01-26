@@ -32,7 +32,7 @@ function PCDCardImpl({
   isMainIdentity?: boolean;
   onClick?: (id: string) => void;
   hideRemoveButton?: boolean;
-}) {
+}): JSX.Element {
   const clickHandler = useCallback(() => {
     onClick(pcd.id);
   }, [onClick, pcd.id]);
@@ -73,7 +73,7 @@ function HeaderContent({
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
-}) {
+}): JSX.Element {
   const pcdPackage = usePackage(pcd);
 
   const displayOptions = useMemo(() => {
@@ -104,7 +104,7 @@ function CardFooterImpl({
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
-}) {
+}): JSX.Element {
   const { dispatch } = useContext(StateContext);
 
   const onRemoveClick = useCallback(() => {
@@ -142,7 +142,7 @@ function getUI(
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }) {
+function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   // Only Devconnect and ZuConnect tickets support ID-based verification
@@ -168,7 +168,7 @@ function CardBody({
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
-}) {
+}): JSX.Element {
   const pcdCollection = usePCDCollection();
 
   if (isMainIdentity) {

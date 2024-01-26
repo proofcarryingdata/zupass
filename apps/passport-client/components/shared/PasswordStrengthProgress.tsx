@@ -48,7 +48,8 @@ const ProgressPie = styled.div<{ progress: number; progressColor: string }>`
       transparent 60% 100%
     ),
     conic-gradient(
-      ${({ progressColor }) => progressColor} ${({ progress }) => progress}%,
+      ${({ progressColor }): string => progressColor}
+        ${({ progress }): number => progress}%,
       rgba(var(--white-rgb), 0.05) 5%
     );
 `;

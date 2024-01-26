@@ -18,7 +18,7 @@ import { CollapsableCode, HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { ZUPASS_URL } from "../../constants";
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const externalNullifier = generateSnarkMessageHash(
     "consumer-client-nullifier"
   ).toString();
@@ -30,7 +30,7 @@ export default function Page() {
   const [pcdStr] = useZupassPopupMessages();
 
   const [valid, setValid] = useState<boolean | undefined>();
-  const onVerified = (valid: boolean) => {
+  const onVerified = (valid: boolean): void => {
     setValid(valid);
   };
 
@@ -52,7 +52,7 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() =>
+          onClick={(): void =>
             openZKEdDSAFrogPopup(
               ZUPASS_URL,
               window.location.origin + "#/popup",
@@ -111,7 +111,7 @@ export function openZKEdDSAFrogPopup(
   popupUrl: string,
   externalNullifier: string,
   watermark: string
-) {
+): void {
   const args: ZKEdDSAFrogPCDArgs = {
     frog: {
       argumentType: ArgumentTypeName.PCD,

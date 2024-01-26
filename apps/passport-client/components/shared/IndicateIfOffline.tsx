@@ -8,7 +8,7 @@ export function IndicateIfOffline({
 }: {
   children?: React.ReactNode | React.ReactNode[];
   marginBottom?: string;
-}) {
+}): JSX.Element | undefined {
   const isOffline = useIsOffline();
   if (!isOffline) {
     return undefined;

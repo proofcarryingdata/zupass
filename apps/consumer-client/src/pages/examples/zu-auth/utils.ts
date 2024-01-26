@@ -34,7 +34,7 @@ export function openZKEdDSAEventTicketPopup(
   watermark: bigint,
   validEventIds: string[],
   validProductIds: string[]
-) {
+): void {
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,

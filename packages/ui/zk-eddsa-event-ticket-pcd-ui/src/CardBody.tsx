@@ -12,7 +12,11 @@ export const ZKEdDSAEventTicketPCDUI: PCDUI<ZKEdDSAEventTicketPCD> = {
   renderCardBody: ZKEdDSAEventTicketCardBody
 };
 
-function ZKEdDSAEventTicketCardBody({ pcd }: { pcd: ZKEdDSAEventTicketPCD }) {
+function ZKEdDSAEventTicketCardBody({
+  pcd
+}: {
+  pcd: ZKEdDSAEventTicketPCD;
+}): JSX.Element {
   return (
     <Container>
       <p>

@@ -80,7 +80,9 @@ export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
 }
 
 const OFFLINE_TICKETS_KEY = "offline_tickets";
-export function saveOfflineTickets(offlineTickets: OfflineTickets | undefined) {
+export function saveOfflineTickets(
+  offlineTickets: OfflineTickets | undefined
+): void {
   if (!offlineTickets) {
     window.localStorage.removeItem(OFFLINE_TICKETS_KEY);
   } else {
@@ -108,7 +110,7 @@ export function loadOfflineTickets(): OfflineTickets {
 const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_devconnect_tickets";
 export function saveCheckedInOfflineTickets(
   offlineTickets: OfflineDevconnectTicket[]
-) {
+): void {
   if (!offlineTickets) {
     window.localStorage.removeItem(CHECKED_IN_OFFLINE_TICKETS_KEY);
   } else {
@@ -220,11 +222,11 @@ export function loadPersistentSyncStatus(): PersistentSyncStatus {
   }
 }
 
-export function saveUsingLaserScanner(usingLaserScanner: boolean) {
+export function saveUsingLaserScanner(usingLaserScanner: boolean): void {
   window.localStorage["using_laser_scanner"] = usingLaserScanner.toString();
 }
 
-export function loadUsingLaserScanner() {
+export function loadUsingLaserScanner(): boolean {
   return window.localStorage["using_laser_scanner"] === "true";
 }
 

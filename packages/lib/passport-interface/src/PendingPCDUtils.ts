@@ -33,7 +33,7 @@ export enum PendingPCDStatus {
   NONE = "none"
 }
 
-export function isSettledPendingPCDStatus(status: PendingPCDStatus) {
+export function isSettledPendingPCDStatus(status: PendingPCDStatus): boolean {
   return [
     PendingPCDStatus.ERROR,
     PendingPCDStatus.COMPLETE,

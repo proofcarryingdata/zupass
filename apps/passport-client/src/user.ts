@@ -8,7 +8,10 @@ import { appConfig } from "./appConfig";
 import { Dispatcher } from "./dispatch";
 
 // Starts polling the user from the server, in the background.
-export async function pollUser(self: User, dispatch: Dispatcher) {
+export async function pollUser(
+  self: User,
+  dispatch: Dispatcher
+): Promise<void> {
   try {
     console.log("[USER_POLL] polling user");
     const response = await requestUser(appConfig.zupassServer, self.uuid);
@@ -38,7 +41,7 @@ export async function pollUser(self: User, dispatch: Dispatcher) {
 }
 
 // Function that checks whether the user has set a password for their account
-export function hasSetupPassword(user: User) {
+export function hasSetupPassword(user: User): boolean {
   return user != null && user.salt != null;
 }
 
@@ -58,7 +61,7 @@ export function findIdentityPCD(
       (pcd as SemaphoreIdentityPCD).claim.identity.commitment.toString() ===
       identityCommitment
     ) {
-      return pcd;
+      return pcd as SemaphoreIdentityPCD;
     }
   }
   return undefined;

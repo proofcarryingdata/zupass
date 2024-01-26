@@ -13,7 +13,7 @@ export function FrogCryptoUpdateTelegramModal({
 }: {
   revealed: boolean;
   refreshAll: () => Promise<void>;
-}) {
+}): JSX.Element {
   const credentialManager = useCredentialManager();
   const dispatch = useDispatch();
 
@@ -54,7 +54,7 @@ export function FrogCryptoUpdateTelegramModal({
       </>
       <ActionButton
         ButtonComponent={BtnBase}
-        onClick={async () => {
+        onClick={async (): Promise<void> => {
           try {
             await requestFrogCryptoUpdateTelegramHandleSharing(
               appConfig.zupassServer,

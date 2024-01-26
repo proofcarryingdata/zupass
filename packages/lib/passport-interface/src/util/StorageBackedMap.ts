@@ -39,7 +39,7 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
    * Queues a microtask to sync to local storage once the current event loop
    *  has finished processing
    */
-  private queueSync() {
+  private queueSync(): void {
     if (!this.syncing) {
       this.syncing = true;
       queueMicrotask(() => this.syncToStorage());
@@ -61,7 +61,7 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
    * Reloads data from storage, called in response to storage changes that
    * come from other tabs.
    */
-  private reloadFromStorage() {
+  private reloadFromStorage(): void {
     const storageData = window.localStorage.getItem(this.storageKey);
     let loadedData = [];
     if (storageData) {
@@ -85,7 +85,7 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
   /**
    * Wraps Map.set(), and queues a sync after the change
    */
-  public set(key: K, value: V) {
+  public set(key: K, value: V): this {
     super.set(key, value);
     this.queueSync();
     return this;
@@ -94,7 +94,7 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
   /**
    * Wraps Map.delete(), and queues a sync after the change
    */
-  public delete(key: K) {
+  public delete(key: K): boolean {
     if (super.delete(key)) {
       this.queueSync();
       return true;
@@ -106,7 +106,7 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
   /**
    * Wraps Map.clear(), and queues a sync after the change
    */
-  public clear() {
+  public clear(): void {
     super.clear();
     this.queueSync();
   }

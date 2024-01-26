@@ -31,7 +31,7 @@ export function validateRequest<T extends PCDRequest>(
 }
 
 // A javascript:... returnUrl allows a caller to exfiltrate user secrets.
-function validateReturnUrl(returnUrl: string) {
+function validateReturnUrl(returnUrl: string): void {
   const url = new URL(returnUrl);
   if (url.protocol === "https:") return;
   if (url.protocol === "http:" && url.hostname === "localhost") return;
@@ -39,14 +39,20 @@ function validateReturnUrl(returnUrl: string) {
 }
 
 // Redirects to the returnUrl with a pending server proof in the query string.
-export function safeRedirectPending(returnUrl: string, pendingPCD: PendingPCD) {
+export function safeRedirectPending(
+  returnUrl: string,
+  pendingPCD: PendingPCD
+): void {
   validateReturnUrl(returnUrl);
   const encPCD = encodeURIComponent(JSON.stringify(pendingPCD));
   window.location.href = `${returnUrl}?encodedPendingPCD=${encPCD}`;
 }
 
 // Redirects to the returnUrl with the serialized PCD in the query string.
-export function safeRedirect(returnUrl: string, serializedPCD?: SerializedPCD) {
+export function safeRedirect(
+  returnUrl: string,
+  serializedPCD?: SerializedPCD
+): void {
   validateReturnUrl(returnUrl);
   const hasQuery = returnUrl.includes("?");
   const queryMarker = hasQuery ? "&" : "?";

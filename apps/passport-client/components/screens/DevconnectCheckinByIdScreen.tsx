@@ -27,7 +27,7 @@ import {
   CardOutlineExpanded
 } from "../shared/PCDCard";
 
-export function DevconnectCheckinByIdScreen() {
+export function DevconnectCheckinByIdScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
   const { loading: verifyingTicketId, ticketId } = useTicketId();
 
@@ -60,7 +60,7 @@ export function DevconnectCheckinByIdScreen() {
   );
 }
 
-function CheckInById({ ticketId }: { ticketId: string }) {
+function CheckInById({ ticketId }: { ticketId: string }): JSX.Element {
   const { loading: checkingTicket, result: checkTicketByIdResult } =
     useCheckTicketById(ticketId);
 
@@ -104,7 +104,7 @@ function useTicketId(): TicketId {
     if (!id) {
       const pcdStr = query.get("pcd");
       const decodedPCD = decodeQRPayload(pcdStr);
-      const verify = async () => {
+      const verify = async (): Promise<void> => {
         const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
           JSON.parse(decodedPCD).pcd
         );
@@ -129,7 +129,7 @@ function useTicketId(): TicketId {
   return { loading, ticketId, error };
 }
 
-function TicketErrorContent({ error }: { error: TicketError }) {
+function TicketErrorContent({ error }: { error: TicketError }): JSX.Element {
   let errorContent = null;
 
   switch (error.name) {
@@ -202,7 +202,7 @@ function TicketErrorContent({ error }: { error: TicketError }) {
   return <ErrorContainer>{errorContent}</ErrorContainer>;
 }
 
-export function TicketError({ error }: { error: TicketError }) {
+export function TicketError({ error }: { error: TicketError }): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   return (
     <>
@@ -220,7 +220,7 @@ export function TicketError({ error }: { error: TicketError }) {
   );
 }
 
-function ScanAnotherTicket() {
+function ScanAnotherTicket(): JSX.Element {
   const onClick = useCallback(() => {
     window.location.href = "/#/scan";
   }, []);
@@ -232,7 +232,7 @@ function ScanAnotherTicket() {
   );
 }
 
-function Home() {
+function Home(): JSX.Element {
   const onClick = useCallback(() => {
     window.location.href = "/#/";
   }, []);
@@ -253,7 +253,7 @@ export function UserReadyForCheckin({
 }: {
   ticketData: CheckTicketByIdResponseValue;
   ticketId: string;
-}) {
+}): JSX.Element {
   return (
     <>
       <TicketInfoSection ticketData={ticketData} />
@@ -304,7 +304,7 @@ export function useCheckTicketById(ticketId: string | undefined):
   }
 }
 
-function CheckInSection({ ticketId }: { ticketId: string }) {
+function CheckInSection({ ticketId }: { ticketId: string }): JSX.Element {
   const dispatchContext = useStateContext();
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
@@ -372,7 +372,7 @@ function TicketInfoSection({
   ticketData
 }: {
   ticketData: CheckTicketByIdResponseValue;
-}) {
+}): JSX.Element {
   return (
     <CardOutlineExpanded>
       <CardHeader>

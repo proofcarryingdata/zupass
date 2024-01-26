@@ -32,7 +32,7 @@ export function AddHaloScreen({
   pk2: string;
   rnd: string;
   rndsig: string;
-}) {
+}): JSX.Element {
   const location = useLocation();
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
@@ -42,7 +42,7 @@ export function AddHaloScreen({
   const syncSettled = useIsSyncSettled();
 
   useEffect(() => {
-    const generatePCD = async () => {
+    const generatePCD = async (): Promise<void> => {
       const args: HaLoNoncePCDArgs = {
         pk2: {
           argumentType: ArgumentTypeName.String,
@@ -85,7 +85,7 @@ export function AddHaloScreen({
     }
   }, [dispatch, pcd]);
 
-  const onLoginClick = () => {
+  const onLoginClick = (): void => {
     clearAllPendingRequests();
     setPendingHaloRequest(location.search);
     window.location.href = "/#/login?redirectedFromAction=true";

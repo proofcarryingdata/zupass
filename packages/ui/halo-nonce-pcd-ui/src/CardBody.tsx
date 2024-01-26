@@ -15,7 +15,11 @@ const base = new Airtable({
     "pat5y56owllLzfmW4.18658c109003682514513254c6f464f52022562acbb3af33d7fd95f05eebb6f2"
 }).base("appJcTn3eQUXKQEKT");
 
-function useAirtableData(pubkeyHex: string) {
+function useAirtableData(pubkeyHex: string): {
+  headerText: string;
+  imageUrl: string | undefined;
+  loadedAirtable: boolean;
+} {
   const [loadedAirtable, setLoadedAirtable] = useState(false);
   const [imageUrl, setImageUrl] = useState<string | undefined>(undefined);
   const [headerText, setHeaderText] = useState<string>("NFC STAMP");
@@ -57,12 +61,12 @@ function useAirtableData(pubkeyHex: string) {
   return { headerText, imageUrl, loadedAirtable };
 }
 
-function Header({ pcd }: { pcd: HaLoNoncePCD }) {
+function Header({ pcd }: { pcd: HaLoNoncePCD }): JSX.Element {
   const { headerText } = useAirtableData(pcd.claim.pubkeyHex);
   return <>{headerText}</>;
 }
 
-function HaLoNonceCardBody({ pcd }: { pcd: HaLoNoncePCD }) {
+function HaLoNonceCardBody({ pcd }: { pcd: HaLoNoncePCD }): JSX.Element {
   const { loadedAirtable, imageUrl } = useAirtableData(pcd.claim.pubkeyHex);
 
   if (!loadedAirtable) {

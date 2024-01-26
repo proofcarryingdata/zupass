@@ -4,7 +4,7 @@ import { ApplicationContext } from "./types";
 
 const services: ServiceInitializer[] = [startServer];
 
-export async function startApplication() {
+export async function startApplication(): Promise<void> {
   const context: ApplicationContext = {};
 
   for (const service of services) {

@@ -82,7 +82,7 @@ describe("validateAppState", async function () {
         TAG_STR,
         undefined,
         undefined,
-        await (async () => {
+        await (async (): Promise<PCDCollection> => {
           const collection = new PCDCollection(pcdPackages);
           collection.add(await newEdSAPCD());
           return collection;

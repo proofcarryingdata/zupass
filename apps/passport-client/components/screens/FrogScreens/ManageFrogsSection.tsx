@@ -15,10 +15,12 @@ import { useCredentialManager } from "../../../src/appHooks";
 import { ErrorMessage } from "../../core/error";
 import { useAdminError } from "./useAdminError";
 
-export function ManageFrogsSection() {
+export function ManageFrogsSection(): JSX.Element {
   const [newFrogs, setNewFrogs] = useState<FrogCryptoFrogData[]>([]);
   const [newFrogsError, setNewFrogsError] = useState<string>();
-  const onTextChange = (event: React.ChangeEvent<HTMLTextAreaElement>) => {
+  const onTextChange = (
+    event: React.ChangeEvent<HTMLTextAreaElement>
+  ): void => {
     try {
       const parsedData = frogParser(event.target.value);
       setNewFrogs(parsedData);
@@ -59,7 +61,7 @@ export function ManageFrogsSection() {
         <>
           <h2>(Preview) New/Updated Frogs</h2>
           <DataTable data={newFrogs} />
-          <button onClick={() => updateFrogs(newFrogs)}>
+          <button onClick={(): void => updateFrogs(newFrogs)}>
             Add/Update Frogs
           </button>
         </>
@@ -71,7 +73,7 @@ export function ManageFrogsSection() {
       {isLoading && <p>Loading...</p>}
       {error && <ErrorMessage>Error fetching frogs: {error}</ErrorMessage>}
       <button
-        onClick={() => deleteFrogs(selectedFrogIds)}
+        onClick={(): void => deleteFrogs(selectedFrogIds)}
         disabled={selectedFrogIds.length === 0}
       >
         Delete Selected Frogs{" "}
@@ -110,7 +112,7 @@ function useFrogs(): {
   const credentialManager = useCredentialManager();
   const [pcd, setPcd] = useState<SerializedPCD>();
   useEffect(() => {
-    const fetchPcd = async () => {
+    const fetchPcd = async (): Promise<void> => {
       const pcd = await credentialManager.requestCredential({
         signatureType: "sempahore-signature-pcd"
       });
@@ -129,7 +131,7 @@ function useFrogs(): {
   useEffect(() => {
     const abortController = new AbortController();
 
-    const doRequest = async () => {
+    const doRequest = async (): Promise<void> => {
       if (!pcd) {
         setError("Waiting for PCD to be ready");
         return;
@@ -268,7 +270,7 @@ export function DataTable({
   data: FrogCryptoFrogData[];
   checkedIds?: number[];
   setCheckedIds?: Dispatch<SetStateAction<number[]>>;
-}) {
+}): JSX.Element {
   const keys =
     data.length > 0
       ? _.chain(data).map(Object.keys).flatten().uniq().value()
@@ -288,12 +290,12 @@ export function DataTable({
       showMultiSelect={!!setCheckedIds}
       customRenderCell={{
         ...keys.reduce((acc, key) => {
-          acc[key] = (row) => {
+          acc[key] = (row): any => {
             return typeof row[key] === "undefined" ? "<undefined>" : row[key];
           };
           return acc;
         }, {}),
-        description: (row) => {
+        description: (row): JSX.Element => {
           return (
             <Description title={row["description"]}>
               {row["description"]}
@@ -301,14 +303,14 @@ export function DataTable({
           );
         }
       }}
-      onRowSelect={(args, row) => {
+      onRowSelect={(args, row): void => {
         setCheckedIds?.((rowIds) =>
           row.checked
             ? rowIds.filter((id) => id !== row.id)
             : [...rowIds, row.id]
         );
       }}
-      onAllRowSelect={(args, allrows) => {
+      onAllRowSelect={(args, allrows): void => {
         setCheckedIds?.((ids) =>
           ids.length === allrows.length ? [] : allrows.map((row) => row.id)
         );

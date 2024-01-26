@@ -26,7 +26,7 @@ export const setPassword = async (
   knownServerStorageRevision: string | undefined,
   dispatch: Dispatcher,
   update: ZuUpdate
-) => {
+): Promise<void> => {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: newEncryptionKey } =
     await crypto.generateSaltAndEncryptionKey(newPassword);

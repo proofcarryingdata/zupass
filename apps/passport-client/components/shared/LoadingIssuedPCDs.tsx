@@ -2,7 +2,7 @@ import styled from "styled-components";
 import { useLoadedIssuedPCDs } from "../../src/appHooks";
 import { RippleLoader } from "../core/RippleLoader";
 
-export function LoadingIssuedPCDs() {
+export function LoadingIssuedPCDs(): JSX.Element | null {
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
   if (loadedIssuedPCDs) {

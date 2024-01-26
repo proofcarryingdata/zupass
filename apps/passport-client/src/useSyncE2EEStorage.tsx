@@ -283,7 +283,10 @@ export async function mergeStorage(
     (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
   ) {
     identicalPCDs = false;
-    const pcdMergePredicate = (pcd: PCD, remotePCDs: PCDCollection) => {
+    const pcdMergePredicate = (
+      pcd: PCD,
+      remotePCDs: PCDCollection
+    ): boolean => {
       if (remotePCDs.hasPCDWithId(pcd.id)) {
         return false;
       } else {
@@ -532,7 +535,7 @@ export async function tryDeserializeNewStorage(
   }
 }
 
-export function useSyncE2EEStorage() {
+export function useSyncE2EEStorage(): void {
   const { dispatch } = useContext(StateContext);
 
   const load = useCallback(() => {

@@ -12,7 +12,11 @@ export const SemaphoreGroupPCDUI: PCDUI<SemaphoreGroupPCD> = {
   renderCardBody: SemaphoreGroupCardBody
 };
 
-function SemaphoreGroupCardBody({ pcd }: { pcd: SemaphoreGroupPCD }) {
+function SemaphoreGroupCardBody({
+  pcd
+}: {
+  pcd: SemaphoreGroupPCD;
+}): JSX.Element {
   return (
     <Container>
       <p>

@@ -19,7 +19,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { InlineError } from "../shared/InlineError";
 import { ResendCodeButton } from "../shared/ResendCodeButton";
 
-export function EnterConfirmationCodeScreen() {
+export function EnterConfirmationCodeScreen(): JSX.Element {
   const query = useQuery();
   const email = query?.get("email");
   const isReset = query?.get("isReset");
@@ -97,7 +97,7 @@ export function EnterConfirmationCodeScreen() {
           <ConfirmationCodeInput
             autoFocus
             value={input}
-            onChange={(e) => setInput(e.target.value.replace(/\D/g, ""))}
+            onChange={(e): void => setInput(e.target.value.replace(/\D/g, ""))}
             placeholder="confirmation code"
             disabled={verifyingCode}
           />

@@ -32,7 +32,7 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
 import { sendZupassRequest } from "../../util";
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
 
   return (
@@ -66,12 +66,14 @@ export default function Page() {
           cols={40}
           rows={1}
           value={signedMessage}
-          onChange={(e) => {
+          onChange={(e): void => {
             setSignedMessage(e.target.value);
           }}
         />
         <br />
-        <button onClick={() => addSignatureProofPCD(signedMessage)}>
+        <button
+          onClick={(): Promise<void> => addSignatureProofPCD(signedMessage)}
+        >
           prove and add a signature proof
         </button>
         <br />
@@ -98,7 +100,7 @@ export default function Page() {
   );
 }
 
-function AddEthAddrPCDButton() {
+function AddEthAddrPCDButton(): JSX.Element {
   const [pcdStr] = useZupassPopupMessages();
   const [isActive, setIsActive] = useState(false);
 
@@ -114,7 +116,7 @@ function AddEthAddrPCDButton() {
       alert("Please install MetaMask to use this dApp!");
     }
 
-    (async function () {
+    (async function (): Promise<void> {
       await ethereum.request({ method: "eth_requestAccounts" });
       const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
       const signature = await provider
@@ -152,7 +154,7 @@ function AddEthAddrPCDButton() {
 
   return (
     <button
-      onClick={() => {
+      onClick={(): void => {
         setIsActive(true);
         zupassSignIn("eth-pcd");
       }}
@@ -162,7 +164,7 @@ function AddEthAddrPCDButton() {
   );
 }
 
-async function zupassSignIn(originalSiteName: string) {
+async function zupassSignIn(originalSiteName: string): Promise<void> {
   openSignedZuzaluSignInPopup(
     ZUPASS_URL,
     window.location.origin + "#/popup",
@@ -170,7 +172,7 @@ async function zupassSignIn(originalSiteName: string) {
   );
 }
 
-function AddEthGroupPCDButton() {
+function AddEthGroupPCDButton(): JSX.Element {
   const [pcdStr] = useZupassPopupMessages();
   const [isActive, setIsActive] = useState(false);
 
@@ -186,7 +188,7 @@ function AddEthGroupPCDButton() {
       alert("Please install MetaMask to use this dApp!");
     }
 
-    (async function () {
+    (async function (): Promise<void> {
       await ethereum.request({ method: "eth_requestAccounts" });
       const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
 
@@ -257,7 +259,7 @@ function AddEthGroupPCDButton() {
   return (
     <button
       disabled
-      onClick={() => {
+      onClick={(): void => {
         setIsActive(true);
         zupassSignIn("eth-group-pcd");
       }}
@@ -267,7 +269,7 @@ function AddEthGroupPCDButton() {
   );
 }
 
-async function addGroupMembershipProofPCD() {
+async function addGroupMembershipProofPCD(): Promise<void> {
   const url = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreGroupPCDPackage
   >(
@@ -314,7 +316,7 @@ async function addGroupMembershipProofPCD() {
   sendZupassRequest(url);
 }
 
-async function addEdDSAPCD() {
+async function addEdDSAPCD(): Promise<void> {
   const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof EdDSAPCDPackage
   >(
@@ -346,7 +348,7 @@ async function addEdDSAPCD() {
   sendZupassRequest(proofUrl);
 }
 
-async function addSignatureProofPCD(messageToSign: string) {
+async function addSignatureProofPCD(messageToSign: string): Promise<void> {
   const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -374,7 +376,7 @@ async function addSignatureProofPCD(messageToSign: string) {
   sendZupassRequest(proofUrl);
 }
 
-async function addIdentityPCD() {
+async function addIdentityPCD(): Promise<void> {
   const newIdentity = await SemaphoreIdentityPCDPackage.prove({
     identity: new Identity()
   });
@@ -391,7 +393,7 @@ async function addIdentityPCD() {
   sendZupassRequest(url);
 }
 
-async function addWebAuthnPCD() {
+async function addWebAuthnPCD(): Promise<void> {
   // Register a new WebAuthn credential for testing.
   const generatedRegistrationOptions = await generateRegistrationOptions({
     rpName: "consumer-client",

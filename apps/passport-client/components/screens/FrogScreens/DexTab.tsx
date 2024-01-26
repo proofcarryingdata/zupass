@@ -40,7 +40,7 @@ export function DexTab({
 }: {
   possibleFrogs?: DexFrog[];
   pcds: EdDSAFrogPCD[];
-}) {
+}): JSX.Element {
   const dispatch = useDispatch();
   const [mode, setMode] = useState<"grid" | "list">("list");
   const groupedPCDs = useGroupedPCDs(pcds || []);
@@ -54,7 +54,7 @@ export function DexTab({
   return (
     <>
       <Button
-        onClick={() =>
+        onClick={(): void =>
           dispatch({
             type: "set-modal",
             modal: {
@@ -70,7 +70,10 @@ export function DexTab({
         <span style={{ marginRight: "16px" }}>
           Owned: {Object.keys(groupedPCDs).length.toString().padStart(3, "0")}
         </span>
-        <Button onClick={() => setMode("list")} disabled={mode === "list"}>
+        <Button
+          onClick={(): void => setMode("list")}
+          disabled={mode === "list"}
+        >
           <img
             src={icons.inputObject}
             draggable={false}
@@ -78,7 +81,10 @@ export function DexTab({
             height={16}
           />
         </Button>
-        <Button onClick={() => setMode("grid")} disabled={mode === "grid"}>
+        <Button
+          onClick={(): void => setMode("grid")}
+          disabled={mode === "grid"}
+        >
           <img src={icons.grid} draggable={false} width={16} height={16} />
         </Button>
       </ButtonGroup>
@@ -100,7 +106,7 @@ export function DexTab({
       {focusedFrogs && (
         <FrogsModal
           pcds={focusedFrogs}
-          onClose={() => setFocusedFrogs(null)}
+          onClose={(): void => setFocusedFrogs(null)}
           color={RARITIES[focusedFrogs[0].claim.data.rarity].color}
         />
       )}
@@ -116,7 +122,7 @@ const DexList = ({
   possibleFrogs: DexFrog[];
   pcds: FrogsById;
   onClick: Dispatch<SetStateAction<EdDSAFrogPCD[]>>;
-}) => {
+}): JSX.Element => {
   return (
     <table>
       <tbody>
@@ -140,7 +146,7 @@ const DexList = ({
           return (
             <tr
               key={id}
-              onClick={() => onClick(frogPCDs.pcds)}
+              onClick={(): void => onClick(frogPCDs.pcds)}
               style={{ cursor: "pointer" }}
             >
               <Cell>{id}</Cell>
@@ -166,7 +172,7 @@ const DexGrid = ({
   possibleFrogs: DexFrog[];
   pcds: FrogsById;
   onClick: Dispatch<SetStateAction<EdDSAFrogPCD[]>>;
-}) => {
+}): JSX.Element => {
   return (
     <CardGrid>
       {possibleFrogs.map(({ id, rarity }) => {
@@ -190,7 +196,10 @@ const DexGrid = ({
 
         return (
           <CardContainer key={id}>
-            <FrogCard rarity={rarity} onClick={() => onClick(frogPCDs.pcds)}>
+            <FrogCard
+              rarity={rarity}
+              onClick={(): void => onClick(frogPCDs.pcds)}
+            >
               <span>{frogPCDs.frog.name}</span>
               <img src={frogPCDs.frog.imageUrl} draggable={false} />
             </FrogCard>
@@ -238,11 +247,11 @@ const Cell = styled.td`
 
 const RarityBadge = styled.div<{ rarity: Rarity }>`
   padding: 2px;
-  border: 1px solid ${({ rarity }) => RARITIES[rarity].color};
+  border: 1px solid ${({ rarity }): string => RARITIES[rarity].color};
   border-radius: 2px;
   font-size: 8px;
   color: var(--white);
-  background: ${({ rarity }) => RARITIES[rarity].color};
+  background: ${({ rarity }): string => RARITIES[rarity].color};
 
   text-align: center;
   vertical-align: middle;
@@ -250,7 +259,7 @@ const RarityBadge = styled.div<{ rarity: Rarity }>`
 
 const UnknownRarityBadge = styled(RarityBadge)`
   background: rgba(var(--white-rgb), 0.05);
-  color: ${({ rarity }) => RARITIES[rarity].color};
+  color: ${({ rarity }): string => RARITIES[rarity].color};
 `;
 
 const UnknownCell = styled(Cell)`
@@ -264,9 +273,9 @@ const CardGrid = styled.div`
 `;
 
 const FrogCard = styled.div<{ rarity: Rarity }>`
-  border: 2px solid ${({ rarity }) => RARITIES[rarity].color};
-  background-color: ${({ rarity }) => RARITIES[rarity].color};
-  background: ${({ rarity }) => RARITIES[rarity].color};
+  border: 2px solid ${({ rarity }): string => RARITIES[rarity].color};
+  background-color: ${({ rarity }): string => RARITIES[rarity].color};
+  background: ${({ rarity }): string => RARITIES[rarity].color};
 
   border-radius: 8px;
   display: flex;
@@ -296,7 +305,7 @@ const FrogCard = styled.div<{ rarity: Rarity }>`
 
 const SkeletonCard = styled(FrogCard)`
   background: rgba(var(--white-rgb), 0.05);
-  border: 2px dashed ${({ rarity }) => RARITIES[rarity].color};
+  border: 2px dashed ${({ rarity }): string => RARITIES[rarity].color};
 
   cursor: unset;
   filter: opacity(40%);

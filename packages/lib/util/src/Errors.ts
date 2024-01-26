@@ -15,7 +15,10 @@ export function getErrorMessage(e: any | Error): string {
  * @param parameter Parameter to be checked.
  * @param parameterName Name of the parameter.
  */
-export function requireDefinedParameter(parameter: any, parameterName: string) {
+export function requireDefinedParameter(
+  parameter: any,
+  parameterName: string
+): void {
   if (typeof parameter === "undefined") {
     throw new Error(`${parameterName} must be defined`);
   }

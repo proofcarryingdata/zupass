@@ -9,7 +9,7 @@ describe("Emitter", async function () {
   it("should call listeners on event emission", function () {
     const emitter = new Emitter<number>();
 
-    const callback = function (_number: number) {
+    const callback = function (_number: number): void {
       //
     };
 

@@ -20,7 +20,7 @@ import {
   ZUPASS_URL
 } from "../../constants";
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const [zupassPCDStr, zupassPendingPCDStr] = useZupassPopupMessages();
   const [pendingPCDStatus, pendingPCDError, serverPCDStr] = usePendingPCD(
     zupassPendingPCDStr,
@@ -28,7 +28,7 @@ export default function Page() {
   );
   const pcdStr = usePCDMultiplexer(zupassPCDStr, serverPCDStr);
   const [valid, setValid] = useState<boolean | undefined>();
-  const onVerified = (valid: boolean) => {
+  const onVerified = (valid: boolean): void => {
     setValid(valid);
   };
   const { proof, group } = useSemaphoreGroupProof(
@@ -66,7 +66,7 @@ export default function Page() {
       </p>
       <ExampleContainer>
         <button
-          onClick={() =>
+          onClick={(): void =>
             requestMembershipProof(
               debugChecked,
               serverProving,
@@ -81,7 +81,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={debugChecked}
-            onChange={() => {
+            onChange={(): void => {
               setDebugChecked((checked) => !checked);
             }}
           />
@@ -91,7 +91,7 @@ export default function Page() {
           <input
             type="checkbox"
             checked={serverProving}
-            onChange={() => {
+            onChange={(): void => {
               setServerProving((checked: boolean) => !checked);
             }}
           />
@@ -127,7 +127,7 @@ function requestMembershipProof(
   debug: boolean,
   proveOnServer: boolean,
   originalSiteName: string
-) {
+): void {
   const popupUrl = window.location.origin + "#/popup";
   const proofUrl = constructZupassPcdGetRequestUrl<
     typeof SemaphoreGroupPCDPackage

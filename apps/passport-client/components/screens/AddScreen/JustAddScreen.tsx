@@ -16,7 +16,11 @@ import { SyncingPCDs } from "../../shared/SyncingPCDs";
  * Screen that allows the user to respond to a `PCDAddRequest` and add
  * a PCD into their wallet without proving it.
  */
-export function JustAddScreen({ request }: { request: PCDAddRequest }) {
+export function JustAddScreen({
+  request
+}: {
+  request: PCDAddRequest;
+}): JSX.Element {
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
   const { error, pcd } = useDeserialized(request.pcd);
@@ -47,7 +51,7 @@ export function JustAddScreen({ request }: { request: PCDAddRequest }) {
       </>
     );
   } else {
-    content = <AddedPCD onCloseClick={() => window.close()} />;
+    content = <AddedPCD onCloseClick={(): void => window.close()} />;
   }
 
   return (

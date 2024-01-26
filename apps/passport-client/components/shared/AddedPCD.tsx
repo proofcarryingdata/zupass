@@ -6,7 +6,11 @@ import { Button, H1 } from "../core";
  * their Zupass. PCDs can be added by third party websites via uploading
  * a `SerializedPCD`, or by requesting a new PCD to be proved by Zupass.
  */
-export function AddedPCD({ onCloseClick }: { onCloseClick: () => void }) {
+export function AddedPCD({
+  onCloseClick
+}: {
+  onCloseClick: () => void;
+}): JSX.Element {
   return (
     <AddedPCDContainer>
       <H1>Added</H1>

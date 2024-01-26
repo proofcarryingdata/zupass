@@ -8,7 +8,7 @@ import { Button, ButtonGroup } from "./Button";
 import { ManageFeedsSection } from "./ManageFeedsSection";
 import { ManageFrogsSection } from "./ManageFrogsSection";
 
-export function FrogManagerScreen() {
+export function FrogManagerScreen(): JSX.Element {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
 
@@ -21,10 +21,16 @@ export function FrogManagerScreen() {
   return (
     <AppContainer bg="gray">
       <ButtonGroup>
-        <Button disabled={tab === "frogs"} onClick={() => setTab("frogs")}>
+        <Button
+          disabled={tab === "frogs"}
+          onClick={(): void => setTab("frogs")}
+        >
           Frogs
         </Button>
-        <Button disabled={tab === "feeds"} onClick={() => setTab("feeds")}>
+        <Button
+          disabled={tab === "feeds"}
+          onClick={(): void => setTab("feeds")}
+        >
           Feeds
         </Button>
       </ButtonGroup>

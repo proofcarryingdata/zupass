@@ -10,7 +10,7 @@ export class Emitter<T = void> {
     return () => this.listeners.delete(l);
   }
 
-  public emit(t: T) {
+  public emit(t: T): void {
     for (const listener of Array.from(this.listeners)) {
       listener(t);
     }

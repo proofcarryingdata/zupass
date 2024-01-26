@@ -47,7 +47,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     serializedPCD: SerializedPCD<PCDOf<T>> | undefined,
     pendingPCD: PendingPCD | undefined
   ) => void;
-}) {
+}): JSX.Element {
   const rollbar = useAppRollbar();
   const pcds = usePCDCollection();
   const [args, setArgs] = useState<ArgsOf<T>>(
