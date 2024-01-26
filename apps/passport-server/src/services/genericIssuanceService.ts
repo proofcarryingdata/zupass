@@ -1,4 +1,8 @@
-import { PollFeedResponseValue } from "@pcd/passport-interface";
+import {
+  CheckTicketInRequest,
+  CheckTicketInResponseValue,
+  PollFeedResponseValue
+} from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
 
@@ -23,6 +27,7 @@ export interface LemonadeEvent {
 
 export interface ILemonadeAPI {
   loadEvents(apiKey: string): Promise<LemonadeEvent[]>;
+  checkinTicket(ticketId: string): Promise<boolean>;
 }
 
 export class MockLemonadeAPI implements ILemonadeAPI {
@@ -40,6 +45,11 @@ export class MockLemonadeAPI implements ILemonadeAPI {
     } else {
       throw new Error("not allowed");
     }
+  }
+
+  public async checkinTicket(_ticketId: string): Promise<boolean> {
+    // todo
+    throw new Error("not implemented");
   }
 }
 
@@ -144,22 +154,29 @@ export class MockPipelineAtomDB {
   }
 }
 
-export enum BasePipelineCapability {
-  FeedIssuanceCapability = "FeedIssuanceCapability"
+export enum PipelineCapability {
+  FeedIssuanceCapability = "FeedIssuanceCapability",
+  CheckinCapability = "CheckinCapability"
 }
 
-export interface PipelineCapability {
-  type: BasePipelineCapability;
+export interface BasePipelineCapability {
+  type: PipelineCapability;
 }
 
-export interface FeedIssuanceCapability extends PipelineCapability {
-  type: BasePipelineCapability.FeedIssuanceCapability;
-  feedId: string;
-  handle(credential: SerializedPCD): Promise<PollFeedResponseValue>;
+export interface FeedIssuanceCapability extends BasePipelineCapability {
+  type: PipelineCapability.FeedIssuanceCapability;
+  subId: string;
+  issue(credential: SerializedPCD): Promise<PollFeedResponseValue>;
+}
+
+export interface CheckinCapability extends BasePipelineCapability {
+  type: PipelineCapability.CheckinCapability;
+  checkin(request: CheckTicketInRequest): Promise<CheckTicketInResponseValue>;
 }
 
 export interface BasePipeline {
   type: PipelineType;
+  capabilities: readonly BasePipelineCapability[];
 }
 
 export interface LemonadeAtom extends PipelineAtom {
@@ -168,6 +185,17 @@ export interface LemonadeAtom extends PipelineAtom {
 
 export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
+  public capabilities = [
+    {
+      issue: this.issue.bind(this),
+      subId: "ticket-feed",
+      type: PipelineCapability.FeedIssuanceCapability
+    } satisfies FeedIssuanceCapability,
+    {
+      checkin: this.checkin.bind(this),
+      type: PipelineCapability.CheckinCapability
+    } satisfies CheckinCapability
+  ];
 
   private definition: LemonadePipelineDefinition;
   private db: PipelineAtomDB;
@@ -224,6 +252,13 @@ export class LemonadePipeline implements BasePipeline {
     };
   }
 
+  private async checkin(
+    _request: CheckTicketInRequest
+  ): Promise<CheckTicketInResponseValue> {
+    // todo
+    this.api.checkinTicket("get ticket id from request");
+  }
+
   public static is(p: Pipeline): p is LemonadePipeline {
     return p.type === PipelineType.Lemonade;
   }
@@ -234,6 +269,8 @@ export class LemonadePipeline implements BasePipeline {
  */
 export class PretixPipeline implements BasePipeline {
   public type = PipelineType.Pretix;
+  public capabilities = []; // TODO: fill this out
+
   private definition: PretixPipelineDefinition;
   private db: PipelineAtomDB;
 

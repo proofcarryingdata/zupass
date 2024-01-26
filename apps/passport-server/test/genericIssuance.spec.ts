@@ -81,6 +81,7 @@ describe.only("generic issuance declarations", function () {
     };
 
     const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockLemonadeData);
+    // TODO: implement real one
     const db = new MockPipelineAtomDB();
     const definitions = [
       examplePretixPipelineConfig,
