@@ -5,7 +5,7 @@
   "private": true,
   "scripts": {
     "build": "rm -rf ./build && yarn tsc -p ./tsconfig.json",
-    "start:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --respawn --watch=.env,.env.local src/main.ts",
+    "start:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --inspect=4321 --respawn --watch=.env,.env.local src/main.ts",
     "dev:worker": "nodemon -w src/multiprocess/worker.ts --exec \"yarn tsc -p ./tsconfig.json\"",
     "dev": "yarn tsc -p ./tsconfig.json && concurrently -r \"yarn start:dev\" \"yarn dev:worker\"",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
