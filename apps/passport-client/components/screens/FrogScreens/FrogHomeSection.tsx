@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import styled from "styled-components";
+import { TypewriterClass } from "typewriter-effect";
 import { appConfig } from "../../../src/appConfig";
 import {
   useCredentialManager,
@@ -103,7 +104,7 @@ export function FrogHomeSection(): JSX.Element {
 
       {frogSubs.length === 0 && (
         <TypistText
-          onInit={(typewriter): any =>
+          onInit={(typewriter): TypewriterClass =>
             typewriter
               .typeString(
                 isFromSubscriptionRef.current
@@ -139,7 +140,7 @@ export function FrogHomeSection(): JSX.Element {
         (frogPCDs.length === 0 && !myScore ? (
           <>
             <TypistText
-              onInit={(typewriter): any => {
+              onInit={(typewriter): TypewriterClass => {
                 const text = isFromSubscriptionRef.current
                   ? `you hear a whisper. "come back again when you're stronger."`
                   : "you're certain you saw a frog wearing a monocle.";

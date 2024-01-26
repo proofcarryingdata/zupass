@@ -3,6 +3,7 @@ import { useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import { useSwipeable } from "react-swipeable";
 import styled from "styled-components";
+import { TypewriterClass } from "typewriter-effect";
 import {
   useIsSyncSettled,
   useSelf,
@@ -81,7 +82,7 @@ export function FrogSubscriptionScreen(): JSX.Element {
     <AppContainer bg="gray">
       <Container>
         <TypistText
-          onInit={(typewriter): any =>
+          onInit={(typewriter): TypewriterClass =>
             typewriter.typeString(
               "You have chosen the path less traveled. What do you desire? Speak, and they shall be yours"
             )
