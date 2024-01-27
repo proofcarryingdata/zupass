@@ -4,7 +4,9 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { Router } from "express";
 import _ from "lodash";
+import { logger } from "../util/logger";
 
 export interface LemonadeTicket {
   id: string;
@@ -161,6 +163,7 @@ export enum PipelineCapability {
 
 export interface BasePipelineCapability {
   type: PipelineCapability;
+  urlPath?: string; // set dynamically during application initialization
 }
 
 export interface FeedIssuanceCapability extends BasePipelineCapability {
@@ -169,9 +172,21 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
   issue(credential: SerializedPCD): Promise<PollFeedResponseValue>;
 }
 
+export function isFeedIssuanceCapability(
+  capability: BasePipelineCapability
+): capability is FeedIssuanceCapability {
+  return capability.type === PipelineCapability.FeedIssuanceCapability;
+}
+
 export interface CheckinCapability extends BasePipelineCapability {
   type: PipelineCapability.CheckinCapability;
   checkin(request: CheckTicketInRequest): Promise<CheckTicketInResponseValue>;
+}
+
+export function isCheckinCapability(
+  capability: BasePipelineCapability
+): capability is CheckinCapability {
+  return capability.type === PipelineCapability.CheckinCapability;
 }
 
 export interface BasePipeline {
@@ -274,6 +289,10 @@ export class PretixPipeline implements BasePipeline {
   private definition: PretixPipelineDefinition;
   private db: PipelineAtomDB;
 
+  public get id(): string {
+    return this.definition.id;
+  }
+
   public constructor(definition: PretixPipelineDefinition, db: PipelineAtomDB) {
     this.definition = definition;
     this.db = db;
@@ -305,6 +324,57 @@ export function createPipeline(
       definition
     )}`
   );
+}
+
+export async function setupRoutes(
+  router: Router,
+  pipelines: Pipeline[]
+): Promise<void> {
+  for (const pipeline of pipelines) {
+    for (const capability of pipeline.capabilities) {
+      await setupRoutesForCapability(router, pipeline, capability);
+    }
+  }
+}
+
+export async function setupRoutesForCapability(
+  router: Router,
+  pipeline: Pipeline,
+  capability: BasePipelineCapability
+): Promise<void> {
+  if (isFeedIssuanceCapability(capability)) {
+    setupFeedCapabilityRoutes(router, pipeline, capability);
+  } else if (isCheckinCapability(capability)) {
+    setupCheckinCapabilityRoutes(router, pipeline, capability);
+  } else {
+    logger(
+      `pipeline ${pipeline.id} capability ${capability} doesn't have a router`
+    );
+  }
+}
+
+export async function setupFeedCapabilityRoutes(
+  router: Router,
+  pipeline: Pipeline,
+  capability: BasePipelineCapability
+): Promise<void> {
+  const urlPath = `/generic-issuance/${pipeline.id}/poll-feed`;
+  capability.urlPath = urlPath;
+  router.post(urlPath, (req, res) => {
+    res.send("ok"); // TODO
+  });
+}
+
+export async function setupCheckinCapabilityRoutes(
+  router: Router,
+  pipeline: Pipeline,
+  capability: BasePipelineCapability
+): Promise<void> {
+  const urlPath = `/generic-issuance/${pipeline.id}/checkin`;
+  capability.urlPath = urlPath;
+  router.post(urlPath, (req, res) => {
+    res.send("ok"); // TODO
+  });
 }
 
 export class GenericIssuanceService {}

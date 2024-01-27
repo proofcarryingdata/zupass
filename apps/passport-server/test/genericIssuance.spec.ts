@@ -2,6 +2,7 @@
 /* eslint-disable no-restricted-globals */
 import { expect } from "chai";
 import { randomUUID } from "crypto";
+import { Router } from "express";
 import "mocha";
 import {
   ILemonadeAPI,
@@ -13,7 +14,8 @@ import {
   PipelineType,
   PretixPipeline,
   PretixPipelineDefinition,
-  createPipeline
+  createPipeline,
+  setupRoutes
 } from "../src/services/genericIssuanceService";
 
 describe.only("generic issuance declarations", function () {
@@ -106,5 +108,11 @@ describe.only("generic issuance declarations", function () {
         id: mockLemonadeData.events[0].tickets[0].id
       }
     });
+
+    const router = Router();
+
+    setupRoutes(router, pipelines);
+
+    // todo: hit the routes
   });
 });
