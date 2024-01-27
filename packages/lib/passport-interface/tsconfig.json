@@ -1,10 +1,6 @@
 {
   "extends": "@pcd/tsconfig/ts-library.json",
-  "include": [
-    "src",
-    "test",
-    "../../../apps/passport-server/src/services/GenericIssuance.ts"
-  ],
+  "include": ["src", "test"],
   "exclude": ["dist", "build", "node_modules"],
   "compilerOptions": {
     "lib": ["dom"],
