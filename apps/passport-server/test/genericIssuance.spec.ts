@@ -15,9 +15,19 @@ import {
   PretixPipeline,
   PretixPipelineDefinition,
   createPipeline,
-  setupRoutes
+  setupRoutesForPipelines
 } from "../src/services/genericIssuanceService";
 
+/**
+ * Rough test of the generic issuance functionality defined in this PR, just
+ * to make sure that ends are coming together neatly. Totally incomplete.
+ *
+ * TODO:
+ * - finish this before shipping the {@link GenericIssuanceService}.
+ * - comprehensive tests for both Pretix and Lemonade cases
+ * - probably need to test the Capability route features of Pipelines
+ * - probably need to test the iterative creation of Pipelines (cc @richard)
+ */
 describe.only("generic issuance declarations", function () {
   this.timeout(15_000);
   it("test", async () => {
@@ -111,7 +121,7 @@ describe.only("generic issuance declarations", function () {
 
     const router = Router();
 
-    setupRoutes(router, pipelines);
+    setupRoutesForPipelines(router, pipelines);
 
     // todo: hit the routes XD
   });
