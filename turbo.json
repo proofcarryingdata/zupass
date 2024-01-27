@@ -11,7 +11,7 @@
     "build": {
       "dependsOn": ["pre-build", "^build"],
       "outputs": [],
-      "cache": true
+      "cache": false
     },
     "dev": {
       "cache": false

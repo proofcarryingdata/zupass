@@ -297,7 +297,9 @@ export async function getScoreboard(
     [limit]
   );
 
-  return result.rows.map<any>((row) => _.omit(row, ["semaphore_id"]));
+  return result.rows.map(
+    (row) => _.omit(row, ["semaphore_id"]) as FrogCryptoScore
+  );
 }
 
 /**
@@ -313,7 +315,9 @@ export async function getUserScore(
     [semaphoreId]
   );
 
-  return result.rows.map<any>((row) => _.omit(row, ["semaphore_id"]))[0];
+  return result.rows.map(
+    (row) => _.omit(row, ["semaphore_id"]) as FrogCryptoScore
+  )[0];
 }
 
 /**

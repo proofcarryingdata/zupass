@@ -45,6 +45,7 @@ export class RollbarService {
       // this method allows us to intercept 'items' that are scheduled
       // to be uploaded to rollbar, and determine if we should ignore them
       checkIgnore: (isUncaught, args, item): boolean => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const itemAsAny = item as any;
         const itemErrorMessage =
           itemAsAny?.body?.trace_chain?.[0]?.exception?.message;
@@ -68,6 +69,7 @@ export class RollbarService {
     });
   }
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   public reportError(e: any): void {
     if (isError(e)) {
       this.rollbar.error(...causalChain(e));

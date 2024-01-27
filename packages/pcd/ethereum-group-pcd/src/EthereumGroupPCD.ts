@@ -158,7 +158,7 @@ export async function prove(
 
   if (
     ![GroupType.ADDRESS, GroupType.PUBLICKEY].includes(
-      args.groupType.value as any
+      args.groupType.value as GroupType
     )
   ) {
     throw new Error(

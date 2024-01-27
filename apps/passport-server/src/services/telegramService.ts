@@ -972,6 +972,7 @@ export class TelegramService {
             disable_web_page_preview: true,
             reply_markup
           });
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
         } catch (error: { error_code: number; description: string } & any) {
           const isDeletedThread =
             error.error_code === 400 &&
@@ -1265,10 +1266,11 @@ export class TelegramService {
           reaction,
           nullifierHash
         );
-      } catch (e: any) {
+      } catch (e) {
         // Receiving this error message means that the user tried to
         // react with the same reaction twice to a message.
         if (
+          e instanceof Error &&
           e.message.includes(
             "telegram_chat_reactions_sender_nullifier_anon_message_id_re_key"
           )

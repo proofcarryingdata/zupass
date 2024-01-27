@@ -145,6 +145,7 @@ export type StateContextValue = {
   update: ZuUpdate;
 };
 
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export const StateContext = createContext<StateContextValue>({} as any);
 
 export type ZuUpdate = (s: Partial<AppState>) => void;

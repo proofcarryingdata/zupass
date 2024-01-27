@@ -136,7 +136,7 @@ export async function traced<T>(
   });
 }
 
-export function setError(e: Error | any, span?: Span): void {
+export function setError(e: unknown, span?: Span): void {
   span?.setAttribute("error", true);
   span?.setAttribute("error_msg", e + "");
 

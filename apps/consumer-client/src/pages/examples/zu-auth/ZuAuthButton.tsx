@@ -1,3 +1,4 @@
+import { ITicketData } from "@pcd/eddsa-ticket-pcd";
 import { useZupassPopupMessages } from "@pcd/passport-interface";
 import { EdDSATicketFieldsToReveal } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect } from "react";
@@ -48,7 +49,7 @@ export interface ZuAuthButtonProps {
   /**
    * A handler to alter the authentication status of the user within the current session.
    */
-  setAuthenticated: (status: boolean) => void;
+  setAuthenticated: (status: Partial<ITicketData> | false) => void;
 }
 
 /**

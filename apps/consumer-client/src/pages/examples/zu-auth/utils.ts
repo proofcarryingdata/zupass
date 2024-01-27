@@ -1,4 +1,4 @@
-import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EdDSATicketPCDPackage, ITicketData } from "@pcd/eddsa-ticket-pcd";
 import {
   constructZupassPcdGetRequestUrl,
   getWithoutProvingUrl,
@@ -105,7 +105,9 @@ export async function logout(): Promise<void> {
  *
  * @param serialized The stringified serialized form of an EdDSATicketPCD.
  */
-export async function authenticate(serialized: string): Promise<any> {
+export async function authenticate(
+  serialized: string
+): Promise<Partial<ITicketData>> {
   const { pcd } = JSON.parse(serialized);
 
   const response = await fetch(urlJoin(CONSUMER_SERVER_URL, `auth/login`), {
@@ -126,7 +128,7 @@ export async function authenticate(serialized: string): Promise<any> {
  * Verifies the user's authentication status by sending a GET request to the `consumer-server`.
  * If the user is authenticated it returns the ticket data saved in the current session, or false otherwise.
  */
-export async function isLoggedIn(): Promise<any | false> {
+export async function isLoggedIn(): Promise<Partial<ITicketData> | false> {
   const response = await fetch(urlJoin(CONSUMER_SERVER_URL, "auth/logged-in"), {
     method: "GET",
     mode: "cors",

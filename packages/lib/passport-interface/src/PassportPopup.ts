@@ -10,7 +10,7 @@ export function useZupassPopupMessages(): [string, string] {
 
   // Listen for PCDs coming back from the Zupass popup
   useEffect(() => {
-    function receiveMessage(ev: MessageEvent<any>): void {
+    function receiveMessage(ev: MessageEvent): void {
       // Extensions including Metamask apparently send messages to every page. Ignore those.
       if (ev.data.encodedPCD) {
         console.log("Received PCD", ev.data.encodedPCD);

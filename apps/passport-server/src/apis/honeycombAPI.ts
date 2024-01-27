@@ -33,6 +33,7 @@ export enum EventName {
 export function sendEvent(
   context: ApplicationContext,
   eventName: EventName,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   eventData?: any
 ): void {
   if (!context.honeyClient) return;

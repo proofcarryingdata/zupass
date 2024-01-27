@@ -113,7 +113,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       try {
         const pcd = await pcdPackage.prove(args);
         const serializedPCD = await pcdPackage.serialize(pcd);
-        onProve(pcd as any, serializedPCD, undefined);
+        onProve(pcd as PCDOf<T>, serializedPCD, undefined);
       } catch (e) {
         const errorMessage = getErrorMessage(e);
         if (errorMessage.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {

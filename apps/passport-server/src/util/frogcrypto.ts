@@ -75,7 +75,7 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
   }
 
   public handleFeedRequest(
-    request: PollFeedRequest<PCDPackage<any, any, any, any>>
+    request: PollFeedRequest<PCDPackage>
   ): Promise<PollFeedResponseValue> {
     const feed = this.hostedFeed.find((f) => f.feed.id === request.feedId);
     if (!feed) {

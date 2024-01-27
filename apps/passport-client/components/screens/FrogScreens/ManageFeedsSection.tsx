@@ -197,7 +197,7 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
   return JSON.parse(data).map((rawFeed) => {
     // e.g. biomesPutridswampDropweightscaler => biomes.PutridSwamp.dropWeightScaler
     const parseBiomes = (
-      rawFeed: Record<string, any>
+      rawFeed: Record<string, string | undefined>
     ): FrogCryptoFeedBiomeConfigs =>
       Object.keys(Biome).reduce((acc, biome) => {
         const dropWeightScaler =
@@ -253,20 +253,17 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
       private: feed.feed.private,
       activeUntil: new Date(feed.feed.activeUntil * 1000).toISOString(),
       cooldown: feed.feed.cooldown,
-      ...Object.keys(Biome).reduce(
-        (acc, biome) => {
-          const biomeConfig = feed.feed.biomes[biome];
-          if (biomeConfig) {
-            acc[
-              `biomes${_.upperFirst(
-                biome.replace(/\s/, "").toLowerCase()
-              )}Dropweightscaler`
-            ] = biomeConfig.dropWeightScaler;
-          }
-          return acc;
-        },
-        {} as Record<string, any>
-      ),
+      ...Object.keys(Biome).reduce((acc, biome) => {
+        const biomeConfig = feed.feed.biomes[biome];
+        if (biomeConfig) {
+          acc[
+            `biomes${_.upperFirst(
+              biome.replace(/\s/, "").toLowerCase()
+            )}Dropweightscaler`
+          ] = biomeConfig.dropWeightScaler;
+        }
+        return acc;
+      }, {}),
       codes: feed.feed.codes?.join(",")
     })),
     null,
@@ -304,6 +301,7 @@ export function DataTable({
       noDataMessage="No Feeds"
       customRenderCell={{
         ...keys.reduce((acc, key) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           acc[key] = (row): any => {
             return typeof row[key] === "undefined" ? "<undefined>" : row[key];
           };

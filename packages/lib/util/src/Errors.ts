@@ -2,7 +2,7 @@
  * Either extracts the error message out of an error, or converts
  * the value passed in into a string.
  */
-export function getErrorMessage(e: any | Error): string {
+export function getErrorMessage(e: unknown | Error): string {
   if (e instanceof Error) {
     return e.message;
   }
@@ -16,7 +16,7 @@ export function getErrorMessage(e: any | Error): string {
  * @param parameterName Name of the parameter.
  */
 export function requireDefinedParameter(
-  parameter: any,
+  parameter: unknown,
   parameterName: string
 ): void {
   if (typeof parameter === "undefined") {

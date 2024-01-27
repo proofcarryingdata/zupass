@@ -117,7 +117,7 @@ export class StorageBackedMap<K, V> extends Map<K, V> {
    */
   public forEach(
     callbackfn: (value: V, key: K, map: Map<K, V>) => void,
-    thisArg?: any
+    thisArg?: unknown
   ): void {
     super.forEach(callbackfn, thisArg);
     this.queueSync();
