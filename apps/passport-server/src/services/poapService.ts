@@ -1,18 +1,27 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { getHash } from "@pcd/passport-crypto";
-import { ZUZALU_23_EVENT_ID } from "@pcd/passport-interface";
+import {
+  ZUCONNECT_23_DAY_PASS_EVENT_ID,
+  ZUCONNECT_23_FIRST_WEEK_EVENT_ID,
+  ZUCONNECT_23_ORGANIZER_EVENT_ID,
+  ZUCONNECT_23_RESIDENT_EVENT_ID,
+  ZUCONNECT_23_SCHOLARSHIP_EVENT_ID,
+  ZUZALU_23_EVENT_ID
+} from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import AsyncLock from "async-lock";
+import { isEqual } from "lodash";
 import { PoapEvent } from "../database/models";
 import { fetchDevconnectPretixTicketByTicketId } from "../database/queries/devconnect_pretix_tickets/fetchDevconnectPretixTicket";
 import {
   claimNewPoapUrl,
   getExistingClaimUrlByTicketId
 } from "../database/queries/poap";
+import { fetchZuconnectTicketById } from "../database/queries/zuconnect/fetchZuconnectTickets";
 import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
@@ -26,6 +35,14 @@ import { traced } from "./telemetryService";
 const lock = new AsyncLock();
 
 const DEVCONNECT_COWORK_SPACE_EVENT_ID = "a1c822c4-60bd-11ee-8732-763dbf30819c";
+
+const ZUCONNECT_EVENT_IDS = new Set([
+  ZUCONNECT_23_RESIDENT_EVENT_ID,
+  ZUCONNECT_23_FIRST_WEEK_EVENT_ID,
+  ZUCONNECT_23_SCHOLARSHIP_EVENT_ID,
+  ZUCONNECT_23_ORGANIZER_EVENT_ID,
+  ZUCONNECT_23_DAY_PASS_EVENT_ID
+]);
 
 // All valid Cowork products that can claim a POAP. This excludes add-on products, like the Turkish Towel.
 const DEVCONNECT_COWORK_SPACE_VALID_PRODUCT_IDS = [
@@ -162,6 +179,59 @@ export class PoapService {
       );
       if (zuzaluPretixTicket == null) {
         throw new Error("zuzalu ticket does not exist");
+      }
+
+      return ticketId;
+    });
+  }
+
+  /**
+   * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
+   * ZuConnect 2023 Ticket and returns the ID of that ticket.
+   *
+   * This function throws an error in the case that the PCD is not
+   * valid; for example, here are a few invalid cases
+   *  1. Wrong PCD type
+   *  2. Wrong EdDSA public key
+   *  3. PCD proof is invalid
+   *  4. Event of ticket is not ZuConnect 2023
+   *  5. Ticket does not actually exist
+   */
+  private async validateZuConnectTicket(
+    serializedPCD: string
+  ): Promise<string> {
+    return traced("poap", "validateZuConnectTicket", async (span) => {
+      const pcd = await this.validateZKEdDSAEventTicketPCD(serializedPCD);
+
+      const {
+        validEventIds,
+        partialTicket: { ticketId }
+      } = pcd.claim;
+
+      logger(
+        `[POAP] checking that validEventds ${validEventIds} matches ZuConnect 2023`
+      );
+      if (
+        !(validEventIds && isEqual(ZUCONNECT_EVENT_IDS, new Set(validEventIds)))
+      ) {
+        throw new Error(
+          "valid event IDs of PCD does not match ZuConnect event IDs"
+        );
+      }
+
+      if (ticketId == null) {
+        throw new Error("ticket ID must be revealed");
+      }
+      span?.setAttribute("ticketId", ticketId);
+
+      logger(`[POAP] fetching zuconnect ticket ${ticketId} from database`);
+
+      const zuconnectTicket = fetchZuconnectTicketById(
+        this.context.dbPool,
+        ticketId
+      );
+      if (zuconnectTicket == null) {
+        throw new Error("zuconnect ticket does not exist");
       }
 
       return ticketId;
@@ -317,6 +387,40 @@ export class PoapService {
       return getServerErrorUrl(
         "Contact support",
         "An error occurred while fetching your POAP mint link for Zuzalu 2023."
+      );
+    }
+  }
+
+  /**
+   * Given a ZKEdDSAEventTicketPCD sent to the server for claiming a ZuConnect 2023 POAP,
+   * returns the valid redirect URL to the response handler.
+   *  1. If this ticket is already associated with a POAP mint link, return that link.
+   *  2. If this ticket is not associated with a POAP mint link and more unclaimed POAP
+   *     links exist, then associate that unclaimed link with this ticket and return it.
+   *  3. If this ticket is not associated with a POAP mint link and no more unclaimed
+   *     POAP links exist, return a custom server error URL.
+   */
+  public async getZuConnectPoapRedirectUrl(
+    serializedPCD: string
+  ): Promise<string> {
+    try {
+      const ticketId = await this.validateZuConnectTicket(serializedPCD);
+      const poapLink = await this.getPoapClaimUrlByTicketId(
+        ticketId,
+        "zuconnect"
+      );
+      if (poapLink == null) {
+        throw new Error("Not enough ZuConnect POAP links");
+      }
+      return poapLink;
+    } catch (e) {
+      logger("[POAP] getZuConnectPoapRedirectUrl error", e);
+      this.rollbarService?.reportError(e);
+      // Return the generic /server-error page instead for the route to redirect to,
+      // with a title and description informing the user to contact support.
+      return getServerErrorUrl(
+        "Contact support",
+        "An error occurred while fetching your POAP mint link for ZuConnect."
       );
     }
   }
