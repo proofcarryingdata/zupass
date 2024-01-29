@@ -12,6 +12,11 @@
 export interface PipelineAtomDB {
   save(pipelineID: string, atoms: PipelineAtom[]): Promise<void>;
   load(pipelineID: string): Promise<PipelineAtom[]>;
+  loadById(
+    pipelineID: string,
+    atomID: string
+  ): Promise<PipelineAtom | undefined>;
+  loadByEmail(pipelineID: string, email: string): Promise<PipelineAtom[]>;
 }
 
 /**

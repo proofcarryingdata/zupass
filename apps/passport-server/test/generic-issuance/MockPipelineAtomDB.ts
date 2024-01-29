@@ -27,4 +27,22 @@ export class MockPipelineAtomDB implements PipelineAtomDB {
 
     return Object.values(this.data[pipelineID]);
   }
+
+  public async loadById(
+    pipelineID: string,
+    atomID: string
+  ): Promise<PipelineAtom | undefined> {
+    const pipelineData = this.data[pipelineID];
+    const values = Object.values(pipelineData);
+    return values.find((v) => v.id === atomID);
+  }
+
+  public async loadByEmail(
+    pipelineID: string,
+    email: string
+  ): Promise<PipelineAtom[]> {
+    const pipelineData = this.data[pipelineID];
+    const values = Object.values(pipelineData);
+    return values.filter((v) => v.email === email);
+  }
 }
