@@ -4,8 +4,8 @@ import { expect } from "chai";
 import { randomUUID } from "crypto";
 import { Router } from "express";
 import "mocha";
+import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import {
-  ILemonadeAPI,
   LemonadePipeline,
   LemonadePipelineDefinition,
   PipelineType,
@@ -13,7 +13,7 @@ import {
   PretixPipelineDefinition,
   createPipeline,
   setupRoutesForPipelines
-} from "../src/services/genericIssuanceService";
+} from "../src/services/generic-issuance/genericIssuanceService";
 import { MockPipelineAtomDB } from "./generic-issuance/MockPipelineAtomDB";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";

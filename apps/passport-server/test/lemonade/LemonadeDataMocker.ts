@@ -4,7 +4,7 @@ import {
   LemonadeTicket,
   LemonadeTicketTier,
   LemonadeUser
-} from "../../src/services/genericIssuanceService";
+} from "../../src/apis/lemonade/lemonadeAPI";
 import { randomEmail } from "../util/util";
 
 export class LemonadeDataMocker {

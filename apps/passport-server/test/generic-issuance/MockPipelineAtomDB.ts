@@ -1,4 +1,4 @@
-import { PipelineAtom } from "../../src/services/genericIssuanceService";
+import { PipelineAtom } from "../../src/services/generic-issuance/genericIssuanceService";
 
 /**
  * A mock implementation of {@link PipelineAtomDB} for testing purposes.

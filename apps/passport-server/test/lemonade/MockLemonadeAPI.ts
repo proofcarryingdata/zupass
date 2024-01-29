@@ -1,7 +1,7 @@
 import {
   ILemonadeAPI,
   LemonadeEvent
-} from "../../src/services/genericIssuanceService";
+} from "../../src/apis/lemonade/lemonadeAPI";
 import { LemonadeDataMocker } from "./LemonadeDataMocker";
 
 /**
