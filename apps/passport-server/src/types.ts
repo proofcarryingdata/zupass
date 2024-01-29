@@ -3,6 +3,7 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
+import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import {
@@ -57,7 +58,7 @@ export interface GlobalServices {
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
-  genericIssuanceService: GenericIssuanceService;
+  genericIssuanceService: GenericIssuanceService | null;
 }
 
 export interface Zupass {
@@ -76,6 +77,7 @@ export interface APIs {
   zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
+  lemonadeAPI: ILemonadeAPI | null;
 }
 
 export interface EnvironmentVariables {

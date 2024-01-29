@@ -12,14 +12,14 @@ import { PipelineCapability } from "./types";
  * of a feed to respond to check in requests.
  */
 export interface CheckinCapability extends BasePipelineCapability {
-  type: PipelineCapability.CheckinCapability;
+  type: PipelineCapability.Checkin;
   checkin(request: CheckTicketInRequest): Promise<CheckTicketInResponseValue>;
 }
 
 export function isCheckinCapability(
   capability: BasePipelineCapability
 ): capability is CheckinCapability {
-  return capability.type === PipelineCapability.CheckinCapability;
+  return capability.type === PipelineCapability.Checkin;
 }
 
 /**

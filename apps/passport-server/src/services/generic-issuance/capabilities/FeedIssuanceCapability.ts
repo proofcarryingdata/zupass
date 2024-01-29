@@ -28,7 +28,7 @@ export async function setupFeedCapabilityRoutes(
  * to connect it to the other services - express routing, etc.
  */
 export interface FeedIssuanceCapability extends BasePipelineCapability {
-  type: PipelineCapability.FeedIssuanceCapability;
+  type: PipelineCapability.FeedIssuance;
   /**
    * Used to differentiate between different feeds on the same {@link Pipeline}.
    * TODO:
@@ -42,5 +42,5 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
 export function isFeedIssuanceCapability(
   capability: BasePipelineCapability
 ): capability is FeedIssuanceCapability {
-  return capability.type === PipelineCapability.FeedIssuanceCapability;
+  return capability.type === PipelineCapability.FeedIssuance;
 }

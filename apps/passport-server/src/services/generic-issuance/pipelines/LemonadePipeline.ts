@@ -66,11 +66,11 @@ export class LemonadePipeline implements BasePipeline {
     {
       issue: this.issueLemonadeTicketPCD.bind(this),
       subId: "ticket-feed",
-      type: PipelineCapability.FeedIssuanceCapability
+      type: PipelineCapability.FeedIssuance
     } satisfies FeedIssuanceCapability,
     {
       checkin: this.checkinLemonadeTicketPCD.bind(this),
-      type: PipelineCapability.CheckinCapability
+      type: PipelineCapability.Checkin
     } satisfies CheckinCapability
   ];
 

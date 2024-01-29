@@ -1,3 +1,6 @@
+import { LemonadeDataMocker } from "../../../test/lemonade/LemonadeDataMocker";
+import { MockLemonadeAPI } from "../../../test/lemonade/MockLemonadeAPI";
+
 export interface LemonadeUser {
   id: string;
   email: string;
@@ -69,4 +72,17 @@ export interface ILemonadeAPI {
   //     - Product type (7-day, early bird, GA, etc)
   //     - Checked-in status
   // - POST Check-in (and potentially check-out)
+}
+
+/**
+ * TODO: replace with production version once it exists
+ */
+export function getLemonadeAPI(): ILemonadeAPI {
+  const mockData = new LemonadeDataMocker();
+  const edgeCity = mockData.addEvent("edge city");
+  const ivan = mockData.addUser("ivan");
+  const ga = mockData.addTier(edgeCity.id, "ga");
+  mockData.addTicket(ga.id, edgeCity.id, ivan.name);
+  mockData.permissionUser(ivan.id, edgeCity.id);
+  return new MockLemonadeAPI(mockData);
 }

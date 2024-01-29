@@ -1,3 +1,8 @@
+import {
+  CheckTicketInResponseValue,
+  PollFeedRequest,
+  PollFeedResponseValue
+} from "@pcd/passport-interface";
 import { Router } from "express";
 import { MockPipelineAtomDB } from "../../../test/generic-issuance/MockPipelineAtomDB";
 import { MockPipelineDefinitionDB } from "../../../test/generic-issuance/MockPipelineDefinitionDB";
@@ -24,6 +29,35 @@ import {
 } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineDefinition } from "./pipelines/types";
 import { BasePipelineCapability } from "./types";
+
+const SERVICE_NAME = "GENERIC_ISSUANCE";
+const LOG_TAG = `[${SERVICE_NAME}]`;
+
+export async function createPipelines(
+  definitions: PipelineDefinition[],
+  db: IPipelineAtomDB,
+  apis: {
+    lemonadeAPI: ILemonadeAPI;
+    // TODO: pretix api
+  }
+): Promise<Pipeline[]> {
+  logger(LOG_TAG, `creating ${definitions.length} pipelines`);
+
+  const results: Pipeline[] = [];
+
+  for (const definition of definitions) {
+    try {
+      logger(LOG_TAG, `creating pipeline ${definition.id}`);
+      const pipeline = await createPipeline(definition, db, apis);
+      results.push(pipeline);
+      logger(LOG_TAG, `successfully created pipeline ${definition.id}`);
+    } catch (e) {
+      logger(LOG_TAG, `failed to create pipeline ${definition.id}`, e);
+    }
+  }
+
+  return results;
+}
 
 /**
  * Given a {@link PipelineDefinition} (which is persisted to the database) instantiates
@@ -81,6 +115,7 @@ export async function setupRoutesForCapability(
     setupCheckinCapabilityRoutes(router, pipeline, capability);
   } else {
     logger(
+      LOG_TAG,
       `pipeline ${pipeline.id} capability ${capability} doesn't have a router`
     );
   }
@@ -98,37 +133,68 @@ export class GenericIssuanceService {
   private pipelines: Pipeline[];
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
+  private lemonadeAPI: ILemonadeAPI;
 
   public constructor(
     context: ApplicationContext,
     definitionDB: IPipelineDefinitionDB,
-    atomDB: IPipelineAtomDB
+    atomDB: IPipelineAtomDB,
+    lemonadeAPI: ILemonadeAPI
   ) {
     this.definitionDB = definitionDB;
     this.atomDB = atomDB;
     this.context = context;
+    this.lemonadeAPI = lemonadeAPI;
     this.pipelines = [];
   }
 
   public async start(): Promise<void> {
     const definitions = await this.definitionDB.loadPipelineDefinitions();
+    const pipelines = await createPipelines(definitions, this.atomDB, {
+      lemonadeAPI: this.lemonadeAPI
+    });
+    this.pipelines = pipelines;
   }
 
+  // todo
   public async stop(): Promise<void> {
-    // todo
+    return;
+  }
+
+  // todo
+  public async handlePollFeed(
+    _req: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
+    return {
+      actions: []
+    };
+  }
+
+  // todo
+  public async handleCheckIn(_req: any): Promise<CheckTicketInResponseValue> {
+    return undefined;
   }
 }
 
 export async function startGenericIssuanceService(
-  context: ApplicationContext
-): Promise<GenericIssuanceService> {
+  context: ApplicationContext,
+  lemonadeAPI: ILemonadeAPI | null
+): Promise<GenericIssuanceService | null> {
+  if (!lemonadeAPI) {
+    logger(
+      "[INIT] not starting generic issuance service - missing lemonade API"
+    );
+    return null;
+  }
+
   const definitionDB = new MockPipelineDefinitionDB();
   const atomDB = new MockPipelineAtomDB();
 
   const issuanceService = new GenericIssuanceService(
     context,
     definitionDB,
-    atomDB
+    atomDB,
+    lemonadeAPI
   );
 
   await issuanceService.start();

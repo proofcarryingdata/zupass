@@ -41,6 +41,7 @@ describe.only("generic issuance declarations", function () {
     const ga = mockData.addTier(edgeCity.id, "ga");
     mockData.addTicket(ga.id, edgeCity.id, ivan.name);
     mockData.permissionUser(ivan.id, edgeCity.id);
+    const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockData);
 
     const exampleLemonadePipelineConfig: LemonadePipelineDefinition = {
       ownerUserId: randomUUID(),
@@ -78,7 +79,6 @@ describe.only("generic issuance declarations", function () {
       type: PipelineType.Pretix
     };
 
-    const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockData);
     // TODO: implement real one
     const db = new MockPipelineAtomDB();
     const definitions = [

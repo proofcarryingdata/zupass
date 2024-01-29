@@ -6,6 +6,7 @@ import urljoin from "url-join";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
+import { ILemonadeAPI, getLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import {
   IZuconnectTripshaAPI,
   getZuconnectTripshaAPI
@@ -126,10 +127,20 @@ async function getOverridenApis(
     zuconnectTripshaAPI = getZuconnectTripshaAPI();
   }
 
+  let lemonadeAPI: ILemonadeAPI | null = null;
+
+  if (apiOverrides?.lemonadeAPI) {
+    logger("[INIT] overriding Lemonade API");
+    lemonadeAPI = apiOverrides.lemonadeAPI;
+  } else {
+    lemonadeAPI = getLemonadeAPI();
+  }
+
   return {
     emailAPI,
     zuzaluPretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI
+    zuconnectTripshaAPI,
+    lemonadeAPI
   };
 }

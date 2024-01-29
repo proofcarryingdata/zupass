@@ -83,7 +83,10 @@ export async function startServices(
     issuanceService
   );
   const poapService = startPoapService(context, rollbarService);
-  const genericIssuanceService = await startGenericIssuanceService(context);
+  const genericIssuanceService = await startGenericIssuanceService(
+    context,
+    apis.lemonadeAPI
+  );
 
   const services: GlobalServices = {
     semaphoreService,
