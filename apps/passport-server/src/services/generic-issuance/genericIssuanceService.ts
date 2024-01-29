@@ -1,6 +1,9 @@
 import { Router } from "express";
+import { MockPipelineAtomDB } from "../../../test/generic-issuance/MockPipelineAtomDB";
+import { MockPipelineDefinitionDB } from "../../../test/generic-issuance/MockPipelineDefinitionDB";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
-import { PipelineAtomDB } from "../../database/queries/pipelineAtomDB";
+import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
+import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import {
@@ -29,7 +32,7 @@ import { BasePipelineCapability } from "./types";
  */
 export function createPipeline(
   definition: PipelineDefinition,
-  db: PipelineAtomDB,
+  db: IPipelineAtomDB,
   apis: {
     lemonadeAPI: ILemonadeAPI;
     // TODO: pretix api
@@ -92,15 +95,43 @@ export async function setupRoutesForCapability(
  */
 export class GenericIssuanceService {
   private context: ApplicationContext;
+  private pipelines: Pipeline[];
+  private definitionDB: IPipelineDefinitionDB;
+  private atomDB: IPipelineAtomDB;
 
-  public constructor(context: ApplicationContext) {
+  public constructor(
+    context: ApplicationContext,
+    definitionDB: IPipelineDefinitionDB,
+    atomDB: IPipelineAtomDB
+  ) {
+    this.definitionDB = definitionDB;
+    this.atomDB = atomDB;
     this.context = context;
+    this.pipelines = [];
+  }
+
+  public async start(): Promise<void> {
+    const definitions = await this.definitionDB.loadPipelineDefinitions();
+  }
+
+  public async stop(): Promise<void> {
+    // todo
   }
 }
 
 export async function startGenericIssuanceService(
   context: ApplicationContext
 ): Promise<GenericIssuanceService> {
-  const issuanceService = new GenericIssuanceService(context);
+  const definitionDB = new MockPipelineDefinitionDB();
+  const atomDB = new MockPipelineAtomDB();
+
+  const issuanceService = new GenericIssuanceService(
+    context,
+    definitionDB,
+    atomDB
+  );
+
+  await issuanceService.start();
+
   return issuanceService;
 }

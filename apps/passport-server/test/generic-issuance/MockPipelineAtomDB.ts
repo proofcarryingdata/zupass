@@ -1,12 +1,12 @@
 import {
-  PipelineAtom,
-  PipelineAtomDB
+  IPipelineAtomDB,
+  PipelineAtom
 } from "../../src/database/queries/pipelineAtomDB";
 
 /**
- * A mock implementation of {@link PipelineAtomDB} for testing purposes.
+ * A mock implementation of {@link IPipelineAtomDB} for testing purposes.
  */
-export class MockPipelineAtomDB implements PipelineAtomDB {
+export class MockPipelineAtomDB implements IPipelineAtomDB {
   public data: {
     [pipelineId: string]: { [atomId: string]: PipelineAtom };
   } = {};

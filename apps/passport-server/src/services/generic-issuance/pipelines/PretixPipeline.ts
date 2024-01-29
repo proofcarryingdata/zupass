@@ -1,4 +1,4 @@
-import { PipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import {
   BasePipeline,
   BasePipelineDefinition,
@@ -17,13 +17,16 @@ export class PretixPipeline implements BasePipeline {
   ];
 
   private definition: PretixPipelineDefinition;
-  private db: PipelineAtomDB;
+  private db: IPipelineAtomDB;
 
   public get id(): string {
     return this.definition.id;
   }
 
-  public constructor(definition: PretixPipelineDefinition, db: PipelineAtomDB) {
+  public constructor(
+    definition: PretixPipelineDefinition,
+    db: IPipelineAtomDB
+  ) {
     this.definition = definition;
     this.db = db;
   }

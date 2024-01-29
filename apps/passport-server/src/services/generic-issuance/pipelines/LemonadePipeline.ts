@@ -7,8 +7,8 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
-  PipelineAtom,
-  PipelineAtomDB
+  IPipelineAtomDB,
+  PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { CheckinCapability } from "../capabilities/CheckinCapability";
 import { FeedIssuanceCapability } from "../capabilities/FeedIssuanceCapability";
@@ -75,7 +75,7 @@ export class LemonadePipeline implements BasePipeline {
   ];
 
   private definition: LemonadePipelineDefinition;
-  private db: PipelineAtomDB;
+  private db: IPipelineAtomDB;
   private api: ILemonadeAPI;
 
   public get id(): string {
@@ -84,7 +84,7 @@ export class LemonadePipeline implements BasePipeline {
 
   public constructor(
     definition: LemonadePipelineDefinition,
-    db: PipelineAtomDB,
+    db: IPipelineAtomDB,
     api: ILemonadeAPI
   ) {
     this.definition = definition;
@@ -93,7 +93,7 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   /**
-   * Loads external data from Lemonade and saves it to the {@link PipelineAtomDB} for
+   * Loads external data from Lemonade and saves it to the {@link IPipelineAtomDB} for
    * later use.
    *
    * TODO:

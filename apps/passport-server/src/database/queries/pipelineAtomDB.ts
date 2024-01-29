@@ -6,10 +6,10 @@
  * - what other functions should we have here? in the case that a
  *   pipeline has a LOT of data, there should probably be some cursor-based
  *   api that streams atoms.
- * - Other than atoms, what else should the {@link PipelineAtomDB} be able
+ * - Other than atoms, what else should the {@link IPipelineAtomDB} be able
  *   to store for feeds?
  */
-export interface PipelineAtomDB {
+export interface IPipelineAtomDB {
   save(pipelineID: string, atoms: PipelineAtom[]): Promise<void>;
   load(pipelineID: string): Promise<PipelineAtom[]>;
   loadById(
