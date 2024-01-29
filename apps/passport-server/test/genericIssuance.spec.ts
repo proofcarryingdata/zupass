@@ -8,7 +8,6 @@ import {
   ILemonadeAPI,
   LemonadePipeline,
   LemonadePipelineDefinition,
-  MockLemonadeAPI,
   MockPipelineAtomDB,
   PipelineType,
   PretixPipeline,
@@ -17,6 +16,7 @@ import {
   setupRoutesForPipelines
 } from "../src/services/genericIssuanceService";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
+import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
