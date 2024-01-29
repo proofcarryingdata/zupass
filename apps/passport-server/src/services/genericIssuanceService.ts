@@ -4,8 +4,10 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { randomUUID } from "crypto";
 import { Router } from "express";
 import _ from "lodash";
+import { randomEmail } from "../../test/util/util";
 import { logger } from "../util/logger";
 
 /**
@@ -18,8 +20,10 @@ import { logger } from "../util/logger";
 export interface LemonadeTicket {
   id: string;
   name: string;
+  email: string;
   eventId: string;
   tierId: string;
+  checkedIn: boolean;
 }
 
 /**
@@ -46,6 +50,7 @@ export interface LemonadeEvent {
   name: string;
   tickets: LemonadeTicket[];
   tiers: LemonadeTicketTier[];
+  permissionedUserIds: string[];
 }
 
 /**
@@ -54,7 +59,11 @@ export interface LemonadeEvent {
  */
 export interface ILemonadeAPI {
   loadEvents(apiKey: string): Promise<LemonadeEvent[]>;
-  checkinTicket(ticketId: string): Promise<boolean>;
+  checkinTicket(
+    apiKey: string,
+    eventId: string,
+    ticketId: string
+  ): Promise<void>;
   // TODO: fill in the other methods. This is what Richard
   // has communicated to them:
   // - API Key scoped to an ‘account’, which has read/write permissions to the appropriate events. E.g. can read/write events that are owned/co-owned by the account.
@@ -67,31 +76,199 @@ export interface ILemonadeAPI {
   // - POST Check-in (and potentially check-out)
 }
 
+export interface LemonadeUser {
+  id: string;
+  email: string;
+  apiKey: string;
+  name: string;
+}
+
+export class LemonadeDataMocker {
+  private events: LemonadeEvent[];
+  private users: LemonadeUser[];
+
+  public constructor() {
+    this.events = [];
+    this.users = [];
+  }
+
+  public getUsersEvents(userId: string): LemonadeEvent[] {
+    return this.events.filter((e) => {
+      return e.permissionedUserIds.includes(userId);
+    });
+  }
+
+  public getEvent(eventId: string): LemonadeEvent | undefined {
+    return this.events.find((e) => e.id === eventId);
+  }
+
+  public getTier(
+    eventId: string,
+    tierId: string
+  ): LemonadeTicketTier | undefined {
+    const event = this.getEvent(eventId);
+
+    if (!event) {
+      return undefined;
+    }
+
+    return event.tiers.find((t) => t.id === tierId);
+  }
+
+  public addTicket(
+    tierId: string,
+    eventId: string,
+    attendeeName: string
+  ): LemonadeTicket {
+    const newTicket: LemonadeTicket = {
+      checkedIn: false,
+      eventId,
+      id: randomUUID(),
+      email: randomEmail(),
+      name: attendeeName,
+      tierId
+    };
+
+    const event = this.getEvent(eventId);
+
+    if (!event) {
+      throw new Error(`can't add ticket to event that doesn't exist`);
+    }
+
+    const tier = this.getTier(eventId, tierId);
+
+    if (!tier) {
+      throw new Error(`can't add ticket to tier that doesn't exist`);
+    }
+
+    event.tickets.push(newTicket);
+
+    return newTicket;
+  }
+
+  public addEvent(name: string): LemonadeEvent {
+    const newEvent: LemonadeEvent = {
+      id: randomUUID(),
+      name: name,
+      tickets: [],
+      tiers: [],
+      permissionedUserIds: []
+    };
+    this.events.push(newEvent);
+    return newEvent;
+  }
+
+  public addTier(eventId: string, name: string): LemonadeTicketTier {
+    const newTier: LemonadeTicketTier = {
+      id: randomUUID(),
+      name
+    };
+    const event = this.events.find((e) => e.id === eventId);
+    if (!event) {
+      throw new Error(`unable to find event with id ${eventId}`);
+    }
+    const existingTier = event.tiers.find((t) => t.name === name);
+    if (existingTier) {
+      throw new Error(
+        `event ${eventId} already has a ticket tier with name ${name}`
+      );
+    }
+    event.tiers.push(newTier);
+    return newTier;
+  }
+
+  public addUser(name?: string): LemonadeUser {
+    const newUser: LemonadeUser = {
+      email: randomEmail(),
+      id: randomUUID(),
+      apiKey: randomUUID(),
+      name: name ?? randomUUID()
+    };
+    this.users.push(newUser);
+    return newUser;
+  }
+
+  public getUser(userId: string): LemonadeUser | undefined {
+    return this.users.find((u) => u.id === userId);
+  }
+
+  public getUserByApiKey(apiKey: string): LemonadeUser | undefined {
+    return this.users.find((u) => u.apiKey === apiKey);
+  }
+
+  public permissionUser(userId: string, eventId: string): void {
+    const user = this.getUser(userId);
+    const event = this.getEvent(eventId);
+
+    if (!user) {
+      throw new Error(`user ${userId} does not exist`);
+    }
+
+    if (!event) {
+      throw new Error(`event ${eventId} does not exist`);
+    }
+
+    if (event.permissionedUserIds.includes(user.id)) {
+      throw new Error(
+        `event ${eventId} already has user ${userId} as an admin`
+      );
+    }
+
+    event.permissionedUserIds.push(userId);
+  }
+}
+
 /**
  * TODO:
  * - multiple keys
  * - mutations
  */
 export class MockLemonadeAPI implements ILemonadeAPI {
-  public readonly ALLOWED_KEY = "allowed";
+  private data: LemonadeDataMocker;
 
-  private data: { events: LemonadeEvent[] };
-
-  public constructor(data: { events: LemonadeEvent[] }) {
+  public constructor(data: LemonadeDataMocker) {
     this.data = data;
   }
 
   public async loadEvents(apiKey: string): Promise<LemonadeEvent[]> {
-    if (apiKey === this.ALLOWED_KEY) {
-      return this.data.events;
-    } else {
-      throw new Error("not allowed");
+    const user = this.data.getUserByApiKey(apiKey);
+
+    if (!user) {
+      throw new Error(`no user with api key ${apiKey} found`);
     }
+
+    return this.data.getUsersEvents(user.id);
   }
 
-  public async checkinTicket(_ticketId: string): Promise<boolean> {
-    // todo
-    throw new Error("not implemented");
+  public async checkinTicket(
+    apiKey: string,
+    eventId: string,
+    ticketId: string
+  ): Promise<void> {
+    const user = this.data.getUserByApiKey(apiKey);
+
+    if (!user) {
+      throw new Error(`no user with api key ${apiKey} found`);
+    }
+
+    const usersEvents = this.data.getUsersEvents(user.id);
+    const event = usersEvents.find((e) => e.id === eventId);
+
+    if (!event) {
+      throw new Error(`user ${user.id} cannot view event ${eventId}`);
+    }
+
+    const ticket = event.tickets.find((t) => t.id === ticketId);
+
+    if (!ticket) {
+      throw new Error(`could not find ticket with id ${ticketId}`);
+    }
+
+    if (ticket.checkedIn) {
+      throw new Error(`ticket ${ticket.id} is already checked in`);
+    }
+
+    ticket.checkedIn = true;
   }
 }
 
@@ -183,7 +360,7 @@ export interface LemonadePipelineOptions {
 export interface LemonadeEventConfig {
   id: string;
   name: string;
-  ticketTiers: string[];
+  ticketTierIds: string[];
 }
 
 /**
@@ -402,7 +579,7 @@ export class LemonadePipeline implements BasePipeline {
         return false;
       }
 
-      const eventConfigHasTicketTier = eventConfig.ticketTiers.includes(
+      const eventConfigHasTicketTier = eventConfig.ticketTierIds.includes(
         t.tierId
       );
       return eventConfigHasTicketTier;
@@ -441,7 +618,7 @@ export class LemonadePipeline implements BasePipeline {
   private async checkinLemonadeTicketPCD(
     _request: CheckTicketInRequest
   ): Promise<CheckTicketInResponseValue> {
-    this.api.checkinTicket("get ticket id from request");
+    this.api.checkinTicket("api key", "event id", "get ticket id from request");
   }
 
   public static is(p: Pipeline): p is LemonadePipeline {
