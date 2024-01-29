@@ -10,8 +10,8 @@ import { PipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { CheckinCapability } from "../capabilities/CheckinCapability";
 import { FeedIssuanceCapability } from "../capabilities/FeedIssuanceCapability";
 import {
-  LemonadeAtom,
   LemonadePipelineDefinition,
+  PipelineAtom,
   PipelineCapability,
   PipelineType
 } from "../types";
@@ -120,4 +120,12 @@ export class LemonadePipeline implements BasePipeline {
   public static is(p: Pipeline): p is LemonadePipeline {
     return p.type === PipelineType.Lemonade;
   }
+}
+
+/**
+ * Intermediate representation which the {@link LemonadePipeline} uses to
+ * save tickets, in order to be able to issue tickets based on them later on.
+ */
+export interface LemonadeAtom extends PipelineAtom {
+  // todo
 }
