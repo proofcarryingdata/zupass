@@ -25,4 +25,5 @@ export interface PipelineAtomDB {
  */
 export interface PipelineAtom {
   id: string; // unique per pipeline configuration
+  email?: string; // not constrained to be unique but generally useful
 }

@@ -42,7 +42,7 @@ export function isLemonadePipelineDefinition(
  * types defined above - {@link LemonadeTicket}, {@link LemonadeEvent}, and
  * {@link LemonadeTicketTier}.
  */
-export interface LemonadeEventConfig {
+export interface LemonadePipelineEventConfig {
   id: string;
   name: string;
   ticketTierIds: string[];
@@ -53,7 +53,7 @@ export interface LemonadeEventConfig {
  */
 export interface LemonadePipelineOptions {
   lemonadeApiKey: string;
-  events: LemonadeEventConfig[];
+  events: LemonadePipelineEventConfig[];
 }
 
 /**
