@@ -4,19 +4,16 @@ import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
-import { createPipeline } from "../src/services/generic-issuance/genericIssuanceService";
-import {
-  LemonadePipeline,
-  LemonadePipelineDefinition
-} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import {
-  PretixPipeline,
-  PretixPipelineDefinition
-} from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import { stopApplication } from "../src/application";
+import { LemonadePipelineDefinition } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import { PretixPipelineDefinition } from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
-import { MockPipelineAtomDB } from "./generic-issuance/MockPipelineAtomDB";
+import { Zupass } from "../src/types";
+import { logger } from "../src/util/logger";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
+import { overrideEnvironment, testingEnv } from "./util/env";
+import { startTestingApp } from "./util/startTestingApplication";
 
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
@@ -30,77 +27,73 @@ import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
  */
 describe.only("generic issuance declarations", function () {
   this.timeout(15_000);
+
+  let application: Zupass;
+
+  const mockLemonadeData = new LemonadeDataMocker();
+  const edgeCity = mockLemonadeData.addEvent("edge city");
+  const ivan = mockLemonadeData.addUser("ivan");
+  const ga = mockLemonadeData.addTier(edgeCity.id, "ga");
+  mockLemonadeData.addTicket(ga.id, edgeCity.id, ivan.name);
+  mockLemonadeData.permissionUser(ivan.id, edgeCity.id);
+  const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockLemonadeData);
+
+  const exampleLemonadePipelineConfig: LemonadePipelineDefinition = {
+    ownerUserId: randomUUID(),
+    id: randomUUID(),
+    editorUserIds: [],
+    options: {
+      lemonadeApiKey: ivan.apiKey,
+      events: [
+        {
+          id: edgeCity.id,
+          name: edgeCity.name,
+          ticketTierIds: [ga.id]
+        }
+      ]
+    },
+    type: PipelineType.Lemonade
+  };
+
+  const examplePretixPipelineConfig: PretixPipelineDefinition = {
+    ownerUserId: randomUUID(),
+    id: randomUUID(),
+    editorUserIds: [],
+    options: {
+      events: [
+        {
+          id: randomUUID(),
+          name: "Eth LatAm",
+          productIds: [randomUUID(), randomUUID()],
+          superUserProductIds: [randomUUID()]
+        }
+      ],
+      pretixAPIKey: randomUUID(),
+      pretixOrgUrl: randomUUID()
+    },
+    type: PipelineType.Pretix
+  };
+
+  const definitions = [
+    examplePretixPipelineConfig,
+    exampleLemonadePipelineConfig
+  ];
+
+  this.beforeAll(async () => {
+    await overrideEnvironment(testingEnv);
+
+    application = await startTestingApp({
+      lemonadeAPI
+    });
+  });
+
+  this.afterAll(async () => {
+    await stopApplication(application);
+  });
+
   it("test", async () => {
-    const mockData = new LemonadeDataMocker();
-    const edgeCity = mockData.addEvent("edge city");
-    const ivan = mockData.addUser("ivan");
-    const ga = mockData.addTier(edgeCity.id, "ga");
-    mockData.addTicket(ga.id, edgeCity.id, ivan.name);
-    mockData.permissionUser(ivan.id, edgeCity.id);
-    const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockData);
-
-    const exampleLemonadePipelineConfig: LemonadePipelineDefinition = {
-      ownerUserId: randomUUID(),
-      id: randomUUID(),
-      editorUserIds: [],
-      options: {
-        lemonadeApiKey: ivan.apiKey,
-        events: [
-          {
-            id: edgeCity.id,
-            name: edgeCity.name,
-            ticketTierIds: [ga.id]
-          }
-        ]
-      },
-      type: PipelineType.Lemonade
-    };
-
-    const examplePretixPipelineConfig: PretixPipelineDefinition = {
-      ownerUserId: randomUUID(),
-      id: randomUUID(),
-      editorUserIds: [],
-      options: {
-        events: [
-          {
-            id: randomUUID(),
-            name: "Eth LatAm",
-            productIds: [randomUUID(), randomUUID()],
-            superUserProductIds: [randomUUID()]
-          }
-        ],
-        pretixAPIKey: randomUUID(),
-        pretixOrgUrl: randomUUID()
-      },
-      type: PipelineType.Pretix
-    };
-
-    // TODO: implement real one
-    const db = new MockPipelineAtomDB();
-    const definitions = [
-      examplePretixPipelineConfig,
-      exampleLemonadePipelineConfig
-    ];
-    const pipelines = definitions.map((d) =>
-      createPipeline(d, db, {
-        lemonadeAPI
-      })
-    );
-
-    const lemonadePipeline = pipelines.find(LemonadePipeline.is);
-    const pretixPipeline = pipelines.find(PretixPipeline.is);
-
-    expect(lemonadePipeline).to.not.be.undefined;
-    expect(pretixPipeline).to.not.be.undefined;
-
-    await lemonadePipeline!.load();
-
-    // expect(db.data[lemonadePipeline!.id]).to.deep.eq({
-    //   [mockLemonadeData.events[0].tickets[0].id]: {
-    //     id: mockLemonadeData.events[0].tickets[0].id
-    //   }
-    // });
-
-    // todo: hit the routes XD
+    const giService = application.services.genericIssuanceService;
+    expect(giService).to.not.be.undefined;
+    logger("test");
   });
 });

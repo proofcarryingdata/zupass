@@ -6,6 +6,8 @@ import { IEmailAPI } from "./apis/emailAPI";
 import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
+import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
+import { IPipelineDefinitionDB } from "./database/queries/pipelineDefinitionDB";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -36,6 +38,10 @@ export interface ApplicationContext {
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
+
+  /// WIP
+  pipelineDB: IPipelineDefinitionDB;
+  atomDB: IPipelineAtomDB;
 }
 
 export interface GlobalServices {

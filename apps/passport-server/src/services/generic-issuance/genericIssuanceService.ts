@@ -4,8 +4,6 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import { MockPipelineAtomDB } from "../../../test/generic-issuance/MockPipelineAtomDB";
-import { MockPipelineDefinitionDB } from "../../../test/generic-issuance/MockPipelineDefinitionDB";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
@@ -187,13 +185,10 @@ export async function startGenericIssuanceService(
     return null;
   }
 
-  const definitionDB = new MockPipelineDefinitionDB();
-  const atomDB = new MockPipelineAtomDB();
-
   const issuanceService = new GenericIssuanceService(
     context,
-    definitionDB,
-    atomDB,
+    context.pipelineDB,
+    context.atomDB,
     lemonadeAPI
   );
 
