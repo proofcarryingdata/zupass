@@ -3,7 +3,6 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import { Router } from "express";
 import { MockPipelineAtomDB } from "../../../test/generic-issuance/MockPipelineAtomDB";
 import { MockPipelineDefinitionDB } from "../../../test/generic-issuance/MockPipelineDefinitionDB";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
@@ -11,14 +10,6 @@ import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
-import {
-  isCheckinCapability,
-  setupCheckinCapabilityRoutes
-} from "./capabilities/CheckinCapability";
-import {
-  isFeedIssuanceCapability,
-  setupFeedCapabilityRoutes
-} from "./capabilities/FeedIssuanceCapability";
 import {
   LemonadePipeline,
   isLemonadePipelineDefinition
@@ -28,7 +19,6 @@ import {
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineDefinition } from "./pipelines/types";
-import { BasePipelineCapability } from "./types";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -83,42 +73,6 @@ export function createPipeline(
       definition
     )}`
   );
-}
-
-/**
- * Given a set of instantiated {@link Pipeline}s, creates routes that handle
- * external HTTP requests.
- */
-export async function setupRoutesForPipelines(
-  router: Router,
-  pipelines: Pipeline[]
-): Promise<void> {
-  for (const pipeline of pipelines) {
-    for (const capability of pipeline.capabilities) {
-      await setupRoutesForCapability(router, pipeline, capability);
-    }
-  }
-}
-
-/**
- * TODO:
- * - probably move to a different file than this
- */
-export async function setupRoutesForCapability(
-  router: Router,
-  pipeline: Pipeline,
-  capability: BasePipelineCapability
-): Promise<void> {
-  if (isFeedIssuanceCapability(capability)) {
-    setupFeedCapabilityRoutes(router, pipeline, capability);
-  } else if (isCheckinCapability(capability)) {
-    setupCheckinCapabilityRoutes(router, pipeline, capability);
-  } else {
-    logger(
-      LOG_TAG,
-      `pipeline ${pipeline.id} capability ${capability} doesn't have a router`
-    );
-  }
 }
 
 /**

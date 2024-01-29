@@ -5,30 +5,11 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import express, { Router } from "express";
-import { FeedIssuanceCapability } from "../../services/generic-issuance/capabilities/FeedIssuanceCapability";
+import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
-import { Pipeline } from "../../services/generic-issuance/pipelines/types";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { PCDHTTPError } from "../pcdHttpError";
-
-/**
- * TODO:
- * - actually interpret HTTP requests, and respond appropriately.
- * - probably move to a different file than this
- */
-export async function setupFeedCapabilityRoutes(
-  router: Router,
-  pipeline: Pipeline,
-  capability: FeedIssuanceCapability
-): Promise<void> {
-  const urlPath = `/generic-issuance/${pipeline.id}/${capability.subId}/poll-feed`;
-  capability.urlPath = urlPath;
-  router.post(urlPath, (req, res) => {
-    res.send("ok"); // TODO
-  });
-}
 
 export function initGenericIssuanceRoutes(
   app: express.Application,

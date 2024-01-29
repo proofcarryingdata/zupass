@@ -2,13 +2,9 @@
 /* eslint-disable no-restricted-globals */
 import { expect } from "chai";
 import { randomUUID } from "crypto";
-import { Router } from "express";
 import "mocha";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
-import {
-  createPipeline,
-  setupRoutesForPipelines
-} from "../src/services/generic-issuance/genericIssuanceService";
+import { createPipeline } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LemonadePipeline,
   LemonadePipelineDefinition
@@ -104,10 +100,6 @@ describe.only("generic issuance declarations", function () {
     //     id: mockLemonadeData.events[0].tickets[0].id
     //   }
     // });
-
-    const router = Router();
-
-    setupRoutesForPipelines(router, pipelines);
 
     // todo: hit the routes XD
   });
