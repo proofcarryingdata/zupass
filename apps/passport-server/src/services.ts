@@ -4,6 +4,7 @@ import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startFrogcryptoService } from "./services/frogcryptoService";
+import { startGenericIssuanceService } from "./services/generic-issuance/genericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
@@ -82,6 +83,8 @@ export async function startServices(
     issuanceService
   );
   const poapService = startPoapService(context, rollbarService);
+  const genericIssuanceService = await startGenericIssuanceService(context);
+
   const services: GlobalServices = {
     semaphoreService,
     userService,
@@ -101,8 +104,10 @@ export async function startServices(
     poapService,
     persistentCacheService,
     multiprocessService,
-    rateLimitService
+    rateLimitService,
+    genericIssuanceService
   };
+
   return services;
 }
 

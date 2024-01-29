@@ -1,6 +1,7 @@
 import { Router } from "express";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { PipelineAtomDB } from "../../database/queries/pipelineAtomDB";
+import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import {
   isCheckinCapability,
@@ -90,5 +91,16 @@ export async function setupRoutesForCapability(
  * - Probably overall very similar to {@link DevconnectPretixSyncService}
  */
 export class GenericIssuanceService {
-  // TODO
+  private context: ApplicationContext;
+
+  public constructor(context: ApplicationContext) {
+    this.context = context;
+  }
+}
+
+export async function startGenericIssuanceService(
+  context: ApplicationContext
+): Promise<GenericIssuanceService> {
+  const issuanceService = new GenericIssuanceService(context);
+  return issuanceService;
 }
