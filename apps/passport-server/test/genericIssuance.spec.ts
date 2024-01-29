@@ -6,7 +6,6 @@ import { Router } from "express";
 import "mocha";
 import {
   ILemonadeAPI,
-  LemonadeDataMocker,
   LemonadePipeline,
   LemonadePipelineDefinition,
   MockLemonadeAPI,
@@ -17,6 +16,7 @@ import {
   createPipeline,
   setupRoutesForPipelines
 } from "../src/services/genericIssuanceService";
+import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
