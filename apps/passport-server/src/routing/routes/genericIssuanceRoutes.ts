@@ -52,7 +52,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.post(
-    "/generic-issuance/api/check-in/pipelineID",
+    "/generic-issuance/api/check-in/:pipelineID",
     async (req: express.Request, res: express.Response) => {
       checkIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");

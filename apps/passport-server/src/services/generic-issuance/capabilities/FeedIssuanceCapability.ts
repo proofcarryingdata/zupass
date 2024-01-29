@@ -14,14 +14,19 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
    * Used to differentiate between different feeds on the same {@link Pipeline}.
    * TODO:
    * - ensure at runtime that a {@link Pipeline} doesn't contain capabilities
-   *   with overlapping {@link subId}s.
+   *   with overlapping {@link feedId}s.
    */
-  subId: string;
+  feedId: string;
   issue(credential: SerializedPCD): Promise<PollFeedResponseValue>;
+  getFeedUrl(): string;
 }
 
 export function isFeedIssuanceCapability(
   capability: BasePipelineCapability
 ): capability is FeedIssuanceCapability {
   return capability.type === PipelineCapability.FeedIssuance;
+}
+
+export function generateIssuanceUrlPath(pipelineId: string): string {
+  return `/generic-issuance/api/poll-feed/${pipelineId}`;
 }

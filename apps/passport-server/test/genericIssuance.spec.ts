@@ -1,11 +1,17 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-restricted-globals */
+import { pollFeed } from "@pcd/passport-interface";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
+import * as path from "path";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { stopApplication } from "../src/application";
-import { LemonadePipelineDefinition } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import {
+  LemonadePipeline,
+  LemonadePipelineDefinition
+} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
 import { PretixPipelineDefinition } from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
@@ -14,6 +20,7 @@ import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
+import { expectToExist } from "./util/util";
 
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
@@ -97,11 +104,33 @@ describe.only("generic issuance service tests", function () {
   });
 
   it("test", async () => {
+    const userIdentity = new Identity();
     const giService = application.services.genericIssuanceService;
     const pipelines = await giService?.getAllPipelines();
 
-    expect(giService).to.not.be.undefined;
+    expectToExist(pipelines);
+
     expect(pipelines).to.have.lengthOf(2);
     logger("the pipelines are", pipelines);
+
+    const lemonadePipeline = pipelines.find(LemonadePipeline.is);
+    expectToExist<LemonadePipeline>(lemonadePipeline);
+
+    const urlRoot = application.expressContext.localEndpoint;
+    const lemonadeIssuanceRoute = path.join(
+      urlRoot,
+      lemonadePipeline?.issuanceCapability.getFeedUrl()
+    );
+
+    logger(lemonadeIssuanceRoute);
+
+    const result = await pollFeed(
+      lemonadeIssuanceRoute,
+      userIdentity,
+      "",
+      lemonadePipeline.issuanceCapability.feedId
+    );
+
+    logger(result);
   });
 });

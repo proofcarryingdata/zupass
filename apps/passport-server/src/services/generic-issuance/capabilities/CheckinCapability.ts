@@ -12,10 +12,15 @@ import { PipelineCapability } from "./types";
 export interface CheckinCapability extends BasePipelineCapability {
   type: PipelineCapability.Checkin;
   checkin(request: CheckTicketInRequest): Promise<CheckTicketInResponseValue>;
+  getCheckinUrl(): string;
 }
 
 export function isCheckinCapability(
   capability: BasePipelineCapability
 ): capability is CheckinCapability {
   return capability.type === PipelineCapability.Checkin;
+}
+
+export function generateCheckinUrlPath(pipelineId: string): string {
+  return `/generic-issuance/api/check-in/${pipelineId}`;
 }

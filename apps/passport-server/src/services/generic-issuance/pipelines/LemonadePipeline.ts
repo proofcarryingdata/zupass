@@ -10,8 +10,14 @@ import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
-import { CheckinCapability } from "../capabilities/CheckinCapability";
-import { FeedIssuanceCapability } from "../capabilities/FeedIssuanceCapability";
+import {
+  CheckinCapability,
+  generateCheckinUrlPath
+} from "../capabilities/CheckinCapability";
+import {
+  FeedIssuanceCapability,
+  generateIssuanceUrlPath
+} from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import {
   BasePipeline,
@@ -65,12 +71,14 @@ export class LemonadePipeline implements BasePipeline {
   public capabilities = [
     {
       issue: this.issueLemonadeTicketPCD.bind(this),
-      subId: "ticket-feed",
-      type: PipelineCapability.FeedIssuance
+      feedId: "ticket-feed",
+      type: PipelineCapability.FeedIssuance,
+      getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
     } satisfies FeedIssuanceCapability,
     {
       checkin: this.checkinLemonadeTicketPCD.bind(this),
-      type: PipelineCapability.Checkin
+      type: PipelineCapability.Checkin,
+      getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
     } satisfies CheckinCapability
   ];
 
@@ -80,6 +88,14 @@ export class LemonadePipeline implements BasePipeline {
 
   public get id(): string {
     return this.definition.id;
+  }
+
+  public get issuanceCapability(): FeedIssuanceCapability {
+    return this.capabilities[0] as FeedIssuanceCapability;
+  }
+
+  public get checkinCapability(): CheckinCapability {
+    return this.capabilities[1] as CheckinCapability;
   }
 
   public constructor(

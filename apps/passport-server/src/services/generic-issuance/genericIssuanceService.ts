@@ -145,7 +145,7 @@ export class GenericIssuanceService {
   ): Promise<PollFeedResponseValue> {
     const pipeline = await this.ensurePipeline(pipelineId);
     const relevantCapability = pipeline.capabilities.find(
-      (c) => isFeedIssuanceCapability(c) && c.subId === req.feedId
+      (c) => isFeedIssuanceCapability(c) && c.feedId === req.feedId
     ) as FeedIssuanceCapability | undefined;
 
     if (!relevantCapability) {
