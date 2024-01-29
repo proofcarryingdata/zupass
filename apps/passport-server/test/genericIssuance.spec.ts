@@ -6,11 +6,11 @@ import { Router } from "express";
 import "mocha";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import {
-  LemonadePipeline,
-  PretixPipeline,
   createPipeline,
   setupRoutesForPipelines
 } from "../src/services/generic-issuance/genericIssuanceService";
+import { LemonadePipeline } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
   LemonadePipelineDefinition,
   PipelineType,

@@ -1,10 +1,3 @@
-import {
-  CheckTicketInRequest,
-  CheckTicketInResponseValue,
-  PollFeedResponseValue
-} from "@pcd/passport-interface";
-import { SerializedPCD } from "@pcd/pcd-types";
-
 /**
  * A pipeline definition is owned by the user who set it up. It's the
  * persisted representation of a pipeline on our backend. When a user
@@ -156,52 +149,6 @@ export enum PipelineCapability {
 export interface BasePipelineCapability {
   type: PipelineCapability;
   urlPath?: string; // set dynamically during application initialization
-}
-
-/**
- * Can be attached to a {@link Pipeline} that can issue feeds to external
- * users. The server can make use of the information encoded in this Capability
- * to connect it to the other services - express routing, etc.
- */
-export interface FeedIssuanceCapability extends BasePipelineCapability {
-  type: PipelineCapability.FeedIssuanceCapability;
-  /**
-   * Used to differentiate between different feeds on the same {@link Pipeline}.
-   * TODO:
-   * - ensure at runtime that a {@link Pipeline} doesn't contain capabilities
-   *   with overlapping {@link subId}s.
-   */
-  subId: string;
-  issue(credential: SerializedPCD): Promise<PollFeedResponseValue>;
-}
-
-export function isFeedIssuanceCapability(
-  capability: BasePipelineCapability
-): capability is FeedIssuanceCapability {
-  return capability.type === PipelineCapability.FeedIssuanceCapability;
-}
-
-/**
- * Similar to {@link FeedIssuanceCapability} except used to declare the capability
- * of a feed to respond to check in requests.
- */
-export interface CheckinCapability extends BasePipelineCapability {
-  type: PipelineCapability.CheckinCapability;
-  checkin(request: CheckTicketInRequest): Promise<CheckTicketInResponseValue>;
-}
-
-export function isCheckinCapability(
-  capability: BasePipelineCapability
-): capability is CheckinCapability {
-  return capability.type === PipelineCapability.CheckinCapability;
-}
-
-/**
- * Interface from which all {@link Pipeline}s derive.
- */
-export interface BasePipeline {
-  type: PipelineType;
-  capabilities: readonly BasePipelineCapability[];
 }
 
 /**
