@@ -1,5 +1,3 @@
-import { PipelineAtom } from "../../services/generic-issuance/types";
-
 /**
  * A place for the {@link PipelineAtom}s to be persisted.
  *
@@ -14,4 +12,17 @@ import { PipelineAtom } from "../../services/generic-issuance/types";
 export interface PipelineAtomDB {
   save(pipelineID: string, atoms: PipelineAtom[]): Promise<void>;
   load(pipelineID: string): Promise<PipelineAtom[]>;
+}
+
+/**
+ * {@link Pipeline}s store the data they load from their data providers in our
+ * database. The fundamental unit of storage is a {@link PipelineAtom}. Each new
+ * type of {@link Pipeline} should define a subtype of this interface to further
+ * specify the data that it stores.
+ *
+ * TODO:
+ * - what metadata should be stored per atom? pipeline name? timetamps?
+ */
+export interface PipelineAtom {
+  id: string; // unique per pipeline configuration
 }

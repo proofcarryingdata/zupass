@@ -1,5 +1,7 @@
-import { PipelineAtomDB } from "../../src/database/queries/pipelineAtomDB";
-import { PipelineAtom } from "../../src/services/generic-issuance/types";
+import {
+  PipelineAtom,
+  PipelineAtomDB
+} from "../../src/database/queries/pipelineAtomDB";
 
 /**
  * A mock implementation of {@link PipelineAtomDB} for testing purposes.

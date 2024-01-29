@@ -9,13 +9,15 @@ import {
   createPipeline,
   setupRoutesForPipelines
 } from "../src/services/generic-issuance/genericIssuanceService";
-import { LemonadePipeline } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
-  LemonadePipelineDefinition,
-  PipelineType,
+  LemonadePipeline,
+  LemonadePipelineDefinition
+} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import {
+  PretixPipeline,
   PretixPipelineDefinition
-} from "../src/services/generic-issuance/types";
+} from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
 import { MockPipelineAtomDB } from "./generic-issuance/MockPipelineAtomDB";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";

@@ -2,7 +2,8 @@ import { PollFeedResponseValue } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { Router } from "express";
 import { Pipeline } from "../pipelines/types";
-import { BasePipelineCapability, PipelineCapability } from "../types";
+import { BasePipelineCapability } from "../types";
+import { PipelineCapability } from "./types";
 
 /**
  * TODO:

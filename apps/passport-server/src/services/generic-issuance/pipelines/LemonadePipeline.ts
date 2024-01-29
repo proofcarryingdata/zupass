@@ -6,16 +6,55 @@ import {
 import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
-import { PipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import {
+  PipelineAtom,
+  PipelineAtomDB
+} from "../../../database/queries/pipelineAtomDB";
 import { CheckinCapability } from "../capabilities/CheckinCapability";
 import { FeedIssuanceCapability } from "../capabilities/FeedIssuanceCapability";
+import { PipelineCapability } from "../capabilities/types";
 import {
-  LemonadePipelineDefinition,
-  PipelineAtom,
-  PipelineCapability,
+  BasePipeline,
+  BasePipelineDefinition,
+  Pipeline,
+  PipelineDefinition,
   PipelineType
-} from "../types";
-import { BasePipeline, Pipeline } from "./types";
+} from "./types";
+
+/**
+ * A {@link LemonadePipelineDefinition} is a pipeline that has finished being
+ * set up that configures the generic issuance service to load data on behalf
+ * of a particular user from Lemonade and issue tickets for it.
+ */
+export interface LemonadePipelineDefinition extends BasePipelineDefinition {
+  type: PipelineType.Lemonade;
+  options: LemonadePipelineOptions;
+}
+
+export function isLemonadePipelineDefinition(
+  d: PipelineDefinition
+): d is LemonadePipelineDefinition {
+  return d.type === PipelineType.Lemonade;
+}
+
+/**
+ * Generic Issuance-specific event configuration. Should roughly match up to the
+ * types defined above - {@link LemonadeTicket}, {@link LemonadeEvent}, and
+ * {@link LemonadeTicketTier}.
+ */
+export interface LemonadeEventConfig {
+  id: string;
+  name: string;
+  ticketTierIds: string[];
+}
+
+/**
+ * TODO: finalize this
+ */
+export interface LemonadePipelineOptions {
+  lemonadeApiKey: string;
+  events: LemonadeEventConfig[];
+}
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which

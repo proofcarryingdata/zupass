@@ -10,15 +10,16 @@ import {
   isFeedIssuanceCapability,
   setupFeedCapabilityRoutes
 } from "./capabilities/FeedIssuanceCapability";
-import { LemonadePipeline } from "./pipelines/LemonadePipeline";
-import { PretixPipeline } from "./pipelines/PretixPipeline";
-import { Pipeline } from "./pipelines/types";
 import {
-  BasePipelineCapability,
-  PipelineDefinition,
-  isLemonadePipelineDefinition,
+  LemonadePipeline,
+  isLemonadePipelineDefinition
+} from "./pipelines/LemonadePipeline";
+import {
+  PretixPipeline,
   isPretixPipelineDefinition
-} from "./types";
+} from "./pipelines/PretixPipeline";
+import { Pipeline, PipelineDefinition } from "./pipelines/types";
+import { BasePipelineCapability } from "./types";
 
 /**
  * Given a {@link PipelineDefinition} (which is persisted to the database) instantiates

@@ -4,7 +4,8 @@ import {
 } from "@pcd/passport-interface";
 import { Router } from "express";
 import { Pipeline } from "../pipelines/types";
-import { BasePipelineCapability, PipelineCapability } from "../types";
+import { BasePipelineCapability } from "../types";
+import { PipelineCapability } from "./types";
 
 /**
  * Similar to {@link FeedIssuanceCapability} except used to declare the capability
