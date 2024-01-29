@@ -40,8 +40,8 @@ export interface ApplicationContext {
   gitCommitHash: string;
 
   /// WIP
-  pipelineDB: IPipelineDefinitionDB;
-  atomDB: IPipelineAtomDB;
+  pipelineDefinitionDB: IPipelineDefinitionDB;
+  pipelineAtomDB: IPipelineAtomDB;
 }
 
 export interface GlobalServices {

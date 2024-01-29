@@ -111,6 +111,11 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
+    await this.createPipelines();
+  }
+
+  private async createPipelines(): Promise<void> {
+    this.pipelines = [];
     const definitions = await this.definitionDB.loadPipelineDefinitions();
     const pipelines = await createPipelines(definitions, this.atomDB, {
       lemonadeAPI: this.lemonadeAPI
@@ -172,6 +177,10 @@ export class GenericIssuanceService {
 
     return relevantCapability.checkin(req);
   }
+
+  public async getAllPipelines(): Promise<Pipeline[]> {
+    return this.pipelines;
+  }
 }
 
 export async function startGenericIssuanceService(
@@ -187,8 +196,8 @@ export async function startGenericIssuanceService(
 
   const issuanceService = new GenericIssuanceService(
     context,
-    context.pipelineDB,
-    context.atomDB,
+    context.pipelineDefinitionDB,
+    context.pipelineAtomDB,
     lemonadeAPI
   );
 

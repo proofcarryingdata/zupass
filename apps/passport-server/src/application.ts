@@ -47,8 +47,8 @@ export async function startApplication(
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
     gitCommitHash: await getCommitHash(),
-    atomDB: new MockPipelineAtomDB(),
-    pipelineDB: new MockPipelineDefinitionDB()
+    pipelineAtomDB: new MockPipelineAtomDB(),
+    pipelineDefinitionDB: new MockPipelineDefinitionDB()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);

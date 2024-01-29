@@ -25,7 +25,7 @@ import { startTestingApp } from "./util/startTestingApplication";
  * - probably need to test the Capability route features of Pipelines
  * - probably need to test the iterative creation of Pipelines (cc @richard)
  */
-describe.only("generic issuance declarations", function () {
+describe.only("generic issuance service tests", function () {
   this.timeout(15_000);
 
   let application: Zupass;
@@ -85,6 +85,11 @@ describe.only("generic issuance declarations", function () {
     application = await startTestingApp({
       lemonadeAPI
     });
+
+    await application.services.genericIssuanceService?.stop();
+    await application.context.pipelineDefinitionDB.clearAllDefinitions();
+    await application.context.pipelineDefinitionDB.setDefinitions(definitions);
+    await application.services.genericIssuanceService?.start();
   });
 
   this.afterAll(async () => {
@@ -93,7 +98,10 @@ describe.only("generic issuance declarations", function () {
 
   it("test", async () => {
     const giService = application.services.genericIssuanceService;
+    const pipelines = await giService?.getAllPipelines();
+
     expect(giService).to.not.be.undefined;
-    logger("test");
+    expect(pipelines).to.have.lengthOf(2);
+    logger("the pipelines are", pipelines);
   });
 });

@@ -2,23 +2,35 @@ import { IPipelineDefinitionDB } from "../../src/database/queries/pipelineDefini
 import { PipelineDefinition } from "../../src/services/generic-issuance/pipelines/types";
 
 export class MockPipelineDefinitionDB implements IPipelineDefinitionDB {
-  private definitions: PipelineDefinition[];
+  private definitions: { [id: string]: PipelineDefinition };
 
   public constructor() {
-    this.definitions = [];
+    this.definitions = {};
   }
 
-  public async addDefinition(definition: PipelineDefinition): Promise<void> {
-    this.definitions.push(definition);
+  public async clearAllDefinitions(): Promise<void> {
+    this.definitions = {};
+  }
+
+  public async setDefinition(definition: PipelineDefinition): Promise<void> {
+    this.definitions[definition.id] = definition;
+  }
+
+  public async setDefinitions(
+    definitions: PipelineDefinition[]
+  ): Promise<void> {
+    for (const definition of definitions) {
+      await this.setDefinition(definition);
+    }
   }
 
   public async getDefinition(
     definitionID: string
   ): Promise<PipelineDefinition | undefined> {
-    return this.definitions.find((d) => d.id === definitionID);
+    return this.definitions[definitionID];
   }
 
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
-    return this.definitions;
+    return Object.values(this.definitions);
   }
 }

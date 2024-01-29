@@ -1,6 +1,5 @@
 import { PollFeedResponseValue } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
-import { Pipeline } from "../pipelines/types";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
