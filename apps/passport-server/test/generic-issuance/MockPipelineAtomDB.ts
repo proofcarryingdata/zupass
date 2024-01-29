@@ -1,9 +1,10 @@
-import { PipelineAtom } from "../../src/services/generic-issuance/genericIssuanceService";
+import { PipelineAtomDB } from "../../src/database/queries/pipelineAtomDB";
+import { PipelineAtom } from "../../src/services/generic-issuance/types";
 
 /**
  * A mock implementation of {@link PipelineAtomDB} for testing purposes.
  */
-export class MockPipelineAtomDB {
+export class MockPipelineAtomDB implements PipelineAtomDB {
   public data: {
     [pipelineId: string]: { [atomId: string]: PipelineAtom };
   } = {};

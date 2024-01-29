@@ -7,13 +7,15 @@ import "mocha";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import {
   LemonadePipeline,
-  LemonadePipelineDefinition,
-  PipelineType,
   PretixPipeline,
-  PretixPipelineDefinition,
   createPipeline,
   setupRoutesForPipelines
 } from "../src/services/generic-issuance/genericIssuanceService";
+import {
+  LemonadePipelineDefinition,
+  PipelineType,
+  PretixPipelineDefinition
+} from "../src/services/generic-issuance/types";
 import { MockPipelineAtomDB } from "./generic-issuance/MockPipelineAtomDB";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
