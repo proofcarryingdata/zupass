@@ -3,7 +3,7 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
 
-const consumerClientAppOpts: BuildOptions = {
+const genericIssuanceClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
@@ -31,18 +31,21 @@ run(process.argv[2])
 async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
-      const clientRes = await build({ ...consumerClientAppOpts, minify: true });
+      const clientRes = await build({
+        ...genericIssuanceClientAppOpts,
+        minify: true
+      });
       console.error("Built", clientRes);
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
-        `${consumerClientAppOpts.outdir}/bundle-size.json`,
+        `${genericIssuanceClientAppOpts.outdir}/bundle-size.json`,
         JSON.stringify(clientRes.metafile)
       );
 
       break;
     case "dev":
-      const ctx = await context(consumerClientAppOpts);
+      const ctx = await context(genericIssuanceClientAppOpts);
       await ctx.watch();
 
       const options = {
