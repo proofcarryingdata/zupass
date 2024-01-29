@@ -125,7 +125,7 @@ function initAllRoutes(
   initFrogcryptoRoutes(app, context, globalServices);
   initPoapRoutes(app, context, globalServices);
   initLogRoutes(app);
-  initGenericIssuanceRoutes(app, context, globalServices);
+  initGenericIssuanceRoutes(app, globalServices);
 }
 
 export function stopHttpServer(app: Zupass): Promise<void> {
