@@ -8,13 +8,13 @@ import {
   ILemonadeAPI,
   LemonadePipeline,
   LemonadePipelineDefinition,
-  MockPipelineAtomDB,
   PipelineType,
   PretixPipeline,
   PretixPipelineDefinition,
   createPipeline,
   setupRoutesForPipelines
 } from "../src/services/genericIssuanceService";
+import { MockPipelineAtomDB } from "./generic-issuance/MockPipelineAtomDB";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 
