@@ -1,4 +1,5 @@
 import {
+  CheckTicketInRequest,
   CheckTicketInResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -8,8 +9,17 @@ import { MockPipelineDefinitionDB } from "../../../test/generic-issuance/MockPip
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
+import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import {
+  CheckinCapability,
+  isCheckinCapability
+} from "./capabilities/CheckinCapability";
+import {
+  FeedIssuanceCapability,
+  isFeedIssuanceCapability
+} from "./capabilities/FeedIssuanceCapability";
 import {
   LemonadePipeline,
   isLemonadePipelineDefinition
@@ -110,23 +120,59 @@ export class GenericIssuanceService {
     this.pipelines = pipelines;
   }
 
-  // todo
   public async stop(): Promise<void> {
-    return;
+    return; // todo
   }
 
-  // todo
+  private async getPipeline(id: string): Promise<Pipeline | undefined> {
+    return this.pipelines.find((p) => p.id === id);
+  }
+
+  private async ensurePipeline(id: string): Promise<Pipeline> {
+    const pipeline = await this.getPipeline(id);
+    if (!pipeline) {
+      throw new Error(`no pipeline with id ${id} found`);
+    }
+    return pipeline;
+  }
+
   public async handlePollFeed(
-    _req: PollFeedRequest
+    pipelineId: string,
+    req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
-    return {
-      actions: []
-    };
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const relevantCapability = pipeline.capabilities.find(
+      (c) => isFeedIssuanceCapability(c) && c.subId === req.feedId
+    ) as FeedIssuanceCapability | undefined;
+
+    if (!relevantCapability) {
+      throw new PCDHTTPError(403, `pipeline ${pipelineId} can't issue PCDs`);
+    }
+
+    if (!req.pcd) {
+      throw new PCDHTTPError(403, `missing credential PCD in request`);
+    }
+
+    return relevantCapability.issue(req.pcd);
   }
 
-  // todo
-  public async handleCheckIn(_req: any): Promise<CheckTicketInResponseValue> {
-    return undefined;
+  public async handleCheckIn(
+    pipelineId: string,
+    req: CheckTicketInRequest
+  ): Promise<CheckTicketInResponseValue> {
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const relevantCapability = pipeline.capabilities.find((c) =>
+      isCheckinCapability(c)
+    ) as CheckinCapability | undefined;
+
+    if (!relevantCapability) {
+      throw new PCDHTTPError(
+        403,
+        `pipeline ${pipelineId} can't check tickets in`
+      );
+    }
+
+    return relevantCapability.checkin(req);
   }
 }
 
