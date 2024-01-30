@@ -11,8 +11,10 @@ function Page(): JSX.Element {
   const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get("token");
   const navigate = useNavigate();
-  console.log({ searchParams });
 
+  // On receiving email code token, try to call Stytch API to authenticate.
+  // Sets cookies (session and session JWT) if successful, which redirects
+  // to dashboard.
   useEffect(() => {
     if (!token || checkedToken) return;
     stytchClient.magicLinks
@@ -23,14 +25,13 @@ function Page(): JSX.Element {
       .then(() => setCheckedToken(true));
   }, [stytchClient, token, checkedToken, navigate]);
 
-  const linkUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
-
   const handleContinue = async (): Promise<void> => {
     if (!email) return;
+    const magicLinkUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
     await stytchClient.magicLinks.email.loginOrCreate(email, {
-      login_magic_link_url: linkUrl,
+      login_magic_link_url: magicLinkUrl,
       login_expiration_minutes: 10,
-      signup_magic_link_url: linkUrl,
+      signup_magic_link_url: magicLinkUrl,
       signup_expiration_minutes: 10
     });
 
