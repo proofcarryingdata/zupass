@@ -5,6 +5,7 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
+import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
@@ -37,7 +38,7 @@ export async function createPipelines(
   db: IPipelineAtomDB,
   apis: {
     lemonadeAPI: ILemonadeAPI;
-    // TODO: pretix api
+    genericPretixAPI: IGenericPretixAPI;
   }
 ): Promise<Pipeline[]> {
   logger(LOG_TAG, `creating ${definitions.length} pipelines`);
@@ -47,12 +48,7 @@ export async function createPipelines(
   for (const definition of definitions) {
     try {
       logger(LOG_TAG, `creating pipeline ${definition.id}`);
-      const pipeline = await createPipeline(
-        eddsaPrivateKey,
-        definition,
-        db,
-        apis
-      );
+      const pipeline = createPipeline(eddsaPrivateKey, definition, db, apis);
       pipelines.push(pipeline);
       logger(LOG_TAG, `successfully created pipeline ${definition.id}`);
     } catch (e) {
@@ -74,7 +70,7 @@ export function createPipeline(
   db: IPipelineAtomDB,
   apis: {
     lemonadeAPI: ILemonadeAPI;
-    // TODO: pretix api
+    genericPretixAPI: IGenericPretixAPI;
   }
 ): Pipeline {
   if (isLemonadePipelineDefinition(definition)) {
@@ -85,7 +81,12 @@ export function createPipeline(
       apis.lemonadeAPI
     );
   } else if (isPretixPipelineDefinition(definition)) {
-    return new PretixPipeline(eddsaPrivateKey, definition, db);
+    return new PretixPipeline(
+      eddsaPrivateKey,
+      definition,
+      db,
+      apis.genericPretixAPI
+    );
   }
 
   throw new Error(
@@ -108,6 +109,7 @@ export class GenericIssuanceService {
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
   private lemonadeAPI: ILemonadeAPI;
+  private genericPretixAPI: IGenericPretixAPI;
   private eddsaPrivateKey: string;
 
   public constructor(
@@ -115,12 +117,14 @@ export class GenericIssuanceService {
     definitionDB: IPipelineDefinitionDB,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
+    pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string
   ) {
     this.definitionDB = definitionDB;
     this.atomDB = atomDB;
     this.context = context;
     this.lemonadeAPI = lemonadeAPI;
+    this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelines = [];
   }
@@ -143,7 +147,8 @@ export class GenericIssuanceService {
       definitions,
       this.atomDB,
       {
-        lemonadeAPI: this.lemonadeAPI
+        lemonadeAPI: this.lemonadeAPI,
+        genericPretixAPI: this.genericPretixAPI
       }
     );
     this.pipelines = pipelines;
@@ -233,12 +238,18 @@ export class GenericIssuanceService {
 
 export async function startGenericIssuanceService(
   context: ApplicationContext,
-  lemonadeAPI: ILemonadeAPI | null
+  lemonadeAPI: ILemonadeAPI | null,
+  genericPretixAPI: IGenericPretixAPI | null
 ): Promise<GenericIssuanceService | null> {
   if (!lemonadeAPI) {
     logger(
       "[INIT] not starting generic issuance service - missing lemonade API"
     );
+    return null;
+  }
+
+  if (!genericPretixAPI) {
+    logger("[INIT] not starting generic issuance service - missing pretix API");
     return null;
   }
 
@@ -256,6 +267,7 @@ export async function startGenericIssuanceService(
     context.pipelineDefinitionDB,
     context.pipelineAtomDB,
     lemonadeAPI,
+    genericPretixAPI,
     pkeyEnv
   );
 
