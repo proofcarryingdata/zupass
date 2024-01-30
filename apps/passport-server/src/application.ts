@@ -3,9 +3,12 @@ import sendgrid from "@sendgrid/mail";
 import process from "node:process";
 import * as path from "path";
 import urljoin from "url-join";
+import { MockPipelineAtomDB } from "../test/generic-issuance/MockPipelineAtomDB";
+import { MockPipelineDefinitionDB } from "../test/generic-issuance/MockPipelineDefinitionDB";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
+import { ILemonadeAPI, getLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import {
   IZuconnectTripshaAPI,
   getZuconnectTripshaAPI
@@ -43,7 +46,10 @@ export async function startApplication(
     honeyClient,
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
-    gitCommitHash: await getCommitHash()
+    gitCommitHash: await getCommitHash(),
+    // TODO: remove these once we have settled on a db schema for these
+    pipelineAtomDB: new MockPipelineAtomDB(),
+    pipelineDefinitionDB: new MockPipelineDefinitionDB()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
@@ -126,10 +132,20 @@ async function getOverridenApis(
     zuconnectTripshaAPI = getZuconnectTripshaAPI();
   }
 
+  let lemonadeAPI: ILemonadeAPI | null = null;
+
+  if (apiOverrides?.lemonadeAPI) {
+    logger("[INIT] overriding Lemonade API");
+    lemonadeAPI = apiOverrides.lemonadeAPI;
+  } else {
+    lemonadeAPI = getLemonadeAPI();
+  }
+
   return {
     emailAPI,
     zuzaluPretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI
+    zuconnectTripshaAPI,
+    lemonadeAPI
   };
 }

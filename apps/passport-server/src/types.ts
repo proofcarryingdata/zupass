@@ -3,8 +3,11 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
+import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
+import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
+import { IPipelineDefinitionDB } from "./database/queries/pipelineDefinitionDB";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -13,6 +16,7 @@ import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
+import { GenericIssuanceService } from "./services/generic-issuance/genericIssuanceService";
 import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
@@ -34,6 +38,10 @@ export interface ApplicationContext {
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
+
+  /// WIP. remove once we have real database APIs for these
+  pipelineDefinitionDB: IPipelineDefinitionDB;
+  pipelineAtomDB: IPipelineAtomDB;
 }
 
 export interface GlobalServices {
@@ -56,6 +64,7 @@ export interface GlobalServices {
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
+  genericIssuanceService: GenericIssuanceService | null;
 }
 
 export interface Zupass {
@@ -74,6 +83,7 @@ export interface APIs {
   zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
+  lemonadeAPI: ILemonadeAPI | null;
 }
 
 export interface EnvironmentVariables {

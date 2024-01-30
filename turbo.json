@@ -5,7 +5,7 @@
       "cache": true
     },
     "pre-build": {
-      "cache": true,
+      "cache": false,
       "outputs": []
     },
     "build": {
@@ -17,7 +17,7 @@
       "cache": false
     },
     "test": {
-      "cache": true
+      "cache": false
     },
     "clean": {
       "outputs": [],
@@ -86,6 +86,7 @@
     "FROGCRYPTO_SERVER_URL",
     "TICKET_ISSUANCE_CUTOFF_DATE",
     "GENERIC_RATE_LIMIT_DISABLED",
-    "WORKER_MODULE_PATH"
+    "WORKER_MODULE_PATH",
+    "GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
   ]
 }

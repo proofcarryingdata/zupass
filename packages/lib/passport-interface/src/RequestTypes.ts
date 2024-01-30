@@ -803,3 +803,21 @@ export type FrogCryptoUpdateFeedsRequest = {
 export interface FrogCryptoUpdateFeedsResponseValue {
   feeds: FrogCryptoDbFeedData[];
 }
+
+/**
+ * Request body for hitting the Generic Issuance checkin API on the backend.
+ */
+export type GenericIssuanceCheckInRequest = {
+  /**
+   * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
+   * signed using the Zupass Semaphore identity of the user who has a ticket
+   * that the user claims grants them the permission to check tickets issued
+   * by the generic issuance service in.
+   */
+  credential: SerializedPCD<SemaphoreSignaturePCD>;
+};
+
+/**
+ * Checking in either succeeds or fails, so no response value is defined for now.
+ */
+export type GenericIssuanceCheckInResponseValue = undefined;
