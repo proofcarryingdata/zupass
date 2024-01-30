@@ -42,7 +42,7 @@ export async function createPipelines(
 ): Promise<Pipeline[]> {
   logger(LOG_TAG, `creating ${definitions.length} pipelines`);
 
-  const results: Pipeline[] = [];
+  const pipelines: Pipeline[] = [];
 
   for (const definition of definitions) {
     try {
@@ -53,14 +53,14 @@ export async function createPipelines(
         db,
         apis
       );
-      results.push(pipeline);
+      pipelines.push(pipeline);
       logger(LOG_TAG, `successfully created pipeline ${definition.id}`);
     } catch (e) {
       logger(LOG_TAG, `failed to create pipeline ${definition.id}`, e);
     }
   }
 
-  return results;
+  return pipelines;
 }
 
 /**
@@ -128,6 +128,7 @@ export class GenericIssuanceService {
   public async start(): Promise<void> {
     await this.createPipelines();
     await this.loadAllPipelines();
+    await this.scheduleReloads();
   }
 
   public async loadAllPipelines(): Promise<void> {
@@ -148,6 +149,10 @@ export class GenericIssuanceService {
     this.pipelines = pipelines;
   }
 
+  private async scheduleReloads(): Promise<void> {
+    // TODO
+  }
+
   public async stop(): Promise<void> {
     return; // todo
   }
@@ -164,6 +169,12 @@ export class GenericIssuanceService {
     return pipeline;
   }
 
+  /**
+   * Handles incoming requests that hit a Pipeline-specific feed for PCDs
+   * for every single pipeline that has this capability that this server manages.
+   *
+   * TODO: better logging, honeycomb tracing
+   */
   public async handlePollFeed(
     pipelineId: string,
     req: PollFeedRequest
@@ -174,7 +185,10 @@ export class GenericIssuanceService {
     ) as FeedIssuanceCapability | undefined;
 
     if (!relevantCapability) {
-      throw new PCDHTTPError(403, `pipeline ${pipelineId} can't issue PCDs`);
+      throw new PCDHTTPError(
+        403,
+        `pipeline ${pipelineId} can't issue PCDs for feed id ${req.feedId}`
+      );
     }
 
     if (!req.pcd) {
@@ -184,6 +198,12 @@ export class GenericIssuanceService {
     return relevantCapability.issue(req);
   }
 
+  /**
+   * Handles incoming requests that hit a Pipeline which implements the checkin
+   * capability for every pipeline this server manages.
+   *
+   * TODO: better logging and tracing.
+   */
   public async handleCheckIn(
     pipelineId: string,
     req: GenericIssuanceCheckInRequest
@@ -203,6 +223,9 @@ export class GenericIssuanceService {
     return relevantCapability.checkin(req);
   }
 
+  /**
+   * TODO: this probably shouldn't be public, but it was useful for testing.
+   */
   public async getAllPipelines(): Promise<Pipeline[]> {
     return this.pipelines;
   }
@@ -236,6 +259,9 @@ export async function startGenericIssuanceService(
     pkeyEnv
   );
 
+  // TODO: in the future (read: before shipping to real prod), this probably
+  // shouldn't await, as there may be many many pipelines, and their APIs don't
+  // necessarily return in a bounded amount of time.
   await issuanceService.start();
 
   return issuanceService;

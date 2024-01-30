@@ -66,19 +66,45 @@ export function isLemonadePipelineDefinition(
  * {@link LemonadeTicketTier}.
  */
 export interface LemonadePipelineEventConfig {
+  /**
+   * The ID of this event on the Lemonade end.
+   */
   externalId: string;
+
+  /**
+   * Display name.
+   */
   name: string;
+
+  /**
+   * The UUID of this event used for {@link EdDSATicketPCD}.
+   */
   genericIssuanceEventId: string;
+
+  /**
+   * Roughly translates to Products in {@link EdDSATicketPCD}.
+   */
   ticketTiers: LemonadePipelineTicketTierConfig[];
 }
 
+/**
+ * Generic Issuance-specific ticket tier configuration - roughly corresponds to a
+ * 'Product' in Pretix-land.
+ */
 export interface LemonadePipelineTicketTierConfig {
+  /**
+   * The ID of this ticket tier on the Lemonade end.
+   */
   externalId: string;
+
+  /**
+   * The UUID of this ticket tier used in {@link EdDSATicketPCD}.
+   */
   genericIssuanceProductId: string;
 }
 
 /**
- * TODO: finalize this
+ * Configured by the user when setting up Lemonade as a data source.
  */
 export interface LemonadePipelineOptions {
   lemonadeApiKey: string;
@@ -105,8 +131,16 @@ export class LemonadePipeline implements BasePipeline {
     } satisfies CheckinCapability
   ];
 
+  /**
+   * Used to sign {@link EdDSATicketPCD}
+   */
   private eddsaPrivateKey: string;
   private definition: LemonadePipelineDefinition;
+
+  /**
+   * This is where the Pipeline stores atoms so that they don't all have
+   * to be stored in-memory.
+   */
   private db: IPipelineAtomDB<LemonadeAtom>;
   private api: ILemonadeAPI;
 
@@ -141,7 +175,7 @@ export class LemonadePipeline implements BasePipeline {
    * TODO:
    * - consider rate limiting and chunking, similarly to how we currently do it in
    *   {@link DevconnectPretixSyncService}.
-   * - clear tickets after each load?
+   * - clear tickets after each load? important!!!!
    */
   public async load(): Promise<void> {
     logger(LOG_TAG, `loading for pipeline id ${this.id}`);
@@ -180,7 +214,6 @@ export class LemonadePipeline implements BasePipeline {
       LOG_TAG,
       `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
     );
-    logger(atomsToSave);
 
     // TODO: error handling
     await this.db.save(this.definition.id, atomsToSave);
@@ -188,9 +221,8 @@ export class LemonadePipeline implements BasePipeline {
 
   /**
    * TODO:
-   * - implement this - return {@link EdDSATicketPCD}s that this user has based
-   *   on their email address. Watermark the ticket to the semaphore identity linked
-   *   to the {@link EmailPCD} provided as part of this request.
+   * - proper validation of credentials.
+   * - be robust to any single ticket failing to convert.
    */
   private async issueLemonadeTicketPCDs(
     req: PollFeedRequest
@@ -217,11 +249,7 @@ export class LemonadePipeline implements BasePipeline {
     // - that it was signed by the Zupass Server
 
     const email = emailPCD.claim.emailAddress;
-
     const relevantTickets = await this.db.loadByEmail(this.id, email);
-    logger(`email from email pcd`, email);
-    logger(`tickets corresponding to email ${email}`, relevantTickets);
-
     const ticketDatas = relevantTickets.map((t) =>
       this.atomToTicketData(t, credential.claim.identityCommitment)
     );
@@ -348,11 +376,19 @@ export class LemonadePipeline implements BasePipeline {
     return event.name;
   }
 
+  /**
+   * It's important to keep this up to date with whatever is in Lemonade.
+   * Thus, the {@link LemonadePipeline#load} function should probably have
+   * the ability to update its {@link PipelineDefinition}, as that is where
+   * the 'name' of ticket tiers (which corresponds to the ticket name) is stored.
+   */
   private lemonadeAtomToTicketName(atom: LemonadeAtom): string {
-    // TODO
     return atom.lemonadeTierId;
   }
 
+  /**
+   * Very WIP, did my best here.
+   */
   private atomToTicketData(
     atom: LemonadeAtom,
     semaphoreId: string

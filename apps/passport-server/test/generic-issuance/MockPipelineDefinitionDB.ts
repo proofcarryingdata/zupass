@@ -1,6 +1,10 @@
 import { IPipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
 import { PipelineDefinition } from "../../src/services/generic-issuance/pipelines/types";
 
+/**
+ * For testing. In-memory representation of all the pipelines that
+ * 'users' have created in the generic issuance backend.
+ */
 export class MockPipelineDefinitionDB implements IPipelineDefinitionDB {
   private definitions: { [id: string]: PipelineDefinition };
 

@@ -1,6 +1,9 @@
 import { LemonadeDataMocker } from "../../../test/lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "../../../test/lemonade/MockLemonadeAPI";
 
+/**
+ * Used in tests.
+ */
 export interface LemonadeUser {
   id: string;
   email: string;
@@ -11,9 +14,6 @@ export interface LemonadeUser {
 /**
  * A lemonade ticket as represented by the upcoming Lemonade API. It's
  * still t.b.d so this is my best guess for now.
- *
- * TODO:
- * - probably move to different file
  */
 export interface LemonadeTicket {
   id: string;
@@ -22,14 +22,12 @@ export interface LemonadeTicket {
   eventId: string;
   tierId: string;
   checkedIn: boolean;
+  checkerEmail?: string;
 }
 
 /**
  * A lemonade ticket tier as represented by the upcoming Lemonade API. It's
  * still t.b.d so this is my best guess for now.
- *
- * TODO:
- * - probably move to different file
  */
 export interface LemonadeTicketTier {
   name: string;
@@ -39,9 +37,6 @@ export interface LemonadeTicketTier {
 /**
  * A lemonade event as represented by the upcoming Lemonade API. It's
  * still t.b.d so this is my best guess for now.
- *
- * TODO:
- * - probably move to different file
  */
 export interface LemonadeEvent {
   id: string;
@@ -52,8 +47,7 @@ export interface LemonadeEvent {
 }
 
 /**
- * TODO:
- * - probably move to different file
+ * TODO: implement to match the actual API
  */
 export interface ILemonadeAPI {
   loadEvents(apiKey: string): Promise<LemonadeEvent[]>;
@@ -62,9 +56,9 @@ export interface ILemonadeAPI {
     eventId: string,
     ticketId: string
   ): Promise<void>;
-  // TODO: fill in the other methods. This is what Richard
-  // has communicated to them:
-  // - API Key scoped to an ‘account’, which has read/write permissions to the appropriate events. E.g. can read/write events that are owned/co-owned by the account.
+  // TODO: fill in the other methods. This is what is planned so far:
+  // - API Key scoped to an ‘account’, which has read/write permissions to
+  //   the appropriate events. E.g. can read/write events that are owned/co-owned by the account.
   // - GET product types for a given event
   // - GET tickets for a given event, which will include
   //     - Attendee name
@@ -75,14 +69,10 @@ export interface ILemonadeAPI {
 }
 
 /**
- * TODO: replace with production version once it exists
+ * TODO: replace with production version once it exists. We have a placeholder
+ * so that {@link GenericIssuanceService} is instantiated in non-testing environments.
  */
 export function getLemonadeAPI(): ILemonadeAPI {
   const mockData = new LemonadeDataMocker();
-  const edgeCity = mockData.addEvent("edge city");
-  const ivan = mockData.addUser("ivan");
-  const ga = mockData.addTier(edgeCity.id, "ga");
-  mockData.addTicket(ga.id, edgeCity.id, ivan.name, ivan.email);
-  mockData.permissionUser(ivan.id, edgeCity.id);
   return new MockLemonadeAPI(mockData);
 }

@@ -1,4 +1,3 @@
-/* eslint-disable @typescript-eslint/no-unused-vars */
 import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
@@ -19,7 +18,7 @@ export function initGenericIssuanceRoutes(
   logger("[INIT] initializing generic issuance routes");
 
   /**
-   * Throws if we don't have an instance of {@link issuanceService}.
+   * Throws if we don't have an instance of {@link GenericIssuanceService}.
    */
   function checkIssuanceServiceStarted(
     issuanceService: GenericIssuanceService | null

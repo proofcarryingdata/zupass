@@ -22,10 +22,18 @@ export interface IPipelineAtomDB<T extends PipelineAtom = PipelineAtom> {
  * type of {@link Pipeline} should define a subtype of this interface to further
  * specify the data that it stores.
  *
- * TODO:
- * - what metadata should be stored per atom? pipeline name? timetamps?
+ * The rough database schema I was thinking would make most sense for atoms is something like
+ * (
+ *  pipelineID varchar,
+ *  id varchar,
+ *  data json,
+ *  timeCreated Date,
+ *  timeUpdated Date,
+ *  email (derived from data->>email),
+ *  constraint unique(piipelineId, id)
+ * )
  */
 export interface PipelineAtom {
   id: string; // unique per pipeline configuration
-  email?: string; // not constrained to be unique but generally useful
+  email?: string; // not constrained to be unique
 }

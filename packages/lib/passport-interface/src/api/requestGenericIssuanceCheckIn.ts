@@ -9,7 +9,9 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks the server to verify the given email login token.
+ * Asks the server to check in a ticket issued by the Generic Issuance
+ * Service. {@link signedPayload} is a Semaphore Signature of a payload
+ * that is a `JSON.stringify`-ed {@link GenericCheckinCredentialPayload}.
  *
  * Never rejects. All information encoded in the resolved response.
  */

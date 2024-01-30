@@ -5,9 +5,7 @@ import {
 import { LemonadeDataMocker } from "./LemonadeDataMocker";
 
 /**
- * TODO:
- * - multiple keys
- * - mutations
+ * Wraps a {@link LemonadeDataMocker} for testing purposes.
  */
 export class MockLemonadeAPI implements ILemonadeAPI {
   private data: LemonadeDataMocker;

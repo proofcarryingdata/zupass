@@ -47,6 +47,7 @@ export async function startApplication(
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
     gitCommitHash: await getCommitHash(),
+    // TODO: remove these once we have settled on a db schema for these
     pipelineAtomDB: new MockPipelineAtomDB(),
     pipelineDefinitionDB: new MockPipelineDefinitionDB()
   };

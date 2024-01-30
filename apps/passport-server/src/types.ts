@@ -39,7 +39,7 @@ export interface ApplicationContext {
   publicResourcesDir: string;
   gitCommitHash: string;
 
-  /// WIP
+  /// WIP. remove once we have real database APIs for these
   pipelineDefinitionDB: IPipelineDefinitionDB;
   pipelineAtomDB: IPipelineAtomDB;
 }

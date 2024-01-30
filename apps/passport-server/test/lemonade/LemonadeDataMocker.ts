@@ -7,6 +7,10 @@ import {
 } from "../../src/apis/lemonade/lemonadeAPI";
 import { randomEmail } from "../util/util";
 
+/**
+ * In-memory representation of Lemonade's backend, for testing purposes.
+ * Incomplete, depends on how Lemonade actually implements their backend.
+ */
 export class LemonadeDataMocker {
   private events: LemonadeEvent[];
   private users: LemonadeUser[];
