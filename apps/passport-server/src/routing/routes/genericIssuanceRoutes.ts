@@ -1,6 +1,7 @@
 import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
+  GenericIssuanceSendEmailResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -63,6 +64,17 @@ export function initGenericIssuanceRoutes(
         request
       );
       res.send(result satisfies GenericIssuanceCheckInResponseValue);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/user/send-email/:email",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const result = await genericIssuanceService.sendLoginEmail(
+        checkUrlParam(req, "email")
+      );
+      res.send(result satisfies GenericIssuanceSendEmailResponseValue);
     }
   );
 

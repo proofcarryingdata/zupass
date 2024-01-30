@@ -1,6 +1,7 @@
 import {
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest,
+  GenericIssuanceSendEmailResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -112,6 +113,8 @@ export class GenericIssuanceService {
   private lemonadeAPI: ILemonadeAPI;
   private eddsaPrivateKey: string;
   private stytchClient: Client;
+  private bypassEmail: boolean;
+  private genericIssuanceClientUrl: string;
 
   public constructor(
     context: ApplicationContext,
@@ -119,7 +122,8 @@ export class GenericIssuanceService {
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
     eddsaPrivateKey: string,
-    stytchClient: Client
+    stytchClient: Client,
+    genericIssuanceClientUrl: string
   ) {
     this.definitionDB = definitionDB;
     this.atomDB = atomDB;
@@ -128,6 +132,10 @@ export class GenericIssuanceService {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelines = [];
     this.stytchClient = stytchClient;
+    this.genericIssuanceClientUrl = genericIssuanceClientUrl;
+    this.bypassEmail =
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production";
   }
 
   public async start(): Promise<void> {
@@ -255,6 +263,23 @@ export class GenericIssuanceService {
       throw new PCDHTTPError(401, "Not authorized");
     }
   }
+
+  public async sendLoginEmail(
+    email: string
+  ): Promise<GenericIssuanceSendEmailResponseValue> {
+    // TODO: Skip email auth on this.bypassEmail
+    try {
+      await this.stytchClient.magicLinks.email.loginOrCreate({
+        email,
+        login_magic_link_url: this.genericIssuanceClientUrl,
+        login_expiration_minutes: 10,
+        signup_magic_link_url: this.genericIssuanceClientUrl,
+        signup_expiration_minutes: 10
+      });
+    } catch (e) {
+      throw new PCDHTTPError(500, "Failed to send generic issuance email");
+    }
+  }
 }
 
 export async function startGenericIssuanceService(
@@ -293,13 +318,19 @@ export async function startGenericIssuanceService(
     secret: secretEnv
   });
 
+  const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
+  if (genericIssuanceClientUrl == null) {
+    throw new PCDHTTPError(500, "[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
+  }
+
   const issuanceService = new GenericIssuanceService(
     context,
     context.pipelineDefinitionDB,
     context.pipelineAtomDB,
     lemonadeAPI,
     pkeyEnv,
-    stytchClient
+    stytchClient,
+    genericIssuanceClientUrl
   );
 
   // TODO: in the future (read: before shipping to real prod), this probably

@@ -1,6 +1,7 @@
 import { useStytch, useStytchSession } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { ZUPASS_SERVER_URL } from "../constants";
 
 function Page(): JSX.Element {
   const stytchClient = useStytch();
@@ -19,23 +20,26 @@ function Page(): JSX.Element {
     if (!token || checkedToken) return;
     stytchClient.magicLinks
       .authenticate(token, {
-        session_duration_minutes: 60
+        session_duration_minutes: 24 * 60
       })
       .catch((e) => console.error(e))
       .then(() => setCheckedToken(true));
   }, [stytchClient, token, checkedToken, navigate]);
 
   const handleContinue = async (): Promise<void> => {
-    if (!email) return;
-    const magicLinkUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
-    await stytchClient.magicLinks.email.loginOrCreate(email, {
-      login_magic_link_url: magicLinkUrl,
-      login_expiration_minutes: 10,
-      signup_magic_link_url: magicLinkUrl,
-      signup_expiration_minutes: 10
-    });
-
-    setHasSentEmail(true);
+    if (!email || hasSentEmail) return;
+    try {
+      await fetch(
+        new URL(
+          `/generic-issuance/api/user/send-email/${email}`,
+          ZUPASS_SERVER_URL
+        ),
+        { method: "POST" }
+      );
+      setHasSentEmail(true);
+    } catch (e) {
+      alert(e);
+    }
   };
 
   if (session) {
