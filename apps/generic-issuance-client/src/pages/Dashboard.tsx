@@ -12,8 +12,7 @@ export default function Dashboard(): ReactNode {
   useEffect(() => {
     setUserPingMessage("Pinging server...");
     fetch(new URL("generic-issuance/api/user/ping", ZUPASS_SERVER_URL).href, {
-      credentials: "include",
-      referrerPolicy: "no-referrer"
+      credentials: "include"
     })
       .then((res) => res.json())
       .then((message) => setUserPingMessage(`JWT valid, received ${message}.`))
