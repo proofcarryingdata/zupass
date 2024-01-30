@@ -803,3 +803,10 @@ export type FrogCryptoUpdateFeedsRequest = {
 export interface FrogCryptoUpdateFeedsResponseValue {
   feeds: FrogCryptoDbFeedData[];
 }
+
+export type GenericIssuanceCheckInRequest = {
+  // TODO: make this something other than the ticket pcd
+  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+};
+
+export type GenericIssuanceCheckInResponseValue = undefined;
