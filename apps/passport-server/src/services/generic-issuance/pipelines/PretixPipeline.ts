@@ -56,7 +56,42 @@ const LOG_NAME = "PretixPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 /**
- * TODO: implement this. (Probably Rob).
+ * This object represents a configuration from which the server can instantiate
+ * a functioning {@link PretixPipeline}. It's entirely specified by the user.
+ */
+export interface PretixPipelineOptions {
+  pretixAPIKey: string;
+  pretixOrgUrl: string;
+  events: PretixEventConfig[];
+}
+
+/**
+ * Configuration for a specific event, which is managed under the organizer's
+ * Pretix account.
+ */
+export interface PretixEventConfig {
+  externalId: string; // Pretix's event ID
+  genericIssuanceId: string; // Our UUID
+  name: string; // Display name for the event
+  products: PretixProductConfig[];
+}
+
+/**
+ * Configuration for specific products available for the event. Does not need
+ * to include all products available in Pretix, but any product listed here
+ * must be available in Pretix.
+ */
+export interface PretixProductConfig {
+  externalId: string; // Pretix's item ID
+  genericIssuanceId: string; // Our UUID
+  name: string; // Display name
+  isSuperUser: boolean; // Is a user with this product a "superuser"?
+  // Superusers are able to check tickets in to events.
+}
+
+/**
+ * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
+ * loads data from Pretix is capable of.
  */
 export class PretixPipeline implements BasePipeline {
   public type = PipelineType.Pretix;
@@ -74,15 +109,18 @@ export class PretixPipeline implements BasePipeline {
     } satisfies CheckinCapability
   ];
 
+  /**
+   * Used to sign {@link EdDSATicketPCD}
+   */
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
+
+  /**
+   * This is where the Pipeline stores atoms so that they don't all have
+   * to be stored in-memory.
+   */
   private db: IPipelineAtomDB<PretixAtom>;
   private api: IGenericPretixAPI;
-
-  // @todo remove this
-  public getDB(): IPipelineAtomDB {
-    return this.db;
-  }
 
   public get id(): string {
     return this.definition.id;
@@ -108,16 +146,33 @@ export class PretixPipeline implements BasePipeline {
     this.api = api;
   }
 
+  /**
+   * Loads external data from Lemonade and saves it to the {@link IPipelineAtomDB} for
+   * later use.
+   *
+   * TODO:
+   * - clear tickets after each load? important!!!!
+   */
   public async load(): Promise<void> {
     logger(LOG_TAG, `loading for pipeline id ${this.id}`);
     const tickets: PretixTicket[] = [];
 
+    const errors = [];
+
     for (const event of this.definition.options.events) {
-      // @todo validate event data (e.g. pretix settings)
       // @todo this can throw exceptions. how should we handle this?
       const eventData = await this.loadEvent(event);
 
+      errors.push(...this.validateEventData(eventData, event));
+
       tickets.push(...(await this.ordersToTickets(event, eventData)));
+    }
+
+    if (errors.length > 0) {
+      for (const error of errors) {
+        logger(`${LOG_TAG}: ${error}`);
+      }
+      throw new Error(errors.join("\n"));
     }
 
     const atomsToSave: PretixAtom[] = tickets.map((ticket) => {
@@ -131,7 +186,9 @@ export class PretixPipeline implements BasePipeline {
         // globally unique. The position ID is not globally unique, but is
         // unique within the namespace of the event.
         id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
-        secret: ticket.secret
+        secret: ticket.secret,
+        timestampConsumed: ticket.pretix_checkin_timestamp,
+        isConsumed: !!ticket.pretix_checkin_timestamp
       };
     });
 
@@ -176,21 +233,181 @@ export class PretixPipeline implements BasePipeline {
   }
 
   /**
-   * Converts a given list of orders to tickets, and sets
-   * all of their roles to equal the given role. When `subEvents`
-   * is passed in as a parameter, cross-reference them with the
-   * orders, and set the visitor date ranges for the new
-   * `DevconnectPretixTicket` to equal to the date ranges of the visitor
-   * subevent events they have in their order.
+   * Validate that an event's settings match our expectations.
+   * These settings correspond to the "Ask for email addresses per ticket"
+   * setting in the Pretix UI being set to "Ask and require input", which
+   * is mandatory for us.
+   */
+  private validateEventSettings(
+    settings: GenericPretixEventSettings,
+    eventConfig: PretixEventConfig
+  ): string[] {
+    const errors = [];
+    if (
+      settings.attendee_emails_asked !== true ||
+      settings.attendee_emails_required !== true
+    ) {
+      errors.push(
+        `"Ask for email addresses per ticket" setting should be set to "Ask and require input" for event ${eventConfig.genericIssuanceId}`
+      );
+    }
+
+    return errors;
+  }
+
+  /**
+   * Validate that an item / product's settings match our expectations.
+   * These settings correspond to the product (1) either being an add-on item OR of
+   * type "Admission" with "Personalization" being set to "Personalized ticket"
+   * and (2) "Generate tickets" in the "Tickets & Badges" section being set to
+   * "Choose automatically depending on event settings" in the Pretix UI.
+   */
+  private validateEventItem(
+    item: GenericPretixItem,
+    addonCategoryIdSet: Set<number>,
+    productConfig: PretixProductConfig
+  ): string[] {
+    const errors = [];
+
+    // If item is not an add-on, check that it is an Admission product and
+    // that "Personalization" is set to "Personalized Ticket"
+    if (!addonCategoryIdSet.has(item.category)) {
+      if (item.admission !== true) {
+        errors.push(
+          `Product type is not "Admission" on product ${productConfig.genericIssuanceId}`
+        );
+      }
+
+      if (item.personalized !== true) {
+        errors.push(
+          `"Personalization" is not set to "Personalized ticket" on product ${productConfig.genericIssuanceId}`
+        );
+      }
+    }
+
+    if (
+      !(
+        item.generate_tickets === null || item.generate_tickets === undefined
+      ) &&
+      item.generate_tickets !== false
+    ) {
+      errors.push(
+        `"Generate tickets" is not set to "Choose automatically depending on event settings" or "Never" on product ${productConfig.genericIssuanceId}`
+      );
+    }
+
+    return errors;
+  }
+
+  /**
+   * Check all of the API responses for an event before syncing them to the
+   * DB.
+   */
+  private validateEventData(
+    eventData: PretixEventData,
+    eventConfig: PretixEventConfig
+  ): string[] {
+    const { settings, items, categories } = eventData;
+    const activeItemIdSet = new Set(
+      eventConfig.products.map((product) => product.externalId)
+    );
+    const superuserItemIdSet = new Set(
+      eventConfig.products
+        .filter((product) => product.isSuperUser)
+        .map((product) => product.externalId)
+    );
+    const addonCategoryIdSet = new Set(
+      categories.filter((a) => a.is_addon).map((a) => a.id)
+    );
+
+    // We want to make sure that we log all errors, so we collect everything
+    // and only throw an exception once we have found all of them.
+    const errors: string[] = [];
+
+    const eventSettingErrors = this.validateEventSettings(
+      settings,
+      eventConfig
+    );
+    if (eventSettingErrors.length > 0) {
+      errors.push(
+        `Event settings for "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) are invalid:\n` +
+          eventSettingErrors.join("\n")
+      );
+    }
+
+    const fetchedItemsIdSet = new Set();
+
+    for (const item of items) {
+      // Ignore items which are not in the event's "activeItemIDs" set
+      if (activeItemIdSet.has(item.id.toString())) {
+        fetchedItemsIdSet.add(item.id.toString());
+        const productConfig = eventConfig.products.find(
+          (product) => product.externalId === item.id.toString()
+        );
+        const itemErrors = this.validateEventItem(
+          item,
+          addonCategoryIdSet,
+          productConfig as PretixProductConfig
+        );
+        if (itemErrors.length > 0) {
+          errors.push(
+            `Product "${item.name.en}" (${productConfig?.genericIssuanceId}) in event "${eventData.eventInfo.name.en}" is invalid:\n` +
+              itemErrors.join("\n")
+          );
+        }
+      }
+    }
+
+    const activeItemDiff = [...activeItemIdSet].filter(
+      (x) => !fetchedItemsIdSet.has(x)
+    );
+
+    const superuserItemDiff = [...superuserItemIdSet].filter(
+      (x) => !fetchedItemsIdSet.has(x)
+    );
+
+    if (activeItemDiff.length > 0) {
+      errors.push(
+        `Active items with ID(s) "${activeItemDiff.join(
+          ", "
+        )}" are present in config but not in data fetched from Pretix for event ${
+          eventConfig.genericIssuanceId
+        }`
+      );
+    }
+
+    if (superuserItemDiff.length > 0) {
+      errors.push(
+        `Superuser items with ID(s) "${superuserItemDiff.join(
+          ", "
+        )}" are present in config but not in data fetched from Pretix for event ${
+          eventConfig.genericIssuanceId
+        }`
+      );
+    }
+
+    if (eventData.checkinLists.length > 1) {
+      errors.push(
+        `Event "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) has multiple check-in lists`
+      );
+    }
+
+    if (eventData.checkinLists.length < 1) {
+      errors.push(
+        `Event "${eventData.eventInfo.name.en}" (${eventConfig.genericIssuanceId}) has no check-in lists`
+      );
+    }
+
+    return errors;
+  }
+
+  /**
+   * Converts a given list of orders to tickets.
    */
   private async ordersToTickets(
     eventConfig: PretixEventConfig,
     eventData: PretixEventData
   ): Promise<PretixTicket[]> {
-    // Go through all orders and aggregate all item IDs under
-    // the same (email, event_id, organizer_url) tuple. Since we're
-    // already fixing the event_id and organizer_url in this function,
-    // we just need to have the email as the key for this map.
     const tickets: PretixTicket[] = [];
     const { orders } = eventData;
     const fetchedItemIds = new Set(
@@ -201,6 +418,7 @@ export class PretixPipeline implements BasePipeline {
         .filter((product) => fetchedItemIds.has(product.externalId))
         .map((product) => [product.externalId, product])
     );
+
     for (const order of orders) {
       // check that they paid
       if (order.status !== "p") {
@@ -215,6 +433,8 @@ export class PretixPipeline implements BasePipeline {
         checkins
       } of order.positions) {
         const product = products.get(item.toString());
+        // The product should always exist, since the validation functions
+        // ensure it. But TypeScript doesn't know that.
         if (product) {
           // Try getting email from response to question; otherwise, default to email of purchaser
           const email = normalizeEmail(attendee_email || order.email);
@@ -252,7 +472,6 @@ export class PretixPipeline implements BasePipeline {
             product,
             event: eventConfig,
             full_name: attendee_name || order.name || "", // Fallback since we have a not-null constraint
-            is_deleted: false,
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
@@ -564,34 +783,6 @@ export function isPretixPipelineDefinition(
   return d.type === PipelineType.Pretix;
 }
 
-/**
- * TODO: this needs to take into account the actual {@link PretixPipeline}, which
- * has not been implemented yet.
- */
-export interface PretixPipelineOptions {
-  pretixAPIKey: string;
-  pretixOrgUrl: string;
-  events: PretixEventConfig[];
-}
-
-/**
- * This object represents a configuration from which the server can instantiate
- * a functioning {@link PretixPipeline}. It's entirely specified by the user.
- */
-export interface PretixEventConfig {
-  externalId: string; // Pretix's event ID
-  genericIssuanceId: string; // Our UUID
-  name: string;
-  products: PretixProductConfig[];
-}
-
-export interface PretixProductConfig {
-  externalId: string; // Pretix's item ID
-  genericIssuanceId: string; // Our UUID
-  name: string;
-  isSuperUser: boolean;
-}
-
 // Collection of API data for a single event
 interface PretixEventData {
   settings: GenericPretixEventSettings;
@@ -607,7 +798,6 @@ export interface PretixTicket {
   full_name: string;
   product: PretixProductConfig;
   event: PretixEventConfig;
-  is_deleted: boolean;
   is_consumed: boolean;
   secret: string;
   position_id: string;
@@ -619,4 +809,6 @@ export interface PretixAtom extends PipelineAtom {
   eventId: string; // UUID
   productId: string; // UUID
   secret: string;
+  timestampConsumed: Date | null;
+  isConsumed: boolean;
 }
