@@ -301,9 +301,9 @@ export async function startGenericIssuanceService(
     return null;
   }
 
-  const projectIdEnv = process.env.STYTCH_RROJECT_ID;
+  const projectIdEnv = process.env.STYTCH_PROJECT_ID;
   if (projectIdEnv == null) {
-    logger("[INIT] missing environment variable STYTCH_RROJECT_ID");
+    logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
     return null;
   }
 
