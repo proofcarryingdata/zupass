@@ -201,6 +201,11 @@ export class PretixPipeline implements BasePipeline {
     await this.db.save(this.definition.id, atomsToSave);
   }
 
+  /**
+   * Loads data from Pretix for a single event.
+   * Some of this data is used to create tickets, and other data is loaded for
+   * the purpose of validating that Pretix is correctly configured.
+   */
   private async loadEvent(event: PretixEventConfig): Promise<PretixEventData> {
     return traced(LOG_NAME, "loadEvents", async () => {
       const orgUrl = this.definition.options.pretixOrgUrl;
