@@ -18,7 +18,6 @@ import { PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
-import { safeExit } from "../../../../test/util/util";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
@@ -67,9 +66,15 @@ export function isLemonadePipelineDefinition(
  * {@link LemonadeTicketTier}.
  */
 export interface LemonadePipelineEventConfig {
-  id: string;
+  externalId: string;
   name: string;
-  ticketTierIds: string[];
+  genericIssuanceEventId: string;
+  ticketTiers: LemonadePipelineTicketTierConfig[];
+}
+
+export interface LemonadePipelineTicketTierConfig {
+  externalId: string;
+  genericIssuanceProductId: string;
 }
 
 /**
@@ -147,16 +152,17 @@ export class LemonadePipeline implements BasePipeline {
     const tickets = _.flatMap(events, (e) => e.tickets);
     const relevantTickets = tickets.filter((t) => {
       const eventConfig = this.definition.options.events.find(
-        (e) => e.id === t.eventId
+        (e) => e.externalId === t.eventId
       );
 
       if (!eventConfig) {
         return false;
       }
 
-      const eventConfigHasTicketTier = eventConfig.ticketTierIds.includes(
-        t.tierId
-      );
+      const eventConfigHasTicketTier =
+        eventConfig.ticketTiers.find((tier) => tier.externalId === t.tierId) !==
+        undefined;
+
       return eventConfigHasTicketTier;
     });
 
@@ -264,17 +270,73 @@ export class LemonadePipeline implements BasePipeline {
     return ticketPCD;
   }
 
+  private eddsaTicketToLemonadeEventId(ticket: EdDSATicketPCD): string {
+    const correspondingEventConfig = this.definition.options.events.find(
+      (e) => e.genericIssuanceEventId === ticket.claim.ticket.eventId
+    );
+
+    if (!correspondingEventConfig) {
+      throw new Error("no matching event id");
+    }
+
+    return correspondingEventConfig.externalId;
+  }
+
+  private eddsaTicketToLemonadeTierId(ticket: EdDSATicketPCD): string {
+    const correspondingEventConfig = this.definition.options.events.find(
+      (e) => e.genericIssuanceEventId === ticket.claim.ticket.eventId
+    );
+
+    if (!correspondingEventConfig) {
+      throw new Error("no matching event id");
+    }
+
+    const correspondingTierConfig = correspondingEventConfig.ticketTiers.find(
+      (t) => t.genericIssuanceProductId === ticket.claim.ticket.productId
+    );
+
+    if (!correspondingTierConfig) {
+      throw new Error("no matching tier id");
+    }
+
+    return correspondingTierConfig.externalId;
+  }
+
   private lemonadeAtomToZupassEventId(atom: LemonadeAtom): string {
-    return this.id + "-" + atom.lemonadeEventId;
+    const correspondingEventConfig = this.definition.options.events.find(
+      (e) => e.externalId === atom.lemonadeEventId
+    );
+
+    if (!correspondingEventConfig) {
+      throw new Error("no matching event id");
+    }
+
+    return correspondingEventConfig.genericIssuanceEventId;
   }
 
   private lemonadeAtomToZupassProductId(atom: LemonadeAtom): string {
-    return this.id + "-" + atom.lemonadeTierId;
+    const correspondingEventConfig = this.definition.options.events.find(
+      (e) => e.externalId === atom.lemonadeEventId
+    );
+
+    if (!correspondingEventConfig) {
+      throw new Error("no matching event id");
+    }
+
+    const correspondingTierConfig = correspondingEventConfig.ticketTiers.find(
+      (t) => t.externalId === atom.lemonadeTierId
+    );
+
+    if (!correspondingTierConfig) {
+      throw new Error("no corresponding tier config");
+    }
+
+    return correspondingTierConfig.genericIssuanceProductId;
   }
 
   private lemonadeAtomToEventName(atom: LemonadeAtom): string {
     const event = this.definition.options.events.find(
-      (e) => e.id === atom.lemonadeEventId
+      (e) => e.externalId === atom.lemonadeEventId
     );
 
     if (!event) {
@@ -358,13 +420,15 @@ export class LemonadePipeline implements BasePipeline {
     logger("ticketToCheckIn", ticketToCheckIn);
 
     // TODO: check if all the credentials line up
+    // - pubkey matches generic issuance pkey
+    // - signature is valid
 
-    logger("safely exiting");
-    safeExit();
+    const lemonadeEventId = this.eddsaTicketToLemonadeEventId(ticketToCheckIn);
 
-    this.api.checkinTicket(
+    // TODO: error handling
+    await this.api.checkinTicket(
       this.definition.options.lemonadeApiKey,
-      "event id",
+      lemonadeEventId,
       ticketToCheckIn.claim.ticket.ticketId
     );
   }

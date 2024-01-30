@@ -217,9 +217,19 @@ describe.only("generic issuance service tests", function () {
       lemonadeApiKey: ticketCheckerLemonadeUser.apiKey,
       events: [
         {
-          id: edgeCityLemoandeEvent.id,
+          externalId: edgeCityLemoandeEvent.id,
           name: edgeCityLemoandeEvent.name,
-          ticketTierIds: [lemonadeCheckerTier.id, lemonadeGATier.id]
+          genericIssuanceEventId: randomUUID(),
+          ticketTiers: [
+            {
+              externalId: lemonadeCheckerTier.id,
+              genericIssuanceProductId: randomUUID()
+            },
+            {
+              externalId: lemonadeGATier.id,
+              genericIssuanceProductId: randomUUID()
+            }
+          ]
         }
       ]
     },

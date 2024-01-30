@@ -19,9 +19,9 @@ export async function requestGenericIssuanceCheckin(
 ): Promise<GenericIssuanceCheckInResult> {
   return httpPostSimple(
     urlJoin(checkinUrl),
-    async (resText) =>
+    async () =>
       ({
-        value: JSON.parse(resText),
+        value: undefined,
         success: true
       }) as GenericIssuanceCheckInResult,
     {
