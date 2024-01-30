@@ -1,5 +1,5 @@
 import { ArgumentTypeName, PCDPackage } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { expect } from "chai";
 import NodeRSA from "node-rsa";
