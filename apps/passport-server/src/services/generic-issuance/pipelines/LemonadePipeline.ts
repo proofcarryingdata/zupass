@@ -10,6 +10,7 @@ import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
+import { logger } from "../../../util/logger";
 import {
   CheckinCapability,
   generateCheckinUrlPath
@@ -26,6 +27,9 @@ import {
   PipelineDefinition,
   PipelineType
 } from "./types";
+
+const LOG_NAME = "LemonadePipeline";
+const LOG_TAG = `[${LOG_NAME}]`;
 
 /**
  * A {@link LemonadePipelineDefinition} is a pipeline that has finished being
@@ -117,6 +121,8 @@ export class LemonadePipeline implements BasePipeline {
    *   {@link DevconnectPretixSyncService}.
    */
   public async load(): Promise<void> {
+    logger(LOG_TAG, `loading for pipeline id ${this.id}`);
+
     const events = await this.api.loadEvents(
       this.definition.options.lemonadeApiKey
     );
@@ -138,10 +144,15 @@ export class LemonadePipeline implements BasePipeline {
 
     const atomsToSave: LemonadeAtom[] = relevantTickets.map((t) => {
       return {
-        id: t.id
-        // TODO: what else should go in here?
+        id: t.id,
+        email: t.email
       };
     });
+
+    logger(
+      LOG_TAG,
+      `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
+    );
 
     // TODO: error handling
     await this.db.save(this.definition.id, atomsToSave);
@@ -154,8 +165,15 @@ export class LemonadePipeline implements BasePipeline {
    *   to the {@link EmailPCD} provided as part of this request.
    */
   private async issueLemonadeTicketPCD(
-    _credential: SerializedPCD
+    credential: SerializedPCD
   ): Promise<PollFeedResponseValue> {
+    logger(
+      LOG_TAG,
+      `got request to issue tickets for credential ${JSON.stringify(
+        credential
+      )}`
+    );
+
     return {
       actions: []
     };
@@ -167,8 +185,13 @@ export class LemonadePipeline implements BasePipeline {
    * - make sure to check that the given credential corresponds to a superuser ticket type
    */
   private async checkinLemonadeTicketPCD(
-    _request: CheckTicketInRequest
+    request: CheckTicketInRequest
   ): Promise<CheckTicketInResponseValue> {
+    logger(
+      LOG_TAG,
+      `got request to check in tickets with request ${JSON.stringify(request)}`
+    );
+
     this.api.checkinTicket("api key", "event id", "get ticket id from request");
   }
 
