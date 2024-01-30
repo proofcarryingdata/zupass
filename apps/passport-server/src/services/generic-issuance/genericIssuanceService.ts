@@ -112,6 +112,11 @@ export class GenericIssuanceService {
 
   public async start(): Promise<void> {
     await this.createPipelines();
+    await this.loadAllPipelines();
+  }
+
+  public async loadAllPipelines(): Promise<void> {
+    await Promise.allSettled(this.pipelines.map((p) => p.load()));
   }
 
   private async createPipelines(): Promise<void> {

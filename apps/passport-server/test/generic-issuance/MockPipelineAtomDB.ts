@@ -33,6 +33,11 @@ export class MockPipelineAtomDB implements IPipelineAtomDB {
     atomID: string
   ): Promise<PipelineAtom | undefined> {
     const pipelineData = this.data[pipelineID];
+
+    if (!pipelineData) {
+      return undefined;
+    }
+
     const values = Object.values(pipelineData);
     return values.find((v) => v.id === atomID);
   }
@@ -42,6 +47,9 @@ export class MockPipelineAtomDB implements IPipelineAtomDB {
     email: string
   ): Promise<PipelineAtom[]> {
     const pipelineData = this.data[pipelineID];
+    if (!pipelineData) {
+      return [];
+    }
     const values = Object.values(pipelineData);
     return values.filter((v) => v.email === email);
   }

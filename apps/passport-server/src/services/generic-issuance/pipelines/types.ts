@@ -17,6 +17,7 @@ export type Pipeline = LemonadePipeline | PretixPipeline;
 export interface BasePipeline {
   type: PipelineType;
   capabilities: readonly BasePipelineCapability[];
+  load(): Promise<void>; // TODO: is this right?
 }
 
 /**

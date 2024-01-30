@@ -1,4 +1,11 @@
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  ITicketData,
+  TicketCategory
+} from "@pcd/eddsa-ticket-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
+import { getHash } from "@pcd/passport-crypto";
 import {
   CheckTicketInRequest,
   CheckTicketInResponseValue,
@@ -6,9 +13,11 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { PCDActionType } from "@pcd/pcd-collection";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { randomUUID } from "crypto";
 import _ from "lodash";
-import { safeExit } from "../../../../test/util/util";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
@@ -91,7 +100,7 @@ export class LemonadePipeline implements BasePipeline {
   ];
 
   private definition: LemonadePipelineDefinition;
-  private db: IPipelineAtomDB;
+  private db: IPipelineAtomDB<LemonadeAtom>;
   private api: ILemonadeAPI;
 
   public get id(): string {
@@ -112,7 +121,7 @@ export class LemonadePipeline implements BasePipeline {
     api: ILemonadeAPI
   ) {
     this.definition = definition;
-    this.db = db;
+    this.db = db as IPipelineAtomDB<LemonadeAtom>;
     this.api = api;
   }
 
@@ -149,7 +158,8 @@ export class LemonadePipeline implements BasePipeline {
     const atomsToSave: LemonadeAtom[] = relevantTickets.map((t) => {
       return {
         id: t.id,
-        email: t.email
+        email: t.email,
+        name: t.name
       };
     });
 
@@ -157,6 +167,7 @@ export class LemonadePipeline implements BasePipeline {
       LOG_TAG,
       `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
     );
+    logger(atomsToSave);
 
     // TODO: error handling
     await this.db.save(this.definition.id, atomsToSave);
@@ -171,10 +182,10 @@ export class LemonadePipeline implements BasePipeline {
   private async issueLemonadeTicketPCDs(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
-    logger(
-      LOG_TAG,
-      `got request to issue tickets for credential ${JSON.stringify(req)}`
-    );
+    // logger(
+    //   LOG_TAG,
+    //   `got request to issue tickets for credential ${JSON.stringify(req)}`
+    // );
 
     if (!req.pcd) {
       throw new Error("missing credential pcd");
@@ -199,31 +210,83 @@ export class LemonadePipeline implements BasePipeline {
 
     const email = emailPCD.claim.emailAddress;
 
-    // const ticketHolderCredentialPCD =
-    //   await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
-    // const ticketHolderSignatureValid =
-    //   await SemaphoreSignaturePCDPackage.verify(ticketHolderCredentialPCD);
-    // const credentialPayload = JSON.parse(
-    //   ticketHolderCredentialPCD.claim.signedMessage
-    // );
-    // const credentialPayloadPCD = await SemaphoreSignaturePCDPackage.deserialize(
-    //   credentialPayload.pcd
-    // );
-    // logger("credentialPayloadPCD", credentialPayloadPCD);
-    // const serializedEmailPCD = JSON.parse(
-    //   credentialPayloadPCD.claim.signedMessage
-    // ).pcd;
-    // logger("serializedEmailPCD", serializedEmailPCD);
-    // logger("serializedEmailPCD.pcd", serializedEmailPCD.pcd);
-    // const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD);
+    const relevantTickets = await this.db.loadByEmail(this.id, email);
+    logger(`email from email pcd`, email);
+    logger(`tickets corresponding to email ${email}`, relevantTickets);
 
-    // logger("emailPCD", emailPCD);
+    const ticketDatas = relevantTickets.map((t) =>
+      this.atomToTicketData(t, credential.claim.identityCommitment)
+    );
 
-    safeExit();
+    // TODO: cache this intelligently
+    const tickets = await Promise.all(
+      ticketDatas.map((t) => this.ticketDataToTicketPCD(t, ""))
+    );
 
     return {
-      actions: []
+      actions: [
+        {
+          type: PCDActionType.ReplaceInFolder,
+          folder: "folder",
+          pcds: await Promise.all(
+            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+          )
+        }
+      ]
     };
+  }
+
+  private async ticketDataToTicketPCD(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
+  ): Promise<EdDSATicketPCD> {
+    const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
+
+    const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: stableId,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    return ticketPCD;
+  }
+
+  private atomToTicketData(
+    atom: LemonadeAtom,
+    semaphoreId: string
+  ): ITicketData {
+    if (!atom.email) {
+      throw new Error("no"); // TODO
+    }
+
+    return {
+      // unsigned fields
+      attendeeName: atom.name,
+      attendeeEmail: atom.email,
+      eventName: "event name", // TODO
+      ticketName: "ticket name", // TODO
+      checkerEmail: undefined, // TODO
+
+      // signed fields
+      ticketId: atom.id,
+      eventId: randomUUID(), // TODO
+      productId: randomUUID(), // TODO
+      timestampConsumed: 0, // TODO
+      timestampSigned: Date.now(),
+      attendeeSemaphoreId: semaphoreId,
+      isConsumed: false, // TODO
+      isRevoked: false, // TODO
+      ticketCategory: TicketCategory.Generic // TODO?
+    } satisfies ITicketData;
   }
 
   /**
@@ -234,10 +297,10 @@ export class LemonadePipeline implements BasePipeline {
   private async checkinLemonadeTicketPCD(
     request: CheckTicketInRequest
   ): Promise<CheckTicketInResponseValue> {
-    logger(
-      LOG_TAG,
-      `got request to check in tickets with request ${JSON.stringify(request)}`
-    );
+    // logger(
+    //   LOG_TAG,
+    //   `got request to check in tickets with request ${JSON.stringify(request)}`
+    // );
 
     this.api.checkinTicket("api key", "event id", "get ticket id from request");
   }
@@ -253,4 +316,5 @@ export class LemonadePipeline implements BasePipeline {
  */
 export interface LemonadeAtom extends PipelineAtom {
   // todo
+  name: string;
 }

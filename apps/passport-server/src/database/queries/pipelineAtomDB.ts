@@ -9,14 +9,11 @@
  * - Other than atoms, what else should the {@link IPipelineAtomDB} be able
  *   to store for feeds?
  */
-export interface IPipelineAtomDB {
-  save(pipelineID: string, atoms: PipelineAtom[]): Promise<void>;
-  load(pipelineID: string): Promise<PipelineAtom[]>;
-  loadById(
-    pipelineID: string,
-    atomID: string
-  ): Promise<PipelineAtom | undefined>;
-  loadByEmail(pipelineID: string, email: string): Promise<PipelineAtom[]>;
+export interface IPipelineAtomDB<T extends PipelineAtom = PipelineAtom> {
+  save(pipelineID: string, atoms: T[]): Promise<void>;
+  load(pipelineID: string): Promise<T[]>;
+  loadById(pipelineID: string, atomID: string): Promise<T | undefined>;
+  loadByEmail(pipelineID: string, email: string): Promise<T[]>;
 }
 
 /**

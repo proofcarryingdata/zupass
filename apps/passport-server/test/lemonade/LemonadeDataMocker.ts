@@ -42,13 +42,14 @@ export class LemonadeDataMocker {
   public addTicket(
     tierId: string,
     eventId: string,
-    attendeeName: string
+    attendeeName: string,
+    attendeeEmail: string
   ): LemonadeTicket {
     const newTicket: LemonadeTicket = {
       checkedIn: false,
       eventId,
       id: randomUUID(),
-      email: randomEmail(),
+      email: attendeeEmail,
       name: attendeeName,
       tierId
     };

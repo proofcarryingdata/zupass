@@ -31,6 +31,10 @@ export class PretixPipeline implements BasePipeline {
     this.db = db;
   }
 
+  public async load(): Promise<void> {
+    return;
+  }
+
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
   }
