@@ -57,7 +57,7 @@ const LOG_TAG = `[${LOG_NAME}]`;
 
 /**
  * This object represents a configuration from which the server can instantiate
- * a functioning {@link PretixPipeline}. It's entirely specified by the user.
+ * a functioning {@link PretixPipeline}. Partially specified by the user.
  */
 export interface PretixPipelineOptions {
   pretixAPIKey: string;

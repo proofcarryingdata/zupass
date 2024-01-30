@@ -177,7 +177,7 @@ describe("generic issuance service tests", function () {
   let URL_ROOT: string;
   let application: Zupass;
   let giService: GenericIssuanceService | null;
-  let server: SetupServer;
+  let mockPretixServer: SetupServer;
 
   const mockLemonadeData = new LemonadeDataMocker();
   const edgeCityLemonadeEvent = mockLemonadeData.addEvent("edge city");
@@ -290,8 +290,8 @@ describe("generic issuance service tests", function () {
     });
 
     const orgUrls = mockPretixData.get().organizersByOrgUrl.keys();
-    server = getGenericMockPretixAPIServer(orgUrls, mockPretixData);
-    server.listen({ onUnhandledRequest: "bypass" });
+    mockPretixServer = getGenericMockPretixAPIServer(orgUrls, mockPretixData);
+    mockPretixServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     URL_ROOT = application.expressContext.localEndpoint;
@@ -305,7 +305,7 @@ describe("generic issuance service tests", function () {
   });
 
   this.afterEach(async () => {
-    server.resetHandlers();
+    mockPretixServer.resetHandlers();
   });
 
   it("test", async () => {
@@ -456,6 +456,6 @@ describe("generic issuance service tests", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
-    server.close();
+    mockPretixServer.close();
   });
 });
