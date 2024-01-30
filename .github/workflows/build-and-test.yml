@@ -43,6 +43,7 @@ jobs:
         run: "git diff --quiet -- yarn.lock"
       - run: "yarn check-references"
       - run: "yarn build"
+      - run: "yarn typedoc --emit none"
       - run: "yarn lint"
       - run: "yarn test"
       - name: "Test that template package works out-of-the-box"
