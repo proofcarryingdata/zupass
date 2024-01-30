@@ -19,26 +19,33 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
+import { SetupServer } from "msw/node";
 import * as path from "path";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
+import { getI18nString } from "../src/apis/pretix/genericPretixAPI";
 import { stopApplication } from "../src/application";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LemonadePipeline,
   LemonadePipelineDefinition
 } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import { PretixPipelineDefinition } from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import {
+  PretixPipeline,
+  PretixPipelineDefinition
+} from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
+import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
+import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 export async function semaphoreSignPayload(
   identity: Identity,
-  payload: FeedCredentialPayload | any
+  payload: FeedCredentialPayload
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {
@@ -170,6 +177,7 @@ describe("generic issuance service tests", function () {
   let URL_ROOT: string;
   let application: Zupass;
   let giService: GenericIssuanceService | null;
+  let mockPretixServer: SetupServer;
 
   const mockLemonadeData = new LemonadeDataMocker();
   const edgeCityLemonadeEvent = mockLemonadeData.addEvent("edge city");
@@ -237,6 +245,16 @@ describe("generic issuance service tests", function () {
     type: PipelineType.Lemonade
   };
 
+  const mockPretixData = new GenericPretixDataMocker();
+
+  const pretixOrganizer = mockPretixData.get().organizer1;
+  const pretixEvent = pretixOrganizer.eventA;
+  const pretixProducts = pretixOrganizer.itemsByEventID.get(pretixEvent.slug);
+  const pretixSuperuserItemIds = [pretixProducts?.[1].id];
+
+  const ticketHolderPretixEmail = pretixOrganizer.EMAIL_3;
+  const checkerPretixEmail = pretixOrganizer.EMAIL_1;
+
   const pretixDefinition: PretixPipelineDefinition = {
     ownerUserId: randomUUID(),
     id: randomUUID(),
@@ -244,14 +262,21 @@ describe("generic issuance service tests", function () {
     options: {
       events: [
         {
-          id: randomUUID(),
+          genericIssuanceId: randomUUID(),
+          externalId: pretixEvent.slug,
           name: "Eth LatAm",
-          productIds: [randomUUID(), randomUUID()],
-          superUserProductIds: [randomUUID()]
+          products: (pretixProducts ?? []).map((product) => {
+            return {
+              externalId: product.id.toString(),
+              name: getI18nString(product.name),
+              genericIssuanceId: randomUUID(),
+              isSuperUser: pretixSuperuserItemIds.includes(product.id)
+            };
+          })
         }
       ],
-      pretixAPIKey: randomUUID(),
-      pretixOrgUrl: randomUUID()
+      pretixAPIKey: pretixOrganizer.token,
+      pretixOrgUrl: pretixOrganizer.orgUrl
     },
     type: PipelineType.Pretix
   };
@@ -264,6 +289,10 @@ describe("generic issuance service tests", function () {
       lemonadeAPI
     });
 
+    const orgUrls = mockPretixData.get().organizersByOrgUrl.keys();
+    mockPretixServer = getGenericMockPretixAPIServer(orgUrls, mockPretixData);
+    mockPretixServer.listen({ onUnhandledRequest: "bypass" });
+
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     URL_ROOT = application.expressContext.localEndpoint;
     giService = application.services.genericIssuanceService;
@@ -273,6 +302,10 @@ describe("generic issuance service tests", function () {
       pipelineDefinitions
     );
     await giService?.start();
+  });
+
+  this.afterEach(async () => {
+    mockPretixServer.resetHandlers();
   });
 
   it("test", async () => {
@@ -348,7 +381,81 @@ describe("generic issuance service tests", function () {
     expect(thirdCheckinResult.success).to.eq(false);
   });
 
+  it("test pretix", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expect(pipelines).to.have.lengthOf(2);
+    const pretixPipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pretixPipeline);
+    const pretixIssuanceRoute = path.join(
+      URL_ROOT,
+      pretixPipeline?.issuanceCapability.getFeedUrl()
+    );
+
+    const holderIssuedTickets = await requestGenericTickets(
+      pretixIssuanceRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketHolderPretixEmail,
+      ticketHolderZupassIdentity
+    );
+
+    expect(holderIssuedTickets.length).to.eq(1);
+    const firstHolderTicket = holderIssuedTickets[0];
+    expect(firstHolderTicket.claim.ticket.attendeeEmail).to.eq(
+      ticketHolderPretixEmail
+    );
+
+    const checkerIssuedTickets = await requestGenericTickets(
+      pretixIssuanceRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      checkerPretixEmail,
+      ticketCheckerZupassIdentity
+    );
+    expect(checkerIssuedTickets.length).to.eq(6);
+    const firstCheckerTicket = checkerIssuedTickets[0];
+    expect(firstCheckerTicket.claim.ticket.attendeeEmail).to.eq(
+      checkerPretixEmail
+    );
+
+    const pretixCheckinRoute = path.join(
+      URL_ROOT,
+      pretixPipeline?.checkinCapability.getCheckinUrl()
+    );
+
+    const firstCheckinResult = await requestCheckInGenericTicket(
+      pretixCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      checkerPretixEmail,
+      ticketCheckerZupassIdentity,
+      firstHolderTicket
+    );
+    expect(firstCheckinResult.success).to.eq(true);
+
+    // can't check in a ticket that's already checked in
+    const secondCheckinResult = await requestCheckInGenericTicket(
+      pretixCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      checkerPretixEmail,
+      ticketCheckerZupassIdentity,
+      firstHolderTicket
+    );
+    expect(secondCheckinResult.success).to.eq(false);
+
+    // can't check in a ticket using a ticket that isn't a
+    // superuser ticket
+    const thirdCheckinResult = await requestCheckInGenericTicket(
+      pretixCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketHolderPretixEmail,
+      ticketHolderZupassIdentity,
+      firstCheckerTicket
+    );
+    expect(thirdCheckinResult.success).to.eq(false);
+  });
+
   this.afterAll(async () => {
     await stopApplication(application);
+    mockPretixServer.close();
   });
 });

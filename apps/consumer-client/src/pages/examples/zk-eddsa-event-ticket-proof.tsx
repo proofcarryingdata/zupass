@@ -466,7 +466,7 @@ function useZKEdDSAEventTicketProof(
   fieldsToReveal: EdDSATicketFieldsToReveal,
   watermark: bigint,
   externalNullifier?: string
-): { pcd: ZKEdDSAEventTicketPCD | undefined; error: any } {
+): { pcd: ZKEdDSAEventTicketPCD | undefined; error: Error } {
   const [error, _setError] = useState<Error | undefined>();
   const zkEdDSAEventTicketPCD = useSerializedPCD(
     ZKEdDSAEventTicketPCDPackage,

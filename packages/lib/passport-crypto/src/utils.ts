@@ -20,7 +20,7 @@ const {
  * or polyfilled by the final bundler.
  */
 export function getCrypto(): Crypto {
-  const g = globalThis as any;
+  const g = globalThis;
   if (g.crypto) {
     return g.crypto;
   } else {

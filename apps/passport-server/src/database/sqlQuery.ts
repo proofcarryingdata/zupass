@@ -1,5 +1,5 @@
 import { getErrorMessage } from "@pcd/util";
-import { QueryResult } from "pg";
+import { DatabaseError, QueryResult } from "pg";
 import { Pool, PoolClient } from "postgres-pool";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
@@ -12,6 +12,7 @@ import { execWithRetry } from "../util/retry";
 export function sqlQuery(
   pool: Pool,
   query: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args?: any[]
 ): Promise<QueryResult> {
   return traced("DB", "query", async (span) => {
@@ -21,8 +22,8 @@ export function sqlQuery(
     } catch (e) {
       span?.setAttribute("error", e + "");
 
-      if ((e as any).code) {
-        span?.setAttribute("code", (e as any).code);
+      if (e instanceof DatabaseError && e.code) {
+        span?.setAttribute("code", e.code);
       }
 
       logger(`[ERROR] sql query\n`, `"${query}"\n`, e);
@@ -34,6 +35,7 @@ export function sqlQuery(
 async function execQueryWithRetry(
   pool: Pool,
   query: string,
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args?: any[]
 ): Promise<QueryResult> {
   return execWithRetry(
@@ -66,8 +68,8 @@ export function sqlTransaction<T>(
     } catch (e) {
       span?.setAttribute("error", e + "");
 
-      if ((e as any).code) {
-        span?.setAttribute("code", (e as any).code);
+      if (e instanceof DatabaseError && e.code) {
+        span?.setAttribute("code", e.code);
       }
 
       logger(`[ERROR] sql transaction\n`, `"${txn_desc}"\n`, e);

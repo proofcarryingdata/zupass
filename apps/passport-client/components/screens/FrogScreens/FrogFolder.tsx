@@ -1,7 +1,7 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
-import { useEffect, useMemo, useState } from "react";
+import { PropsWithChildren, useEffect, useMemo, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
 import { useUserFeedState } from "./FrogHomeSection";
@@ -22,7 +22,11 @@ export function FrogFolder({
   Container
 }: {
   onFolderClick: (folder: string) => void;
-  Container: React.ComponentType<any>;
+  Container: React.ComponentType<
+    PropsWithChildren<{
+      onClick: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+    }>
+  >;
 }): JSX.Element {
   const fetchTimestamp = useFetchTimestamp();
 

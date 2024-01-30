@@ -43,18 +43,21 @@ export type SyncedEncryptedStorage =
   | SyncedEncryptedStorageV3;
 
 export function isSyncedEncryptedStorageV1(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   storage: any
 ): storage is SyncedEncryptedStorageV1 {
   return storage._storage_version === undefined;
 }
 
 export function isSyncedEncryptedStorageV2(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   storage: any
 ): storage is SyncedEncryptedStorageV2 {
   return storage._storage_version === "v2";
 }
 
 export function isSyncedEncryptedStorageV3(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   storage: any
 ): storage is SyncedEncryptedStorageV3 {
   return storage._storage_version === "v3";

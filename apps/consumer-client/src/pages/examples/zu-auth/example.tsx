@@ -1,3 +1,4 @@
+import { ITicketData } from "@pcd/eddsa-ticket-pcd";
 import { EdDSATicketFieldsToReveal } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { HomeLink } from "../../../components/Core";
@@ -11,7 +12,9 @@ import { isLoggedIn } from "./utils";
  * proofs on top of ZK EdDSA Ticket Event PCD.
  */
 export default function ZuAuthExample(): JSX.Element {
-  const [authenticated, setAuthenticated] = useState<any | false>(false);
+  const [authenticated, setAuthenticated] = useState<
+    Partial<ITicketData> | false
+  >(false);
 
   const [fieldsToReveal, setFieldsToReveal] =
     useState<EdDSATicketFieldsToReveal>({

@@ -93,7 +93,7 @@ export async function onNamedAPIError<TResult>(
   errorCode: number | undefined
 ): Promise<APIResult<TResult, NamedAPIError>> {
   // If server gives us valid JSON, parse it for potential encoded error.
-  let apiError: any = {};
+  let apiError: Partial<NamedAPIError> = {};
   let serverProvidedError = false;
   console.log(resText);
   try {
@@ -146,7 +146,7 @@ export async function onNamedAPIError<TResult>(
   }
 
   console.log(apiError);
-  return { success: false, error: apiError satisfies NamedAPIError };
+  return { success: false, error: apiError as NamedAPIError };
 }
 
 /**

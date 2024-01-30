@@ -14,7 +14,7 @@ export function useSerializedPCD<T extends PCDPackage>(
         return;
       }
       proofPackage.deserialize(parsedPCD.pcd).then((pcd) => {
-        setPCD(pcd as any);
+        setPCD(pcd as PCDOf<T>);
       });
     }
   }, [proofPackage, serializedPCD, setPCD]);

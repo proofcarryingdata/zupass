@@ -90,10 +90,10 @@ function cacheNameForLog(cacheName: string): string {
  */
 const swLog = {
   tag: `[SERVICE_WORKER][${SW_BUILD_ID.substring(0, 4)}]`,
-  I: function (msg: any): void {
+  I: function (msg: string): void {
     console.log(this.tag, msg);
   },
-  V: function (msg: any): void {
+  V: function (msg: string): void {
     console.debug(this.tag, msg);
   }
 };
@@ -141,7 +141,7 @@ self.addEventListener("activate", (event: ExtendableEvent) => {
       windows ${SW_BUILD_ID}`
     );
     event.waitUntil(
-      (async (): any => {
+      (async (): Promise<void> => {
         await swSelf.clients.claim();
         await swSelf.registration.unregister();
         for (const client of await swSelf.clients.matchAll()) {
@@ -190,7 +190,7 @@ self.addEventListener("fetch", (event: FetchEvent) => {
 
   swLog.V(`fetching ${event.request?.url}`);
   event.respondWith(
-    (async (): Promise<void> => {
+    (async (): Promise<Response> => {
       // Check stable cache first.  If we get a hit, we never fetch.
       const stableResp = await checkStableCache(event.request);
       if (stableResp) {

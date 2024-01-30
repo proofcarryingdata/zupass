@@ -10,6 +10,10 @@ import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
 import { ILemonadeAPI, getLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import {
+  IGenericPretixAPI,
+  getGenericPretixAPI
+} from "./apis/pretix/genericPretixAPI";
+import {
   IZuconnectTripshaAPI,
   getZuconnectTripshaAPI
 } from "./apis/zuconnect/zuconnectTripshaAPI";
@@ -108,7 +112,7 @@ async function getOverridenApis(
   let zuzaluPretixAPI: ZuzaluPretixAPI | null = null;
 
   if (apiOverrides?.zuzaluPretixAPI) {
-    logger("[INIT] overriding pretix api");
+    logger("[INIT] overriding zuzalu pretix api");
     zuzaluPretixAPI = apiOverrides.zuzaluPretixAPI;
   } else {
     zuzaluPretixAPI = getZuzaluPretixAPI();
@@ -141,11 +145,21 @@ async function getOverridenApis(
     lemonadeAPI = getLemonadeAPI();
   }
 
+  let genericPretixAPI: IGenericPretixAPI | null = null;
+
+  if (apiOverrides?.genericPretixAPI) {
+    logger("[INIT] overriding Generic Pretix API");
+    genericPretixAPI = apiOverrides.genericPretixAPI;
+  } else {
+    genericPretixAPI = getGenericPretixAPI();
+  }
+
   return {
     emailAPI,
     zuzaluPretixAPI,
     devconnectPretixAPIFactory,
     zuconnectTripshaAPI,
-    lemonadeAPI
+    lemonadeAPI,
+    genericPretixAPI
   };
 }

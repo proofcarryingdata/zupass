@@ -70,7 +70,7 @@ export function login(
         return;
       }
 
-      const isValidTicket = value.knownTicketTypes.some((ticketType: any) => {
+      const isValidTicket = value.knownTicketTypes.some((ticketType) => {
         return (
           (!pcd.claim.partialTicket.eventId ||
             ticketType.eventId === pcd.claim.partialTicket.eventId) &&
@@ -99,8 +99,10 @@ export function login(
       await req.session.save();
 
       res.status(200).send(req.session.ticket);
-    } catch (error: any) {
-      console.error(`[ERROR] ${error.message}`);
+    } catch (error) {
+      if (error instanceof Error) {
+        console.error(`[ERROR] ${error.message}`);
+      }
 
       res.sendStatus(500);
     }
