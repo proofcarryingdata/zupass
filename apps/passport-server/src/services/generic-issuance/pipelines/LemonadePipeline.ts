@@ -17,7 +17,6 @@ import {
 import { PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { randomUUID } from "crypto";
 import _ from "lodash";
 import { safeExit } from "../../../../test/util/util";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
@@ -137,6 +136,7 @@ export class LemonadePipeline implements BasePipeline {
    * TODO:
    * - consider rate limiting and chunking, similarly to how we currently do it in
    *   {@link DevconnectPretixSyncService}.
+   * - clear tickets after each load?
    */
   public async load(): Promise<void> {
     logger(LOG_TAG, `loading for pipeline id ${this.id}`);
@@ -164,7 +164,9 @@ export class LemonadePipeline implements BasePipeline {
       return {
         id: t.id,
         email: t.email,
-        name: t.name
+        name: t.name,
+        lemonadeEventId: t.eventId,
+        lemonadeTierId: t.tierId
       };
     });
 
@@ -262,6 +264,33 @@ export class LemonadePipeline implements BasePipeline {
     return ticketPCD;
   }
 
+  private lemonadeAtomToZupassEventId(atom: LemonadeAtom): string {
+    return this.id + "-" + atom.lemonadeEventId;
+  }
+
+  private lemonadeAtomToZupassProductId(atom: LemonadeAtom): string {
+    return this.id + "-" + atom.lemonadeTierId;
+  }
+
+  private lemonadeAtomToEventName(atom: LemonadeAtom): string {
+    const event = this.definition.options.events.find(
+      (e) => e.id === atom.lemonadeEventId
+    );
+
+    if (!event) {
+      throw new Error(
+        `no lemonade event with id ${atom.lemonadeEventId} in pipeline ${this.id}`
+      );
+    }
+
+    return event.name;
+  }
+
+  private lemonadeAtomToTicketName(atom: LemonadeAtom): string {
+    // TODO
+    return atom.lemonadeTierId;
+  }
+
   private atomToTicketData(
     atom: LemonadeAtom,
     semaphoreId: string
@@ -274,14 +303,14 @@ export class LemonadePipeline implements BasePipeline {
       // unsigned fields
       attendeeName: atom.name,
       attendeeEmail: atom.email,
-      eventName: "event name", // TODO
-      ticketName: "ticket name", // TODO
+      eventName: this.lemonadeAtomToEventName(atom),
+      ticketName: this.lemonadeAtomToTicketName(atom),
       checkerEmail: undefined, // TODO
 
       // signed fields
       ticketId: atom.id,
-      eventId: randomUUID(), // TODO
-      productId: randomUUID(), // TODO
+      eventId: this.lemonadeAtomToZupassEventId(atom),
+      productId: this.lemonadeAtomToZupassProductId(atom),
       timestampConsumed: 0, // TODO
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
@@ -333,7 +362,11 @@ export class LemonadePipeline implements BasePipeline {
     logger("safely exiting");
     safeExit();
 
-    this.api.checkinTicket("api key", "event id", "get ticket id from request");
+    this.api.checkinTicket(
+      this.definition.options.lemonadeApiKey,
+      "event id",
+      ticketToCheckIn.claim.ticket.ticketId
+    );
   }
 
   public static is(p: Pipeline): p is LemonadePipeline {
@@ -348,4 +381,6 @@ export class LemonadePipeline implements BasePipeline {
 export interface LemonadeAtom extends PipelineAtom {
   // todo
   name: string;
+  lemonadeEventId: string;
+  lemonadeTierId: string;
 }
