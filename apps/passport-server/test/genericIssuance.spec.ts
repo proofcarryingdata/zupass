@@ -1,13 +1,14 @@
 /* eslint-disable @typescript-eslint/no-non-null-assertion */
 /* eslint-disable no-restricted-globals */
+import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   FeedCredentialPayload,
   createFeedCredentialPayload,
-  requestGenericIssuanceCheckin,
   requestPollFeed
 } from "@pcd/passport-interface";
-import { ArgumentTypeName, PCD, SerializedPCD } from "@pcd/pcd-types";
+import { ReplaceInFolderAction } from "@pcd/pcd-collection";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
@@ -20,6 +21,7 @@ import "mocha";
 import * as path from "path";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { stopApplication } from "../src/application";
+import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LemonadePipeline,
   LemonadePipelineDefinition
@@ -27,19 +29,16 @@ import {
 import { PretixPipelineDefinition } from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
-import { logger } from "../src/util/logger";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import { expectToExist, safeExit } from "./util/util";
+import { expectToExist } from "./util/util";
 
-// Takes a payload and wraps it in a signature PCD.
 export async function semaphoreSignPayload(
   identity: Identity,
   payload: FeedCredentialPayload
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
-  // In future we might support other types of signature here
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {
       argumentType: ArgumentTypeName.PCD,
@@ -58,6 +57,57 @@ export async function semaphoreSignPayload(
   return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
 }
 
+export async function requestGenericTickets(
+  url: string,
+  zupassEddsaPrivateKey: string,
+  email: string,
+  identity: Identity
+): Promise<EdDSATicketPCD[]> {
+  const ticketHolderEmailPCD = await EmailPCDPackage.prove({
+    privateKey: {
+      value: zupassEddsaPrivateKey,
+      argumentType: ArgumentTypeName.String
+    },
+    id: {
+      value: "email-id",
+      argumentType: ArgumentTypeName.String
+    },
+    emailAddress: {
+      value: email,
+      argumentType: ArgumentTypeName.String
+    },
+    semaphoreId: {
+      value: identity.commitment.toString(),
+      argumentType: ArgumentTypeName.String
+    }
+  });
+  const serializedTicketHolderEmailPCD =
+    await EmailPCDPackage.serialize(ticketHolderEmailPCD);
+  const ticketHolderFeedCredentialPayload = createFeedCredentialPayload(
+    serializedTicketHolderEmailPCD
+  );
+  const ticketHolderFeedCredential = await semaphoreSignPayload(
+    identity,
+    ticketHolderFeedCredentialPayload
+  );
+  const ticketPCDResponse = await requestPollFeed(url, {
+    feedId: "ticket-feed",
+    pcd: ticketHolderFeedCredential
+  });
+
+  if (!ticketPCDResponse.success) {
+    throw new Error("expected to be able to hit the generic issuance feed");
+  }
+
+  const firstAction = ticketPCDResponse.value
+    .actions[0] as ReplaceInFolderAction;
+  const serializedTickets: SerializedPCD<EdDSATicketPCD>[] = firstAction.pcds;
+  const tickets = await Promise.all(
+    serializedTickets.map((t) => EdDSATicketPCDPackage.deserialize(t.pcd))
+  );
+  return tickets;
+}
+
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
  * to make sure that ends are coming together neatly. Totally incomplete.
@@ -71,34 +121,45 @@ export async function semaphoreSignPayload(
 describe.only("generic issuance service tests", function () {
   this.timeout(15_000);
 
+  let ZUPASS_EDDSA_KEY: string;
+  let URL_ROOT: string;
   let application: Zupass;
+  let giService: GenericIssuanceService | null;
 
   const mockLemonadeData = new LemonadeDataMocker();
-  const edgeCity = mockLemonadeData.addEvent("edge city");
+  const edgeCityLemoandeEvent = mockLemonadeData.addEvent("edge city");
 
-  const gaTier = mockLemonadeData.addTier(edgeCity.id, "ga");
-  const checkerTier = mockLemonadeData.addTier(edgeCity.id, "checker");
-
-  const ticketHolder = mockLemonadeData.addUser("holder");
-  const ticketHolderIdentity = new Identity();
-
-  const ticketChecker = mockLemonadeData.addUser("checker");
-  const checkerIdentity = new Identity();
-
-  const holderTicket = mockLemonadeData.addTicket(
-    gaTier.id,
-    edgeCity.id,
-    ticketHolder.name,
-    ticketHolder.email
+  const lemonadeGATier = mockLemonadeData.addTier(
+    edgeCityLemoandeEvent.id,
+    "ga"
   );
-  const checkerTicket = mockLemonadeData.addTicket(
-    checkerTier.id,
-    edgeCity.id,
-    ticketChecker.name,
-    ticketChecker.email
+  const lemonadeCheckerTier = mockLemonadeData.addTier(
+    edgeCityLemoandeEvent.id,
+    "checker"
   );
 
-  mockLemonadeData.permissionUser(ticketChecker.id, edgeCity.id);
+  const ticketHolderLemonadeUser = mockLemonadeData.addUser("holder");
+  const ticketHolderZupassIdentity = new Identity();
+  const ticketHolderLemonadeTicket = mockLemonadeData.addTicket(
+    lemonadeGATier.id,
+    edgeCityLemoandeEvent.id,
+    ticketHolderLemonadeUser.name,
+    ticketHolderLemonadeUser.email
+  );
+
+  const ticketCheckerLemonadeUser = mockLemonadeData.addUser("checker");
+  const ticketCheckerZupassIdentity = new Identity();
+  const ticketCheckerLemonadeTicket = mockLemonadeData.addTicket(
+    lemonadeCheckerTier.id,
+    edgeCityLemoandeEvent.id,
+    ticketCheckerLemonadeUser.name,
+    ticketCheckerLemonadeUser.email
+  );
+
+  mockLemonadeData.permissionUser(
+    ticketCheckerLemonadeUser.id,
+    edgeCityLemoandeEvent.id
+  );
 
   const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockLemonadeData);
 
@@ -107,12 +168,12 @@ describe.only("generic issuance service tests", function () {
     id: randomUUID(),
     editorUserIds: [],
     options: {
-      lemonadeApiKey: ticketChecker.apiKey,
+      lemonadeApiKey: ticketCheckerLemonadeUser.apiKey,
       events: [
         {
-          id: edgeCity.id,
-          name: edgeCity.name,
-          ticketTierIds: [checkerTier.id, gaTier.id]
+          id: edgeCityLemoandeEvent.id,
+          name: edgeCityLemoandeEvent.name,
+          ticketTierIds: [lemonadeCheckerTier.id, lemonadeGATier.id]
         }
       ]
     },
@@ -145,41 +206,19 @@ describe.only("generic issuance service tests", function () {
     application = await startTestingApp({
       lemonadeAPI
     });
-    await application.services.genericIssuanceService?.stop();
+
+    ZUPASS_EDDSA_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
+    URL_ROOT = application.expressContext.localEndpoint;
+    giService = application.services.genericIssuanceService;
+    await giService?.stop();
     await application.context.pipelineDefinitionDB.clearAllDefinitions();
     await application.context.pipelineDefinitionDB.setDefinitions(
       pipelineDefinitions
     );
-    await application.services.genericIssuanceService?.start();
+    await giService?.start();
   });
 
   it("test", async () => {
-    const urlRoot = application.expressContext.localEndpoint;
-    const zupassEddsaPrivateKey = process.env
-      .SERVER_EDDSA_PRIVATE_KEY as string;
-
-    const ticketHolderEmailPCD = await EmailPCDPackage.prove({
-      privateKey: {
-        value: zupassEddsaPrivateKey,
-        argumentType: ArgumentTypeName.String
-      },
-      id: {
-        value: "email-id",
-        argumentType: ArgumentTypeName.String
-      },
-      emailAddress: {
-        value: ticketHolder.email,
-        argumentType: ArgumentTypeName.String
-      },
-      semaphoreId: {
-        value: ticketHolderIdentity.commitment.toString(),
-        argumentType: ArgumentTypeName.String
-      }
-    });
-    const serializedTicketHolderEmailPCD =
-      await EmailPCDPackage.serialize(ticketHolderEmailPCD);
-
-    const giService = application.services.genericIssuanceService;
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
     expectToExist(pipelines);
@@ -188,59 +227,33 @@ describe.only("generic issuance service tests", function () {
     expectToExist(lemonadePipeline);
 
     const lemonadeIssuanceRoute = path.join(
-      urlRoot,
+      URL_ROOT,
       lemonadePipeline?.issuanceCapability.getFeedUrl()
     );
 
-    const ticketHolderFeedCredentialPayload = createFeedCredentialPayload(
-      serializedTicketHolderEmailPCD
+    const holderIssuedTickets = await requestGenericTickets(
+      lemonadeIssuanceRoute,
+      ZUPASS_EDDSA_KEY,
+      ticketHolderLemonadeUser.email,
+      ticketHolderZupassIdentity
     );
-    const ticketHolderFeedCredential = await semaphoreSignPayload(
-      ticketHolderIdentity,
-      ticketHolderFeedCredentialPayload
+    expect(holderIssuedTickets.length).to.eq(1);
+    const firstHolderTicket = holderIssuedTickets[0];
+    expect(firstHolderTicket.claim.ticket.attendeeEmail)
+      .to.eq(ticketHolderLemonadeTicket.email)
+      .to.eq(ticketHolderLemonadeUser.email);
+
+    const checkerIssuedTickets = await requestGenericTickets(
+      lemonadeIssuanceRoute,
+      ZUPASS_EDDSA_KEY,
+      ticketCheckerLemonadeTicket.email,
+      ticketCheckerZupassIdentity
     );
-    const ticketPCDResponse = await requestPollFeed(lemonadeIssuanceRoute, {
-      feedId: "ticket-feed",
-      pcd: ticketHolderFeedCredential
-    });
-
-    logger("feeds response", JSON.stringify(ticketPCDResponse, null, 2));
-    logger("exiting safely");
-    safeExit();
-
-    const ticketHolderTicketPCD: PCD | undefined = undefined;
-    const checkinRoute = path.join(
-      urlRoot,
-      lemonadePipeline.checkinCapability.getCheckinUrl()
-    );
-
-    const checkinCredentialPCD: SerializedPCD =
-      await SemaphoreSignaturePCDPackage.serialize(
-        await SemaphoreSignaturePCDPackage.prove({
-          identity: {
-            argumentType: ArgumentTypeName.PCD,
-            value: await SemaphoreIdentityPCDPackage.serialize(
-              await SemaphoreIdentityPCDPackage.prove({
-                identity: checkerIdentity
-              })
-            )
-          },
-          signedMessage: {
-            argumentType: ArgumentTypeName.String,
-            value: ticketHolderTicketPCD ?? ""
-          }
-        })
-      );
-
-    logger(ticketPCDResponse, ticketHolderTicketPCD);
-    logger("checkin route", checkinRoute);
-
-    const checkinResult = await requestGenericIssuanceCheckin(
-      checkinRoute,
-      checkinCredentialPCD
-    );
-
-    logger("checkin result", checkinResult);
+    expect(checkerIssuedTickets.length).to.eq(1);
+    const firstCheckerTicket = checkerIssuedTickets[0];
+    expect(firstCheckerTicket.claim.ticket.attendeeEmail)
+      .to.eq(ticketCheckerLemonadeTicket.email)
+      .to.eq(ticketCheckerLemonadeUser.email);
   });
 
   this.afterAll(async () => {
