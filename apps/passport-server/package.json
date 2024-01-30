@@ -64,6 +64,7 @@
     "request": "^2.88.2",
     "rollbar": "^2.26.1",
     "source-map-support": "^0.5.21",
+    "stytch": "^10.4.0",
     "superagent": "^8.0.0",
     "ts-node": "^10.9.2",
     "url-join": "4.0.1",
