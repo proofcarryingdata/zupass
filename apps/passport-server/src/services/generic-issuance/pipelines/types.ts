@@ -56,3 +56,12 @@ export interface BasePipelineDefinition {
 export type PipelineDefinition =
   | LemonadePipelineDefinition
   | PretixPipelineDefinition;
+
+/**
+ * TODO - should be a database entry
+ */
+export interface PipelineUser {
+  id: string;
+  email: string;
+  isAdmin: boolean;
+}
