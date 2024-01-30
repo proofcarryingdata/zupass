@@ -180,8 +180,8 @@ describe.only("generic issuance service tests", function () {
       await EmailPCDPackage.serialize(ticketHolderEmailPCD);
 
     const giService = application.services.genericIssuanceService;
-    const pipelines = await giService?.getAllPipelines();
-
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
     expectToExist(pipelines);
     expect(pipelines).to.have.lengthOf(2);
     const lemonadePipeline = pipelines.find(LemonadePipeline.is);

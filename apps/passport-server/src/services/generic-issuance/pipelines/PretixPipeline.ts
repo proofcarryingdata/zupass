@@ -16,6 +16,7 @@ export class PretixPipeline implements BasePipeline {
     // TODO: fill this out with an issuance and checkin capability
   ];
 
+  private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
   private db: IPipelineAtomDB;
 
@@ -24,9 +25,11 @@ export class PretixPipeline implements BasePipeline {
   }
 
   public constructor(
+    eddsaPrivateKey: string,
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB
   ) {
+    this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db;
   }

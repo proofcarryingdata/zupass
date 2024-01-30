@@ -32,6 +32,7 @@ const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export async function createPipelines(
+  eddsaPrivateKey: string,
   definitions: PipelineDefinition[],
   db: IPipelineAtomDB,
   apis: {
@@ -46,7 +47,12 @@ export async function createPipelines(
   for (const definition of definitions) {
     try {
       logger(LOG_TAG, `creating pipeline ${definition.id}`);
-      const pipeline = await createPipeline(definition, db, apis);
+      const pipeline = await createPipeline(
+        eddsaPrivateKey,
+        definition,
+        db,
+        apis
+      );
       results.push(pipeline);
       logger(LOG_TAG, `successfully created pipeline ${definition.id}`);
     } catch (e) {
@@ -63,6 +69,7 @@ export async function createPipelines(
  * and expose its {@link Capability}s to the external world.
  */
 export function createPipeline(
+  eddsaPrivateKey: string,
   definition: PipelineDefinition,
   db: IPipelineAtomDB,
   apis: {
@@ -71,9 +78,14 @@ export function createPipeline(
   }
 ): Pipeline {
   if (isLemonadePipelineDefinition(definition)) {
-    return new LemonadePipeline(definition, db, apis.lemonadeAPI);
+    return new LemonadePipeline(
+      eddsaPrivateKey,
+      definition,
+      db,
+      apis.lemonadeAPI
+    );
   } else if (isPretixPipelineDefinition(definition)) {
-    return new PretixPipeline(definition, db);
+    return new PretixPipeline(eddsaPrivateKey, definition, db);
   }
 
   throw new Error(
@@ -96,17 +108,20 @@ export class GenericIssuanceService {
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
   private lemonadeAPI: ILemonadeAPI;
+  private eddsaPrivateKey: string;
 
   public constructor(
     context: ApplicationContext,
     definitionDB: IPipelineDefinitionDB,
     atomDB: IPipelineAtomDB,
-    lemonadeAPI: ILemonadeAPI
+    lemonadeAPI: ILemonadeAPI,
+    eddsaPrivateKey: string
   ) {
     this.definitionDB = definitionDB;
     this.atomDB = atomDB;
     this.context = context;
     this.lemonadeAPI = lemonadeAPI;
+    this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelines = [];
   }
 
@@ -122,9 +137,14 @@ export class GenericIssuanceService {
   private async createPipelines(): Promise<void> {
     this.pipelines = [];
     const definitions = await this.definitionDB.loadPipelineDefinitions();
-    const pipelines = await createPipelines(definitions, this.atomDB, {
-      lemonadeAPI: this.lemonadeAPI
-    });
+    const pipelines = await createPipelines(
+      this.eddsaPrivateKey,
+      definitions,
+      this.atomDB,
+      {
+        lemonadeAPI: this.lemonadeAPI
+      }
+    );
     this.pipelines = pipelines;
   }
 
@@ -199,11 +219,21 @@ export async function startGenericIssuanceService(
     return null;
   }
 
+  const pkeyEnv = process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY;
+
+  if (pkeyEnv == null) {
+    logger(
+      "[INIT] missing environment variable GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
+    );
+    return null;
+  }
+
   const issuanceService = new GenericIssuanceService(
     context,
     context.pipelineDefinitionDB,
     context.pipelineAtomDB,
-    lemonadeAPI
+    lemonadeAPI,
+    pkeyEnv
   );
 
   await issuanceService.start();

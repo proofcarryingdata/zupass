@@ -82,7 +82,7 @@ export function getLemonadeAPI(): ILemonadeAPI {
   const edgeCity = mockData.addEvent("edge city");
   const ivan = mockData.addUser("ivan");
   const ga = mockData.addTier(edgeCity.id, "ga");
-  mockData.addTicket(ga.id, edgeCity.id, ivan.name);
+  mockData.addTicket(ga.id, edgeCity.id, ivan.name, ivan.email);
   mockData.permissionUser(ivan.id, edgeCity.id);
   return new MockLemonadeAPI(mockData);
 }

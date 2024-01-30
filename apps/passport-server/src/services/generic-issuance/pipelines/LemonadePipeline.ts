@@ -99,6 +99,7 @@ export class LemonadePipeline implements BasePipeline {
     } satisfies CheckinCapability
   ];
 
+  private eddsaPrivateKey: string;
   private definition: LemonadePipelineDefinition;
   private db: IPipelineAtomDB<LemonadeAtom>;
   private api: ILemonadeAPI;
@@ -116,10 +117,12 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   public constructor(
+    eddsaPrivateKey: string,
     definition: LemonadePipelineDefinition,
     db: IPipelineAtomDB,
     api: ILemonadeAPI
   ) {
+    this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<LemonadeAtom>;
     this.api = api;
@@ -182,11 +185,6 @@ export class LemonadePipeline implements BasePipeline {
   private async issueLemonadeTicketPCDs(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
-    // logger(
-    //   LOG_TAG,
-    //   `got request to issue tickets for credential ${JSON.stringify(req)}`
-    // );
-
     if (!req.pcd) {
       throw new Error("missing credential pcd");
     }
@@ -220,7 +218,9 @@ export class LemonadePipeline implements BasePipeline {
 
     // TODO: cache this intelligently
     const tickets = await Promise.all(
-      ticketDatas.map((t) => this.ticketDataToTicketPCD(t, ""))
+      ticketDatas.map((t) =>
+        this.ticketDataToTicketPCD(t, this.eddsaPrivateKey)
+      )
     );
 
     return {
