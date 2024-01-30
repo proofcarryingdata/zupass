@@ -101,6 +101,11 @@ export interface LemonadePipelineTicketTierConfig {
    * The UUID of this ticket tier used in {@link EdDSATicketPCD}.
    */
   genericIssuanceProductId: string;
+
+  /**
+   * Whether this ticket tier is allowed to check other tickets in or not.
+   */
+  isSuperUser: boolean;
 }
 
 /**
@@ -448,18 +453,62 @@ export class LemonadePipeline implements BasePipeline {
     const checkerEmailPCD = await EmailPCDPackage.deserialize(
       payload.emailPCD.pcd
     );
+
+    const checkerTickets = await this.db.loadByEmail(
+      this.id,
+      checkerEmailPCD.claim.emailAddress
+    );
+
     const ticketToCheckIn = await EdDSATicketPCDPackage.deserialize(
       payload.ticketToCheckIn.pcd
     );
 
-    logger("checkerEmailPCD", checkerEmailPCD);
-    logger("ticketToCheckIn", ticketToCheckIn);
-
     // TODO: check if all the credentials line up
     // - pubkey matches generic issuance pkey
     // - signature is valid
+    // - event / tier are real
 
     const lemonadeEventId = this.eddsaTicketToLemonadeEventId(ticketToCheckIn);
+
+    const lemonadeTicketTier =
+      this.eddsaTicketToLemonadeTierId(ticketToCheckIn);
+
+    const eventConfig = this.definition.options.events.find(
+      (e) => e.externalId === lemonadeEventId
+    );
+
+    if (!eventConfig) {
+      throw new Error(
+        `${lemonadeEventId} has no corresponding event configuration`
+      );
+    }
+
+    const tierConfig = eventConfig.ticketTiers.find(
+      (t) => t.externalId === lemonadeTicketTier
+    );
+
+    if (!tierConfig) {
+      throw new Error(`${tierConfig} has no corresponding tier configuration`);
+    }
+
+    const checkerEventTickets = checkerTickets.filter(
+      (t) => t.lemonadeEventId === lemonadeEventId
+    );
+    const checkerEventTiers = checkerEventTickets.map((t) => {
+      const tierConfig = eventConfig.ticketTiers.find(
+        (tier) => tier.externalId === t.lemonadeTierId
+      );
+      return tierConfig;
+    });
+    const hasSuperUserTierTicket = checkerEventTiers.find(
+      (t) => t?.isSuperUser
+    );
+
+    if (!hasSuperUserTierTicket) {
+      throw new Error(
+        `user ${checkerEmailPCD.claim.emailAddress} doesn't have a superuser ticket`
+      );
+    }
 
     // TODO: error handling
     await this.api.checkinTicket(

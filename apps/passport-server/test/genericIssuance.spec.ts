@@ -172,14 +172,14 @@ describe.only("generic issuance service tests", function () {
   let giService: GenericIssuanceService | null;
 
   const mockLemonadeData = new LemonadeDataMocker();
-  const edgeCityLemoandeEvent = mockLemonadeData.addEvent("edge city");
+  const edgeCityLemonadeEvent = mockLemonadeData.addEvent("edge city");
 
   const lemonadeGATier = mockLemonadeData.addTier(
-    edgeCityLemoandeEvent.id,
+    edgeCityLemonadeEvent.id,
     "ga"
   );
   const lemonadeCheckerTier = mockLemonadeData.addTier(
-    edgeCityLemoandeEvent.id,
+    edgeCityLemonadeEvent.id,
     "checker"
   );
 
@@ -187,7 +187,7 @@ describe.only("generic issuance service tests", function () {
   const ticketHolderZupassIdentity = new Identity();
   const ticketHolderLemonadeTicket = mockLemonadeData.addTicket(
     lemonadeGATier.id,
-    edgeCityLemoandeEvent.id,
+    edgeCityLemonadeEvent.id,
     ticketHolderLemonadeUser.name,
     ticketHolderLemonadeUser.email
   );
@@ -196,14 +196,14 @@ describe.only("generic issuance service tests", function () {
   const ticketCheckerZupassIdentity = new Identity();
   const ticketCheckerLemonadeTicket = mockLemonadeData.addTicket(
     lemonadeCheckerTier.id,
-    edgeCityLemoandeEvent.id,
+    edgeCityLemonadeEvent.id,
     ticketCheckerLemonadeUser.name,
     ticketCheckerLemonadeUser.email
   );
 
   mockLemonadeData.permissionUser(
     ticketCheckerLemonadeUser.id,
-    edgeCityLemoandeEvent.id
+    edgeCityLemonadeEvent.id
   );
 
   const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockLemonadeData);
@@ -216,17 +216,19 @@ describe.only("generic issuance service tests", function () {
       lemonadeApiKey: ticketCheckerLemonadeUser.apiKey,
       events: [
         {
-          externalId: edgeCityLemoandeEvent.id,
-          name: edgeCityLemoandeEvent.name,
+          externalId: edgeCityLemonadeEvent.id,
+          name: edgeCityLemonadeEvent.name,
           genericIssuanceEventId: randomUUID(),
           ticketTiers: [
             {
               externalId: lemonadeCheckerTier.id,
-              genericIssuanceProductId: randomUUID()
+              genericIssuanceProductId: randomUUID(),
+              isSuperUser: true
             },
             {
               externalId: lemonadeGATier.id,
-              genericIssuanceProductId: randomUUID()
+              genericIssuanceProductId: randomUUID(),
+              isSuperUser: false
             }
           ]
         }
@@ -333,6 +335,17 @@ describe.only("generic issuance service tests", function () {
       firstHolderTicket
     );
     expect(secondCheckinResult.success).to.eq(false);
+
+    // can't check in a ticket using a ticket that isn't a
+    // superuser ticket
+    const thirdCheckinResult = await requestCheckInGenericTicket(
+      lemonadeCheckInRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketHolderLemonadeTicket.email,
+      ticketHolderZupassIdentity,
+      firstCheckerTicket
+    );
+    expect(thirdCheckinResult.success).to.eq(false);
   });
 
   this.afterAll(async () => {
