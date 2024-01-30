@@ -320,7 +320,8 @@ export async function startGenericIssuanceService(
 
   const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
   if (genericIssuanceClientUrl == null) {
-    throw new PCDHTTPError(500, "[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
+    logger("[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
+    return null;
   }
 
   const issuanceService = new GenericIssuanceService(
