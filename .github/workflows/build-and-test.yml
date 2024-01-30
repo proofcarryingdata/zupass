@@ -33,6 +33,7 @@ jobs:
         uses: actions/setup-node@v3
         with:
           node-version: 18.x
+          cache: "yarn"
 
       - name: Configure Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
