@@ -71,6 +71,7 @@ export async function startHttpServer(
         _next: NextFunction
       ) => {
         logger(`[ERROR] ${req.method} ${req.url}`);
+        logger(err);
         logger(err.stack);
         globalServices.rollbarService?.reportError(err);
         respondWithError(err, res);

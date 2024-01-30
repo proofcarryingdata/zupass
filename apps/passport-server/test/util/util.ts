@@ -30,3 +30,9 @@ export function expectToExist<T, U extends T = T>(
     throw new Error("Expected value to be narrowable to U");
   }
 }
+
+export function safeExit(): void {
+  if (Math.random() < 2) {
+    process.exit(0);
+  }
+}

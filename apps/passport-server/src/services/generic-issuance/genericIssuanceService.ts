@@ -156,7 +156,7 @@ export class GenericIssuanceService {
       throw new PCDHTTPError(403, `missing credential PCD in request`);
     }
 
-    return relevantCapability.issue(req.pcd);
+    return relevantCapability.issue(req);
   }
 
   public async handleCheckIn(

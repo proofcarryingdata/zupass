@@ -2,13 +2,17 @@
 /* eslint-disable no-restricted-globals */
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
+  FeedCredentialPayload,
   createFeedCredentialPayload,
-  pollFeed,
-  requestGenericIssuanceCheckin
+  requestGenericIssuanceCheckin,
+  requestPollFeed
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, PCD, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -28,7 +32,31 @@ import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import { expectToExist } from "./util/util";
+import { expectToExist, safeExit } from "./util/util";
+
+// Takes a payload and wraps it in a signature PCD.
+export async function semaphoreSignPayload(
+  identity: Identity,
+  payload: FeedCredentialPayload
+): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+  // In future we might support other types of signature here
+  const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      value: await SemaphoreIdentityPCDPackage.serialize(
+        await SemaphoreIdentityPCDPackage.prove({
+          identity: identity
+        })
+      )
+    },
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      value: JSON.stringify(payload)
+    }
+  });
+
+  return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+}
 
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
@@ -189,16 +217,20 @@ describe.only("generic issuance service tests", function () {
 
     logger(lemonadeIssuanceRoute);
 
-    const ticketHolderFeedCredential = createFeedCredentialPayload(
+    const ticketHolderFeedCredentialPayload = createFeedCredentialPayload(
       serializedTicketHolderEmailPCD
     );
-
-    const ticketPCDResponse = await pollFeed(
-      lemonadeIssuanceRoute,
-      checkerIdentity,
-      JSON.stringify(ticketHolderFeedCredential),
-      lemonadePipeline.issuanceCapability.feedId
+    const ticketHolderFeedCredential = await semaphoreSignPayload(
+      ticketHolderIdentity,
+      ticketHolderFeedCredentialPayload
     );
+
+    const ticketPCDResponse = await requestPollFeed(lemonadeIssuanceRoute, {
+      feedId: "ticket-feed",
+      pcd: ticketHolderFeedCredential
+    });
+
+    safeExit();
 
     const ticketHolderTicketPCD: PCD | undefined = undefined;
     const checkinRoute = path.join(

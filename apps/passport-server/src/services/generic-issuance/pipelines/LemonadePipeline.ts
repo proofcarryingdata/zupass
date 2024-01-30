@@ -1,10 +1,14 @@
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CheckTicketInRequest,
   CheckTicketInResponseValue,
+  FeedCredentialPayload,
+  PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
+import { safeExit } from "../../../../test/util/util";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
@@ -74,7 +78,7 @@ export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
   public capabilities = [
     {
-      issue: this.issueLemonadeTicketPCD.bind(this),
+      issue: this.issueLemonadeTicketPCDs.bind(this),
       feedId: "ticket-feed",
       type: PipelineCapability.FeedIssuance,
       getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
@@ -164,15 +168,58 @@ export class LemonadePipeline implements BasePipeline {
    *   on their email address. Watermark the ticket to the semaphore identity linked
    *   to the {@link EmailPCD} provided as part of this request.
    */
-  private async issueLemonadeTicketPCD(
-    credential: SerializedPCD
+  private async issueLemonadeTicketPCDs(
+    req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     logger(
       LOG_TAG,
-      `got request to issue tickets for credential ${JSON.stringify(
-        credential
-      )}`
+      `got request to issue tickets for credential ${JSON.stringify(req)}`
     );
+
+    if (!req.pcd) {
+      throw new Error("missing credential pcd");
+    }
+
+    const credential = await SemaphoreSignaturePCDPackage.deserialize(
+      req.pcd.pcd
+    );
+    const feedCredential: FeedCredentialPayload = JSON.parse(
+      credential.claim.signedMessage
+    );
+
+    const serializedEmailPCD = feedCredential.pcd?.pcd;
+    if (!serializedEmailPCD) {
+      throw new Error("missing email pcd");
+    }
+
+    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD);
+    // TODO: verify the email pcd
+    // - that the signature is valid
+    // - that it was signed by the Zupass Server
+
+    const email = emailPCD.claim.emailAddress;
+
+    // const ticketHolderCredentialPCD =
+    //   await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
+    // const ticketHolderSignatureValid =
+    //   await SemaphoreSignaturePCDPackage.verify(ticketHolderCredentialPCD);
+    // const credentialPayload = JSON.parse(
+    //   ticketHolderCredentialPCD.claim.signedMessage
+    // );
+    // const credentialPayloadPCD = await SemaphoreSignaturePCDPackage.deserialize(
+    //   credentialPayload.pcd
+    // );
+    // logger("credentialPayloadPCD", credentialPayloadPCD);
+    // const serializedEmailPCD = JSON.parse(
+    //   credentialPayloadPCD.claim.signedMessage
+    // ).pcd;
+    // logger("serializedEmailPCD", serializedEmailPCD);
+    // logger("serializedEmailPCD.pcd", serializedEmailPCD.pcd);
+    // const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD);
+
+    // logger("emailPCD", emailPCD);
+
+    safeExit();
 
     return {
       actions: []

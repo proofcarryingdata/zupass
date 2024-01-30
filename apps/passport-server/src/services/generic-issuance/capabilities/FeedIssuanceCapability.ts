@@ -1,5 +1,7 @@
-import { PollFeedResponseValue } from "@pcd/passport-interface";
-import { SerializedPCD } from "@pcd/pcd-types";
+import {
+  PollFeedRequest,
+  PollFeedResponseValue
+} from "@pcd/passport-interface";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
@@ -17,7 +19,7 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
    *   with overlapping {@link feedId}s.
    */
   feedId: string;
-  issue(credential: SerializedPCD): Promise<PollFeedResponseValue>;
+  issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
   getFeedUrl(): string;
 }
 
