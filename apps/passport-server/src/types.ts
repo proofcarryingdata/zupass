@@ -4,6 +4,7 @@ import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
+import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
@@ -84,6 +85,7 @@ export interface APIs {
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
   lemonadeAPI: ILemonadeAPI | null;
+  genericPretixAPI: IGenericPretixAPI | null;
 }
 
 export interface EnvironmentVariables {

@@ -19,6 +19,7 @@ import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
+import { SetupServer } from "msw/node";
 import * as path from "path";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { stopApplication } from "../src/application";
@@ -27,11 +28,16 @@ import {
   LemonadePipeline,
   LemonadePipelineDefinition
 } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import { PretixPipelineDefinition } from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import {
+  PretixPipeline,
+  PretixPipelineDefinition
+} from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
+import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
+import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
@@ -170,6 +176,7 @@ describe("generic issuance service tests", function () {
   let URL_ROOT: string;
   let application: Zupass;
   let giService: GenericIssuanceService | null;
+  let server: SetupServer;
 
   const mockLemonadeData = new LemonadeDataMocker();
   const edgeCityLemonadeEvent = mockLemonadeData.addEvent("edge city");
@@ -237,6 +244,16 @@ describe("generic issuance service tests", function () {
     type: PipelineType.Lemonade
   };
 
+  const mockPretixData = new GenericPretixDataMocker();
+
+  const pretixOrganizer = mockPretixData.get().organizer1;
+  const pretixEvent = pretixOrganizer.eventA;
+  const pretixProducts = pretixOrganizer.itemsByEventID.get(pretixEvent.slug);
+  const pretixSuperuserItemIds = [pretixProducts?.[0].id];
+
+  const ticketHolderPretixEmail = pretixOrganizer.EMAIL_3;
+  const superuserPretixEmail = pretixOrganizer.EMAIL_1;
+
   const pretixDefinition: PretixPipelineDefinition = {
     ownerUserId: randomUUID(),
     id: randomUUID(),
@@ -244,14 +261,21 @@ describe("generic issuance service tests", function () {
     options: {
       events: [
         {
-          id: randomUUID(),
+          genericIssuanceId: randomUUID(),
+          externalId: pretixEvent.slug,
           name: "Eth LatAm",
-          productIds: [randomUUID(), randomUUID()],
-          superUserProductIds: [randomUUID()]
+          products: (pretixProducts ?? []).map((product) => {
+            return {
+              externalId: product.id.toString(),
+              name: product.name["en"],
+              genericIssuanceId: randomUUID(),
+              isSuperUser: pretixSuperuserItemIds.includes(product.id)
+            };
+          })
         }
       ],
-      pretixAPIKey: randomUUID(),
-      pretixOrgUrl: randomUUID()
+      pretixAPIKey: pretixOrganizer.token,
+      pretixOrgUrl: pretixOrganizer.orgUrl
     },
     type: PipelineType.Pretix
   };
@@ -264,6 +288,10 @@ describe("generic issuance service tests", function () {
       lemonadeAPI
     });
 
+    const orgUrls = mockPretixData.get().organizersByOrgUrl.keys();
+    server = getGenericMockPretixAPIServer(orgUrls, mockPretixData);
+    server.listen({ onUnhandledRequest: "bypass" });
+
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     URL_ROOT = application.expressContext.localEndpoint;
     giService = application.services.genericIssuanceService;
@@ -273,6 +301,10 @@ describe("generic issuance service tests", function () {
       pipelineDefinitions
     );
     await giService?.start();
+  });
+
+  this.afterEach(async () => {
+    server.resetHandlers();
   });
 
   it("test", async () => {
@@ -346,6 +378,32 @@ describe("generic issuance service tests", function () {
       firstCheckerTicket
     );
     expect(thirdCheckinResult.success).to.eq(false);
+  });
+
+  it("test pretix", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expect(pipelines).to.have.lengthOf(2);
+    const pretixPipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pretixPipeline);
+    const pretixIssuanceRoute = path.join(
+      URL_ROOT,
+      pretixPipeline?.issuanceCapability.getFeedUrl()
+    );
+
+    const holderIssuedTickets = await requestGenericTickets(
+      pretixIssuanceRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketHolderPretixEmail,
+      ticketHolderZupassIdentity
+    );
+    console.log(holderIssuedTickets);
+    expect(holderIssuedTickets.length).to.eq(1);
+    const firstHolderTicket = holderIssuedTickets[0];
+    expect(firstHolderTicket.claim.ticket.attendeeEmail).to.eq(
+      ticketHolderPretixEmail
+    );
   });
 
   this.afterAll(async () => {
