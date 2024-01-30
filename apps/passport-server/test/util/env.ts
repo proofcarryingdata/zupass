@@ -25,6 +25,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
   SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
+  GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
   PASSPORT_CLIENT_URL: "http://localhost:3000",
   PRETIX_SYNC_DISABLED: undefined,
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,

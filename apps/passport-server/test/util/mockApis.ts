@@ -2,6 +2,10 @@ import chai from "chai";
 import { getDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import {
+  ILemonadeAPI,
+  getLemonadeAPI
+} from "../../src/apis/lemonade/lemonadeAPI";
+import {
   IZuconnectTripshaAPI,
   getZuconnectTripshaAPI
 } from "../../src/apis/zuconnect/zuconnectTripshaAPI";
@@ -15,6 +19,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let pretixAPI: IZuzaluPretixAPI | null;
   let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   let zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
+  let lemonadeAPI: ILemonadeAPI | null;
 
   if (apiOverrides?.emailAPI) {
     emailAPI = apiOverrides.emailAPI;
@@ -41,16 +46,24 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   } else {
     devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
+
   if (apiOverrides?.zuconnectTripshaAPI) {
     zuconnectTripshaAPI = apiOverrides.zuconnectTripshaAPI;
   } else {
     zuconnectTripshaAPI = getZuconnectTripshaAPI();
   }
 
+  if (apiOverrides?.lemonadeAPI) {
+    lemonadeAPI = apiOverrides.lemonadeAPI;
+  } else {
+    lemonadeAPI = getLemonadeAPI();
+  }
+
   return {
     emailAPI,
     zuzaluPretixAPI: pretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI
+    zuconnectTripshaAPI,
+    lemonadeAPI
   };
 }

@@ -30,3 +30,14 @@ export function expectToExist<T, U extends T = T>(
     throw new Error("Expected value to be narrowable to U");
   }
 }
+
+/**
+ * TypeScript complains if it thinks you're definitely calling `process.exit(0)`
+ * in the middle of a function. This is a hack to get around the compiler complaining.
+ * Should only be used in the process of developing tests.
+ */
+export function safeExit(): void {
+  if (Math.random() < 2) {
+    process.exit(0);
+  }
+}
