@@ -1,5 +1,6 @@
 import { rest } from "msw";
 import { SetupServer, setupServer } from "msw/node";
+import { GenericPretixPosition } from "../../src/apis/pretix/genericPretixAPI";
 import { GenericPretixDataMocker } from "./GenericPretixDataMocker";
 
 export function getGenericMockPretixAPIServer(
@@ -78,14 +79,31 @@ export function getGenericMockPretixAPIServer(
           !body.has("secret") ||
           !body.has("lists") ||
           typeof body.get("secret") !== "string" ||
-          !Array.isArray(body.get("lists")) ||
-          mocker.getOrgByUrl(orgUrl).checkins.has(body.get("secret") as string)
+          !Array.isArray(body.get("lists"))
         ) {
           return res(ctx.status(400), ctx.json({}));
         }
 
-        mocker.getOrgByUrl(orgUrl).checkins.add(body.get("secret") as string);
-        return res(ctx.json({ status: "ok" }));
+        let checkedIn = false;
+        mocker.updatePositionBySecret(
+          orgUrl,
+          body.get("secret") as string,
+          (position: GenericPretixPosition) => {
+            if (position.checkins.length === 0) {
+              position.checkins.push({
+                type: "entry",
+                datetime: new Date().toISOString()
+              });
+              checkedIn = true;
+            }
+          }
+        );
+
+        if (checkedIn) {
+          return res(ctx.json({ status: "ok" }));
+        } else {
+          return res(ctx.status(400), ctx.json({}));
+        }
       })
     );
   }

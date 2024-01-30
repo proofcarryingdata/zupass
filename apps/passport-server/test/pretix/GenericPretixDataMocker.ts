@@ -48,8 +48,6 @@ export interface IOrganizer {
   EMAIL_2: string;
   EMAIL_3: string;
   EMAIL_4: string;
-
-  checkins: Set<string>;
 }
 
 export class GenericPretixDataMocker {
@@ -94,6 +92,25 @@ export class GenericPretixDataMocker {
       throw new Error(`couldn't find order ${code}`);
     }
     update(order);
+  }
+
+  public updatePositionBySecret(
+    orgUrl: string,
+    secret: string,
+    update: (position: GenericPretixPosition) => void
+  ): void {
+    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+
+    for (const order of [...org.ordersByEventID.values()].flat()) {
+      const position = order.positions.find(
+        (position) => position.secret === secret
+      );
+      if (position) {
+        update(position);
+        return;
+      }
+    }
   }
 
   public removeOrder(orgUrl: string, eventID: string, code: string): void {
@@ -284,8 +301,7 @@ export class GenericPretixDataMocker {
       EMAIL_1,
       EMAIL_2,
       EMAIL_3,
-      EMAIL_4,
-      checkins: new Set()
+      EMAIL_4
     };
   }
 
