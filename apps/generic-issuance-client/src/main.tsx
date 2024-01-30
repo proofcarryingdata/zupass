@@ -7,9 +7,7 @@ import { GlobalStyle } from "./components/GlobalStyle";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 
-const stytch = new StytchUIClient(
-  "public-token-test-d34c6a44-f7a6-43e1-a49c-11bbf2396c47"
-);
+const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN);
 
 const router = createHashRouter([
   { path: "/", element: <Home /> },

@@ -14,7 +14,6 @@ function Page(): JSX.Element {
   console.log({ searchParams });
 
   useEffect(() => {
-    console.log("something changed");
     if (!token || checkedToken) return;
     stytchClient.magicLinks
       .authenticate(token, {
@@ -24,9 +23,10 @@ function Page(): JSX.Element {
       .then(() => setCheckedToken(true));
   }, [stytchClient, token, checkedToken, navigate]);
 
-  const linkUrl = "http://localhost:3005";
+  const linkUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
 
   const handleContinue = async (): Promise<void> => {
+    if (!email) return;
     await stytchClient.magicLinks.email.loginOrCreate(email, {
       login_magic_link_url: linkUrl,
       login_expiration_minutes: 10,
@@ -48,7 +48,11 @@ function Page(): JSX.Element {
   return (
     <div>
       <h1>Generic Issuance Client</h1>
-      {hasSentEmail && "Please check your email for a login link."}
+      {hasSentEmail && (
+        <div>
+          Please check your email <b>{email}</b> for a login link.
+        </div>
+      )}
       {!hasSentEmail && (
         <form
           onSubmit={(e): Promise<void> => {
