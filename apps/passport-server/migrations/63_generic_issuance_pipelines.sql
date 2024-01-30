@@ -8,7 +8,7 @@ CREATE TABLE generic_issuance_users (
 CREATE TABLE generic_issuance_pipelines (
   id UUID NOT NULL PRIMARY KEY,
   owner_user_id UUID NOT NULL REFERENCES generic_issuance_users(id),
-  pipeline_type VARCHAR NOT NULL CHECK(pipeline_type IN ('Lemonade', 'Pretix')),
+  pipeline_type VARCHAR NOT NULL,
   -- Configuration for specific pipeline types goes here.
   -- This is everything included in the PipelineDefinition that is not either
   -- part of the PipelineDefinition base class, or is the type of the Pipeline.
