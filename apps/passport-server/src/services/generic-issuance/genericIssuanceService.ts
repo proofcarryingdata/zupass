@@ -1,6 +1,6 @@
 import {
-  CheckTicketInRequest,
   CheckTicketInResponseValue,
+  GenericIssuanceCheckInRequest,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -186,7 +186,7 @@ export class GenericIssuanceService {
 
   public async handleCheckIn(
     pipelineId: string,
-    req: CheckTicketInRequest
+    req: GenericIssuanceCheckInRequest
   ): Promise<CheckTicketInResponseValue> {
     const pipeline = await this.ensurePipeline(pipelineId);
     const relevantCapability = pipeline.capabilities.find((c) =>

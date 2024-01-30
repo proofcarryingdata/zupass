@@ -1,6 +1,6 @@
 import {
-  CheckTicketInRequest,
-  CheckTicketInResponseValue
+  CheckTicketInResponseValue,
+  GenericIssuanceCheckInRequest
 } from "@pcd/passport-interface";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
@@ -11,7 +11,9 @@ import { PipelineCapability } from "./types";
  */
 export interface CheckinCapability extends BasePipelineCapability {
   type: PipelineCapability.Checkin;
-  checkin(request: CheckTicketInRequest): Promise<CheckTicketInResponseValue>;
+  checkin(
+    request: GenericIssuanceCheckInRequest
+  ): Promise<CheckTicketInResponseValue>;
   getCheckinUrl(): string;
 }
 

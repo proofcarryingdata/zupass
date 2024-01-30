@@ -5,6 +5,8 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   FeedCredentialPayload,
   createFeedCredentialPayload,
+  createGenericCheckinCredentialPayload,
+  requestGenericIssuanceCheckin,
   requestPollFeed
 } from "@pcd/passport-interface";
 import { ReplaceInFolderAction } from "@pcd/pcd-collection";
@@ -37,7 +39,7 @@ import { expectToExist } from "./util/util";
 
 export async function semaphoreSignPayload(
   identity: Identity,
-  payload: FeedCredentialPayload
+  payload: FeedCredentialPayload | any
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {
@@ -108,6 +110,50 @@ export async function requestGenericTickets(
   return tickets;
 }
 
+export async function requestCheckInGenericTicket(
+  checkinRoute: string,
+  zupassEddsaPrivateKey: string,
+  checkerEmail: string,
+  checkerIdentity: Identity,
+  ticket: EdDSATicketPCD
+): Promise<void> {
+  const checkerEmailPCD = await EmailPCDPackage.prove({
+    privateKey: {
+      value: zupassEddsaPrivateKey,
+      argumentType: ArgumentTypeName.String
+    },
+    id: {
+      value: "email-id",
+      argumentType: ArgumentTypeName.String
+    },
+    emailAddress: {
+      value: checkerEmail,
+      argumentType: ArgumentTypeName.String
+    },
+    semaphoreId: {
+      value: checkerIdentity.commitment.toString(),
+      argumentType: ArgumentTypeName.String
+    }
+  });
+  const serializedTicketCheckerEmailPCD =
+    await EmailPCDPackage.serialize(checkerEmailPCD);
+
+  const ticketCheckerPayload = createGenericCheckinCredentialPayload(
+    serializedTicketCheckerEmailPCD,
+    await EdDSATicketPCDPackage.serialize(ticket)
+  );
+
+  const ticketCheckerFeedCredential = await semaphoreSignPayload(
+    checkerIdentity,
+    ticketCheckerPayload
+  );
+
+  const ticketPCDResponse = await requestGenericIssuanceCheckin(
+    checkinRoute,
+    ticketCheckerFeedCredential
+  );
+}
+
 /**
  * Rough test of the generic issuance functionality defined in this PR, just
  * to make sure that ends are coming together neatly. Totally incomplete.
@@ -121,7 +167,7 @@ export async function requestGenericTickets(
 describe.only("generic issuance service tests", function () {
   this.timeout(15_000);
 
-  let ZUPASS_EDDSA_KEY: string;
+  let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let URL_ROOT: string;
   let application: Zupass;
   let giService: GenericIssuanceService | null;
@@ -207,7 +253,7 @@ describe.only("generic issuance service tests", function () {
       lemonadeAPI
     });
 
-    ZUPASS_EDDSA_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
+    ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     URL_ROOT = application.expressContext.localEndpoint;
     giService = application.services.genericIssuanceService;
     await giService?.stop();
@@ -233,7 +279,7 @@ describe.only("generic issuance service tests", function () {
 
     const holderIssuedTickets = await requestGenericTickets(
       lemonadeIssuanceRoute,
-      ZUPASS_EDDSA_KEY,
+      ZUPASS_EDDSA_PRIVATE_KEY,
       ticketHolderLemonadeUser.email,
       ticketHolderZupassIdentity
     );
@@ -245,7 +291,7 @@ describe.only("generic issuance service tests", function () {
 
     const checkerIssuedTickets = await requestGenericTickets(
       lemonadeIssuanceRoute,
-      ZUPASS_EDDSA_KEY,
+      ZUPASS_EDDSA_PRIVATE_KEY,
       ticketCheckerLemonadeTicket.email,
       ticketCheckerZupassIdentity
     );
@@ -254,6 +300,19 @@ describe.only("generic issuance service tests", function () {
     expect(firstCheckerTicket.claim.ticket.attendeeEmail)
       .to.eq(ticketCheckerLemonadeTicket.email)
       .to.eq(ticketCheckerLemonadeUser.email);
+
+    const lemonadeCheckInRoute = path.join(
+      URL_ROOT,
+      lemonadePipeline?.checkinCapability.getCheckinUrl()
+    );
+
+    await requestCheckInGenericTicket(
+      lemonadeCheckInRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketCheckerLemonadeTicket.email,
+      ticketCheckerZupassIdentity,
+      firstHolderTicket
+    );
   });
 
   this.afterAll(async () => {

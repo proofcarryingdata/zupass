@@ -805,8 +805,7 @@ export interface FrogCryptoUpdateFeedsResponseValue {
 }
 
 export type GenericIssuanceCheckInRequest = {
-  // TODO: make this something other than the ticket pcd
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  credential: SerializedPCD<SemaphoreSignaturePCD>;
 };
 
 export type GenericIssuanceCheckInResponseValue = undefined;

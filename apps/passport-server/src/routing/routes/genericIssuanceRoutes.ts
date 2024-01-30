@@ -1,7 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unused-vars */
 import {
-  CheckTicketInRequest,
-  CheckTicketInResponseValue,
+  GenericIssuanceCheckInRequest,
+  GenericIssuanceCheckInResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -56,12 +56,12 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
-      const request = req.body as CheckTicketInRequest;
+      const request = req.body as GenericIssuanceCheckInRequest;
       const result = await genericIssuanceService.handleCheckIn(
         pipelineID,
         request
       );
-      res.send(result satisfies CheckTicketInResponseValue);
+      res.send(result satisfies GenericIssuanceCheckInResponseValue);
     }
   );
 }

@@ -7,9 +7,9 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CheckTicketInRequest,
   CheckTicketInResponseValue,
   FeedCredentialPayload,
+  GenericIssuanceCheckInRequest,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -295,12 +295,12 @@ export class LemonadePipeline implements BasePipeline {
    * - make sure to check that the given credential corresponds to a superuser ticket type
    */
   private async checkinLemonadeTicketPCD(
-    request: CheckTicketInRequest
+    request: GenericIssuanceCheckInRequest
   ): Promise<CheckTicketInResponseValue> {
-    // logger(
-    //   LOG_TAG,
-    //   `got request to check in tickets with request ${JSON.stringify(request)}`
-    // );
+    logger(
+      LOG_TAG,
+      `got request to check in tickets with request ${JSON.stringify(request)}`
+    );
 
     this.api.checkinTicket("api key", "event id", "get ticket id from request");
   }

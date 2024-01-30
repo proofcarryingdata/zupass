@@ -1,4 +1,5 @@
 import { SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   GenericIssuanceCheckInRequest,
@@ -14,7 +15,7 @@ import { httpPostSimple } from "./makeRequest";
  */
 export async function requestGenericIssuanceCheckin(
   checkinUrl: string,
-  signatureOnTicket: SerializedPCD
+  signedPayload: SerializedPCD<SemaphoreSignaturePCD>
 ): Promise<GenericIssuanceCheckInResult> {
   return httpPostSimple(
     urlJoin(checkinUrl),
@@ -23,7 +24,9 @@ export async function requestGenericIssuanceCheckin(
         value: JSON.parse(resText),
         success: true
       }) as GenericIssuanceCheckInResult,
-    { pcd: signatureOnTicket } satisfies GenericIssuanceCheckInRequest
+    {
+      credential: signedPayload
+    } satisfies GenericIssuanceCheckInRequest
   );
 }
 
