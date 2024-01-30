@@ -163,7 +163,7 @@ export async function requestCheckInGenericTicket(
  * - probably need to test the Capability route features of Pipelines
  * - probably need to test the iterative creation of Pipelines (cc @richard)
  */
-describe.only("generic issuance service tests", function () {
+describe("generic issuance service tests", function () {
   this.timeout(15_000);
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
