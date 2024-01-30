@@ -456,5 +456,6 @@ describe("generic issuance service tests", function () {
 
   this.afterAll(async () => {
     await stopApplication(application);
+    server.close();
   });
 });
