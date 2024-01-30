@@ -5,19 +5,19 @@
       "cache": true
     },
     "pre-build": {
-      "cache": true,
+      "cache": false,
       "outputs": []
     },
     "build": {
       "dependsOn": ["pre-build", "^build"],
       "outputs": [],
-      "cache": true
+      "cache": false
     },
     "dev": {
       "cache": false
     },
     "test": {
-      "cache": true
+      "cache": false
     },
     "clean": {
       "outputs": [],
