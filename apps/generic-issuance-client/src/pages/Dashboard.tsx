@@ -5,14 +5,14 @@ export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const { user } = useStytchUser();
   const [isLoggingOut, setLoggingOut] = useState(false);
-  const [error, setError] = useState('')
+  const [error, setError] = useState("");
 
   if (!user) {
     window.location.href = "/";
   }
 
   if (error) {
-    return <div>An error occured. {JSON.stringify(error)}</div>
+    return <div>An error occured. {JSON.stringify(error)}</div>;
   }
 
   if (isLoggingOut) {
@@ -30,7 +30,7 @@ export default function Dashboard(): ReactNode {
           try {
             await stytchClient.session.revoke();
           } catch (e) {
-            setError(e)
+            setError(e);
             setLoggingOut(false);
           }
         }}
