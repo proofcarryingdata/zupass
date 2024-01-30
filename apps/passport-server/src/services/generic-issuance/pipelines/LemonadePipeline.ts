@@ -9,6 +9,7 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   CheckTicketInResponseValue,
   FeedCredentialPayload,
+  GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
   PollFeedRequest,
   PollFeedResponseValue
@@ -18,6 +19,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "crypto";
 import _ from "lodash";
+import { safeExit } from "../../../../test/util/util";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
@@ -301,6 +303,35 @@ export class LemonadePipeline implements BasePipeline {
       LOG_TAG,
       `got request to check in tickets with request ${JSON.stringify(request)}`
     );
+
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      request.credential.pcd
+    );
+    const signaturePCDValid =
+      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+
+    if (!signaturePCDValid) {
+      throw new Error("credential signature invalid");
+    }
+
+    const payload: GenericCheckinCredentialPayload = JSON.parse(
+      signaturePCD.claim.signedMessage
+    );
+
+    const checkerEmailPCD = await EmailPCDPackage.deserialize(
+      payload.emailPCD.pcd
+    );
+    const ticketToCheckIn = await EdDSATicketPCDPackage.deserialize(
+      payload.ticketToCheckIn.pcd
+    );
+
+    logger("checkerEmailPCD", checkerEmailPCD);
+    logger("ticketToCheckIn", ticketToCheckIn);
+
+    // TODO: check if all the credentials line up
+
+    logger("safely exiting");
+    safeExit();
 
     this.api.checkinTicket("api key", "event id", "get ticket id from request");
   }
