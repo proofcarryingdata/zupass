@@ -151,7 +151,7 @@ async function getOverridenApis(
     logger("[INIT] overriding Generic Pretix API");
     genericPretixAPI = apiOverrides.genericPretixAPI;
   } else {
-    genericPretixAPI = await getGenericPretixAPI();
+    genericPretixAPI = getGenericPretixAPI();
   }
 
   return {

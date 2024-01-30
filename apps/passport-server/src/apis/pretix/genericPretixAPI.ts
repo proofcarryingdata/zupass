@@ -498,7 +498,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   }
 }
 
-export async function getGenericPretixAPI(): Promise<GenericPretixAPI> {
+export function getGenericPretixAPI(): GenericPretixAPI {
   const api = new GenericPretixAPI();
   return api;
 }
