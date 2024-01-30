@@ -45,7 +45,8 @@ module.exports = {
     "@typescript-eslint/no-require-imports": "error",
     "import/no-unresolved": "off",
     "prettier/prettier": "error",
-    "@typescript-eslint/explicit-function-return-type": "error"
+    "@typescript-eslint/explicit-function-return-type": "error",
+    "@typescript-eslint/no-explicit-any": "error"
   },
   settings: {
     "import/resolver": {

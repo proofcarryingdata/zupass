@@ -290,6 +290,7 @@ export function DataTable({
       showMultiSelect={!!setCheckedIds}
       customRenderCell={{
         ...keys.reduce((acc, key) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
           acc[key] = (row): any => {
             return typeof row[key] === "undefined" ? "<undefined>" : row[key];
           };

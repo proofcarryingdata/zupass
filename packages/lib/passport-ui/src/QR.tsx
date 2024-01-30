@@ -1,5 +1,5 @@
 import { gzip, ungzip } from "pako";
-import qr from "qr-image";
+import qr, { SvgObject } from "qr-image";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "./StyledWrapper";
 
@@ -150,7 +150,7 @@ export function QR({
   fgColor: string;
   bgColor: string;
 }): JSX.Element {
-  const [svgObject, setSvgObject] = useState<any | undefined>();
+  const [svgObject, setSvgObject] = useState<SvgObject | undefined>();
 
   useEffect(() => {
     const svgObject = qr.svgObject(value, "L");

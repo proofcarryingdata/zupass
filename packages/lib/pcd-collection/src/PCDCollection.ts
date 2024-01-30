@@ -82,7 +82,7 @@ export class PCDCollection {
   public readonly changeEmitter: Emitter;
 
   private packages: PCDPackage[];
-  private pcds: PCD<any, any>[];
+  private pcds: PCD<unknown, unknown>[];
   public folders: Record<string, string>; // pcd id -> folder
 
   public constructor(

@@ -187,8 +187,8 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
  * @param value The object property value.
  * @returns The original value of the property or the converted one.
  */
-function replacer(key: any, value: any): any {
-  if (key === "message") {
+function replacer(key: unknown, value: unknown): unknown {
+  if (key === "message" && value instanceof Array) {
     return value.map((num: bigint) => num.toString(16));
   } else {
     return value;
@@ -204,8 +204,8 @@ function replacer(key: any, value: any): any {
  * @param value The object property value.
  * @returns The original value of the property or the converted one.
  */
-function reviver(key: any, value: any): any {
-  if (key === "message") {
+function reviver(key: unknown, value: unknown): unknown {
+  if (key === "message" && value instanceof Array) {
     return value.map((str: string) => BigInt(`0x${str}`));
   } else {
     return value;

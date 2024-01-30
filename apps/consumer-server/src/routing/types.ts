@@ -1,6 +1,7 @@
 import express from "express";
 import "iron-session";
 
+import { ITicketData } from "@pcd/eddsa-ticket-pcd";
 import { ApplicationContext } from "../types";
 
 export interface RouteInitializer {
@@ -10,6 +11,6 @@ export interface RouteInitializer {
 declare module "iron-session" {
   interface IronSessionData {
     nonce?: string;
-    ticket?: Record<string, any>;
+    ticket?: Partial<ITicketData>;
   }
 }

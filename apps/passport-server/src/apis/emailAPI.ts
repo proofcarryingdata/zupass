@@ -48,6 +48,7 @@ export function mailgunSendEmail({
         method: "POST",
         formData: { from, to, subject, text, html }
       },
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (err: any, _res: any, _body: any) => {
         if (err) {
           reject(err);

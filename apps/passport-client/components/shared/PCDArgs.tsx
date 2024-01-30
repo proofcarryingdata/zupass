@@ -63,7 +63,7 @@ export function PCDArgs<T extends PCDPackage>({
         <ArgInput
           key={key}
           argName={key}
-          arg={value as any}
+          arg={value}
           setArgs={setArgs}
           defaultArg={options?.[key]}
         />
@@ -84,7 +84,7 @@ export function PCDArgs<T extends PCDPackage>({
               <ArgInput
                 key={key}
                 argName={key}
-                arg={value as any}
+                arg={value}
                 setArgs={setArgs}
                 defaultArg={options?.[key]}
                 hidden={!showAll}
@@ -124,7 +124,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   );
 
   const isValid = useCallback(
-    <A extends Argument<any, any>>(value: RawValueType<A>) =>
+    <A extends Argument<ArgumentTypeName, unknown>>(value: RawValueType<A>) =>
       (arg.validatorParams &&
         defaultArg?.validate?.(value, arg.validatorParams)) ??
       true,
@@ -167,7 +167,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
 /**
  * Common props for all {@link ArgInput} components
  */
-interface ArgInputProps<A extends Argument<any, unknown>> {
+interface ArgInputProps<A extends Argument<ArgumentTypeName, unknown>> {
   arg: A;
   argName: string;
   setArg: (value: A["value"]) => void;
@@ -314,7 +314,7 @@ export function ObjectArgInput({
   arg,
   setArg,
   ...rest
-}: ArgInputProps<ObjectArgument<any>>): JSX.Element {
+}: ArgInputProps<ObjectArgument<unknown>>): JSX.Element {
   const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
   const [loaded, setLoaded] = useState(false);
 
@@ -530,7 +530,7 @@ function ArgContainer({
   children,
   end
 }: {
-  arg: Argument<any, any>;
+  arg: Argument<ArgumentTypeName, unknown>;
   hidden?: boolean;
   error?: string;
   children?: React.ReactNode;

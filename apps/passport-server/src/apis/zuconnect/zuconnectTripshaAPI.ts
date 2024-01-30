@@ -108,7 +108,7 @@ export class ZuconnectTripshaAPI {
     const data = await fetchResult.json();
 
     if (_.isArray(data.tickets)) {
-      const parsed = data.tickets.flatMap((ticket: any) => {
+      const parsed = data.tickets.flatMap((ticket: unknown) => {
         const parsedTicket = ZuconnectTripshaNormalizedSchema.safeParse(ticket);
 
         if (parsedTicket.success) {

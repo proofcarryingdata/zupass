@@ -30,15 +30,18 @@ function instrumentPackage(pcdPackage: PCDPackage): void {
 }
 
 function instrumentSingleFunction(
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   pcdPackage: PCDPackage<unknown, unknown, any, unknown>,
   functionName: string
 ): void {
   logger(`[INIT] instrumenting ${pcdPackage.name}.${functionName}`);
 
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const packageAsAny = pcdPackage as any;
   const uninstrumentedFunction = packageAsAny[functionName];
 
   if (uninstrumentedFunction) {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     packageAsAny[functionName] = (...args: any[]): any => {
       return traced("PCDPackage", functionName, async (span) => {
         span?.setAttribute("pcd_package_name", pcdPackage.name);

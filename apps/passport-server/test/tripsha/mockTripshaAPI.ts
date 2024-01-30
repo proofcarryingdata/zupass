@@ -95,6 +95,9 @@ export const goodResponse = {
 /**
  * Make a mock handler for a given sample response.
  */
+// Allow `any` because the data is sometimes JSON that intentionally matches
+// no known type.
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
 export function makeHandler(data: any): RestHandler {
   const url = urljoin(
     MOCK_ZUCONNECT_TRIPSHA_URL,

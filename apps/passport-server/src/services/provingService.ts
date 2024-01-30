@@ -145,13 +145,13 @@ export class ProvingService {
         serializedPCD: JSON.stringify(serializedPCD),
         error: undefined
       });
-    } catch (e: any) {
+    } catch (e) {
       logger(e);
       this.rollbarService?.reportError(e);
       this.pendingPCDResponse.set(currentHash, {
         status: PendingPCDStatus.ERROR,
         serializedPCD: undefined,
-        error: e.message
+        error: e instanceof Error ? e.message : ""
       });
     }
 

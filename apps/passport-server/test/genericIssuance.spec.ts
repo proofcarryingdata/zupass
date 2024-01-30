@@ -38,7 +38,7 @@ import { expectToExist } from "./util/util";
 
 export async function semaphoreSignPayload(
   identity: Identity,
-  payload: FeedCredentialPayload | any
+  payload: FeedCredentialPayload
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {

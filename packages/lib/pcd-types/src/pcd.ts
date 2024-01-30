@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 /**
  * All PCDs consist of a "claim", which is the human-interpretable statement
  * that the PCD is making (i.e. "I am a Zuzalu resident"); and a "proof" attached
