@@ -204,6 +204,7 @@ describe.only("generic issuance service tests", function () {
       pcd: ticketHolderFeedCredential
     });
 
+    logger("feeds response", JSON.stringify(ticketPCDResponse, null, 2));
     logger("exiting safely");
     safeExit();
 
