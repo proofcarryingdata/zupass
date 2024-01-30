@@ -4,6 +4,7 @@ import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   FeedCredentialPayload,
+  GenericIssuanceCheckInResult,
   createFeedCredentialPayload,
   createGenericCheckinCredentialPayload,
   requestGenericIssuanceCheckin,
@@ -116,7 +117,7 @@ export async function requestCheckInGenericTicket(
   checkerEmail: string,
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
-): Promise<void> {
+): Promise<GenericIssuanceCheckInResult> {
   const checkerEmailPCD = await EmailPCDPackage.prove({
     privateKey: {
       value: zupassEddsaPrivateKey,
@@ -148,7 +149,7 @@ export async function requestCheckInGenericTicket(
     ticketCheckerPayload
   );
 
-  const ticketPCDResponse = await requestGenericIssuanceCheckin(
+  return requestGenericIssuanceCheckin(
     checkinRoute,
     ticketCheckerFeedCredential
   );
@@ -316,13 +317,24 @@ describe.only("generic issuance service tests", function () {
       lemonadePipeline?.checkinCapability.getCheckinUrl()
     );
 
-    await requestCheckInGenericTicket(
+    const firstCheckinResult = await requestCheckInGenericTicket(
       lemonadeCheckInRoute,
       ZUPASS_EDDSA_PRIVATE_KEY,
       ticketCheckerLemonadeTicket.email,
       ticketCheckerZupassIdentity,
       firstHolderTicket
     );
+    expect(firstCheckinResult.success).to.eq(true);
+
+    // can't check in a ticket that's already checked in
+    const secondCheckinResult = await requestCheckInGenericTicket(
+      lemonadeCheckInRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketCheckerLemonadeTicket.email,
+      ticketCheckerZupassIdentity,
+      firstHolderTicket
+    );
+    expect(secondCheckinResult.success).to.eq(false);
   });
 
   this.afterAll(async () => {
