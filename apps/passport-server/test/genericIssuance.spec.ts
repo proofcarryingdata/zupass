@@ -22,6 +22,7 @@ import "mocha";
 import { SetupServer } from "msw/node";
 import * as path from "path";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
+import { getI18nString } from "../src/apis/pretix/genericPretixAPI";
 import { stopApplication } from "../src/application";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
@@ -267,7 +268,7 @@ describe("generic issuance service tests", function () {
           products: (pretixProducts ?? []).map((product) => {
             return {
               externalId: product.id.toString(),
-              name: product.name["en"],
+              name: getI18nString(product.name),
               genericIssuanceId: randomUUID(),
               isSuperUser: pretixSuperuserItemIds.includes(product.id)
             };
@@ -450,7 +451,6 @@ describe("generic issuance service tests", function () {
       ticketHolderZupassIdentity,
       firstCheckerTicket
     );
-    console.log(thirdCheckinResult);
     expect(thirdCheckinResult.success).to.eq(false);
   });
 

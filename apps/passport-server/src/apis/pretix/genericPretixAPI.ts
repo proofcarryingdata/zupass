@@ -7,11 +7,6 @@ import { instrumentedFetch } from "../fetch";
 
 const TRACE_SERVICE = "GenericPretixAPI";
 
-export type FetchFn = (
-  input: RequestInfo | URL,
-  init?: RequestInit
-) => Promise<Response>;
-
 export interface IGenericPretixAPI {
   fetchOrders(
     orgUrl: string,
@@ -60,6 +55,16 @@ export interface GenericPretixAPIOptions {
   intervalMs?: number;
 }
 
+/**
+ * This manages a rate-limiter queue for a single organizer. Pretix rate-limits
+ * requests on a per-organizer basis, so we instantiate a new queue every time
+ * we see a request for an organizer we haven't seen before. Old queues are
+ * deleted once they go idle (when they have no queued items and all promises
+ * have resolved).
+ *
+ * By default, we limit concurrency to 1, meaning that only one request can
+ * occur at a time.
+ */
 class OrganizerRequestQueue {
   private readonly maxConcurrentRequests: number;
   private readonly intervalCap: number;
@@ -81,14 +86,21 @@ class OrganizerRequestQueue {
       interval: this.interval,
       intervalCap: this.intervalCap
     });
+    // The "idle" handler can be used by the caller to delete this queue once
+    // it is no longer doing anything.
     this.requestQueue.on("idle", onIdle);
   }
 
+  /**
+   * Performs a HTTP fetch, but using a queue to ensure that we wait if we are
+   * at our rate limit.
+   */
   public fetch(
     input: RequestInfo | URL,
     init?: RequestInit
   ): Promise<Response> {
-    // Set up an abort controller for this request.
+    // Set up an abort controller for this request. This is used to cancel
+    // pending requests, e.g. during app shutdown.
     const abortController = new AbortController();
     const abortHandler = (): void => {
       abortController.abort();
@@ -104,6 +116,9 @@ class OrganizerRequestQueue {
           ...init
         });
 
+        // If Pretix tells us that we've exceeded the rate limit, log a
+        // specific message. This should never happen, and would indicate that
+        // our rate-limiting is too loose or not working correctly.
         if (result.status === 429) {
           logger(
             `[GENERIC PRETIX] Received 429 error while fetching ${input.toString()}.
@@ -115,12 +130,18 @@ class OrganizerRequestQueue {
 
         return result;
       } finally {
+        // The cancel controller has a maximum number of event listeners, so
+        // always remove event listeners once they're not needed.
         this.cancelController.signal.removeEventListener("abort", abortHandler);
       }
     });
   }
 }
 
+/**
+ * Generic Pretix API client. Provides utility functions for making requests to
+ * Pretix APIs, and manages queues on a per-organizer basis.
+ */
 export class GenericPretixAPI implements IGenericPretixAPI {
   private cancelController: AbortController;
   private readonly maxConcurrentRequests: number;
@@ -129,10 +150,17 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   private organizerQueues: Record<string, OrganizerRequestQueue>;
 
   public constructor(options?: GenericPretixAPIOptions) {
+    // These configuration options apply to the per-organizer queues:
+    // By default, allow 100 requests per organizer per minute. Pretix maximum
+    // is 300.
     this.intervalCap = options?.requestsPerInterval ?? 100;
+    // By default, allow one request at a time (per organizer).
     this.maxConcurrentRequests = options?.concurrency ?? 1;
+    // Rate limit time period is 60 seconds (one minute).
     this.interval = options?.intervalMs ?? 60_000;
+    // No organizer queues exist at startup.
     this.organizerQueues = {};
+    // Used to cancel all pending requests.
     this.cancelController = this.newCancelController();
   }
 
@@ -475,14 +503,24 @@ export async function getGenericPretixAPI(): Promise<GenericPretixAPI> {
   return api;
 }
 
-export type GenericPretixI18nMap = { [lang: string]: string };
-
 /**
  * Return an English-language string if one exists, otherwise the first
  */
 export function getI18nString(map: GenericPretixI18nMap): string {
   return map["en"] ?? Object.values(map)[0];
 }
+
+/**
+ * Pretix API types
+ *
+ * A Zod schema is used to ensure that the data has the expected form.
+ * Clients may do additional validation, for instance to ensure that events
+ * have the expected products, or that event settings match those that we
+ * require. Those checks are not part of the schema.
+ *
+ * The comments below are copied from the original Devconnect Pretix API
+ * client.
+ */
 
 const GenericPretixI18MapSchema = z.record(z.string());
 
@@ -553,6 +591,7 @@ const GenericPretixCheckinListSchema = z.object({
   name: z.string()
 });
 
+export type GenericPretixI18nMap = z.infer<typeof GenericPretixI18MapSchema>;
 export type GenericPretixOrder = z.infer<typeof GenericPretixOrderSchema>;
 export type GenericPretixItem = z.infer<typeof GenericPretixItemSchema>;
 export type GenericPretixEvent = z.infer<typeof GenericPretixEventSchema>;
