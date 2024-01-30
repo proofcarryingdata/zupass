@@ -1,5 +1,5 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RSAPCDPackage } from "@pcd/rsa-pcd";
+import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import chai, { expect } from "chai";
 import "mocha";
 import NodeRSA from "node-rsa";
