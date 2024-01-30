@@ -1,9 +1,12 @@
 import {
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest,
+  GenericIssuanceSendEmailResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { Request } from "express";
+import stytch, { Client, Session } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
@@ -111,12 +114,17 @@ export class GenericIssuanceService {
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
   private eddsaPrivateKey: string;
+  private stytchClient: Client;
+  private bypassEmail: boolean;
+  private genericIssuanceClientUrl: string;
 
   public constructor(
     context: ApplicationContext,
     definitionDB: IPipelineDefinitionDB,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
+    stytchClient: Client,
+    genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string
   ) {
@@ -127,6 +135,11 @@ export class GenericIssuanceService {
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelines = [];
+    this.stytchClient = stytchClient;
+    this.genericIssuanceClientUrl = genericIssuanceClientUrl;
+    this.bypassEmail =
+      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
+      process.env.NODE_ENV !== "production";
   }
 
   public async start(): Promise<void> {
@@ -234,6 +247,44 @@ export class GenericIssuanceService {
   public async getAllPipelines(): Promise<Pipeline[]> {
     return this.pipelines;
   }
+
+  private getEmailFromStytchSession(session: Session): string {
+    const email = session.authentication_factors.find(
+      (f) => !!f.email_factor?.email_address
+    )?.email_factor?.email_address;
+    if (!email) {
+      throw new PCDHTTPError(400, "Session did not use email authentication");
+    }
+    return email;
+  }
+
+  public async authenticateStytchSession(req: Request): Promise<string> {
+    try {
+      const { session } = await this.stytchClient.sessions.authenticateJwt({
+        session_jwt: req.cookies["stytch_session_jwt"]
+      });
+      return this.getEmailFromStytchSession(session);
+    } catch (e) {
+      throw new PCDHTTPError(401, "Not authorized");
+    }
+  }
+
+  public async sendLoginEmail(
+    email: string
+  ): Promise<GenericIssuanceSendEmailResponseValue> {
+    // TODO: Skip email auth on this.bypassEmail
+    try {
+      await this.stytchClient.magicLinks.email.loginOrCreate({
+        email,
+        login_magic_link_url: this.genericIssuanceClientUrl,
+        login_expiration_minutes: 10,
+        signup_magic_link_url: this.genericIssuanceClientUrl,
+        signup_expiration_minutes: 10
+      });
+    } catch (e) {
+      throw new PCDHTTPError(500, "Failed to send generic issuance email");
+    }
+  }
 }
 
 export async function startGenericIssuanceService(
@@ -254,11 +305,33 @@ export async function startGenericIssuanceService(
   }
 
   const pkeyEnv = process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY;
-
   if (pkeyEnv == null) {
     logger(
       "[INIT] missing environment variable GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
     );
+    return null;
+  }
+
+  const projectIdEnv = process.env.STYTCH_PROJECT_ID;
+  if (projectIdEnv == null) {
+    logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
+    return null;
+  }
+
+  const secretEnv = process.env.STYTCH_SECRET;
+  if (secretEnv == null) {
+    logger("[INIT] missing environment variable STYTCH_SECRET");
+    return null;
+  }
+
+  const stytchClient = new stytch.Client({
+    project_id: projectIdEnv,
+    secret: secretEnv
+  });
+
+  const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
+  if (genericIssuanceClientUrl == null) {
+    logger("[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
     return null;
   }
 
@@ -267,6 +340,8 @@ export async function startGenericIssuanceService(
     context.pipelineDefinitionDB,
     context.pipelineAtomDB,
     lemonadeAPI,
+    stytchClient,
+    genericIssuanceClientUrl,
     genericPretixAPI,
     pkeyEnv
   );

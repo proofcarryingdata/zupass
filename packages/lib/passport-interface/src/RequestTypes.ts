@@ -821,3 +821,8 @@ export type GenericIssuanceCheckInRequest = {
  * Checking in either succeeds or fails, so no response value is defined for now.
  */
 export type GenericIssuanceCheckInResponseValue = undefined;
+
+/**
+ * Sending email either succeeds or fails, so no response value is defined for now.
+ */
+export type GenericIssuanceSendEmailResponseValue = undefined;

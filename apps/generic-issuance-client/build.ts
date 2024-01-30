@@ -1,13 +1,18 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
+
+dotenv.config();
 
 const genericIssuanceClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
-    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`
+    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
+    "process.env.STYTCH_PUBLIC_TOKEN": `'${process.env.STYTCH_PUBLIC_TOKEN}'`,
+    "process.env.GENERIC_ISSUANCE_CLIENT_URL": `'${process.env.GENERIC_ISSUANCE_CLIENT_URL}'`
   },
   entryPoints: ["src/main.tsx"],
   plugins: [

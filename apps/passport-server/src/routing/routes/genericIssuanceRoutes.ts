@@ -1,9 +1,11 @@
 import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
+  GenericIssuanceSendEmailResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import cookierParser from "cookie-parser";
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import { GlobalServices } from "../../types";
@@ -16,15 +18,16 @@ export function initGenericIssuanceRoutes(
   { genericIssuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
+  app.use(cookierParser());
 
   /**
    * Throws if we don't have an instance of {@link GenericIssuanceService}.
    */
-  function checkIssuanceServiceStarted(
+  function checkGenericIssuanceServiceStarted(
     issuanceService: GenericIssuanceService | null
   ): asserts issuanceService {
     if (!issuanceService) {
-      throw new PCDHTTPError(503, "issuance service not instantiated");
+      throw new PCDHTTPError(503, "generic issuance service not instantiated");
     }
   }
 
@@ -39,7 +42,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/poll-feed/:pipelineID",
     async (req: express.Request, res: express.Response) => {
-      checkIssuanceServiceStarted(genericIssuanceService);
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const request = req.body as PollFeedRequest;
       const result = await genericIssuanceService.handlePollFeed(
@@ -53,7 +56,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/check-in/:pipelineID",
     async (req: express.Request, res: express.Response) => {
-      checkIssuanceServiceStarted(genericIssuanceService);
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const request = req.body as GenericIssuanceCheckInRequest;
       const result = await genericIssuanceService.handleCheckIn(
@@ -61,6 +64,27 @@ export function initGenericIssuanceRoutes(
         request
       );
       res.send(result satisfies GenericIssuanceCheckInResponseValue);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/user/send-email/:email",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const result = await genericIssuanceService.sendLoginEmail(
+        checkUrlParam(req, "email")
+      );
+      res.send(result satisfies GenericIssuanceSendEmailResponseValue);
+    }
+  );
+
+  // temporary -- just for testing JWT authentication
+  app.get(
+    "/generic-issuance/api/user/ping",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      await genericIssuanceService.authenticateStytchSession(req);
+      res.json("pong");
     }
   );
 }
