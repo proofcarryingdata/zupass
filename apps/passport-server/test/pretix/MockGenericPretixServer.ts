@@ -78,11 +78,13 @@ export function getGenericMockPretixAPIServer(
           !body.has("secret") ||
           !body.has("lists") ||
           typeof body.get("secret") !== "string" ||
-          !Array.isArray(body.get("lists"))
+          !Array.isArray(body.get("lists")) ||
+          mocker.getOrgByUrl(orgUrl).checkins.has(body.get("secret") as string)
         ) {
           return res(ctx.status(400), ctx.json({}));
         }
 
+        mocker.getOrgByUrl(orgUrl).checkins.add(body.get("secret") as string);
         return res(ctx.json({ status: "ok" }));
       })
     );

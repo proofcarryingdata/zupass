@@ -249,10 +249,10 @@ describe("generic issuance service tests", function () {
   const pretixOrganizer = mockPretixData.get().organizer1;
   const pretixEvent = pretixOrganizer.eventA;
   const pretixProducts = pretixOrganizer.itemsByEventID.get(pretixEvent.slug);
-  const pretixSuperuserItemIds = [pretixProducts?.[0].id];
+  const pretixSuperuserItemIds = [pretixProducts?.[1].id];
 
   const ticketHolderPretixEmail = pretixOrganizer.EMAIL_3;
-  const superuserPretixEmail = pretixOrganizer.EMAIL_1;
+  const checkerPretixEmail = pretixOrganizer.EMAIL_1;
 
   const pretixDefinition: PretixPipelineDefinition = {
     ownerUserId: randomUUID(),
@@ -398,12 +398,60 @@ describe("generic issuance service tests", function () {
       ticketHolderPretixEmail,
       ticketHolderZupassIdentity
     );
-    console.log(holderIssuedTickets);
+
     expect(holderIssuedTickets.length).to.eq(1);
     const firstHolderTicket = holderIssuedTickets[0];
     expect(firstHolderTicket.claim.ticket.attendeeEmail).to.eq(
       ticketHolderPretixEmail
     );
+
+    const checkerIssuedTickets = await requestGenericTickets(
+      pretixIssuanceRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      checkerPretixEmail,
+      ticketCheckerZupassIdentity
+    );
+    expect(checkerIssuedTickets.length).to.eq(6);
+    const firstCheckerTicket = checkerIssuedTickets[0];
+    expect(firstCheckerTicket.claim.ticket.attendeeEmail).to.eq(
+      checkerPretixEmail
+    );
+
+    const pretixCheckinRoute = path.join(
+      URL_ROOT,
+      pretixPipeline?.checkinCapability.getCheckinUrl()
+    );
+
+    const firstCheckinResult = await requestCheckInGenericTicket(
+      pretixCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      checkerPretixEmail,
+      ticketCheckerZupassIdentity,
+      firstHolderTicket
+    );
+    expect(firstCheckinResult.success).to.eq(true);
+
+    // can't check in a ticket that's already checked in
+    const secondCheckinResult = await requestCheckInGenericTicket(
+      pretixCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      checkerPretixEmail,
+      ticketCheckerZupassIdentity,
+      firstHolderTicket
+    );
+    expect(secondCheckinResult.success).to.eq(false);
+
+    // can't check in a ticket using a ticket that isn't a
+    // superuser ticket
+    const thirdCheckinResult = await requestCheckInGenericTicket(
+      pretixCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      ticketHolderPretixEmail,
+      ticketHolderZupassIdentity,
+      firstCheckerTicket
+    );
+    console.log(thirdCheckinResult);
+    expect(thirdCheckinResult.success).to.eq(false);
   });
 
   this.afterAll(async () => {

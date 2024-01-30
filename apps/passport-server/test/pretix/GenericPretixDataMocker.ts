@@ -48,6 +48,8 @@ export interface IOrganizer {
   EMAIL_2: string;
   EMAIL_3: string;
   EMAIL_4: string;
+
+  checkins: Set<string>;
 }
 
 export class GenericPretixDataMocker {
@@ -282,7 +284,8 @@ export class GenericPretixDataMocker {
       EMAIL_1,
       EMAIL_2,
       EMAIL_3,
-      EMAIL_4
+      EMAIL_4,
+      checkins: new Set()
     };
   }
 

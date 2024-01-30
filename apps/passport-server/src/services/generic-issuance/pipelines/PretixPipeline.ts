@@ -1,11 +1,19 @@
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
-import { FeedCredentialPayload } from "@pcd/passport-interface";
+import {
+  CheckTicketInResponseValue,
+  FeedCredentialPayload,
+  GenericCheckinCredentialPayload,
+  GenericIssuanceCheckInRequest,
+  PollFeedRequest,
+  PollFeedResponseValue
+} from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -39,6 +47,7 @@ import { PipelineCapability } from "../capabilities/types";
 import {
   BasePipeline,
   BasePipelineDefinition,
+  Pipeline,
   PipelineDefinition,
   PipelineType
 } from "./types";
@@ -358,6 +367,111 @@ export class PretixPipeline implements BasePipeline {
   private async checkinPretixTicketPCDs(
     request: GenericIssuanceCheckInRequest
   ): Promise<CheckTicketInResponseValue> {
+    logger(
+      LOG_TAG,
+      `got request to check in tickets with request ${JSON.stringify(request)}`
+    );
+
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      request.credential.pcd
+    );
+    const signaturePCDValid =
+      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+
+    if (!signaturePCDValid) {
+      throw new Error("credential signature invalid");
+    }
+
+    const payload: GenericCheckinCredentialPayload = JSON.parse(
+      signaturePCD.claim.signedMessage
+    );
+
+    const checkerEmailPCD = await EmailPCDPackage.deserialize(
+      payload.emailPCD.pcd
+    );
+
+    const checkerTickets = await this.db.loadByEmail(
+      this.id,
+      checkerEmailPCD.claim.emailAddress
+    );
+
+    const ticketToCheckIn = await EdDSATicketPCDPackage.deserialize(
+      payload.ticketToCheckIn.pcd
+    );
+
+    const pretixEventId = this.eddsaTicketToPretixEventId(ticketToCheckIn);
+
+    const pretixProductId = this.eddsaTicketToPretixProductId(ticketToCheckIn);
+
+    const eventConfig = this.definition.options.events.find(
+      (e) => e.externalId === pretixEventId
+    );
+
+    if (!eventConfig) {
+      throw new Error(
+        `${pretixEventId} has no corresponding event configuration`
+      );
+    }
+
+    const productConfig = eventConfig.products.find(
+      (t) => t.externalId === pretixProductId
+    );
+
+    if (!productConfig) {
+      throw new Error(
+        `${pretixProductId} has no corresponding product configuration`
+      );
+    }
+
+    const checkerEventTickets = checkerTickets.filter(
+      (t) => t.eventId === eventConfig.genericIssuanceId
+    );
+    const checkerProducts = checkerEventTickets.map((t) => {
+      const productConfig = eventConfig.products.find(
+        (p) => p.genericIssuanceId === t.productId
+      );
+      return productConfig;
+    });
+    const hasSuperUserProductTicket = checkerProducts.find(
+      (t) => t?.isSuperUser
+    );
+
+    if (!hasSuperUserProductTicket) {
+      throw new Error(
+        `user ${checkerEmailPCD.claim.emailAddress} doesn't have a superuser ticket`
+      );
+    }
+
+    const ticketAtom = await this.db.loadById(
+      this.id,
+      ticketToCheckIn.claim.ticket.ticketId
+    );
+    if (!ticketAtom) {
+      throw new Error(
+        `Could not load atom for ticket id ${ticketToCheckIn.claim.ticket.ticketId}`
+      );
+    }
+
+    const checkinLists = await this.api.fetchEventCheckinLists(
+      this.definition.options.pretixOrgUrl,
+      this.definition.options.pretixAPIKey,
+      pretixEventId
+    );
+
+    if (checkinLists.length === 0) {
+      throw new Error(
+        `Could not fetch check-in lists for ${eventConfig.genericIssuanceId}`
+      );
+    }
+
+    // TODO: error handling
+    await this.api.pushCheckin(
+      this.definition.options.pretixOrgUrl,
+      this.definition.options.pretixAPIKey,
+      ticketAtom.secret,
+      checkinLists[0].id.toString(),
+      new Date().toISOString()
+    );
     return;
   }
 
@@ -397,6 +511,38 @@ export class PretixPipeline implements BasePipeline {
     }
 
     return product.name;
+  }
+
+  private eddsaTicketToPretixEventId(ticket: EdDSATicketPCD): string {
+    const correspondingEventConfig = this.definition.options.events.find(
+      (e) => e.genericIssuanceId === ticket.claim.ticket.eventId
+    );
+
+    if (!correspondingEventConfig) {
+      throw new Error("no matching event id");
+    }
+
+    return correspondingEventConfig.externalId;
+  }
+
+  private eddsaTicketToPretixProductId(ticket: EdDSATicketPCD): string {
+    const correspondingEventConfig = this.definition.options.events.find(
+      (e) => e.genericIssuanceId === ticket.claim.ticket.eventId
+    );
+
+    if (!correspondingEventConfig) {
+      throw new Error("no matching event id");
+    }
+
+    const correspondingProductConfig = correspondingEventConfig.products.find(
+      (p) => p.genericIssuanceId === ticket.claim.ticket.productId
+    );
+
+    if (!correspondingProductConfig) {
+      throw new Error("no matching product id");
+    }
+
+    return correspondingProductConfig.externalId;
   }
 
   public static is(p: Pipeline): p is PretixPipeline {
