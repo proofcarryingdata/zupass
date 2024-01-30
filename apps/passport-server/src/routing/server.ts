@@ -1,4 +1,4 @@
-import cors from "cors";
+import cors, { CorsOptions } from "cors";
 import express, { Application, NextFunction } from "express";
 import * as fs from "fs";
 import * as http from "http";
@@ -55,9 +55,31 @@ export async function startHttpServer(
     app.use(cors());
     app.use(tracingMiddleware());
     app.use(
-      cors({
-        origin: "*",
-        methods: ["GET", "POST", "PUT", "DELETE"]
+      cors((req, callback) => {
+        // Requests from generic issuance client require Access-Control-Allow-Credentials to be true,
+        // as the generic issuance client sends cookies as part of user authentication. However, when
+        // Access-Control-Allow-Origin is set to wildcard "*", setting credentials to true is forbidden:
+        // https://developer.mozilla.org/en-US/docs/Web/HTTP/CORS/Errors/CORSNotSupportingCredentials.
+        // As a result, if we are receiving a request from generic issuance client, we set a single origin
+        // equal to the generic issuance client URL and set credential to true. Otherwise, we return
+        // a wildcard origin "*" and set credential to false.
+        const genericIssuanceClientUrl =
+          process.env.GENERIC_ISSUANCE_CLIENT_URL;
+
+        let corsOptions: CorsOptions;
+        if (
+          genericIssuanceClientUrl != null &&
+          req.header("Origin") === genericIssuanceClientUrl
+        ) {
+          corsOptions = { origin: genericIssuanceClientUrl, credentials: true };
+        } else {
+          corsOptions = {
+            origin: "*",
+            methods: ["GET", "POST", "PUT", "DELETE"]
+          };
+        }
+
+        callback(null, corsOptions);
       })
     );
 

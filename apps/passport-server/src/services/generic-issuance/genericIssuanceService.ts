@@ -4,6 +4,8 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { Request } from "express";
+import stytch, { Client, Session } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
@@ -109,13 +111,15 @@ export class GenericIssuanceService {
   private atomDB: IPipelineAtomDB;
   private lemonadeAPI: ILemonadeAPI;
   private eddsaPrivateKey: string;
+  private stytchClient: Client;
 
   public constructor(
     context: ApplicationContext,
     definitionDB: IPipelineDefinitionDB,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
-    eddsaPrivateKey: string
+    eddsaPrivateKey: string,
+    stytchClient: Client
   ) {
     this.definitionDB = definitionDB;
     this.atomDB = atomDB;
@@ -123,6 +127,7 @@ export class GenericIssuanceService {
     this.lemonadeAPI = lemonadeAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelines = [];
+    this.stytchClient = stytchClient;
   }
 
   public async start(): Promise<void> {
@@ -229,6 +234,27 @@ export class GenericIssuanceService {
   public async getAllPipelines(): Promise<Pipeline[]> {
     return this.pipelines;
   }
+
+  private getEmailFromStytchSession(session: Session): string {
+    const email = session.authentication_factors.find(
+      (f) => !!f.email_factor?.email_address
+    )?.email_factor?.email_address;
+    if (!email) {
+      throw new PCDHTTPError(400, "Session did not use email authentication");
+    }
+    return email;
+  }
+
+  public async authenticateStytchSession(req: Request): Promise<string> {
+    try {
+      const { session } = await this.stytchClient.sessions.authenticateJwt({
+        session_jwt: req.cookies["stytch_session_jwt"]
+      });
+      return this.getEmailFromStytchSession(session);
+    } catch (e) {
+      throw new PCDHTTPError(401, "Not authorized");
+    }
+  }
 }
 
 export async function startGenericIssuanceService(
@@ -243,7 +269,6 @@ export async function startGenericIssuanceService(
   }
 
   const pkeyEnv = process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY;
-
   if (pkeyEnv == null) {
     logger(
       "[INIT] missing environment variable GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
@@ -251,12 +276,30 @@ export async function startGenericIssuanceService(
     return null;
   }
 
+  const projectIdEnv = process.env.STYTCH_RROJECT_ID;
+  if (projectIdEnv == null) {
+    logger("[INIT] missing environment variable STYTCH_RROJECT_ID");
+    return null;
+  }
+
+  const secretEnv = process.env.STYTCH_SECRET;
+  if (secretEnv == null) {
+    logger("[INIT] missing environment variable STYTCH_SECRET");
+    return null;
+  }
+
+  const stytchClient = new stytch.Client({
+    project_id: projectIdEnv,
+    secret: secretEnv
+  });
+
   const issuanceService = new GenericIssuanceService(
     context,
     context.pipelineDefinitionDB,
     context.pipelineAtomDB,
     lemonadeAPI,
-    pkeyEnv
+    pkeyEnv,
+    stytchClient
   );
 
   // TODO: in the future (read: before shipping to real prod), this probably
