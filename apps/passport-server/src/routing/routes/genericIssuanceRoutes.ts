@@ -62,7 +62,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.get(
-    "/generic-issuance/api/poll-feed/:pipelineId",
+    "/generic-issuance/api/poll-feed/:pipelineID",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");

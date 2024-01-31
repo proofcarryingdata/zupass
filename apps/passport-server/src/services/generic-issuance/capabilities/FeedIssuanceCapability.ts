@@ -19,26 +19,15 @@ import { PipelineCapability } from "./types";
  * users. The server can make use of the information encoded in this Capability
  * to connect it to the other services - express routing, etc.
  */
-export interface FeedIssuanceCapabilityOld extends BasePipelineCapability {
-  type: PipelineCapability.FeedIssuance;
+export class FeedIssuanceCapability implements BasePipelineCapability {
+  private pipeline: Pipeline;
+  public readonly type: PipelineCapability.FeedIssuance;
   /**
    * Used to differentiate between different feeds on the same {@link Pipeline}.
    * TODO:
    * - ensure at runtime that a {@link Pipeline} doesn't contain capabilities
    *   with overlapping {@link feedId}s.
    */
-  feedId: string;
-  issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
-  getFeedUrl(): string;
-  /**
-   * TODO: implement endpoint that lets Zupass figure out what permissions / etc. a
-   * feed requires.
-   */
-}
-
-export class FeedIssuanceCapability implements BasePipelineCapability {
-  private pipeline: Pipeline;
-  public readonly type: PipelineCapability.FeedIssuance;
   public readonly feedId: string;
   private folder: string;
   private name: string;
@@ -96,7 +85,7 @@ export class FeedIssuanceCapability implements BasePipelineCapability {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "folder",
+          folder: this.folder,
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )
