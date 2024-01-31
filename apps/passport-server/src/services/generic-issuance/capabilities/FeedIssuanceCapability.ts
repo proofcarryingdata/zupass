@@ -52,13 +52,19 @@ export class FeedIssuanceCapability implements BasePipelineCapability {
     return generateIssuanceUrlPath(this.pipeline.id);
   }
 
+  /**
+   * Returns a feed definition, based on the configuration values provided.
+   */
   public getFeed(): Feed {
     const folder = this.folder;
     return {
       id: this.feedId,
-      name: `Feed ${this.feedId}`,
-      description: "Generic issuance feed",
+      name: this.name,
+      description: this.description,
       permissions: [
+        // These ought to be configurable
+        // Perhaps feeds could be configured to be "append-only" or "replace",
+        // with different permissions and actions depending on this.
         {
           folder,
           type: PCDPermissionType.ReplaceInFolder
@@ -75,14 +81,20 @@ export class FeedIssuanceCapability implements BasePipelineCapability {
     };
   }
 
+  /**
+   * Return the actual feed contents.
+   */
   public async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
     if (!req.pcd) {
       throw new Error(`Missing credential for ${this.feedId}`);
     }
 
+    // The cast here is a bit ugly; it might make more sense to use a generic
+    // serialization function.
     const tickets = (await this.pipeline.issue(req.pcd)) as EdDSATicketPCD[];
     return {
       actions: [
+        // Different actions could be configurable
         {
           type: PCDActionType.ReplaceInFolder,
           folder: this.folder,

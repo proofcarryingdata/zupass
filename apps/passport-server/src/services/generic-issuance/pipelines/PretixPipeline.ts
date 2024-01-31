@@ -490,6 +490,10 @@ export class PretixPipeline implements BasePipeline {
     return tickets;
   }
 
+  /**
+   * Returns the issued tickets for a given user. Called by the feed
+   * capability, but could be called by other capabilities.
+   */
   public async issue(
     credential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<PCD[]> {
