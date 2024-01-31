@@ -1,4 +1,3 @@
-import { z } from "zod";
 import { BasePipelineCapability } from "../types";
 import {
   LemonadePipeline,
@@ -41,17 +40,11 @@ export enum PipelineType {
  *   something like a 2-column table. One column for JSON representing
  *   the pipeline definition, and a unique id column derived from the JSON.
  */
-export const BasePipelineDefinitionSchema = z.object({
-  id: z.string().uuid(),
-  ownerUserId: z.string().uuid(),
-  editorUserIds: z.string().uuid().array(),
-  type: z.string(),
-  options: z.any()
-});
-
-export type BasePipelineDefinition = z.infer<
-  typeof BasePipelineDefinitionSchema
->;
+export interface BasePipelineDefinition {
+  id: string;
+  ownerUserId: string;
+  editorUserIds: string[];
+}
 
 /**
  * Any new pipeline definitions need to be added to this type declaration. Note

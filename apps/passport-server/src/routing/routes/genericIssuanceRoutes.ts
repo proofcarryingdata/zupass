@@ -5,7 +5,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import cookieParser from "cookie-parser";
+import cookierParser from "cookie-parser";
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import { GlobalServices } from "../../types";
@@ -18,8 +18,7 @@ export function initGenericIssuanceRoutes(
   { genericIssuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
-  app.use(cookieParser());
-  app.use(express.json());
+  app.use(cookierParser());
 
   /**
    * Throws if we don't have an instance of {@link GenericIssuanceService}.
@@ -79,55 +78,13 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  // temporary -- just for testing JWT authentication
   app.get(
-    "/generic-issuance/api/pipelines",
+    "/generic-issuance/api/user/ping",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      res.send(await genericIssuanceService.getUserPipelines(id));
-    }
-  );
-
-  app.get(
-    "/generic-issuance/api/pipelines/:id",
-    async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id: userId } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
-        await genericIssuanceService.getUserPipelineDefinition(
-          userId,
-          checkUrlParam(req, "id")
-        )
-      );
-    }
-  );
-
-  app.put(
-    "/generic-issuance/api/pipelines",
-    async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id: userId } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
-        await genericIssuanceService.upsertPipelineDefinition(userId, req.body)
-      );
-    }
-  );
-
-  app.delete(
-    "/generic-issuance/api/pipelines/:id",
-    async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id: userId } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
-        await genericIssuanceService.deletePipelineDefinition(
-          userId,
-          checkUrlParam(req, "id")
-        )
-      );
+      await genericIssuanceService.authenticateStytchSession(req);
+      res.json("pong");
     }
   );
 }
