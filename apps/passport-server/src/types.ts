@@ -8,7 +8,6 @@ import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
-import { IPipelineDefinitionDB } from "./database/queries/pipelineDefinitionDB";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -41,7 +40,6 @@ export interface ApplicationContext {
   gitCommitHash: string;
 
   /// WIP. remove once we have real database APIs for these
-  pipelineDefinitionDB: IPipelineDefinitionDB;
   pipelineAtomDB: IPipelineAtomDB;
 }
 

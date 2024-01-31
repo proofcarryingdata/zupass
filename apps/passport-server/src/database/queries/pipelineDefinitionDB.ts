@@ -42,7 +42,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       `
       SELECT p.*, ARRAY_AGG(e.editor_id) AS editor_user_ids
       FROM generic_issuance_pipelines p
-      INNER JOIN generic_issuance_pipeline_editors e
+      LEFT JOIN generic_issuance_pipeline_editors e
       ON p.id = e.pipeline_id
       GROUP BY p.id`
     );
@@ -57,7 +57,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   }
 
   public async clearAllDefinitions(): Promise<void> {
-    await sqlQuery(this.db, "DELETE FROM pipeline_definitions");
+    await sqlQuery(this.db, "DELETE FROM generic_issuance_pipeline_editors");
+    await sqlQuery(this.db, "DELETE FROM generic_issuance_pipelines");
   }
 
   public async getDefinition(
@@ -68,7 +69,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       `
       SELECT p.*, ARRAY_AGG(e.editor_id) AS editor_user_ids
       FROM generic_issuance_pipelines p
-      INNER JOIN generic_issuance_pipeline_editors e
+      LEFT JOIN generic_issuance_pipeline_editors e
       ON p.id = e.pipeline_id
       WHERE p.id = $1
       GROUP BY p.id`,
@@ -109,8 +110,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
         `,
             [
               definition.id,
-              definition.type,
               definition.ownerUserId,
+              definition.type,
               definition.options
             ]
           )

@@ -10,7 +10,10 @@ import stytch, { Client, Session } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
-import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
+import {
+  IPipelineDefinitionDB,
+  PipelineDefinitionDB
+} from "../../database/queries/pipelineDefinitionDB";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -120,7 +123,6 @@ export class GenericIssuanceService {
 
   public constructor(
     context: ApplicationContext,
-    definitionDB: IPipelineDefinitionDB,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client,
@@ -128,7 +130,7 @@ export class GenericIssuanceService {
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string
   ) {
-    this.definitionDB = definitionDB;
+    this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
     this.context = context;
     this.lemonadeAPI = lemonadeAPI;
@@ -337,7 +339,6 @@ export async function startGenericIssuanceService(
 
   const issuanceService = new GenericIssuanceService(
     context,
-    context.pipelineDefinitionDB,
     context.pipelineAtomDB,
     lemonadeAPI,
     stytchClient,

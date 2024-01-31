@@ -18,7 +18,6 @@ import {
 } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
-import { PipelineDefinitionDB } from "./database/queries/pipelineDefinitionDB";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
@@ -52,8 +51,7 @@ export async function startApplication(
     publicResourcesDir: path.join(process.cwd(), "public"),
     gitCommitHash: await getCommitHash(),
     // TODO: remove these once we have settled on a db schema for these
-    pipelineAtomDB: new MockPipelineAtomDB(),
-    pipelineDefinitionDB: new PipelineDefinitionDB(dbPool)
+    pipelineAtomDB: new MockPipelineAtomDB()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);

@@ -24,6 +24,8 @@ import * as path from "path";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { getI18nString } from "../src/apis/pretix/genericPretixAPI";
 import { stopApplication } from "../src/application";
+import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
+import { sqlQuery } from "../src/database/sqlQuery";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LemonadePipeline,
@@ -216,8 +218,10 @@ describe("generic issuance service tests", function () {
 
   const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(mockLemonadeData);
 
+  const pipelineOwnerUUID = randomUUID();
+
   const lemonadeDefinition: LemonadePipelineDefinition = {
-    ownerUserId: randomUUID(),
+    ownerUserId: pipelineOwnerUUID,
     id: randomUUID(),
     editorUserIds: [],
     options: {
@@ -256,7 +260,7 @@ describe("generic issuance service tests", function () {
   const checkerPretixEmail = pretixOrganizer.EMAIL_1;
 
   const pretixDefinition: PretixPipelineDefinition = {
-    ownerUserId: randomUUID(),
+    ownerUserId: pipelineOwnerUUID,
     id: randomUUID(),
     editorUserIds: [],
     options: {
@@ -289,6 +293,13 @@ describe("generic issuance service tests", function () {
       lemonadeAPI
     });
 
+    // TODO: remove this once we have user management
+    await sqlQuery(
+      application.context.dbPool,
+      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
+      [pipelineOwnerUUID, "test@example.com", true]
+    );
+
     const orgUrls = mockPretixData.get().organizersByOrgUrl.keys();
     mockPretixServer = getGenericMockPretixAPIServer(orgUrls, mockPretixData);
     mockPretixServer.listen({ onUnhandledRequest: "bypass" });
@@ -297,10 +308,11 @@ describe("generic issuance service tests", function () {
     URL_ROOT = application.expressContext.localEndpoint;
     giService = application.services.genericIssuanceService;
     await giService?.stop();
-    await application.context.pipelineDefinitionDB.clearAllDefinitions();
-    await application.context.pipelineDefinitionDB.setDefinitions(
-      pipelineDefinitions
+    const pipelineDefinitionDB = new PipelineDefinitionDB(
+      application.context.dbPool
     );
+    await pipelineDefinitionDB.clearAllDefinitions();
+    await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
     await giService?.start();
   });
 
