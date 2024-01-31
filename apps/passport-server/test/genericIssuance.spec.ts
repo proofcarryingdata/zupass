@@ -308,6 +308,16 @@ describe("generic issuance service tests", function () {
     mockPretixServer.resetHandlers();
   });
 
+  it("endpoints test", async () => {
+    // TODO: Add more tests here
+    expectToExist(giService);
+    const pretixUserPipelines = await giService.getAllUserPipelineDefinitions(
+      pretixDefinition.ownerUserId
+    );
+    expect(pretixUserPipelines).to.have.length(1);
+    expect(pretixUserPipelines[0].id).to.eq(pretixDefinition.id);
+  });
+
   it("test", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
