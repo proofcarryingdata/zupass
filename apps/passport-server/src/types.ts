@@ -112,4 +112,5 @@ export interface EnvironmentVariables {
   TELEGRAM_KUDOSBOT_TOKEN?: string;
   TICKET_ISSUANCE_CUTOFF_DATE?: string;
   GENERIC_RATE_LIMIT_DISABLED?: string;
+  GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY?: string;
 }
