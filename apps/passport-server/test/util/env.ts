@@ -4,6 +4,8 @@ import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
 
+const serverEddsaPrivateKey = newEdDSAPrivateKey();
+
 export const testingEnv: EnvironmentVariables = Object.freeze({
   PORT: 47891,
   NODE_ENV: "production",
@@ -24,7 +26,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
-  SERVER_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
+  SERVER_EDDSA_PRIVATE_KEY: serverEddsaPrivateKey,
   GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY: newEdDSAPrivateKey(),
   STYTCH_PROJECT_ID: "stytch_project_id",
   STYTCH_SECRET: "stytch_url",
