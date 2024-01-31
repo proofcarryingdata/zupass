@@ -18,6 +18,7 @@ import {
 } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
+import { PipelineDefinitionDB } from "./database/queries/pipelineDefinitionDB";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
