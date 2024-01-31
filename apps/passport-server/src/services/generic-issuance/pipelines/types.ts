@@ -1,3 +1,5 @@
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { BasePipelineCapability } from "../types";
 import {
   LemonadePipeline,
@@ -18,6 +20,7 @@ export interface BasePipeline {
   type: PipelineType;
   capabilities: readonly BasePipelineCapability[];
   load(): Promise<void>; // TODO: is this right?
+  issue(credential: SerializedPCD<SemaphoreSignaturePCD>): Promise<PCD[]>;
 }
 
 /**

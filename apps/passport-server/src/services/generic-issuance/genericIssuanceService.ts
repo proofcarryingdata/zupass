@@ -3,6 +3,7 @@ import {
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest,
   GenericIssuanceSendEmailResponseValue,
+  ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -159,6 +160,7 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
+    logger(`${LOG_TAG} Starting generic issuance service`);
     await this.createPipelines();
     await this.loadAllPipelines();
     await this.scheduleReloads();
@@ -231,6 +233,25 @@ export class GenericIssuanceService {
     }
 
     return relevantCapability.issue(req);
+  }
+
+  /**
+   * Lists the feeds available from this pipeline.
+   */
+  public async handleListFeeds(
+    pipelineId: string
+  ): Promise<ListFeedsResponseValue> {
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const relevantCapabilities: FeedIssuanceCapability[] =
+      pipeline.capabilities.filter((c) =>
+        isFeedIssuanceCapability(c)
+      ) as FeedIssuanceCapability[];
+
+    return {
+      providerName: pipeline.id,
+      providerUrl: `${process.env.PASSPORT_SERVER_URL}/generic-issuance/api/poll-feed/${pipelineId}`,
+      feeds: relevantCapabilities.map((cap) => cap.getFeed())
+    };
   }
 
   /**

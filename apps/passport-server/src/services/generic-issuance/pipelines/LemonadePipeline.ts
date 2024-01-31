@@ -11,13 +11,13 @@ import {
   CheckTicketInResponseValue,
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
-  PollFeedRequest,
-  PollFeedResponseValue,
   verifyFeedCredential
 } from "@pcd/passport-interface";
-import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ArgumentTypeName, PCD, SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
@@ -29,10 +29,7 @@ import {
   CheckinCapability,
   generateCheckinUrlPath
 } from "../capabilities/CheckinCapability";
-import {
-  FeedIssuanceCapability,
-  generateIssuanceUrlPath
-} from "../capabilities/FeedIssuanceCapability";
+import { FeedIssuanceCapability } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import {
   BasePipeline,
@@ -124,12 +121,19 @@ export interface LemonadePipelineOptions {
 export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
   public capabilities = [
-    {
-      issue: this.issueLemonadeTicketPCDs.bind(this),
-      feedId: "ticket-feed",
-      type: PipelineCapability.FeedIssuance,
-      getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
-    } satisfies FeedIssuanceCapability,
+    // {
+    //   issue: this.issueLemonadeTicketPCDs.bind(this),
+    //   feedId: "ticket-feed",
+    //   type: PipelineCapability.FeedIssuance,
+    //   getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
+    // } satisfies FeedIssuanceCapability,
+    new FeedIssuanceCapability(
+      this,
+      "ticket-feed",
+      "Lemonade Generic",
+      "Lemonade test feed",
+      "Tests generic issuance"
+    ),
     {
       checkin: this.checkinLemonadeTicketPCD.bind(this),
       type: PipelineCapability.Checkin,
@@ -228,20 +232,23 @@ export class LemonadePipeline implements BasePipeline {
     await this.db.save(this.definition.id, atomsToSave);
   }
 
+  public async issue(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<PCD[]> {
+    return this.issueLemonadeTicketPCDs(credential);
+  }
+
   /**
    * TODO:
    * - proper validation of credentials.
    * - be robust to any single ticket failing to convert.
    */
   private async issueLemonadeTicketPCDs(
-    req: PollFeedRequest
-  ): Promise<PollFeedResponseValue> {
-    if (!req.pcd) {
-      throw new Error("missing credential pcd");
-    }
-
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EdDSATicketPCD[]> {
     // TODO: cache the verification
-    const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
+    const { pcd: signaturePCD, payload } =
+      await verifyFeedCredential(credential);
 
     const serializedEmailPCD = payload.pcd;
     if (!serializedEmailPCD) {
@@ -250,7 +257,7 @@ export class LemonadePipeline implements BasePipeline {
 
     const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
 
-    if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
+    if (emailPCD.claim.semaphoreId !== signaturePCD.claim.identityCommitment) {
       throw new Error(`Semaphore signature does not match email PCD`);
     }
 
@@ -266,7 +273,7 @@ export class LemonadePipeline implements BasePipeline {
     const email = emailPCD.claim.emailAddress;
     const relevantTickets = await this.db.loadByEmail(this.id, email);
     const ticketDatas = relevantTickets.map((t) =>
-      this.atomToTicketData(t, credential.claim.identityCommitment)
+      this.atomToTicketData(t, signaturePCD.claim.identityCommitment)
     );
 
     // TODO: cache this intelligently
@@ -276,17 +283,7 @@ export class LemonadePipeline implements BasePipeline {
       )
     );
 
-    return {
-      actions: [
-        {
-          type: PCDActionType.ReplaceInFolder,
-          folder: "folder",
-          pcds: await Promise.all(
-            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-          )
-        }
-      ]
-    };
+    return tickets;
   }
 
   private async ticketDataToTicketPCD(

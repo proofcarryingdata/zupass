@@ -2,6 +2,7 @@ import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -39,6 +40,13 @@ export function initGenericIssuanceRoutes(
     }
   });
 
+  app.get("/generic-issuance/pipelines", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+
+    const pipelines = await genericIssuanceService.getAllPipelines();
+    res.send(pipelines);
+  });
+
   app.post(
     "/generic-issuance/api/poll-feed/:pipelineID",
     async (req: express.Request, res: express.Response) => {
@@ -50,6 +58,16 @@ export function initGenericIssuanceRoutes(
         request
       );
       res.send(result satisfies PollFeedResponseValue);
+    }
+  );
+
+  app.get(
+    "/generic-issuance/api/poll-feed/:pipelineId",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineID = checkUrlParam(req, "pipelineID");
+      const result = await genericIssuanceService.handleListFeeds(pipelineID);
+      res.send(result satisfies ListFeedsResponseValue);
     }
   );
 
