@@ -1,3 +1,4 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
@@ -284,7 +285,14 @@ describe("generic issuance service tests", function () {
   const pipelineDefinitions = [pretixDefinition, lemonadeDefinition];
 
   this.beforeAll(async () => {
-    await overrideEnvironment(testingEnv);
+    // This has to be done here as it requires an `await`
+    const zupassPublicKey = JSON.stringify(
+      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
+    );
+    await overrideEnvironment({
+      GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
+      ...testingEnv
+    });
     application = await startTestingApp({
       lemonadeAPI
     });

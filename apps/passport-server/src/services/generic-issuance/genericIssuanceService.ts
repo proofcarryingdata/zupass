@@ -1,3 +1,4 @@
+import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest,
@@ -42,7 +43,8 @@ export async function createPipelines(
   apis: {
     lemonadeAPI: ILemonadeAPI;
     genericPretixAPI: IGenericPretixAPI;
-  }
+  },
+  zupassPublicKey: EdDSAPublicKey
 ): Promise<Pipeline[]> {
   logger(LOG_TAG, `creating ${definitions.length} pipelines`);
 
@@ -51,7 +53,13 @@ export async function createPipelines(
   for (const definition of definitions) {
     try {
       logger(LOG_TAG, `creating pipeline ${definition.id}`);
-      const pipeline = createPipeline(eddsaPrivateKey, definition, db, apis);
+      const pipeline = createPipeline(
+        eddsaPrivateKey,
+        definition,
+        db,
+        apis,
+        zupassPublicKey
+      );
       pipelines.push(pipeline);
       logger(LOG_TAG, `successfully created pipeline ${definition.id}`);
     } catch (e) {
@@ -74,21 +82,24 @@ export function createPipeline(
   apis: {
     lemonadeAPI: ILemonadeAPI;
     genericPretixAPI: IGenericPretixAPI;
-  }
+  },
+  zupassPublicKey: EdDSAPublicKey
 ): Pipeline {
   if (isLemonadePipelineDefinition(definition)) {
     return new LemonadePipeline(
       eddsaPrivateKey,
       definition,
       db,
-      apis.lemonadeAPI
+      apis.lemonadeAPI,
+      zupassPublicKey
     );
   } else if (isPretixPipelineDefinition(definition)) {
     return new PretixPipeline(
       eddsaPrivateKey,
       definition,
       db,
-      apis.genericPretixAPI
+      apis.genericPretixAPI,
+      zupassPublicKey
     );
   }
 
@@ -117,6 +128,7 @@ export class GenericIssuanceService {
   private stytchClient: Client;
   private bypassEmail: boolean;
   private genericIssuanceClientUrl: string;
+  private zupassPublicKey: EdDSAPublicKey;
 
   public constructor(
     context: ApplicationContext,
@@ -126,7 +138,8 @@ export class GenericIssuanceService {
     stytchClient: Client,
     genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
-    eddsaPrivateKey: string
+    eddsaPrivateKey: string,
+    zupassPublicKey: EdDSAPublicKey
   ) {
     this.definitionDB = definitionDB;
     this.atomDB = atomDB;
@@ -140,6 +153,7 @@ export class GenericIssuanceService {
     this.bypassEmail =
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
+    this.zupassPublicKey = zupassPublicKey;
   }
 
   public async start(): Promise<void> {
@@ -162,7 +176,8 @@ export class GenericIssuanceService {
       {
         lemonadeAPI: this.lemonadeAPI,
         genericPretixAPI: this.genericPretixAPI
-      }
+      },
+      this.zupassPublicKey
     );
     this.pipelines = pipelines;
   }
@@ -335,6 +350,23 @@ export async function startGenericIssuanceService(
     return null;
   }
 
+  const zupassPublicKeyEnv = process.env.GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY;
+  if (!zupassPublicKeyEnv) {
+    logger("[INIT missing GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY");
+    return null;
+  }
+
+  let zupassPublicKey: EdDSAPublicKey;
+  try {
+    zupassPublicKey = JSON.parse(zupassPublicKeyEnv);
+    if (!isEdDSAPublicKey(zupassPublicKey)) {
+      throw new Error("Invalid public key");
+    }
+  } catch (e) {
+    logger("[INIT] invalid GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY");
+    return null;
+  }
+
   const issuanceService = new GenericIssuanceService(
     context,
     context.pipelineDefinitionDB,
@@ -343,7 +375,8 @@ export async function startGenericIssuanceService(
     stytchClient,
     genericIssuanceClientUrl,
     genericPretixAPI,
-    pkeyEnv
+    pkeyEnv,
+    zupassPublicKey
   );
 
   // TODO: in the future (read: before shipping to real prod), this probably
