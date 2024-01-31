@@ -27,7 +27,7 @@ export class MockPipelineUserDB implements IPipelineUserDB {
   public async getUserByEmail(
     email: string
   ): Promise<PipelineUser | undefined> {
-    return Object.values(this.users).find(u => u.email = email)
+    return Object.values(this.users).find((u) => (u.email = email));
   }
 
   public async loadUsers(): Promise<PipelineUser[]> {
