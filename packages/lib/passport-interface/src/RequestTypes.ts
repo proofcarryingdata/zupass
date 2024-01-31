@@ -826,3 +826,33 @@ export type GenericIssuanceCheckInResponseValue = undefined;
  * Sending email either succeeds or fails, so no response value is defined for now.
  */
 export type GenericIssuanceSendEmailResponseValue = undefined;
+
+// TODO: fix
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+type PipelineDefinition = any;
+
+/**
+ * Returns all pipeline definitions that a user has access to.
+ */
+export type GenericIssuanceGetAllUserPipelinesResponseValue =
+  PipelineDefinition[];
+
+/**
+ * Returns the requested pipeline definition.
+ */
+export type GenericIssuanceGetPipelineResponseValue = PipelineDefinition;
+
+/**
+ * Request body containing the pipeline definition to be upserted.
+ */
+export type GenericIssuanceUpsertPipelineRequest = PipelineDefinition;
+
+/**
+ * Returns the upserted pipeline definition.
+ */
+export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
+
+/**
+ * Deleting a pipeline definition either succeeds or fails, so no response value is defined for now.
+ */
+export type GenericIssuanceDeletePipelineResponseValue = undefined;

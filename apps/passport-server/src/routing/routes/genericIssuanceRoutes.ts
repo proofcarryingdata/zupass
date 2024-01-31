@@ -1,7 +1,11 @@
 import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
+  GenericIssuanceDeletePipelineResponseValue,
+  GenericIssuanceGetAllUserPipelinesResponseValue,
+  GenericIssuanceGetPipelineResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceUpsertPipelineRequest,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -82,7 +86,11 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(await genericIssuanceService.getAllUserPipelineDefinitions(id));
+      res.send(
+        (await genericIssuanceService.getAllUserPipelineDefinitions(
+          id
+        )) satisfies GenericIssuanceGetAllUserPipelinesResponseValue
+      );
     }
   );
 
@@ -93,10 +101,10 @@ export function initGenericIssuanceRoutes(
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
       res.send(
-        await genericIssuanceService.getPipelineDefinition(
+        (await genericIssuanceService.getPipelineDefinition(
           userId,
           checkUrlParam(req, "id")
-        )
+        )) satisfies GenericIssuanceGetPipelineResponseValue
       );
     }
   );
@@ -108,7 +116,10 @@ export function initGenericIssuanceRoutes(
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
       res.send(
-        await genericIssuanceService.upsertPipelineDefinition(userId, req.body)
+        (await genericIssuanceService.upsertPipelineDefinition(
+          userId,
+          req.body as GenericIssuanceUpsertPipelineRequest
+        )) satisfies GenericIssuanceUpsertPipelineRequest
       );
     }
   );
@@ -120,10 +131,10 @@ export function initGenericIssuanceRoutes(
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
       res.send(
-        await genericIssuanceService.deletePipelineDefinition(
+        (await genericIssuanceService.deletePipelineDefinition(
           userId,
           checkUrlParam(req, "id")
-        )
+        )) satisfies GenericIssuanceDeletePipelineResponseValue
       );
     }
   );

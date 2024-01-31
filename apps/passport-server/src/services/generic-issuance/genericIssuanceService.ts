@@ -324,7 +324,7 @@ export class GenericIssuanceService {
   public async deletePipelineDefinition(
     userId: string,
     pipelineId: string
-  ): Promise<void> {
+  ): Promise<undefined> {
     const pipeline = await this.getPipelineDefinition(userId, pipelineId);
     // TODO: Finalize the "permissions model" for CRUD actions. Right now,
     // create, read, update are permissable by owners and editors, while delete
@@ -332,7 +332,7 @@ export class GenericIssuanceService {
     if (pipeline.ownerUserId !== userId) {
       throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
     }
-    void this.definitionDB.clearDefinition(pipelineId);
+    await this.definitionDB.clearDefinition(pipelineId);
   }
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {
