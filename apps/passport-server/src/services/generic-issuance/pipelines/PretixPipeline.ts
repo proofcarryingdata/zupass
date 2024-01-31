@@ -1,3 +1,4 @@
+import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -8,11 +9,11 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CheckTicketInResponseValue,
-  FeedCredentialPayload,
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -114,6 +115,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
+  private zupassPublicKey: EdDSAPublicKey;
 
   /**
    * This is where the Pipeline stores atoms so that they don't all have
@@ -138,12 +140,14 @@ export class PretixPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB,
-    api: IGenericPretixAPI
+    api: IGenericPretixAPI,
+    zupassPublicKey: EdDSAPublicKey
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
+    this.zupassPublicKey = zupassPublicKey;
   }
 
   /**
@@ -495,22 +499,28 @@ export class PretixPipeline implements BasePipeline {
       throw new Error("missing credential pcd");
     }
 
-    const credential = await SemaphoreSignaturePCDPackage.deserialize(
-      req.pcd.pcd
-    );
-    const feedCredential: FeedCredentialPayload = JSON.parse(
-      credential.claim.signedMessage
-    );
+    // TODO: cache the verification
+    const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
 
-    const serializedEmailPCD = feedCredential.pcd?.pcd;
+    const serializedEmailPCD = payload.pcd;
     if (!serializedEmailPCD) {
       throw new Error("missing email pcd");
     }
 
-    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD);
-    // TODO: verify the email pcd
-    // - that the signature is valid
-    // - that it was signed by the Zupass Server
+    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
+
+    if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
+      throw new Error(`Semaphore signature does not match email PCD`);
+    }
+
+    if (
+      !isEqualEdDSAPublicKey(
+        emailPCD.proof.eddsaPCD.claim.publicKey,
+        this.zupassPublicKey
+      )
+    ) {
+      throw new Error(`Email PCD is not signed by Zupass`);
+    }
 
     const email = emailPCD.claim.emailAddress;
     const relevantTickets = await this.db.loadByEmail(this.id, email);

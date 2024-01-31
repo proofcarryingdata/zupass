@@ -17,3 +17,23 @@ export function isEqualEdDSAPublicKey(
 ): boolean {
   return a[0] === b[0] && a[1] === b[1];
 }
+
+/**
+ * Checks if a value is a valid EdDSAPublicKey
+ */
+export function isEdDSAPublicKey(
+  maybeKey: unknown
+): maybeKey is EdDSAPublicKey {
+  if (
+    maybeKey instanceof Array &&
+    maybeKey.length === 2 &&
+    typeof maybeKey[0] === "string" &&
+    typeof maybeKey[1] === "string" &&
+    !isNaN(Number("0x" + maybeKey[0])) &&
+    !isNaN(Number("0x" + maybeKey[1]))
+  ) {
+    return true;
+  } else {
+    return false;
+  }
+}
