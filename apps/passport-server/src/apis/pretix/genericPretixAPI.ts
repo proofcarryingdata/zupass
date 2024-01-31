@@ -539,7 +539,7 @@ const GenericPretixPositionSchema = z.object({
   price: z.string(),
   attendee_name: z.string(), // first and last
   attendee_email: z.string().toLowerCase().trim().nullable(),
-  subevent: z.number(),
+  subevent: z.number().nullable(),
   secret: z.string(),
   checkins: z.array(GenericPretixCheckinSchema)
 });
@@ -550,14 +550,14 @@ const GenericPretixOrderSchema = z.object({
   status: z.string(), // "p"
   testmode: z.boolean(),
   secret: z.string(),
-  name: z.string(),
+  name: z.string().nullable().optional(),
   email: z.string().toLowerCase().trim(),
   positions: z.array(GenericPretixPositionSchema) // should have exactly one
 });
 
 const GenericPretixItemSchema = z.object({
   id: z.number(), // corresponds to "item" field in GenericPretixPosition
-  category: z.number(),
+  category: z.number().optional().nullable(),
   admission: z.boolean(),
   personalized: z.boolean(),
   generate_tickets: z.boolean().nullable().optional(),

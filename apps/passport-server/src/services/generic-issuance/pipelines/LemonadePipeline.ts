@@ -187,8 +187,6 @@ export class LemonadePipeline implements BasePipeline {
    * - clear tickets after each load? important!!!!
    */
   public async load(): Promise<void> {
-    logger(LOG_TAG, `loading for pipeline id ${this.id}`);
-
     const events = await this.api.loadEvents(
       this.definition.options.lemonadeApiKey
     );

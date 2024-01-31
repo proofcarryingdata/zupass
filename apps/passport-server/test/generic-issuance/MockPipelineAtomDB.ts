@@ -2,6 +2,7 @@ import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../src/database/queries/pipelineAtomDB";
+import { logger } from "../../src/util/logger";
 
 /**
  * A mock implementation of {@link IPipelineAtomDB} for testing purposes.
@@ -18,6 +19,8 @@ export class MockPipelineAtomDB implements IPipelineAtomDB {
     atoms.forEach((atom) => {
       this.data[pipelineID][atom.id] = atom;
     });
+
+    logger("MockPipelineAtomDB.save", atoms);
   }
 
   public async load(pipelineID: string): Promise<PipelineAtom[]> {

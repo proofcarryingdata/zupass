@@ -1,4 +1,4 @@
-import { exec } from "child_process";
+import { exec, spawn } from "child_process";
 import validator from "email-validator";
 import { promisify } from "util";
 import { logger } from "./logger";
@@ -144,4 +144,13 @@ export function getServerErrorUrl(title: string, description: string): string {
   const searchParams = new URLSearchParams({ title, description });
   const url = new URL("/#/server-error", requireEnv("PASSPORT_CLIENT_URL"));
   return `${url}?${searchParams.toString()}`;
+}
+
+/**
+ * OSX only - copies data to clipboard
+ */
+export function pbcopy(data: string): void {
+  const proc = spawn("pbcopy");
+  proc.stdin.write(data);
+  proc.stdin.end();
 }

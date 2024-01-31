@@ -34,7 +34,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
-import { normalizeEmail } from "../../../util/util";
+import { normalizeEmail, pbcopy } from "../../../util/util";
 import { traced } from "../../telemetryService";
 import {
   CheckinCapability,
@@ -161,13 +161,14 @@ export class PretixPipeline implements BasePipeline {
     logger(LOG_TAG, `loading for pipeline id ${this.id}`);
     const tickets: PretixTicket[] = [];
 
-    const errors = [];
+    let errors: string[] = [];
 
     for (const event of this.definition.options.events) {
       // @todo this can throw exceptions. how should we handle this?
       const eventData = await this.loadEvent(event);
 
-      errors.push(...this.validateEventData(eventData, event));
+      const newErrors = this.validateEventData(eventData, event);
+      errors = [...errors, ...newErrors];
 
       tickets.push(...(await this.ordersToTickets(event, eventData)));
     }
@@ -211,7 +212,9 @@ export class PretixPipeline implements BasePipeline {
    * the purpose of validating that Pretix is correctly configured.
    */
   private async loadEvent(event: PretixEventConfig): Promise<PretixEventData> {
-    return traced(LOG_NAME, "loadEvents", async () => {
+    return traced(LOG_NAME, "loadEvent", async () => {
+      logger(LOG_TAG, `loadEvent`, event);
+
       const orgUrl = this.definition.options.pretixOrgUrl;
       const token = this.definition.options.pretixAPIKey;
       const eventId = event.externalId;
@@ -280,7 +283,7 @@ export class PretixPipeline implements BasePipeline {
 
     // If item is not an add-on, check that it is an Admission product and
     // that "Personalization" is set to "Personalized Ticket"
-    if (!addonCategoryIdSet.has(item.category)) {
+    if (item.category && !addonCategoryIdSet.has(item.category)) {
       if (item.admission !== true) {
         errors.push(
           `Product type is not "Admission" on product ${productConfig.genericIssuanceId}`
@@ -417,6 +420,9 @@ export class PretixPipeline implements BasePipeline {
     eventConfig: PretixEventConfig,
     eventData: PretixEventData
   ): Promise<PretixTicket[]> {
+    logger(LOG_TAG, "ordersToTickets", JSON.stringify(eventConfig, null, 2));
+    pbcopy(JSON.stringify(eventConfig, null, 2));
+
     const tickets: PretixTicket[] = [];
     const { orders } = eventData;
     const fetchedItemIds = new Set(

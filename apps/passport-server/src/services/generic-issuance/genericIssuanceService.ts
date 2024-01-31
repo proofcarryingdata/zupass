@@ -159,13 +159,26 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
+    await (this.definitionDB as PipelineDefinitionDB).maybeCreateTestStuff();
     await this.createPipelines();
     await this.loadAllPipelines();
     await this.scheduleReloads();
   }
 
   public async loadAllPipelines(): Promise<void> {
-    await Promise.allSettled(this.pipelines.map((p) => p.load()));
+    logger(LOG_TAG, "loading all pipelines", this.pipelines.length);
+
+    await Promise.allSettled(
+      this.pipelines.map(async (p) => {
+        try {
+          logger(LOG_TAG, `loading for pipeline with id ${p.id}`);
+          await p.load();
+          logger(LOG_TAG, `successfully loaded pipeline with id ${p.id}`);
+        } catch (e) {
+          logger(LOG_TAG, `failed to load pipeline ${p.id}`, e);
+        }
+      })
+    );
   }
 
   private async createPipelines(): Promise<void> {

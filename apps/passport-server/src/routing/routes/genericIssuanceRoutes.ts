@@ -39,6 +39,17 @@ export function initGenericIssuanceRoutes(
     }
   });
 
+  app.get("/generic-issuance/pipelines", async (req, res) => {
+    if (process.env.NODE_ENV === "production") {
+      res.sendStatus(403);
+      return;
+    }
+
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+
+    res.json(await genericIssuanceService.getAllPipelines());
+  });
+
   app.post(
     "/generic-issuance/api/poll-feed/:pipelineID",
     async (req: express.Request, res: express.Response) => {
