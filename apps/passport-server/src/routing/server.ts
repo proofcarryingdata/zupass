@@ -52,7 +52,6 @@ export async function startHttpServer(
         limit: "5mb"
       })
     );
-    app.use(cors());
     app.use(tracingMiddleware());
     app.use(
       cors((req, callback) => {
@@ -67,15 +66,20 @@ export async function startHttpServer(
           process.env.GENERIC_ISSUANCE_CLIENT_URL;
 
         let corsOptions: CorsOptions;
+        const methods = ["GET", "POST", "PUT", "DELETE"];
         if (
           genericIssuanceClientUrl != null &&
           req.header("Origin") === genericIssuanceClientUrl
         ) {
-          corsOptions = { origin: genericIssuanceClientUrl, credentials: true };
+          corsOptions = {
+            origin: genericIssuanceClientUrl,
+            credentials: true,
+            methods
+          };
         } else {
           corsOptions = {
             origin: "*",
-            methods: ["GET", "POST", "PUT", "DELETE"]
+            methods
           };
         }
 

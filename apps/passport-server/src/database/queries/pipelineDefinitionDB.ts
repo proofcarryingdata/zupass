@@ -9,6 +9,7 @@ import { PipelineDefinition } from "../../services/generic-issuance/pipelines/ty
  */
 export interface IPipelineDefinitionDB {
   loadPipelineDefinitions(): Promise<PipelineDefinition[]>;
+  clearDefinition(definitionID: string): Promise<void>;
   clearAllDefinitions(): Promise<void>;
   getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
   setDefinition(definition: PipelineDefinition): Promise<void>;

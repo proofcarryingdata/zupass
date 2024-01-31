@@ -7,10 +7,12 @@ import {
 } from "@pcd/passport-interface";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
+import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import { IPipelineDefinitionDB } from "../../database/queries/pipelineDefinitionDB";
+import { IPipelineUserDB } from "../../database/queries/pipelineUserDB";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -30,7 +32,12 @@ import {
   PretixPipeline,
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
-import { Pipeline, PipelineDefinition } from "./pipelines/types";
+import {
+  BasePipelineDefinitionSchema,
+  Pipeline,
+  PipelineDefinition,
+  PipelineUser
+} from "./pipelines/types";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -109,6 +116,7 @@ export function createPipeline(
 export class GenericIssuanceService {
   private context: ApplicationContext;
   private pipelines: Pipeline[];
+  private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
   private lemonadeAPI: ILemonadeAPI;
@@ -120,6 +128,7 @@ export class GenericIssuanceService {
 
   public constructor(
     context: ApplicationContext,
+    userDB: IPipelineUserDB,
     definitionDB: IPipelineDefinitionDB,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
@@ -129,6 +138,7 @@ export class GenericIssuanceService {
     eddsaPrivateKey: string
   ) {
     this.definitionDB = definitionDB;
+    this.userDB = userDB;
     this.atomDB = atomDB;
     this.context = context;
     this.lemonadeAPI = lemonadeAPI;
@@ -241,6 +251,102 @@ export class GenericIssuanceService {
     return relevantCapability.checkin(req);
   }
 
+  public async getUserPipelines(userId: string): Promise<PipelineDefinition[]> {
+    // TODO: Add logic for isAdmin = true
+    return (await this.definitionDB.loadPipelineDefinitions()).filter(
+      (d) => d.ownerUserId === userId
+    );
+  }
+
+  private userHasPipelineDefinitionAccess(
+    userID: string,
+    pipeline: PipelineDefinition
+  ): boolean {
+    return (
+      pipeline.ownerUserId === userID || pipeline.editorUserIds.includes(userID)
+    );
+  }
+
+  public async getUserPipelineDefinition(
+    userId: string,
+    pipelineId: string
+  ): Promise<PipelineDefinition> {
+    const pipeline = await this.definitionDB.getDefinition(pipelineId);
+    if (!pipeline || !this.userHasPipelineDefinitionAccess(userId, pipeline))
+      throw new PCDHTTPError(404, "Pipeline not found or not accessible");
+    return pipeline;
+  }
+
+  public async upsertPipelineDefinition(
+    userId: string,
+    pipelineDefinition: PipelineDefinition
+  ): Promise<PipelineDefinition> {
+    const existingPipelineDefinition = await this.definitionDB.getDefinition(
+      pipelineDefinition.id
+    );
+    if (existingPipelineDefinition) {
+      if (
+        !this.userHasPipelineDefinitionAccess(
+          userId,
+          existingPipelineDefinition
+        )
+      ) {
+        throw new PCDHTTPError(403, "Not allowed to edit pipeline");
+      }
+      if (
+        existingPipelineDefinition.ownerUserId !==
+        pipelineDefinition.ownerUserId
+      ) {
+        throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+      }
+    } else {
+      pipelineDefinition.ownerUserId = userId;
+      if (!pipelineDefinition.id) {
+        pipelineDefinition.id = uuidV4();
+      }
+    }
+
+    let newPipelineDefinition: PipelineDefinition;
+    try {
+      newPipelineDefinition = BasePipelineDefinitionSchema.parse(
+        pipelineDefinition
+      ) as PipelineDefinition;
+    } catch (e) {
+      throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
+    }
+
+    this.definitionDB.setDefinition(newPipelineDefinition);
+    return newPipelineDefinition;
+  }
+
+  public async deletePipelineDefinition(
+    userId: string,
+    pipelineId: string
+  ): Promise<void> {
+    const pipeline = await this.getUserPipelineDefinition(userId, pipelineId);
+    // TODO: Finalize the "permissions model" for CRUD actions. Right now,
+    // create, read, update are permissable by owners and editors, while delete
+    // is only permissable by owners.
+    if (pipeline.ownerUserId !== userId) {
+      throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
+    }
+    void this.definitionDB.clearDefinition(pipelineId);
+  }
+
+  public async createOrGetUser(email: string): Promise<PipelineUser> {
+    const existingUser = await this.userDB.getUserByEmail(email);
+    if (existingUser != null) {
+      return existingUser;
+    }
+    const newUser: PipelineUser = {
+      id: uuidV4(),
+      email,
+      isAdmin: false
+    };
+    this.userDB.setUser(newUser);
+    return newUser;
+  }
+
   /**
    * TODO: this probably shouldn't be public, but it was useful for testing.
    */
@@ -258,12 +364,14 @@ export class GenericIssuanceService {
     return email;
   }
 
-  public async authenticateStytchSession(req: Request): Promise<string> {
+  public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
     try {
       const { session } = await this.stytchClient.sessions.authenticateJwt({
         session_jwt: req.cookies["stytch_session_jwt"]
       });
-      return this.getEmailFromStytchSession(session);
+      const email = this.getEmailFromStytchSession(session);
+      const user = await this.createOrGetUser(email);
+      return user;
     } catch (e) {
       throw new PCDHTTPError(401, "Not authorized");
     }
@@ -337,6 +445,7 @@ export async function startGenericIssuanceService(
 
   const issuanceService = new GenericIssuanceService(
     context,
+    context.pipelineUserDB,
     context.pipelineDefinitionDB,
     context.pipelineAtomDB,
     lemonadeAPI,
