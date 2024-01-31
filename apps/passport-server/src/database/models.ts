@@ -346,3 +346,24 @@ export interface RateLimitBucket {
   // last_take is a bigint in Postgres, which node-postgres turns into a string
   last_take: string;
 }
+
+export interface GenericIssuancePipelineRow {
+  id: string;
+  owner_user_id: string;
+  editor_user_ids: string[];
+  pipeline_type: string;
+  // Config corresponds to the `options` property of PretixPipelineDefinition/
+  // LemonadePipelineDefinition. There is no generic or base type for this, but
+  // it's represented as JSON in the DB.
+  // Using "any" here is not great, but using "unknown" means that we would
+  // need some way to parse the config from the JSON, e.g. a Zod schema. This
+  // might be worth coming back to once the configuration format is stable.
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  config: any;
+}
+
+export interface GenericIssuanceUserRow {
+  id: string;
+  email: string;
+  is_admin: boolean;
+}

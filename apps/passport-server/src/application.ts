@@ -4,7 +4,6 @@ import process from "node:process";
 import * as path from "path";
 import urljoin from "url-join";
 import { MockPipelineAtomDB } from "../test/generic-issuance/MockPipelineAtomDB";
-import { MockPipelineDefinitionDB } from "../test/generic-issuance/MockPipelineDefinitionDB";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
@@ -52,8 +51,7 @@ export async function startApplication(
     publicResourcesDir: path.join(process.cwd(), "public"),
     gitCommitHash: await getCommitHash(),
     // TODO: remove these once we have settled on a db schema for these
-    pipelineAtomDB: new MockPipelineAtomDB(),
-    pipelineDefinitionDB: new MockPipelineDefinitionDB()
+    pipelineAtomDB: new MockPipelineAtomDB()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
