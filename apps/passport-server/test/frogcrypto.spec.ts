@@ -87,7 +87,7 @@ describe("frogcrypto functionality", function () {
     expect(feeds.length).to.eq(1);
     const feed = feeds[0] as FrogCryptoFeed;
     expectToExist(feed);
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.autoPoll).to.be.false;
     expect(feed.private).to.be.false;
     // secret value is not returned
@@ -96,7 +96,7 @@ describe("frogcrypto functionality", function () {
 
   it("should be able to look up feed even it is private", async function () {
     const feed = feeds[5];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
 
     const response = await requestListFeeds(
@@ -109,7 +109,7 @@ describe("frogcrypto functionality", function () {
     const resFeed = resFeeds[0] as FrogCryptoFeed;
     expectToExist(resFeed);
     expect(resFeed.id).to.eq(feed.id);
-    expect(resFeed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(resFeed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.autoPoll).to.be.false;
     expect(resFeed.private).to.be.true;
     // secret value is not returned
@@ -119,7 +119,7 @@ describe("frogcrypto functionality", function () {
 
   it("should be able to look up feed by its secret code", async function () {
     const feed = feeds[5];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
     const code = feed.codes?.[1];
     expectToExist(code);
@@ -134,7 +134,7 @@ describe("frogcrypto functionality", function () {
     const resFeed = resFeeds[0] as FrogCryptoFeed;
     expectToExist(resFeed);
     expect(resFeed.id).to.eq(feed.id);
-    expect(resFeed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(resFeed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(resFeed.private).to.be.true;
     // secret value is not returned
     expect(resFeed.codes).to.be.undefined;
@@ -144,7 +144,7 @@ describe("frogcrypto functionality", function () {
   it("should be able to get frog", async () => {
     const feed = feeds[0];
     expectToExist(feed);
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.false;
 
     await testGetFrog(feed, DATE_EPOCH_1H);
@@ -153,7 +153,7 @@ describe("frogcrypto functionality", function () {
   it("should be able to get frog even if feed is private", async () => {
     const feed = feeds[1];
     expectToExist(feed);
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
 
     await testGetFrog(feed, DATE_EPOCH_1H);
@@ -162,7 +162,7 @@ describe("frogcrypto functionality", function () {
   it("should not be able to get frog if feed is inactive", async () => {
     const feed = feeds[2];
     expectToExist(feed);
-    expect(feed.activeUntil).to.be.lessThanOrEqual(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.lessThanOrEqual(Date.now());
     expect(feed.private).to.be.true;
 
     await testGetFrogFail(feed, new Date(), "not active");
@@ -170,7 +170,7 @@ describe("frogcrypto functionality", function () {
 
   it("should be able to get two free rolls", async () => {
     const feed = feeds[0];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
@@ -186,7 +186,7 @@ describe("frogcrypto functionality", function () {
 
   it("should be able to get frog if after cooldown", async () => {
     const feed = feeds[0];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
@@ -198,7 +198,7 @@ describe("frogcrypto functionality", function () {
 
   it("should not be able to get frog if before cooldown", async () => {
     const feed = feeds[0];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
@@ -215,7 +215,7 @@ describe("frogcrypto functionality", function () {
 
   it("should return frog from complex biome", async () => {
     const feed = feeds[4];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
     expect(feed.biomes).to.deep.eq({
       TheCapital: { dropWeightScaler: 1 }
@@ -227,7 +227,7 @@ describe("frogcrypto functionality", function () {
 
   it("should sample frog attribute based on prototype", async () => {
     const feed = feeds[4];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
     expect(feed.biomes).to.deep.eq({
       TheCapital: { dropWeightScaler: 1 }
@@ -250,7 +250,7 @@ describe("frogcrypto functionality", function () {
 
   it("should get 404 if no frogs are available", async () => {
     const feed = feeds[3];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
     expect(feed.biomes).to.deep.eq({
       TheWrithingVoid: { dropWeightScaler: 1 }
@@ -261,7 +261,7 @@ describe("frogcrypto functionality", function () {
 
   it("should update user state after getting frog", async () => {
     const feed = feeds[0];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.false;
 
     let userState = await getUserState([feed.id]);
@@ -323,8 +323,8 @@ describe("frogcrypto functionality", function () {
     const oldFeed = feeds[0];
     const newFeed = feeds[1];
     MockDate.set(oldFeed.activeUntil * 1000);
-    expect(oldFeed.activeUntil).to.be.eq(Date.now() / 1000);
-    expect(newFeed.activeUntil).to.be.eq(Date.now() / 1000);
+    expect(oldFeed.activeUntil * 1000).to.be.eq(Date.now());
+    expect(newFeed.activeUntil * 1000).to.be.eq(Date.now());
     expect(oldFeed.private).to.be.false;
     expect(newFeed.private).to.be.true;
 
@@ -345,7 +345,7 @@ describe("frogcrypto functionality", function () {
 
   it("should no longer give frog if user reaches score cap", async () => {
     const feed = feeds[0];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.false;
     expect(feed.cooldown).to.eq(60);
 
@@ -359,7 +359,7 @@ describe("frogcrypto functionality", function () {
   it("should not increment score if getting an object", async () => {
     await upsertFrogData(db, testFrogsAndObjects);
     const feed = feeds[5];
-    expect(feed.activeUntil).to.be.greaterThan(Date.now() / 1000);
+    expect(feed.activeUntil * 1000).to.be.greaterThan(Date.now());
     expect(feed.private).to.be.true;
     expect(feed.biomes).to.deep.eq({
       Unknown: { dropWeightScaler: 1 }
