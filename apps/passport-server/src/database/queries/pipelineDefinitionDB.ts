@@ -50,7 +50,9 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     return result.rows.map((row: GenericIssuancePipelineDB) => ({
       id: row.id,
       ownerUserId: row.owner_user_id,
-      editorUserIds: row.editor_user_ids,
+      editorUserIds: row.editor_user_ids.filter(
+        (editorId: unknown) => typeof editorId === "string"
+      ),
       type: row.pipeline_type as PipelineType,
       options: row.config
     }));
@@ -79,12 +81,14 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     if (result.rowCount === 0) {
       return undefined;
     } else {
-      const row = result.rows[0];
+      const row: GenericIssuancePipelineDB = result.rows[0];
       return {
         id: row.id,
         ownerUserId: row.owner_user_id,
-        editorUserIds: row.editor_user_ids,
-        type: row.pipeline_type,
+        editorUserIds: row.editor_user_ids.filter(
+          (editorId: unknown) => typeof editorId === "string"
+        ),
+        type: row.pipeline_type as PipelineType,
         options: row.config
       };
     }
@@ -112,7 +116,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
               definition.id,
               definition.ownerUserId,
               definition.type,
-              definition.options
+              JSON.stringify(definition.options)
             ]
           )
         ).rows[0];
@@ -134,16 +138,20 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
             pipeline.editor_user_ids
           );
 
-          await client.query(
-            `DELETE FROM generic_issuance_pipeline_editors WHERE editor_id = ANY($1)`,
-            [[editorsToRemove]]
-          );
-
-          for (const editorId of editorsToAdd) {
+          if (editorsToRemove.length > 0) {
             await client.query(
-              "INSERT INTO generic_issuance_pipeline_editors (pipeline_id, editor_id) VALUES($1, $2)",
-              [pipeline.id, editorId]
+              `DELETE FROM generic_issuance_pipeline_editors WHERE editor_id = ANY($1)`,
+              [[editorsToRemove]]
             );
+          }
+
+          if (editorsToAdd.length > 0) {
+            for (const editorId of editorsToAdd) {
+              await client.query(
+                "INSERT INTO generic_issuance_pipeline_editors (pipeline_id, editor_id) VALUES($1, $2)",
+                [pipeline.id, editorId]
+              );
+            }
           }
         }
       }

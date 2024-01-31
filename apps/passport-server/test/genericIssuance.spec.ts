@@ -466,6 +466,40 @@ describe("generic issuance service tests", function () {
     expect(thirdCheckinResult.success).to.eq(false);
   });
 
+  it("test definition DB", async function () {
+    const definitionDB = new PipelineDefinitionDB(application.context.dbPool);
+    await definitionDB.clearAllDefinitions();
+
+    {
+      const definitions = await definitionDB.loadPipelineDefinitions();
+      expect(definitions).to.be.empty;
+    }
+
+    {
+      await definitionDB.setDefinitions(pipelineDefinitions);
+      const definitions = await definitionDB.loadPipelineDefinitions();
+      expect(definitions.length).to.eq(2);
+
+      const pretixDefinition = definitions.find(
+        (d) => d.type === PipelineType.Pretix
+      ) as PretixPipelineDefinition;
+      const newKey = "TEST_KEY";
+      pretixDefinition.options = {
+        ...pretixDefinition?.options,
+        pretixAPIKey: newKey
+      };
+      await definitionDB.setDefinition(pretixDefinition);
+      const updatedPretixDefinition = await definitionDB.getDefinition(
+        pretixDefinition.id
+      );
+      expect(updatedPretixDefinition).to.exist;
+      expect(
+        (updatedPretixDefinition as PretixPipelineDefinition).options
+          .pretixAPIKey
+      ).to.eq(newKey);
+    }
+  });
+
   this.afterAll(async () => {
     await stopApplication(application);
     mockPretixServer.close();
