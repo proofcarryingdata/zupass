@@ -116,15 +116,18 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  // TODO: Delete pipeline route
-
-  // temporary -- just for testing JWT authentication
-  app.get(
-    "/generic-issuance/api/user/ping",
+  app.delete(
+    "/generic-issuance/api/pipelines/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      await genericIssuanceService.authenticateStytchSession(req);
-      res.json("pong");
+      const { id: userId } =
+        await genericIssuanceService.authenticateStytchSession(req);
+      res.send(
+        await genericIssuanceService.deletePipelineDefinition(
+          userId,
+          checkUrlParam(req, "id")
+        )
+      );
     }
   );
 }

@@ -12,6 +12,10 @@ export class MockPipelineDefinitionDB implements IPipelineDefinitionDB {
     this.definitions = {};
   }
 
+  public async clearDefinition(definitionID: string): Promise<void> {
+    delete this.definitions[definitionID];
+  }
+
   public async clearAllDefinitions(): Promise<void> {
     this.definitions = {};
   }

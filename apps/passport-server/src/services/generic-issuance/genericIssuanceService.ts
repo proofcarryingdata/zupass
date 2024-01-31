@@ -270,7 +270,7 @@ export class GenericIssuanceService {
   public async getUserPipelineDefinition(
     userId: string,
     pipelineId: string
-  ): Promise<PipelineDefinition | null> {
+  ): Promise<PipelineDefinition> {
     const pipeline = await this.definitionDB.getDefinition(pipelineId);
     if (!pipeline || !this.userHasPipelineDefinitionAccess(userId, pipeline))
       throw new PCDHTTPError(404, "Pipeline not found or not accessible");
@@ -319,6 +319,20 @@ export class GenericIssuanceService {
     return newPipelineDefinition;
   }
 
+  public async deletePipelineDefinition(
+    userId: string,
+    pipelineId: string
+  ): Promise<void> {
+    const pipeline = await this.getUserPipelineDefinition(userId, pipelineId);
+    // TODO: Finalize the "permissions model" for CRUD actions. Right now,
+    // create, read, update are permissable by owners and editors, while delete
+    // is only permissable by owners.
+    if (pipeline.ownerUserId !== userId) {
+      throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
+    }
+    void this.definitionDB.clearDefinition(pipelineId);
+  }
+
   public async createOrGetUser(email: string): Promise<PipelineUser> {
     const existingUser = await this.userDB.getUserByEmail(email);
     if (existingUser != null) {
@@ -351,17 +365,14 @@ export class GenericIssuanceService {
   }
 
   public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
-    console.log("cookies", req.cookies);
     try {
       const { session } = await this.stytchClient.sessions.authenticateJwt({
         session_jwt: req.cookies["stytch_session_jwt"]
       });
       const email = this.getEmailFromStytchSession(session);
       const user = await this.createOrGetUser(email);
-      console.log(user);
       return user;
     } catch (e) {
-      console.error(e);
       throw new PCDHTTPError(401, "Not authorized");
     }
   }

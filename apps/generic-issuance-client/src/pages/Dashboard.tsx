@@ -21,7 +21,7 @@ export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const { user } = useStytchUser();
   const [isLoggingOut, setLoggingOut] = useState(false);
-  const [userPingMessage, setUserPingMessage] = useState("");
+  // TODO: After MVP, replace with RTK hooks or a more robust state management.
   const [pipelines, setPipelines] = useState([]);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
   const [newPipelineRaw, setNewPipelineRaw] = useState(
@@ -39,14 +39,6 @@ export default function Dashboard(): ReactNode {
   }, []);
 
   useEffect(() => {
-    setUserPingMessage("Pinging server...");
-    fetch(new URL("generic-issuance/api/user/ping", ZUPASS_SERVER_URL).href, {
-      credentials: "include"
-    })
-      .then((res) => res.json())
-      .then((message) => setUserPingMessage(`JWT valid, received ${message}.`))
-      .catch((e) => setUserPingMessage(`Error: ${e}`));
-
     fetchAllPipelines();
   }, [fetchAllPipelines]);
 
@@ -62,22 +54,6 @@ export default function Dashboard(): ReactNode {
       alert(e);
     }
     await fetchAllPipelines();
-
-    // await fetch(
-    //   new URL("generic-issuance/api/pipelines", ZUPASS_SERVER_URL).href,
-    //   {
-    //     credentials: "include",
-    //     method: "POST",
-    //     headers: {
-    //       "Content-Type": "application/json"
-    //       //   Accept: "application/json"
-    //     },
-    //     body: newPipelineRaw
-    //   }
-    // )
-    //   .then((res) => res.json())
-    //   .then((pipelines) => setPipelines(pipelines))
-    //   .catch((e) => setUserPingMessage(`Error: ${e}`));
 
     setCreatingPipeline(false);
   };
@@ -99,36 +75,6 @@ export default function Dashboard(): ReactNode {
       <p>
         Congrats - you are now logged in as <b>{user.emails?.[0]?.email}.</b>
       </p>
-      <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
-        {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
-      </button>
-      {isCreatingPipeline && (
-        <div>
-          <textarea
-            rows={10}
-            cols={50}
-            value={newPipelineRaw}
-            onChange={(e): void => setNewPipelineRaw(e.target.value)}
-          />
-          <div>
-            <button onClick={createPipeline}>Create new pipeline</button>
-          </div>
-        </div>
-      )}
-      <h2>My Pipelines</h2>
-      {!pipelines.length && <div>No pipelines right now - go create some!</div>}
-      {!!pipelines.length && (
-        <ol>
-          {pipelines.map((p) => (
-            <Link to={`/pipelines/${p.id}`}>
-              <li key={p.id}>
-                id: {p.id}, type: {p.type}
-              </li>
-            </Link>
-          ))}
-        </ol>
-      )}
-      {userPingMessage && <p>{userPingMessage}</p>}
       <button
         onClick={async (): Promise<void> => {
           if (confirm("Are you sure you want to log out?")) {
@@ -144,6 +90,38 @@ export default function Dashboard(): ReactNode {
       >
         Log out
       </button>
+
+      <h2>My Pipelines</h2>
+      {!pipelines.length && <p>No pipelines right now - go create some!</p>}
+      {!!pipelines.length && (
+        <ol>
+          {pipelines.map((p) => (
+            <Link to={`/pipelines/${p.id}`}>
+              <li key={p.id}>
+                id: {p.id}, type: {p.type}
+              </li>
+            </Link>
+          ))}
+        </ol>
+      )}
+      <p>
+        <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
+          {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
+        </button>
+        {isCreatingPipeline && (
+          <div>
+            <textarea
+              rows={10}
+              cols={50}
+              value={newPipelineRaw}
+              onChange={(e): void => setNewPipelineRaw(e.target.value)}
+            />
+            <div>
+              <button onClick={createPipeline}>Create new pipeline</button>
+            </div>
+          </div>
+        )}
+      </p>
     </div>
   );
 }
