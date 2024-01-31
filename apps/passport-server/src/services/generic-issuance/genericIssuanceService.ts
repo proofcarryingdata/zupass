@@ -248,6 +248,7 @@ export class GenericIssuanceService {
 
   public async getUserPipelines(userId: string): Promise<PipelineDefinition[]> {
     // TODO: Add logic for isAdmin = true
+    console.log("pipelines", await this.definitionDB.loadPipelineDefinitions());
     return (await this.definitionDB.loadPipelineDefinitions()).filter(
       (d) => d.ownerUserId === userId
     );
@@ -259,6 +260,7 @@ export class GenericIssuanceService {
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {
     const existingUser = await this.userDB.getUserByEmail(email);
+    console.log({ existingUser }, await this.userDB.loadUsers());
     if (existingUser != null) {
       return existingUser;
     }
@@ -289,6 +291,7 @@ export class GenericIssuanceService {
   }
 
   public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
+    console.log("cookies", req.cookies);
     try {
       const { session } = await this.stytchClient.sessions.authenticateJwt({
         session_jwt: req.cookies["stytch_session_jwt"]
@@ -296,6 +299,7 @@ export class GenericIssuanceService {
       const email = this.getEmailFromStytchSession(session);
       return await this.createOrGetUser(email);
     } catch (e) {
+      console.error(e);
       throw new PCDHTTPError(401, "Not authorized");
     }
   }

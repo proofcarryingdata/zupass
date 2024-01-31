@@ -1,4 +1,3 @@
-import cookieParser from "cookie-parser";
 import cors from "cors";
 import express from "express";
 import { ironSession } from "iron-session/express";
@@ -27,7 +26,6 @@ export async function startServer(
     const app = express();
     app.use(morgan("tiny"));
 
-    app.use(cookieParser());
     app.use(express.json());
     app.use(express.urlencoded({ extended: true }));
     app.use(cors({ origin: true, credentials: true }));
