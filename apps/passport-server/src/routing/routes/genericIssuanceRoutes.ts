@@ -5,7 +5,6 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
-import cookieParser from "cookie-parser";
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import { GlobalServices } from "../../types";
@@ -18,8 +17,6 @@ export function initGenericIssuanceRoutes(
   { genericIssuanceService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
-  app.use(cookieParser());
-  app.use(express.json());
 
   /**
    * Throws if we don't have an instance of {@link GenericIssuanceService}.
@@ -85,7 +82,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(await genericIssuanceService.getUserPipelines(id));
+      res.send(await genericIssuanceService.getAllUserPipelineDefinitions(id));
     }
   );
 
@@ -96,7 +93,7 @@ export function initGenericIssuanceRoutes(
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
       res.send(
-        await genericIssuanceService.getUserPipelineDefinition(
+        await genericIssuanceService.getPipelineDefinition(
           userId,
           checkUrlParam(req, "id")
         )

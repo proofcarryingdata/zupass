@@ -1,3 +1,4 @@
+import cookieParser from "cookie-parser";
 import cors, { CorsOptions } from "cors";
 import express, { Application, NextFunction } from "express";
 import * as fs from "fs";
@@ -47,6 +48,7 @@ export async function startHttpServer(
       app.use(morgan("tiny"));
     }
 
+    app.use(cookieParser());
     app.use(
       express.json({
         limit: "5mb"

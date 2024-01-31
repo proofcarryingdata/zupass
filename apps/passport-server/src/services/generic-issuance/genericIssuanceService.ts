@@ -251,23 +251,25 @@ export class GenericIssuanceService {
     return relevantCapability.checkin(req);
   }
 
-  public async getUserPipelines(userId: string): Promise<PipelineDefinition[]> {
+  public async getAllUserPipelineDefinitions(
+    userId: string
+  ): Promise<PipelineDefinition[]> {
     // TODO: Add logic for isAdmin = true
-    return (await this.definitionDB.loadPipelineDefinitions()).filter(
-      (d) => d.ownerUserId === userId
+    return (await this.definitionDB.loadPipelineDefinitions()).filter((d) =>
+      this.userHasPipelineDefinitionAccess(userId, d)
     );
   }
 
   private userHasPipelineDefinitionAccess(
-    userID: string,
+    userId: string,
     pipeline: PipelineDefinition
   ): boolean {
     return (
-      pipeline.ownerUserId === userID || pipeline.editorUserIds.includes(userID)
+      pipeline.ownerUserId === userId || pipeline.editorUserIds.includes(userId)
     );
   }
 
-  public async getUserPipelineDefinition(
+  public async getPipelineDefinition(
     userId: string,
     pipelineId: string
   ): Promise<PipelineDefinition> {
@@ -323,7 +325,7 @@ export class GenericIssuanceService {
     userId: string,
     pipelineId: string
   ): Promise<void> {
-    const pipeline = await this.getUserPipelineDefinition(userId, pipelineId);
+    const pipeline = await this.getPipelineDefinition(userId, pipelineId);
     // TODO: Finalize the "permissions model" for CRUD actions. Right now,
     // create, read, update are permissable by owners and editors, while delete
     // is only permissable by owners.
