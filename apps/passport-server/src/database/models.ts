@@ -347,7 +347,7 @@ export interface RateLimitBucket {
   last_take: string;
 }
 
-export interface GenericIssuancePipelineDB {
+export interface GenericIssuancePipelineRow {
   id: string;
   owner_user_id: string;
   editor_user_ids: string[];
@@ -362,7 +362,7 @@ export interface GenericIssuancePipelineDB {
   config: any;
 }
 
-export interface GenericIssuanceUserDB {
+export interface GenericIssuanceUserRow {
   id: string;
   email: string;
   is_admin: boolean;

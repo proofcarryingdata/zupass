@@ -4,7 +4,7 @@ import {
   PipelineDefinition,
   PipelineType
 } from "../../services/generic-issuance/pipelines/types";
-import { GenericIssuancePipelineDB } from "../models";
+import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 /**
@@ -47,7 +47,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       GROUP BY p.id`
     );
 
-    return result.rows.map((row: GenericIssuancePipelineDB) => ({
+    return result.rows.map((row: GenericIssuancePipelineRow) => ({
       id: row.id,
       ownerUserId: row.owner_user_id,
       editorUserIds: row.editor_user_ids.filter(
@@ -81,7 +81,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     if (result.rowCount === 0) {
       return undefined;
     } else {
-      const row: GenericIssuancePipelineDB = result.rows[0];
+      const row: GenericIssuancePipelineRow = result.rows[0];
       return {
         id: row.id,
         ownerUserId: row.owner_user_id,
@@ -104,7 +104,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       this.db,
       "Insert or update pipeline definition",
       async (client: PoolClient) => {
-        const pipeline: GenericIssuancePipelineDB = (
+        const pipeline: GenericIssuancePipelineRow = (
           await client.query(
             `
         INSERT INTO generic_issuance_pipelines (id, owner_user_id, pipeline_type, config) VALUES($1, $2, $3, $4)
