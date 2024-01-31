@@ -829,7 +829,7 @@ export type GenericIssuanceSendEmailResponseValue = undefined;
 
 // TODO: fix
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
-type PipelineDefinition = any;
+export type PipelineDefinition = any;
 
 /**
  * Returns all pipeline definitions that a user has access to.

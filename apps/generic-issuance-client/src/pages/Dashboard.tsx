@@ -1,5 +1,8 @@
+import {
+  requestGenericIssuanceGetAllUserPipelines,
+  requestGenericIssuanceUpsertPipeline
+} from "@pcd/passport-interface";
 import { useStytch, useStytchUser } from "@stytch/react";
-import axios from "axios";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
@@ -29,13 +32,22 @@ export default function Dashboard(): ReactNode {
   );
   const [error, setError] = useState("");
 
-  const fetchAllPipelines = useCallback(() => {
-    fetch(new URL(`generic-issuance/api/pipelines`, ZUPASS_SERVER_URL).href, {
-      credentials: "include"
-    })
-      .then((res) => res.json())
-      .then((data) => setPipelines(data))
-      .catch((e) => alert(e));
+  const fetchAllPipelines = useCallback(async () => {
+    const res =
+      await requestGenericIssuanceGetAllUserPipelines(ZUPASS_SERVER_URL);
+    if (res.success) {
+      setPipelines(res.value);
+    } else {
+      // TODO: Better errors
+      alert(`An error occurred while fetching user pipelines: ${res.error}`);
+    }
+
+    // fetch(new URL(`generic-issuance/api/pipelines`, ZUPASS_SERVER_URL).href, {
+    //   credentials: "include"
+    // })
+    //   .then((res) => res.json())
+    //   .then((data) => setPipelines(data))
+    //   .catch((e) => alert(e));
   }, []);
 
   useEffect(() => {
@@ -44,18 +56,17 @@ export default function Dashboard(): ReactNode {
 
   const createPipeline = async (): Promise<void> => {
     if (!newPipelineRaw) return;
-    try {
-      await axios.put(
-        new URL("generic-issuance/api/pipelines", ZUPASS_SERVER_URL).href,
-        JSON.parse(newPipelineRaw),
-        { withCredentials: true }
-      );
-    } catch (e) {
-      alert(e);
-    }
+    const res = await requestGenericIssuanceUpsertPipeline(
+      ZUPASS_SERVER_URL,
+      JSON.parse(newPipelineRaw)
+    );
     await fetchAllPipelines();
-
-    setCreatingPipeline(false);
+    if (res.success) {
+      setCreatingPipeline(false);
+    } else {
+      // TODO: Better errors
+      alert(`An error occurred while creating pipeline: ${res.error}`);
+    }
   };
 
   if (!user) {

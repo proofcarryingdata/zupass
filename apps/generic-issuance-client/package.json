@@ -15,7 +15,6 @@
     "@pcd/passport-interface": "0.10.0",
     "@stytch/react": "^15.0.0",
     "@stytch/vanilla-js": "^4.4.2",
-    "axios": "^1.6.7",
     "dotenv": "^16.4.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
