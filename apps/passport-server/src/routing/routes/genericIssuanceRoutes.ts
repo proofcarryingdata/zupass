@@ -108,10 +108,15 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      await genericIssuanceService.authenticateStytchSession(req);
-      res.send(await genericIssuanceService.upsertPipelineDefinition(req.body));
+      const { id: userId } =
+        await genericIssuanceService.authenticateStytchSession(req);
+      res.send(
+        await genericIssuanceService.upsertPipelineDefinition(userId, req.body)
+      );
     }
   );
+
+  // TODO: Delete pipeline route
 
   // temporary -- just for testing JWT authentication
   app.get(

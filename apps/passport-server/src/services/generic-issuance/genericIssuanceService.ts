@@ -32,7 +32,12 @@ import {
   PretixPipeline,
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
-import { Pipeline, PipelineDefinition, PipelineUser } from "./pipelines/types";
+import {
+  BasePipelineDefinitionSchema,
+  Pipeline,
+  PipelineDefinition,
+  PipelineUser
+} from "./pipelines/types";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -248,9 +253,17 @@ export class GenericIssuanceService {
 
   public async getUserPipelines(userId: string): Promise<PipelineDefinition[]> {
     // TODO: Add logic for isAdmin = true
-    console.log("pipelines", await this.definitionDB.loadPipelineDefinitions());
     return (await this.definitionDB.loadPipelineDefinitions()).filter(
       (d) => d.ownerUserId === userId
+    );
+  }
+
+  private userHasPipelineDefinitionAccess(
+    userID: string,
+    pipeline: PipelineDefinition
+  ): boolean {
+    return (
+      pipeline.ownerUserId === userID || pipeline.editorUserIds.includes(userID)
     );
   }
 
@@ -259,16 +272,51 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<PipelineDefinition | null> {
     const pipeline = await this.definitionDB.getDefinition(pipelineId);
-    if (!pipeline || pipeline.ownerUserId !== userId) return null;
+    if (!pipeline || !this.userHasPipelineDefinitionAccess(userId, pipeline))
+      throw new PCDHTTPError(404, "Pipeline not found or not accessible");
     return pipeline;
   }
 
   public async upsertPipelineDefinition(
-    pipeline: PipelineDefinition
+    userId: string,
+    pipelineDefinition: PipelineDefinition
   ): Promise<PipelineDefinition> {
-    // TODO: Check for access and validate
-    this.definitionDB.setDefinition(pipeline);
-    return pipeline;
+    const existingPipelineDefinition = await this.definitionDB.getDefinition(
+      pipelineDefinition.id
+    );
+    if (existingPipelineDefinition) {
+      if (
+        !this.userHasPipelineDefinitionAccess(
+          userId,
+          existingPipelineDefinition
+        )
+      ) {
+        throw new PCDHTTPError(403, "Not allowed to edit pipeline");
+      }
+      if (
+        existingPipelineDefinition.ownerUserId !==
+        pipelineDefinition.ownerUserId
+      ) {
+        throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+      }
+    } else {
+      pipelineDefinition.ownerUserId = userId;
+      if (!pipelineDefinition.id) {
+        pipelineDefinition.id = uuidV4();
+      }
+    }
+
+    let newPipelineDefinition: PipelineDefinition;
+    try {
+      newPipelineDefinition = BasePipelineDefinitionSchema.parse(
+        pipelineDefinition
+      ) as PipelineDefinition;
+    } catch (e) {
+      throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
+    }
+
+    this.definitionDB.setDefinition(newPipelineDefinition);
+    return newPipelineDefinition;
   }
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {

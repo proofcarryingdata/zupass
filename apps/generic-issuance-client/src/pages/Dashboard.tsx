@@ -4,6 +4,19 @@ import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
 
+const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
+  {
+    type: "Lemonade",
+    editorUserIds: [],
+    options: {
+      lemonadeApiKey: "your-lemonade-api-key",
+      events: []
+    }
+  },
+  null,
+  2
+);
+
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const { user } = useStytchUser();
@@ -11,7 +24,9 @@ export default function Dashboard(): ReactNode {
   const [userPingMessage, setUserPingMessage] = useState("");
   const [pipelines, setPipelines] = useState([]);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
-  const [newPipelineRaw, setNewPipelineRaw] = useState("");
+  const [newPipelineRaw, setNewPipelineRaw] = useState(
+    SAMPLE_CREATE_PIPELINE_TEXT
+  );
   const [error, setError] = useState("");
 
   const fetchAllPipelines = useCallback(() => {
@@ -37,11 +52,15 @@ export default function Dashboard(): ReactNode {
 
   const createPipeline = async (): Promise<void> => {
     if (!newPipelineRaw) return;
-    await axios.put(
-      new URL("generic-issuance/api/pipelines", ZUPASS_SERVER_URL).href,
-      JSON.parse(newPipelineRaw),
-      { withCredentials: true }
-    );
+    try {
+      await axios.put(
+        new URL("generic-issuance/api/pipelines", ZUPASS_SERVER_URL).href,
+        JSON.parse(newPipelineRaw),
+        { withCredentials: true }
+      );
+    } catch (e) {
+      alert(e);
+    }
     await fetchAllPipelines();
 
     // await fetch(
@@ -86,6 +105,8 @@ export default function Dashboard(): ReactNode {
       {isCreatingPipeline && (
         <div>
           <textarea
+            rows={10}
+            cols={50}
             value={newPipelineRaw}
             onChange={(e): void => setNewPipelineRaw(e.target.value)}
           />
@@ -110,12 +131,14 @@ export default function Dashboard(): ReactNode {
       {userPingMessage && <p>{userPingMessage}</p>}
       <button
         onClick={async (): Promise<void> => {
-          setLoggingOut(true);
-          try {
-            await stytchClient.session.revoke();
-          } catch (e) {
-            setError(e);
-            setLoggingOut(false);
+          if (confirm("Are you sure you want to log out?")) {
+            setLoggingOut(true);
+            try {
+              await stytchClient.session.revoke();
+            } catch (e) {
+              setError(e);
+              setLoggingOut(false);
+            }
           }
         }}
       >
