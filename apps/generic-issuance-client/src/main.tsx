@@ -6,12 +6,14 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
+import Pipeline from "./pages/Pipeline";
 
 const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN);
 
 const router = createHashRouter([
   { path: "/", element: <Home /> },
-  { path: "/dashboard", element: <Dashboard /> }
+  { path: "/dashboard", element: <Dashboard /> },
+  { path: "/pipelines/:id", element: <Pipeline /> }
 ]);
 
 createRoot(document.getElementById("root") as HTMLElement).render(

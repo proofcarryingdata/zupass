@@ -254,13 +254,25 @@ export class GenericIssuanceService {
     );
   }
 
-  public async createPipeline(pipeline: PipelineDefinition): Promise<void> {
-    return this.definitionDB.setDefinition(pipeline);
+  public async getUserPipelineDefinition(
+    userId: string,
+    pipelineId: string
+  ): Promise<PipelineDefinition | null> {
+    const pipeline = await this.definitionDB.getDefinition(pipelineId);
+    if (!pipeline || pipeline.ownerUserId !== userId) return null;
+    return pipeline;
+  }
+
+  public async upsertPipelineDefinition(
+    pipeline: PipelineDefinition
+  ): Promise<PipelineDefinition> {
+    // TODO: Check for access and validate
+    this.definitionDB.setDefinition(pipeline);
+    return pipeline;
   }
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {
     const existingUser = await this.userDB.getUserByEmail(email);
-    console.log({ existingUser }, await this.userDB.loadUsers());
     if (existingUser != null) {
       return existingUser;
     }
@@ -297,7 +309,9 @@ export class GenericIssuanceService {
         session_jwt: req.cookies["stytch_session_jwt"]
       });
       const email = this.getEmailFromStytchSession(session);
-      return await this.createOrGetUser(email);
+      const user = await this.createOrGetUser(email);
+      console.log(user);
+      return user;
     } catch (e) {
       console.error(e);
       throw new PCDHTTPError(401, "Not authorized");

@@ -1,6 +1,7 @@
 import { useStytch, useStytchUser } from "@stytch/react";
 import axios from "axios";
-import { ReactNode, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
 
 export default function Dashboard(): ReactNode {
@@ -13,6 +14,15 @@ export default function Dashboard(): ReactNode {
   const [newPipelineRaw, setNewPipelineRaw] = useState("");
   const [error, setError] = useState("");
 
+  const fetchAllPipelines = useCallback(() => {
+    fetch(new URL(`generic-issuance/api/pipelines`, ZUPASS_SERVER_URL).href, {
+      credentials: "include"
+    })
+      .then((res) => res.json())
+      .then((data) => setPipelines(data))
+      .catch((e) => alert(e));
+  }, []);
+
   useEffect(() => {
     setUserPingMessage("Pinging server...");
     fetch(new URL("generic-issuance/api/user/ping", ZUPASS_SERVER_URL).href, {
@@ -21,16 +31,18 @@ export default function Dashboard(): ReactNode {
       .then((res) => res.json())
       .then((message) => setUserPingMessage(`JWT valid, received ${message}.`))
       .catch((e) => setUserPingMessage(`Error: ${e}`));
-  }, []);
+
+    fetchAllPipelines();
+  }, [fetchAllPipelines]);
 
   const createPipeline = async (): Promise<void> => {
     if (!newPipelineRaw) return;
-    const { data } = await axios.post(
+    await axios.put(
       new URL("generic-issuance/api/pipelines", ZUPASS_SERVER_URL).href,
       JSON.parse(newPipelineRaw),
       { withCredentials: true }
     );
-    setPipelines(data);
+    await fetchAllPipelines();
 
     // await fetch(
     //   new URL("generic-issuance/api/pipelines", ZUPASS_SERVER_URL).href,
@@ -87,9 +99,11 @@ export default function Dashboard(): ReactNode {
       {!!pipelines.length && (
         <ol>
           {pipelines.map((p) => (
-            <li key={p.id}>
-              id: {p.id}, type: {p.type}
-            </li>
+            <Link to={`/pipelines/${p.id}`}>
+              <li key={p.id}>
+                id: {p.id}, type: {p.type}
+              </li>
+            </Link>
           ))}
         </ol>
       )}

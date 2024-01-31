@@ -85,22 +85,31 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(genericIssuanceService.getUserPipelines(id));
+      res.send(await genericIssuanceService.getUserPipelines(id));
     }
   );
 
-  app.post(
+  app.get(
+    "/generic-issuance/api/pipelines/:id",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const { id: userId } =
+        await genericIssuanceService.authenticateStytchSession(req);
+      res.send(
+        await genericIssuanceService.getUserPipelineDefinition(
+          userId,
+          checkUrlParam(req, "id")
+        )
+      );
+    }
+  );
+
+  app.put(
     "/generic-issuance/api/pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      // TODO: Validate req.body
-      console.log("body", req.body, { id });
-      await genericIssuanceService.createPipeline(req.body);
-      const pipelines = await genericIssuanceService.getUserPipelines(id);
-      console.log({ pipelines });
-      res.send(pipelines);
+      await genericIssuanceService.authenticateStytchSession(req);
+      res.send(await genericIssuanceService.upsertPipelineDefinition(req.body));
     }
   );
 
