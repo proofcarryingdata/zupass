@@ -4,7 +4,6 @@ import process from "node:process";
 import * as path from "path";
 import urljoin from "url-join";
 import { MockPipelineAtomDB } from "../test/generic-issuance/MockPipelineAtomDB";
-import { MockPipelineDefinitionDB } from "../test/generic-issuance/MockPipelineDefinitionDB";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
@@ -19,6 +18,7 @@ import {
 } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
+import { PipelineDefinitionDB } from "./database/queries/pipelineDefinitionDB";
 import { startHttpServer, stopHttpServer } from "./routing/server";
 import { startServices, stopServices } from "./services";
 import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncService";
@@ -53,7 +53,7 @@ export async function startApplication(
     gitCommitHash: await getCommitHash(),
     // TODO: remove these once we have settled on a db schema for these
     pipelineAtomDB: new MockPipelineAtomDB(),
-    pipelineDefinitionDB: new MockPipelineDefinitionDB()
+    pipelineDefinitionDB: new PipelineDefinitionDB(dbPool)
   };
 
   const apis = await getOverridenApis(context, apiOverrides);
