@@ -489,14 +489,30 @@ describe("generic issuance service tests", function () {
         pretixAPIKey: newKey
       };
       await definitionDB.setDefinition(pretixDefinition);
-      const updatedPretixDefinition = await definitionDB.getDefinition(
+      const updatedPretixDefinition = (await definitionDB.getDefinition(
         pretixDefinition.id
-      );
+      )) as PretixPipelineDefinition;
       expect(updatedPretixDefinition).to.exist;
       expect(
         (updatedPretixDefinition as PretixPipelineDefinition).options
           .pretixAPIKey
       ).to.eq(newKey);
+
+      updatedPretixDefinition.editorUserIds.push(pipelineOwnerUUID);
+      await definitionDB.setDefinition(updatedPretixDefinition);
+      const newEditorDefinition = (await definitionDB.getDefinition(
+        updatedPretixDefinition.id
+      )) as PretixPipelineDefinition;
+      expect(newEditorDefinition).to.exist;
+      expect(newEditorDefinition.editorUserIds).to.contain(pipelineOwnerUUID);
+
+      newEditorDefinition.editorUserIds = [];
+      await definitionDB.setDefinition(newEditorDefinition);
+      const emptyEditorsDefinition = (await definitionDB.getDefinition(
+        updatedPretixDefinition.id
+      )) as PretixPipelineDefinition;
+      expect(emptyEditorsDefinition).to.exist;
+      expect(emptyEditorsDefinition.editorUserIds).to.be.empty;
     }
   });
 
