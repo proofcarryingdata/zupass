@@ -438,7 +438,16 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  // TODO: @rob - what's your best description of what's going on here?
+  /**
+   * When checking in, it is necessary to provide one or more checkin
+   * list IDs: https://docs.pretix.eu/en/latest/api/resources/checkin.html
+   *
+   * Events can have multiple checkin lists, though we tell users to set
+   * up only one, and we throw an error if anything other than one checkin
+   * list is found {@link PretixPipeline#validateEventData}.
+   *
+   * When checking in, we use the checkin list ID of the sole checkin list.
+   */
   public async fetchEventCheckinLists(
     orgUrl: string,
     token: string,
