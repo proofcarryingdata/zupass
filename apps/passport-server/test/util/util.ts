@@ -57,8 +57,14 @@ export function expectLength<T>(
   array: Array<T> | undefined,
   length: number
 ): void {
-  if (!array || array.length !== length) {
-    throw new Error("Expected value to be true");
+  if (!array) {
+    throw new Error("expected array to exist");
+  }
+
+  if (array.length !== length) {
+    throw new Error(
+      `expected ${JSON.stringify(array, null, 2)} to have length ${length}`
+    );
   }
 }
 

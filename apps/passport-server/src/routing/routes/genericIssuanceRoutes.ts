@@ -56,7 +56,12 @@ export function initGenericIssuanceRoutes(
   });
 
   /**
+   * Asks the given feed of a given pipeline for {@link PCD}s
+   *
    * Authenticated by PCD so doesn't need auth.
+   *
+   * Request is {@link PollFeedRequest}
+   * Response is {@link PollFeedResponseValue}
    */
   app.post(
     "/generic-issuance/api/feed/:pipelineID/:feedId",

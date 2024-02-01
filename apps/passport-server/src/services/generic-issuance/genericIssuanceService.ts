@@ -171,15 +171,21 @@ export class GenericIssuanceService {
     await this.loadPipelines();
     setTimeout(async () => {
       try {
-        await this.loadPipelineData();
+        await this.loadPipelineDatas();
       } catch (e) {
         logger(LOG_TAG, e);
       }
     });
   }
 
-  public async loadPipelineData(): Promise<void> {
-    logger(LOG_TAG, "loading data for all pipelines", this.pipelines.length);
+  public async loadPipelineDatas(): Promise<void> {
+    logger(
+      LOG_TAG,
+      `loading data for all pipelines: ${JSON.stringify(
+        this.pipelines.map((p) => p.id)
+      )}`,
+      this.pipelines.length
+    );
 
     await Promise.allSettled(
       this.pipelines.map(async (p) => {

@@ -20,7 +20,7 @@ export interface IMockGenericIssuancePretixBackendData {
   // specific data for easier testing
   ethLatAmOrganizer: IOrganizer;
   // TODO: test multi-organizer scenarios better
-  ethBerlinOrganizer: IOrganizer;
+  // ethBerlinOrganizer: IOrganizer;
 }
 
 export interface IOrganizer {
@@ -34,7 +34,7 @@ export interface IOrganizer {
 
   ethLatAmAttendeeProduct: GenericPretixProduct;
   ethLatAmBouncerProduct: GenericPretixProduct;
-  ethLatAmTshirtProduct: GenericPretixProduct;
+  ethLatAmTShirtProduct: GenericPretixProduct;
 
   ethLatAmAttendeeEmail: string;
   ethLatAmBouncerEmail: string;
@@ -46,8 +46,10 @@ export interface IOrganizer {
   ethBerlinAttendeeProduct: GenericPretixProduct;
   ethBerlinBouncerProduct: GenericPretixProduct;
   ethBerlinTshirtProduct: GenericPretixProduct;
-  ethBerlinAttendeeEmail: string;
-  ethBerlinBouncerEmail: string;
+
+  // TODO:
+  // ethBerlinAttendeeEmail: string;
+  // ethBerlinBouncerEmail: string;
 
   // in the future - other setup types?
   // ...
@@ -200,17 +202,16 @@ export class GenericPretixDataMocker {
   }
 
   private newMockData(): IMockGenericIssuancePretixBackendData {
-    const organizer1 = this.newOrganizer("organizer-1");
-    const organizer2 = this.newOrganizer("organizer-2");
+    const organizer1 = this.newOrganizer("PRETIX_ORGANIZER_ONE");
+    // const organizer2 = this.newOrganizer("PRETIX_ORGANIZER_TWO");
 
     const organizersByOrgUrl = new Map<string, IOrganizer>();
     organizersByOrgUrl.set(organizer1.orgUrl, organizer1);
-    organizersByOrgUrl.set(organizer2.orgUrl, organizer2);
+    // organizersByOrgUrl.set(organizer2.orgUrl, organizer2);
 
     return {
-      organizers: [organizer1, organizer2],
+      organizers: [organizer1],
       organizersByOrgUrl: organizersByOrgUrl,
-      ethBerlinOrganizer: organizer2,
       ethLatAmOrganizer: organizer1
     };
   }
@@ -222,10 +223,15 @@ export class GenericPretixDataMocker {
     const orgUrl = `https://www.${name}.com`;
     const token = uuid();
 
-    const EthLatAmAttendee1Email = `attendee-1-${name}@test.com`;
-    const EthLatAmAttendee2Email = `attendee-2-${name}@test.com`;
-    const EthLatAmBouncer1Email = `bouncer-1${name}@test.com`;
-    const EthLatAmBouncer2Email = `bouncer-2${name}@test.com`;
+    const ethLatAmAttendeeEmail = `attendee-1-${name}@test.com`
+      .toLowerCase()
+      .trim();
+    const ethLatAmAttendeeName = randomName();
+
+    const ethLatAmBouncerEmail = `bouncer-1${name}@test.com`
+      .toLowerCase()
+      .trim();
+    const ethLatAmBouncerName = randomName();
 
     const ethLatAm = this.newEvent("ethLatAm", "eth-lat-am");
     const ethBerlin = this.newEvent("eth-berlin", "eth-berlin");
@@ -244,66 +250,60 @@ export class GenericPretixDataMocker {
 
     const ethBerlinCategories = [
       this.newProductCategory(ticketCategory, { is_addon: false }),
-      this.newProductCategory(addonCategory, { is_addon: false })
+      this.newProductCategory(addonCategory, { is_addon: true })
     ];
 
     const ethLatAmAttendeeProduct = this.newProductType(
-      "eth-latam-attende",
-      this.nextId()
+      "eth-latam-attendee-product",
+      ticketCategory
     );
     const ethLatAmBouncerProduct = this.newProductType(
-      "eth-lat-am-attendee-bouncer",
-      this.nextId()
+      "eth-lat-am-bouncer-product",
+      ticketCategory
     );
     // Add-on Product - e.g. t-shirt or towel
-    const ethLatAmTshirtProduct = this.newProductType(
-      "eth-latam-t-shirt",
-      this.nextId(),
+    const ethLatAmTShirtProduct = this.newProductType(
+      "eth-latam-t-shirt-product",
+      addonCategory,
       {
         is_addon: true
       }
     );
     const ethBerlinAttendeeProduct = this.newProductType(
-      "eth-berlin-attendee",
-      this.nextId()
+      "eth-berlin-attendee-product",
+      ticketCategory
     );
     const ethBerlinBouncerProduct = this.newProductType(
-      "eth-berlin-bouncer",
-      this.nextId()
+      "eth-berlin-bouncer-product",
+      ticketCategory
     );
     // Add-on Product - e.g. t-shirt or towel
-    const ethBerlinAddonProduct = this.newProductType(
-      "eth-berlin-addon",
-      this.nextId(),
+    const ethBerlinTshirtProduct = this.newProductType(
+      "eth-berlin-t-shirt-product",
+      addonCategory,
       {
         is_addon: true
       }
     );
 
     const ethLatAmOrders: GenericPretixOrder[] = [
-      this.newOrder(EthLatAmBouncer2Email, [
-        [ethLatAmAttendeeProduct.id, EthLatAmBouncer2Email]
+      this.newOrder(ethLatAmAttendeeEmail, ethLatAmAttendeeName, [
+        [
+          ethLatAmAttendeeProduct.id,
+          ethLatAmAttendeeEmail,
+          ethLatAmAttendeeName
+        ]
       ]),
-      this.newOrder(EthLatAmAttendee1Email, [
-        [ethLatAmAttendeeProduct.id, EthLatAmAttendee1Email],
-        [ethLatAmAttendeeProduct.id, EthLatAmAttendee2Email],
-        [ethLatAmAttendeeProduct.id, EthLatAmAttendee2Email],
-        [ethLatAmAttendeeProduct.id, EthLatAmBouncer1Email],
-        [ethLatAmAttendeeProduct.id, null],
-        [ethLatAmBouncerProduct.id, EthLatAmAttendee1Email],
-        [ethLatAmBouncerProduct.id, EthLatAmAttendee1Email],
-        [ethLatAmBouncerProduct.id, EthLatAmAttendee2Email],
-        [ethLatAmBouncerProduct.id, null],
-        [ethBerlinAttendeeProduct.id, EthLatAmAttendee2Email],
-        [ethLatAmBouncerProduct.id, EthLatAmBouncer2Email]
-      ]),
-      this.newOrder(EthLatAmAttendee2Email, [
-        [ethLatAmBouncerProduct.id, EthLatAmBouncer2Email],
-        [ethLatAmBouncerProduct.id, null],
-        [ethLatAmAttendeeProduct.id, EthLatAmAttendee1Email]
+
+      this.newOrder(ethLatAmBouncerEmail, ethLatAmBouncerName, [
+        [ethLatAmBouncerProduct.id, ethLatAmBouncerEmail, ethLatAmBouncerName]
       ])
+
+      // TODO: more orders and positions
     ];
 
+    // TODO: model some example orders once we get further along with the
+    // EthBerlin account.
     const ethBerlinOrders: GenericPretixOrder[] = [];
 
     const ordersByEventID = new Map<string, GenericPretixOrder[]>();
@@ -318,12 +318,12 @@ export class GenericPretixDataMocker {
     productsByEventID.set(ethLatAm.slug, [
       ethLatAmAttendeeProduct,
       ethLatAmBouncerProduct,
-      ethLatAmTshirtProduct
+      ethLatAmTShirtProduct
     ]);
     productsByEventID.set(ethBerlin.slug, [
       ethBerlinAttendeeProduct,
-      ethBerlinAddonProduct,
-      ethLatAmTshirtProduct
+      ethBerlinTshirtProduct,
+      ethLatAmTShirtProduct
     ]);
 
     const settingsByEventID = new Map<string, GenericPretixEventSettings>();
@@ -339,19 +339,22 @@ export class GenericPretixDataMocker {
     return {
       ethLatAm,
       ethLatAmSettings,
-      ethLatAmAttendeeProduct: ethLatAmAttendeeProduct,
-      ethLatAmBouncerProduct: ethLatAmBouncerProduct,
-      ethLatAmTshirtProduct: ethLatAmTshirtProduct,
-      ethLatAmAttendeeEmail: EthLatAmAttendee1Email,
-      ethLatAmBouncerEmail: EthLatAmAttendee2Email,
+      ethLatAmAttendeeProduct,
+      ethLatAmBouncerProduct,
+      ethLatAmTShirtProduct,
+
+      ethLatAmAttendeeEmail,
+      ethLatAmBouncerEmail,
 
       ethBerlin,
       ethBerlinSettings,
-      ethBerlinAttendeeProduct: ethBerlinAttendeeProduct,
-      ethBerlinBouncerProduct: ethBerlinBouncerProduct,
-      ethBerlinTshirtProduct: ethBerlinAddonProduct,
-      ethBerlinAttendeeEmail: EthLatAmBouncer1Email,
-      ethBerlinBouncerEmail: EthLatAmBouncer2Email,
+      ethBerlinAttendeeProduct,
+      ethBerlinBouncerProduct,
+      ethBerlinTshirtProduct,
+
+      // TODO:
+      // ethBerlinAttendeeEmail,
+      // ethBerlinBouncerEmail,
 
       orgUrl,
       token,
@@ -393,7 +396,12 @@ export class GenericPretixDataMocker {
    */
   private newOrder(
     orderEmail: string,
-    productEmailPairs: [number, string | null][]
+    orderName: string,
+    positions: [
+      number /* product id */,
+      string | null /* email */,
+      string | null /* name */
+    ][]
   ): GenericPretixOrder {
     const orderId = this.randomOrderCode();
 
@@ -403,14 +411,14 @@ export class GenericPretixDataMocker {
        * name attached to order doesn't have to match names
        * on positions (individual purchased items)
        */
-      name: randomName(),
+      name: orderName,
       status: "p", // p = paid
       testmode: false,
       secret: this.randomPositionSecret(),
       email: orderEmail,
-      positions: productEmailPairs.map(([product, email]) =>
+      positions: positions.map(([product, email, name]) =>
         // TODO @rob - is the sub event id meant to be using `this.nextId()`
-        this.newPosition(orderId, email, product, this.nextId())
+        this.newPosition(orderId, email, name, product, this.nextId())
       )
     };
   }
@@ -418,6 +426,7 @@ export class GenericPretixDataMocker {
   private newPosition(
     orderId: string,
     attendeeEmail: string | null,
+    attendeeName: string | null,
     productId: number,
     subEventId: number
   ): GenericPretixPosition {
@@ -431,7 +440,7 @@ export class GenericPretixDataMocker {
        */
       item: productId,
       price: "",
-      attendee_name: randomName(),
+      attendee_name: attendeeName ?? "",
       attendee_email: attendeeEmail,
       subevent: subEventId,
       secret: this.randomPositionSecret(),

@@ -294,16 +294,29 @@ export class PretixPipeline implements BasePipeline {
 
     // If item is not an add-on, check that it is an Admission product and
     // that "Personalization" is set to "Personalized Ticket"
+
     if (item.category && !addonCategoryIdSet.has(item.category)) {
       if (item.admission !== true) {
         errors.push(
-          `Product type is not "Admission" on product ${productConfig.genericIssuanceId}`
+          `Product type is not "Admission" on product ${JSON.stringify(
+            productConfig,
+            null,
+            2
+          )} - addon product categories are ${JSON.stringify([
+            ...addonCategoryIdSet
+          ])}`
         );
       }
 
       if (item.personalized !== true) {
         errors.push(
-          `"Personalization" is not set to "Personalized ticket" on product ${productConfig.genericIssuanceId}`
+          `"Personalization" is not set to "Personalized ticket" on product ${JSON.stringify(
+            productConfig,
+            null,
+            2
+          )} - addon product categories are ${JSON.stringify([
+            ...addonCategoryIdSet
+          ])}`
         );
       }
     }
@@ -460,7 +473,7 @@ export class PretixPipeline implements BasePipeline {
         // ensure it. But TypeScript doesn't know that.
         if (product) {
           // Try getting email from response to question; otherwise, default to email of purchaser
-          const email = normalizeEmail(attendee_email || order.email);
+          const email = normalizeEmail(attendee_email ?? order.email);
 
           // Checkin events can be either "entry" or "exit".
           // Exits cancel out entries, so we want to find out if the most
@@ -494,7 +507,7 @@ export class PretixPipeline implements BasePipeline {
             email,
             product,
             event: eventConfig,
-            full_name: attendee_name || order.name || "", // Fallback since we have a not-null constraint
+            full_name: attendee_name ?? order.name ?? "", // Fallback since we have a not-null constraint
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
@@ -537,7 +550,13 @@ export class PretixPipeline implements BasePipeline {
     }
 
     const email = emailPCD.claim.emailAddress;
+
+    const bouncerEmail = `bouncer-1${"PRETIX_ORGANIZER_ONE"}@test.com`
+      .toLowerCase()
+      .trim();
+
     const relevantTickets = await this.db.loadByEmail(this.id, email);
+
     const ticketDatas = relevantTickets.map((t) =>
       this.atomToTicketData(t, credential.claim.identityCommitment)
     );
@@ -549,17 +568,25 @@ export class PretixPipeline implements BasePipeline {
       )
     );
 
-    return {
+    const result: PollFeedResponseValue = {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "test",
+          folder: this.definition.options.feedOptions.feedFolder,
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )
-        }
+        } as any
       ]
     };
+
+    if (email === bouncerEmail) {
+      console.log("bouncerEmail", bouncerEmail);
+      console.log("relevantTickets", relevantTickets);
+      console.log("result", JSON.stringify(result, null, 2));
+    }
+
+    return result;
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {

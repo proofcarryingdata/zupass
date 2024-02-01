@@ -436,6 +436,7 @@ export interface ListFeedsResponseValue {
 export interface PipelineFeedInfo {
   name: string;
   url: string;
+  // TODO: checkin url
 }
 
 export interface PipelineInfoResponseValue {

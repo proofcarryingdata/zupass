@@ -36,7 +36,10 @@ import {
   LemonadeTicketTier,
   LemonadeUser
 } from "../../src/apis/lemonade/lemonadeAPI";
-import { getI18nString } from "../../src/apis/pretix/genericPretixAPI";
+import {
+  GenericPretixProduct,
+  getI18nString
+} from "../../src/apis/pretix/genericPretixAPI";
 import { stopApplication } from "../../src/application";
 import { PipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
 import { sqlQuery } from "../../src/database/sqlQuery";
@@ -67,6 +70,507 @@ import {
   expectToExist,
   expectTrue
 } from "../util/util";
+
+/**
+ * {@link GenericIssuanceService}
+ * Rough test of the generic issuance functionality defined in this PR, just
+ * to make sure that ends are coming together neatly. Totally incomplete.
+ *
+ * TODO:
+ * - finish this during Cat Week.
+ * - comprehensive tests for both Pretix and Lemonade cases
+ */
+describe.only("Generic Issuance", function () {
+  this.timeout(15_000);
+
+  let ZUPASS_EDDSA_PRIVATE_KEY: string;
+  let genericIssuanceServerUrl: string;
+  let giBackend: Zupass;
+  let giService: GenericIssuanceService | null;
+
+  /**
+   * Generic Issuance product user who has set up a {@link LemonadePipeline}
+   * via the Generic Issuance UI.
+   */
+  const edgeCityGIUserID = randomUUID();
+  const edgeCityGIUserEmail = "edge-city-gi-user@test.com";
+
+  /**
+   * Generic Issuance product user who has set up a {@link PretixPipeline}
+   * via the Generic Issuance UI.
+   */
+  const ethLatAmGIUserID = randomUUID();
+  const ethLatAmGIUserEmail = "eth-lat-am-gi-user@test.com";
+  const EthLatAmBouncerIdentity = new Identity();
+  const EthLatAmAttendeeIdentity = new Identity();
+
+  const lemonadeBackend = new LemonadeDataMocker();
+
+  /**
+   * TODO: test ingestion of the data we'll need for production.
+   */
+  const EdgeCityDenver = lemonadeBackend.addEvent("Edge City");
+
+  /**
+   * Attendee ticket tier. In reality there will be several.
+   *
+   * TODO: test that we can handle several attendee tiers.
+   */
+  const EdgeCityAttendeeTier: LemonadeTicketTier = lemonadeBackend.addTier(
+    EdgeCityDenver.id,
+    "ga"
+  );
+  const EdgeCityBouncerTier = lemonadeBackend.addTier(
+    EdgeCityDenver.id,
+    "bouncer"
+  );
+
+  /**
+   * Most tests below need a person who is checking tickets {@link EdgeCityDenverBouncer}
+   * and a person whose ticket needs to be checked in (@link Attendee)
+   */
+  const EdgeCityDenverAttendee: LemonadeUser =
+    lemonadeBackend.addUser("attendee");
+  const EdgeCityDenverAttendeeIdentity = new Identity();
+  const EdgeCityAttendeeTicket: LemonadeTicket = lemonadeBackend.addTicket(
+    EdgeCityAttendeeTier.id,
+    EdgeCityDenver.id,
+    EdgeCityDenverAttendee.name,
+    EdgeCityDenverAttendee.email
+  );
+
+  /**
+   * Similar to {@link EdgeCityDenverAttendee}
+   * Person who has a {@link LemonadeTicket} that does not have a bouncer ticket,
+   * i.e. a ticket whose 'product id' or 'tier' is set up to be a 'superuser' ticket
+   * by the Generic Issuance User with id {@link edgeCityGIUserID}.
+   */
+  const EdgeCityDenverBouncer: LemonadeUser =
+    lemonadeBackend.addUser("bouncer bob");
+  const EdgeCityBouncerIdentity = new Identity();
+  const EdgeCityDenverBouncerTicket = lemonadeBackend.addTicket(
+    EdgeCityBouncerTier.id,
+    EdgeCityDenver.id,
+    EdgeCityDenverBouncer.name,
+    EdgeCityDenverBouncer.email
+  );
+  lemonadeBackend.makeCoHost(EdgeCityDenverBouncer.id, EdgeCityDenver.id);
+  const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(lemonadeBackend);
+  const lemonadePipelineDefinition: LemonadePipelineDefinition = {
+    ownerUserId: edgeCityGIUserID,
+    id: randomUUID(),
+    /**
+     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
+     * on the backend respects generic issuance user permissions. @richard
+     */
+    editorUserIds: [],
+    options: {
+      feedOptions: {
+        // TODO: @richard what do the organizers want these tickets to be called?
+        feedDescription: "Edge City Denver tickets!",
+        feedDisplayName: "Edge City Denver",
+        feedFolder: "Edge City",
+        feedId: "edge-city"
+      },
+      lemonadeApiKey: EdgeCityDenverBouncer.apiKey,
+      events: [
+        {
+          externalId: EdgeCityDenver.id,
+          name: EdgeCityDenver.name,
+          genericIssuanceEventId: randomUUID(),
+          ticketTiers: [
+            {
+              externalId: EdgeCityBouncerTier.id,
+              genericIssuanceProductId: randomUUID(),
+              isSuperUser: true
+            },
+            {
+              externalId: EdgeCityAttendeeTier.id,
+              genericIssuanceProductId: randomUUID(),
+              isSuperUser: false
+            }
+          ]
+        }
+      ]
+    },
+    type: PipelineType.Lemonade
+  };
+
+  let pretixBackendServer: SetupServer;
+  const pretixBackend = new GenericPretixDataMocker();
+  const ethLatAmPretixOrganizer = pretixBackend.get().ethLatAmOrganizer;
+  const ethLatAmEvent = ethLatAmPretixOrganizer.ethLatAm;
+  const ethLatAmProducts = ethLatAmPretixOrganizer.productsByEventID.get(
+    ethLatAmEvent.slug
+  );
+  // TODO: how are we going to recommend their Pretix is set up?
+  // @richard @rob
+  expectToExist(ethLatAmProducts);
+  /**
+   * We expect an Attendee, a Bouncer, and a Tshirt product
+   */
+  expectLength(ethLatAmProducts, 3);
+  const ethLatAmSuperuserProductIds: number[] = [
+    pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerProduct.id
+  ];
+  expectLength(ethLatAmSuperuserProductIds, 1);
+  expect([]);
+
+  const ethLatAmPipeline: PretixPipelineDefinition = {
+    ownerUserId: ethLatAmGIUserID,
+    id: randomUUID(),
+    /**
+     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
+     * on the backend respects generic issuance user permissions. @richard
+     */
+    editorUserIds: [],
+    options: {
+      // https://ethlatam.org/
+      feedOptions: {
+        feedDescription: "Eth Lat Am tickets! <copy>", // TODO: @richard what's the best copy here?
+        feedDisplayName: "Eth LatAm",
+        feedFolder: "Eth LatAm",
+        feedId: "eth-latam"
+        // TODO: product question - would users (pipeline admins) want to
+        // customize other branding for their feed issuance? e.g. a nice image
+        // or a custom font, or animation, or making it clickable, or have
+        // some other built in functionality? We've been thinking about issuing
+        // announcements for edge city, what might a cool announcement look like?
+      },
+      events: [
+        {
+          genericIssuanceId: randomUUID(),
+          externalId: ethLatAmEvent.slug,
+          name: "Eth LatAm",
+          products: ethLatAmProducts.map((product: GenericPretixProduct) => {
+            return {
+              externalId: product.id.toString(),
+              genericIssuanceId: randomUUID(),
+              name: getI18nString(product.name),
+              isSuperUser: ethLatAmSuperuserProductIds.includes(product.id)
+            };
+          })
+        }
+      ],
+      pretixAPIKey: ethLatAmPretixOrganizer.token,
+      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
+    },
+    type: PipelineType.Pretix
+  };
+
+  const pipelineDefinitions = [ethLatAmPipeline, lemonadePipelineDefinition];
+
+  /**
+   * Sets up a Zupass/Generic issuance backend with two pipelines:
+   * - {@link LemonadePipeline}, as defined by {@link lemonadePipelineDefinition}
+   * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
+   */
+  this.beforeAll(async () => {
+    // This has to be done here as it requires an `await`
+    const zupassPublicKey = JSON.stringify(
+      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
+    );
+
+    await overrideEnvironment({
+      GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
+      ...testingEnv
+    });
+
+    giBackend = await startTestingApp({
+      lemonadeAPI
+    });
+
+    // TODO: once @richard's user db functions are merged, replace this
+    // with a function call
+    {
+      const isAdmin = false;
+      await sqlQuery(
+        giBackend.context.dbPool,
+        "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
+        [edgeCityGIUserID, edgeCityGIUserEmail, isAdmin]
+      );
+
+      await sqlQuery(
+        giBackend.context.dbPool,
+        "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
+        [ethLatAmGIUserID, ethLatAmGIUserEmail, isAdmin]
+      );
+    }
+
+    const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
+    pretixBackendServer = getGenericMockPretixAPIServer(
+      pretixOrgUrls,
+      pretixBackend
+    );
+    pretixBackendServer.listen({ onUnhandledRequest: "bypass" });
+
+    ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
+    genericIssuanceServerUrl = giBackend.expressContext.localEndpoint;
+    giService = giBackend.services.genericIssuanceService;
+    await giService?.stop();
+    const pipelineDefinitionDB = new PipelineDefinitionDB(
+      giBackend.context.dbPool
+    );
+    await pipelineDefinitionDB.clearAllDefinitions();
+    await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
+    await giService?.loadPipelines();
+    await giService?.loadPipelineDatas();
+  });
+
+  this.afterEach(async () => {
+    pretixBackendServer.resetHandlers();
+  });
+
+  /**
+   * Tests for {@link LemonadePipeline} reading from a mocked
+   * Edge Cities Denver lemonade configuration, and issuing
+   * {@link EdDSATicketPCD} tickets that can be checked in
+   * using the Zupass client.
+   *
+   * @brian and @richard discussed building out a separate app for scanning
+   * curious to hear thoughts from rest of team about this
+   */
+  it("LemonadePipeline feed issuance and checkin for Edge City Denver", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expectLength(pipelines, 2);
+    const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
+    expectToExist(edgeCityDenverPipeline);
+    const edgeCityDenverTicketFeedUrl =
+      edgeCityDenverPipeline.issuanceCapability.feedUrl;
+    const AttendeeTickets = await requestTicketsFromPipeline(
+      edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+      edgeCityDenverTicketFeedUrl,
+      edgeCityDenverPipeline.issuanceCapability.options.feedId,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      EdgeCityDenverAttendee.email,
+      EdgeCityDenverAttendeeIdentity
+    );
+    expectLength(AttendeeTickets, 1);
+    const AttendeeTicket = AttendeeTickets[0];
+    expectIsEdDSATicketPCD(AttendeeTicket);
+    expect(AttendeeTicket.claim.ticket.attendeeEmail)
+      .to.eq(EdgeCityAttendeeTicket.email)
+      .to.eq(EdgeCityDenverAttendee.email);
+
+    const BouncerTickets = await requestTicketsFromPipeline(
+      edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+      edgeCityDenverTicketFeedUrl,
+      edgeCityDenverPipeline.issuanceCapability.options.feedId,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      EdgeCityDenverBouncerTicket.email,
+      EdgeCityBouncerIdentity
+    );
+    expectLength(BouncerTickets, 1);
+    const BouncerTicket = BouncerTickets[0];
+    expectIsEdDSATicketPCD(BouncerTicket);
+    expect(BouncerTicket.claim.ticket.attendeeEmail)
+      .to.eq(EdgeCityDenverBouncerTicket.email)
+      .to.eq(EdgeCityDenverBouncer.email);
+
+    const bouncerChecksInAttendee = await requestCheckInPipelineTicket(
+      edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      EdgeCityDenverBouncerTicket.email,
+      EdgeCityBouncerIdentity,
+      AttendeeTicket
+    );
+    expectTrue(bouncerChecksInAttendee.success);
+
+    // can't check in a ticket that's already checked in
+    const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
+      edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      EdgeCityDenverBouncerTicket.email,
+      EdgeCityBouncerIdentity,
+      AttendeeTicket
+    );
+    expectTrue(bouncerChecksInAttendeeAgain.success);
+
+    // can't check in a ticket using a ticket that isn't a
+    // superuser ticket
+    const atteendeeChecksInBouncerResult = await requestCheckInPipelineTicket(
+      edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      EdgeCityAttendeeTicket.email,
+      EdgeCityDenverAttendeeIdentity,
+      BouncerTicket
+    );
+    expectTrue(!atteendeeChecksInBouncerResult.success);
+    await checkPipelineInfoEndpoint(edgeCityDenverPipeline);
+  });
+
+  /**
+   * Test for {@link PretixPipeline} for Eth LatAm.
+   */
+  it.only("PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expectLength(pipelines, 2);
+    const pipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+    const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+    const attendeeTickets = await requestTicketsFromPipeline(
+      pipeline.issuanceCapability.options.feedFolder,
+      ethLatAmTicketFeedUrl,
+      pipeline.issuanceCapability.options.feedId,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+      EthLatAmAttendeeIdentity
+    );
+    expectLength(
+      attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
+      1
+    );
+    const attendeeTicket = attendeeTickets[0];
+    expectToExist(attendeeTicket);
+    expectIsEdDSATicketPCD(attendeeTicket);
+    expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
+    );
+
+    const bouncerTickets = await requestTicketsFromPipeline(
+      pipeline.issuanceCapability.options.feedFolder,
+      ethLatAmTicketFeedUrl,
+      pipeline.issuanceCapability.options.feedId,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+      EthLatAmBouncerIdentity
+    );
+    expectLength(bouncerTickets, 1);
+    const bouncerTicket = bouncerTickets[0];
+    expectToExist(bouncerTicket);
+    expectIsEdDSATicketPCD(bouncerTicket);
+    expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+    );
+
+    const ethLatAmCheckinRoute = path.join(
+      genericIssuanceServerUrl,
+      pipeline?.checkinCapability.getCheckinUrl()
+    );
+
+    const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+      ethLatAmCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      bouncerTicket.claim.ticket.attendeeEmail,
+      EdgeCityBouncerIdentity,
+      bouncerTicket
+    );
+    expect(bouncerCheckInBouncer.success).to.eq(true);
+
+    // can't check in a ticket that's already checked in
+    const bouncerCheckInBouncerAgain = await requestCheckInPipelineTicket(
+      ethLatAmCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      bouncerTicket.claim.ticket.attendeeEmail,
+      EdgeCityBouncerIdentity,
+      bouncerTicket
+    );
+    expectFalse(bouncerCheckInBouncerAgain.success);
+
+    // can't check in a ticket using a ticket that isn't a superuser ticket
+    const attendeeCheckInBouncerResult = await requestCheckInPipelineTicket(
+      ethLatAmCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      attendeeTicket.claim.ticket.attendeeEmail,
+      EdgeCityDenverAttendeeIdentity,
+      bouncerTicket
+    );
+
+    expectFalse(attendeeCheckInBouncerResult.success);
+
+    await checkPipelineInfoEndpoint(pipeline);
+  });
+
+  /**
+   * Testing that the Generic Issuance backend calculates {@link InfoResult} about
+   * pipeline {@link PretixPipeline} correctly by requesting it from the Generic
+   * Issuance API routes.
+   *
+   * This endpoint is used by the Generic Issuance frontend to assist a user in
+   * managing their {@link Pipeline}.
+   *
+   * TODO: incorporate auth
+   */
+  async function checkPipelineInfoEndpoint(pipeline: Pipeline): Promise<void> {
+    const pipelineInfoResult: InfoResult = await requestPipelineInfo(
+      giBackend.expressContext.localEndpoint,
+      pipeline.id
+    );
+    expectTrue(pipelineInfoResult.success);
+    expectLength(pipelineInfoResult.value.feeds, 1);
+    const pretixFeedInfo: PipelineFeedInfo = pipelineInfoResult.value.feeds[0];
+    expect(pretixFeedInfo.name).to.eq(
+      pipeline.issuanceCapability.options.feedDisplayName
+    );
+    expect(pretixFeedInfo.url).to.eq(pipeline.issuanceCapability.feedUrl);
+  }
+
+  /**
+   * Test for {@link PipelineDefinitionDB}, which implements postgres CRUD
+   * operations for {@link PipelineDefinition}s
+   */
+  it("PipelineDefinitionDB", async function () {
+    const definitionDB = new PipelineDefinitionDB(giBackend.context.dbPool);
+    await definitionDB.clearAllDefinitions();
+
+    {
+      const definitions: PipelineDefinition[] =
+        await definitionDB.loadPipelineDefinitions();
+      expectLength(definitions, 0);
+    }
+
+    {
+      await definitionDB.setDefinitions(pipelineDefinitions);
+      const definitions = await definitionDB.loadPipelineDefinitions();
+      expectLength(definitions, 2);
+
+      const pretixDefinition = definitions.find(
+        (d) => d.type === PipelineType.Pretix
+      ) as PretixPipelineDefinition;
+
+      const newKey = "TEST_KEY";
+      pretixDefinition.options = {
+        ...pretixDefinition?.options,
+        pretixAPIKey: newKey
+      };
+      await definitionDB.setDefinition(pretixDefinition);
+      const updatedPretixDefinition = (await definitionDB.getDefinition(
+        pretixDefinition.id
+      )) as PretixPipelineDefinition;
+      expect(updatedPretixDefinition).to.exist;
+      expect(
+        (updatedPretixDefinition as PretixPipelineDefinition).options
+          .pretixAPIKey
+      ).to.eq(newKey);
+
+      updatedPretixDefinition.editorUserIds.push(edgeCityGIUserID);
+      await definitionDB.setDefinition(updatedPretixDefinition);
+      const newEditorDefinition = (await definitionDB.getDefinition(
+        updatedPretixDefinition.id
+      )) as PretixPipelineDefinition;
+      expect(newEditorDefinition).to.exist;
+      expect(newEditorDefinition.editorUserIds).to.contain(edgeCityGIUserID);
+
+      newEditorDefinition.editorUserIds = [];
+      await definitionDB.setDefinition(newEditorDefinition);
+      const emptyEditorsDefinition = (await definitionDB.getDefinition(
+        updatedPretixDefinition.id
+      )) as PretixPipelineDefinition;
+      expect(emptyEditorsDefinition).to.exist;
+      expect(emptyEditorsDefinition.editorUserIds).to.be.empty;
+    }
+  });
+
+  this.afterAll(async () => {
+    await stopApplication(giBackend);
+    pretixBackendServer.close();
+  });
+});
 
 /**
  * TODO: extract this to the `@pcd/passport-interface` package.
@@ -161,6 +665,10 @@ export function getTicketsFromFeedResponse(
 ): Promise<EdDSATicketPCD[]> {
   expectTrue(result.success);
   const firstAction = result.value.actions[0];
+  // console.log("firstAction", firstAction);
+  console.log("expectedFolder", expectedFolder);
+  console.log("firstAction.folder", firstAction.folder);
+
   expectIsReplaceInFolderAction(firstAction);
   expect(firstAction.folder).to.eq(expectedFolder);
   return Promise.all(
@@ -219,469 +727,3 @@ export async function requestCheckInPipelineTicket(
     ticketCheckerFeedCredential
   );
 }
-
-/**
- * {@link GenericIssuanceService}
- * Rough test of the generic issuance functionality defined in this PR, just
- * to make sure that ends are coming together neatly. Totally incomplete.
- *
- * TODO:
- * - finish this during Cat Week.
- * - comprehensive tests for both Pretix and Lemonade cases
- */
-describe.only("Generic Issuance", function () {
-  this.timeout(15_000);
-
-  let ZUPASS_EDDSA_PRIVATE_KEY: string;
-  let genericIssuanceServerUrl: string;
-  let giBackend: Zupass;
-  let giService: GenericIssuanceService | null;
-
-  /**
-   * Generic Issuance product user who has set up a {@link LemonadePipeline}
-   * via the Generic Issuance UI.
-   */
-  const edgeCityGIUser = randomUUID();
-
-  /**
-   * Generic Issuance product user who has set up a {@link PretixPipeline}
-   * via the Generic Issuance UI.
-   */
-  const ethLatamGIUser = randomUUID();
-
-  const lemonadeBackend = new LemonadeDataMocker();
-
-  /**
-   * TODO: test ingestion of the data we'll need for production.
-   */
-  const EdgeCity = lemonadeBackend.addEvent("Edge City");
-
-  /**
-   * Attendee ticket tier. In reality there will be several.
-   *
-   * TODO: test that we can handle several attendee tiers.
-   */
-  const EdgeCityAttendeeTier: LemonadeTicketTier = lemonadeBackend.addTier(
-    EdgeCity.id,
-    "ga"
-  );
-  const EdgeCityBouncerTier = lemonadeBackend.addTier(EdgeCity.id, "bouncer");
-
-  /**
-   * Most tests below need a person who is checking tickets {@link EdgeCityBouncer}
-   * and a person whose ticket needs to be checked in (@link Attendee)
-   */
-  const EdgeCityAttendee: LemonadeUser = lemonadeBackend.addUser("attendee");
-  const EdgeCityAttendeeIdentity = new Identity();
-  const EdgeCityAttendeeTicket: LemonadeTicket = lemonadeBackend.addTicket(
-    EdgeCityAttendeeTier.id,
-    EdgeCity.id,
-    EdgeCityAttendee.name,
-    EdgeCityAttendee.email
-  );
-
-  /**
-   * Similar to {@link EdgeCityAttendee}
-   * Person who has a {@link LemonadeTicket} that does not have a bouncer ticket,
-   * i.e. a ticket whose 'product id' or 'tier' is set up to be a 'superuser' ticket
-   * by the Generic Issuance User with id {@link edgeCityGIUser}.
-   */
-  const EdgeCityBouncer: LemonadeUser = lemonadeBackend.addUser("james bond");
-  const EdgeCityBouncerIdentity = new Identity();
-  const EdgeCityBouncerTicket = lemonadeBackend.addTicket(
-    EdgeCityBouncerTier.id,
-    EdgeCity.id,
-    EdgeCityBouncer.name,
-    EdgeCityBouncer.email
-  );
-  lemonadeBackend.makeCoHost(EdgeCityBouncer.id, EdgeCity.id);
-  const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(lemonadeBackend);
-  const lemonadePipelineDefinition: LemonadePipelineDefinition = {
-    ownerUserId: edgeCityGIUser,
-    id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
-    editorUserIds: [],
-    options: {
-      feedOptions: {
-        // TODO: @richard what do the organizers want these tickets to be called?
-        feedDescription: "Edge City Denver tickets!",
-        feedDisplayName: "Edge City Denver",
-        feedFolder: "Edge City",
-        feedId: "edge-city"
-      },
-      lemonadeApiKey: EdgeCityBouncer.apiKey,
-      events: [
-        {
-          externalId: EdgeCity.id,
-          name: EdgeCity.name,
-          genericIssuanceEventId: randomUUID(),
-          ticketTiers: [
-            {
-              externalId: EdgeCityBouncerTier.id,
-              genericIssuanceProductId: randomUUID(),
-              isSuperUser: true
-            },
-            {
-              externalId: EdgeCityAttendeeTier.id,
-              genericIssuanceProductId: randomUUID(),
-              isSuperUser: false
-            }
-          ]
-        }
-      ]
-    },
-    type: PipelineType.Lemonade
-  };
-
-  let pretixBackendServer: SetupServer;
-  const pretixBackend = new GenericPretixDataMocker();
-  const ethLatAmPretixOrganizer = pretixBackend.get().ethLatAmOrganizer;
-  const ethLatAm = ethLatAmPretixOrganizer.ethLatAm;
-  const ethLatAmProducts = ethLatAmPretixOrganizer.productsByEventID.get(
-    ethLatAm.slug
-  );
-  // TODO: how are we going to recommend their Pretix is set up?
-  // @richard @rob
-  expectToExist(ethLatAmProducts);
-  expectLength(ethLatAmProducts, 1);
-  const ethLatAmSuperuserProductIds: number[] = [
-    pretixBackend.get().ethLatAmOrganizer.ethBerlinBouncerProduct.id
-  ];
-  const ethLatAmPipeline: PretixPipelineDefinition = {
-    ownerUserId: ethLatamGIUser,
-    id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
-    editorUserIds: [],
-    options: {
-      // https://ethlatam.org/
-      feedOptions: {
-        feedDescription: "Eth Lat Am tickets! <copy>", // TODO: @richard what's the best copy here?
-        feedDisplayName: "Eth LatAm",
-        feedFolder: "Eth LatAm",
-        feedId: "eth-latam"
-        // TODO: production question - would users (pipeline admins) want to
-        // customize other branding for their feed issuance? e.g. a nice image
-        // or a custom font, or animation, or making it clickable, or have
-        // some other built in functionality? We've been thinking about issuing
-        // announcements for edge city, what might a cool announcement look like?
-      },
-      events: [
-        {
-          genericIssuanceId: randomUUID(),
-          externalId: ethLatAm.slug,
-          name: "Eth LatAm",
-          products: ethLatAmProducts.map((product) => {
-            return {
-              externalId: product.id.toString(),
-              name: getI18nString(product.name),
-              genericIssuanceId: randomUUID(),
-              isSuperUser: ethLatAmSuperuserProductIds.includes(product.id)
-            };
-          })
-        }
-      ],
-      pretixAPIKey: ethLatAmPretixOrganizer.token,
-      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
-    },
-    type: PipelineType.Pretix
-  };
-
-  const pipelineDefinitions = [ethLatAmPipeline, lemonadePipelineDefinition];
-
-  /**
-   * Sets up a Zupass/Generic issuance backend with two pipelines:
-   * - {@link LemonadePipeline}, as defined by {@link lemonadePipelineDefinition}
-   * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
-   */
-  this.beforeAll(async () => {
-    // This has to be done here as it requires an `await`
-    const zupassPublicKey = JSON.stringify(
-      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
-    );
-    await overrideEnvironment({
-      GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
-      ...testingEnv
-    });
-    giBackend = await startTestingApp({
-      lemonadeAPI
-    });
-
-    // TODO: remove this once we have user management
-    await sqlQuery(
-      giBackend.context.dbPool,
-      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
-      [edgeCityGIUser, "test@example.com", true]
-    );
-
-    const orgUrls = pretixBackend.get().organizersByOrgUrl.keys();
-    pretixBackendServer = getGenericMockPretixAPIServer(orgUrls, pretixBackend);
-    pretixBackendServer.listen({ onUnhandledRequest: "bypass" });
-
-    ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
-    genericIssuanceServerUrl = giBackend.expressContext.localEndpoint;
-    giService = giBackend.services.genericIssuanceService;
-    await giService?.stop();
-    const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
-    );
-    await pipelineDefinitionDB.clearAllDefinitions();
-    await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
-    await giService?.loadPipelines();
-    await giService?.loadPipelineData();
-  });
-
-  this.afterEach(async () => {
-    pretixBackendServer.resetHandlers();
-  });
-
-  /**
-   * Tests for {@link LemonadePipeline}.
-   */
-  step("Lemonade Pipeline feed issuance and checkin", async () => {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
-    expectToExist(pipelines);
-    expectLength(pipelines, 2);
-    const edgeCityPipeline = pipelines.find(LemonadePipeline.is);
-    expectToExist(edgeCityPipeline);
-    const edgeCityTicketFeedUrl = edgeCityPipeline.issuanceCapability.feedUrl;
-    const AttendeeTickets = await requestTicketsFromPipeline(
-      edgeCityPipeline.issuanceCapability.options.feedFolder,
-      edgeCityTicketFeedUrl,
-      edgeCityPipeline.issuanceCapability.options.feedId,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      EdgeCityAttendee.email,
-      EdgeCityAttendeeIdentity
-    );
-    expectLength(AttendeeTickets, 1);
-    const AttendeeTicket = AttendeeTickets[0];
-    expectIsEdDSATicketPCD(AttendeeTicket);
-    expect(AttendeeTicket.claim.ticket.attendeeEmail)
-      .to.eq(EdgeCityAttendeeTicket.email)
-      .to.eq(EdgeCityAttendee.email);
-
-    const BouncerTickets = await requestTicketsFromPipeline(
-      edgeCityPipeline.issuanceCapability.options.feedFolder,
-      edgeCityTicketFeedUrl,
-      edgeCityPipeline.issuanceCapability.options.feedId,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      EdgeCityBouncerTicket.email,
-      EdgeCityBouncerIdentity
-    );
-    expectLength(BouncerTickets, 1);
-    const BouncerTicket = BouncerTickets[0];
-    expectIsEdDSATicketPCD(BouncerTicket);
-    expect(BouncerTicket.claim.ticket.attendeeEmail)
-      .to.eq(EdgeCityBouncerTicket.email)
-      .to.eq(EdgeCityBouncer.email);
-
-    const edgeCityCheckinRoute = path.join(
-      genericIssuanceServerUrl,
-      edgeCityPipeline.checkinCapability.getCheckinUrl()
-    );
-
-    const bouncerChecksInAttendee = await requestCheckInPipelineTicket(
-      edgeCityCheckinRoute,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      EdgeCityBouncerTicket.email,
-      EdgeCityBouncerIdentity,
-      AttendeeTicket
-    );
-    expectTrue(bouncerChecksInAttendee.success);
-
-    // can't check in a ticket that's already checked in
-    const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
-      edgeCityCheckinRoute,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      EdgeCityBouncerTicket.email,
-      EdgeCityBouncerIdentity,
-      AttendeeTicket
-    );
-    expectTrue(bouncerChecksInAttendeeAgain.success);
-
-    // can't check in a ticket using a ticket that isn't a
-    // superuser ticket
-    const atteendeeChecksInBouncerResult = await requestCheckInPipelineTicket(
-      edgeCityCheckinRoute,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      EdgeCityAttendeeTicket.email,
-      EdgeCityAttendeeIdentity,
-      BouncerTicket
-    );
-    expectTrue(!atteendeeChecksInBouncerResult.success);
-    await checkPipelineInfoEndpoint(edgeCityPipeline);
-  });
-
-  /**
-   * Test for {@link PretixPipeline}.
-   */
-  it.only("PretixPipeline issuance and checkin", async () => {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
-    expectToExist(pipelines);
-    expectLength(pipelines, 2);
-    const pretixPipeline = pipelines.find(PretixPipeline.is);
-    expectToExist(pretixPipeline);
-    const pretixFeedUrl = pretixPipeline.issuanceCapability.feedUrl;
-    const attendeeTickets = await requestTicketsFromPipeline(
-      pretixPipeline.issuanceCapability.options.feedFolder,
-      pretixFeedUrl,
-      pretixPipeline.issuanceCapability.options.feedId,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
-      EdgeCityAttendeeIdentity
-    );
-    expectLength(attendeeTickets, 1);
-
-    const attendeeTicket = attendeeTickets[0];
-    expectToExist(attendeeTicket);
-    expectIsEdDSATicketPCD(attendeeTicket);
-    expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
-      pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
-    );
-
-    const bouncerTickets = await requestTicketsFromPipeline(
-      pretixPipeline.issuanceCapability.feedUrl,
-      pretixFeedUrl,
-      pretixPipeline.issuanceCapability.options.feedId,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
-      EdgeCityBouncerIdentity
-    );
-    expectLength(bouncerTickets, 6);
-    const bouncerTicket = bouncerTickets[0];
-    expectToExist(bouncerTicket);
-    expectIsEdDSATicketPCD(bouncerTicket);
-    expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
-      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
-    );
-
-    const pretixCheckinRoute = path.join(
-      genericIssuanceServerUrl,
-      pretixPipeline?.checkinCapability.getCheckinUrl()
-    );
-
-    const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
-      pretixCheckinRoute,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      bouncerTicket.claim.ticket.attendeeEmail,
-      EdgeCityBouncerIdentity,
-      bouncerTicket
-    );
-    expect(bouncerCheckInBouncer.success).to.eq(true);
-
-    // can't check in a ticket that's already checked in
-    const bouncerCheckInBouncerAgain = await requestCheckInPipelineTicket(
-      pretixCheckinRoute,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      bouncerTicket.claim.ticket.attendeeEmail,
-      EdgeCityBouncerIdentity,
-      bouncerTicket
-    );
-    expectFalse(bouncerCheckInBouncerAgain.success);
-
-    // can't check in a ticket using a ticket that isn't a superuser ticket
-    const attendeeCheckInBouncerResult = await requestCheckInPipelineTicket(
-      pretixCheckinRoute,
-      ZUPASS_EDDSA_PRIVATE_KEY,
-      attendeeTicket.claim.ticket.attendeeEmail,
-      EdgeCityAttendeeIdentity,
-      bouncerTicket
-    );
-
-    expectFalse(attendeeCheckInBouncerResult.success);
-
-    await checkPipelineInfoEndpoint(pretixPipeline);
-  });
-
-  /**
-   * Testing that the Generic Issuance backend calculates {@link InfoResult} about
-   * pipeline {@link PretixPipeline} correctly by requesting it from the Generic
-   * Issuance API routes.
-   *
-   * This endpoint is used by the Generic Issuance frontend to assist a user in
-   * managing their {@link Pipeline}.
-   *
-   * TODO: incorporate auth
-   */
-  async function checkPipelineInfoEndpoint(pipeline: Pipeline): Promise<void> {
-    const pipelineInfoResult: InfoResult = await requestPipelineInfo(
-      giBackend.expressContext.localEndpoint,
-      pipeline.id
-    );
-    expectTrue(pipelineInfoResult.success);
-    expectLength(pipelineInfoResult.value.feeds, 1);
-    const pretixFeedInfo: PipelineFeedInfo = pipelineInfoResult.value.feeds[0];
-    expect(pretixFeedInfo.name).to.eq(
-      pipeline.issuanceCapability.options.feedDisplayName
-    );
-    expect(pretixFeedInfo.url).to.eq(pipeline.issuanceCapability.feedUrl);
-  }
-
-  /**
-   * Test for {@link PipelineDefinitionDB}, which implements postgres CRUD
-   * operations for {@link PipelineDefinition}s
-   */
-  it("PipelineDefinitionDB", async function () {
-    const definitionDB = new PipelineDefinitionDB(giBackend.context.dbPool);
-    await definitionDB.clearAllDefinitions();
-
-    {
-      const definitions: PipelineDefinition[] =
-        await definitionDB.loadPipelineDefinitions();
-      expectLength(definitions, 0);
-    }
-
-    {
-      await definitionDB.setDefinitions(pipelineDefinitions);
-      const definitions = await definitionDB.loadPipelineDefinitions();
-      expectLength(definitions, 2);
-
-      const pretixDefinition = definitions.find(
-        (d) => d.type === PipelineType.Pretix
-      ) as PretixPipelineDefinition;
-
-      const newKey = "TEST_KEY";
-      pretixDefinition.options = {
-        ...pretixDefinition?.options,
-        pretixAPIKey: newKey
-      };
-      await definitionDB.setDefinition(pretixDefinition);
-      const updatedPretixDefinition = (await definitionDB.getDefinition(
-        pretixDefinition.id
-      )) as PretixPipelineDefinition;
-      expect(updatedPretixDefinition).to.exist;
-      expect(
-        (updatedPretixDefinition as PretixPipelineDefinition).options
-          .pretixAPIKey
-      ).to.eq(newKey);
-
-      updatedPretixDefinition.editorUserIds.push(edgeCityGIUser);
-      await definitionDB.setDefinition(updatedPretixDefinition);
-      const newEditorDefinition = (await definitionDB.getDefinition(
-        updatedPretixDefinition.id
-      )) as PretixPipelineDefinition;
-      expect(newEditorDefinition).to.exist;
-      expect(newEditorDefinition.editorUserIds).to.contain(edgeCityGIUser);
-
-      newEditorDefinition.editorUserIds = [];
-      await definitionDB.setDefinition(newEditorDefinition);
-      const emptyEditorsDefinition = (await definitionDB.getDefinition(
-        updatedPretixDefinition.id
-      )) as PretixPipelineDefinition;
-      expect(emptyEditorsDefinition).to.exist;
-      expect(emptyEditorsDefinition.editorUserIds).to.be.empty;
-    }
-  });
-
-  this.afterAll(async () => {
-    await stopApplication(giBackend);
-    pretixBackendServer.close();
-  });
-});
