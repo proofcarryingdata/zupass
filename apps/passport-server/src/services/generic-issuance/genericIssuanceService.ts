@@ -9,6 +9,7 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
+import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
@@ -18,6 +19,7 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../database/queries/pipelineDefinitionDB";
+import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -35,9 +37,10 @@ import {
 } from "./pipelines/LemonadePipeline";
 import {
   PretixPipeline,
+  PretixPipelineDefinition,
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
-import { Pipeline, PipelineDefinition } from "./pipelines/types";
+import { Pipeline, PipelineDefinition, PipelineType } from "./pipelines/types";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -162,14 +165,14 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
-    await (this.definitionDB as PipelineDefinitionDB).maybeCreateTestStuff();
+    await this.localDevCreateTestPipeline();
     await this.createPipelines();
     await this.loadAllPipelines();
     await this.scheduleReloads();
   }
 
   public async loadAllPipelines(): Promise<void> {
-    logger(LOG_TAG, "loading all pipelines", this.pipelines.length);
+    logger(LOG_TAG, "loading data for all pipelines", this.pipelines.length);
 
     await Promise.allSettled(
       this.pipelines.map(async (p) => {
@@ -232,7 +235,7 @@ export class GenericIssuanceService {
   ): Promise<PollFeedResponseValue> {
     const pipeline = await this.ensurePipeline(pipelineId);
     const relevantCapability = pipeline.capabilities.find(
-      (c) => isFeedIssuanceCapability(c) && c.feedId === req.feedId
+      (c) => isFeedIssuanceCapability(c) && c.options.feedId === req.feedId
     ) as FeedIssuanceCapability | undefined;
 
     if (!relevantCapability) {
@@ -255,7 +258,7 @@ export class GenericIssuanceService {
   ): Promise<ListFeedsResponseValue> {
     const pipeline = await this.ensurePipeline(pipelineId);
     const relevantCapability = pipeline.capabilities.find(
-      (c) => isFeedIssuanceCapability(c) && c.feedId === feedId
+      (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
     ) as FeedIssuanceCapability | undefined;
 
     if (!relevantCapability) {
@@ -267,15 +270,15 @@ export class GenericIssuanceService {
 
     const feed: Feed = {
       id: feedId,
-      name: relevantCapability.feedDisplayName,
-      description: relevantCapability.feedDescription,
+      name: relevantCapability.options.feedDisplayName,
+      description: relevantCapability.options.feedDescription,
       permissions: [
         {
-          folder: relevantCapability.feedFolder,
+          folder: relevantCapability.options.feedFolder,
           type: PCDPermissionType.AppendToFolder
         },
         {
-          folder: relevantCapability.feedFolder,
+          folder: relevantCapability.options.feedFolder,
           type: PCDPermissionType.ReplaceInFolder
         }
       ],
@@ -287,8 +290,8 @@ export class GenericIssuanceService {
 
     const res: ListFeedsResponseValue = {
       feeds: [feed],
-      providerName: "Generic Issuance",
-      providerUrl: relevantCapability.getFeedUrl()
+      providerName: relevantCapability.options.providerName,
+      providerUrl: relevantCapability.feedUrl
     };
 
     return res;
@@ -362,6 +365,75 @@ export class GenericIssuanceService {
     } catch (e) {
       throw new PCDHTTPError(500, "Failed to send generic issuance email");
     }
+  }
+
+  /**
+   * in local development, set the `TEST_PRETIX_KEY` and `TEST_PRETIX_ORG_URL` env
+   * variables to the ones that Ivan shares with you to set up a Pretix pipeline.
+   */
+  public async localDevCreateTestPipeline(): Promise<void> {
+    if (process.env.NODE_ENV === "production") {
+      return;
+    }
+
+    logger("[INIT] attempting to create test pipeline data");
+
+    const existingPipelines = await this.definitionDB.loadPipelineDefinitions();
+
+    if (existingPipelines.length !== 0) {
+      logger("[INIT] there's already a pipeline - not creating test pipeline");
+      return;
+    }
+
+    const testPretixAPIKey = process.env.TEST_PRETIX_KEY;
+    const testPretixOrgUrl = process.env.TEST_PRETIX_ORG_URL;
+
+    if (!testPretixAPIKey || !testPretixOrgUrl) {
+      logger("[INIT] not creating test pipeline data - missing env vars");
+      return;
+    }
+
+    const ownerUUID = randomUUID();
+
+    await sqlQuery(
+      this.context.dbPool,
+      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
+      [ownerUUID, "test@example.com", true]
+    );
+
+    const pretixDefinition: PretixPipelineDefinition = {
+      ownerUserId: ownerUUID,
+      id: randomUUID(),
+      editorUserIds: [],
+      options: {
+        events: [
+          {
+            genericIssuanceId: randomUUID(),
+            externalId: "progcrypto",
+            name: "ProgCrypto (Internal Test)",
+            products: [
+              {
+                externalId: "369803",
+                name: "GA",
+                genericIssuanceId: randomUUID(),
+                isSuperUser: false
+              },
+              {
+                externalId: "374045",
+                name: "Organizer",
+                genericIssuanceId: randomUUID(),
+                isSuperUser: false
+              }
+            ]
+          }
+        ],
+        pretixAPIKey: testPretixAPIKey,
+        pretixOrgUrl: testPretixOrgUrl
+      },
+      type: PipelineType.Pretix
+    };
+
+    await this.definitionDB.setDefinition(pretixDefinition);
   }
 }
 
@@ -441,10 +513,7 @@ export async function startGenericIssuanceService(
     zupassPublicKey
   );
 
-  // TODO: in the future (read: before shipping to real prod), this probably
-  // shouldn't await, as there may be many many pipelines, and their APIs don't
-  // necessarily return in a bounded amount of time.
-  await issuanceService.start();
+  issuanceService.start();
 
   return issuanceService;
 }

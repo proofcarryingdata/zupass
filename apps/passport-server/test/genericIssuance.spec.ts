@@ -336,10 +336,7 @@ describe("generic issuance service tests", function () {
     const lemonadePipeline = pipelines.find(LemonadePipeline.is);
     expectToExist(lemonadePipeline);
 
-    const lemonadeIssuanceRoute = path.join(
-      URL_ROOT,
-      lemonadePipeline?.issuanceCapability.getFeedUrl()
-    );
+    const lemonadeIssuanceRoute = lemonadePipeline?.issuanceCapability.feedUrl;
 
     const holderIssuedTickets = await requestGenericTickets(
       lemonadeIssuanceRoute,
@@ -408,10 +405,7 @@ describe("generic issuance service tests", function () {
     expect(pipelines).to.have.lengthOf(2);
     const pretixPipeline = pipelines.find(PretixPipeline.is);
     expectToExist(pretixPipeline);
-    const pretixIssuanceRoute = path.join(
-      URL_ROOT,
-      pretixPipeline?.issuanceCapability.getFeedUrl()
-    );
+    const pretixIssuanceRoute = pretixPipeline?.issuanceCapability.feedUrl;
 
     const holderIssuedTickets = await requestGenericTickets(
       pretixIssuanceRoute,

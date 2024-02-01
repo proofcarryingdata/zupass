@@ -34,7 +34,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
-import { normalizeEmail, pbcopy } from "../../../util/util";
+import { normalizeEmail } from "../../../util/util";
 import { traced } from "../../telemetryService";
 import {
   CheckinCapability,
@@ -42,7 +42,6 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceListFeedUrl,
   generateIssuanceUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
@@ -100,14 +99,16 @@ export class PretixPipeline implements BasePipeline {
   public capabilities = [
     {
       issue: this.issuePretixTicketPCDs.bind(this),
-      feedId: "ticket-feed",
-      feedDisplayName: "Ticket Feed", // TODO: how can we make this configurable
-      feedDescription: "Feed Description", // TODO: how can we make this configurable
-      feedFolder: "test",
+      // TODO: make configurable
+      options: {
+        feedId: "ticket-feed",
+        feedDisplayName: "Ticket Feed",
+        feedDescription: "Feed Description",
+        feedFolder: "test",
+        providerName: "provider"
+      },
       type: PipelineCapability.FeedIssuance,
-      getFeedUrl: (): string => generateIssuanceUrl(this.id, "ticket-feed"),
-      getListFeedUrl: (): string =>
-        generateIssuanceListFeedUrl(this.id, "ticket-feed")
+      feedUrl: generateIssuanceUrl(this.id, "ticket-feed")
     } satisfies FeedIssuanceCapability,
     {
       checkin: this.checkinPretixTicketPCDs.bind(this),
@@ -426,9 +427,6 @@ export class PretixPipeline implements BasePipeline {
     eventConfig: PretixEventConfig,
     eventData: PretixEventData
   ): Promise<PretixTicket[]> {
-    logger(LOG_TAG, "ordersToTickets", JSON.stringify(eventConfig, null, 2));
-    pbcopy(JSON.stringify(eventConfig, null, 2));
-
     const tickets: PretixTicket[] = [];
     const { orders } = eventData;
     const fetchedItemIds = new Set(

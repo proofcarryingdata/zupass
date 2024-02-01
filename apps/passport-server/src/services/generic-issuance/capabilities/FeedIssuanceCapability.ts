@@ -6,13 +6,7 @@ import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
-/**
- * Can be attached to a {@link Pipeline} that can issue feeds to external
- * users. The server can make use of the information encoded in this Capability
- * to connect it to the other services - express routing, etc.
- */
-export interface FeedIssuanceCapability extends BasePipelineCapability {
-  type: PipelineCapability.FeedIssuance;
+export interface FeedIssuanceOptions {
   /**
    * Used to differentiate between different feeds on the same {@link Pipeline}.
    * TODO:
@@ -20,12 +14,22 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
    *   with overlapping {@link feedId}s.
    */
   feedId: string;
-  issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
-  getFeedUrl(): string;
-  getListFeedUrl(): string;
   feedDisplayName: string;
   feedDescription: string;
+  providerName: string;
   feedFolder: string;
+}
+
+/**
+ * Can be attached to a {@link Pipeline} that can issue feeds to external
+ * users. The server can make use of the information encoded in this Capability
+ * to connect it to the other services - express routing, etc.
+ */
+export interface FeedIssuanceCapability extends BasePipelineCapability {
+  type: PipelineCapability.FeedIssuance;
+  issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
+  feedUrl: string;
+  options: FeedIssuanceOptions;
 }
 
 export function isFeedIssuanceCapability(

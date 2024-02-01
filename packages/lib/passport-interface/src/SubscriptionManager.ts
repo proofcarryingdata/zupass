@@ -33,11 +33,7 @@ export async function applyActions(
     for (const action of actionSet.actions) {
       // tryExec already handles any exceptions that can come from executing
       // actions, so we don't need to catch anything here.
-      const executed = await collection.tryExec(
-        action,
-        actionSet.subscription.feed.permissions
-      );
-      console.log("execution status", executed, action);
+      await collection.tryExec(action, actionSet.subscription.feed.permissions);
     }
   }
 }
@@ -235,7 +231,6 @@ export class FeedSubscriptionManager {
     subscription: Subscription,
     credentialManager: CredentialManagerAPI
   ): Promise<SubscriptionActions[]> {
-    console.log("SUBSCRIPTIONS", subscription);
     const responses: SubscriptionActions[] = [];
     this.resetError(subscription.id);
     try {

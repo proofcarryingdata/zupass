@@ -54,16 +54,23 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
-      logger("GENERIC_ISSUANCE", "POLLING***********************");
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
+      const feedId = checkUrlParam(req, "feedId");
       const request = req.body as PollFeedRequest;
-      // todo: check url param feedId matches the one in the request
+
+      if (request.feedId !== feedId) {
+        throw new PCDHTTPError(
+          400,
+          "feed id in url does not match feed id in request body"
+        );
+      }
+
       const result = await genericIssuanceService.handlePollFeed(
         pipelineID,
         request
       );
-      logger("GENERIC_ISSUANCE RESULT", result);
+
       res.send(result satisfies PollFeedResponseValue);
     }
   );

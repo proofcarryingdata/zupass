@@ -1,12 +1,9 @@
-import { randomUUID } from "crypto";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
-import { PretixPipelineDefinition } from "../../services/generic-issuance/pipelines/PretixPipeline";
 import {
   PipelineDefinition,
   PipelineType
 } from "../../services/generic-issuance/pipelines/types";
-import { logger } from "../../util/logger";
 import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
@@ -37,68 +34,6 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
 
   public constructor(db: Pool) {
     this.db = db;
-  }
-
-  public async maybeCreateTestStuff(): Promise<void> {
-    logger("[INIT] attempting to create test pipeline data");
-
-    const existingPipelines = await this.loadPipelineDefinitions();
-
-    if (existingPipelines.length !== 0) {
-      logger("[INIT] there's already a pipeline - not creating test pipeline");
-      return;
-    }
-
-    const ownerUUID = randomUUID();
-
-    await sqlQuery(
-      this.db,
-      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
-      [ownerUUID, "test@example.com", true]
-    );
-
-    const pretixDefinition: PretixPipelineDefinition = {
-      ownerUserId: ownerUUID,
-      id: randomUUID(),
-      editorUserIds: [],
-      options: {
-        events: [
-          {
-            genericIssuanceId: randomUUID(),
-            externalId: "progcrypto",
-            name: "ProgCrypto (Internal Test)",
-            products: [
-              {
-                externalId: "369803",
-                name: "GA",
-                genericIssuanceId: randomUUID(),
-                isSuperUser: false
-              },
-              {
-                externalId: "374045",
-                name: "Organizer",
-                genericIssuanceId: randomUUID(),
-                isSuperUser: false
-              }
-            ]
-            // TODO
-            // (pretixProducts ?? []).map((product) => {
-            //   return {
-            //     externalId: product.id.toString(),
-            //     name: getI18nString(product.name),
-            //     genericIssuanceId: randomUUID(),
-            //     isSuperUser: pretixSuperuserItemIds.includes(product.id)
-            //   };
-            // })
-          }
-        ],
-        pretixAPIKey: process.env.TEST_PRETIX_KEY as string,
-        pretixOrgUrl: process.env.TEST_PRETIX_ORG_URL as string
-      },
-      type: PipelineType.Pretix
-    };
-
-    await this.setDefinition(pretixDefinition);
   }
 
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {

@@ -805,7 +805,6 @@ async function doSync(
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
       console.log(`[SYNC] fetched ${actions.length} actions`);
-      console.log(actions);
 
       await applyActions(state.pcds, actions);
       console.log("[SYNC] applied pcd actions");
