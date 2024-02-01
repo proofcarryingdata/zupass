@@ -322,7 +322,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
   public async fetchProductCategories(
     orgUrl: string,
-    pretixApiToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixProductCategory[]> {
     return traced(TRACE_SERVICE, "fetchAddons", async (span) => {
@@ -334,7 +334,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching categories: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${pretixApiToken}` }
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -361,7 +361,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
   public async fetchProducts(
     orgUrl: string,
-    pretixApiToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixProduct[]> {
     return traced(TRACE_SERVICE, "fetchItems", async (span) => {
@@ -373,7 +373,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching items: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${pretixApiToken}` }
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -401,7 +401,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   // Fetch all orders for a given event.
   public async fetchOrders(
     orgUrl: string,
-    pretixApiToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
@@ -413,7 +413,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${pretixApiToken}` }
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(

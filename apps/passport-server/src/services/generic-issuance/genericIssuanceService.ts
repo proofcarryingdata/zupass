@@ -418,8 +418,9 @@ export class GenericIssuanceService {
 
     const testPretixAPIKey = process.env.TEST_PRETIX_KEY;
     const testPretixOrgUrl = process.env.TEST_PRETIX_ORG_URL;
+    const createTestPretixPipeline = process.env.CREATE_TEST_PIPELINE;
 
-    if (!testPretixAPIKey || !testPretixOrgUrl) {
+    if (!createTestPretixPipeline || !testPretixAPIKey || !testPretixOrgUrl) {
       logger("[INIT] not creating test pipeline data - missing env vars");
       return;
     }
@@ -434,9 +435,11 @@ export class GenericIssuanceService {
       [ownerUUID, "test@example.com", true]
     );
 
+    const pretixDefinitionId = "3d6d4c8e-4228-423e-9b0a-33709aa1b468";
+
     const pretixDefinition: PretixPipelineDefinition = {
       ownerUserId: ownerUUID,
-      id: randomUUID(),
+      id: pretixDefinitionId,
       editorUserIds: [],
       options: {
         feedOptions: {
