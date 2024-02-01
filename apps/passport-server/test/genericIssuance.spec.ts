@@ -22,11 +22,12 @@ import { randomUUID } from "crypto";
 import "mocha";
 import { SetupServer } from "msw/node";
 import * as path from "path";
+import { v4 } from "uuid";
 import { ILemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { getI18nString } from "../src/apis/pretix/genericPretixAPI";
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
-import { sqlQuery } from "../src/database/sqlQuery";
+import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LemonadePipeline,
@@ -36,7 +37,10 @@ import {
   PretixPipeline,
   PretixPipelineDefinition
 } from "../src/services/generic-issuance/pipelines/PretixPipeline";
-import { PipelineType } from "../src/services/generic-issuance/pipelines/types";
+import {
+  PipelineType,
+  PipelineUser
+} from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
@@ -44,7 +48,7 @@ import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
 import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import { expectToExist } from "./util/util";
+import { expectToExist, randomEmail } from "./util/util";
 
 export async function semaphoreSignPayload(
   identity: Identity,
@@ -161,6 +165,16 @@ export async function requestCheckInGenericTicket(
     checkinRoute,
     ticketCheckerFeedCredential
   );
+}
+
+function assertUserMatches(
+  expectedUser: PipelineUser,
+  actualUser: PipelineUser | undefined
+): void {
+  expect(actualUser).to.exist;
+  expect(actualUser?.email).to.eq(expectedUser.email);
+  expect(actualUser?.id).to.eq(expectedUser.id);
+  expect(actualUser?.isAdmin).to.eq(expectedUser.isAdmin);
 }
 
 /**
@@ -301,12 +315,12 @@ describe("generic issuance service tests", function () {
       lemonadeAPI
     });
 
-    // TODO: remove this once we have user management
-    await sqlQuery(
-      application.context.dbPool,
-      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
-      [pipelineOwnerUUID, "test@example.com", true]
-    );
+    const userDB = new PipelineUserDB(application.context.dbPool);
+    await userDB.setUser({
+      id: pipelineOwnerUUID,
+      email: "test@example.com",
+      isAdmin: true
+    });
 
     const orgUrls = mockPretixData.get().organizersByOrgUrl.keys();
     mockPretixServer = getGenericMockPretixAPIServer(orgUrls, mockPretixData);
@@ -334,8 +348,10 @@ describe("generic issuance service tests", function () {
     const pretixUserPipelines = await giService.getAllUserPipelineDefinitions(
       pretixDefinition.ownerUserId
     );
-    expect(pretixUserPipelines).to.have.length(1);
-    expect(pretixUserPipelines[0].id).to.eq(pretixDefinition.id);
+    expect(pretixUserPipelines).to.have.deep.members([
+      pretixDefinition,
+      lemonadeDefinition
+    ]);
   });
 
   it("test", async () => {
@@ -484,6 +500,61 @@ describe("generic issuance service tests", function () {
     expect(thirdCheckinResult.success).to.eq(false);
   });
 
+  it("test user DB", async function () {
+    const userDB = new PipelineUserDB(application.context.dbPool);
+
+    const adminUser = await userDB.getUser(pipelineOwnerUUID);
+    assertUserMatches(
+      { id: pipelineOwnerUUID, email: "test@example.com", isAdmin: true },
+      adminUser
+    );
+    expect(adminUser).to.exist;
+    expect(adminUser?.email).to.eq("test@example.com");
+    expect(adminUser?.id).to.eq(pipelineOwnerUUID);
+    expect(adminUser?.isAdmin).to.be.true;
+
+    const user1: PipelineUser = {
+      id: v4(),
+      email: randomEmail(),
+      isAdmin: false
+    };
+    await userDB.setUser(user1);
+    const user2: PipelineUser = {
+      id: v4(),
+      email: randomEmail(),
+      isAdmin: false
+    };
+    await userDB.setUser(user2);
+
+    assertUserMatches(user1, await userDB.getUser(user1.id));
+    assertUserMatches(user2, await userDB.getUser(user2.id));
+    expect(await userDB.loadUsers()).to.have.deep.members([
+      adminUser,
+      user1,
+      user2
+    ]);
+
+    const updatedUser1: PipelineUser = {
+      id: user1.id,
+      email: randomEmail(),
+      isAdmin: true
+    };
+    await userDB.setUser(updatedUser1);
+
+    assertUserMatches(updatedUser1, await userDB.getUser(user1.id));
+    assertUserMatches(user2, await userDB.getUserByEmail(user2.email));
+    assertUserMatches(
+      updatedUser1,
+      await userDB.getUserByEmail(updatedUser1.email)
+    );
+    expect(await userDB.getUserByEmail(user1.email)).to.be.undefined;
+    expect(await userDB.loadUsers()).to.have.deep.members([
+      adminUser,
+      updatedUser1,
+      user2
+    ]);
+  });
+
   it("test definition DB", async function () {
     const definitionDB = new PipelineDefinitionDB(application.context.dbPool);
     await definitionDB.clearAllDefinitions();
@@ -531,6 +602,11 @@ describe("generic issuance service tests", function () {
       )) as PretixPipelineDefinition;
       expect(emptyEditorsDefinition).to.exist;
       expect(emptyEditorsDefinition.editorUserIds).to.be.empty;
+      await definitionDB.clearDefinition(emptyEditorsDefinition.id);
+      const deletedDefinition = await definitionDB.getDefinition(
+        emptyEditorsDefinition.id
+      );
+      expect(deletedDefinition).to.be.undefined;
     }
   });
 
