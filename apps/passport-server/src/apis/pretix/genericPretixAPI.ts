@@ -593,7 +593,6 @@ const GenericPretixEventSchema = z.object({
   name: GenericPretixI18MapSchema
 });
 
-// TODO: @rob @richard @josh - can we do a pretix settings scan?
 const GenericPretixEventSettingsSchema = z.object({
   // These settings control whether individual attendees must have
   // email addresses specified.
@@ -604,11 +603,23 @@ const GenericPretixEventSettingsSchema = z.object({
   attendee_emails_required: z.boolean()
 });
 
-// @rob - what are product categories?
+/**
+ * All tickets must be configured as "personalized", with the exception of
+ * "add-ons", and an add-on is recognized by its category. The use-case
+ * for non-personalized add-on tickets was Devconnect towels.
+ *
+ * To date, we only care about categories for the purpose of ensuring that
+ * non-personalized tickets are, indeed, add-ons. No category data is persisted,
+ * as it's used only for validation.
+ *
+ * Category API docs: https://docs.pretix.eu/en/latest/api/resources/categories.html
+ *
+ * See #1119 for original implementation.
+ */
 const GenericPretixProductCategorySchema = z.object({
   id: z.number(),
   is_addon: z.boolean()
-  // @rob - should we load category names?
+  // TODO: load category name
 });
 
 // Each event has one or more check-in lists
