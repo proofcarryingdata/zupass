@@ -1,5 +1,8 @@
 import urlJoin from "url-join";
-import { GenericIssuanceGetAllUserPipelinesResponseValue } from "../RequestTypes";
+import {
+  GenericIssuanceGetAllUserPipelinesResponseValue,
+  GenericIssuanceGetAllUserPipelinesResponseValueSchema
+} from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
@@ -14,7 +17,8 @@ export async function requestGenericIssuanceGetAllUserPipelines(
   return httpGetSimple(
     urlJoin(zupassServerUrl, `/generic-issuance/api/pipelines`),
     async (resText) => ({
-      value: JSON.parse(resText),
+      value:
+        GenericIssuanceGetAllUserPipelinesResponseValueSchema.parse(resText),
       success: true
     }),
     undefined,

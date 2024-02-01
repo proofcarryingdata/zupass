@@ -11,9 +11,9 @@ export enum PipelineType {
 }
 
 const BasePipelineDefinitionSchema = z.object({
-  id: z.string(),
-  ownerUserId: z.string(),
-  editorUserIds: z.array(z.string())
+  id: z.string().uuid(),
+  ownerUserId: z.string().uuid(),
+  editorUserIds: z.array(z.string().uuid())
 });
 
 /**
@@ -35,7 +35,7 @@ const LemonadePipelineTicketTierConfigSchema = z.object({
   /**
    * The UUID of this ticket tier used in {@link EdDSATicketPCD}.
    */
-  genericIssuanceProductId: z.string(),
+  genericIssuanceProductId: z.string().uuid(),
   /**
    * Whether this ticket tier is allowed to check other tickets in or not.
    */
@@ -62,7 +62,7 @@ const LemonadePipelineEventConfigSchema = z.object({
   /**
    * The UUID of this event used for {@link EdDSATicketPCD}.
    */
-  genericIssuanceEventId: z.string(),
+  genericIssuanceEventId: z.string().uuid(),
   /**
    * Roughly translates to Products in {@link EdDSATicketPCD}.
    */
@@ -112,7 +112,7 @@ const PretixProductConfigSchema = z.object({
   /**
    * Our UUID
    */
-  genericIssuanceId: z.string(),
+  genericIssuanceId: z.string().uuid(),
   /**
    * Display name
    */
@@ -139,7 +139,7 @@ const PretixEventConfigSchema = z.object({
   /**
    * Our UUID
    */
-  genericIssuanceId: z.string(),
+  genericIssuanceId: z.string().uuid(),
   /**
    * Display name for the event
    */

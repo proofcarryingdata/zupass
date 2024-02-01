@@ -3,6 +3,7 @@ import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { z } from "zod";
 import {
   DexFrog,
   FrogCryptoDbFeedData,
@@ -12,7 +13,10 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
-import { PipelineDefinition } from "./genericIssuance";
+import {
+  PipelineDefinition,
+  PipelineDefinitionSchema
+} from "./genericIssuance";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -828,11 +832,16 @@ export type GenericIssuanceCheckInResponseValue = undefined;
  */
 export type GenericIssuanceSendEmailResponseValue = undefined;
 
+export const GenericIssuanceGetAllUserPipelinesResponseValueSchema = z.array(
+  PipelineDefinitionSchema
+);
+
 /**
  * Returns all pipeline definitions that a user has access to.
  */
-export type GenericIssuanceGetAllUserPipelinesResponseValue =
-  PipelineDefinition[];
+export type GenericIssuanceGetAllUserPipelinesResponseValue = z.infer<
+  typeof GenericIssuanceGetAllUserPipelinesResponseValueSchema
+>;
 
 /**
  * Returns the requested pipeline definition.
