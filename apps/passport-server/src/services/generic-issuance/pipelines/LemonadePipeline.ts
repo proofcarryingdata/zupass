@@ -286,7 +286,7 @@ export class LemonadePipeline implements BasePipeline {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "lemonade",
+          folder: this.definition.options.feedOptions.feedFolder,
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )

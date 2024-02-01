@@ -29,7 +29,6 @@ import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { SetupServer } from "msw/node";
-import * as path from "path";
 import {
   ILemonadeAPI,
   LemonadeTicket,
@@ -386,7 +385,7 @@ describe.only("Generic Issuance", function () {
       EdgeCityBouncerIdentity,
       AttendeeTicket
     );
-    expectTrue(bouncerChecksInAttendeeAgain.success);
+    expectFalse(bouncerChecksInAttendeeAgain.success);
 
     // can't check in a ticket using a ticket that isn't a
     // superuser ticket
@@ -397,14 +396,15 @@ describe.only("Generic Issuance", function () {
       EdgeCityDenverAttendeeIdentity,
       BouncerTicket
     );
-    expectTrue(!atteendeeChecksInBouncerResult.success);
+    expectFalse(atteendeeChecksInBouncerResult.success);
+
     await checkPipelineInfoEndpoint(edgeCityDenverPipeline);
   });
 
   /**
    * Test for {@link PretixPipeline} for Eth LatAm.
    */
-  it.only("PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm", async () => {
+  it("PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
     expectToExist(pipelines);
@@ -448,10 +448,7 @@ describe.only("Generic Issuance", function () {
       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
     );
 
-    const ethLatAmCheckinRoute = path.join(
-      genericIssuanceServerUrl,
-      pipeline?.checkinCapability.getCheckinUrl()
-    );
+    const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 
     const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
       ethLatAmCheckinRoute,
