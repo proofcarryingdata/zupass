@@ -9,7 +9,7 @@ const TRACE_SERVICE = "GenericPretixAPI";
 
 export interface IGenericPretixAPI {
   /**
-   * Orders contain many tickets.
+   * Orders contain many positions, which basically correspond to tickets on our end.
    */
   fetchOrders(
     orgUrl: string,
