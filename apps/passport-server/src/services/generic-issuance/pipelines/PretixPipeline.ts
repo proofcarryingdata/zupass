@@ -576,15 +576,9 @@ export class PretixPipeline implements BasePipeline {
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )
-        } as any
+        }
       ]
     };
-
-    if (email === bouncerEmail) {
-      console.log("bouncerEmail", bouncerEmail);
-      console.log("relevantTickets", relevantTickets);
-      console.log("result", JSON.stringify(result, null, 2));
-    }
 
     return result;
   }

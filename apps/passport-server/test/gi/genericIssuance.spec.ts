@@ -662,10 +662,6 @@ export function getTicketsFromFeedResponse(
 ): Promise<EdDSATicketPCD[]> {
   expectTrue(result.success);
   const firstAction = result.value.actions[0];
-  // console.log("firstAction", firstAction);
-  console.log("expectedFolder", expectedFolder);
-  console.log("firstAction.folder", firstAction.folder);
-
   expectIsReplaceInFolderAction(firstAction);
   expect(firstAction.folder).to.eq(expectedFolder);
   return Promise.all(
