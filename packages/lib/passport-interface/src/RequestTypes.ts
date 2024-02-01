@@ -12,7 +12,7 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
-import { PipelineDefinition } from "./genericIssuance";
+import { PipelineDefinition } from "./genericIssuanceTypes";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
