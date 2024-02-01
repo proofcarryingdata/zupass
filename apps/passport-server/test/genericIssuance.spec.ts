@@ -173,7 +173,7 @@ export async function requestCheckInGenericTicket(
  * - probably need to test the Capability route features of Pipelines
  * - probably need to test the iterative creation of Pipelines (cc @richard)
  */
-describe("generic issuance service tests", function () {
+describe.only("generic issuance service tests", function () {
   this.timeout(15_000);
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
@@ -335,14 +335,15 @@ describe("generic issuance service tests", function () {
     );
     await pipelineDefinitionDB.clearAllDefinitions();
     await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
-    await giService?.start();
+    await giService?.loadPipelines();
+    await giService?.loadPipelineData();
   });
 
   this.afterEach(async () => {
     mockPretixServer.resetHandlers();
   });
 
-  it("test", async () => {
+  it("lemonade test", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
     expectToExist(pipelines);

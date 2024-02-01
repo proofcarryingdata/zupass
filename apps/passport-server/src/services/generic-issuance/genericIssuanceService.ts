@@ -61,7 +61,7 @@ export async function createPipelines(
 
   for (const definition of definitions) {
     try {
-      logger(LOG_TAG, `creating pipeline ${definition.id}`);
+      logger(LOG_TAG, `creating pipeline ${definition.id}`, definition);
       const pipeline = createPipeline(
         eddsaPrivateKey,
         definition,
@@ -166,12 +166,17 @@ export class GenericIssuanceService {
 
   public async start(): Promise<void> {
     await this.localDevCreateTestPipeline();
-    await this.createPipelines();
-    await this.loadAllPipelines();
-    await this.scheduleReloads();
+    await this.loadPipelines();
+    setTimeout(async () => {
+      try {
+        await this.loadPipelineData();
+      } catch (e) {
+        logger(LOG_TAG, e);
+      }
+    });
   }
 
-  public async loadAllPipelines(): Promise<void> {
+  public async loadPipelineData(): Promise<void> {
     logger(LOG_TAG, "loading data for all pipelines", this.pipelines.length);
 
     await Promise.allSettled(
@@ -185,9 +190,11 @@ export class GenericIssuanceService {
         }
       })
     );
+
+    await this.scheduleReloads();
   }
 
-  private async createPipelines(): Promise<void> {
+  public async loadPipelines(): Promise<void> {
     this.pipelines = [];
     const definitions = await this.definitionDB.loadPipelineDefinitions();
     const pipelines = await createPipelines(
@@ -376,8 +383,6 @@ export class GenericIssuanceService {
       return;
     }
 
-    logger("[INIT] attempting to create test pipeline data");
-
     const existingPipelines = await this.definitionDB.loadPipelineDefinitions();
 
     if (existingPipelines.length !== 0) {
@@ -392,6 +397,8 @@ export class GenericIssuanceService {
       logger("[INIT] not creating test pipeline data - missing env vars");
       return;
     }
+
+    logger("[INIT] attempting to create test pipeline data");
 
     const ownerUUID = randomUUID();
 

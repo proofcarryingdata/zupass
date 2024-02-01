@@ -20,7 +20,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_TOKEN: "pretix_token",
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
-  SUPPRESS_LOGGING: "true",
+  SUPPRESS_LOGGING: "false",
   SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
@@ -30,6 +30,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   STYTCH_SECRET: "stytch_url",
   GENERIC_ISSUANCE_CLIENT_URL: "http://localhost:3005",
   PASSPORT_CLIENT_URL: "http://localhost:3000",
+  PASSPORT_SERVER_URL: "http://localhost:3002",
   PRETIX_SYNC_DISABLED: undefined,
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   TICKET_ISSUANCE_CUTOFF_DATE: undefined,
