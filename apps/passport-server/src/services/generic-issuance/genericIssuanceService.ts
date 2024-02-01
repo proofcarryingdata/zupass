@@ -320,10 +320,7 @@ export class GenericIssuanceService {
 
     const res: ListFeedsResponseValue = {
       feeds: [feed],
-      /**
-       * TODO: @rob @richard @brian @josh what should the provider name be?
-       */
-      providerName: "PCD Team Generic Issuance Server",
+      providerName: "PCD-ifier",
       providerUrl: relevantCapability.feedUrl
     };
 
@@ -409,12 +406,7 @@ export class GenericIssuanceService {
       return;
     }
 
-    const existingPipelines = await this.definitionDB.loadPipelineDefinitions();
-
-    if (existingPipelines.length !== 0) {
-      logger("[INIT] there's already a pipeline - not creating test pipeline");
-      return;
-    }
+    logger("[INIT] attempting to create test pipeline data");
 
     const testPretixAPIKey = process.env.TEST_PRETIX_KEY;
     const testPretixOrgUrl = process.env.TEST_PRETIX_ORG_URL;
@@ -425,7 +417,11 @@ export class GenericIssuanceService {
       return;
     }
 
-    logger("[INIT] attempting to create test pipeline data");
+    const existingPipelines = await this.definitionDB.loadPipelineDefinitions();
+    if (existingPipelines.length !== 0) {
+      logger("[INIT] there's already a pipeline - not creating test pipeline");
+      return;
+    }
 
     const ownerUUID = randomUUID();
 
