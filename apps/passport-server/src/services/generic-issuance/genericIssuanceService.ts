@@ -460,7 +460,7 @@ export class GenericIssuanceService {
                 externalId: "374045",
                 name: "Organizer",
                 genericIssuanceId: randomUUID(),
-                isSuperUser: false
+                isSuperUser: true
               }
             ]
           }
