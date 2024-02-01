@@ -85,7 +85,7 @@ export function initGenericIssuanceRoutes(
         request
       );
 
-      res.send(result satisfies PollFeedResponseValue);
+      res.json(result satisfies PollFeedResponseValue);
     }
   );
 
@@ -116,7 +116,7 @@ export function initGenericIssuanceRoutes(
         pipelineID,
         feedId
       );
-      res.send(result satisfies ListFeedsResponseValue);
+      res.json(result satisfies ListFeedsResponseValue);
     }
   );
 
@@ -133,7 +133,7 @@ export function initGenericIssuanceRoutes(
         pipelineID,
         request
       );
-      res.send(result satisfies GenericIssuanceCheckInResponseValue);
+      res.json(result satisfies GenericIssuanceCheckInResponseValue);
     }
   );
 
@@ -147,7 +147,7 @@ export function initGenericIssuanceRoutes(
       const result = await genericIssuanceService.sendLoginEmail(
         checkUrlParam(req, "email")
       );
-      res.send(result satisfies GenericIssuanceSendEmailResponseValue);
+      res.json(result satisfies GenericIssuanceSendEmailResponseValue);
     }
   );
 
@@ -157,7 +157,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
+      res.json(
         (await genericIssuanceService.getAllUserPipelineDefinitions(
           id
         )) satisfies GenericIssuanceGetAllUserPipelinesResponseValue
@@ -171,7 +171,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
+      res.json(
         (await genericIssuanceService.getPipelineDefinition(
           userId,
           checkUrlParam(req, "id")
@@ -186,7 +186,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
+      res.json(
         (await genericIssuanceService.upsertPipelineDefinition(
           userId,
           req.body as GenericIssuanceUpsertPipelineRequest
@@ -201,7 +201,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
-      res.send(
+      res.json(
         (await genericIssuanceService.deletePipelineDefinition(
           userId,
           checkUrlParam(req, "id")
