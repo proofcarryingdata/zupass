@@ -107,7 +107,7 @@ describe("Generic Issuance", function () {
   /**
    * TODO: test ingestion of the data we'll need for production.
    */
-  const EdgeCityDenver = lemonadeBackend.addEvent("Edge City");
+  const EdgeCityDenver = lemonadeBackend.addEvent("Edge City Denver");
 
   /**
    * Attendee ticket tier. In reality there will be several.
