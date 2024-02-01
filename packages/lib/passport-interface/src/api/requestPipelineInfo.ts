@@ -4,7 +4,8 @@ import { APIResult } from "./apiResult";
 import { httpGetSimple } from "./makeRequest";
 
 /**
- * Asks a feed for new PCDs.
+ * Asks generic issuance backend for details about a {@link Pipeline}.
+ * User has to be authenticated as an owner or editor of the pipeline.
  *
  * Never rejects. All information encoded in the resolved response.
  */
