@@ -1,5 +1,5 @@
+import { PipelineDefinition } from "@pcd/passport-interface";
 import { IPipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
-import { PipelineDefinition } from "../../src/services/generic-issuance/pipelines/types";
 
 /**
  * For testing. In-memory representation of all the pipelines that
@@ -10,6 +10,10 @@ export class MockPipelineDefinitionDB implements IPipelineDefinitionDB {
 
   public constructor() {
     this.definitions = {};
+  }
+
+  public async clearDefinition(definitionID: string): Promise<void> {
+    delete this.definitions[definitionID];
   }
 
   public async clearAllDefinitions(): Promise<void> {

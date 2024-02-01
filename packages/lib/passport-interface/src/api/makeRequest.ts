@@ -9,14 +9,16 @@ import { POST } from "./constants";
 export async function httpGet<T extends APIResult<unknown, unknown>>(
   url: string,
   opts: ResultMapper<T>,
-  query?: object
+  query?: object,
+  includeCredentials = false
 ): Promise<T> {
   return httpRequest<T>(
     urlJoin(
       url,
       "?" + new URLSearchParams((query as Record<string, string>) ?? {})
     ),
-    opts
+    opts,
+    includeCredentials
   );
 }
 
@@ -26,9 +28,33 @@ export async function httpGet<T extends APIResult<unknown, unknown>>(
 export async function httpPost<T extends APIResult<unknown, unknown>>(
   url: string,
   opts: ResultMapper<T>,
-  postBody?: object
+  postBody?: object,
+  includeCredentials = false
 ): Promise<T> {
-  return httpRequest<T>(url, opts, postBody);
+  return httpRequest<T>(url, opts, includeCredentials, "POST", postBody);
+}
+
+/**
+ * Wrapper of {@link httpRequest} that sends a PUT request.
+ */
+export async function httpPut<T extends APIResult<unknown, unknown>>(
+  url: string,
+  opts: ResultMapper<T>,
+  putBody?: object,
+  includeCredentials = false
+): Promise<T> {
+  return httpRequest<T>(url, opts, includeCredentials, "PUT", putBody);
+}
+
+/**
+ * Wrapper of {@link httpRequest} that sends a DE:ETE request.
+ */
+export async function httpDelete<T extends APIResult<unknown, unknown>>(
+  url: string,
+  opts: ResultMapper<T>,
+  includeCredentials = false
+): Promise<T> {
+  return httpRequest<T>(urlJoin(url), opts, includeCredentials, "DELETE");
 }
 
 /**
@@ -37,7 +63,8 @@ export async function httpPost<T extends APIResult<unknown, unknown>>(
 export async function httpGetSimple<TResult>(
   url: string,
   onValue: GetResultValue<APIResult<TResult, string>>,
-  query?: object
+  query?: object,
+  includeCredentials = false
 ): Promise<APIResult<TResult, string>> {
   return httpGet<APIResult<TResult, string>>(
     url,
@@ -49,7 +76,8 @@ export async function httpGetSimple<TResult>(
         code
       })
     },
-    query
+    query,
+    includeCredentials
   );
 }
 
@@ -59,7 +87,8 @@ export async function httpGetSimple<TResult>(
 export async function httpPostSimple<TResult>(
   url: string,
   onValue: GetResultValue<APIResult<TResult, string>>,
-  postBody?: object
+  postBody?: object,
+  includeCredentials = false
 ): Promise<APIResult<TResult, string>> {
   return httpPost<APIResult<TResult, string>>(
     url,
@@ -71,7 +100,54 @@ export async function httpPostSimple<TResult>(
         code
       })
     },
-    postBody
+    postBody,
+    includeCredentials
+  );
+}
+
+/**
+ * Shorthand for a {@link httpPut} whose error type is a string.
+ */
+export async function httpPutSimple<TResult>(
+  url: string,
+  onValue: GetResultValue<APIResult<TResult, string>>,
+  putBody?: object,
+  includeCredentials = false
+): Promise<APIResult<TResult, string>> {
+  return httpPut<APIResult<TResult, string>>(
+    url,
+    {
+      onValue,
+      onError: async (resText, code) => ({
+        error: resText,
+        success: false,
+        code
+      })
+    },
+    putBody,
+    includeCredentials
+  );
+}
+
+/**
+ * Shorthand for a {@link httpDelete} whose error type is a string.
+ */
+export async function httpDeleteSimple<TResult>(
+  url: string,
+  onValue: GetResultValue<APIResult<TResult, string>>,
+  includeCredentials = false
+): Promise<APIResult<TResult, string>> {
+  return httpDelete<APIResult<TResult, string>>(
+    url,
+    {
+      onValue,
+      onError: async (resText, code) => ({
+        error: resText,
+        success: false,
+        code
+      })
+    },
+    includeCredentials
   );
 }
 
@@ -92,7 +168,9 @@ const throttleMs = 0;
 async function httpRequest<T extends APIResult<unknown, unknown>>(
   url: string,
   opts: ResultMapper<T>,
-  postBody?: object
+  includeCredentials: boolean,
+  method?: "GET" | "POST" | "PUT" | "DELETE",
+  requestBody?: object
 ): Promise<T> {
   await sleep(throttleMs);
 
@@ -100,12 +178,23 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
     method: "GET"
   };
 
-  if (postBody != null) {
+  if (includeCredentials) {
+    requestOptions = {
+      ...requestOptions,
+      credentials: "include"
+    };
+  }
+
+  if (requestBody != null) {
     requestOptions = {
       ...requestOptions,
       ...POST,
-      body: JSON.stringify(postBody)
+      body: JSON.stringify(requestBody)
     };
+  }
+
+  if (method != null) {
+    requestOptions = { ...requestOptions, method };
   }
 
   try {

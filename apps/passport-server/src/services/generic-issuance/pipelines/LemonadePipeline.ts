@@ -11,6 +11,9 @@ import {
   CheckTicketInResponseValue,
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
+  LemonadePipelineDefinition,
+  PipelineDefinition,
+  PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
   verifyFeedCredential
@@ -35,89 +38,15 @@ import {
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { BasePipelineCapability } from "../types";
-import {
-  BasePipeline,
-  BasePipelineDefinition,
-  FeedIssuanceOptions,
-  Pipeline,
-  PipelineDefinition,
-  PipelineType
-} from "./types";
+import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "LemonadePipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
-
-/**
- * A {@link LemonadePipelineDefinition} is a pipeline that has finished being
- * set up that configures the generic issuance service to load data on behalf
- * of a particular user from Lemonade and issue tickets for it.
- */
-export interface LemonadePipelineDefinition extends BasePipelineDefinition {
-  type: PipelineType.Lemonade;
-  options: LemonadePipelineOptions;
-}
 
 export function isLemonadePipelineDefinition(
   d: PipelineDefinition
 ): d is LemonadePipelineDefinition {
   return d.type === PipelineType.Lemonade;
-}
-
-/**
- * Generic Issuance-specific event configuration. Should roughly match up to the
- * types defined above - {@link LemonadeTicket}, {@link LemonadeEvent}, and
- * {@link LemonadeTicketTier}.
- */
-export interface LemonadePipelineEventConfig {
-  /**
-   * The ID of this event on the Lemonade end.
-   */
-  externalId: string;
-
-  /**
-   * Display name.
-   */
-  name: string;
-
-  /**
-   * The UUID of this event used for {@link EdDSATicketPCD}.
-   */
-  genericIssuanceEventId: string;
-
-  /**
-   * Roughly translates to Products in {@link EdDSATicketPCD}.
-   */
-  ticketTiers: LemonadePipelineTicketTierConfig[];
-}
-
-/**
- * Generic Issuance-specific ticket tier configuration - roughly corresponds to a
- * 'Product' in Pretix-land.
- */
-export interface LemonadePipelineTicketTierConfig {
-  /**
-   * The ID of this ticket tier on the Lemonade end.
-   */
-  externalId: string;
-
-  /**
-   * The UUID of this ticket tier used in {@link EdDSATicketPCD}.
-   */
-  genericIssuanceProductId: string;
-
-  /**
-   * Whether this ticket tier is allowed to check other tickets in or not.
-   */
-  isSuperUser: boolean;
-}
-
-/**
- * Configured by the user when setting up Lemonade as a data source.
- */
-export interface LemonadePipelineOptions {
-  lemonadeApiKey: string;
-  events: LemonadePipelineEventConfig[];
-  feedOptions: FeedIssuanceOptions;
 }
 
 /**
