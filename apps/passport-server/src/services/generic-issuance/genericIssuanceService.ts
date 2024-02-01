@@ -16,7 +16,10 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../database/queries/pipelineDefinitionDB";
-import { IPipelineUserDB } from "../../database/queries/pipelineUserDB";
+import {
+  IPipelineUserDB,
+  PipelineUserDB
+} from "../../database/queries/pipelineUserDB";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -143,7 +146,6 @@ export class GenericIssuanceService {
 
   public constructor(
     context: ApplicationContext,
-    userDB: IPipelineUserDB,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client,
@@ -152,7 +154,7 @@ export class GenericIssuanceService {
     eddsaPrivateKey: string,
     zupassPublicKey: EdDSAPublicKey
   ) {
-    this.userDB = userDB;
+    this.userDB = new PipelineUserDB(context.dbPool);
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
     this.context = context;
@@ -334,7 +336,7 @@ export class GenericIssuanceService {
       throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
     }
 
-    this.definitionDB.setDefinition(newPipelineDefinition);
+    await this.definitionDB.setDefinition(newPipelineDefinition);
     return newPipelineDefinition;
   }
 
@@ -481,7 +483,6 @@ export async function startGenericIssuanceService(
 
   const issuanceService = new GenericIssuanceService(
     context,
-    context.pipelineUserDB,
     context.pipelineAtomDB,
     lemonadeAPI,
     stytchClient,

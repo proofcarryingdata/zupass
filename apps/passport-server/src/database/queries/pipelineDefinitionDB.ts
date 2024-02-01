@@ -65,10 +65,19 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   }
 
   public async clearDefinition(definitionID: string): Promise<void> {
-    await sqlQuery(
+    await sqlTransaction(
       this.db,
-      "DELETE FROM generic_issuance_pipeline_editors WHERE id = $1",
-      [definitionID]
+      "Delete pipeline definition",
+      async (client) => {
+        await client.query(
+          "DELETE FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1",
+          [definitionID]
+        );
+        await client.query(
+          "DELETE FROM generic_issuance_pipelines WHERE id = $1",
+          [definitionID]
+        );
+      }
     );
   }
 
