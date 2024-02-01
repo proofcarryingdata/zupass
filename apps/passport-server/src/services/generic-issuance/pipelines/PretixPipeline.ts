@@ -11,8 +11,13 @@ import {
   CheckTicketInResponseValue,
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
+  PipelineDefinition,
+  PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
+  PretixEventConfig,
+  PretixPipelineDefinition,
+  PretixProductConfig,
   verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
@@ -45,50 +50,10 @@ import {
   generateIssuanceUrlPath
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
-import {
-  BasePipeline,
-  BasePipelineDefinition,
-  Pipeline,
-  PipelineDefinition,
-  PipelineType
-} from "./types";
+import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
-
-/**
- * This object represents a configuration from which the server can instantiate
- * a functioning {@link PretixPipeline}. Partially specified by the user.
- */
-export interface PretixPipelineOptions {
-  pretixAPIKey: string;
-  pretixOrgUrl: string;
-  events: PretixEventConfig[];
-}
-
-/**
- * Configuration for a specific event, which is managed under the organizer's
- * Pretix account.
- */
-export interface PretixEventConfig {
-  externalId: string; // Pretix's event ID
-  genericIssuanceId: string; // Our UUID
-  name: string; // Display name for the event
-  products: PretixProductConfig[];
-}
-
-/**
- * Configuration for specific products available for the event. Does not need
- * to include all products available in Pretix, but any product listed here
- * must be available in Pretix.
- */
-export interface PretixProductConfig {
-  externalId: string; // Pretix's item ID
-  genericIssuanceId: string; // Our UUID
-  name: string; // Display name
-  isSuperUser: boolean; // Is a user with this product a "superuser"?
-  // Superusers are able to check tickets in to events.
-}
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
@@ -782,14 +747,6 @@ export class PretixPipeline implements BasePipeline {
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
   }
-}
-
-/**
- * Similar to {@link LemonadePipelineDefinition} but for Pretix-based Pipelines.
- */
-export interface PretixPipelineDefinition extends BasePipelineDefinition {
-  type: PipelineType.Pretix;
-  options: PretixPipelineOptions;
 }
 
 export function isPretixPipelineDefinition(

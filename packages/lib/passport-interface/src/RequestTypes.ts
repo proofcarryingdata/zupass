@@ -12,6 +12,7 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
+import { PipelineDefinition } from "./genericIssuance";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -826,3 +827,29 @@ export type GenericIssuanceCheckInResponseValue = undefined;
  * Sending email either succeeds or fails, so no response value is defined for now.
  */
 export type GenericIssuanceSendEmailResponseValue = undefined;
+
+/**
+ * Returns all pipeline definitions that a user has access to.
+ */
+export type GenericIssuanceGetAllUserPipelinesResponseValue =
+  PipelineDefinition[];
+
+/**
+ * Returns the requested pipeline definition.
+ */
+export type GenericIssuanceGetPipelineResponseValue = PipelineDefinition;
+
+/**
+ * Request body containing the pipeline definition to be upserted.
+ */
+export type GenericIssuanceUpsertPipelineRequest = PipelineDefinition;
+
+/**
+ * Returns the upserted pipeline definition.
+ */
+export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
+
+/**
+ * Deleting a pipeline definition either succeeds or fails, so no response value is defined for now.
+ */
+export type GenericIssuanceDeletePipelineResponseValue = undefined;

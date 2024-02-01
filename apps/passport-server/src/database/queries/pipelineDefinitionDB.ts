@@ -1,9 +1,6 @@
+import { PipelineDefinition, PipelineType } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
-import {
-  PipelineDefinition,
-  PipelineType
-} from "../../services/generic-issuance/pipelines/types";
 import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
@@ -16,6 +13,7 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  */
 export interface IPipelineDefinitionDB {
   loadPipelineDefinitions(): Promise<PipelineDefinition[]>;
+  clearDefinition(definitionID: string): Promise<void>;
   clearAllDefinitions(): Promise<void>;
   getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
   setDefinition(definition: PipelineDefinition): Promise<void>;
@@ -61,6 +59,23 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   public async clearAllDefinitions(): Promise<void> {
     await sqlQuery(this.db, "DELETE FROM generic_issuance_pipeline_editors");
     await sqlQuery(this.db, "DELETE FROM generic_issuance_pipelines");
+  }
+
+  public async clearDefinition(definitionID: string): Promise<void> {
+    await sqlTransaction(
+      this.db,
+      "Delete pipeline definition",
+      async (client) => {
+        await client.query(
+          "DELETE FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1",
+          [definitionID]
+        );
+        await client.query(
+          "DELETE FROM generic_issuance_pipelines WHERE id = $1",
+          [definitionID]
+        );
+      }
+    );
   }
 
   public async getDefinition(
