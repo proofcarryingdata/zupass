@@ -95,10 +95,8 @@ export function initGenericIssuanceRoutes(
     async (req, res) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineId");
-
       const result =
         await genericIssuanceService.handleGetPipelineInfo(pipelineID);
-
       res.json(result satisfies PipelineInfoResponseValue);
     }
   );
