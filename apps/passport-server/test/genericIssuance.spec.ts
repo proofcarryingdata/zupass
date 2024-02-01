@@ -34,41 +34,41 @@ import {
   LemonadeTicket,
   LemonadeTicketTier,
   LemonadeUser
-} from "../../src/apis/lemonade/lemonadeAPI";
+} from "../src/apis/lemonade/lemonadeAPI";
 import {
   GenericPretixProduct,
   getI18nString
-} from "../../src/apis/pretix/genericPretixAPI";
-import { stopApplication } from "../../src/application";
-import { PipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
-import { sqlQuery } from "../../src/database/sqlQuery";
-import { GenericIssuanceService } from "../../src/services/generic-issuance/genericIssuanceService";
+} from "../src/apis/pretix/genericPretixAPI";
+import { stopApplication } from "../src/application";
+import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
+import { sqlQuery } from "../src/database/sqlQuery";
+import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LemonadePipeline,
   LemonadePipelineDefinition
-} from "../../src/services/generic-issuance/pipelines/LemonadePipeline";
+} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
 import {
   PretixPipeline,
   PretixPipelineDefinition
-} from "../../src/services/generic-issuance/pipelines/PretixPipeline";
+} from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
   Pipeline,
   PipelineDefinition,
   PipelineType
-} from "../../src/services/generic-issuance/pipelines/types";
-import { Zupass } from "../../src/types";
-import { LemonadeDataMocker } from "../lemonade/LemonadeDataMocker";
-import { MockLemonadeAPI } from "../lemonade/MockLemonadeAPI";
-import { GenericPretixDataMocker } from "../pretix/GenericPretixDataMocker";
-import { getGenericMockPretixAPIServer } from "../pretix/MockGenericPretixServer";
-import { overrideEnvironment, testingEnv } from "../util/env";
-import { startTestingApp } from "../util/startTestingApplication";
+} from "../src/services/generic-issuance/pipelines/types";
+import { Zupass } from "../src/types";
+import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
+import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
+import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
+import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
+import { overrideEnvironment, testingEnv } from "./util/env";
+import { startTestingApp } from "./util/startTestingApplication";
 import {
   expectFalse,
   expectLength,
   expectToExist,
   expectTrue
-} from "../util/util";
+} from "./util/util";
 
 /**
  * {@link GenericIssuanceService}
@@ -83,7 +83,6 @@ describe("Generic Issuance", function () {
   this.timeout(15_000);
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
-  let genericIssuanceServerUrl: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService | null;
 
@@ -304,7 +303,6 @@ describe("Generic Issuance", function () {
     pretixBackendServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
-    genericIssuanceServerUrl = giBackend.expressContext.localEndpoint;
     giService = giBackend.services.genericIssuanceService;
     await giService?.stop();
     const pipelineDefinitionDB = new PipelineDefinitionDB(

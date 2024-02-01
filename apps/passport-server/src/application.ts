@@ -69,6 +69,10 @@ export async function startApplication(
   services.rollbarService?.log("Server started.");
   services.discordService?.sendAlert(discordAlertMessage);
 
+  if (!process.env.PASSPORT_SERVER_URL) {
+    throw new Error("expected process.env.PASSPORT_SERVER_URL");
+  }
+
   const zupass: Zupass = {
     context,
     services,

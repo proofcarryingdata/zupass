@@ -168,14 +168,13 @@ export class PretixPipeline implements BasePipeline {
     logger(LOG_TAG, `loading for pipeline id ${this.id}`);
     const tickets: PretixTicket[] = [];
 
-    let errors: string[] = [];
+    const errors: string[] = [];
 
     for (const event of this.definition.options.events) {
       // @todo this can throw exceptions. how should we handle this?
       const eventData = await this.loadEvent(event);
 
-      const newErrors = this.validateEventData(eventData, event);
-      errors = [...errors, ...newErrors];
+      errors.push(...this.validateEventData(eventData, event));
 
       tickets.push(...(await this.ordersToTickets(event, eventData)));
     }
@@ -235,7 +234,7 @@ export class PretixPipeline implements BasePipeline {
         token,
         eventId
       );
-      const items = await this.api.fetchProducts(orgUrl, token, eventId);
+      const products = await this.api.fetchProducts(orgUrl, token, eventId);
       const eventInfo = await this.api.fetchEvent(orgUrl, token, eventId);
       const orders = await this.api.fetchOrders(orgUrl, token, eventId);
       const checkinLists = await this.api.fetchEventCheckinLists(
@@ -247,7 +246,7 @@ export class PretixPipeline implements BasePipeline {
       return {
         settings,
         categories,
-        items,
+        products,
         eventInfo,
         orders,
         checkinLists
@@ -343,7 +342,7 @@ export class PretixPipeline implements BasePipeline {
     eventData: PretixEventData,
     eventConfig: PretixEventConfig
   ): string[] {
-    const { settings, items, categories } = eventData;
+    const { settings, products: items, categories } = eventData;
     const activeItemIdSet = new Set(
       eventConfig.products.map((product) => product.externalId)
     );
@@ -447,7 +446,7 @@ export class PretixPipeline implements BasePipeline {
     const tickets: PretixTicket[] = [];
     const { orders } = eventData;
     const fetchedItemIds = new Set(
-      eventData.items.map((item) => item.id.toString())
+      eventData.products.map((item) => item.id.toString())
     );
     const products = new Map(
       eventConfig.products
@@ -550,10 +549,6 @@ export class PretixPipeline implements BasePipeline {
     }
 
     const email = emailPCD.claim.emailAddress;
-
-    const bouncerEmail = `bouncer-1${"PRETIX_ORGANIZER_ONE"}@test.com`
-      .toLowerCase()
-      .trim();
 
     const relevantTickets = await this.db.loadByEmail(this.id, email);
 
@@ -838,7 +833,7 @@ interface PretixEventData {
   settings: GenericPretixEventSettings;
   eventInfo: GenericPretixEvent;
   categories: GenericPretixProductCategory[];
-  items: GenericPretixProduct[];
+  products: GenericPretixProduct[];
   orders: GenericPretixOrder[];
   checkinLists: GenericPretixCheckinList[];
 }

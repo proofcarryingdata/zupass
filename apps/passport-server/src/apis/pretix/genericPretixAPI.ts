@@ -13,7 +13,7 @@ export interface IGenericPretixAPI {
    */
   fetchOrders(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixOrder[]>;
   /**
@@ -26,27 +26,27 @@ export interface IGenericPretixAPI {
    */
   fetchProducts(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixProduct[]>;
   fetchEvent(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixEvent>;
   fetchEventCheckinLists(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixCheckinList[]>;
   fetchEventSettings(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixEventSettings>;
   fetchProductCategories(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixProductCategory[]>;
   fetchAllEvents(orgUrl: string, token: string): Promise<GenericPretixEvent[]>;
@@ -57,7 +57,7 @@ export interface IGenericPretixAPI {
    */
   pushCheckin(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     positionSecret: string,
     checkinListId: string,
     timestamp: string
@@ -441,7 +441,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   // TODO: @rob - what's your best description of what's going on here?
   public async fetchEventCheckinLists(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     eventID: string
   ): Promise<GenericPretixCheckinList[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
@@ -453,7 +453,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${pretixToken}` }
+          headers: { Authorization: `Token ${token}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -481,7 +481,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   // Push a check-in to Pretix
   public async pushCheckin(
     orgUrl: string,
-    pretixToken: string,
+    token: string,
     positionSecret: string,
     checkinListId: string,
     timestamp: string
@@ -494,7 +494,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
         method: "POST",
         headers: {
-          Authorization: `Token ${pretixToken}`,
+          Authorization: `Token ${token}`,
           Accept: "application/json",
           "Content-Type": "application/json"
         },

@@ -63,7 +63,7 @@ export async function createPipelines(
 
   for (const definition of definitions) {
     try {
-      logger(LOG_TAG, `creating pipeline ${definition.id}`, definition);
+      logger(LOG_TAG, `creating pipeline ${definition.id}`);
       const pipeline = createPipeline(
         eddsaPrivateKey,
         definition,
