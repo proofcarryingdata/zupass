@@ -273,6 +273,10 @@ export class GenericIssuanceService {
         {
           folder: relevantCapability.feedFolder,
           type: PCDPermissionType.AppendToFolder
+        },
+        {
+          folder: relevantCapability.feedFolder,
+          type: PCDPermissionType.ReplaceInFolder
         }
       ],
       credentialRequest: {
@@ -284,7 +288,7 @@ export class GenericIssuanceService {
     const res: ListFeedsResponseValue = {
       feeds: [feed],
       providerName: "Generic Issuance",
-      providerUrl: "/generic-issuance/api/list-feed/:pipelineID/" // TODO
+      providerUrl: relevantCapability.getFeedUrl()
     };
 
     return res;

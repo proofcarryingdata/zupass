@@ -31,7 +31,8 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceUrlPath
+  generateIssuanceListFeedUrl,
+  generateIssuanceUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import {
@@ -131,7 +132,9 @@ export class LemonadePipeline implements BasePipeline {
       feedDisplayName: "display name",
       feedFolder: "lemonade", // todo
       type: PipelineCapability.FeedIssuance,
-      getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
+      getFeedUrl: (): string => generateIssuanceUrl(this.id, "ticket-feed"),
+      getListFeedUrl: (): string =>
+        generateIssuanceListFeedUrl(this.id, "ticket-feed")
     } satisfies FeedIssuanceCapability,
     {
       checkin: this.checkinLemonadeTicketPCD.bind(this),
@@ -281,7 +284,7 @@ export class LemonadePipeline implements BasePipeline {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "folder",
+          folder: "lemonade",
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )

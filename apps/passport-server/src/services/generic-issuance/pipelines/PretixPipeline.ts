@@ -42,7 +42,8 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceUrlPath
+  generateIssuanceListFeedUrl,
+  generateIssuanceUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import {
@@ -104,7 +105,9 @@ export class PretixPipeline implements BasePipeline {
       feedDescription: "Feed Description", // TODO: how can we make this configurable
       feedFolder: "test",
       type: PipelineCapability.FeedIssuance,
-      getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
+      getFeedUrl: (): string => generateIssuanceUrl(this.id, "ticket-feed"),
+      getListFeedUrl: (): string =>
+        generateIssuanceListFeedUrl(this.id, "ticket-feed")
     } satisfies FeedIssuanceCapability,
     {
       checkin: this.checkinPretixTicketPCDs.bind(this),
@@ -548,7 +551,7 @@ export class PretixPipeline implements BasePipeline {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "folder",
+          folder: "test",
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )

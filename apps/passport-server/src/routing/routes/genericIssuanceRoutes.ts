@@ -52,21 +52,24 @@ export function initGenericIssuanceRoutes(
   });
 
   app.post(
-    "/generic-issuance/api/poll-feed/:pipelineID",
+    "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
+      logger("GENERIC_ISSUANCE", "POLLING***********************");
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const request = req.body as PollFeedRequest;
+      // todo: check url param feedId matches the one in the request
       const result = await genericIssuanceService.handlePollFeed(
         pipelineID,
         request
       );
+      logger("GENERIC_ISSUANCE RESULT", result);
       res.send(result satisfies PollFeedResponseValue);
     }
   );
 
   app.get(
-    "/generic-issuance/api/list-feed/:pipelineID/:feedId",
+    "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const pipelineID = checkUrlParam(req, "pipelineID");

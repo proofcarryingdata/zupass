@@ -2,6 +2,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
@@ -21,7 +22,7 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
   feedId: string;
   issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
   getFeedUrl(): string;
-
+  getListFeedUrl(): string;
   feedDisplayName: string;
   feedDescription: string;
   feedFolder: string;
@@ -33,6 +34,22 @@ export function isFeedIssuanceCapability(
   return capability.type === PipelineCapability.FeedIssuance;
 }
 
-export function generateIssuanceUrlPath(pipelineId: string): string {
-  return `/generic-issuance/api/poll-feed/${pipelineId}`;
+export function generateIssuanceUrl(
+  pipelineId: string,
+  feedId: string
+): string {
+  return urljoin(
+    process.env.PASSPORT_SERVER_URL as string,
+    `/generic-issuance/api/feed/${pipelineId}/${feedId}`
+  );
+}
+
+export function generateIssuanceListFeedUrl(
+  pipelineId: string,
+  feedId: string
+): string {
+  return urljoin(
+    process.env.PASSPORT_SERVER_URL as string,
+    `/generic-issuance/api/feed/${pipelineId}/${feedId}`
+  );
 }
