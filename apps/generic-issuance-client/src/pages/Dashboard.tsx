@@ -1,4 +1,5 @@
 import {
+  PipelineDefinition,
   requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
@@ -25,7 +26,7 @@ export default function Dashboard(): ReactNode {
   const { user } = useStytchUser();
   const [isLoggingOut, setLoggingOut] = useState(false);
   // TODO: After MVP, replace with RTK hooks or a more robust state management.
-  const [pipelines, setPipelines] = useState([]);
+  const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
   const [newPipelineRaw, setNewPipelineRaw] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
@@ -41,13 +42,6 @@ export default function Dashboard(): ReactNode {
       // TODO: Better errors
       alert(`An error occurred while fetching user pipelines: ${res.error}`);
     }
-
-    // fetch(new URL(`generic-issuance/api/pipelines`, ZUPASS_SERVER_URL).href, {
-    //   credentials: "include"
-    // })
-    //   .then((res) => res.json())
-    //   .then((data) => setPipelines(data))
-    //   .catch((e) => alert(e));
   }, []);
 
   useEffect(() => {

@@ -1,9 +1,6 @@
+import { PipelineDefinition, PipelineType } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
-import {
-  PipelineDefinition,
-  PipelineType
-} from "../../services/generic-issuance/pipelines/types";
 import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 

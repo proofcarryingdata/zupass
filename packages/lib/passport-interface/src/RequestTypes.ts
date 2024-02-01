@@ -12,6 +12,7 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
+import { PipelineDefinition } from "./genericIssuance";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -826,10 +827,6 @@ export type GenericIssuanceCheckInResponseValue = undefined;
  * Sending email either succeeds or fails, so no response value is defined for now.
  */
 export type GenericIssuanceSendEmailResponseValue = undefined;
-
-// TODO: fix
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-export type PipelineDefinition = any;
 
 /**
  * Returns all pipeline definitions that a user has access to.

@@ -1,5 +1,5 @@
+import { PipelineDefinition } from "@pcd/passport-interface";
 import { IPipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
-import { PipelineDefinition } from "../../src/services/generic-issuance/pipelines/types";
 
 /**
  * For testing. In-memory representation of all the pipelines that

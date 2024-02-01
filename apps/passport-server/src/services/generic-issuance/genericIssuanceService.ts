@@ -1,8 +1,10 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  BasePipelineDefinitionSchema,
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest,
   GenericIssuanceSendEmailResponseValue,
+  PipelineDefinition,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -39,12 +41,7 @@ import {
   PretixPipeline,
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
-import {
-  BasePipelineDefinitionSchema,
-  Pipeline,
-  PipelineDefinition,
-  PipelineUser
-} from "./pipelines/types";
+import { Pipeline, PipelineUser } from "./pipelines/types";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;

@@ -1,4 +1,5 @@
 import {
+  PipelineDefinition,
   requestGenericIssuanceDeletePipeline,
   requestGenericIssuanceGetPipeline,
   requestGenericIssuanceUpsertPipeline
@@ -17,7 +18,7 @@ export default function Pipeline(): ReactNode {
   const { user } = useStytchUser();
   const { id } = params;
   // TODO: After MVP, replace with RTK hooks or a more robust state management.
-  const [savedPipeline, setSavedPipeline] = useState();
+  const [savedPipeline, setSavedPipeline] = useState<PipelineDefinition>();
   const [textareaValue, setTextareaValue] = useState("");
   const [queryLoading, setQueryLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);

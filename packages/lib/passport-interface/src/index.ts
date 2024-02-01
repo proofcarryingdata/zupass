@@ -58,5 +58,6 @@ export * from "./api/requestVerifyTicket";
 export * from "./api/requestVerifyTicketById";
 export * from "./api/requestVerifyToken";
 export * from "./edgecity";
+export * from "./genericIssuance";
 export * from "./zuconnect";
 export * from "./zuzalu";

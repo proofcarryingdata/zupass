@@ -4,6 +4,9 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   FeedCredentialPayload,
   GenericIssuanceCheckInResult,
+  LemonadePipelineDefinition,
+  PipelineType,
+  PretixPipelineDefinition,
   createFeedCredentialPayload,
   createGenericCheckinCredentialPayload,
   requestGenericIssuanceCheckin,
@@ -29,18 +32,9 @@ import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
-import {
-  LemonadePipeline,
-  LemonadePipelineDefinition
-} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import {
-  PretixPipeline,
-  PretixPipelineDefinition
-} from "../src/services/generic-issuance/pipelines/PretixPipeline";
-import {
-  PipelineType,
-  PipelineUser
-} from "../src/services/generic-issuance/pipelines/types";
+import { LemonadePipeline } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import { PipelineUser } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
