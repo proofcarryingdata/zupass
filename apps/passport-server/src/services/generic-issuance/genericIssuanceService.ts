@@ -1,10 +1,10 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  BasePipelineDefinitionSchema,
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest,
   GenericIssuanceSendEmailResponseValue,
   PipelineDefinition,
+  PipelineDefinitionSchema,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -326,7 +326,7 @@ export class GenericIssuanceService {
 
     let newPipelineDefinition: PipelineDefinition;
     try {
-      newPipelineDefinition = BasePipelineDefinitionSchema.parse(
+      newPipelineDefinition = PipelineDefinitionSchema.parse(
         pipelineDefinition
       ) as PipelineDefinition;
     } catch (e) {

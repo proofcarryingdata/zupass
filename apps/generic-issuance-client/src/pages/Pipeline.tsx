@@ -33,6 +33,7 @@ export default function Pipeline(): ReactNode {
     if (res.success) {
       setSavedPipeline(res.value);
       setTextareaValue(format(res.value));
+      setError("");
     } else {
       setError(`An error occured while saving: ${res.error}`);
     }
