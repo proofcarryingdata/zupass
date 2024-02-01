@@ -8,9 +8,12 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CheckTicketInResponseValue,
   GenericCheckinCredentialPayload,
+  GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
+  GenericIssuanceCheckInResponseValue,
+  GenericIssuancePreCheckRequest,
+  GenericIssuancePreCheckResponseValue,
   LemonadePipelineDefinition,
   PipelineDefinition,
   PipelineType,
@@ -19,8 +22,11 @@ import {
   verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import _ from "lodash";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
@@ -109,7 +115,13 @@ export class LemonadePipeline implements BasePipeline {
       {
         checkin: this.checkinLemonadeTicketPCD.bind(this),
         type: PipelineCapability.Checkin,
-        getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
+        getCheckinUrl: (): string => generateCheckinUrlPath(),
+        canHandleCheckinForEvent: (eventId: string): boolean => {
+          return this.definition.options.events.some(
+            (ev) => ev.genericIssuanceEventId === eventId
+          );
+        },
+        check: this.checkLemonadeTicketPCDCanBeCheckedIn.bind(this)
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
   }
@@ -368,27 +380,20 @@ export class LemonadePipeline implements BasePipeline {
     } satisfies ITicketData;
   }
 
-  /**
-   * TODO:
-   * - implement this
-   * - make sure to check that the given credential corresponds to a superuser ticket type
-   */
-  private async checkinLemonadeTicketPCD(
-    request: GenericIssuanceCheckInRequest
-  ): Promise<CheckTicketInResponseValue> {
-    logger(
-      LOG_TAG,
-      `got request to check in tickets with request ${JSON.stringify(request)}`
-    );
-
+  private async unwrapCheckInSignature(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<{
+    ticketId: string;
+    checkerTickets: LemonadeAtom[];
+  }> {
     const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      request.credential.pcd
+      credential.pcd
     );
     const signaturePCDValid =
       await SemaphoreSignaturePCDPackage.verify(signaturePCD);
 
     if (!signaturePCDValid) {
-      throw new Error("credential signature invalid");
+      throw new Error("Invalid signature");
     }
 
     const payload: GenericCheckinCredentialPayload = JSON.parse(
@@ -404,28 +409,23 @@ export class LemonadePipeline implements BasePipeline {
       checkerEmailPCD.claim.emailAddress
     );
 
-    const ticketToCheckIn = await EdDSATicketPCDPackage.deserialize(
-      payload.ticketToCheckIn.pcd
-    );
+    return { checkerTickets, ticketId: payload.ticketIdToCheckIn };
+  }
 
-    // TODO: check if all the credentials line up
-    // - pubkey matches generic issuance pkey
-    // - signature is valid
-    // - event / tier are real
+  private async canCheckIn(
+    ticketAtom: LemonadeAtom,
+    checkerTickets: LemonadeAtom[]
+  ): Promise<true | GenericIssuanceCheckInError> {
+    const lemonadeEventId = ticketAtom.lemonadeEventId;
 
-    const lemonadeEventId = this.eddsaTicketToLemonadeEventId(ticketToCheckIn);
-
-    const lemonadeTicketTier =
-      this.eddsaTicketToLemonadeTierId(ticketToCheckIn);
+    const lemonadeTicketTier = ticketAtom.lemonadeTierId;
 
     const eventConfig = this.definition.options.events.find(
       (e) => e.externalId === lemonadeEventId
     );
 
     if (!eventConfig) {
-      throw new Error(
-        `${lemonadeEventId} has no corresponding event configuration`
-      );
+      return { name: "InvalidTicket" };
     }
 
     const tierConfig = eventConfig.ticketTiers.find(
@@ -433,7 +433,7 @@ export class LemonadePipeline implements BasePipeline {
     );
 
     if (!tierConfig) {
-      throw new Error(`${tierConfig} has no corresponding tier configuration`);
+      return { name: "InvalidTicket" };
     }
 
     const checkerEventTickets = checkerTickets.filter(
@@ -450,17 +450,106 @@ export class LemonadePipeline implements BasePipeline {
     );
 
     if (!hasSuperUserTierTicket) {
-      throw new Error(
-        `user ${checkerEmailPCD.claim.emailAddress} doesn't have a superuser ticket`
-      );
+      return { name: "NotSuperuser" };
     }
 
-    // TODO: error handling
-    await this.api.checkinTicket(
-      this.definition.options.lemonadeApiKey,
-      lemonadeEventId,
-      ticketToCheckIn.claim.ticket.ticketId
+    return true;
+  }
+
+  private async checkLemonadeTicketPCDCanBeCheckedIn(
+    request: GenericIssuancePreCheckRequest
+  ): Promise<GenericIssuancePreCheckResponseValue> {
+    let checkerTickets: LemonadeAtom[];
+    let ticketId: string;
+
+    try {
+      const unwrapped = await this.unwrapCheckInSignature(request.credential);
+      checkerTickets = unwrapped.checkerTickets;
+      ticketId = unwrapped.ticketId;
+    } catch (e) {
+      return { canCheckIn: false, error: { name: "InvalidSignature" } };
+    }
+
+    const ticketAtom = await this.db.loadById(this.id, ticketId);
+    if (!ticketAtom) {
+      return { canCheckIn: false, error: { name: "InvalidTicket" } };
+    }
+
+    const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
+
+    // TODO how do we check if Lemonade tickets are consumed?
+
+    if (canCheckInResult === true) {
+      return {
+        canCheckIn: true,
+        eventName: this.lemonadeAtomToEventName(ticketAtom),
+        ticketName: this.lemonadeAtomToTicketName(ticketAtom),
+        attendeeEmail: ticketAtom.email as string,
+        attendeeName: ticketAtom.name
+      };
+    } else {
+      return { canCheckIn: false, error: canCheckInResult };
+    }
+  }
+
+  /**
+   * TODO:
+   * - implement this
+   * - make sure to check that the given credential corresponds to a superuser ticket type
+   */
+  private async checkinLemonadeTicketPCD(
+    request: GenericIssuanceCheckInRequest
+  ): Promise<GenericIssuanceCheckInResponseValue> {
+    logger(
+      LOG_TAG,
+      `got request to check in tickets with request ${JSON.stringify(request)}`
     );
+
+    let checkerTickets: LemonadeAtom[];
+    let ticketId: string;
+
+    try {
+      const unwrapped = await this.unwrapCheckInSignature(request.credential);
+      checkerTickets = unwrapped.checkerTickets;
+      ticketId = unwrapped.ticketId;
+    } catch (e) {
+      return { checkedIn: false, error: { name: "InvalidSignature" } };
+    }
+
+    const ticketAtom = await this.db.loadById(this.id, ticketId);
+    if (!ticketAtom) {
+      return { checkedIn: false, error: { name: "InvalidTicket" } };
+    }
+
+    const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
+
+    // TODO how can we check if a Lemonade ticket is consumed?
+
+    if (canCheckInResult === true) {
+      const lemonadeEventId = ticketAtom.lemonadeEventId;
+
+      try {
+        await this.api.checkinTicket(
+          this.definition.options.lemonadeApiKey,
+          lemonadeEventId,
+          // Is this the correct ticket ID?
+          ticketAtom.id
+        );
+      } catch (e) {
+        logger(
+          `${LOG_TAG} Failed to check in ticket ${
+            ticketAtom.id
+          } for event ${this.lemonadeAtomToZupassEventId(
+            ticketAtom
+          )} on behalf of checker ${checkerTickets[0].email}`
+        );
+        return { checkedIn: false, error: { name: "ServerError" } };
+      }
+
+      return { checkedIn: true };
+    } else {
+      return { checkedIn: false, error: canCheckInResult };
+    }
   }
 
   public static is(p: Pipeline): p is LemonadePipeline {

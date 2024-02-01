@@ -1,6 +1,8 @@
 import {
-  CheckTicketInResponseValue,
-  GenericIssuanceCheckInRequest
+  GenericIssuanceCheckInRequest,
+  GenericIssuanceCheckInResponseValue,
+  GenericIssuancePreCheckRequest,
+  GenericIssuancePreCheckResponseValue
 } from "@pcd/passport-interface";
 import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
@@ -14,8 +16,24 @@ export interface CheckinCapability extends BasePipelineCapability {
   type: PipelineCapability.Checkin;
   checkin(
     request: GenericIssuanceCheckInRequest
-  ): Promise<CheckTicketInResponseValue>;
+  ): Promise<GenericIssuanceCheckInResponseValue>;
   getCheckinUrl(): string;
+  // Check-ins are based off ticket data, and tickets do not identify the
+  // pipeline that issued them. As a workaround, the generic issuance service
+  // will iterate over the pipelines, looking for one that can handle a checkin
+  // request for the given event. This method should return true if the
+  // pipeline is configured to handle checkin for the given eventId, or false
+  // if not.
+  canHandleCheckinForEvent(eventId: string): boolean;
+  // Prior to check-in, a ticket is first "checked" to see if it is already
+  // checked in, and whether the scanning user has permission to check it in.
+  // This is called from passport-client after successfully scanning a QR code,
+  // to determine whether to show the user the check-in screen, or a generic
+  // response indicating that the ticket is recognized (or not, if the ticket
+  // is invalid).
+  check(
+    request: GenericIssuancePreCheckRequest
+  ): Promise<GenericIssuancePreCheckResponseValue>;
 }
 
 export function isCheckinCapability(
@@ -24,9 +42,9 @@ export function isCheckinCapability(
   return capability.type === PipelineCapability.Checkin;
 }
 
-export function generateCheckinUrlPath(pipelineId: string): string {
+export function generateCheckinUrlPath(): string {
   return urljoin(
     process.env.PASSPORT_SERVER_URL as string,
-    `/generic-issuance/api/check-in/${pipelineId}`
+    `/generic-issuance/api/check-in`
   );
 }

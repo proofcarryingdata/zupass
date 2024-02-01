@@ -113,7 +113,8 @@ class OrganizerRequestQueue {
    */
   public fetch(
     input: RequestInfo | URL,
-    init?: RequestInit
+    init?: RequestInit,
+    priority?: number
   ): Promise<Response> {
     // Set up an abort controller for this request. This is used to cancel
     // pending requests, e.g. during app shutdown.
@@ -125,32 +126,38 @@ class OrganizerRequestQueue {
     // Trigger the abort signal if our main "cancel" controller fires.
     this.cancelController.signal.addEventListener("abort", abortHandler);
 
-    return this.requestQueue.add(async () => {
-      try {
-        const result = await instrumentedFetch(input, {
-          signal: abortController.signal,
-          ...init
-        });
+    return this.requestQueue.add(
+      async () => {
+        try {
+          const result = await instrumentedFetch(input, {
+            signal: abortController.signal,
+            ...init
+          });
 
-        // If Pretix tells us that we've exceeded the rate limit, log a
-        // specific message. This should never happen, and would indicate that
-        // our rate-limiting is too loose or not working correctly.
-        if (result.status === 429) {
-          logger(
-            `[GENERIC PRETIX] Received 429 error while fetching ${input.toString()}.
+          // If Pretix tells us that we've exceeded the rate limit, log a
+          // specific message. This should never happen, and would indicate that
+          // our rate-limiting is too loose or not working correctly.
+          if (result.status === 429) {
+            logger(
+              `[GENERIC PRETIX] Received 429 error while fetching ${input.toString()}.
           API client is currently enforcing a limit of ${
             this.intervalCap
           } requests per ${this.interval} milliseconds.`
+            );
+          }
+
+          return result;
+        } finally {
+          // The cancel controller has a maximum number of event listeners, so
+          // always remove event listeners once they're not needed.
+          this.cancelController.signal.removeEventListener(
+            "abort",
+            abortHandler
           );
         }
-
-        return result;
-      } finally {
-        // The cancel controller has a maximum number of event listeners, so
-        // always remove event listeners once they're not needed.
-        this.cancelController.signal.removeEventListener("abort", abortHandler);
-      }
-    });
+      },
+      { priority: priority ?? 0 }
+    );
   }
 }
 
@@ -500,19 +507,26 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
       const url = `${orgUrl}/checkinrpc/redeem/`;
 
-      const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-        method: "POST",
-        headers: {
-          Authorization: `Token ${token}`,
-          Accept: "application/json",
-          "Content-Type": "application/json"
+      const res = await this.getOrCreateQueue(orgUrl).fetch(
+        url,
+        {
+          method: "POST",
+          headers: {
+            Authorization: `Token ${token}`,
+            Accept: "application/json",
+            "Content-Type": "application/json"
+          },
+          body: JSON.stringify({
+            secret: positionSecret,
+            lists: [checkinListId],
+            datetime: timestamp
+          })
         },
-        body: JSON.stringify({
-          secret: positionSecret,
-          lists: [checkinListId],
-          datetime: timestamp
-        })
-      });
+        // Priority greater than zero means that this will jump the queue and
+        // be processed next, necessary if we happen to be running a sync at
+        // the time of check-in.
+        1
+      );
 
       if (!res.ok) {
         throw new Error(
