@@ -79,7 +79,7 @@ import {
  * - finish this during Cat Week.
  * - comprehensive tests for both Pretix and Lemonade cases
  */
-describe.only("Generic Issuance", function () {
+describe("Generic Issuance", function () {
   this.timeout(15_000);
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
