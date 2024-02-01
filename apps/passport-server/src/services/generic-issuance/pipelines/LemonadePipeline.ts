@@ -34,9 +34,11 @@ import {
   generateIssuanceUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { BasePipelineCapability } from "../types";
 import {
   BasePipeline,
   BasePipelineDefinition,
+  FeedIssuanceOptions,
   Pipeline,
   PipelineDefinition,
   PipelineType
@@ -115,6 +117,7 @@ export interface LemonadePipelineTicketTierConfig {
 export interface LemonadePipelineOptions {
   lemonadeApiKey: string;
   events: LemonadePipelineEventConfig[];
+  feedOptions: FeedIssuanceOptions;
 }
 
 /**
@@ -123,26 +126,7 @@ export interface LemonadePipelineOptions {
  */
 export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
-  public capabilities = [
-    {
-      issue: this.issueLemonadeTicketPCDs.bind(this),
-      // TODO: make configurable
-      options: {
-        feedId: "ticket-feed",
-        feedDescription: "description",
-        feedDisplayName: "display name",
-        feedFolder: "lemonade",
-        providerName: "lemonade"
-      },
-      type: PipelineCapability.FeedIssuance,
-      feedUrl: generateIssuanceUrl(this.id, "ticket-feed")
-    } satisfies FeedIssuanceCapability,
-    {
-      checkin: this.checkinLemonadeTicketPCD.bind(this),
-      type: PipelineCapability.Checkin,
-      getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
-    } satisfies CheckinCapability
-  ];
+  public capabilities: BasePipelineCapability[];
 
   /**
    * Used to sign {@link EdDSATicketPCD}
@@ -182,6 +166,20 @@ export class LemonadePipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<LemonadeAtom>;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
+
+    this.capabilities = [
+      {
+        issue: this.issueLemonadeTicketPCDs.bind(this),
+        options: this.definition.options.feedOptions,
+        type: PipelineCapability.FeedIssuance,
+        feedUrl: generateIssuanceUrl(this.id, "ticket-feed")
+      } satisfies FeedIssuanceCapability,
+      {
+        checkin: this.checkinLemonadeTicketPCD.bind(this),
+        type: PipelineCapability.Checkin,
+        getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
+      } satisfies CheckinCapability
+    ] as unknown as BasePipelineCapability[];
   }
 
   /**

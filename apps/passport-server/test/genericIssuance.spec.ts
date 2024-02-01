@@ -226,6 +226,13 @@ describe("generic issuance service tests", function () {
     id: randomUUID(),
     editorUserIds: [],
     options: {
+      feedOptions: {
+        feedDescription: "description",
+        feedDisplayName: "name",
+        feedFolder: "folder",
+        feedId: "0",
+        providerName: "generic-issuance"
+      },
       lemonadeApiKey: ticketCheckerLemonadeUser.apiKey,
       events: [
         {
@@ -265,6 +272,13 @@ describe("generic issuance service tests", function () {
     id: randomUUID(),
     editorUserIds: [],
     options: {
+      feedOptions: {
+        feedDescription: "description",
+        feedDisplayName: "name",
+        feedFolder: "folder",
+        feedId: "0",
+        providerName: "generic-issuance"
+      },
       events: [
         {
           genericIssuanceId: randomUUID(),

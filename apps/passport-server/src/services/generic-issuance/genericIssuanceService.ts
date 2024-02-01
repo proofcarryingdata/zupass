@@ -406,6 +406,13 @@ export class GenericIssuanceService {
       id: randomUUID(),
       editorUserIds: [],
       options: {
+        feedOptions: {
+          feedDescription: "progcrypto test tickets",
+          feedDisplayName: "progcrypto",
+          feedFolder: "generic/progcrypto",
+          feedId: "0",
+          providerName: "generic issuance"
+        },
         events: [
           {
             genericIssuanceId: randomUUID(),

@@ -48,6 +48,7 @@ import { PipelineCapability } from "../capabilities/types";
 import {
   BasePipeline,
   BasePipelineDefinition,
+  FeedIssuanceOptions,
   Pipeline,
   PipelineDefinition,
   PipelineType
@@ -64,6 +65,7 @@ export interface PretixPipelineOptions {
   pretixAPIKey: string;
   pretixOrgUrl: string;
   events: PretixEventConfig[];
+  feedOptions: FeedIssuanceOptions;
 }
 
 /**

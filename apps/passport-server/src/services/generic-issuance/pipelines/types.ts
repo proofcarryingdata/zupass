@@ -1,9 +1,14 @@
 import { BasePipelineCapability } from "../types";
 import {
   LemonadePipeline,
-  LemonadePipelineDefinition
+  LemonadePipelineDefinition,
+  LemonadePipelineOptions
 } from "./LemonadePipeline";
-import { PretixPipeline, PretixPipelineDefinition } from "./PretixPipeline";
+import {
+  PretixPipeline,
+  PretixPipelineDefinition,
+  PretixPipelineOptions
+} from "./PretixPipeline";
 
 /**
  * Each new type of {@link Pipeline} needs to be added to this type
@@ -34,16 +39,20 @@ export enum PipelineType {
  * sets up a pipeline via the generic issuance UI, they are creating one
  * of these over a series of configuration steps - choosing which data
  * source to use, uploading an API key, selecting which data to load, etc.
- *
- * TODO:
- * - sql migration to create a table to store these things. Probably
- *   something like a 2-column table. One column for JSON representing
- *   the pipeline definition, and a unique id column derived from the JSON.
  */
 export interface BasePipelineDefinition {
   id: string;
   ownerUserId: string;
   editorUserIds: string[];
+  options: LemonadePipelineOptions | PretixPipelineOptions;
+}
+
+export interface FeedIssuanceOptions {
+  feedId: string;
+  feedDisplayName: string;
+  feedDescription: string;
+  providerName: string;
+  feedFolder: string;
 }
 
 /**
