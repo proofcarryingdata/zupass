@@ -14,7 +14,7 @@ export function getGenericMockPretixAPIServer(
       rest.get(orgUrl + "/events", (req, res, ctx) => {
         const org = mocker.getOrgByUrl(orgUrl);
         return res(
-          ctx.json({ results: [...org.eventByEventID.values()], next: null })
+          ctx.json({ results: [...org.eventsByEventID.values()], next: null })
         );
       })
     );
@@ -22,7 +22,7 @@ export function getGenericMockPretixAPIServer(
     handlers.push(
       rest.get(orgUrl + "/events/:event", (req, res, ctx) => {
         const org = mocker.getOrgByUrl(orgUrl);
-        const event = org.eventByEventID.get(req.params.event as string);
+        const event = org.eventsByEventID.get(req.params.event as string);
         if (!event) {
           return res(ctx.status(404));
         }
@@ -33,7 +33,8 @@ export function getGenericMockPretixAPIServer(
     handlers.push(
       rest.get(orgUrl + "/events/:event/items", (req, res, ctx) => {
         const org = mocker.getOrgByUrl(orgUrl);
-        const items = org.itemsByEventID.get(req.params.event as string) ?? [];
+        const items =
+          org.productsByEventID.get(req.params.event as string) ?? [];
         return res(ctx.json({ results: items, next: null }));
       })
     );
@@ -51,7 +52,7 @@ export function getGenericMockPretixAPIServer(
       rest.get(orgUrl + "/events/:event/categories", (req, res, ctx) => {
         const org = mocker.getOrgByUrl(orgUrl);
         const categories =
-          org.categoriesByEventId.get(req.params.event as string) ?? [];
+          org.productCategoriesByEventID.get(req.params.event as string) ?? [];
         return res(ctx.json({ results: categories, next: null }));
       })
     );

@@ -20,12 +20,12 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { v5 as uuidv5 } from "uuid";
 import {
-  GenericPretixCategory,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
-  GenericPretixItem,
   GenericPretixOrder,
+  GenericPretixProduct,
+  GenericPretixProductCategory,
   IGenericPretixAPI
 } from "../../../apis/pretix/genericPretixAPI";
 import {
@@ -230,8 +230,12 @@ export class PretixPipeline implements BasePipeline {
         token,
         eventId
       );
-      const categories = await this.api.fetchCategories(orgUrl, token, eventId);
-      const items = await this.api.fetchItems(orgUrl, token, eventId);
+      const categories = await this.api.fetchProductCategories(
+        orgUrl,
+        token,
+        eventId
+      );
+      const items = await this.api.fetchProducts(orgUrl, token, eventId);
       const eventInfo = await this.api.fetchEvent(orgUrl, token, eventId);
       const orders = await this.api.fetchOrders(orgUrl, token, eventId);
       const checkinLists = await this.api.fetchEventCheckinLists(
@@ -282,7 +286,7 @@ export class PretixPipeline implements BasePipeline {
    * "Choose automatically depending on event settings" in the Pretix UI.
    */
   private validateEventItem(
-    item: GenericPretixItem,
+    item: GenericPretixProduct,
     addonCategoryIdSet: Set<number>,
     productConfig: PretixProductConfig
   ): string[] {
@@ -812,8 +816,8 @@ export function isPretixPipelineDefinition(
 interface PretixEventData {
   settings: GenericPretixEventSettings;
   eventInfo: GenericPretixEvent;
-  categories: GenericPretixCategory[];
-  items: GenericPretixItem[];
+  categories: GenericPretixProductCategory[];
+  items: GenericPretixProduct[];
   orders: GenericPretixOrder[];
   checkinLists: GenericPretixCheckinList[];
 }

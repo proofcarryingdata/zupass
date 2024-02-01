@@ -125,7 +125,10 @@ export class LemonadeDataMocker {
     return this.users.find((u) => u.apiKey === apiKey);
   }
 
-  public permissionUser(userId: string, eventId: string): void {
+  /**
+   * Co-hosts on Lemonade have check-in privelages.
+   */
+  public makeCoHost(userId: string, eventId: string): void {
     const user = this.getUser(userId);
     const event = this.getEvent(eventId);
 

@@ -51,7 +51,6 @@ export interface FeedIssuanceOptions {
   feedId: string;
   feedDisplayName: string;
   feedDescription: string;
-  providerName: string;
   feedFolder: string;
 }
 

@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import _ from "lodash";
 import { v4 as uuid } from "uuid";
 
 export function randomEmail(): string {
@@ -32,6 +33,36 @@ export function expectToExist<T, U extends T = T>(
 }
 
 /**
+ * Use in place of `expect(value).to.eq(true)`
+ */
+export function expectTrue(value: boolean): asserts value is true {
+  if (!value) {
+    throw new Error("Expected value to be true");
+  }
+}
+
+/**
+ * Use in place of `expect(value).to.eq(false)`
+ */
+export function expectFalse(value: boolean): asserts value is true {
+  if (value) {
+    throw new Error("Expected value to be false");
+  }
+}
+
+/**
+ * Use in place of `expect(value).to.eq(true)`
+ */
+export function expectLength<T>(
+  array: Array<T> | undefined,
+  length: number
+): void {
+  if (!array || array.length !== length) {
+    throw new Error("Expected value to be true");
+  }
+}
+
+/**
  * TypeScript complains if it thinks you're definitely calling `process.exit(0)`
  * in the middle of a function. This is a hack to get around the compiler complaining.
  * Should only be used in the process of developing tests.
@@ -46,4 +77,10 @@ export function safeExit(): void {
     console.log("*************\n");
     process.exit(0);
   }
+}
+
+export function randomName(): string {
+  const firstNames = ["Bob", "Steve", "Gub", "Mob", "Flub", "Jib", "Grub"];
+  const lastNames = ["Froby", "Shmoby", "Glowby", "Brimby", "Slimbo", "Froggy"];
+  return _.sample(firstNames) + " " + _.sample(lastNames);
 }

@@ -267,6 +267,17 @@ export function isEdDSATicketPCD(pcd: PCD): pcd is EdDSATicketPCD {
 }
 
 /**
+ * Throws if {@link pcd} is not an {@link EdDSATicketPCD}.
+ */
+export function expectIsEdDSATicketPCD(
+  pcd: PCD
+): asserts pcd is EdDSATicketPCD {
+  if (pcd.type !== EdDSATicketPCDPackage.name) {
+    throw new Error("Expected EdDSATicketPCD");
+  }
+}
+
+/**
  * The PCD package of the EdDSA Ticket PCD. It exports an object containing
  * the code necessary to operate on this PCD data.
  */

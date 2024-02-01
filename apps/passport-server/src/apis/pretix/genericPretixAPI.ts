@@ -8,41 +8,57 @@ import { instrumentedFetch } from "../fetch";
 const TRACE_SERVICE = "GenericPretixAPI";
 
 export interface IGenericPretixAPI {
+  /**
+   * Orders contain many tickets.
+   */
   fetchOrders(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
   ): Promise<GenericPretixOrder[]>;
-  fetchItems(
+  /**
+   * On Pretix you can sell several different types of things to your
+   * 'event attendees'. You can sell different tiers of tickets - GA, VIP, etc.
+   * You can also sell [add-ons](https://docs.pretix.eu/en/latest/api/resources/item_add-ons.html) -
+   * items that can be bought *in addition* to another product type. E.g. you could offer
+   * to sell t-shirts in addition to a GA ticket, but the VIP just gets a t-shirt for
+   * free, so they don't have to 'buy' anything - their VIP ticket grants them access to a t-shirt.
+   */
+  fetchProducts(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
-  ): Promise<GenericPretixItem[]>;
+  ): Promise<GenericPretixProduct[]>;
   fetchEvent(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
   ): Promise<GenericPretixEvent>;
   fetchEventCheckinLists(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
   ): Promise<GenericPretixCheckinList[]>;
   fetchEventSettings(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
   ): Promise<GenericPretixEventSettings>;
-  fetchCategories(
+  fetchProductCategories(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
-  ): Promise<GenericPretixCategory[]>;
+  ): Promise<GenericPretixProductCategory[]>;
   fetchAllEvents(orgUrl: string, token: string): Promise<GenericPretixEvent[]>;
+  /**
+   * It would probably be good practice to have some sort of lock on the act
+   * of checking in a generic issuance ticket for a particular external event id.
+   * We do not want to introduce surface area for double-spend.
+   */
   pushCheckin(
     orgUrl: string,
-    token: string,
-    secret: string,
+    pretixToken: string,
+    positionSecret: string,
     checkinListId: string,
     timestamp: string
   ): Promise<void>;
@@ -304,21 +320,21 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  public async fetchCategories(
+  public async fetchProductCategories(
     orgUrl: string,
-    token: string,
+    pretixApiToken: string,
     eventID: string
-  ): Promise<GenericPretixCategory[]> {
+  ): Promise<GenericPretixProductCategory[]> {
     return traced(TRACE_SERVICE, "fetchAddons", async (span) => {
       span?.setAttribute("org_url", orgUrl);
-      const categories: GenericPretixCategory[] = [];
+      const categories: GenericPretixProductCategory[] = [];
 
       // Fetch categories from paginated API
       let url = `${orgUrl}/events/${eventID}/categories/`;
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching categories: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
+          headers: { Authorization: `Token ${pretixApiToken}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -327,7 +343,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
         }
         const page = await res.json();
         const results = z
-          .array(GenericPretixCategorySchema)
+          .array(GenericPretixProductCategorySchema)
           .safeParse(page.results);
         if (results.success) {
           categories.push(...results.data);
@@ -343,21 +359,21 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  public async fetchItems(
+  public async fetchProducts(
     orgUrl: string,
-    token: string,
+    pretixApiToken: string,
     eventID: string
-  ): Promise<GenericPretixItem[]> {
+  ): Promise<GenericPretixProduct[]> {
     return traced(TRACE_SERVICE, "fetchItems", async (span) => {
       span?.setAttribute("org_url", orgUrl);
-      const items: GenericPretixItem[] = [];
+      const items: GenericPretixProduct[] = [];
 
       // Fetch orders from paginated API
       let url = `${orgUrl}/events/${eventID}/items/`;
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching items: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
+          headers: { Authorization: `Token ${pretixApiToken}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -366,7 +382,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
         }
         const page = await res.json();
         const results = z
-          .array(GenericPretixItemSchema)
+          .array(GenericPretixProductSchema)
           .safeParse(page.results);
         if (results.success) {
           items.push(...results.data);
@@ -385,7 +401,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   // Fetch all orders for a given event.
   public async fetchOrders(
     orgUrl: string,
-    token: string,
+    pretixApiToken: string,
     eventID: string
   ): Promise<GenericPretixOrder[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
@@ -397,7 +413,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
+          headers: { Authorization: `Token ${pretixApiToken}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -422,10 +438,10 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  // Fetch all check-in lists for a given event.
+  // TODO: @rob - what's your best description of what's going on here?
   public async fetchEventCheckinLists(
     orgUrl: string,
-    token: string,
+    pretixToken: string,
     eventID: string
   ): Promise<GenericPretixCheckinList[]> {
     return traced(TRACE_SERVICE, "fetchOrders", async (span) => {
@@ -437,7 +453,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       while (url != null) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
-          headers: { Authorization: `Token ${token}` }
+          headers: { Authorization: `Token ${pretixToken}` }
         });
         if (!res.ok) {
           throw new Error(
@@ -465,8 +481,8 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   // Push a check-in to Pretix
   public async pushCheckin(
     orgUrl: string,
-    token: string,
-    secret: string,
+    pretixToken: string,
+    positionSecret: string,
     checkinListId: string,
     timestamp: string
   ): Promise<void> {
@@ -478,12 +494,12 @@ export class GenericPretixAPI implements IGenericPretixAPI {
       const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
         method: "POST",
         headers: {
-          Authorization: `Token ${token}`,
+          Authorization: `Token ${pretixToken}`,
           Accept: "application/json",
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          secret,
+          secret: positionSecret,
           lists: [checkinListId],
           datetime: timestamp
         })
@@ -499,8 +515,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 }
 
 export function getGenericPretixAPI(): GenericPretixAPI {
-  const api = new GenericPretixAPI();
-  return api;
+  return new GenericPretixAPI();
 }
 
 /**
@@ -555,7 +570,7 @@ const GenericPretixOrderSchema = z.object({
   positions: z.array(GenericPretixPositionSchema) // should have exactly one
 });
 
-const GenericPretixItemSchema = z.object({
+const GenericPretixProductSchema = z.object({
   id: z.number(), // corresponds to "item" field in GenericPretixPosition
   category: z.number().optional().nullable(),
   admission: z.boolean(),
@@ -569,6 +584,7 @@ const GenericPretixEventSchema = z.object({
   name: GenericPretixI18MapSchema
 });
 
+// TODO: @rob @richard @josh - can we do a pretix settings scan?
 const GenericPretixEventSettingsSchema = z.object({
   // These settings control whether individual attendees must have
   // email addresses specified.
@@ -579,9 +595,11 @@ const GenericPretixEventSettingsSchema = z.object({
   attendee_emails_required: z.boolean()
 });
 
-const GenericPretixCategorySchema = z.object({
+// @rob - what are product categories?
+const GenericPretixProductCategorySchema = z.object({
   id: z.number(),
   is_addon: z.boolean()
+  // @rob - should we load category names?
 });
 
 // Each event has one or more check-in lists
@@ -593,12 +611,14 @@ const GenericPretixCheckinListSchema = z.object({
 
 export type GenericPretixI18nMap = z.infer<typeof GenericPretixI18MapSchema>;
 export type GenericPretixOrder = z.infer<typeof GenericPretixOrderSchema>;
-export type GenericPretixItem = z.infer<typeof GenericPretixItemSchema>;
+export type GenericPretixProduct = z.infer<typeof GenericPretixProductSchema>;
 export type GenericPretixEvent = z.infer<typeof GenericPretixEventSchema>;
 export type GenericPretixEventSettings = z.infer<
   typeof GenericPretixEventSettingsSchema
 >;
-export type GenericPretixCategory = z.infer<typeof GenericPretixCategorySchema>;
+export type GenericPretixProductCategory = z.infer<
+  typeof GenericPretixProductCategorySchema
+>;
 export type GenericPretixCheckinList = z.infer<
   typeof GenericPretixCheckinListSchema
 >;

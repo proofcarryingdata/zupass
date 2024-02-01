@@ -3,6 +3,7 @@ import {
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceSendEmailResponseValue,
   ListFeedsResponseValue,
+  PipelineInfoResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -40,6 +41,9 @@ export function initGenericIssuanceRoutes(
     }
   });
 
+  /**
+   * For local development.
+   */
   app.get("/generic-issuance/pipelines", async (req, res) => {
     if (process.env.NODE_ENV === "production") {
       res.sendStatus(403);
@@ -51,6 +55,9 @@ export function initGenericIssuanceRoutes(
     res.json(await genericIssuanceService.getAllPipelines());
   });
 
+  /**
+   * Authenticated by PCD so doesn't need auth.
+   */
   app.post(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
@@ -75,6 +82,25 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * Needs user authentication.
+   */
+  app.get(
+    "/generic-issuance/api/pipeline-info/:pipelineId",
+    async (req, res) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineID = checkUrlParam(req, "pipelineId");
+
+      const result =
+        await genericIssuanceService.handleGetPipelineInfo(pipelineID);
+
+      res.json(result satisfies PipelineInfoResponseValue);
+    }
+  );
+
+  /**
+   * Authenticated by PCD so doesn't need auth.
+   */
   app.get(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
@@ -89,6 +115,9 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * Authenticated by PCD so doesn't need auth.
+   */
   app.post(
     "/generic-issuance/api/check-in/:pipelineID",
     async (req: express.Request, res: express.Response) => {
@@ -103,6 +132,9 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * TODO: auth?
+   */
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {

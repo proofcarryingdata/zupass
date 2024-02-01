@@ -5,6 +5,8 @@ import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceSendEmailResponseValue,
   ListFeedsResponseValue,
+  PipelineFeedInfo,
+  PipelineInfoResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -259,6 +261,21 @@ export class GenericIssuanceService {
     return relevantCapability.issue(req);
   }
 
+  public async handleGetPipelineInfo(
+    pipelineId: string
+  ): Promise<PipelineInfoResponseValue> {
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const feeds = pipeline.capabilities.filter(isFeedIssuanceCapability);
+    const infos: PipelineFeedInfo[] = feeds.map((f) => ({
+      name: f.options.feedDisplayName,
+      url: f.feedUrl
+    }));
+
+    const response: PipelineInfoResponseValue = { feeds: infos };
+
+    return response;
+  }
+
   public async handleListFeed(
     pipelineId: string,
     feedId: string
@@ -297,7 +314,10 @@ export class GenericIssuanceService {
 
     const res: ListFeedsResponseValue = {
       feeds: [feed],
-      providerName: relevantCapability.options.providerName,
+      /**
+       * TODO: @rob @richard @brian @josh what should the provider name be?
+       */
+      providerName: "PCD Team Generic Issuance Server",
       providerUrl: relevantCapability.feedUrl
     };
 
@@ -417,8 +437,7 @@ export class GenericIssuanceService {
           feedDescription: "progcrypto test tickets",
           feedDisplayName: "progcrypto",
           feedFolder: "generic/progcrypto",
-          feedId: "0",
-          providerName: "generic issuance"
+          feedId: "0"
         },
         events: [
           {

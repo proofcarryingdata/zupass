@@ -41,6 +41,7 @@ export * from "./api/requestLogToServer";
 export * from "./api/requestOfflineTickets";
 export * from "./api/requestOfflineTicketsCheckin";
 export * from "./api/requestPasswordSalt";
+export * from "./api/requestPipelineInfo";
 export * from "./api/requestPollFeed";
 export * from "./api/requestPretixSyncStatus";
 export * from "./api/requestProveOnServer";

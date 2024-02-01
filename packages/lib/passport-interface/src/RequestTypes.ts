@@ -433,6 +433,15 @@ export interface ListFeedsResponseValue {
   feeds: Feed[];
 }
 
+export interface PipelineFeedInfo {
+  name: string;
+  url: string;
+}
+
+export interface PipelineInfoResponseValue {
+  feeds: PipelineFeedInfo[];
+}
+
 export interface ListSingleFeedRequest {
   feedId: string;
 }

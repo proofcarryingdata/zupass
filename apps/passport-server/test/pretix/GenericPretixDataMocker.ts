@@ -1,73 +1,85 @@
-import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import {
-  GenericPretixCategory,
   GenericPretixEvent,
   GenericPretixEventSettings,
-  GenericPretixItem,
   GenericPretixOrder,
-  GenericPretixPosition
+  GenericPretixPosition,
+  GenericPretixProduct,
+  GenericPretixProductCategory
 } from "../../src/apis/pretix/genericPretixAPI";
+import { randomName } from "../util/util";
 
-export interface IMockGenericPretixData {
+/**
+ *
+ */
+export interface IMockGenericIssuancePretixBackendData {
   // aggregate data for simpler querying
   organizers: IOrganizer[];
   organizersByOrgUrl: Map<string, IOrganizer>;
 
   // specific data for easier testing
-  organizer1: IOrganizer;
-  organizer2: IOrganizer;
+  ethLatAmOrganizer: IOrganizer;
+  // TODO: test multi-organizer scenarios better
+  ethBerlinOrganizer: IOrganizer;
 }
 
 export interface IOrganizer {
   orgUrl: string;
   token: string;
 
+  // eth latam setup type
+
+  ethLatAm: GenericPretixEvent;
+  ethLatAmSettings: GenericPretixEventSettings;
+
+  ethLatAmAttendeeProduct: GenericPretixProduct;
+  ethLatAmBouncerProduct: GenericPretixProduct;
+  ethLatAmTshirtProduct: GenericPretixProduct;
+
+  ethLatAmAttendeeEmail: string;
+  ethLatAmBouncerEmail: string;
+
+  // eth berlin setup type
+
+  ethBerlin: GenericPretixEvent;
+  ethBerlinSettings: GenericPretixEventSettings;
+  ethBerlinAttendeeProduct: GenericPretixProduct;
+  ethBerlinBouncerProduct: GenericPretixProduct;
+  ethBerlinTshirtProduct: GenericPretixProduct;
+  ethBerlinAttendeeEmail: string;
+  ethBerlinBouncerEmail: string;
+
+  // in the future - other setup types?
+  // ...
+  // ...
+
   // aggregate data for simpler querying
+
   ordersByEventID: Map<string, GenericPretixOrder[]>;
-  eventByEventID: Map<string, GenericPretixEvent>;
-  itemsByEventID: Map<string, GenericPretixItem[]>;
+  eventsByEventID: Map<string, GenericPretixEvent>;
+  productsByEventID: Map<string, GenericPretixProduct[]>;
   settingsByEventID: Map<string, GenericPretixEventSettings>;
-  categoriesByEventId: Map<string, GenericPretixCategory[]>;
-
-  // specific data for easier testing
-  eventAItem1: GenericPretixItem;
-  eventAItem2: GenericPretixItem;
-  eventBItem3: GenericPretixItem;
-  eventBItem4: GenericPretixItem;
-
-  eventA: GenericPretixEvent;
-  eventB: GenericPretixEvent;
-  eventC: GenericPretixEvent;
-
-  eventASettings: GenericPretixEventSettings;
-  eventBSettings: GenericPretixEventSettings;
-  eventCSettings: GenericPretixEventSettings;
-
-  EMAIL_1: string;
-  EMAIL_2: string;
-  EMAIL_3: string;
-  EMAIL_4: string;
+  productCategoriesByEventID: Map<string, GenericPretixProductCategory[]>;
 }
 
 export class GenericPretixDataMocker {
-  private autoincrementingId = 10_000;
-  private mockData: IMockGenericPretixData;
+  private autoincrementingId = 123_456_789;
+  private data: IMockGenericIssuancePretixBackendData;
 
   public constructor() {
-    this.mockData = this.newMockData();
+    this.data = this.newMockData();
   }
 
-  public backup(): IMockGenericPretixData {
-    return structuredClone(this.mockData);
+  public backup(): IMockGenericIssuancePretixBackendData {
+    return structuredClone(this.data);
   }
 
-  public restore(data: IMockGenericPretixData): void {
-    this.mockData = data;
+  public restore(data: IMockGenericIssuancePretixBackendData): void {
+    this.data = data;
   }
 
-  public get(): IMockGenericPretixData {
-    return this.mockData;
+  public get(): IMockGenericIssuancePretixBackendData {
+    return this.data;
   }
 
   public getOrgByUrl(orgUrl: string): IOrganizer {
@@ -81,30 +93,35 @@ export class GenericPretixDataMocker {
   public updateOrder(
     orgUrl: string,
     eventID: string,
-    code: string,
+    orderCode: string,
     update: (order: GenericPretixOrder) => void
   ): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
     const eventOrders = org.ordersByEventID.get(eventID) ?? [];
-    const order = eventOrders.find((o) => o.code === code);
+    const order = eventOrders.find((o) => o.code === orderCode);
     if (!order) {
-      throw new Error(`couldn't find order ${code}`);
+      throw new Error(`couldn't find order ${orderCode}`);
     }
     update(order);
   }
 
+  /**
+   * A position corresponds to a 'ticket' on our end. A Pretix order
+   * can have many positions - different tickets issued to potentially
+   * multiple different attendee types and emails
+   */
   public updatePositionBySecret(
     orgUrl: string,
-    secret: string,
+    positionSecret: string,
     update: (position: GenericPretixPosition) => void
   ): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
 
     for (const order of [...org.ordersByEventID.values()].flat()) {
       const position = order.positions.find(
-        (position) => position.secret === secret
+        (position) => position.secret === positionSecret
       );
       if (position) {
         update(position);
@@ -113,21 +130,21 @@ export class GenericPretixDataMocker {
     }
   }
 
-  public removeOrder(orgUrl: string, eventID: string, code: string): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+  public removeOrder(orgUrl: string, eventID: string, orderCode: string): void {
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
     let eventOrders = org.ordersByEventID.get(eventID) ?? [];
-    eventOrders = eventOrders.filter((o) => o.code !== code);
+    eventOrders = eventOrders.filter((o) => o.code !== orderCode);
     org.ordersByEventID.set(eventID, eventOrders);
   }
 
-  public removeEventItem(orgUrl: string, eventID: string, id: number): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+  public removeProductType(orgUrl: string, eventID: string, id: number): void {
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
 
-    let eventItems = org.itemsByEventID.get(eventID) ?? [];
+    let eventItems = org.productsByEventID.get(eventID) ?? [];
     eventItems = eventItems.filter((item) => item.id !== id);
-    org.itemsByEventID.set(eventID, eventItems);
+    org.productsByEventID.set(eventID, eventItems);
   }
 
   public updateEvent(
@@ -135,9 +152,9 @@ export class GenericPretixDataMocker {
     eventID: string,
     update: (event: GenericPretixEvent) => void
   ): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
-    const event = org.eventByEventID.get(eventID);
+    const event = org.eventsByEventID.get(eventID);
     if (!event) {
       throw new Error(`couldn't find event ${eventID}`);
     }
@@ -148,7 +165,7 @@ export class GenericPretixDataMocker {
     orgUrl: string,
     eventID: string
   ): GenericPretixEventSettings {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
     if (!org.settingsByEventID.has(eventID)) {
       throw new Error(`missing settings for ${eventID}`);
@@ -161,147 +178,189 @@ export class GenericPretixDataMocker {
     eventID: string,
     settings: GenericPretixEventSettings
   ): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
     org.settingsByEventID.set(eventID, settings);
   }
 
-  public updateItem(
+  public updateProduct(
     orgUrl: string,
     eventID: string,
-    itemId: number,
-    update: (order: GenericPretixItem) => void
+    productId: number,
+    update: (order: GenericPretixProduct) => void
   ): void {
-    const org = this.mockData.organizersByOrgUrl.get(orgUrl);
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
-    const eventItems = org.itemsByEventID.get(eventID) ?? [];
-    const item = eventItems.find((item) => item.id === itemId);
-    if (!item) {
-      throw new Error(`couldn't find item ${itemId} for event ${eventID}`);
+    const eventProducts = org.productsByEventID.get(eventID) ?? [];
+    const product = eventProducts.find((item) => item.id === productId);
+    if (!product) {
+      throw new Error(`couldn't find item ${productId} for event ${eventID}`);
     }
-    update(item);
+    update(product);
   }
 
-  private newMockData(): IMockGenericPretixData {
-    const organizer1 = this.newOrganizer();
-    const organizer2 = this.newOrganizer();
+  private newMockData(): IMockGenericIssuancePretixBackendData {
+    const organizer1 = this.newOrganizer("organizer-1");
+    const organizer2 = this.newOrganizer("organizer-2");
 
-    const organizersByOrgUrl: Map<string, IOrganizer> = new Map();
+    const organizersByOrgUrl = new Map<string, IOrganizer>();
     organizersByOrgUrl.set(organizer1.orgUrl, organizer1);
     organizersByOrgUrl.set(organizer2.orgUrl, organizer2);
 
     return {
       organizers: [organizer1, organizer2],
       organizersByOrgUrl: organizersByOrgUrl,
-      organizer2,
-      organizer1
+      ethBerlinOrganizer: organizer2,
+      ethLatAmOrganizer: organizer1
     };
   }
 
-  private newOrganizer(): IOrganizer {
-    const orgUrl = `https://www.${uuid()}.com`;
+  /**
+   * Note to self: we don't test multi-organizer scenarios very thoroughly.
+   */
+  private newOrganizer(name: string): IOrganizer {
+    const orgUrl = `https://www.${name}.com`;
     const token = uuid();
 
-    const EMAIL_1 = "email-1@test.com";
-    const EMAIL_2 = "email-2@test.com";
-    const EMAIL_3 = "email-3@test.com";
-    const EMAIL_4 = "email-4@test.com";
+    const EthLatAmAttendee1Email = `attendee-1-${name}@test.com`;
+    const EthLatAmAttendee2Email = `attendee-2-${name}@test.com`;
+    const EthLatAmBouncer1Email = `bouncer-1${name}@test.com`;
+    const EthLatAmBouncer2Email = `bouncer-2${name}@test.com`;
 
-    const eventA = this.newEvent("Event A", "event-a");
-    const eventB = this.newEvent("Event B", "event-b");
-    const eventC = this.newEvent("Event C", "event-c");
+    const ethLatAm = this.newEvent("ethLatAm", "eth-lat-am");
+    const ethBerlin = this.newEvent("eth-berlin", "eth-berlin");
 
-    const eventASettings = this.newEventSettings();
-    const eventBSettings = this.newEventSettings();
-    const eventCSettings = this.newEventSettings();
+    // TODO: @richard @rob @josh - what settings should we lock in for Eth LatAm and Eth Berlin?
+    const ethLatAmSettings = this.newEventSettings();
+    const ethBerlinSettings = this.newEventSettings();
 
-    const eventACategories = [1, 2, 3].map((n) =>
-      this.newEventCategory(n, false)
-    );
-    const eventBCategories = [
-      this.newEventCategory(1, false),
-      this.newEventCategory(2, true)
+    // TODO: @richard / @rob - what categories are relevant for each event?
+    const ticketCategory = this.nextId();
+    const addonCategory = this.nextId();
+    const ethLatAmCategories = [
+      this.newProductCategory(ticketCategory, { is_addon: false }),
+      this.newProductCategory(addonCategory, { is_addon: true })
     ];
-    const eventCCategories = [1, 2].map((n) => this.newEventCategory(n, false));
 
-    const eventAItem1 = this.newItem("item-1", 1);
-    const eventAItem2 = this.newItem("item-2", 1);
-    const eventBItem3 = this.newItem("item-3", 1);
-    // Add-on item
-    const eventBItem4 = this.newItem("item-4", 2, true);
+    const ethBerlinCategories = [
+      this.newProductCategory(ticketCategory, { is_addon: false }),
+      this.newProductCategory(addonCategory, { is_addon: false })
+    ];
 
-    const eventAOrders: GenericPretixOrder[] = [
-      this.newPretixOrder(EMAIL_4, [[eventAItem1.id, EMAIL_4]]),
-      this.newPretixOrder(EMAIL_1, [
-        [eventAItem1.id, EMAIL_1],
-        [eventAItem1.id, EMAIL_2],
-        [eventAItem1.id, EMAIL_2],
-        [eventAItem1.id, EMAIL_3],
-        [eventAItem1.id, null],
-        [eventAItem2.id, EMAIL_1],
-        [eventAItem2.id, EMAIL_1],
-        [eventAItem2.id, EMAIL_2],
-        [eventAItem2.id, null],
-        [eventBItem3.id, EMAIL_2],
-        [eventAItem2.id, EMAIL_4]
+    const ethLatAmAttendeeProduct = this.newProductType(
+      "eth-latam-attende",
+      this.nextId()
+    );
+    const ethLatAmBouncerProduct = this.newProductType(
+      "eth-lat-am-attendee-bouncer",
+      this.nextId()
+    );
+    // Add-on Product - e.g. t-shirt or towel
+    const ethLatAmTshirtProduct = this.newProductType(
+      "eth-latam-t-shirt",
+      this.nextId(),
+      {
+        is_addon: true
+      }
+    );
+    const ethBerlinAttendeeProduct = this.newProductType(
+      "eth-berlin-attendee",
+      this.nextId()
+    );
+    const ethBerlinBouncerProduct = this.newProductType(
+      "eth-berlin-bouncer",
+      this.nextId()
+    );
+    // Add-on Product - e.g. t-shirt or towel
+    const ethBerlinAddonProduct = this.newProductType(
+      "eth-berlin-addon",
+      this.nextId(),
+      {
+        is_addon: true
+      }
+    );
+
+    const ethLatAmOrders: GenericPretixOrder[] = [
+      this.newOrder(EthLatAmBouncer2Email, [
+        [ethLatAmAttendeeProduct.id, EthLatAmBouncer2Email]
       ]),
-      this.newPretixOrder(EMAIL_2, [
-        [eventAItem2.id, EMAIL_4],
-        [eventAItem2.id, null],
-        [eventAItem1.id, EMAIL_1]
+      this.newOrder(EthLatAmAttendee1Email, [
+        [ethLatAmAttendeeProduct.id, EthLatAmAttendee1Email],
+        [ethLatAmAttendeeProduct.id, EthLatAmAttendee2Email],
+        [ethLatAmAttendeeProduct.id, EthLatAmAttendee2Email],
+        [ethLatAmAttendeeProduct.id, EthLatAmBouncer1Email],
+        [ethLatAmAttendeeProduct.id, null],
+        [ethLatAmBouncerProduct.id, EthLatAmAttendee1Email],
+        [ethLatAmBouncerProduct.id, EthLatAmAttendee1Email],
+        [ethLatAmBouncerProduct.id, EthLatAmAttendee2Email],
+        [ethLatAmBouncerProduct.id, null],
+        [ethBerlinAttendeeProduct.id, EthLatAmAttendee2Email],
+        [ethLatAmBouncerProduct.id, EthLatAmBouncer2Email]
+      ]),
+      this.newOrder(EthLatAmAttendee2Email, [
+        [ethLatAmBouncerProduct.id, EthLatAmBouncer2Email],
+        [ethLatAmBouncerProduct.id, null],
+        [ethLatAmAttendeeProduct.id, EthLatAmAttendee1Email]
       ])
     ];
 
-    const eventBOrders: GenericPretixOrder[] = [];
-    const eventCOrders: GenericPretixOrder[] = [];
+    const ethBerlinOrders: GenericPretixOrder[] = [];
 
-    const ordersByEventID: Map<string, GenericPretixOrder[]> = new Map();
-    ordersByEventID.set(eventA.slug, eventAOrders);
-    ordersByEventID.set(eventB.slug, eventBOrders);
-    ordersByEventID.set(eventC.slug, eventCOrders);
+    const ordersByEventID = new Map<string, GenericPretixOrder[]>();
+    ordersByEventID.set(ethLatAm.slug, ethLatAmOrders);
+    ordersByEventID.set(ethBerlin.slug, ethBerlinOrders);
 
-    const eventNameByEventID: Map<string, GenericPretixEvent> = new Map();
-    eventNameByEventID.set(eventA.slug, eventA);
-    eventNameByEventID.set(eventB.slug, eventB);
-    eventNameByEventID.set(eventC.slug, eventC);
+    const eventsByEventID = new Map<string, GenericPretixEvent>();
+    eventsByEventID.set(ethLatAm.slug, ethLatAm);
+    eventsByEventID.set(ethBerlin.slug, ethBerlin);
 
-    const itemsByEventID: Map<string, GenericPretixItem[]> = new Map();
-    itemsByEventID.set(eventA.slug, [eventAItem1, eventAItem2]);
-    itemsByEventID.set(eventB.slug, [eventBItem3, eventBItem4]);
+    const productsByEventID = new Map<string, GenericPretixProduct[]>();
+    productsByEventID.set(ethLatAm.slug, [
+      ethLatAmAttendeeProduct,
+      ethLatAmBouncerProduct,
+      ethLatAmTshirtProduct
+    ]);
+    productsByEventID.set(ethBerlin.slug, [
+      ethBerlinAttendeeProduct,
+      ethBerlinAddonProduct,
+      ethLatAmTshirtProduct
+    ]);
 
-    const settingsByEventID: Map<string, GenericPretixEventSettings> =
-      new Map();
-    settingsByEventID.set(eventA.slug, eventASettings);
-    settingsByEventID.set(eventB.slug, eventBSettings);
-    settingsByEventID.set(eventC.slug, eventCSettings);
-
-    const categoriesByEventId: Map<string, GenericPretixCategory[]> = new Map();
-    categoriesByEventId.set(eventA.slug, eventACategories);
-    categoriesByEventId.set(eventB.slug, eventBCategories);
-    categoriesByEventId.set(eventC.slug, eventCCategories);
+    const settingsByEventID = new Map<string, GenericPretixEventSettings>();
+    settingsByEventID.set(ethLatAm.slug, ethLatAmSettings);
+    settingsByEventID.set(ethBerlin.slug, ethBerlinSettings);
+    const productCategoriesByEventID = new Map<
+      string,
+      GenericPretixProductCategory[]
+    >();
+    productCategoriesByEventID.set(ethLatAm.slug, ethLatAmCategories);
+    productCategoriesByEventID.set(ethBerlin.slug, ethBerlinCategories);
 
     return {
+      ethLatAm,
+      ethLatAmSettings,
+      ethLatAmAttendeeProduct: ethLatAmAttendeeProduct,
+      ethLatAmBouncerProduct: ethLatAmBouncerProduct,
+      ethLatAmTshirtProduct: ethLatAmTshirtProduct,
+      ethLatAmAttendeeEmail: EthLatAmAttendee1Email,
+      ethLatAmBouncerEmail: EthLatAmAttendee2Email,
+
+      ethBerlin,
+      ethBerlinSettings,
+      ethBerlinAttendeeProduct: ethBerlinAttendeeProduct,
+      ethBerlinBouncerProduct: ethBerlinBouncerProduct,
+      ethBerlinTshirtProduct: ethBerlinAddonProduct,
+      ethBerlinAttendeeEmail: EthLatAmBouncer1Email,
+      ethBerlinBouncerEmail: EthLatAmBouncer2Email,
+
       orgUrl,
       token,
+
       ordersByEventID,
-      eventByEventID: eventNameByEventID,
-      itemsByEventID,
+      eventsByEventID,
+      productsByEventID,
       settingsByEventID,
-      eventAItem1,
-      eventAItem2,
-      eventBItem3,
-      eventBItem4,
-      eventA,
-      eventB,
-      eventC,
-      eventASettings,
-      eventBSettings,
-      eventCSettings,
-      categoriesByEventId,
-      EMAIL_1,
-      EMAIL_2,
-      EMAIL_3,
-      EMAIL_4
+      productCategoriesByEventID
     };
   }
 
@@ -312,35 +371,46 @@ export class GenericPretixDataMocker {
     };
   }
 
-  private newItem(
-    name: string,
-    category: number,
-    addon = false
-  ): GenericPretixItem {
+  /**
+   * E.g. GA, Bouncer, T-Shirt, Towel
+   */
+  private newProductType(
+    productName: string,
+    productCategoryId: number,
+    { is_addon } = { is_addon: false }
+  ): GenericPretixProduct {
     return {
       id: this.nextId(),
-      name: { en: name },
-      category,
-      admission: !addon,
-      personalized: !addon
+      name: { en: productName },
+      category: productCategoryId,
+      admission: !is_addon,
+      personalized: !is_addon
     };
   }
 
-  private newPretixOrder(
+  /**
+   * @param orderEmail - array of (product id, attendee email) tuples,
+   */
+  private newOrder(
     orderEmail: string,
-    itemsAndEmails: [number, string | null][] // array of (item, attendee email) tuples,
+    productEmailPairs: [number, string | null][]
   ): GenericPretixOrder {
     const orderId = this.randomOrderCode();
 
     return {
       code: orderId,
-      name: this.randomName(),
-      status: "p",
+      /**
+       * name attached to order doesn't have to match names
+       * on positions (individual purchased items)
+       */
+      name: randomName(),
+      status: "p", // p = paid
       testmode: false,
-      secret: this.randomSecret(),
+      secret: this.randomPositionSecret(),
       email: orderEmail,
-      positions: itemsAndEmails.map(([item, email]) =>
-        this.newPosition(orderId, email, item, this.nextId())
+      positions: productEmailPairs.map(([product, email]) =>
+        // TODO @rob - is the sub event id meant to be using `this.nextId()`
+        this.newPosition(orderId, email, product, this.nextId())
       )
     };
   }
@@ -348,19 +418,23 @@ export class GenericPretixDataMocker {
   private newPosition(
     orderId: string,
     attendeeEmail: string | null,
-    itemId: number,
-    subevent: number
+    productId: number,
+    subEventId: number
   ): GenericPretixPosition {
     return {
       id: this.nextId(),
       order: orderId,
       positionid: this.nextId(),
-      item: itemId,
+      /**
+       * 'item' and 'product' and 'product type' are generally
+       * used interchangably.
+       */
+      item: productId,
       price: "",
-      attendee_name: this.randomName(),
+      attendee_name: randomName(),
       attendee_email: attendeeEmail,
-      subevent: subevent,
-      secret: this.randomSecret(),
+      subevent: subEventId,
+      secret: this.randomPositionSecret(),
       checkins: []
     };
   }
@@ -372,14 +446,11 @@ export class GenericPretixDataMocker {
     };
   }
 
-  private newEventCategory(
+  private newProductCategory(
     id: number,
-    isAddon: boolean
-  ): GenericPretixCategory {
-    return {
-      id,
-      is_addon: isAddon
-    };
+    { is_addon }: { is_addon: boolean }
+  ): GenericPretixProductCategory {
+    return { id, is_addon };
   }
 
   private nextId(): number {
@@ -390,20 +461,7 @@ export class GenericPretixDataMocker {
     return uuid().substring(0, 5).toUpperCase();
   }
 
-  private randomSecret(): string {
+  private randomPositionSecret(): string {
     return uuid().substring(0, 8);
-  }
-
-  private randomName(): string {
-    const firstNames = ["Bob", "Steve", "Gub", "Mob", "Flub", "Jib", "Grub"];
-    const lastNames = [
-      "Froby",
-      "Shmoby",
-      "Glowby",
-      "Brimby",
-      "Slimbo",
-      "Froggy"
-    ];
-    return _.sample(firstNames) + " " + _.sample(lastNames);
   }
 }
