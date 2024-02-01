@@ -27,6 +27,7 @@ export default function Dashboard(): ReactNode {
   const [isLoggingOut, setLoggingOut] = useState(false);
   // TODO: After MVP, replace with RTK hooks or a more robust state management.
   const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
+  const [isLoading, setLoading] = useState(true);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
   const [newPipelineRaw, setNewPipelineRaw] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
@@ -34,6 +35,7 @@ export default function Dashboard(): ReactNode {
   const [error, setError] = useState("");
 
   const fetchAllPipelines = useCallback(async () => {
+    setLoading(true);
     const res =
       await requestGenericIssuanceGetAllUserPipelines(ZUPASS_SERVER_URL);
     if (res.success) {
@@ -42,6 +44,7 @@ export default function Dashboard(): ReactNode {
       // TODO: Better errors
       alert(`An error occurred while fetching user pipelines: ${res.error}`);
     }
+    setLoading(false);
   }, []);
 
   useEffect(() => {
@@ -62,6 +65,10 @@ export default function Dashboard(): ReactNode {
       alert(`An error occurred while creating pipeline: ${res.error}`);
     }
   };
+
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
   if (!user) {
     window.location.href = "/";

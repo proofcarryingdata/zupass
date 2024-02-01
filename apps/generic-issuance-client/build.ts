@@ -12,7 +12,13 @@ const genericIssuanceClientAppOpts: BuildOptions = {
   define: {
     "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
     "process.env.STYTCH_PUBLIC_TOKEN": `'${process.env.STYTCH_PUBLIC_TOKEN}'`,
-    "process.env.GENERIC_ISSUANCE_CLIENT_URL": `'${process.env.GENERIC_ISSUANCE_CLIENT_URL}'`
+    "process.env.GENERIC_ISSUANCE_CLIENT_URL": `'${process.env.GENERIC_ISSUANCE_CLIENT_URL}'`,
+    "process.env.PASSPORT_SERVER_URL": JSON.stringify(
+      process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
+    ),
+    "process.env.PASSPORT_CLIENT_URL": JSON.stringify(
+      process.env.PASSPORT_CLIENT_URL || "http://localhost:3000"
+    )
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
