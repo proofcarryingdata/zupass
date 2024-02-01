@@ -23,6 +23,14 @@ export function isReplaceInFolderAction(
   return action.type === PCDActionType.ReplaceInFolder;
 }
 
+export function expectIsReplaceInFolderAction(
+  action: PCDAction
+): asserts action is ReplaceInFolderAction {
+  if (action.type !== PCDActionType.ReplaceInFolder) {
+    throw new Error("Expected action to be a ReplaceInFolderAction");
+  }
+}
+
 export interface AppendToFolderAction {
   type: typeof PCDActionType.AppendToFolder;
   folder: string;

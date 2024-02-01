@@ -78,12 +78,22 @@ export type LemonadePipelineEventConfig = z.infer<
   typeof LemonadePipelineEventConfigSchema
 >;
 
+const FeedIssuanceOptionsSchema = z.object({
+  feedId: z.string(),
+  feedDisplayName: z.string(),
+  feedDescription: z.string(),
+  feedFolder: z.string()
+});
+
+export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
+
 const LemonadePipelineOptionsSchema = z.object({
   /**
    * Configured by the user when setting up Lemonade as a data source.
    */
   lemonadeApiKey: z.string(),
-  events: z.array(LemonadePipelineEventConfigSchema)
+  events: z.array(LemonadePipelineEventConfigSchema),
+  feedOptions: FeedIssuanceOptionsSchema
 });
 
 export type LemonadePipelineOptions = z.infer<
@@ -160,7 +170,8 @@ const PretixPipelineOptionsSchema = z.object({
    */
   pretixAPIKey: z.string(),
   pretixOrgUrl: z.string(),
-  events: z.array(PretixEventConfigSchema)
+  events: z.array(PretixEventConfigSchema),
+  feedOptions: FeedIssuanceOptionsSchema
 });
 
 export type PretixPipelineOptions = z.infer<typeof PretixPipelineOptionsSchema>;

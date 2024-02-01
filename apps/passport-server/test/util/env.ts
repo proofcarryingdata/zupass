@@ -4,8 +4,10 @@ import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
 
+const TEST_PORT = 47891;
+
 export const testingEnv: EnvironmentVariables = Object.freeze({
-  PORT: 47891,
+  PORT: TEST_PORT,
   NODE_ENV: "production",
   MAILGUN_API_KEY: undefined,
   DATABASE_USERNAME: "admin",
@@ -30,6 +32,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   STYTCH_SECRET: "stytch_url",
   GENERIC_ISSUANCE_CLIENT_URL: "http://localhost:3005",
   PASSPORT_CLIENT_URL: "http://localhost:3000",
+  PASSPORT_SERVER_URL: `http://localhost:${TEST_PORT}`,
   PRETIX_SYNC_DISABLED: undefined,
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   TICKET_ISSUANCE_CUTOFF_DATE: undefined,

@@ -25,12 +25,12 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { v5 as uuidv5 } from "uuid";
 import {
-  GenericPretixCategory,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
-  GenericPretixItem,
   GenericPretixOrder,
+  GenericPretixProduct,
+  GenericPretixProductCategory,
   IGenericPretixAPI
 } from "../../../apis/pretix/genericPretixAPI";
 import {
@@ -47,9 +47,10 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceUrlPath
+  makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { BasePipelineCapability } from "../types";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";
@@ -61,19 +62,7 @@ const LOG_TAG = `[${LOG_NAME}]`;
  */
 export class PretixPipeline implements BasePipeline {
   public type = PipelineType.Pretix;
-  public capabilities = [
-    {
-      issue: this.issuePretixTicketPCDs.bind(this),
-      feedId: "ticket-feed",
-      type: PipelineCapability.FeedIssuance,
-      getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
-    } satisfies FeedIssuanceCapability,
-    {
-      checkin: this.checkinPretixTicketPCDs.bind(this),
-      type: PipelineCapability.Checkin,
-      getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
-    } satisfies CheckinCapability
-  ];
+  public capabilities: BasePipelineCapability[];
 
   /**
    * Used to sign {@link EdDSATicketPCD}
@@ -113,6 +102,22 @@ export class PretixPipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
+    this.capabilities = [
+      {
+        issue: this.issuePretixTicketPCDs.bind(this),
+        options: this.definition.options.feedOptions,
+        type: PipelineCapability.FeedIssuance,
+        feedUrl: makeGenericIssuanceFeedUrl(
+          this.id,
+          this.definition.options.feedOptions.feedId
+        )
+      } satisfies FeedIssuanceCapability,
+      {
+        checkin: this.checkinPretixTicketPCDs.bind(this),
+        type: PipelineCapability.Checkin,
+        getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
+      } satisfies CheckinCapability
+    ] as unknown as BasePipelineCapability[];
   }
 
   /**
@@ -126,7 +131,7 @@ export class PretixPipeline implements BasePipeline {
     logger(LOG_TAG, `loading for pipeline id ${this.id}`);
     const tickets: PretixTicket[] = [];
 
-    const errors = [];
+    const errors: string[] = [];
 
     for (const event of this.definition.options.events) {
       // @todo this can throw exceptions. how should we handle this?
@@ -176,7 +181,9 @@ export class PretixPipeline implements BasePipeline {
    * the purpose of validating that Pretix is correctly configured.
    */
   private async loadEvent(event: PretixEventConfig): Promise<PretixEventData> {
-    return traced(LOG_NAME, "loadEvents", async () => {
+    return traced(LOG_NAME, "loadEvent", async () => {
+      logger(LOG_TAG, `loadEvent`, event);
+
       const orgUrl = this.definition.options.pretixOrgUrl;
       const token = this.definition.options.pretixAPIKey;
       const eventId = event.externalId;
@@ -185,8 +192,12 @@ export class PretixPipeline implements BasePipeline {
         token,
         eventId
       );
-      const categories = await this.api.fetchCategories(orgUrl, token, eventId);
-      const items = await this.api.fetchItems(orgUrl, token, eventId);
+      const categories = await this.api.fetchProductCategories(
+        orgUrl,
+        token,
+        eventId
+      );
+      const products = await this.api.fetchProducts(orgUrl, token, eventId);
       const eventInfo = await this.api.fetchEvent(orgUrl, token, eventId);
       const orders = await this.api.fetchOrders(orgUrl, token, eventId);
       const checkinLists = await this.api.fetchEventCheckinLists(
@@ -198,7 +209,7 @@ export class PretixPipeline implements BasePipeline {
       return {
         settings,
         categories,
-        items,
+        products,
         eventInfo,
         orders,
         checkinLists
@@ -237,7 +248,7 @@ export class PretixPipeline implements BasePipeline {
    * "Choose automatically depending on event settings" in the Pretix UI.
    */
   private validateEventItem(
-    item: GenericPretixItem,
+    item: GenericPretixProduct,
     addonCategoryIdSet: Set<number>,
     productConfig: PretixProductConfig
   ): string[] {
@@ -245,16 +256,29 @@ export class PretixPipeline implements BasePipeline {
 
     // If item is not an add-on, check that it is an Admission product and
     // that "Personalization" is set to "Personalized Ticket"
-    if (!addonCategoryIdSet.has(item.category)) {
+
+    if (item.category && !addonCategoryIdSet.has(item.category)) {
       if (item.admission !== true) {
         errors.push(
-          `Product type is not "Admission" on product ${productConfig.genericIssuanceId}`
+          `Product type is not "Admission" on product ${JSON.stringify(
+            productConfig,
+            null,
+            2
+          )} - addon product categories are ${JSON.stringify([
+            ...addonCategoryIdSet
+          ])}`
         );
       }
 
       if (item.personalized !== true) {
         errors.push(
-          `"Personalization" is not set to "Personalized ticket" on product ${productConfig.genericIssuanceId}`
+          `"Personalization" is not set to "Personalized ticket" on product ${JSON.stringify(
+            productConfig,
+            null,
+            2
+          )} - addon product categories are ${JSON.stringify([
+            ...addonCategoryIdSet
+          ])}`
         );
       }
     }
@@ -281,7 +305,7 @@ export class PretixPipeline implements BasePipeline {
     eventData: PretixEventData,
     eventConfig: PretixEventConfig
   ): string[] {
-    const { settings, items, categories } = eventData;
+    const { settings, products: items, categories } = eventData;
     const activeItemIdSet = new Set(
       eventConfig.products.map((product) => product.externalId)
     );
@@ -385,7 +409,7 @@ export class PretixPipeline implements BasePipeline {
     const tickets: PretixTicket[] = [];
     const { orders } = eventData;
     const fetchedItemIds = new Set(
-      eventData.items.map((item) => item.id.toString())
+      eventData.products.map((item) => item.id.toString())
     );
     const products = new Map(
       eventConfig.products
@@ -411,7 +435,7 @@ export class PretixPipeline implements BasePipeline {
         // ensure it. But TypeScript doesn't know that.
         if (product) {
           // Try getting email from response to question; otherwise, default to email of purchaser
-          const email = normalizeEmail(attendee_email || order.email);
+          const email = normalizeEmail(attendee_email ?? order.email);
 
           // Checkin events can be either "entry" or "exit".
           // Exits cancel out entries, so we want to find out if the most
@@ -445,7 +469,7 @@ export class PretixPipeline implements BasePipeline {
             email,
             product,
             event: eventConfig,
-            full_name: attendee_name || order.name || "", // Fallback since we have a not-null constraint
+            full_name: attendee_name ?? order.name ?? "", // Fallback since we have a not-null constraint
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,
@@ -488,7 +512,9 @@ export class PretixPipeline implements BasePipeline {
     }
 
     const email = emailPCD.claim.emailAddress;
+
     const relevantTickets = await this.db.loadByEmail(this.id, email);
+
     const ticketDatas = relevantTickets.map((t) =>
       this.atomToTicketData(t, credential.claim.identityCommitment)
     );
@@ -500,17 +526,19 @@ export class PretixPipeline implements BasePipeline {
       )
     );
 
-    return {
+    const result: PollFeedResponseValue = {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "folder",
+          folder: this.definition.options.feedOptions.feedFolder,
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )
         }
       ]
     };
+
+    return result;
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
@@ -759,8 +787,8 @@ export function isPretixPipelineDefinition(
 interface PretixEventData {
   settings: GenericPretixEventSettings;
   eventInfo: GenericPretixEvent;
-  categories: GenericPretixCategory[];
-  items: GenericPretixItem[];
+  categories: GenericPretixProductCategory[];
+  products: GenericPretixProduct[];
   orders: GenericPretixOrder[];
   checkinLists: GenericPretixCheckinList[];
 }

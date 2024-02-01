@@ -2,8 +2,22 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
+
+export interface FeedIssuanceOptions {
+  /**
+   * Used to differentiate between different feeds on the same {@link Pipeline}.
+   * TODO:
+   * - ensure at runtime that a {@link Pipeline} doesn't contain capabilities
+   *   with overlapping {@link feedId}s.
+   */
+  feedId: string;
+  feedDisplayName: string;
+  feedDescription: string;
+  feedFolder: string;
+}
 
 /**
  * Can be attached to a {@link Pipeline} that can issue feeds to external
@@ -12,19 +26,9 @@ import { PipelineCapability } from "./types";
  */
 export interface FeedIssuanceCapability extends BasePipelineCapability {
   type: PipelineCapability.FeedIssuance;
-  /**
-   * Used to differentiate between different feeds on the same {@link Pipeline}.
-   * TODO:
-   * - ensure at runtime that a {@link Pipeline} doesn't contain capabilities
-   *   with overlapping {@link feedId}s.
-   */
-  feedId: string;
   issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
-  getFeedUrl(): string;
-  /**
-   * TODO: implement endpoint that lets Zupass figure out what permissions / etc. a
-   * feed requires.
-   */
+  feedUrl: string;
+  options: FeedIssuanceOptions;
 }
 
 export function isFeedIssuanceCapability(
@@ -33,6 +37,12 @@ export function isFeedIssuanceCapability(
   return capability.type === PipelineCapability.FeedIssuance;
 }
 
-export function generateIssuanceUrlPath(pipelineId: string): string {
-  return `/generic-issuance/api/poll-feed/${pipelineId}`;
+export function makeGenericIssuanceFeedUrl(
+  pipelineId: string,
+  feedId: string
+): string {
+  return urljoin(
+    process.env.PASSPORT_SERVER_URL as string,
+    `/generic-issuance/api/feed/${pipelineId}/${feedId}`
+  );
 }

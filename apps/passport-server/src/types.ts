@@ -113,4 +113,5 @@ export interface EnvironmentVariables {
   TICKET_ISSUANCE_CUTOFF_DATE?: string;
   GENERIC_RATE_LIMIT_DISABLED?: string;
   GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY?: string;
+  PASSPORT_SERVER_URL: string;
 }

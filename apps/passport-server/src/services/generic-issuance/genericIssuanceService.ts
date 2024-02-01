@@ -1,13 +1,21 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CheckTicketInResponseValue,
+  Feed,
   GenericIssuanceCheckInRequest,
   GenericIssuanceSendEmailResponseValue,
+  ListFeedsResponseValue,
   PipelineDefinition,
   PipelineDefinitionSchema,
+  PipelineFeedInfo,
+  PipelineInfoResponseValue,
+  PipelineType,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  PretixPipelineDefinition
 } from "@pcd/passport-interface";
+import { PCDPermissionType } from "@pcd/pcd-collection";
+import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
 import { v4 as uuidV4 } from "uuid";
@@ -22,6 +30,7 @@ import {
   IPipelineUserDB,
   PipelineUserDB
 } from "../../database/queries/pipelineUserDB";
+import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -168,16 +177,42 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
-    await this.createPipelines();
-    await this.loadAllPipelines();
+    await this.localDevCreateTestPipeline();
+    await this.loadPipelines();
+    setTimeout(async () => {
+      try {
+        await this.loadPipelineDatas();
+      } catch (e) {
+        logger(LOG_TAG, e);
+      }
+    });
+  }
+
+  public async loadPipelineDatas(): Promise<void> {
+    logger(
+      LOG_TAG,
+      `loading data for all pipelines: ${JSON.stringify(
+        this.pipelines.map((p) => p.id)
+      )}`,
+      this.pipelines.length
+    );
+
+    await Promise.allSettled(
+      this.pipelines.map(async (p) => {
+        try {
+          logger(LOG_TAG, `loading for pipeline with id ${p.id}`);
+          await p.load();
+          logger(LOG_TAG, `successfully loaded pipeline with id ${p.id}`);
+        } catch (e) {
+          logger(LOG_TAG, `failed to load pipeline ${p.id}`, e);
+        }
+      })
+    );
+
     await this.scheduleReloads();
   }
 
-  public async loadAllPipelines(): Promise<void> {
-    await Promise.allSettled(this.pipelines.map((p) => p.load()));
-  }
-
-  private async createPipelines(): Promise<void> {
+  public async loadPipelines(): Promise<void> {
     this.pipelines = [];
     const definitions = await this.definitionDB.loadPipelineDefinitions();
     const pipelines = await createPipelines(
@@ -225,7 +260,7 @@ export class GenericIssuanceService {
   ): Promise<PollFeedResponseValue> {
     const pipeline = await this.ensurePipeline(pipelineId);
     const relevantCapability = pipeline.capabilities.find(
-      (c) => isFeedIssuanceCapability(c) && c.feedId === req.feedId
+      (c) => isFeedIssuanceCapability(c) && c.options.feedId === req.feedId
     ) as FeedIssuanceCapability | undefined;
 
     if (!relevantCapability) {
@@ -240,6 +275,66 @@ export class GenericIssuanceService {
     }
 
     return relevantCapability.issue(req);
+  }
+
+  public async handleGetPipelineInfo(
+    pipelineId: string
+  ): Promise<PipelineInfoResponseValue> {
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const feeds = pipeline.capabilities.filter(isFeedIssuanceCapability);
+    const infos: PipelineFeedInfo[] = feeds.map((f) => ({
+      name: f.options.feedDisplayName,
+      url: f.feedUrl
+    }));
+
+    const response: PipelineInfoResponseValue = { feeds: infos };
+
+    return response;
+  }
+
+  public async handleListFeed(
+    pipelineId: string,
+    feedId: string
+  ): Promise<ListFeedsResponseValue> {
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const relevantCapability = pipeline.capabilities.find(
+      (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
+    ) as FeedIssuanceCapability | undefined;
+
+    if (!relevantCapability) {
+      throw new PCDHTTPError(
+        403,
+        `pipeline ${pipelineId} can't issue PCDs for feed id ${feedId}`
+      );
+    }
+
+    const feed: Feed = {
+      id: feedId,
+      name: relevantCapability.options.feedDisplayName,
+      description: relevantCapability.options.feedDescription,
+      permissions: [
+        {
+          folder: relevantCapability.options.feedFolder,
+          type: PCDPermissionType.AppendToFolder
+        },
+        {
+          folder: relevantCapability.options.feedFolder,
+          type: PCDPermissionType.ReplaceInFolder
+        }
+      ],
+      credentialRequest: {
+        signatureType: "sempahore-signature-pcd",
+        pcdType: "email-pcd"
+      }
+    };
+
+    const res: ListFeedsResponseValue = {
+      feeds: [feed],
+      providerName: "PCD-ifier",
+      providerUrl: relevantCapability.feedUrl
+    };
+
+    return res;
   }
 
   /**
@@ -411,6 +506,83 @@ export class GenericIssuanceService {
       throw new PCDHTTPError(500, "Failed to send generic issuance email");
     }
   }
+
+  /**
+   * in local development, set the `TEST_PRETIX_KEY` and `TEST_PRETIX_ORG_URL` env
+   * variables to the ones that Ivan shares with you to set up a Pretix pipeline.
+   */
+  public async localDevCreateTestPipeline(): Promise<void> {
+    if (process.env.NODE_ENV === "production") {
+      return;
+    }
+
+    logger("[INIT] attempting to create test pipeline data");
+
+    const testPretixAPIKey = process.env.TEST_PRETIX_KEY;
+    const testPretixOrgUrl = process.env.TEST_PRETIX_ORG_URL;
+    const createTestPretixPipeline = process.env.CREATE_TEST_PIPELINE;
+
+    if (!createTestPretixPipeline || !testPretixAPIKey || !testPretixOrgUrl) {
+      logger("[INIT] not creating test pipeline data - missing env vars");
+      return;
+    }
+
+    const existingPipelines = await this.definitionDB.loadPipelineDefinitions();
+    if (existingPipelines.length !== 0) {
+      logger("[INIT] there's already a pipeline - not creating test pipeline");
+      return;
+    }
+
+    const ownerUUID = randomUUID();
+
+    await sqlQuery(
+      this.context.dbPool,
+      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
+      [ownerUUID, "test@example.com", true]
+    );
+
+    const pretixDefinitionId = "3d6d4c8e-4228-423e-9b0a-33709aa1b468";
+
+    const pretixDefinition: PretixPipelineDefinition = {
+      ownerUserId: ownerUUID,
+      id: pretixDefinitionId,
+      editorUserIds: [],
+      options: {
+        feedOptions: {
+          feedDescription: "progcrypto test tickets",
+          feedDisplayName: "progcrypto",
+          feedFolder: "generic/progcrypto",
+          feedId: "0"
+        },
+        events: [
+          {
+            genericIssuanceId: randomUUID(),
+            externalId: "progcrypto",
+            name: "ProgCrypto (Internal Test)",
+            products: [
+              {
+                externalId: "369803",
+                name: "GA",
+                genericIssuanceId: randomUUID(),
+                isSuperUser: false
+              },
+              {
+                externalId: "374045",
+                name: "Organizer",
+                genericIssuanceId: randomUUID(),
+                isSuperUser: true
+              }
+            ]
+          }
+        ],
+        pretixAPIKey: testPretixAPIKey,
+        pretixOrgUrl: testPretixOrgUrl
+      },
+      type: PipelineType.Pretix
+    };
+
+    await this.definitionDB.setDefinition(pretixDefinition);
+  }
 }
 
 export async function startGenericIssuanceService(
@@ -489,10 +661,7 @@ export async function startGenericIssuanceService(
     zupassPublicKey
   );
 
-  // TODO: in the future (read: before shipping to real prod), this probably
-  // shouldn't await, as there may be many many pipelines, and their APIs don't
-  // necessarily return in a bounded amount of time.
-  await issuanceService.start();
+  issuanceService.start();
 
   return issuanceService;
 }

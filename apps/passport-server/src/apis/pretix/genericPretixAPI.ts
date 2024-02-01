@@ -8,16 +8,27 @@ import { instrumentedFetch } from "../fetch";
 const TRACE_SERVICE = "GenericPretixAPI";
 
 export interface IGenericPretixAPI {
+  /**
+   * Orders contain many positions, which basically correspond to tickets on our end.
+   */
   fetchOrders(
     orgUrl: string,
     token: string,
     eventID: string
   ): Promise<GenericPretixOrder[]>;
-  fetchItems(
+  /**
+   * On Pretix you can sell several different types of things to your
+   * 'event attendees'. You can sell different tiers of tickets - GA, VIP, etc.
+   * You can also sell [add-ons](https://docs.pretix.eu/en/latest/api/resources/item_add-ons.html) -
+   * items that can be bought *in addition* to another product type. E.g. you could offer
+   * to sell t-shirts in addition to a GA ticket, but the VIP just gets a t-shirt for
+   * free, so they don't have to 'buy' anything - their VIP ticket grants them access to a t-shirt.
+   */
+  fetchProducts(
     orgUrl: string,
     token: string,
     eventID: string
-  ): Promise<GenericPretixItem[]>;
+  ): Promise<GenericPretixProduct[]>;
   fetchEvent(
     orgUrl: string,
     token: string,
@@ -33,16 +44,21 @@ export interface IGenericPretixAPI {
     token: string,
     eventID: string
   ): Promise<GenericPretixEventSettings>;
-  fetchCategories(
+  fetchProductCategories(
     orgUrl: string,
     token: string,
     eventID: string
-  ): Promise<GenericPretixCategory[]>;
+  ): Promise<GenericPretixProductCategory[]>;
   fetchAllEvents(orgUrl: string, token: string): Promise<GenericPretixEvent[]>;
+  /**
+   * It would probably be good practice to have some sort of lock on the act
+   * of checking in a generic issuance ticket for a particular external event id.
+   * We do not want to introduce surface area for double-spend.
+   */
   pushCheckin(
     orgUrl: string,
     token: string,
-    secret: string,
+    positionSecret: string,
     checkinListId: string,
     timestamp: string
   ): Promise<void>;
@@ -304,14 +320,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  public async fetchCategories(
+  public async fetchProductCategories(
     orgUrl: string,
     token: string,
     eventID: string
-  ): Promise<GenericPretixCategory[]> {
+  ): Promise<GenericPretixProductCategory[]> {
     return traced(TRACE_SERVICE, "fetchAddons", async (span) => {
       span?.setAttribute("org_url", orgUrl);
-      const categories: GenericPretixCategory[] = [];
+      const categories: GenericPretixProductCategory[] = [];
 
       // Fetch categories from paginated API
       let url = `${orgUrl}/events/${eventID}/categories/`;
@@ -327,7 +343,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
         }
         const page = await res.json();
         const results = z
-          .array(GenericPretixCategorySchema)
+          .array(GenericPretixProductCategorySchema)
           .safeParse(page.results);
         if (results.success) {
           categories.push(...results.data);
@@ -343,14 +359,14 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  public async fetchItems(
+  public async fetchProducts(
     orgUrl: string,
     token: string,
     eventID: string
-  ): Promise<GenericPretixItem[]> {
+  ): Promise<GenericPretixProduct[]> {
     return traced(TRACE_SERVICE, "fetchItems", async (span) => {
       span?.setAttribute("org_url", orgUrl);
-      const items: GenericPretixItem[] = [];
+      const items: GenericPretixProduct[] = [];
 
       // Fetch orders from paginated API
       let url = `${orgUrl}/events/${eventID}/items/`;
@@ -366,7 +382,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
         }
         const page = await res.json();
         const results = z
-          .array(GenericPretixItemSchema)
+          .array(GenericPretixProductSchema)
           .safeParse(page.results);
         if (results.success) {
           items.push(...results.data);
@@ -422,7 +438,16 @@ export class GenericPretixAPI implements IGenericPretixAPI {
     });
   }
 
-  // Fetch all check-in lists for a given event.
+  /**
+   * When checking in, it is necessary to provide one or more checkin
+   * list IDs: https://docs.pretix.eu/en/latest/api/resources/checkin.html
+   *
+   * Events can have multiple checkin lists, though we tell users to set
+   * up only one, and we throw an error if anything other than one checkin
+   * list is found {@link PretixPipeline#validateEventData}.
+   *
+   * When checking in, we use the checkin list ID of the sole checkin list.
+   */
   public async fetchEventCheckinLists(
     orgUrl: string,
     token: string,
@@ -466,7 +491,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
   public async pushCheckin(
     orgUrl: string,
     token: string,
-    secret: string,
+    positionSecret: string,
     checkinListId: string,
     timestamp: string
   ): Promise<void> {
@@ -483,7 +508,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
           "Content-Type": "application/json"
         },
         body: JSON.stringify({
-          secret,
+          secret: positionSecret,
           lists: [checkinListId],
           datetime: timestamp
         })
@@ -499,8 +524,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 }
 
 export function getGenericPretixAPI(): GenericPretixAPI {
-  const api = new GenericPretixAPI();
-  return api;
+  return new GenericPretixAPI();
 }
 
 /**
@@ -539,7 +563,7 @@ const GenericPretixPositionSchema = z.object({
   price: z.string(),
   attendee_name: z.string(), // first and last
   attendee_email: z.string().toLowerCase().trim().nullable(),
-  subevent: z.number(),
+  subevent: z.number().nullable(),
   secret: z.string(),
   checkins: z.array(GenericPretixCheckinSchema)
 });
@@ -550,14 +574,14 @@ const GenericPretixOrderSchema = z.object({
   status: z.string(), // "p"
   testmode: z.boolean(),
   secret: z.string(),
-  name: z.string(),
+  name: z.string().nullable().optional(),
   email: z.string().toLowerCase().trim(),
   positions: z.array(GenericPretixPositionSchema) // should have exactly one
 });
 
-const GenericPretixItemSchema = z.object({
+const GenericPretixProductSchema = z.object({
   id: z.number(), // corresponds to "item" field in GenericPretixPosition
-  category: z.number(),
+  category: z.number().optional().nullable(),
   admission: z.boolean(),
   personalized: z.boolean(),
   generate_tickets: z.boolean().nullable().optional(),
@@ -579,9 +603,23 @@ const GenericPretixEventSettingsSchema = z.object({
   attendee_emails_required: z.boolean()
 });
 
-const GenericPretixCategorySchema = z.object({
+/**
+ * All tickets must be configured as "personalized", with the exception of
+ * "add-ons", and an add-on is recognized by its category. The use-case
+ * for non-personalized add-on tickets was Devconnect towels.
+ *
+ * To date, we only care about categories for the purpose of ensuring that
+ * non-personalized tickets are, indeed, add-ons. No category data is persisted,
+ * as it's used only for validation.
+ *
+ * Category API docs: https://docs.pretix.eu/en/latest/api/resources/categories.html
+ *
+ * See #1119 for original implementation.
+ */
+const GenericPretixProductCategorySchema = z.object({
   id: z.number(),
   is_addon: z.boolean()
+  // TODO: load category name
 });
 
 // Each event has one or more check-in lists
@@ -593,12 +631,14 @@ const GenericPretixCheckinListSchema = z.object({
 
 export type GenericPretixI18nMap = z.infer<typeof GenericPretixI18MapSchema>;
 export type GenericPretixOrder = z.infer<typeof GenericPretixOrderSchema>;
-export type GenericPretixItem = z.infer<typeof GenericPretixItemSchema>;
+export type GenericPretixProduct = z.infer<typeof GenericPretixProductSchema>;
 export type GenericPretixEvent = z.infer<typeof GenericPretixEventSchema>;
 export type GenericPretixEventSettings = z.infer<
   typeof GenericPretixEventSettingsSchema
 >;
-export type GenericPretixCategory = z.infer<typeof GenericPretixCategorySchema>;
+export type GenericPretixProductCategory = z.infer<
+  typeof GenericPretixProductCategorySchema
+>;
 export type GenericPretixCheckinList = z.infer<
   typeof GenericPretixCheckinListSchema
 >;

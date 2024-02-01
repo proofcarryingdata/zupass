@@ -2,6 +2,7 @@ import {
   CheckTicketInResponseValue,
   GenericIssuanceCheckInRequest
 } from "@pcd/passport-interface";
+import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
@@ -24,5 +25,8 @@ export function isCheckinCapability(
 }
 
 export function generateCheckinUrlPath(pipelineId: string): string {
-  return `/generic-issuance/api/check-in/${pipelineId}`;
+  return urljoin(
+    process.env.PASSPORT_SERVER_URL as string,
+    `/generic-issuance/api/check-in/${pipelineId}`
+  );
 }

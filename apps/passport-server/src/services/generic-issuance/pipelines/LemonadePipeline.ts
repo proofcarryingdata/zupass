@@ -34,9 +34,10 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceUrlPath
+  makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { BasePipelineCapability } from "../types";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "LemonadePipeline";
@@ -54,19 +55,7 @@ export function isLemonadePipelineDefinition(
  */
 export class LemonadePipeline implements BasePipeline {
   public type = PipelineType.Lemonade;
-  public capabilities = [
-    {
-      issue: this.issueLemonadeTicketPCDs.bind(this),
-      feedId: "ticket-feed",
-      type: PipelineCapability.FeedIssuance,
-      getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
-    } satisfies FeedIssuanceCapability,
-    {
-      checkin: this.checkinLemonadeTicketPCD.bind(this),
-      type: PipelineCapability.Checkin,
-      getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
-    } satisfies CheckinCapability
-  ];
+  public capabilities: BasePipelineCapability[];
 
   /**
    * Used to sign {@link EdDSATicketPCD}
@@ -106,6 +95,23 @@ export class LemonadePipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<LemonadeAtom>;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
+
+    this.capabilities = [
+      {
+        issue: this.issueLemonadeTicketPCDs.bind(this),
+        options: this.definition.options.feedOptions,
+        type: PipelineCapability.FeedIssuance,
+        feedUrl: makeGenericIssuanceFeedUrl(
+          this.id,
+          this.definition.options.feedOptions.feedId
+        )
+      } satisfies FeedIssuanceCapability,
+      {
+        checkin: this.checkinLemonadeTicketPCD.bind(this),
+        type: PipelineCapability.Checkin,
+        getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
+      } satisfies CheckinCapability
+    ] as unknown as BasePipelineCapability[];
   }
 
   /**
@@ -118,8 +124,6 @@ export class LemonadePipeline implements BasePipeline {
    * - clear tickets after each load? important!!!!
    */
   public async load(): Promise<void> {
-    logger(LOG_TAG, `loading for pipeline id ${this.id}`);
-
     const events = await this.api.loadEvents(
       this.definition.options.lemonadeApiKey
     );
@@ -211,7 +215,7 @@ export class LemonadePipeline implements BasePipeline {
       actions: [
         {
           type: PCDActionType.ReplaceInFolder,
-          folder: "folder",
+          folder: this.definition.options.feedOptions.feedFolder,
           pcds: await Promise.all(
             tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
           )
