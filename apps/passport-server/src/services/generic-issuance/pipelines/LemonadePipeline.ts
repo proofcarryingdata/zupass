@@ -127,6 +127,9 @@ export class LemonadePipeline implements BasePipeline {
     {
       issue: this.issueLemonadeTicketPCDs.bind(this),
       feedId: "ticket-feed",
+      feedDescription: "description",
+      feedDisplayName: "display name",
+      feedFolder: "lemonade", // todo
       type: PipelineCapability.FeedIssuance,
       getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
     } satisfies FeedIssuanceCapability,

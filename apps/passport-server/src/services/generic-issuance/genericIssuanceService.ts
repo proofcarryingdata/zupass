@@ -1,11 +1,14 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CheckTicketInResponseValue,
+  Feed,
   GenericIssuanceCheckInRequest,
   GenericIssuanceSendEmailResponseValue,
+  ListFeedsResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { PCDPermissionType } from "@pcd/pcd-collection";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
@@ -244,6 +247,47 @@ export class GenericIssuanceService {
     }
 
     return relevantCapability.issue(req);
+  }
+
+  public async handleListFeed(
+    pipelineId: string,
+    feedId: string
+  ): Promise<ListFeedsResponseValue> {
+    const pipeline = await this.ensurePipeline(pipelineId);
+    const relevantCapability = pipeline.capabilities.find(
+      (c) => isFeedIssuanceCapability(c) && c.feedId === feedId
+    ) as FeedIssuanceCapability | undefined;
+
+    if (!relevantCapability) {
+      throw new PCDHTTPError(
+        403,
+        `pipeline ${pipelineId} can't issue PCDs for feed id ${feedId}`
+      );
+    }
+
+    const feed: Feed = {
+      id: feedId,
+      name: relevantCapability.feedDisplayName,
+      description: relevantCapability.feedDescription,
+      permissions: [
+        {
+          folder: relevantCapability.feedFolder,
+          type: PCDPermissionType.AppendToFolder
+        }
+      ],
+      credentialRequest: {
+        signatureType: "sempahore-signature-pcd",
+        pcdType: "email-pcd"
+      }
+    };
+
+    const res: ListFeedsResponseValue = {
+      feeds: [feed],
+      providerName: "Generic Issuance",
+      providerUrl: "/generic-issuance/api/list-feed/:pipelineID/" // TODO
+    };
+
+    return res;
   }
 
   /**

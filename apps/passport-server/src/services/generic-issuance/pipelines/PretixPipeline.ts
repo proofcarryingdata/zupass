@@ -100,6 +100,9 @@ export class PretixPipeline implements BasePipeline {
     {
       issue: this.issuePretixTicketPCDs.bind(this),
       feedId: "ticket-feed",
+      feedDisplayName: "Ticket Feed", // TODO: how can we make this configurable
+      feedDescription: "Feed Description", // TODO: how can we make this configurable
+      feedFolder: "test",
       type: PipelineCapability.FeedIssuance,
       getFeedUrl: (): string => generateIssuanceUrlPath(this.id)
     } satisfies FeedIssuanceCapability,

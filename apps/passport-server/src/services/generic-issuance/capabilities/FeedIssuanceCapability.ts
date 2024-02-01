@@ -21,10 +21,10 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
   feedId: string;
   issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
   getFeedUrl(): string;
-  /**
-   * TODO: implement endpoint that lets Zupass figure out what permissions / etc. a
-   * feed requires.
-   */
+
+  feedDisplayName: string;
+  feedDescription: string;
+  feedFolder: string;
 }
 
 export function isFeedIssuanceCapability(
