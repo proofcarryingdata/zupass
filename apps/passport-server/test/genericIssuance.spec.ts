@@ -47,7 +47,6 @@ import {
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
-import { sqlQuery } from "../src/database/sqlQuery";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import { LemonadePipeline } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
 import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
@@ -280,22 +279,27 @@ describe("Generic Issuance", function () {
       lemonadeAPI
     });
 
-    // TODO: once @richard's user db functions are merged, replace this
-    // with a function call
-    {
-      const isAdmin = false;
-      await sqlQuery(
-        giBackend.context.dbPool,
-        "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
-        [edgeCityGIUserID, edgeCityGIUserEmail, isAdmin]
-      );
-
-      await sqlQuery(
-        giBackend.context.dbPool,
-        "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
-        [ethLatAmGIUserID, ethLatAmGIUserEmail, isAdmin]
-      );
-    }
+    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const ethLatAmGIUser: PipelineUser = {
+      id: ethLatAmGIUserID,
+      email: ethLatAmGIUserEmail,
+      isAdmin: false
+    };
+    await userDB.setUser(ethLatAmGIUser);
+    assertUserMatches(
+      { id: ethLatAmGIUserID, email: ethLatAmGIUserEmail, isAdmin: false },
+      await userDB.getUser(ethLatAmGIUser.id)
+    );
+    const edgeCityDenverUser: PipelineUser = {
+      id: edgeCityGIUserID,
+      email: edgeCityGIUserEmail,
+      isAdmin: false
+    };
+    await userDB.setUser(edgeCityDenverUser);
+    assertUserMatches(
+      { id: edgeCityGIUserID, email: edgeCityGIUserEmail, isAdmin: false },
+      await userDB.getUser(edgeCityDenverUser.id)
+    );
 
     const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
     pretixBackendServer = getGenericMockPretixAPIServer(
@@ -334,26 +338,7 @@ describe("Generic Issuance", function () {
       await userDB.getUser(adminUser.id)
     );
 
-    const ethLatAmGIUser: PipelineUser = {
-      id: ethLatAmGIUserID,
-      email: ethLatAmGIUserEmail,
-      isAdmin: false
-    };
-    await userDB.setUser(ethLatAmGIUser);
-    assertUserMatches(
-      { id: ethLatAmGIUserID, email: ethLatAmGIUserEmail, isAdmin: false },
-      await userDB.getUser(ethLatAmGIUser.id)
-    );
-    const edgeCityDenverUser: PipelineUser = {
-      id: edgeCityGIUserID,
-      email: edgeCityGIUserEmail,
-      isAdmin: false
-    };
-    await userDB.setUser(edgeCityDenverUser);
-    assertUserMatches(
-      { id: edgeCityGIUserID, email: edgeCityGIUserEmail, isAdmin: false },
-      await userDB.getUser(edgeCityDenverUser.id)
-    );
+    // TODO: comprehensive tests of create update read delete
   });
 
   /**
