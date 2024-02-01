@@ -31,7 +31,7 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceUrl
+  makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { BasePipelineCapability } from "../types";
@@ -172,7 +172,10 @@ export class LemonadePipeline implements BasePipeline {
         issue: this.issueLemonadeTicketPCDs.bind(this),
         options: this.definition.options.feedOptions,
         type: PipelineCapability.FeedIssuance,
-        feedUrl: generateIssuanceUrl(this.id, "ticket-feed")
+        feedUrl: makeGenericIssuanceFeedUrl(
+          this.id,
+          this.definition.options.feedOptions.feedId
+        )
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.checkinLemonadeTicketPCD.bind(this),

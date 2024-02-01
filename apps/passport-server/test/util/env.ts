@@ -4,8 +4,10 @@ import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
 
+const TEST_PORT = 47891;
+
 export const testingEnv: EnvironmentVariables = Object.freeze({
-  PORT: 47891,
+  PORT: TEST_PORT,
   NODE_ENV: "production",
   MAILGUN_API_KEY: undefined,
   DATABASE_USERNAME: "admin",
@@ -20,7 +22,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_TOKEN: "pretix_token",
   PRETIX_VISITOR_EVENT_ID: "visitor_event_id",
   PRETIX_ZU_EVENT_ID: "zu_event_id",
-  SUPPRESS_LOGGING: "false",
+  SUPPRESS_LOGGING: "true",
   SERVER_RSA_PRIVATE_KEY_BASE64: Buffer.from(
     new NodeRSA({ b: 2048 }).exportKey("private")
   ).toString("base64"),
@@ -30,7 +32,7 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   STYTCH_SECRET: "stytch_url",
   GENERIC_ISSUANCE_CLIENT_URL: "http://localhost:3005",
   PASSPORT_CLIENT_URL: "http://localhost:3000",
-  PASSPORT_SERVER_URL: "http://localhost:3002",
+  PASSPORT_SERVER_URL: `http://localhost:${TEST_PORT}`,
   PRETIX_SYNC_DISABLED: undefined,
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   TICKET_ISSUANCE_CUTOFF_DATE: undefined,

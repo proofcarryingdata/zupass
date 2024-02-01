@@ -62,7 +62,7 @@ export function initGenericIssuanceRoutes(
       if (request.feedId !== feedId) {
         throw new PCDHTTPError(
           400,
-          "feed id in url does not match feed id in request body"
+          `feed id in url (${feedId}) does not match feed id in request body (${request.feedId})`
         );
       }
 

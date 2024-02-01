@@ -42,9 +42,10 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  generateIssuanceUrl
+  makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { BasePipelineCapability } from "../types";
 import {
   BasePipeline,
   BasePipelineDefinition,
@@ -98,26 +99,7 @@ export interface PretixProductConfig {
  */
 export class PretixPipeline implements BasePipeline {
   public type = PipelineType.Pretix;
-  public capabilities = [
-    {
-      issue: this.issuePretixTicketPCDs.bind(this),
-      // TODO: make configurable
-      options: {
-        feedId: "ticket-feed",
-        feedDisplayName: "Ticket Feed",
-        feedDescription: "Feed Description",
-        feedFolder: "test",
-        providerName: "provider"
-      },
-      type: PipelineCapability.FeedIssuance,
-      feedUrl: generateIssuanceUrl(this.id, "ticket-feed")
-    } satisfies FeedIssuanceCapability,
-    {
-      checkin: this.checkinPretixTicketPCDs.bind(this),
-      type: PipelineCapability.Checkin,
-      getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
-    } satisfies CheckinCapability
-  ];
+  public capabilities: BasePipelineCapability[];
 
   /**
    * Used to sign {@link EdDSATicketPCD}
@@ -157,6 +139,22 @@ export class PretixPipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
+    this.capabilities = [
+      {
+        issue: this.issuePretixTicketPCDs.bind(this),
+        options: this.definition.options.feedOptions,
+        type: PipelineCapability.FeedIssuance,
+        feedUrl: makeGenericIssuanceFeedUrl(
+          this.id,
+          this.definition.options.feedOptions.feedId
+        )
+      } satisfies FeedIssuanceCapability,
+      {
+        checkin: this.checkinPretixTicketPCDs.bind(this),
+        type: PipelineCapability.Checkin,
+        getCheckinUrl: (): string => generateCheckinUrlPath(this.id)
+      } satisfies CheckinCapability
+    ] as unknown as BasePipelineCapability[];
   }
 
   /**

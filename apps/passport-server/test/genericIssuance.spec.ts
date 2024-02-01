@@ -70,6 +70,7 @@ export async function semaphoreSignPayload(
 
 export async function requestGenericTickets(
   url: string,
+  feedId: string,
   zupassEddsaPrivateKey: string,
   email: string,
   identity: Identity
@@ -102,7 +103,7 @@ export async function requestGenericTickets(
     ticketHolderFeedCredentialPayload
   );
   const ticketPCDResponse = await requestPollFeed(url, {
-    feedId: "ticket-feed",
+    feedId: feedId,
     pcd: ticketHolderFeedCredential
   });
 
@@ -355,6 +356,7 @@ describe.only("generic issuance service tests", function () {
 
     const holderIssuedTickets = await requestGenericTickets(
       lemonadeIssuanceRoute,
+      lemonadePipeline.issuanceCapability.options.feedId,
       ZUPASS_EDDSA_PRIVATE_KEY,
       ticketHolderLemonadeUser.email,
       ticketHolderZupassIdentity
@@ -367,6 +369,7 @@ describe.only("generic issuance service tests", function () {
 
     const checkerIssuedTickets = await requestGenericTickets(
       lemonadeIssuanceRoute,
+      lemonadePipeline.issuanceCapability.options.feedId,
       ZUPASS_EDDSA_PRIVATE_KEY,
       ticketCheckerLemonadeTicket.email,
       ticketCheckerZupassIdentity
@@ -424,6 +427,7 @@ describe.only("generic issuance service tests", function () {
 
     const holderIssuedTickets = await requestGenericTickets(
       pretixIssuanceRoute,
+      pretixPipeline.issuanceCapability.options.feedId,
       ZUPASS_EDDSA_PRIVATE_KEY,
       ticketHolderPretixEmail,
       ticketHolderZupassIdentity
@@ -437,6 +441,7 @@ describe.only("generic issuance service tests", function () {
 
     const checkerIssuedTickets = await requestGenericTickets(
       pretixIssuanceRoute,
+      pretixPipeline.issuanceCapability.options.feedId,
       ZUPASS_EDDSA_PRIVATE_KEY,
       checkerPretixEmail,
       ticketCheckerZupassIdentity

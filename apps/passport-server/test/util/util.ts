@@ -38,6 +38,12 @@ export function expectToExist<T, U extends T = T>(
  */
 export function safeExit(): void {
   if (Math.random() < 2) {
+    // eslint-disable-next-line no-console
+    console.log("\n*************");
+    // eslint-disable-next-line no-console
+    console.log("* SAFE EXIT *");
+    // eslint-disable-next-line no-console
+    console.log("*************\n");
     process.exit(0);
   }
 }

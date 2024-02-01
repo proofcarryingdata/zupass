@@ -38,17 +38,7 @@ export function isFeedIssuanceCapability(
   return capability.type === PipelineCapability.FeedIssuance;
 }
 
-export function generateIssuanceUrl(
-  pipelineId: string,
-  feedId: string
-): string {
-  return urljoin(
-    process.env.PASSPORT_SERVER_URL as string,
-    `/generic-issuance/api/feed/${pipelineId}/${feedId}`
-  );
-}
-
-export function generateIssuanceListFeedUrl(
+export function makeGenericIssuanceFeedUrl(
   pipelineId: string,
   feedId: string
 ): string {
