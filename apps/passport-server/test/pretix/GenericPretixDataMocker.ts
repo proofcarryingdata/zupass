@@ -9,9 +9,6 @@ import {
 } from "../../src/apis/pretix/genericPretixAPI";
 import { randomName } from "../util/util";
 
-/**
- *
- */
 export interface IMockGenericIssuancePretixBackendData {
   // aggregate data for simpler querying
   organizers: IOrganizer[];
