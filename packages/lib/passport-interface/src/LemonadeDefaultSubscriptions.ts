@@ -1,3 +1,5 @@
+// TODO: Update after we finish feeds on generic issuance.
+// Copied over from https://zupass.lemonade.social/tickets.
 import { Feed, LemonadeFeedIds } from "./SubscriptionManager";
 
 export const lemonadeDefaultSubscriptions: Record<

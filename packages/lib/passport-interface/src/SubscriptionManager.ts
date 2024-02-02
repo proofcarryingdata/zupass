@@ -22,7 +22,7 @@ export const enum ZupassFeedIds {
   Zuconnect_23 = "5"
 }
 
-// TODO: Update after we finish feeds on generic issuance
+// TODO: Update after we finish feeds on generic issuance.
 export const enum LemonadeFeedIds {
   EdgeCityDenver = "1"
 }

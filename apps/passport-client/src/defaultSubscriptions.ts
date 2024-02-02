@@ -10,7 +10,7 @@ const DEFAULT_FEED_URL = `${appConfig.zupassServer}/feeds`;
 const DEFAULT_FEED_PROVIDER_NAME = "Zupass";
 const DEFAULT_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
-// TODO: Update after we finish feeds on generic issuance
+// TODO: Update after we finish feeds on generic issuance.
 const LEMONADE_FEED_URL = "https://zupass.lemonade.social/tickets";
 const LEMONADE_FEED_PROVIDER_NAME = "Lemonade";
 const LEMONADE_FEEDS = new Set(Object.keys(lemonadeDefaultSubscriptions));
