@@ -138,7 +138,6 @@ export function createPipeline(
  */
 export class GenericIssuanceService {
   private context: ApplicationContext;
-  private pipelines: Pipeline[];
   private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
@@ -149,6 +148,7 @@ export class GenericIssuanceService {
   private bypassEmail: boolean;
   private genericIssuanceClientUrl: string;
   private zupassPublicKey: EdDSAPublicKey;
+  private pipelines: Pipeline[];
 
   public constructor(
     context: ApplicationContext,
