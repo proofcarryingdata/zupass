@@ -113,8 +113,10 @@ export class LemonadePipeline implements BasePipeline {
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
   }
+
   public async stop(): Promise<void> {
-    //
+    logger(LOG_TAG, `stopping LemonadePipeline with id ${this.id}`);
+    // TODO: what to actually do for a stopped pipeline?
   }
 
   /**

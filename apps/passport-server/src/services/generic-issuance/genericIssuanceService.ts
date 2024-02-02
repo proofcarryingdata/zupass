@@ -510,6 +510,7 @@ export class GenericIssuanceService {
     }
 
     await this.definitionDB.setDefinition(newPipelineDefinition);
+    await this.restartPipelineId(newPipelineDefinition.id);
     return newPipelineDefinition;
   }
 
@@ -525,6 +526,56 @@ export class GenericIssuanceService {
       throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
     }
     await this.definitionDB.clearDefinition(pipelineId);
+    await this.restartPipelineId(pipelineId);
+  }
+
+  private async restartPipelineId(pipelineId: string): Promise<void> {
+    const definition = await this.definitionDB.getDefinition(pipelineId);
+    const inMemoryPipeline = this.pipelines.get(pipelineId);
+
+    if (!definition) {
+      // this definition has been deleted from the db and needs to be stopped
+      if (inMemoryPipeline) {
+        this.pipelines.delete(pipelineId);
+        await inMemoryPipeline.pipeline?.stop();
+      }
+    } else {
+      // this definition has been edited and needs to be restarted
+
+      if (inMemoryPipeline) {
+        this.pipelines.delete(pipelineId);
+        await inMemoryPipeline.pipeline?.stop();
+      }
+
+      const newPipeline = createPipeline(
+        this.eddsaPrivateKey,
+        definition,
+        this.atomDB,
+        {
+          genericPretixAPI: this.genericPretixAPI,
+          lemonadeAPI: this.lemonadeAPI
+        },
+        this.zupassPublicKey
+      );
+
+      newPipeline
+        .load()
+        .then(() => {
+          logger(LOG_TAG, `loaded data for new pipeline ${newPipeline.id}`);
+        })
+        .catch((e) => {
+          logger(
+            LOG_TAG,
+            `failed to load data for new pipeline ${newPipeline.id}`,
+            e
+          );
+        });
+
+      this.pipelines.set(definition.id, {
+        pipeline: newPipeline,
+        definition
+      });
+    }
   }
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {

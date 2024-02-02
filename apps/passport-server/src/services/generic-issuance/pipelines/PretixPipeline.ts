@@ -121,7 +121,8 @@ export class PretixPipeline implements BasePipeline {
   }
 
   public async stop(): Promise<void> {
-    //
+    logger(LOG_TAG, `stopping PretixPipeline with id ${this.id}`);
+    // TODO: what to actually do for a stopped pipeline?
   }
 
   /**
