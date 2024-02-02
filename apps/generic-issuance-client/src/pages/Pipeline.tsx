@@ -26,10 +26,17 @@ export default function Pipeline(): ReactNode {
   const userJWT = useStytch().session.getTokens().session_jwt;
 
   async function savePipeline(): Promise<void> {
+    let pipeline: PipelineDefinition;
+    try {
+      pipeline = JSON.parse(textareaValue);
+    } catch (e) {
+      setError(`Invalid JSON object: ${e}`);
+      return;
+    }
     setSaveLoading(true);
     const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
       jwt: userJWT,
-      pipeline: JSON.parse(textareaValue)
+      pipeline
     });
     if (res.success) {
       setSavedPipeline(res.value);

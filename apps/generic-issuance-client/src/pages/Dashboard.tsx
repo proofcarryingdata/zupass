@@ -14,7 +14,13 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
     editorUserIds: [],
     options: {
       lemonadeApiKey: "your-lemonade-api-key",
-      events: []
+      events: [],
+      feedOptions: {
+        feedId: "example-feed-id",
+        feedDisplayName: "Example Feed",
+        feedDescription: "Your description here...",
+        feedFolder: "Example Folder"
+      }
     }
   },
   null,
