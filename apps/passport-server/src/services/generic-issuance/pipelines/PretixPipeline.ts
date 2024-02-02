@@ -136,7 +136,7 @@ export class PretixPipeline implements BasePipeline {
             (ev) => ev.genericIssuanceId === eventId
           );
         },
-        check: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
+        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();

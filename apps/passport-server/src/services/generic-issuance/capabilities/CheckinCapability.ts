@@ -31,13 +31,13 @@ export interface CheckinCapability extends BasePipelineCapability {
   // pipeline is configured to handle checkin for the given eventId, or false
   // if not.
   canHandleCheckinForEvent(eventId: string): boolean;
-  // Prior to check-in, a ticket is first "checked" to see if it is already
+  // Prior to check-in, a ticket is "pre-checked" to see if it is already
   // checked in, and whether the scanning user has permission to check it in.
   // This is called from passport-client after successfully scanning a QR code,
   // to determine whether to show the user the check-in screen, or a generic
   // response indicating that the ticket is recognized (or not, if the ticket
   // is invalid).
-  check(
+  preCheck(
     request: GenericIssuancePreCheckRequest
   ): Promise<GenericIssuancePreCheckResponseValue>;
 }

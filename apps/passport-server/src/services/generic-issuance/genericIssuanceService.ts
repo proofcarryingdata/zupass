@@ -413,7 +413,7 @@ export class GenericIssuanceService {
           isCheckinCapability(capability) &&
           capability.canHandleCheckinForEvent(eventId)
         ) {
-          return await capability.check(req);
+          return await capability.preCheck(req);
         }
       }
     }

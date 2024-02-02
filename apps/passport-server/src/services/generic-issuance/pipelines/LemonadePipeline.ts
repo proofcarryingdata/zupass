@@ -130,7 +130,7 @@ export class LemonadePipeline implements BasePipeline {
             (ev) => ev.genericIssuanceEventId === eventId
           );
         },
-        check: this.checkLemonadeTicketPCDCanBeCheckedIn.bind(this)
+        preCheck: this.checkLemonadeTicketPCDCanBeCheckedIn.bind(this)
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
