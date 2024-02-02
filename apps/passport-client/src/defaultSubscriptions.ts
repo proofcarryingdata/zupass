@@ -16,10 +16,16 @@ const LEMONADE_FEED_PROVIDER_NAME = "Lemonade";
 const LEMONADE_FEEDS = new Set(Object.keys(lemonadeDefaultSubscriptions));
 
 export function isDefaultSubscription(sub: Subscription): boolean {
-  return (
-    (sub.providerUrl === DEFAULT_FEED_URL && DEFAULT_FEEDS.has(sub.feed.id)) ||
-    (sub.providerUrl === LEMONADE_FEED_URL && LEMONADE_FEEDS.has(sub.feed.id))
-  );
+  const isZupassDefaultSubscription =
+    sub.providerUrl === DEFAULT_FEED_URL && DEFAULT_FEEDS.has(sub.feed.id);
+  const isLemonadeDefaultSubscription =
+    sub.providerUrl === LEMONADE_FEED_URL && LEMONADE_FEEDS.has(sub.feed.id);
+  // Only enable Lemonade feed auto-subscribe in prod because feed only
+  // allows one semaphore ID per email to subscribe at a time.
+  if (process.env.NODE_ENV === "production") {
+    return isZupassDefaultSubscription || isLemonadeDefaultSubscription;
+  }
+  return isZupassDefaultSubscription;
 }
 
 export async function addDefaultSubscriptions(
@@ -27,10 +33,6 @@ export async function addDefaultSubscriptions(
 ): Promise<void> {
   if (!subscriptions.hasProvider(DEFAULT_FEED_URL)) {
     subscriptions.addProvider(DEFAULT_FEED_URL, DEFAULT_FEED_PROVIDER_NAME);
-  }
-
-  if (!subscriptions.hasProvider(LEMONADE_FEED_URL)) {
-    subscriptions.addProvider(LEMONADE_FEED_URL, LEMONADE_FEED_PROVIDER_NAME);
   }
 
   for (const id in zupassDefaultSubscriptions) {
@@ -42,12 +44,20 @@ export async function addDefaultSubscriptions(
     );
   }
 
-  for (const id in lemonadeDefaultSubscriptions) {
-    subscriptions.subscribe(
-      LEMONADE_FEED_URL,
-      lemonadeDefaultSubscriptions[id],
-      // Replace the existing subscription if it already exists
-      true
-    );
+  // Only enable Lemonade feed auto-subscribe in prod because feed only
+  // allows one semaphore ID per email to subscribe at a time.
+  if (process.env.NODE_ENV === "production") {
+    if (!subscriptions.hasProvider(LEMONADE_FEED_URL)) {
+      subscriptions.addProvider(LEMONADE_FEED_URL, LEMONADE_FEED_PROVIDER_NAME);
+    }
+
+    for (const id in lemonadeDefaultSubscriptions) {
+      subscriptions.subscribe(
+        LEMONADE_FEED_URL,
+        lemonadeDefaultSubscriptions[id],
+        // Replace the existing subscription if it already exists
+        true
+      );
+    }
   }
 }
