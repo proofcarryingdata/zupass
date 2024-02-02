@@ -48,7 +48,7 @@ export default function Dashboard(): ReactNode {
       alert(`An error occurred while fetching user pipelines: ${res.error}`);
     }
     setLoading(false);
-  }, []);
+  }, [userJWT]);
 
   useEffect(() => {
     fetchAllPipelines();
