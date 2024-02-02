@@ -17,7 +17,10 @@ export async function requestGenericIssuanceDeletePipeline(
   jwt: string
 ): Promise<GenericIssuanceDeletePipelineResponse> {
   return httpPostSimple(
-    urlJoin(zupassServerUrl, `/generic-issuance/api/delete-pipeline/${pipelineId}`),
+    urlJoin(
+      zupassServerUrl,
+      `/generic-issuance/api/delete-pipeline/${pipelineId}`
+    ),
     async () => ({
       value: undefined,
       success: true
