@@ -162,7 +162,7 @@ export class GenericIssuanceService {
 
   public async start(): Promise<void> {
     await this.maybeInsertLocalDevTestPipeline();
-    await this.instantiateAllPipelines();
+    await this.startPipelinesFromDefinitions();
     this.schedulePipelineLoadLoop();
   }
 
@@ -175,7 +175,7 @@ export class GenericIssuanceService {
     }
   }
 
-  public async instantiateAllPipelines(): Promise<void> {
+  public async startPipelinesFromDefinitions(): Promise<void> {
     const existingPipelines = Array.from(this.pipelines.values());
     const piplinesFromDB = await this.definitionDB.loadPipelineDefinitions();
 
@@ -266,14 +266,18 @@ export class GenericIssuanceService {
     );
   }
 
+  /**
+   * Loads all data for all pipelines (that have been started). Waits 60s,
+   * then loads all data for all loaded pipelines again.
+   */
   private async schedulePipelineLoadLoop(): Promise<void> {
-    logger(LOG_TAG, "scheduleReloads", "refreshing pipeline datas");
+    logger(LOG_TAG, "refreshing pipeline datas");
 
     try {
       await this.executeAllPipelineLoads();
-      logger(LOG_TAG, "scheduleReloads", "pipeline datas refreshed");
+      logger(LOG_TAG, "pipeline datas refreshed");
     } catch (e) {
-      logger(LOG_TAG, "scheduleReloads", "pipeline datas failed to refresh", e);
+      logger(LOG_TAG, "pipeline datas failed to refresh", e);
     }
 
     if (this.stopped) {
@@ -282,16 +286,15 @@ export class GenericIssuanceService {
 
     logger(
       LOG_TAG,
-      "scheduleReloads",
-      "scheduling next pipeline refresh loop for",
+      "scheduling next pipeline refresh for",
       Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
       "s from now"
     );
+
     this.nextLoadTimeout = setTimeout(() => {
       if (this.stopped) {
         return;
       }
-
       this.schedulePipelineLoadLoop();
     }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
   }
@@ -508,27 +511,29 @@ export class GenericIssuanceService {
     await this.restartPipelineId(pipelineId);
   }
 
+  /**
+   * Makes sure that the pipeline that's running on the server
+   * for the given id is based off the latest pipeline configuration
+   * stored in the database.
+   *
+   * If a pipeline with the given definition does not exists in the database
+   * makes sure that no pipeline for it is running on the server.
+   */
   private async restartPipelineId(pipelineId: string): Promise<void> {
-    const definition = await this.definitionDB.getDefinition(pipelineId);
     const inMemoryPipeline = this.pipelines.get(pipelineId);
+    if (inMemoryPipeline) {
+      // we're going to need to stop the pipeline for this
+      // definition, so we do that right at the beginning
+      this.pipelines.delete(pipelineId);
+      await inMemoryPipeline.pipeline?.stop();
+    }
 
-    if (!definition) {
-      // this definition has been deleted from the db and needs to be stopped
-      if (inMemoryPipeline) {
-        this.pipelines.delete(pipelineId);
-        await inMemoryPipeline.pipeline?.stop();
-      }
-    } else {
-      // this definition has been edited and needs to be restarted
+    const definitionInDB = await this.definitionDB.getDefinition(pipelineId);
 
-      if (inMemoryPipeline) {
-        this.pipelines.delete(pipelineId);
-        await inMemoryPipeline.pipeline?.stop();
-      }
-
-      const newPipeline = createPipeline(
+    if (definitionInDB) {
+      const pipeline = createPipeline(
         this.eddsaPrivateKey,
-        definition,
+        definitionInDB,
         this.atomDB,
         {
           genericPretixAPI: this.genericPretixAPI,
@@ -537,23 +542,28 @@ export class GenericIssuanceService {
         this.zupassPublicKey
       );
 
-      newPipeline
+      this.pipelines.set(definitionInDB.id, {
+        pipeline: pipeline,
+        definition: definitionInDB
+      });
+
+      logger(LOG_TAG, `loading data for updated pipeline ${pipeline.id}`);
+
+      pipeline
         .load()
         .then(() => {
-          logger(LOG_TAG, `loaded data for new pipeline ${newPipeline.id}`);
+          logger(LOG_TAG, `loaded data for updated pipeline ${pipeline.id}`);
         })
         .catch((e) => {
           logger(
             LOG_TAG,
-            `failed to load data for new pipeline ${newPipeline.id}`,
+            `failed to load data for updated pipeline ${pipeline.id}`,
             e
           );
         });
-
-      this.pipelines.set(definition.id, {
-        pipeline: newPipeline,
-        definition
-      });
+    } else {
+      // this pipeline doesn't have a definition anymore, so we don't need to
+      // start another instance for it
     }
   }
 
