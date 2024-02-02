@@ -130,7 +130,7 @@ export class GenericIssuanceService {
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
   private bypassEmail: boolean;
-  private pipelines: Map<string, InMemoryPipeline>;
+  private pipelines: InMemoryPipeline[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
 
@@ -151,7 +151,7 @@ export class GenericIssuanceService {
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
-    this.pipelines = new Map();
+    this.pipelines = [];
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
     this.bypassEmail =
@@ -176,18 +176,17 @@ export class GenericIssuanceService {
   }
 
   public async startPipelinesFromDefinitions(): Promise<void> {
-    const existingPipelines = Array.from(this.pipelines.values());
     const piplinesFromDB = await this.definitionDB.loadPipelineDefinitions();
 
     await Promise.allSettled(
-      existingPipelines.map(async (entry) => {
+      this.pipelines.map(async (entry) => {
         if (entry.pipeline) {
           await entry.pipeline.stop();
         }
       })
     );
 
-    const pipelines = await Promise.all(
+    this.pipelines = await Promise.all(
       piplinesFromDB.map(async (definition: PipelineDefinition) => {
         const result: InMemoryPipeline = {
           definition
@@ -212,27 +211,20 @@ export class GenericIssuanceService {
         return result;
       })
     );
-
-    this.pipelines = new Map<string, InMemoryPipeline>();
-    pipelines.forEach((runtimePipeline: InMemoryPipeline) =>
-      this.pipelines.set(runtimePipeline.definition.id, runtimePipeline)
-    );
   }
 
   public async executeAllPipelineLoads(): Promise<void> {
-    const pipelines = Array.from(this.pipelines.values());
-
     logger(
       LOG_TAG,
       `loading data for ${
-        pipelines.length
+        this.pipelines.length
       } pipelines. ids are: ${JSON.stringify(
-        pipelines.map((p) => p.definition.id)
+        this.pipelines.map((p) => p.definition.id)
       )}`
     );
 
     await Promise.allSettled(
-      pipelines.map(
+      this.pipelines.map(
         async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
           const pipelineId = inMemoryPipeline.definition.id;
           const pipeline = inMemoryPipeline.pipeline;
@@ -297,7 +289,7 @@ export class GenericIssuanceService {
   }
 
   private async getPipeline(id: string): Promise<Pipeline | undefined> {
-    return this.pipelines.get(id)?.pipeline;
+    return this.pipelines.find((p) => p.definition.id === id)?.pipeline;
   }
 
   private async ensurePipeline(id: string): Promise<Pipeline> {
@@ -356,7 +348,7 @@ export class GenericIssuanceService {
     pipelineId: string,
     feedId: string
   ): Promise<ListFeedsResponseValue> {
-    const pipeline = await this.ensurePipeline(pipelineId);
+    const pipeline: Pipeline = await this.ensurePipeline(pipelineId);
     const relevantCapability = pipeline.capabilities.find(
       (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
     ) as FeedIssuanceCapability | undefined;
@@ -429,6 +421,7 @@ export class GenericIssuanceService {
     // TODO: Add logic for isAdmin = true
     const allDefinitions: PipelineDefinition[] =
       await this.definitionDB.loadPipelineDefinitions();
+
     return allDefinitions.filter((d) =>
       this.userHasPipelineDefinitionAccess(userId, d)
     );
@@ -520,11 +513,15 @@ export class GenericIssuanceService {
    * makes sure that no pipeline for it is running on the server.
    */
   private async restartPipelineId(pipelineId: string): Promise<void> {
-    const inMemoryPipeline = this.pipelines.get(pipelineId);
+    const inMemoryPipeline = this.pipelines.find(
+      (p) => p.definition.id === pipelineId
+    );
     if (inMemoryPipeline) {
       // we're going to need to stop the pipeline for this
       // definition, so we do that right at the beginning
-      this.pipelines.delete(pipelineId);
+      this.pipelines = this.pipelines.filter(
+        (p) => p.definition.id !== pipelineId
+      );
       await inMemoryPipeline.pipeline?.stop();
     }
 
@@ -542,10 +539,10 @@ export class GenericIssuanceService {
         this.zupassPublicKey
       );
 
-      this.pipelines.set(definitionInDB.id, {
+      this.pipelines.push({
         pipeline: pipeline,
         definition: definitionInDB
-      });
+      } satisfies InMemoryPipeline);
 
       logger(LOG_TAG, `loading data for updated pipeline ${pipeline.id}`);
 
@@ -585,7 +582,7 @@ export class GenericIssuanceService {
    * TODO: this probably shouldn't be public, but it was useful for testing.
    */
   public async getAllPipelines(): Promise<Pipeline[]> {
-    return Array.from(this.pipelines.values())
+    return this.pipelines
       .map((p) => p.pipeline)
       .filter((p) => !!p) as Pipeline[];
   }
