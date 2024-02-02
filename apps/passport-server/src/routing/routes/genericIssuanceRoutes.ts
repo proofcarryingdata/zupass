@@ -138,9 +138,6 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  /**
-   * TODO: auth?
-   */
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {
@@ -153,7 +150,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.post(
-    "/generic-issuance/api/pipelines",
+    "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
@@ -168,7 +165,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.post(
-    "/generic-issuance/api/pipelines/:id",
+    "/generic-issuance/api/get-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
@@ -182,8 +179,8 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.put(
-    "/generic-issuance/api/pipelines",
+  app.post(
+    "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
@@ -200,7 +197,7 @@ export function initGenericIssuanceRoutes(
   );
 
   app.post(
-    "/generic-issuance/api/pipelines/:id",
+    "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =

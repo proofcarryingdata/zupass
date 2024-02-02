@@ -16,7 +16,7 @@ export async function requestGenericIssuanceGetAllUserPipelines(
   jwt: string
 ): Promise<GenericIssuanceGetAllUserPipelinesResponse> {
   return httpPostSimple(
-    urlJoin(zupassServerUrl, `/generic-issuance/api/pipelines`),
+    urlJoin(zupassServerUrl, `/generic-issuance/api/get-all-user-pipelines`),
     async (resText) => ({
       value: JSON.parse(resText),
       success: true
