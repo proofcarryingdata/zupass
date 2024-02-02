@@ -55,40 +55,6 @@ import { Pipeline, PipelineUser } from "./pipelines/types";
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export async function createPipelines(
-  eddsaPrivateKey: string,
-  definitions: PipelineDefinition[],
-  db: IPipelineAtomDB,
-  apis: {
-    lemonadeAPI: ILemonadeAPI;
-    genericPretixAPI: IGenericPretixAPI;
-  },
-  zupassPublicKey: EdDSAPublicKey
-): Promise<Pipeline[]> {
-  logger(LOG_TAG, `creating ${definitions.length} pipelines`);
-
-  const pipelines: Pipeline[] = [];
-
-  for (const definition of definitions) {
-    try {
-      logger(LOG_TAG, `creating pipeline ${definition.id}`);
-      const pipeline = createPipeline(
-        eddsaPrivateKey,
-        definition,
-        db,
-        apis,
-        zupassPublicKey
-      );
-      pipelines.push(pipeline);
-      logger(LOG_TAG, `successfully created pipeline ${definition.id}`);
-    } catch (e) {
-      logger(LOG_TAG, `failed to create pipeline ${definition.id}`, e);
-    }
-  }
-
-  return pipelines;
-}
-
 /**
  * Given a {@link PipelineDefinition} (which is persisted to the database) instantiates
  * a {@link Pipeline} so that it can be used for loading data from an external provider,
@@ -129,13 +95,26 @@ export function createPipeline(
   );
 }
 
+/**
+ * It's not always to start a {@link Pipeline} given a {@link PipelineDefinition}
+ * since a pipeline could be mis-configured. This data structure lets us store in-memory
+ * all our defined pipelines, as well as its corresponding instantiated Pipeline, if
+ * the {@link GenericIssuanceService} was able to start one.
+ */
 export interface InMemoryPipeline {
   definition: PipelineDefinition;
   pipeline?: Pipeline;
 }
 
 export class GenericIssuanceService {
-  private static readonly PIPELINE_REFRESH_INTERVAL = 60_000;
+  /**
+   * The pipeline data reload algorithm works as follows:
+   * 1. concurrently load all data for all pipelines
+   * 2. save that data
+   * 3. wait {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds
+   * 4. go back to step one
+   */
+  private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
   private context: ApplicationContext;
 
@@ -305,7 +284,7 @@ export class GenericIssuanceService {
       LOG_TAG,
       "scheduleReloads",
       "scheduling next pipeline refresh loop for",
-      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL / 1000),
+      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
       "s from now"
     );
     this.nextLoadTimeout = setTimeout(() => {
@@ -314,7 +293,7 @@ export class GenericIssuanceService {
       }
 
       this.schedulePipelineLoadLoop();
-    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL);
+    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
   }
 
   private async getPipeline(id: string): Promise<Pipeline | undefined> {
