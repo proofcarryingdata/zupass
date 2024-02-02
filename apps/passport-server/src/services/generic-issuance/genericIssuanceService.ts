@@ -129,26 +129,31 @@ export function createPipeline(
   );
 }
 
-/**
- * TODO: implement this (probably Ivan or Rob).
- * - Needs to be robust.
- * - Needs to appropriately handle creation of new pipelines.
- * - Needs to execute pipelines on some schedule
- * - Probably overall very similar to {@link DevconnectPretixSyncService}
- */
+export interface InMemoryPipeline {
+  definition: PipelineDefinition;
+  pipeline?: Pipeline;
+}
+
 export class GenericIssuanceService {
+  private static readonly PIPELINE_REFRESH_INTERVAL = 60_000;
+
   private context: ApplicationContext;
+
   private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
+
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
-  private eddsaPrivateKey: string;
   private stytchClient: Client;
-  private bypassEmail: boolean;
+
   private genericIssuanceClientUrl: string;
+  private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
-  private pipelines: Pipeline[];
+  private bypassEmail: boolean;
+  private pipelines: Map<string, InMemoryPipeline>;
+  private nextLoadTimeout: NodeJS.Timeout | undefined;
+  private stopped = false;
 
   public constructor(
     context: ApplicationContext,
@@ -167,7 +172,7 @@ export class GenericIssuanceService {
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
-    this.pipelines = [];
+    this.pipelines = new Map();
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
     this.bypassEmail =
@@ -177,67 +182,143 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
-    await this.localDevCreateTestPipeline();
-    await this.loadPipelines();
-    setTimeout(async () => {
-      try {
-        await this.loadPipelineDatas();
-      } catch (e) {
-        logger(LOG_TAG, e);
-      }
-    });
+    await this.maybeInsertLocalDevTestPipeline();
+    await this.instantiateAllPipelines();
+    this.schedulePipelineLoadLoop();
   }
 
-  public async loadPipelineDatas(): Promise<void> {
-    logger(
-      LOG_TAG,
-      `loading data for all pipelines: ${JSON.stringify(
-        this.pipelines.map((p) => p.id)
-      )}`,
-      this.pipelines.length
-    );
+  public async stop(): Promise<void> {
+    logger(LOG_TAG, "stopping");
 
+    this.stopped = true;
+    if (this.nextLoadTimeout) {
+      clearTimeout(this.nextLoadTimeout);
+    }
+  }
+
+  public async instantiateAllPipelines(): Promise<void> {
+    const existingPipelines = Array.from(this.pipelines.values());
+    const piplinesFromDB = await this.definitionDB.loadPipelineDefinitions();
+
+    // TODO: only restart pipelines whose definitions have changed
     await Promise.allSettled(
-      this.pipelines.map(async (p) => {
-        try {
-          logger(LOG_TAG, `loading for pipeline with id ${p.id}`);
-          await p.load();
-          logger(LOG_TAG, `successfully loaded pipeline with id ${p.id}`);
-        } catch (e) {
-          logger(LOG_TAG, `failed to load pipeline ${p.id}`, e);
+      existingPipelines.map(async (entry) => {
+        if (entry.pipeline) {
+          await entry.pipeline.stop();
         }
       })
     );
 
-    await this.scheduleReloads();
-  }
+    const pipelines = await Promise.all(
+      piplinesFromDB.map(async (definition) => {
+        const result: InMemoryPipeline = {
+          definition
+        };
 
-  public async loadPipelines(): Promise<void> {
-    this.pipelines = [];
-    const definitions = await this.definitionDB.loadPipelineDefinitions();
-    const pipelines = await createPipelines(
-      this.eddsaPrivateKey,
-      definitions,
-      this.atomDB,
-      {
-        lemonadeAPI: this.lemonadeAPI,
-        genericPretixAPI: this.genericPretixAPI
-      },
-      this.zupassPublicKey
+        try {
+          const pipeline = createPipeline(
+            this.eddsaPrivateKey,
+            definition,
+            this.atomDB,
+            {
+              lemonadeAPI: this.lemonadeAPI,
+              genericPretixAPI: this.genericPretixAPI
+            },
+            this.zupassPublicKey
+          );
+          result.pipeline = pipeline;
+        } catch (e) {
+          //
+        }
+
+        return result;
+      })
     );
-    this.pipelines = pipelines;
+
+    this.pipelines = new Map(
+      pipelines.map((runtimePipeline) => [
+        runtimePipeline.definition.id,
+        runtimePipeline
+      ])
+    );
   }
 
-  private async scheduleReloads(): Promise<void> {
-    // TODO
+  public async executeAllPipelineLoads(): Promise<void> {
+    const pipelines: InMemoryPipeline[] = Array.from(this.pipelines.values());
+
+    logger(
+      LOG_TAG,
+      `loading data for ${
+        pipelines.length
+      } pipelines. ids are: ${JSON.stringify(
+        pipelines.map((p) => p.definition.id)
+      )}`
+    );
+
+    await Promise.allSettled(
+      pipelines.map(
+        async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
+          const pipelineId = inMemoryPipeline.definition.id;
+          const pipeline = inMemoryPipeline.pipeline;
+
+          if (!pipeline) {
+            logger(
+              LOG_TAG,
+              `pipeline ${pipelineId} is not running; skipping loading`
+            );
+            return;
+          }
+
+          try {
+            logger(
+              LOG_TAG,
+              `loading data for pipeline with id '${pipelineId}'`
+            );
+            await pipeline.load();
+            logger(
+              LOG_TAG,
+              `successfully loaded data for pipeline with id '${pipelineId}'`
+            );
+          } catch (e) {
+            logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
+          }
+        }
+      )
+    );
   }
 
-  public async stop(): Promise<void> {
-    return; // todo
+  private async schedulePipelineLoadLoop(): Promise<void> {
+    logger(LOG_TAG, "scheduleReloads", "refreshing pipeline datas");
+
+    try {
+      await this.executeAllPipelineLoads();
+      logger(LOG_TAG, "scheduleReloads", "pipeline datas refreshed");
+    } catch (e) {
+      logger(LOG_TAG, "scheduleReloads", "pipeline datas failed to refresh", e);
+    }
+
+    if (this.stopped) {
+      return;
+    }
+
+    logger(
+      LOG_TAG,
+      "scheduleReloads",
+      "scheduling next pipeline refresh loop for",
+      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL / 1000),
+      "s from now"
+    );
+    this.nextLoadTimeout = setTimeout(() => {
+      if (this.stopped) {
+        return;
+      }
+
+      this.schedulePipelineLoadLoop();
+    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL);
   }
 
   private async getPipeline(id: string): Promise<Pipeline | undefined> {
-    return this.pipelines.find((p) => p.id === id);
+    return this.pipelines.get(id)?.pipeline;
   }
 
   private async ensurePipeline(id: string): Promise<Pipeline> {
@@ -464,7 +545,9 @@ export class GenericIssuanceService {
    * TODO: this probably shouldn't be public, but it was useful for testing.
    */
   public async getAllPipelines(): Promise<Pipeline[]> {
-    return this.pipelines;
+    return Array.from(this.pipelines.values())
+      .map((p) => p.pipeline)
+      .filter((p) => !!p) as Pipeline[];
   }
 
   private getEmailFromStytchSession(session: Session): string {
@@ -514,7 +597,7 @@ export class GenericIssuanceService {
    * in local development, set the `TEST_PRETIX_KEY` and `TEST_PRETIX_ORG_URL` env
    * variables to the ones that Ivan shares with you to set up a Pretix pipeline.
    */
-  public async localDevCreateTestPipeline(): Promise<void> {
+  public async maybeInsertLocalDevTestPipeline(): Promise<void> {
     if (process.env.NODE_ENV === "production") {
       return;
     }

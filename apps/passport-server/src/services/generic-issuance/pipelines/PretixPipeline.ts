@@ -120,6 +120,10 @@ export class PretixPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
   }
 
+  public async stop(): Promise<void> {
+    //
+  }
+
   /**
    * Loads external data from Lemonade and saves it to the {@link IPipelineAtomDB} for
    * later use.

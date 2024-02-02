@@ -113,6 +113,9 @@ export class LemonadePipeline implements BasePipeline {
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
   }
+  public async stop(): Promise<void> {
+    //
+  }
 
   /**
    * Loads external data from Lemonade and saves it to the {@link IPipelineAtomDB} for
