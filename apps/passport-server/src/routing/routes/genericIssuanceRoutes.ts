@@ -4,6 +4,8 @@ import {
   GenericIssuanceDeletePipelineResponseValue,
   GenericIssuanceGetAllUserPipelinesResponseValue,
   GenericIssuanceGetPipelineResponseValue,
+  GenericIssuancePreCheckRequest,
+  GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
@@ -125,19 +127,31 @@ export function initGenericIssuanceRoutes(
    * Authenticated by PCD so doesn't need auth.
    */
   app.post(
-    "/generic-issuance/api/check-in/:pipelineID",
+    "/generic-issuance/api/check-in",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const pipelineID = checkUrlParam(req, "pipelineID");
       const request = req.body as GenericIssuanceCheckInRequest;
-      const result = await genericIssuanceService.handleCheckIn(
-        pipelineID,
-        request
-      );
+      const result = await genericIssuanceService.handleCheckIn(request);
       res.json(result satisfies GenericIssuanceCheckInResponseValue);
     }
   );
 
+  /**
+   * Authenticated by PCD so doesn't need auth.
+   */
+  app.post(
+    "/generic-issuance/api/pre-check",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const request = req.body as GenericIssuancePreCheckRequest;
+      const result = await genericIssuanceService.handlePreCheck(request);
+      res.json(result satisfies GenericIssuancePreCheckResponseValue);
+    }
+  );
+
+  /**
+   * TODO: auth?
+   */
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {

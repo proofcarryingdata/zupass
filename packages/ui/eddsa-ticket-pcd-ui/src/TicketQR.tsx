@@ -47,6 +47,7 @@ export function TicketQR({
       const encodedId = Buffer.from(
         JSON.stringify({
           ticketId: pcd.claim.ticket.ticketId,
+          eventId: pcd.claim.ticket.eventId,
           timestamp: Date.now().toString()
         })
       ).toString("base64");

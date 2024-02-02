@@ -815,6 +815,25 @@ export interface FrogCryptoUpdateFeedsResponseValue {
   feeds: FrogCryptoDbFeedData[];
 }
 
+/*
+ * Many problems can come up in {@link GenericIssuanceCheckInRequest}
+ * and {@link GenericIssuanceCheckRequest}. This type enumerates all the possible
+ * problems.
+ */
+export type GenericIssuanceCheckInError = { detailedMessage?: string } & (
+  | { name: "NotSuperuser" }
+  | {
+      name: "AlreadyCheckedIn";
+      checkinTimestamp: string | undefined;
+      checker: string | undefined;
+    }
+  | { name: "InvalidSignature" }
+  | { name: "InvalidTicket" }
+  | { name: "TicketRevoked"; revokedTimestamp: number }
+  | { name: "NetworkError" }
+  | { name: "ServerError" }
+);
+
 /**
  * Request body for hitting the Generic Issuance checkin API on the backend.
  */
@@ -831,7 +850,45 @@ export type GenericIssuanceCheckInRequest = {
 /**
  * Checking in either succeeds or fails, so no response value is defined for now.
  */
-export type GenericIssuanceCheckInResponseValue = undefined;
+export type GenericIssuanceCheckInResponseValue =
+  | {
+      checkedIn: true;
+    }
+  | {
+      checkedIn: false;
+      error: GenericIssuanceCheckInError;
+    };
+
+/**
+ * This is a "pre-checkin" step, which verifies that the user is able to check
+ * the ticket in, before allowing them to attempt to do so.
+ */
+export type GenericIssuancePreCheckRequest = {
+  /**
+   * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
+   * signed using the Zupass Semaphore identity of the user who has a ticket
+   * that the user claims grants them the permission to check tickets issued
+   * by the generic issuance service in.
+   */
+  credential: SerializedPCD<SemaphoreSignaturePCD>;
+};
+
+/**
+ * Checking the ticket either succeeds or fails, so no response value is defined for now.
+ */
+export type GenericIssuancePreCheckResponseValue =
+  | {
+      canCheckIn: true;
+      // The server will reveal these fields to a superuser
+      attendeeName: string;
+      attendeeEmail: string;
+      ticketName: string;
+      eventName: string;
+    }
+  | {
+      canCheckIn: false;
+      error: GenericIssuanceCheckInError;
+    };
 
 /**
  * Sending email either succeeds or fails, so no response value is defined for now.

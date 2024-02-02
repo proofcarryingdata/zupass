@@ -1,8 +1,11 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  CheckTicketInResponseValue,
   Feed,
+  GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
+  GenericIssuanceCheckInResponseValue,
+  GenericIssuancePreCheckRequest,
+  GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
   ListFeedsResponseValue,
   PipelineDefinition,
@@ -15,6 +18,7 @@ import {
   PretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
@@ -34,10 +38,7 @@ import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
-import {
-  CheckinCapability,
-  isCheckinCapability
-} from "./capabilities/CheckinCapability";
+import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
   isFeedIssuanceCapability
@@ -344,22 +345,83 @@ export class GenericIssuanceService {
    * TODO: better logging and tracing.
    */
   public async handleCheckIn(
-    pipelineId: string,
     req: GenericIssuanceCheckInRequest
-  ): Promise<CheckTicketInResponseValue> {
-    const pipeline = await this.ensurePipeline(pipelineId);
-    const relevantCapability = pipeline.capabilities.find((c) =>
-      isCheckinCapability(c)
-    ) as CheckinCapability | undefined;
+  ): Promise<GenericIssuanceCheckInResponseValue> {
+    // This is sub-optimal, but since tickets do not identify the pipelines
+    // they come from, we have to match the ticket to the pipeline this way.
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.credential.pcd
+    );
+    const signaturePCDValid =
+      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
 
-    if (!relevantCapability) {
-      throw new PCDHTTPError(
-        403,
-        `pipeline ${pipelineId} can't check tickets in`
-      );
+    if (!signaturePCDValid) {
+      throw new Error("credential signature invalid");
     }
 
-    return relevantCapability.checkin(req);
+    const payload: GenericCheckinCredentialPayload = JSON.parse(
+      signaturePCD.claim.signedMessage
+    );
+
+    const eventId = payload.eventId;
+    // TODO detect mismatch between eventId and ticketId?
+
+    for (const pipeline of this.pipelines) {
+      for (const capability of pipeline.capabilities) {
+        if (
+          isCheckinCapability(capability) &&
+          capability.canHandleCheckinForEvent(eventId)
+        ) {
+          return await capability.checkin(req);
+        }
+      }
+    }
+
+    throw new PCDHTTPError(
+      403,
+      `can't find pipeline to check-in for event ${eventId}`
+    );
+  }
+
+  /**
+   * Checks that a ticket could be checked in by the current user.
+   */
+  public async handlePreCheck(
+    req: GenericIssuancePreCheckRequest
+  ): Promise<GenericIssuancePreCheckResponseValue> {
+    // This is sub-optimal, but since tickets do not identify the pipelines
+    // they come from, we have to match the ticket to the pipeline this way.
+    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+      req.credential.pcd
+    );
+    const signaturePCDValid =
+      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+
+    if (!signaturePCDValid) {
+      throw new Error("credential signature invalid");
+    }
+
+    const payload: GenericCheckinCredentialPayload = JSON.parse(
+      signaturePCD.claim.signedMessage
+    );
+
+    const eventId = payload.eventId;
+
+    for (const pipeline of this.pipelines) {
+      for (const capability of pipeline.capabilities) {
+        if (
+          isCheckinCapability(capability) &&
+          capability.canHandleCheckinForEvent(eventId)
+        ) {
+          return await capability.preCheck(req);
+        }
+      }
+    }
+
+    throw new PCDHTTPError(
+      403,
+      `can't find pipeline to check-in for event ${eventId}`
+    );
   }
 
   public async getAllUserPipelineDefinitions(

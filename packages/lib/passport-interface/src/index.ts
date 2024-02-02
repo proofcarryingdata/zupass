@@ -33,6 +33,7 @@ export * from "./api/requestFrogCryptoGetUserState";
 export * from "./api/requestFrogCryptoUpdateFeeds";
 export * from "./api/requestFrogCryptoUpdateFrogs";
 export * from "./api/requestFrogCryptoUpdateTelegramSharing";
+export * from "./api/requestGenericIssuanceCheck";
 export * from "./api/requestGenericIssuanceCheckIn";
 export * from "./api/requestGenericIssuanceDeletePipeline";
 export * from "./api/requestGenericIssuanceGetAllUserPipelines";
