@@ -624,12 +624,14 @@ export class PretixPipeline implements BasePipeline {
     return ticketPCD;
   }
 
+  /**
+   * When checking tickets in, the user submits various pieces of data, wrapped
+   * in a Semaphore signature.
+   * Here we verify the signature, and return the encoded payload.
+   */
   private async unwrapCheckInSignature(
     credential: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<{
-    ticketId: string;
-    checkerTickets: PretixAtom[];
-  }> {
+  ): Promise<GenericCheckinCredentialPayload> {
     const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
       credential.pcd
     );
@@ -644,18 +646,17 @@ export class PretixPipeline implements BasePipeline {
       signaturePCD.claim.signedMessage
     );
 
-    const checkerEmailPCD = await EmailPCDPackage.deserialize(
-      payload.emailPCD.pcd
-    );
-
-    const checkerTickets = await this.db.loadByEmail(
-      this.id,
-      checkerEmailPCD.claim.emailAddress
-    );
-
-    return { checkerTickets, ticketId: payload.ticketIdToCheckIn };
+    return payload;
   }
 
+  /**
+   * Given a ticket to check in, and a set of tickets belonging to the user
+   * performing the check-in, verify that at least one of the user's tickets
+   * belongs to a matching event and is a superuser ticket.
+   *
+   * Returns true if the user has the permission to check the ticket in, or an
+   * error if not.
+   */
   private async canCheckIn(
     ticketAtom: PretixAtom,
     checkerTickets: PretixAtom[]
@@ -700,6 +701,13 @@ export class PretixPipeline implements BasePipeline {
     return true;
   }
 
+  /**
+   * Carry out a set of checks to ensure that a ticket can be checked in. This
+   * is done in response to an API request that occurs when the user scans a
+   * ticket. It is used by the scanning application to determine whether to
+   * show an option to check the ticket in. If check-in is permitted, some
+   * ticket data is returned.
+   */
   private async checkPretixTicketPCDCanBeCheckedIn(
     request: GenericIssuancePreCheckRequest
   ): Promise<GenericIssuancePreCheckResponseValue> {
@@ -707,9 +715,16 @@ export class PretixPipeline implements BasePipeline {
     let ticketId: string;
 
     try {
-      const unwrapped = await this.unwrapCheckInSignature(request.credential);
-      checkerTickets = unwrapped.checkerTickets;
-      ticketId = unwrapped.ticketId;
+      const payload = await this.unwrapCheckInSignature(request.credential);
+      const checkerEmailPCD = await EmailPCDPackage.deserialize(
+        payload.emailPCD.pcd
+      );
+
+      checkerTickets = await this.db.loadByEmail(
+        this.id,
+        checkerEmailPCD.claim.emailAddress
+      );
+      ticketId = payload.ticketIdToCheckIn;
     } catch (e) {
       return { canCheckIn: false, error: { name: "InvalidSignature" } };
     }
@@ -719,9 +734,12 @@ export class PretixPipeline implements BasePipeline {
       return { canCheckIn: false, error: { name: "InvalidTicket" } };
     }
 
+    // Check permissions
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
 
     if (canCheckInResult === true) {
+      // Only check if ticket is already checked in here, to avoid leaking
+      // information about ticket check-in status to unpermitted users.
       if (ticketAtom.isConsumed) {
         return {
           canCheckIn: false,
@@ -761,6 +779,12 @@ export class PretixPipeline implements BasePipeline {
     }
   }
 
+  /**
+   * Perform a check-in.
+   * This repeats the checks performed by {@link checkPretixTicketPCDCanBeCheckedIn}
+   * and, if successful, records that a pending check-in is underway and sends
+   * a check-in API request to Pretix.
+   */
   private async checkinPretixTicketPCDs(
     request: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
@@ -773,13 +797,18 @@ export class PretixPipeline implements BasePipeline {
     let ticketId: string;
 
     try {
-      const unwrapped = await this.unwrapCheckInSignature(request.credential);
-      checkerTickets = unwrapped.checkerTickets;
-      ticketId = unwrapped.ticketId;
+      const payload = await this.unwrapCheckInSignature(request.credential);
+      const checkerEmailPCD = await EmailPCDPackage.deserialize(
+        payload.emailPCD.pcd
+      );
+
+      checkerTickets = await this.db.loadByEmail(
+        this.id,
+        checkerEmailPCD.claim.emailAddress
+      );
+      ticketId = payload.ticketIdToCheckIn;
     } catch (e) {
-      // return error
-      logger(e);
-      throw e;
+      return { checkedIn: false, error: { name: "InvalidSignature" } };
     }
 
     const ticketAtom = await this.db.loadById(this.id, ticketId);
@@ -821,6 +850,8 @@ export class PretixPipeline implements BasePipeline {
       }
 
       try {
+        // We fetch this as part of data verification when load()'ing data from
+        // Pretix, so perhaps we could cache that data and avoid this API call.
         const checkinLists = await this.api.fetchEventCheckinLists(
           this.definition.options.pretixOrgUrl,
           this.definition.options.pretixAPIKey,
