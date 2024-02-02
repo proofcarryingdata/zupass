@@ -591,10 +591,10 @@ export class PretixPipeline implements BasePipeline {
       ticketId: atom.id,
       eventId: atom.eventId,
       productId: atom.productId,
-      timestampConsumed: 0,
+      timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
-      isConsumed: false,
+      isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
     };
