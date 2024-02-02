@@ -199,7 +199,10 @@ export class PretixPipeline implements BasePipeline {
     // If a check-in succeeded, it will be represented in the data we just
     // saved, so there's no reason to keep this.
     this.pendingCheckIns.forEach((value, key) => {
-      if (value.status === CheckinStatus.Success) {
+      if (
+        value.status === CheckinStatus.Success ||
+        value.status === CheckinStatus.Failed
+      ) {
         this.pendingCheckIns.delete(key);
       }
     });
@@ -729,24 +732,23 @@ export class PretixPipeline implements BasePipeline {
 
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
 
-    let pendingCheckin;
-    if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
-      if (
-        pendingCheckin.status === CheckinStatus.Pending ||
-        pendingCheckin.status === CheckinStatus.Success
-      ) {
-        return {
-          canCheckIn: false,
-          error: {
-            name: "AlreadyCheckedIn",
-            checkinTimestamp: pendingCheckin.timestamp,
-            checker: PRETIX_CHECKER
-          }
-        };
-      }
-    }
-
     if (canCheckInResult === true) {
+      let pendingCheckin;
+      if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
+        if (
+          pendingCheckin.status === CheckinStatus.Pending ||
+          pendingCheckin.status === CheckinStatus.Success
+        ) {
+          return {
+            canCheckIn: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: pendingCheckin.timestamp,
+              checker: PRETIX_CHECKER
+            }
+          };
+        }
+      }
       return {
         canCheckIn: true,
         eventName: this.atomToEventName(ticketAtom),

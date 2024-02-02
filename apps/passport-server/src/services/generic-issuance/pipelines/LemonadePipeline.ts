@@ -36,6 +36,7 @@ import {
 import { logger } from "../../../util/logger";
 import {
   CheckinCapability,
+  CheckinStatus,
   generateCheckinUrlPath
 } from "../capabilities/CheckinCapability";
 import {
@@ -48,6 +49,8 @@ import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "LemonadePipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
+
+const LEMONADE_CHECKER = "Lemonade";
 
 export function isLemonadePipelineDefinition(
   d: PipelineDefinition
@@ -69,6 +72,12 @@ export class LemonadePipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private definition: LemonadePipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
+
+  // These are all check-in attempts since the last load()
+  private pendingCheckIns: Map<
+    string,
+    { status: CheckinStatus; timestamp: string }
+  >;
 
   /**
    * This is where the Pipeline stores atoms so that they don't all have
@@ -124,6 +133,7 @@ export class LemonadePipeline implements BasePipeline {
         check: this.checkLemonadeTicketPCDCanBeCheckedIn.bind(this)
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
+    this.pendingCheckIns = new Map();
   }
 
   /**
@@ -173,6 +183,16 @@ export class LemonadePipeline implements BasePipeline {
 
     // TODO: error handling
     await this.db.save(this.definition.id, atomsToSave);
+    // If a check-in succeeded, it will be represented in the data we just
+    // saved, so there's no reason to keep this.
+    this.pendingCheckIns.forEach((value, key) => {
+      if (
+        value.status === CheckinStatus.Success ||
+        value.status === CheckinStatus.Failed
+      ) {
+        this.pendingCheckIns.delete(key);
+      }
+    });
   }
 
   /**
@@ -477,9 +497,27 @@ export class LemonadePipeline implements BasePipeline {
 
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
 
-    // TODO how do we check if Lemonade tickets are consumed?
-
     if (canCheckInResult === true) {
+      // TODO Lemonade Atoms should indicate if a ticket is checked in, otherwise
+      // we will not be able to remember who is checked in.
+
+      let pendingCheckin;
+      if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
+        if (
+          pendingCheckin.status === CheckinStatus.Pending ||
+          pendingCheckin.status === CheckinStatus.Success
+        ) {
+          return {
+            canCheckIn: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: pendingCheckin.timestamp,
+              checker: LEMONADE_CHECKER
+            }
+          };
+        }
+      }
+
       return {
         canCheckIn: true,
         eventName: this.lemonadeAtomToEventName(ticketAtom),
@@ -523,11 +561,33 @@ export class LemonadePipeline implements BasePipeline {
 
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
 
-    // TODO how can we check if a Lemonade ticket is consumed?
-
     if (canCheckInResult === true) {
+      // TODO Lemonade Atoms should indicate if a ticket is checked in, otherwise
+      // we will not be able to remember who is checked in.
+
+      let pendingCheckin;
+      if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
+        if (
+          pendingCheckin.status === CheckinStatus.Pending ||
+          pendingCheckin.status === CheckinStatus.Success
+        ) {
+          return {
+            checkedIn: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: pendingCheckin.timestamp,
+              checker: LEMONADE_CHECKER
+            }
+          };
+        }
+      }
+
       const lemonadeEventId = ticketAtom.lemonadeEventId;
 
+      this.pendingCheckIns.set(ticketAtom.id, {
+        status: CheckinStatus.Pending,
+        timestamp: new Date().toISOString()
+      });
       try {
         await this.api.checkinTicket(
           this.definition.options.lemonadeApiKey,
@@ -535,6 +595,10 @@ export class LemonadePipeline implements BasePipeline {
           // Is this the correct ticket ID?
           ticketAtom.id
         );
+        this.pendingCheckIns.set(ticketAtom.id, {
+          status: CheckinStatus.Success,
+          timestamp: new Date().toISOString()
+        });
       } catch (e) {
         logger(
           `${LOG_TAG} Failed to check in ticket ${
@@ -543,6 +607,11 @@ export class LemonadePipeline implements BasePipeline {
             ticketAtom
           )} on behalf of checker ${checkerTickets[0].email}`
         );
+        // TODO retry?
+        this.pendingCheckIns.set(ticketAtom.id, {
+          status: CheckinStatus.Failed,
+          timestamp: new Date().toISOString()
+        });
         return { checkedIn: false, error: { name: "ServerError" } };
       }
 
