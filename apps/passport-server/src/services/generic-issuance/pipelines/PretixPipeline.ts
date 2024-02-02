@@ -49,6 +49,7 @@ import { normalizeEmail } from "../../../util/util";
 import { traced } from "../../telemetryService";
 import {
   CheckinCapability,
+  CheckinStatus,
   generateCheckinUrlPath
 } from "../capabilities/CheckinCapability";
 import {
@@ -61,6 +62,8 @@ import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
+
+const PRETIX_CHECKER = "Pretix";
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
@@ -76,6 +79,12 @@ export class PretixPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
+
+  // These are all check-in attempts since the last load()
+  private pendingCheckIns: Map<
+    string,
+    { status: CheckinStatus; timestamp: string }
+  >;
 
   /**
    * This is where the Pipeline stores atoms so that they don't all have
@@ -130,6 +139,7 @@ export class PretixPipeline implements BasePipeline {
         check: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
+    this.pendingCheckIns = new Map();
   }
 
   /**
@@ -185,6 +195,14 @@ export class PretixPipeline implements BasePipeline {
 
     // TODO: error handling
     await this.db.save(this.definition.id, atomsToSave);
+
+    // If a check-in succeeded, it will be represented in the data we just
+    // saved, so there's no reason to keep this.
+    this.pendingCheckIns.forEach((value, key) => {
+      if (value.status === CheckinStatus.Success) {
+        this.pendingCheckIns.delete(key);
+      }
+    });
   }
 
   /**
@@ -704,12 +722,29 @@ export class PretixPipeline implements BasePipeline {
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
-          checker: "Pretix" // Pretix does not store a "checker"
+          checker: PRETIX_CHECKER // Pretix does not store a "checker" so use a constant
         }
       };
     }
 
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
+
+    let pendingCheckin;
+    if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
+      if (
+        pendingCheckin.status === CheckinStatus.Pending ||
+        pendingCheckin.status === CheckinStatus.Success
+      ) {
+        return {
+          canCheckIn: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            checkinTimestamp: pendingCheckin.timestamp,
+            checker: PRETIX_CHECKER
+          }
+        };
+      }
+    }
 
     if (canCheckInResult === true) {
       return {
@@ -758,13 +793,30 @@ export class PretixPipeline implements BasePipeline {
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
-          checker: "Pretix" // Pretix does not store a "checker"
+          checker: PRETIX_CHECKER // Pretix does not store a "checker"
         }
       };
     }
 
     if (canCheckInResult === true) {
       const pretixEventId = this.atomToPretixEventId(ticketAtom);
+
+      let pendingCheckin;
+      if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
+        if (
+          pendingCheckin.status === CheckinStatus.Pending ||
+          pendingCheckin.status === CheckinStatus.Success
+        ) {
+          return {
+            checkedIn: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: pendingCheckin.timestamp,
+              checker: PRETIX_CHECKER
+            }
+          };
+        }
+      }
 
       try {
         const checkinLists = await this.api.fetchEventCheckinLists(
@@ -773,6 +825,11 @@ export class PretixPipeline implements BasePipeline {
           pretixEventId
         );
 
+        this.pendingCheckIns.set(ticketAtom.id, {
+          status: CheckinStatus.Pending,
+          timestamp: new Date().toISOString()
+        });
+
         await this.api.pushCheckin(
           this.definition.options.pretixOrgUrl,
           this.definition.options.pretixAPIKey,
@@ -780,7 +837,17 @@ export class PretixPipeline implements BasePipeline {
           checkinLists[0].id.toString(),
           new Date().toISOString()
         );
+
+        this.pendingCheckIns.set(ticketAtom.id, {
+          status: CheckinStatus.Success,
+          timestamp: new Date().toISOString()
+        });
       } catch (e) {
+        // TODO retry?
+        this.pendingCheckIns.set(ticketAtom.id, {
+          status: CheckinStatus.Failed,
+          timestamp: new Date().toISOString()
+        });
         logger(
           `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerTickets[0].email}`
         );

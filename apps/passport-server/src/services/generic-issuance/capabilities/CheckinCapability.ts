@@ -8,6 +8,12 @@ import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
+export enum CheckinStatus {
+  Pending,
+  Success,
+  Failed
+}
+
 /**
  * Similar to {@link FeedIssuanceCapability} except used to declare the capability
  * of a feed to respond to check in requests.
