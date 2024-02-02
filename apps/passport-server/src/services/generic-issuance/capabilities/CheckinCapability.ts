@@ -10,8 +10,7 @@ import { PipelineCapability } from "./types";
 
 export enum CheckinStatus {
   Pending,
-  Success,
-  Failed
+  Success
 }
 
 /**

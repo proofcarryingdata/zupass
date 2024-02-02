@@ -73,10 +73,13 @@ export class LemonadePipeline implements BasePipeline {
   private definition: LemonadePipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
 
-  // These are all check-in attempts since the last load()
+  // Pending check-ins are check-ins which have either completed (and have
+  // succeeded) or are in-progress, but which are not yet reflected in the data
+  // loaded from Lemonade. We use this map to ensure that we do not attempt to
+  // check the same ticket in multiple times.
   private pendingCheckIns: Map<
     string,
-    { status: CheckinStatus; timestamp: string }
+    { status: CheckinStatus; timestamp: number }
   >;
 
   /**
@@ -146,6 +149,8 @@ export class LemonadePipeline implements BasePipeline {
    * - clear tickets after each load? important!!!!
    */
   public async load(): Promise<void> {
+    const loadStart = Date.now();
+
     const events = await this.api.loadEvents(
       this.definition.options.lemonadeApiKey
     );
@@ -183,12 +188,23 @@ export class LemonadePipeline implements BasePipeline {
 
     // TODO: error handling
     await this.db.save(this.definition.id, atomsToSave);
-    // If a check-in succeeded, it will be represented in the data we just
-    // saved, so there's no reason to keep this.
+
+    const loadEnd = Date.now();
+
+    logger(
+      LOG_TAG,
+      `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
+        loadEnd - loadStart
+      }ms`
+    );
+
+    // Remove any pending check-ins that succeeded before loading started.
+    // Those that succeeded after loading started might not be represented in
+    // the data we fetched, so we can remove them on the next run.
     this.pendingCheckIns.forEach((value, key) => {
       if (
-        value.status === CheckinStatus.Success ||
-        value.status === CheckinStatus.Failed
+        value.status === CheckinStatus.Success &&
+        value.timestamp < loadStart
       ) {
         this.pendingCheckIns.delete(key);
       }
@@ -527,7 +543,9 @@ export class LemonadePipeline implements BasePipeline {
             canCheckIn: false,
             error: {
               name: "AlreadyCheckedIn",
-              checkinTimestamp: pendingCheckin.timestamp,
+              checkinTimestamp: new Date(
+                pendingCheckin.timestamp
+              ).toISOString(),
               checker: LEMONADE_CHECKER
             }
           };
@@ -599,7 +617,9 @@ export class LemonadePipeline implements BasePipeline {
             checkedIn: false,
             error: {
               name: "AlreadyCheckedIn",
-              checkinTimestamp: pendingCheckin.timestamp,
+              checkinTimestamp: new Date(
+                pendingCheckin.timestamp
+              ).toISOString(),
               checker: LEMONADE_CHECKER
             }
           };
@@ -610,7 +630,7 @@ export class LemonadePipeline implements BasePipeline {
 
       this.pendingCheckIns.set(ticketAtom.id, {
         status: CheckinStatus.Pending,
-        timestamp: new Date().toISOString()
+        timestamp: Date.now()
       });
       try {
         await this.api.checkinTicket(
@@ -621,7 +641,7 @@ export class LemonadePipeline implements BasePipeline {
         );
         this.pendingCheckIns.set(ticketAtom.id, {
           status: CheckinStatus.Success,
-          timestamp: new Date().toISOString()
+          timestamp: Date.now()
         });
       } catch (e) {
         logger(
@@ -631,11 +651,8 @@ export class LemonadePipeline implements BasePipeline {
             ticketAtom
           )} on behalf of checker ${checkerTickets[0].email}`
         );
-        // TODO retry?
-        this.pendingCheckIns.set(ticketAtom.id, {
-          status: CheckinStatus.Failed,
-          timestamp: new Date().toISOString()
-        });
+
+        this.pendingCheckIns.delete(ticketAtom.id);
         return { checkedIn: false, error: { name: "ServerError" } };
       }
 
