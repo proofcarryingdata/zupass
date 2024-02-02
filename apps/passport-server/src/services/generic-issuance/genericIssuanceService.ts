@@ -188,7 +188,7 @@ export class GenericIssuanceService {
     );
 
     const pipelines = await Promise.all(
-      piplinesFromDB.map(async (definition) => {
+      piplinesFromDB.map(async (definition: PipelineDefinition) => {
         const result: InMemoryPipeline = {
           definition
         };
@@ -213,16 +213,14 @@ export class GenericIssuanceService {
       })
     );
 
-    this.pipelines = new Map(
-      pipelines.map((runtimePipeline) => [
-        runtimePipeline.definition.id,
-        runtimePipeline
-      ])
+    this.pipelines = new Map<string, InMemoryPipeline>();
+    pipelines.forEach((runtimePipeline: InMemoryPipeline) =>
+      this.pipelines.set(runtimePipeline.definition.id, runtimePipeline)
     );
   }
 
   public async executeAllPipelineLoads(): Promise<void> {
-    const pipelines: InMemoryPipeline[] = Array.from(this.pipelines.values());
+    const pipelines = Array.from(this.pipelines.values());
 
     logger(
       LOG_TAG,
@@ -429,7 +427,9 @@ export class GenericIssuanceService {
     userId: string
   ): Promise<PipelineDefinition[]> {
     // TODO: Add logic for isAdmin = true
-    return (await this.definitionDB.loadPipelineDefinitions()).filter((d) =>
+    const allDefinitions: PipelineDefinition[] =
+      await this.definitionDB.loadPipelineDefinitions();
+    return allDefinitions.filter((d) =>
       this.userHasPipelineDefinitionAccess(userId, d)
     );
   }
