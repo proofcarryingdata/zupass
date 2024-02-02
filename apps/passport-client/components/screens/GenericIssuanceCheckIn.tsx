@@ -32,13 +32,36 @@ import {
   CardOutlineExpanded
 } from "../shared/PCDCard";
 
+/**
+ * Shows the check-in screen for a generic issuance ticket.
+ *
+ * On load, this parses ticket data from the URL. This can either be a base64-
+ * encoded JSON string with a ticket ID and event ID, or a serialized
+ * ZKEdDSAEventTicketPCD, which also contains a ticket ID and event ID.
+ *
+ * If these are found, we load a "PreCheckTicket" stage. This sends a
+ * credential to the back-end, which will confirm whether the current user can
+ * check the ticket in. If they can do so, some ticket metadata is returned.
+ *
+ * This could fail for several reasons:
+ * - Either ticket ID or event ID not recognized
+ * - User does not have permission to check the ticket in
+ * - Ticket is already checked in, or a pending check-in request is underway
+ *
+ * If this pre-check fails, the user is shown an error message.
+ * If it succeeds, the check-in form is shown, along with the ticket metadata.
+ */
 export function GenericIssuanceCheckInScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
-  const { loading: verifyingTicketId, ticketId, eventId } = useTicketId();
+  const {
+    loading: parsingTicketData,
+    ticketId,
+    eventId
+  } = useTicketDataFromQuery();
 
   let content = null;
 
-  if (verifyingTicketId) {
+  if (parsingTicketData) {
     content = (
       <div>
         <Spacer h={32} />
@@ -63,7 +86,7 @@ type TicketIdAndEventId = {
   error: string | null;
 };
 
-function useTicketId(): TicketIdAndEventId {
+function useTicketDataFromQuery(): TicketIdAndEventId {
   const query = useQuery();
   const id = query.get("id");
   const [ticketId, setTicketId] = useState<string | null>(null);
@@ -91,6 +114,7 @@ function useTicketId(): TicketIdAndEventId {
 
       verify();
     } else {
+      // TODO check the timestamp also included here
       const { ticketId, eventId } = JSON.parse(
         Buffer.from(id, "base64").toString()
       );
@@ -103,6 +127,10 @@ function useTicketId(): TicketIdAndEventId {
   return { loading, ticketId, error, eventId };
 }
 
+/**
+ * Before check-in can be attempted, verify that the user can check the ticket
+ * in, and show the results of the check.
+ */
 function PreCheckTicket({
   ticketId,
   eventId
@@ -210,7 +238,10 @@ export function usePreCheckTicket(
   }
 }
 
-export function GenericIssuanceUserReadyForCheckin({
+/**
+ * Ticket can be checked in. Show ticket info, and the check-in form.
+ */
+function GenericIssuanceUserReadyForCheckin({
   ticketData,
   ticketId,
   eventId
