@@ -1,5 +1,5 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EdDSATicketPCD, ITicketData } from "@pcd/eddsa-ticket-pcd";
+import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";

@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "incremental": true,
+    "incremental": false,
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
