@@ -149,8 +149,17 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   // If using only an ID in the URL, choose different verification screen based
   // on ticket category. Worth remembering that this does not check the public
   // key of the issuer.
-  // If the `idBasedVerifyURL` is undefined, then the ticket can only be
-  // verified using a QR code containing a serialized ZKEdDSAEventTicketPCD.
+  // If the `idBasedVerifyURL` is set, then the QR code will default to
+  // encoding some simple data, with "ZK mode" as an alternate option. ZK mode
+  // encodes an entire serialized ZKEdDSAEventTicketPCD in the query string,
+  // which may make the resulting QR code difficult to scan on some devices.
+  // If idBasedVerifyURL is undefined, then "ZK mode" is forcibly enabled and
+  // there is no option of a simpler query parameter and smaller QR code.
+  // Because ID-based verification relies on the server to do something, we
+  // only enable it for tickets we think can use it (see caveat about the
+  // issuer public key above; we are using the ticket category as a heuristic
+  // but it's possible for third-party tickets to use these categories even if
+  // we won't be able to do ID-based verification for them).
   const idBasedVerifyURL =
     ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
