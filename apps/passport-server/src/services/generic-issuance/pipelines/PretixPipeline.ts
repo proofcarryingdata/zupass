@@ -719,20 +719,20 @@ export class PretixPipeline implements BasePipeline {
       return { canCheckIn: false, error: { name: "InvalidTicket" } };
     }
 
-    if (ticketAtom.isConsumed) {
-      return {
-        canCheckIn: false,
-        error: {
-          name: "AlreadyCheckedIn",
-          checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
-          checker: PRETIX_CHECKER // Pretix does not store a "checker" so use a constant
-        }
-      };
-    }
-
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
 
     if (canCheckInResult === true) {
+      if (ticketAtom.isConsumed) {
+        return {
+          canCheckIn: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
+            checker: PRETIX_CHECKER // Pretix does not store a "checker" so use a constant
+          }
+        };
+      }
+
       let pendingCheckin;
       if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
         if (
@@ -789,18 +789,18 @@ export class PretixPipeline implements BasePipeline {
 
     const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
 
-    if (ticketAtom.isConsumed) {
-      return {
-        checkedIn: false,
-        error: {
-          name: "AlreadyCheckedIn",
-          checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
-          checker: PRETIX_CHECKER // Pretix does not store a "checker"
-        }
-      };
-    }
-
     if (canCheckInResult === true) {
+      if (ticketAtom.isConsumed) {
+        return {
+          checkedIn: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
+            checker: PRETIX_CHECKER // Pretix does not store a "checker"
+          }
+        };
+      }
+
       const pretixEventId = this.atomToPretixEventId(ticketAtom);
 
       let pendingCheckin;
