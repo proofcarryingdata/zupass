@@ -213,6 +213,8 @@ export class PretixPipeline implements BasePipeline {
     // Remove any pending check-ins that succeeded before loading started.
     // Those that succeeded after loading started might not be represented in
     // the data we fetched, so we can remove them on the next run.
+    // Pending checkins with the "Pending" status should not be removed, as
+    // they are still in-progress.
     this.pendingCheckIns.forEach((value, key) => {
       if (
         value.status === CheckinStatus.Success &&

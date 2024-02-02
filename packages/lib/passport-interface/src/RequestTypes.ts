@@ -816,7 +816,7 @@ export interface FrogCryptoUpdateFeedsResponseValue {
 }
 
 /*
- * However, many problems can come up in {@link GenericIssuanceCheckInRequest}
+ * Many problems can come up in {@link GenericIssuanceCheckInRequest}
  * and {@link GenericIssuanceCheckRequest}. This type enumerates all the possible
  * problems.
  */
