@@ -179,7 +179,6 @@ export class GenericIssuanceService {
     const existingPipelines = Array.from(this.pipelines.values());
     const piplinesFromDB = await this.definitionDB.loadPipelineDefinitions();
 
-    // TODO: only restart pipelines whose definitions have changed
     await Promise.allSettled(
       existingPipelines.map(async (entry) => {
         if (entry.pipeline) {
