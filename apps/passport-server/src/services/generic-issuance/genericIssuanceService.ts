@@ -404,6 +404,7 @@ export class GenericIssuanceService {
    * Handles incoming requests that hit a Pipeline which implements the checkin
    * capability for every pipeline this server manages.
    *
+   *
    * TODO: better logging and tracing.
    */
   public async handleCheckIn(
