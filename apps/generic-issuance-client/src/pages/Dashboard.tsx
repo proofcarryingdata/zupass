@@ -33,11 +33,14 @@ export default function Dashboard(): ReactNode {
     SAMPLE_CREATE_PIPELINE_TEXT
   );
   const [error, setError] = useState("");
+  const userJWT = useStytch().session.getTokens().session_jwt;
 
   const fetchAllPipelines = useCallback(async () => {
     setLoading(true);
-    const res =
-      await requestGenericIssuanceGetAllUserPipelines(ZUPASS_SERVER_URL);
+    const res = await requestGenericIssuanceGetAllUserPipelines(
+      ZUPASS_SERVER_URL,
+      userJWT
+    );
     if (res.success) {
       setPipelines(res.value);
     } else {
@@ -53,10 +56,10 @@ export default function Dashboard(): ReactNode {
 
   const createPipeline = async (): Promise<void> => {
     if (!newPipelineRaw) return;
-    const res = await requestGenericIssuanceUpsertPipeline(
-      ZUPASS_SERVER_URL,
-      JSON.parse(newPipelineRaw)
-    );
+    const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
+      pipeline: JSON.parse(newPipelineRaw),
+      jwt: userJWT
+    });
     await fetchAllPipelines();
     if (res.success) {
       setCreatingPipeline(false);

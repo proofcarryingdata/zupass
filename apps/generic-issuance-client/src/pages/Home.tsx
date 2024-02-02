@@ -22,8 +22,10 @@ function Page(): JSX.Element {
       .authenticate(token, {
         session_duration_minutes: 24 * 60
       })
-      .catch((e) => console.error(e))
-      .then(() => setCheckedToken(true));
+      .then(() => {
+        setCheckedToken(true);
+      })
+      .catch((e) => console.error(e));
   }, [stytchClient, token, checkedToken, navigate]);
 
   const handleContinue = async (): Promise<void> => {

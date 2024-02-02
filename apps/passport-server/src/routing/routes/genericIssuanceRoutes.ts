@@ -6,6 +6,7 @@ import {
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
+  GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
   PipelineInfoResponseValue,
   PollFeedRequest,
@@ -151,12 +152,13 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.get(
+  app.post(
     "/generic-issuance/api/pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
         await genericIssuanceService.authenticateStytchSession(req);
+
       res.json(
         (await genericIssuanceService.getAllUserPipelineDefinitions(
           id
@@ -165,7 +167,7 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.get(
+  app.post(
     "/generic-issuance/api/pipelines/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
@@ -186,16 +188,18 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
+      const body = req.body as GenericIssuanceUpsertPipelineRequest;
+
       res.json(
         (await genericIssuanceService.upsertPipelineDefinition(
           userId,
-          req.body as GenericIssuanceUpsertPipelineRequest
-        )) satisfies GenericIssuanceUpsertPipelineRequest
+          body.pipeline
+        )) satisfies GenericIssuanceUpsertPipelineResponseValue
       );
     }
   );
 
-  app.delete(
+  app.post(
     "/generic-issuance/api/pipelines/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);

@@ -4,7 +4,7 @@ import {
   GenericIssuanceUpsertPipelineResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpPutSimple } from "./makeRequest";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks the server to fetch the pipeline definition corresponding to the
@@ -13,15 +13,15 @@ import { httpPutSimple } from "./makeRequest";
  */
 export async function requestGenericIssuanceUpsertPipeline(
   zupassServerUrl: string,
-  pipeline: GenericIssuanceUpsertPipelineRequest
+  req: GenericIssuanceUpsertPipelineRequest
 ): Promise<GenericIssuanceUpsertPipelineResponse> {
-  return httpPutSimple(
+  return httpPostSimple(
     urlJoin(zupassServerUrl, `/generic-issuance/api/pipelines`),
     async (resText) => ({
       value: JSON.parse(resText),
       success: true
     }),
-    pipeline,
+    req,
     true
   );
 }

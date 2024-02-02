@@ -479,8 +479,11 @@ export class GenericIssuanceService {
 
   public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
     try {
+      const reqBody = req.body;
+      const jwt = reqBody.jwt;
+
       const { session } = await this.stytchClient.sessions.authenticateJwt({
-        session_jwt: req.cookies["stytch_session_jwt"]
+        session_jwt: jwt
       });
       const email = this.getEmailFromStytchSession(session);
       const user = await this.createOrGetUser(email);
