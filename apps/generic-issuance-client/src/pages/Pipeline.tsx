@@ -4,7 +4,7 @@ import {
   requestGenericIssuanceGetPipeline,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
-import { useStytchUser } from "@stytch/react";
+import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
@@ -23,13 +23,21 @@ export default function Pipeline(): ReactNode {
   const [queryLoading, setQueryLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [error, setError] = useState("");
+  const userJWT = useStytch().session.getTokens().session_jwt;
 
   async function savePipeline(): Promise<void> {
+    let pipeline: PipelineDefinition;
+    try {
+      pipeline = JSON.parse(textareaValue);
+    } catch (e) {
+      setError(`Invalid JSON object: ${e}`);
+      return;
+    }
     setSaveLoading(true);
-    const res = await requestGenericIssuanceUpsertPipeline(
-      ZUPASS_SERVER_URL,
-      JSON.parse(textareaValue)
-    );
+    const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
+      jwt: userJWT,
+      pipeline
+    });
     if (res.success) {
       setSavedPipeline(res.value);
       setTextareaValue(format(res.value));
@@ -44,7 +52,8 @@ export default function Pipeline(): ReactNode {
     if (confirm("Are you sure you would like to delete this pipeline?")) {
       const res = await requestGenericIssuanceDeletePipeline(
         ZUPASS_SERVER_URL,
-        id
+        id,
+        userJWT
       );
       if (res.success) {
         window.location.href = "/#/dashboard";
@@ -58,7 +67,8 @@ export default function Pipeline(): ReactNode {
     async function fetchPipeline(): Promise<void> {
       const res = await requestGenericIssuanceGetPipeline(
         ZUPASS_SERVER_URL,
-        id
+        id,
+        userJWT
       );
       if (res.success) {
         setSavedPipeline(res.value);
@@ -73,7 +83,7 @@ export default function Pipeline(): ReactNode {
       setQueryLoading(false);
     }
     fetchPipeline();
-  }, [id]);
+  }, [id, userJWT]);
 
   if (!user) {
     window.location.href = "/";

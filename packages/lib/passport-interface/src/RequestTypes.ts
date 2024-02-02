@@ -838,6 +838,8 @@ export type GenericIssuanceCheckInResponseValue = undefined;
  */
 export type GenericIssuanceSendEmailResponseValue = undefined;
 
+export type GenericIssuanceGetAllUserPipelinesRequest = { jwt: string };
+
 /**
  * Returns all pipeline definitions that a user has access to.
  */
@@ -849,10 +851,15 @@ export type GenericIssuanceGetAllUserPipelinesResponseValue =
  */
 export type GenericIssuanceGetPipelineResponseValue = PipelineDefinition;
 
+export type GenericIssuanceGetPipelineRequest = { jwt: string };
+
 /**
  * Request body containing the pipeline definition to be upserted.
  */
-export type GenericIssuanceUpsertPipelineRequest = PipelineDefinition;
+export type GenericIssuanceUpsertPipelineRequest = {
+  pipeline: PipelineDefinition;
+  jwt: string;
+};
 
 /**
  * Returns the upserted pipeline definition.
@@ -863,3 +870,5 @@ export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
  * Deleting a pipeline definition either succeeds or fails, so no response value is defined for now.
  */
 export type GenericIssuanceDeletePipelineResponseValue = undefined;
+
+export type GenericIssuanceDeletePipelineRequest = { jwt: string };

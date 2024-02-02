@@ -6,6 +6,7 @@ import {
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
+  GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
   PipelineInfoResponseValue,
   PollFeedRequest,
@@ -137,9 +138,6 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  /**
-   * TODO: auth?
-   */
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {
@@ -151,12 +149,13 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.get(
-    "/generic-issuance/api/pipelines",
+  app.post(
+    "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id } =
         await genericIssuanceService.authenticateStytchSession(req);
+
       res.json(
         (await genericIssuanceService.getAllUserPipelineDefinitions(
           id
@@ -165,8 +164,8 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.get(
-    "/generic-issuance/api/pipelines/:id",
+  app.post(
+    "/generic-issuance/api/get-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
@@ -180,23 +179,25 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  app.put(
-    "/generic-issuance/api/pipelines",
+  app.post(
+    "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =
         await genericIssuanceService.authenticateStytchSession(req);
+      const body = req.body as GenericIssuanceUpsertPipelineRequest;
+
       res.json(
         (await genericIssuanceService.upsertPipelineDefinition(
           userId,
-          req.body as GenericIssuanceUpsertPipelineRequest
-        )) satisfies GenericIssuanceUpsertPipelineRequest
+          body.pipeline
+        )) satisfies GenericIssuanceUpsertPipelineResponseValue
       );
     }
   );
 
-  app.delete(
-    "/generic-issuance/api/pipelines/:id",
+  app.post(
+    "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const { id: userId } =

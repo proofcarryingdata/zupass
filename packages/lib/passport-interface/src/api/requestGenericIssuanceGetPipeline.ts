@@ -1,7 +1,10 @@
 import urlJoin from "url-join";
-import { GenericIssuanceGetPipelineResponseValue } from "../RequestTypes";
+import {
+  GenericIssuanceGetPipelineRequest,
+  GenericIssuanceGetPipelineResponseValue
+} from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks the server to fetch the pipeline definition corresponding to the
@@ -10,15 +13,19 @@ import { httpGetSimple } from "./makeRequest";
  */
 export async function requestGenericIssuanceGetPipeline(
   zupassServerUrl: string,
-  pipelineId: string
+  pipelineId: string,
+  jwt: string
 ): Promise<GenericIssuanceGetPipelineResponse> {
-  return httpGetSimple(
-    urlJoin(zupassServerUrl, `/generic-issuance/api/pipelines/${pipelineId}`),
+  return httpPostSimple(
+    urlJoin(
+      zupassServerUrl,
+      `/generic-issuance/api/get-pipeline/${pipelineId}`
+    ),
     async (resText) => ({
       value: JSON.parse(resText),
       success: true
     }),
-    undefined,
+    { jwt } satisfies GenericIssuanceGetPipelineRequest,
     true
   );
 }
