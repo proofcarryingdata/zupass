@@ -127,7 +127,7 @@ export function AddSubscriptionScreen(): JSX.Element {
           disabled={fetching || alreadyFetched}
           onClick={onFetchFeedsClick}
         >
-          <Spinner show={fetching} text="Get possible subscriptions" />
+          <Spinner show={fetching} text="Load" />
         </Button>
         <Spacer h={16} />
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
