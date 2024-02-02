@@ -4,6 +4,7 @@ export * from "./FeedAPI";
 export * from "./FeedCredential";
 export * from "./FeedHost";
 export * from "./FrogCrypto";
+export * from "./LemonadeDefaultSubscriptions";
 export * from "./PassportInterface";
 export * from "./PassportPopup";
 export * from "./PendingPCDIntegration";

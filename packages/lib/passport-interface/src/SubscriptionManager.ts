@@ -22,6 +22,11 @@ export const enum ZupassFeedIds {
   Zuconnect_23 = "5"
 }
 
+// TODO: Update after we finish feeds on generic issuance
+export const enum LemonadeFeedIds {
+  EdgeCityDenver = "1"
+}
+
 /**
  * Applies a set of actions to a PCD collection.
  */
