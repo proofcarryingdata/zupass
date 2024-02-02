@@ -1,8 +1,10 @@
 import {
   PipelineDefinition,
+  PipelineInfoResponseValue,
   requestGenericIssuanceDeletePipeline,
   requestGenericIssuanceGetPipeline,
-  requestGenericIssuanceUpsertPipeline
+  requestGenericIssuanceUpsertPipeline,
+  requestPipelineInfo
 } from "@pcd/passport-interface";
 import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
@@ -22,6 +24,8 @@ export default function Pipeline(): ReactNode {
   const [textareaValue, setTextareaValue] = useState("");
   const [queryLoading, setQueryLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
+  const [info, setInfo] = useState<PipelineInfoResponseValue | undefined>();
+
   const [error, setError] = useState("");
   const userJWT = useStytch().session.getTokens().session_jwt;
 
@@ -70,6 +74,7 @@ export default function Pipeline(): ReactNode {
         id,
         userJWT
       );
+
       if (res.success) {
         setSavedPipeline(res.value);
         setTextareaValue(format(res.value));
@@ -80,8 +85,18 @@ export default function Pipeline(): ReactNode {
         );
         setSavedPipeline(undefined);
       }
+
+      const infoRes = await requestPipelineInfo(ZUPASS_SERVER_URL, id);
+      if (infoRes.success) {
+        setError("");
+        setInfo(infoRes.value);
+      } else {
+        setError(`couldn't load pipeline info`);
+      }
+
       setQueryLoading(false);
     }
+
     fetchPipeline();
   }, [id, userJWT]);
 
@@ -118,6 +133,15 @@ export default function Pipeline(): ReactNode {
           <p>
             <button onClick={deletePipeline}>Delete pipeline</button>
           </p>
+        </>
+      )}
+      {info && (
+        <>
+          {info.feeds.map((f) => (
+            <div>
+              feed {f.name} - <a href={f.url}>{f.url}</a>{" "}
+            </div>
+          ))}
         </>
       )}
       {error && (
