@@ -642,9 +642,6 @@ export class GenericIssuanceService {
             e
           );
         });
-    } else {
-      // this pipeline doesn't have a definition anymore, so we don't need to
-      // start another instance for it
     }
   }
 
