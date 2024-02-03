@@ -139,6 +139,11 @@ export class LemonadePipeline implements BasePipeline {
     this.pendingCheckIns = new Map();
   }
 
+  public async stop(): Promise<void> {
+    logger(LOG_TAG, `stopping LemonadePipeline with id ${this.id}`);
+    // TODO: what to actually do for a stopped pipeline?
+  }
+
   /**
    * Loads external data from Lemonade and saves it to the {@link IPipelineAtomDB} for
    * later use.

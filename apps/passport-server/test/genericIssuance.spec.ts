@@ -312,8 +312,8 @@ describe("Generic Issuance", function () {
     );
     await pipelineDefinitionDB.clearAllDefinitions();
     await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
-    await giService?.loadPipelines();
-    await giService?.loadPipelineDatas();
+    await giService?.startPipelinesFromDefinitions();
+    await giService?.executeAllPipelineLoads();
   });
 
   this.afterEach(async () => {

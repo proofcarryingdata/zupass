@@ -85,6 +85,7 @@ export async function startServices(
   const poapService = startPoapService(context, rollbarService);
   const genericIssuanceService = await startGenericIssuanceService(
     context,
+    rollbarService,
     apis.lemonadeAPI,
     apis.genericPretixAPI
   );
@@ -129,4 +130,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   await services.discordService?.stop();
   await services.multiprocessService.stop();
   services.rateLimitService?.stop();
+  services.genericIssuanceService?.stop();
 }
