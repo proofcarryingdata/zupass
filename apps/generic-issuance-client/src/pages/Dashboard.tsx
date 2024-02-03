@@ -1,29 +1,59 @@
 import {
+  LemonadePipelineDefinition,
   PipelineDefinition,
+  PipelineType,
   requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
 import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { v4 as uuid } from "uuid";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
-    type: "Lemonade",
+    type: PipelineType.Lemonade,
     editorUserIds: [],
     options: {
       lemonadeApiKey: "your-lemonade-api-key",
-      events: [],
+      events: [
+        {
+          externalId: "lemonade-id",
+          /**
+           * TODO: do not accept edits to this field on backend.
+           */
+          genericIssuanceEventId: uuid(),
+          name: "test-event",
+          ticketTiers: [
+            {
+              externalId: "organizer",
+              /**
+               * TODO: do not accept edits to this field on backend.
+               */
+              genericIssuanceProductId: uuid(),
+              isSuperUser: true
+            },
+            {
+              externalId: "attendee",
+              /**
+               * TODO: do not accept edits to this field on backend.
+               */
+              genericIssuanceProductId: uuid(),
+              isSuperUser: true
+            }
+          ]
+        }
+      ],
       feedOptions: {
-        feedId: "example-feed-id",
-        feedDisplayName: "Example Feed",
-        feedDescription: "Your description here...",
-        feedFolder: "Example Folder"
+        feedId: "0",
+        feedDisplayName: "Hot Pot",
+        feedDescription: "hot pot tickets",
+        feedFolder: "0xPARC/events"
       }
     }
-  },
+  } satisfies LemonadePipelineDefinition,
   null,
   2
 );
@@ -31,9 +61,11 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const { user } = useStytchUser();
-  const [isLoggingOut, setLoggingOut] = useState(false);
-  // TODO: After MVP, replace with RTK hooks or a more robust state management.
+
+  // TODO: After MVP, replace with RTK
+  // hooks or a more robust state management.
   const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
+  const [isLoggingOut, setLoggingOut] = useState(false);
   const [isLoading, setLoading] = useState(true);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
   const [newPipelineRaw, setNewPipelineRaw] = useState(
