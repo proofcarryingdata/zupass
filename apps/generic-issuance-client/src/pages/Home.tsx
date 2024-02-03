@@ -1,6 +1,7 @@
 import { useStytch, useStytchSession } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 
 function Page(): JSX.Element {
@@ -54,6 +55,8 @@ function Page(): JSX.Element {
 
   return (
     <div>
+      <Header />
+
       <h1>Generic Issuance Client</h1>
       {hasSentEmail && (
         <div>

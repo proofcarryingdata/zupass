@@ -6,6 +6,7 @@ import {
 import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
@@ -93,6 +94,8 @@ export default function Dashboard(): ReactNode {
 
   return (
     <div>
+      <Header />
+
       <p>
         Congrats - you are now logged in as <b>{user.emails?.[0]?.email}.</b>
       </p>
@@ -117,7 +120,7 @@ export default function Dashboard(): ReactNode {
       {!!pipelines.length && (
         <ol>
           {pipelines.map((p) => (
-            <Link to={`/pipelines/${p.id}`}>
+            <Link to={`/pipelines/${p.id}`} key={p.id}>
               <li key={p.id}>
                 id: {p.id}, type: {p.type}
               </li>

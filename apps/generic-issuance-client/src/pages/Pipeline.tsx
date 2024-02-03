@@ -9,6 +9,7 @@ import {
 import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
+import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 
 function format(obj: object): string {
@@ -112,6 +113,8 @@ export default function Pipeline(): ReactNode {
 
   return (
     <div>
+      <Header />
+
       {savedPipeline && (
         <>
           <p>
