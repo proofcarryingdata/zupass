@@ -172,6 +172,7 @@ export class GenericIssuanceService {
       await this.startPipelinesFromDefinitions();
       this.schedulePipelineLoadLoop();
     } catch (e) {
+      this.rollbarService?.reportError(e);
       logger(LOG_TAG, "error starting GenericIssuanceService", e);
     }
   }
@@ -221,7 +222,8 @@ export class GenericIssuanceService {
           );
           result.pipeline = pipeline;
         } catch (e) {
-          //
+          this.rollbarService?.reportError(e);
+          logger(LOG_TAG, "failed to create pipeline", e);
         }
 
         return result;
@@ -264,6 +266,7 @@ export class GenericIssuanceService {
               `successfully loaded data for pipeline with id '${pipelineId}'`
             );
           } catch (e) {
+            this.rollbarService?.reportError(e);
             logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
           }
         }
@@ -282,6 +285,7 @@ export class GenericIssuanceService {
       await this.executeAllPipelineLoads();
       logger(LOG_TAG, "pipeline datas refreshed");
     } catch (e) {
+      this.rollbarService?.reportError(e);
       logger(LOG_TAG, "pipeline datas failed to refresh", e);
     }
 
@@ -409,7 +413,6 @@ export class GenericIssuanceService {
    * Handles incoming requests that hit a Pipeline which implements the checkin
    * capability for every pipeline this server manages.
    *
-   *
    * TODO: better logging and tracing.
    */
   public async handleCheckIn(
@@ -483,6 +486,7 @@ export class GenericIssuanceService {
       if (!pipeline.pipeline) {
         continue;
       }
+
       for (const capability of pipeline.pipeline.capabilities) {
         if (
           isCheckinCapability(capability) &&
@@ -569,7 +573,7 @@ export class GenericIssuanceService {
     }
 
     await this.definitionDB.setDefinition(newPipelineDefinition);
-    await this.restartPipelineId(newPipelineDefinition.id);
+    await this.restartPipeline(newPipelineDefinition.id);
     return newPipelineDefinition;
   }
 
@@ -585,7 +589,7 @@ export class GenericIssuanceService {
       throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
     }
     await this.definitionDB.clearDefinition(pipelineId);
-    await this.restartPipelineId(pipelineId);
+    await this.restartPipeline(pipelineId);
   }
 
   /**
@@ -596,7 +600,7 @@ export class GenericIssuanceService {
    * If a pipeline with the given definition does not exists in the database
    * makes sure that no pipeline for it is running on the server.
    */
-  private async restartPipelineId(pipelineId: string): Promise<void> {
+  private async restartPipeline(pipelineId: string): Promise<void> {
     const inMemoryPipeline = this.pipelines.find(
       (p) => p.definition.id === pipelineId
     );
