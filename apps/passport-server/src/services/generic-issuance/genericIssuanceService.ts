@@ -177,11 +177,17 @@ export class GenericIssuanceService {
   }
 
   public async stop(): Promise<void> {
+    if (this.stopped) {
+      logger(LOG_TAG, "already stopped - not stopping");
+      return;
+    }
+
     logger(LOG_TAG, "stopping");
 
     this.stopped = true;
     if (this.nextLoadTimeout) {
       clearTimeout(this.nextLoadTimeout);
+      this.nextLoadTimeout = undefined;
     }
   }
 

@@ -130,4 +130,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   await services.discordService?.stop();
   await services.multiprocessService.stop();
   services.rateLimitService?.stop();
+  services.genericIssuanceService?.stop();
 }
