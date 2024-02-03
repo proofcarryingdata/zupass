@@ -420,7 +420,11 @@ export class GenericIssuanceService {
     // TODO detect mismatch between eventId and ticketId?
 
     for (const pipeline of this.pipelines) {
-      for (const capability of pipeline.capabilities) {
+      if (!pipeline.pipeline) {
+        continue;
+      }
+
+      for (const capability of pipeline?.pipeline.capabilities) {
         if (
           isCheckinCapability(capability) &&
           capability.canHandleCheckinForEvent(eventId)
@@ -461,7 +465,10 @@ export class GenericIssuanceService {
     const eventId = payload.eventId;
 
     for (const pipeline of this.pipelines) {
-      for (const capability of pipeline.capabilities) {
+      if (!pipeline.pipeline) {
+        continue;
+      }
+      for (const capability of pipeline.pipeline.capabilities) {
         if (
           isCheckinCapability(capability) &&
           capability.canHandleCheckinForEvent(eventId)
