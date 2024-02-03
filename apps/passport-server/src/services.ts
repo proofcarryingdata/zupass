@@ -85,6 +85,7 @@ export async function startServices(
   const poapService = startPoapService(context, rollbarService);
   const genericIssuanceService = await startGenericIssuanceService(
     context,
+    rollbarService,
     apis.lemonadeAPI,
     apis.genericPretixAPI
   );

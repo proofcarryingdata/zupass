@@ -38,6 +38,7 @@ import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import { RollbarService } from "../rollbarService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -119,6 +120,7 @@ export class GenericIssuanceService {
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
   private context: ApplicationContext;
+  private rollbarService: RollbarService | null;
 
   private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
@@ -138,6 +140,7 @@ export class GenericIssuanceService {
 
   public constructor(
     context: ApplicationContext,
+    rollbarService: RollbarService | null,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client,
@@ -146,10 +149,11 @@ export class GenericIssuanceService {
     eddsaPrivateKey: string,
     zupassPublicKey: EdDSAPublicKey
   ) {
+    this.context = context;
+    this.rollbarService = rollbarService;
     this.userDB = new PipelineUserDB(context.dbPool);
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
-    this.context = context;
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -163,9 +167,13 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
-    await this.maybeInsertLocalDevTestPipeline();
-    await this.startPipelinesFromDefinitions();
-    this.schedulePipelineLoadLoop();
+    try {
+      await this.maybeInsertLocalDevTestPipeline();
+      await this.startPipelinesFromDefinitions();
+      this.schedulePipelineLoadLoop();
+    } catch (e) {
+      logger(LOG_TAG, "error starting GenericIssuanceService", e);
+    }
   }
 
   public async stop(): Promise<void> {
@@ -780,6 +788,7 @@ export class GenericIssuanceService {
 
 export async function startGenericIssuanceService(
   context: ApplicationContext,
+  rollbarService: RollbarService | null,
   lemonadeAPI: ILemonadeAPI | null,
   genericPretixAPI: IGenericPretixAPI | null
 ): Promise<GenericIssuanceService | null> {
@@ -845,6 +854,7 @@ export async function startGenericIssuanceService(
 
   const issuanceService = new GenericIssuanceService(
     context,
+    rollbarService,
     context.pipelineAtomDB,
     lemonadeAPI,
     stytchClient,
