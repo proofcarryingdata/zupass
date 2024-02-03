@@ -42,7 +42,6 @@ jobs:
       - name: "Check that yarn install did not cause changes to yarn.lock"
         run: "git diff --quiet -- yarn.lock"
       - run: "yarn check-references"
-      - run: "yarn tsc --version"
       - run: "yarn build"
       - run: "yarn typedoc --emit none"
       - run: "yarn lint"
