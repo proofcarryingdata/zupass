@@ -97,10 +97,11 @@ export function createPipeline(
 }
 
 /**
- * It's not always to start a {@link Pipeline} given a {@link PipelineDefinition}
- * since a pipeline could be mis-configured. This data structure lets us store in-memory
- * all our defined pipelines, as well as its corresponding instantiated Pipeline, if
- * the {@link GenericIssuanceService} was able to start one.
+ * It's not always possible to start a {@link Pipeline} given a {@link PipelineDefinition}
+ * because a pipeline could be misconfigured.
+ *
+ * An {@link InMemoryPipeline} is used to represent a pair of {@link PipelineDefinition} and
+ * its corresponding {@link Pipeline} if one was able to be started.
  */
 export interface InMemoryPipeline {
   definition: PipelineDefinition;
