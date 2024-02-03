@@ -1,4 +1,3 @@
-import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
@@ -28,7 +27,8 @@ export interface FeedCredentialPayload {
  */
 export interface GenericCheckinCredentialPayload {
   emailPCD: SerializedPCD<EmailPCD>;
-  ticketToCheckIn: SerializedPCD<EdDSATicketPCD>;
+  ticketIdToCheckIn: string;
+  eventId: string;
   timestamp: number;
 }
 
@@ -51,11 +51,13 @@ export function createFeedCredentialPayload(
  */
 export function createGenericCheckinCredentialPayload(
   emailPCD: SerializedPCD<EmailPCD>,
-  ticketPCD: SerializedPCD<EdDSATicketPCD>
+  ticketId: string,
+  eventId: string
 ): GenericCheckinCredentialPayload {
   return {
     emailPCD: emailPCD,
-    ticketToCheckIn: ticketPCD,
+    ticketIdToCheckIn: ticketId,
+    eventId,
     timestamp: Date.now()
   };
 }

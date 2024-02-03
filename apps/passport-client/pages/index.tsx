@@ -16,6 +16,7 @@ import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectChe
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
+import { GenericIssuanceCheckInScreen } from "../components/screens/GenericIssuanceCheckIn";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen";
@@ -370,6 +371,10 @@ function RouterImpl(): JSX.Element {
           />
           <Route path="server-error" element={<ServerErrorScreen />} />
           <Route path="import" element={<ImportBackupScreen />} />
+          <Route
+            path="generic-checkin"
+            element={<GenericIssuanceCheckInScreen />}
+          />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>

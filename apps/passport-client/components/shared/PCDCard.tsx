@@ -145,18 +145,48 @@ function getUI(
 function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
-  // Only Devconnect and ZuConnect tickets support ID-based verification
+  const ticketCategory = pcd.claim.ticket.ticketCategory;
+  // If using only an ID in the URL, choose different verification screen based
+  // on ticket category. Worth remembering that this does not check the public
+  // key of the issuer.
+  // If the `idBasedVerifyURL` is set, then the QR code will default to
+  // encoding some simple data, with "ZK mode" as an alternate option. ZK mode
+  // encodes an entire serialized ZKEdDSAEventTicketPCD in the query string,
+  // which may make the resulting QR code difficult to scan on some devices.
+  // If idBasedVerifyURL is undefined, then "ZK mode" is forcibly enabled and
+  // there is no option of a simpler query parameter and smaller QR code.
+  // Because ID-based verification relies on the server to do something, we
+  // only enable it for tickets we think can use it (see caveat about the
+  // issuer public key above; we are using the ticket category as a heuristic
+  // but it's possible for third-party tickets to use these categories even if
+  // we won't be able to do ID-based verification for them).
   const idBasedVerifyURL =
-    pcd.claim.ticket.ticketCategory === TicketCategory.Devconnect
+    ticketCategory === TicketCategory.Devconnect
       ? `${window.location.origin}/#/checkin-by-id`
-      : pcd.claim.ticket.ticketCategory === TicketCategory.ZuConnect
+      : ticketCategory === TicketCategory.ZuConnect
       ? `${window.location.origin}/#/verify`
+      : ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
       : undefined;
+
+  // In the long run, we will want issuers to be able to provide more metadata
+  // about how check-in should work, either in the PCD itself or to be looked
+  // up via some kind of registry (e.g. starting from the issuer's public key).
+  // This might include having check-in happen at a third-party URL.
+  // For now, we can assume that all "Generic" tickets are coming from the
+  // Zupass generic issuance server. This will change, but that change will
+  // probably occur alongside other changes (e.g. ZKDF tickets) that make it
+  // seem unnecessary to future-proof at this stage.
+  const verifyURL =
+    ticketCategory === TicketCategory.Generic
+      ? `${window.location.origin}/#/generic-checkin`
+      : `${window.location.origin}/#/verify`;
+
   return (
     <Card
       pcd={pcd}
       identityPCD={identityPCD}
-      verifyURL={`${window.location.origin}/#/verify`}
+      verifyURL={verifyURL}
       idBasedVerifyURL={idBasedVerifyURL}
     />
   );

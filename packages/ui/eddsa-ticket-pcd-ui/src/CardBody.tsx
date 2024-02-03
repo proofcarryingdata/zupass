@@ -21,13 +21,11 @@ export interface EdDSATicketPCDCardProps {
   // The user's Semaphore identity is necessary for generating a ZK proof from
   // the EdDSATicketPCD.
   identityPCD: SemaphoreIdentityPCD;
-  // The base URL for online verification of the ticket
+  // The URL to use when encoding a serialized PCD on the query string.
   verifyURL: string;
-  // The base URL for ID-based verification
-  // ID-based verification does not rely on verifying the whole PCD, but
-  // instead submits the ticket ID, wrapped in a timestamped Semaphore
-  // signature, for verification. This can be useful when needing to ensure
-  // the smallest possible QR code payload.
+  // The URL to use for the simpler case of sending some identifiers rather
+  // than a whole serialized ZkEdDSAEventTicketPCD.
+  // This can be useful to ensure the smallest possible QR code payload.
   // If this parameter is set, then the default QR code will use this URL.
   // "ZK mode" will then be enabled, allowing the user to switch to using the
   // `verifyURL` with a ZK proof of their ticket as the payload.

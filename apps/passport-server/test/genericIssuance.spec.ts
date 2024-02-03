@@ -7,6 +7,7 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   FeedCredentialPayload,
+  GenericIssuanceCheckInResponseValue,
   GenericIssuanceCheckInResult,
   InfoResult,
   LemonadePipelineDefinition,
@@ -17,7 +18,7 @@ import {
   PretixPipelineDefinition,
   createFeedCredentialPayload,
   createGenericCheckinCredentialPayload,
-  requestGenericIssuanceCheckin,
+  requestGenericIssuanceCheckIn,
   requestPipelineInfo,
   requestPollFeed
 } from "@pcd/passport-interface";
@@ -61,12 +62,7 @@ import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
 import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
-import {
-  expectFalse,
-  expectLength,
-  expectToExist,
-  expectTrue
-} from "./util/util";
+import { expectLength, expectToExist, expectTrue } from "./util/util";
 
 /**
  * {@link GenericIssuanceService}
@@ -398,7 +394,7 @@ describe("Generic Issuance", function () {
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
-      expectTrue(bouncerChecksInAttendee.success);
+      expect(bouncerChecksInAttendee.value).to.deep.eq({ checkedIn: true });
 
       // can't check in a ticket that's already checked in
       const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
@@ -408,7 +404,10 @@ describe("Generic Issuance", function () {
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
-      expectFalse(bouncerChecksInAttendeeAgain.success);
+      // TODO check for specific error type
+      expect(bouncerChecksInAttendeeAgain.value).to.deep.contain({
+        checkedIn: false
+      });
 
       // can't check in a ticket using a ticket that isn't a
       // superuser ticket
@@ -419,7 +418,10 @@ describe("Generic Issuance", function () {
         EdgeCityDenverAttendeeIdentity,
         BouncerTicket
       );
-      expectFalse(atteendeeChecksInBouncerResult.success);
+      expect(atteendeeChecksInBouncerResult.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
 
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
     }
@@ -483,7 +485,7 @@ describe("Generic Issuance", function () {
         EdgeCityBouncerIdentity,
         bouncerTicket
       );
-      expect(bouncerCheckInBouncer.success).to.eq(true);
+      expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
 
       // can't check in a ticket that's already checked in
       const bouncerCheckInBouncerAgain = await requestCheckInPipelineTicket(
@@ -493,7 +495,9 @@ describe("Generic Issuance", function () {
         EdgeCityBouncerIdentity,
         bouncerTicket
       );
-      expectFalse(bouncerCheckInBouncerAgain.success);
+      expect(bouncerCheckInBouncerAgain.value).to.deep.contain({
+        checkedIn: false
+      });
 
       // can't check in a ticket using a ticket that isn't a superuser ticket
       const attendeeCheckInBouncerResult = await requestCheckInPipelineTicket(
@@ -504,7 +508,10 @@ describe("Generic Issuance", function () {
         bouncerTicket
       );
 
-      expectFalse(attendeeCheckInBouncerResult.success);
+      expect(attendeeCheckInBouncerResult.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
@@ -750,7 +757,8 @@ export async function requestCheckInPipelineTicket(
 
   const ticketCheckerPayload = createGenericCheckinCredentialPayload(
     serializedTicketCheckerEmailPCD,
-    await EdDSATicketPCDPackage.serialize(ticket)
+    ticket.claim.ticket.ticketId,
+    ticket.claim.ticket.eventId
   );
 
   const ticketCheckerFeedCredential = await signFeedCredentialPayload(
@@ -758,7 +766,7 @@ export async function requestCheckInPipelineTicket(
     ticketCheckerPayload
   );
 
-  return requestGenericIssuanceCheckin(
+  return requestGenericIssuanceCheckIn(
     checkinRoute,
     ticketCheckerFeedCredential
   );

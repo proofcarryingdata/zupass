@@ -36,7 +36,7 @@ export function expectToExist<T, U extends T = T>(
  * Use in place of `expect(value).to.eq(true)`
  */
 export function expectTrue(value: boolean): asserts value is true {
-  if (!value) {
+  if (value !== true) {
     throw new Error("Expected value to be true");
   }
 }
@@ -45,7 +45,7 @@ export function expectTrue(value: boolean): asserts value is true {
  * Use in place of `expect(value).to.eq(false)`
  */
 export function expectFalse(value: boolean): asserts value is true {
-  if (value) {
+  if (value !== false) {
     throw new Error("Expected value to be false");
   }
 }
