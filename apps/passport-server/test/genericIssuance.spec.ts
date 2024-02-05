@@ -1,4 +1,4 @@
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -423,6 +423,20 @@ describe("Generic Issuance", function () {
         error: { name: "NotSuperuser" }
       } satisfies GenericIssuanceCheckInResponseValue);
 
+      // can't check in a ticket with an email PCD signed by a non-Zupass private key
+      const fakeBouncerCheckInBouncerResult =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          newEdDSAPrivateKey(),
+          EdgeCityAttendeeTicket.email,
+          EdgeCityDenverAttendeeIdentity,
+          BouncerTicket
+        );
+      expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "InvalidSignature" }
+      } satisfies GenericIssuanceCheckInResponseValue);
+
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
     }
   );
@@ -511,6 +525,20 @@ describe("Generic Issuance", function () {
       expect(attendeeCheckInBouncerResult.value).to.deep.eq({
         checkedIn: false,
         error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
+
+      // can't check in a ticket with an email PCD signed by a non-Zupass private key
+      const fakeBouncerCheckInBouncerResult =
+        await requestCheckInPipelineTicket(
+          ethLatAmCheckinRoute,
+          newEdDSAPrivateKey(),
+          attendeeTicket.claim.ticket.attendeeEmail,
+          EdgeCityDenverAttendeeIdentity,
+          bouncerTicket
+        );
+      expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "InvalidSignature" }
       } satisfies GenericIssuanceCheckInResponseValue);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
