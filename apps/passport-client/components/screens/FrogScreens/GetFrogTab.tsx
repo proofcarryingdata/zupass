@@ -125,7 +125,7 @@ const SearchButton = ({
               dispatch({
                 type: "sync-subscription",
                 subscriptionId: id,
-                onSucess: () => {
+                onSuccess: () => {
                   // nb: sync-subscription swallows http errors and always resolve as success
                   const error = subManager.getError(id);
                   if (error?.type === SubscriptionErrorType.FetchError) {
