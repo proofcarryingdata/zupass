@@ -275,6 +275,9 @@ export class LemonadePipeline implements BasePipeline {
         this.atomToTicketData(t, credential.claim.identityCommitment)
       );
 
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
+
       // TODO: cache this intelligently
       const tickets = await Promise.all(
         ticketDatas.map((t) =>

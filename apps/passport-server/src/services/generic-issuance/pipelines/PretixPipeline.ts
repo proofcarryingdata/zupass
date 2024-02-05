@@ -580,6 +580,8 @@ export class PretixPipeline implements BasePipeline {
       }
 
       const email = emailPCD.claim.emailAddress;
+      span?.setAttribute("email", email);
+      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
 
       const relevantTickets = await this.db.loadByEmail(this.id, email);
 
