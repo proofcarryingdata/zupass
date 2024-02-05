@@ -742,6 +742,18 @@ export class PretixPipeline implements BasePipeline {
         payload.emailPCD.pcd
       );
 
+      if (
+        !isEqualEdDSAPublicKey(
+          checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
+          this.zupassPublicKey
+        )
+      ) {
+        logger(
+          `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
+        );
+        return { canCheckIn: false, error: { name: "InvalidSignature" } };
+      }
+
       checkerTickets = await this.db.loadByEmail(
         this.id,
         checkerEmailPCD.claim.emailAddress
@@ -825,6 +837,18 @@ export class PretixPipeline implements BasePipeline {
       const checkerEmailPCD = await EmailPCDPackage.deserialize(
         payload.emailPCD.pcd
       );
+
+      if (
+        !isEqualEdDSAPublicKey(
+          checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
+          this.zupassPublicKey
+        )
+      ) {
+        logger(
+          `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
+        );
+        return { checkedIn: false, error: { name: "InvalidSignature" } };
+      }
 
       checkerTickets = await this.db.loadByEmail(
         this.id,
