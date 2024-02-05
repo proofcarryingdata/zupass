@@ -43,6 +43,11 @@ export function AddSubscriptionScreen(): JSX.Element {
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
+  // When mailing out subscription links, senders can include a "suggested"
+  // email. If the user is not logged in, they will be prompted to sign up
+  // using that email. If the user is logged in, they will be warned that the
+  // feed may not give them the PCDs they expect.
+  const suggestedEmail = query?.get("email");
   const [providerUrl, setProviderUrl] = useState(
     url.length > 0 ? url : DEFAULT_FEEDS_URL
   );
@@ -59,19 +64,32 @@ export function AddSubscriptionScreen(): JSX.Element {
   const self = useSelf();
   const dispatch = useDispatch();
   const userForcedToLogout = useUserForcedToLogout();
+  const [mismatchedEmails, setMismatchedEmails] = useState<boolean>(false);
 
   useEffect(() => {
     if (self == null || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(url ?? "");
       setPendingAddSubscriptionRequest(stringifiedRequest);
+      const emailParameter = suggestedEmail
+        ? `&email=${encodeURIComponent(suggestedEmail)}`
+        : "";
       if (self == null) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
           stringifiedRequest
-        )}`;
+        )}${emailParameter}`;
+      }
+    } else {
+      if (
+        suggestedEmail &&
+        self.email.trim().toLocaleLowerCase() !==
+          suggestedEmail.trim().toLocaleLowerCase()
+      ) {
+        // User is logged in, but they probably got this subscription link from an email for a different address
+        setMismatchedEmails(true);
       }
     }
-  }, [self, dispatch, url, userForcedToLogout]);
+  }, [self, dispatch, url, userForcedToLogout, suggestedEmail]);
 
   const onFetchFeedsClick = useCallback(() => {
     if (fetching) {
@@ -102,6 +120,23 @@ export function AddSubscriptionScreen(): JSX.Element {
       });
   }, [fetching, providerUrl, subs]);
 
+  useEffect(() => {
+    const url = query?.get("url") ?? "";
+    console.log({ url, onFetchFeedsClick });
+    // If a URL was specified in the query string, automatically fetch feeds for it
+    if (url.length > 0 && !fetchError && !fetchedProviderUrl) {
+      onFetchFeedsClick();
+    }
+  }, [
+    fetchError,
+    fetchedProviderUrl,
+    fetching,
+    onFetchFeedsClick,
+    providerUrl,
+    query,
+    subs
+  ]);
+
   const alreadyFetched = fetchedProviderUrl === providerUrl;
 
   return (
@@ -110,26 +145,46 @@ export function AddSubscriptionScreen(): JSX.Element {
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
         <H2>Add subscription</H2>
-        <Spacer h={16} />
-        <div>Enter a URL to a feed provider:</div>
+        {mismatchedEmails && (
+          <MismatchedEmailWarning>
+            <Spacer h={16} />
+            <p>
+              Your email is <strong>{self.email}</strong> but the subscription
+              link was sent to <strong>{suggestedEmail}</strong>.
+            </p>
+            <p>
+              This may mean that you cannot receive the expected PCDs. You may
+              be able to contact the issuer to change the email address to{" "}
+              <strong>{self.email}</strong>, or sign up for a new Zupass account
+              with <strong>{suggestedEmail}</strong>.
+            </p>
+          </MismatchedEmailWarning>
+        )}
+        {url.length === 0 && (
+          <>
+            <Spacer h={16} />
+            <div>Enter a URL to a feed provider:</div>
+            <Spacer h={8} />
+            <BigInput
+              autoCorrect="off"
+              autoCapitalize="off"
+              disabled={fetching}
+              value={providerUrl}
+              onChange={(e): void => {
+                setProviderUrl(e.target.value);
+              }}
+            />
+            <Spacer h={16} />
+            <Button
+              disabled={fetching || alreadyFetched}
+              onClick={onFetchFeedsClick}
+            >
+              <Spinner show={fetching} text="Get possible subscriptions" />
+            </Button>
+            <Spacer h={16} />
+          </>
+        )}
         <Spacer h={8} />
-        <BigInput
-          autoCorrect="off"
-          autoCapitalize="off"
-          disabled={fetching}
-          value={providerUrl}
-          onChange={(e): void => {
-            setProviderUrl(e.target.value);
-          }}
-        />
-        <Spacer h={16} />
-        <Button
-          disabled={fetching || alreadyFetched}
-          onClick={onFetchFeedsClick}
-        >
-          <Spinner show={fetching} text="Get possible subscriptions" />
-        </Button>
-        <Spacer h={16} />
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
         <div>
           {infos &&
@@ -426,4 +481,10 @@ const SubscriptionErrors = styled.div`
 const PermissionListItem = styled.li`
   margin-left: 14px;
   list-style-type: circle;
+`;
+
+const MismatchedEmailWarning = styled.div`
+  p {
+    margin-bottom: 16px;
+  }
 `;

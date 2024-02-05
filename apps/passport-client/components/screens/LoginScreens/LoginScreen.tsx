@@ -93,8 +93,10 @@ export function LoginScreen(): JSX.Element {
     pendingViewFrogCryptoRequest
   ]);
 
+  const suggestedEmail = query?.get("email");
+
   const self = useSelf();
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(suggestedEmail ?? "");
 
   const onGenPass = useCallback(
     function (e: FormEvent<HTMLFormElement>) {
