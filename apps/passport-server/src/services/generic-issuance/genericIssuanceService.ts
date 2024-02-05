@@ -39,6 +39,7 @@ import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { RollbarService } from "../rollbarService";
+import { setError, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -193,85 +194,98 @@ export class GenericIssuanceService {
   }
 
   public async startPipelinesFromDefinitions(): Promise<void> {
-    const piplinesFromDB = await this.definitionDB.loadPipelineDefinitions();
+    return traced(
+      SERVICE_NAME,
+      "startPipelinesFromDefinitions",
+      async (span) => {
+        const pipelinesFromDB =
+          await this.definitionDB.loadPipelineDefinitions();
 
-    await Promise.allSettled(
-      this.pipelines.map(async (entry) => {
-        if (entry.pipeline) {
-          await entry.pipeline.stop();
-        }
-      })
-    );
+        span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
-    this.pipelines = await Promise.all(
-      piplinesFromDB.map(async (definition: PipelineDefinition) => {
-        const result: InMemoryPipeline = {
-          definition
-        };
+        await Promise.allSettled(
+          this.pipelines.map(async (entry) => {
+            if (entry.pipeline) {
+              await entry.pipeline.stop();
+            }
+          })
+        );
 
-        try {
-          const pipeline = createPipeline(
-            this.eddsaPrivateKey,
-            definition,
-            this.atomDB,
-            {
-              lemonadeAPI: this.lemonadeAPI,
-              genericPretixAPI: this.genericPretixAPI
-            },
-            this.zupassPublicKey
-          );
-          result.pipeline = pipeline;
-        } catch (e) {
-          this.rollbarService?.reportError(e);
-          logger(LOG_TAG, "failed to create pipeline", e);
-        }
+        this.pipelines = await Promise.all(
+          pipelinesFromDB.map(async (definition: PipelineDefinition) => {
+            const result: InMemoryPipeline = {
+              definition
+            };
 
-        return result;
-      })
+            try {
+              const pipeline = createPipeline(
+                this.eddsaPrivateKey,
+                definition,
+                this.atomDB,
+                {
+                  lemonadeAPI: this.lemonadeAPI,
+                  genericPretixAPI: this.genericPretixAPI
+                },
+                this.zupassPublicKey
+              );
+              result.pipeline = pipeline;
+            } catch (e) {
+              this.rollbarService?.reportError(e);
+              logger(LOG_TAG, "failed to create pipeline", e);
+              setError(e, span);
+            }
+
+            return result;
+          })
+        );
+      }
     );
   }
 
   public async executeAllPipelineLoads(): Promise<void> {
-    logger(
-      LOG_TAG,
-      `loading data for ${
-        this.pipelines.length
-      } pipelines. ids are: ${JSON.stringify(
+    return traced(SERVICE_NAME, "executeAllPipelineLoads", async (span) => {
+      const pipelineIds = JSON.stringify(
         this.pipelines.map((p) => p.definition.id)
-      )}`
-    );
+      );
+      logger(
+        LOG_TAG,
+        `loading data for ${this.pipelines.length} pipelines. ids are: ${pipelineIds}`
+      );
+      span?.setAttribute("pipeline_ids", pipelineIds);
 
-    await Promise.allSettled(
-      this.pipelines.map(
-        async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
-          const pipelineId = inMemoryPipeline.definition.id;
-          const pipeline = inMemoryPipeline.pipeline;
+      await Promise.allSettled(
+        this.pipelines.map(
+          async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
+            const pipelineId = inMemoryPipeline.definition.id;
+            const pipeline = inMemoryPipeline.pipeline;
 
-          if (!pipeline) {
-            logger(
-              LOG_TAG,
-              `pipeline ${pipelineId} is not running; skipping loading`
-            );
-            return;
+            if (!pipeline) {
+              logger(
+                LOG_TAG,
+                `pipeline ${pipelineId} is not running; skipping loading`
+              );
+              return;
+            }
+
+            try {
+              logger(
+                LOG_TAG,
+                `loading data for pipeline with id '${pipelineId}'`
+              );
+              await pipeline.load();
+              logger(
+                LOG_TAG,
+                `successfully loaded data for pipeline with id '${pipelineId}'`
+              );
+            } catch (e) {
+              this.rollbarService?.reportError(e);
+              logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
+              setError(e, span);
+            }
           }
-
-          try {
-            logger(
-              LOG_TAG,
-              `loading data for pipeline with id '${pipelineId}'`
-            );
-            await pipeline.load();
-            logger(
-              LOG_TAG,
-              `successfully loaded data for pipeline with id '${pipelineId}'`
-            );
-          } catch (e) {
-            this.rollbarService?.reportError(e);
-            logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
-          }
-        }
-      )
-    );
+        )
+      );
+    });
   }
 
   /**
@@ -279,33 +293,36 @@ export class GenericIssuanceService {
    * then loads all data for all loaded pipelines again.
    */
   private async schedulePipelineLoadLoop(): Promise<void> {
-    logger(LOG_TAG, "refreshing pipeline datas");
+    return traced(SERVICE_NAME, "schedulePipelineLoadLoop", async (span) => {
+      logger(LOG_TAG, "refreshing pipeline datas");
 
-    try {
-      await this.executeAllPipelineLoads();
-      logger(LOG_TAG, "pipeline datas refreshed");
-    } catch (e) {
-      this.rollbarService?.reportError(e);
-      logger(LOG_TAG, "pipeline datas failed to refresh", e);
-    }
+      try {
+        await this.executeAllPipelineLoads();
+        logger(LOG_TAG, "pipeline datas refreshed");
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger(LOG_TAG, "pipeline datas failed to refresh", e);
+        setError(e, span);
+      }
 
-    if (this.stopped) {
-      return;
-    }
-
-    logger(
-      LOG_TAG,
-      "scheduling next pipeline refresh for",
-      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
-      "s from now"
-    );
-
-    this.nextLoadTimeout = setTimeout(() => {
       if (this.stopped) {
         return;
       }
-      this.schedulePipelineLoadLoop();
-    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
+
+      logger(
+        LOG_TAG,
+        "scheduling next pipeline refresh for",
+        Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
+        "s from now"
+      );
+
+      this.nextLoadTimeout = setTimeout(() => {
+        if (this.stopped) {
+          return;
+        }
+        this.schedulePipelineLoadLoop();
+      }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
+    });
   }
 
   private async getPipeline(id: string): Promise<Pipeline | undefined> {
@@ -324,29 +341,34 @@ export class GenericIssuanceService {
    * Handles incoming requests that hit a Pipeline-specific feed for PCDs
    * for every single pipeline that has this capability that this server manages.
    *
-   * TODO: better logging, honeycomb tracing
+   * TODO: better logging
    */
   public async handlePollFeed(
     pipelineId: string,
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
-    const pipeline = await this.ensurePipeline(pipelineId);
-    const relevantCapability = pipeline.capabilities.find(
-      (c) => isFeedIssuanceCapability(c) && c.options.feedId === req.feedId
-    ) as FeedIssuanceCapability | undefined;
+    return traced(SERVICE_NAME, "handlePollFeed", async (span) => {
+      span?.setAttribute("pipeline_id", pipelineId);
+      span?.setAttribute("feed_id", req.feedId);
 
-    if (!relevantCapability) {
-      throw new PCDHTTPError(
-        403,
-        `pipeline ${pipelineId} can't issue PCDs for feed id ${req.feedId}`
-      );
-    }
+      const pipeline = await this.ensurePipeline(pipelineId);
+      const relevantCapability = pipeline.capabilities.find(
+        (c) => isFeedIssuanceCapability(c) && c.options.feedId === req.feedId
+      ) as FeedIssuanceCapability | undefined;
 
-    if (!req.pcd) {
-      throw new PCDHTTPError(403, `missing credential PCD in request`);
-    }
+      if (!relevantCapability) {
+        throw new PCDHTTPError(
+          403,
+          `pipeline ${pipelineId} can't issue PCDs for feed id ${req.feedId}`
+        );
+      }
 
-    return relevantCapability.issue(req);
+      if (!req.pcd) {
+        throw new PCDHTTPError(403, `missing credential PCD in request`);
+      }
+
+      return relevantCapability.issue(req);
+    });
   }
 
   public async handleGetPipelineInfo(
@@ -368,45 +390,50 @@ export class GenericIssuanceService {
     pipelineId: string,
     feedId: string
   ): Promise<ListFeedsResponseValue> {
-    const pipeline: Pipeline = await this.ensurePipeline(pipelineId);
-    const relevantCapability = pipeline.capabilities.find(
-      (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
-    ) as FeedIssuanceCapability | undefined;
+    return traced(SERVICE_NAME, "handleListFeed", async (span) => {
+      span?.setAttribute("pipeline_id", pipelineId);
+      span?.setAttribute("feed_id", feedId);
 
-    if (!relevantCapability) {
-      throw new PCDHTTPError(
-        403,
-        `pipeline ${pipelineId} can't issue PCDs for feed id ${feedId}`
-      );
-    }
+      const pipeline: Pipeline = await this.ensurePipeline(pipelineId);
+      const relevantCapability = pipeline.capabilities.find(
+        (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
+      ) as FeedIssuanceCapability | undefined;
 
-    const feed: Feed = {
-      id: feedId,
-      name: relevantCapability.options.feedDisplayName,
-      description: relevantCapability.options.feedDescription,
-      permissions: [
-        {
-          folder: relevantCapability.options.feedFolder,
-          type: PCDPermissionType.AppendToFolder
-        },
-        {
-          folder: relevantCapability.options.feedFolder,
-          type: PCDPermissionType.ReplaceInFolder
-        }
-      ],
-      credentialRequest: {
-        signatureType: "sempahore-signature-pcd",
-        pcdType: "email-pcd"
+      if (!relevantCapability) {
+        throw new PCDHTTPError(
+          403,
+          `pipeline ${pipelineId} can't issue PCDs for feed id ${feedId}`
+        );
       }
-    };
 
-    const res: ListFeedsResponseValue = {
-      feeds: [feed],
-      providerName: "PCD-ifier",
-      providerUrl: relevantCapability.feedUrl
-    };
+      const feed: Feed = {
+        id: feedId,
+        name: relevantCapability.options.feedDisplayName,
+        description: relevantCapability.options.feedDescription,
+        permissions: [
+          {
+            folder: relevantCapability.options.feedFolder,
+            type: PCDPermissionType.AppendToFolder
+          },
+          {
+            folder: relevantCapability.options.feedFolder,
+            type: PCDPermissionType.ReplaceInFolder
+          }
+        ],
+        credentialRequest: {
+          signatureType: "sempahore-signature-pcd",
+          pcdType: "email-pcd"
+        }
+      };
 
-    return res;
+      const res: ListFeedsResponseValue = {
+        feeds: [feed],
+        providerName: "PCD-ifier",
+        providerUrl: relevantCapability.feedUrl
+      };
+
+      return res;
+    });
   }
 
   /**
@@ -418,44 +445,50 @@ export class GenericIssuanceService {
   public async handleCheckIn(
     req: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
-    // This is sub-optimal, but since tickets do not identify the pipelines
-    // they come from, we have to match the ticket to the pipeline this way.
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.credential.pcd
-    );
-    const signaturePCDValid =
-      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+    return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
+      // This is sub-optimal, but since tickets do not identify the pipelines
+      // they come from, we have to match the ticket to the pipeline this way.
+      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+        req.credential.pcd
+      );
+      const signaturePCDValid =
+        await SemaphoreSignaturePCDPackage.verify(signaturePCD);
 
-    if (!signaturePCDValid) {
-      throw new Error("credential signature invalid");
-    }
-
-    const payload: GenericCheckinCredentialPayload = JSON.parse(
-      signaturePCD.claim.signedMessage
-    );
-
-    const eventId = payload.eventId;
-    // TODO detect mismatch between eventId and ticketId?
-
-    for (const pipeline of this.pipelines) {
-      if (!pipeline.pipeline) {
-        continue;
+      if (!signaturePCDValid) {
+        throw new Error("credential signature invalid");
       }
 
-      for (const capability of pipeline?.pipeline.capabilities) {
-        if (
-          isCheckinCapability(capability) &&
-          capability.canHandleCheckinForEvent(eventId)
-        ) {
-          return await capability.checkin(req);
+      const payload: GenericCheckinCredentialPayload = JSON.parse(
+        signaturePCD.claim.signedMessage
+      );
+
+      const eventId = payload.eventId;
+      // TODO detect mismatch between eventId and ticketId?
+
+      span?.setAttribute("event_id", eventId);
+
+      for (const pipeline of this.pipelines) {
+        if (!pipeline.pipeline) {
+          continue;
+        }
+
+        for (const capability of pipeline?.pipeline.capabilities) {
+          if (
+            isCheckinCapability(capability) &&
+            capability.canHandleCheckinForEvent(eventId)
+          ) {
+            span?.setAttribute("pipeline_id", pipeline.definition.id);
+            span?.setAttribute("pipeline_type", pipeline.definition.type);
+            return await capability.checkin(req);
+          }
         }
       }
-    }
 
-    throw new PCDHTTPError(
-      403,
-      `can't find pipeline to check-in for event ${eventId}`
-    );
+      throw new PCDHTTPError(
+        403,
+        `can't find pipeline to check-in for event ${eventId}`
+      );
+    });
   }
 
   /**
@@ -464,43 +497,48 @@ export class GenericIssuanceService {
   public async handlePreCheck(
     req: GenericIssuancePreCheckRequest
   ): Promise<GenericIssuancePreCheckResponseValue> {
-    // This is sub-optimal, but since tickets do not identify the pipelines
-    // they come from, we have to match the ticket to the pipeline this way.
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.credential.pcd
-    );
-    const signaturePCDValid =
-      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
+    return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
+      // This is sub-optimal, but since tickets do not identify the pipelines
+      // they come from, we have to match the ticket to the pipeline this way.
+      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
+        req.credential.pcd
+      );
+      const signaturePCDValid =
+        await SemaphoreSignaturePCDPackage.verify(signaturePCD);
 
-    if (!signaturePCDValid) {
-      throw new Error("credential signature invalid");
-    }
-
-    const payload: GenericCheckinCredentialPayload = JSON.parse(
-      signaturePCD.claim.signedMessage
-    );
-
-    const eventId = payload.eventId;
-
-    for (const pipeline of this.pipelines) {
-      if (!pipeline.pipeline) {
-        continue;
+      if (!signaturePCDValid) {
+        throw new Error("credential signature invalid");
       }
 
-      for (const capability of pipeline.pipeline.capabilities) {
-        if (
-          isCheckinCapability(capability) &&
-          capability.canHandleCheckinForEvent(eventId)
-        ) {
-          return await capability.preCheck(req);
+      const payload: GenericCheckinCredentialPayload = JSON.parse(
+        signaturePCD.claim.signedMessage
+      );
+
+      const eventId = payload.eventId;
+      span?.setAttribute("event_id", eventId);
+
+      for (const pipeline of this.pipelines) {
+        if (!pipeline.pipeline) {
+          continue;
+        }
+
+        for (const capability of pipeline.pipeline.capabilities) {
+          if (
+            isCheckinCapability(capability) &&
+            capability.canHandleCheckinForEvent(eventId)
+          ) {
+            span?.setAttribute("pipeline_id", pipeline.definition.id);
+            span?.setAttribute("pipeline_type", pipeline.definition.type);
+            return await capability.preCheck(req);
+          }
         }
       }
-    }
 
-    throw new PCDHTTPError(
-      403,
-      `can't find pipeline to check-in for event ${eventId}`
-    );
+      throw new PCDHTTPError(
+        403,
+        `can't find pipeline to check-in for event ${eventId}`
+      );
+    });
   }
 
   public async getAllUserPipelineDefinitions(
@@ -538,58 +576,71 @@ export class GenericIssuanceService {
     userId: string,
     pipelineDefinition: PipelineDefinition
   ): Promise<PipelineDefinition> {
-    const existingPipelineDefinition = await this.definitionDB.getDefinition(
-      pipelineDefinition.id
-    );
-    if (existingPipelineDefinition) {
-      if (
-        !this.userHasPipelineDefinitionAccess(
-          userId,
-          existingPipelineDefinition
-        )
-      ) {
-        throw new PCDHTTPError(403, "Not allowed to edit pipeline");
-      }
-      if (
-        existingPipelineDefinition.ownerUserId !==
-        pipelineDefinition.ownerUserId
-      ) {
-        throw new PCDHTTPError(400, "Cannot change owner of pipeline");
-      }
-    } else {
-      pipelineDefinition.ownerUserId = userId;
-      if (!pipelineDefinition.id) {
-        pipelineDefinition.id = uuidV4();
-      }
-    }
+    return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
+      span?.setAttribute("user_id", userId);
+      span?.setAttribute(
+        "pipeline_definition",
+        JSON.stringify(pipelineDefinition)
+      );
 
-    let newPipelineDefinition: PipelineDefinition;
-    try {
-      newPipelineDefinition = PipelineDefinitionSchema.parse(
-        pipelineDefinition
-      ) as PipelineDefinition;
-    } catch (e) {
-      throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
-    }
+      const existingPipelineDefinition = await this.definitionDB.getDefinition(
+        pipelineDefinition.id
+      );
+      if (existingPipelineDefinition) {
+        if (
+          !this.userHasPipelineDefinitionAccess(
+            userId,
+            existingPipelineDefinition
+          )
+        ) {
+          throw new PCDHTTPError(403, "Not allowed to edit pipeline");
+        }
+        if (
+          existingPipelineDefinition.ownerUserId !==
+          pipelineDefinition.ownerUserId
+        ) {
+          throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+        }
+      } else {
+        pipelineDefinition.ownerUserId = userId;
+        if (!pipelineDefinition.id) {
+          pipelineDefinition.id = uuidV4();
+        }
+      }
 
-    await this.definitionDB.setDefinition(newPipelineDefinition);
-    await this.restartPipeline(newPipelineDefinition.id);
-    return newPipelineDefinition;
+      let newPipelineDefinition: PipelineDefinition;
+      try {
+        newPipelineDefinition = PipelineDefinitionSchema.parse(
+          pipelineDefinition
+        ) as PipelineDefinition;
+      } catch (e) {
+        throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
+      }
+
+      await this.definitionDB.setDefinition(newPipelineDefinition);
+      await this.restartPipeline(newPipelineDefinition.id);
+      return newPipelineDefinition;
+    });
   }
 
   public async deletePipelineDefinition(
     userId: string,
     pipelineId: string
   ): Promise<undefined> {
-    const pipeline = await this.getPipelineDefinition(userId, pipelineId);
-    // TODO: Finalize the "permissions model" for CRUD actions. Right now,
-    // create, read, update are permissable by owners and editors, while delete
-    // is only permissable by owners.
-    if (pipeline.ownerUserId !== userId) {
-      throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
-    }
-    await this.definitionDB.clearDefinition(pipelineId);
-    await this.restartPipeline(pipelineId);
+    return traced(SERVICE_NAME, "deletePipelineDefinition", async (span) => {
+      span?.setAttribute("user_id", userId);
+      span?.setAttribute("pipeline_id", pipelineId);
+      const pipeline = await this.getPipelineDefinition(userId, pipelineId);
+      // TODO: Finalize the "permissions model" for CRUD actions. Right now,
+      // create, read, update are permissable by owners and editors, while delete
+      // is only permissable by owners.
+      if (pipeline.ownerUserId !== userId) {
+        throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
+      }
+      await this.definitionDB.clearDefinition(pipelineId);
+      await this.restartPipeline(pipelineId);
+      return undefined;
+    });
   }
 
   /**
@@ -601,66 +652,74 @@ export class GenericIssuanceService {
    * makes sure that no pipeline for it is running on the server.
    */
   private async restartPipeline(pipelineId: string): Promise<void> {
-    const inMemoryPipeline = this.pipelines.find(
-      (p) => p.definition.id === pipelineId
-    );
-    if (inMemoryPipeline) {
-      // we're going to need to stop the pipeline for this
-      // definition, so we do that right at the beginning
-      this.pipelines = this.pipelines.filter(
-        (p) => p.definition.id !== pipelineId
+    return traced(SERVICE_NAME, "restartPipeline", async (span) => {
+      span?.setAttribute("pipeline_id", pipelineId);
+
+      const inMemoryPipeline = this.pipelines.find(
+        (p) => p.definition.id === pipelineId
       );
-      await inMemoryPipeline.pipeline?.stop();
-    }
+      if (inMemoryPipeline) {
+        // we're going to need to stop the pipeline for this
+        // definition, so we do that right at the beginning
+        this.pipelines = this.pipelines.filter(
+          (p) => p.definition.id !== pipelineId
+        );
+        await inMemoryPipeline.pipeline?.stop();
+      }
 
-    const definitionInDB = await this.definitionDB.getDefinition(pipelineId);
+      const definitionInDB = await this.definitionDB.getDefinition(pipelineId);
 
-    if (definitionInDB) {
-      const pipeline = createPipeline(
-        this.eddsaPrivateKey,
-        definitionInDB,
-        this.atomDB,
-        {
-          genericPretixAPI: this.genericPretixAPI,
-          lemonadeAPI: this.lemonadeAPI
-        },
-        this.zupassPublicKey
-      );
+      if (definitionInDB) {
+        const pipeline = createPipeline(
+          this.eddsaPrivateKey,
+          definitionInDB,
+          this.atomDB,
+          {
+            genericPretixAPI: this.genericPretixAPI,
+            lemonadeAPI: this.lemonadeAPI
+          },
+          this.zupassPublicKey
+        );
 
-      this.pipelines.push({
-        pipeline: pipeline,
-        definition: definitionInDB
-      } satisfies InMemoryPipeline);
+        this.pipelines.push({
+          pipeline: pipeline,
+          definition: definitionInDB
+        } satisfies InMemoryPipeline);
 
-      logger(LOG_TAG, `loading data for updated pipeline ${pipeline.id}`);
+        logger(LOG_TAG, `loading data for updated pipeline ${pipeline.id}`);
 
-      pipeline
-        .load()
-        .then(() => {
-          logger(LOG_TAG, `loaded data for updated pipeline ${pipeline.id}`);
-        })
-        .catch((e) => {
-          logger(
-            LOG_TAG,
-            `failed to load data for updated pipeline ${pipeline.id}`,
-            e
-          );
-        });
-    }
+        pipeline
+          .load()
+          .then(() => {
+            logger(LOG_TAG, `loaded data for updated pipeline ${pipeline.id}`);
+          })
+          .catch((e) => {
+            logger(
+              LOG_TAG,
+              `failed to load data for updated pipeline ${pipeline.id}`,
+              e
+            );
+            setError(e, span);
+          });
+      }
+    });
   }
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {
-    const existingUser = await this.userDB.getUserByEmail(email);
-    if (existingUser != null) {
-      return existingUser;
-    }
-    const newUser: PipelineUser = {
-      id: uuidV4(),
-      email,
-      isAdmin: false
-    };
-    this.userDB.setUser(newUser);
-    return newUser;
+    return traced(SERVICE_NAME, "createOrGetUser", async (span) => {
+      span?.setAttribute("email", email);
+      const existingUser = await this.userDB.getUserByEmail(email);
+      if (existingUser != null) {
+        return existingUser;
+      }
+      const newUser: PipelineUser = {
+        id: uuidV4(),
+        email,
+        isAdmin: false
+      };
+      this.userDB.setUser(newUser);
+      return newUser;
+    });
   }
 
   /**
@@ -701,18 +760,23 @@ export class GenericIssuanceService {
   public async sendLoginEmail(
     email: string
   ): Promise<GenericIssuanceSendEmailResponseValue> {
-    // TODO: Skip email auth on this.bypassEmail
-    try {
-      await this.stytchClient.magicLinks.email.loginOrCreate({
-        email,
-        login_magic_link_url: this.genericIssuanceClientUrl,
-        login_expiration_minutes: 10,
-        signup_magic_link_url: this.genericIssuanceClientUrl,
-        signup_expiration_minutes: 10
-      });
-    } catch (e) {
-      throw new PCDHTTPError(500, "Failed to send generic issuance email");
-    }
+    return traced(SERVICE_NAME, "sendLoginEmail", async (span) => {
+      // TODO: Skip email auth on this.bypassEmail
+      try {
+        await this.stytchClient.magicLinks.email.loginOrCreate({
+          email,
+          login_magic_link_url: this.genericIssuanceClientUrl,
+          login_expiration_minutes: 10,
+          signup_magic_link_url: this.genericIssuanceClientUrl,
+          signup_expiration_minutes: 10
+        });
+      } catch (e) {
+        setError(e, span);
+        throw new PCDHTTPError(500, "Failed to send generic issuance email");
+      }
+
+      return undefined;
+    });
   }
 
   /**

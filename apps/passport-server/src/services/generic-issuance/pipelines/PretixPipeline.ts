@@ -158,75 +158,83 @@ export class PretixPipeline implements BasePipeline {
    * - clear tickets after each load? important!!!!
    */
   public async load(): Promise<void> {
-    logger(LOG_TAG, `loading for pipeline id ${this.id}`);
-    const tickets: PretixTicket[] = [];
+    return traced(LOG_NAME, "load", async (span) => {
+      span?.setAttribute("pipeline_id", this.id);
+      span?.setAttribute("pipeline_type", this.type);
 
-    const errors: string[] = [];
+      logger(LOG_TAG, `loading for pipeline id ${this.id}`);
+      const tickets: PretixTicket[] = [];
 
-    const loadStart = Date.now();
+      const errors: string[] = [];
 
-    for (const event of this.definition.options.events) {
-      // @todo this can throw exceptions. how should we handle this?
-      const eventData = await this.loadEvent(event);
+      const loadStart = Date.now();
 
-      errors.push(...this.validateEventData(eventData, event));
+      for (const event of this.definition.options.events) {
+        // @todo this can throw exceptions. how should we handle this?
+        const eventData = await this.loadEvent(event);
 
-      tickets.push(...(await this.ordersToTickets(event, eventData)));
-    }
+        errors.push(...this.validateEventData(eventData, event));
 
-    if (errors.length > 0) {
-      for (const error of errors) {
-        logger(`${LOG_TAG}: ${error}`);
+        tickets.push(...(await this.ordersToTickets(event, eventData)));
       }
-      throw new Error(errors.join("\n"));
-    }
 
-    const atomsToSave: PretixAtom[] = tickets.map((ticket) => {
-      return {
-        email: ticket.email,
-        name: ticket.full_name,
-        eventId: ticket.event.genericIssuanceId,
-        productId: ticket.product.genericIssuanceId,
-        // Use the event ID as the "namespace" when hashing the position ID.
-        // The event ID is a UUID that is part of our configuration, and is
-        // globally unique. The position ID is not globally unique, but is
-        // unique within the namespace of the event.
-        id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
-        secret: ticket.secret,
-        timestampConsumed: ticket.pretix_checkin_timestamp,
-        isConsumed: !!ticket.pretix_checkin_timestamp
-      };
-    });
-
-    logger(
-      LOG_TAG,
-      `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
-    );
-
-    // TODO: error handling
-    await this.db.save(this.definition.id, atomsToSave);
-
-    const loadEnd = Date.now();
-
-    logger(
-      LOG_TAG,
-      `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-        loadEnd - loadStart
-      }ms`
-    );
-
-    // Remove any pending check-ins that succeeded before loading started.
-    // Those that succeeded after loading started might not be represented in
-    // the data we fetched, so we can remove them on the next run.
-    // Pending checkins with the "Pending" status should not be removed, as
-    // they are still in-progress.
-    this.pendingCheckIns.forEach((value, key) => {
-      if (
-        value.status === CheckinStatus.Success &&
-        value.timestamp < loadStart
-      ) {
-        this.pendingCheckIns.delete(key);
+      if (errors.length > 0) {
+        for (const error of errors) {
+          logger(`${LOG_TAG}: ${error}`);
+        }
+        throw new Error(errors.join("\n"));
       }
+
+      const atomsToSave: PretixAtom[] = tickets.map((ticket) => {
+        return {
+          email: ticket.email,
+          name: ticket.full_name,
+          eventId: ticket.event.genericIssuanceId,
+          productId: ticket.product.genericIssuanceId,
+          // Use the event ID as the "namespace" when hashing the position ID.
+          // The event ID is a UUID that is part of our configuration, and is
+          // globally unique. The position ID is not globally unique, but is
+          // unique within the namespace of the event.
+          id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
+          secret: ticket.secret,
+          timestampConsumed: ticket.pretix_checkin_timestamp,
+          isConsumed: !!ticket.pretix_checkin_timestamp
+        };
+      });
+
+      logger(
+        LOG_TAG,
+        `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
+      );
+
+      // TODO: error handling
+      await this.db.save(this.definition.id, atomsToSave);
+
+      const loadEnd = Date.now();
+
+      logger(
+        LOG_TAG,
+        `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
+          loadEnd - loadStart
+        }ms`
+      );
+
+      span?.setAttribute("atoms_saved", atomsToSave.length);
+      span?.setAttribute("load_duration_ms", loadEnd - loadStart);
+
+      // Remove any pending check-ins that succeeded before loading started.
+      // Those that succeeded after loading started might not be represented in
+      // the data we fetched, so we can remove them on the next run.
+      // Pending checkins with the "Pending" status should not be removed, as
+      // they are still in-progress.
+      this.pendingCheckIns.forEach((value, key) => {
+        if (
+          value.status === CheckinStatus.Success &&
+          value.timestamp < loadStart
+        ) {
+          this.pendingCheckIns.delete(key);
+        }
+      });
     });
   }
 
@@ -539,61 +547,69 @@ export class PretixPipeline implements BasePipeline {
   private async issuePretixTicketPCDs(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
-    if (!req.pcd) {
-      throw new Error("missing credential pcd");
-    }
+    return traced(LOG_NAME, "issuePretixTicketPCDs", async (span) => {
+      span?.setAttribute("pipeline_id", this.id);
+      span?.setAttribute("pipeline_type", this.type);
+      if (!req.pcd) {
+        throw new Error("missing credential pcd");
+      }
 
-    // TODO: cache the verification
-    const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
+      // TODO: cache the verification
+      const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
 
-    const serializedEmailPCD = payload.pcd;
-    if (!serializedEmailPCD) {
-      throw new Error("missing email pcd");
-    }
+      const serializedEmailPCD = payload.pcd;
+      if (!serializedEmailPCD) {
+        throw new Error("missing email pcd");
+      }
 
-    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
+      const emailPCD = await EmailPCDPackage.deserialize(
+        serializedEmailPCD.pcd
+      );
 
-    if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
-      throw new Error(`Semaphore signature does not match email PCD`);
-    }
+      if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
+        throw new Error(`Semaphore signature does not match email PCD`);
+      }
 
-    if (
-      !isEqualEdDSAPublicKey(
-        emailPCD.proof.eddsaPCD.claim.publicKey,
-        this.zupassPublicKey
-      )
-    ) {
-      throw new Error(`Email PCD is not signed by Zupass`);
-    }
+      if (
+        !isEqualEdDSAPublicKey(
+          emailPCD.proof.eddsaPCD.claim.publicKey,
+          this.zupassPublicKey
+        )
+      ) {
+        throw new Error(`Email PCD is not signed by Zupass`);
+      }
 
-    const email = emailPCD.claim.emailAddress;
+      const email = emailPCD.claim.emailAddress;
 
-    const relevantTickets = await this.db.loadByEmail(this.id, email);
+      const relevantTickets = await this.db.loadByEmail(this.id, email);
 
-    const ticketDatas = relevantTickets.map((t) =>
-      this.atomToTicketData(t, credential.claim.identityCommitment)
-    );
+      const ticketDatas = relevantTickets.map((t) =>
+        this.atomToTicketData(t, credential.claim.identityCommitment)
+      );
 
-    // TODO: cache this intelligently
-    const tickets = await Promise.all(
-      ticketDatas.map((t) =>
-        this.ticketDataToTicketPCD(t, this.eddsaPrivateKey)
-      )
-    );
+      // TODO: cache this intelligently
+      const tickets = await Promise.all(
+        ticketDatas.map((t) =>
+          this.ticketDataToTicketPCD(t, this.eddsaPrivateKey)
+        )
+      );
 
-    const result: PollFeedResponseValue = {
-      actions: [
-        {
-          type: PCDActionType.ReplaceInFolder,
-          folder: this.definition.options.feedOptions.feedFolder,
-          pcds: await Promise.all(
-            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-          )
-        }
-      ]
-    };
+      span?.setAttribute("pcds_issued", tickets.length);
 
-    return result;
+      const result: PollFeedResponseValue = {
+        actions: [
+          {
+            type: PCDActionType.ReplaceInFolder,
+            folder: this.definition.options.feedOptions.feedFolder,
+            pcds: await Promise.all(
+              tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+            )
+          }
+        ]
+      };
+
+      return result;
+    });
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
@@ -824,118 +840,140 @@ export class PretixPipeline implements BasePipeline {
   private async checkinPretixTicketPCDs(
     request: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
-    logger(
-      LOG_TAG,
-      `got request to check in tickets with request ${JSON.stringify(request)}`
-    );
-
-    let checkerTickets: PretixAtom[];
-    let ticketId: string;
-
-    try {
-      const payload = await this.unwrapCheckInSignature(request.credential);
-      const checkerEmailPCD = await EmailPCDPackage.deserialize(
-        payload.emailPCD.pcd
+    return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
+      span?.setAttribute("pipeline_id", this.id);
+      span?.setAttribute("pipeline_type", this.type);
+      logger(
+        LOG_TAG,
+        `got request to check in tickets with request ${JSON.stringify(
+          request
+        )}`
       );
 
-      if (
-        !isEqualEdDSAPublicKey(
-          checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-          this.zupassPublicKey
-        )
-      ) {
-        logger(
-          `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
+      let checkerTickets: PretixAtom[];
+      let ticketId: string;
+
+      try {
+        const payload = await this.unwrapCheckInSignature(request.credential);
+        const checkerEmailPCD = await EmailPCDPackage.deserialize(
+          payload.emailPCD.pcd
         );
+
+        if (
+          !isEqualEdDSAPublicKey(
+            checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
+            this.zupassPublicKey
+          )
+        ) {
+          logger(
+            `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
+          );
+          return { checkedIn: false, error: { name: "InvalidSignature" } };
+        }
+
+        checkerTickets = await this.db.loadByEmail(
+          this.id,
+          checkerEmailPCD.claim.emailAddress
+        );
+        ticketId = payload.ticketIdToCheckIn;
+      } catch (e) {
+        span?.setAttribute("checkin_error", "InvalidSignature");
         return { checkedIn: false, error: { name: "InvalidSignature" } };
       }
 
-      checkerTickets = await this.db.loadByEmail(
-        this.id,
-        checkerEmailPCD.claim.emailAddress
-      );
-      ticketId = payload.ticketIdToCheckIn;
-    } catch (e) {
-      return { checkedIn: false, error: { name: "InvalidSignature" } };
-    }
-
-    const ticketAtom = await this.db.loadById(this.id, ticketId);
-    if (!ticketAtom) {
-      return { checkedIn: false, error: { name: "InvalidTicket" } };
-    }
-
-    const canCheckInResult = await this.canCheckIn(ticketAtom, checkerTickets);
-
-    if (canCheckInResult === true) {
-      if (ticketAtom.isConsumed) {
-        return {
-          checkedIn: false,
-          error: {
-            name: "AlreadyCheckedIn",
-            checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
-            checker: PRETIX_CHECKER // Pretix does not store a "checker"
-          }
-        };
+      const ticketAtom = await this.db.loadById(this.id, ticketId);
+      if (!ticketAtom) {
+        span?.setAttribute("checkin_error", "InvalidTicket");
+        span?.setAttribute("failed_checkin_ticket_id", ticketId);
+        return { checkedIn: false, error: { name: "InvalidTicket" } };
       }
 
-      const pretixEventId = this.atomToPretixEventId(ticketAtom);
+      const canCheckInResult = await this.canCheckIn(
+        ticketAtom,
+        checkerTickets
+      );
 
-      let pendingCheckin;
-      if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
-        if (
-          pendingCheckin.status === CheckinStatus.Pending ||
-          pendingCheckin.status === CheckinStatus.Success
-        ) {
+      if (canCheckInResult === true) {
+        if (ticketAtom.isConsumed) {
+          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+          span?.setAttribute("failed_checkin_ticket_id", ticketId);
           return {
             checkedIn: false,
             error: {
               name: "AlreadyCheckedIn",
-              checkinTimestamp: new Date(
-                pendingCheckin.timestamp
-              ).toISOString(),
-              checker: PRETIX_CHECKER
+              checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
+              checker: PRETIX_CHECKER // Pretix does not store a "checker"
             }
           };
         }
+
+        const pretixEventId = this.atomToPretixEventId(ticketAtom);
+
+        let pendingCheckin;
+        if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
+          if (
+            pendingCheckin.status === CheckinStatus.Pending ||
+            pendingCheckin.status === CheckinStatus.Success
+          ) {
+            span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+            span?.setAttribute("failed_checkin_ticket_id", ticketId);
+            return {
+              checkedIn: false,
+              error: {
+                name: "AlreadyCheckedIn",
+                checkinTimestamp: new Date(
+                  pendingCheckin.timestamp
+                ).toISOString(),
+                checker: PRETIX_CHECKER
+              }
+            };
+          }
+        }
+
+        try {
+          // We fetch this as part of data verification when load()'ing data from
+          // Pretix, so perhaps we could cache that data and avoid this API call.
+          const checkinLists = await this.api.fetchEventCheckinLists(
+            this.definition.options.pretixOrgUrl,
+            this.definition.options.pretixAPIKey,
+            pretixEventId
+          );
+
+          this.pendingCheckIns.set(ticketAtom.id, {
+            status: CheckinStatus.Pending,
+            timestamp: Date.now()
+          });
+
+          await this.api.pushCheckin(
+            this.definition.options.pretixOrgUrl,
+            this.definition.options.pretixAPIKey,
+            ticketAtom.secret,
+            checkinLists[0].id.toString(),
+            new Date().toISOString()
+          );
+
+          this.pendingCheckIns.set(ticketAtom.id, {
+            status: CheckinStatus.Success,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          logger(
+            `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerTickets[0].email}`
+          );
+          span?.setAttribute("checkin_error", "ServerError");
+          span?.setAttribute("failed_checkin_ticket_id", ticketId);
+          return { checkedIn: false, error: { name: "ServerError" } };
+        }
+
+        span?.setAttribute("successful_checkin_ticket_id", ticketId);
+
+        return { checkedIn: true };
+      } else {
+        span?.setAttribute("checkin_error", canCheckInResult.name);
+        span?.setAttribute("failed_checkin_ticket_id", ticketAtom.id);
+        return { checkedIn: false, error: canCheckInResult };
       }
-
-      try {
-        // We fetch this as part of data verification when load()'ing data from
-        // Pretix, so perhaps we could cache that data and avoid this API call.
-        const checkinLists = await this.api.fetchEventCheckinLists(
-          this.definition.options.pretixOrgUrl,
-          this.definition.options.pretixAPIKey,
-          pretixEventId
-        );
-
-        this.pendingCheckIns.set(ticketAtom.id, {
-          status: CheckinStatus.Pending,
-          timestamp: Date.now()
-        });
-
-        await this.api.pushCheckin(
-          this.definition.options.pretixOrgUrl,
-          this.definition.options.pretixAPIKey,
-          ticketAtom.secret,
-          checkinLists[0].id.toString(),
-          new Date().toISOString()
-        );
-
-        this.pendingCheckIns.set(ticketAtom.id, {
-          status: CheckinStatus.Success,
-          timestamp: Date.now()
-        });
-      } catch (e) {
-        logger(
-          `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerTickets[0].email}`
-        );
-        return { checkedIn: false, error: { name: "ServerError" } };
-      }
-
-      return { checkedIn: true };
-    } else {
-      return { checkedIn: false, error: canCheckInResult };
-    }
+    });
   }
 
   private atomToEventName(atom: PretixAtom): string {
