@@ -69,7 +69,8 @@ function getVerifyUrlPrefixes(): string[] {
     `${window.location.origin}/#/checkin`,
     `${window.location.origin}#/checkin`,
     `${window.location.origin}/#/checkin-by-id`,
-    `${window.location.origin}#/checkin-by-id`
+    `${window.location.origin}#/generic-checkin`,
+    `${window.location.origin}/#/generic-checkin`
   ];
 }
 
