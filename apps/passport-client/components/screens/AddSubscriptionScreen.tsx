@@ -160,30 +160,31 @@ export function AddSubscriptionScreen(): JSX.Element {
             </p>
           </MismatchedEmailWarning>
         )}
-        {url.length === 0 && (
-          <>
-            <Spacer h={16} />
-            <div>Enter a URL to a feed provider:</div>
-            <Spacer h={8} />
-            <BigInput
-              autoCorrect="off"
-              autoCapitalize="off"
-              disabled={fetching}
-              value={providerUrl}
-              onChange={(e): void => {
-                setProviderUrl(e.target.value);
-              }}
-            />
-            <Spacer h={16} />
-            <Button
-              disabled={fetching || alreadyFetched}
-              onClick={onFetchFeedsClick}
-            >
-              <Spinner show={fetching} text="Get possible subscriptions" />
-            </Button>
-            <Spacer h={16} />
-          </>
-        )}
+        {fetchError ||
+          (url.length === 0 && (
+            <>
+              <Spacer h={16} />
+              <div>Enter a URL to a feed provider:</div>
+              <Spacer h={8} />
+              <BigInput
+                autoCorrect="off"
+                autoCapitalize="off"
+                disabled={fetching}
+                value={providerUrl}
+                onChange={(e): void => {
+                  setProviderUrl(e.target.value);
+                }}
+              />
+              <Spacer h={16} />
+              <Button
+                disabled={fetching || alreadyFetched}
+                onClick={onFetchFeedsClick}
+              >
+                <Spinner show={fetching} text="Get possible subscriptions" />
+              </Button>
+              <Spacer h={16} />
+            </>
+          ))}
         <Spacer h={8} />
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
         <div>
