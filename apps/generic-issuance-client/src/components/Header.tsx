@@ -4,5 +4,5 @@ export function Header(): ReactNode {
   useEffect(() => {
     //
   }, []);
-  return <b>HEADER</b>;
+  return <b>PodBox</b>;
 }

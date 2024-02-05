@@ -1,14 +1,13 @@
 import {
   LemonadePipelineDefinition,
-  PipelineDefinition,
   PipelineType,
-  requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
 import { useStytch, useStytchUser } from "@stytch/react";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 import { v4 as uuid } from "uuid";
+import { useFetchAllPipelines } from "../behaviors/useFetchAllPipelines";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 
@@ -64,34 +63,14 @@ export default function Dashboard(): ReactNode {
 
   // TODO: After MVP, replace with RTK
   // hooks or a more robust state management.
-  const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
   const [isLoggingOut, setLoggingOut] = useState(false);
-  const [isLoading, setLoading] = useState(true);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
   const [newPipelineRaw, setNewPipelineRaw] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
   );
   const [error, setError] = useState("");
-  const userJWT = useStytch().session.getTokens().session_jwt;
 
-  const fetchAllPipelines = useCallback(async () => {
-    setLoading(true);
-    const res = await requestGenericIssuanceGetAllUserPipelines(
-      ZUPASS_SERVER_URL,
-      userJWT
-    );
-    if (res.success) {
-      setPipelines(res.value);
-    } else {
-      // TODO: Better errors
-      alert(`An error occurred while fetching user pipelines: ${res.error}`);
-    }
-    setLoading(false);
-  }, [userJWT]);
-
-  useEffect(() => {
-    fetchAllPipelines();
-  }, [fetchAllPipelines]);
+  const pipelinesHook = useFetchAllPipelines();
 
   const createPipeline = async (): Promise<void> => {
     if (!newPipelineRaw) return;
@@ -148,10 +127,10 @@ export default function Dashboard(): ReactNode {
       </button>
 
       <h2>My Pipelines</h2>
-      {!pipelines.length && <p>No pipelines right now - go create some!</p>}
-      {!!pipelines.length && (
+      {!pipelinesHook.length && <p>No pipelines right now - go create some!</p>}
+      {!!pipelinesHook.length && (
         <ol>
-          {pipelines.map((p) => (
+          {pipelinesHook.map((p) => (
             <Link to={`/pipelines/${p.id}`} key={p.id}>
               <li key={p.id}>
                 id: {p.id}, type: {p.type}
