@@ -129,7 +129,7 @@ export type Action =
   | {
       type: "sync-subscription";
       subscriptionId: string;
-      onSucess?: () => void;
+      onSuccess?: () => void;
       onError?: (e: Error) => void;
     }
   | {
@@ -238,7 +238,7 @@ export async function dispatch(
         state,
         update,
         action.subscriptionId,
-        action.onSucess,
+        action.onSuccess,
         action.onError
       );
     case "merge-import":
