@@ -40,6 +40,7 @@ export interface ITestOrganizer {
   dbId: string;
   token: string;
   organizerUrl: string;
+  disabled: boolean;
 }
 
 export interface ITestEvent {
@@ -88,12 +89,14 @@ describe("database reads and writes for devconnect ticket features", function ()
     {
       dbId: "",
       token: uuid(),
-      organizerUrl: "https://www.example.com/0xparc-organizer"
+      organizerUrl: "https://www.example.com/0xparc-organizer",
+      disabled: false
     },
     {
       dbId: "",
       token: uuid(),
-      organizerUrl: "https://www.example.com/thirdparty-organizer"
+      organizerUrl: "https://www.example.com/thirdparty-organizer",
+      disabled: false
     }
   ];
 
@@ -239,7 +242,8 @@ describe("database reads and writes for devconnect ticket features", function ()
       const id = await insertPretixOrganizerConfig(
         db,
         organizer.organizerUrl,
-        organizer.token
+        organizer.token,
+        organizer.disabled
       );
       organizer.dbId = id;
       expect(typeof id).to.eq("string");

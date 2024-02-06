@@ -5,15 +5,16 @@ import { sqlQuery } from "../../sqlQuery";
 export async function insertPretixOrganizerConfig(
   db: Pool,
   organizerUrl: string,
-  token: string
+  token: string,
+  disabled: boolean
 ): Promise<string> {
   const id = await sqlQuery(
     db,
-    `insert into pretix_organizers_config(organizer_url, token) ` +
-      `values ($1, $2) ` +
+    `insert into pretix_organizers_config(organizer_url, token, disabled) ` +
+      `values ($1, $2, $3) ` +
       `on conflict (organizer_url) do update set token = $2 ` +
       `returning id`,
-    [organizerUrl, token]
+    [organizerUrl, token, disabled]
   );
 
   return id.rows[0].id;

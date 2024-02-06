@@ -23,6 +23,7 @@ export interface IMockDevconnectPretixData {
 export interface IOrganizer {
   orgUrl: string;
   token: string;
+  disabled: boolean;
 
   // aggregate data for simpler querying
   ordersByEventID: Map<string, DevconnectPretixOrder[]>;
@@ -285,7 +286,8 @@ export class DevconnectPretixDataMocker {
       EMAIL_1,
       EMAIL_2,
       EMAIL_3,
-      EMAIL_4
+      EMAIL_4,
+      disabled: false
     };
   }
 
