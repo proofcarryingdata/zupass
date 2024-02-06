@@ -8,6 +8,7 @@ import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { useJWT } from "../helpers/useFetchSelf";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
@@ -40,13 +41,13 @@ export default function Dashboard(): ReactNode {
     SAMPLE_CREATE_PIPELINE_TEXT
   );
   const [error, setError] = useState("");
-  const userJWT = useStytch().session.getTokens().session_jwt;
+  const userJWT = useJWT();
 
   const fetchAllPipelines = useCallback(async () => {
     setLoading(true);
     const res = await requestGenericIssuanceGetAllUserPipelines(
       ZUPASS_SERVER_URL,
-      userJWT
+      userJWT ?? ""
     );
     if (res.success) {
       setPipelines(res.value);
@@ -65,7 +66,7 @@ export default function Dashboard(): ReactNode {
     if (!newPipelineRaw) return;
     const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
       pipeline: JSON.parse(newPipelineRaw),
-      jwt: userJWT
+      jwt: userJWT ?? ""
     });
     await fetchAllPipelines();
     if (res.success) {
@@ -96,7 +97,7 @@ export default function Dashboard(): ReactNode {
     <div>
       <Header />
       <p>
-        Congrats - you are now logged in as <b>{user.emails?.[0]?.email}.</b>
+        Congrats - you are now logged in as <b>{user?.emails?.[0]?.email}.</b>
       </p>
       <button
         onClick={async (): Promise<void> => {

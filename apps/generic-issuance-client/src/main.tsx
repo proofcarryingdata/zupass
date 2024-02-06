@@ -8,7 +8,7 @@ import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Pipeline from "./pages/Pipeline";
 
-const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN);
+const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 
 const router = createHashRouter([
   { path: "/", element: <Home /> },

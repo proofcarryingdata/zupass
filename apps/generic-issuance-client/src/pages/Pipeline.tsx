@@ -6,11 +6,12 @@ import {
   requestGenericIssuanceUpsertPipeline,
   requestPipelineInfo
 } from "@pcd/passport-interface";
-import { useStytch, useStytchUser } from "@stytch/react";
+import { useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { useJWT } from "../helpers/useFetchSelf";
 
 function format(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -28,7 +29,7 @@ export default function Pipeline(): ReactNode {
   const [info, setInfo] = useState<PipelineInfoResponseValue | undefined>();
 
   const [error, setError] = useState("");
-  const userJWT = useStytch().session.getTokens().session_jwt;
+  const userJWT = useJWT();
 
   async function savePipeline(): Promise<void> {
     let pipeline: PipelineDefinition;
@@ -40,7 +41,7 @@ export default function Pipeline(): ReactNode {
     }
     setSaveLoading(true);
     const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
-      jwt: userJWT,
+      jwt: userJWT ?? "",
       pipeline
     });
     if (res.success) {
@@ -57,8 +58,8 @@ export default function Pipeline(): ReactNode {
     if (confirm("Are you sure you would like to delete this pipeline?")) {
       const res = await requestGenericIssuanceDeletePipeline(
         ZUPASS_SERVER_URL,
-        id,
-        userJWT
+        id ?? "",
+        userJWT ?? ""
       );
       if (res.success) {
         window.location.href = "/#/dashboard";
@@ -72,8 +73,8 @@ export default function Pipeline(): ReactNode {
     async function fetchPipeline(): Promise<void> {
       const res = await requestGenericIssuanceGetPipeline(
         ZUPASS_SERVER_URL,
-        id,
-        userJWT
+        id ?? "",
+        userJWT ?? ""
       );
 
       if (res.success) {
@@ -87,7 +88,7 @@ export default function Pipeline(): ReactNode {
         setSavedPipeline(undefined);
       }
 
-      const infoRes = await requestPipelineInfo(ZUPASS_SERVER_URL, id);
+      const infoRes = await requestPipelineInfo(ZUPASS_SERVER_URL, id ?? "");
       if (infoRes.success) {
         setError("");
         setInfo(infoRes.value);
@@ -109,7 +110,7 @@ export default function Pipeline(): ReactNode {
     return <div>Loading...</div>;
   }
 
-  const hasEdits = format(savedPipeline) !== textareaValue;
+  const hasEdits = format(savedPipeline ?? {}) !== textareaValue;
 
   return (
     <div>
