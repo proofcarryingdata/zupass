@@ -2,6 +2,7 @@ import { useStytch } from "@stytch/react";
 import { ReactNode } from "react";
 import styled from "styled-components";
 import { useFetchSelf } from "../helpers/useFetchSelf";
+import { GOLD } from "./Core";
 
 export function Header(): ReactNode {
   const stytchClient = useStytch();
@@ -69,7 +70,7 @@ export function Header(): ReactNode {
 }
 
 export const HeaderContainer = styled.div`
-  border-bottom: 4px solid #f4ff1f;
+  border-bottom: 4px solid ${GOLD};
   width: 100vw;
   height: auto;
   padding: 16px;
