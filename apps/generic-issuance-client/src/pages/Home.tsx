@@ -57,7 +57,6 @@ function Page(): JSX.Element {
     <div>
       <Header />
 
-      <h1>Generic Issuance Client</h1>
       {hasSentEmail && (
         <div>
           Please check your email <b>{email}</b> for a login link.
