@@ -36,6 +36,7 @@ function pretixConfigDBToDevconnectPretixConfig(
             activeItemIDs: eventDB.active_item_ids,
             superuserItemIds: eventDB.superuser_item_ids
           })),
+          disabled: organizerDB.disabled,
           token: organizerDB.token
         }) satisfies DevconnectPretixOrganizerConfig
     )
@@ -55,6 +56,7 @@ export interface DevconnectPretixOrganizerConfig {
   id: string;
   orgURL: string;
   token: string;
+  disabled: boolean;
   events: DevconnectPretixEventConfig[];
 }
 

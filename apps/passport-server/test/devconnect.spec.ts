@@ -130,7 +130,6 @@ import { resetRateLimitBuckets } from "./util/rateLimit";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
-// @todo: merge this with zupass.spec.ts, and delete this file, after completely deprecating pcdpass
 describe("devconnect functionality", function () {
   this.timeout(30_000);
 
@@ -181,7 +180,8 @@ describe("devconnect functionality", function () {
     organizerConfigId = await insertPretixOrganizerConfig(
       db,
       mocker.get().organizer1.orgUrl,
-      mocker.get().organizer1.token
+      mocker.get().organizer1.token,
+      mocker.get().organizer1.disabled
     );
 
     eventAConfigId = await insertPretixEventConfig(
@@ -258,6 +258,7 @@ describe("devconnect functionality", function () {
           id: organizerConfigId,
           orgURL: mocker.get().organizer1.orgUrl,
           token: mocker.get().organizer1.token,
+          disabled: mocker.get().organizer1.disabled,
           events: [
             {
               id: eventAConfigId,

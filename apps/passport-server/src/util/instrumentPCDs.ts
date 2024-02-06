@@ -34,8 +34,6 @@ function instrumentSingleFunction(
   pcdPackage: PCDPackage<unknown, unknown, any, unknown>,
   functionName: string
 ): void {
-  logger(`[INIT] instrumenting ${pcdPackage.name}.${functionName}`);
-
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const packageAsAny = pcdPackage as any;
   const uninstrumentedFunction = packageAsAny[functionName];

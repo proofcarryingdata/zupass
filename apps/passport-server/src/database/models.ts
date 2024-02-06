@@ -182,6 +182,7 @@ export interface PretixOrganizersConfig {
   id: string;
   organizer_url: string;
   token: string;
+  disabled: boolean;
   events: PretixEventsConfig[];
 }
 
@@ -189,6 +190,7 @@ export interface PretixOrganizerRow {
   id: string;
   organizer_url: string;
   token: string;
+  disabled: boolean;
 }
 
 export interface PretixEventInfo {
