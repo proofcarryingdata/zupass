@@ -69,7 +69,7 @@ export function Header(): ReactNode {
 }
 
 export const HeaderContainer = styled.div`
-  border-bottom: 2px solid #f4ff1f;
+  border-bottom: 4px solid #f4ff1f;
   width: 100vw;
   height: auto;
   padding: 16px;
