@@ -10,8 +10,9 @@ export function PipelineListEntry({
   return (
     <li key={entry.pipeline.id}>
       <Link to={`/pipelines/${entry.pipeline.id}`}>
-        id: {entry.pipeline.id}, type: {entry.pipeline.type}
-      </Link>
+        {entry.pipeline.type} ({entry.pipeline.id.substring(0, 8)}...)
+      </Link>{" "}
+      by {entry.extraInfo.ownerEmail}
     </li>
   );
 }
