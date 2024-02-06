@@ -9,7 +9,7 @@ import { Link } from "react-router-dom";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
-import { useJWT } from "../helpers/useFetchSelf";
+import { useFetchSelf, useJWT } from "../helpers/useFetchSelf";
 import { AdminPipelinesSection } from "../sections/AdminPipelinesSection";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
@@ -41,6 +41,7 @@ export default function Dashboard(): ReactNode {
     SAMPLE_CREATE_PIPELINE_TEXT
   );
   const [error, setError] = useState("");
+  const giUser = useFetchSelf();
   const userJWT = useJWT();
 
   const fetchAllPipelines = useCallback(async () => {
@@ -93,19 +94,7 @@ export default function Dashboard(): ReactNode {
     <>
       <Header />
       <PageContent>
-        <h2>My Pipelines</h2>
-        {!pipelines.length && <p>No pipelines right now - go create some!</p>}
-        {!!pipelines.length && (
-          <ol>
-            {pipelines.map((p) => (
-              <Link to={`/pipelines/${p.id}`} key={p.id}>
-                <li key={p.id}>
-                  id: {p.id}, type: {p.type}
-                </li>
-              </Link>
-            ))}
-          </ol>
-        )}
+        <h2>New Pipeline</h2>
         <p>
           <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
             {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
@@ -124,6 +113,22 @@ export default function Dashboard(): ReactNode {
             </div>
           )}
         </p>
+        <h2>My Pipelines</h2>
+        {!pipelines.length && <p>No pipelines right now - go create some!</p>}
+        {!!pipelines.length && (
+          <ol>
+            {pipelines
+              .filter((p) => p.ownerUserId === giUser?.value?.id)
+              .map((p) => (
+                <Link to={`/pipelines/${p.id}`} key={p.id}>
+                  <li key={p.id}>
+                    id: {p.id}, type: {p.type}
+                  </li>
+                </Link>
+              ))}
+          </ol>
+        )}
+
         <AdminPipelinesSection />
       </PageContent>
     </>
