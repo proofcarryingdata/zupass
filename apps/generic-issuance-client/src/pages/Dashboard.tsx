@@ -45,6 +45,10 @@ export default function Dashboard(): ReactNode {
   const userJWT = useJWT();
 
   const fetchAllPipelines = useCallback(async () => {
+    if (!userJWT) {
+      return;
+    }
+
     setLoading(true);
     const res = await requestGenericIssuanceGetAllUserPipelines(
       ZUPASS_SERVER_URL,
@@ -79,7 +83,12 @@ export default function Dashboard(): ReactNode {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return (
+      <>
+        <Header />
+        <PageContent>Loading...</PageContent>
+      </>
+    );
   }
 
   if (!user) {

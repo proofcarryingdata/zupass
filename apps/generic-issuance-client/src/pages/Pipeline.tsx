@@ -108,7 +108,12 @@ export default function Pipeline(): ReactNode {
   }
 
   if (queryLoading) {
-    return <div>Loading...</div>;
+    return (
+      <>
+        <Header includeLinkToDashboard />
+        <PageContent>Loading...</PageContent>
+      </>
+    );
   }
 
   const hasEdits = format(savedPipeline ?? {}) !== textareaValue;
