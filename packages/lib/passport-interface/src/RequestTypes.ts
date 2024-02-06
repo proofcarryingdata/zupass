@@ -929,3 +929,13 @@ export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
 export type GenericIssuanceDeletePipelineResponseValue = undefined;
 
 export type GenericIssuanceDeletePipelineRequest = { jwt: string };
+
+export type GenericIssuanceSelf = {
+  email: string;
+  isAdmin: boolean;
+  id: string;
+};
+
+export type GenericIssuanceSelfResponseValue = GenericIssuanceSelf;
+
+export type GenericIssuanceSelfRequest = { jwt: string };

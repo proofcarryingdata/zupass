@@ -6,6 +6,7 @@ import {
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
+  GenericIssuanceSelfResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
@@ -44,6 +45,17 @@ export function initGenericIssuanceRoutes(
     } else {
       res.send("not started");
     }
+  });
+
+  app.post("/generic-issuance/api/self", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    const self = await genericIssuanceService.authenticateStytchSession(req);
+    const result: GenericIssuanceSelfResponseValue = {
+      email: self.email,
+      isAdmin: self.isAdmin,
+      id: self.id
+    };
+    res.json(result satisfies GenericIssuanceSelfResponseValue);
   });
 
   /**
