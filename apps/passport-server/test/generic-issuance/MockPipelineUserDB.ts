@@ -12,6 +12,13 @@ export class MockPipelineUserDB implements IPipelineUserDB {
     this.users = {};
   }
 
+  public async setUserAdmin(email: string, isAdmin: boolean): Promise<void> {
+    const user = await this.getUserByEmail(email);
+    if (user) {
+      user.isAdmin = isAdmin;
+    }
+  }
+
   public async clearAllUsers(): Promise<void> {
     this.users = {};
   }

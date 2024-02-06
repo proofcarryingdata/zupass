@@ -170,6 +170,7 @@ export class GenericIssuanceService {
   public async start(): Promise<void> {
     try {
       await this.maybeInsertLocalDevTestPipeline();
+      await this.maybeSetupAdmins();
       await this.startPipelinesFromDefinitions();
       this.schedulePipelineLoadLoop();
     } catch (e) {
@@ -777,6 +778,33 @@ export class GenericIssuanceService {
 
       return undefined;
     });
+  }
+
+  private async maybeSetupAdmins(): Promise<void> {
+    try {
+      if (!process.env.GENERIC_ISSUANCE_ADMINS) {
+        return;
+      }
+
+      const adminEmailsFromEnv: string[] = JSON.parse(
+        process.env.GENERIC_ISSUANCE_ADMINS
+      );
+
+      if (!(adminEmailsFromEnv instanceof Array)) {
+        throw new Error(
+          `expected environment variable 'GENERIC_ISSUANCE_ADMINS' ` +
+            `to be an array of strings`
+        );
+      }
+
+      logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
+
+      for (const email of adminEmailsFromEnv) {
+        await this.userDB.setUserAdmin(email, true);
+      }
+    } catch (e) {
+      logger(LOG_TAG, `failed to set up generic issuance admins`, e);
+    }
   }
 
   /**
