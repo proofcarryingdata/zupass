@@ -3,7 +3,7 @@ import {
   requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
-import { useStytch, useStytchUser } from "@stytch/react";
+import { useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { Header } from "../components/Header";
@@ -30,9 +30,7 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 );
 
 export default function Dashboard(): ReactNode {
-  const stytchClient = useStytch();
   const { user } = useStytchUser();
-  const [isLoggingOut, setLoggingOut] = useState(false);
   // TODO: After MVP, replace with RTK hooks or a more robust state management.
   const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
   const [isLoading, setLoading] = useState(true);
@@ -89,29 +87,9 @@ export default function Dashboard(): ReactNode {
     return <div>An error occured. {JSON.stringify(error)}</div>;
   }
 
-  if (isLoggingOut) {
-    return <div>Logging out...</div>;
-  }
-
   return (
     <div>
       <Header />
-      <button
-        onClick={async (): Promise<void> => {
-          if (confirm("Are you sure you want to log out?")) {
-            setLoggingOut(true);
-            try {
-              await stytchClient.session.revoke();
-            } catch (e) {
-              setError(e);
-              setLoggingOut(false);
-            }
-          }
-        }}
-      >
-        Log out
-      </button>
-
       <h2>My Pipelines</h2>
       {!pipelines.length && <p>No pipelines right now - go create some!</p>}
       {!!pipelines.length && (
