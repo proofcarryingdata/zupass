@@ -7,6 +7,7 @@ import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { useFetchSelf } from "../helpers/useFetchSelf";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
@@ -40,6 +41,17 @@ export default function Dashboard(): ReactNode {
   );
   const [error, setError] = useState("");
   const userJWT = useStytch().session.getTokens().session_jwt;
+  const self = useFetchSelf();
+
+  useEffect(() => {
+    if (!self) {
+      return;
+    } else if (self.success) {
+      alert(self.value.email);
+    } else {
+      alert("failure");
+    }
+  }, [self]);
 
   const fetchAllPipelines = useCallback(async () => {
     setLoading(true);

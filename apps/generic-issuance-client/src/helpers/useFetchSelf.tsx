@@ -16,9 +16,11 @@ export function useFetchSelf(): GenericIssuanceSelfResult | undefined {
   const [result, setResult] = useState<GenericIssuanceSelfResult>();
 
   useEffect(() => {
-    requestGenericIssuanceSelf(ZUPASS_SERVER_URL, jwt).then((result) => {
-      setResult(result);
-    });
+    if (jwt) {
+      requestGenericIssuanceSelf(ZUPASS_SERVER_URL, jwt).then((result) => {
+        setResult(result);
+      });
+    }
   }, [jwt]);
 
   return result;
