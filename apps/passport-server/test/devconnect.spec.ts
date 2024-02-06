@@ -258,6 +258,7 @@ describe("devconnect functionality", function () {
           id: organizerConfigId,
           orgURL: mocker.get().organizer1.orgUrl,
           token: mocker.get().organizer1.token,
+          disabled: mocker.get().organizer1.disabled,
           events: [
             {
               id: eventAConfigId,
