@@ -7,6 +7,7 @@ import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { useJWT } from "../helpers/userHooks";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
@@ -39,9 +40,10 @@ export default function Dashboard(): ReactNode {
     SAMPLE_CREATE_PIPELINE_TEXT
   );
   const [error, setError] = useState("");
-  const userJWT = useStytch().session.getTokens().session_jwt;
+  const userJWT = useJWT();
 
   const fetchAllPipelines = useCallback(async () => {
+    if (!userJWT) return;
     setLoading(true);
     const res = await requestGenericIssuanceGetAllUserPipelines(
       ZUPASS_SERVER_URL,
@@ -79,7 +81,7 @@ export default function Dashboard(): ReactNode {
     return <div>Loading...</div>;
   }
 
-  if (!user) {
+  if (!userJWT) {
     window.location.href = "/";
   }
 
