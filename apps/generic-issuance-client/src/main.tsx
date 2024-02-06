@@ -4,6 +4,7 @@ import React from "react";
 import { createRoot } from "react-dom/client";
 import { createHashRouter, RouterProvider } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
+import { RefreshSession } from "./components/RefreshSession";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Pipeline from "./pages/Pipeline";
@@ -19,6 +20,7 @@ const router = createHashRouter([
 createRoot(document.getElementById("root") as HTMLElement).render(
   <React.StrictMode>
     <StytchProvider stytch={stytch}>
+      <RefreshSession />
       <GlobalStyle />
       <RouterProvider router={router} />
     </StytchProvider>
