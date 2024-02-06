@@ -901,7 +901,14 @@ export type GenericIssuanceGetAllUserPipelinesRequest = { jwt: string };
  * Returns all pipeline definitions that a user has access to.
  */
 export type GenericIssuanceGetAllUserPipelinesResponseValue =
-  PipelineDefinition[];
+  GenericIssuancePipelineListEntry[];
+
+export type GenericIssuancePipelineListEntry = {
+  pipeline: PipelineDefinition;
+  extraInfo: {
+    ownerEmail: string;
+  };
+};
 
 /**
  * Returns the requested pipeline definition.

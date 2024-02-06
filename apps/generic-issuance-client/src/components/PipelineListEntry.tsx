@@ -1,16 +1,16 @@
-import { PipelineDefinition } from "@pcd/passport-interface";
+import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 export function PipelineListEntry({
-  pipeline
+  entry
 }: {
-  pipeline: PipelineDefinition;
+  entry: GenericIssuancePipelineListEntry;
 }): ReactNode {
   return (
-    <li key={pipeline.id}>
-      <Link to={`/pipelines/${pipeline.id}`}>
-        id: {pipeline.id}, type: {pipeline.type}
+    <li key={entry.pipeline.id}>
+      <Link to={`/pipelines/${entry.pipeline.id}`}>
+        id: {entry.pipeline.id}, type: {entry.pipeline.type}
       </Link>
     </li>
   );

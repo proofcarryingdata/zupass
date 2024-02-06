@@ -4,6 +4,7 @@ import {
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
+  GenericIssuancePipelineListEntry,
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
@@ -544,14 +545,30 @@ export class GenericIssuanceService {
 
   public async getAllUserPipelineDefinitions(
     userId: string
-  ): Promise<PipelineDefinition[]> {
+  ): Promise<GenericIssuancePipelineListEntry[]> {
     const allDefinitions: PipelineDefinition[] =
       await this.definitionDB.loadPipelineDefinitions();
 
     const user = await this.userDB.getUser(userId);
 
-    return allDefinitions.filter((d) =>
+    const relevantPipelines = allDefinitions.filter((d) =>
       this.userHasPipelineDefinitionAccess(user, d)
+    );
+
+    return Promise.all(
+      relevantPipelines.map(async (p) => {
+        const owner = await this.userDB.getUser(p.ownerUserId);
+        if (!owner) {
+          throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
+        }
+
+        return {
+          extraInfo: {
+            ownerEmail: owner.email
+          },
+          pipeline: p
+        };
+      })
     );
   }
 

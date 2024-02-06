@@ -1,5 +1,5 @@
 import {
-  PipelineDefinition,
+  GenericIssuancePipelineListEntry,
   requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
@@ -34,7 +34,9 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 export default function Dashboard(): ReactNode {
   const { user } = useStytchUser();
   // TODO: After MVP, replace with RTK hooks or a more robust state management.
-  const [pipelines, setPipelines] = useState<PipelineDefinition[]>([]);
+  const [pipelineEntries, setPipelineEntries] = useState<
+    GenericIssuancePipelineListEntry[]
+  >([]);
   const [isLoading, setLoading] = useState(true);
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
   const [newPipelineRaw, setNewPipelineRaw] = useState(
@@ -55,7 +57,7 @@ export default function Dashboard(): ReactNode {
       userJWT ?? ""
     );
     if (res.success) {
-      setPipelines(res.value);
+      setPipelineEntries(res.value);
     } else {
       // TODO: Better errors
       alert(`An error occurred while fetching user pipelines: ${res.error}`);
@@ -123,18 +125,23 @@ export default function Dashboard(): ReactNode {
           )}
         </p>
         <h2>My Pipelines</h2>
-        {!pipelines.length && <p>No pipelines right now - go create some!</p>}
-        {!!pipelines.length && (
+        {!pipelineEntries.length && (
+          <p>No pipelines right now - go create some!</p>
+        )}
+        {!!pipelineEntries.length && (
           <ol>
-            {pipelines
-              .filter((p) => p.ownerUserId === giUser?.value?.id)
+            {pipelineEntries
+              .filter((p) => p.pipeline.ownerUserId === giUser?.value?.id)
               .map((p) => (
-                <PipelineListEntry pipeline={p} key={p.id} />
+                <PipelineListEntry entry={p} key={p.pipeline.id} />
               ))}
           </ol>
         )}
 
-        <AdminPipelinesSection self={giUser?.value} pipelines={pipelines} />
+        <AdminPipelinesSection
+          self={giUser?.value}
+          pipelineEntries={pipelineEntries}
+        />
       </PageContent>
     </>
   );
