@@ -545,21 +545,28 @@ export class GenericIssuanceService {
   public async getAllUserPipelineDefinitions(
     userId: string
   ): Promise<PipelineDefinition[]> {
-    // TODO: Add logic for isAdmin = true
     const allDefinitions: PipelineDefinition[] =
       await this.definitionDB.loadPipelineDefinitions();
 
+    const user = await this.userDB.getUser(userId);
+
     return allDefinitions.filter((d) =>
-      this.userHasPipelineDefinitionAccess(userId, d)
+      this.userHasPipelineDefinitionAccess(user, d)
     );
   }
 
   private userHasPipelineDefinitionAccess(
-    userId: string,
+    user: PipelineUser | undefined,
     pipeline: PipelineDefinition
   ): boolean {
+    if (!user) {
+      return false;
+    }
+
     return (
-      pipeline.ownerUserId === userId || pipeline.editorUserIds.includes(userId)
+      user.isAdmin ||
+      pipeline.ownerUserId === user.id ||
+      pipeline.editorUserIds.includes(user.id)
     );
   }
 
@@ -568,7 +575,8 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<PipelineDefinition> {
     const pipeline = await this.definitionDB.getDefinition(pipelineId);
-    if (!pipeline || !this.userHasPipelineDefinitionAccess(userId, pipeline))
+    const user = await this.userDB.getUser(userId);
+    if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline))
       throw new PCDHTTPError(404, "Pipeline not found or not accessible");
     return pipeline;
   }
@@ -587,10 +595,12 @@ export class GenericIssuanceService {
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
       );
+      const user = await this.userDB.getUser(userId);
+
       if (existingPipelineDefinition) {
         if (
           !this.userHasPipelineDefinitionAccess(
-            userId,
+            user,
             existingPipelineDefinition
           )
         ) {
