@@ -9,6 +9,7 @@ import {
 import { useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
+import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
@@ -122,45 +123,63 @@ export default function Pipeline(): ReactNode {
     <>
       <Header includeLinkToDashboard />
       <PageContent>
-        {savedPipeline && (
-          <>
-            <p>
-              <textarea
-                cols={50}
-                rows={30}
-                value={textareaValue}
-                onChange={(e): void => setTextareaValue(e.target.value)}
-              />
-            </p>
-            <p>
-              {hasEdits && (
-                <button disabled={saveLoading} onClick={savePipeline}>
-                  {saveLoading ? "Saving..." : "Save changes"}
-                </button>
-              )}
-              {!hasEdits && <button disabled>All changes saved ✅</button>}
-            </p>
-            <p>
-              <button onClick={deletePipeline}>Delete pipeline</button>
-            </p>
-          </>
-        )}
-        {info && (
-          <>
-            {info.feeds.map((f) => (
-              <div>
-                feed {f.name} - <a href={f.url}>{f.url}</a>{" "}
-              </div>
-            ))}
-          </>
-        )}
-        {error && (
-          <p>
-            <strong>Error: </strong>
-            {error}
-          </p>
-        )}
+        <TwoColumns>
+          <div>
+            <h2>Edit Pipeline</h2>
+            {savedPipeline && (
+              <>
+                <p>
+                  <textarea
+                    cols={50}
+                    rows={30}
+                    value={textareaValue}
+                    onChange={(e): void => setTextareaValue(e.target.value)}
+                  />
+                </p>
+                <p>
+                  {hasEdits && (
+                    <button disabled={saveLoading} onClick={savePipeline}>
+                      {saveLoading ? "Saving..." : "Save changes"}
+                    </button>
+                  )}
+                  {!hasEdits && <button disabled>All changes saved ✅</button>}
+                  <button onClick={deletePipeline}>Delete pipeline</button>
+                </p>
+              </>
+            )}
+            {error && (
+              <p>
+                <strong>Error: </strong>
+                {error}
+              </p>
+            )}
+          </div>
+          <div>
+            <h2>Pipeline Info</h2>
+            {info && (
+              <>
+                {info.feeds.map((f) => (
+                  <div>
+                    feed {f.name} - <a href={f.url}>{f.url}</a>{" "}
+                  </div>
+                ))}
+              </>
+            )}
+          </div>
+        </TwoColumns>
       </PageContent>
     </>
   );
 }
+
+const TwoColumns = styled.div`
+  display: flex;
+  justify-content: stretch;
+  align-items: stretch;
+  flex-direction: row;
+  gap: 16px;
+
+  div {
+    flex-grow: 1;
+  }
+`;
