@@ -10,6 +10,7 @@ import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "../helpers/useFetchSelf";
+import { AdminPipelinesSection } from "../sections/AdminPipelinesSection";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
@@ -123,6 +124,7 @@ export default function Dashboard(): ReactNode {
             </div>
           )}
         </p>
+        <AdminPipelinesSection />
       </PageContent>
     </>
   );
