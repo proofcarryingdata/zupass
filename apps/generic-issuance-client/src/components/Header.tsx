@@ -1,5 +1,6 @@
 import { useStytch } from "@stytch/react";
 import { ReactNode } from "react";
+import styled from "styled-components";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 
 export function Header(): ReactNode {
@@ -50,5 +51,12 @@ export function Header(): ReactNode {
     );
   }
 
-  return <>{headerElements}</>;
+  return <HeaderContainer>{headerElements}</HeaderContainer>;
 }
+
+export const HeaderContainer = styled.div`
+  width: 100vw;
+  height: auto;
+  padding: 16px;
+  margin-bottom: 32px;
+`;

@@ -113,7 +113,7 @@ export default function Pipeline(): ReactNode {
   const hasEdits = format(savedPipeline ?? {}) !== textareaValue;
 
   return (
-    <div>
+    <>
       <Header />
 
       {savedPipeline && (
@@ -159,6 +159,6 @@ export default function Pipeline(): ReactNode {
           <button>Return to all pipelines</button>
         </Link>
       </p>
-    </div>
+    </>
   );
 }

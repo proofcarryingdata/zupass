@@ -88,7 +88,7 @@ export default function Dashboard(): ReactNode {
   }
 
   return (
-    <div>
+    <>
       <Header />
       <h2>My Pipelines</h2>
       {!pipelines.length && <p>No pipelines right now - go create some!</p>}
@@ -121,6 +121,6 @@ export default function Dashboard(): ReactNode {
           </div>
         )}
       </p>
-    </div>
+    </>
   );
 }

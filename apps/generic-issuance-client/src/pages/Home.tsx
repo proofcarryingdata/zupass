@@ -54,7 +54,7 @@ function Page(): JSX.Element {
   }
 
   return (
-    <div>
+    <>
       <Header />
 
       {hasSentEmail && (
@@ -79,7 +79,7 @@ function Page(): JSX.Element {
           <button type="submit">Continue</button>
         </form>
       )}
-    </div>
+    </>
   );
 }
 
