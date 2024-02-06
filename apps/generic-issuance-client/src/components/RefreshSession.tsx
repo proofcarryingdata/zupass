@@ -13,7 +13,7 @@ export const RefreshSession: FC = () => {
         });
       }
     };
-    // Refresh session on mount and halfway through the session.
+    // Refresh session on mount and at intervals of one half the session duration.
     refresh();
     const interval = setInterval(refresh, SESSION_DURATION_MINUTES / 2);
     return () => clearInterval(interval);
