@@ -11,10 +11,10 @@ export async function fetchPretixConfiguration(
   const result = await sqlQuery(
     client,
     `\
-    select o.id, o.organizer_url, o.token, json_agg(e.*) as events
+    select o.id, o.organizer_url, o.token, o.disabled, json_agg(e.*) as events
     from pretix_events_config e
     join pretix_organizers_config o on e.pretix_organizers_config_id = o.id
-    group by o.id, o.organizer_url, o.token`
+    group by o.id, o.organizer_url, o.token, o.disabled`
   );
 
   return result.rows;

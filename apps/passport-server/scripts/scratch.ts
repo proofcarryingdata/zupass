@@ -146,7 +146,8 @@ yargs
       const organizerConfigId = await insertPretixOrganizerConfig(
         db,
         argv.orgUrl,
-        argv.token
+        argv.token,
+        false
       );
       logger(`organizerConfigId: ${organizerConfigId}`);
 
@@ -246,7 +247,8 @@ yargs
       const organizerConfigId = await insertPretixOrganizerConfig(
         db,
         orgUrl,
-        token
+        token,
+        false
       );
       logger(`organizerConfigId: ${organizerConfigId}`);
 

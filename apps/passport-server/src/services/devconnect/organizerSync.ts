@@ -127,6 +127,14 @@ export class OrganizerSync {
       span?.setAttribute("org_url", this.organizer.orgURL);
       span?.setAttribute("events_count", this.organizer.events.length);
       span?.setAttribute("org_id", this.organizer.id);
+      span?.setAttribute("disabled", this.organizer.disabled);
+
+      if (this.organizer.disabled) {
+        logger(
+          `[DEVCONNECT PRETIX] skipping organizer ${this.organizer.id} because it's disabled`
+        );
+        return;
+      }
 
       let fetchedData;
       this._isRunning = true;

@@ -123,7 +123,12 @@ export class SemaphoreService {
    * Load users from DB, rebuild semaphore groups
    */
   public async reload(): Promise<void> {
-    return traced("Semaphore", "reload", async () => {
+    return traced("Semaphore", "reload", async (span) => {
+      if (process.env.SEMAPHORE_SERVICE_DISABLED === "true") {
+        span?.setAttribute("disabled", true);
+        return;
+      }
+
       logger(`[SEMA] Reloading semaphore service...`);
 
       await this.reloadZuzaluGroups();
