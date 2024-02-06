@@ -5,9 +5,9 @@ import {
 } from "@pcd/passport-interface";
 import { useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
-import { Link } from "react-router-dom";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
+import { PipelineListEntry } from "../components/PipelineListEntry";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useFetchSelf, useJWT } from "../helpers/useFetchSelf";
 import { AdminPipelinesSection } from "../sections/AdminPipelinesSection";
@@ -120,16 +120,12 @@ export default function Dashboard(): ReactNode {
             {pipelines
               .filter((p) => p.ownerUserId === giUser?.value?.id)
               .map((p) => (
-                <Link to={`/pipelines/${p.id}`} key={p.id}>
-                  <li key={p.id}>
-                    id: {p.id}, type: {p.type}
-                  </li>
-                </Link>
+                <PipelineListEntry pipeline={p} />
               ))}
           </ol>
         )}
 
-        <AdminPipelinesSection />
+        <AdminPipelinesSection self={giUser?.value} pipelines={pipelines} />
       </PageContent>
     </>
   );
