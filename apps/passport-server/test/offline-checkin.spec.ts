@@ -89,7 +89,12 @@ describe("offline checkin database queries should work", function () {
       const progCryptoEventName = "progcrypto";
       const awEventName = "aw";
 
-      const oxparc = await insertPretixOrganizerConfig(db, "test.com", "test");
+      const oxparc = await insertPretixOrganizerConfig(
+        db,
+        "test.com",
+        "test",
+        false
+      );
       const progCrypto = await insertPretixEventConfig(
         db,
         oxparc,

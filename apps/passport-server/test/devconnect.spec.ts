@@ -181,7 +181,8 @@ describe("devconnect functionality", function () {
     organizerConfigId = await insertPretixOrganizerConfig(
       db,
       mocker.get().organizer1.orgUrl,
-      mocker.get().organizer1.token
+      mocker.get().organizer1.token,
+      mocker.get().organizer1.disabled
     );
 
     eventAConfigId = await insertPretixEventConfig(

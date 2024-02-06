@@ -59,7 +59,8 @@ describe("telegram bot functionality", function () {
     {
       dbId: "",
       token: uuid(),
-      organizerUrl: "https://www.example.com/0xparc-organizer"
+      organizerUrl: "https://www.example.com/0xparc-organizer",
+      disabled: false
     }
   ];
 
@@ -87,7 +88,8 @@ describe("telegram bot functionality", function () {
       const id = await insertPretixOrganizerConfig(
         db,
         organizer.organizerUrl,
-        organizer.token
+        organizer.token,
+        organizer.disabled
       );
       organizer.dbId = id;
       expect(typeof id).to.eq("string");
