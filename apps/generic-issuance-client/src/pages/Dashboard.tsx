@@ -98,7 +98,7 @@ export default function Dashboard(): ReactNode {
         {!!pipelines.length && (
           <ol>
             {pipelines.map((p) => (
-              <Link to={`/pipelines/${p.id}`}>
+              <Link to={`/pipelines/${p.id}`} key={p.id}>
                 <li key={p.id}>
                   id: {p.id}, type: {p.type}
                 </li>

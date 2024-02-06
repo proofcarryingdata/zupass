@@ -22,7 +22,7 @@ export class PipelineUserDB implements IPipelineUserDB {
   public async setUserAdmin(email: string, isAdmin: boolean): Promise<void> {
     await sqlQuery(
       this.db,
-      "update generic_issuance_users set isAdmin=$1 where email=$2",
+      "update generic_issuance_users set is_admin=$1 where email=$2",
       [isAdmin, email]
     );
   }
