@@ -1,16 +1,32 @@
 import { useStytch } from "@stytch/react";
 import { ReactNode } from "react";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { GOLD } from "./Core";
 
-export function Header(): ReactNode {
+export function Header({
+  includeLinkToDashboard
+}: {
+  includeLinkToDashboard?: boolean;
+}): ReactNode {
   const stytchClient = useStytch();
   const self = useFetchSelf();
   const user = self?.value;
 
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
+
+  if (includeLinkToDashboard) {
+    leftElements.push(
+      <span key="back">
+        <Link to="/dashboard">
+          <button>👈 Back to Dashboard</button>
+        </Link>
+        {" · "}
+      </span>
+    );
+  }
 
   leftElements.push(<b key="title">Generic Issuance</b>);
 

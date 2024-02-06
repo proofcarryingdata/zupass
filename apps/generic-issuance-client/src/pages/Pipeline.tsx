@@ -8,7 +8,7 @@ import {
 } from "@pcd/passport-interface";
 import { useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
-import { Link, useParams } from "react-router-dom";
+import { useParams } from "react-router-dom";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
@@ -115,7 +115,7 @@ export default function Pipeline(): ReactNode {
 
   return (
     <>
-      <Header />
+      <Header includeLinkToDashboard />
       <PageContent>
         {savedPipeline && (
           <>
@@ -155,11 +155,6 @@ export default function Pipeline(): ReactNode {
             {error}
           </p>
         )}
-        <p>
-          <Link to="/dashboard">
-            <button>Return to all pipelines</button>
-          </Link>
-        </p>
       </PageContent>
     </>
   );
