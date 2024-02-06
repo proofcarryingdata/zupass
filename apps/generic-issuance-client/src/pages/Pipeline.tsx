@@ -13,7 +13,7 @@ import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
-import { useJWT } from "../helpers/useFetchSelf";
+import { useFetchSelf, useJWT } from "../helpers/useFetchSelf";
 
 function format(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -22,14 +22,13 @@ function format(obj: object): string {
 export default function Pipeline(): ReactNode {
   const params = useParams();
   const { user } = useStytchUser();
+  const ownUser = useFetchSelf();
   const { id } = params;
-  // TODO: After MVP, replace with RTK hooks or a more robust state management.
   const [savedPipeline, setSavedPipeline] = useState<PipelineDefinition>();
   const [textareaValue, setTextareaValue] = useState("");
   const [queryLoading, setQueryLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
   const [info, setInfo] = useState<PipelineInfoResponseValue | undefined>();
-
   const [error, setError] = useState("");
   const userJWT = useJWT();
 
@@ -118,10 +117,18 @@ export default function Pipeline(): ReactNode {
   }
 
   const hasEdits = format(savedPipeline ?? {}) !== textareaValue;
+  const ownedBySomeoneElse = savedPipeline?.ownerUserId !== ownUser?.value?.id;
 
   return (
     <>
       <Header includeLinkToDashboard />
+      {ownedBySomeoneElse && (
+        <WarningSection>
+          <b>WARNING!</b> You are not the owner of this pipeline, but you can
+          see it because you're an <b>admin</b>. Be <b>Careful</b>!
+        </WarningSection>
+      )}
+
       <PageContent>
         <TwoColumns>
           <div>
@@ -138,12 +145,20 @@ export default function Pipeline(): ReactNode {
                 </p>
                 <p>
                   {hasEdits && (
-                    <button disabled={saveLoading} onClick={savePipeline}>
+                    <button
+                      disabled={saveLoading || ownedBySomeoneElse}
+                      onClick={savePipeline}
+                    >
                       {saveLoading ? "Saving..." : "Save changes"}
                     </button>
                   )}
                   {!hasEdits && <button disabled>All changes saved ✅</button>}
-                  <button onClick={deletePipeline}>Delete pipeline</button>
+                  <button
+                    disabled={ownedBySomeoneElse}
+                    onClick={deletePipeline}
+                  >
+                    Delete pipeline
+                  </button>
                 </p>
               </>
             )}
@@ -174,6 +189,11 @@ export default function Pipeline(): ReactNode {
     </>
   );
 }
+
+const WarningSection = styled.div`
+  padding: 16px;
+  background-color: rgba(238, 255, 0, 0.1);
+`;
 
 const TwoColumns = styled.div`
   display: flex;
