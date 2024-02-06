@@ -32,6 +32,15 @@ export function Header(): ReactNode {
   }
 
   if (user) {
+    leftElements.push(
+      <b key="id">
+        {" · user id: "}
+        <i style={{ fontWeight: "normal" }}>{user.id}</i>
+      </b>
+    );
+  }
+
+  if (user) {
     rightElements.push(
       <span key="logout">
         <button
