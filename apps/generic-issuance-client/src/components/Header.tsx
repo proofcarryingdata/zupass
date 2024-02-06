@@ -8,12 +8,13 @@ export function Header(): ReactNode {
   const self = useFetchSelf();
   const user = self?.value;
 
-  const headerElements: ReactNode[] = [];
+  const leftElements: ReactNode[] = [];
+  const rightElements: ReactNode[] = [];
 
-  headerElements.push(<b key="title">Generic Issuance</b>);
+  leftElements.push(<b key="title">Generic Issuance</b>);
 
   if (user) {
-    headerElements.push(
+    leftElements.push(
       <b key="email">
         {" · "}
         {user.email}
@@ -22,7 +23,7 @@ export function Header(): ReactNode {
   }
 
   if (user?.isAdmin) {
-    headerElements.push(
+    leftElements.push(
       <b key="admin">
         {" · "}
         {"admin"}
@@ -31,9 +32,8 @@ export function Header(): ReactNode {
   }
 
   if (user) {
-    headerElements.push(
+    rightElements.push(
       <span key="logout">
-        {" · "}
         <button
           onClick={async (): Promise<void> => {
             if (confirm("Are you sure you want to log out?")) {
@@ -51,12 +51,26 @@ export function Header(): ReactNode {
     );
   }
 
-  return <HeaderContainer>{headerElements}</HeaderContainer>;
+  return (
+    <HeaderContainer>
+      <LeftHalf>{leftElements}</LeftHalf>
+      <RightHalf>{rightElements}</RightHalf>
+    </HeaderContainer>
+  );
 }
 
 export const HeaderContainer = styled.div`
+  border-bottom: 2px solid #f4ff1f;
   width: 100vw;
   height: auto;
   padding: 16px;
   margin-bottom: 32px;
+  box-sizing: border-box;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 `;
+
+export const LeftHalf = styled.div``;
+
+export const RightHalf = styled.div``;
