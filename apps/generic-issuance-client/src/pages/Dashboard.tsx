@@ -96,9 +96,6 @@ export default function Dashboard(): ReactNode {
   return (
     <div>
       <Header />
-      <p>
-        Congrats - you are now logged in as <b>{user?.emails?.[0]?.email}.</b>
-      </p>
       <button
         onClick={async (): Promise<void> => {
           if (confirm("Are you sure you want to log out?")) {
