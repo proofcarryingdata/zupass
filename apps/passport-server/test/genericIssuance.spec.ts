@@ -38,7 +38,7 @@ import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
-import { SetupServer } from "msw/node";
+import { SetupServer, setupServer } from "msw/node";
 import {
   ILemonadeAPI,
   LemonadeTicket,
@@ -59,6 +59,7 @@ import { Zupass } from "../src/types";
 import { testCSVPipeline } from "./generic-issuance/testCSVPipeline";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
+import { getMockLemonadeHandlers } from "./lemonade/MockLemonadeServer";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
 import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
@@ -200,7 +201,7 @@ describe("Generic Issuance", function () {
     type: PipelineType.Lemonade
   };
 
-  let pretixBackendServer: SetupServer;
+  let mockServer: SetupServer;
   const pretixBackend = new GenericPretixDataMocker();
   const ethLatAmPretixOrganizer = pretixBackend.get().ethLatAmOrganizer;
   const ethLatAmEvent = ethLatAmPretixOrganizer.ethLatAm;
@@ -337,11 +338,11 @@ t2,i1`,
     );
 
     const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
-    pretixBackendServer = getGenericMockPretixAPIServer(
-      pretixOrgUrls,
-      pretixBackend
+    mockServer = setupServer(
+      ...getGenericMockPretixAPIServer(pretixOrgUrls, pretixBackend),
+      ...getMockLemonadeHandlers()
     );
-    pretixBackendServer.listen({ onUnhandledRequest: "bypass" });
+    mockServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     giService = giBackend.services.genericIssuanceService;
@@ -360,7 +361,7 @@ t2,i1`,
   });
 
   this.afterEach(async () => {
-    pretixBackendServer.resetHandlers();
+    mockServer.resetHandlers();
     MockDate.reset();
   });
 
@@ -841,7 +842,7 @@ t2,i1`,
 
   this.afterAll(async () => {
     await stopApplication(giBackend);
-    pretixBackendServer.close();
+    mockServer.close();
   });
 });
 
