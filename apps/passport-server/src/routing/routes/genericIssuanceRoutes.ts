@@ -47,6 +47,11 @@ export function initGenericIssuanceRoutes(
     }
   });
 
+  /**
+   * Gets the currently logged in user based on their JWT.
+   *
+   * P.S. GraphQL would be so nice.
+   */
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const self = await genericIssuanceService.authenticateStytchSession(req);

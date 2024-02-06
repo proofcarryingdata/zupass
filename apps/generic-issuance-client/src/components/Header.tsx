@@ -5,6 +5,11 @@ import styled from "styled-components";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { GOLD } from "./Core";
 
+/**
+ * A header that displays information about the logged-in user
+ * and provides rudimentary navigation help. Intended to be
+ * displayed at the top of all the generic issuance client pages.
+ */
 export function Header({
   includeLinkToDashboard
 }: {
