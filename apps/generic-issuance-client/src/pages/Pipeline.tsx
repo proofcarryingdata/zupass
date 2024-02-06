@@ -6,10 +6,10 @@ import {
   requestGenericIssuanceUpsertPipeline,
   requestPipelineInfo
 } from "@pcd/passport-interface";
-import { useStytch, useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
 import { Link, useParams } from "react-router-dom";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { useJWT } from "../helpers/userHooks";
 
 function format(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -17,7 +17,6 @@ function format(obj: object): string {
 
 export default function Pipeline(): ReactNode {
   const params = useParams();
-  const { user } = useStytchUser();
   const { id } = params;
   // TODO: After MVP, replace with RTK hooks or a more robust state management.
   const [savedPipeline, setSavedPipeline] = useState<PipelineDefinition>();
@@ -27,7 +26,7 @@ export default function Pipeline(): ReactNode {
   const [info, setInfo] = useState<PipelineInfoResponseValue | undefined>();
 
   const [error, setError] = useState("");
-  const userJWT = useStytch().session.getTokens().session_jwt;
+  const userJWT = useJWT();
 
   async function savePipeline(): Promise<void> {
     let pipeline: PipelineDefinition;
@@ -100,7 +99,7 @@ export default function Pipeline(): ReactNode {
     fetchPipeline();
   }, [id, userJWT]);
 
-  if (!user) {
+  if (!userJWT) {
     window.location.href = "/";
   }
 
