@@ -12,6 +12,10 @@ export function AdminPipelinesSection({
   self?: GenericIssuanceSelf;
   pipelines: PipelineDefinition[];
 }): ReactNode {
+  if (!self?.isAdmin) {
+    return null;
+  }
+
   return (
     <div>
       <h2>All Other Pipelines (admin-only view)</h2>
