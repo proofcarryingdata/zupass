@@ -1,9 +1,10 @@
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
-import React from "react";
+import React, { ReactNode, useState } from "react";
 import { createRoot } from "react-dom/client";
-import { createHashRouter, RouterProvider } from "react-router-dom";
+import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
+import { GIContext, GIContextState } from "./helpers/Context";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Pipeline from "./pages/Pipeline";
@@ -16,11 +17,20 @@ const router = createHashRouter([
   { path: "/pipelines/:id", element: <Pipeline /> }
 ]);
 
-createRoot(document.getElementById("root") as HTMLElement).render(
-  <React.StrictMode>
-    <StytchProvider stytch={stytch}>
-      <GlobalStyle />
-      <RouterProvider router={router} />
-    </StytchProvider>
-  </React.StrictMode>
-);
+function App(): ReactNode {
+  const [state, setState] = useState<GIContextState>({} as GIContextState);
+  state.setState = setState;
+
+  return (
+    <React.StrictMode>
+      <StytchProvider stytch={stytch}>
+        <GIContext.Provider value={state}>
+          <GlobalStyle />
+          <RouterProvider router={router} />
+        </GIContext.Provider>
+      </StytchProvider>
+    </React.StrictMode>
+  );
+}
+
+createRoot(document.getElementById("root") as HTMLElement).render(<App />);
