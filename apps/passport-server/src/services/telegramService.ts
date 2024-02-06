@@ -1627,6 +1627,13 @@ export async function startTelegramService(
   const forwardBotToken = process.env.TELEGRAM_FORWARD_BOT_TOKEN;
   const anonBotExists = !!(anonBotToken && anonBotToken !== botToken);
 
+  if (process.env.TELEGRAM_BOT_DISABLED) {
+    logger(
+      `[INIT] TELEGRAM_BOT_DISABLED is true - not starting telegram service`
+    );
+    return null;
+  }
+
   if (!botToken) {
     logger(
       `[INIT] missing TELEGRAM_BOT_TOKEN, not instantiating Telegram service`
