@@ -73,7 +73,6 @@ export const HeaderContainer = styled.div`
   width: 100vw;
   height: auto;
   padding: 16px;
-  margin-bottom: 32px;
   box-sizing: border-box;
   display: flex;
   justify-content: space-between;

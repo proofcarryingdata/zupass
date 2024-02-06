@@ -1,6 +1,7 @@
 import { useStytch, useStytchSession } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 
@@ -56,29 +57,30 @@ function Page(): JSX.Element {
   return (
     <>
       <Header />
-
-      {hasSentEmail && (
-        <div>
-          Please check your email <b>{email}</b> for a login link.
-        </div>
-      )}
-      {!hasSentEmail && (
-        <form
-          onSubmit={(e): Promise<void> => {
-            e.preventDefault();
-            e.stopPropagation();
-            return handleContinue();
-          }}
-        >
-          <input
-            autoFocus
-            value={email}
-            onChange={(e): void => setEmail(e.target.value)}
-            placeholder="Enter your email"
-          />
-          <button type="submit">Continue</button>
-        </form>
-      )}
+      <PageContent>
+        {hasSentEmail && (
+          <div>
+            Please check your email <b>{email}</b> for a login link.
+          </div>
+        )}
+        {!hasSentEmail && (
+          <form
+            onSubmit={(e): Promise<void> => {
+              e.preventDefault();
+              e.stopPropagation();
+              return handleContinue();
+            }}
+          >
+            <input
+              autoFocus
+              value={email}
+              onChange={(e): void => setEmail(e.target.value)}
+              placeholder="Enter your email"
+            />
+            <button type="submit">Continue</button>
+          </form>
+        )}
+      </PageContent>
     </>
   );
 }

@@ -64,3 +64,7 @@ const CollapsableCodeContainer = styled.div`
   max-width: 100%;
   padding: 8px;
 `;
+
+export const PageContent = styled.div`
+  padding: 32px;
+`;

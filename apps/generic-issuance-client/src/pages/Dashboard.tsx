@@ -6,6 +6,7 @@ import {
 import { useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { Link } from "react-router-dom";
+import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "../helpers/useFetchSelf";
@@ -90,37 +91,39 @@ export default function Dashboard(): ReactNode {
   return (
     <>
       <Header />
-      <h2>My Pipelines</h2>
-      {!pipelines.length && <p>No pipelines right now - go create some!</p>}
-      {!!pipelines.length && (
-        <ol>
-          {pipelines.map((p) => (
-            <Link to={`/pipelines/${p.id}`}>
-              <li key={p.id}>
-                id: {p.id}, type: {p.type}
-              </li>
-            </Link>
-          ))}
-        </ol>
-      )}
-      <p>
-        <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
-          {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
-        </button>
-        {isCreatingPipeline && (
-          <div>
-            <textarea
-              rows={10}
-              cols={50}
-              value={newPipelineRaw}
-              onChange={(e): void => setNewPipelineRaw(e.target.value)}
-            />
-            <div>
-              <button onClick={createPipeline}>Create new pipeline</button>
-            </div>
-          </div>
+      <PageContent>
+        <h2>My Pipelines</h2>
+        {!pipelines.length && <p>No pipelines right now - go create some!</p>}
+        {!!pipelines.length && (
+          <ol>
+            {pipelines.map((p) => (
+              <Link to={`/pipelines/${p.id}`}>
+                <li key={p.id}>
+                  id: {p.id}, type: {p.type}
+                </li>
+              </Link>
+            ))}
+          </ol>
         )}
-      </p>
+        <p>
+          <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
+            {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
+          </button>
+          {isCreatingPipeline && (
+            <div>
+              <textarea
+                rows={10}
+                cols={50}
+                value={newPipelineRaw}
+                onChange={(e): void => setNewPipelineRaw(e.target.value)}
+              />
+              <div>
+                <button onClick={createPipeline}>Create new pipeline</button>
+              </div>
+            </div>
+          )}
+        </p>
+      </PageContent>
     </>
   );
 }
