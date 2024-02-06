@@ -129,7 +129,7 @@ export default function Dashboard(): ReactNode {
             {pipelines
               .filter((p) => p.ownerUserId === giUser?.value?.id)
               .map((p) => (
-                <PipelineListEntry pipeline={p} />
+                <PipelineListEntry pipeline={p} key={p.id} />
               ))}
           </ol>
         )}
