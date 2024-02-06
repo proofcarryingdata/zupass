@@ -154,15 +154,18 @@ export default function Pipeline(): ReactNode {
               </p>
             )}
           </div>
-          <div>
+          <div style={{ flexGrow: 1 }}>
             <h2>Pipeline Info</h2>
             {info && (
               <>
-                {info.feeds.map((f) => (
-                  <div>
-                    feed {f.name} - <a href={f.url}>{f.url}</a>{" "}
-                  </div>
-                ))}
+                <h3>Feeds</h3>
+                <ol>
+                  {info.feeds.map((feed) => (
+                    <li key={feed.url}>
+                      <b>{feed.name}</b> - <a href={feed.url}>{feed.url}</a>{" "}
+                    </li>
+                  ))}
+                </ol>
               </>
             )}
           </div>
@@ -177,9 +180,9 @@ const TwoColumns = styled.div`
   justify-content: stretch;
   align-items: stretch;
   flex-direction: row;
-  gap: 16px;
+  gap: 32px;
 
-  div {
-    flex-grow: 1;
+  ol {
+    max-width: unset !important;
   }
 `;
