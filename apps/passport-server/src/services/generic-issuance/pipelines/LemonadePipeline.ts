@@ -29,6 +29,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { v5 as uuidv5 } from "uuid";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
@@ -172,23 +173,33 @@ export class LemonadePipeline implements BasePipeline {
         oauthServerUrl: this.definition.options.oauthServerUrl
       };
 
-      // Fetch events from Lemonade
-      const events = await this.api.getHostingEvents(
-        this.definition.options.backendUrl,
-        credentials
+      const supportedEventIds = new Set(
+        this.definition.options.events.map((ev) => ev.externalId)
       );
+      // Fetch events from Lemonade
+      const events = (
+        await this.api.getHostingEvents(
+          this.definition.options.backendUrl,
+          credentials
+        )
+      )
+        // Filter out unsupported events
+        .filter((ev) => supportedEventIds.has(ev._id));
 
       // For each event, fetch tickets
       const tickets = await Promise.all(
         events.map(async (ev) => {
-          // See if we have this event configured
           const eventConfig = this.definition.options.events.find(
             (e) => e.externalId === ev._id
           );
 
           // If not, return no tickets
           if (!eventConfig) {
-            return { id: ev._id, tickets: [] };
+            // This should never happen because we filtered the fetched events
+            // earlier
+            throw new Error(
+              `Failed to get event configuration for ${ev._id} in pipeline ${this.id}`
+            );
           }
 
           // Get tickets for this event
@@ -205,7 +216,7 @@ export class LemonadePipeline implements BasePipeline {
           );
 
           return {
-            id: ev._id,
+            eventConfig,
             // Filter the tickets down to supported tickets
             // TODO anything to log if we find unsupported tickets?
             tickets: eventTickets.filter((t) => {
@@ -215,20 +226,22 @@ export class LemonadePipeline implements BasePipeline {
         })
       );
 
-      const atomsToSave: LemonadeAtom[] = tickets.flatMap(({ id, tickets }) => {
-        return tickets.map(
-          (t) =>
-            ({
-              id: t._id,
-              email: t.assigned_to_expanded?.email as string,
-              name: `${t.assigned_to_expanded?.first_name} ${t.assigned_to_expanded?.last_name}`,
-              lemonadeEventId: id,
-              lemonadeTicketTypeId: t.type,
-              lemonadeUserId: t.assigned_to as string,
-              isConsumed: t.accepted === true
-            }) as LemonadeAtom
-        );
-      });
+      const atomsToSave: LemonadeAtom[] = tickets.flatMap(
+        ({ eventConfig, tickets }) => {
+          return tickets.map(
+            (t) =>
+              ({
+                id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
+                email: t.assigned_to_expanded?.email as string,
+                name: `${t.assigned_to_expanded?.first_name} ${t.assigned_to_expanded?.last_name}`,
+                lemonadeEventId: eventConfig.externalId,
+                lemonadeTicketTypeId: t.type,
+                lemonadeUserId: t.assigned_to as string,
+                isConsumed: t.accepted === true
+              }) as LemonadeAtom
+          );
+        }
+      );
 
       logger(
         LOG_TAG,
