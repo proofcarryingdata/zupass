@@ -23,24 +23,24 @@ export interface LemonadeOAuthCredentials {
  */
 export interface ILemonadeAPI {
   getHostingEvents(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials
   ): Promise<LemonadeEvents>;
 
   getEventTicketTypes(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTicketTypes>;
 
   getTickets(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTickets>;
 
   checkinUser(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string,
     lemonadeUserId: string
@@ -141,9 +141,9 @@ class OAuthTokenManager implements AuthTokenSource {
 class LemonadeClient {
   private gqlClient: ApolloClient<NormalizedCacheObject>;
 
-  public constructor(backendUri: string) {
+  public constructor(backendUrl: string) {
     this.gqlClient = new ApolloClient({
-      uri: backendUri,
+      uri: backendUrl,
       cache: new InMemoryCache()
     });
   }
@@ -302,11 +302,11 @@ export class LemonadeAPI implements ILemonadeAPI {
    * Requests require clients, so we look up a previously-created client object
    * for this request, if one exists. Otherwise, we create and store a new one.
    */
-  private getClient(backendUri: string): LemonadeClient {
-    if (!this.clients.has(backendUri)) {
-      this.clients.set(backendUri, new LemonadeClient(backendUri));
+  private getClient(backendUrl: string): LemonadeClient {
+    if (!this.clients.has(backendUrl)) {
+      this.clients.set(backendUrl, new LemonadeClient(backendUrl));
     }
-    return this.clients.get(backendUri) as LemonadeClient;
+    return this.clients.get(backendUrl) as LemonadeClient;
   }
 
   /**
@@ -342,10 +342,10 @@ export class LemonadeAPI implements ILemonadeAPI {
    * Get all events (restricted by credentials).
    */
   public async getHostingEvents(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials
   ): Promise<LemonadeEvents> {
-    const client = this.getClient(backendUri);
+    const client = this.getClient(backendUrl);
     const token = await this.getToken(credentials);
 
     return await this.paginate<LemonadeEvents[number]>((opts) =>
@@ -357,11 +357,11 @@ export class LemonadeAPI implements ILemonadeAPI {
    * Get all ticket types for an event.
    */
   public async getEventTicketTypes(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTicketTypes> {
-    const client = this.getClient(backendUri);
+    const client = this.getClient(backendUrl);
     const token = await this.getToken(credentials);
     return await client.getEventTicketTypes(token, {
       input: { event: lemonadeEventId }
@@ -372,11 +372,11 @@ export class LemonadeAPI implements ILemonadeAPI {
    * Get all tickets for an event.
    */
   public async getTickets(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTickets> {
-    const client = this.getClient(backendUri);
+    const client = this.getClient(backendUrl);
     const token = await this.getToken(credentials);
     return await this.paginate<LemonadeTickets[number]>((opts) =>
       client.getTickets(token, lemonadeEventId, opts)
@@ -387,12 +387,12 @@ export class LemonadeAPI implements ILemonadeAPI {
    * Check a user in for an event.
    */
   public async checkinUser(
-    backendUri: string,
+    backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string,
     lemonadeUserId: string
   ): Promise<LemonadeCheckin> {
-    const client = this.getClient(backendUri);
+    const client = this.getClient(backendUrl);
     const token = await this.getToken(credentials);
 
     return await client.checkinUser(token, {
