@@ -29,7 +29,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { IRealLemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
+import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
   PipelineAtom
@@ -89,7 +89,7 @@ export class LemonadePipeline implements BasePipeline {
    * to be stored in-memory.
    */
   private db: IPipelineAtomDB<LemonadeAtom>;
-  private api: IRealLemonadeAPI;
+  private api: ILemonadeAPI;
 
   public get id(): string {
     return this.definition.id;
@@ -107,7 +107,7 @@ export class LemonadePipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: LemonadePipelineDefinition,
     db: IPipelineAtomDB,
-    api: IRealLemonadeAPI,
+    api: ILemonadeAPI,
     zupassPublicKey: EdDSAPublicKey
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;

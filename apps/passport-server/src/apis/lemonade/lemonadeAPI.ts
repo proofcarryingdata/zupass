@@ -15,7 +15,7 @@ export interface LemonadeOAuthCredentials {
   oauthServerUrl: string;
 }
 
-export interface IRealLemonadeAPI {
+export interface ILemonadeAPI {
   getHostingEvents(
     backendUri: string,
     credentials: LemonadeOAuthCredentials
@@ -39,28 +39,6 @@ export interface IRealLemonadeAPI {
     lemonadeEventId: string,
     lemonadeUserId: string
   ): Promise<LemonadeCheckin>;
-}
-
-/**
- * TODO: implement to match the actual API
- */
-export interface ILemonadeAPI {
-  loadEvents(apiKey: string): Promise<LemonadeEvent[]>;
-  checkinTicket(
-    apiKey: string,
-    eventId: string,
-    ticketId: string
-  ): Promise<void>;
-  // TODO: fill in the other methods. This is what is planned so far:
-  // - API Key scoped to an ‘account’, which has read/write permissions to
-  //   the appropriate events. E.g. can read/write events that are owned/co-owned by the account.
-  // - GET product types for a given event
-  // - GET tickets for a given event, which will include
-  //     - Attendee name
-  //     - Attendee email
-  //     - Product type (7-day, early bird, GA, etc)
-  //     - Checked-in status
-  // - POST Check-in (and potentially check-out)
 }
 
 interface AuthTokenSource {
@@ -293,7 +271,7 @@ class LemonadeClient {
  * shared between all pipelines. This means that user-specific credentials must
  * be passed in on each API call.
  */
-export class LemonadeAPI implements IRealLemonadeAPI {
+export class LemonadeAPI implements ILemonadeAPI {
   // To avoid regenerating OAuth tokens and the GraphQL client, we store client
   // objects between requests.
   private clients: Map<string, LemonadeClient>;
@@ -541,6 +519,6 @@ export type LemonadeCheckin = CheckinUserResponse["checkinUser"];
  * TODO: replace with production version once it exists. We have a placeholder
  * so that {@link GenericIssuanceService} is instantiated in non-testing environments.
  */
-export function getLemonadeAPI(): IRealLemonadeAPI {
+export function getLemonadeAPI(): ILemonadeAPI {
   return new LemonadeAPI(undefined);
 }

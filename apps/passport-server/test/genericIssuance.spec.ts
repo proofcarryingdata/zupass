@@ -40,6 +40,9 @@ import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { SetupServer, setupServer } from "msw/node";
 import {
+  ILemonadeAPI,
+  LemonadeAPI,
+  LemonadeOAuthCredentials,
   LemonadeTicket,
   LemonadeTicketType
 } from "../src/apis/lemonade/lemonadeAPI";
@@ -163,7 +166,7 @@ describe("Generic Issuance", function () {
   );
   //lemonadeBackend.makeCoHost(EdgeCityDenverBouncer.id, EdgeCityDenver.id);
 
-  const lemonadeAPI: IRealLemonadeAPI = new LemonadeAPI({
+  const lemonadeAPI: ILemonadeAPI = new LemonadeAPI({
     async getToken(credentials: LemonadeOAuthCredentials): Promise<string> {
       return credentials.oauthClientId;
     }

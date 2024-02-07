@@ -27,7 +27,7 @@ import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
 import { v4 as uuidV4 } from "uuid";
-import { IRealLemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
+import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
@@ -86,7 +86,7 @@ export class GenericIssuanceService {
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
 
-  private lemonadeAPI: IRealLemonadeAPI;
+  private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
   private stytchClient: Client;
 
@@ -102,7 +102,7 @@ export class GenericIssuanceService {
     context: ApplicationContext,
     rollbarService: RollbarService | null,
     atomDB: IPipelineAtomDB,
-    lemonadeAPI: IRealLemonadeAPI,
+    lemonadeAPI: ILemonadeAPI,
     stytchClient: Client,
     genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
@@ -1083,7 +1083,7 @@ export class GenericIssuanceService {
 export async function startGenericIssuanceService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
-  lemonadeAPI: IRealLemonadeAPI | null,
+  lemonadeAPI: ILemonadeAPI | null,
   genericPretixAPI: IGenericPretixAPI | null
 ): Promise<GenericIssuanceService | null> {
   if (!lemonadeAPI) {
