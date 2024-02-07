@@ -172,6 +172,9 @@ export default function Pipeline(): ReactNode {
             <h2>Pipeline Info</h2>
             {info && (
               <>
+                <pre style={{ border: "1px solid white", padding: "8px" }}>
+                  {JSON.stringify(info, null, 2)}
+                </pre>
                 <h3>Feeds</h3>
                 <ol>
                   {info.feeds.map((feed) => (
