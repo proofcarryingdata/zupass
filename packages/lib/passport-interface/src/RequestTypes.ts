@@ -440,8 +440,22 @@ export interface PipelineFeedInfo {
   // TODO: checkin url
 }
 
+export enum PipelineLogLevel {
+  Info = "Info",
+  Warning = "Warning",
+  Error = "Error"
+}
+
+export interface PipelineLog {
+  level: PipelineLogLevel;
+  value: string;
+  metadata: unknown;
+}
+
 export interface PipelineInfoResponseValue {
-  feeds: PipelineFeedInfo[];
+  feeds?: PipelineFeedInfo[];
+  latestAtoms?: object[];
+  latestLogs?: PipelineLog[];
 }
 
 export interface ListSingleFeedRequest {

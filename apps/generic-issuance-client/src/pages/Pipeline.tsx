@@ -175,14 +175,18 @@ export default function Pipeline(): ReactNode {
                 <pre style={{ border: "1px solid white", padding: "8px" }}>
                   {JSON.stringify(info, null, 2)}
                 </pre>
-                <h3>Feeds</h3>
-                <ol>
-                  {info.feeds.map((feed) => (
-                    <li key={feed.url}>
-                      <b>{feed.name}</b> - <a href={feed.url}>{feed.url}</a>{" "}
-                    </li>
-                  ))}
-                </ol>
+                {info.feeds && (
+                  <>
+                    <h3>Feeds</h3>
+                    <ol>
+                      {info.feeds?.map((feed) => (
+                        <li key={feed.url}>
+                          <b>{feed.name}</b> - <a href={feed.url}>{feed.url}</a>{" "}
+                        </li>
+                      ))}
+                    </ol>
+                  </>
+                )}
               </>
             )}
           </div>

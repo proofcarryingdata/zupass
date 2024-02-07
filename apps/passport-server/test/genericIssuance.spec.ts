@@ -640,7 +640,9 @@ async function checkPipelineInfoEndpoint(
   );
   expectTrue(pipelineInfoResult.success);
   expectLength(pipelineInfoResult.value.feeds, 1);
-  const pretixFeedInfo: PipelineFeedInfo = pipelineInfoResult.value.feeds[0];
+  const pretixFeedInfo: PipelineFeedInfo | undefined =
+    pipelineInfoResult.value.feeds?.[0];
+  expectToExist(pretixFeedInfo);
   expect(pretixFeedInfo.name).to.eq(
     pipeline.issuanceCapability.options.feedDisplayName
   );

@@ -383,7 +383,12 @@ export class GenericIssuanceService {
       url: f.feedUrl
     }));
 
-    const response: PipelineInfoResponseValue = { feeds: infos };
+    const latestAtoms = await this.atomDB.load(pipeline.id);
+
+    const response: PipelineInfoResponseValue = {
+      feeds: infos,
+      latestAtoms: latestAtoms
+    };
 
     return response;
   }
