@@ -2,7 +2,7 @@ import chai from "chai";
 import { getDevconnectPretixAPI } from "../../src/apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI } from "../../src/apis/emailAPI";
 import {
-  ILemonadeAPI,
+  IRealLemonadeAPI,
   getLemonadeAPI
 } from "../../src/apis/lemonade/lemonadeAPI";
 import {
@@ -23,7 +23,7 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let pretixAPI: IZuzaluPretixAPI | null;
   let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   let zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
-  let lemonadeAPI: ILemonadeAPI | null;
+  let lemonadeAPI: IRealLemonadeAPI | null;
   let genericPretixAPI: IGenericPretixAPI | null;
 
   if (apiOverrides?.emailAPI) {

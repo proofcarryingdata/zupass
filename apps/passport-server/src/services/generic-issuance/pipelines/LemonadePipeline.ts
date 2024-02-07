@@ -29,8 +29,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import _ from "lodash";
-import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
+import { IRealLemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
   PipelineAtom
@@ -90,7 +89,7 @@ export class LemonadePipeline implements BasePipeline {
    * to be stored in-memory.
    */
   private db: IPipelineAtomDB<LemonadeAtom>;
-  private api: ILemonadeAPI;
+  private api: IRealLemonadeAPI;
 
   public get id(): string {
     return this.definition.id;
@@ -108,7 +107,7 @@ export class LemonadePipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: LemonadePipelineDefinition,
     db: IPipelineAtomDB,
-    api: ILemonadeAPI,
+    api: IRealLemonadeAPI,
     zupassPublicKey: EdDSAPublicKey
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -166,35 +165,55 @@ export class LemonadePipeline implements BasePipeline {
 
       const loadStart = Date.now();
 
-      const events = await this.api.loadEvents(
-        this.definition.options.lemonadeApiKey
+      const credentials = {
+        oauthAudience: this.definition.options.oauthAudience,
+        oauthClientId: this.definition.options.oauthClientId,
+        oauthClientSecret: this.definition.options.oauthClientSecret,
+        oauthServerUrl: this.definition.options.oauthServerUrl
+      };
+
+      const events = await this.api.getHostingEvents(
+        this.definition.options.backendUrl,
+        credentials
       );
-      const tickets = _.flatMap(events, (e) => e.tickets);
-      const relevantTickets = tickets.filter((t) => {
-        const eventConfig = this.definition.options.events.find(
-          (e) => e.externalId === t.eventId
-        );
 
-        if (!eventConfig) {
-          return false;
-        }
+      const tickets = await Promise.all(
+        events.map(async (ev) => {
+          const eventTickets = await this.api.getTickets(
+            this.definition.options.backendUrl,
+            credentials,
+            ev._id
+          );
+          const eventConfig = this.definition.options.events.find(
+            (e) => e.externalId === ev._id
+          );
 
-        const eventConfigHasTicketTier =
-          eventConfig.ticketTiers.find(
-            (tier) => tier.externalId === t.tierId
-          ) !== undefined;
+          if (!eventConfig) {
+            return { id: ev._id, tickets: [] };
+          }
 
-        return eventConfigHasTicketTier;
-      });
+          const supportedTypes = new Set(
+            eventConfig.ticketTiers.map((tier) => tier.externalId)
+          );
 
-      const atomsToSave: LemonadeAtom[] = relevantTickets.map((t) => {
-        return {
-          id: t.id,
-          email: t.email,
-          name: t.name,
-          lemonadeEventId: t.eventId,
-          lemonadeTierId: t.tierId
-        };
+          return {
+            id: ev._id,
+            tickets: eventTickets.filter((t) => {
+              return supportedTypes.has(t.type);
+            })
+          };
+        })
+      );
+
+      const atomsToSave: LemonadeAtom[] = tickets.flatMap(({ id, tickets }) => {
+        return tickets.map((t) => ({
+          id: t._id,
+          email: t.assigned_to_expanded?.email as string,
+          name: `${t.assigned_to_expanded?.first_name} ${t.assigned_to_expanded?.last_name}`,
+          lemonadeEventId: id,
+          lemonadeTierId: t.type,
+          lemonadeUserId: t.assigned_to as string
+        }));
       });
 
       logger(
@@ -738,18 +757,23 @@ export class LemonadePipeline implements BasePipeline {
           }
         }
 
-        const lemonadeEventId = ticketAtom.lemonadeEventId;
-
         this.pendingCheckIns.set(ticketAtom.id, {
           status: CheckinStatus.Pending,
           timestamp: Date.now()
         });
         try {
-          await this.api.checkinTicket(
-            this.definition.options.lemonadeApiKey,
-            lemonadeEventId,
-            // Is this the correct ticket ID?
-            ticketAtom.id
+          const credentials = {
+            oauthAudience: this.definition.options.oauthAudience,
+            oauthClientId: this.definition.options.oauthClientId,
+            oauthClientSecret: this.definition.options.oauthClientSecret,
+            oauthServerUrl: this.definition.options.oauthServerUrl
+          };
+
+          await this.api.checkinUser(
+            this.definition.options.backendUrl,
+            credentials,
+            ticketAtom.lemonadeEventId,
+            ticketAtom.lemonadeUserId
           );
           this.pendingCheckIns.set(ticketAtom.id, {
             status: CheckinStatus.Success,
@@ -792,4 +816,5 @@ export interface LemonadeAtom extends PipelineAtom {
   name: string;
   lemonadeEventId: string;
   lemonadeTierId: string;
+  lemonadeUserId: string;
 }

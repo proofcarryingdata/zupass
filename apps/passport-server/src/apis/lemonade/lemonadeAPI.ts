@@ -7,8 +7,6 @@ import {
   gql
 } from "@apollo/client/core";
 import { Client, Issuer, type TokenSet } from "openid-client";
-import { LemonadeDataMocker } from "../../../test/lemonade/LemonadeDataMocker";
-import { MockLemonadeAPI } from "../../../test/lemonade/MockLemonadeAPI";
 
 export interface LemonadeOAuthCredentials {
   oauthAudience: string;
@@ -66,31 +64,24 @@ export interface ILemonadeAPI {
 }
 
 interface AuthTokenSource {
-  getToken(): Promise<string>;
+  getToken(credentials: LemonadeOAuthCredentials): Promise<string>;
 }
 
-class DummyTokenManager implements AuthTokenSource {
-  public async getToken(): Promise<string> {
-    return "dummyToken";
-  }
+interface CachedTokenIssuance {
+  issuer: Issuer;
+  client: Client;
+  tokenSet: TokenSet;
 }
 
 class OAuthTokenManager implements AuthTokenSource {
-  private credentials: LemonadeOAuthCredentials;
-  private issuer: Issuer | undefined;
-  private client: Client | undefined;
-  private tokenSet: TokenSet | undefined;
+  private cache: Map<string, CachedTokenIssuance>;
 
-  public constructor(credentials: LemonadeOAuthCredentials) {
-    if (
-      !credentials.oauthAudience ||
-      !credentials.oauthClientId ||
-      !credentials.oauthClientSecret ||
-      !credentials.oauthServerUrl
-    ) {
-      throw new Error("Invalid OAuth credentials");
-    }
-    this.credentials = credentials;
+  public constructor() {
+    this.cache = new Map();
+  }
+
+  private stringifyCredentials(credentials: LemonadeOAuthCredentials): string {
+    return `${credentials.oauthAudience}${credentials.oauthClientId}${credentials.oauthClientSecret}${credentials.oauthServerUrl}`;
   }
 
   /**
@@ -100,38 +91,62 @@ class OAuthTokenManager implements AuthTokenSource {
    *
    * This call may make third-party server requests and so may be slow.
    */
-  public async getToken(): Promise<string> {
-    const { oauthServerUrl, oauthClientId, oauthAudience, oauthClientSecret } =
-      this.credentials;
+  public async getToken(
+    credentials: LemonadeOAuthCredentials
+  ): Promise<string> {
     if (
-      !this.tokenSet ||
-      !this.tokenSet.access_token ||
-      !this.tokenSet.expires_at ||
-      this.tokenSet.expires_at * 1000 < Date.now()
+      !credentials.oauthAudience ||
+      !credentials.oauthClientId ||
+      !credentials.oauthClientSecret ||
+      !credentials.oauthServerUrl
     ) {
-      if (!this.issuer) {
-        this.issuer = await Issuer.discover(oauthServerUrl);
-      }
+      throw new Error("Invalid OAuth credentials");
+    }
 
-      if (!this.client) {
-        this.client = new this.issuer.Client({
-          client_id: oauthClientId,
-          client_secret: oauthClientSecret
-        });
-      }
+    let issuer: Issuer | undefined;
+    let client: Client | undefined;
 
-      this.tokenSet = await this.client.grant({
-        grant_type: "client_credentials",
-        scope: ["audience"],
-        audience: [oauthAudience]
+    const cacheKey = this.stringifyCredentials(credentials);
+    if (this.cache.has(cacheKey)) {
+      const cached = this.cache.get(cacheKey) as CachedTokenIssuance;
+      issuer = cached.issuer;
+      client = cached.client;
+      if (
+        cached.tokenSet.access_token &&
+        cached.tokenSet.expires_at &&
+        cached.tokenSet.expires_at * 1000 < Date.now()
+      ) {
+        return cached.tokenSet.access_token as string;
+      }
+    }
+
+    const { oauthServerUrl, oauthClientId, oauthAudience, oauthClientSecret } =
+      credentials;
+
+    if (!issuer) {
+      issuer = await Issuer.discover(oauthServerUrl);
+    }
+
+    if (!client) {
+      client = new issuer.Client({
+        client_id: oauthClientId,
+        client_secret: oauthClientSecret
       });
     }
 
-    if (!this.tokenSet.access_token) {
+    const tokenSet = await client.grant({
+      grant_type: "client_credentials",
+      scope: ["audience"],
+      audience: [oauthAudience]
+    });
+
+    if (!tokenSet.access_token) {
       throw new Error("Access token is not defined");
     }
 
-    return this.tokenSet.access_token;
+    this.cache.set(cacheKey, { tokenSet, issuer, client });
+
+    return tokenSet.access_token;
   }
 }
 
@@ -142,14 +157,12 @@ class OAuthTokenManager implements AuthTokenSource {
  */
 class LemonadeClient {
   private gqlClient: ApolloClient<NormalizedCacheObject>;
-  private tokenSource: AuthTokenSource;
 
-  public constructor(backendUri: string, tokenSource: AuthTokenSource) {
+  public constructor(backendUri: string) {
     this.gqlClient = new ApolloClient({
       uri: backendUri,
       cache: new InMemoryCache()
     });
-    this.tokenSource = tokenSource;
   }
 
   private getContextFromToken(token: string): DefaultContext {
@@ -194,9 +207,9 @@ class LemonadeClient {
    * values to control pagination.
    */
   public async getHostingEvents(
+    token: string,
     opts: { skip?: number; limit?: number } = { skip: 0, limit: 25 }
   ): Promise<LemonadeEvents> {
-    const token = await this.tokenSource.getToken();
     const { getHostingEvents } = await this.query<GetHostingEventsResponse>(
       token,
       getHostingEventsQuery,
@@ -211,10 +224,12 @@ class LemonadeClient {
    * contains an array of all ticket types, so there is no pagination to do
    * here.
    */
-  public async getEventTicketTypes(opts: {
-    input: { event: string };
-  }): Promise<LemonadeTicketTypes> {
-    const token = await this.tokenSource.getToken();
+  public async getEventTicketTypes(
+    token: string,
+    opts: {
+      input: { event: string };
+    }
+  ): Promise<LemonadeTicketTypes> {
     const { getEventTicketTypes } =
       await this.query<GetEventTicketTypesResponse>(
         token,
@@ -231,10 +246,10 @@ class LemonadeClient {
    * values to control pagination.
    */
   public async getTickets(
+    token: string,
     eventId: string,
     opts: { skip?: number; limit?: number } = { skip: 0, limit: 25 }
   ): Promise<LemonadeTickets> {
-    const token = await this.tokenSource.getToken();
     const { getTickets } = await this.query<GetTicketsResponse>(
       token,
       getTicketsQuery,
@@ -250,12 +265,14 @@ class LemonadeClient {
   /**
    * Checks a given user in to an event.
    */
-  public async checkinUser(opts: {
-    // These are Lemonade IDs, names here match the GraphQL query
-    event: string;
-    user: string;
-  }): Promise<LemonadeCheckin> {
-    const token = await this.tokenSource.getToken();
+  public async checkinUser(
+    token: string,
+    opts: {
+      // These are Lemonade IDs, names here match the GraphQL query
+      event: string;
+      user: string;
+    }
+  ): Promise<LemonadeCheckin> {
     const { checkinUser } = await this.mutate<CheckinUserResponse>(
       token,
       checkinUserMutation,
@@ -280,30 +297,27 @@ export class LemonadeAPI implements IRealLemonadeAPI {
   // To avoid regenerating OAuth tokens and the GraphQL client, we store client
   // objects between requests.
   private clients: Map<string, LemonadeClient>;
-  private auth: boolean;
+  private tokenSource: AuthTokenSource;
 
-  public constructor(auth = true) {
+  public constructor(tokenSource: AuthTokenSource | undefined) {
     this.clients = new Map();
-    this.auth = auth;
+    this.tokenSource = tokenSource ?? new OAuthTokenManager();
   }
 
+  private async getToken(
+    credentials: LemonadeOAuthCredentials
+  ): Promise<string> {
+    return await this.tokenSource.getToken(credentials);
+  }
   /**
    * Requests require clients, so we look up a previously-created client object
    * for this request, if one exists. Otherwise, we create and store a new one.
    */
-  private getClient(
-    backendUri: string,
-    credentials: LemonadeOAuthCredentials
-  ): LemonadeClient {
-    // This ought to be unique for any given user of any given backend
-    const key = `${credentials.oauthClientId}@${backendUri}`;
-    if (!this.clients.has(key)) {
-      this.clients.set(
-        key,
-        new LemonadeClient(backendUri, new DummyTokenManager())
-      );
+  private getClient(backendUri: string): LemonadeClient {
+    if (!this.clients.has(backendUri)) {
+      this.clients.set(backendUri, new LemonadeClient(backendUri));
     }
-    return this.clients.get(key) as LemonadeClient;
+    return this.clients.get(backendUri) as LemonadeClient;
   }
 
   /**
@@ -339,10 +353,11 @@ export class LemonadeAPI implements IRealLemonadeAPI {
     backendUri: string,
     credentials: LemonadeOAuthCredentials
   ): Promise<LemonadeEvents> {
-    const client = this.getClient(backendUri, credentials);
+    const client = this.getClient(backendUri);
+    const token = await this.getToken(credentials);
 
     return await this.paginate<LemonadeEvents[number]>((opts) =>
-      client.getHostingEvents(opts)
+      client.getHostingEvents(token, opts)
     );
   }
 
@@ -351,8 +366,9 @@ export class LemonadeAPI implements IRealLemonadeAPI {
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTicketTypes> {
-    const client = this.getClient(backendUri, credentials);
-    return await client.getEventTicketTypes({
+    const client = this.getClient(backendUri);
+    const token = await this.getToken(credentials);
+    return await client.getEventTicketTypes(token, {
       input: { event: lemonadeEventId }
     });
   }
@@ -362,10 +378,10 @@ export class LemonadeAPI implements IRealLemonadeAPI {
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTickets> {
-    const client = this.getClient(backendUri, credentials);
-
+    const client = this.getClient(backendUri);
+    const token = await this.getToken(credentials);
     return await this.paginate<LemonadeTickets[number]>((opts) =>
-      client.getTickets(lemonadeEventId, opts)
+      client.getTickets(token, lemonadeEventId, opts)
     );
   }
 
@@ -375,9 +391,10 @@ export class LemonadeAPI implements IRealLemonadeAPI {
     lemonadeEventId: string,
     lemonadeUserId: string
   ): Promise<LemonadeCheckin> {
-    const client = this.getClient(backendUri, credentials);
+    const client = this.getClient(backendUri);
+    const token = await this.getToken(credentials);
 
-    return await client.checkinUser({
+    return await client.checkinUser(token, {
       event: lemonadeEventId,
       user: lemonadeUserId
     });
@@ -448,8 +465,8 @@ export interface GetEventTicketTypesResponse {
       prices: {
         cost: string;
         currency: string;
-        default?: boolean;
-        network?: string;
+        default?: boolean | null;
+        network?: string | null;
       }[];
     }[];
   };
@@ -500,7 +517,7 @@ export type LemonadeTickets = GetTicketsResponse["getTickets"];
 export type LemonadeTicket = LemonadeTickets[number];
 
 export const checkinUserMutation = gql(`
-  mutation($event: MongoID!, $user: MongoID!) {
+  mutation CheckinUser($event: MongoID!, $user: MongoID!) {
     checkinUser(event: $event, user: $user) {
       messages {
         primary
@@ -524,7 +541,6 @@ export type LemonadeCheckin = CheckinUserResponse["checkinUser"];
  * TODO: replace with production version once it exists. We have a placeholder
  * so that {@link GenericIssuanceService} is instantiated in non-testing environments.
  */
-export function getLemonadeAPI(): ILemonadeAPI {
-  const mockData = new LemonadeDataMocker();
-  return new MockLemonadeAPI(mockData);
+export function getLemonadeAPI(): IRealLemonadeAPI {
+  return new LemonadeAPI(undefined);
 }

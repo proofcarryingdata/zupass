@@ -8,7 +8,7 @@ import { MockPipelineUserDB } from "../test/generic-issuance/MockPipelineUserDB"
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
-import { ILemonadeAPI, getLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
+import { IRealLemonadeAPI, getLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import {
   IGenericPretixAPI,
   getGenericPretixAPI
@@ -140,7 +140,7 @@ async function getOverridenApis(
     zuconnectTripshaAPI = getZuconnectTripshaAPI();
   }
 
-  let lemonadeAPI: ILemonadeAPI | null = null;
+  let lemonadeAPI: IRealLemonadeAPI | null = null;
 
   if (apiOverrides?.lemonadeAPI) {
     logger("[INIT] overriding Lemonade API");

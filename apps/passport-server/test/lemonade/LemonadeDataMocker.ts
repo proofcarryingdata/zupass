@@ -1,5 +1,6 @@
 import { ONE_DAY_MS } from "@pcd/util";
 import { randomUUID } from "crypto";
+import _ from "lodash";
 import {
   LemonadeEvent,
   LemonadeTicket,
@@ -30,14 +31,18 @@ class LemonadeAccount {
   }
 
   public addEvent(title: string): LemonadeEvent {
-    const KEBAB_REGEX = /[A-Z\u00C0-\u00D6\u00D8-\u00DE]/g;
     const event: LemonadeEvent = {
       title,
       description: title,
-      slug: title.replace(KEBAB_REGEX, (match) => "-" + match.toLowerCase()),
+      slug: _.kebabCase(title),
       _id: randomUUID(),
       start: new Date().toISOString(),
-      end: new Date(Date.now() + ONE_DAY_MS * 7).toISOString()
+      end: new Date(Date.now() + ONE_DAY_MS * 7).toISOString(),
+      guest_limit: 100,
+      guest_limit_per: 2,
+      new_photos: [],
+      cover: "",
+      url_go: ""
     };
 
     this.events.set(event._id, event);
@@ -54,7 +59,9 @@ class LemonadeAccount {
       prices: [
         {
           cost: "1",
-          currency: "USD"
+          currency: "USD",
+          network: null,
+          default: null
         }
       ]
     };
@@ -105,6 +112,37 @@ class LemonadeAccount {
 
   public getTicketTypes(): Map<string, Map<string, LemonadeTicketType>> {
     return this.ticketTypes;
+  }
+
+  public getTickets(): Map<string, Map<string, LemonadeTicket>> {
+    return this.tickets;
+  }
+
+  public checkinUser(eventId: string, userId: string): void {
+    if (!this.events.has(eventId)) {
+      throw new Error(`Can't check in user to non-existent event ${eventId}`);
+    }
+    if (!this.users.has(userId)) {
+      throw new Error(`Can't check in non-existent user ${userId}`);
+    }
+
+    const tickets = this.getTickets().get(eventId)?.values();
+    let ticket;
+
+    if (
+      !tickets ||
+      !(ticket = [...tickets].find((t) => t.assigned_to === userId))
+    ) {
+      throw new Error(
+        `Can't find ticket assigned to user ${userId} for ${eventId}`
+      );
+    }
+
+    if (ticket.accepted) {
+      throw new Error(`User ${userId} is already checked in to ${eventId}`);
+    }
+
+    ticket.accepted = true;
   }
 }
 
@@ -167,147 +205,4 @@ export class LemonadeDataMocker {
 
     return this.accounts.get(clientId) as LemonadeAccount;
   }
-
-  // public addTicket(eventId: string, type: string): LemonadeTicket {
-  //   const ticket: LemonadeTicket = {
-  //     _id: randomUUID(),
-  //     type
-  //   };
-  // }
-  // private events: LemonadeEvent[];
-  // private users: LemonadeUser[];
-
-  // public constructor() {
-  //   this.events = [];
-  //   this.users = [];
-  // }
-
-  // public getUsersEvents(userId: string): LemonadeEvent[] {
-  //   return this.events.filter((e) => {
-  //     return e.permissionedUserIds.includes(userId);
-  //   });
-  // }
-
-  // public getEvent(eventId: string): LemonadeEvent | undefined {
-  //   return this.events.find((e) => e.id === eventId);
-  // }
-
-  // public getTier(
-  //   eventId: string,
-  //   tierId: string
-  // ): LemonadeTicketTier | undefined {
-  //   const event = this.getEvent(eventId);
-
-  //   if (!event) {
-  //     return undefined;
-  //   }
-
-  //   return event.tiers.find((t) => t.id === tierId);
-  // }
-
-  // public addTicket(
-  //   tierId: string,
-  //   eventId: string,
-  //   attendeeName: string,
-  //   attendeeEmail: string
-  // ): LemonadeTicket {
-  //   const newTicket: LemonadeTicket = {
-  //     checkedIn: false,
-  //     eventId,
-  //     id: randomUUID(),
-  //     email: attendeeEmail,
-  //     name: attendeeName,
-  //     tierId
-  //   };
-
-  //   const event = this.getEvent(eventId);
-
-  //   if (!event) {
-  //     throw new Error(`can't add ticket to event that doesn't exist`);
-  //   }
-
-  //   const tier = this.getTier(eventId, tierId);
-
-  //   if (!tier) {
-  //     throw new Error(`can't add ticket to tier that doesn't exist`);
-  //   }
-
-  //   event.tickets.push(newTicket);
-
-  //   return newTicket;
-  // }
-
-  // public addEvent(name: string): LemonadeEvent {
-  //   const newEvent: LemonadeEvent = {
-  //     id: randomUUID(),
-  //     name: name,
-  //     tickets: [],
-  //     tiers: [],
-  //     permissionedUserIds: []
-  //   };
-  //   this.events.push(newEvent);
-  //   return newEvent;
-  // }
-
-  // public addTier(eventId: string, name: string): LemonadeTicketTier {
-  //   const newTier: LemonadeTicketTier = {
-  //     id: randomUUID(),
-  //     name
-  //   };
-  //   const event = this.events.find((e) => e.id === eventId);
-  //   if (!event) {
-  //     throw new Error(`unable to find event with id ${eventId}`);
-  //   }
-  //   const existingTier = event.tiers.find((t) => t.name === name);
-  //   if (existingTier) {
-  //     throw new Error(
-  //       `event ${eventId} already has a ticket tier with name ${name}`
-  //     );
-  //   }
-  //   event.tiers.push(newTier);
-  //   return newTier;
-  // }
-
-  // public addUser(name?: string): LemonadeUser {
-  //   const newUser: LemonadeUser = {
-  //     email: randomEmail(),
-  //     id: randomUUID(),
-  //     apiKey: randomUUID(),
-  //     name: name ?? randomUUID()
-  //   };
-  //   this.users.push(newUser);
-  //   return newUser;
-  // }
-
-  // public getUser(userId: string): LemonadeUser | undefined {
-  //   return this.users.find((u) => u.id === userId);
-  // }
-
-  // public getUserByApiKey(apiKey: string): LemonadeUser | undefined {
-  //   return this.users.find((u) => u.apiKey === apiKey);
-  // }
-
-  // /**
-  //  * Co-hosts on Lemonade have check-in privelages.
-  //  */
-  // public makeCoHost(userId: string, eventId: string): void {
-  //   const user = this.getUser(userId);
-  //   const event = this.getEvent(eventId);
-
-  //   if (!user) {
-  //     throw new Error(`user ${userId} does not exist`);
-  //   }
-
-  //   if (!event) {
-  //     throw new Error(`event ${eventId} does not exist`);
-  //   }
-
-  //   if (event.permissionedUserIds.includes(user.id)) {
-  //     throw new Error(
-  //       `event ${eventId} already has user ${userId} as an admin`
-  //     );
-  //   }
-
-  //   event.permissionedUserIds.push(userId);
-  // }
 }

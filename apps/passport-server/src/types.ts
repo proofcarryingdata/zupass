@@ -3,7 +3,6 @@ import * as http from "http";
 import Libhoney from "libhoney";
 import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
-import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
@@ -32,6 +31,7 @@ import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
 import { ZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
+import { IRealLemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 
 export interface ApplicationContext {
   dbPool: Pool;
@@ -84,7 +84,7 @@ export interface APIs {
   zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
   zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
-  lemonadeAPI: ILemonadeAPI | null;
+  lemonadeAPI: IRealLemonadeAPI | null;
   genericPretixAPI: IGenericPretixAPI | null;
 }
 

@@ -98,6 +98,7 @@ const LemonadePipelineOptionsSchema = z.object({
   oauthClientId: z.string(),
   oauthClientSecret: z.string(),
   oauthServerUrl: z.string(),
+  backendUrl: z.string(),
   events: z.array(LemonadePipelineEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema
 });
