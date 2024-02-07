@@ -77,12 +77,12 @@ export default function Dashboard(): ReactNode {
     }
   };
 
-  if (isLoading) {
-    return <div>Loading...</div>;
-  }
-
   if (!userJWT) {
     window.location.href = "/";
+  }
+
+  if (isLoading) {
+    return <div>Loading...</div>;
   }
 
   if (error) {
