@@ -9,6 +9,7 @@ export interface IPipelineUserDB {
   getUser(userID: string): Promise<PipelineUser | undefined>;
   getUserByEmail(email: string): Promise<PipelineUser | undefined>;
   setUser(user: PipelineUser): Promise<void>;
+  setUserAdmin(email: string, isAdmin: boolean): Promise<void>;
 }
 
 export class PipelineUserDB implements IPipelineUserDB {
@@ -16,6 +17,14 @@ export class PipelineUserDB implements IPipelineUserDB {
 
   public constructor(db: Pool) {
     this.db = db;
+  }
+
+  public async setUserAdmin(email: string, isAdmin: boolean): Promise<void> {
+    await sqlQuery(
+      this.db,
+      "update generic_issuance_users set is_admin=$1 where email=$2",
+      [isAdmin, email]
+    );
   }
 
   private dbRowToPipelineUser(row: GenericIssuanceUserRow): PipelineUser {

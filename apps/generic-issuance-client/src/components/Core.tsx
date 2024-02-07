@@ -64,3 +64,9 @@ const CollapsableCodeContainer = styled.div`
   max-width: 100%;
   padding: 8px;
 `;
+
+export const PageContent = styled.div`
+  padding: 32px;
+`;
+
+export const GOLD = "#f4ff1f";

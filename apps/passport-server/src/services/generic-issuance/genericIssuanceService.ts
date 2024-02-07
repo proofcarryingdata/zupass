@@ -4,6 +4,7 @@ import {
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
+  GenericIssuancePipelineListEntry,
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
@@ -170,6 +171,7 @@ export class GenericIssuanceService {
   public async start(): Promise<void> {
     try {
       await this.maybeInsertLocalDevTestPipeline();
+      await this.maybeSetupAdmins();
       await this.startPipelinesFromDefinitions();
       this.schedulePipelineLoadLoop();
     } catch (e) {
@@ -543,22 +545,45 @@ export class GenericIssuanceService {
 
   public async getAllUserPipelineDefinitions(
     userId: string
-  ): Promise<PipelineDefinition[]> {
-    // TODO: Add logic for isAdmin = true
+  ): Promise<GenericIssuancePipelineListEntry[]> {
     const allDefinitions: PipelineDefinition[] =
       await this.definitionDB.loadPipelineDefinitions();
 
-    return allDefinitions.filter((d) =>
-      this.userHasPipelineDefinitionAccess(userId, d)
+    const user = await this.userDB.getUser(userId);
+
+    const relevantPipelines = allDefinitions.filter((d) =>
+      this.userHasPipelineDefinitionAccess(user, d)
+    );
+
+    return Promise.all(
+      relevantPipelines.map(async (p) => {
+        const owner = await this.userDB.getUser(p.ownerUserId);
+        if (!owner) {
+          throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
+        }
+
+        return {
+          extraInfo: {
+            ownerEmail: owner.email
+          },
+          pipeline: p
+        };
+      })
     );
   }
 
   private userHasPipelineDefinitionAccess(
-    userId: string,
+    user: PipelineUser | undefined,
     pipeline: PipelineDefinition
   ): boolean {
+    if (!user) {
+      return false;
+    }
+
     return (
-      pipeline.ownerUserId === userId || pipeline.editorUserIds.includes(userId)
+      user.isAdmin ||
+      pipeline.ownerUserId === user.id ||
+      pipeline.editorUserIds.includes(user.id)
     );
   }
 
@@ -567,7 +592,8 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<PipelineDefinition> {
     const pipeline = await this.definitionDB.getDefinition(pipelineId);
-    if (!pipeline || !this.userHasPipelineDefinitionAccess(userId, pipeline))
+    const user = await this.userDB.getUser(userId);
+    if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline))
       throw new PCDHTTPError(404, "Pipeline not found or not accessible");
     return pipeline;
   }
@@ -586,10 +612,12 @@ export class GenericIssuanceService {
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
       );
+      const user = await this.userDB.getUser(userId);
+
       if (existingPipelineDefinition) {
         if (
           !this.userHasPipelineDefinitionAccess(
-            userId,
+            user,
             existingPipelineDefinition
           )
         ) {
@@ -777,6 +805,33 @@ export class GenericIssuanceService {
 
       return undefined;
     });
+  }
+
+  private async maybeSetupAdmins(): Promise<void> {
+    try {
+      if (!process.env.GENERIC_ISSUANCE_ADMINS) {
+        return;
+      }
+
+      const adminEmailsFromEnv: string[] = JSON.parse(
+        process.env.GENERIC_ISSUANCE_ADMINS
+      );
+
+      if (!(adminEmailsFromEnv instanceof Array)) {
+        throw new Error(
+          `expected environment variable 'GENERIC_ISSUANCE_ADMINS' ` +
+            `to be an array of strings`
+        );
+      }
+
+      logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
+
+      for (const email of adminEmailsFromEnv) {
+        await this.userDB.setUserAdmin(email, true);
+      }
+    } catch (e) {
+      logger(LOG_TAG, `failed to set up generic issuance admins`, e);
+    }
   }
 
   /**

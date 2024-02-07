@@ -1,6 +1,8 @@
 import { useStytch, useStytchSession } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { PageContent } from "../components/Core";
+import { Header } from "../components/Header";
 import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../constants";
 
 function Page(): JSX.Element {
@@ -53,31 +55,33 @@ function Page(): JSX.Element {
   }
 
   return (
-    <div>
-      <h1>Generic Issuance Client</h1>
-      {hasSentEmail && (
-        <div>
-          Please check your email <b>{email}</b> for a login link.
-        </div>
-      )}
-      {!hasSentEmail && (
-        <form
-          onSubmit={(e): Promise<void> => {
-            e.preventDefault();
-            e.stopPropagation();
-            return handleContinue();
-          }}
-        >
-          <input
-            autoFocus
-            value={email}
-            onChange={(e): void => setEmail(e.target.value)}
-            placeholder="Enter your email"
-          />
-          <button type="submit">Continue</button>
-        </form>
-      )}
-    </div>
+    <>
+      <Header />
+      <PageContent>
+        {hasSentEmail && (
+          <div>
+            Please check your email <b>{email}</b> for a login link.
+          </div>
+        )}
+        {!hasSentEmail && (
+          <form
+            onSubmit={(e): Promise<void> => {
+              e.preventDefault();
+              e.stopPropagation();
+              return handleContinue();
+            }}
+          >
+            <input
+              autoFocus
+              value={email}
+              onChange={(e): void => setEmail(e.target.value)}
+              placeholder="Enter your email"
+            />
+            <button type="submit">Continue</button>
+          </form>
+        )}
+      </PageContent>
+    </>
   );
 }
 
