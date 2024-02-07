@@ -202,6 +202,7 @@ const TwoColumns = styled.div`
   gap: 32px;
 
   ol {
+    // to override 'GlobalStyle'
     max-width: unset !important;
   }
 `;

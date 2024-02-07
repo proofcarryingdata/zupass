@@ -15,7 +15,6 @@ export interface GIContextState {
 
 export const GIContext = createContext<GIContextState>({
   error: undefined,
-  setState: (_state: GIContextState) => {
-    //
-  }
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  setState: (_state: GIContextState) => {}
 });

@@ -40,7 +40,7 @@ export default function Dashboard(): ReactNode {
   const [newPipelineRaw, setNewPipelineRaw] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
   );
-  const [error, setError] = useState("");
+  const [error, _setError] = useState("");
   const giUser = useFetchSelf();
   const userJWT = useJWT();
 
