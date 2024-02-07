@@ -82,6 +82,10 @@ export default function Dashboard(): ReactNode {
     fetchAllPipelines();
   }, [fetchAllPipelines]);
 
+  if (!userJWT) {
+    window.location.href = "/";
+  }
+
   if (isLoading) {
     return (
       <>
@@ -89,10 +93,6 @@ export default function Dashboard(): ReactNode {
         <PageContent>Loading...</PageContent>
       </>
     );
-  }
-
-  if (!userJWT) {
-    window.location.href = "/";
   }
 
   if (error) {
