@@ -1,59 +1,57 @@
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
-import { RequestHandler, graphql } from "msw";
+import { GraphQLRequest, GraphQLVariables, RequestHandler, graphql } from "msw";
+import { LemonadeTicketType } from "../../src/apis/lemonade/lemonadeAPI";
+import { LemonadeDataMocker } from "./LemonadeDataMocker";
 
 loadDevMessages();
 
 loadErrorMessages();
 
-export function getMockLemonadeHandlers(): RequestHandler[] {
-//mocker: LemonadeDataMocker
+export function getMockLemonadeHandlers(
+  mocker: LemonadeDataMocker
+): RequestHandler[] {
   const handlers = [];
 
+  const checkClientId = (
+    mocker: LemonadeDataMocker,
+    req: GraphQLRequest<GraphQLVariables>
+  ): string => {
+    const clientId = req.headers.get("Authorization")?.split(" ")[1];
+    if (!clientId || !mocker.getAccount(clientId)) {
+      throw new Error(`Invalid client ID: ${clientId}`);
+    }
+    return clientId;
+  };
+
   handlers.push(
-    graphql.query("GetHostingEvents", (_req, res, ctx) => {
+    graphql.query("GetHostingEvents", (req, res, ctx) => {
+      const clientId = checkClientId(mocker, req);
       return res(
         ctx.data({
           getHostingEvents: [
-            {
-              __typename: "Event",
-              _id: "65c1faf41770460a0bb9aa1e",
-              title: "Test event",
-              description: "Testing Lemonade-Zupass sync",
-              start: "2024-02-09T09:00:00.613Z",
-              end: "2024-02-12T17:00:00.613Z",
-              url_go:
-                "https://go.staging.lemonade.social/e/WVIQCzLI/Test-event",
-              slug: "Test-event",
-              cover: null,
-              new_photos: [],
-              guest_limit: 100,
-              guest_limit_per: 2
-            }
+            ...mocker.getAccount(clientId).getEvents().values()
           ]
         })
       );
     }),
 
-    graphql.query("GetEventTicketTypes", (_req, res, ctx) => {
+    graphql.query("GetEventTicketTypes", (req, res, ctx) => {
+      const clientId = checkClientId(mocker, req);
+      const eventId = req.variables["eventId"];
+      if (!mocker.getAccount(clientId).getEvents().has(eventId)) {
+        throw new Error(`Invalid event ID ${eventId}`);
+      }
       return res(
         ctx.data({
           getEventTicketTypes: {
             __typename: "GetEventTicketTypesResponse",
             ticket_types: [
-              {
-                __typename: "PurchasableTicketType",
-                _id: "65c1faf41770460a0bb9aa1f",
-                title: "Ticket",
-                prices: [
-                  {
-                    __typename: "EventTicketPrice",
-                    cost: "0",
-                    currency: "USD",
-                    default: null,
-                    network: null
-                  }
-                ]
-              }
+              ...(
+                mocker
+                  .getAccount(clientId)
+                  .getTicketTypes()
+                  .get(eventId) as Map<string, LemonadeTicketType>
+              ).values()
             ]
           }
         })

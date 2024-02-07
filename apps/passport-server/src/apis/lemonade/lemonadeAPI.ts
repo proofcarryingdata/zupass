@@ -10,51 +10,6 @@ import { Client, Issuer, type TokenSet } from "openid-client";
 import { LemonadeDataMocker } from "../../../test/lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "../../../test/lemonade/MockLemonadeAPI";
 
-/**
- * Used in tests.
- */
-export interface LemonadeUser {
-  id: string;
-  email: string;
-  apiKey: string;
-  name: string;
-}
-
-/**
- * A lemonade ticket as represented by the upcoming Lemonade API. It's
- * still t.b.d so this is my best guess for now.
- */
-export interface LemonadeTicket {
-  id: string;
-  name: string;
-  email: string;
-  eventId: string;
-  tierId: string;
-  checkedIn: boolean;
-  checkerEmail?: string;
-}
-
-/**
- * A lemonade ticket tier as represented by the upcoming Lemonade API. It's
- * still t.b.d so this is my best guess for now.
- */
-export interface LemonadeTicketTier {
-  name: string;
-  id: string;
-}
-
-/**
- * A lemonade event as represented by the upcoming Lemonade API. It's
- * still t.b.d so this is my best guess for now.
- */
-export interface LemonadeEvent {
-  id: string;
-  name: string;
-  tickets: LemonadeTicket[];
-  tiers: LemonadeTicketTier[];
-  permissionedUserIds: string[];
-}
-
 export interface LemonadeOAuthCredentials {
   oauthAudience: string;
   oauthClientId: string;
@@ -397,7 +352,6 @@ export class LemonadeAPI implements IRealLemonadeAPI {
     lemonadeEventId: string
   ): Promise<LemonadeTicketTypes> {
     const client = this.getClient(backendUri, credentials);
-    console.log(client);
     return await client.getEventTicketTypes({
       input: { event: lemonadeEventId }
     });
@@ -467,6 +421,7 @@ export interface GetHostingEventsResponse {
 }
 
 export type LemonadeEvents = GetHostingEventsResponse["getHostingEvents"];
+export type LemonadeEvent = LemonadeEvents[number];
 
 export const getEventTicketTypesQuery = gql(`
   query GetEventTicketTypes($input: GetEventTicketTypesInput!) {
@@ -502,6 +457,7 @@ export interface GetEventTicketTypesResponse {
 
 export type LemonadeTicketTypes =
   GetEventTicketTypesResponse["getEventTicketTypes"];
+export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 
 export const getTicketsQuery = gql(`
   query GetTickets($skip: Int!, $limit: Int!, $event: MongoID) {
@@ -541,6 +497,7 @@ export interface GetTicketsResponse {
 }
 
 export type LemonadeTickets = GetTicketsResponse["getTickets"];
+export type LemonadeTicket = LemonadeTickets[number];
 
 export const checkinUserMutation = gql(`
   mutation($event: MongoID!, $user: MongoID!) {

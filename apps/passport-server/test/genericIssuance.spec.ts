@@ -42,8 +42,7 @@ import { SetupServer, setupServer } from "msw/node";
 import {
   ILemonadeAPI,
   LemonadeTicket,
-  LemonadeTicketTier,
-  LemonadeUser
+  LemonadeTicketType
 } from "../src/apis/lemonade/lemonadeAPI";
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
@@ -57,7 +56,10 @@ import {
 } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
 import { testCSVPipeline } from "./generic-issuance/testCSVPipeline";
-import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
+import {
+  LemonadeDataMocker,
+  LemonadeUser
+} from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 import { getMockLemonadeHandlers } from "./lemonade/MockLemonadeServer";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
@@ -109,22 +111,21 @@ describe("Generic Issuance", function () {
 
   const lemonadeBackend = new LemonadeDataMocker();
 
-  /**
-   * TODO: test ingestion of the data we'll need for production.
-   */
-  const EdgeCityDenver = lemonadeBackend.addEvent("Edge City Denver");
+  const EdgeCityLemonadeAccount = lemonadeBackend.addAccount(
+    "edge-city-client-id"
+  );
+
+  const EdgeCityDenver = EdgeCityLemonadeAccount.addEvent("Edge City Denver");
 
   /**
    * Attendee ticket tier. In reality there will be several.
    *
    * TODO: test that we can handle several attendee tiers.
    */
-  const EdgeCityAttendeeTier: LemonadeTicketTier = lemonadeBackend.addTier(
-    EdgeCityDenver.id,
-    "ga"
-  );
-  const EdgeCityBouncerTier = lemonadeBackend.addTier(
-    EdgeCityDenver.id,
+  const EdgeCityAttendeeTicketType: LemonadeTicketType =
+    EdgeCityLemonadeAccount.addTicketType(EdgeCityDenver._id, "ga");
+  const EdgeCityBouncerTicketType = EdgeCityLemonadeAccount.addTicketType(
+    EdgeCityDenver._id,
     "bouncer"
   );
 
@@ -132,15 +133,18 @@ describe("Generic Issuance", function () {
    * Most tests below need a person who is checking tickets {@link EdgeCityDenverBouncer}
    * and a person whose ticket needs to be checked in (@link Attendee)
    */
-  const EdgeCityDenverAttendee: LemonadeUser =
-    lemonadeBackend.addUser("attendee");
-  const EdgeCityDenverAttendeeIdentity = new Identity();
-  const EdgeCityAttendeeTicket: LemonadeTicket = lemonadeBackend.addTicket(
-    EdgeCityAttendeeTier.id,
-    EdgeCityDenver.id,
-    EdgeCityDenverAttendee.name,
-    EdgeCityDenverAttendee.email
+  const EdgeCityDenverAttendee: LemonadeUser = lemonadeBackend.addUser(
+    "attendee@example.com",
+    "attendee",
+    "smith"
   );
+  const EdgeCityDenverAttendeeIdentity = new Identity();
+  const EdgeCityAttendeeTicket: LemonadeTicket =
+    EdgeCityLemonadeAccount.addTicket(
+      EdgeCityDenver._id,
+      EdgeCityAttendeeTicketType._id,
+      EdgeCityDenverAttendee._id
+    );
 
   /**
    * Similar to {@link EdgeCityDenverAttendee}
@@ -148,16 +152,19 @@ describe("Generic Issuance", function () {
    * i.e. a ticket whose 'product id' or 'tier' is set up to be a 'superuser' ticket
    * by the Generic Issuance User with id {@link edgeCityGIUserID}.
    */
-  const EdgeCityDenverBouncer: LemonadeUser =
-    lemonadeBackend.addUser("bouncer bob");
-  const EdgeCityBouncerIdentity = new Identity();
-  const EdgeCityDenverBouncerTicket = lemonadeBackend.addTicket(
-    EdgeCityBouncerTier.id,
-    EdgeCityDenver.id,
-    EdgeCityDenverBouncer.name,
-    EdgeCityDenverBouncer.email
+  const EdgeCityDenverBouncer: LemonadeUser = lemonadeBackend.addUser(
+    "bouncer@example.com",
+    "bouncer",
+    "bob"
   );
-  lemonadeBackend.makeCoHost(EdgeCityDenverBouncer.id, EdgeCityDenver.id);
+  const EdgeCityBouncerIdentity = new Identity();
+  const EdgeCityDenverBouncerTicket = EdgeCityLemonadeAccount.addTicket(
+    EdgeCityDenver._id,
+    EdgeCityBouncerTicketType._id,
+    EdgeCityDenverBouncer._id
+  );
+  //lemonadeBackend.makeCoHost(EdgeCityDenverBouncer.id, EdgeCityDenver.id);
+
   const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(lemonadeBackend);
   const lemonadePipelineDefinition: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
@@ -177,20 +184,23 @@ describe("Generic Issuance", function () {
         feedFolder: "Edge City",
         feedId: "edge-city"
       },
-      lemonadeApiKey: EdgeCityDenverBouncer.apiKey,
+      oauthAudience: "test",
+      oauthClientId: "edge-city-client-id",
+      oauthClientSecret: "test",
+      oauthServerUrl: "test",
       events: [
         {
-          externalId: EdgeCityDenver.id,
-          name: EdgeCityDenver.name,
+          externalId: EdgeCityDenver._id,
+          name: EdgeCityDenver.title,
           genericIssuanceEventId: randomUUID(),
           ticketTiers: [
             {
-              externalId: EdgeCityBouncerTier.id,
+              externalId: EdgeCityBouncerTicketType._id,
               genericIssuanceProductId: randomUUID(),
               isSuperUser: true
             },
             {
-              externalId: EdgeCityAttendeeTier.id,
+              externalId: EdgeCityAttendeeTicketType._id,
               genericIssuanceProductId: randomUUID(),
               isSuperUser: false
             }

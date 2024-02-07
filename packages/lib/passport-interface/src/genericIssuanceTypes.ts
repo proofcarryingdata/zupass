@@ -94,7 +94,10 @@ const LemonadePipelineOptionsSchema = z.object({
   /**
    * Configured by the user when setting up Lemonade as a data source.
    */
-  lemonadeApiKey: z.string(),
+  oauthAudience: z.string(),
+  oauthClientId: z.string(),
+  oauthClientSecret: z.string(),
+  oauthServerUrl: z.string(),
   events: z.array(LemonadePipelineEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema
 });
