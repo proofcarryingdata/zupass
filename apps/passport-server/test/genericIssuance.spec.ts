@@ -64,7 +64,7 @@ import {
 } from "./lemonade/LemonadeDataMocker";
 import { getMockLemonadeHandlers } from "./lemonade/MockLemonadeServer";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
-import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
+import { getGenericMockPretixAPIHandlers } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import {
@@ -357,7 +357,7 @@ t2,i1`,
 
     const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
     mockServer = setupServer(
-      ...getGenericMockPretixAPIServer(pretixOrgUrls, pretixBackend),
+      ...getGenericMockPretixAPIHandlers(pretixOrgUrls, pretixBackend),
       ...getMockLemonadeHandlers(lemonadeBackend)
     );
     mockServer.listen({ onUnhandledRequest: "bypass" });

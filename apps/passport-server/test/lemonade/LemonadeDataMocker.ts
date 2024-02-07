@@ -7,6 +7,12 @@ import {
   LemonadeTicketType
 } from "../../src/apis/lemonade/lemonadeAPI";
 
+/**
+ * For testing purposes, this models Lemonade users. This is Lemonade's model
+ * of a registered user, such as a person attending an event. We don't have an
+ * API that retrieves these directly, though this record does form part of a
+ * ticket object.
+ */
 export interface LemonadeUser {
   __typename: "User";
   _id: string;
@@ -16,10 +22,18 @@ export interface LemonadeUser {
   email: string;
 }
 
+/**
+ * Manages test data for a single Lemonade account, roughly similar to an
+ * organizer in Pretix. In the real API, the set of events, tickets etc.
+ * available to the user is determined by their OAuth credentials. An
+ * "account" here models the different sets of results that are available when
+ * authenticating with different credentials.
+ */
 class LemonadeAccount {
   private events: Map<string, LemonadeEvent>;
   private ticketTypes: Map<string, Map<string, LemonadeTicketType>>;
   private tickets: Map<string, Map<string, LemonadeTicket>>;
+  // Reference to a shared map of users
   private users: Map<string, LemonadeUser>;
 
   public constructor(users: Map<string, LemonadeUser>) {
@@ -30,6 +44,9 @@ class LemonadeAccount {
     this.users = users;
   }
 
+  /**
+   * Add an event.
+   */
   public addEvent(title: string): LemonadeEvent {
     const event: LemonadeEvent = {
       title,
@@ -49,6 +66,10 @@ class LemonadeAccount {
     return event;
   }
 
+  /**
+   * Add a ticket type. The eventId must match an existing event.
+   * See {@link addEvent}
+   */
   public addTicketType(eventId: string, title: string): LemonadeTicketType {
     if (!this.events.has(eventId)) {
       throw new Error(`Can't add ticket type to non-existent event ${eventId}`);
@@ -73,17 +94,22 @@ class LemonadeAccount {
     return ticketType;
   }
 
+  /**
+   * Add a ticket. The eventId and ticketTypeId must match existing events and
+   * ticket types, and the user ID must have been added via LemonadeDataMocker.
+   * See {@link addEvent} and {@link addTicketType}
+   */
   public addTicket(
     eventId: string,
-    type: string,
+    ticketTypeId: string,
     userId: string
   ): LemonadeTicket {
     if (!this.events.has(eventId)) {
       throw new Error(`Can't add ticket to non-existent event ${eventId}`);
     }
-    if (!this.ticketTypes.get(eventId)?.has(type)) {
+    if (!this.ticketTypes.get(eventId)?.has(ticketTypeId)) {
       throw new Error(
-        `Can't add ticket of non-existent type ${type} to event ${eventId}`
+        `Can't add ticket of non-existent type ${ticketTypeId} to event ${eventId}`
       );
     }
     if (!this.users.has(userId)) {
@@ -91,7 +117,7 @@ class LemonadeAccount {
     }
     const ticket: LemonadeTicket = {
       _id: randomUUID(),
-      type,
+      type: ticketTypeId,
       assigned_to_expanded: this.users.get(userId) as LemonadeUser,
       assigned_to: userId,
       assigned_email: null, // This is what we get from the live API, if you
@@ -118,6 +144,9 @@ class LemonadeAccount {
     return this.tickets;
   }
 
+  /**
+   * Check in a user.
+   */
   public checkinUser(eventId: string, userId: string): void {
     if (!this.events.has(eventId)) {
       throw new Error(`Can't check in user to non-existent event ${eventId}`);
@@ -138,10 +167,12 @@ class LemonadeAccount {
       );
     }
 
+    // If the ticket exists and has already been checked in
     if (ticket.accepted) {
       throw new Error(`User ${userId} is already checked in to ${eventId}`);
     }
 
+    // Flag the ticket as checked in.
     ticket.accepted = true;
   }
 }

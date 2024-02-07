@@ -30,6 +30,7 @@ export function getMockLemonadeHandlers(
     return clientId;
   };
 
+  // Mock GraphQL endpoints
   handlers.push(
     graphql.query("GetHostingEvents", (req, res, ctx) => {
       const clientId = checkClientId(mocker, req);
@@ -99,6 +100,7 @@ export function getMockLemonadeHandlers(
       return res(
         ctx.data({
           checkinUser: {
+            // These are the messages that the real endpoint returns
             messages: {
               primary: "You're in! 🎉",
               secondary: "you can invite 2 friends",

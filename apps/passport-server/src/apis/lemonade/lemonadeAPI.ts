@@ -8,6 +8,9 @@ import {
 } from "@apollo/client/core";
 import { Client, Issuer, type TokenSet } from "openid-client";
 
+/**
+ * Credentials used for authenticating with Lemonade.
+ */
 export interface LemonadeOAuthCredentials {
   oauthAudience: string;
   oauthClientId: string;
@@ -15,6 +18,9 @@ export interface LemonadeOAuthCredentials {
   oauthServerUrl: string;
 }
 
+/**
+ * Matches the structure of Lemonade's GraphQL API.
+ */
 export interface ILemonadeAPI {
   getHostingEvents(
     backendUri: string,
@@ -129,9 +135,8 @@ class OAuthTokenManager implements AuthTokenSource {
 }
 
 /**
- * Represents a client for a single Lemonade user account.
- * Contains utility methods for performing each of the possible requests, and
- * manages the lifecycle of the Apollo GraphQL client and OAuth tokens.
+ * Wraps an Apollo GraphQL client. There is one client instance per backend
+ * URL, so in practice there is likely to be only one instance.
  */
 class LemonadeClient {
   private gqlClient: ApolloClient<NormalizedCacheObject>;
@@ -143,6 +148,9 @@ class LemonadeClient {
     });
   }
 
+  /**
+   * Generate HTTP headers for request context.
+   */
   private getContextFromToken(token: string): DefaultContext {
     return {
       headers: {
@@ -268,12 +276,10 @@ class LemonadeClient {
  * periodically.
  *
  * Following the convention of PretixAPI, a single instance of LemonadeAPI is
- * shared between all pipelines. This means that user-specific credentials must
- * be passed in on each API call.
+ * shared between all pipelines. This means that account-specific credentials
+ * must be passed in on each API call.
  */
 export class LemonadeAPI implements ILemonadeAPI {
-  // To avoid regenerating OAuth tokens and the GraphQL client, we store client
-  // objects between requests.
   private clients: Map<string, LemonadeClient>;
   private tokenSource: AuthTokenSource;
 
@@ -282,11 +288,16 @@ export class LemonadeAPI implements ILemonadeAPI {
     this.tokenSource = tokenSource ?? new OAuthTokenManager();
   }
 
+  /**
+   * Lemonade API requests are authenticated using tokens. Make sure we have an
+   * up-to-date token for each request.
+   */
   private async getToken(
     credentials: LemonadeOAuthCredentials
   ): Promise<string> {
     return await this.tokenSource.getToken(credentials);
   }
+
   /**
    * Requests require clients, so we look up a previously-created client object
    * for this request, if one exists. Otherwise, we create and store a new one.
@@ -327,6 +338,9 @@ export class LemonadeAPI implements ILemonadeAPI {
     return results;
   }
 
+  /**
+   * Get all events (restricted by credentials).
+   */
   public async getHostingEvents(
     backendUri: string,
     credentials: LemonadeOAuthCredentials
@@ -339,6 +353,9 @@ export class LemonadeAPI implements ILemonadeAPI {
     );
   }
 
+  /**
+   * Get all ticket types for an event.
+   */
   public async getEventTicketTypes(
     backendUri: string,
     credentials: LemonadeOAuthCredentials,
@@ -351,6 +368,9 @@ export class LemonadeAPI implements ILemonadeAPI {
     });
   }
 
+  /**
+   * Get all tickets for an event.
+   */
   public async getTickets(
     backendUri: string,
     credentials: LemonadeOAuthCredentials,
@@ -363,6 +383,9 @@ export class LemonadeAPI implements ILemonadeAPI {
     );
   }
 
+  /**
+   * Check a user in for an event.
+   */
   public async checkinUser(
     backendUri: string,
     credentials: LemonadeOAuthCredentials,
@@ -515,10 +538,6 @@ export interface CheckinUserResponse {
 
 export type LemonadeCheckin = CheckinUserResponse["checkinUser"];
 
-/**
- * TODO: replace with production version once it exists. We have a placeholder
- * so that {@link GenericIssuanceService} is instantiated in non-testing environments.
- */
 export function getLemonadeAPI(): ILemonadeAPI {
   return new LemonadeAPI(undefined);
 }
