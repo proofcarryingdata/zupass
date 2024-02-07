@@ -1,12 +1,11 @@
-import { useStytch } from "@stytch/react";
+import { useStytch, useStytchSession } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../constants";
-import { useJWT } from "../helpers/userHooks";
 
 function Page(): JSX.Element {
   const stytchClient = useStytch();
-  const userJWT = useJWT();
+  const { session } = useStytchSession();
   const [email, setEmail] = useState("");
   const [hasSentEmail, setHasSentEmail] = useState(false);
   const [checkedToken, setCheckedToken] = useState(false);
@@ -45,11 +44,9 @@ function Page(): JSX.Element {
     }
   };
 
-  useEffect(() => {
-    if (userJWT) {
-      window.location.href = "/#/dashboard";
-    }
-  }, [userJWT]);
+  if (session) {
+    window.location.href = "/#/dashboard";
+  }
 
   if (token) {
     return <div>Attempting to log you in...</div>;
