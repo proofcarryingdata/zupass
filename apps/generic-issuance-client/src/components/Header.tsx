@@ -33,7 +33,7 @@ export function Header({
     );
   }
 
-  leftElements.push(<b key="title">PodBox</b>);
+  leftElements.push(<b key="title">📦 PodBox</b>);
 
   if (user) {
     leftElements.push(
