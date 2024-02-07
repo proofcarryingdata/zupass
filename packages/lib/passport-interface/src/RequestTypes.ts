@@ -901,7 +901,14 @@ export type GenericIssuanceGetAllUserPipelinesRequest = { jwt: string };
  * Returns all pipeline definitions that a user has access to.
  */
 export type GenericIssuanceGetAllUserPipelinesResponseValue =
-  PipelineDefinition[];
+  GenericIssuancePipelineListEntry[];
+
+export type GenericIssuancePipelineListEntry = {
+  pipeline: PipelineDefinition;
+  extraInfo: {
+    ownerEmail: string;
+  };
+};
 
 /**
  * Returns the requested pipeline definition.
@@ -929,3 +936,13 @@ export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
 export type GenericIssuanceDeletePipelineResponseValue = undefined;
 
 export type GenericIssuanceDeletePipelineRequest = { jwt: string };
+
+export type GenericIssuanceSelf = {
+  email: string;
+  isAdmin: boolean;
+  id: string;
+};
+
+export type GenericIssuanceSelfResponseValue = GenericIssuanceSelf;
+
+export type GenericIssuanceSelfRequest = { jwt: string };
