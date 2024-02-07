@@ -68,6 +68,8 @@ export default function Pipeline(): ReactNode {
 
   useEffect(() => {
     async function fetchPipeline(): Promise<void> {
+      if (!userJWT) return;
+      setQueryLoading(true);
       const res = await requestGenericIssuanceGetPipeline(
         ZUPASS_SERVER_URL,
         id,
@@ -99,9 +101,11 @@ export default function Pipeline(): ReactNode {
     fetchPipeline();
   }, [id, userJWT]);
 
-  if (!userJWT) {
-    window.location.href = "/";
-  }
+  useEffect(() => {
+    if (!userJWT) {
+      window.location.href = "/";
+    }
+  }, [userJWT]);
 
   if (queryLoading) {
     return <div>Loading...</div>;
