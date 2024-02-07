@@ -193,7 +193,7 @@ describe("Generic Issuance", function () {
       oauthClientId: "edge-city-client-id",
       oauthClientSecret: "test",
       oauthServerUrl: "test",
-      backendUrl: "http://localhost/grapql",
+      backendUrl: "http://localhost/graphql",
       events: [
         {
           externalId: EdgeCityDenver._id,
