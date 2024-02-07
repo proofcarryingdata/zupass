@@ -3,13 +3,13 @@ import {
   requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
-import { useStytchUser } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { PipelineListEntry } from "../components/PipelineListEntry";
 import { ZUPASS_SERVER_URL } from "../constants";
-import { useFetchSelf, useJWT } from "../helpers/useFetchSelf";
+import { useFetchSelf } from "../helpers/useFetchSelf";
+import { useJWT } from "../helpers/userHooks";
 import { AdminPipelinesSection } from "../sections/AdminPipelinesSection";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
@@ -32,8 +32,6 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 );
 
 export default function Dashboard(): ReactNode {
-  const { user } = useStytchUser();
-  // TODO: After MVP, replace with RTK hooks or a more robust state management.
   const [pipelineEntries, setPipelineEntries] = useState<
     GenericIssuancePipelineListEntry[]
   >([]);
@@ -65,10 +63,6 @@ export default function Dashboard(): ReactNode {
     setLoading(false);
   }, [userJWT]);
 
-  useEffect(() => {
-    fetchAllPipelines();
-  }, [fetchAllPipelines]);
-
   const createPipeline = async (): Promise<void> => {
     if (!newPipelineRaw) return;
     const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
@@ -84,6 +78,10 @@ export default function Dashboard(): ReactNode {
     }
   };
 
+  useEffect(() => {
+    fetchAllPipelines();
+  }, [fetchAllPipelines]);
+
   if (isLoading) {
     return (
       <>
@@ -93,7 +91,7 @@ export default function Dashboard(): ReactNode {
     );
   }
 
-  if (!user) {
+  if (!userJWT) {
     window.location.href = "/";
   }
 

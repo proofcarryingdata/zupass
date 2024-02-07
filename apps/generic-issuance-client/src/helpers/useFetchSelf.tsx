@@ -2,14 +2,9 @@ import {
   GenericIssuanceSelfResult,
   requestGenericIssuanceSelf
 } from "@pcd/passport-interface";
-import { useStytch } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { ZUPASS_SERVER_URL } from "../constants";
-
-export function useJWT(): string | undefined {
-  const userJWT = useStytch()?.session?.getTokens()?.session_jwt;
-  return userJWT;
-}
+import { useJWT } from "./userHooks";
 
 export function useFetchSelf(): GenericIssuanceSelfResult | undefined {
   const jwt = useJWT();

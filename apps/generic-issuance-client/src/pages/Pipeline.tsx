@@ -6,14 +6,14 @@ import {
   requestGenericIssuanceUpsertPipeline,
   requestPipelineInfo
 } from "@pcd/passport-interface";
-import { useStytchUser } from "@stytch/react";
 import { ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
-import { useFetchSelf, useJWT } from "../helpers/useFetchSelf";
+import { useFetchSelf } from "../helpers/useFetchSelf";
+import { useJWT } from "../helpers/userHooks";
 
 function format(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -21,7 +21,6 @@ function format(obj: object): string {
 
 export default function Pipeline(): ReactNode {
   const params = useParams();
-  const { user } = useStytchUser();
   const ownUser = useFetchSelf();
   const { id } = params;
   const [savedPipeline, setSavedPipeline] = useState<PipelineDefinition>();
@@ -103,7 +102,7 @@ export default function Pipeline(): ReactNode {
     fetchPipeline();
   }, [id, userJWT]);
 
-  if (!user) {
+  if (!userJWT) {
     window.location.href = "/";
   }
 

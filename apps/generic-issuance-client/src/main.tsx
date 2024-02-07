@@ -4,6 +4,7 @@ import React, { ReactNode, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
+import { RefreshSession } from "./components/RefreshSession";
 import { GIContext, GIContextState } from "./helpers/Context";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
@@ -25,6 +26,7 @@ function App(): ReactNode {
     <React.StrictMode>
       <StytchProvider stytch={stytch}>
         <GIContext.Provider value={state}>
+          <RefreshSession />
           <GlobalStyle />
           <RouterProvider router={router} />
         </GIContext.Provider>
