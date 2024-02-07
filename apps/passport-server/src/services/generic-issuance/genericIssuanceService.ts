@@ -800,6 +800,7 @@ export class GenericIssuanceService {
         });
       } catch (e) {
         setError(e, span);
+        logger(LOG_TAG, `failed to send login email`, e);
         throw new PCDHTTPError(500, "Failed to send generic issuance email");
       }
 
