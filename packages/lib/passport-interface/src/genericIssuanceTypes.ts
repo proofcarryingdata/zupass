@@ -30,27 +30,31 @@ export type BasePipelineDefinition = z.infer<
   typeof BasePipelineDefinitionSchema
 >;
 
-const LemonadePipelineTicketTierConfigSchema = z.object({
+const LemonadePipelineTicketTypeConfigSchema = z.object({
   /**
-   * The ID of this ticket tier on the Lemonade end.
+   * The ID of this ticket type on the Lemonade end.
    */
   externalId: z.string(),
   /**
-   * The UUID of this ticket tier used in {@link EdDSATicketPCD}.
+   * The UUID of this ticket type used in {@link EdDSATicketPCD}.
    */
   genericIssuanceProductId: z.string().uuid(),
   /**
-   * Whether this ticket tier is allowed to check other tickets in or not.
+   * Whether this ticket type is allowed to check other tickets in or not.
    */
-  isSuperUser: z.boolean()
+  isSuperUser: z.boolean(),
+  /**
+   * Display name
+   */
+  name: z.string()
 });
 
 /**
- * Generic Issuance-specific ticket tier configuration - roughly corresponds to a
+ * Generic Issuance-specific ticket type configuration - roughly corresponds to a
  * 'Product' in Pretix-land.
  */
-export type LemonadePipelineTicketTierConfig = z.infer<
-  typeof LemonadePipelineTicketTierConfigSchema
+export type LemonadePipelineTicketTypeConfig = z.infer<
+  typeof LemonadePipelineTicketTypeConfigSchema
 >;
 
 const LemonadePipelineEventConfigSchema = z.object({
@@ -69,13 +73,13 @@ const LemonadePipelineEventConfigSchema = z.object({
   /**
    * Roughly translates to Products in {@link EdDSATicketPCD}.
    */
-  ticketTiers: z.array(LemonadePipelineTicketTierConfigSchema)
+  ticketTypes: z.array(LemonadePipelineTicketTypeConfigSchema)
 });
 
 /**
  * Generic Issuance-specific event configuration. Should roughly match up to the
  * types defined above - {@link LemonadeTicket}, {@link LemonadeEvent}, and
- * {@link LemonadeTicketTier}.
+ * {@link LemonadeTicketType}.
  */
 export type LemonadePipelineEventConfig = z.infer<
   typeof LemonadePipelineEventConfigSchema

@@ -119,9 +119,9 @@ describe("Generic Issuance", function () {
   const EdgeCityDenver = EdgeCityLemonadeAccount.addEvent("Edge City Denver");
 
   /**
-   * Attendee ticket tier. In reality there will be several.
+   * Attendee ticket type. In reality there will be several.
    *
-   * TODO: test that we can handle several attendee tiers.
+   * TODO: test that we can handle several attendee types.
    */
   const EdgeCityAttendeeTicketType: LemonadeTicketType =
     EdgeCityLemonadeAccount.addTicketType(EdgeCityDenver._id, "ga");
@@ -199,16 +199,18 @@ describe("Generic Issuance", function () {
           externalId: EdgeCityDenver._id,
           name: EdgeCityDenver.title,
           genericIssuanceEventId: randomUUID(),
-          ticketTiers: [
+          ticketTypes: [
             {
               externalId: EdgeCityBouncerTicketType._id,
               genericIssuanceProductId: randomUUID(),
-              isSuperUser: true
+              isSuperUser: true,
+              name: "Bouncer"
             },
             {
               externalId: EdgeCityAttendeeTicketType._id,
               genericIssuanceProductId: randomUUID(),
-              isSuperUser: false
+              isSuperUser: false,
+              name: "Attendee"
             }
           ]
         }

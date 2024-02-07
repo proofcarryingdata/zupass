@@ -172,32 +172,42 @@ export class LemonadePipeline implements BasePipeline {
         oauthServerUrl: this.definition.options.oauthServerUrl
       };
 
+      // Fetch events from Lemonade
       const events = await this.api.getHostingEvents(
         this.definition.options.backendUrl,
         credentials
       );
 
+      // For each event, fetch tickets
       const tickets = await Promise.all(
         events.map(async (ev) => {
+          // See if we have this event configured
+          const eventConfig = this.definition.options.events.find(
+            (e) => e.externalId === ev._id
+          );
+
+          // If not, return no tickets
+          if (!eventConfig) {
+            return { id: ev._id, tickets: [] };
+          }
+
+          // Get tickets for this event
           const eventTickets = await this.api.getTickets(
             this.definition.options.backendUrl,
             credentials,
             ev._id
           );
-          const eventConfig = this.definition.options.events.find(
-            (e) => e.externalId === ev._id
-          );
 
-          if (!eventConfig) {
-            return { id: ev._id, tickets: [] };
-          }
-
+          // We only want to return tickets which are of a supported type
+          // Get the supported types from event configuration
           const supportedTypes = new Set(
-            eventConfig.ticketTiers.map((tier) => tier.externalId)
+            eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
           );
 
           return {
             id: ev._id,
+            // Filter the tickets down to supported tickets
+            // TODO anything to log if we find unsupported tickets?
             tickets: eventTickets.filter((t) => {
               return supportedTypes.has(t.type);
             })
@@ -206,14 +216,18 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       const atomsToSave: LemonadeAtom[] = tickets.flatMap(({ id, tickets }) => {
-        return tickets.map((t) => ({
-          id: t._id,
-          email: t.assigned_to_expanded?.email as string,
-          name: `${t.assigned_to_expanded?.first_name} ${t.assigned_to_expanded?.last_name}`,
-          lemonadeEventId: id,
-          lemonadeTierId: t.type,
-          lemonadeUserId: t.assigned_to as string
-        }));
+        return tickets.map(
+          (t) =>
+            ({
+              id: t._id,
+              email: t.assigned_to_expanded?.email as string,
+              name: `${t.assigned_to_expanded?.first_name} ${t.assigned_to_expanded?.last_name}`,
+              lemonadeEventId: id,
+              lemonadeTicketTypeId: t.type,
+              lemonadeUserId: t.assigned_to as string,
+              isConsumed: t.accepted === true
+            }) as LemonadeAtom
+        );
       });
 
       logger(
@@ -369,7 +383,7 @@ export class LemonadePipeline implements BasePipeline {
     return correspondingEventConfig.externalId;
   }
 
-  private eddsaTicketToLemonadeTierId(ticket: EdDSATicketPCD): string {
+  private eddsaTicketToLemonadeTicketTypeId(ticket: EdDSATicketPCD): string {
     const correspondingEventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceEventId === ticket.claim.ticket.eventId
     );
@@ -378,15 +392,16 @@ export class LemonadePipeline implements BasePipeline {
       throw new Error("no matching event id");
     }
 
-    const correspondingTierConfig = correspondingEventConfig.ticketTiers.find(
-      (t) => t.genericIssuanceProductId === ticket.claim.ticket.productId
-    );
+    const correspondingTicketTypeConfig =
+      correspondingEventConfig.ticketTypes.find(
+        (t) => t.genericIssuanceProductId === ticket.claim.ticket.productId
+      );
 
-    if (!correspondingTierConfig) {
-      throw new Error("no matching tier id");
+    if (!correspondingTicketTypeConfig) {
+      throw new Error("no matching ticket type id");
     }
 
-    return correspondingTierConfig.externalId;
+    return correspondingTicketTypeConfig.externalId;
   }
 
   private lemonadeAtomToZupassEventId(atom: LemonadeAtom): string {
@@ -410,15 +425,16 @@ export class LemonadePipeline implements BasePipeline {
       throw new Error("no matching event id");
     }
 
-    const correspondingTierConfig = correspondingEventConfig.ticketTiers.find(
-      (t) => t.externalId === atom.lemonadeTierId
-    );
+    const correspondingTicketTypeConfig =
+      correspondingEventConfig.ticketTypes.find(
+        (t) => t.externalId === atom.lemonadeTicketTypeId
+      );
 
-    if (!correspondingTierConfig) {
-      throw new Error("no corresponding tier config");
+    if (!correspondingTicketTypeConfig) {
+      throw new Error("no corresponding ticket type config");
     }
 
-    return correspondingTierConfig.genericIssuanceProductId;
+    return correspondingTicketTypeConfig.genericIssuanceProductId;
   }
 
   private lemonadeAtomToEventName(atom: LemonadeAtom): string {
@@ -439,21 +455,42 @@ export class LemonadePipeline implements BasePipeline {
    * It's important to keep this up to date with whatever is in Lemonade.
    * Thus, the {@link LemonadePipeline#load} function should probably have
    * the ability to update its {@link PipelineDefinition}, as that is where
-   * the 'name' of ticket tiers (which corresponds to the ticket name) is stored.
+   * the 'name' of ticket type (which corresponds to the ticket name) is stored.
    */
   private lemonadeAtomToTicketName(atom: LemonadeAtom): string {
-    return atom.lemonadeTierId;
+    const event = this.definition.options.events.find(
+      (event) => event.externalId === atom.lemonadeEventId
+    );
+
+    if (!event) {
+      throw new Error(
+        `no lemonade event with id ${atom.lemonadeEventId} in pipeline ${this.id}`
+      );
+    }
+
+    const ticketType = event.ticketTypes.find(
+      (ticketType) => ticketType.externalId === atom.lemonadeTicketTypeId
+    );
+
+    if (!ticketType) {
+      throw new Error(
+        `no pretix product with id ${atom.lemonadeTicketTypeId} in pipeline ${this.id}`
+      );
+    }
+
+    return ticketType.name;
   }
 
   /**
-   * Very WIP, did my best here.
+   * Matches real Lemonade API, though might need some refactors due to
+   * mismatches in data models.
    */
   private atomToTicketData(
     atom: LemonadeAtom,
     semaphoreId: string
   ): ITicketData {
     if (!atom.email) {
-      throw new Error("no"); // TODO
+      throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
     }
 
     return {
@@ -462,17 +499,17 @@ export class LemonadePipeline implements BasePipeline {
       attendeeEmail: atom.email,
       eventName: this.lemonadeAtomToEventName(atom),
       ticketName: this.lemonadeAtomToTicketName(atom),
-      checkerEmail: undefined, // TODO
+      checkerEmail: undefined, // Doesn't exist in Lemonade
 
       // signed fields
       ticketId: atom.id,
       eventId: this.lemonadeAtomToZupassEventId(atom),
       productId: this.lemonadeAtomToZupassProductId(atom),
-      timestampConsumed: 0, // TODO
+      timestampConsumed: 0, // Lemonade doesn't give us this information
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
-      isConsumed: false, // TODO
-      isRevoked: false, // TODO
+      isConsumed: atom.isConsumed,
+      isRevoked: false, // Not clear what concept this maps to in Lemonade
       ticketCategory: TicketCategory.Generic // TODO?
     } satisfies ITicketData;
   }
@@ -516,7 +553,7 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<true | GenericIssuanceCheckInError> {
     const lemonadeEventId = ticketAtom.lemonadeEventId;
 
-    const lemonadeTicketTier = ticketAtom.lemonadeTierId;
+    const lemonadeTicketType = ticketAtom.lemonadeTicketTypeId;
 
     const eventConfig = this.definition.options.events.find(
       (e) => e.externalId === lemonadeEventId
@@ -526,28 +563,28 @@ export class LemonadePipeline implements BasePipeline {
       return { name: "InvalidTicket" };
     }
 
-    const tierConfig = eventConfig.ticketTiers.find(
-      (t) => t.externalId === lemonadeTicketTier
+    const ticketTypeConfig = eventConfig.ticketTypes.find(
+      (t) => t.externalId === lemonadeTicketType
     );
 
-    if (!tierConfig) {
+    if (!ticketTypeConfig) {
       return { name: "InvalidTicket" };
     }
 
     const checkerEventTickets = checkerTickets.filter(
       (t) => t.lemonadeEventId === lemonadeEventId
     );
-    const checkerEventTiers = checkerEventTickets.map((t) => {
-      const tierConfig = eventConfig.ticketTiers.find(
-        (tier) => tier.externalId === t.lemonadeTierId
+    const checkerEventTicketTypes = checkerEventTickets.map((t) => {
+      const ticketTypeConfig = eventConfig.ticketTypes.find(
+        (ticketTypes) => ticketTypes.externalId === t.lemonadeTicketTypeId
       );
-      return tierConfig;
+      return ticketTypeConfig;
     });
-    const hasSuperUserTierTicket = checkerEventTiers.find(
+    const hasSuperUserTicket = checkerEventTicketTypes.find(
       (t) => t?.isSuperUser
     );
 
-    if (!hasSuperUserTierTicket) {
+    if (!hasSuperUserTicket) {
       return { name: "NotSuperuser" };
     }
 
@@ -815,6 +852,7 @@ export interface LemonadeAtom extends PipelineAtom {
   // todo
   name: string;
   lemonadeEventId: string;
-  lemonadeTierId: string;
+  lemonadeTicketTypeId: string;
   lemonadeUserId: string;
+  isConsumed: boolean;
 }

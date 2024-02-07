@@ -645,7 +645,7 @@ export class PretixPipeline implements BasePipeline {
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
     if (!atom.email) {
-      throw new Error(`Atom missing email: ${atom.id}`);
+      throw new Error(`Atom missing email: ${atom.id} in pipeline ${this.id}`);
     }
 
     return {
