@@ -122,7 +122,6 @@ export function AddSubscriptionScreen(): JSX.Element {
 
   useEffect(() => {
     const url = query?.get("url") ?? "";
-    console.log({ url, onFetchFeedsClick });
     // If a URL was specified in the query string, automatically fetch feeds for it
     if (url.length > 0 && !fetchError && !fetchedProviderUrl) {
       onFetchFeedsClick();
