@@ -5360,14 +5360,6 @@
   resolved "https://registry.yarnpkg.com/@yarnpkg/lockfile/-/lockfile-1.1.0.tgz#e77a97fbd345b76d83245edcd17d393b1b41fb31"
   integrity sha512-GpSwvyXOcOOlV70vbnzjj4fW5xW/FdUF6nQEt1ENy7m4ZCczi1+/buVUPAqmGfqznsORNFzUMjctTIp8a9tuCQ==
 
-"@zk-kit/groth16@^0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/groth16/-/groth16-0.3.0.tgz#74240beb26e98e4ea3546159108ca968ed7c019b"
-  integrity sha512-rvTrzMcpxFy0lkiIveI5HHovVbyBQ+eDuh/RGAb0SHkzIxJ8kiPjSXvRXUmEdq278ZdhHvrCZSz5J53oIBuoFw==
-  dependencies:
-    circom_runtime "0.1.24"
-    ffjavascript "0.2.60"
-
 "@zk-kit/incremental-merkle-tree@0.4.3", "@zk-kit/incremental-merkle-tree@^0.4.3":
   version "0.4.3"
   resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-0.4.3.tgz#197f72102d35dd9c546a6a432896d6d6f6de05f4"
@@ -6704,13 +6696,6 @@ circom_runtime@0.1.21:
   integrity sha512-qTkud630B/GK8y76hnOaaS1aNuF6prfV0dTrkeRsiJKnlP1ryQbP2FWLgDOPqn6aKyaPlam+Z+DTbBhkEzh8dA==
   dependencies:
     ffjavascript "0.2.56"
-
-circom_runtime@0.1.22:
-  version "0.1.22"
-  resolved "https://registry.yarnpkg.com/circom_runtime/-/circom_runtime-0.1.22.tgz#f957c47662cdd03cd3fb76979c434c719a366373"
-  integrity sha512-V/XYZWBhbZY8SotkaGH4FbiDYAZ8a1Md++MBiKPDOuWS/NIJB+Q+XIiTC8zKMgoDaa9cd2OiTvsC9J6te7twNg==
-  dependencies:
-    ffjavascript "0.2.57"
 
 circom_runtime@0.1.24:
   version "0.1.24"
@@ -9142,24 +9127,6 @@ ffjavascript@0.2.56:
     wasmcurves "0.2.0"
     web-worker "^1.2.0"
 
-ffjavascript@0.2.57:
-  version "0.2.57"
-  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.57.tgz#ba1be96015b2688192e49f2f4de2cc5150fd8594"
-  integrity sha512-V+vxZ/zPNcthrWmqfe/1YGgqdkTamJeXiED0tsk7B84g40DKlrTdx47IqZuiygqAVG6zMw4qYuvXftIJWsmfKQ==
-  dependencies:
-    wasmbuilder "0.0.16"
-    wasmcurves "0.2.0"
-    web-worker "^1.2.0"
-
-ffjavascript@0.2.59:
-  version "0.2.59"
-  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.59.tgz#b2f836082587fab333dfb181b909a188f80036f3"
-  integrity sha512-QssOEUv+wilz9Sg7Zaj6KWAm7QceOAEsFuEBTltUsDo1cjn11rA/LGYvzFBPbzNfxRlZxwgJ7uxpCQcdDlrNfw==
-  dependencies:
-    wasmbuilder "0.0.16"
-    wasmcurves "0.2.1"
-    web-worker "^1.2.0"
-
 ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0.2.48:
   version "0.2.60"
   resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.60.tgz#4d8ae613d6bf4e98b3cc29ba10c626f5853854cf"
@@ -9168,6 +9135,15 @@ ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0
     wasmbuilder "0.0.16"
     wasmcurves "0.2.2"
     web-worker "^1.2.0"
+
+ffjavascript@0.2.63:
+  version "0.2.63"
+  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.63.tgz#0c1216a1f123dc9181df69e144473704d2f115eb"
+  integrity sha512-dBgdsfGks58b66JnUZeZpGxdMIDQ4QsD3VYlRJyFVrKQHb2kJy4R2gufx5oetrTxXPT+aEjg0dOvOLg1N0on4A==
+  dependencies:
+    wasmbuilder "0.0.16"
+    wasmcurves "0.2.2"
+    web-worker "1.2.0"
 
 figures@^3.0.0:
   version "3.2.0"
@@ -14095,15 +14071,15 @@ r1csfile@0.0.41:
     fastfile "0.0.20"
     ffjavascript "0.2.56"
 
-r1csfile@0.0.45:
-  version "0.0.45"
-  resolved "https://registry.yarnpkg.com/r1csfile/-/r1csfile-0.0.45.tgz#59d59a33f8b5280017fc00ee691d003a3d705fe0"
-  integrity sha512-YKIp4D441aZ6OoI9y+bfAyb2j4Cl+OFq/iiX6pPWDrL4ZO968h0dq0w07i65edvrTt7/G43mTnl0qEuLXyp/Yw==
+r1csfile@0.0.47:
+  version "0.0.47"
+  resolved "https://registry.yarnpkg.com/r1csfile/-/r1csfile-0.0.47.tgz#ed95a0dc8e910e9c070253906f7a31bd8c5333c8"
+  integrity sha512-oI4mAwuh1WwuFg95eJDNDDL8hCaZkwnPuNZrQdLBWvDoRU7EG+L/MOHL7SwPW2Y+ZuYcTLpj3rBkgllBQZN/JA==
   dependencies:
     "@iden3/bigarray" "0.0.2"
     "@iden3/binfileutils" "0.0.11"
     fastfile "0.0.20"
-    ffjavascript "0.2.57"
+    ffjavascript "0.2.60"
 
 raf@^3.4.1:
   version "3.4.1"
@@ -15138,21 +15114,21 @@ snarkjs@^0.5.0:
     logplease "^1.2.15"
     r1csfile "0.0.41"
 
-snarkjs@^0.7.0:
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/snarkjs/-/snarkjs-0.7.0.tgz#9b4d193a0535c1903e45f1508aa7ad74cd130844"
-  integrity sha512-Vu5W+0Va6X1xvlCllpZ2r3/S7MafnL6IrAv09lk/F+VNDHuHEHx3xopR9Kr70p2KpbBBJ/HB9VCDZWism8WGlA==
+snarkjs@^0.7.3:
+  version "0.7.3"
+  resolved "https://registry.yarnpkg.com/snarkjs/-/snarkjs-0.7.3.tgz#7f703d05b810235255f2d0a70d8a9b8b3ea916e5"
+  integrity sha512-cDLpWqdqEJSCQNc+cXYX1XTKdUZBtYEisuOsgmXf/HUsN5WmGN+FO7HfCS+cMQT1Nzbm1a9gAEpKH6KRtDtS1Q==
   dependencies:
     "@iden3/binfileutils" "0.0.11"
     bfj "^7.0.2"
     blake2b-wasm "^2.4.0"
-    circom_runtime "0.1.22"
+    circom_runtime "0.1.24"
     ejs "^3.1.6"
     fastfile "0.0.20"
-    ffjavascript "0.2.59"
+    ffjavascript "0.2.63"
     js-sha3 "^0.8.0"
     logplease "^1.2.15"
-    r1csfile "0.0.45"
+    r1csfile "0.0.47"
 
 socks-proxy-agent@^8.0.2:
   version "8.0.2"
@@ -17122,13 +17098,6 @@ wasmcurves@0.2.0:
   dependencies:
     wasmbuilder "0.0.16"
 
-wasmcurves@0.2.1:
-  version "0.2.1"
-  resolved "https://registry.yarnpkg.com/wasmcurves/-/wasmcurves-0.2.1.tgz#416d15432a9c6a7b79ef6000eab1e8e7302624ad"
-  integrity sha512-9ciO7bUE5bgpbOcdK7IO3enrSVIKHwrQmPibok4GLJWaCA7Wyqc9PRYnu5HbiFv9NDFNqVKPtU5R6Is5KujBLg==
-  dependencies:
-    wasmbuilder "0.0.16"
-
 wasmcurves@0.2.2:
   version "0.2.2"
   resolved "https://registry.yarnpkg.com/wasmcurves/-/wasmcurves-0.2.2.tgz#ca444f6a6f6e2a5cbe6629d98ff478a62b4ccb2b"
@@ -17165,7 +17134,7 @@ web-streams-polyfill@^3.0.3:
   resolved "https://registry.yarnpkg.com/web-streams-polyfill/-/web-streams-polyfill-3.2.1.tgz#71c2718c52b45fd49dbeee88634b3a60ceab42a6"
   integrity sha512-e0MO3wdXWKrLbL0DgGnUV7WHVuw9OUvL4hjgnPkIeEvESk74gAITi5G606JtZPp39cd8HA9VQzCIvA49LpPN5Q==
 
-web-worker@^1.2.0:
+web-worker@1.2.0, web-worker@^1.2.0:
   version "1.2.0"
   resolved "https://registry.yarnpkg.com/web-worker/-/web-worker-1.2.0.tgz#5d85a04a7fbc1e7db58f66595d7a3ac7c9c180da"
   integrity sha512-PgF341avzqyx60neE9DD+XS26MMNMoUQRz9NOZwW32nPQrF6p77f1htcnjBSEV8BGMKZ16choqUG4hyI0Hx7mA==

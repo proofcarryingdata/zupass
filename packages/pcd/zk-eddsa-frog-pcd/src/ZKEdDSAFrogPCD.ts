@@ -27,13 +27,9 @@ import {
   hexToBigInt,
   requireDefinedParameter
 } from "@pcd/util";
-import {
-  Groth16Proof,
-  prove as groth16Prove,
-  verify as groth16Verify
-} from "@zk-kit/groth16";
 import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
+import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 
@@ -216,6 +212,11 @@ function snarkInputForProof(
 ): Record<string, `${number}` | `${number}`[]> {
   const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
   const signerPubKey = frogPCD.proof.eddsaPCD.claim.publicKey;
+
+  // Note: unpackSignature leaves the R8 point's coordinates in Montgomery
+  // form, which is then reversed by toObject below.
+  // This is a reference to Montgomery form of numbers for modular
+  // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
   const rawSig = eddsa.unpackSignature(
     fromHexString(frogPCD.proof.eddsaPCD.proof.signature)
   );
@@ -307,7 +308,7 @@ export async function prove(args: ZKEdDSAFrogPCDArgs): Promise<ZKEdDSAFrogPCD> {
     watermark.toString()
   );
 
-  const { proof, publicSignals } = await groth16Prove(
+  const { proof, publicSignals } = await groth16.fullProve(
     snarkInput,
     initArgs.wasmFilePath,
     initArgs.zkeyFilePath
@@ -348,7 +349,7 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
     pcd.claim.externalNullifier,
     pcd.claim.watermark
   ];
-  return groth16Verify(vkey, { publicSignals, proof: pcd.proof });
+  return groth16.verify(vkey, publicSignals, pcd.proof);
 }
 
 /**
