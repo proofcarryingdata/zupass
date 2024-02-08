@@ -446,7 +446,14 @@ export enum PipelineLogLevel {
   Error = "Error"
 }
 
+export interface PipelineRunInfo {
+  lastRunStartTimestamp: number;
+  lastRunEndTimestamp: number;
+  latestLogs: PipelineLog[];
+}
+
 export interface PipelineLog {
+  timestampCreated: number;
   level: PipelineLogLevel;
   value: string;
   metadata: unknown;
