@@ -71,13 +71,19 @@ function Page(): JSX.Element {
               return handleContinue();
             }}
           >
-            <input
-              autoFocus
-              value={email}
-              onChange={(e): void => setEmail(e.target.value)}
-              placeholder="Enter your email"
-            />
-            <button type="submit">Continue</button>
+            <label>
+              email:
+              <input
+                style={{
+                  marginLeft: "8px"
+                }}
+                autoFocus
+                value={email}
+                onChange={(e): void => setEmail(e.target.value)}
+                placeholder="Enter your email"
+              />
+            </label>
+            <button type="submit">Login</button>
           </form>
         )}
       </PageContent>

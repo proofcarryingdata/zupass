@@ -74,8 +74,8 @@ export default function Dashboard(): ReactNode {
                 <td>🍂</td>
                 <td>status</td>
                 <td>type</td>
-                <td>pipeline</td>
                 <td>owner</td>
+                <td>pipeline</td>
               </tr>
             </thead>
             <tbody>
@@ -83,14 +83,14 @@ export default function Dashboard(): ReactNode {
                 return (
                   <tr key={i}>
                     <td>
-                      <span>{pipelineIcon(p)}</span>
+                      <span>{pipelineIcon(p?.extraInfo?.lastRun)}</span>
                     </td>
                     <td>
-                      <span>{pipelineStatus(p)}</span>
+                      <span>{pipelineStatus(p?.extraInfo?.lastRun)}</span>
                     </td>
                     <td>{pipelineType(p)}</td>
-                    <td>{pipelineLink(p)}</td>
                     <td>{pipelineOwner(p)}</td>
+                    <td>{pipelineLink(p)}</td>
                   </tr>
                 );
               })}

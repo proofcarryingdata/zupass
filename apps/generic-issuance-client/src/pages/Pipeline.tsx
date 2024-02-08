@@ -19,13 +19,12 @@ function stringifyAndFormat(obj: object): string {
 
 export default function Pipeline(): ReactNode {
   const stytchClient = useStytch();
+  const userJWT = useJWT();
   const params = useParams();
   const pipelineId: string | undefined = params.id;
   const [textareaValue, setTextareaValue] = useState("");
-  const userJWT = useJWT();
   const userFromServer = useFetchSelf();
   const pipelineFromServer = useFetchPipeline(pipelineId);
-
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoFromServer?.value;
   const [actionInProgress, setActionInProgress] = useState(false);
@@ -59,7 +58,12 @@ export default function Pipeline(): ReactNode {
     !pipelineInfo ||
     actionInProgress
   ) {
-    return "loading...";
+    return (
+      <>
+        <Header includeLinkToDashboard />
+        <PageContent>Loading...</PageContent>
+      </>
+    );
   }
 
   if (!userJWT) {

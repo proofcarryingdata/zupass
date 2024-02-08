@@ -23,7 +23,7 @@ export function Header({
   const rightElements: ReactNode[] = [];
   const [showUserId, setShowUserId] = useState(false);
 
-  const title = <b key="title">📦 PodBox</b>;
+  const title = <span key="title">📦 PodBox</span>;
 
   if (!user?.value) {
     return (
@@ -48,18 +48,18 @@ export function Header({
   leftElements.push(title);
 
   leftElements.push(
-    <b key="email">
+    <span key="email">
       {" · "}
       {user?.value?.email}
-    </b>
+    </span>
   );
 
   if (user.value.isAdmin) {
     leftElements.push(
-      <b key="admin">
+      <span key="admin">
         {" · "}
         {"admin"}
-      </b>
+      </span>
     );
   }
 
