@@ -7,7 +7,8 @@ import { z } from "zod";
  */
 export enum PipelineType {
   Lemonade = "Lemonade",
-  Pretix = "Pretix"
+  Pretix = "Pretix",
+  CSV = "CSV"
 }
 
 const BasePipelineDefinitionSchema = z.object({
