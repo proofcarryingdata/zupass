@@ -249,43 +249,49 @@ export class GenericIssuanceService {
   private async executeSinglePipeline(
     inMemoryPipeline: InMemoryPipeline
   ): Promise<PipelineRunInfo> {
-    return traced(SERVICE_NAME, "executeSinglePipeline", async (span) => {
-      const start = Date.now();
-      const pipelineId = inMemoryPipeline.definition.id;
-      const pipeline = inMemoryPipeline.pipeline;
+    return traced<PipelineRunInfo>(
+      SERVICE_NAME,
+      "executeSinglePipeline",
+      async (span): Promise<PipelineRunInfo> => {
+        const start = Date.now();
+        const pipelineId = inMemoryPipeline.definition.id;
+        const pipeline = inMemoryPipeline.pipeline;
 
-      if (!pipeline) {
-        logger(
-          LOG_TAG,
-          `pipeline ${pipelineId} is not running; skipping loading`
-        );
-        return {
-          lastRunStartTimestamp: start,
-          lastRunEndTimestamp: start,
-          latestLogs: [makePLogErr("failed to start pipeline")]
-        };
-      }
+        if (!pipeline) {
+          logger(
+            LOG_TAG,
+            `pipeline ${pipelineId} is not running; skipping loading`
+          );
+          return {
+            lastRunStartTimestamp: start,
+            lastRunEndTimestamp: start,
+            latestLogs: [makePLogErr("failed to start pipeline")],
+            atomsLoaded: 0
+          };
+        }
 
-      try {
-        logger(LOG_TAG, `loading data for pipeline with id '${pipelineId}'`);
-        const result = await pipeline.load();
-        logger(
-          LOG_TAG,
-          `successfully loaded data for pipeline with id '${pipelineId}'`,
-          result
-        );
-        return result;
-      } catch (e) {
-        this.rollbarService?.reportError(e);
-        logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
-        setError(e, span);
-        return {
-          lastRunStartTimestamp: start,
-          lastRunEndTimestamp: Date.now(),
-          latestLogs: [makePLogErr(`failed to start pipeline: ${e + ""}`)]
-        };
+        try {
+          logger(LOG_TAG, `loading data for pipeline with id '${pipelineId}'`);
+          const result = await pipeline.load();
+          logger(
+            LOG_TAG,
+            `successfully loaded data for pipeline with id '${pipelineId}'`,
+            result
+          );
+          return result;
+        } catch (e) {
+          this.rollbarService?.reportError(e);
+          logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
+          setError(e, span);
+          return {
+            lastRunStartTimestamp: start,
+            lastRunEndTimestamp: Date.now(),
+            latestLogs: [makePLogErr(`failed to start pipeline: ${e + ""}`)],
+            atomsLoaded: 0
+          };
+        }
       }
-    });
+    );
   }
 
   public async executeAllPipelineLoads(): Promise<void> {

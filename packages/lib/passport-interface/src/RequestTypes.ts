@@ -450,6 +450,7 @@ export interface PipelineRunInfo {
   lastRunStartTimestamp: number;
   lastRunEndTimestamp: number;
   latestLogs: PipelineLog[];
+  atomsLoaded: number;
 }
 
 export interface PipelineLog {

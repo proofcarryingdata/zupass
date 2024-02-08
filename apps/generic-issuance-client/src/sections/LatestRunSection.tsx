@@ -36,6 +36,10 @@ export function LatestRunSection({
             <td>duration</td>
             <td>{durationMs}ms</td>
           </tr>
+          <tr>
+            <td>entries loaded</td>
+            <td>{latestRun.atomsLoaded}</td>
+          </tr>
         </tbody>
       </Table>
 
