@@ -149,21 +149,31 @@ export default function Pipeline(): ReactNode {
                     rows={30}
                     value={textareaValue}
                     onChange={onTextAreaChange}
+                    readOnly={ownedBySomeoneElse}
                   />
                 </p>
                 <p>
-                  {hasEdits && (
-                    <button
-                      disabled={!!actionInProgress || ownedBySomeoneElse}
-                      onClick={onSaveClick}
-                    >
-                      {actionInProgress ? "Saving..." : "Save changes"}
-                    </button>
+                  {!ownedBySomeoneElse && (
+                    <>
+                      {hasEdits && (
+                        <button
+                          disabled={!!actionInProgress || ownedBySomeoneElse}
+                          onClick={onSaveClick}
+                        >
+                          {actionInProgress ? "Saving..." : "Save changes"}
+                        </button>
+                      )}
+                      {!hasEdits && (
+                        <button disabled>All changes saved ✅</button>
+                      )}
+                      <button
+                        disabled={ownedBySomeoneElse}
+                        onClick={onDeleteClick}
+                      >
+                        Delete pipeline
+                      </button>
+                    </>
                   )}
-                  {!hasEdits && <button disabled>All changes saved ✅</button>}
-                  <button disabled={ownedBySomeoneElse} onClick={onDeleteClick}>
-                    Delete pipeline
-                  </button>
                 </p>
               </>
             )}
