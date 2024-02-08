@@ -143,18 +143,22 @@ export default function Dashboard(): ReactNode {
           }}
         >
           <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
-            {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
+            {isCreatingPipeline ? "Minimize 🔼" : "Create 🔽"}
           </button>
           {isCreatingPipeline && (
-            <div>
+            <div
+              style={{
+                marginTop: "8px"
+              }}
+            >
               <textarea
-                rows={10}
-                cols={50}
+                rows={20}
+                cols={80}
                 value={newPipelineRaw}
                 onChange={(e): void => setNewPipelineRaw(e.target.value)}
               />
               <div>
-                <button onClick={createPipeline}>Create new pipeline</button>
+                <button onClick={createPipeline}>🐒 Create! 🚀</button>
               </div>
             </div>
           )}
