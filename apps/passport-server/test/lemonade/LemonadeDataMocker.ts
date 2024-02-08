@@ -117,12 +117,15 @@ class LemonadeAccount {
     }
     const ticket: LemonadeTicket = {
       _id: randomUUID(),
-      type: ticketTypeId,
-      assigned_to_expanded: this.users.get(userId) as LemonadeUser,
+      type_id: ticketTypeId,
+      type_title: this.ticketTypes.get(eventId)?.get(ticketTypeId)
+        ?.title as string,
+      user_id: userId,
+      user_email: this.users.get(userId)?.email as string,
       assigned_to: userId,
       assigned_email: null, // This is what we get from the live API, if you
       // want the email address then look in `assigned_to_expanded`
-      accepted: null // This is how un-checked-in users seem to be represented
+      checkin_date: "" // This is how un-checked-in users seem to be represented
     };
 
     const eventTickets = this.tickets.get(eventId) ?? new Map();
@@ -168,12 +171,12 @@ class LemonadeAccount {
     }
 
     // If the ticket exists and has already been checked in
-    if (ticket.accepted) {
+    if (ticket.checkin_date) {
       throw new Error(`User ${userId} is already checked in to ${eventId}`);
     }
 
     // Flag the ticket as checked in.
-    ticket.accepted = true;
+    ticket.checkin_date = new Date().toISOString();
   }
 }
 

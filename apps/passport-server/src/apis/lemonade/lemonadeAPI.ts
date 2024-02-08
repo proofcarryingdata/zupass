@@ -6,7 +6,11 @@ import {
   NormalizedCacheObject,
   gql
 } from "@apollo/client/core";
+import { parse } from "csv-parse/sync";
 import { Client, Issuer, type TokenSet } from "openid-client";
+import urljoin from "url-join";
+import { z } from "zod";
+import { instrumentedFetch } from "../fetch";
 
 /**
  * Credentials used for authenticating with Lemonade.
@@ -25,7 +29,7 @@ export interface ILemonadeAPI {
   getHostingEvents(
     backendUrl: string,
     credentials: LemonadeOAuthCredentials
-  ): Promise<LemonadeEvents>;
+  ): Promise<LemonadeEvent[]>;
 
   getEventTicketTypes(
     backendUrl: string,
@@ -37,7 +41,7 @@ export interface ILemonadeAPI {
     backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
-  ): Promise<LemonadeTickets>;
+  ): Promise<LemonadeTicket[]>;
 
   checkinUser(
     backendUrl: string,
@@ -143,7 +147,7 @@ class LemonadeClient {
 
   public constructor(backendUrl: string) {
     this.gqlClient = new ApolloClient({
-      uri: backendUrl,
+      uri: urljoin(backendUrl, "graphql"),
       cache: new InMemoryCache()
     });
   }
@@ -224,28 +228,6 @@ class LemonadeClient {
       );
 
     return getEventTicketTypes;
-  }
-
-  /**
-   * Gets LemonadeTickets for an event. Number of tickets returned is
-   * variable, and the caller is responsible for setting the `skip` and `limit`
-   * values to control pagination.
-   */
-  public async getTickets(
-    token: string,
-    eventId: string,
-    opts: { skip?: number; limit?: number } = { skip: 0, limit: 25 }
-  ): Promise<LemonadeTickets> {
-    const { getTickets } = await this.query<GetTicketsResponse>(
-      token,
-      getTicketsQuery,
-      {
-        event: eventId,
-        ...opts
-      }
-    );
-
-    return getTickets;
   }
 
   /**
@@ -375,12 +357,25 @@ export class LemonadeAPI implements ILemonadeAPI {
     backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
-  ): Promise<LemonadeTickets> {
-    const client = this.getClient(backendUrl);
+  ): Promise<LemonadeTicket[]> {
     const token = await this.getToken(credentials);
-    return await this.paginate<LemonadeTickets[number]>((opts) =>
-      client.getTickets(token, lemonadeEventId, opts)
-    );
+    const url = urljoin(backendUrl, "event", lemonadeEventId, "export/tickets");
+    const result = await instrumentedFetch(url, {
+      method: "POST",
+      headers: {
+        Authorization: `Bearer ${token}`,
+        "Content-type": "text/csv"
+      }
+    });
+    const csvText = await result.text();
+    const parsed = parse(csvText, {
+      columns: true
+    });
+    const results = [];
+    for (const row of parsed) {
+      results.push(LemonadeTicketSchema.parse(row));
+    }
+    return results;
   }
 
   /**
@@ -477,45 +472,18 @@ export type LemonadeTicketTypes =
   GetEventTicketTypesResponse["getEventTicketTypes"];
 export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 
-export const getTicketsQuery = gql(`
-  query GetTickets($skip: Int!, $limit: Int!, $event: MongoID) {
-    getTickets(skip: $skip, limit: $limit, event: $event) {
-      _id,
-      assigned_to_expanded {
-        _id
-        name
-        first_name
-        last_name
-        email
-      }
-      assigned_to
-      assigned_email
-      type
-      accepted
-    }
-  }
-`);
+const LemonadeTicketSchema = z.object({
+  _id: z.string(),
+  assigned_email: z.string().nullable(),
+  assigned_to: z.string().nullable(),
+  user_id: z.string(),
+  user_email: z.string(),
+  type_id: z.string(),
+  type_title: z.string(),
+  checkin_date: z.string().nullable()
+});
 
-// Values seem to be nullable more often than one might expect
-export interface GetTicketsResponse {
-  getTickets: {
-    _id: string;
-    type: string; //-- id of the ticket type
-    accepted?: boolean | null; //-- accepted = true means already checked in
-    assigned_email?: string | null; // seems to be null even when assigned?
-    assigned_to?: string | null; // a user ID
-    assigned_to_expanded?: {
-      _id: string; // user id
-      name: string; // user id, e.g. 'robknight'
-      first_name?: string;
-      last_name?: string;
-      email?: string;
-    } | null;
-  }[];
-}
-
-export type LemonadeTickets = GetTicketsResponse["getTickets"];
-export type LemonadeTicket = LemonadeTickets[number];
+export type LemonadeTicket = z.infer<typeof LemonadeTicketSchema>;
 
 export const checkinUserMutation = gql(`
   mutation CheckinUser($event: MongoID!, $user: MongoID!) {

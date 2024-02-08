@@ -171,6 +171,7 @@ describe("Generic Issuance", function () {
       return credentials.oauthClientId;
     }
   });
+  const lemonadeBackendUrl = "http://localhost";
   const lemonadePipelineDefinition: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
     timeCreated: new Date().toISOString(),
@@ -193,7 +194,7 @@ describe("Generic Issuance", function () {
       oauthClientId: "edge-city-client-id",
       oauthClientSecret: "test",
       oauthServerUrl: "test",
-      backendUrl: "http://localhost/graphql",
+      backendUrl: lemonadeBackendUrl,
       events: [
         {
           externalId: EdgeCityDenver._id,
@@ -358,7 +359,7 @@ t2,i1`,
     const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
     mockServer = setupServer(
       ...getGenericMockPretixAPIHandlers(pretixOrgUrls, pretixBackend),
-      ...getMockLemonadeHandlers(lemonadeBackend)
+      ...getMockLemonadeHandlers(lemonadeBackend, lemonadeBackendUrl)
     );
     mockServer.listen({ onUnhandledRequest: "bypass" });
 
@@ -432,7 +433,7 @@ t2,i1`,
       const AttendeeTicket = AttendeeTickets[0];
       expectIsEdDSATicketPCD(AttendeeTicket);
       expect(AttendeeTicket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityAttendeeTicket.assigned_to_expanded?.email)
+        .to.eq(EdgeCityAttendeeTicket.user_email)
         .to.eq(EdgeCityDenverAttendee.email);
 
       const BouncerTickets = await requestTicketsFromPipeline(
@@ -440,22 +441,20 @@ t2,i1`,
         edgeCityDenverTicketFeedUrl,
         edgeCityDenverPipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.assigned_to_expanded?.email as string,
+        EdgeCityDenverBouncerTicket.user_email as string,
         EdgeCityBouncerIdentity
       );
       expectLength(BouncerTickets, 1);
       const BouncerTicket = BouncerTickets[0];
       expectIsEdDSATicketPCD(BouncerTicket);
       expect(BouncerTicket.claim.ticket.attendeeEmail)
-        .to.eq(
-          EdgeCityDenverBouncerTicket.assigned_to_expanded?.email as string
-        )
+        .to.eq(EdgeCityDenverBouncerTicket.user_email as string)
         .to.eq(EdgeCityDenverBouncer.email);
 
       const bouncerChecksInAttendee = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.assigned_to_expanded?.email as string,
+        EdgeCityDenverBouncerTicket.user_email as string,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
@@ -465,7 +464,7 @@ t2,i1`,
       const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.assigned_to_expanded?.email as string,
+        EdgeCityDenverBouncerTicket.user_email as string,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
@@ -479,7 +478,7 @@ t2,i1`,
       const atteendeeChecksInBouncerResult = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityAttendeeTicket.assigned_to_expanded?.email as string,
+        EdgeCityAttendeeTicket.user_email as string,
         EdgeCityDenverAttendeeIdentity,
         BouncerTicket
       );
@@ -493,7 +492,7 @@ t2,i1`,
         await requestCheckInPipelineTicket(
           edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
           newEdDSAPrivateKey(),
-          EdgeCityAttendeeTicket.assigned_to_expanded?.email as string,
+          EdgeCityAttendeeTicket.user_email as string,
           EdgeCityDenverAttendeeIdentity,
           BouncerTicket
         );

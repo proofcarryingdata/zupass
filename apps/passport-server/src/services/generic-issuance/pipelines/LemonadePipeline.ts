@@ -220,7 +220,7 @@ export class LemonadePipeline implements BasePipeline {
             // Filter the tickets down to supported tickets
             // TODO anything to log if we find unsupported tickets?
             tickets: eventTickets.filter((t) => {
-              return supportedTypes.has(t.type);
+              return supportedTypes.has(t.type_id);
             })
           };
         })
@@ -232,12 +232,12 @@ export class LemonadePipeline implements BasePipeline {
             (t) =>
               ({
                 id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
-                email: t.assigned_to_expanded?.email as string,
-                name: `${t.assigned_to_expanded?.first_name} ${t.assigned_to_expanded?.last_name}`,
+                email: t.user_email as string,
+                name: t.user_email as string,
                 lemonadeEventId: eventConfig.externalId,
-                lemonadeTicketTypeId: t.type,
+                lemonadeTicketTypeId: t.type_id,
                 lemonadeUserId: t.assigned_to as string,
-                isConsumed: t.accepted === true
+                isConsumed: t.checkin_date !== null && t.checkin_date !== ""
               }) as LemonadeAtom
           );
         }

@@ -1,5 +1,7 @@
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
-import { GraphQLRequest, GraphQLVariables, RequestHandler, graphql } from "msw";
+import { stringify } from "csv-stringify/sync";
+import { MockedRequest, RequestHandler, graphql, rest } from "msw";
+import urljoin from "url-join";
 import {
   LemonadeTicket,
   LemonadeTicketType
@@ -11,7 +13,8 @@ loadDevMessages();
 loadErrorMessages();
 
 export function getMockLemonadeHandlers(
-  mocker: LemonadeDataMocker
+  mocker: LemonadeDataMocker,
+  backendUrl: string
 ): RequestHandler[] {
   const handlers = [];
 
@@ -21,7 +24,7 @@ export function getMockLemonadeHandlers(
   // TODO actually mock this with a bit more fidelity, so we can mock token expiry
   const checkClientId = (
     mocker: LemonadeDataMocker,
-    req: GraphQLRequest<GraphQLVariables>
+    req: MockedRequest
   ): string => {
     const clientId = req.headers.get("Authorization")?.split(" ")[1];
     if (!clientId || !mocker.getAccount(clientId)) {
@@ -65,26 +68,25 @@ export function getMockLemonadeHandlers(
         })
       );
     }),
-
-    graphql.query("GetTickets", (req, res, ctx) => {
-      const clientId = checkClientId(mocker, req);
-      const eventId = req.variables["event"];
-      if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
-        throw new Error(`Invalid event ID ${eventId}`);
+    rest.post(
+      urljoin(backendUrl, "/event/:eventId/export/tickets"),
+      (req, res, ctx) => {
+        const clientId = checkClientId(mocker, req);
+        const eventId = req.params["eventId"] as string;
+        if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
+          throw new Error(`Invalid event ID ${eventId}`);
+        }
+        const tickets = [
+          ...(
+            mocker.getAccount(clientId).getTickets().get(eventId) as Map<
+              string,
+              LemonadeTicket
+            >
+          ).values()
+        ];
+        return res(ctx.text(stringify(tickets, { header: true })));
       }
-      return res(
-        ctx.data({
-          getTickets: [
-            ...(
-              mocker.getAccount(clientId).getTickets().get(eventId) as Map<
-                string,
-                LemonadeTicket
-              >
-            ).values()
-          ]
-        })
-      );
-    }),
+    ),
 
     graphql.mutation("CheckinUser", (req, res, ctx) => {
       const clientId = checkClientId(mocker, req);
