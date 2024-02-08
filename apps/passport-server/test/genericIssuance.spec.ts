@@ -647,6 +647,7 @@ async function checkPipelineInfoEndpoint(
     pipeline.issuanceCapability.options.feedDisplayName
   );
   expect(pretixFeedInfo.url).to.eq(pipeline.issuanceCapability.feedUrl);
+  // TODO: more comprehensive pipeline info tests
 }
 
 /**
