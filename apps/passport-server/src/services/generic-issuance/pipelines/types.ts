@@ -1,5 +1,6 @@
 import { PipelineRunInfo, PipelineType } from "@pcd/passport-interface";
 import { BasePipelineCapability } from "../types";
+import { CSVPipeline } from "./CSVPipeline";
 import { LemonadePipeline } from "./LemonadePipeline";
 import { PretixPipeline } from "./PretixPipeline";
 
@@ -7,7 +8,7 @@ import { PretixPipeline } from "./PretixPipeline";
  * Each new type of {@link Pipeline} needs to be added to this type
  * declaration.
  */
-export type Pipeline = LemonadePipeline | PretixPipeline;
+export type Pipeline = LemonadePipeline | PretixPipeline | CSVPipeline;
 
 /**
  * Interface from which all {@link Pipeline}s derive.

@@ -47,59 +47,12 @@ import {
   FeedIssuanceCapability,
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
-import {
-  LemonadePipeline,
-  isLemonadePipelineDefinition
-} from "./pipelines/LemonadePipeline";
-import {
-  PretixPipeline,
-  isPretixPipelineDefinition
-} from "./pipelines/PretixPipeline";
+import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { makePLogErr } from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
-
-/**
- * Given a {@link PipelineDefinition} (which is persisted to the database) instantiates
- * a {@link Pipeline} so that it can be used for loading data from an external provider,
- * and expose its {@link Capability}s to the external world.
- */
-export function instantiatePipeline(
-  eddsaPrivateKey: string,
-  definition: PipelineDefinition,
-  db: IPipelineAtomDB,
-  apis: {
-    lemonadeAPI: ILemonadeAPI;
-    genericPretixAPI: IGenericPretixAPI;
-  },
-  zupassPublicKey: EdDSAPublicKey
-): Pipeline {
-  if (isLemonadePipelineDefinition(definition)) {
-    return new LemonadePipeline(
-      eddsaPrivateKey,
-      definition,
-      db,
-      apis.lemonadeAPI,
-      zupassPublicKey
-    );
-  } else if (isPretixPipelineDefinition(definition)) {
-    return new PretixPipeline(
-      eddsaPrivateKey,
-      definition,
-      db,
-      apis.genericPretixAPI,
-      zupassPublicKey
-    );
-  }
-
-  throw new Error(
-    `couldn't instantiate pipeline for configuration ${JSON.stringify(
-      definition
-    )}`
-  );
-}
 
 /**
  * It's not always possible to start a {@link Pipeline} given a {@link PipelineDefinition}
@@ -434,9 +387,8 @@ export class GenericIssuanceService {
 
       this.ensureUserHasPipelineDefinitionAccess(user, pipelineSlot.definition);
 
-      const pipelineFeeds = pipelineInstance.capabilities.filter(
-        isFeedIssuanceCapability
-      );
+      const pipelineFeeds: FeedIssuanceCapability[] =
+        pipelineInstance.capabilities.filter(isFeedIssuanceCapability);
 
       const latestRun = await this.definitionDB.getLatestRunInfo(
         pipelineInstance.id

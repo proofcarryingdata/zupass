@@ -388,7 +388,7 @@ describe.only("Generic Issuance", function () {
       expectToExist(giService);
       const pipelines = await giService.getAllPipelines();
       expectToExist(pipelines);
-      expectLength(pipelines, 2);
+      expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(edgeCityDenverPipeline);
       const edgeCityDenverTicketFeedUrl =
@@ -486,7 +486,7 @@ describe.only("Generic Issuance", function () {
       expectToExist(giService);
       const pipelines = await giService.getAllPipelines();
       expectToExist(pipelines);
-      expectLength(pipelines, 2);
+      expectLength(pipelines, 3);
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -646,7 +646,7 @@ describe.only("Generic Issuance", function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
     expectToExist(pipelines);
-    expectLength(pipelines, 2);
+    expectLength(pipelines, 3);
     const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
     expectToExist(edgeCityDenverPipeline);
     const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
