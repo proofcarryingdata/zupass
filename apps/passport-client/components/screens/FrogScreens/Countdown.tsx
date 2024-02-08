@@ -6,6 +6,9 @@ const THE_END = new Date("2023-11-26T23:59:59.999Z");
 // when the season ends in less than 2 day, show the full message
 const MESSAGE_CUT_OFF = 60 * 60 * 24 * 2; // 2 days
 
+// flag to disable the frogelion end animation
+const END_ANIMATION_DISABLED = true;
+
 /**
  * A countdown timer towards the end of this season.
  */
@@ -25,6 +28,10 @@ export function Countdown(): JSX.Element {
     }, 10);
     return () => clearInterval(interval);
   }, []);
+
+  if (END_ANIMATION_DISABLED) {
+    return null;
+  }
 
   if (timeLeft <= 0) {
     return <TheEnd />;
