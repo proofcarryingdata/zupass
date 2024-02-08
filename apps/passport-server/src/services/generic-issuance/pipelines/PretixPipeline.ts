@@ -60,6 +60,7 @@ import {
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { BasePipelineCapability } from "../types";
+import { makePLogErr, makePLogInfo } from "../util";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";
@@ -160,93 +161,107 @@ export class PretixPipeline implements BasePipeline {
    * - clear tickets after each load? important!!!!
    */
   public async load(): Promise<PipelineRunInfo> {
-    return traced(LOG_NAME, "load", async (span) => {
-      const startTime = Date.now();
-      const logs: PipelineLog[] = [];
+    return traced<PipelineRunInfo>(
+      LOG_NAME,
+      "load",
+      async (span): Promise<PipelineRunInfo> => {
+        const startTime = Date.now();
+        const logs: PipelineLog[] = [];
 
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+        span?.setAttribute("pipeline_id", this.id);
+        span?.setAttribute("pipeline_type", this.type);
 
-      logger(LOG_TAG, `loading for pipeline id ${this.id}`);
+        logger(LOG_TAG, `loading for pipeline id ${this.id}`);
 
-      const tickets: PretixTicket[] = [];
-      const errors: string[] = [];
+        const tickets: PretixTicket[] = [];
+        const errors: string[] = [];
 
-      for (const event of this.definition.options.events) {
-        // @todo this can throw exceptions. how should we handle this?
-        const eventData = await this.loadEvent(event);
+        for (const event of this.definition.options.events) {
+          const eventData = await this.loadEvent(event);
 
-        errors.push(...this.validateEventData(eventData, event));
+          logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
-        tickets.push(...(await this.ordersToTickets(event, eventData)));
-      }
+          const errors = this.validateEventData(eventData, event);
+          logs.push(...errors.map((e) => makePLogErr(e)));
+          errors.push(...errors);
 
-      if (errors.length > 0) {
-        for (const error of errors) {
-          logger(`${LOG_TAG}: ${error}`);
+          tickets.push(...(await this.ordersToTickets(event, eventData)));
         }
-        throw new Error(errors.join("\n"));
-      }
 
-      const atomsToSave: PretixAtom[] = tickets.map((ticket) => {
+        if (errors.length > 0) {
+          for (const error of errors) {
+            logger(LOG_TAG, `'${this.id}' {${error}`);
+          }
+
+          return {
+            atomsLoaded: 0,
+            lastRunEndTimestamp: Date.now(),
+            lastRunStartTimestamp: startTime,
+            latestLogs: logs,
+            success: false
+          };
+        }
+
+        const atomsToSave: PretixAtom[] = tickets.map((ticket) => {
+          return {
+            email: ticket.email,
+            name: ticket.full_name,
+            eventId: ticket.event.genericIssuanceId,
+            productId: ticket.product.genericIssuanceId,
+            // Use the event ID as the "namespace" when hashing the position ID.
+            // The event ID is a UUID that is part of our configuration, and is
+            // globally unique. The position ID is not globally unique, but is
+            // unique within the namespace of the event.
+            id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
+            secret: ticket.secret,
+            timestampConsumed: ticket.pretix_checkin_timestamp,
+            isConsumed: !!ticket.pretix_checkin_timestamp
+          };
+        });
+
+        logger(
+          LOG_TAG,
+          `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
+        );
+
+        // TODO: error handling
+        await this.db.save(this.definition.id, atomsToSave);
+
+        const loadEnd = Date.now();
+
+        logger(
+          LOG_TAG,
+          `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
+            loadEnd - startTime
+          }ms`
+        );
+
+        span?.setAttribute("atoms_saved", atomsToSave.length);
+        span?.setAttribute("load_duration_ms", loadEnd - startTime);
+
+        // Remove any pending check-ins that succeeded before loading started.
+        // Those that succeeded after loading started might not be represented in
+        // the data we fetched, so we can remove them on the next run.
+        // Pending checkins with the "Pending" status should not be removed, as
+        // they are still in-progress.
+        this.pendingCheckIns.forEach((value, key) => {
+          if (
+            value.status === CheckinStatus.Success &&
+            value.timestamp < startTime
+          ) {
+            this.pendingCheckIns.delete(key);
+          }
+        });
+
         return {
-          email: ticket.email,
-          name: ticket.full_name,
-          eventId: ticket.event.genericIssuanceId,
-          productId: ticket.product.genericIssuanceId,
-          // Use the event ID as the "namespace" when hashing the position ID.
-          // The event ID is a UUID that is part of our configuration, and is
-          // globally unique. The position ID is not globally unique, but is
-          // unique within the namespace of the event.
-          id: uuidv5(ticket.position_id, ticket.event.genericIssuanceId),
-          secret: ticket.secret,
-          timestampConsumed: ticket.pretix_checkin_timestamp,
-          isConsumed: !!ticket.pretix_checkin_timestamp
-        };
-      });
-
-      logger(
-        LOG_TAG,
-        `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
-      );
-
-      // TODO: error handling
-      await this.db.save(this.definition.id, atomsToSave);
-
-      const loadEnd = Date.now();
-
-      logger(
-        LOG_TAG,
-        `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-          loadEnd - startTime
-        }ms`
-      );
-
-      span?.setAttribute("atoms_saved", atomsToSave.length);
-      span?.setAttribute("load_duration_ms", loadEnd - startTime);
-
-      // Remove any pending check-ins that succeeded before loading started.
-      // Those that succeeded after loading started might not be represented in
-      // the data we fetched, so we can remove them on the next run.
-      // Pending checkins with the "Pending" status should not be removed, as
-      // they are still in-progress.
-      this.pendingCheckIns.forEach((value, key) => {
-        if (
-          value.status === CheckinStatus.Success &&
-          value.timestamp < startTime
-        ) {
-          this.pendingCheckIns.delete(key);
-        }
-      });
-
-      return {
-        lastRunEndTimestamp: Date.now(),
-        lastRunStartTimestamp: startTime,
-        latestLogs: logs,
-        atomsLoaded: atomsToSave.length,
-        success: true
-      } satisfies PipelineRunInfo;
-    });
+          lastRunEndTimestamp: Date.now(),
+          lastRunStartTimestamp: startTime,
+          latestLogs: logs,
+          atomsLoaded: atomsToSave.length,
+          success: true
+        } satisfies PipelineRunInfo;
+      }
+    );
   }
 
   /**

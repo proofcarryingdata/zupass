@@ -50,7 +50,6 @@ export default function Pipeline(): ReactNode {
       } else {
         alert(res.error);
       }
-      setActionInProgress(undefined);
     }
   }, [pipelineFromServer?.value?.id, textareaValue, userJWT]);
 
@@ -69,7 +68,6 @@ export default function Pipeline(): ReactNode {
       } else {
         alert(res.error);
       }
-      setActionInProgress(undefined);
     }
   }, [pipelineFromServer?.value?.id, userJWT]);
 
