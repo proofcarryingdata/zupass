@@ -3,7 +3,7 @@ import { useStytch } from "@stytch/react";
 import { ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { GOLD, TextButton } from "./Core";
+import { TABLE_BORDER_COLOR, TABLE_BORDER_WIDTH, TextButton } from "./Core";
 
 /**
  * A header that displays information about the logged-in user
@@ -23,7 +23,7 @@ export function Header({
   const rightElements: ReactNode[] = [];
   const [showUserId, setShowUserId] = useState(false);
 
-  const title = <span key="title">📦 PodBox</span>;
+  const title = <Title key="title" />;
 
   if (!user?.value) {
     return (
@@ -105,7 +105,7 @@ export function Header({
 }
 
 export const HeaderContainer = styled.div`
-  border-bottom: 4px solid ${GOLD};
+  border-bottom: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
   width: 100vw;
   height: auto;
   padding: 16px;
@@ -118,3 +118,5 @@ export const HeaderContainer = styled.div`
 export const LeftHalf = styled.div``;
 
 export const RightHalf = styled.div``;
+
+export const Title = (): ReactNode => <span style={{}}>📦 PodBox</span>;

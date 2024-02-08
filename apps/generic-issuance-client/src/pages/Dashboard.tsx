@@ -1,17 +1,19 @@
 import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useContext, useState } from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
   pipeineLastEdit,
   pipelineCreatedAt,
+  pipelineDetailPagePath,
   pipelineIcon,
   pipelineLink,
   pipelineOwner,
   pipelineStatus,
   pipelineType
 } from "../components/PipelineListEntry";
+import { GIContext } from "../helpers/Context";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
@@ -20,6 +22,8 @@ import { useJWT } from "../helpers/userHooks";
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
     type: "Lemonade",
+    timeCreated: 0,
+    timeUpdated: 0,
     editorUserIds: [],
     options: {
       lemonadeApiKey: "your-lemonade-api-key",
@@ -39,6 +43,7 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
+  const ctx = useContext(GIContext);
   const pipelinesFromServer = useFetchAllPipelines();
   const pipelineEntries: GenericIssuancePipelineListEntry[] | undefined =
     pipelinesFromServer?.value;
@@ -52,8 +57,12 @@ export default function Dashboard(): ReactNode {
   const onCreateClick = useCallback(() => {
     if (userJWT) {
       savePipeline(userJWT, newPipelineJSON).then((res) => {
-        console.log("RESULT", res);
-        alert();
+        console.log("create pipeline result", res);
+        if (res.success === false) {
+          alert(res.error);
+        } else {
+          window.location.href = "/#/" + pipelineDetailPagePath(res.value?.id);
+        }
       });
     }
   }, [newPipelineJSON, userJWT]);

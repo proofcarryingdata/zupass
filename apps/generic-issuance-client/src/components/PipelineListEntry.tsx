@@ -57,13 +57,19 @@ export function pipelineIcon(
   return "❌";
 }
 
+export function pipelineDetailPagePath(pipelineId: string): string {
+  return `/pipelines/${pipelineId}`;
+}
+
 export function pipelineLink(pipelineId: string | undefined): ReactNode {
   if (!pipelineId) {
     return null;
   }
 
   return (
-    <Link to={`/pipelines/${pipelineId}`}>{pipelineId.substring(0, 8)}...</Link>
+    <Link to={pipelineDetailPagePath(pipelineId)}>
+      {pipelineId.substring(0, 8)}...
+    </Link>
   );
 }
 
