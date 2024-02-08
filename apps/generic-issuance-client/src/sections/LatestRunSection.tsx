@@ -1,4 +1,8 @@
-import { PipelineDefinition, PipelineRunInfo } from "@pcd/passport-interface";
+import {
+  PipelineDefinition,
+  PipelineLog,
+  PipelineRunInfo
+} from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
 import styled from "styled-components";
@@ -35,10 +39,33 @@ export function LatestRunSection({
         </tbody>
       </Table>
 
+      <h3>Logs</h3>
+      {latestRun.latestLogs.length === 0 ? (
+        <>
+          <div>no logs</div>
+        </>
+      ) : (
+        <Table>
+          {latestRun.latestLogs.map((l, i) => (
+            <PipelineLogEntry log={l} key={i} />
+          ))}
+        </Table>
+      )}
+
       {/* <pre style={{ border: "1px solid white", padding: "8px" }}>
         {JSON.stringify(latestRun, null, 2)}
       </pre> */}
     </div>
+  );
+}
+
+export function PipelineLogEntry({ log }: { log: PipelineLog }): ReactNode {
+  return (
+    <tr>
+      <td>{moment(log.timestampCreated).format("MMMM Do YYYY, h:mm:ss a")}</td>
+      <td>{log.level}</td>
+      <td>{log.value}</td>
+    </tr>
   );
 }
 
