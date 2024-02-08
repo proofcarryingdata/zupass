@@ -211,7 +211,7 @@ async function checkProveInputs(args: ZKEdDSAFrogPCDArgs): Promise<{
 function snarkInputForProof(
   frogPCD: EdDSAFrogPCD,
   identityPCD: SemaphoreIdentityPCD,
-  externalNullifer: string,
+  externalNullifier: string,
   watermark: string
 ): Record<string, `${number}` | `${number}`[]> {
   const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
@@ -251,7 +251,7 @@ function snarkInputForProof(
       .getTrapdoor()
       .toString(),
 
-    externalNullifier: externalNullifer,
+    externalNullifier: externalNullifier,
     watermark: watermark
   } as Record<string, `${number}` | `${number}`[]>;
 }

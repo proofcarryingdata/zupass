@@ -630,4 +630,40 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
     expect(deserializedValid).to.eq(true);
     expect(pcd1).to.deep.eq(deserialized);
   });
+
+  it("should be able to compatibly deserialize a saved PCD", async function () {
+    const savedPCD =
+      '{"type":"zk-eddsa-event-ticket-pcd","pcd":"{\\"id\\":\\"901007ff-866e-4f5a-aefc-579ebe3c7049\\",\\"claim\\":{\\"partialTicket\\":{\\"eventId\\":\\"4332f16c-8444-4261-94b9-a0ba8ca917e2\\",\\"productId\\":\\"c94002fb-2c41-480b-842d-fa826fb517e5\\"},\\"watermark\\":\\"6\\",\\"signer\\":[\\"1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2\\",\\"1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4\\"],\\"validEventIds\\":[\\"c42849bb-d560-44dc-91a8-ec539eec36ba\\",\\"4332f16c-8444-4261-94b9-a0ba8ca917e2\\",\\"36751943-3e1f-4949-9b08-1246b44ea57e\\",\\"d9bb0e57-1103-4a9f-8c6f-ce657eaa5631\\"],\\"nullifierHash\\":\\"1517081033071132720435657432021139876572843496027662548196342287861804968602\\",\\"externalNullifier\\":\\"42\\"},\\"proof\\":{\\"pi_a\\":[\\"7443287144452624587451457649650158479741106817661856467449869923512377104915\\",\\"12912811503693259439126137956131804617018932811711869521682309527711394662653\\",\\"1\\"],\\"pi_b\\":[[\\"4331546046227502363935897959623743859075324341251300118709038790387608533932\\",\\"17041281791994731359121603083790639720295810541681051816262752524895696878569\\"],[\\"16566688918303298590248190250121520044886383362917980701233509311123485260870\\",\\"12382607323159614240302076136990617836106316152364368813564865379046463782503\\"],[\\"1\\",\\"0\\"]],\\"pi_c\\":[\\"17058416429903633430095990902784397281501853266038211130684740605824028754579\\",\\"10835095255411048927525416623181952637656271963620642649554399009355797771994\\",\\"1\\"],\\"protocol\\":\\"groth16\\",\\"curve\\":\\"bn128\\"},\\"type\\":\\"zk-eddsa-event-ticket-pcd\\"}"}';
+    const expectedPartialTicket: Partial<ITicketData> = {
+      eventId: "4332f16c-8444-4261-94b9-a0ba8ca917e2",
+      productId: "c94002fb-2c41-480b-842d-fa826fb517e5"
+    };
+    const serialized = JSON.parse(savedPCD);
+    expect(serialized.type).to.eq(ZKEdDSAEventTicketPCDPackage.name);
+    const deserialized = await ZKEdDSAEventTicketPCDPackage.deserialize(
+      serialized.pcd
+    );
+    const deserializedValid =
+      await ZKEdDSAEventTicketPCDPackage.verify(deserialized);
+    expect(deserializedValid).to.eq(true);
+    expect(deserialized.id).to.eq("901007ff-866e-4f5a-aefc-579ebe3c7049");
+    expect(deserialized.claim.partialTicket).to.deep.eq(expectedPartialTicket);
+    expect(deserialized.claim.watermark).to.eq(WATERMARK.toString());
+    expect(deserialized.claim.signer).to.deep.eq([
+      "1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2",
+      "1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4"
+    ]);
+    expect(deserialized.claim.validEventIds).to.deep.eq([
+      "c42849bb-d560-44dc-91a8-ec539eec36ba",
+      "4332f16c-8444-4261-94b9-a0ba8ca917e2",
+      "36751943-3e1f-4949-9b08-1246b44ea57e",
+      "d9bb0e57-1103-4a9f-8c6f-ce657eaa5631"
+    ]);
+    expect(deserialized.claim.externalNullifier).to.eq(
+      EXTERNAL_NULLIFIER.toString()
+    );
+    expect(deserialized.claim.nullifierHash).to.eq(
+      "1517081033071132720435657432021139876572843496027662548196342287861804968602"
+    );
+  });
 });
