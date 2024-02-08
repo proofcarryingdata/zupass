@@ -51,23 +51,41 @@ export interface ILemonadeAPI {
   ): Promise<LemonadeCheckin>;
 }
 
+/**
+ * To enable different auth token generation strategies in tests, provide an
+ * interface that allows for swappable token generators.
+ */
 interface AuthTokenSource {
   getToken(credentials: LemonadeOAuthCredentials): Promise<string>;
 }
 
+/**
+ * In the OAuth token manager, we want to cache certain objects between calls,
+ * as they contain reusable tokens or reusable OAuth data that can be used to
+ * regenerate expired tokens.
+ */
 interface CachedTokenIssuance {
   issuer: Issuer;
   client: Client;
   tokenSet: TokenSet;
 }
 
+/**
+ * Manages tokens fetched from an OAuth backend.
+ */
 class OAuthTokenManager implements AuthTokenSource {
+  // Cache TokenSet and other OAuth data
+  // Key is a string containing the credentials and backend URL
   private cache: Map<string, CachedTokenIssuance>;
 
   public constructor() {
     this.cache = new Map();
   }
 
+  /**
+   * Turn OAuth credentials into a string. Doing it this way avoids possible
+   * issues with JSON stringifying object keys in different orders.
+   */
   private stringifyCredentials(credentials: LemonadeOAuthCredentials): string {
     return `${credentials.oauthAudience}${credentials.oauthClientId}${credentials.oauthClientSecret}${credentials.oauthServerUrl}`;
   }
@@ -104,6 +122,7 @@ class OAuthTokenManager implements AuthTokenSource {
         cached.tokenSet.expires_at &&
         cached.tokenSet.expires_at * 1000 < Date.now()
       ) {
+        // This is the happy path, and occurs most often
         return cached.tokenSet.access_token as string;
       }
     }
@@ -111,10 +130,13 @@ class OAuthTokenManager implements AuthTokenSource {
     const { oauthServerUrl, oauthClientId, oauthAudience, oauthClientSecret } =
       credentials;
 
+    // We probably had a cached Issuer object, but if not then create a new one
     if (!issuer) {
       issuer = await Issuer.discover(oauthServerUrl);
     }
 
+    // We probably have a cached OAuth client object, but if not then create a
+    // new one
     if (!client) {
       client = new issuer.Client({
         client_id: oauthClientId,
@@ -122,16 +144,19 @@ class OAuthTokenManager implements AuthTokenSource {
       });
     }
 
+    // Get a new TokenSet
     const tokenSet = await client.grant({
       grant_type: "client_credentials",
       scope: ["audience"],
       audience: [oauthAudience]
     });
 
+    // Make sure it has an access token
     if (!tokenSet.access_token) {
       throw new Error("Access token is not defined");
     }
 
+    // Cache the TokenSet, Issuer, and Client
     this.cache.set(cacheKey, { tokenSet, issuer, client });
 
     return tokenSet.access_token;
@@ -142,7 +167,7 @@ class OAuthTokenManager implements AuthTokenSource {
  * Wraps an Apollo GraphQL client. There is one client instance per backend
  * URL, so in practice there is likely to be only one instance.
  */
-class LemonadeClient {
+class LemonadeGraphQLClient {
   private gqlClient: ApolloClient<NormalizedCacheObject>;
 
   public constructor(backendUrl: string) {
@@ -163,6 +188,9 @@ class LemonadeClient {
     };
   }
 
+  /**
+   * Perform a query (read).
+   */
   private async query<T>(
     token: string,
     q: DocumentNode,
@@ -177,6 +205,9 @@ class LemonadeClient {
     return res.data as T;
   }
 
+  /**
+   * Perform a mutation (write).
+   */
   private async mutate<T>(
     token: string,
     m: DocumentNode,
@@ -264,7 +295,7 @@ class LemonadeClient {
  * must be passed in on each API call.
  */
 export class LemonadeAPI implements ILemonadeAPI {
-  private clients: Map<string, LemonadeClient>;
+  private clients: Map<string, LemonadeGraphQLClient>;
   private tokenSource: AuthTokenSource;
 
   public constructor(tokenSource: AuthTokenSource | undefined) {
@@ -286,11 +317,11 @@ export class LemonadeAPI implements ILemonadeAPI {
    * Requests require clients, so we look up a previously-created client object
    * for this request, if one exists. Otherwise, we create and store a new one.
    */
-  private getClient(backendUrl: string): LemonadeClient {
+  private getClient(backendUrl: string): LemonadeGraphQLClient {
     if (!this.clients.has(backendUrl)) {
-      this.clients.set(backendUrl, new LemonadeClient(backendUrl));
+      this.clients.set(backendUrl, new LemonadeGraphQLClient(backendUrl));
     }
-    return this.clients.get(backendUrl) as LemonadeClient;
+    return this.clients.get(backendUrl) as LemonadeGraphQLClient;
   }
 
   /**
@@ -354,6 +385,8 @@ export class LemonadeAPI implements ILemonadeAPI {
 
   /**
    * Get all tickets for an event.
+   * Unlike the other calls, this does not use the GraphQL client.
+   * Instead, it reads CSV data from a REST endpoint.
    */
   public async getTickets(
     backendUrl: string,
@@ -395,6 +428,7 @@ export class LemonadeAPI implements ILemonadeAPI {
     return await client.updateEventCheckin(token, {
       event: lemonadeEventId,
       user: lemonadeUserId,
+      // Setting this to 'false' would cancel the check-in
       active: true
     });
   }

@@ -237,7 +237,7 @@ export class LemonadePipeline implements BasePipeline {
                 lemonadeEventId: eventConfig.externalId,
                 lemonadeTicketTypeId: t.type_id,
                 lemonadeUserId: t.assigned_to as string,
-                isConsumed: t.checkin_date instanceof Date
+                checkinDate: t.checkin_date
               }) as LemonadeAtom
           );
         }
@@ -518,10 +518,11 @@ export class LemonadePipeline implements BasePipeline {
       ticketId: atom.id,
       eventId: this.lemonadeAtomToZupassEventId(atom),
       productId: this.lemonadeAtomToZupassProductId(atom),
-      timestampConsumed: 0, // Lemonade doesn't give us this information
+      timestampConsumed:
+        atom.checkinDate instanceof Date ? atom.checkinDate.getTime() : 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
-      isConsumed: atom.isConsumed,
+      isConsumed: atom.checkinDate instanceof Date,
       isRevoked: false, // Not clear what concept this maps to in Lemonade
       ticketCategory: TicketCategory.Generic // TODO?
     } satisfies ITicketData;
@@ -867,5 +868,5 @@ export interface LemonadeAtom extends PipelineAtom {
   lemonadeEventId: string;
   lemonadeTicketTypeId: string;
   lemonadeUserId: string;
-  isConsumed: boolean;
+  checkinDate: Date | null;
 }
