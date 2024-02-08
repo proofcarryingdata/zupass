@@ -29,11 +29,13 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { ONE_SECOND_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
+import * as MockDate from "mockdate";
 import { SetupServer } from "msw/node";
 import {
   ILemonadeAPI,
@@ -81,6 +83,7 @@ import {
  */
 describe("Generic Issuance", function () {
   this.timeout(15_000);
+  const now = Date.now();
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
@@ -354,8 +357,13 @@ t2,i1`,
     await giService?.executeAllPipelineLoads();
   });
 
+  this.beforeEach(async () => {
+    MockDate.set(now);
+  });
+
   this.afterEach(async () => {
     pretixBackendServer.resetHandlers();
+    MockDate.reset();
   });
 
   step("PipelineUserDB", async function () {
@@ -586,6 +594,163 @@ t2,i1`,
   step("CSVPipeline", async function () {
     expectToExist(giService);
     await testCSVPipeline(giService);
+  });
+
+  step("check-in and remote check-out works in Pretix", async function () {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expectLength(pipelines, 2);
+    const pipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+    const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+
+    // Ensure that bouncer is checked out
+    pretixBackend.checkOut(
+      ethLatAmPretixOrganizer.orgUrl,
+      "eth-lat-am",
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+    );
+    MockDate.set(Date.now() + ONE_SECOND_MS);
+    // Verify that bouncer is checked out in backend
+    await pipeline.load();
+    const bouncerTickets = await requestTicketsFromPipeline(
+      pipeline.issuanceCapability.options.feedFolder,
+      ethLatAmTicketFeedUrl,
+      pipeline.issuanceCapability.options.feedId,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+      EthLatAmBouncerIdentity
+    );
+    expectLength(bouncerTickets, 1);
+    const bouncerTicket = bouncerTickets[0];
+    expectToExist(bouncerTicket);
+    expectIsEdDSATicketPCD(bouncerTicket);
+    expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+    );
+    // Bouncer ticket is checked out
+    expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+
+    // Now check the bouncer in
+    const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+
+    const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+      ethLatAmCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      bouncerTicket.claim.ticket.attendeeEmail,
+      EdgeCityBouncerIdentity,
+      bouncerTicket
+    );
+    expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+    const checkinTimestamp = Date.now();
+    MockDate.set(Date.now() + ONE_SECOND_MS);
+
+    // Reload the pipeline
+    await pipeline.load();
+    {
+      const bouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        ethLatAmTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity
+      );
+      expectLength(bouncerTickets, 1);
+      const bouncerTicket = bouncerTickets[0];
+      expectToExist(bouncerTicket);
+      expectIsEdDSATicketPCD(bouncerTicket);
+      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+      // User is now checked in
+      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
+    }
+    {
+      // Trying to check in again should fail
+      const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+        ethLatAmCheckinRoute,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        bouncerTicket.claim.ticket.attendeeEmail,
+        EdgeCityBouncerIdentity,
+        bouncerTicket
+      );
+      expect(bouncerCheckInBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date(checkinTimestamp).toISOString(),
+          checker: "Pretix"
+        }
+      } as GenericIssuanceCheckInResponseValue);
+    }
+    {
+      // Check the bouncer out again
+      pretixBackend.checkOut(
+        ethLatAmPretixOrganizer.orgUrl,
+        "eth-lat-am",
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+    }
+    // Verify that bouncer is checked out in backend
+    await pipeline.load();
+    {
+      const bouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        ethLatAmTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity
+      );
+      expectLength(bouncerTickets, 1);
+      const bouncerTicket = bouncerTickets[0];
+      expectToExist(bouncerTicket);
+      expectIsEdDSATicketPCD(bouncerTicket);
+      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+      // Bouncer ticket is checked out
+      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+    }
+    {
+      // Now check the bouncer in
+      const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+
+      const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+        ethLatAmCheckinRoute,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        bouncerTicket.claim.ticket.attendeeEmail,
+        EdgeCityBouncerIdentity,
+        bouncerTicket
+      );
+      expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+      MockDate.set(Date.now() + ONE_SECOND_MS);
+
+      // Reload the pipeline
+      await pipeline.load();
+      {
+        const bouncerTickets = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          ethLatAmTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+          EthLatAmBouncerIdentity
+        );
+        expectLength(bouncerTickets, 1);
+        const bouncerTicket = bouncerTickets[0];
+        expectToExist(bouncerTicket);
+        expectIsEdDSATicketPCD(bouncerTicket);
+        expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+        );
+        // User is now checked in
+        expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
+      }
+    }
   });
 
   /**

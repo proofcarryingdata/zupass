@@ -198,6 +198,24 @@ export class GenericPretixDataMocker {
     update(product);
   }
 
+  public checkOut(orgUrl: string, eventId: string, email: string): void {
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    const order = org.ordersByEventID
+      .get(eventId)
+      ?.find((order) => order.email === email);
+    if (!order) {
+      throw new Error(
+        `Couldn't find an order for ${email} for event ${eventId}`
+      );
+    }
+    if (order) {
+      order.positions.forEach((position) => {
+        position.checkins = [];
+      });
+    }
+  }
+
   private newMockData(): IMockGenericIssuancePretixBackendData {
     const organizer1 = this.newOrganizer("PRETIX_ORGANIZER_ONE");
     // const organizer2 = this.newOrganizer("PRETIX_ORGANIZER_TWO");
