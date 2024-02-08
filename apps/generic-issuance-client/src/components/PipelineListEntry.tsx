@@ -14,23 +14,63 @@ export function PipelineListEntry({
   entry: GenericIssuancePipelineListEntry;
 }): ReactNode {
   const icon = useMemo(() => {
-    if (!entry.extraInfo.lastRun) {
-      return "⏳";
-    }
-
-    if (entry.extraInfo.lastRun.success) {
-      return "✅";
-    }
-
-    return "❌";
-  }, [entry.extraInfo]);
+    return pipelineIcon(entry);
+  }, [entry]);
 
   return (
     <li key={entry.pipeline.id}>
-      <Link to={`/pipelines/${entry.pipeline.id}`}>
-        {entry.pipeline.type} ({entry.pipeline.id.substring(0, 8)}...)
-      </Link>{" "}
+      {pipelineLink(entry)}
       by {entry.extraInfo.ownerEmail} {icon}
     </li>
   );
+}
+
+export function pipelineStatus(
+  entry: GenericIssuancePipelineListEntry
+): ReactNode {
+  if (!entry.extraInfo.lastRun) {
+    return "Waiting";
+  }
+
+  if (entry.extraInfo.lastRun.success) {
+    return "Success";
+  }
+
+  return "Error";
+}
+
+export function pipelineIcon(
+  entry: GenericIssuancePipelineListEntry
+): ReactNode {
+  if (!entry.extraInfo.lastRun) {
+    return "⏳";
+  }
+
+  if (entry.extraInfo.lastRun.success) {
+    return "✅";
+  }
+
+  return "❌";
+}
+
+export function pipelineLink(
+  entry: GenericIssuancePipelineListEntry
+): ReactNode {
+  return (
+    <Link to={`/pipelines/${entry.pipeline.id}`}>
+      {entry.pipeline.id.substring(0, 8)}...
+    </Link>
+  );
+}
+
+export function pipelineOwner(
+  entry: GenericIssuancePipelineListEntry
+): ReactNode {
+  return entry.extraInfo.ownerEmail;
+}
+
+export function pipelineType(
+  entry: GenericIssuancePipelineListEntry
+): ReactNode {
+  return <span>{entry.pipeline.type}</span>;
 }

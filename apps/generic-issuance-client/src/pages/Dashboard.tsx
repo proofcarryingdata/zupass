@@ -4,13 +4,18 @@ import {
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
 import { ReactNode, useCallback, useEffect, useState } from "react";
-import { PageContent } from "../components/Core";
+import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
-import { PipelineListEntry } from "../components/PipelineListEntry";
+import {
+  pipelineIcon,
+  pipelineLink,
+  pipelineOwner,
+  pipelineStatus,
+  pipelineType
+} from "../components/PipelineListEntry";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { AdminPipelinesSection } from "../sections/AdminPipelinesSection";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
@@ -103,7 +108,42 @@ export default function Dashboard(): ReactNode {
     <>
       <Header />
       <PageContent>
-        <h2>New Pipeline</h2>
+        <h2>{giUser?.value?.isAdmin ? "" : "My "} Pipelines</h2>
+        {pipelineEntries.length === 0 ? (
+          <p>No pipelines right now - go create some!</p>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <td>status</td>
+                <td>type</td>
+                <td>pipeline</td>
+                <td>owner</td>
+              </tr>
+            </thead>
+            <tbody>
+              {pipelineEntries.map((p, i) => {
+                return (
+                  <tr key={i}>
+                    <td
+                      style={{
+                        display: "flex",
+                        justifyContent: "space-between",
+                        gap: "12px"
+                      }}
+                    >
+                      <span>{pipelineIcon(p)}</span>
+                      <span>{pipelineStatus(p)}</span>
+                    </td>
+                    <td>{pipelineType(p)}</td>
+                    <td>{pipelineLink(p)}</td>
+                    <td>{pipelineOwner(p)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
         <p>
           <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
             {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
@@ -122,24 +162,6 @@ export default function Dashboard(): ReactNode {
             </div>
           )}
         </p>
-        <h2>My Pipelines</h2>
-        {!pipelineEntries.length && (
-          <p>No pipelines right now - go create some!</p>
-        )}
-        {!!pipelineEntries.length && (
-          <ol>
-            {pipelineEntries
-              .filter((p) => p.pipeline.ownerUserId === giUser?.value?.id)
-              .map((p) => (
-                <PipelineListEntry entry={p} key={p.pipeline.id} />
-              ))}
-          </ol>
-        )}
-
-        <AdminPipelinesSection
-          self={giUser?.value}
-          pipelineEntries={pipelineEntries}
-        />
       </PageContent>
     </>
   );

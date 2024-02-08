@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import styled from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { PCD_GITHUB_URL } from "../constants";
 
 export const Container = styled.div`
@@ -70,3 +70,35 @@ export const PageContent = styled.div`
 `;
 
 export const GOLD = "#f4ff1f";
+
+export const Table = styled.table`
+  ${({ twoColumn }: { twoColumn?: boolean }): FlattenSimpleInterpolation => css`
+    border-collapse: collapse;
+
+    thead {
+      tr {
+        td {
+          padding: 4px 8px;
+          border: 1px solid white;
+        }
+      }
+    }
+
+    tr {
+      td {
+        padding: 4px 8px;
+        border: 1px solid white;
+      }
+
+      ${twoColumn &&
+      css`
+        td:first-child {
+          text-align: left;
+        }
+        td:last-child {
+          text-align: right;
+        }
+      `}
+    }
+  `}
+`;
