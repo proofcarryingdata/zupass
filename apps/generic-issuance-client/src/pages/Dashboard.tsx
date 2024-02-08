@@ -1,6 +1,6 @@
 import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -13,6 +13,7 @@ import {
   pipelineStatus,
   pipelineType
 } from "../components/PipelineListEntry";
+import { GIContext } from "../helpers/Context";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
@@ -43,16 +44,31 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
+  const ctx = useContext(GIContext);
   const pipelinesFromServer = useFetchAllPipelines();
-  const pipelineEntries: GenericIssuancePipelineListEntry[] | undefined =
-    pipelinesFromServer?.value;
+  const user = useFetchSelf();
+
+  const isAdminView = ctx.isAdminMode && user?.value?.isAdmin;
+
+  const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {
+    if (!user?.value?.id) {
+      return [];
+    }
+
+    const entries = pipelinesFromServer?.value ?? [];
+
+    if (!isAdminView) {
+      return entries.filter((e) => e.pipeline.ownerUserId === user.value.id);
+    }
+
+    return entries;
+  }, [isAdminView, pipelinesFromServer?.value, user?.value?.id]);
 
   const [isCreatingPipeline, setIsCreatingPipeline] = useState(false);
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [newPipelineJSON, setNewPipelineJSON] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
   );
-  const user = useFetchSelf();
 
   const onCreateClick = useCallback(() => {
     if (userJWT) {
@@ -110,7 +126,7 @@ export default function Dashboard(): ReactNode {
     <>
       <Header user={user} stytchClient={stytchClient} />
       <PageContent>
-        <h2>{user?.value?.isAdmin ? "" : "My "} Pipelines</h2>
+        <h2>{isAdminView ? "" : "My "} Pipelines</h2>
         {!pipelineEntries?.length ? (
           <p>No pipelines right now - go create some!</p>
         ) : (
@@ -120,7 +136,7 @@ export default function Dashboard(): ReactNode {
                 <td>🍂</td>
                 <td>status</td>
                 <td>type</td>
-                <td>owner</td>
+                {isAdminView && <td>owner</td>}
                 <td>created at</td>
                 <td>last edit</td>
                 <td>more details</td>
@@ -137,7 +153,7 @@ export default function Dashboard(): ReactNode {
                       <span>{pipelineStatus(p?.extraInfo?.lastRun)}</span>
                     </td>
                     <td>{pipelineType(p)}</td>
-                    <td>{pipelineOwner(p)}</td>
+                    {isAdminView && <td>{pipelineOwner(p)}</td>}
                     <td>{pipelineCreatedAt(p.pipeline.timeCreated)}</td>
                     <td>{pipeineLastEdit(p.pipeline.timeUpdated)}</td>
                     <td>{pipelineLink(p.pipeline.id)}</td>

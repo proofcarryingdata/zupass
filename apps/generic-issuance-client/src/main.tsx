@@ -18,17 +18,51 @@ const router = createHashRouter([
   { path: "/pipelines/:id", element: <Pipeline /> }
 ]);
 
+function loadInitalState(): Partial<GIContextState> {
+  let isAdminMode = undefined;
+
+  try {
+    const adminSerializedValue =
+      window.localStorage.getItem("setting-admin-mode");
+
+    if (!adminSerializedValue) {
+      throw new Error();
+    }
+
+    isAdminMode = JSON.parse(adminSerializedValue);
+  } catch (e) {
+    //
+  }
+
+  const initialState: Partial<GIContextState> = {
+    isAdminMode
+  };
+
+  return initialState;
+}
+
+function saveState(state: GIContextState): void {
+  window.localStorage.setItem(
+    "setting-admin-mode",
+    JSON.stringify(!!state.isAdminMode)
+  );
+}
+
 function App(): ReactNode {
-  const [state, setState] = useState<GIContextState>({} as GIContextState);
-  const update = useCallback((partial: Partial<GIContextState>) => {
+  const [state, setState] = useState<GIContextState>(
+    () => loadInitalState() as GIContextState
+  );
+
+  state.setState = useCallback((partial: Partial<GIContextState>) => {
     setState((state) => {
-      return {
+      const newState = {
         ...state,
         ...partial
       };
+      saveState(newState);
+      return newState;
     });
   }, []);
-  state.setState = update;
 
   return (
     <React.StrictMode>

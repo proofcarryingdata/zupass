@@ -25,7 +25,6 @@ export function Header({
   const ctx = useContext(GIContext);
   const [showUserId, setShowUserId] = useState(false);
   const onAdminToggleClick = useCallback(() => {
-    alert("toggle clicked " + ctx.isAdminMode);
     ctx.setState({ isAdminMode: !ctx.isAdminMode });
   }, [ctx]);
 
@@ -84,12 +83,12 @@ export function Header({
   );
 
   rightElements.push(
-    <span>
+    <span key="admin-toggle">
       <label style={{ cursor: "pointer", userSelect: "none" }}>
         admin view
         <input
           type="checkbox"
-          value={ctx.isAdminMode ? 1 : 0}
+          checked={!!ctx.isAdminMode}
           onChange={onAdminToggleClick}
         />
       </label>
