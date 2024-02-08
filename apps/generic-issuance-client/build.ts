@@ -36,7 +36,7 @@ const genericIssuanceClientAppOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built PodBox client"))
+  .then(() => console.log("Built Podbox client"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {

@@ -15,6 +15,10 @@ export class MockPipelineAtomDB implements IPipelineAtomDB {
     [pipelineId: string]: { [atomId: string]: PipelineAtom };
   } = {};
 
+  public async clear(pipelineID: string): Promise<void> {
+    this.data[pipelineID] = {};
+  }
+
   public async save(pipelineID: string, atoms: PipelineAtom[]): Promise<void> {
     logger(LOG_TAG, "save", atoms);
 

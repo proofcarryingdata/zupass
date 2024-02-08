@@ -461,6 +461,11 @@ export interface PipelineLog {
   metadata: unknown;
 }
 
+export interface PipelineInfoRequest {
+  jwt: string;
+  pipelineId: string;
+}
+
 export interface PipelineInfoResponseValue {
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
@@ -957,7 +962,7 @@ export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
 /**
  * Deleting a pipeline definition either succeeds or fails, so no response value is defined for now.
  */
-export type GenericIssuanceDeletePipelineResponseValue = undefined;
+export type GenericIssuanceDeletePipelineResponseValue = void;
 
 export type GenericIssuanceDeletePipelineRequest = { jwt: string };
 

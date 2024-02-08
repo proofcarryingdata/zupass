@@ -1,6 +1,6 @@
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
@@ -18,9 +18,51 @@ const router = createHashRouter([
   { path: "/pipelines/:id", element: <Pipeline /> }
 ]);
 
+function loadInitalState(): Partial<GIContextState> {
+  let isAdminMode = undefined;
+
+  try {
+    const adminSerializedValue =
+      window.localStorage.getItem("setting-admin-mode");
+
+    if (!adminSerializedValue) {
+      throw new Error();
+    }
+
+    isAdminMode = JSON.parse(adminSerializedValue);
+  } catch (e) {
+    //
+  }
+
+  const initialState: Partial<GIContextState> = {
+    isAdminMode
+  };
+
+  return initialState;
+}
+
+function saveState(state: GIContextState): void {
+  window.localStorage.setItem(
+    "setting-admin-mode",
+    JSON.stringify(!!state.isAdminMode)
+  );
+}
+
 function App(): ReactNode {
-  const [state, setState] = useState<GIContextState>({} as GIContextState);
-  state.setState = setState;
+  const [state, setState] = useState<GIContextState>(
+    () => loadInitalState() as GIContextState
+  );
+
+  state.setState = useCallback((partial: Partial<GIContextState>) => {
+    setState((state) => {
+      const newState = {
+        ...state,
+        ...partial
+      };
+      saveState(newState);
+      return newState;
+    });
+  }, []);
 
   return (
     <React.StrictMode>

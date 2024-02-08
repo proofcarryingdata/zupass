@@ -1,10 +1,10 @@
 import { PipelineLog, PipelineRunInfo } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
-import styled from "styled-components";
+import { Table } from "../components/Core";
 
 /**
- * Renders information about the last time this pipeline was run by PodBox.
+ * Renders information about the last time this pipeline was run by Podbox.
  * Useful for debugging an integration, and figuring out what went wrong.
  */
 export function LatestRunSection({
@@ -52,9 +52,11 @@ export function LatestRunSection({
         </>
       ) : (
         <Table>
-          {latestRun.latestLogs.map((l, i) => (
-            <PipelineLogEntry log={l} key={i} />
-          ))}
+          <tbody>
+            {latestRun.latestLogs.map((l, i) => (
+              <PipelineLogEntry log={l} key={i} />
+            ))}
+          </tbody>
         </Table>
       )}
     </div>
@@ -70,20 +72,3 @@ export function PipelineLogEntry({ log }: { log: PipelineLog }): ReactNode {
     </tr>
   );
 }
-
-const Table = styled.table`
-  border-collapse: collapse;
-
-  tr {
-    td {
-      padding: 4px 8px;
-      border: 1px solid white;
-    }
-    td:first-child {
-      text-align: left;
-    }
-    td:last-child {
-      text-align: right;
-    }
-  }
-`;

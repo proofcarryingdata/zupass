@@ -1,20 +1,32 @@
 import {
   GenericIssuancePipelineListEntry,
-  requestGenericIssuanceGetAllUserPipelines,
-  requestGenericIssuanceUpsertPipeline
+  getError
 } from "@pcd/passport-interface";
-import { ReactNode, useCallback, useEffect, useState } from "react";
-import { PageContent } from "../components/Core";
+import { useStytch } from "@stytch/react";
+import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
-import { PipelineListEntry } from "../components/PipelineListEntry";
-import { ZUPASS_SERVER_URL } from "../constants";
+import {
+  pipeineLastEdit,
+  pipelineCreatedAt,
+  pipelineDetailPagePath,
+  pipelineIcon,
+  pipelineLink,
+  pipelineOwner,
+  pipelineStatus,
+  pipelineType
+} from "../components/PipelineDetails";
+import { GIContext } from "../helpers/Context";
+import { savePipeline } from "../helpers/Mutations";
+import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { AdminPipelinesSection } from "../sections/AdminPipelinesSection";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
     type: "Lemonade",
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
     editorUserIds: [],
     options: {
       lemonadeApiKey: "your-lemonade-api-key",
@@ -32,114 +44,153 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 );
 
 export default function Dashboard(): ReactNode {
-  const [pipelineEntries, setPipelineEntries] = useState<
-    GenericIssuancePipelineListEntry[]
-  >([]);
-  const [isLoading, setLoading] = useState(true);
-  const [isCreatingPipeline, setCreatingPipeline] = useState(false);
-  const [newPipelineRaw, setNewPipelineRaw] = useState(
+  const stytchClient = useStytch();
+  const userJWT = useJWT();
+  const ctx = useContext(GIContext);
+  const pipelinesFromServer = useFetchAllPipelines();
+  const user = useFetchSelf();
+
+  const isAdminView = ctx.isAdminMode && user?.value?.isAdmin;
+
+  const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {
+    if (!user?.value?.id) {
+      return [];
+    }
+
+    const entries = pipelinesFromServer?.value ?? [];
+
+    if (!isAdminView) {
+      return entries.filter((e) => e.pipeline.ownerUserId === user.value.id);
+    }
+
+    return entries;
+  }, [isAdminView, pipelinesFromServer?.value, user?.value?.id]);
+
+  const [isCreatingPipeline, setIsCreatingPipeline] = useState(false);
+  const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
+  const [newPipelineJSON, setNewPipelineJSON] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
   );
-  const [error, _setError] = useState("");
-  const giUser = useFetchSelf();
-  const userJWT = useJWT();
 
-  const fetchAllPipelines = useCallback(async () => {
-    if (!userJWT) {
-      return;
+  const onCreateClick = useCallback(() => {
+    if (userJWT) {
+      setIsUploadingPipeline(true);
+      savePipeline(userJWT, newPipelineJSON)
+        .then((res) => {
+          console.log("create pipeline result", res);
+          if (res.success === false) {
+            alert(res.error);
+          } else {
+            window.location.href = "/#" + pipelineDetailPagePath(res.value?.id);
+          }
+        })
+        .finally(() => {
+          setIsUploadingPipeline(false);
+        });
     }
-
-    setLoading(true);
-    const res = await requestGenericIssuanceGetAllUserPipelines(
-      ZUPASS_SERVER_URL,
-      userJWT ?? ""
-    );
-    if (res.success) {
-      setPipelineEntries(res.value);
-    } else {
-      // TODO: Better errors
-      alert(`An error occurred while fetching user pipelines: ${res.error}`);
-    }
-    setLoading(false);
-  }, [userJWT]);
-
-  const createPipeline = async (): Promise<void> => {
-    if (!newPipelineRaw) return;
-    const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
-      pipeline: JSON.parse(newPipelineRaw),
-      jwt: userJWT ?? ""
-    });
-    await fetchAllPipelines();
-    if (res.success) {
-      setCreatingPipeline(false);
-    } else {
-      // TODO: Better errors
-      alert(`An error occurred while creating pipeline: ${res.error}`);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllPipelines();
-  }, [fetchAllPipelines]);
+  }, [newPipelineJSON, userJWT]);
 
   if (!userJWT) {
     window.location.href = "/";
   }
 
-  if (isLoading) {
+  if (isUploadingPipeline) {
     return (
       <>
-        <Header />
+        <Header user={user} stytchClient={stytchClient} />
+        <PageContent>creating pipeline...</PageContent>
+      </>
+    );
+  }
+
+  if (!user || !pipelinesFromServer) {
+    return (
+      <>
+        <Header user={user} stytchClient={stytchClient} />
         <PageContent>Loading...</PageContent>
       </>
     );
   }
 
-  if (error) {
-    return <div>An error occured. {JSON.stringify(error)}</div>;
+  const requestError = getError(pipelinesFromServer, user);
+  if (requestError) {
+    return (
+      <>
+        <Header includeLinkToDashboard />
+        <PageContent>
+          <h2>Error Loading Page</h2>
+          {requestError}
+        </PageContent>
+      </>
+    );
   }
-
   return (
     <>
-      <Header />
+      <Header user={user} stytchClient={stytchClient} />
       <PageContent>
-        <h2>New Pipeline</h2>
-        <p>
-          <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
-            {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
+        <h2>{isAdminView ? "" : "My "} Pipelines</h2>
+        {!pipelineEntries?.length ? (
+          <p>No pipelines right now - go create some!</p>
+        ) : (
+          <Table>
+            <thead>
+              <tr>
+                <td>🍂</td>
+                <td>status</td>
+                <td>type</td>
+                {isAdminView && <td>owner</td>}
+                <td>created at</td>
+                <td>last edit</td>
+                <td>more details</td>
+              </tr>
+            </thead>
+            <tbody>
+              {pipelineEntries.map((p, i) => {
+                return (
+                  <tr key={i}>
+                    <td>
+                      <span>{pipelineIcon(p?.extraInfo?.lastRun)}</span>
+                    </td>
+                    <td>
+                      <span>{pipelineStatus(p?.extraInfo?.lastRun)}</span>
+                    </td>
+                    <td>{pipelineType(p)}</td>
+                    {isAdminView && <td>{pipelineOwner(p)}</td>}
+                    <td>{pipelineCreatedAt(p.pipeline.timeCreated)}</td>
+                    <td>{pipeineLastEdit(p.pipeline.timeUpdated)}</td>
+                    <td>{pipelineLink(p.pipeline.id)}</td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </Table>
+        )}
+        <div
+          style={{
+            marginTop: "16px"
+          }}
+        >
+          <button onClick={(): void => setIsCreatingPipeline((curr) => !curr)}>
+            {isCreatingPipeline ? "Minimize 🔼" : "Create 🔽"}
           </button>
           {isCreatingPipeline && (
-            <div>
+            <div
+              style={{
+                marginTop: "8px"
+              }}
+            >
               <textarea
-                rows={10}
-                cols={50}
-                value={newPipelineRaw}
-                onChange={(e): void => setNewPipelineRaw(e.target.value)}
+                rows={20}
+                cols={80}
+                value={newPipelineJSON}
+                onChange={(e): void => setNewPipelineJSON(e.target.value)}
               />
               <div>
-                <button onClick={createPipeline}>Create new pipeline</button>
+                <button onClick={onCreateClick}>🐒 Create! 🚀</button>
               </div>
             </div>
           )}
-        </p>
-        <h2>My Pipelines</h2>
-        {!pipelineEntries.length && (
-          <p>No pipelines right now - go create some!</p>
-        )}
-        {!!pipelineEntries.length && (
-          <ol>
-            {pipelineEntries
-              .filter((p) => p.pipeline.ownerUserId === giUser?.value?.id)
-              .map((p) => (
-                <PipelineListEntry entry={p} key={p.pipeline.id} />
-              ))}
-          </ol>
-        )}
-
-        <AdminPipelinesSection
-          self={giUser?.value}
-          pipelineEntries={pipelineEntries}
-        />
+        </div>
       </PageContent>
     </>
   );

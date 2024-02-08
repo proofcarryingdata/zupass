@@ -1,6 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { Link } from "react-router-dom";
-import styled from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { PCD_GITHUB_URL } from "../constants";
 
 export const Container = styled.div`
@@ -70,3 +70,50 @@ export const PageContent = styled.div`
 `;
 
 export const GOLD = "#f4ff1f";
+export const TABLE_BORDER_COLOR = "#5d5d5d";
+export const TABLE_BORDER_WIDTH = "2px";
+
+export const Table = styled.table`
+  ${({ twoColumn }: { twoColumn?: boolean }): FlattenSimpleInterpolation => css`
+    border-collapse: collapse;
+
+    thead {
+      tr {
+        font-weight: bold;
+        text-decoration: underline;
+        text-align: right;
+
+        td {
+          padding: 4px 8px;
+          border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
+        }
+      }
+    }
+
+    tr {
+      td {
+        padding: 4px 8px;
+        border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
+      }
+
+      ${twoColumn &&
+      css`
+        td:first-child {
+          text-align: left;
+        }
+        td:last-child {
+          text-align: right;
+        }
+      `}
+    }
+  `}
+`;
+
+export const TextButton = styled.span`
+  cursor: pointer;
+  user-select: none;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;

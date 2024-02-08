@@ -6,4 +6,5 @@ export * from "./NumericRepresentation";
 export * from "./Pseudonyms";
 export * from "./SNARKHelpers";
 export * from "./promises";
+export * from "./strings";
 export * from "./telegram";

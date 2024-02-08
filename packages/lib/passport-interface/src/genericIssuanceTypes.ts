@@ -13,7 +13,9 @@ export enum PipelineType {
 const BasePipelineDefinitionSchema = z.object({
   id: z.string().uuid(),
   ownerUserId: z.string().uuid(),
-  editorUserIds: z.array(z.string().uuid())
+  editorUserIds: z.array(z.string().uuid()),
+  timeCreated: z.string(),
+  timeUpdated: z.string()
 });
 
 /**

@@ -26,7 +26,7 @@ export interface IPipelineDefinitionDB {
     definitionID: string,
     lastRunInfo?: PipelineRunInfo
   ): Promise<void>;
-  getLastRunInfo(definitionID: string): Promise<PipelineRunInfo | undefined>;
+  getLatestRunInfo(definitionID: string): Promise<PipelineRunInfo | undefined>;
 }
 
 /**
@@ -50,7 +50,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * Intentionally saving these in-memory.
    * TODO: save to db as an extra column in the PipelineDefinition table.
    */
-  public async getLastRunInfo(
+  public async getLatestRunInfo(
     definitionID: string
   ): Promise<PipelineRunInfo | undefined> {
     return this.runInfos[definitionID];
@@ -78,15 +78,20 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       GROUP BY p.id`
     );
 
-    return result.rows.map((row: GenericIssuancePipelineRow) => ({
-      id: row.id,
-      ownerUserId: row.owner_user_id,
-      editorUserIds: row.editor_user_ids.filter(
-        (editorId: unknown) => typeof editorId === "string"
-      ),
-      type: row.pipeline_type as PipelineType,
-      options: row.config
-    }));
+    return result.rows.map(
+      (row: GenericIssuancePipelineRow): PipelineDefinition =>
+        ({
+          id: row.id,
+          ownerUserId: row.owner_user_id,
+          editorUserIds: row.editor_user_ids.filter(
+            (editorId: unknown) => typeof editorId === "string"
+          ),
+          type: row.pipeline_type as PipelineType,
+          options: row.config,
+          timeCreated: row.time_created,
+          timeUpdated: row.time_updated
+        }) satisfies PipelineDefinition
+    );
   }
 
   public async clearAllDefinitions(): Promise<void> {
@@ -137,7 +142,9 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           (editorId: unknown) => typeof editorId === "string"
         ),
         type: row.pipeline_type as PipelineType,
-        options: row.config
+        options: row.config,
+        timeCreated: row.time_created,
+        timeUpdated: row.time_updated
       };
     }
   }
@@ -157,7 +164,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
             `
         INSERT INTO generic_issuance_pipelines (id, owner_user_id, pipeline_type, config) VALUES($1, $2, $3, $4)
         ON CONFLICT(id) DO UPDATE
-        SET (owner_user_id, pipeline_type, config) = ($2, $3, $4)
+        SET (owner_user_id, pipeline_type, config, time_updated) = ($2, $3, $4, NOW())
         RETURNING *
         `,
             [

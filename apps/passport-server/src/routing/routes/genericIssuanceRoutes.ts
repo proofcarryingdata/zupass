@@ -11,6 +11,7 @@ import {
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
+  PipelineInfoRequest,
   PipelineInfoResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -54,27 +55,13 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const self = await genericIssuanceService.authenticateStytchSession(req);
+    const user = await genericIssuanceService.authenticateStytchSession(req);
     const result: GenericIssuanceSelfResponseValue = {
-      email: self.email,
-      isAdmin: self.isAdmin,
-      id: self.id
+      email: user.email,
+      isAdmin: user.isAdmin,
+      id: user.id
     };
     res.json(result satisfies GenericIssuanceSelfResponseValue);
-  });
-
-  /**
-   * For local development.
-   */
-  app.get("/generic-issuance/pipelines", async (req, res) => {
-    if (process.env.NODE_ENV === "production") {
-      res.sendStatus(403);
-      return;
-    }
-
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
-
-    res.json(await genericIssuanceService.getAllPipelines());
   });
 
   /**
@@ -110,18 +97,19 @@ export function initGenericIssuanceRoutes(
   );
 
   /**
-   * Needs user authentication.
+   * Gets more granular pipeline info ({@link PipelineInfoResponseValue}) that
+   * is visible to the logged in user
    */
-  app.get(
-    "/generic-issuance/api/pipeline-info/:pipelineId",
-    async (req, res) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const pipelineID = checkUrlParam(req, "pipelineId");
-      const result =
-        await genericIssuanceService.handleGetPipelineInfo(pipelineID);
-      res.json(result satisfies PipelineInfoResponseValue);
-    }
-  );
+  app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    const user = await genericIssuanceService.authenticateStytchSession(req);
+    const reqBody = req.body as PipelineInfoRequest;
+    const result = await genericIssuanceService.handleGetPipelineInfo(
+      user,
+      reqBody.pipelineId
+    );
+    res.json(result satisfies PipelineInfoResponseValue);
+  });
 
   /**
    * Authenticated by PCD so doesn't need auth.
@@ -180,65 +168,68 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * Gets pipelines visible to logged in user.
+   */
   app.post(
     "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id } =
-        await genericIssuanceService.authenticateStytchSession(req);
-
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      const result =
+        await genericIssuanceService.getAllUserPipelineDefinitions(user);
       res.json(
-        (await genericIssuanceService.getAllUserPipelineDefinitions(
-          id
-        )) satisfies GenericIssuanceGetAllUserPipelinesResponseValue
+        result satisfies GenericIssuanceGetAllUserPipelinesResponseValue
       );
     }
   );
 
+  /**
+   * Gets specific pipeline that is visible to logged in user.
+   */
   app.post(
     "/generic-issuance/api/get-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id: userId } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      res.json(
-        (await genericIssuanceService.getPipelineDefinition(
-          userId,
-          checkUrlParam(req, "id")
-        )) satisfies GenericIssuanceGetPipelineResponseValue
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      const result = await genericIssuanceService.loadPipelineDefinition(
+        user.id,
+        checkUrlParam(req, "id")
       );
+      res.json(result satisfies GenericIssuanceGetPipelineResponseValue);
     }
   );
 
+  /**
+   * Upserts a specific pipeline that is visible to logged in user.
+   */
   app.post(
     "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id: userId } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      const body = req.body as GenericIssuanceUpsertPipelineRequest;
-
-      res.json(
-        (await genericIssuanceService.upsertPipelineDefinition(
-          userId,
-          body.pipeline
-        )) satisfies GenericIssuanceUpsertPipelineResponseValue
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
+      const result = await genericIssuanceService.upsertPipelineDefinition(
+        user.id,
+        reqBody.pipeline
       );
+      res.json(result satisfies GenericIssuanceUpsertPipelineResponseValue);
     }
   );
 
+  /**
+   * Deletes a specific pipeline that is visible to logged in user.
+   */
   app.post(
     "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const { id: userId } =
-        await genericIssuanceService.authenticateStytchSession(req);
-      res.json(
-        (await genericIssuanceService.deletePipelineDefinition(
-          userId,
-          checkUrlParam(req, "id")
-        )) satisfies GenericIssuanceDeletePipelineResponseValue
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      const result = await genericIssuanceService.deletePipelineDefinition(
+        user.id,
+        checkUrlParam(req, "id")
       );
+      res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
     }
   );
 }

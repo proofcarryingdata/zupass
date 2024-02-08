@@ -18,13 +18,6 @@ export function requireEnv(str: string): string {
 }
 
 /**
- * Normalizes email so that equivalent emails can be compared.
- */
-export function normalizeEmail(email: string): string {
-  return email.toLowerCase().trim();
-}
-
-/**
  * Generate a random 6-digit random token for use as a token.
  */
 export function randomEmailToken(): string {
