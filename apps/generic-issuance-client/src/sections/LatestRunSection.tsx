@@ -3,6 +3,10 @@ import moment from "moment";
 import { ReactNode } from "react";
 import styled from "styled-components";
 
+/**
+ * Renders information about the last time this pipeline was run by PodBox.
+ * Useful for debugging an integration, and figuring out what went wrong.
+ */
 export function LatestRunSection({
   latestRun
 }: {

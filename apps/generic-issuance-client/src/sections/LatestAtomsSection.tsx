@@ -1,6 +1,10 @@
 import { ReactNode } from "react";
 import styled from "styled-components";
 
+/**
+ * Used to display the latest data that a given pipeline loaded during
+ * the last time that it was run.
+ */
 export function LatestAtomsSection({
   latestAtoms
 }: {

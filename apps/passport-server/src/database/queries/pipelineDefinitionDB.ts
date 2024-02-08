@@ -46,12 +46,20 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     this.db = db;
   }
 
+  /**
+   * Intentionally saving these in-memory.
+   * TODO: save to db as an extra column in the PipelineDefinition table.
+   */
   public async getLastRunInfo(
     definitionID: string
   ): Promise<PipelineRunInfo | undefined> {
     return this.runInfos[definitionID];
   }
 
+  /**
+   * Intentionally saving these in-memory.
+   * TODO: save to db as an extra column in the PipelineDefinition table.
+   */
   public async saveLastRunInfo(
     definitionID: string,
     lastRunInfo: PipelineRunInfo
