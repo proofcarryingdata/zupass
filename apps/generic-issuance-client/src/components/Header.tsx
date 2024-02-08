@@ -1,8 +1,8 @@
+import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { useFetchSelf } from "../helpers/useFetchSelf";
 import { GOLD } from "./Core";
 
 /**
@@ -11,16 +11,27 @@ import { GOLD } from "./Core";
  * displayed at the top of all the generic issuance client pages.
  */
 export function Header({
-  includeLinkToDashboard
+  user,
+  includeLinkToDashboard,
+  stytchClient
 }: {
+  user?: GenericIssuanceSelfResult;
   includeLinkToDashboard?: boolean;
+  stytchClient?: ReturnType<typeof useStytch>;
 }): ReactNode {
-  const stytchClient = useStytch();
-  const self = useFetchSelf();
-  const user = self?.value;
-
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
+
+  const title = <b key="title">📦 PodBox</b>;
+
+  if (!user?.value) {
+    return (
+      <HeaderContainer>
+        <LeftHalf>{title}</LeftHalf>
+        <RightHalf></RightHalf>
+      </HeaderContainer>
+    );
+  }
 
   if (includeLinkToDashboard) {
     leftElements.push(
@@ -33,18 +44,16 @@ export function Header({
     );
   }
 
-  leftElements.push(<b key="title">📦 PodBox</b>);
+  leftElements.push(title);
 
-  if (user) {
-    leftElements.push(
-      <b key="email">
-        {" · "}
-        {user.email}
-      </b>
-    );
-  }
+  leftElements.push(
+    <b key="email">
+      {" · "}
+      {user?.value?.email}
+    </b>
+  );
 
-  if (user?.isAdmin) {
+  if (user.value.isAdmin) {
     leftElements.push(
       <b key="admin">
         {" · "}
@@ -53,34 +62,30 @@ export function Header({
     );
   }
 
-  if (user) {
-    leftElements.push(
-      <b key="id">
-        {" · user id: "}
-        <i style={{ fontWeight: "normal" }}>{user.id}</i>
-      </b>
-    );
-  }
+  leftElements.push(
+    <b key="id">
+      {" · user id: "}
+      <i style={{ fontWeight: "normal" }}>{user.value.id}</i>
+    </b>
+  );
 
-  if (user) {
-    rightElements.push(
-      <span key="logout">
-        <button
-          onClick={async (): Promise<void> => {
-            if (confirm("Are you sure you want to log out?")) {
-              try {
-                await stytchClient.session.revoke();
-              } catch (e) {
-                // TODO: better error handling
-              }
+  rightElements.push(
+    <span key="logout">
+      <button
+        onClick={async (): Promise<void> => {
+          if (confirm("Are you sure you want to log out?")) {
+            try {
+              await stytchClient?.session.revoke();
+            } catch (e) {
+              // TODO: better error handling
             }
-          }}
-        >
-          Log Out
-        </button>
-      </span>
-    );
-  }
+          }
+        }}
+      >
+        Log Out
+      </button>
+    </span>
+  );
 
   return (
     <HeaderContainer>

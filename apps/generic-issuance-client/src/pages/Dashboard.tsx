@@ -3,6 +3,7 @@ import {
   requestGenericIssuanceGetAllUserPipelines,
   requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
+import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
@@ -37,6 +38,7 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 );
 
 export default function Dashboard(): ReactNode {
+  const stytchClient = useStytch();
   const [pipelineEntries, setPipelineEntries] = useState<
     GenericIssuancePipelineListEntry[]
   >([]);
@@ -46,7 +48,7 @@ export default function Dashboard(): ReactNode {
     SAMPLE_CREATE_PIPELINE_TEXT
   );
   const [error, _setError] = useState("");
-  const giUser = useFetchSelf();
+  const user = useFetchSelf();
   const userJWT = useJWT();
 
   const fetchAllPipelines = useCallback(async () => {
@@ -91,24 +93,15 @@ export default function Dashboard(): ReactNode {
     window.location.href = "/";
   }
 
-  if (isLoading) {
-    return (
-      <>
-        <Header />
-        <PageContent>Loading...</PageContent>
-      </>
-    );
-  }
-
   if (error) {
     return <div>An error occured. {JSON.stringify(error)}</div>;
   }
 
   return (
     <>
-      <Header />
+      <Header user={user} stytchClient={stytchClient} />
       <PageContent>
-        <h2>{giUser?.value?.isAdmin ? "" : "My "} Pipelines</h2>
+        <h2>{user?.value?.isAdmin ? "" : "My "} Pipelines</h2>
         {pipelineEntries.length === 0 ? (
           <p>No pipelines right now - go create some!</p>
         ) : (
@@ -144,7 +137,11 @@ export default function Dashboard(): ReactNode {
             </tbody>
           </Table>
         )}
-        <p>
+        <div
+          style={{
+            marginTop: "16px"
+          }}
+        >
           <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
             {isCreatingPipeline ? "Minimize 🔼" : "Create new pipeline 🔽"}
           </button>
@@ -161,7 +158,7 @@ export default function Dashboard(): ReactNode {
               </div>
             </div>
           )}
-        </p>
+        </div>
       </PageContent>
     </>
   );
