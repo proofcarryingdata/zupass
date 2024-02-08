@@ -20,6 +20,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { normalizeEmail } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
@@ -899,10 +900,11 @@ export class GenericIssuanceService {
     email: string
   ): Promise<GenericIssuanceSendEmailResponseValue> {
     return traced(SERVICE_NAME, "sendLoginEmail", async (span) => {
+      const normalizedEmail = normalizeEmail(email);
       // TODO: Skip email auth on this.bypassEmail
       try {
         await this.stytchClient.magicLinks.email.loginOrCreate({
-          email,
+          email: normalizedEmail,
           login_magic_link_url: this.genericIssuanceClientUrl,
           login_expiration_minutes: 10,
           signup_magic_link_url: this.genericIssuanceClientUrl,

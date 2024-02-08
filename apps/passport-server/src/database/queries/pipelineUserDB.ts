@@ -1,3 +1,4 @@
+import { normalizeEmail } from "@pcd/util";
 import { Pool } from "postgres-pool";
 import { PipelineUser } from "../../services/generic-issuance/pipelines/types";
 import { GenericIssuanceUserRow } from "../models";
@@ -23,7 +24,7 @@ export class PipelineUserDB implements IPipelineUserDB {
     await sqlQuery(
       this.db,
       "update generic_issuance_users set is_admin=$1 where email=$2",
-      [isAdmin, email]
+      [isAdmin, normalizeEmail(email)]
     );
   }
 
@@ -66,7 +67,7 @@ export class PipelineUserDB implements IPipelineUserDB {
     const result = await sqlQuery(
       this.db,
       "SELECT * FROM generic_issuance_users WHERE email = $1",
-      [email]
+      [normalizeEmail(email)]
     );
     if (result.rowCount === 0) {
       return undefined;
@@ -83,7 +84,7 @@ export class PipelineUserDB implements IPipelineUserDB {
     ON CONFLICT(id) DO UPDATE
     SET (email, is_admin) = ($2, $3)
     `,
-      [user.id, user.email, user.isAdmin]
+      [user.id, normalizeEmail(user.email), user.isAdmin]
     );
   }
 }
