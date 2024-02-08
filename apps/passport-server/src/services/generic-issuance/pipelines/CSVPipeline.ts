@@ -3,7 +3,9 @@ import {
   CSVPipelineDefinition,
   PipelineLog,
   PipelineRunInfo,
-  PipelineType
+  PipelineType,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
@@ -12,6 +14,11 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { logger } from "../../../util/logger";
+import {
+  FeedIssuanceCapability,
+  makeGenericIssuanceFeedUrl
+} from "../capabilities/FeedIssuanceCapability";
+import { PipelineCapability } from "../capabilities/types";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo } from "../util";
 import { BasePipeline, Pipeline } from "./types";
@@ -46,6 +53,23 @@ export class CSVPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
+
+    this.capabilities = [
+      {
+        type: PipelineCapability.FeedIssuance,
+        issue: async (req: PollFeedRequest): Promise<PollFeedResponseValue> => {
+          logger(req);
+          return {
+            actions: []
+          };
+        },
+        feedUrl: makeGenericIssuanceFeedUrl(
+          this.id,
+          this.definition.options.feedOptions.feedId
+        ),
+        options: this.definition.options.feedOptions
+      } satisfies FeedIssuanceCapability
+    ] as unknown as BasePipelineCapability[];
   }
 
   public async load(): Promise<PipelineRunInfo> {
