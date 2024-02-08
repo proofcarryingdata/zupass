@@ -1,6 +1,6 @@
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
-import React, { ReactNode, useState } from "react";
+import React, { ReactNode, useCallback, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
@@ -20,7 +20,15 @@ const router = createHashRouter([
 
 function App(): ReactNode {
   const [state, setState] = useState<GIContextState>({} as GIContextState);
-  state.setState = setState;
+  const update = useCallback((partial: Partial<GIContextState>) => {
+    setState((state) => {
+      return {
+        ...state,
+        ...partial
+      };
+    });
+  }, []);
+  state.setState = update;
 
   return (
     <React.StrictMode>

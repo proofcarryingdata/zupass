@@ -9,8 +9,9 @@ export interface GIError {
 }
 
 export interface GIContextState {
-  setState: (state: GIContextState) => void;
+  setState: (state: Partial<GIContextState>) => void;
   error?: GIError;
+  isAdminMode?: boolean;
 }
 
 export const GIContext = createContext<GIContextState>({

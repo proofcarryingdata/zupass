@@ -1,8 +1,9 @@
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useState } from "react";
+import { ReactNode, useCallback, useContext, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { GIContext } from "../helpers/Context";
 import { TABLE_BORDER_COLOR, TABLE_BORDER_WIDTH, TextButton } from "./Core";
 
 /**
@@ -21,7 +22,12 @@ export function Header({
 }): ReactNode {
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
+  const ctx = useContext(GIContext);
   const [showUserId, setShowUserId] = useState(false);
+  const onAdminToggleClick = useCallback(() => {
+    alert("toggle clicked " + ctx.isAdminMode);
+    ctx.setState({ isAdminMode: !ctx.isAdminMode });
+  }, [ctx]);
 
   const title = <Title key="title" />;
 
@@ -74,6 +80,20 @@ export function Header({
         user id
       </TextButton>{" "}
       {showUserId ? user.value.id : "***"}
+    </span>
+  );
+
+  rightElements.push(
+    <span>
+      <label style={{ cursor: "pointer", userSelect: "none" }}>
+        admin view
+        <input
+          type="checkbox"
+          value={ctx.isAdminMode ? 1 : 0}
+          onChange={onAdminToggleClick}
+        />
+      </label>
+      {" · "}
     </span>
   );
 
