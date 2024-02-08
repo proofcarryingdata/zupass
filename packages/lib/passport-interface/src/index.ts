@@ -63,5 +63,6 @@ export * from "./api/requestVerifyToken";
 export * from "./edgecity";
 export * from "./genericIssuanceTypes";
 export * from "./util/util";
+export * from "./vitalia";
 export * from "./zuconnect";
 export * from "./zuzalu";
