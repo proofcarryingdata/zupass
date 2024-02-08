@@ -1,4 +1,7 @@
-import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
+import {
+  GenericIssuancePipelineListEntry,
+  PipelineRunInfo
+} from "@pcd/passport-interface";
 import { ReactNode, useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -26,13 +29,13 @@ export function PipelineListEntry({
 }
 
 export function pipelineStatus(
-  entry: GenericIssuancePipelineListEntry
+  latestRun: PipelineRunInfo | undefined
 ): ReactNode {
-  if (!entry.extraInfo.lastRun) {
+  if (!latestRun) {
     return "Waiting";
   }
 
-  if (entry.extraInfo.lastRun.success) {
+  if (latestRun.success) {
     return "Success";
   }
 
@@ -40,13 +43,13 @@ export function pipelineStatus(
 }
 
 export function pipelineIcon(
-  entry: GenericIssuancePipelineListEntry
+  latestRun: PipelineRunInfo | undefined
 ): ReactNode {
-  if (!entry.extraInfo.lastRun) {
+  if (!latestRun) {
     return "⏳";
   }
 
-  if (entry.extraInfo.lastRun.success) {
+  if (latestRun.success) {
     return "✅";
   }
 

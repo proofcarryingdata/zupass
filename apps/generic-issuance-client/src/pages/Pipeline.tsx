@@ -4,6 +4,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
+import { pipelineIcon, pipelineStatus } from "../components/PipelineListEntry";
 import { deletePipeline, savePipeline } from "../helpers/Pipeline";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
@@ -118,6 +119,9 @@ export default function Pipeline(): ReactNode {
           </div>
           <div style={{ flexGrow: 1 }}>
             <h2>Pipeline Info</h2>
+            <h3>Status</h3>
+            {pipelineIcon(pipelineInfo.latestRun)}{" "}
+            {pipelineStatus(pipelineInfo.latestRun)}
             {pipelineInfo && pipelineFromServer.value && (
               <>
                 {pipelineInfo.feeds && (
