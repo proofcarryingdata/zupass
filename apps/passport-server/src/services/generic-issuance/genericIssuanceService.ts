@@ -1160,14 +1160,8 @@ export class GenericIssuanceService {
                 externalId: "65c1faf41770460a0bb9aa1f",
                 name: "GA",
                 genericIssuanceProductId: randomUUID(),
-                isSuperUser: false
-              }
-              /* {
-                externalId: "374045",
-                name: "Organizer",
-                genericIssuanceId: randomUUID(),
                 isSuperUser: true
-              }*/
+              }
             ]
           }
         ],
