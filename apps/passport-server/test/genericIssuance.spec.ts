@@ -164,7 +164,6 @@ describe("Generic Issuance", function () {
     EdgeCityBouncerTicketType._id,
     EdgeCityDenverBouncer._id
   );
-  //lemonadeBackend.makeCoHost(EdgeCityDenverBouncer.id, EdgeCityDenver.id);
 
   const lemonadeAPI: ILemonadeAPI = new LemonadeAPI({
     async getToken(credentials: LemonadeOAuthCredentials): Promise<string> {
