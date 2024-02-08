@@ -72,6 +72,22 @@ export default function Dashboard(): ReactNode {
     window.location.href = "/";
   }
 
+  const maybeRequestError: string | undefined = getError(
+    pipelinesFromServer,
+    user
+  );
+  if (maybeRequestError) {
+    return (
+      <>
+        <Header user={user} stytchClient={stytchClient} />
+        <PageContent>
+          <h2>Error Loading Page</h2>
+          {maybeRequestError}
+        </PageContent>
+      </>
+    );
+  }
+
   if (isUploadingPipeline) {
     return (
       <>
@@ -90,18 +106,6 @@ export default function Dashboard(): ReactNode {
     );
   }
 
-  const requestError = getError(pipelinesFromServer, user);
-  if (requestError) {
-    return (
-      <>
-        <Header includeLinkToDashboard />
-        <PageContent>
-          <h2>Error Loading Page</h2>
-          {requestError}
-        </PageContent>
-      </>
-    );
-  }
   return (
     <>
       <Header user={user} stytchClient={stytchClient} />

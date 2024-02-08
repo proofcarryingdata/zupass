@@ -79,19 +79,23 @@ export default function Pipeline(): ReactNode {
     setTextareaValue(e.target.value);
   }, []);
 
-  const requestError = getError(
+  const maybeRequestError: string | undefined = getError(
     userFromServer,
     pipelineFromServer,
     pipelineInfoFromServer
   );
 
-  if (requestError) {
+  if (maybeRequestError) {
     return (
       <>
-        <Header includeLinkToDashboard />
+        <Header
+          includeLinkToDashboard
+          user={userFromServer}
+          stytchClient={stytchClient}
+        />
         <PageContent>
           <h2>❌ Load Error</h2>
-          {requestError}
+          {maybeRequestError}
         </PageContent>
       </>
     );
@@ -106,7 +110,11 @@ export default function Pipeline(): ReactNode {
   ) {
     return (
       <>
-        <Header includeLinkToDashboard />
+        <Header
+          includeLinkToDashboard
+          user={userFromServer}
+          stytchClient={stytchClient}
+        />
         <PageContent>
           {actionInProgress ? actionInProgress : "Loading..."}
         </PageContent>
