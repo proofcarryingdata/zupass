@@ -49,6 +49,10 @@ export class CSVPipeline implements BasePipeline {
     return this.definition.id;
   }
 
+  public get feedCapability(): FeedIssuanceCapability {
+    return this.capabilities[0] as FeedIssuanceCapability;
+  }
+
   public constructor(
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
@@ -87,10 +91,8 @@ export class CSVPipeline implements BasePipeline {
 
       const serializedPCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) => {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const row = atom.row as any;
-          const imgTitle = row[0] ?? defaultTitle;
-          const imgUrl = row[1] ?? defaultImg;
+          const imgTitle = atom.row[0] ?? defaultTitle;
+          const imgUrl = atom.row[1] ?? defaultImg;
 
           const pcd = await RSAImagePCDPackage.prove({
             id: {

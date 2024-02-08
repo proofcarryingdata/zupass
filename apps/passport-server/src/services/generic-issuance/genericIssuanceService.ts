@@ -366,10 +366,6 @@ export class GenericIssuanceService {
         );
       }
 
-      if (!req.pcd) {
-        throw new PCDHTTPError(403, `missing credential PCD in request`);
-      }
-
       return feedCapability.issue(req);
     });
   }
