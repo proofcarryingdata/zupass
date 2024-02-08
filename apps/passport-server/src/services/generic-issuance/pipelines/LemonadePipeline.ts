@@ -235,7 +235,8 @@ export class LemonadePipeline implements BasePipeline {
         latestLogs: logs,
         lastRunEndTimestamp: Date.now(),
         lastRunStartTimestamp: startTime,
-        atomsLoaded: atomsToSave.length
+        atomsLoaded: atomsToSave.length,
+        success: true
       } satisfies PipelineRunInfo;
     });
   }

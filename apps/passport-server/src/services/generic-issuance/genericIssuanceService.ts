@@ -266,7 +266,8 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: start,
             lastRunEndTimestamp: start,
             latestLogs: [makePLogErr("failed to start pipeline")],
-            atomsLoaded: 0
+            atomsLoaded: 0,
+            success: false
           };
         }
 
@@ -287,7 +288,8 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: start,
             lastRunEndTimestamp: Date.now(),
             latestLogs: [makePLogErr(`failed to start pipeline: ${e + ""}`)],
-            atomsLoaded: 0
+            atomsLoaded: 0,
+            success: false
           };
         }
       }

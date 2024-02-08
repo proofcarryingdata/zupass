@@ -16,13 +16,21 @@ export function LatestAtomsSection({
   return (
     <div>
       <h3>Latest Data</h3>
-      <ul>
-        {latestAtoms.map((atom, i) => (
-          <li key={i}>
-            <AtomPreview atom={atom} />
-          </li>
-        ))}
-      </ul>
+      {latestAtoms.length === 0 ? (
+        <>
+          <i>No data found</i>
+        </>
+      ) : (
+        <>
+          <ul>
+            {latestAtoms.map((atom, i) => (
+              <li key={i}>
+                <AtomPreview atom={atom} />
+              </li>
+            ))}
+          </ul>
+        </>
+      )}
     </div>
   );
 }

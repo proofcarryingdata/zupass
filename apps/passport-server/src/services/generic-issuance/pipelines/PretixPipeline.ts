@@ -245,7 +245,8 @@ export class PretixPipeline implements BasePipeline {
         lastRunEndTimestamp: Date.now(),
         lastRunStartTimestamp: startTime,
         latestLogs: logs,
-        atomsLoaded: atomsToSave.length
+        atomsLoaded: atomsToSave.length,
+        success: true
       } satisfies PipelineRunInfo;
     });
   }

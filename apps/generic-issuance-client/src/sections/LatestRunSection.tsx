@@ -40,6 +40,10 @@ export function LatestRunSection({
             <td>datas loaded</td>
             <td>{latestRun.atomsLoaded}</td>
           </tr>
+          <tr>
+            <td>success</td>
+            <td>{latestRun.success.toString()}</td>
+          </tr>
         </tbody>
       </Table>
 
