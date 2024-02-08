@@ -18,6 +18,7 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { logger } from "../../../util/logger";
+import { traced } from "../../telemetryService";
 import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
@@ -31,7 +32,7 @@ const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export interface CSVAtom extends PipelineAtom {
-  row: object;
+  row: string[];
 }
 
 export class CSVPipeline implements BasePipeline {
@@ -73,94 +74,104 @@ export class CSVPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
   }
 
-  private async issue(_req: PollFeedRequest): Promise<PollFeedResponseValue> {
-    const atoms = await this.db.load(this.id);
-    const defaultImg =
-      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg";
-    const serializedPCDs = await Promise.all(
-      atoms.map(async (atom: CSVAtom) => {
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        const row = atom.row as any;
-        const imgTitle = row[0] ?? "untitled cat";
-        const imgUrl = row[1] ?? defaultImg;
+  private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
+    return traced(LOG_NAME, "issue", async (span) => {
+      logger(LOG_TAG, `issue`, req);
 
-        const pcd = await RSAImagePCDPackage.prove({
-          id: {
-            argumentType: ArgumentTypeName.String,
-            value: uuid()
+      const atoms = await this.db.load(this.id);
+      span?.setAttribute("atoms", atoms.length);
+
+      const defaultTitle = "Cat";
+      const defaultImg =
+        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg";
+
+      const serializedPCDs = await Promise.all(
+        atoms.map(async (atom: CSVAtom) => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          const row = atom.row as any;
+          const imgTitle = row[0] ?? defaultTitle;
+          const imgUrl = row[1] ?? defaultImg;
+
+          const pcd = await RSAImagePCDPackage.prove({
+            id: {
+              argumentType: ArgumentTypeName.String,
+              value: uuid()
+            },
+            privateKey: {
+              argumentType: ArgumentTypeName.String,
+              value: this.rsaKey
+            },
+            title: {
+              argumentType: ArgumentTypeName.String,
+              value: imgTitle
+            },
+            url: {
+              argumentType: ArgumentTypeName.String,
+              value: imgUrl
+            }
+          });
+          const serialized = await RSAImagePCDPackage.serialize(pcd);
+          return serialized;
+        })
+      );
+
+      return {
+        actions: [
+          {
+            type: PCDActionType.DeleteFolder,
+            folder: this.definition.options.feedOptions.feedFolder,
+            recursive: false
           },
-          privateKey: {
-            argumentType: ArgumentTypeName.String,
-            value: this.rsaKey
-          },
-          title: {
-            argumentType: ArgumentTypeName.String,
-            value: imgTitle
-          },
-          url: {
-            argumentType: ArgumentTypeName.String,
-            value: imgUrl
+          {
+            type: PCDActionType.ReplaceInFolder,
+            folder: this.definition.options.feedOptions.feedFolder,
+            pcds: serializedPCDs
           }
-        });
-        const serialized = await RSAImagePCDPackage.serialize(pcd);
-        return serialized;
-      })
-    );
-
-    return {
-      actions: [
-        {
-          type: PCDActionType.DeleteFolder,
-          folder: this.definition.options.feedOptions.feedFolder,
-          recursive: false
-        },
-        {
-          type: PCDActionType.ReplaceInFolder,
-          folder: this.definition.options.feedOptions.feedFolder,
-          pcds: serializedPCDs
-        }
-      ]
-    };
+        ]
+      };
+    });
   }
 
   public async load(): Promise<PipelineRunInfo> {
-    const start = new Date();
-    const logs: PipelineLog[] = [];
+    return traced(LOG_NAME, "load", async () => {
+      const start = new Date();
+      const logs: PipelineLog[] = [];
 
-    try {
-      const parsedCSV = await parseCSV(this.definition.options.csv);
-      const titleRow = parsedCSV.shift();
-      logs.push(makePLogInfo(`skipped title row '${titleRow}'`));
-      const atoms = parsedCSV.map((row) => {
+      try {
+        const parsedCSV = await parseCSV(this.definition.options.csv);
+        const titleRow = parsedCSV.shift();
+        logs.push(makePLogInfo(`skipped title row '${titleRow}'`));
+        const atoms = parsedCSV.map((row) => {
+          return {
+            id: uuid(),
+            row: row
+          };
+        });
+
+        await this.db.clear(this.id);
+        await this.db.save(this.id, atoms);
+        logs.push(makePLogInfo(`loaded csv ${this.definition.options.csv}`));
+
         return {
-          id: uuid(),
-          row: row
+          atomsLoaded: atoms.length,
+          lastRunEndTimestamp: Date.now(),
+          lastRunStartTimestamp: start.getTime(),
+          latestLogs: logs,
+          success: true
         };
-      });
+      } catch (e) {
+        logs.push(makePLogErr(`failed to load csv: ${e}`));
+        logs.push(makePLogErr(`csv was ${this.definition.options.csv}`));
 
-      await this.db.clear(this.id);
-      await this.db.save(this.id, atoms);
-      logs.push(makePLogInfo(`loaded csv ${this.definition.options.csv}`));
-
-      return {
-        atomsLoaded: atoms.length,
-        lastRunEndTimestamp: Date.now(),
-        lastRunStartTimestamp: start.getTime(),
-        latestLogs: logs,
-        success: true
-      };
-    } catch (e) {
-      logs.push(makePLogErr(`failed to load csv: ${e}`));
-      logs.push(makePLogErr(`csv was ${this.definition.options.csv}`));
-
-      return {
-        atomsLoaded: 0,
-        lastRunEndTimestamp: Date.now(),
-        lastRunStartTimestamp: start.getTime(),
-        latestLogs: logs,
-        success: false
-      };
-    }
+        return {
+          atomsLoaded: 0,
+          lastRunEndTimestamp: Date.now(),
+          lastRunStartTimestamp: start.getTime(),
+          latestLogs: logs,
+          success: false
+        };
+      }
+    });
   }
 
   public async stop(): Promise<void> {
@@ -172,10 +183,10 @@ export class CSVPipeline implements BasePipeline {
   }
 }
 
-export function parseCSV(csv: string): Promise<object[]> {
-  return new Promise<object[]>((resolve, reject) => {
+export function parseCSV(csv: string): Promise<string[][]> {
+  return new Promise<string[][]>((resolve, reject) => {
     const parser = parse();
-    const records: object[] = [];
+    const records: string[][] = [];
 
     parser.on("readable", function () {
       let record;
