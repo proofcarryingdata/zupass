@@ -123,9 +123,9 @@ class LemonadeAccount {
       user_id: userId,
       user_email: this.users.get(userId)?.email as string,
       assigned_to: userId,
-      assigned_email: null, // This is what we get from the live API, if you
-      // want the email address then look in `assigned_to_expanded`
-      checkin_date: "" // This is how un-checked-in users seem to be represented
+      assigned_email: "", // This is what we get from the live API, if you
+      // want the email address then look in `user_email`
+      checkin_date: null
     };
 
     const eventTickets = this.tickets.get(eventId) ?? new Map();
@@ -176,7 +176,7 @@ class LemonadeAccount {
     }
 
     // Flag the ticket as checked in.
-    ticket.checkin_date = new Date().toISOString();
+    ticket.checkin_date = new Date();
   }
 }
 

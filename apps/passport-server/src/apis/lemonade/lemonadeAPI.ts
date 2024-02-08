@@ -231,23 +231,25 @@ class LemonadeClient {
   }
 
   /**
-   * Checks a given user in to an event.
+   * Updates a user's check-in state for an event.
    */
-  public async checkinUser(
+  public async updateEventCheckin(
     token: string,
     opts: {
       // These are Lemonade IDs, names here match the GraphQL query
       event: string;
       user: string;
+      active: boolean;
     }
   ): Promise<LemonadeCheckin> {
-    const { checkinUser } = await this.mutate<CheckinUserResponse>(
-      token,
-      checkinUserMutation,
-      opts
-    );
+    const { updateEventCheckin } =
+      await this.mutate<UpdateEventCheckinResponse>(
+        token,
+        updateEventCheckinMutation,
+        opts
+      );
 
-    return checkinUser;
+    return updateEventCheckin;
   }
 }
 
@@ -390,9 +392,10 @@ export class LemonadeAPI implements ILemonadeAPI {
     const client = this.getClient(backendUrl);
     const token = await this.getToken(credentials);
 
-    return await client.checkinUser(token, {
+    return await client.updateEventCheckin(token, {
       event: lemonadeEventId,
-      user: lemonadeUserId
+      user: lemonadeUserId,
+      active: true
     });
   }
 }
@@ -496,26 +499,17 @@ const LemonadeTicketSchema = z.object({
 
 export type LemonadeTicket = z.infer<typeof LemonadeTicketSchema>;
 
-export const checkinUserMutation = gql(`
-  mutation CheckinUser($event: MongoID!, $user: MongoID!) {
-    checkinUser(event: $event, user: $user) {
-      messages {
-        primary
-        secondary
-      }
-      state,
-    }
-  }
+export const updateEventCheckinMutation = gql(`
+mutation UpdateEventCheckin($event: MongoID!, $user: MongoID!, $active: Boolean!) {
+  updateEventCheckin(input: { event: $event, user: $user, active: $active })
+}
 `);
 
-export interface CheckinUserResponse {
-  checkinUser: {
-    message: { primary: string; secondary?: string };
-    state: "pending" | "payment" | "accepted" | "declined";
-  };
+export interface UpdateEventCheckinResponse {
+  updateEventCheckin: boolean;
 }
 
-export type LemonadeCheckin = CheckinUserResponse["checkinUser"];
+export type LemonadeCheckin = UpdateEventCheckinResponse["updateEventCheckin"];
 
 export function getLemonadeAPI(): ILemonadeAPI {
   return new LemonadeAPI(undefined);

@@ -88,7 +88,7 @@ export function getMockLemonadeHandlers(
       }
     ),
 
-    graphql.mutation("CheckinUser", (req, res, ctx) => {
+    graphql.mutation("UpdateEventCheckin", (req, res, ctx) => {
       const clientId = checkClientId(mocker, req);
       const eventId = req.variables["event"];
       const userId = req.variables["user"];
@@ -99,20 +99,7 @@ export function getMockLemonadeHandlers(
         return res(ctx.errors([e as Error]));
       }
 
-      return res(
-        ctx.data({
-          checkinUser: {
-            // These are the messages that the real endpoint returns
-            messages: {
-              primary: "You're in! 🎉",
-              secondary: "you can invite 2 friends",
-              __typename: "EventRsvpMessages"
-            },
-            state: "accepted",
-            __typename: "EventRsvp"
-          }
-        })
-      );
+      return res(ctx.data({ updateEventCheckin: true }));
     })
   );
 
