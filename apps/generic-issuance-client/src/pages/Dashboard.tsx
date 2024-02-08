@@ -21,27 +21,7 @@ import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-
-const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
-  {
-    type: "Lemonade",
-    timeCreated: new Date().toISOString(),
-    timeUpdated: new Date().toISOString(),
-    editorUserIds: [],
-    options: {
-      lemonadeApiKey: "your-lemonade-api-key",
-      events: [],
-      feedOptions: {
-        feedId: "example-feed-id",
-        feedDisplayName: "Example Feed",
-        feedDescription: "Your description here...",
-        feedFolder: "Example Folder"
-      }
-    }
-  },
-  null,
-  2
-);
+import { SAMPLE_CSV_PIPELINE } from "./SamplePipelines";
 
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
@@ -68,9 +48,7 @@ export default function Dashboard(): ReactNode {
 
   const [isCreatingPipeline, setIsCreatingPipeline] = useState(false);
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
-  const [newPipelineJSON, setNewPipelineJSON] = useState(
-    SAMPLE_CREATE_PIPELINE_TEXT
-  );
+  const [newPipelineJSON, setNewPipelineJSON] = useState(SAMPLE_CSV_PIPELINE);
 
   const onCreateClick = useCallback(() => {
     if (userJWT) {

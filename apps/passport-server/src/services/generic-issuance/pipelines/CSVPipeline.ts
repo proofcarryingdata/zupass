@@ -61,6 +61,7 @@ export class CSVPipeline implements BasePipeline {
         };
       });
 
+      await this.db.clear(this.id);
       await this.db.save(this.id, atoms);
       logs.push(makePLogInfo(`loaded csv ${this.definition.options.csv}`));
 
@@ -73,13 +74,14 @@ export class CSVPipeline implements BasePipeline {
       };
     } catch (e) {
       logs.push(makePLogErr(`failed to load csv: ${e}`));
+      logs.push(makePLogErr(`csv was ${this.definition.options.csv}`));
 
       return {
         atomsLoaded: 0,
         lastRunEndTimestamp: Date.now(),
         lastRunStartTimestamp: start.getTime(),
         latestLogs: logs,
-        success: true
+        success: false
       };
     }
   }
@@ -95,7 +97,7 @@ export class CSVPipeline implements BasePipeline {
 
 export function parseCSV(csv: string): Promise<object[]> {
   return new Promise<object[]>((resolve, reject) => {
-    const parser = parse({});
+    const parser = parse();
     const records: object[] = [];
 
     parser.on("readable", function () {
