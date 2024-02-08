@@ -13,6 +13,7 @@ import {
   PipelineDefinitionSchema,
   PipelineFeedInfo,
   PipelineInfoResponseValue,
+  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
@@ -55,6 +56,7 @@ import {
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
+import { makePLogErr } from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -244,6 +246,56 @@ export class GenericIssuanceService {
     );
   }
 
+  private async executeSinglePipeline(
+    inMemoryPipeline: InMemoryPipeline
+  ): Promise<PipelineRunInfo> {
+    return traced<PipelineRunInfo>(
+      SERVICE_NAME,
+      "executeSinglePipeline",
+      async (span): Promise<PipelineRunInfo> => {
+        const start = Date.now();
+        const pipelineId = inMemoryPipeline.definition.id;
+        const pipeline = inMemoryPipeline.pipeline;
+
+        if (!pipeline) {
+          logger(
+            LOG_TAG,
+            `pipeline ${pipelineId} is not running; skipping loading`
+          );
+          return {
+            lastRunStartTimestamp: start,
+            lastRunEndTimestamp: start,
+            latestLogs: [makePLogErr("failed to start pipeline")],
+            atomsLoaded: 0,
+            success: false
+          };
+        }
+
+        try {
+          logger(LOG_TAG, `loading data for pipeline with id '${pipelineId}'`);
+          const result = await pipeline.load();
+          logger(
+            LOG_TAG,
+            `successfully loaded data for pipeline with id '${pipelineId}'`,
+            result
+          );
+          return result;
+        } catch (e) {
+          this.rollbarService?.reportError(e);
+          logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
+          setError(e, span);
+          return {
+            lastRunStartTimestamp: start,
+            lastRunEndTimestamp: Date.now(),
+            latestLogs: [makePLogErr(`failed to start pipeline: ${e + ""}`)],
+            atomsLoaded: 0,
+            success: false
+          };
+        }
+      }
+    );
+  }
+
   public async executeAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "executeAllPipelineLoads", async (span) => {
       const pipelineIds = JSON.stringify(
@@ -258,32 +310,11 @@ export class GenericIssuanceService {
       await Promise.allSettled(
         this.pipelines.map(
           async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
-            const pipelineId = inMemoryPipeline.definition.id;
-            const pipeline = inMemoryPipeline.pipeline;
-
-            if (!pipeline) {
-              logger(
-                LOG_TAG,
-                `pipeline ${pipelineId} is not running; skipping loading`
-              );
-              return;
-            }
-
-            try {
-              logger(
-                LOG_TAG,
-                `loading data for pipeline with id '${pipelineId}'`
-              );
-              await pipeline.load();
-              logger(
-                LOG_TAG,
-                `successfully loaded data for pipeline with id '${pipelineId}'`
-              );
-            } catch (e) {
-              this.rollbarService?.reportError(e);
-              logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
-              setError(e, span);
-            }
+            const runInfo = await this.executeSinglePipeline(inMemoryPipeline);
+            this.definitionDB.saveLastRunInfo(
+              inMemoryPipeline.definition.id,
+              runInfo
+            );
           }
         )
       );
@@ -383,7 +414,14 @@ export class GenericIssuanceService {
       url: f.feedUrl
     }));
 
-    const response: PipelineInfoResponseValue = { feeds: infos };
+    const latestRun = await this.definitionDB.getLastRunInfo(pipeline.id);
+    const latestAtoms = await this.atomDB.load(pipeline.id);
+
+    const response: PipelineInfoResponseValue = {
+      feeds: infos,
+      latestAtoms: latestAtoms,
+      latestRun: latestRun
+    };
 
     return response;
   }
@@ -561,13 +599,15 @@ export class GenericIssuanceService {
         if (!owner) {
           throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
         }
+        const lastRun = await this.definitionDB.getLastRunInfo(p.id);
 
         return {
           extraInfo: {
-            ownerEmail: owner.email
+            ownerEmail: owner.email,
+            lastRun
           },
           pipeline: p
-        };
+        } satisfies GenericIssuancePipelineListEntry;
       })
     );
   }

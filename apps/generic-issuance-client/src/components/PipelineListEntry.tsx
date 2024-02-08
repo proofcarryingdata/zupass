@@ -1,5 +1,5 @@
 import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
-import { ReactNode } from "react";
+import { ReactNode, useMemo } from "react";
 import { Link } from "react-router-dom";
 
 /**
@@ -13,12 +13,24 @@ export function PipelineListEntry({
 }: {
   entry: GenericIssuancePipelineListEntry;
 }): ReactNode {
+  const icon = useMemo(() => {
+    if (!entry.extraInfo.lastRun) {
+      return "⏳";
+    }
+
+    if (entry.extraInfo.lastRun.success) {
+      return "✅";
+    }
+
+    return "❌";
+  }, [entry.extraInfo]);
+
   return (
     <li key={entry.pipeline.id}>
       <Link to={`/pipelines/${entry.pipeline.id}`}>
         {entry.pipeline.type} ({entry.pipeline.id.substring(0, 8)}...)
       </Link>{" "}
-      by {entry.extraInfo.ownerEmail}
+      by {entry.extraInfo.ownerEmail} {icon}
     </li>
   );
 }

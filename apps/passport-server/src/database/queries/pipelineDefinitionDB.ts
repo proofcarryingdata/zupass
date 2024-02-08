@@ -1,4 +1,8 @@
-import { PipelineDefinition, PipelineType } from "@pcd/passport-interface";
+import {
+  PipelineDefinition,
+  PipelineRunInfo,
+  PipelineType
+} from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
 import { GenericIssuancePipelineRow } from "../models";
@@ -18,6 +22,11 @@ export interface IPipelineDefinitionDB {
   getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
   setDefinition(definition: PipelineDefinition): Promise<void>;
   setDefinitions(definitions: PipelineDefinition[]): Promise<void>;
+  saveLastRunInfo(
+    definitionID: string,
+    lastRunInfo?: PipelineRunInfo
+  ): Promise<void>;
+  getLastRunInfo(definitionID: string): Promise<PipelineRunInfo | undefined>;
 }
 
 /**
@@ -28,10 +37,34 @@ export interface IPipelineDefinitionDB {
  * simply for the MVP.
  */
 export class PipelineDefinitionDB implements IPipelineDefinitionDB {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  private runInfos: any = {};
+
   private db: Pool;
 
   public constructor(db: Pool) {
     this.db = db;
+  }
+
+  /**
+   * Intentionally saving these in-memory.
+   * TODO: save to db as an extra column in the PipelineDefinition table.
+   */
+  public async getLastRunInfo(
+    definitionID: string
+  ): Promise<PipelineRunInfo | undefined> {
+    return this.runInfos[definitionID];
+  }
+
+  /**
+   * Intentionally saving these in-memory.
+   * TODO: save to db as an extra column in the PipelineDefinition table.
+   */
+  public async saveLastRunInfo(
+    definitionID: string,
+    lastRunInfo: PipelineRunInfo
+  ): Promise<void> {
+    this.runInfos[definitionID] = lastRunInfo;
   }
 
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {

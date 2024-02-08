@@ -440,8 +440,31 @@ export interface PipelineFeedInfo {
   // TODO: checkin url
 }
 
+export enum PipelineLogLevel {
+  Info = "Info",
+  Warning = "Warning",
+  Error = "Error"
+}
+
+export interface PipelineRunInfo {
+  lastRunStartTimestamp: number;
+  lastRunEndTimestamp: number;
+  latestLogs: PipelineLog[];
+  atomsLoaded: number;
+  success: boolean;
+}
+
+export interface PipelineLog {
+  timestampCreated: number;
+  level: PipelineLogLevel;
+  value: string;
+  metadata: unknown;
+}
+
 export interface PipelineInfoResponseValue {
-  feeds: PipelineFeedInfo[];
+  feeds?: PipelineFeedInfo[];
+  latestAtoms?: object[];
+  latestRun?: PipelineRunInfo;
 }
 
 export interface ListSingleFeedRequest {
@@ -907,6 +930,7 @@ export type GenericIssuancePipelineListEntry = {
   pipeline: PipelineDefinition;
   extraInfo: {
     ownerEmail: string;
+    lastRun?: PipelineRunInfo;
   };
 };
 
