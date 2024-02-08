@@ -6,6 +6,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
+  CSVPipelineDefinition,
   FeedCredentialPayload,
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceCheckInResult,
@@ -262,7 +263,33 @@ describe.only("Generic Issuance", function () {
     type: PipelineType.Pretix
   };
 
-  const pipelineDefinitions = [ethLatAmPipeline, lemonadePipelineDefinition];
+  const csvPipeline: CSVPipelineDefinition = {
+    type: PipelineType.CSV,
+    ownerUserId: ethLatAmGIUserID,
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
+    id: randomUUID(),
+    /**
+     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
+     * on the backend respects generic issuance user permissions. @richard
+     */
+    editorUserIds: [],
+    options: {
+      csv: "",
+      feedOptions: {
+        feedDescription: "CSV goodies",
+        feedDisplayName: "CSV goodies",
+        feedFolder: "goodie bag",
+        feedId: "goodie-bag"
+      }
+    }
+  };
+
+  const pipelineDefinitions = [
+    ethLatAmPipeline,
+    lemonadePipelineDefinition,
+    csvPipeline
+  ];
 
   /**
    * Sets up a Zupass/Generic issuance backend with two pipelines:
@@ -576,7 +603,7 @@ describe.only("Generic Issuance", function () {
     {
       await definitionDB.setDefinitions(pipelineDefinitions);
       const definitions = await definitionDB.loadPipelineDefinitions();
-      expectLength(definitions, 2);
+      expectLength(definitions, pipelineDefinitions.length);
 
       const pretixDefinition = definitions.find(
         (d) => d.type === PipelineType.Pretix
