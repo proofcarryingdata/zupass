@@ -57,10 +57,6 @@ export function LatestRunSection({
           ))}
         </Table>
       )}
-
-      {/* <pre style={{ border: "1px solid white", padding: "8px" }}>
-        {JSON.stringify(latestRun, null, 2)}
-      </pre> */}
     </div>
   );
 }
