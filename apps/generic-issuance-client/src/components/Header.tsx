@@ -140,4 +140,4 @@ export const LeftHalf = styled.div``;
 
 export const RightHalf = styled.div``;
 
-export const Title = (): ReactNode => <span style={{}}>📦 Podbox</span>;
+export const Title = (): ReactNode => <span>📦 Podbox</span>;

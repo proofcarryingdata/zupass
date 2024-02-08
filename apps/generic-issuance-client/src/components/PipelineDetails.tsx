@@ -3,31 +3,8 @@ import {
   PipelineRunInfo
 } from "@pcd/passport-interface";
 import moment from "moment";
-import { ReactNode, useMemo } from "react";
+import { ReactNode } from "react";
 import { Link } from "react-router-dom";
-
-/**
- * Renders a {@link GenericIssuancePipelineListEntry} as part of a list.
- * This data structure is returned from the generic issuance server when the
- * generic issuance client asks for a bunch of pipelines, e.g. when it asks
- * the server 'plz give me all my pipelines'.
- */
-export function PipelineListEntry({
-  entry
-}: {
-  entry: GenericIssuancePipelineListEntry;
-}): ReactNode {
-  const icon = useMemo(() => {
-    return pipelineIcon(entry.extraInfo.lastRun);
-  }, [entry]);
-
-  return (
-    <li key={entry.pipeline.id}>
-      {pipelineLink(entry.pipeline.id)}
-      by {entry.extraInfo.ownerEmail} {icon}
-    </li>
-  );
-}
 
 export function pipelineStatus(
   latestRun: PipelineRunInfo | undefined

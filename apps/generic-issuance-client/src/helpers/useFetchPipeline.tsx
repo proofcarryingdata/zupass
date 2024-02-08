@@ -15,17 +15,15 @@ export function useFetchPipeline(
   >();
 
   useEffect(() => {
-    if (id === undefined) {
+    if (!id || !jwt) {
       return;
     }
 
-    requestGenericIssuanceGetPipeline(
-      ZUPASS_SERVER_URL,
-      id ?? "",
-      jwt ?? ""
-    ).then((res) => {
-      setResult(res);
-    });
+    requestGenericIssuanceGetPipeline(ZUPASS_SERVER_URL, id, jwt).then(
+      (res) => {
+        setResult(res);
+      }
+    );
   }, [id, jwt]);
 
   return result;

@@ -21,7 +21,7 @@ export const savePipeline = async (
   const saveResponse = await requestGenericIssuanceUpsertPipeline(
     ZUPASS_SERVER_URL,
     {
-      jwt: userJWT ?? "",
+      jwt: userJWT,
       pipeline
     }
   );

@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import styled from "styled-components";
 import { Table } from "../components/Core";
 
 /**
@@ -23,20 +22,16 @@ export function LatestAtomsSection({
           <i>No data found</i>
         </>
       ) : (
-        <TableContainer>
-          <Table>
-            <tbody>
-              {latestAtoms.map((row, i) => (
-                <tr key={i}>
-                  <td>{JSON.stringify(row)}</td>
-                </tr>
-              ))}
-            </tbody>
-          </Table>
-        </TableContainer>
+        <Table>
+          <tbody>
+            {latestAtoms.map((row, i) => (
+              <tr key={i}>
+                <td>{JSON.stringify(row)}</td>
+              </tr>
+            ))}
+          </tbody>
+        </Table>
       )}
     </div>
   );
 }
-
-const TableContainer = styled.div``;

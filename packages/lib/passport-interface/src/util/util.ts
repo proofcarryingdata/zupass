@@ -1,5 +1,8 @@
-import { APIResult } from "@pcd/passport-interface";
+import { APIResult } from "../api/apiResult";
 
+/**
+ * Returns the first error from a list of {@link APIResult}s.
+ */
 export function getError(
   ...results: (APIResult | undefined)[]
 ): string | undefined {

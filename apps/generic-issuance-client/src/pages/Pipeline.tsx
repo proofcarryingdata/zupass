@@ -1,3 +1,4 @@
+import { getError } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
@@ -5,7 +6,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
-import { pipelineIcon, pipelineStatus } from "../components/PipelineListEntry";
+import { pipelineIcon, pipelineStatus } from "../components/PipelineDetails";
 import { deletePipeline, savePipeline } from "../helpers/Mutations";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
@@ -13,7 +14,6 @@ import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
 import { LatestRunSection } from "../sections/LatestRunSection";
-import { getError } from "../util";
 
 function stringifyAndFormat(obj: object): string {
   return JSON.stringify(obj, null, 2);

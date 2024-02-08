@@ -1,5 +1,8 @@
 import urljoin from "url-join";
-import { PipelineInfoResponseValue } from "../RequestTypes";
+import {
+  PipelineInfoRequest,
+  PipelineInfoResponseValue
+} from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
@@ -23,7 +26,7 @@ export async function requestPipelineInfo(
     {
       pipelineId,
       jwt: userJWT
-    }
+    } satisfies PipelineInfoRequest
   );
 }
 

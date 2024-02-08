@@ -1,4 +1,7 @@
-import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
+import {
+  GenericIssuancePipelineListEntry,
+  getError
+} from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
 import { PageContent, Table } from "../components/Core";
@@ -12,13 +15,12 @@ import {
   pipelineOwner,
   pipelineStatus,
   pipelineType
-} from "../components/PipelineListEntry";
+} from "../components/PipelineDetails";
 import { GIContext } from "../helpers/Context";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { getError } from "../util";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
