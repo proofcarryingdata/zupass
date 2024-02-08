@@ -82,19 +82,21 @@ export function Header({
     </span>
   );
 
-  rightElements.push(
-    <span key="admin-toggle">
-      <label style={{ cursor: "pointer", userSelect: "none" }}>
-        admin view
-        <input
-          type="checkbox"
-          checked={!!ctx.isAdminMode}
-          onChange={onAdminToggleClick}
-        />
-      </label>
-      {" · "}
-    </span>
-  );
+  if (user.value.isAdmin) {
+    rightElements.push(
+      <span key="admin-toggle">
+        <label style={{ cursor: "pointer", userSelect: "none" }}>
+          admin view
+          <input
+            type="checkbox"
+            checked={!!ctx.isAdminMode}
+            onChange={onAdminToggleClick}
+          />
+        </label>
+        {" · "}
+      </span>
+    );
+  }
 
   rightElements.push(
     <span key="logout">

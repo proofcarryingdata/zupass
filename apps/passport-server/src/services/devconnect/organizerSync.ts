@@ -1,5 +1,6 @@
 import { getHash } from "@pcd/passport-crypto";
 import { UNREDACT_TICKETS_TERMS_VERSION } from "@pcd/passport-interface";
+import { normalizeEmail } from "@pcd/util";
 import _ from "lodash";
 import { Pool } from "postgres-pool";
 import {
@@ -54,7 +55,7 @@ import {
   pretixTicketsDifferent
 } from "../../util/devconnectTicket";
 import { logger } from "../../util/logger";
-import { compareArrays, normalizeEmail } from "../../util/util";
+import { compareArrays } from "../../util/util";
 import { setError, traced } from "../telemetryService";
 
 const NAME = "OrganizerSync";

@@ -6,10 +6,10 @@ import {
   VerifyTokenRequest,
   VerifyTokenResponseValue
 } from "@pcd/passport-interface";
+import { normalizeEmail } from "@pcd/util";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { normalizeEmail } from "../../util/util";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 

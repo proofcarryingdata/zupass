@@ -31,6 +31,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { normalizeEmail } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import {
   GenericPretixCheckinList,
@@ -47,7 +48,6 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
-import { normalizeEmail } from "../../../util/util";
 import { setError, traced } from "../../telemetryService";
 import {
   CheckinCapability,
