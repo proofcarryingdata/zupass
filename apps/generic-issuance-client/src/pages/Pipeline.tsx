@@ -1,4 +1,3 @@
-import { PipelineDefinition } from "@pcd/passport-interface";
 import { ReactNode, useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
@@ -12,42 +11,57 @@ import { useJWT } from "../helpers/userHooks";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
 import { LatestRunSection } from "../sections/LatestRunSection";
 
-function format(obj: object): string {
+function stringifyAndFormat(obj: object): string {
   return JSON.stringify(obj, null, 2);
 }
 
 export default function Pipeline(): ReactNode {
   const params = useParams();
   const pipelineId: string | undefined = params.id;
-  const [savedPipeline, setSavedPipeline] = useState<PipelineDefinition>();
   const [textareaValue, setTextareaValue] = useState("");
-  const [saveLoading, setSaveLoading] = useState(false);
-  const [error, setError] = useState("");
   const userJWT = useJWT();
   const userFromServer = useFetchSelf();
   const pipelineFromServer = useFetchPipeline(pipelineId);
+  const pipeline = pipelineFromServer?.value;
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoFromServer?.value;
+  const [actionInProgress, setActionInProgress] = useState(false);
 
-  if (!userJWT) {
-    window.location.href = "/";
-  }
-
-  const hasEdits = format(savedPipeline ?? {}) !== textareaValue;
-  const ownedBySomeoneElse =
-    savedPipeline?.ownerUserId !== userFromServer?.value?.id;
-
-  const onSaveClick = useCallback(() => {
+  const onSaveClick = useCallback(async () => {
     if (userJWT) {
-      savePipeline(userJWT, textareaValue);
+      setActionInProgress(true);
+      await savePipeline(userJWT, textareaValue);
+      setActionInProgress(false);
     }
   }, [textareaValue, userJWT]);
 
   const onDeleteClick = useCallback(() => {
     if (userJWT && pipelineFromServer?.value?.id) {
+      setActionInProgress(true);
       deletePipeline(userJWT, pipelineFromServer?.value?.id);
+      setActionInProgress(false);
     }
   }, [pipelineFromServer?.value?.id, userJWT]);
+
+  if (
+    !userFromServer ||
+    !pipelineFromServer ||
+    !pipelineInfoFromServer ||
+    !pipelineInfo ||
+    actionInProgress
+  ) {
+    return "loading...";
+  }
+
+  if (!userJWT) {
+    console.log("not logged in - redirecting to the homepage");
+    window.location.href = "/";
+  }
+
+  const hasEdits =
+    stringifyAndFormat(pipelineFromServer.value ?? {}) !== textareaValue;
+  const ownedBySomeoneElse =
+    pipelineFromServer.value?.ownerUserId !== userFromServer?.value?.id;
 
   return (
     <>
@@ -63,7 +77,7 @@ export default function Pipeline(): ReactNode {
         <TwoColumns>
           <div>
             <h2>Edit Pipeline</h2>
-            {savedPipeline && (
+            {pipelineFromServer.value && (
               <>
                 <p>
                   <textarea
@@ -76,10 +90,10 @@ export default function Pipeline(): ReactNode {
                 <p>
                   {hasEdits && (
                     <button
-                      disabled={saveLoading || ownedBySomeoneElse}
+                      disabled={actionInProgress || ownedBySomeoneElse}
                       onClick={onSaveClick}
                     >
-                      {saveLoading ? "Saving..." : "Save changes"}
+                      {actionInProgress ? "Saving..." : "Save changes"}
                     </button>
                   )}
                   {!hasEdits && <button disabled>All changes saved ✅</button>}
@@ -89,16 +103,10 @@ export default function Pipeline(): ReactNode {
                 </p>
               </>
             )}
-            {error && (
-              <p>
-                <strong>Error: </strong>
-                {error}
-              </p>
-            )}
           </div>
           <div style={{ flexGrow: 1 }}>
             <h2>Pipeline Info</h2>
-            {pipelineInfo && savedPipeline && (
+            {pipelineInfo && pipelineFromServer.value && (
               <>
                 {pipelineInfo.feeds && (
                   <>

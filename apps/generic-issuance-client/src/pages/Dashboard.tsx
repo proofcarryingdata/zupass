@@ -1,10 +1,6 @@
-import {
-  GenericIssuancePipelineListEntry,
-  requestGenericIssuanceGetAllUserPipelines,
-  requestGenericIssuanceUpsertPipeline
-} from "@pcd/passport-interface";
+import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -14,7 +10,8 @@ import {
   pipelineStatus,
   pipelineType
 } from "../components/PipelineListEntry";
-import { ZUPASS_SERVER_URL } from "../constants";
+import { savePipeline } from "../helpers/Pipeline";
+import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 
@@ -39,62 +36,28 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
-  const [pipelineEntries, setPipelineEntries] = useState<
-    GenericIssuancePipelineListEntry[]
-  >([]);
-  const [isLoading, setLoading] = useState(true);
+  const userJWT = useJWT();
+  const pipelinesFromServer = useFetchAllPipelines();
+  const pipelineEntries: GenericIssuancePipelineListEntry[] | undefined =
+    pipelinesFromServer?.value;
+
   const [isCreatingPipeline, setCreatingPipeline] = useState(false);
-  const [newPipelineRaw, setNewPipelineRaw] = useState(
+  const [newPipelineJSON, setNewPipelineJSON] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
   );
-  const [error, _setError] = useState("");
   const user = useFetchSelf();
-  const userJWT = useJWT();
 
-  const fetchAllPipelines = useCallback(async () => {
-    if (!userJWT) {
-      return;
+  const onCreateClick = useCallback(() => {
+    if (userJWT) {
+      savePipeline(userJWT, newPipelineJSON).then((res) => {
+        console.log("RESULT", res);
+        alert();
+      });
     }
-
-    setLoading(true);
-    const res = await requestGenericIssuanceGetAllUserPipelines(
-      ZUPASS_SERVER_URL,
-      userJWT ?? ""
-    );
-    if (res.success) {
-      setPipelineEntries(res.value);
-    } else {
-      // TODO: Better errors
-      alert(`An error occurred while fetching user pipelines: ${res.error}`);
-    }
-    setLoading(false);
-  }, [userJWT]);
-
-  const createPipeline = async (): Promise<void> => {
-    if (!newPipelineRaw) return;
-    const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
-      pipeline: JSON.parse(newPipelineRaw),
-      jwt: userJWT ?? ""
-    });
-    await fetchAllPipelines();
-    if (res.success) {
-      setCreatingPipeline(false);
-    } else {
-      // TODO: Better errors
-      alert(`An error occurred while creating pipeline: ${res.error}`);
-    }
-  };
-
-  useEffect(() => {
-    fetchAllPipelines();
-  }, [fetchAllPipelines]);
+  }, [newPipelineJSON, userJWT]);
 
   if (!userJWT) {
     window.location.href = "/";
-  }
-
-  if (error) {
-    return <div>An error occured. {JSON.stringify(error)}</div>;
   }
 
   return (
@@ -102,7 +65,7 @@ export default function Dashboard(): ReactNode {
       <Header user={user} stytchClient={stytchClient} />
       <PageContent>
         <h2>{user?.value?.isAdmin ? "" : "My "} Pipelines</h2>
-        {pipelineEntries.length === 0 ? (
+        {!pipelineEntries?.length ? (
           <p>No pipelines right now - go create some!</p>
         ) : (
           <Table>
@@ -154,11 +117,11 @@ export default function Dashboard(): ReactNode {
               <textarea
                 rows={20}
                 cols={80}
-                value={newPipelineRaw}
-                onChange={(e): void => setNewPipelineRaw(e.target.value)}
+                value={newPipelineJSON}
+                onChange={(e): void => setNewPipelineJSON(e.target.value)}
               />
               <div>
-                <button onClick={createPipeline}>🐒 Create! 🚀</button>
+                <button onClick={onCreateClick}>🐒 Create! 🚀</button>
               </div>
             </div>
           )}

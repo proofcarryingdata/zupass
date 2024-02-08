@@ -1,7 +1,7 @@
 import urljoin from "url-join";
 import { PipelineInfoResponseValue } from "../RequestTypes";
 import { APIResult } from "./apiResult";
-import { httpGetSimple } from "./makeRequest";
+import { httpPostSimple } from "./makeRequest";
 
 /**
  * Asks generic issuance backend for details about a {@link Pipeline}.
@@ -14,16 +14,16 @@ export async function requestPipelineInfo(
   zupassServerUrl: string,
   pipelineId: string
 ): Promise<InfoResult> {
-  return httpGetSimple(
-    urljoin(
-      zupassServerUrl,
-      `/generic-issuance/api/pipeline-info/`,
-      pipelineId
-    ),
+  return httpPostSimple(
+    urljoin(zupassServerUrl, `/generic-issuance/api/pipeline-info/`),
     async (resText) => ({
       value: JSON.parse(resText) as PipelineInfoResponseValue,
       success: true
-    })
+    }),
+    {
+      pipelineId,
+      jwt: userJWT
+    }
   );
 }
 

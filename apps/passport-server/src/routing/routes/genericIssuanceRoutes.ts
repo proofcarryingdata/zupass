@@ -11,6 +11,7 @@ import {
   GenericIssuanceUpsertPipelineRequest,
   GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
+  PipelineInfoRequest,
   PipelineInfoResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -99,19 +100,16 @@ export function initGenericIssuanceRoutes(
    * Gets more granular pipeline info ({@link PipelineInfoResponseValue}) that
    * is visible to the logged in user
    */
-  app.post(
-    "/generic-issuance/api/pipeline-info/:pipelineId",
-    async (req, res) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
-      const pipelineID = checkUrlParam(req, "pipelineId");
-      const result = await genericIssuanceService.handleGetPipelineInfo(
-        user,
-        pipelineID
-      );
-      res.json(result satisfies PipelineInfoResponseValue);
-    }
-  );
+  app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    const user = await genericIssuanceService.authenticateStytchSession(req);
+    const reqBody = req.body as PipelineInfoRequest;
+    const result = await genericIssuanceService.handleGetPipelineInfo(
+      user,
+      reqBody.pipelineId
+    );
+    res.json(result satisfies PipelineInfoResponseValue);
+  });
 
   /**
    * Authenticated by PCD so doesn't need auth.

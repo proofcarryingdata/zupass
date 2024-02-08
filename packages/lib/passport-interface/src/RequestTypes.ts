@@ -461,6 +461,11 @@ export interface PipelineLog {
   metadata: unknown;
 }
 
+export interface PipelineInfoRequest {
+  jwt: string;
+  pipelineId: string;
+}
+
 export interface PipelineInfoResponseValue {
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
