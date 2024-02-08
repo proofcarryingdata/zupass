@@ -1,5 +1,9 @@
 import { PipelineLog, PipelineLogLevel } from "@pcd/passport-interface";
 
+/**
+ * Helper function to instantiate a {@link PipelineLog}, used to communicate
+ * information from data loading of pipelines to users of PodBox.
+ */
 export function makePLog(
   level: PipelineLogLevel,
   log: string,
@@ -8,6 +12,9 @@ export function makePLog(
   return { timestampCreated: Date.now(), level, value: log, metadata };
 }
 
+/**
+ * Like {@link makePLog}, but specifically from {@link PipelineLogLevel.Info}.
+ */
 export function makePLogInfo(log: string, metadata?: unknown): PipelineLog {
   return {
     timestampCreated: Date.now(),
@@ -17,6 +24,9 @@ export function makePLogInfo(log: string, metadata?: unknown): PipelineLog {
   };
 }
 
+/**
+ * Like {@link makePLog}, but specifically from {@link PipelineLogLevel.Warning}.
+ */
 export function makePLogWarn(log: string, metadata?: unknown): PipelineLog {
   return {
     timestampCreated: Date.now(),
@@ -26,6 +36,9 @@ export function makePLogWarn(log: string, metadata?: unknown): PipelineLog {
   };
 }
 
+/**
+ * Like {@link makePLog}, but specifically from {@link PipelineLogLevel.Error}.
+ */
 export function makePLogErr(log: string, metadata?: unknown): PipelineLog {
   return {
     timestampCreated: Date.now(),
