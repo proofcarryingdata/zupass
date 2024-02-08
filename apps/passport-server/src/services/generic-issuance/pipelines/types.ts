@@ -1,4 +1,4 @@
-import { PipelineType } from "@pcd/passport-interface";
+import { PipelineRunInfo, PipelineType } from "@pcd/passport-interface";
 import { BasePipelineCapability } from "../types";
 import { LemonadePipeline } from "./LemonadePipeline";
 import { PretixPipeline } from "./PretixPipeline";
@@ -15,7 +15,7 @@ export type Pipeline = LemonadePipeline | PretixPipeline;
 export interface BasePipeline {
   type: PipelineType;
   capabilities: readonly BasePipelineCapability[];
-  load(): Promise<void>;
+  load(): Promise<PipelineRunInfo>;
   stop(): Promise<void>;
 }
 

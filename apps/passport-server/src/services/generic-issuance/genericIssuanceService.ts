@@ -13,6 +13,7 @@ import {
   PipelineDefinitionSchema,
   PipelineFeedInfo,
   PipelineInfoResponseValue,
+  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
@@ -55,6 +56,7 @@ import {
   isPretixPipelineDefinition
 } from "./pipelines/PretixPipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
+import { makePLogErr } from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -244,6 +246,48 @@ export class GenericIssuanceService {
     );
   }
 
+  private async executeSinglePipeline(
+    inMemoryPipeline: InMemoryPipeline
+  ): Promise<PipelineRunInfo> {
+    return traced(SERVICE_NAME, "executeSinglePipeline", async (span) => {
+      const start = Date.now();
+      const pipelineId = inMemoryPipeline.definition.id;
+      const pipeline = inMemoryPipeline.pipeline;
+
+      if (!pipeline) {
+        logger(
+          LOG_TAG,
+          `pipeline ${pipelineId} is not running; skipping loading`
+        );
+        return {
+          lastRunStartTimestamp: start,
+          lastRunEndTimestamp: start,
+          latestLogs: [makePLogErr("failed to start pipeline")]
+        };
+      }
+
+      try {
+        logger(LOG_TAG, `loading data for pipeline with id '${pipelineId}'`);
+        const result = await pipeline.load();
+        logger(
+          LOG_TAG,
+          `successfully loaded data for pipeline with id '${pipelineId}'`,
+          result
+        );
+        return result;
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
+        setError(e, span);
+        return {
+          lastRunStartTimestamp: start,
+          lastRunEndTimestamp: Date.now(),
+          latestLogs: [makePLogErr(`failed to start pipeline: ${e + ""}`)]
+        };
+      }
+    });
+  }
+
   public async executeAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "executeAllPipelineLoads", async (span) => {
       const pipelineIds = JSON.stringify(
@@ -258,32 +302,7 @@ export class GenericIssuanceService {
       await Promise.allSettled(
         this.pipelines.map(
           async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
-            const pipelineId = inMemoryPipeline.definition.id;
-            const pipeline = inMemoryPipeline.pipeline;
-
-            if (!pipeline) {
-              logger(
-                LOG_TAG,
-                `pipeline ${pipelineId} is not running; skipping loading`
-              );
-              return;
-            }
-
-            try {
-              logger(
-                LOG_TAG,
-                `loading data for pipeline with id '${pipelineId}'`
-              );
-              await pipeline.load();
-              logger(
-                LOG_TAG,
-                `successfully loaded data for pipeline with id '${pipelineId}'`
-              );
-            } catch (e) {
-              this.rollbarService?.reportError(e);
-              logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
-              setError(e, span);
-            }
+            await this.executeSinglePipeline(inMemoryPipeline);
           }
         )
       );

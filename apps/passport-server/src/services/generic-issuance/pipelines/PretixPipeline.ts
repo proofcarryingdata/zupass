@@ -15,6 +15,8 @@ import {
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
   PipelineDefinition,
+  PipelineLog,
+  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
@@ -157,8 +159,11 @@ export class PretixPipeline implements BasePipeline {
    * TODO:
    * - clear tickets after each load? important!!!!
    */
-  public async load(): Promise<void> {
+  public async load(): Promise<PipelineRunInfo> {
     return traced(LOG_NAME, "load", async (span) => {
+      const startTime = Date.now();
+      const logs: PipelineLog[] = [];
+
       span?.setAttribute("pipeline_id", this.id);
       span?.setAttribute("pipeline_type", this.type);
 
@@ -235,6 +240,12 @@ export class PretixPipeline implements BasePipeline {
           this.pendingCheckIns.delete(key);
         }
       });
+
+      return {
+        lastRunEndTimestamp: Date.now(),
+        lastRunStartTimestamp: startTime,
+        latestLogs: logs
+      } satisfies PipelineRunInfo;
     });
   }
 

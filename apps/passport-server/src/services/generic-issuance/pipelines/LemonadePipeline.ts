@@ -16,6 +16,8 @@ import {
   GenericIssuancePreCheckResponseValue,
   LemonadePipelineDefinition,
   PipelineDefinition,
+  PipelineLog,
+  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
@@ -154,8 +156,11 @@ export class LemonadePipeline implements BasePipeline {
    *   {@link DevconnectPretixSyncService}.
    * - clear tickets after each load? important!!!!
    */
-  public async load(): Promise<void> {
+  public async load(): Promise<PipelineRunInfo> {
     return traced(LOG_NAME, "load", async (span) => {
+      const logs: PipelineLog[] = [];
+      const startTime = Date.now();
+
       span?.setAttribute("pipeline_id", this.id);
       span?.setAttribute("pipeline_type", this.type);
 
@@ -225,6 +230,12 @@ export class LemonadePipeline implements BasePipeline {
           this.pendingCheckIns.delete(key);
         }
       });
+
+      return {
+        latestLogs: logs,
+        lastRunEndTimestamp: Date.now(),
+        lastRunStartTimestamp: startTime
+      } satisfies PipelineRunInfo;
     });
   }
 
