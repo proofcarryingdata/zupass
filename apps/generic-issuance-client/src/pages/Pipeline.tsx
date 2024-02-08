@@ -5,7 +5,7 @@ import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { pipelineIcon, pipelineStatus } from "../components/PipelineListEntry";
-import { deletePipeline, savePipeline } from "../helpers/Pipeline";
+import { deletePipeline, savePipeline } from "../helpers/Mutations";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../helpers/useFetchSelf";

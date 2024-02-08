@@ -2,6 +2,7 @@ import {
   GenericIssuancePipelineListEntry,
   PipelineRunInfo
 } from "@pcd/passport-interface";
+import moment from "moment";
 import { ReactNode, useMemo } from "react";
 import { Link } from "react-router-dom";
 
@@ -76,4 +77,14 @@ export function pipelineType(
   entry: GenericIssuancePipelineListEntry
 ): ReactNode {
   return <span>{entry.pipeline.type}</span>;
+}
+
+export function pipelineCreatedAt(timestamp: number): ReactNode {
+  return <span>{moment(new Date(timestamp)).format("MMM D YYYY")}</span>;
+}
+
+export function pipeineLastEdit(timestamp: number): ReactNode {
+  return (
+    <span>{moment(new Date(timestamp)).format("MMM D YYYY, h:mm:ss a")}</span>
+  );
 }

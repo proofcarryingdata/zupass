@@ -4,13 +4,15 @@ import { ReactNode, useCallback, useState } from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
+  pipeineLastEdit,
+  pipelineCreatedAt,
   pipelineIcon,
   pipelineLink,
   pipelineOwner,
   pipelineStatus,
   pipelineType
 } from "../components/PipelineListEntry";
-import { savePipeline } from "../helpers/Pipeline";
+import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
@@ -75,7 +77,9 @@ export default function Dashboard(): ReactNode {
                 <td>status</td>
                 <td>type</td>
                 <td>owner</td>
-                <td>pipeline</td>
+                <td>created at</td>
+                <td>last edit</td>
+                <td>more details</td>
               </tr>
             </thead>
             <tbody>
@@ -90,6 +94,8 @@ export default function Dashboard(): ReactNode {
                     </td>
                     <td>{pipelineType(p)}</td>
                     <td>{pipelineOwner(p)}</td>
+                    <td>{pipelineCreatedAt(p.pipeline.timeCreated)}</td>
+                    <td>{pipeineLastEdit(p.pipeline.timeUpdated)}</td>
                     <td>{pipelineLink(p.pipeline.id)}</td>
                   </tr>
                 );
