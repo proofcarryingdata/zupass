@@ -462,7 +462,7 @@ export interface PipelineLog {
 export interface PipelineInfoResponseValue {
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
-  latestLogs?: PipelineLog[];
+  latestRun?: PipelineRunInfo;
 }
 
 export interface ListSingleFeedRequest {

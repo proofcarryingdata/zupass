@@ -302,7 +302,11 @@ export class GenericIssuanceService {
       await Promise.allSettled(
         this.pipelines.map(
           async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
-            await this.executeSinglePipeline(inMemoryPipeline);
+            const runInfo = await this.executeSinglePipeline(inMemoryPipeline);
+            this.definitionDB.saveLastRunInfo(
+              inMemoryPipeline.definition.id,
+              runInfo
+            );
           }
         )
       );
@@ -402,11 +406,13 @@ export class GenericIssuanceService {
       url: f.feedUrl
     }));
 
+    const latestRun = await this.definitionDB.getLastRunInfo(pipeline.id);
     const latestAtoms = await this.atomDB.load(pipeline.id);
 
     const response: PipelineInfoResponseValue = {
       feeds: infos,
-      latestAtoms: latestAtoms
+      latestAtoms: latestAtoms,
+      latestRun: latestRun
     };
 
     return response;
