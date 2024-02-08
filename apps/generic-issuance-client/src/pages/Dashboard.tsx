@@ -71,6 +71,7 @@ export default function Dashboard(): ReactNode {
           <Table>
             <thead>
               <tr>
+                <td>🍂</td>
                 <td>status</td>
                 <td>type</td>
                 <td>pipeline</td>
@@ -81,14 +82,10 @@ export default function Dashboard(): ReactNode {
               {pipelineEntries.map((p, i) => {
                 return (
                   <tr key={i}>
-                    <td
-                      style={{
-                        display: "flex",
-                        justifyContent: "space-between",
-                        gap: "12px"
-                      }}
-                    >
+                    <td>
                       <span>{pipelineIcon(p)}</span>
+                    </td>
+                    <td>
                       <span>{pipelineStatus(p)}</span>
                     </td>
                     <td>{pipelineType(p)}</td>

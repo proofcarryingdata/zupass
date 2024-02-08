@@ -70,6 +70,8 @@ export const PageContent = styled.div`
 `;
 
 export const GOLD = "#f4ff1f";
+export const TABLE_BORDER_COLOR = "#5d5d5d";
+export const TABLE_BORDER_WIDTH = "2px";
 
 export const Table = styled.table`
   ${({ twoColumn }: { twoColumn?: boolean }): FlattenSimpleInterpolation => css`
@@ -77,9 +79,13 @@ export const Table = styled.table`
 
     thead {
       tr {
+        font-weight: bold;
+        text-decoration: underline;
+        text-align: right;
+
         td {
           padding: 4px 8px;
-          border: 1px solid white;
+          border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
         }
       }
     }
@@ -87,7 +93,7 @@ export const Table = styled.table`
     tr {
       td {
         padding: 4px 8px;
-        border: 1px solid white;
+        border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
       }
 
       ${twoColumn &&
