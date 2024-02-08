@@ -1,17 +1,12 @@
-import {
-  PipelineDefinition,
-  PipelineInfoResponseValue,
-  requestGenericIssuanceDeletePipeline,
-  requestGenericIssuanceGetPipeline,
-  requestGenericIssuanceUpsertPipeline,
-  requestPipelineInfo
-} from "@pcd/passport-interface";
-import { ReactNode, useEffect, useState } from "react";
+import { PipelineDefinition } from "@pcd/passport-interface";
+import { ReactNode, useCallback, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
-import { ZUPASS_SERVER_URL } from "../constants";
+import { deletePipeline, savePipeline } from "../helpers/Pipeline";
+import { useFetchPipeline } from "../helpers/useFetchPipeline";
+import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
@@ -23,102 +18,36 @@ function format(obj: object): string {
 
 export default function Pipeline(): ReactNode {
   const params = useParams();
-  const ownUser = useFetchSelf();
-  const { id } = params;
+  const pipelineId: string | undefined = params.id;
   const [savedPipeline, setSavedPipeline] = useState<PipelineDefinition>();
   const [textareaValue, setTextareaValue] = useState("");
-  const [queryLoading, setQueryLoading] = useState(true);
   const [saveLoading, setSaveLoading] = useState(false);
-  const [info, setInfo] = useState<PipelineInfoResponseValue | undefined>();
   const [error, setError] = useState("");
   const userJWT = useJWT();
-
-  async function savePipeline(): Promise<void> {
-    let pipeline: PipelineDefinition;
-    try {
-      pipeline = JSON.parse(textareaValue);
-    } catch (e) {
-      setError(`Invalid JSON object: ${e}`);
-      return;
-    }
-    setSaveLoading(true);
-    const res = await requestGenericIssuanceUpsertPipeline(ZUPASS_SERVER_URL, {
-      jwt: userJWT ?? "",
-      pipeline
-    });
-    if (res.success) {
-      setSavedPipeline(res.value);
-      setTextareaValue(format(res.value));
-      setError("");
-    } else {
-      setError(`An error occured while saving: ${res.error}`);
-    }
-    setSaveLoading(false);
-  }
-
-  async function deletePipeline(): Promise<void> {
-    if (confirm("Are you sure you would like to delete this pipeline?")) {
-      const res = await requestGenericIssuanceDeletePipeline(
-        ZUPASS_SERVER_URL,
-        id ?? "",
-        userJWT ?? ""
-      );
-      if (res.success) {
-        window.location.href = "/#/dashboard";
-      } else {
-        setError(`An error occured while deleting: ${res.error}`);
-      }
-    }
-  }
-
-  useEffect(() => {
-    async function fetchPipeline(): Promise<void> {
-      const res = await requestGenericIssuanceGetPipeline(
-        ZUPASS_SERVER_URL,
-        id ?? "",
-        userJWT ?? ""
-      );
-
-      if (res.success) {
-        setSavedPipeline(res.value);
-        setTextareaValue(format(res.value));
-        setError("");
-      } else {
-        setError(
-          `This pipeline "${id}" is invalid or you do not have access to this pipeline.`
-        );
-        setSavedPipeline(undefined);
-      }
-
-      const infoRes = await requestPipelineInfo(ZUPASS_SERVER_URL, id ?? "");
-      if (infoRes.success) {
-        setError("");
-        setInfo(infoRes.value);
-      } else {
-        setError(`couldn't load pipeline info`);
-      }
-
-      setQueryLoading(false);
-    }
-
-    fetchPipeline();
-  }, [id, userJWT]);
+  const userFromServer = useFetchSelf();
+  const pipelineFromServer = useFetchPipeline(pipelineId);
+  const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
+  const pipelineInfo = pipelineInfoFromServer?.value;
 
   if (!userJWT) {
     window.location.href = "/";
   }
 
-  if (queryLoading) {
-    return (
-      <>
-        <Header includeLinkToDashboard />
-        <PageContent>Loading...</PageContent>
-      </>
-    );
-  }
-
   const hasEdits = format(savedPipeline ?? {}) !== textareaValue;
-  const ownedBySomeoneElse = savedPipeline?.ownerUserId !== ownUser?.value?.id;
+  const ownedBySomeoneElse =
+    savedPipeline?.ownerUserId !== userFromServer?.value?.id;
+
+  const onSaveClick = useCallback(() => {
+    if (userJWT) {
+      savePipeline(userJWT, textareaValue);
+    }
+  }, [textareaValue, userJWT]);
+
+  const onDeleteClick = useCallback(() => {
+    if (userJWT && pipelineFromServer?.value?.id) {
+      deletePipeline(userJWT, pipelineFromServer?.value?.id);
+    }
+  }, [pipelineFromServer?.value?.id, userJWT]);
 
   return (
     <>
@@ -148,16 +77,13 @@ export default function Pipeline(): ReactNode {
                   {hasEdits && (
                     <button
                       disabled={saveLoading || ownedBySomeoneElse}
-                      onClick={savePipeline}
+                      onClick={onSaveClick}
                     >
                       {saveLoading ? "Saving..." : "Save changes"}
                     </button>
                   )}
                   {!hasEdits && <button disabled>All changes saved ✅</button>}
-                  <button
-                    disabled={ownedBySomeoneElse}
-                    onClick={deletePipeline}
-                  >
+                  <button disabled={ownedBySomeoneElse} onClick={onDeleteClick}>
                     Delete pipeline
                   </button>
                 </p>
@@ -172,13 +98,13 @@ export default function Pipeline(): ReactNode {
           </div>
           <div style={{ flexGrow: 1 }}>
             <h2>Pipeline Info</h2>
-            {info && savedPipeline && (
+            {pipelineInfo && savedPipeline && (
               <>
-                {info.feeds && (
+                {pipelineInfo.feeds && (
                   <>
                     <h3>Feeds</h3>
                     <ol>
-                      {info.feeds?.map((feed) => (
+                      {pipelineInfo.feeds?.map((feed) => (
                         <li key={feed.url}>
                           <b>{feed.name}</b> - <a href={feed.url}>{feed.url}</a>{" "}
                         </li>
@@ -186,11 +112,11 @@ export default function Pipeline(): ReactNode {
                     </ol>
                   </>
                 )}
-                {info.latestRun && (
-                  <LatestRunSection latestRun={info.latestRun} />
+                {pipelineInfo.latestRun && (
+                  <LatestRunSection latestRun={pipelineInfo.latestRun} />
                 )}
-                {info.latestAtoms && (
-                  <LatestAtomsSection latestAtoms={info.latestAtoms} />
+                {pipelineInfo.latestAtoms && (
+                  <LatestAtomsSection latestAtoms={pipelineInfo.latestAtoms} />
                 )}
               </>
             )}

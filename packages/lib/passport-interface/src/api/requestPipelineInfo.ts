@@ -10,6 +10,7 @@ import { httpGetSimple } from "./makeRequest";
  * Never rejects. All information encoded in the resolved response.
  */
 export async function requestPipelineInfo(
+  userJWT: string,
   zupassServerUrl: string,
   pipelineId: string
 ): Promise<InfoResult> {

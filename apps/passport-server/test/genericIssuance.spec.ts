@@ -635,6 +635,7 @@ async function checkPipelineInfoEndpoint(
   pipeline: Pipeline
 ): Promise<void> {
   const pipelineInfoResult: InfoResult = await requestPipelineInfo(
+    "todo",
     giBackend.expressContext.localEndpoint,
     pipeline.id
   );

@@ -11,7 +11,6 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineDefinitionSchema,
-  PipelineFeedInfo,
   PipelineInfoResponseValue,
   PipelineRunInfo,
   PipelineType,
@@ -66,7 +65,7 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  * a {@link Pipeline} so that it can be used for loading data from an external provider,
  * and expose its {@link Capability}s to the external world.
  */
-export function createPipeline(
+export function instantiatePipeline(
   eddsaPrivateKey: string,
   definition: PipelineDefinition,
   db: IPipelineAtomDB,
@@ -105,12 +104,12 @@ export function createPipeline(
  * It's not always possible to start a {@link Pipeline} given a {@link PipelineDefinition}
  * because a pipeline could be misconfigured.
  *
- * An {@link InMemoryPipeline} is used to represent a pair of {@link PipelineDefinition} and
+ * An {@link PipelineSlot} is used to represent a pair of {@link PipelineDefinition} and
  * its corresponding {@link Pipeline} if one was able to be started.
  */
-export interface InMemoryPipeline {
+export interface PipelineSlot {
   definition: PipelineDefinition;
-  pipeline?: Pipeline;
+  pipelineInstance?: Pipeline;
 }
 
 export class GenericIssuanceService {
@@ -138,7 +137,7 @@ export class GenericIssuanceService {
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
   private bypassEmail: boolean;
-  private pipelines: InMemoryPipeline[];
+  private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
 
@@ -161,7 +160,7 @@ export class GenericIssuanceService {
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
-    this.pipelines = [];
+    this.pipelineSlots = [];
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
     this.bypassEmail =
@@ -208,21 +207,21 @@ export class GenericIssuanceService {
         span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
         await Promise.allSettled(
-          this.pipelines.map(async (entry) => {
-            if (entry.pipeline) {
-              await entry.pipeline.stop();
+          this.pipelineSlots.map(async (entry) => {
+            if (entry.pipelineInstance) {
+              await entry.pipelineInstance.stop();
             }
           })
         );
 
-        this.pipelines = await Promise.all(
+        this.pipelineSlots = await Promise.all(
           pipelinesFromDB.map(async (definition: PipelineDefinition) => {
-            const result: InMemoryPipeline = {
+            const result: PipelineSlot = {
               definition
             };
 
             try {
-              const pipeline = createPipeline(
+              const pipeline = instantiatePipeline(
                 this.eddsaPrivateKey,
                 definition,
                 this.atomDB,
@@ -232,7 +231,7 @@ export class GenericIssuanceService {
                 },
                 this.zupassPublicKey
               );
-              result.pipeline = pipeline;
+              result.pipelineInstance = pipeline;
             } catch (e) {
               this.rollbarService?.reportError(e);
               logger(LOG_TAG, "failed to create pipeline", e);
@@ -247,7 +246,7 @@ export class GenericIssuanceService {
   }
 
   private async executeSinglePipeline(
-    inMemoryPipeline: InMemoryPipeline
+    inMemoryPipeline: PipelineSlot
   ): Promise<PipelineRunInfo> {
     return traced<PipelineRunInfo>(
       SERVICE_NAME,
@@ -255,20 +254,22 @@ export class GenericIssuanceService {
       async (span): Promise<PipelineRunInfo> => {
         const start = Date.now();
         const pipelineId = inMemoryPipeline.definition.id;
-        const pipeline = inMemoryPipeline.pipeline;
+        const pipeline = inMemoryPipeline.pipelineInstance;
 
         if (!pipeline) {
           logger(
             LOG_TAG,
-            `pipeline ${pipelineId} is not running; skipping loading`
+            `pipeline '${pipelineId}' is not running; skipping execution`
           );
-          return {
+          const newInfo: PipelineRunInfo = {
             lastRunStartTimestamp: start,
             lastRunEndTimestamp: start,
             latestLogs: [makePLogErr("failed to start pipeline")],
             atomsLoaded: 0,
             success: false
           };
+          this.definitionDB.saveLastRunInfo(pipelineId, newInfo);
+          return newInfo;
         }
 
         try {
@@ -279,6 +280,7 @@ export class GenericIssuanceService {
             `successfully loaded data for pipeline with id '${pipelineId}'`,
             result
           );
+          this.definitionDB.saveLastRunInfo(pipelineId, result);
           return result;
         } catch (e) {
           this.rollbarService?.reportError(e);
@@ -299,17 +301,17 @@ export class GenericIssuanceService {
   public async executeAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "executeAllPipelineLoads", async (span) => {
       const pipelineIds = JSON.stringify(
-        this.pipelines.map((p) => p.definition.id)
+        this.pipelineSlots.map((p) => p.definition.id)
       );
       logger(
         LOG_TAG,
-        `loading data for ${this.pipelines.length} pipelines. ids are: ${pipelineIds}`
+        `loading data for ${this.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
       );
       span?.setAttribute("pipeline_ids", pipelineIds);
 
       await Promise.allSettled(
-        this.pipelines.map(
-          async (inMemoryPipeline: InMemoryPipeline): Promise<void> => {
+        this.pipelineSlots.map(
+          async (inMemoryPipeline: PipelineSlot): Promise<void> => {
             const runInfo = await this.executeSinglePipeline(inMemoryPipeline);
             this.definitionDB.saveLastRunInfo(
               inMemoryPipeline.definition.id,
@@ -358,16 +360,24 @@ export class GenericIssuanceService {
     });
   }
 
-  private async getPipeline(id: string): Promise<Pipeline | undefined> {
-    return this.pipelines.find((p) => p.definition.id === id)?.pipeline;
+  private async getPipelineSlot(id: string): Promise<PipelineSlot | undefined> {
+    return this.pipelineSlots.find((p) => p.definition.id === id);
   }
 
-  private async ensurePipeline(id: string): Promise<Pipeline> {
-    const pipeline = await this.getPipeline(id);
+  private async ensurePipelineSlotExists(id: string): Promise<PipelineSlot> {
+    const pipeline = await this.getPipelineSlot(id);
     if (!pipeline) {
       throw new Error(`no pipeline with id ${id} found`);
     }
     return pipeline;
+  }
+
+  private async ensurePipelineStarted(id: string): Promise<Pipeline> {
+    const pipeline = await this.ensurePipelineSlotExists(id);
+    if (!pipeline.pipelineInstance) {
+      throw new Error(`no pipeline instance with id ${id} found`);
+    }
+    return pipeline.pipelineInstance;
   }
 
   /**
@@ -383,13 +393,12 @@ export class GenericIssuanceService {
     return traced(SERVICE_NAME, "handlePollFeed", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
       span?.setAttribute("feed_id", req.feedId);
-
-      const pipeline = await this.ensurePipeline(pipelineId);
-      const relevantCapability = pipeline.capabilities.find(
+      const pipeline = await this.ensurePipelineStarted(pipelineId);
+      const feedCapability = pipeline.capabilities.find(
         (c) => isFeedIssuanceCapability(c) && c.options.feedId === req.feedId
       ) as FeedIssuanceCapability | undefined;
 
-      if (!relevantCapability) {
+      if (!feedCapability) {
         throw new PCDHTTPError(
           403,
           `pipeline ${pipelineId} can't issue PCDs for feed id ${req.feedId}`
@@ -400,32 +409,46 @@ export class GenericIssuanceService {
         throw new PCDHTTPError(403, `missing credential PCD in request`);
       }
 
-      return relevantCapability.issue(req);
+      return feedCapability.issue(req);
     });
   }
 
   public async handleGetPipelineInfo(
+    user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
-    const pipeline = await this.ensurePipeline(pipelineId);
-    const feeds = pipeline.capabilities.filter(isFeedIssuanceCapability);
-    const infos: PipelineFeedInfo[] = feeds.map((f) => ({
-      name: f.options.feedDisplayName,
-      url: f.feedUrl
-    }));
+    return traced(SERVICE_NAME, "handleGetPipelineInfo", async (span) => {
+      span?.setAttribute("user_id", user.id);
+      span?.setAttribute("pipelineId", pipelineId);
 
-    const latestRun = await this.definitionDB.getLastRunInfo(pipeline.id);
-    const latestAtoms = await this.atomDB.load(pipeline.id);
+      const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+      const pipelineInstance = await this.ensurePipelineStarted(pipelineId);
 
-    const response: PipelineInfoResponseValue = {
-      feeds: infos,
-      latestAtoms: latestAtoms,
-      latestRun: latestRun
-    };
+      this.ensureUserHasPipelineDefinitionAccess(user, pipelineSlot.definition);
 
-    return response;
+      const pipelineFeeds = pipelineInstance.capabilities.filter(
+        isFeedIssuanceCapability
+      );
+
+      const latestRun = await this.definitionDB.getLatestRunInfo(
+        pipelineInstance.id
+      );
+      const latestAtoms = await this.atomDB.load(pipelineInstance.id);
+
+      return {
+        feeds: pipelineFeeds.map((f) => ({
+          name: f.options.feedDisplayName,
+          url: f.feedUrl
+        })),
+        latestAtoms: latestAtoms,
+        latestRun: latestRun
+      } satisfies PipelineInfoResponseValue;
+    });
   }
 
+  /**
+   * Accessible to public internet
+   */
   public async handleListFeed(
     pipelineId: string,
     feedId: string
@@ -434,45 +457,43 @@ export class GenericIssuanceService {
       span?.setAttribute("pipeline_id", pipelineId);
       span?.setAttribute("feed_id", feedId);
 
-      const pipeline: Pipeline = await this.ensurePipeline(pipelineId);
-      const relevantCapability = pipeline.capabilities.find(
+      const pipeline = await this.ensurePipelineStarted(pipelineId);
+      const feedCapability = pipeline.capabilities.find(
         (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
       ) as FeedIssuanceCapability | undefined;
 
-      if (!relevantCapability) {
+      if (!feedCapability) {
         throw new PCDHTTPError(
           403,
           `pipeline ${pipelineId} can't issue PCDs for feed id ${feedId}`
         );
       }
 
-      const feed: Feed = {
-        id: feedId,
-        name: relevantCapability.options.feedDisplayName,
-        description: relevantCapability.options.feedDescription,
-        permissions: [
+      return {
+        feeds: [
           {
-            folder: relevantCapability.options.feedFolder,
-            type: PCDPermissionType.AppendToFolder
-          },
-          {
-            folder: relevantCapability.options.feedFolder,
-            type: PCDPermissionType.ReplaceInFolder
-          }
+            id: feedId,
+            name: feedCapability.options.feedDisplayName,
+            description: feedCapability.options.feedDescription,
+            permissions: [
+              {
+                folder: feedCapability.options.feedFolder,
+                type: PCDPermissionType.AppendToFolder
+              },
+              {
+                folder: feedCapability.options.feedFolder,
+                type: PCDPermissionType.ReplaceInFolder
+              }
+            ],
+            credentialRequest: {
+              signatureType: "sempahore-signature-pcd",
+              pcdType: "email-pcd"
+            }
+          } satisfies Feed
         ],
-        credentialRequest: {
-          signatureType: "sempahore-signature-pcd",
-          pcdType: "email-pcd"
-        }
-      };
-
-      const res: ListFeedsResponseValue = {
-        feeds: [feed],
         providerName: "PCD-ifier",
-        providerUrl: relevantCapability.feedUrl
-      };
-
-      return res;
+        providerUrl: feedCapability.feedUrl
+      } satisfies ListFeedsResponseValue;
     });
   }
 
@@ -507,12 +528,12 @@ export class GenericIssuanceService {
 
       span?.setAttribute("event_id", eventId);
 
-      for (const pipeline of this.pipelines) {
-        if (!pipeline.pipeline) {
+      for (const pipeline of this.pipelineSlots) {
+        if (!pipeline.pipelineInstance) {
           continue;
         }
 
-        for (const capability of pipeline?.pipeline.capabilities) {
+        for (const capability of pipeline?.pipelineInstance.capabilities) {
           if (
             isCheckinCapability(capability) &&
             capability.canHandleCheckinForEvent(eventId)
@@ -557,12 +578,12 @@ export class GenericIssuanceService {
       const eventId = payload.eventId;
       span?.setAttribute("event_id", eventId);
 
-      for (const pipeline of this.pipelines) {
-        if (!pipeline.pipeline) {
+      for (const pipeline of this.pipelineSlots) {
+        if (!pipeline.pipelineInstance) {
           continue;
         }
 
-        for (const capability of pipeline.pipeline.capabilities) {
+        for (const capability of pipeline.pipelineInstance.capabilities) {
           if (
             isCheckinCapability(capability) &&
             capability.canHandleCheckinForEvent(eventId)
@@ -581,25 +602,26 @@ export class GenericIssuanceService {
     });
   }
 
+  /**
+   * Gets all piplines this user can see.
+   */
   public async getAllUserPipelineDefinitions(
-    userId: string
+    user: PipelineUser
   ): Promise<GenericIssuancePipelineListEntry[]> {
     const allDefinitions: PipelineDefinition[] =
       await this.definitionDB.loadPipelineDefinitions();
 
-    const user = await this.userDB.getUser(userId);
-
-    const relevantPipelines = allDefinitions.filter((d) =>
+    const visiblePipelines = allDefinitions.filter((d) =>
       this.userHasPipelineDefinitionAccess(user, d)
     );
 
     return Promise.all(
-      relevantPipelines.map(async (p) => {
+      visiblePipelines.map(async (p) => {
         const owner = await this.userDB.getUser(p.ownerUserId);
         if (!owner) {
           throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
         }
-        const lastRun = await this.definitionDB.getLastRunInfo(p.id);
+        const lastRun = await this.definitionDB.getLatestRunInfo(p.id);
 
         return {
           extraInfo: {
@@ -612,6 +634,10 @@ export class GenericIssuanceService {
     );
   }
 
+  /**
+   * Returns whether or not the given {@link PipelineUser} has
+   * access to the given {@link Pipeline}.
+   */
   private userHasPipelineDefinitionAccess(
     user: PipelineUser | undefined,
     pipeline: PipelineDefinition
@@ -627,15 +653,42 @@ export class GenericIssuanceService {
     );
   }
 
-  public async getPipelineDefinition(
+  /**
+   * Throws an error if the given {@link PipelineUser} does not have
+   * access to the given {@link Pipeline}.
+   */
+  private ensureUserHasPipelineDefinitionAccess(
+    user: PipelineUser | undefined,
+    pipeline: PipelineDefinition | undefined
+  ): void {
+    if (!pipeline) {
+      throw new Error(`can't view undefined pipeline`);
+    }
+
+    const hasAccess = this.userHasPipelineDefinitionAccess(user, pipeline);
+    if (!hasAccess) {
+      throw new Error(`user ${user?.id} can not view pipeline ${pipeline?.id}`);
+    }
+  }
+
+  /**
+   * Loads a pipeline definition if the given {@link PipelineUser} has access.
+   */
+  public async loadPipelineDefinition(
     userId: string,
     pipelineId: string
   ): Promise<PipelineDefinition> {
-    const pipeline = await this.definitionDB.getDefinition(pipelineId);
-    const user = await this.userDB.getUser(userId);
-    if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline))
-      throw new PCDHTTPError(404, "Pipeline not found or not accessible");
-    return pipeline;
+    return traced(SERVICE_NAME, "", async (span) => {
+      span?.setAttribute("user_id", userId);
+      span?.setAttribute("pipelineId", pipelineId);
+
+      const pipeline = await this.definitionDB.getDefinition(pipelineId);
+      const user = await this.userDB.getUser(userId);
+      if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline))
+        throw new PCDHTTPError(404, "Pipeline not found or not accessible");
+
+      return pipeline;
+    });
   }
 
   public async upsertPipelineDefinition(
@@ -644,10 +697,7 @@ export class GenericIssuanceService {
   ): Promise<PipelineDefinition> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       span?.setAttribute("user_id", userId);
-      span?.setAttribute(
-        "pipeline_definition",
-        JSON.stringify(pipelineDefinition)
-      );
+      span?.setAttribute("pipeline_d", pipelineDefinition.id);
 
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
@@ -694,20 +744,22 @@ export class GenericIssuanceService {
   public async deletePipelineDefinition(
     userId: string,
     pipelineId: string
-  ): Promise<undefined> {
+  ): Promise<void> {
     return traced(SERVICE_NAME, "deletePipelineDefinition", async (span) => {
       span?.setAttribute("user_id", userId);
       span?.setAttribute("pipeline_id", pipelineId);
-      const pipeline = await this.getPipelineDefinition(userId, pipelineId);
+      const pipeline = await this.loadPipelineDefinition(userId, pipelineId);
       // TODO: Finalize the "permissions model" for CRUD actions. Right now,
       // create, read, update are permissable by owners and editors, while delete
       // is only permissable by owners.
       if (pipeline.ownerUserId !== userId) {
-        throw new PCDHTTPError(403, "Need to be owner to delete pipeline");
+        throw new PCDHTTPError(
+          403,
+          `user ${userId} can't delete pipeline ${pipeline.id} owned by other user ${pipeline.ownerUserId}`
+        );
       }
       await this.definitionDB.clearDefinition(pipelineId);
       await this.restartPipeline(pipelineId);
-      return undefined;
     });
   }
 
@@ -716,60 +768,67 @@ export class GenericIssuanceService {
    * for the given id is based off the latest pipeline configuration
    * stored in the database.
    *
-   * If a pipeline with the given definition does not exists in the database
+   * If a pipeline with the given definition does not exist in the database
    * makes sure that no pipeline for it is running on the server.
+   *
+   * Tl;dr syncs db <-> pipeline in memory
    */
   private async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
 
-      const inMemoryPipeline = this.pipelines.find(
+      const pipelineSlot = this.pipelineSlots.find(
         (p) => p.definition.id === pipelineId
       );
-      if (inMemoryPipeline) {
+
+      if (pipelineSlot) {
         // we're going to need to stop the pipeline for this
         // definition, so we do that right at the beginning
-        this.pipelines = this.pipelines.filter(
+        this.pipelineSlots = this.pipelineSlots.filter(
           (p) => p.definition.id !== pipelineId
         );
-        await inMemoryPipeline.pipeline?.stop();
-      }
-
-      const definitionInDB = await this.definitionDB.getDefinition(pipelineId);
-
-      if (definitionInDB) {
-        const pipeline = createPipeline(
-          this.eddsaPrivateKey,
-          definitionInDB,
-          this.atomDB,
-          {
-            genericPretixAPI: this.genericPretixAPI,
-            lemonadeAPI: this.lemonadeAPI
-          },
-          this.zupassPublicKey
+        logger(
+          LOG_TAG,
+          `killing already running pipeline instance '${pipelineId}'`
         );
-
-        this.pipelines.push({
-          pipeline: pipeline,
-          definition: definitionInDB
-        } satisfies InMemoryPipeline);
-
-        logger(LOG_TAG, `loading data for updated pipeline ${pipeline.id}`);
-
-        pipeline
-          .load()
-          .then(() => {
-            logger(LOG_TAG, `loaded data for updated pipeline ${pipeline.id}`);
-          })
-          .catch((e) => {
-            logger(
-              LOG_TAG,
-              `failed to load data for updated pipeline ${pipeline.id}`,
-              e
-            );
-            setError(e, span);
-          });
+        await pipelineSlot.pipelineInstance?.stop();
       }
+
+      const pipelineDefinition =
+        await this.definitionDB.getDefinition(pipelineId);
+
+      if (!pipelineDefinition) {
+        logger(
+          LOG_TAG,
+          `can't restart pipeline '${pipelineId}' because not in database`
+        );
+        return;
+      }
+
+      const pipelineInstance = instantiatePipeline(
+        this.eddsaPrivateKey,
+        pipelineDefinition,
+        this.atomDB,
+        {
+          genericPretixAPI: this.genericPretixAPI,
+          lemonadeAPI: this.lemonadeAPI
+        },
+        this.zupassPublicKey
+      );
+
+      const newPipelineSlot = {
+        pipelineInstance: pipelineInstance,
+        definition: pipelineDefinition
+      } satisfies PipelineSlot;
+
+      this.pipelineSlots.push(newPipelineSlot);
+
+      logger(
+        LOG_TAG,
+        `loading data for updated pipeline '${pipelineInstance.id}'`
+      );
+
+      await this.executeSinglePipeline(newPipelineSlot);
     });
   }
 
@@ -794,8 +853,8 @@ export class GenericIssuanceService {
    * TODO: this probably shouldn't be public, but it was useful for testing.
    */
   public async getAllPipelines(): Promise<Pipeline[]> {
-    return this.pipelines
-      .map((p) => p.pipeline)
+    return this.pipelineSlots
+      .map((p) => p.pipelineInstance)
       .filter((p) => !!p) as Pipeline[];
   }
 
