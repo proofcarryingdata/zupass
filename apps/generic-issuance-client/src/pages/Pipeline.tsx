@@ -192,7 +192,19 @@ export default function Pipeline(): ReactNode {
                     <ol>
                       {pipelineInfo.feeds?.map((feed) => (
                         <li key={feed.url}>
-                          <b>{feed.name}</b> - <a href={feed.url}>{feed.url}</a>{" "}
+                          <b>{feed.name}</b>
+                          {" - "}
+                          <a
+                            href={`${
+                              process.env.PASSPORT_CLIENT_URL
+                            }/#/add-subscription?url=${encodeURIComponent(
+                              feed.url
+                            )}`}
+                          >
+                            Subscription link
+                          </a>
+                          {" - "}
+                          <a href={feed.url}>Feed Link</a>{" "}
                         </li>
                       ))}
                     </ol>

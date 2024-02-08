@@ -187,6 +187,8 @@ export const testDexFrogsAndObjects: DexFrog[] = testFrogsAndObjects.map(
   })
 );
 
+const now = Date.now();
+
 export const testFeeds: FrogCryptoDbFeedData[] = [
   {
     uuid: "85b139fa-3665-4b96-a7bd-77c6c4ed18cd",
@@ -194,7 +196,7 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       name: "Bog",
       description: "Bog",
       private: false,
-      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      activeUntil: now / 1000 + 3600, // 1 hour from now
       cooldown: 60,
       biomes: {
         Jungle: { dropWeightScaler: 1 },
@@ -209,7 +211,7 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       name: "Cog",
       description: "Cog",
       private: true,
-      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      activeUntil: now / 1000 + 3600, // 1 hour from now
       cooldown: 180,
       biomes: {
         Jungle: { dropWeightScaler: 1 },
@@ -224,7 +226,7 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       name: "Dog",
       description: "Dog",
       private: true,
-      activeUntil: Date.now() / 1000, // expired
+      activeUntil: now / 1000, // expired
       cooldown: 60,
       biomes: {
         Jungle: { dropWeightScaler: 1 },
@@ -239,7 +241,7 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       name: "God",
       description: "God",
       private: true,
-      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      activeUntil: now / 1000 + 3600, // 1 hour from now
       cooldown: 600,
       biomes: {
         TheWrithingVoid: { dropWeightScaler: 1 }
@@ -252,7 +254,7 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       name: "Cat",
       description: "Cat",
       private: true,
-      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      activeUntil: now / 1000 + 3600, // 1 hour from now
       cooldown: 600,
       biomes: {
         TheCapital: { dropWeightScaler: 1 }
@@ -265,7 +267,7 @@ export const testFeeds: FrogCryptoDbFeedData[] = [
       name: "Bat",
       description: "Bat",
       private: true,
-      activeUntil: Date.now() / 1000 + 3600, // 1 hour from now
+      activeUntil: now / 1000 + 3600, // 1 hour from now
       cooldown: 600,
       biomes: {
         Unknown: { dropWeightScaler: 1 }
