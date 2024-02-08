@@ -84,6 +84,7 @@ export function Header({
           if (confirm("Are you sure you want to log out?")) {
             try {
               await stytchClient?.session.revoke();
+              window.location.href = "/";
             } catch (e) {
               // TODO: better error handling
             }
