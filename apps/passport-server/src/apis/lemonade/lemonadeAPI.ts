@@ -474,13 +474,24 @@ export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 
 const LemonadeTicketSchema = z.object({
   _id: z.string(),
-  assigned_email: z.string().nullable(),
-  assigned_to: z.string().nullable(),
+  assigned_email: z.string(),
+  assigned_to: z.string(),
   user_id: z.string(),
   user_email: z.string(),
   type_id: z.string(),
   type_title: z.string(),
-  checkin_date: z.string().nullable()
+  checkin_date: z.string().transform((arg) => {
+    try {
+      const time = Date.parse(arg);
+      if (!isNaN(time)) {
+        return new Date(time);
+      } else {
+        return null;
+      }
+    } catch (e) {
+      return null;
+    }
+  })
 });
 
 export type LemonadeTicket = z.infer<typeof LemonadeTicketSchema>;

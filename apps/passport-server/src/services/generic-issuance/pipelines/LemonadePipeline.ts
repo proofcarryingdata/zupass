@@ -237,7 +237,7 @@ export class LemonadePipeline implements BasePipeline {
                 lemonadeEventId: eventConfig.externalId,
                 lemonadeTicketTypeId: t.type_id,
                 lemonadeUserId: t.assigned_to as string,
-                isConsumed: t.checkin_date !== null && t.checkin_date !== ""
+                isConsumed: t.checkin_date instanceof Date
               }) as LemonadeAtom
           );
         }
