@@ -85,8 +85,16 @@ export default function Dashboard(): ReactNode {
     );
   }
 
-  const requestError = getError(pipelinesFromServer, user);
+  if (!user || !pipelinesFromServer) {
+    return (
+      <>
+        <Header user={user} stytchClient={stytchClient} />
+        <PageContent>Loading...</PageContent>
+      </>
+    );
+  }
 
+  const requestError = getError(pipelinesFromServer, user);
   if (requestError) {
     return (
       <>
