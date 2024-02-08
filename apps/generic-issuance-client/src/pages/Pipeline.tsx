@@ -14,6 +14,7 @@ import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
+import { LatestAtomsSection } from "../sections/LatestAtomsSection";
 import { LatestRunSection } from "../sections/LatestRunSection";
 
 function format(obj: object): string {
@@ -189,6 +190,14 @@ export default function Pipeline(): ReactNode {
                   <>
                     <LatestRunSection
                       latestRun={info.latestRun}
+                      pipeline={savedPipeline}
+                    />
+                  </>
+                )}
+                {info.latestAtoms && (
+                  <>
+                    <LatestAtomsSection
+                      latestAtoms={info.latestAtoms}
                       pipeline={savedPipeline}
                     />
                   </>

@@ -37,7 +37,7 @@ export function LatestRunSection({
             <td>{durationMs}ms</td>
           </tr>
           <tr>
-            <td>entries loaded</td>
+            <td>datas loaded</td>
             <td>{latestRun.atomsLoaded}</td>
           </tr>
         </tbody>
