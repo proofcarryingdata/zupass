@@ -14,8 +14,8 @@ const BasePipelineDefinitionSchema = z.object({
   id: z.string().uuid(),
   ownerUserId: z.string().uuid(),
   editorUserIds: z.array(z.string().uuid()),
-  timeCreated: z.number(),
-  timeUpdated: z.number()
+  timeCreated: z.string(),
+  timeUpdated: z.string()
 });
 
 /**

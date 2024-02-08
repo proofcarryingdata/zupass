@@ -32,14 +32,12 @@ export const savePipeline = async (
 export const deletePipeline = async (
   userJWT: string,
   pipelineID: string
-): Promise<GenericIssuanceDeletePipelineResponse | undefined> => {
-  if (confirm("Are you sure you would like to delete this pipeline?")) {
-    const deleteResponse = await requestGenericIssuanceDeletePipeline(
-      ZUPASS_SERVER_URL,
-      pipelineID,
-      userJWT
-    );
+): Promise<GenericIssuanceDeletePipelineResponse> => {
+  const deleteResponse = await requestGenericIssuanceDeletePipeline(
+    ZUPASS_SERVER_URL,
+    pipelineID,
+    userJWT
+  );
 
-    return deleteResponse;
-  }
+  return deleteResponse;
 };

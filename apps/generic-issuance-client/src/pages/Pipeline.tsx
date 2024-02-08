@@ -36,17 +36,32 @@ export default function Pipeline(): ReactNode {
   }, [pipelineFromServer?.value]);
 
   const onSaveClick = useCallback(async () => {
+    alert("save click");
     if (userJWT) {
+      alert("userjwt");
       setActionInProgress(true);
-      await savePipeline(userJWT, textareaValue);
+      const res = await savePipeline(userJWT, textareaValue);
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert(res.error);
+      }
       setActionInProgress(false);
     }
   }, [textareaValue, userJWT]);
 
-  const onDeleteClick = useCallback(() => {
+  const onDeleteClick = useCallback(async () => {
     if (userJWT && pipelineFromServer?.value?.id) {
+      if (!confirm("Are you sure you would like to delete this pipeline?")) {
+        return;
+      }
       setActionInProgress(true);
-      deletePipeline(userJWT, pipelineFromServer?.value?.id);
+      const res = await deletePipeline(userJWT, pipelineFromServer.value.id);
+      if (res.success) {
+        window.location.href = "/#/dashboard";
+      } else {
+        alert(res.error);
+      }
       setActionInProgress(false);
     }
   }, [pipelineFromServer?.value?.id, userJWT]);

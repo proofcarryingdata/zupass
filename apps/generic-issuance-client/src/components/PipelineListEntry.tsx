@@ -85,12 +85,12 @@ export function pipelineType(
   return <span>{entry.pipeline.type}</span>;
 }
 
-export function pipelineCreatedAt(timestamp: number): ReactNode {
-  return <span>{moment(new Date(timestamp)).format("MMM D YYYY")}</span>;
+export function pipelineCreatedAt(dateStr: string): ReactNode {
+  return <span>{moment(new Date(dateStr)).format("MMM D YYYY")}</span>;
 }
 
-export function pipeineLastEdit(timestamp: number): ReactNode {
+export function pipeineLastEdit(dateStr: string): ReactNode {
   return (
-    <span>{moment(new Date(timestamp)).format("MMM D YYYY, h:mm:ss a")}</span>
+    <span>{moment(new Date(dateStr)).format("MMM D YYYY, h:mm:ss a")}</span>
   );
 }
