@@ -104,6 +104,11 @@ export class CSVPipeline implements BasePipeline {
     return {
       actions: [
         {
+          type: PCDActionType.DeleteFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          recursive: false
+        },
+        {
           type: PCDActionType.ReplaceInFolder,
           folder: this.definition.options.feedOptions.feedFolder,
           pcds: serializedPCDs

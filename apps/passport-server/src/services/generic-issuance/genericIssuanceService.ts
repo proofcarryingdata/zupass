@@ -438,6 +438,10 @@ export class GenericIssuanceService {
             permissions: [
               {
                 folder: feedCapability.options.feedFolder,
+                type: PCDPermissionType.DeleteFolder
+              },
+              {
+                folder: feedCapability.options.feedFolder,
                 type: PCDPermissionType.AppendToFolder
               },
               {

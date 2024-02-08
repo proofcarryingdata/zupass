@@ -79,6 +79,24 @@ export default function Pipeline(): ReactNode {
     setTextareaValue(e.target.value);
   }, []);
 
+  const requestError = getError(
+    userFromServer,
+    pipelineFromServer,
+    pipelineInfoFromServer
+  );
+
+  if (requestError) {
+    return (
+      <>
+        <Header includeLinkToDashboard />
+        <PageContent>
+          <h2>❌ Load Error</h2>
+          {requestError}
+        </PageContent>
+      </>
+    );
+  }
+
   if (
     !userFromServer ||
     !pipelineFromServer ||
@@ -91,24 +109,6 @@ export default function Pipeline(): ReactNode {
         <Header includeLinkToDashboard />
         <PageContent>
           {actionInProgress ? actionInProgress : "Loading..."}
-        </PageContent>
-      </>
-    );
-  }
-
-  const requestError = getError(
-    userFromServer,
-    pipelineFromServer,
-    pipelineInfoFromServer
-  );
-
-  if (requestError) {
-    return (
-      <>
-        <Header includeLinkToDashboard />
-        <PageContent>
-          <h2>Error Loading Page</h2>
-          {requestError}
         </PageContent>
       </>
     );
