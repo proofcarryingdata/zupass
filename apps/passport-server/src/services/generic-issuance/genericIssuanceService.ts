@@ -854,7 +854,7 @@ export class GenericIssuanceService {
       const newUser: PipelineUser = {
         id: uuidV4(),
         email,
-        isAdmin: false
+        isAdmin: this.getEnvAdminEmails().includes(email)
       };
       this.userDB.setUser(newUser);
       return newUser;
@@ -920,12 +920,12 @@ export class GenericIssuanceService {
     });
   }
 
-  private async maybeSetupAdmins(): Promise<void> {
-    try {
-      if (!process.env.GENERIC_ISSUANCE_ADMINS) {
-        return;
-      }
+  private getEnvAdminEmails(): string[] {
+    if (!process.env.GENERIC_ISSUANCE_ADMINS) {
+      return [];
+    }
 
+    try {
       const adminEmailsFromEnv: string[] = JSON.parse(
         process.env.GENERIC_ISSUANCE_ADMINS
       );
@@ -937,8 +937,16 @@ export class GenericIssuanceService {
         );
       }
 
-      logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
+      return adminEmailsFromEnv;
+    } catch (e) {
+      return [];
+    }
+  }
 
+  private async maybeSetupAdmins(): Promise<void> {
+    try {
+      const adminEmailsFromEnv = this.getEnvAdminEmails();
+      logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
       for (const email of adminEmailsFromEnv) {
         await this.userDB.setUserAdmin(email, true);
       }
