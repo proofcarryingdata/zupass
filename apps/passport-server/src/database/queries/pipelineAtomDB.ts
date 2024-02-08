@@ -12,6 +12,7 @@
 export interface IPipelineAtomDB<T extends PipelineAtom = PipelineAtom> {
   save(pipelineID: string, atoms: T[]): Promise<void>;
   load(pipelineID: string): Promise<T[]>;
+  clear(pipelineID: string): Promise<void>;
   loadById(pipelineID: string, atomID: string): Promise<T | undefined>;
   loadByEmail(pipelineID: string, email: string): Promise<T[]>;
 }

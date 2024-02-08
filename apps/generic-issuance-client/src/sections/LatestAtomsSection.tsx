@@ -1,5 +1,6 @@
 import { ReactNode } from "react";
 import styled from "styled-components";
+import { Table } from "../components/Core";
 
 /**
  * Used to display the latest data that a given pipeline loaded during
@@ -22,22 +23,23 @@ export function LatestAtomsSection({
           <i>No data found</i>
         </>
       ) : (
-        <>
-          <ul>
-            {latestAtoms.map((atom, i) => (
-              <li key={i}>
-                <AtomPreview atom={atom} />
-              </li>
-            ))}
-          </ul>
-        </>
+        <TableContainer>
+          <Table>
+            <tbody>
+              {latestAtoms.map((row, i) => (
+                <tr key={i}>
+                  <td>{JSON.stringify(row)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TableContainer>
       )}
     </div>
   );
 }
 
-export function AtomPreview({ atom }: { atom: unknown }): ReactNode {
-  return <AtomPreviewContainer>{JSON.stringify(atom)}</AtomPreviewContainer>;
-}
-
-const AtomPreviewContainer = styled.pre``;
+const TableContainer = styled.div`
+  max-width: 500px;
+  overflow-x: scroll;
+`;

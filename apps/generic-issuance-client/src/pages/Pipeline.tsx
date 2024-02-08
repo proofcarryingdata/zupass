@@ -1,3 +1,4 @@
+import { sleep } from "@pcd/util";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
@@ -27,7 +28,9 @@ export default function Pipeline(): ReactNode {
   const pipelineFromServer = useFetchPipeline(pipelineId);
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoFromServer?.value;
-  const [actionInProgress, setActionInProgress] = useState(false);
+  const [actionInProgress, setActionInProgress] = useState<
+    string | undefined
+  >();
 
   useEffect(() => {
     if (pipelineFromServer?.value) {
@@ -36,35 +39,43 @@ export default function Pipeline(): ReactNode {
   }, [pipelineFromServer?.value]);
 
   const onSaveClick = useCallback(async () => {
-    alert("save click");
     if (userJWT) {
-      alert("userjwt");
-      setActionInProgress(true);
+      setActionInProgress(
+        `Updating pipeline '${pipelineFromServer?.value?.id}'...`
+      );
       const res = await savePipeline(userJWT, textareaValue);
       if (res.success) {
         window.location.reload();
       } else {
         alert(res.error);
       }
-      setActionInProgress(false);
+      setActionInProgress(undefined);
     }
-  }, [textareaValue, userJWT]);
+  }, [pipelineFromServer?.value?.id, textareaValue, userJWT]);
 
   const onDeleteClick = useCallback(async () => {
     if (userJWT && pipelineFromServer?.value?.id) {
       if (!confirm("Are you sure you would like to delete this pipeline?")) {
         return;
       }
-      setActionInProgress(true);
+      setActionInProgress(
+        `Deleting pipeline '${pipelineFromServer.value.id}'...`
+      );
       const res = await deletePipeline(userJWT, pipelineFromServer.value.id);
+      await sleep(500);
       if (res.success) {
         window.location.href = "/#/dashboard";
       } else {
         alert(res.error);
       }
-      setActionInProgress(false);
+      setActionInProgress(undefined);
     }
   }, [pipelineFromServer?.value?.id, userJWT]);
+
+  const onTextAreaChange = useCallback(
+    (e): void => setTextareaValue(e.target.value),
+    []
+  );
 
   if (
     !userFromServer ||
@@ -76,7 +87,9 @@ export default function Pipeline(): ReactNode {
     return (
       <>
         <Header includeLinkToDashboard />
-        <PageContent>Loading...</PageContent>
+        <PageContent>
+          {actionInProgress ? actionInProgress : "Loading..."}
+        </PageContent>
       </>
     );
   }
@@ -116,13 +129,13 @@ export default function Pipeline(): ReactNode {
                     cols={50}
                     rows={30}
                     value={textareaValue}
-                    onChange={(e): void => setTextareaValue(e.target.value)}
+                    onChange={onTextAreaChange}
                   />
                 </p>
                 <p>
                   {hasEdits && (
                     <button
-                      disabled={actionInProgress || ownedBySomeoneElse}
+                      disabled={!!actionInProgress || ownedBySomeoneElse}
                       onClick={onSaveClick}
                     >
                       {actionInProgress ? "Saving..." : "Save changes"}

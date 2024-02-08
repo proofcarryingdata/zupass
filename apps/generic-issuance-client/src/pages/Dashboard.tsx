@@ -1,6 +1,6 @@
 import { GenericIssuancePipelineListEntry } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useContext, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -13,7 +13,6 @@ import {
   pipelineStatus,
   pipelineType
 } from "../components/PipelineListEntry";
-import { GIContext } from "../helpers/Context";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
@@ -22,8 +21,8 @@ import { useJWT } from "../helpers/userHooks";
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
     type: "Lemonade",
-    timeCreated: 0,
-    timeUpdated: 0,
+    timeCreated: new Date().toISOString(),
+    timeUpdated: new Date().toISOString(),
     editorUserIds: [],
     options: {
       lemonadeApiKey: "your-lemonade-api-key",
@@ -43,12 +42,12 @@ const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
-  const ctx = useContext(GIContext);
   const pipelinesFromServer = useFetchAllPipelines();
   const pipelineEntries: GenericIssuancePipelineListEntry[] | undefined =
     pipelinesFromServer?.value;
 
-  const [isCreatingPipeline, setCreatingPipeline] = useState(false);
+  const [isCreatingPipeline, setIsCreatingPipeline] = useState(false);
+  const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [newPipelineJSON, setNewPipelineJSON] = useState(
     SAMPLE_CREATE_PIPELINE_TEXT
   );
@@ -56,19 +55,31 @@ export default function Dashboard(): ReactNode {
 
   const onCreateClick = useCallback(() => {
     if (userJWT) {
-      savePipeline(userJWT, newPipelineJSON).then((res) => {
-        console.log("create pipeline result", res);
-        if (res.success === false) {
-          alert(res.error);
-        } else {
-          window.location.href = "/#/" + pipelineDetailPagePath(res.value?.id);
-        }
-      });
+      setIsUploadingPipeline(true);
+      savePipeline(userJWT, newPipelineJSON)
+        .then((res) => {
+          console.log("create pipeline result", res);
+          if (res.success === false) {
+            alert(res.error);
+          } else {
+            window.location.href = "/#" + pipelineDetailPagePath(res.value?.id);
+          }
+        })
+        .finally(() => {
+          setIsUploadingPipeline(false);
+        });
     }
   }, [newPipelineJSON, userJWT]);
 
   if (!userJWT) {
     window.location.href = "/";
+  }
+
+  if (isUploadingPipeline) {
+    <>
+      <Header user={user} stytchClient={stytchClient} />
+      <PageContent>creating pipeline...</PageContent>
+    </>;
   }
 
   return (
@@ -117,7 +128,7 @@ export default function Dashboard(): ReactNode {
             marginTop: "16px"
           }}
         >
-          <button onClick={(): void => setCreatingPipeline((curr) => !curr)}>
+          <button onClick={(): void => setIsCreatingPipeline((curr) => !curr)}>
             {isCreatingPipeline ? "Minimize 🔼" : "Create 🔽"}
           </button>
           {isCreatingPipeline && (

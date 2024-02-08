@@ -252,6 +252,11 @@ export class GenericIssuanceService {
       SERVICE_NAME,
       "executeSinglePipeline",
       async (span): Promise<PipelineRunInfo> => {
+        logger(
+          LOG_TAG,
+          `executing pipeline '${inMemoryPipeline.definition.id}'`
+        );
+
         const start = Date.now();
         const pipelineId = inMemoryPipeline.definition.id;
         const pipeline = inMemoryPipeline.pipelineInstance;
@@ -286,13 +291,15 @@ export class GenericIssuanceService {
           this.rollbarService?.reportError(e);
           logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
           setError(e, span);
-          return {
+          const newInfo = {
             lastRunStartTimestamp: start,
             lastRunEndTimestamp: Date.now(),
             latestLogs: [makePLogErr(`failed to start pipeline: ${e + ""}`)],
             atomsLoaded: 0,
             success: false
           };
+          this.definitionDB.saveLastRunInfo(pipelineId, newInfo);
+          return newInfo;
         }
       }
     );
@@ -736,7 +743,12 @@ export class GenericIssuanceService {
       }
 
       await this.definitionDB.setDefinition(newPipelineDefinition);
-      await this.restartPipeline(newPipelineDefinition.id);
+      await this.definitionDB.saveLastRunInfo(
+        newPipelineDefinition.id,
+        undefined
+      );
+      await this.atomDB.clear(newPipelineDefinition.id);
+      this.restartPipeline(newPipelineDefinition.id);
       return newPipelineDefinition;
     });
   }
@@ -792,6 +804,8 @@ export class GenericIssuanceService {
           `killing already running pipeline instance '${pipelineId}'`
         );
         await pipelineSlot.pipelineInstance?.stop();
+      } else {
+        logger(LOG_TAG, `starting brand new pipeline ${pipelineId}`);
       }
 
       const pipelineDefinition =
@@ -804,6 +818,8 @@ export class GenericIssuanceService {
         );
         return;
       }
+
+      logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
       const pipelineInstance = instantiatePipeline(
         this.eddsaPrivateKey,
@@ -822,11 +838,6 @@ export class GenericIssuanceService {
       } satisfies PipelineSlot;
 
       this.pipelineSlots.push(newPipelineSlot);
-
-      logger(
-        LOG_TAG,
-        `loading data for updated pipeline '${pipelineInstance.id}'`
-      );
 
       await this.executeSinglePipeline(newPipelineSlot);
     });
