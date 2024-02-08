@@ -85,6 +85,12 @@ export default function Pipeline(): ReactNode {
     pipelineInfoFromServer
   );
 
+  useEffect(() => {
+    if (!userJWT) {
+      window.location.href = "/";
+    }
+  }, [userJWT]);
+
   if (maybeRequestError) {
     return (
       <>
@@ -120,11 +126,6 @@ export default function Pipeline(): ReactNode {
         </PageContent>
       </>
     );
-  }
-
-  if (!userJWT) {
-    console.log("not logged in - redirecting to the homepage");
-    window.location.href = "/";
   }
 
   const hasEdits =

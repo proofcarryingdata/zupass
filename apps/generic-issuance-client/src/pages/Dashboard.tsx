@@ -3,7 +3,14 @@ import {
   getError
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -68,9 +75,11 @@ export default function Dashboard(): ReactNode {
     }
   }, [newPipelineJSON, userJWT]);
 
-  if (!userJWT) {
-    window.location.href = "/";
-  }
+  useEffect(() => {
+    if (!userJWT) {
+      window.location.href = "/";
+    }
+  }, [userJWT]);
 
   const maybeRequestError: string | undefined = getError(
     pipelinesFromServer,
