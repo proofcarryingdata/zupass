@@ -930,6 +930,7 @@ export type GenericIssuancePipelineListEntry = {
   pipeline: PipelineDefinition;
   extraInfo: {
     ownerEmail: string;
+    lastRun?: PipelineRunInfo;
   };
 };
 

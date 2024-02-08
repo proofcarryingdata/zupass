@@ -599,13 +599,15 @@ export class GenericIssuanceService {
         if (!owner) {
           throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
         }
+        const lastRun = await this.definitionDB.getLastRunInfo(p.id);
 
         return {
           extraInfo: {
-            ownerEmail: owner.email
+            ownerEmail: owner.email,
+            lastRun
           },
           pipeline: p
-        };
+        } satisfies GenericIssuancePipelineListEntry;
       })
     );
   }
