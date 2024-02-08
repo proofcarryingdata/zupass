@@ -14,6 +14,7 @@ import { Header } from "../components/Header";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
+import { LatestRunSection } from "../sections/LatestRunSection";
 
 function format(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -170,11 +171,8 @@ export default function Pipeline(): ReactNode {
           </div>
           <div style={{ flexGrow: 1 }}>
             <h2>Pipeline Info</h2>
-            {info && (
+            {info && savedPipeline && (
               <>
-                <pre style={{ border: "1px solid white", padding: "8px" }}>
-                  {JSON.stringify(info, null, 2)}
-                </pre>
                 {info.feeds && (
                   <>
                     <h3>Feeds</h3>
@@ -185,6 +183,14 @@ export default function Pipeline(): ReactNode {
                         </li>
                       ))}
                     </ol>
+                  </>
+                )}
+                {info.latestRun && (
+                  <>
+                    <LatestRunSection
+                      latestRun={info.latestRun}
+                      pipeline={savedPipeline}
+                    />
                   </>
                 )}
               </>
