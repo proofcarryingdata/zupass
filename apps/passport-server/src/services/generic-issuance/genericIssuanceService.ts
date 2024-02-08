@@ -1140,6 +1140,8 @@ export class GenericIssuanceService {
     const lemonadeDefinition: LemonadePipelineDefinition = {
       ownerUserId: ownerUUID,
       id: lemonadeDefinitionId,
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString(),
       editorUserIds: [],
       timeCreated: new Date().toISOString(),
       timeUpdated: new Date().toISOString(),
