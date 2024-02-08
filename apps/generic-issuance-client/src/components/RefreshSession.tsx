@@ -1,6 +1,6 @@
 import { useStytch } from "@stytch/react";
 import { FC, useEffect } from "react";
-import { SESSION_DURATION_MINUTES } from "../constants";
+import { SESSION_DURATION_MINUTES, SESSION_DURATION_MS } from "../constants";
 
 export const RefreshSession: FC = () => {
   const stytchClient = useStytch();
@@ -15,7 +15,7 @@ export const RefreshSession: FC = () => {
     };
     // Refresh session on mount and at intervals of one half the session duration.
     refresh();
-    const interval = setInterval(refresh, SESSION_DURATION_MINUTES / 2);
+    const interval = setInterval(refresh, SESSION_DURATION_MS / 2);
     return () => clearInterval(interval);
   }, [stytchClient]);
 
