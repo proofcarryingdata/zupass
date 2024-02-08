@@ -1,13 +1,10 @@
-import { PipelineDefinition } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import styled from "styled-components";
 
 export function LatestAtomsSection({
-  latestAtoms,
-  pipeline
+  latestAtoms
 }: {
   latestAtoms?: unknown[];
-  pipeline: PipelineDefinition;
 }): ReactNode {
   if (!latestAtoms) {
     return null;

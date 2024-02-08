@@ -15,7 +15,7 @@ export function PipelineListEntry({
 }): ReactNode {
   const icon = useMemo(() => {
     if (!entry.extraInfo.lastRun) {
-      return "❓";
+      return "⏳";
     }
 
     if (entry.extraInfo.lastRun.success) {

@@ -1,18 +1,12 @@
-import {
-  PipelineDefinition,
-  PipelineLog,
-  PipelineRunInfo
-} from "@pcd/passport-interface";
+import { PipelineLog, PipelineRunInfo } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
 import styled from "styled-components";
 
 export function LatestRunSection({
-  latestRun,
-  pipeline
+  latestRun
 }: {
   latestRun: PipelineRunInfo;
-  pipeline: PipelineDefinition;
 }): ReactNode {
   const startDate = new Date(latestRun.lastRunStartTimestamp);
   const endDate = new Date(latestRun.lastRunStartTimestamp);

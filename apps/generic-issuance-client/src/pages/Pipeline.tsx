@@ -187,20 +187,10 @@ export default function Pipeline(): ReactNode {
                   </>
                 )}
                 {info.latestRun && (
-                  <>
-                    <LatestRunSection
-                      latestRun={info.latestRun}
-                      pipeline={savedPipeline}
-                    />
-                  </>
+                  <LatestRunSection latestRun={info.latestRun} />
                 )}
                 {info.latestAtoms && (
-                  <>
-                    <LatestAtomsSection
-                      latestAtoms={info.latestAtoms}
-                      pipeline={savedPipeline}
-                    />
-                  </>
+                  <LatestAtomsSection latestAtoms={info.latestAtoms} />
                 )}
               </>
             )}
