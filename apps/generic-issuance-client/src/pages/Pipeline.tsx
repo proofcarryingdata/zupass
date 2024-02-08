@@ -1,6 +1,6 @@
 import { sleep } from "@pcd/util";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useEffect, useState } from "react";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
@@ -25,6 +25,7 @@ export default function Pipeline(): ReactNode {
   const params = useParams();
   const pipelineId: string | undefined = params.id;
   const [textareaValue, setTextareaValue] = useState("");
+  const textAreaRef = useRef("");
   const userFromServer = useFetchSelf();
   const pipelineFromServer = useFetchPipeline(pipelineId);
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
@@ -32,9 +33,11 @@ export default function Pipeline(): ReactNode {
   const [actionInProgress, setActionInProgress] = useState<
     string | undefined
   >();
+  const hasSetRef = useRef(false);
 
   useEffect(() => {
-    if (pipelineFromServer?.value) {
+    if (pipelineFromServer?.value && !hasSetRef.current) {
+      hasSetRef.current = true;
       setTextareaValue(stringifyAndFormat(pipelineFromServer.value));
     }
   }, [pipelineFromServer?.value]);
@@ -44,14 +47,14 @@ export default function Pipeline(): ReactNode {
       setActionInProgress(
         `Updating pipeline '${pipelineFromServer?.value?.id}'...`
       );
-      const res = await savePipeline(userJWT, textareaValue);
+      const res = await savePipeline(userJWT, textAreaRef.current);
       if (res.success) {
         window.location.reload();
       } else {
         alert(res.error);
       }
     }
-  }, [pipelineFromServer?.value?.id, textareaValue, userJWT]);
+  }, [pipelineFromServer?.value?.id, userJWT]);
 
   const onDeleteClick = useCallback(async () => {
     if (userJWT && pipelineFromServer?.value?.id) {
@@ -71,10 +74,10 @@ export default function Pipeline(): ReactNode {
     }
   }, [pipelineFromServer?.value?.id, userJWT]);
 
-  const onTextAreaChange = useCallback(
-    (e): void => setTextareaValue(e.target.value),
-    []
-  );
+  const onTextAreaChange = useCallback((e): void => {
+    textAreaRef.current = e.target.value;
+    setTextareaValue(e.target.value);
+  }, []);
 
   if (
     !userFromServer ||
