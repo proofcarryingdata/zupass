@@ -7,6 +7,10 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { PCDActionType } from "@pcd/pcd-collection";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
+import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
@@ -38,6 +42,7 @@ export class CSVPipeline implements BasePipeline {
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
+  private rsaKey: string;
 
   public get id(): string {
     return this.definition.id;
@@ -53,16 +58,12 @@ export class CSVPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
+    this.rsaKey = newRSAPrivateKey();
 
     this.capabilities = [
       {
         type: PipelineCapability.FeedIssuance,
-        issue: async (req: PollFeedRequest): Promise<PollFeedResponseValue> => {
-          logger(req);
-          return {
-            actions: []
-          };
-        },
+        issue: this.issue.bind(this),
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
@@ -72,12 +73,53 @@ export class CSVPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
   }
 
+  private async issue(_req: PollFeedRequest): Promise<PollFeedResponseValue> {
+    const atoms = await this.db.load(this.id);
+    const serializedPCDs = await Promise.all(
+      atoms.map(async (a) => {
+        const pcd = await RSAImagePCDPackage.prove({
+          id: {
+            argumentType: ArgumentTypeName.String,
+            value: uuid()
+          },
+          privateKey: {
+            argumentType: ArgumentTypeName.String,
+            value: this.rsaKey
+          },
+          title: {
+            argumentType: ArgumentTypeName.String,
+            value: a.row + ""
+          },
+          url: {
+            argumentType: ArgumentTypeName.String,
+            value:
+              "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg"
+          }
+        });
+        const serialized = await RSAImagePCDPackage.serialize(pcd);
+        return serialized;
+      })
+    );
+
+    return {
+      actions: [
+        {
+          type: PCDActionType.ReplaceInFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          pcds: serializedPCDs
+        }
+      ]
+    };
+  }
+
   public async load(): Promise<PipelineRunInfo> {
     const start = new Date();
     const logs: PipelineLog[] = [];
 
     try {
       const parsedCSV = await parseCSV(this.definition.options.csv);
+      const titleRow = parsedCSV.shift();
+      logs.push(makePLogInfo(`skipped title row '${titleRow}'`));
       const atoms = parsedCSV.map((row) => {
         return {
           id: uuid(),
