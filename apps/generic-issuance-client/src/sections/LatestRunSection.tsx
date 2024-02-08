@@ -4,7 +4,7 @@ import { ReactNode } from "react";
 import { Table } from "../components/Core";
 
 /**
- * Renders information about the last time this pipeline was run by PodBox.
+ * Renders information about the last time this pipeline was run by Podbox.
  * Useful for debugging an integration, and figuring out what went wrong.
  */
 export function LatestRunSection({

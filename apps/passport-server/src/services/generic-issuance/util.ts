@@ -2,7 +2,7 @@ import { PipelineLog, PipelineLogLevel } from "@pcd/passport-interface";
 
 /**
  * Helper function to instantiate a {@link PipelineLog}, used to communicate
- * information from data loading of pipelines to users of PodBox.
+ * information from data loading of pipelines to users of Podbox.
  */
 export function makePLog(
   level: PipelineLogLevel,
