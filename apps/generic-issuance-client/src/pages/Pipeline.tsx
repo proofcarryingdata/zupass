@@ -1,4 +1,5 @@
-import { ReactNode, useCallback, useState } from "react";
+import { useStytch } from "@stytch/react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
@@ -16,16 +17,23 @@ function stringifyAndFormat(obj: object): string {
 }
 
 export default function Pipeline(): ReactNode {
+  const stytchClient = useStytch();
   const params = useParams();
   const pipelineId: string | undefined = params.id;
   const [textareaValue, setTextareaValue] = useState("");
   const userJWT = useJWT();
   const userFromServer = useFetchSelf();
   const pipelineFromServer = useFetchPipeline(pipelineId);
-  const pipeline = pipelineFromServer?.value;
+
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoFromServer?.value;
   const [actionInProgress, setActionInProgress] = useState(false);
+
+  useEffect(() => {
+    if (pipelineFromServer?.value) {
+      setTextareaValue(stringifyAndFormat(pipelineFromServer.value));
+    }
+  }, [pipelineFromServer?.value]);
 
   const onSaveClick = useCallback(async () => {
     if (userJWT) {
@@ -65,7 +73,11 @@ export default function Pipeline(): ReactNode {
 
   return (
     <>
-      <Header includeLinkToDashboard />
+      <Header
+        includeLinkToDashboard
+        user={userFromServer}
+        stytchClient={stytchClient}
+      />
       {ownedBySomeoneElse && (
         <WarningSection>
           <b>WARNING!</b> You are not the owner of this pipeline, but you can

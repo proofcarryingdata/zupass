@@ -10,10 +10,11 @@ export function useFetchPipelineInfo(
   const [result, setResult] = useState<InfoResult | undefined>();
 
   useEffect(() => {
-    if (id === undefined) {
+    if (id === undefined || !jwt) {
       return;
     }
-    requestPipelineInfo(ZUPASS_SERVER_URL, id ?? "", jwt ?? "").then((res) => {
+
+    requestPipelineInfo(jwt, ZUPASS_SERVER_URL, id).then((res) => {
       setResult(res);
     });
   }, [id, jwt]);

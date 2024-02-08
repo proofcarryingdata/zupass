@@ -52,9 +52,11 @@ export function LatestRunSection({
         </>
       ) : (
         <Table>
-          {latestRun.latestLogs.map((l, i) => (
-            <PipelineLogEntry log={l} key={i} />
-          ))}
+          <tbody>
+            {latestRun.latestLogs.map((l, i) => (
+              <PipelineLogEntry log={l} key={i} />
+            ))}
+          </tbody>
         </Table>
       )}
     </div>
