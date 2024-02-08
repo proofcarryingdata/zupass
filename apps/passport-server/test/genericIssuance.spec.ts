@@ -153,6 +153,8 @@ describe("Generic Issuance", function () {
   const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(lemonadeBackend);
   const lemonadePipelineDefinition: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
+    timeCreated: Date.now(),
+    timeUpdated: Date.now(),
     id: randomUUID(),
     /**
      * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
@@ -213,6 +215,8 @@ describe("Generic Issuance", function () {
 
   const ethLatAmPipeline: PretixPipelineDefinition = {
     ownerUserId: ethLatAmGIUserID,
+    timeCreated: Date.now(),
+    timeUpdated: Date.now(),
     id: randomUUID(),
     /**
      * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s

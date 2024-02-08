@@ -17,12 +17,12 @@ export function PipelineListEntry({
   entry: GenericIssuancePipelineListEntry;
 }): ReactNode {
   const icon = useMemo(() => {
-    return pipelineIcon(entry);
+    return pipelineIcon(entry.extraInfo.lastRun);
   }, [entry]);
 
   return (
     <li key={entry.pipeline.id}>
-      {pipelineLink(entry)}
+      {pipelineLink(entry.pipeline.id)}
       by {entry.extraInfo.ownerEmail} {icon}
     </li>
   );
@@ -56,13 +56,13 @@ export function pipelineIcon(
   return "❌";
 }
 
-export function pipelineLink(
-  entry: GenericIssuancePipelineListEntry
-): ReactNode {
+export function pipelineLink(pipelineId: string | undefined): ReactNode {
+  if (!pipelineId) {
+    return null;
+  }
+
   return (
-    <Link to={`/pipelines/${entry.pipeline.id}`}>
-      {entry.pipeline.id.substring(0, 8)}...
-    </Link>
+    <Link to={`/pipelines/${pipelineId}`}>{pipelineId.substring(0, 8)}...</Link>
   );
 }
 

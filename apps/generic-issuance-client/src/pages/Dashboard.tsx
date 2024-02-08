@@ -90,7 +90,7 @@ export default function Dashboard(): ReactNode {
                     </td>
                     <td>{pipelineType(p)}</td>
                     <td>{pipelineOwner(p)}</td>
-                    <td>{pipelineLink(p)}</td>
+                    <td>{pipelineLink(p.pipeline.id)}</td>
                   </tr>
                 );
               })}

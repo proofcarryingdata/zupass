@@ -973,6 +973,8 @@ export class GenericIssuanceService {
     const pretixDefinition: PretixPipelineDefinition = {
       ownerUserId: ownerUUID,
       id: pretixDefinitionId,
+      timeCreated: Date.now(),
+      timeUpdated: Date.now(),
       editorUserIds: [],
       options: {
         feedOptions: {
