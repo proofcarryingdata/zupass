@@ -75,8 +75,15 @@ export class CSVPipeline implements BasePipeline {
 
   private async issue(_req: PollFeedRequest): Promise<PollFeedResponseValue> {
     const atoms = await this.db.load(this.id);
+    const defaultImg =
+      "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg";
     const serializedPCDs = await Promise.all(
-      atoms.map(async (a) => {
+      atoms.map(async (atom: CSVAtom) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const row = atom.row as any;
+        const imgTitle = row[0] ?? "untitled cat";
+        const imgUrl = row[1] ?? defaultImg;
+
         const pcd = await RSAImagePCDPackage.prove({
           id: {
             argumentType: ArgumentTypeName.String,
@@ -88,12 +95,11 @@ export class CSVPipeline implements BasePipeline {
           },
           title: {
             argumentType: ArgumentTypeName.String,
-            value: a.row + ""
+            value: imgTitle
           },
           url: {
             argumentType: ArgumentTypeName.String,
-            value:
-              "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg"
+            value: imgUrl
           }
         });
         const serialized = await RSAImagePCDPackage.serialize(pcd);

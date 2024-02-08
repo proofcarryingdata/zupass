@@ -26,8 +26,8 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
 );
 
 const SAMPLE_CSV_DATA = `Title,Image
-Test title 1,Img 1
-Test title 2,Img 2
+Dog,https://upload.wikimedia.org/wikipedia/commons/thumb/4/47/American_Eskimo_Dog.jpg/720px-American_Eskimo_Dog.jpg
+Cat,https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/2880px-Cat_August_2010-4.jpg
 `;
 
 export const SAMPLE_CSV_PIPELINE = JSON.stringify(
