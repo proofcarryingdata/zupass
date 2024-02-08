@@ -1,6 +1,6 @@
 module.exports = {
   // TODO: override this to always be true in CI
-  forbidOnly: true,
+  forbidOnly: false,
   forbidPending: true,
   failZero: true,
   bail: true

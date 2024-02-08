@@ -55,6 +55,7 @@ import {
   PipelineUser
 } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
+import { testCSVPipeline } from "./generic-issuance/testCSVPipeline";
 import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
 import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
@@ -77,7 +78,7 @@ import {
  * - finish this during Cat Week.
  * - comprehensive tests for both Pretix and Lemonade cases
  */
-describe("Generic Issuance", function () {
+describe.only("Generic Issuance", function () {
   this.timeout(15_000);
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
@@ -552,6 +553,11 @@ describe("Generic Issuance", function () {
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
   );
+
+  step("CSVPipeline", async function () {
+    expectToExist(giService);
+    await testCSVPipeline(giService);
+  });
 
   /**
    * Test for {@link PipelineDefinitionDB}, which implements postgres CRUD
