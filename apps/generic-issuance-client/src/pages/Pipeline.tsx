@@ -13,6 +13,7 @@ import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
 import { LatestRunSection } from "../sections/LatestRunSection";
+import { getError } from "../util";
 
 function stringifyAndFormat(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -89,6 +90,24 @@ export default function Pipeline(): ReactNode {
         <Header includeLinkToDashboard />
         <PageContent>
           {actionInProgress ? actionInProgress : "Loading..."}
+        </PageContent>
+      </>
+    );
+  }
+
+  const requestError = getError(
+    userFromServer,
+    pipelineFromServer,
+    pipelineInfoFromServer
+  );
+
+  if (requestError) {
+    return (
+      <>
+        <Header includeLinkToDashboard />
+        <PageContent>
+          <h2>Error Loading Page</h2>
+          {requestError}
         </PageContent>
       </>
     );
