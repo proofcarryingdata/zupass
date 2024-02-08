@@ -168,11 +168,9 @@ export class PretixPipeline implements BasePipeline {
       span?.setAttribute("pipeline_type", this.type);
 
       logger(LOG_TAG, `loading for pipeline id ${this.id}`);
+
       const tickets: PretixTicket[] = [];
-
       const errors: string[] = [];
-
-      const loadStart = Date.now();
 
       for (const event of this.definition.options.events) {
         // @todo this can throw exceptions. how should we handle this?
@@ -220,12 +218,12 @@ export class PretixPipeline implements BasePipeline {
       logger(
         LOG_TAG,
         `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-          loadEnd - loadStart
+          loadEnd - startTime
         }ms`
       );
 
       span?.setAttribute("atoms_saved", atomsToSave.length);
-      span?.setAttribute("load_duration_ms", loadEnd - loadStart);
+      span?.setAttribute("load_duration_ms", loadEnd - startTime);
 
       // Remove any pending check-ins that succeeded before loading started.
       // Those that succeeded after loading started might not be represented in
@@ -235,7 +233,7 @@ export class PretixPipeline implements BasePipeline {
       this.pendingCheckIns.forEach((value, key) => {
         if (
           value.status === CheckinStatus.Success &&
-          value.timestamp < loadStart
+          value.timestamp < startTime
         ) {
           this.pendingCheckIns.delete(key);
         }
