@@ -111,6 +111,7 @@ export const Table = styled.table`
 
 export const TextButton = styled.span`
   cursor: pointer;
+  user-select: none;
 
   &:hover {
     text-decoration: underline;

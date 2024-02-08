@@ -39,7 +39,4 @@ export function LatestAtomsSection({
   );
 }
 
-const TableContainer = styled.div`
-  max-width: 500px;
-  overflow-x: scroll;
-`;
+const TableContainer = styled.div``;
