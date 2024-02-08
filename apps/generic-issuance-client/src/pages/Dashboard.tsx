@@ -17,6 +17,7 @@ import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
+import { getError } from "../util";
 
 const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
   {
@@ -76,12 +77,27 @@ export default function Dashboard(): ReactNode {
   }
 
   if (isUploadingPipeline) {
-    <>
-      <Header user={user} stytchClient={stytchClient} />
-      <PageContent>creating pipeline...</PageContent>
-    </>;
+    return (
+      <>
+        <Header user={user} stytchClient={stytchClient} />
+        <PageContent>creating pipeline...</PageContent>
+      </>
+    );
   }
 
+  const requestError = getError(pipelinesFromServer, user);
+
+  if (requestError) {
+    return (
+      <>
+        <Header includeLinkToDashboard />
+        <PageContent>
+          <h2>Error Loading Page</h2>
+          {requestError}
+        </PageContent>
+      </>
+    );
+  }
   return (
     <>
       <Header user={user} stytchClient={stytchClient} />

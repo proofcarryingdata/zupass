@@ -1,8 +1,10 @@
 import { APIResult } from "@pcd/passport-interface";
 
-export function getError(...results: APIResult[]): string | undefined {
+export function getError(
+  ...results: (APIResult | undefined)[]
+): string | undefined {
   for (const result of results) {
-    if (!result.success) {
+    if (result && !result.success) {
       return result.error;
     }
   }

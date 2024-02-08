@@ -9,10 +9,12 @@ export const RefreshSession: FC = () => {
     const refresh = (): void => {
       if (stytchClient.session.getSync()) {
         const expiresAt = stytchClient.session.getSync()?.expires_at;
-
         if (expiresAt != null) {
           const expirationDate = new Date(expiresAt);
-          if (Date.now() > expirationDate.getTime() - SESSION_DURATION_MS / 3) {
+          if (
+            Date.now() >
+            expirationDate.getTime() - SESSION_DURATION_MS * 1.3
+          ) {
             stytchClient.session.authenticate({
               session_duration_minutes: SESSION_DURATION_MINUTES
             });
