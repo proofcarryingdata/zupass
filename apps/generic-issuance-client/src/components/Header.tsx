@@ -1,9 +1,9 @@
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode } from "react";
+import { ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
-import { GOLD } from "./Core";
+import { GOLD, TextButton } from "./Core";
 
 /**
  * A header that displays information about the logged-in user
@@ -21,6 +21,7 @@ export function Header({
 }): ReactNode {
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
+  const [showUserId, setShowUserId] = useState(false);
 
   const title = <b key="title">📦 PodBox</b>;
 
@@ -63,10 +64,17 @@ export function Header({
   }
 
   leftElements.push(
-    <b key="id">
-      {" · user id: "}
-      <i style={{ fontWeight: "normal" }}>{user.value.id}</i>
-    </b>
+    <span key="id">
+      {" · "}
+      <TextButton
+        onClick={(): void => {
+          setShowUserId((show) => !show);
+        }}
+      >
+        user id
+      </TextButton>{" "}
+      {showUserId ? user.value.id : "***"}
+    </span>
   );
 
   rightElements.push(

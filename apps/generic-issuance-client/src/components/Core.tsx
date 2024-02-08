@@ -108,3 +108,11 @@ export const Table = styled.table`
     }
   `}
 `;
+
+export const TextButton = styled.span`
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
+`;
