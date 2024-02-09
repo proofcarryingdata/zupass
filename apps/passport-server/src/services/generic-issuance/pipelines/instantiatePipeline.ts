@@ -31,7 +31,7 @@ export function instantiatePipeline(
   },
   zupassPublicKey: EdDSAPublicKey
 ): Promise<Pipeline> {
-  return traced("", "instantiatePipeline", async (span) => {
+  return traced("instantiatePipeline", "instantiatePipeline", async (span) => {
     setFlattenedObject(span, {
       type: definition.type,
       id: definition.id

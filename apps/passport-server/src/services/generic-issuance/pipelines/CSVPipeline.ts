@@ -194,7 +194,7 @@ export class CSVPipeline implements BasePipeline {
 }
 
 export function parseCSV(csv: string): Promise<string[][]> {
-  return traced("", "parseCSV", async (span) => {
+  return traced("parseCSV", "parseCSV", async (span) => {
     return new Promise<string[][]>((resolve, reject) => {
       span?.setAttribute("text_length", csv.length);
 
