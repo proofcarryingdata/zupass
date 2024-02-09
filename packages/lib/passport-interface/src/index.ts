@@ -36,6 +36,8 @@ export * from "./api/requestFrogCryptoUpdateTelegramSharing";
 export * from "./api/requestGenericIssuanceCheck";
 export * from "./api/requestGenericIssuanceCheckIn";
 export * from "./api/requestGenericIssuanceDeletePipeline";
+export * from "./api/requestGenericIssuanceFetchPretixEvents";
+export * from "./api/requestGenericIssuanceFetchPretixProducts";
 export * from "./api/requestGenericIssuanceGetAllUserPipelines";
 export * from "./api/requestGenericIssuanceGetPipeline";
 export * from "./api/requestGenericIssuanceSelf";

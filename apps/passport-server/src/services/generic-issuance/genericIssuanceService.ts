@@ -26,7 +26,11 @@ import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
-import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
+import {
+  GenericPretixEvent,
+  GenericPretixProduct,
+  IGenericPretixAPI
+} from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
   IPipelineDefinitionDB,
@@ -726,6 +730,21 @@ export class GenericIssuanceService {
       await this.definitionDB.clearDefinition(pipelineId);
       await this.restartPipeline(pipelineId);
     });
+  }
+
+  public async fetchAllPretixEvents(
+    orgUrl: string,
+    token: string
+  ): Promise<GenericPretixEvent[]> {
+    return this.genericPretixAPI.fetchAllEvents(orgUrl, token);
+  }
+
+  public async fetchPretixProducts(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<GenericPretixProduct[]> {
+    return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
   }
 
   /**

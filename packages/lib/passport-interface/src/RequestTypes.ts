@@ -966,6 +966,28 @@ export type GenericIssuanceDeletePipelineResponseValue = void;
 
 export type GenericIssuanceDeletePipelineRequest = { jwt: string };
 
+export type GenericIssuanceFetchPretixEventsRequest = {
+  orgUrl: string;
+  token: string;
+};
+
+// TODO: Move GenericPretixEvent types to passport-interface
+export type GenericIssuanceFetchPretixEventsResponseValue = Array<{
+  slug: string;
+  name: Record<string, string>;
+}>;
+
+export type GenericIssuanceFetchPretixProductsRequest = {
+  orgUrl: string;
+  token: string;
+  eventID: string;
+};
+
+export type GenericIssuanceFetchPretixProductsResponseValue = Array<{
+  id: number;
+  name: Record<string, string>;
+}>;
+
 export type GenericIssuanceSelf = {
   email: string;
   isAdmin: boolean;

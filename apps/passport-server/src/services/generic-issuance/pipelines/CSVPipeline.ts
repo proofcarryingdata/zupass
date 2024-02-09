@@ -197,7 +197,7 @@ export function parseCSV(csv: string): Promise<string[][]> {
       }
     });
 
-    parser.on("error", (err) => {
+    parser.on("error", (err: unknown) => {
       reject(err);
     });
 
