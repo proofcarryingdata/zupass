@@ -77,6 +77,7 @@ describe("EdDSA frog should work", function () {
   });
 
   it("should be able to compatibly deserialize a saved PCD", async function () {
+    // PCD serialized on 2024-02-08 by code of this test as of main commit 8478b75f5a
     const savedPCD =
       '{"type":"eddsa-frog-pcd","pcd":"{\\"id\\":\\"e1581c54-1f64-453e-bb0e-63d752979e34\\",\\"eddsaPCD\\":{\\"type\\":\\"eddsa-pcd\\",\\"pcd\\":\\"{\\\\\\"type\\\\\\":\\\\\\"eddsa-pcd\\\\\\",\\\\\\"id\\\\\\":\\\\\\"c995f27f-c8a6-4f8e-b56d-628e572e805c\\\\\\",\\\\\\"claim\\\\\\":{\\\\\\"message\\\\\\":[\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"18d8676c69f\\\\\\",\\\\\\"3039\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\",\\\\\\"0\\\\\\"],\\\\\\"publicKey\\\\\\":[\\\\\\"1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2\\\\\\",\\\\\\"1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4\\\\\\"]},\\\\\\"proof\\\\\\":{\\\\\\"signature\\\\\\":\\\\\\"ab51c3ab7419fb30b1cfa4aad88b8de5dde9cc62f39c883ca0c2938b50382e269fbb697d661b3cd1602e4d65c2a18636e2bd0dcbe8a1e53df2b51db54d3b0e04\\\\\\"}}\\"},\\"data\\":{\\"name\\":\\"test name\\",\\"description\\":\\"test description\\",\\"imageUrl\\":\\"/frog.png\\",\\"frogId\\":0,\\"biome\\":0,\\"rarity\\":0,\\"temperament\\":0,\\"jump\\":0,\\"speed\\":0,\\"intelligence\\":0,\\"beauty\\":0,\\"timestampSigned\\":1707357947551,\\"ownerSemaphoreId\\":\\"12345\\"}}"}';
     const expectedFrogData: IFrogData = {

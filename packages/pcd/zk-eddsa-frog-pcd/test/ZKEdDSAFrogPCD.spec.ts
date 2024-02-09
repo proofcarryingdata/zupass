@@ -47,7 +47,8 @@ const WATERMARK = BigInt(6);
 describe("ZKEdDSAFrogPCD should work", function () {
   this.timeout(1000 * 30);
 
-  let pcd1: ZKEdDSAFrogPCD;
+  // Single PCD shared among test cases for simplicity.
+  let sharedPCD: ZKEdDSAFrogPCD;
 
   const frogData: IFrogData = {
     // the fields below are not signed and are used for display purposes
@@ -132,9 +133,9 @@ describe("ZKEdDSAFrogPCD should work", function () {
 
   it("should be able to generate and verify a valid proof", async function () {
     const pcdArgs = await toArgs(frogData);
-    pcd1 = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
+    sharedPCD = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
 
-    const claim = pcd1.claim;
+    const claim = sharedPCD.claim;
     expect(claim.partialFrog.frogId).to.be.equal(0);
     expect(claim.partialFrog.ownerSemaphoreId).to.be.equal(
       identity1.getCommitment().toString()
@@ -147,7 +148,7 @@ describe("ZKEdDSAFrogPCD should work", function () {
     expect(claim.nullifierHash).to.be.not.be.undefined;
     expect(claim.watermark).to.be.equal(WATERMARK.toString());
 
-    const verificationRes = await ZKEdDSAFrogPCDPackage.verify(pcd1);
+    const verificationRes = await ZKEdDSAFrogPCDPackage.verify(sharedPCD);
     expect(verificationRes).to.be.true;
   });
 
@@ -331,17 +332,18 @@ describe("ZKEdDSAFrogPCD should work", function () {
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {
-    const serialized = await ZKEdDSAFrogPCDPackage.serialize(pcd1);
+    const serialized = await ZKEdDSAFrogPCDPackage.serialize(sharedPCD);
     const deserialized = await ZKEdDSAFrogPCDPackage.deserialize(
       serialized.pcd
     );
-    expect(pcd1).to.deep.eq(deserialized);
+    expect(sharedPCD).to.deep.eq(deserialized);
 
     const deserializedValid = await ZKEdDSAFrogPCDPackage.verify(deserialized);
     expect(deserializedValid).to.eq(true);
   });
 
   it("should be able to compatibly deserialize a saved PCD", async function () {
+    // PCD serialized on 2024-02-08 by code of this test as of main commit 8478b75f5a
     const savedPCD =
       '{"type":"zk-eddsa-frog-pcd","pcd":"{\\"id\\":\\"ef3c45d5-466b-4a8b-bbb9-d68d5f68e095\\",\\"claim\\":{\\"partialFrog\\":{\\"name\\":\\"test name\\",\\"description\\":\\"test description\\",\\"imageUrl\\":\\"/frog.png\\",\\"frogId\\":0,\\"biome\\":0,\\"rarity\\":0,\\"temperament\\":0,\\"jump\\":0,\\"speed\\":0,\\"intelligence\\":0,\\"beauty\\":0,\\"timestampSigned\\":1707360738783,\\"ownerSemaphoreId\\":\\"18711405342588116796533073928767088921854096266145046362753928030796553161041\\"},\\"signerPublicKey\\":[\\"1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2\\",\\"1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4\\"],\\"externalNullifier\\":\\"42\\",\\"watermark\\":\\"6\\",\\"nullifierHash\\":\\"1517081033071132720435657432021139876572843496027662548196342287861804968602\\"},\\"proof\\":{\\"pi_a\\":[\\"6309217738118897492286114944253760964829823857206059388878610024710014231054\\",\\"12838248983233243152443672744507962169655481323747186320281973636531593384531\\",\\"1\\"],\\"pi_b\\":[[\\"4470107523527921425119063142735752124959897982885298605926564840599163958362\\",\\"21615439528607569986503726881022241496801091076315742457850970676731934444679\\"],[\\"19379548862919133605546657181529806768597627690041452921129174219009405473168\\",\\"3770768116621795640112301289924098960032080115318826372024438011964893835611\\"],[\\"1\\",\\"0\\"]],\\"pi_c\\":[\\"12613842215064694156046209713267405505098974946239483122608822886164077872149\\",\\"14117291538912409884010319692830839171281576682980709352277599727228749407236\\",\\"1\\"],\\"protocol\\":\\"groth16\\",\\"curve\\":\\"bn128\\"},\\"type\\":\\"zk-eddsa-frog-pcd\\"}"}';
     const expectedFrogData: IFrogData = {

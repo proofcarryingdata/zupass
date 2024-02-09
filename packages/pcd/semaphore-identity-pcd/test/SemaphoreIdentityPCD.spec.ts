@@ -34,6 +34,7 @@ describe("Semaphore Identity PCD", function () {
   it("should be able to compatibly deserialize a saved PCD", async function () {
     const { deserialize, name, verify } = SemaphoreIdentityPCDPackage;
 
+    // PCD serialized on 2024-02-08 by code of this test as of main commit 8478b75f5a
     const savedPCD =
       '{"type":"semaphore-identity-pcd","pcd":"{\\"type\\":\\"semaphore-identity-pcd\\",\\"id\\":\\"e3bf14ca-b8eb-4a78-9485-c8b1982a497f\\",\\"identity\\":\\"[\\\\\\"0x5e169461d89b553370b4ac3bae0df93cd7f127abfee5c38d2c1b30d3ebf654\\\\\\",\\\\\\"0xc96157535de33d96ef25e41350cd569b34e97243180ec56a7497eb4f0c3d16\\\\\\"]\\"}"}';
     const serialized = JSON.parse(savedPCD);
