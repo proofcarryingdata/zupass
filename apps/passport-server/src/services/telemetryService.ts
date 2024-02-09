@@ -2,7 +2,7 @@ import { HoneycombSDK } from "@honeycombio/opentelemetry-node";
 import opentelemetry, { Span, Tracer } from "@opentelemetry/api";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
-import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
+import { ZUPASS_GITHUB_REPOSITORY_URL, flattenObject } from "@pcd/util";
 import Libhoney from "libhoney";
 import urljoin from "url-join";
 import { ApplicationContext } from "../types";
@@ -111,6 +111,7 @@ export async function traced<T>(
 
   return tracer.startActiveSpan(service + "." + method, async (span) => {
     span.setAttribute("trace_service_name", service);
+    span.setAttribute("trace_method_name", method);
 
     if (process.env.ROLLBAR_ENV_NAME) {
       span.setAttribute("env_name", process.env.ROLLBAR_ENV_NAME);
@@ -148,4 +149,14 @@ export function setError(e: unknown, span?: Span): void {
       span?.setAttribute("error_cause_stack", e.cause.stack);
     }
   }
+}
+
+export function setFlattenedObject(
+  span: Span | undefined,
+  val: object | undefined
+): void {
+  const flattened = flattenObject(val);
+  flattened.forEach(([k, v]) => {
+    span?.setAttribute(k, v);
+  });
 }
