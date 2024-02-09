@@ -136,8 +136,10 @@ export class CSVPipeline implements BasePipeline {
 
   public async load(): Promise<PipelineRunInfo> {
     return traced(LOG_NAME, "load", async (span) => {
+      logger(LOG_TAG, "load");
       span?.setAttribute("pipeline_id", this.id);
       span?.setAttribute("pipeline_type", this.definition.type);
+      logger(LOG_TAG, "load", this.id, this.definition.type);
 
       const start = new Date();
       const logs: PipelineLog[] = [];
