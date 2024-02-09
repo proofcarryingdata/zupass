@@ -902,6 +902,9 @@ export class GenericIssuanceService {
   ): Promise<GenericIssuanceSendEmailResponseValue> {
     return traced(SERVICE_NAME, "sendLoginEmail", async (span) => {
       const normalizedEmail = normalizeEmail(email);
+      logger(LOG_TAG, "sendLoginEmail", normalizedEmail);
+      span?.setAttribute("email", normalizedEmail);
+
       // TODO: Skip email auth on this.bypassEmail
       try {
         await this.stytchClient.magicLinks.email.loginOrCreate({
@@ -913,7 +916,7 @@ export class GenericIssuanceService {
         });
       } catch (e) {
         setError(e, span);
-        logger(LOG_TAG, `failed to send login email`, e);
+        logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
         throw new PCDHTTPError(500, "Failed to send generic issuance email");
       }
 
