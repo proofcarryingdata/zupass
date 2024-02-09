@@ -21,6 +21,7 @@
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "clean": "rm -rf dist node_modules *.tsbuildinfo",
@@ -34,9 +35,9 @@
     "@pcd/semaphore-signature-pcd": "0.10.0",
     "@pcd/util": "0.4.0",
     "@semaphore-protocol/identity": "^3.14.0",
-    "@zk-kit/groth16": "^0.3.0",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
+    "snarkjs": "^0.7.3",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
