@@ -198,6 +198,29 @@ export class GenericPretixDataMocker {
     update(product);
   }
 
+  /**
+   * Simulates the effect of a ticket-holder being checked out (or, more
+   * precisely, their check-in being deleted) on the Pretix back-end.
+   */
+  public checkOut(orgUrl: string, eventId: string, email: string): void {
+    const org = this.data.organizersByOrgUrl.get(orgUrl);
+    if (!org) throw new Error(`missing org ${orgUrl}`);
+    const order = org.ordersByEventID
+      .get(eventId)
+      ?.find((order) => order.email === email);
+    if (!order) {
+      throw new Error(
+        `Couldn't find an order for ${email} for event ${eventId}`
+      );
+    }
+    if (order) {
+      order.positions.forEach((position) => {
+        // This simulates the results we would see for a cancelled check-in
+        position.checkins = [];
+      });
+    }
+  }
+
   private newMockData(): IMockGenericIssuancePretixBackendData {
     const organizer1 = this.newOrganizer("PRETIX_ORGANIZER_ONE");
     // const organizer2 = this.newOrganizer("PRETIX_ORGANIZER_TWO");
