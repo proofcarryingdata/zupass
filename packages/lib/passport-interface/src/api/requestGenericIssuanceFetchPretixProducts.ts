@@ -7,7 +7,7 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks the server to fetch the Pretix events for the given organizer URL and API token.
+ * Asks the server to fetch the Pretix products for the given organizer URL and API token.
  */
 export async function requestGenericIssuanceFetchPretixProducts(
   zupassServerUrl: string,
