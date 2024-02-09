@@ -127,7 +127,7 @@ export default function Dashboard(): ReactNode {
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
       columnHelper.accessor("status", {
-        header: "Icon",
+        header: "🚀",
         cell: (props) => {
           const value = props.getValue().valueOf();
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
