@@ -72,19 +72,22 @@ export const PageContent = styled.div`
 export const GOLD = "#f4ff1f";
 export const TABLE_BORDER_COLOR = "#5d5d5d";
 export const TABLE_BORDER_WIDTH = "2px";
+export const CELL_PADDING = "4px 8px";
 
 export const Table = styled.table`
   ${({ twoColumn }: { twoColumn?: boolean }): FlattenSimpleInterpolation => css`
     border-collapse: collapse;
 
     thead {
+      user-select: none;
+
       tr {
         font-weight: bold;
         text-decoration: underline;
         text-align: right;
 
         th {
-          padding: 4px 8px;
+          padding: ${CELL_PADDING};
           border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
         }
       }
@@ -92,7 +95,7 @@ export const Table = styled.table`
 
     tr {
       td {
-        padding: 4px 8px;
+        padding: ${CELL_PADDING};
         border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
       }
 
