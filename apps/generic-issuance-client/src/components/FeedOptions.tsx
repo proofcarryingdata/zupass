@@ -6,7 +6,7 @@ interface FeedOptionsProps {
   setFeedOptions: (options: FeedIssuanceOptions) => void;
 }
 
-const FeedOptions: React.FC<FeedOptionsProps> = ({
+export const FeedOptions: React.FC<FeedOptionsProps> = ({
   feedOptions,
   setFeedOptions
 }) => {
@@ -81,5 +81,3 @@ const FeedOptions: React.FC<FeedOptionsProps> = ({
     </table>
   );
 };
-
-export default FeedOptions;

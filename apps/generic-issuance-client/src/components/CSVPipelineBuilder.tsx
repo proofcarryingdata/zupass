@@ -4,7 +4,7 @@ import {
   SAMPLE_CSV_DATA,
   SAMPLE_CSV_FEED_OPTIONS
 } from "../pages/SamplePipelines";
-import FeedOptions from "./FeedOptions";
+import { FeedOptions } from "./FeedOptions";
 
 interface CSVPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;

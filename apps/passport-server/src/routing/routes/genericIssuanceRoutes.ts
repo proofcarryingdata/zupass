@@ -241,6 +241,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-events",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
+      await genericIssuanceService.authenticateStytchSession(req);
       const events = await genericIssuanceService.fetchAllPretixEvents(
         checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
           req,
@@ -259,6 +260,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
+      await genericIssuanceService.authenticateStytchSession(req);
       const events = await genericIssuanceService.fetchPretixProducts(
         checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
           req,

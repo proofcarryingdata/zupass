@@ -10,8 +10,9 @@ import {
 import { ChangeEvent, ReactNode, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { useJWT } from "../helpers/userHooks";
 import { DEFAULT_FEED_OPTIONS } from "../pages/SamplePipelines";
-import FeedOptions from "./FeedOptions";
+import { FeedOptions } from "./FeedOptions";
 
 interface PretixPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
@@ -29,13 +30,20 @@ export default function PretixPipelineBuilder(
   const [feedOptions, setFeedOptions] =
     useState<FeedIssuanceOptions>(DEFAULT_FEED_OPTIONS);
 
+  const jwt = useJWT();
+
+  if (!jwt) {
+    window.location.href = "/";
+    return;
+  }
+
   const handleSelectEvent = async (
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     setSelectedEvent(e.target.value);
     const response = await requestGenericIssuanceFetchPretixProducts(
       ZUPASS_SERVER_URL,
-      { orgUrl, token, eventID: e.target.value }
+      { jwt, orgUrl, token, eventID: e.target.value }
     );
     if (response.success) {
       setProducts(
@@ -71,7 +79,7 @@ export default function PretixPipelineBuilder(
           }
           const response = await requestGenericIssuanceFetchPretixEvents(
             ZUPASS_SERVER_URL,
-            { orgUrl, token }
+            { jwt, orgUrl, token }
           );
           if (response.success) {
             setEvents(response.value);

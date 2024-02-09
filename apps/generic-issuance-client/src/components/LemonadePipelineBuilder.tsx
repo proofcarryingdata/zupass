@@ -1,5 +1,6 @@
-import { ReactNode, useState } from "react";
+import { ReactNode } from "react";
 import { SAMPLE_LEMONADE_PIPELINE } from "../pages/SamplePipelines";
+import RawJSONPipelineBuilder from "./RawJSONPipelineBuilder";
 
 interface LemonadePipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
@@ -9,26 +10,10 @@ interface LemonadePipelineBuilderProps {
 export default function LemonadePipelineBuilder(
   props: LemonadePipelineBuilderProps
 ): ReactNode {
-  const [newPipelineJSON, setNewPipelineJSON] = useState(
-    SAMPLE_LEMONADE_PIPELINE
-  );
   return (
-    <div
-      style={{
-        marginTop: "8px"
-      }}
-    >
-      <textarea
-        cols={120}
-        rows={40}
-        value={newPipelineJSON}
-        onChange={(e): void => setNewPipelineJSON(e.target.value)}
-      />
-      <div>
-        <button onClick={(): Promise<void> => props.onCreate(newPipelineJSON)}>
-          🐒 Create! 🚀
-        </button>
-      </div>
-    </div>
+    <RawJSONPipelineBuilder
+      initialValue={SAMPLE_LEMONADE_PIPELINE}
+      onCreate={props.onCreate}
+    />
   );
 }

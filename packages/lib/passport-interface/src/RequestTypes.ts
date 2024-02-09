@@ -969,6 +969,7 @@ export type GenericIssuanceDeletePipelineRequest = { jwt: string };
 export type GenericIssuanceFetchPretixEventsRequest = {
   orgUrl: string;
   token: string;
+  jwt: string;
 };
 
 // TODO: Move GenericPretixEvent types to passport-interface
@@ -981,6 +982,7 @@ export type GenericIssuanceFetchPretixProductsRequest = {
   orgUrl: string;
   token: string;
   eventID: string;
+  jwt: string;
 };
 
 export type GenericIssuanceFetchPretixProductsResponseValue = Array<{

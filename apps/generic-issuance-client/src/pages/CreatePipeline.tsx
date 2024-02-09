@@ -1,25 +1,26 @@
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useContext, useState } from "react";
+import { ReactNode, useCallback, useState } from "react";
 import CSVPipelineBuilder from "../components/CSVPipelineBuilder";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import LemonadePipelineBuilder from "../components/LemonadePipelineBuilder";
 import { pipelineDetailPagePath } from "../components/PipelineDetails";
 import PretixPipelineBuilder from "../components/PretixPipelineBuilder";
-import { GIContext } from "../helpers/Context";
+import RawJSONPipelineBuilder from "../components/RawJSONPipelineBuilder";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
+
+type PipelineCreationOptions = PipelineType | "Raw JSON";
 
 export default function CreatePipeline(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const user = useFetchSelf();
-  const _ctx = useContext(GIContext);
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [selectedPipelineType, setSelectedPipelineType] =
-    useState<PipelineType>();
+    useState<PipelineCreationOptions>();
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {
@@ -81,6 +82,9 @@ export default function CreatePipeline(): ReactNode {
         )}
         {selectedPipelineType === PipelineType.Lemonade && (
           <LemonadePipelineBuilder onCreate={onCreateClick} />
+        )}
+        {selectedPipelineType === "Raw JSON" && (
+          <RawJSONPipelineBuilder onCreate={onCreateClick} />
         )}
       </PageContent>
     </>
