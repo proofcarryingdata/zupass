@@ -811,6 +811,7 @@ export class GenericIssuanceService {
           LOG_TAG,
           `killing already running pipeline instance '${pipelineId}'`
         );
+        span?.setAttribute("stopping", true);
         await pipelineSlot.pipelineInstance?.stop();
       } else {
         logger(LOG_TAG, `starting brand new pipeline ${pipelineId}`);
@@ -820,6 +821,7 @@ export class GenericIssuanceService {
         await this.definitionDB.getDefinition(pipelineId);
 
       if (!pipelineDefinition) {
+        span?.setAttribute("not_restarting", true);
         logger(
           LOG_TAG,
           `can't restart pipeline '${pipelineId}' because not in database`
