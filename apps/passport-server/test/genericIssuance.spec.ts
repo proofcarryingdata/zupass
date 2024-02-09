@@ -648,6 +648,7 @@ t2,i1`,
     // Reload the pipeline
     await pipeline.load();
     {
+      // Get updated tickets from feed
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,
@@ -686,11 +687,31 @@ t2,i1`,
     }
     {
       // Check the bouncer out again
+      // Simulates the effect of check-in being deleted in Pretix
       pretixBackend.checkOut(
         ethLatAmPretixOrganizer.orgUrl,
         "eth-lat-am",
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       );
+    }
+    {
+      // Trying to check in again should fail because we have not yet reloaded
+      // data from Pretix.
+      const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+        ethLatAmCheckinRoute,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        bouncerTicket.claim.ticket.attendeeEmail,
+        EdgeCityBouncerIdentity,
+        bouncerTicket
+      );
+      expect(bouncerCheckInBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date(checkinTimestamp).toISOString(),
+          checker: "Pretix"
+        }
+      } as GenericIssuanceCheckInResponseValue);
     }
     // Verify that bouncer is checked out in backend
     await pipeline.load();
