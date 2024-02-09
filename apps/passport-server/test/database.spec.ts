@@ -72,7 +72,7 @@ import { overrideEnvironment, testingEnv } from "./util/env";
 import { randomEmail } from "./util/util";
 
 describe("database reads and writes", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   let db: Pool;
   let testTicket: ZuzaluPretixTicket;

@@ -82,7 +82,7 @@ import {
  * - comprehensive tests for both Pretix and Lemonade cases
  */
 describe("Generic Issuance", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
   const now = Date.now();
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;

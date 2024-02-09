@@ -937,6 +937,7 @@ export class GenericIssuanceService {
           signup_magic_link_url: this.genericIssuanceClientUrl,
           signup_expiration_minutes: 10
         });
+        logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
       } catch (e) {
         setError(e, span);
         logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
