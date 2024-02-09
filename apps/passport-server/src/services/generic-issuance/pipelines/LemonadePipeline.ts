@@ -387,39 +387,6 @@ export class LemonadePipeline implements BasePipeline {
     return ticketPCD;
   }
 
-  private eddsaTicketToLemonadeEventId(ticket: EdDSATicketPCD): string {
-    const correspondingEventConfig = this.definition.options.events.find(
-      (e) => e.genericIssuanceEventId === ticket.claim.ticket.eventId
-    );
-
-    if (!correspondingEventConfig) {
-      throw new Error("no matching event id");
-    }
-
-    return correspondingEventConfig.externalId;
-  }
-
-  private eddsaTicketToLemonadeTicketTypeId(ticket: EdDSATicketPCD): string {
-    const correspondingEventConfig = this.definition.options.events.find(
-      (e) => e.genericIssuanceEventId === ticket.claim.ticket.eventId
-    );
-
-    if (!correspondingEventConfig) {
-      throw new Error("no matching event id");
-    }
-
-    const correspondingTicketTypeConfig =
-      correspondingEventConfig.ticketTypes.find(
-        (t) => t.genericIssuanceProductId === ticket.claim.ticket.productId
-      );
-
-    if (!correspondingTicketTypeConfig) {
-      throw new Error("no matching ticket type id");
-    }
-
-    return correspondingTicketTypeConfig.externalId;
-  }
-
   private lemonadeAtomToZupassEventId(atom: LemonadeAtom): string {
     const correspondingEventConfig = this.definition.options.events.find(
       (e) => e.externalId === atom.lemonadeEventId
