@@ -129,9 +129,11 @@ export default function Dashboard(): ReactNode {
       columnHelper.accessor("status", {
         header: "🚀",
         cell: (props) => {
-          const value = props.getValue().valueOf();
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          return <span>{pipelineIconFromStr(value as unknown as any)}</span>;
+          const value = props.getValue().valueOf() as
+            | "waiting"
+            | "success"
+            | "error";
+          return <span>{pipelineIconFromStr(value)}</span>;
         }
       }),
       columnHelper.accessor("status", {
