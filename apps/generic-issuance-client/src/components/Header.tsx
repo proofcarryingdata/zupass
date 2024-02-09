@@ -29,11 +29,22 @@ export function Header({
   }, [ctx]);
 
   const title = <Title key="title" />;
+  const linkToDashboard = (
+    <span key="back">
+      <Link to="/dashboard">
+        <button>👈 Back to Dashboard</button>
+      </Link>
+      {" · "}
+    </span>
+  );
 
   if (!user?.value) {
     return (
       <HeaderContainer>
-        <LeftHalf>{title}</LeftHalf>
+        <LeftHalf>
+          {includeLinkToDashboard ? linkToDashboard : null}
+          {title}
+        </LeftHalf>
         <RightHalf>
           {/* to prevent page reflow on data load */}
           <button style={{ visibility: "hidden" }}>...</button>
@@ -43,14 +54,7 @@ export function Header({
   }
 
   if (includeLinkToDashboard) {
-    leftElements.push(
-      <span key="back">
-        <Link to="/dashboard">
-          <button>👈 Back to Dashboard</button>
-        </Link>
-        {" · "}
-      </span>
-    );
+    leftElements.push(linkToDashboard);
   }
 
   leftElements.push(title);

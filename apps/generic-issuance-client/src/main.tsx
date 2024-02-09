@@ -6,6 +6,7 @@ import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import { RefreshSession } from "./components/RefreshSession";
 import { GIContext, GIContextState } from "./helpers/Context";
+import { NotFound } from "./pages/404";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
 import Pipeline from "./pages/Pipeline";
@@ -15,7 +16,8 @@ const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 const router = createHashRouter([
   { path: "/", element: <Home /> },
   { path: "/dashboard", element: <Dashboard /> },
-  { path: "/pipelines/:id", element: <Pipeline /> }
+  { path: "/pipelines/:id", element: <Pipeline /> },
+  { path: "*", element: <NotFound /> }
 ]);
 
 function loadInitalState(): Partial<GIContextState> {
