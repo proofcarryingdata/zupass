@@ -396,10 +396,11 @@ export class GenericIssuanceService {
   ): Promise<PipelineInfoResponseValue> {
     return traced(SERVICE_NAME, "handleGetPipelineInfo", async (span) => {
       logger(LOG_TAG, "handleGetPipelineInfo", str(user), pipelineId);
-      span?.setAttribute("user_id", user.id);
+      setFlattenedObject(span, { user });
       span?.setAttribute("pipeline_id", pipelineId);
 
       const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+      span?.setAttribute("pipeline_type", pipelineSlot.definition.type);
       const pipelineInstance = await this.ensurePipelineStarted(pipelineId);
 
       this.ensureUserHasPipelineDefinitionAccess(user, pipelineSlot.definition);
@@ -440,6 +441,8 @@ export class GenericIssuanceService {
       span?.setAttribute("feed_id", feedId);
 
       const pipeline = await this.ensurePipelineStarted(pipelineId);
+      span?.setAttribute("pipeline_type", pipeline.type);
+
       const feedCapability = ensureFeedIssuanceCapability(pipeline, feedId);
 
       const result = {
@@ -674,41 +677,41 @@ export class GenericIssuanceService {
    * Loads a pipeline definition if the given {@link PipelineUser} has access.
    */
   public async loadPipelineDefinition(
-    userId: string,
+    user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineDefinition> {
     return traced(SERVICE_NAME, "loadPipelineDefinition", async (span) => {
-      logger(SERVICE_NAME, "loadPipelineDefinition", userId, pipelineId);
-      span?.setAttribute("user_id", userId);
-      span?.setAttribute("pipelineId", pipelineId);
-      const pipeline = await this.definitionDB.getDefinition(pipelineId);
-      const user = await this.userDB.getUser(userId);
-      if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline))
-        throw new PCDHTTPError(404, "Pipeline not found or not accessible");
+      logger(SERVICE_NAME, "loadPipelineDefinition", str(user), pipelineId);
+      span?.setAttribute("pipeline_id", pipelineId);
+      setFlattenedObject(span, { user });
 
+      const pipeline = await this.definitionDB.getDefinition(pipelineId);
+      if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline)) {
+        throw new PCDHTTPError(404, "Pipeline not found or not accessible");
+      }
+      span?.setAttribute("pipeline_type", pipeline.type);
       return pipeline;
     });
   }
 
   public async upsertPipelineDefinition(
-    userId: string,
+    user: PipelineUser,
     pipelineDefinition: PipelineDefinition
   ): Promise<PipelineDefinition> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       logger(
         SERVICE_NAME,
         "upsertPipelineDefinition",
-        userId,
+        str(user),
         str(pipelineDefinition)
       );
-      span?.setAttribute("user_id", userId);
+      setFlattenedObject(span, { user });
       span?.setAttribute("pipeline_id", pipelineDefinition.id);
       span?.setAttribute("pipeline_type", pipelineDefinition.type);
 
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
       );
-      const user = await this.userDB.getUser(userId);
 
       if (existingPipelineDefinition) {
         span?.setAttribute("is_new", false);
@@ -728,7 +731,7 @@ export class GenericIssuanceService {
         }
       } else {
         span?.setAttribute("is_new", true);
-        pipelineDefinition.ownerUserId = userId;
+        pipelineDefinition.ownerUserId = user.id;
         if (!pipelineDefinition.id) {
           pipelineDefinition.id = uuidV4();
         }
@@ -759,20 +762,25 @@ export class GenericIssuanceService {
   }
 
   public async deletePipelineDefinition(
-    userId: string,
+    user: PipelineUser,
     pipelineId: string
   ): Promise<void> {
     return traced(SERVICE_NAME, "deletePipelineDefinition", async (span) => {
-      span?.setAttribute("user_id", userId);
+      setFlattenedObject(span, { user });
+
       span?.setAttribute("pipeline_id", pipelineId);
-      const pipeline = await this.loadPipelineDefinition(userId, pipelineId);
+      const pipeline = await this.loadPipelineDefinition(user, pipelineId);
+      span?.setAttribute("pipeline_type", pipeline.type);
+
       // TODO: Finalize the "permissions model" for CRUD actions. Right now,
       // create, read, update are permissable by owners and editors, while delete
       // is only permissable by owners.
-      if (pipeline.ownerUserId !== userId) {
+      if (pipeline.ownerUserId !== user.id) {
         throw new PCDHTTPError(
           403,
-          `user ${userId} can't delete pipeline ${pipeline.id} owned by other user ${pipeline.ownerUserId}`
+          `user '${str(user)}' can't delete pipeline '${
+            pipeline.id
+          }' owned by other user ${pipeline.ownerUserId}`
         );
       }
 
@@ -829,6 +837,7 @@ export class GenericIssuanceService {
         return;
       }
 
+      span?.setAttribute("pipeline_type", pipelineDefinition.type);
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
       const pipelineInstance = await instantiatePipeline(
@@ -859,16 +868,18 @@ export class GenericIssuanceService {
 
       const existingUser = await this.userDB.getUserByEmail(email);
       if (existingUser != null) {
-        setFlattenedObject(span, { existingUser });
+        span?.setAttribute("is_new", false);
+        setFlattenedObject(span, { user: existingUser });
         return existingUser;
       }
+      span?.setAttribute("is_new", true);
       const newUser: PipelineUser = {
         id: uuidV4(),
         email,
         isAdmin: this.getEnvAdminEmails().includes(email)
       };
       this.userDB.setUser(newUser);
-      setFlattenedObject(span, { newUser });
+      setFlattenedObject(span, { user: newUser });
       return newUser;
     });
   }
@@ -890,18 +901,23 @@ export class GenericIssuanceService {
   }
 
   public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
-    try {
-      const reqBody = req.body;
-      const jwt = reqBody.jwt;
-      const { session } = await this.stytchClient.sessions.authenticateJwt({
-        session_jwt: jwt
-      });
-      const email = this.getEmailFromStytchSession(session);
-      const user = await this.createOrGetUser(email);
-      return user;
-    } catch (e) {
-      throw new PCDHTTPError(401, "Not authorized");
-    }
+    return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
+      const reqBody = req?.body;
+      const jwt = reqBody?.jwt;
+      try {
+        span?.setAttribute("has_jwt", !!jwt);
+        logger(LOG_TAG, `attempting to authenticate jwt ${jwt}`);
+        const { session } = await this.stytchClient.sessions.authenticateJwt({
+          session_jwt: jwt
+        });
+        const email = this.getEmailFromStytchSession(session);
+        const user = await this.createOrGetUser(email);
+        return user;
+      } catch (e) {
+        logger(LOG_TAG, `failed to authenticate with jwt '${jwt}'`, e);
+        throw new PCDHTTPError(401, "Not authorized");
+      }
+    });
   }
 
   public async sendLoginEmail(
