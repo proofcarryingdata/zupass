@@ -6,7 +6,6 @@ import {
 import { useStytch } from "@stytch/react";
 import {
   ColumnDef,
-  ColumnOrderState,
   SortingState,
   createColumnHelper,
   flexRender,
@@ -124,7 +123,6 @@ export default function Dashboard(): ReactNode {
   const rows: Row[] = useMemo(() => {
     return pipelineEntries.map(entryToRow);
   }, [entryToRow, pipelineEntries]);
-
   const columnHelper = createColumnHelper<Row>();
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
@@ -183,22 +181,15 @@ export default function Dashboard(): ReactNode {
     ],
     [columnHelper, isAdminView]
   );
-
   const filteredColumns = useMemo(() => {
     return columns.filter((r) => !!r) as Array<ColumnDef<Row>>;
   }, [columns]);
-
-  const [columnVisibility, setColumnVisibility] = useState({});
-  const [columnOrder, setColumnOrder] = useState<ColumnOrderState>([]);
   const [sorting, setSorting] = useState<SortingState>([]);
-
   const table = useReactTable({
     columns: filteredColumns,
     data: rows,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    onColumnVisibilityChange: setColumnVisibility,
-    onColumnOrderChange: setColumnOrder,
     debugTable: true,
     debugHeaders: true,
     debugColumns: true,
