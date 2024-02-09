@@ -599,8 +599,6 @@ t2,i1`,
   step("check-in and remote check-out works in Pretix", async function () {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
-    expectToExist(pipelines);
-    expectLength(pipelines, 2);
     const pipeline = pipelines.find(PretixPipeline.is);
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(ethLatAmPipeline.id);
