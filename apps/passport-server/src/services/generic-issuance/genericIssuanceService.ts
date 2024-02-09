@@ -711,6 +711,7 @@ export class GenericIssuanceService {
       const user = await this.userDB.getUser(userId);
 
       if (existingPipelineDefinition) {
+        span?.setAttribute("is_new", false);
         if (
           !this.userHasPipelineDefinitionAccess(
             user,
@@ -726,6 +727,7 @@ export class GenericIssuanceService {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
       } else {
+        span?.setAttribute("is_new", true);
         pipelineDefinition.ownerUserId = userId;
         if (!pipelineDefinition.id) {
           pipelineDefinition.id = uuidV4();
