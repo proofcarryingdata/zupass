@@ -41,7 +41,7 @@ import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { RollbarService } from "../rollbarService";
-import { setError, traced } from "../telemetryService";
+import { setError, setFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -208,7 +208,15 @@ export class GenericIssuanceService {
       async (span): Promise<PipelineRunInfo> => {
         logger(
           LOG_TAG,
-          `executing pipeline '${inMemoryPipeline.definition.id}'`
+          `executing pipeline '${inMemoryPipeline.definition.id}'` +
+            ` of type '${inMemoryPipeline.definition.type}'` +
+            ` belonging to ${inMemoryPipeline.definition.ownerUserId}`
+        );
+        span?.setAttribute("pipeline_id", inMemoryPipeline.definition.id);
+        span?.setAttribute("pipeline_type", inMemoryPipeline.definition.type);
+        span?.setAttribute(
+          "owner_user_id",
+          inMemoryPipeline.definition.ownerUserId
         );
 
         const start = Date.now();
@@ -218,7 +226,7 @@ export class GenericIssuanceService {
         if (!pipeline) {
           logger(
             LOG_TAG,
-            `pipeline '${pipelineId}' is not running; skipping execution`
+            `pipeline '${pipelineId}' of type '${inMemoryPipeline.definition.type}' is not running; skipping execution`
           );
           const newInfo: PipelineRunInfo = {
             lastRunStartTimestamp: start,
@@ -228,19 +236,26 @@ export class GenericIssuanceService {
             success: false
           };
           this.definitionDB.saveLastRunInfo(pipelineId, newInfo);
+          setFlattenedObject(span, newInfo);
           return newInfo;
         }
 
         try {
-          logger(LOG_TAG, `loading data for pipeline with id '${pipelineId}'`);
-          const result = await pipeline.load();
           logger(
             LOG_TAG,
-            `successfully loaded data for pipeline with id '${pipelineId}'`,
-            result
+            `loading data for pipeline with id '${pipelineId}'` +
+              ` of type '${inMemoryPipeline.definition.type}'`
           );
-          this.definitionDB.saveLastRunInfo(pipelineId, result);
-          return result;
+          const newInfo = await pipeline.load();
+          logger(
+            LOG_TAG,
+            `successfully loaded data for pipeline with id '${pipelineId}'` +
+              ` of type '${inMemoryPipeline.definition.type}'`,
+            newInfo
+          );
+          this.definitionDB.saveLastRunInfo(pipelineId, newInfo);
+          setFlattenedObject(span, newInfo);
+          return newInfo;
         } catch (e) {
           this.rollbarService?.reportError(e);
           logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
@@ -253,6 +268,7 @@ export class GenericIssuanceService {
             success: false
           };
           this.definitionDB.saveLastRunInfo(pipelineId, newInfo);
+          setFlattenedObject(span, newInfo);
           return newInfo;
         }
       }
