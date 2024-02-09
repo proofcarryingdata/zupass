@@ -773,7 +773,10 @@ export class GenericIssuanceService {
           `user ${userId} can't delete pipeline ${pipeline.id} owned by other user ${pipeline.ownerUserId}`
         );
       }
+
       await this.definitionDB.clearDefinition(pipelineId);
+      await this.definitionDB.saveLastRunInfo(pipelineId, undefined);
+      await this.atomDB.clear(pipelineId);
       await this.restartPipeline(pipelineId);
     });
   }

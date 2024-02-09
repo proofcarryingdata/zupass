@@ -62,7 +62,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    */
   public async saveLastRunInfo(
     definitionID: string,
-    lastRunInfo: PipelineRunInfo
+    lastRunInfo: PipelineRunInfo | undefined
   ): Promise<void> {
     this.runInfos[definitionID] = lastRunInfo;
   }
