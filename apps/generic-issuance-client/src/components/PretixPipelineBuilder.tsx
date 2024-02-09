@@ -1,4 +1,5 @@
 import {
+  FeedIssuanceOptions,
   GenericIssuanceFetchPretixEventsResponseValue,
   PipelineType,
   PretixPipelineDefinition,
@@ -9,6 +10,8 @@ import {
 import { ChangeEvent, ReactNode, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import { ZUPASS_SERVER_URL } from "../constants";
+import { DEFAULT_FEED_OPTIONS } from "../pages/SamplePipelines";
+import FeedOptions from "./FeedOptions";
 
 interface PretixPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
@@ -23,6 +26,8 @@ export default function PretixPipelineBuilder(
     useState<GenericIssuanceFetchPretixEventsResponseValue>();
   const [selectedEvent, setSelectedEvent] = useState<string | undefined>();
   const [products, setProducts] = useState<PretixProductConfig[]>();
+  const [feedOptions, setFeedOptions] =
+    useState<FeedIssuanceOptions>(DEFAULT_FEED_OPTIONS);
 
   const handleSelectEvent = async (
     e: ChangeEvent<HTMLInputElement>
@@ -98,7 +103,7 @@ export default function PretixPipelineBuilder(
             placeholder="Enter API Token"
           />
         </div>
-        <button type="submit">Submit</button>
+        <button type="submit">Search for events</button>
       </form>
       {events && !events.length && <div>Your organizer has no events.</div>}
       {!!events?.length && (
@@ -150,6 +155,10 @@ export default function PretixPipelineBuilder(
               ))}
             </tbody>
           </table>
+          <FeedOptions
+            feedOptions={feedOptions}
+            setFeedOptions={setFeedOptions}
+          />
           <button
             onClick={(): Promise<void> => {
               const pipeline: Partial<PretixPipelineDefinition> = {
@@ -158,12 +167,7 @@ export default function PretixPipelineBuilder(
                 timeUpdated: new Date().toISOString(),
                 editorUserIds: [],
                 options: {
-                  feedOptions: {
-                    feedId: "example-feed-id",
-                    feedDisplayName: "Example Feed",
-                    feedDescription: "Your description here...",
-                    feedFolder: "Example Folder"
-                  },
+                  feedOptions,
                   pretixAPIKey: token,
                   pretixOrgUrl: orgUrl,
                   events: [

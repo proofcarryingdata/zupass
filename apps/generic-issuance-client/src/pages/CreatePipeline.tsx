@@ -1,15 +1,16 @@
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useContext, useState } from "react";
+import CSVPipelineBuilder from "../components/CSVPipelineBuilder";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
+import LemonadePipelineBuilder from "../components/LemonadePipelineBuilder";
 import { pipelineDetailPagePath } from "../components/PipelineDetails";
 import PretixPipelineBuilder from "../components/PretixPipelineBuilder";
 import { GIContext } from "../helpers/Context";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { SAMPLE_CSV_PIPELINE } from "./SamplePipelines";
 
 export default function CreatePipeline(): ReactNode {
   const stytchClient = useStytch();
@@ -19,8 +20,6 @@ export default function CreatePipeline(): ReactNode {
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [selectedPipelineType, setSelectedPipelineType] =
     useState<PipelineType>();
-  // Update
-  const [newPipelineJSON, setNewPipelineJSON] = useState(SAMPLE_CSV_PIPELINE);
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {
@@ -77,26 +76,11 @@ export default function CreatePipeline(): ReactNode {
         {selectedPipelineType === PipelineType.Pretix && (
           <PretixPipelineBuilder onCreate={onCreateClick} />
         )}
+        {selectedPipelineType === PipelineType.CSV && (
+          <CSVPipelineBuilder onCreate={onCreateClick} />
+        )}
         {selectedPipelineType === PipelineType.Lemonade && (
-          <div
-            style={{
-              marginTop: "8px"
-            }}
-          >
-            <textarea
-              rows={20}
-              cols={80}
-              value={newPipelineJSON}
-              onChange={(e): void => setNewPipelineJSON(e.target.value)}
-            />
-            <div>
-              <button
-                onClick={(): Promise<void> => onCreateClick(newPipelineJSON)}
-              >
-                🐒 Create! 🚀
-              </button>
-            </div>
-          </div>
+          <LemonadePipelineBuilder onCreate={onCreateClick} />
         )}
       </PageContent>
     </>
