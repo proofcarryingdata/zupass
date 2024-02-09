@@ -39,13 +39,9 @@ import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { SetupServer, setupServer } from "msw/node";
-import {
-  ILemonadeAPI,
-  LemonadeAPI,
-  LemonadeOAuthCredentials,
-  LemonadeTicket,
-  LemonadeTicketType
-} from "../src/apis/lemonade/lemonadeAPI";
+import { LemonadeOAuthCredentials } from "../src/apis/lemonade/auth";
+import { ILemonadeAPI, LemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
+import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
@@ -62,7 +58,10 @@ import {
   LemonadeDataMocker,
   LemonadeUser
 } from "./lemonade/LemonadeDataMocker";
-import { getMockLemonadeHandlers } from "./lemonade/MockLemonadeServer";
+import {
+  getMockLemonadeHandlers,
+  loadApolloErrorMessages
+} from "./lemonade/MockLemonadeServer";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
 import { getGenericMockPretixAPIHandlers } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
@@ -87,9 +86,15 @@ describe("Generic Issuance", function () {
   this.timeout(30_000);
   const now = Date.now();
 
+  // The Apollo client used by Lemonade does not load error messages by
+  // default, so we have to call this.
+  loadApolloErrorMessages();
+
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService | null;
+
+  const lemonadeOAuthClientId = "edge-city-client-id";
 
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
@@ -113,22 +118,18 @@ describe("Generic Issuance", function () {
   const lemonadeBackend = new LemonadeDataMocker();
 
   const EdgeCityLemonadeAccount = lemonadeBackend.addAccount(
-    "edge-city-client-id"
+    lemonadeOAuthClientId
   );
 
   const EdgeCityDenver = EdgeCityLemonadeAccount.addEvent("Edge City Denver");
 
   /**
    * Attendee ticket type. In reality there will be several.
-   *
-   * TODO: test that we can handle several attendee types.
    */
   const EdgeCityAttendeeTicketType: LemonadeTicketType =
     EdgeCityLemonadeAccount.addTicketType(EdgeCityDenver._id, "ga");
-  const EdgeCityBouncerTicketType = EdgeCityLemonadeAccount.addTicketType(
-    EdgeCityDenver._id,
-    "bouncer"
-  );
+  const EdgeCityBouncerTicketType: LemonadeTicketType =
+    EdgeCityLemonadeAccount.addTicketType(EdgeCityDenver._id, "bouncer");
 
   /**
    * Most tests below need a person who is checking tickets {@link EdgeCityDenverBouncer}
@@ -168,6 +169,9 @@ describe("Generic Issuance", function () {
   );
 
   const lemonadeAPI: ILemonadeAPI = new LemonadeAPI({
+    // In the real API, the authorization token is an OAuth token, which maps
+    // back to the client ID. For testing purposes, we just send the client ID
+    // as the token, to avoid having to mock out the whole OAuth flow.
     async getToken(credentials: LemonadeOAuthCredentials): Promise<string> {
       return credentials.oauthClientId;
     }
@@ -191,8 +195,9 @@ describe("Generic Issuance", function () {
         feedFolder: "Edge City",
         feedId: "edge-city"
       },
+      // Authentication values are not relevant for testing, except for `oauthClientId`
       oauthAudience: "test",
-      oauthClientId: "edge-city-client-id",
+      oauthClientId: lemonadeOAuthClientId,
       oauthClientSecret: "test",
       oauthServerUrl: "test",
       backendUrl: lemonadeBackendUrl,
@@ -442,20 +447,20 @@ t2,i1`,
         edgeCityDenverTicketFeedUrl,
         edgeCityDenverPipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.user_email as string,
+        EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity
       );
       expectLength(BouncerTickets, 1);
       const BouncerTicket = BouncerTickets[0];
       expectIsEdDSATicketPCD(BouncerTicket);
       expect(BouncerTicket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityDenverBouncerTicket.user_email as string)
+        .to.eq(EdgeCityDenverBouncerTicket.user_email)
         .to.eq(EdgeCityDenverBouncer.email);
 
       const bouncerChecksInAttendee = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.user_email as string,
+        EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
@@ -465,7 +470,7 @@ t2,i1`,
       const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.user_email as string,
+        EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
@@ -479,7 +484,7 @@ t2,i1`,
       const atteendeeChecksInBouncerResult = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityAttendeeTicket.user_email as string,
+        EdgeCityAttendeeTicket.user_email,
         EdgeCityDenverAttendeeIdentity,
         BouncerTicket
       );
@@ -493,7 +498,7 @@ t2,i1`,
         await requestCheckInPipelineTicket(
           edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
           newEdDSAPrivateKey(),
-          EdgeCityAttendeeTicket.user_email as string,
+          EdgeCityAttendeeTicket.user_email,
           EdgeCityDenverAttendeeIdentity,
           BouncerTicket
         );

@@ -5,7 +5,7 @@ import {
   LemonadeEvent,
   LemonadeTicket,
   LemonadeTicketType
-} from "../../src/apis/lemonade/lemonadeAPI";
+} from "../../src/apis/lemonade/types";
 
 /**
  * For testing purposes, this models Lemonade users. This is Lemonade's model

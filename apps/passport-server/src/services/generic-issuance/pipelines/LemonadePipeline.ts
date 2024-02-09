@@ -30,6 +30,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { v5 as uuidv5 } from "uuid";
+import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import {
   IPipelineAtomDB,
@@ -173,7 +174,7 @@ export class LemonadePipeline implements BasePipeline {
         oauthServerUrl: this.definition.options.oauthServerUrl
       };
 
-      const supportedEventIds = new Set(
+      const configuredEventIds = new Set(
         this.definition.options.events.map((ev) => ev.externalId)
       );
       // Fetch events from Lemonade
@@ -183,8 +184,8 @@ export class LemonadePipeline implements BasePipeline {
           credentials
         )
       )
-        // Filter out unsupported events
-        .filter((ev) => supportedEventIds.has(ev._id));
+        // Filter out events not in our configuration
+        .filter((ev) => configuredEventIds.has(ev._id));
 
       // For each event, fetch tickets
       const tickets = await Promise.all(
@@ -211,16 +212,21 @@ export class LemonadePipeline implements BasePipeline {
 
           // We only want to return tickets which are of a supported type
           // Get the supported types from event configuration
-          const supportedTypes = new Set(
+          const configuredTypes = new Set(
             eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
           );
 
           return {
             eventConfig,
-            // Filter the tickets down to supported tickets
-            // TODO anything to log if we find unsupported tickets?
+            // Filter the tickets down to configured ticket types
             tickets: eventTickets.filter((t) => {
-              return supportedTypes.has(t.type_id);
+              const result = configuredTypes.has(t.type_id);
+              if (!result) {
+                logger(
+                  `${LOG_TAG} Encountered unsupported ticket type ${t.type_title} (${t.type_id}) on ticket ${t._id}, pipeline ${this.id}`
+                );
+              }
+              return result;
             })
           };
         })
@@ -800,7 +806,7 @@ export class LemonadePipeline implements BasePipeline {
           timestamp: Date.now()
         });
         try {
-          const credentials = {
+          const credentials: LemonadeOAuthCredentials = {
             oauthAudience: this.definition.options.oauthAudience,
             oauthClientId: this.definition.options.oauthClientId,
             oauthClientSecret: this.definition.options.oauthClientSecret,
@@ -850,7 +856,6 @@ export class LemonadePipeline implements BasePipeline {
  * save tickets, in order to be able to issue tickets based on them later on.
  */
 export interface LemonadeAtom extends PipelineAtom {
-  // todo
   name: string;
   lemonadeEventId: string;
   lemonadeTicketTypeId: string;

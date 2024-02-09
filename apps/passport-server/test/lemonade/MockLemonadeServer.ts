@@ -5,12 +5,14 @@ import urljoin from "url-join";
 import {
   LemonadeTicket,
   LemonadeTicketType
-} from "../../src/apis/lemonade/lemonadeAPI";
+} from "../../src/apis/lemonade/types";
 import { LemonadeDataMocker } from "./LemonadeDataMocker";
 
-// Apollo client doesn't load error messages by default so we have to call this
-loadDevMessages();
-loadErrorMessages();
+export function loadApolloErrorMessages(): void {
+  // Apollo client doesn't load error messages by default so we have to call this
+  loadDevMessages();
+  loadErrorMessages();
+}
 
 export function getMockLemonadeHandlers(
   mocker: LemonadeDataMocker,

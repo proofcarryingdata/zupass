@@ -50,6 +50,7 @@
     "discord.js": "14.11.0",
     "email-validator": "^2.0.4",
     "express": "^5.0.0-beta.1",
+    "fast-json-stable-stringify": "^2.1.0",
     "flat": "5",
     "grammy": "^1.18.1",
     "js-sha256": "^0.10.1",
