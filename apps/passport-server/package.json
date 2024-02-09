@@ -45,6 +45,7 @@
     "async-lock": "^1.4.0",
     "cookie-parser": "^1.4.6",
     "cors": "^2.8.5",
+    "csv-parse": "^5.5.3",
     "discord.js": "14.11.0",
     "email-validator": "^2.0.4",
     "express": "^5.0.0-beta.1",

@@ -34,7 +34,10 @@ export function Header({
     return (
       <HeaderContainer>
         <LeftHalf>{title}</LeftHalf>
-        <RightHalf></RightHalf>
+        <RightHalf>
+          {/* to prevent page reflow on data load */}
+          <button style={{ visibility: "hidden" }}>...</button>
+        </RightHalf>
       </HeaderContainer>
     );
   }

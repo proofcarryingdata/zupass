@@ -1143,6 +1143,12 @@ export function isPretixPipelineDefinition(
   return d.type === PipelineType.Pretix;
 }
 
+export function isCSVPipelineDefinition(
+  d: PipelineDefinition
+): d is PretixPipelineDefinition {
+  return d.type === PipelineType.CSV;
+}
+
 // Collection of API data for a single event
 interface PretixEventData {
   settings: GenericPretixEventSettings;

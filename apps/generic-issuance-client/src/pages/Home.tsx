@@ -10,6 +10,7 @@ function Page(): JSX.Element {
   const stytchClient = useStytch();
   const jwt = useJWT();
   const [email, setEmail] = useState("");
+  const [sendingEmail, setSendingEmail] = useState(false);
   const [hasSentEmail, setHasSentEmail] = useState(false);
   const [checkedToken, setCheckedToken] = useState(false);
   const searchParams = new URLSearchParams(window.location.search);
@@ -31,9 +32,11 @@ function Page(): JSX.Element {
       .catch((e) => console.error(e));
   }, [stytchClient, token, checkedToken, navigate]);
 
-  const handleContinue = async (): Promise<void> => {
+  const handleLoginClick = async (): Promise<void> => {
     if (!email || hasSentEmail) return;
+
     try {
+      setSendingEmail(true);
       await fetch(
         new URL(
           `/generic-issuance/api/user/send-email/${email}`,
@@ -44,6 +47,8 @@ function Page(): JSX.Element {
       setHasSentEmail(true);
     } catch (e) {
       alert(e);
+    } finally {
+      setSendingEmail(false);
     }
   };
 
@@ -53,8 +58,31 @@ function Page(): JSX.Element {
     }
   }, [jwt]);
 
+  if (sendingEmail) {
+    return (
+      <>
+        <Header />
+        <PageContent>Sending Email...</PageContent>
+      </>
+    );
+  }
+
+  if (jwt) {
+    return (
+      <>
+        <Header />
+        <PageContent>Loading...</PageContent>
+      </>
+    );
+  }
+
   if (token) {
-    return <div>Attempting to log you in...</div>;
+    return (
+      <>
+        <Header />
+        <PageContent>Logging In...</PageContent>
+      </>
+    );
   }
 
   return (
@@ -63,7 +91,11 @@ function Page(): JSX.Element {
       <PageContent>
         {hasSentEmail && (
           <div>
-            Please check your email <b>{email}</b> for a login link.
+            Check your inbox for{" "}
+            <b>
+              <i>{email} </i>
+            </b>{" "}
+            to continue.
           </div>
         )}
         {!hasSentEmail && (
@@ -71,7 +103,7 @@ function Page(): JSX.Element {
             onSubmit={(e): Promise<void> => {
               e.preventDefault();
               e.stopPropagation();
-              return handleContinue();
+              return handleLoginClick();
             }}
           >
             <label>

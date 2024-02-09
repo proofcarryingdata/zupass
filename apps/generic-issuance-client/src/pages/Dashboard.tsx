@@ -3,7 +3,14 @@ import {
   getError
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useContext, useMemo, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useMemo,
+  useState
+} from "react";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -21,27 +28,7 @@ import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-
-const SAMPLE_CREATE_PIPELINE_TEXT = JSON.stringify(
-  {
-    type: "Lemonade",
-    timeCreated: new Date().toISOString(),
-    timeUpdated: new Date().toISOString(),
-    editorUserIds: [],
-    options: {
-      lemonadeApiKey: "your-lemonade-api-key",
-      events: [],
-      feedOptions: {
-        feedId: "example-feed-id",
-        feedDisplayName: "Example Feed",
-        feedDescription: "Your description here...",
-        feedFolder: "Example Folder"
-      }
-    }
-  },
-  null,
-  2
-);
+import { SAMPLE_CSV_PIPELINE } from "./SamplePipelines";
 
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
@@ -68,9 +55,7 @@ export default function Dashboard(): ReactNode {
 
   const [isCreatingPipeline, setIsCreatingPipeline] = useState(false);
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
-  const [newPipelineJSON, setNewPipelineJSON] = useState(
-    SAMPLE_CREATE_PIPELINE_TEXT
-  );
+  const [newPipelineJSON, setNewPipelineJSON] = useState(SAMPLE_CSV_PIPELINE);
 
   const onCreateClick = useCallback(() => {
     if (userJWT) {
@@ -90,8 +75,26 @@ export default function Dashboard(): ReactNode {
     }
   }, [newPipelineJSON, userJWT]);
 
-  if (!userJWT) {
-    window.location.href = "/";
+  useEffect(() => {
+    if (!userJWT) {
+      window.location.href = "/";
+    }
+  }, [userJWT]);
+
+  const maybeRequestError: string | undefined = getError(
+    pipelinesFromServer,
+    user
+  );
+  if (maybeRequestError) {
+    return (
+      <>
+        <Header user={user} stytchClient={stytchClient} />
+        <PageContent>
+          <h2>Error Loading Page</h2>
+          {maybeRequestError}
+        </PageContent>
+      </>
+    );
   }
 
   if (isUploadingPipeline) {
@@ -112,18 +115,6 @@ export default function Dashboard(): ReactNode {
     );
   }
 
-  const requestError = getError(pipelinesFromServer, user);
-  if (requestError) {
-    return (
-      <>
-        <Header includeLinkToDashboard />
-        <PageContent>
-          <h2>Error Loading Page</h2>
-          {requestError}
-        </PageContent>
-      </>
-    );
-  }
   return (
     <>
       <Header user={user} stytchClient={stytchClient} />

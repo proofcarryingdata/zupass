@@ -7,7 +7,8 @@ import { z } from "zod";
  */
 export enum PipelineType {
   Lemonade = "Lemonade",
-  Pretix = "Pretix"
+  Pretix = "Pretix",
+  CSV = "CSV"
 }
 
 const BasePipelineDefinitionSchema = z.object({
@@ -190,12 +191,30 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
+const CSVPipelineOptionsSchema = z.object({
+  csv: z.string(),
+  feedOptions: FeedIssuanceOptionsSchema
+});
+
+export type CSVPipelineOptions = z.infer<typeof CSVPipelineOptionsSchema>;
+
+const CSVPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
+  type: z.literal(PipelineType.CSV),
+  options: CSVPipelineOptionsSchema
+});
+
+/**
+ * Similar to {@link LemonadePipelineDefinition} but for CSV-based Pipelines.
+ */
+export type CSVPipelineDefinition = z.infer<typeof CSVPipelineDefinitionSchema>;
+
 /**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
 export const PipelineDefinitionSchema = z.union([
   LemonadePipelineDefinitionSchema,
-  PretixPipelineDefinitionSchema
+  PretixPipelineDefinitionSchema,
+  CSVPipelineDefinitionSchema
 ]);
 
 /**

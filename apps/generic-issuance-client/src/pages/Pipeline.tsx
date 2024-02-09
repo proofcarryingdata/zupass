@@ -79,6 +79,34 @@ export default function Pipeline(): ReactNode {
     setTextareaValue(e.target.value);
   }, []);
 
+  const maybeRequestError: string | undefined = getError(
+    userFromServer,
+    pipelineFromServer,
+    pipelineInfoFromServer
+  );
+
+  useEffect(() => {
+    if (!userJWT) {
+      window.location.href = "/";
+    }
+  }, [userJWT]);
+
+  if (maybeRequestError) {
+    return (
+      <>
+        <Header
+          includeLinkToDashboard
+          user={userFromServer}
+          stytchClient={stytchClient}
+        />
+        <PageContent>
+          <h2>❌ Load Error</h2>
+          {maybeRequestError}
+        </PageContent>
+      </>
+    );
+  }
+
   if (
     !userFromServer ||
     !pipelineFromServer ||
@@ -88,35 +116,16 @@ export default function Pipeline(): ReactNode {
   ) {
     return (
       <>
-        <Header includeLinkToDashboard />
+        <Header
+          includeLinkToDashboard
+          user={userFromServer}
+          stytchClient={stytchClient}
+        />
         <PageContent>
           {actionInProgress ? actionInProgress : "Loading..."}
         </PageContent>
       </>
     );
-  }
-
-  const requestError = getError(
-    userFromServer,
-    pipelineFromServer,
-    pipelineInfoFromServer
-  );
-
-  if (requestError) {
-    return (
-      <>
-        <Header includeLinkToDashboard />
-        <PageContent>
-          <h2>Error Loading Page</h2>
-          {requestError}
-        </PageContent>
-      </>
-    );
-  }
-
-  if (!userJWT) {
-    console.log("not logged in - redirecting to the homepage");
-    window.location.href = "/";
   }
 
   const hasEdits =
