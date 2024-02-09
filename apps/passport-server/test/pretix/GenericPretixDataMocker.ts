@@ -198,6 +198,10 @@ export class GenericPretixDataMocker {
     update(product);
   }
 
+  /**
+   * Simulates the effect of a ticket-holder being checked out (or, more
+   * precisely, their check-in being deleted) on the Pretix back-end.
+   */
   public checkOut(orgUrl: string, eventId: string, email: string): void {
     const org = this.data.organizersByOrgUrl.get(orgUrl);
     if (!org) throw new Error(`missing org ${orgUrl}`);
@@ -211,6 +215,7 @@ export class GenericPretixDataMocker {
     }
     if (order) {
       order.positions.forEach((position) => {
+        // This simulates the results we would see for a cancelled check-in
         position.checkins = [];
       });
     }
