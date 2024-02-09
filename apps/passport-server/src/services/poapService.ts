@@ -1,4 +1,8 @@
-import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  isEqualEdDSAPublicKey
+} from "@pcd/eddsa-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   VITALIA_EVENT_ID,
@@ -119,9 +123,10 @@ export class PoapService {
       );
     }
 
-    const signerMatch =
-      pcd.claim.signer[0] === signerPublicKey[0] &&
-      pcd.claim.signer[1] === signerPublicKey[1];
+    const signerMatch = isEqualEdDSAPublicKey(
+      pcd.claim.signer,
+      signerPublicKey
+    );
 
     if (!signerMatch) {
       throw new Error("signer of PCD is invalid");
