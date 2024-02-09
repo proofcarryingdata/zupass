@@ -339,7 +339,7 @@ export interface AnonMessageWithDetails extends AnonMessage {
   reactions: string[];
 }
 
-export type PoapEvent = "devconnect" | "zuzalu23" | "zuconnect";
+export type PoapEvent = "devconnect" | "zuzalu23" | "zuconnect" | "vitalia";
 
 export interface RateLimitBucket {
   action_type: string;
