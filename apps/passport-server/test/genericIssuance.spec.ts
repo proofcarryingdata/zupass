@@ -144,7 +144,8 @@ describe("Generic Issuance", function () {
     EdgeCityLemonadeAccount.addTicket(
       EdgeCityDenver._id,
       EdgeCityAttendeeTicketType._id,
-      EdgeCityDenverAttendee._id
+      EdgeCityDenverAttendee._id,
+      `${EdgeCityDenverAttendee.first_name} ${EdgeCityDenverAttendee.last_name}`
     );
 
   /**
@@ -162,7 +163,8 @@ describe("Generic Issuance", function () {
   const EdgeCityDenverBouncerTicket = EdgeCityLemonadeAccount.addTicket(
     EdgeCityDenver._id,
     EdgeCityBouncerTicketType._id,
-    EdgeCityDenverBouncer._id
+    EdgeCityDenverBouncer._id,
+    `${EdgeCityDenverBouncer.first_name} ${EdgeCityDenverBouncer.last_name}`
   );
 
   const lemonadeAPI: ILemonadeAPI = new LemonadeAPI({

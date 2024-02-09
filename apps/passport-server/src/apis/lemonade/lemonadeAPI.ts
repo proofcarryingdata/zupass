@@ -515,6 +515,9 @@ const LemonadeTicketSchema = z.object({
   assigned_to: z.string(),
   user_id: z.string(),
   user_email: z.string(),
+  user_name: z.string(),
+  user_first_name: z.string(),
+  user_last_name: z.string(),
   type_id: z.string(),
   type_title: z.string(),
   checkin_date: z.string().transform((arg) => {

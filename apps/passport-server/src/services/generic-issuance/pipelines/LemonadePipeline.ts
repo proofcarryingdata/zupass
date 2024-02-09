@@ -226,14 +226,17 @@ export class LemonadePipeline implements BasePipeline {
         })
       );
 
-      const atomsToSave: LemonadeAtom[] = tickets.flatMap(
-        ({ eventConfig, tickets }) => {
+      const atomsToSave = tickets.flatMap(
+        ({ eventConfig, tickets }): LemonadeAtom[] => {
           return tickets.map(
             (t) =>
               ({
                 id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
                 email: t.user_email as string,
-                name: t.user_email as string,
+                name:
+                  t.user_first_name.length > 0 || t.user_last_name.length > 0
+                    ? `${t.user_first_name} ${t.user_last_name}`.trim()
+                    : t.user_name,
                 lemonadeEventId: eventConfig.externalId,
                 lemonadeTicketTypeId: t.type_id,
                 lemonadeUserId: t.assigned_to as string,

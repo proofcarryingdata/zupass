@@ -102,7 +102,8 @@ class LemonadeAccount {
   public addTicket(
     eventId: string,
     ticketTypeId: string,
-    userId: string
+    userId: string,
+    userName: string
   ): LemonadeTicket {
     if (!this.events.has(eventId)) {
       throw new Error(`Can't add ticket to non-existent event ${eventId}`);
@@ -122,6 +123,9 @@ class LemonadeAccount {
         ?.title as string,
       user_id: userId,
       user_email: this.users.get(userId)?.email as string,
+      user_name: userName,
+      user_first_name: "",
+      user_last_name: "",
       assigned_to: userId,
       assigned_email: "", // This is what we get from the live API, if you
       // want the email address then look in `user_email`
