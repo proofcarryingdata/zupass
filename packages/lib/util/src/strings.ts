@@ -29,7 +29,7 @@ export function flattenObject(
       res.push([k, v + ""]);
     } else {
       const flattenedChild: Array<[string, string]> = flattenObject(v).map(
-        ([ck, cv]) => [k + "," + ck, cv]
+        ([ck, cv]) => [k + "." + ck, cv]
       );
       res = [...res, ...flattenedChild];
     }
