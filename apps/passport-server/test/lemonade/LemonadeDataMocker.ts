@@ -154,7 +154,11 @@ class LemonadeAccount {
   /**
    * Check in a user.
    */
-  public checkinUser(eventId: string, userId: string): void {
+  public setCheckin(
+    eventId: string,
+    userId: string,
+    checkinDate: Date | null
+  ): void {
     if (!this.events.has(eventId)) {
       throw new Error(`Can't check in user to non-existent event ${eventId}`);
     }
@@ -175,12 +179,17 @@ class LemonadeAccount {
     }
 
     // If the ticket exists and has already been checked in
-    if (ticket.checkin_date) {
+    if (ticket.checkin_date && checkinDate) {
       throw new Error(`User ${userId} is already checked in to ${eventId}`);
     }
 
-    // Flag the ticket as checked in.
-    ticket.checkin_date = new Date();
+    if (!ticket.checkin_date && !checkinDate) {
+      throw new Error(`User ${userId} is already checked out from ${eventId}`);
+    }
+
+    // If checkinDate is a date, checks the user in. If null, checks the user
+    // out.
+    ticket.checkin_date = checkinDate;
   }
 }
 

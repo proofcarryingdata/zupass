@@ -92,9 +92,12 @@ export function getMockLemonadeHandlers(
       const clientId = checkClientId(mocker, req);
       const eventId = req.variables["event"];
       const userId = req.variables["user"];
+      const active = req.variables["active"];
 
       try {
-        mocker.getAccount(clientId).checkinUser(eventId, userId);
+        mocker
+          .getAccount(clientId)
+          .setCheckin(eventId, userId, active ? new Date() : null);
       } catch (e) {
         return res(ctx.errors([e as Error]));
       }
