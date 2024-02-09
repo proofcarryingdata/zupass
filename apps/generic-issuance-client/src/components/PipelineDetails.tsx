@@ -80,7 +80,5 @@ export function pipelineCreatedAt(dateStr: string): ReactNode {
 }
 
 export function pipelineLastEdit(dateStr: string): ReactNode {
-  return (
-    <span>{moment(new Date(dateStr)).format("MMM D YYYY, h:mm:ss a")}</span>
-  );
+  return <span>{moment(new Date(dateStr)).format("MMM D YYYY, hh:mm a")}</span>;
 }
