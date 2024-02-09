@@ -20,6 +20,19 @@ export function pipelineStatus(
   return "Error";
 }
 
+export function pipelineIconFromStr(
+  str: "waiting" | "success" | "error"
+): ReactNode {
+  if (str === "waiting") {
+    return "⏳";
+  }
+
+  if (str === "success") {
+    return "✅";
+  }
+
+  return "❌";
+}
 export function pipelineIcon(
   latestRun: PipelineRunInfo | undefined
 ): ReactNode {
@@ -66,7 +79,7 @@ export function pipelineCreatedAt(dateStr: string): ReactNode {
   return <span>{moment(new Date(dateStr)).format("MMM D YYYY")}</span>;
 }
 
-export function pipeineLastEdit(dateStr: string): ReactNode {
+export function pipelineLastEdit(dateStr: string): ReactNode {
   return (
     <span>{moment(new Date(dateStr)).format("MMM D YYYY, h:mm:ss a")}</span>
   );
