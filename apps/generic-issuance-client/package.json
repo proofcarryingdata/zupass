@@ -16,6 +16,7 @@
     "@pcd/util": "0.4.0",
     "@stytch/react": "^15.0.0",
     "@stytch/vanilla-js": "^4.4.2",
+    "@tanstack/react-table": "^8.11.8",
     "dotenv": "^16.4.1",
     "moment": "^2.30.1",
     "react": "^18.2.0",

@@ -6,6 +6,7 @@ import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import { RefreshSession } from "./components/RefreshSession";
 import { GIContext, GIContextState } from "./helpers/Context";
+import { NotFound } from "./pages/404";
 import CreatePipeline from "./pages/CreatePipeline";
 import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
@@ -17,7 +18,8 @@ const router = createHashRouter([
   { path: "/", element: <Home /> },
   { path: "/dashboard", element: <Dashboard /> },
   { path: "/create-pipeline", element: <CreatePipeline /> },
-  { path: "/pipelines/:id", element: <Pipeline /> }
+  { path: "/pipelines/:id", element: <Pipeline /> },
+  { path: "*", element: <NotFound /> }
 ]);
 
 function loadInitalState(): Partial<GIContextState> {
