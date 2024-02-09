@@ -19,7 +19,11 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
     timeUpdated: new Date().toISOString(),
     editorUserIds: [],
     options: {
-      lemonadeApiKey: "your-lemonade-api-key",
+      oauthAudience: "",
+      oauthClientId: "",
+      oauthClientSecret: "",
+      oauthServerUrl: "",
+      backendUrl: "",
       events: [],
       feedOptions: DEFAULT_FEED_OPTIONS
     }
