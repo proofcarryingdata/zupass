@@ -18,9 +18,9 @@ import {
   PollFeedResponseValue,
   PretixPipelineDefinition
 } from "@pcd/passport-interface";
-import { PCDPermissionType } from "@pcd/pcd-collection";
+import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { normalizeEmail } from "@pcd/util";
+import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
@@ -45,6 +45,7 @@ import { setError, setFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
+  ensureFeedIssuanceCapability,
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
@@ -306,18 +307,18 @@ export class GenericIssuanceService {
    */
   private async schedulePipelineLoadLoop(): Promise<void> {
     return traced(SERVICE_NAME, "schedulePipelineLoadLoop", async (span) => {
-      logger(LOG_TAG, "refreshing pipeline datas");
-
       try {
+        logger(LOG_TAG, "refreshing pipeline datas");
         await this.executeAllPipelineLoads();
         logger(LOG_TAG, "pipeline datas refreshed");
       } catch (e) {
+        setError(e, span);
         this.rollbarService?.reportError(e);
         logger(LOG_TAG, "pipeline datas failed to refresh", e);
-        setError(e, span);
       }
 
       if (this.stopped) {
+        span?.setAttribute("stopped", true);
         return;
       }
 
@@ -326,6 +327,10 @@ export class GenericIssuanceService {
         "scheduling next pipeline refresh for",
         Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
         "s from now"
+      );
+      span?.setAttribute(
+        "timeout_ms",
+        GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS
       );
 
       this.nextLoadTimeout = setTimeout(() => {
@@ -360,29 +365,34 @@ export class GenericIssuanceService {
   /**
    * Handles incoming requests that hit a Pipeline-specific feed for PCDs
    * for every single pipeline that has this capability that this server manages.
-   *
-   * TODO: better logging
    */
   public async handlePollFeed(
     pipelineId: string,
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(SERVICE_NAME, "handlePollFeed", async (span) => {
+      logger(LOG_TAG, `handlePollFeed`, pipelineId, str(req));
       span?.setAttribute("pipeline_id", pipelineId);
       span?.setAttribute("feed_id", req.feedId);
+      const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+      span?.setAttribute(
+        "pipeline_owner_id",
+        pipelineSlot.definition.ownerUserId
+      );
+      span?.setAttribute("pipeline_type", pipelineSlot.definition.type);
+
       const pipeline = await this.ensurePipelineStarted(pipelineId);
-      const feedCapability = pipeline.capabilities.find(
-        (c) => isFeedIssuanceCapability(c) && c.options.feedId === req.feedId
-      ) as FeedIssuanceCapability | undefined;
+      const feed = ensureFeedIssuanceCapability(pipeline, req.feedId);
+      const feedResponse = await feed.issue(req);
 
-      if (!feedCapability) {
-        throw new PCDHTTPError(
-          403,
-          `pipeline ${pipelineId} can't issue PCDs for feed id ${req.feedId}`
-        );
-      }
+      setFlattenedObject(span, {
+        result: {
+          actionCount: feedResponse.actions.length,
+          pcdCount: getPcdsFromActions(feedResponse.actions).length
+        }
+      });
 
-      return feedCapability.issue(req);
+      return feedResponse;
     });
   }
 

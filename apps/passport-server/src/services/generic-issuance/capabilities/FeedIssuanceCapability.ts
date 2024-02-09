@@ -3,6 +3,8 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import urljoin from "url-join";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { Pipeline } from "../pipelines/types";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
@@ -35,6 +37,32 @@ export function isFeedIssuanceCapability(
   capability: BasePipelineCapability
 ): capability is FeedIssuanceCapability {
   return capability.type === PipelineCapability.FeedIssuance;
+}
+
+export function getFeedIssuanceCapability(
+  pipeline: Pipeline,
+  feedId?: string
+): FeedIssuanceCapability | undefined {
+  return pipeline.capabilities.find(
+    (c) =>
+      isFeedIssuanceCapability(c) && (!feedId || c.options.feedId === feedId)
+  ) as FeedIssuanceCapability | undefined;
+}
+
+export function ensureFeedIssuanceCapability(
+  pipeline: Pipeline,
+  feedId: string | undefined
+): FeedIssuanceCapability {
+  const cap = getFeedIssuanceCapability(pipeline, feedId);
+
+  if (!cap) {
+    throw new PCDHTTPError(
+      403,
+      `pipeline ${pipeline.id} can't issue PCDs for feed id ${feedId}`
+    );
+  }
+
+  return cap;
 }
 
 export function makeGenericIssuanceFeedUrl(

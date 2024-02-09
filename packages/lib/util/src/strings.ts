@@ -39,3 +39,7 @@ export function flattenObject(
 
   return res;
 }
+
+export function str(val: object): string {
+  return JSON.stringify(val);
+}
