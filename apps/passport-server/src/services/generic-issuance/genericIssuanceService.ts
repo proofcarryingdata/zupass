@@ -401,8 +401,9 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<PipelineInfoResponseValue> {
     return traced(SERVICE_NAME, "handleGetPipelineInfo", async (span) => {
+      logger(LOG_TAG, "handleGetPipelineInfo", str(user), pipelineId);
       span?.setAttribute("user_id", user.id);
-      span?.setAttribute("pipelineId", pipelineId);
+      span?.setAttribute("pipeline_id", pipelineId);
 
       const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
       const pipelineInstance = await this.ensurePipelineStarted(pipelineId);
@@ -417,7 +418,7 @@ export class GenericIssuanceService {
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
 
-      return {
+      const info = {
         feeds: pipelineFeeds.map((f) => ({
           name: f.options.feedDisplayName,
           url: f.feedUrl
@@ -425,6 +426,11 @@ export class GenericIssuanceService {
         latestAtoms: latestAtoms,
         latestRun: latestRun
       } satisfies PipelineInfoResponseValue;
+
+      setFlattenedObject(span, { latestRun });
+      setFlattenedObject(span, { pipelineFeeds });
+
+      return info;
     });
   }
 
