@@ -3,15 +3,16 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import { setFlattenedObject, traced } from "../../telemetryService";
 import { CSVPipeline } from "./CSVPipeline";
 import {
-  isLemonadePipelineDefinition,
-  LemonadePipeline
+  LemonadePipeline,
+  isLemonadePipelineDefinition
 } from "./LemonadePipeline";
 import {
+  PretixPipeline,
   isCSVPipelineDefinition,
-  isPretixPipelineDefinition,
-  PretixPipeline
+  isPretixPipelineDefinition
 } from "./PretixPipeline";
 import { Pipeline } from "./types";
 
@@ -29,30 +30,37 @@ export function instantiatePipeline(
     genericPretixAPI: IGenericPretixAPI;
   },
   zupassPublicKey: EdDSAPublicKey
-): Pipeline {
-  if (isLemonadePipelineDefinition(definition)) {
-    return new LemonadePipeline(
-      eddsaPrivateKey,
-      definition,
-      db,
-      apis.lemonadeAPI,
-      zupassPublicKey
-    );
-  } else if (isPretixPipelineDefinition(definition)) {
-    return new PretixPipeline(
-      eddsaPrivateKey,
-      definition,
-      db,
-      apis.genericPretixAPI,
-      zupassPublicKey
-    );
-  } else if (isCSVPipelineDefinition(definition)) {
-    return new CSVPipeline(eddsaPrivateKey, definition, db, zupassPublicKey);
-  }
+): Promise<Pipeline> {
+  return traced("", "instantiatePipeline", async (span) => {
+    setFlattenedObject(span, {
+      type: definition.type,
+      id: definition.id
+    });
 
-  throw new Error(
-    `couldn't instantiate pipeline for configuration ${JSON.stringify(
-      definition
-    )}`
-  );
+    if (isLemonadePipelineDefinition(definition)) {
+      return new LemonadePipeline(
+        eddsaPrivateKey,
+        definition,
+        db,
+        apis.lemonadeAPI,
+        zupassPublicKey
+      );
+    } else if (isPretixPipelineDefinition(definition)) {
+      return new PretixPipeline(
+        eddsaPrivateKey,
+        definition,
+        db,
+        apis.genericPretixAPI,
+        zupassPublicKey
+      );
+    } else if (isCSVPipelineDefinition(definition)) {
+      return new CSVPipeline(eddsaPrivateKey, definition, db, zupassPublicKey);
+    }
+
+    throw new Error(
+      `couldn't instantiate pipeline for configuration ${JSON.stringify(
+        definition
+      )}`
+    );
+  });
 }

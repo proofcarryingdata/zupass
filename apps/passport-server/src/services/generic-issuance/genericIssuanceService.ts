@@ -125,15 +125,18 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
-    try {
-      await this.maybeInsertLocalDevTestPipeline();
-      await this.maybeSetupAdmins();
-      await this.startPipelinesFromDefinitions();
-      this.schedulePipelineLoadLoop();
-    } catch (e) {
-      this.rollbarService?.reportError(e);
-      logger(LOG_TAG, "error starting GenericIssuanceService", e);
-    }
+    return traced(SERVICE_NAME, "start", async (span) => {
+      try {
+        await this.maybeInsertLocalDevTestPipeline();
+        await this.maybeSetupAdmins();
+        await this.startPipelinesFromDefinitions();
+        this.schedulePipelineLoadLoop();
+      } catch (e) {
+        this.rollbarService?.reportError(e);
+        setError(e, span);
+        logger(LOG_TAG, "error starting GenericIssuanceService", e);
+      }
+    });
   }
 
   public async stop(): Promise<void> {
@@ -176,7 +179,7 @@ export class GenericIssuanceService {
             };
 
             try {
-              const pipeline = instantiatePipeline(
+              const pipeline = await instantiatePipeline(
                 this.eddsaPrivateKey,
                 definition,
                 this.atomDB,
@@ -830,7 +833,7 @@ export class GenericIssuanceService {
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
-      const pipelineInstance = instantiatePipeline(
+      const pipelineInstance = await instantiatePipeline(
         this.eddsaPrivateKey,
         pipelineDefinition,
         this.atomDB,
@@ -858,7 +861,7 @@ export class GenericIssuanceService {
 
       const existingUser = await this.userDB.getUserByEmail(email);
       if (existingUser != null) {
-        span?.setAttribute("existing", true);
+        setFlattenedObject(span, { existingUser });
         return existingUser;
       }
       const newUser: PipelineUser = {
@@ -892,7 +895,6 @@ export class GenericIssuanceService {
     try {
       const reqBody = req.body;
       const jwt = reqBody.jwt;
-
       const { session } = await this.stytchClient.sessions.authenticateJwt({
         session_jwt: jwt
       });
