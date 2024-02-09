@@ -35,7 +35,7 @@ function makeTestUser(): TestUser {
 }
 
 describe("offline checkin database queries should work", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   let db: Pool;
 

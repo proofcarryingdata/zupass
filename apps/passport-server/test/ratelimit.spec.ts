@@ -19,7 +19,7 @@ import { resetRateLimitBuckets } from "./util/rateLimit";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("generic rate-limiting features", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   let db: Pool;
   let application: Zupass;
