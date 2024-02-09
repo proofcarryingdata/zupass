@@ -446,18 +446,9 @@ export class GenericIssuanceService {
       span?.setAttribute("feed_id", feedId);
 
       const pipeline = await this.ensurePipelineStarted(pipelineId);
-      const feedCapability = pipeline.capabilities.find(
-        (c) => isFeedIssuanceCapability(c) && c.options.feedId === feedId
-      ) as FeedIssuanceCapability | undefined;
+      const feedCapability = ensureFeedIssuanceCapability(pipeline, feedId);
 
-      if (!feedCapability) {
-        throw new PCDHTTPError(
-          403,
-          `pipeline ${pipelineId} can't issue PCDs for feed id ${feedId}`
-        );
-      }
-
-      return {
+      const result = {
         feeds: [
           {
             id: feedId,
@@ -486,6 +477,12 @@ export class GenericIssuanceService {
         providerName: "PCD-ifier",
         providerUrl: feedCapability.feedUrl
       } satisfies ListFeedsResponseValue;
+
+      setFlattenedObject(span, {
+        feedCount: result.feeds.length
+      });
+
+      return result;
     });
   }
 
@@ -499,6 +496,8 @@ export class GenericIssuanceService {
     req: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
+      logger(LOG_TAG, "handleCheckIn", str(req));
+
       // This is sub-optimal, but since tickets do not identify the pipelines
       // they come from, we have to match the ticket to the pipeline this way.
       const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
@@ -532,7 +531,9 @@ export class GenericIssuanceService {
           ) {
             span?.setAttribute("pipeline_id", pipeline.definition.id);
             span?.setAttribute("pipeline_type", pipeline.definition.type);
-            return await capability.checkin(req);
+            const res = await capability.checkin(req);
+            setFlattenedObject(span, { res });
+            return res;
           }
         }
       }
@@ -551,6 +552,8 @@ export class GenericIssuanceService {
     req: GenericIssuancePreCheckRequest
   ): Promise<GenericIssuancePreCheckResponseValue> {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
+      logger(SERVICE_NAME, "handlePreCheck", str(req));
+
       // This is sub-optimal, but since tickets do not identify the pipelines
       // they come from, we have to match the ticket to the pipeline this way.
       const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
@@ -582,7 +585,9 @@ export class GenericIssuanceService {
           ) {
             span?.setAttribute("pipeline_id", pipeline.definition.id);
             span?.setAttribute("pipeline_type", pipeline.definition.type);
-            return await capability.preCheck(req);
+            const res = await capability.preCheck(req);
+            setFlattenedObject(span, { res });
+            return res;
           }
         }
       }
@@ -600,29 +605,37 @@ export class GenericIssuanceService {
   public async getAllUserPipelineDefinitions(
     user: PipelineUser
   ): Promise<GenericIssuancePipelineListEntry[]> {
-    const allDefinitions: PipelineDefinition[] =
-      await this.definitionDB.loadPipelineDefinitions();
+    return traced(
+      SERVICE_NAME,
+      "getAllUserPipelineDefinitions",
+      async (span) => {
+        logger(SERVICE_NAME, "getAllUserPipelineDefinitions", str(user));
 
-    const visiblePipelines = allDefinitions.filter((d) =>
-      this.userHasPipelineDefinitionAccess(user, d)
-    );
+        const allDefinitions: PipelineDefinition[] =
+          await this.definitionDB.loadPipelineDefinitions();
 
-    return Promise.all(
-      visiblePipelines.map(async (p) => {
-        const owner = await this.userDB.getUser(p.ownerUserId);
-        if (!owner) {
-          throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
-        }
-        const lastRun = await this.definitionDB.getLatestRunInfo(p.id);
+        const visiblePipelines = allDefinitions.filter((d) =>
+          this.userHasPipelineDefinitionAccess(user, d)
+        );
+        span?.setAttribute("pipeline_count", visiblePipelines.length);
 
-        return {
-          extraInfo: {
-            ownerEmail: owner.email,
-            lastRun
-          },
-          pipeline: p
-        } satisfies GenericIssuancePipelineListEntry;
-      })
+        return Promise.all(
+          visiblePipelines.map(async (p) => {
+            const owner = await this.userDB.getUser(p.ownerUserId);
+            if (!owner) {
+              throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
+            }
+            const lastRun = await this.definitionDB.getLatestRunInfo(p.id);
+            return {
+              extraInfo: {
+                ownerEmail: owner.email,
+                lastRun
+              },
+              pipeline: p
+            } satisfies GenericIssuancePipelineListEntry;
+          })
+        );
+      }
     );
   }
 
@@ -670,10 +683,10 @@ export class GenericIssuanceService {
     userId: string,
     pipelineId: string
   ): Promise<PipelineDefinition> {
-    return traced(SERVICE_NAME, "", async (span) => {
+    return traced(SERVICE_NAME, "loadPipelineDefinition", async (span) => {
+      logger(SERVICE_NAME, "loadPipelineDefinition", userId, pipelineId);
       span?.setAttribute("user_id", userId);
       span?.setAttribute("pipelineId", pipelineId);
-
       const pipeline = await this.definitionDB.getDefinition(pipelineId);
       const user = await this.userDB.getUser(userId);
       if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline))
@@ -688,8 +701,15 @@ export class GenericIssuanceService {
     pipelineDefinition: PipelineDefinition
   ): Promise<PipelineDefinition> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
+      logger(
+        SERVICE_NAME,
+        "upsertPipelineDefinition",
+        userId,
+        str(pipelineDefinition)
+      );
       span?.setAttribute("user_id", userId);
-      span?.setAttribute("pipeline_d", pipelineDefinition.id);
+      span?.setAttribute("pipeline_id", pipelineDefinition.id);
+      span?.setAttribute("pipeline_type", pipelineDefinition.type);
 
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
@@ -727,6 +747,10 @@ export class GenericIssuanceService {
         throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
       }
 
+      logger(
+        LOG_TAG,
+        `executing upsert of pipeline ${newPipelineDefinition.id}`
+      );
       await this.definitionDB.setDefinition(newPipelineDefinition);
       await this.definitionDB.saveLastRunInfo(
         newPipelineDefinition.id,
@@ -773,10 +797,10 @@ export class GenericIssuanceService {
   private async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
-
       const pipelineSlot = this.pipelineSlots.find(
         (p) => p.definition.id === pipelineId
       );
+      span?.setAttribute("has_slot", !!pipelineSlot);
 
       if (pipelineSlot) {
         // we're going to need to stop the pipeline for this
@@ -831,8 +855,10 @@ export class GenericIssuanceService {
   public async createOrGetUser(email: string): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "createOrGetUser", async (span) => {
       span?.setAttribute("email", email);
+
       const existingUser = await this.userDB.getUserByEmail(email);
       if (existingUser != null) {
+        span?.setAttribute("existing", true);
         return existingUser;
       }
       const newUser: PipelineUser = {
@@ -841,13 +867,11 @@ export class GenericIssuanceService {
         isAdmin: this.getEnvAdminEmails().includes(email)
       };
       this.userDB.setUser(newUser);
+      setFlattenedObject(span, { newUser });
       return newUser;
     });
   }
 
-  /**
-   * TODO: this probably shouldn't be public, but it was useful for testing.
-   */
   public async getAllPipelines(): Promise<Pipeline[]> {
     return this.pipelineSlots
       .map((p) => p.pipelineInstance)
