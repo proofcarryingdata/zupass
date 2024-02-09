@@ -125,18 +125,16 @@ export class GenericIssuanceService {
   }
 
   public async start(): Promise<void> {
-    return traced(SERVICE_NAME, "start", async (span) => {
-      try {
-        await this.maybeInsertLocalDevTestPipeline();
-        await this.maybeSetupAdmins();
-        await this.startPipelinesFromDefinitions();
-        this.schedulePipelineLoadLoop();
-      } catch (e) {
-        this.rollbarService?.reportError(e);
-        setError(e, span);
-        logger(LOG_TAG, "error starting GenericIssuanceService", e);
-      }
-    });
+    try {
+      await this.maybeInsertLocalDevTestPipeline();
+      await this.maybeSetupAdmins();
+      await this.startPipelinesFromDefinitions();
+      this.schedulePipelineLoadLoop();
+    } catch (e) {
+      this.rollbarService?.reportError(e);
+      logger(LOG_TAG, "error starting GenericIssuanceService", e);
+      throw e;
+    }
   }
 
   public async stop(): Promise<void> {
@@ -210,6 +208,7 @@ export class GenericIssuanceService {
       SERVICE_NAME,
       "executeSinglePipeline",
       async (span): Promise<PipelineRunInfo> => {
+        const start = Date.now();
         logger(
           LOG_TAG,
           `executing pipeline '${inMemoryPipeline.definition.id}'` +
@@ -223,7 +222,6 @@ export class GenericIssuanceService {
           inMemoryPipeline.definition.ownerUserId
         );
 
-        const start = Date.now();
         const pipelineId = inMemoryPipeline.definition.id;
         const pipeline = inMemoryPipeline.pipelineInstance;
 
@@ -281,9 +279,7 @@ export class GenericIssuanceService {
 
   public async executeAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "executeAllPipelineLoads", async (span) => {
-      const pipelineIds = JSON.stringify(
-        this.pipelineSlots.map((p) => p.definition.id)
-      );
+      const pipelineIds = str(this.pipelineSlots.map((p) => p.definition.id));
       logger(
         LOG_TAG,
         `loading data for ${this.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
@@ -291,15 +287,10 @@ export class GenericIssuanceService {
       span?.setAttribute("pipeline_ids", pipelineIds);
 
       await Promise.allSettled(
-        this.pipelineSlots.map(
-          async (inMemoryPipeline: PipelineSlot): Promise<void> => {
-            const runInfo = await this.executeSinglePipeline(inMemoryPipeline);
-            this.definitionDB.saveLastRunInfo(
-              inMemoryPipeline.definition.id,
-              runInfo
-            );
-          }
-        )
+        this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
+          const runInfo = await this.executeSinglePipeline(slot);
+          await this.definitionDB.saveLastRunInfo(slot.definition.id, runInfo);
+        })
       );
     });
   }

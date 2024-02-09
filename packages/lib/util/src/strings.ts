@@ -5,8 +5,6 @@ export function normalizeEmail(email: string): string {
   return email.toLowerCase().trim();
 }
 
-let a = { a: { b: "c" } };
-
 /**
  * Converts `{ a: { b: "c" }, d: "e", f: { } }`
  * Into:

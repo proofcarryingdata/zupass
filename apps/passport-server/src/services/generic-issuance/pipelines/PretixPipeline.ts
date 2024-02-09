@@ -31,7 +31,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { normalizeEmail } from "@pcd/util";
+import { normalizeEmail, str } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import {
   GenericPretixCheckinList,
@@ -171,14 +171,16 @@ export class PretixPipeline implements BasePipeline {
         span?.setAttribute("pipeline_id", this.id);
         span?.setAttribute("pipeline_type", this.type);
 
-        logger(LOG_TAG, `loading for pipeline id ${this.id}`);
+        logger(
+          LOG_TAG,
+          `loading for pipeline id ${this.id} with type ${this.type}`
+        );
 
         const tickets: PretixTicket[] = [];
         const errors: string[] = [];
 
         for (const event of this.definition.options.events) {
           const eventData = await this.loadEvent(event);
-
           logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
           const errors = this.validateEventData(eventData, event);
@@ -189,9 +191,13 @@ export class PretixPipeline implements BasePipeline {
         }
 
         if (errors.length > 0) {
-          for (const error of errors) {
-            logger(LOG_TAG, `'${this.id}' {${error}`);
-          }
+          span?.setAttribute("error_count", errors);
+          logger(
+            LOG_TAG,
+            `failed to load pipeline '${this.id}' of type '${
+              this.type
+            }'; errors: ${str(errors)}`
+          );
 
           return {
             atomsLoaded: 0,
@@ -221,7 +227,7 @@ export class PretixPipeline implements BasePipeline {
 
         logger(
           LOG_TAG,
-          `saving ${atomsToSave.length} atoms for pipeline id ${this.id}`
+          `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`
         );
 
         // TODO: error handling
@@ -237,7 +243,6 @@ export class PretixPipeline implements BasePipeline {
         );
 
         span?.setAttribute("atoms_saved", atomsToSave.length);
-        span?.setAttribute("load_duration_ms", loadEnd - startTime);
 
         // Remove any pending check-ins that succeeded before loading started.
         // Those that succeeded after loading started might not be represented in
