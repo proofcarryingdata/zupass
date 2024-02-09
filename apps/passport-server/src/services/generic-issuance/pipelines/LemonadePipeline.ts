@@ -680,8 +680,17 @@ export class LemonadePipeline implements BasePipeline {
         );
 
         if (canCheckInResult === true) {
-          // TODO Lemonade Atoms should indicate if a ticket is checked in, otherwise
-          // we will not be able to remember who is checked in.
+          if (ticketAtom.checkinDate instanceof Date) {
+            span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+            return {
+              canCheckIn: false,
+              error: {
+                name: "AlreadyCheckedIn",
+                checkinTimestamp: ticketAtom.checkinDate.toISOString(),
+                checker: LEMONADE_CHECKER
+              }
+            };
+          }
 
           let pendingCheckin;
           if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
@@ -730,7 +739,6 @@ export class LemonadePipeline implements BasePipeline {
     return traced(LOG_NAME, "checkinLemonadeTicketPCD", async (span) => {
       span?.setAttribute("pipeline_id", this.id);
       span?.setAttribute("pipeline_type", this.type);
-
       logger(
         LOG_TAG,
         `got request to check in tickets with request ${JSON.stringify(
@@ -788,8 +796,17 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       if (canCheckInResult === true) {
-        // TODO Lemonade Atoms should indicate if a ticket is checked in, otherwise
-        // we will not be able to remember who is checked in.
+        if (ticketAtom.checkinDate instanceof Date) {
+          span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+          return {
+            checkedIn: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: ticketAtom.checkinDate.toISOString(),
+              checker: LEMONADE_CHECKER
+            }
+          };
+        }
 
         let pendingCheckin;
         if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
