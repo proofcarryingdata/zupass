@@ -94,18 +94,6 @@ export default function Dashboard(): ReactNode {
     user
   );
 
-  // <td>
-  //             <span>{pipelineIcon(p?.extraInfo?.lastRun)}</span>
-  //           </td>
-  //           <td>
-  //             <span>{pipelineStatus(p?.extraInfo?.lastRun)}</span>
-  //           </td>
-  //           <td>{pipelineType(p)}</td>
-  //           {isAdminView && <td>{pipelineOwner(p)}</td>}
-  //           <td>{pipelineCreatedAt(p.pipeline.timeCreated)}</td>
-  //           <td>{pipeineLastEdit(p.pipeline.timeUpdated)}</td>
-  //           <td>{pipelineLink(p.pipeline.id)}</td>
-
   type Row = {
     status: "error" | "success" | "waiting";
     type: PipelineType;
