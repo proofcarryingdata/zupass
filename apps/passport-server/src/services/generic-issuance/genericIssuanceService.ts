@@ -837,9 +837,6 @@ export class GenericIssuanceService {
       if (pipelineSlot) {
         // we're going to need to stop the pipeline for this
         // definition, so we do that right at the beginning
-        this.pipelineSlots = this.pipelineSlots.filter(
-          (p) => p.definition.id !== pipelineId
-        );
         logger(
           LOG_TAG,
           `killing already running pipeline instance '${pipelineId}'`
@@ -880,8 +877,10 @@ export class GenericIssuanceService {
         definition: pipelineDefinition
       } satisfies PipelineSlot;
 
+      this.pipelineSlots = this.pipelineSlots.filter(
+        (p) => p.definition.id !== pipelineId
+      );
       this.pipelineSlots.push(newPipelineSlot);
-
       await this.performPipelineLoad(newPipelineSlot);
     });
   }
@@ -930,7 +929,6 @@ export class GenericIssuanceService {
       const jwt = reqBody?.jwt;
       try {
         span?.setAttribute("has_jwt", !!jwt);
-        logger(LOG_TAG, `attempting to authenticate jwt ${jwt}`);
         const { session } = await this.stytchClient.sessions.authenticateJwt({
           session_jwt: jwt
         });
