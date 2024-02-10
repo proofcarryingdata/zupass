@@ -2,6 +2,7 @@ import { PipelineLoadSummary, PipelineLog } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
 import { Table } from "../components/Core";
+import { pipelineIcon } from "../components/PipelineDetails";
 import { timeAgo } from "../helpers/util";
 
 /**
@@ -15,41 +16,29 @@ export function LoadSummarySection({
 }): ReactNode {
   const startDate = new Date(latestRun.lastRunStartTimestamp);
   const endDate = new Date(latestRun.lastRunEndTimestamp);
-  const durationMs =
-    latestRun.lastRunEndTimestamp - latestRun.lastRunStartTimestamp;
 
   return (
     <div>
-      <h3>Last Run</h3>
+      <h3>Last Load</h3>
       <Table>
+        <thead>
+          <tr>
+            <th>started</th>
+            <th>ended</th>
+            <th>duration</th>
+            <th>atoms loaded</th>
+            <th>success</th>
+          </tr>
+        </thead>
         <tbody>
           <tr>
-            <td>start</td>
-            <td>{moment(startDate).format("MMMM Do YYYY, h:mm:ss.SSS a")}</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>{timeAgo.format(startDate)}</td>
-          </tr>
-          <tr>
-            <td>end</td>
-            <td>{moment(endDate).format("MMMM Do YYYY, h:mm:ss.SSS a")}</td>
-          </tr>
-          <tr>
-            <td></td>
-            <td>{timeAgo.format(endDate)}</td>
-          </tr>
-          <tr>
-            <td>duration</td>
-            <td>{durationMs}ms</td>
-          </tr>
-          <tr>
-            <td>datas loaded</td>
+            <td>{timeAgo.format(startDate, "twitter")}</td>
+            <td>{timeAgo.format(endDate, "twitter")}</td>
+            <td>{endDate.getTime() - startDate.getTime()}ms</td>
             <td>{latestRun.atomsLoaded}</td>
-          </tr>
-          <tr>
-            <td>success</td>
-            <td>{latestRun.success.toString()}</td>
+            <td>
+              {pipelineIcon(latestRun)} {latestRun.success.toString()}
+            </td>
           </tr>
         </tbody>
       </Table>

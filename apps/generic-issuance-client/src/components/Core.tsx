@@ -81,7 +81,8 @@ export const Table = styled.table`
     thead {
       user-select: none;
 
-      tr {
+      tr,
+      th {
         font-weight: bold;
         text-decoration: underline;
         text-align: right;

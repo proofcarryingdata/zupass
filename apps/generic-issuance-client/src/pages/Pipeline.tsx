@@ -13,7 +13,6 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
-import { pipelineIcon, pipelineStatus } from "../components/PipelineDetails";
 import { GIContext } from "../helpers/Context";
 import { deletePipeline, savePipeline } from "../helpers/Mutations";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
@@ -203,41 +202,7 @@ export default function Pipeline(): ReactNode {
             )}
           </div>
           <div style={{ flexGrow: 1 }}>
-            {ctx.isAdminMode && userFromServer?.value?.isAdmin && (
-              <>
-                <h2>Admin Details</h2>
-                {/* todo: honeycomb link for feed issuance - e.g. how many pcds have been issued */}
-                {pipelineFromServer.value && (
-                  <>
-                    <ul>
-                      <li>
-                        <a
-                          href={getLoadTraceHoneycombLinkForPipeline(
-                            pipelineFromServer.value.id
-                          )}
-                        >
-                          data load traces {getHoneycombQueryDurationStr()}
-                        </a>
-                      </li>
-                      <li>
-                        <a
-                          href={getAllHoneycombLinkForPipeline(
-                            pipelineFromServer.value.id
-                          )}
-                        >
-                          all traces related to this pipeline{" "}
-                          {getHoneycombQueryDurationStr()}
-                        </a>
-                      </li>
-                    </ul>
-                  </>
-                )}
-              </>
-            )}
             <h2>Pipeline Info</h2>
-            <h3>Status</h3>
-            {pipelineIcon(pipelineInfo.loadSummary)}{" "}
-            {pipelineStatus(pipelineInfo.loadSummary)}
             {pipelineInfo && pipelineFromServer.value && (
               <>
                 {pipelineInfo.feeds && (
@@ -262,6 +227,37 @@ export default function Pipeline(): ReactNode {
                         </li>
                       ))}
                     </ol>
+                  </>
+                )}
+                {ctx.isAdminMode && userFromServer?.value?.isAdmin && (
+                  <>
+                    <h3>Admin Details</h3>
+                    {/* todo: honeycomb link for feed issuance - e.g. how many pcds have been issued */}
+                    {pipelineFromServer.value && (
+                      <>
+                        <ul>
+                          <li>
+                            <a
+                              href={getLoadTraceHoneycombLinkForPipeline(
+                                pipelineFromServer.value.id
+                              )}
+                            >
+                              data load traces {getHoneycombQueryDurationStr()}
+                            </a>
+                          </li>
+                          <li>
+                            <a
+                              href={getAllHoneycombLinkForPipeline(
+                                pipelineFromServer.value.id
+                              )}
+                            >
+                              all traces related to this pipeline{" "}
+                              {getHoneycombQueryDurationStr()}
+                            </a>
+                          </li>
+                        </ul>
+                      </>
+                    )}
                   </>
                 )}
                 {pipelineInfo.loadSummary && (

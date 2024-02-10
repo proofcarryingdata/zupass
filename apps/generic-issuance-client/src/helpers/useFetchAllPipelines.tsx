@@ -6,9 +6,9 @@ import { useEffect, useState } from "react";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "./userHooks";
 
-export function useFetchAllPipelines():
-  | GenericIssuanceGetAllUserPipelinesResponse
-  | undefined {
+export function useFetchAllPipelines(
+  fetchTrigger?: unknown
+): GenericIssuanceGetAllUserPipelinesResponse | undefined {
   const jwt = useJWT();
   const [result, setResult] = useState<
     GenericIssuanceGetAllUserPipelinesResponse | undefined
@@ -24,7 +24,7 @@ export function useFetchAllPipelines():
         setResult(res);
       }
     );
-  }, [jwt]);
+  }, [jwt, fetchTrigger]);
 
   return result;
 }

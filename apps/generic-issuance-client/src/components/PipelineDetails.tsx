@@ -2,7 +2,6 @@ import {
   GenericIssuancePipelineListEntry,
   PipelineLoadSummary
 } from "@pcd/passport-interface";
-import moment from "moment";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 import { timeAgo } from "../helpers/util";
@@ -79,8 +78,7 @@ export function pipelineType(
 export function pipelineCreatedAt(dateStr: string): ReactNode {
   return (
     <>
-      <span>{moment(new Date(dateStr)).format("MMM D")}</span>
-      <span> ({timeAgo.format(new Date(dateStr))})</span>
+      <span> {timeAgo.format(new Date(dateStr), "twitter")}</span>
     </>
   );
 }
@@ -88,7 +86,7 @@ export function pipelineCreatedAt(dateStr: string): ReactNode {
 export function pipelineLastEdit(dateStr: string): ReactNode {
   return (
     <>
-      <span> {timeAgo.format(new Date(dateStr))}</span>
+      <span> {timeAgo.format(new Date(dateStr), "twitter")}</span>
     </>
   );
 }

@@ -39,7 +39,8 @@ import {
   getAllHoneycombLinkForAllGenericIssuanceHttp,
   getAllHoneycombLinkForPipeline,
   getHoneycombQueryDurationStr,
-  getLoadTraceHoneycombLinkForPipeline
+  getLoadTraceHoneycombLinkForPipeline,
+  timeAgo
 } from "../helpers/util";
 
 export default function Dashboard(): ReactNode {
@@ -85,6 +86,7 @@ export default function Dashboard(): ReactNode {
     id: string;
     loadTraceLink: string;
     allTraceLink: string;
+    lastLoad?: number;
   };
 
   const entryToRow = useCallback(
@@ -101,7 +103,8 @@ export default function Dashboard(): ReactNode {
         timeUpdated: entry.pipeline.timeUpdated,
         id: entry.pipeline.id,
         loadTraceLink: getLoadTraceHoneycombLinkForPipeline(entry.pipeline.id),
-        allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id)
+        allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id),
+        lastLoad: entry.extraInfo.lastLoad?.lastRunEndTimestamp
       };
     },
     []
@@ -161,6 +164,17 @@ export default function Dashboard(): ReactNode {
           return <span>{pipelineLastEdit(value)}</span>;
         }
       }),
+      columnHelper.accessor("lastLoad", {
+        header: "Last Load",
+        cell: (props) => {
+          const value = props.getValue()?.valueOf();
+          return (
+            <span>
+              {value ? timeAgo.format(new Date(value), "mini") : "n/a"}
+            </span>
+          );
+        }
+      }),
       columnHelper.accessor("id", {
         enableSorting: false,
         header: "Link",
@@ -172,7 +186,7 @@ export default function Dashboard(): ReactNode {
       isAdminView
         ? columnHelper.accessor("loadTraceLink", {
             enableSorting: false,
-            header: "Load Trace",
+            header: "Load Traces",
             cell: (props) => {
               const value = props.getValue().valueOf();
               return (
