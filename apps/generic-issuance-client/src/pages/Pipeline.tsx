@@ -1,3 +1,4 @@
+import Editor from "@monaco-editor/react";
 import { getError } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import { useStytch } from "@stytch/react";
@@ -38,7 +39,6 @@ export default function Pipeline(): ReactNode {
   const ctx = useContext(GIContext);
   const pipelineId: string | undefined = params.id;
   const [textareaValue, setTextareaValue] = useState("");
-  const textAreaRef = useRef("");
   const userFromServer = useFetchSelf();
   const pipelineFromServer = useFetchPipeline(pipelineId);
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
@@ -61,14 +61,14 @@ export default function Pipeline(): ReactNode {
       setActionInProgress(
         `Updating pipeline '${pipelineFromServer?.value?.id}'...`
       );
-      const res = await savePipeline(userJWT, textAreaRef.current);
+      const res = await savePipeline(userJWT, textareaValue);
       if (res.success) {
         window.location.reload();
       } else {
         alert(res.error);
       }
     }
-  }, [pipelineFromServer?.value?.id, userJWT]);
+  }, [pipelineFromServer?.value?.id, textareaValue, userJWT]);
 
   const onDeleteClick = useCallback(async () => {
     if (userJWT && pipelineFromServer?.value?.id) {
@@ -88,9 +88,9 @@ export default function Pipeline(): ReactNode {
     }
   }, [pipelineFromServer?.value?.id, userJWT]);
 
-  const onTextAreaChange = useCallback((e): void => {
-    textAreaRef.current = e.target.value;
-    setTextareaValue(e.target.value);
+  const onTextAreaChange = useCallback((value: string): void => {
+    console.log("new value", value);
+    setTextareaValue(value);
   }, []);
 
   const maybeRequestError: string | undefined = getError(
@@ -165,16 +165,22 @@ export default function Pipeline(): ReactNode {
         <TwoColumns>
           <div>
             <h1>{pipelineFromServer?.value?.options?.name ?? "<untitled>"}</h1>
-            <h3>Edit Pipeline</h3>
             {pipelineFromServer.value && (
               <>
                 <p>
-                  <textarea
-                    cols={50}
-                    rows={30}
+                  <Editor
+                    width="600px"
+                    height="400px"
+                    language="json"
+                    theme="vs-dark"
                     value={textareaValue}
                     onChange={onTextAreaChange}
-                    readOnly={ownedBySomeoneElse && !isAdminView}
+                    options={{
+                      readonly: ownedBySomeoneElse && !isAdminView,
+                      minimap: {
+                        enabled: false
+                      }
+                    }}
                   />
                 </p>
                 <p>

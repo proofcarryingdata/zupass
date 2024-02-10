@@ -12,6 +12,7 @@
     "clean": "rm -rf node_modules public/js tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@monaco-editor/react": "^4.6.0",
     "@pcd/passport-interface": "0.10.0",
     "@pcd/util": "0.4.0",
     "@stytch/react": "^15.0.0",

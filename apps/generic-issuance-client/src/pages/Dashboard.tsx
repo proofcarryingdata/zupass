@@ -161,7 +161,7 @@ export default function Dashboard(): ReactNode {
       }),
 
       columnHelper.accessor("lastLoad", {
-        header: "last load",
+        header: "loaded",
         cell: (props) => {
           const value = props.getValue()?.valueOf();
           return (
@@ -193,7 +193,7 @@ export default function Dashboard(): ReactNode {
               : "🎟️";
           return (
             <span>
-              {icon}&nbsp;&nbsp;{value}
+              {icon}&nbsp;{value}
             </span>
           );
         }
@@ -209,7 +209,7 @@ export default function Dashboard(): ReactNode {
             | "error";
           return (
             <span>
-              {pipelineIconFromStr(value)}&nbsp;&nbsp;{value}
+              {pipelineIconFromStr(value)}&nbsp;{value}
             </span>
           );
         }
@@ -308,7 +308,7 @@ export default function Dashboard(): ReactNode {
                               }}
                             >
                               {/* eslint-disable-next-line no-constant-condition */}
-                              {i === 0 && false ? null : (
+                              {/* {i === 0 && false ? null : (
                                 <div
                                   style={{
                                     width: "20px",
@@ -323,11 +323,22 @@ export default function Dashboard(): ReactNode {
                                   }[header.column.getIsSorted() as string] ??
                                     ""}
                                 </div>
-                              )}
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
+                              )} */}
+                              <span
+                                style={{
+                                  fontWeight: header.column.getIsSorted()
+                                    ? "bold"
+                                    : "normal",
+                                  fontStyle: header.column.getIsSorted()
+                                    ? "italic"
+                                    : "normal"
+                                }}
+                              >
+                                {flexRender(
+                                  header.column.columnDef.header,
+                                  header.getContext()
+                                )}
+                              </span>
                             </div>
                           )}
                         </th>
