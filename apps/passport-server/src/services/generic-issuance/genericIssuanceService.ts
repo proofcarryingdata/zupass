@@ -8,6 +8,8 @@ import {
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericPretixEvent,
+  GenericPretixProduct,
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineDefinitionSchema,
@@ -789,6 +791,21 @@ export class GenericIssuanceService {
       await this.atomDB.clear(pipelineId);
       await this.restartPipeline(pipelineId);
     });
+  }
+
+  public async fetchAllPretixEvents(
+    orgUrl: string,
+    token: string
+  ): Promise<GenericPretixEvent[]> {
+    return this.genericPretixAPI.fetchAllEvents(orgUrl, token);
+  }
+
+  public async fetchPretixProducts(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<GenericPretixProduct[]> {
+    return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
   }
 
   /**

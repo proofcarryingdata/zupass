@@ -1,6 +1,6 @@
+import { GenericPretixPosition } from "@pcd/passport-interface";
 import { rest } from "msw";
 import { SetupServer, setupServer } from "msw/node";
-import { GenericPretixPosition } from "../../src/apis/pretix/genericPretixAPI";
 import { GenericPretixDataMocker } from "./GenericPretixDataMocker";
 
 export function getGenericMockPretixAPIServer(

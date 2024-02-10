@@ -13,6 +13,7 @@ import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
 import { PipelineDefinition } from "./genericIssuanceTypes";
+import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -965,6 +966,25 @@ export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
 export type GenericIssuanceDeletePipelineResponseValue = void;
 
 export type GenericIssuanceDeletePipelineRequest = { jwt: string };
+
+export type GenericIssuanceFetchPretixEventsRequest = {
+  orgUrl: string;
+  token: string;
+  jwt: string;
+};
+
+export type GenericIssuanceFetchPretixEventsResponseValue =
+  GenericPretixEvent[];
+
+export type GenericIssuanceFetchPretixProductsRequest = {
+  orgUrl: string;
+  token: string;
+  eventID: string;
+  jwt: string;
+};
+
+export type GenericIssuanceFetchPretixProductsResponseValue =
+  GenericPretixProduct[];
 
 export type GenericIssuanceSelf = {
   email: string;

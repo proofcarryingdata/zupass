@@ -21,21 +21,19 @@ import {
   useMemo,
   useState
 } from "react";
+import { Link } from "react-router-dom";
 import { PageContent, Table } from "../components/Core";
 import { Header } from "../components/Header";
 import {
   pipelineCreatedAt,
-  pipelineDetailPagePath,
   pipelineIconFromStr,
   pipelineLastEdit,
   pipelineLink
 } from "../components/PipelineDetails";
 import { GIContext } from "../helpers/Context";
-import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { SAMPLE_CSV_PIPELINE } from "./SamplePipelines";
 
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
@@ -59,28 +57,6 @@ export default function Dashboard(): ReactNode {
 
     return entries;
   }, [isAdminView, pipelinesFromServer?.value, user?.value?.id]);
-
-  const [isCreatingPipeline, setIsCreatingPipeline] = useState(false);
-  const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
-  const [newPipelineJSON, setNewPipelineJSON] = useState(SAMPLE_CSV_PIPELINE);
-
-  const onCreateClick = useCallback(() => {
-    if (userJWT) {
-      setIsUploadingPipeline(true);
-      savePipeline(userJWT, newPipelineJSON)
-        .then((res) => {
-          console.log("create pipeline result", res);
-          if (res.success === false) {
-            alert(res.error);
-          } else {
-            window.location.href = "/#" + pipelineDetailPagePath(res.value?.id);
-          }
-        })
-        .finally(() => {
-          setIsUploadingPipeline(false);
-        });
-    }
-  }, [newPipelineJSON, userJWT]);
 
   useEffect(() => {
     if (!userJWT) {
@@ -213,15 +189,6 @@ export default function Dashboard(): ReactNode {
     );
   }
 
-  if (isUploadingPipeline) {
-    return (
-      <>
-        <Header user={user} stytchClient={stytchClient} />
-        <PageContent>creating pipeline...</PageContent>
-      </>
-    );
-  }
-
   if (!user || !pipelinesFromServer) {
     return (
       <>
@@ -304,26 +271,9 @@ export default function Dashboard(): ReactNode {
             marginTop: "16px"
           }}
         >
-          <button onClick={(): void => setIsCreatingPipeline((curr) => !curr)}>
-            {isCreatingPipeline ? "Minimize 🔼" : "Create 🔽"}
-          </button>
-          {isCreatingPipeline && (
-            <div
-              style={{
-                marginTop: "8px"
-              }}
-            >
-              <textarea
-                rows={20}
-                cols={80}
-                value={newPipelineJSON}
-                onChange={(e): void => setNewPipelineJSON(e.target.value)}
-              />
-              <div>
-                <button onClick={onCreateClick}>🐒 Create! 🚀</button>
-              </div>
-            </div>
-          )}
+          <Link to="/create-pipeline">
+            <button>Create Pipeline</button>
+          </Link>
         </div>
       </PageContent>
     </>

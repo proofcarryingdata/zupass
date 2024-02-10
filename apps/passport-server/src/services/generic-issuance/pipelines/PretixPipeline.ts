@@ -14,6 +14,12 @@ import {
   GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
+  GenericPretixCheckinList,
+  GenericPretixEvent,
+  GenericPretixEventSettings,
+  GenericPretixOrder,
+  GenericPretixProduct,
+  GenericPretixProductCategory,
   PipelineDefinition,
   PipelineLog,
   PipelineRunInfo,
@@ -33,15 +39,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
-import {
-  GenericPretixCheckinList,
-  GenericPretixEvent,
-  GenericPretixEventSettings,
-  GenericPretixOrder,
-  GenericPretixProduct,
-  GenericPretixProductCategory,
-  IGenericPretixAPI
-} from "../../../apis/pretix/genericPretixAPI";
+import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import {
   IPipelineAtomDB,
   PipelineAtom

@@ -3,6 +3,10 @@ import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceDeletePipelineResponseValue,
+  GenericIssuanceFetchPretixEventsRequest,
+  GenericIssuanceFetchPretixEventsResponseValue,
+  GenericIssuanceFetchPretixProductsRequest,
+  GenericIssuanceFetchPretixProductsResponseValue,
   GenericIssuanceGetAllUserPipelinesResponseValue,
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuancePreCheckRequest,
@@ -22,7 +26,7 @@ import { GenericIssuanceService } from "../../services/generic-issuance/genericI
 import { setFlattenedObject } from "../../services/telemetryService";
 import { GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { checkUrlParam } from "../params";
+import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
 export function initGenericIssuanceRoutes(
@@ -245,6 +249,50 @@ export function initGenericIssuanceRoutes(
         checkUrlParam(req, "id")
       );
       res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/fetch-pretix-events",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      await genericIssuanceService.authenticateStytchSession(req);
+      const events = await genericIssuanceService.fetchAllPretixEvents(
+        checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
+          req,
+          "orgUrl"
+        ),
+        checkBody<GenericIssuanceFetchPretixEventsRequest, "token">(
+          req,
+          "token"
+        )
+      );
+      res.json(events satisfies GenericIssuanceFetchPretixEventsResponseValue);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/fetch-pretix-products",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      await genericIssuanceService.authenticateStytchSession(req);
+      const events = await genericIssuanceService.fetchPretixProducts(
+        checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
+          req,
+          "orgUrl"
+        ),
+        checkBody<GenericIssuanceFetchPretixProductsRequest, "token">(
+          req,
+          "token"
+        ),
+        checkBody<GenericIssuanceFetchPretixProductsRequest, "eventID">(
+          req,
+          "eventID"
+        )
+      );
+      res.json(
+        events satisfies GenericIssuanceFetchPretixProductsResponseValue
+      );
     }
   );
 }
