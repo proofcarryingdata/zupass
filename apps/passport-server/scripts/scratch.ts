@@ -1,6 +1,6 @@
 /* eslint-disable */
 import { POST } from "@pcd/passport-interface";
-import { sleep } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import * as dotenv from "dotenv";
 import * as path from "path";
 import yargs from "yargs";
@@ -178,7 +178,14 @@ yargs
     "nothing",
     "like a repl but w/ convenient access to all project and package functions",
     () => {},
-    async function () {}
+    async function () {
+      try {
+        throw new Error("Connection terminated unexpectedly");
+      } catch (e) {
+        console.log(getErrorMessage(e));
+        console.log(e);
+      }
+    }
   )
   .command(
     "frogs-assets [frog-data-json-path] [frog-images-src] [frog-images-dest]",
