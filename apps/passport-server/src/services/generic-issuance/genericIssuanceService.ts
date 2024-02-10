@@ -53,7 +53,7 @@ import {
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
-import { makePLogErr } from "./util";
+import { makePLogErr, makePLogInfo } from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -235,6 +235,20 @@ export class GenericIssuanceService {
         traceUser(owner);
         tracePipeline(pipelineSlot.definition);
 
+        if (pipelineSlot.definition.options?.paused) {
+          logger(
+            LOG_TAG,
+            `pipeline '${pipelineSlot.definition.id}' is paused, not loading`
+          );
+          return {
+            atomsLoaded: 0,
+            lastRunEndTimestamp: Date.now(),
+            lastRunStartTimestamp: Date.now(),
+            latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
+            success: true
+          };
+        }
+
         if (!pipeline) {
           logger(
             LOG_TAG,
@@ -263,8 +277,7 @@ export class GenericIssuanceService {
           logger(
             LOG_TAG,
             `successfully loaded data for pipeline with id '${pipelineId}'` +
-              ` of type '${pipelineSlot.definition.type}'`,
-            summary
+              ` of type '${pipelineSlot.definition.type}'`
           );
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
