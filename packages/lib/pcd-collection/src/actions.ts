@@ -17,6 +17,18 @@ export interface ReplaceInFolderAction {
   pcds: SerializedPCD[];
 }
 
+export function getPcdsFromActions(actions: PCDAction[]): SerializedPCD[] {
+  let results: SerializedPCD[] = [];
+
+  actions.forEach((action) => {
+    if (isAppendToFolderAction(action) || isReplaceInFolderAction(action)) {
+      results = [...results, ...action.pcds];
+    }
+  });
+
+  return results;
+}
+
 export function isReplaceInFolderAction(
   action: PCDAction
 ): action is ReplaceInFolderAction {

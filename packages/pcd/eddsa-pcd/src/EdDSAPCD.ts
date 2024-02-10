@@ -148,6 +148,10 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const publicKey = await getEdDSAPublicKey(prvKey);
 
   // Make the signature on the message.
+  // Note: packSignature converts the R8 coordinates from Mongtomery form to
+  // standard form for use outside of circomlibjs.
+  // This is a reference to Montgomery form of numbers for modular
+  // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
   const signature = toHexString(
     eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
   );
@@ -165,7 +169,11 @@ export async function verify(pcd: EdDSAPCD): Promise<boolean> {
 
     const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
 
-    // `F.fromObject` converts a point from standard format to Montgomery.
+    // Note: `F.fromObject` converts a coordinate from standard format to
+    // Montgomery form, which is expected by circomlibjs.  unpackSignature above
+    // does the same for its R8 point.
+    // This is a reference to Montgomery form of numbers for modular
+    // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
     const pubKey = pcd.claim.publicKey.map((p) =>
       eddsa.F.fromObject(p)
     ) as Point;
@@ -288,7 +296,10 @@ export async function getEdDSAPublicKey(
   }
 
   return eddsa.prv2pub(privateKey).map((p) =>
-    // `F.toObject` converts a point from Montgomery format to a standard one.
+    // Note: `F.toObject` converts a point from the Montgomery format used by
+    // circomlibjs to standard form.
+    // This is a reference to Montgomery form of numbers for modular
+    // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
     eddsa.F.toObject(p).toString(16).padStart(64, "0")
   ) as EdDSAPublicKey;
 }

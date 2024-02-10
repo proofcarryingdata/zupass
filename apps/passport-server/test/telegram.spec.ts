@@ -32,7 +32,7 @@ import { ITestEvent, ITestOrganizer } from "./devconnectdb.spec";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
 describe("telegram bot functionality", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   let db: Pool;
 

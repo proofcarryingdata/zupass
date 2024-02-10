@@ -35,13 +35,9 @@ import {
   requireDefinedParameter,
   uuidToBigInt
 } from "@pcd/util";
-import {
-  Groth16Proof,
-  prove as groth16Prove,
-  verify as groth16Verify
-} from "@zk-kit/groth16";
 import { Eddsa, buildEddsa } from "circomlibjs";
 import JSONBig from "json-bigint";
+import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
 
@@ -281,6 +277,11 @@ function snarkInputForProof(
 ): Record<string, `${number}` | `${number}`[]> {
   const ticketAsBigIntArray = ticketDataToBigInts(ticketPCD.claim.ticket);
   const pubKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
+
+  // Note: unpackSignature leaves the R8 point's coordinates in Montgomery
+  // form, which is then reversed by toObject below.
+  // This is a reference to Montgomery form of numbers for modular
+  // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
   const rawSig = eddsa.unpackSignature(
     fromHexString(ticketPCD.proof.eddsaPCD.proof.signature)
   );
@@ -518,7 +519,7 @@ export async function prove(
     watermark
   );
 
-  const { proof, publicSignals } = await groth16Prove(
+  const { proof, publicSignals } = await groth16.fullProve(
     snarkInput,
     initArgs.wasmFilePath,
     initArgs.zkeyFilePath
@@ -615,7 +616,7 @@ export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
   // full package initialization.
 
   const publicSignals = publicSignalsFromClaim(pcd.claim);
-  return groth16Verify(vkey, { publicSignals, proof: pcd.proof });
+  return groth16.verify(vkey, publicSignals, pcd.proof);
 }
 
 /**

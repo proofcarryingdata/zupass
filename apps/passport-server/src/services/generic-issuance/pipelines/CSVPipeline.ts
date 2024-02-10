@@ -18,7 +18,7 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { logger } from "../../../util/logger";
-import { traced } from "../../telemetryService";
+import { setError, traced } from "../../telemetryService";
 import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
@@ -135,7 +135,12 @@ export class CSVPipeline implements BasePipeline {
   }
 
   public async load(): Promise<PipelineRunInfo> {
-    return traced(LOG_NAME, "load", async () => {
+    return traced(LOG_NAME, "load", async (span) => {
+      logger(LOG_TAG, "load");
+      span?.setAttribute("pipeline_id", this.id);
+      span?.setAttribute("pipeline_type", this.definition.type);
+      logger(LOG_TAG, "load", this.id, this.definition.type);
+
       const start = new Date();
       const logs: PipelineLog[] = [];
 
@@ -151,8 +156,10 @@ export class CSVPipeline implements BasePipeline {
         });
 
         await this.db.clear(this.id);
+        logs.push(makePLogInfo(`clearing old data`));
         await this.db.save(this.id, atoms);
         logs.push(makePLogInfo(`loaded csv ${this.definition.options.csv}`));
+        span?.setAttribute("atom_count", atoms.length);
 
         return {
           atomsLoaded: atoms.length,
@@ -162,6 +169,7 @@ export class CSVPipeline implements BasePipeline {
           success: true
         };
       } catch (e) {
+        setError(e, span);
         logs.push(makePLogErr(`failed to load csv: ${e}`));
         logs.push(makePLogErr(`csv was ${this.definition.options.csv}`));
 
@@ -186,26 +194,32 @@ export class CSVPipeline implements BasePipeline {
 }
 
 export function parseCSV(csv: string): Promise<string[][]> {
-  return new Promise<string[][]>((resolve, reject) => {
-    const parser = parse();
-    const records: string[][] = [];
+  return traced("parseCSV", "parseCSV", async (span) => {
+    return new Promise<string[][]>((resolve, reject) => {
+      span?.setAttribute("text_length", csv.length);
 
-    parser.on("readable", function () {
-      let record;
-      while ((record = parser.read()) !== null) {
-        records.push(record);
-      }
+      const parser = parse();
+      const records: string[][] = [];
+
+      parser.on("readable", function () {
+        let record;
+        while ((record = parser.read()) !== null) {
+          records.push(record);
+        }
+      });
+
+      parser.on("error", (err) => {
+        setError(err);
+        reject(err);
+      });
+
+      parser.on("end", () => {
+        span?.setAttribute("records", records.length);
+        resolve(records);
+      });
+
+      parser.write(csv);
+      parser.end();
     });
-
-    parser.on("error", (err: unknown) => {
-      reject(err);
-    });
-
-    parser.on("end", () => {
-      resolve(records);
-    });
-
-    parser.write(csv);
-    parser.end();
   });
 }
