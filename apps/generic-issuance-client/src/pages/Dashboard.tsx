@@ -143,7 +143,8 @@ export default function Dashboard(): ReactNode {
       //   }
       // }),
       columnHelper.display({
-        header: "test",
+        header: "",
+        id: "title_",
         cell: (table) => {
           return (
             <span>

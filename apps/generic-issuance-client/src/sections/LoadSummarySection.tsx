@@ -1,6 +1,7 @@
 import { PipelineLoadSummary, PipelineLog } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
+import styled from "styled-components";
 import { Table } from "../components/Core";
 import { pipelineIcon } from "../components/PipelineDetails";
 import { timeAgo } from "../helpers/util";
@@ -19,7 +20,7 @@ export function LoadSummarySection({
 
   return (
     <div>
-      <h3>Last Load</h3>
+      <h4>Last Load</h4>
       <Table>
         <thead>
           <tr>
@@ -43,19 +44,17 @@ export function LoadSummarySection({
         </tbody>
       </Table>
 
-      <h3>Logs</h3>
+      <h4>Logs</h4>
       {latestRun.latestLogs.length === 0 ? (
         <>
           <div>no logs</div>
         </>
       ) : (
-        <Table>
-          <tbody>
-            {latestRun.latestLogs.map((l, i) => (
-              <PipelineLogEntry log={l} key={i} />
-            ))}
-          </tbody>
-        </Table>
+        <Logs>
+          {latestRun.latestLogs.map((l, i) => (
+            <PipelineLogEntry log={l} key={i} />
+          ))}
+        </Logs>
       )}
     </div>
   );
@@ -63,10 +62,35 @@ export function LoadSummarySection({
 
 export function PipelineLogEntry({ log }: { log: PipelineLog }): ReactNode {
   return (
-    <tr>
-      <td>{moment(log.timestampCreated).format("MMMM Do YYYY, h:mm:ss a")}</td>
-      <td>{log.level}</td>
-      <td>{log.value}</td>
-    </tr>
+    <LogRow>
+      <LogDate>
+        {moment(log.timestampCreated).format("MMMM Do YYYY, h:mm:ss a")} [
+        {log.level}]
+      </LogDate>
+      <Log>{log.value}</Log>
+    </LogRow>
   );
 }
+
+const Logs = styled.div`
+  max-width: 800px;
+  padding: 8px;
+`;
+
+const LogColumn = styled.span`
+  display: inline;
+  padding: 4px 8px;
+`;
+
+const LogDate = styled(LogColumn)`
+  background-color: rgba(255, 255, 255, 0.2);
+`;
+
+const Log = styled(LogColumn)``;
+
+const LogRow = styled.div`
+  border: 3px solid rgba(255, 255, 255, 0.2);
+  margin-top: 4px;
+  word-break: break-all;
+  font-family: monospace;
+`;

@@ -164,7 +164,8 @@ export default function Pipeline(): ReactNode {
       <PageContent>
         <TwoColumns>
           <div>
-            <h2>Edit Pipeline</h2>
+            <h1>{pipelineFromServer?.value?.options?.name ?? "<untitled>"}</h1>
+            <h3>Edit Pipeline</h3>
             {pipelineFromServer.value && (
               <>
                 <p>
@@ -204,12 +205,11 @@ export default function Pipeline(): ReactNode {
             )}
           </div>
           <div style={{ flexGrow: 1 }}>
-            <h2>Pipeline Info</h2>
             {pipelineInfo && pipelineFromServer.value && (
               <>
                 {pipelineInfo.feeds && (
                   <>
-                    <h3>Feeds</h3>
+                    <h4>Feeds</h4>
                     <ol>
                       {pipelineInfo.feeds?.map((feed) => (
                         <li key={feed.url}>
@@ -233,7 +233,7 @@ export default function Pipeline(): ReactNode {
                 )}
                 {ctx.isAdminMode && userFromServer?.value?.isAdmin && (
                   <>
-                    <h3>Admin Details</h3>
+                    <h4>Admin Details</h4>
                     {/* todo: honeycomb link for feed issuance - e.g. how many pcds have been issued */}
                     {pipelineFromServer.value && (
                       <>

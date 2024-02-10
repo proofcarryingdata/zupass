@@ -16,7 +16,7 @@ export function LatestAtomsSection({
 
   return (
     <div>
-      <h3>Latest Data</h3>
+      <h4>Latest Data</h4>
       {latestAtoms.length === 0 ? (
         <>
           <i>No data found</i>

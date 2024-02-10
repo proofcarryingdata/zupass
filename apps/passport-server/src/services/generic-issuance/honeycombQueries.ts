@@ -146,7 +146,8 @@ export function tracePipeline(pipeline: PipelineDefinition | undefined): void {
       id: pipeline?.id,
       type: pipeline?.type,
       owner_id: pipeline?.ownerUserId,
-      name: pipeline?.options?.name
+      name: pipeline?.options?.name,
+      paused: pipeline?.options.paused
     }
   });
 }
