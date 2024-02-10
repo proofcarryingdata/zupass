@@ -64,6 +64,7 @@ export * from "./api/requestVerifyTicketById";
 export * from "./api/requestVerifyToken";
 export * from "./edgecity";
 export * from "./genericIssuanceTypes";
+export * from "./genericPretixTypes";
 export * from "./util/util";
 export * from "./vitalia";
 export * from "./zuconnect";

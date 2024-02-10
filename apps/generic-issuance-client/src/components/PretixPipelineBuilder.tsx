@@ -4,6 +4,7 @@ import {
   PipelineType,
   PretixPipelineDefinition,
   PretixProductConfig,
+  getI18nString,
   requestGenericIssuanceFetchPretixEvents,
   requestGenericIssuanceFetchPretixProducts
 } from "@pcd/passport-interface";
@@ -49,7 +50,7 @@ export default function PretixPipelineBuilder(
       setProducts(
         response.value.map((p) => ({
           externalId: p.id.toString(),
-          name: Object.values(p.name).join(", "),
+          name: getI18nString(p.name),
           isSuperUser: false,
           genericIssuanceId: uuidV4()
         }))
@@ -127,7 +128,7 @@ export default function PretixPipelineBuilder(
                 onChange={handleSelectEvent}
               />
               <label htmlFor={e.slug}>
-                {e.slug} ({Object.values(e.name).join(", ")})
+                {e.slug} ({getI18nString(e.name)})
               </label>
             </div>
           ))}
@@ -183,11 +184,11 @@ export default function PretixPipelineBuilder(
                       externalId: selectedEvent,
                       genericIssuanceId: uuidV4(),
                       products,
-                      // TODO: Really hacky, will fix in next level of fidelity
-                      name: Object.values(
+                      name: getI18nString(
+                        // TODO: Really hacky, will fix in next level of fidelity
                         events?.find((e) => e.slug === selectedEvent)?.name ??
                           {}
-                      ).join(", ")
+                      )
                     }
                   ]
                 }

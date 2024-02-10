@@ -10,6 +10,7 @@ import {
   FeedCredentialPayload,
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceCheckInResult,
+  GenericPretixProduct,
   InfoResult,
   LemonadePipelineDefinition,
   PipelineDefinition,
@@ -18,6 +19,7 @@ import {
   PretixPipelineDefinition,
   createFeedCredentialPayload,
   createGenericCheckinCredentialPayload,
+  getI18nString,
   requestGenericIssuanceCheckIn,
   requestPipelineInfo,
   requestPollFeed
@@ -43,10 +45,6 @@ import {
   LemonadeTicketTier,
   LemonadeUser
 } from "../src/apis/lemonade/lemonadeAPI";
-import {
-  GenericPretixProduct,
-  getI18nString
-} from "../src/apis/pretix/genericPretixAPI";
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";

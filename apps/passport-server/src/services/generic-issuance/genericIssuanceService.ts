@@ -8,6 +8,8 @@ import {
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericPretixEvent,
+  GenericPretixProduct,
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineDefinitionSchema,
@@ -26,11 +28,7 @@ import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
-import {
-  GenericPretixEvent,
-  GenericPretixProduct,
-  IGenericPretixAPI
-} from "../../apis/pretix/genericPretixAPI";
+import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
   IPipelineDefinitionDB,

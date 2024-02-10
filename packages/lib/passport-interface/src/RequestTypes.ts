@@ -13,6 +13,7 @@ import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
 import { PipelineDefinition } from "./genericIssuanceTypes";
+import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -972,11 +973,8 @@ export type GenericIssuanceFetchPretixEventsRequest = {
   jwt: string;
 };
 
-// TODO: Move GenericPretixEvent types to passport-interface
-export type GenericIssuanceFetchPretixEventsResponseValue = Array<{
-  slug: string;
-  name: Record<string, string>;
-}>;
+export type GenericIssuanceFetchPretixEventsResponseValue =
+  GenericPretixEvent[];
 
 export type GenericIssuanceFetchPretixProductsRequest = {
   orgUrl: string;
@@ -985,10 +983,8 @@ export type GenericIssuanceFetchPretixProductsRequest = {
   jwt: string;
 };
 
-export type GenericIssuanceFetchPretixProductsResponseValue = Array<{
-  id: number;
-  name: Record<string, string>;
-}>;
+export type GenericIssuanceFetchPretixProductsResponseValue =
+  GenericPretixProduct[];
 
 export type GenericIssuanceSelf = {
   email: string;
