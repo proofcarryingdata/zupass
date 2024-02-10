@@ -707,69 +707,65 @@ export class GenericIssuanceService {
 
   public async upsertPipelineDefinition(
     user: PipelineUser,
-    pipelineDefinition: PipelineDefinition
+    newDefinition: PipelineDefinition
   ): Promise<PipelineDefinition> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       logger(
         SERVICE_NAME,
         "upsertPipelineDefinition",
         str(user),
-        str(pipelineDefinition)
+        str(newDefinition)
       );
       traceUser(user);
-      tracePipeline(pipelineDefinition);
+      tracePipeline(newDefinition);
 
       // TODO: do this in a transaction
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
-        pipelineDefinition.id
+        newDefinition.id
       );
 
       if (existingPipelineDefinition) {
         span?.setAttribute("is_new", false);
+        this.ensureUserHasPipelineDefinitionAccess(
+          user,
+          existingPipelineDefinition
+        );
         if (
-          !this.userHasPipelineDefinitionAccess(
-            user,
-            existingPipelineDefinition
-          )
-        ) {
-          throw new PCDHTTPError(403, "Not allowed to edit pipeline");
-        }
-        if (
-          existingPipelineDefinition.ownerUserId !==
-          pipelineDefinition.ownerUserId
+          existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
       } else {
+        // NEW PIPELINE!
         span?.setAttribute("is_new", true);
-        pipelineDefinition.ownerUserId = user.id;
-        if (!pipelineDefinition.id) {
-          pipelineDefinition.id = uuidV4();
-        }
+        newDefinition.ownerUserId = user.id;
+        newDefinition.id = uuidV4();
       }
 
-      let newPipelineDefinition: PipelineDefinition;
+      let validatedNewDefinition: PipelineDefinition;
+
       try {
-        newPipelineDefinition = PipelineDefinitionSchema.parse(
-          pipelineDefinition
+        validatedNewDefinition = PipelineDefinitionSchema.parse(
+          newDefinition
         ) as PipelineDefinition;
       } catch (e) {
-        throw new PCDHTTPError(400, `Invalid formatted response: ${e}`);
+        logger(LOG_TAG, "invalid pipeline definition", e);
+        throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
       }
 
       logger(
         LOG_TAG,
-        `executing upsert of pipeline ${newPipelineDefinition.id}`
+        `executing upsert of pipeline ${validatedNewDefinition.id}`
       );
-      await this.definitionDB.setDefinition(newPipelineDefinition);
+      await this.definitionDB.setDefinition(validatedNewDefinition);
       await this.definitionDB.saveLoadSummary(
-        newPipelineDefinition.id,
+        validatedNewDefinition.id,
         undefined
       );
-      await this.atomDB.clear(newPipelineDefinition.id);
+      await this.atomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
-      this.restartPipeline(newPipelineDefinition.id);
-      return newPipelineDefinition;
+      this.restartPipeline(validatedNewDefinition.id);
+      return validatedNewDefinition;
     });
   }
 
