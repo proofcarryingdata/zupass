@@ -447,7 +447,7 @@ export enum PipelineLogLevel {
   Error = "Error"
 }
 
-export interface PipelineRunInfo {
+export interface PipelineLoadSummary {
   lastRunStartTimestamp: number;
   lastRunEndTimestamp: number;
   latestLogs: PipelineLog[];
@@ -470,7 +470,7 @@ export interface PipelineInfoRequest {
 export interface PipelineInfoResponseValue {
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
-  latestRun?: PipelineRunInfo;
+  latestRun?: PipelineLoadSummary;
 }
 
 export interface ListSingleFeedRequest {
@@ -936,7 +936,7 @@ export type GenericIssuancePipelineListEntry = {
   pipeline: PipelineDefinition;
   extraInfo: {
     ownerEmail: string;
-    lastRun?: PipelineRunInfo;
+    lastRun?: PipelineLoadSummary;
   };
 };
 

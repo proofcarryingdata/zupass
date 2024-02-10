@@ -21,8 +21,8 @@ import {
   GenericPretixProduct,
   GenericPretixProductCategory,
   PipelineDefinition,
+  PipelineLoadSummary,
   PipelineLog,
-  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
@@ -158,11 +158,11 @@ export class PretixPipeline implements BasePipeline {
    * TODO:
    * - clear tickets after each load? important!!!!
    */
-  public async load(): Promise<PipelineRunInfo> {
-    return traced<PipelineRunInfo>(
+  public async load(): Promise<PipelineLoadSummary> {
+    return traced<PipelineLoadSummary>(
       LOG_NAME,
       "load",
-      async (span): Promise<PipelineRunInfo> => {
+      async (span): Promise<PipelineLoadSummary> => {
         const startTime = Date.now();
         const logs: PipelineLog[] = [];
 
@@ -262,7 +262,7 @@ export class PretixPipeline implements BasePipeline {
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
           success: true
-        } satisfies PipelineRunInfo;
+        } satisfies PipelineLoadSummary;
       }
     );
   }

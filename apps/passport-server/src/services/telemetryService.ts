@@ -1,13 +1,19 @@
 import { HoneycombSDK } from "@honeycombio/opentelemetry-node";
 import opentelemetry, { Span, Tracer } from "@opentelemetry/api";
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
+import {
+  PipelineDefinition,
+  PipelineLoadSummary
+} from "@pcd/passport-interface";
 import { ZUPASS_GITHUB_REPOSITORY_URL, flattenObject } from "@pcd/util";
 import Libhoney from "libhoney";
 import urljoin from "url-join";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { getCommitMessage } from "../util/util";
+import { PipelineUser } from "./generic-issuance/pipelines/types";
 
 // todo get rid of these globals
 let honeyClient: Libhoney | null;
@@ -212,12 +218,35 @@ export function setError(e: unknown, span?: Span): void {
   }
 }
 
-export function setFlattenedObject(
+export function traceFlattenedObject(
   span: Span | undefined,
   val: object | undefined
 ): void {
   const flattened = flattenObject(val);
   flattened.forEach(([k, v]) => {
     span?.setAttribute(k, v);
+  });
+}
+
+export function traceUser(user: PipelineUser | undefined): void {
+  traceFlattenedObject(getActiveSpan(), { user });
+}
+
+export function tracePipeline(pipeline: PipelineDefinition | undefined): void {
+  traceFlattenedObject(getActiveSpan(), {
+    pipeline: {
+      pipeline_id: pipeline?.id,
+      pipeline_type: pipeline?.type
+    }
+  });
+}
+
+export function traceLoadSummary(info: PipelineLoadSummary | undefined): void {
+  traceFlattenedObject(getActiveSpan(), {
+    pipelineRunInfo: {
+      atomsLoaded: info?.atomsLoaded,
+      success: info?.success,
+      log_length: info?.latestLogs?.length
+    }
   });
 }

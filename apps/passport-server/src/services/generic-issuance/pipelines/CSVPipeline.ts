@@ -1,8 +1,8 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
+  PipelineLoadSummary,
   PipelineLog,
-  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue
@@ -134,7 +134,7 @@ export class CSVPipeline implements BasePipeline {
     });
   }
 
-  public async load(): Promise<PipelineRunInfo> {
+  public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
       logger(LOG_TAG, "load");
       span?.setAttribute("pipeline_id", this.id);

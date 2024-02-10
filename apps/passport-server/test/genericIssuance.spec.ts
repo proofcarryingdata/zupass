@@ -351,8 +351,8 @@ t2,i1`,
     );
     await pipelineDefinitionDB.clearAllDefinitions();
     await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
-    await giService?.startPipelinesFromDefinitions();
-    await giService?.executeAllPipelineLoads();
+    await giService?.loadAndInstantiatePipelines();
+    await giService?.performAllPipelineLoads();
   });
 
   this.beforeEach(async () => {

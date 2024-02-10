@@ -1,13 +1,13 @@
 import {
   GenericIssuancePipelineListEntry,
-  PipelineRunInfo
+  PipelineLoadSummary
 } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
 
 export function pipelineStatus(
-  latestRun: PipelineRunInfo | undefined
+  latestRun: PipelineLoadSummary | undefined
 ): ReactNode {
   if (!latestRun) {
     return "Waiting";
@@ -34,7 +34,7 @@ export function pipelineIconFromStr(
   return "❌";
 }
 export function pipelineIcon(
-  latestRun: PipelineRunInfo | undefined
+  latestRun: PipelineLoadSummary | undefined
 ): ReactNode {
   if (!latestRun) {
     return "⏳";

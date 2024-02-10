@@ -29,7 +29,7 @@ import {
 } from "../../services/generic-issuance/honeycombQueries";
 import {
   createQueryUrl,
-  setFlattenedObject
+  traceFlattenedObject
 } from "../../services/telemetryService";
 import { GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
@@ -69,7 +69,7 @@ export function initGenericIssuanceRoutes(
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const user = await genericIssuanceService.authenticateStytchSession(req);
-    setFlattenedObject(getActiveSpan(), { user });
+    traceFlattenedObject(getActiveSpan(), { user });
 
     const result: GenericIssuanceSelfResponseValue = {
       email: user.email,
@@ -119,7 +119,7 @@ export function initGenericIssuanceRoutes(
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const user = await genericIssuanceService.authenticateStytchSession(req);
-    setFlattenedObject(getActiveSpan(), { user });
+    traceFlattenedObject(getActiveSpan(), { user });
 
     const reqBody = req.body as PipelineInfoRequest;
     const result = await genericIssuanceService.handleGetPipelineInfo(
@@ -194,7 +194,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceFlattenedObject(getActiveSpan(), { user });
 
       const result =
         await genericIssuanceService.getAllUserPipelineDefinitions(user);
@@ -212,7 +212,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceFlattenedObject(getActiveSpan(), { user });
 
       const result = await genericIssuanceService.loadPipelineDefinition(
         user,
@@ -230,7 +230,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceFlattenedObject(getActiveSpan(), { user });
 
       const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
       const result = await genericIssuanceService.upsertPipelineDefinition(
@@ -249,7 +249,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceFlattenedObject(getActiveSpan(), { user });
 
       const result = await genericIssuanceService.deletePipelineDefinition(
         user,
@@ -290,7 +290,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceFlattenedObject(getActiveSpan(), { user });
       const events = await genericIssuanceService.fetchAllPretixEvents(
         checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
           req,
@@ -310,7 +310,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceFlattenedObject(getActiveSpan(), { user });
       const events = await genericIssuanceService.fetchPretixProducts(
         checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
           req,
