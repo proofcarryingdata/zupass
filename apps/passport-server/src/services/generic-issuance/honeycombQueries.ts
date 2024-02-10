@@ -66,6 +66,29 @@ export function getPipelineAllHQuery(pipelineID: string): object {
   };
 }
 
+/**
+ * Honeycomb query that displays pipeline executions for a given pipeline.
+ */
+export function getAllGenericIssuanceQuery(): object {
+  return {
+    time_range: 3600,
+    granularity: 0,
+    breakdowns: ["name"],
+    calculations: [{ op: "COUNT" }, { op: "AVG", column: "duration_ms" }],
+    filters: [
+      {
+        column: "trace_service_name",
+        op: "=",
+        value: "GENERIC_ISSUANCE"
+      }
+    ],
+    filter_combination: "AND",
+    orders: [{ op: "COUNT", order: "descending" }],
+    havings: [],
+    limit: 1000
+  };
+}
+
 export function traceUser(user: PipelineUser | undefined): void {
   traceFlattenedObject(getActiveSpan(), { user });
 }

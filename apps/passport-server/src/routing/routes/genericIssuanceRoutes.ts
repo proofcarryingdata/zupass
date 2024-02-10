@@ -23,6 +23,7 @@ import {
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import {
+  getAllGenericIssuanceQuery,
   getPipelineAllHQuery,
   getPipelineLoadHQuery as getPipelineDataLoadHQuery,
   traceUser
@@ -281,6 +282,15 @@ export function initGenericIssuanceRoutes(
       res.redirect(queryUrl);
     }
   );
+
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get("/generic-issuance/api/pipeline-honeycomb/all/", async (req, res) => {
+    const query = getAllGenericIssuanceQuery();
+    const queryUrl = await createQueryUrl(query);
+    res.redirect(queryUrl);
+  });
 
   app.post(
     "/generic-issuance/api/fetch-pretix-events",

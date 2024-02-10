@@ -936,6 +936,7 @@ export class GenericIssuanceService {
         });
         const email = this.getEmailFromStytchSession(session);
         const user = await this.createOrGetUser(email);
+        traceUser(user);
         return user;
       } catch (e) {
         logger(LOG_TAG, `failed to authenticate with jwt '${jwt}'`, e);

@@ -35,6 +35,7 @@ import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 import {
+  getAllHoneycombLinkForAllGenericIssuance,
   getAllHoneycombLinkForPipeline,
   getLoadTraceHoneycombLinkForPipeline
 } from "../helpers/util";
@@ -183,12 +184,12 @@ export default function Dashboard(): ReactNode {
       isAdminView
         ? columnHelper.accessor("allTraceLink", {
             enableSorting: false,
-            header: "Trace",
+            header: "All Traces",
             cell: (props) => {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>trace</a>
+                  <a href={value}>all traces</a>
                 </span>
               );
             }
@@ -240,7 +241,13 @@ export default function Dashboard(): ReactNode {
     <>
       <Header user={user} stytchClient={stytchClient} />
       <PageContent>
+        {isAdminView && (
+          <>
+            <DashboardAdminSection />
+          </>
+        )}
         <h2>{isAdminView ? "" : "My "} Pipelines</h2>
+
         {!pipelineEntries?.length ? (
           <p>No pipelines right now - go create some!</p>
         ) : (
@@ -315,5 +322,26 @@ export default function Dashboard(): ReactNode {
         </div>
       </PageContent>
     </>
+  );
+}
+
+export function DashboardAdminSection(): ReactNode {
+  return (
+    <div>
+      <h2>Admin Section</h2>
+      <ul>
+        <li>
+          <a href={getAllHoneycombLinkForAllGenericIssuance()}>
+            all generic issuance traces
+          </a>
+        </li>
+        <li>
+          <a href="">all generic issuance http traces</a>
+        </li>
+        <li>
+          <a href="">query 3</a>
+        </li>
+      </ul>
+    </div>
   );
 }
