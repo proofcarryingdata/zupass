@@ -1,8 +1,8 @@
-import { Button, Checkbox } from "@chakra-ui/react";
+import { Button, FormControl, FormLabel, Link, Switch } from "@chakra-ui/react";
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useContext } from "react";
-import { Link } from "react-router-dom";
+import { Link as ReactLink } from "react-router-dom";
 import styled from "styled-components";
 import { GIContext } from "../helpers/Context";
 
@@ -45,16 +45,27 @@ export function Header({
 
   if (user.value.isAdmin) {
     rightElements.push(
-      <span key="admin-toggle">
-        <Checkbox
-          style={{ cursor: "pointer", userSelect: "none" }}
-          size="md"
-          type="checkbox"
-          isChecked={!!ctx.isAdminMode}
-          onChange={onAdminToggleClick}
-        >
-          admin view
-        </Checkbox>
+      <span
+        key="admin-toggle"
+        style={{
+          display: "flex",
+          justifyContent: "center",
+          alignItems: "center"
+        }}
+      >
+        <FormControl display="flex" alignItems="center">
+          <FormLabel htmlFor="admin" mb="0">
+            admin mode
+          </FormLabel>
+          <Switch
+            id="admin"
+            style={{ cursor: "pointer", userSelect: "none" }}
+            size="md"
+            type="checkbox"
+            isChecked={!!ctx.isAdminMode}
+            onChange={onAdminToggleClick}
+          ></Switch>
+        </FormControl>
       </span>
     );
   }
@@ -110,7 +121,7 @@ export const RightHalf = styled.div`
 `;
 
 export const Title = (): ReactNode => (
-  <Link to="/dashboard">
+  <Link as={ReactLink} to="/dashboard">
     <Button>
       <span style={{ fontSize: "20pt" }}>📦</span>
       &nbsp; &nbsp;

@@ -39,6 +39,7 @@ import {
   useMemo,
   useState
 } from "react";
+import { Link as ReactLink } from "react-router-dom";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -238,6 +239,7 @@ export default function Dashboard(): ReactNode {
               return (
                 <span>
                   <Link
+                    as={ReactLink}
                     href={table.row.original.loadTraceLink}
                     isExternal={true}
                   >
@@ -245,7 +247,7 @@ export default function Dashboard(): ReactNode {
                     <ExternalLinkIcon mx="2px" />
                   </Link>
                   &nbsp;
-                  <Link href={value} isExternal={true}>
+                  <Link as={ReactLink} href={value} isExternal={true}>
                     all
                     <ExternalLinkIcon mx="2px" />
                   </Link>
@@ -311,16 +313,7 @@ export default function Dashboard(): ReactNode {
           <p>No pipelines right now - go create some!</p>
         ) : (
           <>
-            <Stack
-              borderWidth="1px"
-              borderRadius="lg"
-              overflow="hidden"
-              padding={4}
-              gap={4}
-            >
-              <Heading size="md" marginBottom={4}>
-                Pipelines
-              </Heading>
+            <Stack overflow="hidden" padding={4} gap={4}>
               <TableContainer>
                 <Table variant="simple" size="sm">
                   <Thead style={{ userSelect: "none" }}>
@@ -388,7 +381,7 @@ export default function Dashboard(): ReactNode {
               </TableContainer>
               <Box display="inline-block">
                 <Box float="right">
-                  <Link href="/create-pipeline">
+                  <Link as={ReactLink} href="/create-pipeline">
                     <Button colorScheme="green" size="sm">
                       Create Pipeline
                     </Button>
@@ -408,26 +401,30 @@ export default function Dashboard(): ReactNode {
 export function DashboardAdminSection(): ReactNode {
   return (
     <>
-      <Stack
-        borderWidth="1px"
-        borderRadius="lg"
-        overflow="hidden"
-        padding={4}
-        marginTop={8}
-      >
+      <Stack overflow="hidden" padding={4} marginTop={8}>
         <Heading size="md" marginBottom={4}>
-          Admin
+          More Info
         </Heading>
         <UnorderedList>
           <ListItem>
-            <a href={getAllHoneycombLinkForAllGenericIssuance()}>
+            <Link
+              as={ReactLink}
+              href={getAllHoneycombLinkForAllGenericIssuance()}
+            >
               all generic issuance traces {getHoneycombQueryDurationStr()}
-            </a>
+              &nbsp;
+              <ExternalLinkIcon />
+            </Link>
           </ListItem>
           <li>
-            <a href={getAllHoneycombLinkForAllGenericIssuanceHttp()}>
+            <Link
+              as={ReactLink}
+              href={getAllHoneycombLinkForAllGenericIssuanceHttp()}
+            >
               all generic issuance http traces {getHoneycombQueryDurationStr()}
-            </a>
+              &nbsp;
+              <ExternalLinkIcon />
+            </Link>
           </li>
         </UnorderedList>
       </Stack>

@@ -1,9 +1,10 @@
+import { Link } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
+import { Link as ReactLink } from "react-router-dom";
 import { timeAgo } from "../helpers/util";
 
 export function pipelineStatus(
@@ -61,8 +62,7 @@ export function pipelineLink(pipelineId: string | undefined): ReactNode {
   }
 
   return (
-    <Link to={pipelineDetailPagePath(pipelineId)}>
-      {/* <Button size="xs">details</Button> */}
+    <Link as={ReactLink} to={pipelineDetailPagePath(pipelineId)}>
       edit
     </Link>
   );

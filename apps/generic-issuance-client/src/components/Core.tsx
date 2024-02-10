@@ -1,5 +1,6 @@
+import { Link } from "@chakra-ui/react";
 import React, { useCallback, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link as ReactLink } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { PCD_GITHUB_URL } from "../constants";
 
@@ -12,7 +13,11 @@ export const Container = styled.div`
 `;
 
 export const HomeLink = (): JSX.Element => {
-  return <Link to={"/"}>Home</Link>;
+  return (
+    <Link as={ReactLink} to={"/"}>
+      Home
+    </Link>
+  );
 };
 
 export const CodeLink = ({

@@ -1,3 +1,4 @@
+import { Spinner } from "@chakra-ui/react";
 import { PipelineLoadSummary, PipelineLog } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
@@ -11,12 +12,16 @@ import { timeAgo } from "../helpers/util";
  * Useful for debugging an integration, and figuring out what went wrong.
  */
 export function LoadSummarySection({
-  latestRun
+  lastLoad
 }: {
-  latestRun: PipelineLoadSummary;
+  lastLoad?: PipelineLoadSummary;
 }): ReactNode {
-  const startDate = new Date(latestRun.lastRunStartTimestamp);
-  const endDate = new Date(latestRun.lastRunEndTimestamp);
+  if (!lastLoad) {
+    return <Spinner />;
+  }
+
+  const startDate = new Date(lastLoad.lastRunStartTimestamp);
+  const endDate = new Date(lastLoad.lastRunEndTimestamp);
 
   return (
     <div>
@@ -36,22 +41,22 @@ export function LoadSummarySection({
             <td>{timeAgo.format(startDate, "twitter")} ago</td>
             <td>{timeAgo.format(endDate, "twitter")} ago </td>
             <td>{endDate.getTime() - startDate.getTime()}ms</td>
-            <td>{latestRun.atomsLoaded}</td>
+            <td>{lastLoad.atomsLoaded}</td>
             <td>
-              {pipelineIcon(latestRun)} {latestRun.success.toString()}
+              {pipelineIcon(lastLoad)} {lastLoad.success.toString()}
             </td>
           </tr>
         </tbody>
       </Table>
 
       <h4>Logs</h4>
-      {latestRun.latestLogs.length === 0 ? (
+      {lastLoad.latestLogs.length === 0 ? (
         <>
           <div>no logs</div>
         </>
       ) : (
         <Logs>
-          {latestRun.latestLogs.map((l, i) => (
+          {lastLoad.latestLogs.map((l, i) => (
             <PipelineLogEntry log={l} key={i} />
           ))}
         </Logs>

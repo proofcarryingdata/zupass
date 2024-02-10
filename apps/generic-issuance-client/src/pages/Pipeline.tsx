@@ -1,37 +1,18 @@
-import { Box, Button, Heading } from "@chakra-ui/react";
-import Editor from "@monaco-editor/react";
+import { Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
-import { sleep } from "@pcd/util";
 import { useStytch } from "@stytch/react";
-import {
-  ReactNode,
-  useCallback,
-  useContext,
-  useEffect,
-  useRef,
-  useState
-} from "react";
+import { ReactNode, useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { GIContext } from "../helpers/Context";
-import { deletePipeline, savePipeline } from "../helpers/Mutations";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import {
-  getAllHoneycombLinkForPipeline,
-  getHoneycombQueryDurationStr,
-  getLoadTraceHoneycombLinkForPipeline
-} from "../helpers/util";
-import { LatestAtomsSection } from "../sections/LatestAtomsSection";
-import { LoadSummarySection } from "../sections/LoadSummarySection";
-
-function stringifyAndFormat(obj: object): string {
-  return JSON.stringify(obj, null, 2);
-}
+import { PipelineDetailView } from "../sections/PipelineDetailView";
+import { PipelineEditView } from "../sections/PipelineEditView";
 
 export default function Pipeline(): ReactNode {
   const stytchClient = useStytch();
@@ -39,60 +20,10 @@ export default function Pipeline(): ReactNode {
   const params = useParams();
   const ctx = useContext(GIContext);
   const pipelineId: string | undefined = params.id;
-  const [textareaValue, setTextareaValue] = useState("");
   const userFromServer = useFetchSelf();
   const pipelineFromServer = useFetchPipeline(pipelineId);
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoFromServer?.value;
-  const [actionInProgress, setActionInProgress] = useState<
-    string | undefined
-  >();
-  const hasSetRef = useRef(false);
-  const isAdminView = ctx.isAdminMode && userFromServer?.value?.isAdmin;
-
-  useEffect(() => {
-    if (pipelineFromServer?.value && !hasSetRef.current) {
-      hasSetRef.current = true;
-      setTextareaValue(stringifyAndFormat(pipelineFromServer.value));
-    }
-  }, [pipelineFromServer?.value]);
-
-  const onSaveClick = useCallback(async () => {
-    if (userJWT) {
-      setActionInProgress(
-        `Updating pipeline '${pipelineFromServer?.value?.id}'...`
-      );
-      const res = await savePipeline(userJWT, textareaValue);
-      if (res.success) {
-        window.location.reload();
-      } else {
-        alert(res.error);
-      }
-    }
-  }, [pipelineFromServer?.value?.id, textareaValue, userJWT]);
-
-  const onDeleteClick = useCallback(async () => {
-    if (userJWT && pipelineFromServer?.value?.id) {
-      if (!confirm("Are you sure you would like to delete this pipeline?")) {
-        return;
-      }
-      setActionInProgress(
-        `Deleting pipeline '${pipelineFromServer.value.id}'...`
-      );
-      const res = await deletePipeline(userJWT, pipelineFromServer.value.id);
-      await sleep(500);
-      if (res.success) {
-        window.location.href = "/#/dashboard";
-      } else {
-        alert(res.error);
-      }
-    }
-  }, [pipelineFromServer?.value?.id, userJWT]);
-
-  const onTextAreaChange = useCallback((value: string): void => {
-    console.log("new value", value);
-    setTextareaValue(value);
-  }, []);
 
   const maybeRequestError: string | undefined = getError(
     userFromServer,
@@ -126,8 +57,7 @@ export default function Pipeline(): ReactNode {
     !userFromServer ||
     !pipelineFromServer ||
     !pipelineInfoFromServer ||
-    !pipelineInfo ||
-    actionInProgress
+    !pipelineInfo
   ) {
     return (
       <>
@@ -137,14 +67,12 @@ export default function Pipeline(): ReactNode {
           stytchClient={stytchClient}
         />
         <PageContent>
-          {actionInProgress ? actionInProgress : "Loading..."}
+          <Spinner />
         </PageContent>
       </>
     );
   }
 
-  const hasEdits =
-    stringifyAndFormat(pipelineFromServer.value ?? {}) !== textareaValue;
   const ownedBySomeoneElse =
     pipelineFromServer.value?.ownerUserId !== userFromServer?.value?.id;
 
@@ -165,132 +93,28 @@ export default function Pipeline(): ReactNode {
       <PageContent>
         <TwoColumns>
           <div>
-            <Heading size="lg">
-              {pipelineFromServer?.value?.options?.name ?? "<untitled>"}
-            </Heading>
-            {pipelineFromServer.value && (
-              <>
-                <Box
-                  borderWidth="1px"
-                  borderRadius="lg"
-                  overflow="hidden"
-                  padding="8px"
-                >
-                  <Editor
-                    width="600px"
-                    height="400px"
-                    language="json"
-                    theme="vs-light"
-                    value={textareaValue}
-                    onChange={onTextAreaChange}
-                    options={{
-                      readonly: ownedBySomeoneElse && !isAdminView,
-                      minimap: {
-                        enabled: false
-                      }
-                    }}
-                  />
-                </Box>
-                <p>
-                  {(!ownedBySomeoneElse || isAdminView) && (
-                    <>
-                      {hasEdits && (
-                        <Button
-                          size="sm"
-                          disabled={
-                            !!actionInProgress ||
-                            (ownedBySomeoneElse && !isAdminView)
-                          }
-                          onClick={onSaveClick}
-                        >
-                          {actionInProgress ? "Saving..." : "Save changes"}
-                        </Button>
-                      )}
-                      {!hasEdits && (
-                        <Button size="sm" disabled>
-                          No Changes
-                        </Button>
-                      )}
-                      <Button
-                        size="sm"
-                        colorScheme="red"
-                        disabled={ownedBySomeoneElse && !isAdminView}
-                        onClick={onDeleteClick}
-                      >
-                        Delete pipeline
-                      </Button>
-                    </>
-                  )}
-                </p>
-              </>
-            )}
+            {pipelineInfoFromServer.success &&
+              pipelineFromServer.success &&
+              userFromServer.success && (
+                <PipelineEditView
+                  user={userFromServer.value}
+                  pipeline={pipelineFromServer.value}
+                  isAdminView={false}
+                />
+              )}
           </div>
           <div style={{ flexGrow: 1 }}>
-            {pipelineInfo && pipelineFromServer.value && (
-              <>
-                {pipelineInfo.feeds && (
-                  <>
-                    <Heading size="lg">Feeds</Heading>
-                    <ol>
-                      {pipelineInfo.feeds?.map((feed) => (
-                        <li key={feed.url}>
-                          <b>{feed.name}</b>
-                          {" - "}
-                          <a
-                            href={`${
-                              process.env.PASSPORT_CLIENT_URL
-                            }/#/add-subscription?url=${encodeURIComponent(
-                              feed.url
-                            )}`}
-                          >
-                            Subscription link
-                          </a>
-                          {" - "}
-                          <a href={feed.url}>Feed Link</a>{" "}
-                        </li>
-                      ))}
-                    </ol>
-                  </>
-                )}
-                {ctx.isAdminMode && userFromServer?.value?.isAdmin && (
-                  <>
-                    <h4>Admin Details</h4>
-                    {/* todo: honeycomb link for feed issuance - e.g. how many pcds have been issued */}
-                    {pipelineFromServer.value && (
-                      <>
-                        <ul>
-                          <li>
-                            <a
-                              href={getLoadTraceHoneycombLinkForPipeline(
-                                pipelineFromServer.value.id
-                              )}
-                            >
-                              data load traces {getHoneycombQueryDurationStr()}
-                            </a>
-                          </li>
-                          <li>
-                            <a
-                              href={getAllHoneycombLinkForPipeline(
-                                pipelineFromServer.value.id
-                              )}
-                            >
-                              all traces related to this pipeline{" "}
-                              {getHoneycombQueryDurationStr()}
-                            </a>
-                          </li>
-                        </ul>
-                      </>
-                    )}
-                  </>
-                )}
-                {pipelineInfo.loadSummary && (
-                  <LoadSummarySection latestRun={pipelineInfo.loadSummary} />
-                )}
-                {pipelineInfo.latestAtoms && (
-                  <LatestAtomsSection latestAtoms={pipelineInfo.latestAtoms} />
-                )}
-              </>
-            )}
+            {pipelineInfoFromServer.success &&
+              pipelineFromServer.success &&
+              userFromServer.success && (
+                <PipelineDetailView
+                  pipelineInfo={pipelineInfoFromServer.value}
+                  pipelineFromServer={pipelineFromServer.value}
+                  isAdminView={
+                    !!userFromServer.value?.isAdmin && !!ctx.isAdminMode
+                  }
+                />
+              )}
           </div>
         </TwoColumns>
       </PageContent>
