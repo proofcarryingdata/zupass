@@ -30,7 +30,13 @@
       "path": "../../lib/pcd-types"
     },
     {
+      "path": "../../pcd/semaphore-identity-pcd"
+    },
+    {
       "path": "../../lib/util"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd"
     }
   ]
 }
