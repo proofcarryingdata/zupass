@@ -11,17 +11,16 @@ import {
 } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import urljoin from "url-join";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { pipelineIcon, pipelineStatus } from "../components/PipelineDetails";
-import { ZUPASS_SERVER_URL } from "../constants";
 import { GIContext } from "../helpers/Context";
 import { deletePipeline, savePipeline } from "../helpers/Mutations";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
+import { getHoneycombLinkForPipeline } from "../helpers/util";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
 import { LatestRunSection } from "../sections/LatestRunSection";
 
@@ -207,13 +206,11 @@ export default function Pipeline(): ReactNode {
                   <>
                     <p>
                       <a
-                        href={urljoin(
-                          ZUPASS_SERVER_URL,
-                          "/generic-issuance/api/pipeline-honeycomb/",
+                        href={getHoneycombLinkForPipeline(
                           pipelineFromServer.value.id
                         )}
                       >
-                        Go to Honeycomb
+                        honeycomb traces for this pipeline
                       </a>
                     </p>
                   </>
