@@ -59,6 +59,46 @@ export const enum MarkerType {
   Deploy = "deploy"
 }
 
+export async function createQuery(): Promise<string> {
+  if (!honeyClient?.apiHost) {
+    throw new Error("can't create query - missing honeycomb client");
+  }
+
+  // eslint-disable-next-line no-restricted-globals
+  const res = await fetch(
+    urljoin(honeyClient.apiHost, "1/queries/", DATASET_SLUG),
+    {
+      method: "POST",
+      body: JSON.stringify({
+        calculations: [
+          {
+            op: "COUNT",
+            column: null
+          }
+        ],
+        start_time: Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60,
+        end_time: Math.floor(Date.now() / 1000),
+        filters: [
+          {
+            column: "name",
+            op: "=",
+            value: "GENERIC_ISSUANCE.executeSinglePipeline"
+          }
+        ]
+      }),
+      headers: {
+        "Content-Type": "application/json",
+        Accept: "application/json",
+        "X-Honeycomb-Team": honeyClient.writeKey
+      }
+    }
+  );
+
+  const resJson = (await res.json()) as { id: string };
+  const id = resJson.id;
+  return id;
+}
+
 export async function writeMarker(
   name: string,
   type: string,
