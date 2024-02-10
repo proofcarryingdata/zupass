@@ -34,7 +34,10 @@ import { GIContext } from "../helpers/Context";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { getHoneycombLinkForPipeline } from "../helpers/util";
+import {
+  getAllHoneycombLinkForPipeline,
+  getLoadTraceHoneycombLinkForPipeline
+} from "../helpers/util";
 
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();
@@ -77,7 +80,8 @@ export default function Dashboard(): ReactNode {
     timeCreated: string;
     timeUpdated: string;
     id: string;
-    traceLink: string;
+    loadTraceLink: string;
+    allTraceLink: string;
   };
 
   const entryToRow = useCallback(
@@ -93,7 +97,8 @@ export default function Dashboard(): ReactNode {
         timeCreated: entry.pipeline.timeCreated,
         timeUpdated: entry.pipeline.timeUpdated,
         id: entry.pipeline.id,
-        traceLink: getHoneycombLinkForPipeline(entry.pipeline.id)
+        loadTraceLink: getLoadTraceHoneycombLinkForPipeline(entry.pipeline.id),
+        allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id)
       };
     },
     []
@@ -160,7 +165,20 @@ export default function Dashboard(): ReactNode {
         }
       }),
       isAdminView
-        ? columnHelper.accessor("traceLink", {
+        ? columnHelper.accessor("loadTraceLink", {
+            header: "Load Trace",
+            cell: (props) => {
+              const value = props.getValue().valueOf();
+              return (
+                <span>
+                  <a href={value}>load</a>
+                </span>
+              );
+            }
+          })
+        : undefined,
+      isAdminView
+        ? columnHelper.accessor("allTraceLink", {
             header: "Trace",
             cell: (props) => {
               const value = props.getValue().valueOf();

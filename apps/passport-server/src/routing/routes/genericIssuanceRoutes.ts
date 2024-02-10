@@ -23,7 +23,10 @@ import {
 } from "@pcd/passport-interface";
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
-import { getPipelineExecutionQuery } from "../../services/generic-issuance/honeycombQueries";
+import {
+  getPipelineAllHQuery,
+  getPipelineLoadHQuery as getPipelineDataLoadHQuery
+} from "../../services/generic-issuance/honeycombQueries";
 import {
   createQueryUrl,
   setFlattenedObject
@@ -259,12 +262,28 @@ export function initGenericIssuanceRoutes(
   /**
    * Doesn't need auth as the location that we're redirecting to has its own auth layer.
    */
-  app.get("/generic-issuance/api/pipeline-honeycomb/:id", async (req, res) => {
-    const pipelineId = checkUrlParam(req, "id");
-    const query = getPipelineExecutionQuery(pipelineId);
-    const queryUrl = await createQueryUrl(query);
-    res.redirect(queryUrl);
-  });
+  app.get(
+    "/generic-issuance/api/pipeline-honeycomb/load/:id",
+    async (req, res) => {
+      const pipelineId = checkUrlParam(req, "id");
+      const query = getPipelineDataLoadHQuery(pipelineId);
+      const queryUrl = await createQueryUrl(query);
+      res.redirect(queryUrl);
+    }
+  );
+
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get(
+    "/generic-issuance/api/pipeline-honeycomb/all/:id",
+    async (req, res) => {
+      const pipelineId = checkUrlParam(req, "id");
+      const query = getPipelineAllHQuery(pipelineId);
+      const queryUrl = await createQueryUrl(query);
+      res.redirect(queryUrl);
+    }
+  );
 
   app.post(
     "/generic-issuance/api/fetch-pretix-events",

@@ -1,10 +1,20 @@
 import urljoin from "url-join";
 import { ZUPASS_SERVER_URL } from "../constants";
 
-export function getHoneycombLinkForPipeline(pipelineId: string): string {
+export function getLoadTraceHoneycombLinkForPipeline(
+  pipelineId: string
+): string {
   return urljoin(
     ZUPASS_SERVER_URL,
-    "/generic-issuance/api/pipeline-honeycomb/",
+    "/generic-issuance/api/pipeline-honeycomb/load",
+    pipelineId
+  );
+}
+
+export function getAllHoneycombLinkForPipeline(pipelineId: string): string {
+  return urljoin(
+    ZUPASS_SERVER_URL,
+    "/generic-issuance/api/pipeline-honeycomb/all",
     pipelineId
   );
 }

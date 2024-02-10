@@ -20,7 +20,10 @@ import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
-import { getHoneycombLinkForPipeline } from "../helpers/util";
+import {
+  getAllHoneycombLinkForPipeline,
+  getLoadTraceHoneycombLinkForPipeline
+} from "../helpers/util";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
 import { LatestRunSection } from "../sections/LatestRunSection";
 
@@ -204,15 +207,26 @@ export default function Pipeline(): ReactNode {
                 <h2>Admin Details</h2>
                 {pipelineFromServer.value && (
                   <>
-                    <p>
-                      <a
-                        href={getHoneycombLinkForPipeline(
-                          pipelineFromServer.value.id
-                        )}
-                      >
-                        honeycomb traces for this pipeline
-                      </a>
-                    </p>
+                    <ul>
+                      <li>
+                        <a
+                          href={getLoadTraceHoneycombLinkForPipeline(
+                            pipelineFromServer.value.id
+                          )}
+                        >
+                          data load trace
+                        </a>
+                      </li>
+                      <li>
+                        <a
+                          href={getAllHoneycombLinkForPipeline(
+                            pipelineFromServer.value.id
+                          )}
+                        >
+                          all traces related to this pipeline
+                        </a>
+                      </li>
+                    </ul>
                   </>
                 )}
               </>
