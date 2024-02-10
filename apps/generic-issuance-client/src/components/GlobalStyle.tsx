@@ -27,22 +27,6 @@ export const GlobalStyle = createGlobalStyle`
     }
   }
 
-  a {
-    color: #91e0fa;
-
-    &:hover {
-      color: #a0dbef;
-    }
-  }
-
-  a:visited {
-    color: #a186ff;
-
-    &:hover {
-      color: #ad96ff;
-    }
-  }
-
   input {
     background-color: #111111;
     color: #d6d6d6;

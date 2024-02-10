@@ -1,7 +1,9 @@
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Box,
   Button,
   Heading,
+  Link,
   ListItem,
   Stack,
   Table,
@@ -37,7 +39,6 @@ import {
   useMemo,
   useState
 } from "react";
-import { Link } from "react-router-dom";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import {
@@ -236,8 +237,18 @@ export default function Dashboard(): ReactNode {
               const value = "";
               return (
                 <span>
-                  <a href={table.row.original.loadTraceLink}>load</a>{" "}
-                  <a href={value}>all</a>
+                  <Link
+                    href={table.row.original.loadTraceLink}
+                    isExternal={true}
+                  >
+                    load
+                    <ExternalLinkIcon mx="2px" />
+                  </Link>
+                  &nbsp;
+                  <Link href={value} isExternal={true}>
+                    all
+                    <ExternalLinkIcon mx="2px" />
+                  </Link>
                 </span>
               );
             }
@@ -377,7 +388,7 @@ export default function Dashboard(): ReactNode {
               </TableContainer>
               <Box display="inline-block">
                 <Box float="right">
-                  <Link to="/create-pipeline">
+                  <Link href="/create-pipeline">
                     <Button colorScheme="green" size="sm">
                       Create Pipeline
                     </Button>
