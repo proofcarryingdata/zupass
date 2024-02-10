@@ -134,26 +134,23 @@ export default function Dashboard(): ReactNode {
           return <span>{pipelineLastEdit(value)}</span>;
         }
       }),
-      columnHelper.accessor("id", {
-        enableSorting: false,
-        header: "",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
+      // columnHelper.accessor("id", {
+      //   enableSorting: false,
+      //   header: "",
+      //   cell: (props) => {
+      //     const value = props.getValue().valueOf();
+      //     return <span>{pipelineLink(value)}</span>;
+      //   }
+      // }),
+      columnHelper.display({
+        header: "test",
+        cell: (table) => {
           return (
             <span>
-              {pipelineLink(value)}&nbsp;&nbsp;{value.substring(0, 8)}...
-            </span>
-          );
-        }
-      }),
-      columnHelper.accessor("name", {
-        header: "",
-        cell: (props) => {
-          const value = props.getValue()?.valueOf();
-          return (
-            <span>
-              {value ? (
-                value
+              {pipelineLink(table.row.original.id)}
+              {" · "}
+              {table.row.original.name ? (
+                table.row.original.name
               ) : (
                 <span style={{ opacity: 0.6 }}>{"<untitled>"}</span>
               )}
@@ -162,14 +159,6 @@ export default function Dashboard(): ReactNode {
         }
       }),
 
-      // columnHelper.accessor("id", {
-      //   enableSorting: false,
-      //   header: "",
-      //   cell: (props) => {
-      //     const value = props.getValue().valueOf();
-      //     return <span>{value.substring(0, 8)}...</span>;
-      //   }
-      // }),
       columnHelper.accessor("lastLoad", {
         header: "last load",
         cell: (props) => {
@@ -194,8 +183,18 @@ export default function Dashboard(): ReactNode {
       columnHelper.accessor("type", {
         header: "type",
         cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{value}</span>;
+          const value = props.row.original.type;
+          const icon =
+            value === PipelineType.CSV
+              ? "🗒️"
+              : value === PipelineType.Lemonade
+              ? "🍋"
+              : "🎟️";
+          return (
+            <span>
+              {icon}&nbsp;&nbsp;{value}
+            </span>
+          );
         }
       }),
       columnHelper.accessor("status", {
@@ -215,28 +214,15 @@ export default function Dashboard(): ReactNode {
         }
       }),
       isAdminView
-        ? columnHelper.accessor("loadTraceLink", {
-            enableSorting: false,
-            header: "",
-            cell: (props) => {
-              const value = props.getValue().valueOf();
+        ? columnHelper.display({
+            header: "traces",
+            cell: (table) => {
+              const value = "";
               return (
                 <span>
-                  <a href={value}>ingestion traces</a>
-                </span>
-              );
-            }
-          })
-        : undefined,
-      isAdminView
-        ? columnHelper.accessor("allTraceLink", {
-            enableSorting: false,
-            header: "",
-            cell: (props) => {
-              const value = props.getValue().valueOf();
-              return (
-                <span>
-                  <a href={value}>all traces</a>
+                  <a href={table.row.original.loadTraceLink}>load</a>
+                  {" · "}
+                  <a href={value}>all</a>
                 </span>
               );
             }
@@ -320,10 +306,6 @@ export default function Dashboard(): ReactNode {
                                 onClick: header.column.getToggleSortingHandler()
                               }}
                             >
-                              {flexRender(
-                                header.column.columnDef.header,
-                                header.getContext()
-                              )}
                               {/* eslint-disable-next-line no-constant-condition */}
                               {i === 0 && false ? null : (
                                 <div
@@ -340,6 +322,10 @@ export default function Dashboard(): ReactNode {
                                   }[header.column.getIsSorted() as string] ??
                                     ""}
                                 </div>
+                              )}
+                              {flexRender(
+                                header.column.columnDef.header,
+                                header.getContext()
                               )}
                             </div>
                           )}

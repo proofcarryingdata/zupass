@@ -25,6 +25,7 @@ export function getPipelineLoadHQuery(pipelineID: string): object {
       "trace_method_name",
       "pipeline.type",
       "pipeline.id",
+      "pipeline.name",
       "error_msg"
     ],
     calculations: [
@@ -58,7 +59,13 @@ export function getPipelineAllHQuery(pipelineID: string): object {
   return {
     time_range: DEFAULT_QUERY_S,
     granularity: 0,
-    breakdowns: ["name", "pipeline.type", "pipeline.id", "error_msg"],
+    breakdowns: [
+      "name",
+      "pipeline.name",
+      "pipeline.type",
+      "pipeline.id",
+      "error_msg"
+    ],
     calculations: [{ op: "COUNT" }, { op: "AVG", column: "duration_ms" }],
     filters: [
       {
@@ -138,7 +145,8 @@ export function tracePipeline(pipeline: PipelineDefinition | undefined): void {
     pipeline: {
       id: pipeline?.id,
       type: pipeline?.type,
-      owner_id: pipeline?.ownerUserId
+      owner_id: pipeline?.ownerUserId,
+      name: pipeline?.options?.name
     }
   });
 }
