@@ -104,7 +104,7 @@ export function getAllGenericIssuanceHTTPQuery(): object {
   return {
     time_range: DEFAULT_QUERY_S,
     granularity: 0,
-    breakdowns: ["name", "statusCode", "path"],
+    breakdowns: ["statusFamily", "path"],
     calculations: [{ op: "COUNT" }, { op: "AVG", column: "duration_ms" }],
     filters: [
       {
