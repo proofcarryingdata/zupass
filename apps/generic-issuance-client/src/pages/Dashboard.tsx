@@ -35,6 +35,7 @@ import { savePipeline } from "../helpers/Mutations";
 import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
+import { getHoneycombLinkForPipeline } from "../helpers/util";
 import { SAMPLE_CSV_PIPELINE } from "./SamplePipelines";
 
 export default function Dashboard(): ReactNode {
@@ -100,6 +101,7 @@ export default function Dashboard(): ReactNode {
     timeCreated: string;
     timeUpdated: string;
     id: string;
+    traceLink: string;
   };
 
   const entryToRow = useCallback(
@@ -114,7 +116,8 @@ export default function Dashboard(): ReactNode {
         owner: entry.extraInfo.ownerEmail,
         timeCreated: entry.pipeline.timeCreated,
         timeUpdated: entry.pipeline.timeUpdated,
-        id: entry.pipeline.id
+        id: entry.pipeline.id,
+        traceLink: getHoneycombLinkForPipeline(entry.pipeline.id)
       };
     },
     []
@@ -178,6 +181,17 @@ export default function Dashboard(): ReactNode {
         cell: (props) => {
           const value = props.getValue().valueOf();
           return <span>{pipelineLink(value)}</span>;
+        }
+      }),
+      columnHelper.accessor("traceLink", {
+        header: "Trace",
+        cell: (props) => {
+          const value = props.getValue().valueOf();
+          return (
+            <span>
+              <a href={value}>trace</a>
+            </span>
+          );
         }
       })
     ],
