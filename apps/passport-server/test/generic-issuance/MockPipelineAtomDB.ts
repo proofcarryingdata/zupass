@@ -4,7 +4,7 @@ import {
 } from "../../src/database/queries/pipelineAtomDB";
 
 const LOG_NAME = "MockPipelineAtomDB";
-const LOG_TAG = `[${LOG_NAME}]`;
+const _LOG_TAG = `[${LOG_NAME}]`;
 
 /**
  * A mock implementation of {@link IPipelineAtomDB} for testing purposes.

@@ -87,6 +87,7 @@ export default function Dashboard(): ReactNode {
     loadTraceLink: string;
     allTraceLink: string;
     lastLoad?: number;
+    name?: string;
   };
 
   const entryToRow = useCallback(
@@ -106,7 +107,8 @@ export default function Dashboard(): ReactNode {
         id: entry.pipeline.id,
         loadTraceLink: getLoadTraceHoneycombLinkForPipeline(entry.pipeline.id),
         allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id),
-        lastLoad: entry.extraInfo.lastLoad?.lastRunEndTimestamp
+        lastLoad: entry.extraInfo.lastLoad?.lastRunEndTimestamp,
+        name: entry.pipeline.options?.name
       };
     },
     []
@@ -118,6 +120,13 @@ export default function Dashboard(): ReactNode {
   const columnHelper = createColumnHelper<Row>();
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
+      columnHelper.accessor("timeCreated", {
+        header: "created",
+        cell: (props) => {
+          const value = props.getValue().valueOf();
+          return <span>{pipelineCreatedAt(value)}</span>;
+        }
+      }),
       columnHelper.accessor("timeUpdated", {
         header: "edited",
         cell: (props) => {
@@ -137,22 +146,22 @@ export default function Dashboard(): ReactNode {
           );
         }
       }),
-      columnHelper.accessor("status", {
-        enableSorting: false,
+      columnHelper.accessor("name", {
         header: "",
         cell: (props) => {
-          const value = props.getValue().valueOf() as
-            | "paused"
-            | "starting"
-            | "loaded"
-            | "error";
+          const value = props.getValue()?.valueOf();
           return (
             <span>
-              {pipelineIconFromStr(value)}&nbsp;&nbsp;{value}
+              {value ? (
+                value
+              ) : (
+                <span style={{ opacity: 0.6 }}>{"<untitled>"}</span>
+              )}
             </span>
           );
         }
       }),
+
       // columnHelper.accessor("id", {
       //   enableSorting: false,
       //   header: "",
@@ -181,18 +190,28 @@ export default function Dashboard(): ReactNode {
             }
           })
         : undefined,
-      columnHelper.accessor("timeCreated", {
-        header: "created",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineCreatedAt(value)}</span>;
-        }
-      }),
+
       columnHelper.accessor("type", {
         header: "type",
         cell: (props) => {
           const value = props.getValue().valueOf();
           return <span>{value}</span>;
+        }
+      }),
+      columnHelper.accessor("status", {
+        enableSorting: false,
+        header: "",
+        cell: (props) => {
+          const value = props.getValue().valueOf() as
+            | "paused"
+            | "starting"
+            | "loaded"
+            | "error";
+          return (
+            <span>
+              {pipelineIconFromStr(value)}&nbsp;&nbsp;{value}
+            </span>
+          );
         }
       }),
       isAdminView
@@ -276,11 +295,6 @@ export default function Dashboard(): ReactNode {
     <>
       <Header user={user} stytchClient={stytchClient} />
       <PageContent>
-        {isAdminView && (
-          <>
-            <DashboardAdminSection />
-          </>
-        )}
         <h2>{isAdminView ? "" : "My "} Pipelines</h2>
 
         {!pipelineEntries?.length ? (
@@ -310,7 +324,8 @@ export default function Dashboard(): ReactNode {
                                 header.column.columnDef.header,
                                 header.getContext()
                               )}
-                              {i === 0 ? null : (
+                              {/* eslint-disable-next-line no-constant-condition */}
+                              {i === 0 && false ? null : (
                                 <div
                                   style={{
                                     width: "20px",
@@ -364,6 +379,12 @@ export default function Dashboard(): ReactNode {
             <button>Create Pipeline</button>
           </Link>
         </div>
+
+        {isAdminView && (
+          <>
+            <DashboardAdminSection />
+          </>
+        )}
       </PageContent>
     </>
   );
@@ -372,7 +393,7 @@ export default function Dashboard(): ReactNode {
 export function DashboardAdminSection(): ReactNode {
   return (
     <div>
-      <h2>Admin Section</h2>
+      <h2>Admin Details</h2>
       <ul>
         <li>
           <a href={getAllHoneycombLinkForAllGenericIssuance()}>
