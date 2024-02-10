@@ -12,15 +12,14 @@ import { savePipeline } from "../helpers/Mutations";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 
-type PipelineCreationOptions = PipelineType | "Raw JSON";
-
 export default function CreatePipeline(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const user = useFetchSelf();
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
-  const [selectedPipelineType, setSelectedPipelineType] =
-    useState<PipelineCreationOptions>();
+  const [selectedPipelineType, setSelectedPipelineType] = useState<
+    PipelineType | "JSON"
+  >();
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {
@@ -73,6 +72,7 @@ export default function CreatePipeline(): ReactNode {
               {value}
             </option>
           ))}
+          <option value="JSON">Raw JSON</option>
         </select>
         {selectedPipelineType === PipelineType.Pretix && (
           <PretixPipelineBuilder onCreate={onCreateClick} />
@@ -83,7 +83,7 @@ export default function CreatePipeline(): ReactNode {
         {selectedPipelineType === PipelineType.Lemonade && (
           <LemonadePipelineBuilder onCreate={onCreateClick} />
         )}
-        {selectedPipelineType === "Raw JSON" && (
+        {selectedPipelineType === "JSON" && (
           <RawJSONPipelineBuilder onCreate={onCreateClick} />
         )}
       </PageContent>
