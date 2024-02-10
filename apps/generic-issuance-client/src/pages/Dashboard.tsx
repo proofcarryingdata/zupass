@@ -220,18 +220,25 @@ export default function Dashboard(): ReactNode {
     return columns.filter((r) => !!r) as Array<ColumnDef<Row>>;
   }, [columns]);
   const [sorting, setSorting] = useState<SortingState>([]);
+
+  useEffect(() => {
+    console.log("sorting", sorting);
+  }, [sorting]);
   const table = useReactTable({
     columns: filteredColumns,
     data: rows,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    debugTable: true,
-    debugHeaders: true,
-    debugColumns: true,
-    state: {
-      sorting
-    },
-    onSortingChange: setSorting
+    state: {},
+    onSortingChange: setSorting,
+    initialState: {
+      sorting: [
+        {
+          id: "timeUpdated",
+          desc: true
+        }
+      ]
+    }
   });
 
   if (maybeRequestError) {
@@ -276,7 +283,7 @@ export default function Dashboard(): ReactNode {
                   <tr key={headerGroup.id}>
                     {headerGroup.headers.map((header, i) => {
                       return (
-                        <th key={header.id} colSpan={header.colSpan}>
+                        <th key={header.id + "" + i} colSpan={header.colSpan}>
                           {header.isPlaceholder ? null : (
                             <div
                               {...{
@@ -309,12 +316,12 @@ export default function Dashboard(): ReactNode {
                 ))}
               </thead>
               <tbody>
-                {table.getRowModel().rows.map((row) => {
+                {table.getRowModel().rows.map((row, i) => {
                   return (
-                    <tr key={row.id}>
-                      {row.getVisibleCells().map((cell) => {
+                    <tr key={row.id + "" + i}>
+                      {row.getVisibleCells().map((cell, j) => {
                         return (
-                          <td key={cell.id}>
+                          <td key={cell.id + "" + j}>
                             {flexRender(
                               cell.column.columnDef.cell,
                               cell.getContext()
