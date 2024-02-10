@@ -7,15 +7,15 @@ import { Table } from "../components/Core";
  * Renders information about the last time this pipeline was run by Podbox.
  * Useful for debugging an integration, and figuring out what went wrong.
  */
-export function LatestRunSection({
+export function LoadSummarySection({
   latestRun
 }: {
   latestRun: PipelineLoadSummary;
 }): ReactNode {
   const startDate = new Date(latestRun.lastRunStartTimestamp);
-  const endDate = new Date(latestRun.lastRunStartTimestamp);
+  const endDate = new Date(latestRun.lastRunEndTimestamp);
   const durationMs =
-    latestRun.lastRunStartTimestamp - latestRun.lastRunStartTimestamp;
+    latestRun.lastRunEndTimestamp - latestRun.lastRunStartTimestamp;
 
   return (
     <div>
@@ -24,11 +24,11 @@ export function LatestRunSection({
         <tbody>
           <tr>
             <td>start</td>
-            <td>{moment(startDate).format("MMMM Do YYYY, h:mm:ss a")}</td>
+            <td>{moment(startDate).format("MMMM Do YYYY, h:mm:ss.SSS a")}</td>
           </tr>
           <tr>
             <td>end</td>
-            <td>{moment(endDate).format("MMMM Do YYYY, h:mm:ss a")}</td>
+            <td>{moment(endDate).format("MMMM Do YYYY, h:mm:ss.SSS a")}</td>
           </tr>
           <tr>
             <td>duration</td>

@@ -25,7 +25,7 @@ import {
   getLoadTraceHoneycombLinkForPipeline
 } from "../helpers/util";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
-import { LatestRunSection } from "../sections/LatestRunSection";
+import { LoadSummarySection } from "../sections/LoadSummarySection";
 
 function stringifyAndFormat(obj: object): string {
   return JSON.stringify(obj, null, 2);
@@ -262,7 +262,7 @@ export default function Pipeline(): ReactNode {
                   </>
                 )}
                 {pipelineInfo.latestRun && (
-                  <LatestRunSection latestRun={pipelineInfo.latestRun} />
+                  <LoadSummarySection latestRun={pipelineInfo.latestRun} />
                 )}
                 {pipelineInfo.latestAtoms && (
                   <LatestAtomsSection latestAtoms={pipelineInfo.latestAtoms} />
