@@ -16,9 +16,14 @@ const BasePipelineDefinitionSchema = z.object({
   ownerUserId: z.string().uuid(),
   editorUserIds: z.array(z.string().uuid()),
   timeCreated: z.string(),
-  timeUpdated: z.string(),
+  timeUpdated: z.string()
+});
+
+const BasePipelineOptionsSchema = z.object({
   paused: z.boolean().optional()
 });
+
+export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
 
 /**
  * A pipeline definition is owned by the user who set it up. It's the
@@ -91,7 +96,7 @@ const FeedIssuanceOptionsSchema = z.object({
 
 export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
 
-const LemonadePipelineOptionsSchema = z.object({
+const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * Configured by the user when setting up Lemonade as a data source.
    */
@@ -167,7 +172,7 @@ const PretixEventConfigSchema = z.object({
  */
 export type PretixEventConfig = z.infer<typeof PretixEventConfigSchema>;
 
-const PretixPipelineOptionsSchema = z.object({
+const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * This object represents a configuration from which the server can instantiate
    * a functioning {@link PretixPipeline}. Partially specified by the user.
@@ -192,7 +197,7 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
-const CSVPipelineOptionsSchema = z.object({
+const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
   feedOptions: FeedIssuanceOptionsSchema
 });

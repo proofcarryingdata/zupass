@@ -116,9 +116,17 @@ export default function Dashboard(): ReactNode {
   const columnHelper = createColumnHelper<Row>();
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
+      columnHelper.accessor("id", {
+        enableSorting: false,
+        header: "",
+        cell: (props) => {
+          const value = props.getValue().valueOf();
+          return <span>{pipelineLink(value)}</span>;
+        }
+      }),
       columnHelper.accessor("status", {
         enableSorting: false,
-        header: "🚀",
+        header: "",
         cell: (props) => {
           const value = props.getValue().valueOf() as
             | "starting"
@@ -127,23 +135,44 @@ export default function Dashboard(): ReactNode {
           return <span>{pipelineIconFromStr(value)}</span>;
         }
       }),
-      columnHelper.accessor("status", {
-        header: "Status",
+      columnHelper.accessor("id", {
+        enableSorting: false,
+        header: "",
         cell: (props) => {
           const value = props.getValue().valueOf();
-          return <span>{value}</span>;
+          return <span>{value.substring(0, 8)}...</span>;
         }
       }),
-      columnHelper.accessor("type", {
-        header: "Type",
+      columnHelper.accessor("lastLoad", {
+        header: "loaded",
+        cell: (props) => {
+          const value = props.getValue()?.valueOf();
+          return (
+            <span>
+              {value ? timeAgo.format(new Date(value), "mini") : "n/a"} ago
+            </span>
+          );
+        }
+      }),
+      // columnHelper.accessor("status", {
+      //   header: "Status",
+      //   cell: (props) => {
+      //     const value = props.getValue().valueOf();
+      //     return <span>{value}</span>;
+      //   }
+      // }),
+
+      columnHelper.accessor("timeUpdated", {
+        header: "edited",
         cell: (props) => {
           const value = props.getValue().valueOf();
-          return <span>{value}</span>;
+          return <span>{pipelineLastEdit(value)} ago</span>;
         }
       }),
+
       isAdminView
         ? columnHelper.accessor("owner", {
-            header: "Owner",
+            header: "owner",
             cell: (props) => {
               const value = props.getValue().valueOf();
               return <span>{value}</span>;
@@ -151,47 +180,28 @@ export default function Dashboard(): ReactNode {
           })
         : undefined,
       columnHelper.accessor("timeCreated", {
-        header: "Created",
+        header: "created",
         cell: (props) => {
           const value = props.getValue().valueOf();
-          return <span>{pipelineCreatedAt(value)}</span>;
+          return <span>{pipelineCreatedAt(value)} ago</span>;
         }
       }),
-      columnHelper.accessor("timeUpdated", {
-        header: "Last Edited",
+      columnHelper.accessor("type", {
+        header: "type",
         cell: (props) => {
           const value = props.getValue().valueOf();
-          return <span>{pipelineLastEdit(value)}</span>;
-        }
-      }),
-      columnHelper.accessor("lastLoad", {
-        header: "Last Load",
-        cell: (props) => {
-          const value = props.getValue()?.valueOf();
-          return (
-            <span>
-              {value ? timeAgo.format(new Date(value), "mini") : "n/a"}
-            </span>
-          );
-        }
-      }),
-      columnHelper.accessor("id", {
-        enableSorting: false,
-        header: "Edit",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineLink(value)}</span>;
+          return <span>{value}</span>;
         }
       }),
       isAdminView
         ? columnHelper.accessor("loadTraceLink", {
             enableSorting: false,
-            header: "Load Traces",
+            header: "",
             cell: (props) => {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>load 🛜</a>
+                  <a href={value}>ingestion traces</a>
                 </span>
               );
             }
@@ -200,12 +210,12 @@ export default function Dashboard(): ReactNode {
       isAdminView
         ? columnHelper.accessor("allTraceLink", {
             enableSorting: false,
-            header: "All Traces",
+            header: "",
             cell: (props) => {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>overview 🗺️</a>
+                  <a href={value}>all traces</a>
                 </span>
               );
             }
@@ -217,7 +227,12 @@ export default function Dashboard(): ReactNode {
   const filteredColumns = useMemo(() => {
     return columns.filter((r) => !!r) as Array<ColumnDef<Row>>;
   }, [columns]);
-  const [sorting, setSorting] = useState<SortingState>([]);
+  const [sorting, setSorting] = useState<SortingState>([
+    {
+      id: "timeUpdated",
+      desc: true
+    }
+  ]);
 
   useEffect(() => {
     console.log("sorting", sorting);
@@ -228,16 +243,10 @@ export default function Dashboard(): ReactNode {
     data: rows,
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
-    state: {},
-    onSortingChange: setSorting,
-    initialState: {
-      sorting: [
-        {
-          id: "timeUpdated",
-          desc: true
-        }
-      ]
-    }
+    state: {
+      sorting
+    },
+    onSortingChange: setSorting
   });
 
   if (maybeRequestError) {
@@ -299,13 +308,22 @@ export default function Dashboard(): ReactNode {
                                 header.column.columnDef.header,
                                 header.getContext()
                               )}
-                              {i === 0
-                                ? null
-                                : {
+                              {i === 0 ? null : (
+                                <div
+                                  style={{
+                                    width: "20px",
+                                    display: "inline-flex",
+                                    justifyContent: "flex-start",
+                                    paddingLeft: "8px"
+                                  }}
+                                >
+                                  {{
                                     asc: " ↑",
                                     desc: " ↓"
                                   }[header.column.getIsSorted() as string] ??
-                                  "\t"}
+                                    ""}
+                                </div>
+                              )}
                             </div>
                           )}
                         </th>

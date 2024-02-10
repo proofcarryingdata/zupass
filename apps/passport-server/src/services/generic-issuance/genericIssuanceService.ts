@@ -717,7 +717,6 @@ export class GenericIssuanceService {
         str(newDefinition)
       );
       traceUser(user);
-      tracePipeline(newDefinition);
 
       // TODO: do this in a transaction
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
@@ -742,7 +741,7 @@ export class GenericIssuanceService {
         newDefinition.id = uuidV4();
       }
 
-      let validatedNewDefinition: PipelineDefinition;
+      let validatedNewDefinition: PipelineDefinition = newDefinition;
 
       try {
         validatedNewDefinition = PipelineDefinitionSchema.parse(
@@ -755,8 +754,11 @@ export class GenericIssuanceService {
 
       logger(
         LOG_TAG,
-        `executing upsert of pipeline ${validatedNewDefinition.id}`
+        `executing upsert of pipeline ${str(validatedNewDefinition)} ${
+          validatedNewDefinition.options.paused
+        }`
       );
+      tracePipeline(validatedNewDefinition);
       await this.definitionDB.setDefinition(validatedNewDefinition);
       await this.definitionDB.saveLoadSummary(
         validatedNewDefinition.id,
@@ -864,7 +866,12 @@ export class GenericIssuanceService {
         );
       }
 
-      logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
+      logger(
+        LOG_TAG,
+        `instantiating pipeline ${pipelineId} paused: ${
+          definition.options.paused + ""
+        }`
+      );
 
       pipelineSlot.instance = await instantiatePipeline(
         this.eddsaPrivateKey,

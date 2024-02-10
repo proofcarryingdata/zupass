@@ -19,8 +19,8 @@ export default function RawJSONPipelineBuilder(
       }}
     >
       <textarea
-        cols={120}
-        rows={40}
+        cols={80}
+        rows={25}
         value={newPipelineJSON}
         onChange={(e): void => setNewPipelineJSON(e.target.value)}
       />

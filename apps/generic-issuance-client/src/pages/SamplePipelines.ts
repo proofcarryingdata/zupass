@@ -19,6 +19,7 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
     timeUpdated: new Date().toISOString(),
     editorUserIds: [],
     options: {
+      paused: true,
       lemonadeApiKey: "your-lemonade-api-key",
       events: [],
       feedOptions: DEFAULT_FEED_OPTIONS

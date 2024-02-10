@@ -56,11 +56,7 @@ export function pipelineLink(pipelineId: string | undefined): ReactNode {
     return null;
   }
 
-  return (
-    <Link to={pipelineDetailPagePath(pipelineId)}>
-      {pipelineId.substring(0, 8)}...
-    </Link>
-  );
+  return <Link to={pipelineDetailPagePath(pipelineId)}>edit pipeline</Link>;
 }
 
 export function pipelineOwner(
