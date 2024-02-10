@@ -101,33 +101,17 @@ export async function getHoneyAuthCtx(): Promise<HoneyAuthCtx> {
   return cachedCtx;
 }
 
-export async function createQueryUrl(): Promise<string> {
+export async function createQueryUrl(query: object): Promise<string> {
   if (!honeyClient?.apiHost) {
     throw new Error("missing honeycomb client");
   }
 
-  const authEnv = await getHoneyAuthCtx();
+  if (!query) {
+    throw new Error("missing query");
+  }
 
-  const queryDefinition = {
-    calculations: [
-      {
-        op: "COUNT",
-        column: null
-      }
-    ],
-    start_time: Math.floor(Date.now() / 1000) - 7 * 24 * 60 * 60,
-    end_time: Math.floor(Date.now() / 1000),
-    filters: [
-      {
-        column: "name",
-        op: "=",
-        value: "GENERIC_ISSUANCE.executeSinglePipeline"
-      }
-    ]
-  };
-  const encodedQueryDefinition = encodeURIComponent(
-    JSON.stringify(queryDefinition)
-  );
+  const authEnv = await getHoneyAuthCtx();
+  const encodedQueryDefinition = encodeURIComponent(JSON.stringify(query));
   const queryURL =
     `https://ui.honeycomb.io/${authEnv.teamSlug}/environments/` +
     `${authEnv.envSlug}/datasets/${DATASET_SLUG}` +
