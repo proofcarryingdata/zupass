@@ -177,7 +177,7 @@ export default function Dashboard(): ReactNode {
       }),
       columnHelper.accessor("id", {
         enableSorting: false,
-        header: "Link",
+        header: "Edit",
         cell: (props) => {
           const value = props.getValue().valueOf();
           return <span>{pipelineLink(value)}</span>;
@@ -191,7 +191,7 @@ export default function Dashboard(): ReactNode {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>load {getHoneycombQueryDurationStr()}</a>
+                  <a href={value}>load 🛜</a>
                 </span>
               );
             }
@@ -205,9 +205,7 @@ export default function Dashboard(): ReactNode {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>
-                    all traces {getHoneycombQueryDurationStr()}
-                  </a>
+                  <a href={value}>overview 🗺️</a>
                 </span>
               );
             }
