@@ -224,6 +224,7 @@ export default function Dashboard(): ReactNode {
   useEffect(() => {
     console.log("sorting", sorting);
   }, [sorting]);
+
   const table = useReactTable({
     columns: filteredColumns,
     data: rows,

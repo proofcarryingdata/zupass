@@ -214,31 +214,31 @@ export class GenericIssuanceService {
    * capability.
    */
   private async performPipelineLoad(
-    inMemoryPipeline: PipelineSlot
+    pipelineSlot: PipelineSlot
   ): Promise<PipelineLoadSummary> {
     return traced<PipelineLoadSummary>(
       SERVICE_NAME,
       "performPipelineLoad",
       async (span): Promise<PipelineLoadSummary> => {
         const startTime = Date.now();
-        const pipelineId = inMemoryPipeline.definition.id;
-        const pipeline: Pipeline | undefined = inMemoryPipeline.instance;
+        const pipelineId = pipelineSlot.definition.id;
+        const pipeline: Pipeline | undefined = pipelineSlot.instance;
         logger(
           LOG_TAG,
           `executing pipeline '${pipelineId}'` +
             ` of type '${pipeline?.type}'` +
-            ` belonging to ${inMemoryPipeline.definition.ownerUserId}`
+            ` belonging to ${pipelineSlot.definition.ownerUserId}`
         );
         const owner = await this.userDB.getUser(
-          inMemoryPipeline.definition.ownerUserId
+          pipelineSlot.definition.ownerUserId
         );
         traceUser(owner);
-        tracePipeline(inMemoryPipeline.definition);
+        tracePipeline(pipelineSlot.definition);
 
         if (!pipeline) {
           logger(
             LOG_TAG,
-            `pipeline '${pipelineId}' of type '${inMemoryPipeline.definition.type}'` +
+            `pipeline '${pipelineId}' of type '${pipelineSlot.definition.type}'` +
               ` is not running; skipping execution`
           );
           const summary: PipelineLoadSummary = {
@@ -257,13 +257,13 @@ export class GenericIssuanceService {
           logger(
             LOG_TAG,
             `loading data for pipeline with id '${pipelineId}'` +
-              ` of type '${inMemoryPipeline.definition.type}'`
+              ` of type '${pipelineSlot.definition.type}'`
           );
           const summary = await pipeline.load();
           logger(
             LOG_TAG,
             `successfully loaded data for pipeline with id '${pipelineId}'` +
-              ` of type '${inMemoryPipeline.definition.type}'`,
+              ` of type '${pipelineSlot.definition.type}'`,
             summary
           );
           this.definitionDB.saveLoadSummary(pipelineId, summary);
@@ -719,6 +719,7 @@ export class GenericIssuanceService {
       traceUser(user);
       tracePipeline(pipelineDefinition);
 
+      // TODO: do this in a transaction
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
       );
@@ -830,40 +831,48 @@ export class GenericIssuanceService {
   private async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
-      const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-      tracePipeline(pipelineSlot.definition);
-      span?.setAttribute("has_slot", !!pipelineSlot);
+      const definition = await this.definitionDB.getDefinition(pipelineId);
+      if (!definition) {
+        logger(
+          LOG_TAG,
+          `can't restart pipeline with id ${pipelineId} - doesn't exist in database`
+        );
+        return;
+      }
 
-      if (pipelineSlot) {
-        // we're going to need to stop the pipeline for this
-        // definition, so we do that right at the beginning
+      let pipelineSlot = this.pipelineSlots.find(
+        (s) => s.definition.id === pipelineId
+      );
+      span?.setAttribute("slot_existed", !!pipelineSlot);
+
+      if (!pipelineSlot) {
+        pipelineSlot = {
+          definition: definition
+        };
+        this.pipelineSlots.push(pipelineSlot);
+      }
+
+      tracePipeline(pipelineSlot.definition);
+
+      if (pipelineSlot.instance) {
         logger(
           LOG_TAG,
           `killing already running pipeline instance '${pipelineId}'`
         );
         span?.setAttribute("stopping", true);
-        await pipelineSlot.instance?.stop();
+        await pipelineSlot.instance.stop();
       } else {
-        logger(LOG_TAG, `starting brand new pipeline ${pipelineId}`);
-      }
-
-      const pipelineDefinition =
-        await this.definitionDB.getDefinition(pipelineId);
-
-      if (!pipelineDefinition) {
-        span?.setAttribute("not_restarting", true);
         logger(
           LOG_TAG,
-          `can't restart pipeline '${pipelineId}' because not in database`
+          `no need to kill existing pipeline - none exists '${pipelineId}'`
         );
-        return;
       }
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
-      const pipelineInstance = await instantiatePipeline(
+      pipelineSlot.instance = await instantiatePipeline(
         this.eddsaPrivateKey,
-        pipelineDefinition,
+        definition,
         this.atomDB,
         {
           genericPretixAPI: this.genericPretixAPI,
@@ -872,16 +881,7 @@ export class GenericIssuanceService {
         this.zupassPublicKey
       );
 
-      const newPipelineSlot = {
-        instance: pipelineInstance,
-        definition: pipelineDefinition
-      } satisfies PipelineSlot;
-
-      this.pipelineSlots = this.pipelineSlots.filter(
-        (p) => p.definition.id !== pipelineId
-      );
-      this.pipelineSlots.push(newPipelineSlot);
-      await this.performPipelineLoad(newPipelineSlot);
+      await this.performPipelineLoad(pipelineSlot);
     });
   }
 
