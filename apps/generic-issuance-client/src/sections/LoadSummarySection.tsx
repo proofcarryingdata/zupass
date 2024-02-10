@@ -92,5 +92,4 @@ const LogRow = styled.div`
   border: 3px solid rgba(255, 255, 255, 0.2);
   margin-top: 4px;
   word-break: break-all;
-  font-family: monospace;
 `;

@@ -2,12 +2,9 @@ import { createGlobalStyle } from "styled-components";
 
 export const GlobalStyle = createGlobalStyle`
   html {
-    background-color: #111111;
-    color: #d6d6d6;
   }
 
   body {
-    font-family: sans-serif;
     margin: 0;
     line-height: 1.5em;
   }

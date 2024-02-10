@@ -73,13 +73,12 @@ export const GOLD = "#f4ff1f";
 export const TABLE_BORDER_COLOR = "#5d5d5d";
 export const TABLE_BORDER_WIDTH = "1px";
 export const CELL_PADDING = "6px 10px";
-export const TABLE_FONT_SIZE = "11pt";
+export const TABLE_FONT_SIZE = "inherit";
 
 export const Table = styled.table`
   ${({ twoColumn }: { twoColumn?: boolean }): FlattenSimpleInterpolation => css`
     font-size: ${TABLE_FONT_SIZE};
     border-collapse: collapse;
-    font-family: monospace;
 
     thead {
       user-select: none;

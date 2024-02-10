@@ -12,6 +12,9 @@
     "clean": "rm -rf node_modules public/js tsconfig.tsbuildinfo"
   },
   "dependencies": {
+    "@chakra-ui/react": "^2.8.2",
+    "@emotion/react": "^11.11.3",
+    "@emotion/styled": "^11.11.0",
     "@monaco-editor/react": "^4.6.0",
     "@pcd/passport-interface": "0.10.0",
     "@pcd/util": "0.4.0",
@@ -19,6 +22,7 @@
     "@stytch/vanilla-js": "^4.4.2",
     "@tanstack/react-table": "^8.11.8",
     "dotenv": "^16.4.1",
+    "framer-motion": "^11.0.3",
     "javascript-time-ago": "^2.5.9",
     "moment": "^2.30.1",
     "react": "^18.2.0",

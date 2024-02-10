@@ -60,7 +60,12 @@ export function pipelineLink(pipelineId: string | undefined): ReactNode {
     return null;
   }
 
-  return <Link to={pipelineDetailPagePath(pipelineId)}>details</Link>;
+  return (
+    <Link to={pipelineDetailPagePath(pipelineId)}>
+      {/* <Button size="xs">details</Button> */}
+      edit
+    </Link>
+  );
 }
 
 export function pipelineOwner(

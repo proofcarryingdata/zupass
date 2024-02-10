@@ -1,3 +1,4 @@
+import { Box, Button, Heading } from "@chakra-ui/react";
 import Editor from "@monaco-editor/react";
 import { getError } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
@@ -164,15 +165,22 @@ export default function Pipeline(): ReactNode {
       <PageContent>
         <TwoColumns>
           <div>
-            <h1>{pipelineFromServer?.value?.options?.name ?? "<untitled>"}</h1>
+            <Heading size="lg">
+              {pipelineFromServer?.value?.options?.name ?? "<untitled>"}
+            </Heading>
             {pipelineFromServer.value && (
               <>
-                <p>
+                <Box
+                  borderWidth="1px"
+                  borderRadius="lg"
+                  overflow="hidden"
+                  padding="8px"
+                >
                   <Editor
                     width="600px"
                     height="400px"
                     language="json"
-                    theme="vs-dark"
+                    theme="vs-light"
                     value={textareaValue}
                     onChange={onTextAreaChange}
                     options={{
@@ -182,12 +190,13 @@ export default function Pipeline(): ReactNode {
                       }
                     }}
                   />
-                </p>
+                </Box>
                 <p>
                   {(!ownedBySomeoneElse || isAdminView) && (
                     <>
                       {hasEdits && (
-                        <button
+                        <Button
+                          size="sm"
                           disabled={
                             !!actionInProgress ||
                             (ownedBySomeoneElse && !isAdminView)
@@ -195,15 +204,21 @@ export default function Pipeline(): ReactNode {
                           onClick={onSaveClick}
                         >
                           {actionInProgress ? "Saving..." : "Save changes"}
-                        </button>
+                        </Button>
                       )}
-                      {!hasEdits && <button disabled>No Changes</button>}
-                      <button
+                      {!hasEdits && (
+                        <Button size="sm" disabled>
+                          No Changes
+                        </Button>
+                      )}
+                      <Button
+                        size="sm"
+                        colorScheme="red"
                         disabled={ownedBySomeoneElse && !isAdminView}
                         onClick={onDeleteClick}
                       >
                         Delete pipeline
-                      </button>
+                      </Button>
                     </>
                   )}
                 </p>
@@ -215,7 +230,7 @@ export default function Pipeline(): ReactNode {
               <>
                 {pipelineInfo.feeds && (
                   <>
-                    <h4>Feeds</h4>
+                    <Heading size="lg">Feeds</Heading>
                     <ol>
                       {pipelineInfo.feeds?.map((feed) => (
                         <li key={feed.url}>

@@ -1,3 +1,4 @@
+import { ChakraProvider } from "@chakra-ui/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
 import React, { ReactNode, useCallback, useState } from "react";
@@ -70,13 +71,15 @@ function App(): ReactNode {
 
   return (
     <React.StrictMode>
-      <StytchProvider stytch={stytch}>
-        <GIContext.Provider value={state}>
-          <RefreshSession />
-          <GlobalStyle />
-          <RouterProvider router={router} />
-        </GIContext.Provider>
-      </StytchProvider>
+      <ChakraProvider>
+        <StytchProvider stytch={stytch}>
+          <GIContext.Provider value={state}>
+            <RefreshSession />
+            <GlobalStyle />
+            <RouterProvider router={router} />
+          </GIContext.Provider>
+        </StytchProvider>
+      </ChakraProvider>
     </React.StrictMode>
   );
 }

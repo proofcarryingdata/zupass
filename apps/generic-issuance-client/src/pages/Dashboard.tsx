@@ -1,4 +1,20 @@
 import {
+  Box,
+  Button,
+  Heading,
+  ListItem,
+  Stack,
+  Table,
+  TableContainer,
+  Tag,
+  TagLabel,
+  Td,
+  Th,
+  Thead,
+  Tr,
+  UnorderedList
+} from "@chakra-ui/react";
+import {
   GenericIssuancePipelineListEntry,
   PipelineType,
   getError
@@ -22,7 +38,7 @@ import {
   useState
 } from "react";
 import { Link } from "react-router-dom";
-import { PageContent, Table } from "../components/Core";
+import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import {
   pipelineCreatedAt,
@@ -120,36 +136,19 @@ export default function Dashboard(): ReactNode {
   const columnHelper = createColumnHelper<Row>();
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
-      columnHelper.accessor("timeCreated", {
-        header: "created",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineCreatedAt(value)}</span>;
-        }
-      }),
-      columnHelper.accessor("timeUpdated", {
-        header: "edited",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineLastEdit(value)}</span>;
-        }
-      }),
-      // columnHelper.accessor("id", {
-      //   enableSorting: false,
-      //   header: "",
-      //   cell: (props) => {
-      //     const value = props.getValue().valueOf();
-      //     return <span>{pipelineLink(value)}</span>;
-      //   }
-      // }),
       columnHelper.display({
         header: "",
+        id: "edit",
+        cell: (table) => {
+          return <span>{pipelineLink(table.row.original.id)}</span>;
+        }
+      }),
+      columnHelper.display({
+        header: "name",
         id: "title_",
         cell: (table) => {
           return (
             <span>
-              {pipelineLink(table.row.original.id)}
-              {" · "}
               {table.row.original.name ? (
                 table.row.original.name
               ) : (
@@ -159,9 +158,22 @@ export default function Dashboard(): ReactNode {
           );
         }
       }),
-
+      columnHelper.accessor("timeUpdated", {
+        header: "edited",
+        cell: (props) => {
+          const value = props.getValue().valueOf();
+          return <span>{pipelineLastEdit(value)}</span>;
+        }
+      }),
+      columnHelper.accessor("timeCreated", {
+        header: "created",
+        cell: (props) => {
+          const value = props.getValue().valueOf();
+          return <span>{pipelineCreatedAt(value)}</span>;
+        }
+      }),
       columnHelper.accessor("lastLoad", {
-        header: "loaded",
+        header: "Last Load",
         cell: (props) => {
           const value = props.getValue()?.valueOf();
           return (
@@ -192,15 +204,17 @@ export default function Dashboard(): ReactNode {
               ? "🍋"
               : "🎟️";
           return (
-            <span>
-              {icon}&nbsp;{value}
-            </span>
+            <Tag>
+              {icon}
+              &nbsp;
+              <TagLabel>{value}</TagLabel>
+            </Tag>
           );
         }
       }),
       columnHelper.accessor("status", {
         enableSorting: false,
-        header: "",
+        header: "Status",
         cell: (props) => {
           const value = props.getValue().valueOf() as
             | "paused"
@@ -208,9 +222,10 @@ export default function Dashboard(): ReactNode {
             | "loaded"
             | "error";
           return (
-            <span>
-              {pipelineIconFromStr(value)}&nbsp;{value}
-            </span>
+            <Tag>
+              {pipelineIconFromStr(value)}&nbsp;
+              <TagLabel>{value}</TagLabel>
+            </Tag>
           );
         }
       }),
@@ -221,8 +236,7 @@ export default function Dashboard(): ReactNode {
               const value = "";
               return (
                 <span>
-                  <a href={table.row.original.loadTraceLink}>load</a>
-                  {" · "}
+                  <a href={table.row.original.loadTraceLink}>load</a>{" "}
                   <a href={value}>all</a>
                 </span>
               );
@@ -282,107 +296,99 @@ export default function Dashboard(): ReactNode {
     <>
       <Header user={user} stytchClient={stytchClient} />
       <PageContent>
-        <h2>{isAdminView ? "" : "My "} Pipelines</h2>
-
         {!pipelineEntries?.length ? (
           <p>No pipelines right now - go create some!</p>
         ) : (
           <>
-            <Table>
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header, i) => {
-                      return (
-                        <th key={header.id + "" + i} colSpan={header.colSpan}>
-                          {header.isPlaceholder ? null : (
-                            <div
-                              {...{
-                                style: header.column.getCanSort()
-                                  ? {
-                                      cursor: "pointer"
-                                    }
-                                  : undefined,
-
-                                onClick: header.column.getToggleSortingHandler()
-                              }}
+            <Stack
+              borderWidth="1px"
+              borderRadius="lg"
+              overflow="hidden"
+              padding={4}
+              gap={4}
+            >
+              <Heading size="md" marginBottom={4}>
+                Pipelines
+              </Heading>
+              <TableContainer>
+                <Table variant="simple" size="sm">
+                  <Thead style={{ userSelect: "none" }}>
+                    {table.getHeaderGroups().map((headerGroup) => (
+                      <Tr key={headerGroup.id}>
+                        {headerGroup.headers.map((header, i) => {
+                          return (
+                            <Th
+                              style={{ width: i === 1 ? "auto" : "1%" }}
+                              key={header.id + "" + i}
+                              colSpan={header.colSpan}
                             >
-                              {/* eslint-disable-next-line no-constant-condition */}
-                              {/* {i === 0 && false ? null : (
-                                <div
-                                  style={{
-                                    width: "20px",
-                                    display: "inline-flex",
-                                    justifyContent: "flex-start",
-                                    paddingLeft: "8px"
+                              {header.isPlaceholder ? null : (
+                                <span
+                                  {...{
+                                    style: header.column.getCanSort()
+                                      ? {
+                                          cursor: "pointer"
+                                        }
+                                      : undefined,
+
+                                    onClick:
+                                      header.column.getToggleSortingHandler()
                                   }}
                                 >
-                                  {{
-                                    asc: " ↑",
-                                    desc: " ↓"
-                                  }[header.column.getIsSorted() as string] ??
-                                    ""}
-                                </div>
-                              )} */}
-                              <span
-                                style={{
-                                  fontWeight: header.column.getIsSorted()
-                                    ? "bold"
-                                    : "normal",
-                                  fontStyle: header.column.getIsSorted()
-                                    ? "italic"
-                                    : "normal"
-                                }}
-                              >
+                                  <span
+                                    style={{
+                                      fontWeight: header.column.getIsSorted()
+                                        ? "bold"
+                                        : "normal"
+                                    }}
+                                  >
+                                    {flexRender(
+                                      header.column.columnDef.header,
+                                      header.getContext()
+                                    )}
+                                  </span>
+                                </span>
+                              )}
+                            </Th>
+                          );
+                        })}
+                      </Tr>
+                    ))}
+                  </Thead>
+                  <tbody>
+                    {table.getRowModel().rows.map((row, i) => {
+                      return (
+                        <Tr key={row.id + "" + i}>
+                          {row.getVisibleCells().map((cell, j) => {
+                            return (
+                              <Td key={cell.id + "" + j}>
                                 {flexRender(
-                                  header.column.columnDef.header,
-                                  header.getContext()
+                                  cell.column.columnDef.cell,
+                                  cell.getContext()
                                 )}
-                              </span>
-                            </div>
-                          )}
-                        </th>
+                              </Td>
+                            );
+                          })}
+                        </Tr>
                       );
                     })}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row, i) => {
-                  return (
-                    <tr key={row.id + "" + i}>
-                      {row.getVisibleCells().map((cell, j) => {
-                        return (
-                          <td key={cell.id + "" + j}>
-                            {flexRender(
-                              cell.column.columnDef.cell,
-                              cell.getContext()
-                            )}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  );
-                })}
-              </tbody>
-            </Table>
+                  </tbody>
+                </Table>
+              </TableContainer>
+              <Box display="inline-block">
+                <Box float="right">
+                  <Link to="/create-pipeline">
+                    <Button colorScheme="green" size="sm">
+                      Create Pipeline
+                    </Button>
+                  </Link>
+                </Box>
+              </Box>
+            </Stack>
           </>
         )}
-        <div
-          style={{
-            marginTop: "16px"
-          }}
-        >
-          <Link to="/create-pipeline">
-            <button>Create Pipeline</button>
-          </Link>
-        </div>
 
-        {isAdminView && (
-          <>
-            <DashboardAdminSection />
-          </>
-        )}
+        {isAdminView && <DashboardAdminSection />}
       </PageContent>
     </>
   );
@@ -390,20 +396,30 @@ export default function Dashboard(): ReactNode {
 
 export function DashboardAdminSection(): ReactNode {
   return (
-    <div>
-      <h2>Admin Details</h2>
-      <ul>
-        <li>
-          <a href={getAllHoneycombLinkForAllGenericIssuance()}>
-            all generic issuance traces {getHoneycombQueryDurationStr()}
-          </a>
-        </li>
-        <li>
-          <a href={getAllHoneycombLinkForAllGenericIssuanceHttp()}>
-            all generic issuance http traces {getHoneycombQueryDurationStr()}
-          </a>
-        </li>
-      </ul>
-    </div>
+    <>
+      <Stack
+        borderWidth="1px"
+        borderRadius="lg"
+        overflow="hidden"
+        padding={4}
+        marginTop={8}
+      >
+        <Heading size="md" marginBottom={4}>
+          Admin
+        </Heading>
+        <UnorderedList>
+          <ListItem>
+            <a href={getAllHoneycombLinkForAllGenericIssuance()}>
+              all generic issuance traces {getHoneycombQueryDurationStr()}
+            </a>
+          </ListItem>
+          <li>
+            <a href={getAllHoneycombLinkForAllGenericIssuanceHttp()}>
+              all generic issuance http traces {getHoneycombQueryDurationStr()}
+            </a>
+          </li>
+        </UnorderedList>
+      </Stack>
+    </>
   );
 }
