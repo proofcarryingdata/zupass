@@ -43,20 +43,14 @@ import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { RollbarService } from "../rollbarService";
-import {
-  setError,
-  traceFlattenedObject,
-  traceLoadSummary,
-  tracePipeline,
-  traceUser,
-  traced
-} from "../telemetryService";
+import { setError, traceFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
   ensureFeedIssuanceCapability,
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
+import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { makePLogErr } from "./util";
@@ -328,38 +322,41 @@ export class GenericIssuanceService {
    * then loads all data for all loaded pipelines again.
    */
   private async startPipelineLoadLoop(): Promise<void> {
-    return traced(SERVICE_NAME, "startPipelineLoadLoop", async (span) => {
-      try {
-        await this.performAllPipelineLoads();
-      } catch (e) {
-        setError(e, span);
-        this.rollbarService?.reportError(e);
-        logger(LOG_TAG, "pipeline datas failed to refresh", e);
-      }
+    // return traced(SERVICE_NAME, "startPipelineLoadLoop", async (span) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const span: any = undefined;
 
+    try {
+      await this.performAllPipelineLoads();
+    } catch (e) {
+      setError(e, span);
+      this.rollbarService?.reportError(e);
+      logger(LOG_TAG, "pipeline datas failed to refresh", e);
+    }
+
+    if (this.stopped) {
+      span?.setAttribute("stopped", true);
+      return;
+    }
+
+    logger(
+      LOG_TAG,
+      "scheduling next pipeline refresh for",
+      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
+      "s from now"
+    );
+    span?.setAttribute(
+      "timeout_ms",
+      GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS
+    );
+
+    this.nextLoadTimeout = setTimeout(() => {
       if (this.stopped) {
-        span?.setAttribute("stopped", true);
         return;
       }
-
-      logger(
-        LOG_TAG,
-        "scheduling next pipeline refresh for",
-        Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
-        "s from now"
-      );
-      span?.setAttribute(
-        "timeout_ms",
-        GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS
-      );
-
-      this.nextLoadTimeout = setTimeout(() => {
-        if (this.stopped) {
-          return;
-        }
-        this.startPipelineLoadLoop();
-      }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
-    });
+      this.startPipelineLoadLoop();
+    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
+    // });
   }
 
   private async getPipelineSlot(id: string): Promise<PipelineSlot | undefined> {
@@ -392,14 +389,9 @@ export class GenericIssuanceService {
   ): Promise<PollFeedResponseValue> {
     return traced(SERVICE_NAME, "handlePollFeed", async (span) => {
       logger(LOG_TAG, `handlePollFeed`, pipelineId, str(req));
-      span?.setAttribute("pipeline_id", pipelineId);
       span?.setAttribute("feed_id", req.feedId);
       const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-      span?.setAttribute(
-        "pipeline_owner_id",
-        pipelineSlot.definition.ownerUserId
-      );
-      span?.setAttribute("pipeline_type", pipelineSlot.definition.type);
+      tracePipeline(pipelineSlot.definition);
 
       const pipeline = await this.ensurePipelineStarted(pipelineId);
       const feed = ensureFeedIssuanceCapability(pipeline, req.feedId);
@@ -422,19 +414,16 @@ export class GenericIssuanceService {
   ): Promise<PipelineInfoResponseValue> {
     return traced(SERVICE_NAME, "handleGetPipelineInfo", async (span) => {
       logger(LOG_TAG, "handleGetPipelineInfo", str(user), pipelineId);
-      traceFlattenedObject(span, { user });
-      span?.setAttribute("pipeline_id", pipelineId);
-
+      traceUser(user);
       const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-      span?.setAttribute("pipeline_type", pipelineSlot.definition.type);
+      tracePipeline(pipelineSlot.definition);
       const pipelineInstance = await this.ensurePipelineStarted(pipelineId);
-
       this.ensureUserHasPipelineDefinitionAccess(user, pipelineSlot.definition);
 
       const pipelineFeeds: FeedIssuanceCapability[] =
         pipelineInstance.capabilities.filter(isFeedIssuanceCapability);
 
-      const latestRun = await this.definitionDB.getLatestRunInfo(
+      const summary = await this.definitionDB.getLastLoadSummary(
         pipelineInstance.id
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
@@ -445,10 +434,10 @@ export class GenericIssuanceService {
           url: f.feedUrl
         })),
         latestAtoms: latestAtoms,
-        latestRun: latestRun
+        loadSummary: summary
       } satisfies PipelineInfoResponseValue;
 
-      traceFlattenedObject(span, { latestRun });
+      traceFlattenedObject(span, { loadSummary: summary });
       traceFlattenedObject(span, { pipelineFeeds });
 
       return info;
@@ -463,11 +452,10 @@ export class GenericIssuanceService {
     feedId: string
   ): Promise<ListFeedsResponseValue> {
     return traced(SERVICE_NAME, "handleListFeed", async (span) => {
-      span?.setAttribute("pipeline_id", pipelineId);
       span?.setAttribute("feed_id", feedId);
-
+      const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
       const pipeline = await this.ensurePipelineStarted(pipelineId);
-      span?.setAttribute("pipeline_type", pipeline.type);
+      tracePipeline(pipelineSlot.definition);
 
       const feedCapability = ensureFeedIssuanceCapability(pipeline, feedId);
 
@@ -552,8 +540,7 @@ export class GenericIssuanceService {
             isCheckinCapability(capability) &&
             capability.canHandleCheckinForEvent(eventId)
           ) {
-            span?.setAttribute("pipeline_id", pipeline.definition.id);
-            span?.setAttribute("pipeline_type", pipeline.definition.type);
+            tracePipeline(pipeline.definition);
             const res = await capability.checkin(req);
             traceFlattenedObject(span, { res });
             return res;
@@ -606,8 +593,7 @@ export class GenericIssuanceService {
             isCheckinCapability(capability) &&
             capability.canHandleCheckinForEvent(eventId)
           ) {
-            span?.setAttribute("pipeline_id", pipeline.definition.id);
-            span?.setAttribute("pipeline_type", pipeline.definition.type);
+            tracePipeline(pipeline.definition);
             const res = await capability.preCheck(req);
             traceFlattenedObject(span, { res });
             return res;
@@ -648,11 +634,11 @@ export class GenericIssuanceService {
             if (!owner) {
               throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
             }
-            const lastRun = await this.definitionDB.getLatestRunInfo(p.id);
+            const summary = await this.definitionDB.getLastLoadSummary(p.id);
             return {
               extraInfo: {
                 ownerEmail: owner.email,
-                lastRun
+                lastLoad: summary
               },
               pipeline: p
             } satisfies GenericIssuancePipelineListEntry;
@@ -708,10 +694,9 @@ export class GenericIssuanceService {
   ): Promise<PipelineDefinition> {
     return traced(SERVICE_NAME, "loadPipelineDefinition", async (span) => {
       logger(SERVICE_NAME, "loadPipelineDefinition", str(user), pipelineId);
-      span?.setAttribute("pipeline_id", pipelineId);
-      traceFlattenedObject(span, { user });
-
+      traceUser(user);
       const pipeline = await this.definitionDB.getDefinition(pipelineId);
+      tracePipeline(pipeline);
       if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline)) {
         throw new PCDHTTPError(404, "Pipeline not found or not accessible");
       }
@@ -731,9 +716,8 @@ export class GenericIssuanceService {
         str(user),
         str(pipelineDefinition)
       );
-      traceFlattenedObject(span, { user });
-      span?.setAttribute("pipeline_id", pipelineDefinition.id);
-      span?.setAttribute("pipeline_type", pipelineDefinition.type);
+      traceUser(user);
+      tracePipeline(pipelineDefinition);
 
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         pipelineDefinition.id
@@ -782,6 +766,7 @@ export class GenericIssuanceService {
         undefined
       );
       await this.atomDB.clear(newPipelineDefinition.id);
+      // purposely not awaited
       this.restartPipeline(newPipelineDefinition.id);
       return newPipelineDefinition;
     });
@@ -792,11 +777,11 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<void> {
     return traced(SERVICE_NAME, "deletePipelineDefinition", async (span) => {
-      traceFlattenedObject(span, { user });
+      traceUser(user);
 
       span?.setAttribute("pipeline_id", pipelineId);
       const pipeline = await this.loadPipelineDefinition(user, pipelineId);
-      span?.setAttribute("pipeline_type", pipeline.type);
+      tracePipeline(pipeline);
 
       // TODO: Finalize the "permissions model" for CRUD actions. Right now,
       // create, read, update are permissable by owners and editors, while delete
@@ -845,9 +830,8 @@ export class GenericIssuanceService {
   private async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
-      const pipelineSlot = this.pipelineSlots.find(
-        (p) => p.definition.id === pipelineId
-      );
+      const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+      tracePipeline(pipelineSlot.definition);
       span?.setAttribute("has_slot", !!pipelineSlot);
 
       if (pipelineSlot) {
@@ -878,7 +862,6 @@ export class GenericIssuanceService {
         return;
       }
 
-      span?.setAttribute("pipeline_type", pipelineDefinition.type);
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
       const pipelineInstance = await instantiatePipeline(
@@ -910,7 +893,7 @@ export class GenericIssuanceService {
       const existingUser = await this.userDB.getUserByEmail(email);
       if (existingUser != null) {
         span?.setAttribute("is_new", false);
-        traceFlattenedObject(span, { user: existingUser });
+        traceUser(existingUser);
         return existingUser;
       }
       span?.setAttribute("is_new", true);
@@ -919,8 +902,8 @@ export class GenericIssuanceService {
         email,
         isAdmin: this.getEnvAdminEmails().includes(email)
       };
-      this.userDB.setUser(newUser);
-      traceFlattenedObject(span, { user: newUser });
+      traceUser(existingUser);
+      await this.userDB.setUser(newUser);
       return newUser;
     });
   }

@@ -74,7 +74,7 @@ export default function Dashboard(): ReactNode {
   );
 
   type Row = {
-    status: "error" | "success" | "waiting";
+    status: "error" | "success" | "starting";
     type: PipelineType;
     owner: string;
     timeCreated: string;
@@ -87,9 +87,9 @@ export default function Dashboard(): ReactNode {
   const entryToRow = useCallback(
     (entry: GenericIssuancePipelineListEntry): Row => {
       return {
-        status: !entry.extraInfo.lastRun
-          ? "waiting"
-          : entry.extraInfo.lastRun?.success
+        status: !entry.extraInfo.lastLoad
+          ? "starting"
+          : entry.extraInfo.lastLoad?.success
           ? "success"
           : "error",
         type: entry.pipeline.type,
@@ -111,10 +111,11 @@ export default function Dashboard(): ReactNode {
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
       columnHelper.accessor("status", {
+        enableSorting: false,
         header: "🚀",
         cell: (props) => {
           const value = props.getValue().valueOf() as
-            | "waiting"
+            | "starting"
             | "success"
             | "error";
           return <span>{pipelineIconFromStr(value)}</span>;
@@ -158,6 +159,7 @@ export default function Dashboard(): ReactNode {
         }
       }),
       columnHelper.accessor("id", {
+        enableSorting: false,
         header: "Link",
         cell: (props) => {
           const value = props.getValue().valueOf();
@@ -166,6 +168,7 @@ export default function Dashboard(): ReactNode {
       }),
       isAdminView
         ? columnHelper.accessor("loadTraceLink", {
+            enableSorting: false,
             header: "Load Trace",
             cell: (props) => {
               const value = props.getValue().valueOf();
@@ -179,6 +182,7 @@ export default function Dashboard(): ReactNode {
         : undefined,
       isAdminView
         ? columnHelper.accessor("allTraceLink", {
+            enableSorting: false,
             header: "Trace",
             cell: (props) => {
               const value = props.getValue().valueOf();

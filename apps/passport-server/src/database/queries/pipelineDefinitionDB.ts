@@ -26,7 +26,7 @@ export interface IPipelineDefinitionDB {
     definitionID: string,
     lastRunInfo?: PipelineLoadSummary
   ): Promise<void>;
-  getLatestRunInfo(
+  getLastLoadSummary(
     definitionID: string
   ): Promise<PipelineLoadSummary | undefined>;
 }
@@ -52,7 +52,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * Intentionally saving these in-memory.
    * TODO: save to db as an extra column in the PipelineDefinition table.
    */
-  public async getLatestRunInfo(
+  public async getLastLoadSummary(
     definitionID: string
   ): Promise<PipelineLoadSummary | undefined> {
     return this.runInfos[definitionID];

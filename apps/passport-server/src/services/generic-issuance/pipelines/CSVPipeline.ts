@@ -24,6 +24,7 @@ import {
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo } from "../util";
 import { BasePipeline, Pipeline } from "./types";
@@ -81,6 +82,7 @@ export class CSVPipeline implements BasePipeline {
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issue", async (span) => {
       logger(LOG_TAG, `issue`, req);
+      tracePipeline(this.definition);
 
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
@@ -136,9 +138,7 @@ export class CSVPipeline implements BasePipeline {
 
   public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
-      logger(LOG_TAG, "load");
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.definition.type);
+      tracePipeline(this.definition);
       logger(LOG_TAG, "load", this.id, this.definition.type);
 
       const start = new Date();

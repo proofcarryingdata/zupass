@@ -214,7 +214,7 @@ export default function Pipeline(): ReactNode {
                             pipelineFromServer.value.id
                           )}
                         >
-                          data load trace
+                          data load traces
                         </a>
                       </li>
                       <li>
@@ -233,8 +233,8 @@ export default function Pipeline(): ReactNode {
             )}
             <h2>Pipeline Info</h2>
             <h3>Status</h3>
-            {pipelineIcon(pipelineInfo.latestRun)}{" "}
-            {pipelineStatus(pipelineInfo.latestRun)}
+            {pipelineIcon(pipelineInfo.loadSummary)}{" "}
+            {pipelineStatus(pipelineInfo.loadSummary)}
             {pipelineInfo && pipelineFromServer.value && (
               <>
                 {pipelineInfo.feeds && (
@@ -261,8 +261,8 @@ export default function Pipeline(): ReactNode {
                     </ol>
                   </>
                 )}
-                {pipelineInfo.latestRun && (
-                  <LoadSummarySection latestRun={pipelineInfo.latestRun} />
+                {pipelineInfo.loadSummary && (
+                  <LoadSummarySection latestRun={pipelineInfo.loadSummary} />
                 )}
                 {pipelineInfo.latestAtoms && (
                   <LatestAtomsSection latestAtoms={pipelineInfo.latestAtoms} />

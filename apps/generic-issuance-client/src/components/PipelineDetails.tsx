@@ -10,7 +10,7 @@ export function pipelineStatus(
   latestRun: PipelineLoadSummary | undefined
 ): ReactNode {
   if (!latestRun) {
-    return "Waiting";
+    return "Starting";
   }
 
   if (latestRun.success) {
@@ -21,9 +21,9 @@ export function pipelineStatus(
 }
 
 export function pipelineIconFromStr(
-  str: "waiting" | "success" | "error"
+  str: "starting" | "success" | "error"
 ): ReactNode {
-  if (str === "waiting") {
+  if (str === "starting") {
     return "⏳";
   }
 

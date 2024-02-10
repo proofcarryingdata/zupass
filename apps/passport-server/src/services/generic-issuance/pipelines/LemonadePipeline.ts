@@ -47,6 +47,7 @@ import {
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
 import { BasePipeline, Pipeline } from "./types";
 
@@ -158,12 +159,8 @@ export class LemonadePipeline implements BasePipeline {
    */
   public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
+      tracePipeline(this.definition);
       const logs: PipelineLog[] = [];
-      const startTime = Date.now();
-
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
-
       const loadStart = Date.now();
 
       const events = await this.api.loadEvents(
@@ -234,7 +231,7 @@ export class LemonadePipeline implements BasePipeline {
       return {
         latestLogs: logs,
         lastRunEndTimestamp: Date.now(),
-        lastRunStartTimestamp: startTime,
+        lastRunStartTimestamp: loadStart,
         atomsLoaded: atomsToSave.length,
         success: true
       } satisfies PipelineLoadSummary;
@@ -250,8 +247,7 @@ export class LemonadePipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
 
       if (!req.pcd) {
         throw new Error("missing credential pcd");
@@ -549,8 +545,7 @@ export class LemonadePipeline implements BasePipeline {
       LOG_NAME,
       "checkLemonadeTicketPCDCanBeCheckedIn",
       async (span) => {
-        span?.setAttribute("pipeline_id", this.id);
-        span?.setAttribute("pipeline_type", this.type);
+        tracePipeline(this.definition);
 
         let checkerTickets: LemonadeAtom[];
         let ticketId: string;
@@ -655,8 +650,7 @@ export class LemonadePipeline implements BasePipeline {
     request: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
     return traced(LOG_NAME, "checkinLemonadeTicketPCD", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
 
       logger(
         LOG_TAG,

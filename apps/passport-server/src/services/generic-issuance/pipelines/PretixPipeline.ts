@@ -57,6 +57,7 @@ import {
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo } from "../util";
 import { BasePipeline, Pipeline } from "./types";
@@ -163,11 +164,9 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "load",
       async (span): Promise<PipelineLoadSummary> => {
+        tracePipeline(this.definition);
         const startTime = Date.now();
         const logs: PipelineLog[] = [];
-
-        span?.setAttribute("pipeline_id", this.id);
-        span?.setAttribute("pipeline_type", this.type);
 
         logger(
           LOG_TAG,
@@ -274,6 +273,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async loadEvent(event: PretixEventConfig): Promise<PretixEventData> {
     return traced(LOG_NAME, "loadEvent", async () => {
+      tracePipeline(this.definition);
       logger(LOG_TAG, `loadEvent`, event);
 
       const orgUrl = this.definition.options.pretixOrgUrl;
@@ -577,8 +577,8 @@ export class PretixPipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issuePretixTicketPCDs", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
+
       if (!req.pcd) {
         throw new Error("missing credential pcd");
       }
@@ -784,8 +784,7 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "checkPretixTicketPCDCanBeCheckedIn",
       async (span) => {
-        span?.setAttribute("pipeline_id", this.id);
-        span?.setAttribute("pipeline_type", this.type);
+        tracePipeline(this.definition);
 
         let checkerTickets: PretixAtom[];
         let ticketId: string;
@@ -898,8 +897,8 @@ export class PretixPipeline implements BasePipeline {
     request: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
     return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
+
       logger(
         LOG_TAG,
         `got request to check in tickets with request ${JSON.stringify(

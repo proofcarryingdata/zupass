@@ -470,7 +470,7 @@ export interface PipelineInfoRequest {
 export interface PipelineInfoResponseValue {
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
-  latestRun?: PipelineLoadSummary;
+  loadSummary?: PipelineLoadSummary;
 }
 
 export interface ListSingleFeedRequest {
@@ -936,7 +936,7 @@ export type GenericIssuancePipelineListEntry = {
   pipeline: PipelineDefinition;
   extraInfo: {
     ownerEmail: string;
-    lastRun?: PipelineLoadSummary;
+    lastLoad?: PipelineLoadSummary;
   };
 };
 
