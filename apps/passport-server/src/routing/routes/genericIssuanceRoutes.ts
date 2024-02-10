@@ -23,6 +23,7 @@ import {
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import {
+  getAllGenericIssuanceHTTPQuery,
   getAllGenericIssuanceQuery,
   getPipelineAllHQuery,
   getPipelineLoadHQuery as getPipelineDataLoadHQuery,
@@ -278,6 +279,18 @@ export function initGenericIssuanceRoutes(
     async (req, res) => {
       const pipelineId = checkUrlParam(req, "id");
       const query = getPipelineAllHQuery(pipelineId);
+      const queryUrl = await createQueryUrl(query);
+      res.redirect(queryUrl);
+    }
+  );
+
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get(
+    "/generic-issuance/api/pipeline-honeycomb/all-http",
+    async (req, res) => {
+      const query = getAllGenericIssuanceHTTPQuery();
       const queryUrl = await createQueryUrl(query);
       res.redirect(queryUrl);
     }

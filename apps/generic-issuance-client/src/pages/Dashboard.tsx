@@ -36,7 +36,9 @@ import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 import {
   getAllHoneycombLinkForAllGenericIssuance,
+  getAllHoneycombLinkForAllGenericIssuanceHttp,
   getAllHoneycombLinkForPipeline,
+  getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../helpers/util";
 
@@ -175,7 +177,7 @@ export default function Dashboard(): ReactNode {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>load</a>
+                  <a href={value}>load {getHoneycombQueryDurationStr()}</a>
                 </span>
               );
             }
@@ -189,7 +191,9 @@ export default function Dashboard(): ReactNode {
               const value = props.getValue().valueOf();
               return (
                 <span>
-                  <a href={value}>all traces</a>
+                  <a href={value}>
+                    all traces {getHoneycombQueryDurationStr()}
+                  </a>
                 </span>
               );
             }
@@ -332,14 +336,13 @@ export function DashboardAdminSection(): ReactNode {
       <ul>
         <li>
           <a href={getAllHoneycombLinkForAllGenericIssuance()}>
-            all generic issuance traces
+            all generic issuance traces {getHoneycombQueryDurationStr()}
           </a>
         </li>
         <li>
-          <a href="">all generic issuance http traces</a>
-        </li>
-        <li>
-          <a href="">query 3</a>
+          <a href={getAllHoneycombLinkForAllGenericIssuanceHttp()}>
+            all generic issuance http traces {getHoneycombQueryDurationStr()}
+          </a>
         </li>
       </ul>
     </div>

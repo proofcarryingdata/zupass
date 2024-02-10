@@ -25,3 +25,14 @@ export function getAllHoneycombLinkForAllGenericIssuance(): string {
     "/generic-issuance/api/pipeline-honeycomb/all"
   );
 }
+
+export function getAllHoneycombLinkForAllGenericIssuanceHttp(): string {
+  return urljoin(
+    ZUPASS_SERVER_URL,
+    "/generic-issuance/api/pipeline-honeycomb/all-http"
+  );
+}
+
+export function getHoneycombQueryDurationStr(): string {
+  return `(last ${1}hr)`;
+}

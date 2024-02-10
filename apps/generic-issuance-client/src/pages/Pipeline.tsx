@@ -22,6 +22,7 @@ import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";
 import {
   getAllHoneycombLinkForPipeline,
+  getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../helpers/util";
 import { LatestAtomsSection } from "../sections/LatestAtomsSection";
@@ -205,6 +206,7 @@ export default function Pipeline(): ReactNode {
             {ctx.isAdminMode && userFromServer?.value?.isAdmin && (
               <>
                 <h2>Admin Details</h2>
+                {/* todo: honeycomb link for feed issuance - e.g. how many pcds have been issued */}
                 {pipelineFromServer.value && (
                   <>
                     <ul>
@@ -214,7 +216,7 @@ export default function Pipeline(): ReactNode {
                             pipelineFromServer.value.id
                           )}
                         >
-                          data load traces
+                          data load traces {getHoneycombQueryDurationStr()}
                         </a>
                       </li>
                       <li>
@@ -223,7 +225,8 @@ export default function Pipeline(): ReactNode {
                             pipelineFromServer.value.id
                           )}
                         >
-                          all traces related to this pipeline
+                          all traces related to this pipeline{" "}
+                          {getHoneycombQueryDurationStr()}
                         </a>
                       </li>
                     </ul>
