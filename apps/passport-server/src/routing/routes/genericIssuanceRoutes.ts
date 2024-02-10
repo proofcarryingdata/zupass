@@ -18,6 +18,7 @@ import {
 } from "@pcd/passport-interface";
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
+import { createQuery } from "../../services/telemetryService";
 import { GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkUrlParam } from "../params";
@@ -232,4 +233,9 @@ export function initGenericIssuanceRoutes(
       res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
     }
   );
+
+  app.get("/generic-issuance/api/pipeline-honeycomb/:id", async (req, res) => {
+    const query = await createQuery();
+    res.send("query id " + query);
+  });
 }

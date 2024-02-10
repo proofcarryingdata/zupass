@@ -1,12 +1,22 @@
 import { getError } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
+import urljoin from "url-join";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
 import { pipelineIcon, pipelineStatus } from "../components/PipelineDetails";
+import { ZUPASS_SERVER_URL } from "../constants";
+import { GIContext } from "../helpers/Context";
 import { deletePipeline, savePipeline } from "../helpers/Mutations";
 import { useFetchPipeline } from "../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
@@ -23,6 +33,7 @@ export default function Pipeline(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const params = useParams();
+  const ctx = useContext(GIContext);
   const pipelineId: string | undefined = params.id;
   const [textareaValue, setTextareaValue] = useState("");
   const textAreaRef = useRef("");
@@ -189,6 +200,26 @@ export default function Pipeline(): ReactNode {
             )}
           </div>
           <div style={{ flexGrow: 1 }}>
+            {ctx.isAdminMode && userFromServer?.value?.isAdmin && (
+              <>
+                <h2>Admin Details</h2>
+                {pipelineFromServer.value && (
+                  <>
+                    <p>
+                      <a
+                        href={urljoin(
+                          ZUPASS_SERVER_URL,
+                          "/generic-issuance/api/pipeline-honeycomb/",
+                          pipelineFromServer.value.id
+                        )}
+                      >
+                        Go to Honeycomb
+                      </a>
+                    </p>
+                  </>
+                )}
+              </>
+            )}
             <h2>Pipeline Info</h2>
             <h3>Status</h3>
             {pipelineIcon(pipelineInfo.latestRun)}{" "}

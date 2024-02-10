@@ -94,6 +94,7 @@ export async function createQuery(): Promise<string> {
     }
   );
 
+  const status = res.status;
   const resJson = (await res.json()) as { id: string };
   const id = resJson.id;
   return id;
