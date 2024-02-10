@@ -47,6 +47,7 @@ export default function Pipeline(): ReactNode {
     string | undefined
   >();
   const hasSetRef = useRef(false);
+  const isAdminView = ctx.isAdminMode && userFromServer?.value?.isAdmin;
 
   useEffect(() => {
     if (pipelineFromServer?.value && !hasSetRef.current) {
@@ -172,25 +173,26 @@ export default function Pipeline(): ReactNode {
                     rows={30}
                     value={textareaValue}
                     onChange={onTextAreaChange}
-                    readOnly={ownedBySomeoneElse}
+                    readOnly={ownedBySomeoneElse && !isAdminView}
                   />
                 </p>
                 <p>
-                  {!ownedBySomeoneElse && (
+                  {(!ownedBySomeoneElse || isAdminView) && (
                     <>
                       {hasEdits && (
                         <button
-                          disabled={!!actionInProgress || ownedBySomeoneElse}
+                          disabled={
+                            !!actionInProgress ||
+                            (ownedBySomeoneElse && !isAdminView)
+                          }
                           onClick={onSaveClick}
                         >
                           {actionInProgress ? "Saving..." : "Save changes"}
                         </button>
                       )}
-                      {!hasEdits && (
-                        <button disabled>All changes saved ✅</button>
-                      )}
+                      {!hasEdits && <button disabled>No Changes</button>}
                       <button
-                        disabled={ownedBySomeoneElse}
+                        disabled={ownedBySomeoneElse && !isAdminView}
                         onClick={onDeleteClick}
                       >
                         Delete pipeline
