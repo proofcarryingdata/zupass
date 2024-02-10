@@ -1,5 +1,10 @@
+import TimeAgo from "javascript-time-ago";
+import en from "javascript-time-ago/locale/en";
 import urljoin from "url-join";
 import { ZUPASS_SERVER_URL } from "../constants";
+
+TimeAgo.addDefaultLocale(en);
+export const timeAgo = new TimeAgo("en-US");
 
 export function getLoadTraceHoneycombLinkForPipeline(
   pipelineId: string

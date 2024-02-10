@@ -5,6 +5,7 @@ import {
 import moment from "moment";
 import { ReactNode } from "react";
 import { Link } from "react-router-dom";
+import { timeAgo } from "../helpers/util";
 
 export function pipelineStatus(
   latestRun: PipelineLoadSummary | undefined
@@ -76,9 +77,18 @@ export function pipelineType(
 }
 
 export function pipelineCreatedAt(dateStr: string): ReactNode {
-  return <span>{moment(new Date(dateStr)).format("MMMM D")}</span>;
+  return (
+    <>
+      <span>{moment(new Date(dateStr)).format("MMM D")}</span>
+      <span> ({timeAgo.format(new Date(dateStr))})</span>
+    </>
+  );
 }
 
 export function pipelineLastEdit(dateStr: string): ReactNode {
-  return <span>{moment(new Date(dateStr)).format("MMM D YYYY, hh:mm a")}</span>;
+  return (
+    <>
+      <span> {timeAgo.format(new Date(dateStr))}</span>
+    </>
+  );
 }

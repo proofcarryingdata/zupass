@@ -2,6 +2,7 @@ import { PipelineLoadSummary, PipelineLog } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
 import { Table } from "../components/Core";
+import { timeAgo } from "../helpers/util";
 
 /**
  * Renders information about the last time this pipeline was run by Podbox.
@@ -27,8 +28,16 @@ export function LoadSummarySection({
             <td>{moment(startDate).format("MMMM Do YYYY, h:mm:ss.SSS a")}</td>
           </tr>
           <tr>
+            <td></td>
+            <td>{timeAgo.format(startDate)}</td>
+          </tr>
+          <tr>
             <td>end</td>
             <td>{moment(endDate).format("MMMM Do YYYY, h:mm:ss.SSS a")}</td>
+          </tr>
+          <tr>
+            <td></td>
+            <td>{timeAgo.format(endDate)}</td>
           </tr>
           <tr>
             <td>duration</td>
