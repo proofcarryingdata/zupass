@@ -235,6 +235,9 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
   app.get("/generic-issuance/api/pipeline-honeycomb/:id", async (req, res) => {
     const pipelineId = checkUrlParam(req, "id");
     const query = getPipelineExecutionQuery(pipelineId);

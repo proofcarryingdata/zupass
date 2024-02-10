@@ -183,17 +183,19 @@ export default function Dashboard(): ReactNode {
           return <span>{pipelineLink(value)}</span>;
         }
       }),
-      columnHelper.accessor("traceLink", {
-        header: "Trace",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return (
-            <span>
-              <a href={value}>trace</a>
-            </span>
-          );
-        }
-      })
+      isAdminView
+        ? columnHelper.accessor("traceLink", {
+            header: "Trace",
+            cell: (props) => {
+              const value = props.getValue().valueOf();
+              return (
+                <span>
+                  <a href={value}>trace</a>
+                </span>
+              );
+            }
+          })
+        : undefined
     ],
     [columnHelper, isAdminView]
   );
