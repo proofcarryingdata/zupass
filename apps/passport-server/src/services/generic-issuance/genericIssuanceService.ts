@@ -767,9 +767,7 @@ export class GenericIssuanceService {
 
       logger(
         LOG_TAG,
-        `executing upsert of pipeline ${str(validatedNewDefinition)} ${
-          validatedNewDefinition.options.paused
-        }`
+        `executing upsert of pipeline ${str(validatedNewDefinition)}`
       );
       tracePipeline(validatedNewDefinition);
       await this.definitionDB.setDefinition(validatedNewDefinition);
@@ -879,12 +877,7 @@ export class GenericIssuanceService {
         );
       }
 
-      logger(
-        LOG_TAG,
-        `instantiating pipeline ${pipelineId} paused: ${
-          definition.options.paused + ""
-        }`
-      );
+      logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
       pipelineSlot.instance = await instantiatePipeline(
         this.eddsaPrivateKey,

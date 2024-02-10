@@ -20,7 +20,9 @@ const BasePipelineDefinitionSchema = z.object({
 });
 
 const BasePipelineOptionsSchema = z.object({
-  paused: z.boolean().optional()
+  paused: z.boolean().optional(),
+  name: z.string().optional(),
+  notes: z.string().optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
