@@ -108,6 +108,10 @@ export function getAllGenericIssuanceHTTPQuery(): object {
     calculations: [{ op: "COUNT" }, { op: "AVG", column: "duration_ms" }],
     filters: [
       {
+        column: "statusFamily",
+        op: "exists"
+      },
+      {
         column: "name",
         op: "=",
         value: "Express.request"
