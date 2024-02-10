@@ -796,7 +796,7 @@ export class GenericIssuanceService {
       // TODO: Finalize the "permissions model" for CRUD actions. Right now,
       // create, read, update are permissable by owners and editors, while delete
       // is only permissable by owners.
-      if (pipeline.ownerUserId !== user.id) {
+      if (pipeline.ownerUserId !== user.id && !user.isAdmin) {
         throw new PCDHTTPError(
           403,
           `user '${str(user)}' can't delete pipeline '${
