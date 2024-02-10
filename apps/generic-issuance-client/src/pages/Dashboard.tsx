@@ -78,7 +78,7 @@ export default function Dashboard(): ReactNode {
   );
 
   type Row = {
-    status: "error" | "success" | "starting";
+    status: "error" | "loaded" | "starting" | "paused";
     type: PipelineType;
     owner: string;
     timeCreated: string;
@@ -92,10 +92,12 @@ export default function Dashboard(): ReactNode {
   const entryToRow = useCallback(
     (entry: GenericIssuancePipelineListEntry): Row => {
       return {
-        status: !entry.extraInfo.lastLoad
+        status: entry.pipeline.options?.paused
+          ? "paused"
+          : !entry.extraInfo.lastLoad
           ? "starting"
           : entry.extraInfo.lastLoad?.success
-          ? "success"
+          ? "loaded"
           : "error",
         type: entry.pipeline.type,
         owner: entry.extraInfo.ownerEmail,
@@ -116,12 +118,23 @@ export default function Dashboard(): ReactNode {
   const columnHelper = createColumnHelper<Row>();
   const columns: Array<ColumnDef<Row> | undefined> = useMemo(
     () => [
+      columnHelper.accessor("timeUpdated", {
+        header: "edited",
+        cell: (props) => {
+          const value = props.getValue().valueOf();
+          return <span>{pipelineLastEdit(value)}</span>;
+        }
+      }),
       columnHelper.accessor("id", {
         enableSorting: false,
         header: "",
         cell: (props) => {
           const value = props.getValue().valueOf();
-          return <span>{pipelineLink(value)}</span>;
+          return (
+            <span>
+              {pipelineLink(value)}&nbsp;&nbsp;{value.substring(0, 8)}...
+            </span>
+          );
         }
       }),
       columnHelper.accessor("status", {
@@ -129,47 +142,36 @@ export default function Dashboard(): ReactNode {
         header: "",
         cell: (props) => {
           const value = props.getValue().valueOf() as
+            | "paused"
             | "starting"
-            | "success"
+            | "loaded"
             | "error";
-          return <span>{pipelineIconFromStr(value)}</span>;
-        }
-      }),
-      columnHelper.accessor("id", {
-        enableSorting: false,
-        header: "",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{value.substring(0, 8)}...</span>;
-        }
-      }),
-      columnHelper.accessor("lastLoad", {
-        header: "loaded",
-        cell: (props) => {
-          const value = props.getValue()?.valueOf();
           return (
             <span>
-              {value ? timeAgo.format(new Date(value), "mini") : "n/a"} ago
+              {pipelineIconFromStr(value)}&nbsp;&nbsp;{value}
             </span>
           );
         }
       }),
-      // columnHelper.accessor("status", {
-      //   header: "Status",
+      // columnHelper.accessor("id", {
+      //   enableSorting: false,
+      //   header: "",
       //   cell: (props) => {
       //     const value = props.getValue().valueOf();
-      //     return <span>{value}</span>;
+      //     return <span>{value.substring(0, 8)}...</span>;
       //   }
       // }),
-
-      columnHelper.accessor("timeUpdated", {
-        header: "edited",
+      columnHelper.accessor("lastLoad", {
+        header: "last load",
         cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineLastEdit(value)} ago</span>;
+          const value = props.getValue()?.valueOf();
+          return (
+            <span>
+              {value ? timeAgo.format(new Date(value), "mini") : "n/a"}
+            </span>
+          );
         }
       }),
-
       isAdminView
         ? columnHelper.accessor("owner", {
             header: "owner",
@@ -183,7 +185,7 @@ export default function Dashboard(): ReactNode {
         header: "created",
         cell: (props) => {
           const value = props.getValue().valueOf();
-          return <span>{pipelineCreatedAt(value)} ago</span>;
+          return <span>{pipelineCreatedAt(value)}</span>;
         }
       }),
       columnHelper.accessor("type", {

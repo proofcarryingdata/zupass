@@ -21,13 +21,17 @@ export function pipelineStatus(
 }
 
 export function pipelineIconFromStr(
-  str: "starting" | "success" | "error"
+  str: "starting" | "loaded" | "error" | "paused"
 ): ReactNode {
+  if (str === "paused") {
+    return "⏸️";
+  }
+
   if (str === "starting") {
     return "⏳";
   }
 
-  if (str === "success") {
+  if (str === "loaded") {
     return "✅";
   }
 
@@ -56,7 +60,7 @@ export function pipelineLink(pipelineId: string | undefined): ReactNode {
     return null;
   }
 
-  return <Link to={pipelineDetailPagePath(pipelineId)}>edit pipeline</Link>;
+  return <Link to={pipelineDetailPagePath(pipelineId)}>EDIT</Link>;
 }
 
 export function pipelineOwner(
