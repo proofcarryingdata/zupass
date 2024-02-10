@@ -1,7 +1,12 @@
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceDeletePipelineResponseValue,
+  GenericIssuanceFetchPretixEventsRequest,
+  GenericIssuanceFetchPretixEventsResponseValue,
+  GenericIssuanceFetchPretixProductsRequest,
+  GenericIssuanceFetchPretixProductsResponseValue,
   GenericIssuanceGetAllUserPipelinesResponseValue,
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuancePreCheckRequest,
@@ -19,10 +24,13 @@ import {
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import { getPipelineExecutionQuery } from "../../services/generic-issuance/honeycombQueries";
-import { createQueryUrl } from "../../services/telemetryService";
+import {
+  createQueryUrl,
+  setFlattenedObject
+} from "../../services/telemetryService";
 import { GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
-import { checkUrlParam } from "../params";
+import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
 export function initGenericIssuanceRoutes(
@@ -58,11 +66,14 @@ export function initGenericIssuanceRoutes(
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const user = await genericIssuanceService.authenticateStytchSession(req);
+    setFlattenedObject(getActiveSpan(), { user });
+
     const result: GenericIssuanceSelfResponseValue = {
       email: user.email,
       isAdmin: user.isAdmin,
       id: user.id
     };
+
     res.json(result satisfies GenericIssuanceSelfResponseValue);
   });
 
@@ -105,6 +116,8 @@ export function initGenericIssuanceRoutes(
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const user = await genericIssuanceService.authenticateStytchSession(req);
+    setFlattenedObject(getActiveSpan(), { user });
+
     const reqBody = req.body as PipelineInfoRequest;
     const result = await genericIssuanceService.handleGetPipelineInfo(
       user,
@@ -178,6 +191,8 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
+      setFlattenedObject(getActiveSpan(), { user });
+
       const result =
         await genericIssuanceService.getAllUserPipelineDefinitions(user);
       res.json(
@@ -194,8 +209,10 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
+      setFlattenedObject(getActiveSpan(), { user });
+
       const result = await genericIssuanceService.loadPipelineDefinition(
-        user.id,
+        user,
         checkUrlParam(req, "id")
       );
       res.json(result satisfies GenericIssuanceGetPipelineResponseValue);
@@ -210,9 +227,11 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
+      setFlattenedObject(getActiveSpan(), { user });
+
       const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
       const result = await genericIssuanceService.upsertPipelineDefinition(
-        user.id,
+        user,
         reqBody.pipeline
       );
       res.json(result satisfies GenericIssuanceUpsertPipelineResponseValue);
@@ -227,8 +246,10 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
+      setFlattenedObject(getActiveSpan(), { user });
+
       const result = await genericIssuanceService.deletePipelineDefinition(
-        user.id,
+        user,
         checkUrlParam(req, "id")
       );
       res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
@@ -244,4 +265,50 @@ export function initGenericIssuanceRoutes(
     const queryUrl = await createQueryUrl(query);
     res.redirect(queryUrl);
   });
+
+  app.post(
+    "/generic-issuance/api/fetch-pretix-events",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      setFlattenedObject(getActiveSpan(), { user });
+      const events = await genericIssuanceService.fetchAllPretixEvents(
+        checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
+          req,
+          "orgUrl"
+        ),
+        checkBody<GenericIssuanceFetchPretixEventsRequest, "token">(
+          req,
+          "token"
+        )
+      );
+      res.json(events satisfies GenericIssuanceFetchPretixEventsResponseValue);
+    }
+  );
+
+  app.post(
+    "/generic-issuance/api/fetch-pretix-products",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      setFlattenedObject(getActiveSpan(), { user });
+      const events = await genericIssuanceService.fetchPretixProducts(
+        checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
+          req,
+          "orgUrl"
+        ),
+        checkBody<GenericIssuanceFetchPretixProductsRequest, "token">(
+          req,
+          "token"
+        ),
+        checkBody<GenericIssuanceFetchPretixProductsRequest, "eventID">(
+          req,
+          "eventID"
+        )
+      );
+      res.json(
+        events satisfies GenericIssuanceFetchPretixProductsResponseValue
+      );
+    }
+  );
 }

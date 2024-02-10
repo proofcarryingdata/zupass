@@ -23,7 +23,8 @@
     "react-dom": "^18.2.0",
     "react-redux": "^9.1.0",
     "react-router-dom": "^6.9.0",
-    "styled-components": "^5.3.6"
+    "styled-components": "^5.3.6",
+    "uuid": "^9.0.1"
   },
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
@@ -33,6 +34,7 @@
     "@types/react-dom": "^18.0.7",
     "@types/styled-components": "^5.1.26",
     "@types/url-join": "^4.0.3",
+    "@types/uuid": "^9.0.8",
     "@typescript-eslint/eslint-plugin": "^5.56.0",
     "@typescript-eslint/parser": "^5.56.0",
     "esbuild": "^0.17.10",

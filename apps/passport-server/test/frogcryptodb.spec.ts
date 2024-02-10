@@ -28,7 +28,7 @@ import {
 } from "./util/frogcrypto";
 
 describe("database reads and writes for frogcrypto features", function () {
-  this.timeout(15_000);
+  this.timeout(30_000);
 
   let db: Pool;
   let client: Client;

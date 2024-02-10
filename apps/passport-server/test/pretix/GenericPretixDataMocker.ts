@@ -1,4 +1,3 @@
-import { v4 as uuid } from "uuid";
 import {
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -6,7 +5,8 @@ import {
   GenericPretixPosition,
   GenericPretixProduct,
   GenericPretixProductCategory
-} from "../../src/apis/pretix/genericPretixAPI";
+} from "@pcd/passport-interface";
+import { v4 as uuid } from "uuid";
 import { randomName } from "../util/util";
 
 export interface IMockGenericIssuancePretixBackendData {
