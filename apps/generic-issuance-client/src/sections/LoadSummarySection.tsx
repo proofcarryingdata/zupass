@@ -32,8 +32,8 @@ export function LoadSummarySection({
         </thead>
         <tbody>
           <tr>
-            <td>{timeAgo.format(startDate, "twitter")}</td>
-            <td>{timeAgo.format(endDate, "twitter")}</td>
+            <td>{timeAgo.format(startDate, "twitter")} ago</td>
+            <td>{timeAgo.format(endDate, "twitter")} ago </td>
             <td>{endDate.getTime() - startDate.getTime()}ms</td>
             <td>{latestRun.atomsLoaded}</td>
             <td>

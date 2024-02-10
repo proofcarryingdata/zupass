@@ -296,10 +296,10 @@ export default function Dashboard(): ReactNode {
                               {i === 0
                                 ? null
                                 : {
-                                    asc: " <",
-                                    desc: " >"
+                                    asc: " ↑",
+                                    desc: " ↓"
                                   }[header.column.getIsSorted() as string] ??
-                                  null}
+                                  "\t"}
                             </div>
                           )}
                         </th>

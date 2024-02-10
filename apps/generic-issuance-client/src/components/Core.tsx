@@ -84,13 +84,9 @@ export const Table = styled.table`
       tr,
       th {
         font-weight: bold;
-        text-decoration: underline;
         text-align: right;
-
-        th {
-          padding: ${CELL_PADDING};
-          border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
-        }
+        padding: ${CELL_PADDING};
+        border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
       }
     }
 
