@@ -448,15 +448,15 @@ export enum PipelineLogLevel {
 }
 
 export interface PipelineLoadSummary {
-  lastRunStartTimestamp: number;
-  lastRunEndTimestamp: number;
+  lastRunStartTimestamp: string;
+  lastRunEndTimestamp: string;
   latestLogs: PipelineLog[];
   atomsLoaded: number;
   success: boolean;
 }
 
 export interface PipelineLog {
-  timestampCreated: number;
+  timestampCreated: string;
   level: PipelineLogLevel;
   value: string;
   metadata: unknown;

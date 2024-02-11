@@ -4,7 +4,7 @@ import moment from "moment";
 import { ReactNode } from "react";
 import styled from "styled-components";
 import { Table } from "../../components/Core";
-import { pipelineIcon } from "../../components/pipeline-display/PipelineDetails";
+import { pipelineStatusIcon } from "../../components/pipeline-display/PipelineDetails";
 import { timeAgo } from "../../helpers/util";
 
 /**
@@ -43,7 +43,7 @@ export function LoadSummarySection({
             <td>{endDate.getTime() - startDate.getTime()}ms</td>
             <td>{lastLoad.atomsLoaded}</td>
             <td>
-              {pipelineIcon(lastLoad)} {lastLoad.success.toString()}
+              {pipelineStatusIcon(lastLoad)} {lastLoad.success.toString()}
             </td>
           </tr>
         </tbody>

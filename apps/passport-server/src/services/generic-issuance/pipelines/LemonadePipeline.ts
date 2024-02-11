@@ -161,7 +161,7 @@ export class LemonadePipeline implements BasePipeline {
     return traced(LOG_NAME, "load", async (span) => {
       tracePipeline(this.definition);
       const logs: PipelineLog[] = [];
-      const loadStart = Date.now();
+      const loadStart = new Date();
 
       const events = await this.api.loadEvents(
         this.definition.options.lemonadeApiKey
@@ -207,12 +207,12 @@ export class LemonadePipeline implements BasePipeline {
       logger(
         LOG_TAG,
         `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-          loadEnd - loadStart
+          loadEnd - loadStart.getTime()
         }ms`
       );
 
       span?.setAttribute("atoms_saved", atomsToSave.length);
-      span?.setAttribute("load_duration_ms", loadEnd - loadStart);
+      span?.setAttribute("load_duration_ms", loadEnd - loadStart.getTime());
 
       // Remove any pending check-ins that succeeded before loading started.
       // Those that succeeded after loading started might not be represented in
@@ -222,7 +222,7 @@ export class LemonadePipeline implements BasePipeline {
       this.pendingCheckIns.forEach((value, key) => {
         if (
           value.status === CheckinStatus.Success &&
-          value.timestamp < loadStart
+          value.timestamp < loadStart.getTime()
         ) {
           this.pendingCheckIns.delete(key);
         }
@@ -230,8 +230,8 @@ export class LemonadePipeline implements BasePipeline {
 
       return {
         latestLogs: logs,
-        lastRunEndTimestamp: Date.now(),
-        lastRunStartTimestamp: loadStart,
+        lastRunEndTimestamp: new Date().toISOString(),
+        lastRunStartTimestamp: loadStart.toISOString(),
         atomsLoaded: atomsToSave.length,
         success: true
       } satisfies PipelineLoadSummary;

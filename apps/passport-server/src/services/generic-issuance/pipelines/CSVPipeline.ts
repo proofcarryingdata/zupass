@@ -163,11 +163,11 @@ export class CSVPipeline implements BasePipeline {
 
         return {
           atomsLoaded: atoms.length,
-          lastRunEndTimestamp: Date.now(),
-          lastRunStartTimestamp: start.getTime(),
+          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: true
-        };
+        } satisfies PipelineLoadSummary;
       } catch (e) {
         setError(e, span);
         logs.push(makePLogErr(`failed to load csv: ${e}`));
@@ -175,11 +175,11 @@ export class CSVPipeline implements BasePipeline {
 
         return {
           atomsLoaded: 0,
-          lastRunEndTimestamp: Date.now(),
-          lastRunStartTimestamp: start.getTime(),
+          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: false
-        };
+        } satisfies PipelineLoadSummary;
       }
     });
   }

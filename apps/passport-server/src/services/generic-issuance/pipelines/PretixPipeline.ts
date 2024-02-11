@@ -165,7 +165,7 @@ export class PretixPipeline implements BasePipeline {
       "load",
       async (span): Promise<PipelineLoadSummary> => {
         tracePipeline(this.definition);
-        const startTime = Date.now();
+        const startTime = new Date();
         const logs: PipelineLog[] = [];
 
         logger(
@@ -198,8 +198,8 @@ export class PretixPipeline implements BasePipeline {
 
           return {
             atomsLoaded: 0,
-            lastRunEndTimestamp: Date.now(),
-            lastRunStartTimestamp: startTime,
+            lastRunEndTimestamp: new Date().toISOString(),
+            lastRunStartTimestamp: startTime.toISOString(),
             latestLogs: logs,
             success: false
           };
@@ -235,7 +235,7 @@ export class PretixPipeline implements BasePipeline {
         logger(
           LOG_TAG,
           `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-            loadEnd - startTime
+            loadEnd - startTime.getTime()
           }ms`
         );
 
@@ -249,15 +249,15 @@ export class PretixPipeline implements BasePipeline {
         this.pendingCheckIns.forEach((value, key) => {
           if (
             value.status === CheckinStatus.Success &&
-            value.timestamp < startTime
+            value.timestamp < startTime.getTime()
           ) {
             this.pendingCheckIns.delete(key);
           }
         });
 
         return {
-          lastRunEndTimestamp: Date.now(),
-          lastRunStartTimestamp: startTime,
+          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunStartTimestamp: startTime.toISOString(),
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
           success: true

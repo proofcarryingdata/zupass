@@ -220,7 +220,7 @@ export class GenericIssuanceService {
       SERVICE_NAME,
       "performPipelineLoad",
       async (span): Promise<PipelineLoadSummary> => {
-        const startTime = Date.now();
+        const startTime = new Date();
         const pipelineId = pipelineSlot.definition.id;
         const pipeline: Pipeline | undefined = pipelineSlot.instance;
         logger(
@@ -242,8 +242,8 @@ export class GenericIssuanceService {
           );
           return {
             atomsLoaded: 0,
-            lastRunEndTimestamp: Date.now(),
-            lastRunStartTimestamp: Date.now(),
+            lastRunEndTimestamp: new Date().toISOString(),
+            lastRunStartTimestamp: new Date().toISOString(),
             latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
             success: true
           };
@@ -256,8 +256,8 @@ export class GenericIssuanceService {
               ` is not running; skipping execution`
           );
           const summary: PipelineLoadSummary = {
-            lastRunStartTimestamp: startTime,
-            lastRunEndTimestamp: Date.now(),
+            lastRunStartTimestamp: startTime.toISOString(),
+            lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr("failed to start pipeline")],
             atomsLoaded: 0,
             success: false
@@ -287,8 +287,8 @@ export class GenericIssuanceService {
           logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
           setError(e, span);
           const summary = {
-            lastRunStartTimestamp: startTime,
-            lastRunEndTimestamp: Date.now(),
+            lastRunStartTimestamp: startTime.toISOString(),
+            lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
             atomsLoaded: 0,
             success: false

@@ -48,7 +48,8 @@ export function PipelineDetailSection({
                 pipeline: pipelineFromServer
               }
             ]}
-            isAdminView={false}
+            isAdminView={isAdminView}
+            singleRowMode={true}
           />
         </AccordionPanel>
       </AccordionItem>

@@ -7,22 +7,7 @@ import {
 import { ReactNode } from "react";
 import { Link as ReactLink } from "react-router-dom";
 import { timeAgo } from "../../helpers/util";
-
-export type PipelineStateDisplay = "starting" | "loaded" | "error" | "paused";
-
-export function pipelineStatus(
-  latestRun: PipelineLoadSummary | undefined
-): ReactNode {
-  if (!latestRun) {
-    return "Starting";
-  }
-
-  if (latestRun.success) {
-    return "Success";
-  }
-
-  return "Error";
-}
+import { PipelineStateDisplay } from "../../pages/dashboard/PipelineTable";
 
 export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
   if (str === "paused") {
@@ -39,7 +24,8 @@ export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
 
   return "❌";
 }
-export function pipelineIcon(
+
+export function pipelineStatusIcon(
   latestRun: PipelineLoadSummary | undefined
 ): ReactNode {
   if (!latestRun) {
@@ -55,7 +41,6 @@ export function pipelineIcon(
 
 export const NAME_CUTOFF_LENGTH = 16;
 export const PLACEHOLDER_NAME = "untitled";
-
 export function pipelineDisplayNameStr(
   pipeline?: PipelineDefinition
 ): string | undefined {
@@ -106,18 +91,14 @@ export function pipelineType(
   return <span>{entry.pipeline.type}</span>;
 }
 
-export function pipelineCreatedAt(dateStr: string): ReactNode {
-  return (
-    <>
-      <span> {timeAgo.format(new Date(dateStr), "twitter")}</span>
-    </>
-  );
+export function pipelineCreatedAtStr(dateStr: string): string {
+  return timeAgo.format(new Date(dateStr), "twitter");
 }
 
-export function pipelineLastEdit(dateStr: string): ReactNode {
-  return (
-    <>
-      <span> {timeAgo.format(new Date(dateStr), "twitter")}</span>
-    </>
-  );
+export function pipelineLastEditStr(dateStr: string): string {
+  return timeAgo.format(new Date(dateStr), "twitter");
+}
+
+export function pipelineLastLoadStr(dateStr: string): string {
+  return timeAgo.format(new Date(dateStr), "twitter");
 }

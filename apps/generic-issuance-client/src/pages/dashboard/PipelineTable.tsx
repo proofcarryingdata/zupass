@@ -26,9 +26,9 @@ import {
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link as ReactLink } from "react-router-dom";
 import {
-  pipelineCreatedAt,
+  pipelineCreatedAtStr,
   pipelineIconFromStr,
-  pipelineLastEdit,
+  pipelineLastEditStr,
   pipelineLink
 } from "../../components/pipeline-display/PipelineDetails";
 import {
@@ -37,7 +37,9 @@ import {
   timeAgo
 } from "../../helpers/util";
 
-type Row = {
+export type PipelineStateDisplay = "starting" | "loaded" | "error" | "paused";
+
+export type PipelineRow = {
   status: "error" | "loaded" | "starting" | "paused";
   type: PipelineType;
   owner: string;
@@ -46,19 +48,21 @@ type Row = {
   id: string;
   loadTraceLink: string;
   allTraceLink: string;
-  lastLoad?: number;
+  lastLoad?: string;
   name?: string;
 };
 
 export function PipelineTable({
   entries,
-  isAdminView
+  isAdminView,
+  singleRowMode
 }: {
   entries: GenericIssuancePipelineListEntry[];
   isAdminView: boolean;
+  singleRowMode?: boolean;
 }): ReactNode {
   const entryToRow = useCallback(
-    (entry: GenericIssuancePipelineListEntry): Row => {
+    (entry: GenericIssuancePipelineListEntry): PipelineRow => {
       return {
         status: entry.pipeline.options?.paused
           ? "paused"
@@ -81,20 +85,22 @@ export function PipelineTable({
     []
   );
 
-  const rows: Row[] = useMemo(() => {
+  const rows: PipelineRow[] = useMemo(() => {
     return entries.map(entryToRow);
   }, [entryToRow, entries]);
 
-  const columnHelper = createColumnHelper<Row>();
-  const columns: Array<ColumnDef<Row> | undefined> = useMemo(
+  const columnHelper = createColumnHelper<PipelineRow>();
+  const columns: Array<ColumnDef<PipelineRow> | undefined> = useMemo(
     () => [
-      columnHelper.display({
-        header: "",
-        id: "edit",
-        cell: (table) => {
-          return <span>{pipelineLink(table.row.original.id)}</span>;
-        }
-      }),
+      singleRowMode === true
+        ? undefined
+        : columnHelper.display({
+            header: "",
+            id: "edit",
+            cell: (table) => {
+              return <span>{pipelineLink(table.row.original.id)}</span>;
+            }
+          }),
       columnHelper.display({
         header: "name",
         id: "title_",
@@ -112,17 +118,11 @@ export function PipelineTable({
       }),
       columnHelper.accessor("timeUpdated", {
         header: "edited",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineLastEdit(value)}</span>;
-        }
+        cell: (props) => pipelineLastEditStr(props.row.original.timeUpdated)
       }),
       columnHelper.accessor("timeCreated", {
         header: "created",
-        cell: (props) => {
-          const value = props.getValue().valueOf();
-          return <span>{pipelineCreatedAt(value)}</span>;
-        }
+        cell: (props) => pipelineCreatedAtStr(props.row.original.timeCreated)
       }),
       columnHelper.accessor("lastLoad", {
         header: "Last Load",
@@ -207,10 +207,10 @@ export function PipelineTable({
           })
         : undefined
     ],
-    [columnHelper, isAdminView]
+    [columnHelper, isAdminView, singleRowMode]
   );
   const filteredColumns = useMemo(() => {
-    return columns.filter((r) => !!r) as Array<ColumnDef<Row>>;
+    return columns.filter((r) => !!r) as Array<ColumnDef<PipelineRow>>;
   }, [columns]);
   const [sorting, setSorting] = useState<SortingState>([
     {

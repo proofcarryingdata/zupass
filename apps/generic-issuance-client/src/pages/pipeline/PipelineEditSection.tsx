@@ -1,11 +1,11 @@
 import { Box, Button, HStack, Stack } from "@chakra-ui/react";
-import { Editor } from "@monaco-editor/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition
 } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import { FancyEditor } from "../../components/FancyEditor";
 import { deletePipeline, savePipeline } from "../../helpers/Mutations";
 import { useJWT } from "../../helpers/userHooks";
 import { stringifyAndFormat } from "../../helpers/util";
@@ -21,11 +21,11 @@ export function PipelineEditSection({
 }): ReactNode {
   const userJWT = useJWT();
   const hasSetRef = useRef(false);
-  const [textareaValue, setTextareaValue] = useState("");
+  const [editorValue, setEditorValue] = useState("");
   const [actionInProgress, setActionInProgress] = useState<
     string | undefined
   >();
-  const hasEdits = stringifyAndFormat(pipeline) !== textareaValue;
+  const hasEdits = stringifyAndFormat(pipeline) !== editorValue;
   const ownedBySomeoneElse = pipeline.ownerUserId !== user.id;
 
   const onDeleteClick = useCallback(async () => {
@@ -44,11 +44,6 @@ export function PipelineEditSection({
     }
   }, [pipeline.id, userJWT]);
 
-  const onTextAreaChange = useCallback((value: string): void => {
-    console.log("new value", value);
-    setTextareaValue(value);
-  }, []);
-
   const onUndoClick = useCallback(async () => {
     if (
       pipeline &&
@@ -56,45 +51,36 @@ export function PipelineEditSection({
         "are you sure you want to undo these changes without saving them?"
       )
     ) {
-      setTextareaValue(stringifyAndFormat(pipeline));
+      setEditorValue(stringifyAndFormat(pipeline));
     }
   }, [pipeline]);
 
   const onSaveClick = useCallback(async () => {
     if (userJWT) {
       setActionInProgress(`Updating pipeline '${pipeline.id}'...`);
-      const res = await savePipeline(userJWT, textareaValue);
+      const res = await savePipeline(userJWT, editorValue);
       if (res.success) {
         window.location.reload();
       } else {
         alert(res.error);
       }
     }
-  }, [pipeline.id, textareaValue, userJWT]);
+  }, [pipeline.id, editorValue, userJWT]);
 
   useEffect(() => {
     if (!hasSetRef.current) {
       hasSetRef.current = true;
-      setTextareaValue(stringifyAndFormat(pipeline));
+      setEditorValue(stringifyAndFormat(pipeline));
     }
   }, [pipeline]);
 
   return (
     <Stack gap={4}>
       <Box borderWidth="1px" borderRadius="lg" overflow="hidden" padding="8px">
-        <Editor
-          width="600px"
-          height="400px"
-          language="json"
-          theme="vs-light"
-          value={textareaValue}
-          onChange={onTextAreaChange}
-          options={{
-            readonly: ownedBySomeoneElse && !isAdminView,
-            minimap: {
-              enabled: false
-            }
-          }}
+        <FancyEditor
+          value={editorValue}
+          setValue={setEditorValue}
+          readonly={ownedBySomeoneElse && !isAdminView}
         />
       </Box>
       <p>
