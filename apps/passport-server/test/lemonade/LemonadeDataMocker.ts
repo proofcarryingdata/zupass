@@ -9,9 +9,13 @@ import {
 
 /**
  * For testing purposes, this models Lemonade users. This is Lemonade's model
- * of a registered user, such as a person attending an event. We don't have an
- * API that retrieves these directly, though this record does form part of a
- * ticket object.
+ * of a registered user, such as a person attending an event. We need to be
+ * able to add users in order to model the underlying domain behind tickets.
+ *
+ * Users and Accounts are related in Lemonade, but for our purposes we will
+ * ignore this connection: an Account represents the Lemonade account of the
+ * user whose credentials are being used by the pipeline to access the
+ * back-end, and a User is a user who is attending an event.
  */
 export interface LemonadeUser {
   __typename: "User";
@@ -50,9 +54,9 @@ class LemonadeAccount {
   public addEvent(title: string): LemonadeEvent {
     const event: LemonadeEvent = {
       title,
+      _id: randomUUID(),
       description: title,
       slug: _.kebabCase(title),
-      _id: randomUUID(),
       start: new Date().toISOString(),
       end: new Date(Date.now() + ONE_DAY_MS * 7).toISOString(),
       guest_limit: 100,
@@ -251,5 +255,17 @@ export class LemonadeDataMocker {
     }
 
     return this.accounts.get(clientId) as LemonadeAccount;
+  }
+
+  /**
+   * Simulates the effect of checking a user out. This is not currently
+   * possible in the Lemonade UI, but can be done via the API, so we have to
+   * account for the possibility that a previously checked-in user could become
+   * checked out.
+   */
+  public checkOutUser(clientId: string, eventId: string, userId: string): void {
+    const account = this.getAccount(clientId);
+    // Un-checked-in users are represented by a checkin date of `null`
+    account.setCheckin(eventId, userId, null);
   }
 }

@@ -1,5 +1,5 @@
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
-import { stringify } from "csv-stringify/sync";
+import { stringify as csv_stringify } from "csv-stringify/sync";
 import { MockedRequest, RequestHandler, graphql, rest } from "msw";
 import urljoin from "url-join";
 import {
@@ -19,11 +19,14 @@ export function getMockLemonadeHandlers(
   backendUrl: string
 ): RequestHandler[] {
   const handlers = [];
-
-  // In the real API, the authorization token is an OAuth token, which maps
-  // back to the client ID. For testing purposes, we just send the client ID
-  // as the token, to avoid having to mock out the whole OAuth flow.
-  // TODO actually mock this with a bit more fidelity, so we can mock token expiry
+  /**
+   * In the real API, the authorization token is an OAuth token, which maps
+   * back to the client ID. For testing purposes, we just send the client ID
+   * as the token, to avoid having to mock out the whole OAuth flow. We still
+   * check to see if the client ID matches an account that is in the mock
+   * data set.
+   * See {@link TestTokenSource} and {@link LemonadeAPI.getToken()}.
+   */
   const checkClientId = (
     mocker: LemonadeDataMocker,
     req: MockedRequest
@@ -70,25 +73,6 @@ export function getMockLemonadeHandlers(
         })
       );
     }),
-    rest.post(
-      urljoin(backendUrl, "/event/:eventId/export/tickets"),
-      (req, res, ctx) => {
-        const clientId = checkClientId(mocker, req);
-        const eventId = req.params["eventId"] as string;
-        if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
-          throw new Error(`Invalid event ID ${eventId}`);
-        }
-        const tickets = [
-          ...(
-            mocker.getAccount(clientId).getTickets().get(eventId) as Map<
-              string,
-              LemonadeTicket
-            >
-          ).values()
-        ];
-        return res(ctx.text(stringify(tickets, { header: true })));
-      }
-    ),
 
     graphql.mutation("UpdateEventCheckin", (req, res, ctx) => {
       const clientId = checkClientId(mocker, req);
@@ -105,7 +89,41 @@ export function getMockLemonadeHandlers(
       }
 
       return res(ctx.data({ updateEventCheckin: true }));
-    })
+    }),
+
+    // Ticket export is not a GraphQL endpoint, but is instead a REST endpoint
+    // that returns data in CSV format.
+    rest.post(
+      urljoin(backendUrl, "/event/:eventId/export/tickets"),
+      (req, res, ctx) => {
+        const clientId = checkClientId(mocker, req);
+        const eventId = req.params["eventId"] as string;
+        if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
+          throw new Error(`Invalid event ID ${eventId}`);
+        }
+        const tickets = [
+          ...(
+            mocker.getAccount(clientId).getTickets().get(eventId) as Map<
+              string,
+              LemonadeTicket
+            >
+          ).values()
+        ];
+        return res(
+          ctx.text(
+            csv_stringify(tickets, {
+              header: true,
+              cast: {
+                // Convert checkin date to an ISO string
+                date: (date) => {
+                  return date.toISOString();
+                }
+              }
+            })
+          )
+        );
+      }
+    )
   );
 
   return handlers;

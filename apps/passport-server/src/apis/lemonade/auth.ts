@@ -43,11 +43,17 @@ interface CachedOAuthClient {
 
 /**
  * Manages tokens fetched from an OAuth backend.
+ * Only ever used by {@link LemonadeAPI}.
+ * Can be passed in to {@link getLemonadeAPI} as a parameter, but the default
+ * parameter is `new OAuthTokenManager`, so it should never be necessary to
+ * instantiate this class directly.
  */
 export class OAuthTokenManager implements AuthTokenSource {
   // Cache TokenSet and other OAuth data
   // Key is a string containing the credentials and backend URL
   private clientCache: Map<string, CachedOAuthClient>;
+  // Cache of in-progress requests for new tokens, to prevent concurrent
+  // requests that might conflict with each other.
   private requestCache: Map<string, Promise<AuthToken>>;
 
   public constructor() {
@@ -55,6 +61,9 @@ export class OAuthTokenManager implements AuthTokenSource {
     this.requestCache = new Map();
   }
 
+  /**
+   * Get a new token from the OAuth backend.
+   */
   private async getNewToken(
     credentials: LemonadeOAuthCredentials
   ): Promise<AuthToken> {

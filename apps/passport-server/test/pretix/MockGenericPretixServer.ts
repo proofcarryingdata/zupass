@@ -2,7 +2,7 @@ import { GenericPretixPosition } from "@pcd/passport-interface";
 import { RequestHandler, rest } from "msw";
 import { GenericPretixDataMocker } from "./GenericPretixDataMocker";
 
-export function getGenericMockPretixAPIHandlers(
+export function getMockGenericPretixHandlers(
   orgs: IterableIterator<string>,
   mocker: GenericPretixDataMocker
 ): RequestHandler[] {
