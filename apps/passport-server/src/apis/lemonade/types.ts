@@ -4,15 +4,6 @@ export interface GetHostingEventsResponse {
   getHostingEvents: {
     _id: string;
     title: string;
-    description?: string;
-    start: string;
-    end: string;
-    url_go?: string;
-    slug: string;
-    cover?: string;
-    new_photos?: { url: string }[];
-    guest_limit?: number;
-    guest_limit_per?: number;
   }[];
 }
 
@@ -24,12 +15,6 @@ export interface GetEventTicketTypesResponse {
     ticket_types: {
       _id: string;
       title: string;
-      prices: {
-        cost: string;
-        currency: string;
-        default?: boolean | null;
-        network?: string | null;
-      }[];
     }[];
   };
 }
@@ -40,8 +25,6 @@ export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 
 export const LemonadeTicketSchema = z.object({
   _id: z.string(),
-  assigned_email: z.string(),
-  assigned_to: z.string(),
   user_id: z.string(),
   user_email: z.string(),
   user_name: z.string(),

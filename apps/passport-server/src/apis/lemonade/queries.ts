@@ -4,18 +4,7 @@ export const getHostingEventsQuery = gql(`
   query GetHostingEvents($skip: Int!, $limit: Int!) {
     getHostingEvents(skip: $skip, limit: $limit) {
       _id,
-      title,
-      description
-      start
-      end
-      url_go
-      slug
-      cover
-      new_photos {
-        url
-      }
-      guest_limit
-      guest_limit_per
+      title
     }
   }
 `);
@@ -26,12 +15,6 @@ export const getEventTicketTypesQuery = gql(`
       ticket_types {
         _id
         title
-        prices {
-          cost
-          currency
-          default
-          network
-        }
       }
     }
   }

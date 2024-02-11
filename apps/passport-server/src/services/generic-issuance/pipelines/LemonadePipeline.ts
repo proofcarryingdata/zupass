@@ -238,14 +238,14 @@ export class LemonadePipeline implements BasePipeline {
             (t) =>
               ({
                 id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
-                email: t.user_email as string,
+                email: t.user_email,
                 name:
                   t.user_first_name.length > 0 || t.user_last_name.length > 0
                     ? `${t.user_first_name} ${t.user_last_name}`.trim()
                     : t.user_name,
                 lemonadeEventId: eventConfig.externalId,
                 lemonadeTicketTypeId: t.type_id,
-                lemonadeUserId: t.assigned_to as string,
+                lemonadeUserId: t.user_id,
                 checkinDate: t.checkin_date
               }) as LemonadeAtom
           );

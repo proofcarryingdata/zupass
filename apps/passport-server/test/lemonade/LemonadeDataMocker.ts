@@ -1,6 +1,4 @@
-import { ONE_DAY_MS } from "@pcd/util";
 import { randomUUID } from "crypto";
-import _ from "lodash";
 import {
   LemonadeEvent,
   LemonadeTicket,
@@ -54,16 +52,7 @@ class LemonadeAccount {
   public addEvent(title: string): LemonadeEvent {
     const event: LemonadeEvent = {
       title,
-      _id: randomUUID(),
-      description: title,
-      slug: _.kebabCase(title),
-      start: new Date().toISOString(),
-      end: new Date(Date.now() + ONE_DAY_MS * 7).toISOString(),
-      guest_limit: 100,
-      guest_limit_per: 2,
-      new_photos: [],
-      cover: "",
-      url_go: ""
+      _id: randomUUID()
     };
 
     this.events.set(event._id, event);
@@ -80,15 +69,7 @@ class LemonadeAccount {
     }
     const ticketType: LemonadeTicketType = {
       _id: randomUUID(),
-      title,
-      prices: [
-        {
-          cost: "1",
-          currency: "USD",
-          network: null,
-          default: null
-        }
-      ]
+      title
     };
 
     const eventTicketTypes = this.ticketTypes.get(eventId) ?? new Map();
@@ -120,19 +101,17 @@ class LemonadeAccount {
     if (!this.users.has(userId)) {
       throw new Error(`Can't add ticket for non-existent user ${userId}`);
     }
+    const user = this.users.get(userId) as LemonadeUser;
     const ticket: LemonadeTicket = {
       _id: randomUUID(),
       type_id: ticketTypeId,
       type_title: this.ticketTypes.get(eventId)?.get(ticketTypeId)
         ?.title as string,
       user_id: userId,
-      user_email: this.users.get(userId)?.email as string,
+      user_email: user.email,
       user_name: userName,
-      user_first_name: "",
-      user_last_name: "",
-      assigned_to: userId,
-      assigned_email: "", // This is what we get from the live API, if you
-      // want the email address then look in `user_email`
+      user_first_name: user.first_name,
+      user_last_name: user.last_name,
       checkin_date: null
     };
 
@@ -175,7 +154,9 @@ class LemonadeAccount {
 
     if (
       !tickets ||
-      !(ticket = [...tickets].find((t) => t.assigned_to === userId))
+      !(ticket = [...tickets].find(
+        (t) => t.user_email === this.users.get(userId)?.email
+      ))
     ) {
       throw new Error(
         `Can't find ticket assigned to user ${userId} for ${eventId}`
