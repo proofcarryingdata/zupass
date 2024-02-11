@@ -11,7 +11,7 @@ import { PodboxButton } from "./PodboxButton";
  * and provides rudimentary navigation help. Intended to be
  * displayed at the top of all the generic issuance client pages.
  */
-export function Header({
+export function GlobalPageHeader({
   user,
   stytchClient,
   titleContent
@@ -37,7 +37,9 @@ export function Header({
         </LeftHalf>
         <RightHalf>
           {/* to prevent page reflow on data load */}
-          <Button style={{ visibility: "hidden" }}>...</Button>
+          <Button style={{ visibility: "hidden" }} variant="outline">
+            ...
+          </Button>
         </RightHalf>
       </HeaderContainer>
     );
@@ -79,6 +81,7 @@ export function Header({
   rightElements.push(
     <span key="logout">
       <Button
+        variant="outline"
         onClick={async (): Promise<void> => {
           if (confirm("Are you sure you want to log out?")) {
             try {

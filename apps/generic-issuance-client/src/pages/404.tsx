@@ -1,18 +1,14 @@
-import { Link } from "@chakra-ui/react";
 import { ReactNode } from "react";
-import { Link as ReactLink } from "react-router-dom";
-import { PageContent } from "../components/Core";
-import { Header } from "../components/header/Header";
+import { PageContent, PodLink } from "../components/Core";
+import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
 
 export function NotFound(): ReactNode {
   return (
     <>
-      <Header />
+      <GlobalPageHeader />
       <PageContent>
         This page doesn't exist. <br />
-        <Link as={ReactLink} to="/">
-          Go to Podbox
-        </Link>
+        <PodLink to="/">Go to Podbox</PodLink>
       </PageContent>
     </>
   );

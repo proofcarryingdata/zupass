@@ -1,4 +1,4 @@
-import { ChakraProvider } from "@chakra-ui/react";
+import { ChakraProvider, ColorModeScript, extendTheme } from "@chakra-ui/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
 import React, { ReactNode, useCallback, useState } from "react";
@@ -12,6 +12,14 @@ import Home from "./pages/Home";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
+
+window.localStorage.setItem("chakra-ui-color-theme", "dark");
+const THEME = extendTheme({
+  config: {
+    initialColorMode: "dark",
+    useSystemColorMode: false
+  }
+});
 
 const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 
@@ -70,17 +78,20 @@ function App(): ReactNode {
   }, []);
 
   return (
-    <React.StrictMode>
-      <ChakraProvider>
-        <StytchProvider stytch={stytch}>
-          <GIContext.Provider value={state}>
-            <RefreshSession />
-            <GlobalStyle />
-            <RouterProvider router={router} />
-          </GIContext.Provider>
-        </StytchProvider>
-      </ChakraProvider>
-    </React.StrictMode>
+    <>
+      <ColorModeScript initialColorMode={THEME.config.initialColorMode} />
+      <React.StrictMode>
+        <ChakraProvider>
+          <StytchProvider stytch={stytch}>
+            <GIContext.Provider value={state}>
+              <RefreshSession />
+              <GlobalStyle />
+              <RouterProvider router={router} />
+            </GIContext.Provider>
+          </StytchProvider>
+        </ChakraProvider>
+      </React.StrictMode>
+    </>
   );
 }
 

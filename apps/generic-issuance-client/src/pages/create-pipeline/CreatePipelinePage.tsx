@@ -1,9 +1,10 @@
+import { Heading } from "@chakra-ui/react";
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useState } from "react";
 import { PageContent } from "../../components/Core";
 import { pipelineDetailPagePath } from "../../components/PipelineDisplayUtils";
-import { Header } from "../../components/header/Header";
+import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { savePipeline } from "../../helpers/Mutations";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useJWT } from "../../helpers/userHooks";
@@ -47,7 +48,7 @@ export default function CreatePipelinePage(): ReactNode {
   if (isUploadingPipeline) {
     return (
       <>
-        <Header user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} stytchClient={stytchClient} />
         <PageContent>creating pipeline...</PageContent>
       </>
     );
@@ -55,7 +56,13 @@ export default function CreatePipelinePage(): ReactNode {
 
   return (
     <>
-      <Header user={user} stytchClient={stytchClient} />
+      <GlobalPageHeader
+        user={user}
+        stytchClient={stytchClient}
+        titleContent={(): ReactNode => (
+          <Heading size="sm">Create Pipeline</Heading>
+        )}
+      />
       <PageContent>
         <h1>Create your pipeline</h1>
         <select

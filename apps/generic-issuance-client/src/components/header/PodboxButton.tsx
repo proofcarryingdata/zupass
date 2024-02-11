@@ -1,13 +1,13 @@
-import { Button, Link } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
-import { Link as ReactLink, useLocation } from "react-router-dom";
+import { useLocation } from "react-router-dom";
+import { PodLink } from "../Core";
 
 export const PodboxButton = (): ReactNode => {
   const location = useLocation();
 
   return (
-    <Link
-      as={ReactLink}
+    <PodLink
       to="/dashboard"
       onClick={useCallback(() => {
         if (location.pathname === "/dashboard") {
@@ -15,11 +15,11 @@ export const PodboxButton = (): ReactNode => {
         }
       }, [location.pathname])}
     >
-      <Button>
+      <Button variant="outline">
         <span style={{ fontSize: "20pt" }}>📦</span>
         &nbsp;&nbsp;
         <span>Podbox</span>
       </Button>
-    </Link>
+    </PodLink>
   );
 };

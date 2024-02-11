@@ -1,20 +1,13 @@
-import { ExternalLinkIcon } from "@chakra-ui/icons";
-import {
-  Heading,
-  Link,
-  ListItem,
-  Stack,
-  UnorderedList
-} from "@chakra-ui/react";
+import { Heading, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   getError
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect, useMemo } from "react";
-import { Link as ReactLink } from "react-router-dom";
-import { PageContent } from "../../components/Core";
-import { Header } from "../../components/header/Header";
+import { PageContent, PodLink } from "../../components/Core";
+import { LoadingContent } from "../../components/LoadingContent";
+import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
 import { useFetchAllPipelines } from "../../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
@@ -64,7 +57,7 @@ export default function DashboardPage(): ReactNode {
   if (maybeRequestError) {
     return (
       <>
-        <Header user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} stytchClient={stytchClient} />
         <PageContent>
           <h2>Error Loading Page</h2>
           {maybeRequestError}
@@ -76,15 +69,19 @@ export default function DashboardPage(): ReactNode {
   if (!user || !pipelinesFromServer) {
     return (
       <>
-        <Header user={user} stytchClient={stytchClient} />
-        <PageContent>Loading...</PageContent>
+        <GlobalPageHeader user={user} stytchClient={stytchClient} />
+        <LoadingContent />
       </>
     );
   }
 
   return (
     <>
-      <Header user={user} stytchClient={stytchClient} />
+      <GlobalPageHeader
+        user={user}
+        stytchClient={stytchClient}
+        titleContent={(): ReactNode => <Heading size="sm">Dashboard</Heading>}
+      />
       <PageContent>
         {pipelineEntries.length ? (
           <PipelineTable entries={pipelineEntries} isAdminView={isAdminView} />
@@ -109,24 +106,20 @@ export function DashboardAdminSection(): ReactNode {
         </Heading>
         <UnorderedList>
           <ListItem>
-            <Link
-              as={ReactLink}
-              href={getAllHoneycombLinkForAllGenericIssuance()}
+            <PodLink
+              isExternal={true}
+              to={getAllHoneycombLinkForAllGenericIssuance()}
             >
               all generic issuance traces {getHoneycombQueryDurationStr()}
-              &nbsp;
-              <ExternalLinkIcon />
-            </Link>
+            </PodLink>
           </ListItem>
           <li>
-            <Link
-              as={ReactLink}
-              href={getAllHoneycombLinkForAllGenericIssuanceHttp()}
+            <PodLink
+              isExternal={true}
+              to={getAllHoneycombLinkForAllGenericIssuanceHttp()}
             >
               all generic issuance http traces {getHoneycombQueryDurationStr()}
-              &nbsp;
-              <ExternalLinkIcon />
-            </Link>
+            </PodLink>
           </li>
         </UnorderedList>
       </Stack>

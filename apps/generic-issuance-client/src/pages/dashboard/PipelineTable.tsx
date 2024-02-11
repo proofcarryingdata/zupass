@@ -1,15 +1,7 @@
-import { ExternalLinkIcon } from "@chakra-ui/icons";
-import {
-  Link,
-  Table,
-  TableContainer,
-  Td,
-  Th,
-  Thead,
-  Tr
-} from "@chakra-ui/react";
+import { Table, TableContainer, Td, Th, Thead, Tr } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
+  PipelineDefinition,
   PipelineType
 } from "@pcd/passport-interface";
 import {
@@ -21,13 +13,15 @@ import {
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import { Link as ReactLink } from "react-router-dom";
-import styled from "styled-components";
+import { ReactNode, useCallback, useMemo, useState } from "react";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import { PodLink } from "../../components/Core";
 import {
+  PipelineDisplayNameText,
   PipelineStatusTag,
   PipelineTypeTag,
   pipelineCreatedAtStr,
+  pipelineDetailPagePath,
   pipelineDisplayNameStr,
   pipelineLastEditStr,
   pipelineLastLoadStr
@@ -51,6 +45,7 @@ export type PipelineRow = {
   lastLoad?: string;
   name?: string;
   displayName: string;
+  pipeline: PipelineDefinition;
 };
 
 export function PipelineTable({
@@ -81,7 +76,8 @@ export function PipelineTable({
         allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id),
         lastLoad: entry.extraInfo.lastLoad?.lastRunEndTimestamp,
         name: entry.pipeline.options?.name,
-        displayName: pipelineDisplayNameStr(entry.pipeline)
+        displayName: pipelineDisplayNameStr(entry.pipeline),
+        pipeline: entry.pipeline
       };
     },
     []
@@ -96,7 +92,9 @@ export function PipelineTable({
     () => [
       columnHelper.accessor("displayName", {
         header: "name",
-        cell: (table) => table.row.original.displayName
+        cell: (table) => (
+          <PipelineDisplayNameText pipeline={table.row.original.pipeline} />
+        )
       }),
       columnHelper.accessor("timeUpdated", {
         header: "edited",
@@ -132,14 +130,9 @@ export function PipelineTable({
             enableSorting: false,
             header: "load",
             cell: (table) => (
-              <Link
-                as={ReactLink}
-                href={table.row.original.loadTraceLink}
-                isExternal={true}
-              >
+              <PodLink to={table.row.original.loadTraceLink} isExternal={true}>
                 load
-                <ExternalLinkIcon mx="2px" />
-              </Link>
+              </PodLink>
             )
           })
         : undefined,
@@ -148,19 +141,14 @@ export function PipelineTable({
             enableSorting: false,
             header: "all",
             cell: (table) => (
-              <Link
-                as={ReactLink}
-                href={table.row.original.allTraceLink}
-                isExternal={true}
-              >
+              <PodLink to={table.row.original.allTraceLink} isExternal={true}>
                 all
-                <ExternalLinkIcon mx="2px" />
-              </Link>
+              </PodLink>
             )
           })
         : undefined
     ],
-    [columnHelper, isAdminView, singleRowMode]
+    [columnHelper, isAdminView]
   );
   const filteredColumns = useMemo(() => {
     return columns.filter((r) => !!r) as Array<ColumnDef<PipelineRow>>;
@@ -175,10 +163,6 @@ export function PipelineTable({
           }
         ]
   );
-
-  useEffect(() => {
-    console.log("sorting", sorting);
-  }, [sorting]);
 
   const table = useReactTable({
     columns: filteredColumns,
@@ -207,11 +191,12 @@ export function PipelineTable({
                     {header.isPlaceholder ? null : (
                       <span
                         {...{
-                          style: header.column.getCanSort()
-                            ? {
-                                cursor: "pointer"
-                              }
-                            : undefined,
+                          style:
+                            header.column.getCanSort() && !singleRowMode
+                              ? {
+                                  cursor: "pointer"
+                                }
+                              : undefined,
 
                           onClick: header.column.getToggleSortingHandler()
                         }}
@@ -220,9 +205,7 @@ export function PipelineTable({
                           style={{
                             fontWeight: header.column.getIsSorted()
                               ? "bold"
-                              : "normal",
-                            fontFamily: "Inconsolata",
-                            fontSize: "12pt"
+                              : "normal"
                           }}
                         >
                           {flexRender(
@@ -238,10 +221,19 @@ export function PipelineTable({
             </Tr>
           ))}
         </Thead>
-        <TBody>
+        <TBody singleRowMode={singleRowMode}>
           {table.getRowModel().rows.map((row, i) => {
             return (
-              <Tr key={row.id + "" + i}>
+              <Tr
+                key={row.id + "" + i}
+                onClick={(): void => {
+                  if (!singleRowMode) {
+                    window.location.hash = `${pipelineDetailPagePath(
+                      row.original.id
+                    )}`;
+                  }
+                }}
+              >
                 {row.getVisibleCells().map((cell, j) => {
                   return (
                     <Td key={cell.id + "" + j}>
@@ -262,17 +254,26 @@ export function PipelineTable({
 }
 
 const TBody = styled.tbody`
-  tr {
-    user-select: none;
-    cursor: pointer;
-    transition: background-color 150ms;
+  ${({
+    singleRowMode
+  }: {
+    singleRowMode?: boolean;
+  }): FlattenSimpleInterpolation => css`
+      user-select: none;
+      ${
+        !singleRowMode &&
+        css`
+          tr {
+            transition: background-color 150ms;
+            cursor: pointer;
+            &:hover {
+              background-color: rgba(255, 255, 255, 0.07);
 
-    &:hover {
-      background-color: rgba(0, 0, 0, 0.07);
-
-      &:active {
-        background-color: rgba(0, 0, 0, 0.1);
+              &:active {
+                background-color: rgba(255, 255, 255, 0.1);
+              }
+            }`
       }
     }
-  }
+  `}
 `;

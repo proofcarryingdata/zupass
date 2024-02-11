@@ -1,4 +1,4 @@
-import { Link, Tag, TagLabel } from "@chakra-ui/react";
+import { Tag, TagLabel } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   PipelineDefinition,
@@ -6,9 +6,9 @@ import {
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { Link as ReactLink } from "react-router-dom";
 import { timeAgo } from "../helpers/util";
 import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
+import { PodLink } from "./Core";
 
 export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
   if (str === "paused") {
@@ -54,14 +54,14 @@ export function pipelineTypeIcon(type: PipelineType): ReactNode {
 export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
   if (!type) {
     return (
-      <Tag>
+      <Tag style={tagStyle}>
         <TagLabel>{type}</TagLabel>
       </Tag>
     );
   }
 
   return (
-    <Tag>
+    <Tag style={tagStyle}>
       {pipelineTypeIcon(type)}
       &nbsp;
       <TagLabel>{type}</TagLabel>
@@ -76,31 +76,49 @@ export function PipelineStatusTag({
 }): ReactNode {
   if (!status) {
     return (
-      <Tag>
+      <Tag style={tagStyle}>
         <TagLabel>{status}</TagLabel>
       </Tag>
     );
   }
   return (
-    <Tag>
+    <Tag style={tagStyle}>
       {pipelineIconFromStr(status)}&nbsp;
       <TagLabel>{status}</TagLabel>
     </Tag>
   );
 }
 
-export const NAME_CUTOFF_LENGTH = 16;
-export const PLACEHOLDER_NAME = "untitled";
+const tagStyle = {
+  width: "120px",
+  display: "flex",
+  justifyContent: "center",
+  alignItems: "center",
+  gap: "4px"
+};
+
+export const NAME_CUTOFF_LENGTH = 24;
+export const PLACEHOLDER_NAME = "<untitled>";
+
 export function pipelineDisplayNameStr(pipeline?: PipelineDefinition): string {
-  if (!pipeline || !pipeline.options.name) {
+  const name = pipeline?.options.name;
+
+  if (!pipeline || !name) {
     return PLACEHOLDER_NAME;
   }
-  return pipeline.options.name.substring(0, NAME_CUTOFF_LENGTH);
+
+  if (name.length > NAME_CUTOFF_LENGTH) {
+    return name.substring(0, NAME_CUTOFF_LENGTH - 3) + "...";
+  }
+
+  return name;
 }
 
-export function pipelineDisplayNameSpan(
-  pipeline?: PipelineDefinition
-): ReactNode {
+export function PipelineDisplayNameText({
+  pipeline
+}: {
+  pipeline?: PipelineDefinition;
+}): ReactNode {
   const displayName = pipelineDisplayNameStr(pipeline);
   const hasName = !!pipeline?.options?.name;
 
@@ -108,7 +126,9 @@ export function pipelineDisplayNameSpan(
     return <span>{displayName}</span>;
   }
 
-  return <span style={{ color: "rgba(0,0,0,0.1)" }}>{displayName}</span>;
+  return (
+    <span style={{ opacity: 0.8, fontStyle: "italic" }}>{displayName}</span>
+  );
 }
 
 export function pipelineDetailPagePath(pipelineId: string): string {
@@ -120,11 +140,7 @@ export function pipelineLink(pipelineId: string | undefined): ReactNode {
     return null;
   }
 
-  return (
-    <Link as={ReactLink} to={pipelineDetailPagePath(pipelineId)}>
-      edit
-    </Link>
-  );
+  return <PodLink to={pipelineDetailPagePath(pipelineId)}>edit</PodLink>;
 }
 
 export function pipelineOwner(

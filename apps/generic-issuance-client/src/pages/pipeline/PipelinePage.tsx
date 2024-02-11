@@ -1,11 +1,11 @@
-import { Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
-import { Header } from "../../components/header/Header";
+import { LoadingContent } from "../../components/LoadingContent";
+import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
 import { useFetchPipeline } from "../../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
@@ -41,7 +41,7 @@ export default function PipelinePage(): ReactNode {
   if (maybeRequestError) {
     return (
       <>
-        <Header user={userFromServer} stytchClient={stytchClient} />
+        <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
         <PageContent>
           <h2>❌ Load Error</h2>
           {maybeRequestError}
@@ -58,10 +58,8 @@ export default function PipelinePage(): ReactNode {
   ) {
     return (
       <>
-        <Header user={userFromServer} stytchClient={stytchClient} />
-        <PageContent>
-          <Spinner />
-        </PageContent>
+        <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
+        <LoadingContent />
       </>
     );
   }
@@ -71,7 +69,7 @@ export default function PipelinePage(): ReactNode {
 
   return (
     <>
-      <Header
+      <GlobalPageHeader
         user={userFromServer}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
@@ -88,7 +86,18 @@ export default function PipelinePage(): ReactNode {
 
       <PageContent>
         <TwoColumns>
-          <div style={{ flexGrow: 1 }}>
+          <div className="col2">
+            {pipelineInfoFromServer.success &&
+              pipelineFromServer.success &&
+              userFromServer.success && (
+                <PipelineEditSection
+                  user={userFromServer.value}
+                  pipeline={pipelineFromServer.value}
+                  isAdminView={false}
+                />
+              )}
+          </div>
+          <div className="col1">
             {pipelineInfoFromServer.success &&
               pipelineFromServer.success &&
               userFromServer.success && (
@@ -98,17 +107,6 @@ export default function PipelinePage(): ReactNode {
                   isAdminView={
                     !!userFromServer.value?.isAdmin && !!ctx.isAdminMode
                   }
-                />
-              )}
-          </div>
-          <div>
-            {pipelineInfoFromServer.success &&
-              pipelineFromServer.success &&
-              userFromServer.success && (
-                <PipelineEditSection
-                  user={userFromServer.value}
-                  pipeline={pipelineFromServer.value}
-                  isAdminView={false}
                 />
               )}
           </div>
@@ -124,11 +122,20 @@ const WarningSection = styled.div`
 `;
 
 const TwoColumns = styled.div`
+  max-width: 100%;
+  overflow-x: hidden;
   display: flex;
-  justify-content: stretch;
+  justify-content: space-between;
   align-items: stretch;
   flex-direction: row;
   gap: 32px;
+
+  .col1 {
+    flex-grow: 1;
+  }
+
+  .col2 {
+  }
 
   ol {
     // to override 'GlobalStyle'

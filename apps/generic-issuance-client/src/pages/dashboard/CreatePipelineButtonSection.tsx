@@ -1,6 +1,6 @@
-import { Box, Button, Link, Stack } from "@chakra-ui/react";
+import { Box, Button, Stack } from "@chakra-ui/react";
 import { ReactNode } from "react";
-import { Link as ReactLink } from "react-router-dom";
+import { PodLink } from "../../components/Core";
 
 export function CreatePipelineButtonSection(): ReactNode {
   return (
@@ -8,11 +8,11 @@ export function CreatePipelineButtonSection(): ReactNode {
       <Stack overflow="hidden" padding={4} gap={4}>
         <Box display="inline-block">
           <Box float="right">
-            <Link as={ReactLink} to="/create-pipeline">
-              <Button colorScheme="green" size="sm">
+            <PodLink to="/create-pipeline">
+              <Button colorScheme="green" size="sm" variant="outline">
                 Create Pipeline
               </Button>
-            </Link>
+            </PodLink>
           </Box>
         </Box>
       </Stack>
