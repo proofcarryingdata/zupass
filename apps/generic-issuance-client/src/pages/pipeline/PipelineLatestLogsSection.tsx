@@ -1,16 +1,6 @@
-import {
-  Table,
-  TableContainer,
-  Tbody,
-  Td,
-  Th,
-  Thead,
-  Tr
-} from "@chakra-ui/react";
-import { PipelineLoadSummary, PipelineLog } from "@pcd/passport-interface";
-import moment from "moment";
+import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import styled from "styled-components";
+import { FancyEditor } from "../../components/FancyEditor";
 
 /**
  * Renders information about the last time this pipeline was run by Podbox.
@@ -26,41 +16,13 @@ export function PipelineLatestLogsSection({
   }
 
   return (
-    <div
-      style={{
-        display: "inline-flex",
-        // overflowX: "scroll",
-        width: "100%"
-      }}
-    >
-      <TableContainer maxW="100%" width="100%">
-        <Table variant="simple">
-          <Thead style={{ userSelect: "none" }}>
-            <Tr>
-              <Th style={{ width: "1%" }}>Timestamp</Th>
-              <Th style={{ width: "1%" }}>Type</Th>
-              <Th style={{ width: "auto" }}>Log</Th>
-            </Tr>
-          </Thead>
-          <Tbody>
-            {lastLoad.latestLogs.map((l, i) => (
-              <PipelineLogEntry log={l} key={i} />
-            ))}
-          </Tbody>
-        </Table>
-      </TableContainer>
-    </div>
+    <FancyEditor
+      dark
+      style={{ width: "100%", height: "200px" }}
+      readonly={true}
+      value={lastLoad.latestLogs
+        .map((log) => `${log.timestampCreated} - ${log.level} - ${log.value}`)
+        .join("\n")}
+    />
   );
 }
-
-export function PipelineLogEntry({ log }: { log: PipelineLog }): ReactNode {
-  return (
-    <Trow>
-      <Td>{moment(log.timestampCreated).format("MMMM Do YYYY, h:mm:ss a")}</Td>
-      <Td>{log.level}</Td>
-      <Td>{log.value}</Td>
-    </Trow>
-  );
-}
-
-const Trow = styled.tr``;

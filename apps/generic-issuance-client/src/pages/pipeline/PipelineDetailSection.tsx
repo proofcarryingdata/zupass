@@ -4,7 +4,6 @@ import {
   AccordionItem,
   AccordionPanel,
   Badge,
-  Box,
   ListItem,
   OrderedList,
   Stack,
@@ -21,9 +20,7 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
-import { PipelineTable } from "../dashboard/PipelineTable";
 import { PipelineLatestDataSection } from "./PipelineLatestDataSection";
-import { PipelineLatestLoadSection } from "./PipelineLatestLoadSection";
 import { PipelineLatestLogsSection } from "./PipelineLatestLogsSection";
 
 export function PipelineDetailSection({
@@ -37,19 +34,6 @@ export function PipelineDetailSection({
 }): ReactNode {
   return (
     <Stack maxW={"100%"} gap={4}>
-      <Box>
-        <PipelineTable
-          entries={[
-            {
-              extraInfo: pipelineInfo,
-              pipeline: pipelineFromServer
-            }
-          ]}
-          isAdminView={isAdminView}
-          singleRowMode={true}
-        />
-      </Box>
-
       <Accordion defaultIndex={0}>
         {pipelineInfo.feeds && (
           <AccordionItem>
@@ -108,12 +92,6 @@ export function PipelineDetailSection({
             </AccordionPanel>
           </AccordionItem>
         )}
-        <AccordionItem>
-          <AccordionButton>Last Load</AccordionButton>
-          <AccordionPanel>
-            <PipelineLatestLoadSection lastLoad={pipelineInfo.lastLoad} />
-          </AccordionPanel>
-        </AccordionItem>
         <AccordionItem>
           <AccordionButton>Logs</AccordionButton>
           <AccordionPanel>

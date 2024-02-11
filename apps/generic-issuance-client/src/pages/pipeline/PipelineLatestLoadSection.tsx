@@ -21,7 +21,7 @@ export function PipelineLatestLoadSection({
   const endDate = new Date(lastLoad.lastRunEndTimestamp);
 
   return (
-    <Table>
+    <Table size="sm" variant="simple">
       <thead>
         <Tr>
           <Th>started</Th>

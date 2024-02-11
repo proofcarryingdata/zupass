@@ -1,3 +1,4 @@
+import { Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect } from "react";
@@ -25,7 +26,7 @@ export default function PipelinePage(): ReactNode {
   const pipelineFromServer = useFetchPipeline(pipelineId);
   const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoFromServer?.value;
-
+  const isAdminView = !!userFromServer?.value?.isAdmin && !!ctx.isAdminMode;
   const maybeRequestError: string | undefined = getError(
     userFromServer,
     pipelineFromServer,
@@ -58,7 +59,11 @@ export default function PipelinePage(): ReactNode {
   ) {
     return (
       <>
-        <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
+        <GlobalPageHeader
+          user={userFromServer}
+          stytchClient={stytchClient}
+          titleContent={(): ReactNode => <Spinner />}
+        />
         <LoadingContent />
       </>
     );
@@ -92,8 +97,9 @@ export default function PipelinePage(): ReactNode {
               userFromServer.success && (
                 <PipelineEditSection
                   user={userFromServer.value}
+                  pipelineInfo={pipelineInfoFromServer.value}
                   pipeline={pipelineFromServer.value}
-                  isAdminView={false}
+                  isAdminView={isAdminView}
                 />
               )}
           </div>
@@ -104,9 +110,7 @@ export default function PipelinePage(): ReactNode {
                 <PipelineDetailSection
                   pipelineInfo={pipelineInfoFromServer.value}
                   pipelineFromServer={pipelineFromServer.value}
-                  isAdminView={
-                    !!userFromServer.value?.isAdmin && !!ctx.isAdminMode
-                  }
+                  isAdminView={isAdminView}
                 />
               )}
           </div>

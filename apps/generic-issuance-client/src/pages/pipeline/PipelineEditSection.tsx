@@ -1,22 +1,33 @@
 import { Box, Button, HStack, Stack } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
-  PipelineDefinition
+  PipelineDefinition,
+  PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
-import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
 import { FancyEditor } from "../../components/FancyEditor";
 import { deletePipeline, savePipeline } from "../../helpers/Mutations";
 import { useJWT } from "../../helpers/userHooks";
 import { stringifyAndFormat } from "../../helpers/util";
+import { PipelineTable } from "../dashboard/PipelineTable";
 
 export function PipelineEditSection({
   user,
   pipeline,
-  isAdminView
+  isAdminView,
+  pipelineInfo
 }: {
   user: GenericIssuanceSelfResponseValue;
   pipeline: PipelineDefinition;
+  pipelineInfo: PipelineInfoResponseValue;
   isAdminView: boolean;
 }): ReactNode {
   const userJWT = useJWT();
@@ -74,48 +85,69 @@ export function PipelineEditSection({
     }
   }, [pipeline]);
 
+  useEffect(() => {
+    console.log("asdf", {
+      extraInfo: pipelineInfo,
+      pipeline: pipeline
+    });
+  }, [pipeline, pipelineInfo]);
+
   return (
     <Stack gap={4}>
-      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" padding="8px">
-        <FancyEditor
-          value={editorValue}
-          setValue={setEditorValue}
-          readonly={ownedBySomeoneElse && !isAdminView}
+      <Box maxW={"800px"}>
+        <PipelineTable
+          entries={useMemo(() => {
+            return [
+              {
+                extraInfo: pipelineInfo,
+                pipeline: pipeline
+              }
+            ];
+          }, [pipeline, pipelineInfo])}
+          isAdminView={false}
+          singleRowMode={true}
         />
       </Box>
-      <p>
-        {(!ownedBySomeoneElse || isAdminView) && (
-          <HStack>
-            {hasEdits && (
-              <Button
-                size="sm"
-                isDisabled={
-                  !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
-                }
-                onClick={onSaveClick}
-              >
-                {actionInProgress ? "Saving..." : "Save Changes"}
-              </Button>
-            )}
-            {!hasEdits && (
-              <Button size="sm" isDisabled={true}>
-                Save Changes
-              </Button>
-            )}
+
+      <FancyEditor
+        style={{ width: "800px" }}
+        language="json"
+        value={editorValue}
+        setValue={setEditorValue}
+        readonly={ownedBySomeoneElse && !isAdminView}
+      />
+
+      {(!ownedBySomeoneElse || isAdminView) && (
+        <HStack>
+          {hasEdits && (
             <Button
               size="sm"
-              colorScheme="red"
-              isDisabled={ownedBySomeoneElse && !isAdminView}
-              onClick={onDeleteClick}
+              isDisabled={
+                !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
+              }
+              onClick={onSaveClick}
             >
-              Delete Pipeline
+              {actionInProgress ? "Saving..." : "Save Changes"}
             </Button>
-            <Button onClick={onUndoClick} size="sm" isDisabled={!hasEdits}>
-              Reset Changes
+          )}
+          {!hasEdits && (
+            <Button size="sm" isDisabled={true}>
+              Save Changes
             </Button>
-          </HStack>
-        )}
-      </p>
+          )}
+          <Button
+            size="sm"
+            colorScheme="red"
+            isDisabled={ownedBySomeoneElse && !isAdminView}
+            onClick={onDeleteClick}
+          >
+            Delete Pipeline
+          </Button>
+          <Button onClick={onUndoClick} size="sm" isDisabled={!hasEdits}>
+            Reset Changes
+          </Button>
+        </HStack>
+      )}
     </Stack>
   );
 }

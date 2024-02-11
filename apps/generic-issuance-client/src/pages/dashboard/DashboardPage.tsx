@@ -1,11 +1,18 @@
-import { Heading, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
+import {
+  Box,
+  Heading,
+  ListItem,
+  Spinner,
+  Stack,
+  UnorderedList
+} from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   getError
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect, useMemo } from "react";
-import { PageContent, PodLink } from "../../components/Core";
+import { HomeLink, PageContent, PodLink } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
@@ -59,8 +66,14 @@ export default function DashboardPage(): ReactNode {
       <>
         <GlobalPageHeader user={user} stytchClient={stytchClient} />
         <PageContent>
-          <h2>Error Loading Page</h2>
-          {maybeRequestError}
+          <Heading size="md" colorScheme="orange">
+            Error Loading Page
+          </Heading>
+          <Box>
+            {maybeRequestError}
+            <br />
+            go <HomeLink />
+          </Box>
         </PageContent>
       </>
     );
@@ -69,7 +82,11 @@ export default function DashboardPage(): ReactNode {
   if (!user || !pipelinesFromServer) {
     return (
       <>
-        <GlobalPageHeader user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader
+          user={user}
+          stytchClient={stytchClient}
+          titleContent={(): ReactNode => <Spinner />}
+        />
         <LoadingContent />
       </>
     );
@@ -86,7 +103,7 @@ export default function DashboardPage(): ReactNode {
         {pipelineEntries.length ? (
           <PipelineTable entries={pipelineEntries} isAdminView={isAdminView} />
         ) : (
-          <p>No pipelines right now - go create some!</p>
+          <span>No pipelines right now - go create some!</span>
         )}
 
         <CreatePipelineButtonSection />
