@@ -84,7 +84,7 @@ class LemonadeAccount {
    * ticket types, and the user ID must have been added via LemonadeDataMocker.
    * See {@link addEvent} and {@link addTicketType}
    */
-  public addTicket(
+  public addUserTicket(
     eventId: string,
     ticketTypeId: string,
     userId: string,

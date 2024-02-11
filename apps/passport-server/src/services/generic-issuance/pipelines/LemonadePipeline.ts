@@ -234,20 +234,29 @@ export class LemonadePipeline implements BasePipeline {
 
       const atomsToSave = tickets.flatMap(
         ({ eventConfig, tickets }): LemonadeAtom[] => {
-          return tickets.map(
-            (t) =>
-              ({
-                id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
-                email: t.user_email,
-                name:
-                  t.user_first_name.length > 0 || t.user_last_name.length > 0
-                    ? `${t.user_first_name} ${t.user_last_name}`.trim()
-                    : t.user_name,
-                lemonadeEventId: eventConfig.externalId,
-                lemonadeTicketTypeId: t.type_id,
-                lemonadeUserId: t.user_id,
-                checkinDate: t.checkin_date
-              }) as LemonadeAtom
+          return (
+            tickets
+              // Tickets can appear for users who have been invited to the
+              // event, but have not registered with Lemonade. Such tickets
+              // can't be checked in, so we should avoid creating ticket PCDs
+              // for them.
+              .filter((t) => t.user_email.length > 0)
+              .map(
+                (t) =>
+                  ({
+                    id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
+                    email: t.user_email,
+                    name:
+                      t.user_first_name.length > 0 ||
+                      t.user_last_name.length > 0
+                        ? `${t.user_first_name} ${t.user_last_name}`.trim()
+                        : t.user_name,
+                    lemonadeEventId: eventConfig.externalId,
+                    lemonadeTicketTypeId: t.type_id,
+                    lemonadeUserId: t.user_id,
+                    checkinDate: t.checkin_date
+                  }) as LemonadeAtom
+              )
           );
         }
       );

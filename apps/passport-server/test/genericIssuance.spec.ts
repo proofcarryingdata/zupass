@@ -145,7 +145,7 @@ describe("Generic Issuance", function () {
   );
   const EdgeCityDenverAttendeeIdentity = new Identity();
   const EdgeCityAttendeeTicket: LemonadeTicket =
-    EdgeCityLemonadeAccount.addTicket(
+    EdgeCityLemonadeAccount.addUserTicket(
       EdgeCityDenver._id,
       EdgeCityAttendeeTicketType._id,
       EdgeCityDenverAttendee._id,
@@ -164,7 +164,7 @@ describe("Generic Issuance", function () {
     "bob"
   );
   const EdgeCityBouncerIdentity = new Identity();
-  const EdgeCityDenverBouncerTicket = EdgeCityLemonadeAccount.addTicket(
+  const EdgeCityDenverBouncerTicket = EdgeCityLemonadeAccount.addUserTicket(
     EdgeCityDenver._id,
     EdgeCityBouncerTicketType._id,
     EdgeCityDenverBouncer._id,
