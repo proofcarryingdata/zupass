@@ -4,6 +4,7 @@ import {
   AccordionButton,
   AccordionItem,
   AccordionPanel,
+  Badge,
   Link,
   ListItem,
   OrderedList,
@@ -37,7 +38,7 @@ export function PipelineDetailSection({
     <Accordion defaultIndex={0}>
       <AccordionItem>
         <h2>
-          <AccordionButton>Pipeline Info</AccordionButton>
+          <AccordionButton>Pipeline</AccordionButton>
         </h2>
 
         <AccordionPanel>
@@ -56,7 +57,7 @@ export function PipelineDetailSection({
 
       {pipelineInfo.feeds && (
         <AccordionItem>
-          <AccordionButton>Feed Info</AccordionButton>
+          <AccordionButton>Zupass PCD Feeds</AccordionButton>
           <AccordionPanel>
             <OrderedList>
               {pipelineInfo.feeds.map((feed) => (
@@ -83,9 +84,12 @@ export function PipelineDetailSection({
 
       {isAdminView && (
         <AccordionItem>
-          <AccordionButton>Admin Details</AccordionButton>
+          <AccordionButton>
+            <span>
+              Tracing Links <Badge colorScheme="orange">Admin</Badge>
+            </span>
+          </AccordionButton>
           <AccordionPanel>
-            Links to this pipeline's traces on Honeycomb:
             <UnorderedList>
               <ListItem>
                 <Link

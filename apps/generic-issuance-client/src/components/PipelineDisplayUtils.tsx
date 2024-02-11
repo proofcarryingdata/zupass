@@ -1,13 +1,14 @@
-import { Link } from "@chakra-ui/react";
+import { Link, Tag, TagLabel } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   PipelineDefinition,
-  PipelineLoadSummary
+  PipelineLoadSummary,
+  PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { Link as ReactLink } from "react-router-dom";
-import { timeAgo } from "../../helpers/util";
-import { PipelineStateDisplay } from "../../pages/dashboard/PipelineTable";
+import { timeAgo } from "../helpers/util";
+import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
 
 export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
   if (str === "paused") {
@@ -39,11 +40,58 @@ export function pipelineStatusIcon(
   return "❌";
 }
 
+export function pipelineTypeIcon(type: PipelineType): ReactNode {
+  const icon =
+    type === PipelineType.CSV
+      ? "🗒️"
+      : type === PipelineType.Lemonade
+      ? "🍋"
+      : "🎟️";
+
+  return icon;
+}
+
+export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
+  if (!type) {
+    return (
+      <Tag>
+        <TagLabel>{type}</TagLabel>
+      </Tag>
+    );
+  }
+
+  return (
+    <Tag>
+      {pipelineTypeIcon(type)}
+      &nbsp;
+      <TagLabel>{type}</TagLabel>
+    </Tag>
+  );
+}
+
+export function PipelineStatusTag({
+  status
+}: {
+  status?: PipelineStateDisplay;
+}): ReactNode {
+  if (!status) {
+    return (
+      <Tag>
+        <TagLabel>{status}</TagLabel>
+      </Tag>
+    );
+  }
+  return (
+    <Tag>
+      {pipelineIconFromStr(status)}&nbsp;
+      <TagLabel>{status}</TagLabel>
+    </Tag>
+  );
+}
+
 export const NAME_CUTOFF_LENGTH = 16;
 export const PLACEHOLDER_NAME = "untitled";
-export function pipelineDisplayNameStr(
-  pipeline?: PipelineDefinition
-): string | undefined {
+export function pipelineDisplayNameStr(pipeline?: PipelineDefinition): string {
   if (!pipeline || !pipeline.options.name) {
     return PLACEHOLDER_NAME;
   }
@@ -99,6 +147,6 @@ export function pipelineLastEditStr(dateStr: string): string {
   return timeAgo.format(new Date(dateStr), "twitter");
 }
 
-export function pipelineLastLoadStr(dateStr: string): string {
-  return timeAgo.format(new Date(dateStr), "twitter");
+export function pipelineLastLoadStr(dateStr: string | undefined): string {
+  return dateStr ? timeAgo.format(new Date(dateStr), "twitter") : "n/a";
 }

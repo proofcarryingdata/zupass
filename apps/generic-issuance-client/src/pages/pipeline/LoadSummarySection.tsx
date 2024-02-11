@@ -4,7 +4,7 @@ import moment from "moment";
 import { ReactNode } from "react";
 import styled from "styled-components";
 import { Table } from "../../components/Core";
-import { pipelineStatusIcon } from "../../components/pipeline-display/PipelineDetails";
+import { pipelineStatusIcon } from "../../components/PipelineDisplayUtils";
 import { timeAgo } from "../../helpers/util";
 
 /**

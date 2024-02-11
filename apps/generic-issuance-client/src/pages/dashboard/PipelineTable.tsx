@@ -3,8 +3,6 @@ import {
   Link,
   Table,
   TableContainer,
-  Tag,
-  TagLabel,
   Td,
   Th,
   Thead,
@@ -25,16 +23,18 @@ import {
 } from "@tanstack/react-table";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { Link as ReactLink } from "react-router-dom";
+import styled from "styled-components";
 import {
+  PipelineStatusTag,
+  PipelineTypeTag,
   pipelineCreatedAtStr,
-  pipelineIconFromStr,
+  pipelineDisplayNameStr,
   pipelineLastEditStr,
-  pipelineLink
-} from "../../components/pipeline-display/PipelineDetails";
+  pipelineLastLoadStr
+} from "../../components/PipelineDisplayUtils";
 import {
   getAllHoneycombLinkForPipeline,
-  getLoadTraceHoneycombLinkForPipeline,
-  timeAgo
+  getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
 
 export type PipelineStateDisplay = "starting" | "loaded" | "error" | "paused";
@@ -50,6 +50,7 @@ export type PipelineRow = {
   allTraceLink: string;
   lastLoad?: string;
   name?: string;
+  displayName: string;
 };
 
 export function PipelineTable({
@@ -79,7 +80,8 @@ export function PipelineTable({
         loadTraceLink: getLoadTraceHoneycombLinkForPipeline(entry.pipeline.id),
         allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id),
         lastLoad: entry.extraInfo.lastLoad?.lastRunEndTimestamp,
-        name: entry.pipeline.options?.name
+        name: entry.pipeline.options?.name,
+        displayName: pipelineDisplayNameStr(entry.pipeline)
       };
     },
     []
@@ -92,29 +94,9 @@ export function PipelineTable({
   const columnHelper = createColumnHelper<PipelineRow>();
   const columns: Array<ColumnDef<PipelineRow> | undefined> = useMemo(
     () => [
-      singleRowMode === true
-        ? undefined
-        : columnHelper.display({
-            header: "",
-            id: "edit",
-            cell: (table) => {
-              return <span>{pipelineLink(table.row.original.id)}</span>;
-            }
-          }),
-      columnHelper.display({
+      columnHelper.accessor("displayName", {
         header: "name",
-        id: "title_",
-        cell: (table) => {
-          return (
-            <span>
-              {table.row.original.name ? (
-                table.row.original.name
-              ) : (
-                <span style={{ opacity: 0.6 }}>{"<untitled>"}</span>
-              )}
-            </span>
-          );
-        }
+        cell: (table) => table.row.original.displayName
       }),
       columnHelper.accessor("timeUpdated", {
         header: "edited",
@@ -126,84 +108,55 @@ export function PipelineTable({
       }),
       columnHelper.accessor("lastLoad", {
         header: "Last Load",
-        cell: (props) => {
-          const value = props.getValue()?.valueOf();
-          return (
-            <span>
-              {value ? timeAgo.format(new Date(value), "mini") : "n/a"}
-            </span>
-          );
-        }
+        cell: (props) => pipelineLastLoadStr(props.row.original.lastLoad)
       }),
       isAdminView
         ? columnHelper.accessor("owner", {
-            header: "owner",
-            cell: (props) => {
-              const value = props.getValue().valueOf();
-              return <span>{value}</span>;
-            }
+            header: "Owner",
+            cell: (props) => props.row.original.owner
           })
         : undefined,
 
       columnHelper.accessor("type", {
         header: "type",
-        cell: (props) => {
-          const value = props.row.original.type;
-          const icon =
-            value === PipelineType.CSV
-              ? "🗒️"
-              : value === PipelineType.Lemonade
-              ? "🍋"
-              : "🎟️";
-          return (
-            <Tag>
-              {icon}
-              &nbsp;
-              <TagLabel>{value}</TagLabel>
-            </Tag>
-          );
-        }
+        cell: (props) => <PipelineTypeTag type={props.row.original.type} />
       }),
       columnHelper.accessor("status", {
-        enableSorting: false,
         header: "Status",
-        cell: (props) => {
-          const value = props.getValue().valueOf() as
-            | "paused"
-            | "starting"
-            | "loaded"
-            | "error";
-          return (
-            <Tag>
-              {pipelineIconFromStr(value)}&nbsp;
-              <TagLabel>{value}</TagLabel>
-            </Tag>
-          );
-        }
+        cell: (props) => (
+          <PipelineStatusTag status={props.row.original.status} />
+        )
       }),
       isAdminView
-        ? columnHelper.display({
-            header: "traces",
-            cell: (table) => {
-              const value = "";
-              return (
-                <span>
-                  <Link
-                    as={ReactLink}
-                    href={table.row.original.loadTraceLink}
-                    isExternal={true}
-                  >
-                    load
-                    <ExternalLinkIcon mx="2px" />
-                  </Link>
-                  &nbsp;
-                  <Link as={ReactLink} href={value} isExternal={true}>
-                    all
-                    <ExternalLinkIcon mx="2px" />
-                  </Link>
-                </span>
-              );
-            }
+        ? columnHelper.accessor("loadTraceLink", {
+            enableSorting: false,
+            header: "load",
+            cell: (table) => (
+              <Link
+                as={ReactLink}
+                href={table.row.original.loadTraceLink}
+                isExternal={true}
+              >
+                load
+                <ExternalLinkIcon mx="2px" />
+              </Link>
+            )
+          })
+        : undefined,
+      isAdminView
+        ? columnHelper.accessor("allTraceLink", {
+            enableSorting: false,
+            header: "all",
+            cell: (table) => (
+              <Link
+                as={ReactLink}
+                href={table.row.original.allTraceLink}
+                isExternal={true}
+              >
+                all
+                <ExternalLinkIcon mx="2px" />
+              </Link>
+            )
           })
         : undefined
     ],
@@ -212,12 +165,16 @@ export function PipelineTable({
   const filteredColumns = useMemo(() => {
     return columns.filter((r) => !!r) as Array<ColumnDef<PipelineRow>>;
   }, [columns]);
-  const [sorting, setSorting] = useState<SortingState>([
-    {
-      id: "timeUpdated",
-      desc: true
-    }
-  ]);
+  const [sorting, setSorting] = useState<SortingState>(
+    singleRowMode
+      ? []
+      : [
+          {
+            id: "timeUpdated",
+            desc: true
+          }
+        ]
+  );
 
   useEffect(() => {
     console.log("sorting", sorting);
@@ -231,7 +188,7 @@ export function PipelineTable({
     state: {
       sorting
     },
-    onSortingChange: setSorting
+    onSortingChange: singleRowMode ? undefined : setSorting
   });
 
   return (
@@ -243,7 +200,7 @@ export function PipelineTable({
               {headerGroup.headers.map((header, i) => {
                 return (
                   <Th
-                    style={{ width: i === 1 ? "auto" : "1%" }}
+                    style={{ width: i === 0 ? "auto" : "1%" }}
                     key={header.id + "" + i}
                     colSpan={header.colSpan}
                   >
@@ -263,7 +220,9 @@ export function PipelineTable({
                           style={{
                             fontWeight: header.column.getIsSorted()
                               ? "bold"
-                              : "normal"
+                              : "normal",
+                            fontFamily: "Inconsolata",
+                            fontSize: "12pt"
                           }}
                         >
                           {flexRender(
@@ -279,7 +238,7 @@ export function PipelineTable({
             </Tr>
           ))}
         </Thead>
-        <tbody>
+        <TBody>
           {table.getRowModel().rows.map((row, i) => {
             return (
               <Tr key={row.id + "" + i}>
@@ -296,8 +255,24 @@ export function PipelineTable({
               </Tr>
             );
           })}
-        </tbody>
+        </TBody>
       </Table>
     </TableContainer>
   );
 }
+
+const TBody = styled.tbody`
+  tr {
+    user-select: none;
+    cursor: pointer;
+    transition: background-color 150ms;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.07);
+
+      &:active {
+        background-color: rgba(0, 0, 0, 0.1);
+      }
+    }
+  }
+`;
