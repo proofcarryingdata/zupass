@@ -10,7 +10,7 @@ import { deletePipeline, savePipeline } from "../../helpers/Mutations";
 import { useJWT } from "../../helpers/userHooks";
 import { stringifyAndFormat } from "../../helpers/util";
 
-export function PipelineEditView({
+export function PipelineEditSection({
   user,
   pipeline,
   isAdminView

@@ -11,8 +11,8 @@ import { useFetchPipeline } from "../../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useJWT } from "../../helpers/userHooks";
-import { PipelineDetailView } from "./PipelineDetailView";
-import { PipelineEditView } from "./PipelineEditView";
+import { PipelineDetailSection } from "./PipelineDetailSection";
+import { PipelineEditSection } from "./PipelineEditSection";
 
 export default function Pipeline(): ReactNode {
   const stytchClient = useStytch();
@@ -80,27 +80,27 @@ export default function Pipeline(): ReactNode {
 
       <PageContent>
         <TwoColumns>
-          <div>
-            {pipelineInfoFromServer.success &&
-              pipelineFromServer.success &&
-              userFromServer.success && (
-                <PipelineEditView
-                  user={userFromServer.value}
-                  pipeline={pipelineFromServer.value}
-                  isAdminView={false}
-                />
-              )}
-          </div>
           <div style={{ flexGrow: 1 }}>
             {pipelineInfoFromServer.success &&
               pipelineFromServer.success &&
               userFromServer.success && (
-                <PipelineDetailView
+                <PipelineDetailSection
                   pipelineInfo={pipelineInfoFromServer.value}
                   pipelineFromServer={pipelineFromServer.value}
                   isAdminView={
                     !!userFromServer.value?.isAdmin && !!ctx.isAdminMode
                   }
+                />
+              )}
+          </div>
+          <div>
+            {pipelineInfoFromServer.success &&
+              pipelineFromServer.success &&
+              userFromServer.success && (
+                <PipelineEditSection
+                  user={userFromServer.value}
+                  pipeline={pipelineFromServer.value}
+                  isAdminView={false}
                 />
               )}
           </div>

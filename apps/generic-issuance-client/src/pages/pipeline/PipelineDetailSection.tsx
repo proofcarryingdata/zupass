@@ -23,7 +23,7 @@ import {
 import { LatestAtomsSection } from "./LatestAtomsSection";
 import { LoadSummarySection } from "./LoadSummarySection";
 
-export function PipelineDetailView({
+export function PipelineDetailSection({
   pipelineInfo,
   pipelineFromServer,
   isAdminView
