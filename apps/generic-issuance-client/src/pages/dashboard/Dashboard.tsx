@@ -40,18 +40,18 @@ import {
   useState
 } from "react";
 import { Link as ReactLink } from "react-router-dom";
-import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
+import { PageContent } from "../../components/Core";
+import { Header } from "../../components/Header";
 import {
   pipelineCreatedAt,
   pipelineIconFromStr,
   pipelineLastEdit,
   pipelineLink
-} from "../components/PipelineDetails";
-import { GIContext } from "../helpers/Context";
-import { useFetchAllPipelines } from "../helpers/useFetchAllPipelines";
-import { useFetchSelf } from "../helpers/useFetchSelf";
-import { useJWT } from "../helpers/userHooks";
+} from "../../components/PipelineDetails";
+import { GIContext } from "../../helpers/Context";
+import { useFetchAllPipelines } from "../../helpers/useFetchAllPipelines";
+import { useFetchSelf } from "../../helpers/useFetchSelf";
+import { useJWT } from "../../helpers/userHooks";
 import {
   getAllHoneycombLinkForAllGenericIssuance,
   getAllHoneycombLinkForAllGenericIssuanceHttp,
@@ -59,7 +59,7 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline,
   timeAgo
-} from "../helpers/util";
+} from "../../helpers/util";
 
 export default function Dashboard(): ReactNode {
   const stytchClient = useStytch();

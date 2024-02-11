@@ -9,9 +9,9 @@ import { RefreshSession } from "./components/RefreshSession";
 import { GIContext, GIContextState } from "./helpers/Context";
 import { NotFound } from "./pages/404";
 import CreatePipeline from "./pages/CreatePipeline";
-import Dashboard from "./pages/Dashboard";
 import Home from "./pages/Home";
-import Pipeline from "./pages/Pipeline";
+import Dashboard from "./pages/dashboard/Dashboard";
+import Pipeline from "./pages/pipeline/Pipeline";
 
 const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 

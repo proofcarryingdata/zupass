@@ -19,7 +19,7 @@ import {
   getAllHoneycombLinkForPipeline,
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
-} from "../helpers/util";
+} from "../../helpers/util";
 import { LatestAtomsSection } from "./LatestAtomsSection";
 import { LoadSummarySection } from "./LoadSummarySection";
 

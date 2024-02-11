@@ -13,11 +13,9 @@ import { GIContext } from "../helpers/Context";
  */
 export function Header({
   user,
-  includeLinkToDashboard,
   stytchClient
 }: {
   user?: GenericIssuanceSelfResult;
-  includeLinkToDashboard?: boolean;
   stytchClient?: ReturnType<typeof useStytch>;
 }): ReactNode {
   const leftElements: ReactNode[] = [];

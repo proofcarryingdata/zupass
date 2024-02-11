@@ -1,13 +1,13 @@
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useState } from "react";
-import CSVPipelineBuilder from "../components/CSVPipelineBuilder";
 import { PageContent } from "../components/Core";
 import { Header } from "../components/Header";
-import LemonadePipelineBuilder from "../components/LemonadePipelineBuilder";
 import { pipelineDetailPagePath } from "../components/PipelineDetails";
-import PretixPipelineBuilder from "../components/PretixPipelineBuilder";
-import RawJSONPipelineBuilder from "../components/RawJSONPipelineBuilder";
+import CSVPipelineBuilder from "../components/pipeline-builders/CSVPipelineBuilder";
+import LemonadePipelineBuilder from "../components/pipeline-builders/LemonadePipelineBuilder";
+import PretixPipelineBuilder from "../components/pipeline-builders/PretixPipelineBuilder";
+import RawJSONPipelineBuilder from "../components/pipeline-builders/RawJSONPipelineBuilder";
 import { savePipeline } from "../helpers/Mutations";
 import { useFetchSelf } from "../helpers/useFetchSelf";
 import { useJWT } from "../helpers/userHooks";

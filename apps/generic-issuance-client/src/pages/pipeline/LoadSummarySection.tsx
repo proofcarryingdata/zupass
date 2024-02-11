@@ -3,9 +3,9 @@ import { PipelineLoadSummary, PipelineLog } from "@pcd/passport-interface";
 import moment from "moment";
 import { ReactNode } from "react";
 import styled from "styled-components";
-import { Table } from "../components/Core";
-import { pipelineIcon } from "../components/PipelineDetails";
-import { timeAgo } from "../helpers/util";
+import { Table } from "../../components/Core";
+import { pipelineIcon } from "../../components/PipelineDetails";
+import { timeAgo } from "../../helpers/util";
 
 /**
  * Renders information about the last time this pipeline was run by Podbox.

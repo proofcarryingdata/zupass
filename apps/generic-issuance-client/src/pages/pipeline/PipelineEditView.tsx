@@ -6,9 +6,9 @@ import {
 } from "@pcd/passport-interface";
 import { sleep } from "@pcd/util";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
-import { deletePipeline, savePipeline } from "../helpers/Mutations";
-import { useJWT } from "../helpers/userHooks";
-import { stringifyAndFormat } from "../helpers/util";
+import { deletePipeline, savePipeline } from "../../helpers/Mutations";
+import { useJWT } from "../../helpers/userHooks";
+import { stringifyAndFormat } from "../../helpers/util";
 
 export function PipelineEditView({
   user,

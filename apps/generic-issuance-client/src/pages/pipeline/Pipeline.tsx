@@ -4,15 +4,15 @@ import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
-import { GIContext } from "../helpers/Context";
-import { useFetchPipeline } from "../helpers/useFetchPipeline";
-import { useFetchPipelineInfo } from "../helpers/useFetchPipelineInfo";
-import { useFetchSelf } from "../helpers/useFetchSelf";
-import { useJWT } from "../helpers/userHooks";
-import { PipelineDetailView } from "../sections/PipelineDetailView";
-import { PipelineEditView } from "../sections/PipelineEditView";
+import { PageContent } from "../../components/Core";
+import { Header } from "../../components/Header";
+import { GIContext } from "../../helpers/Context";
+import { useFetchPipeline } from "../../helpers/useFetchPipeline";
+import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
+import { useFetchSelf } from "../../helpers/useFetchSelf";
+import { useJWT } from "../../helpers/userHooks";
+import { PipelineDetailView } from "./PipelineDetailView";
+import { PipelineEditView } from "./PipelineEditView";
 
 export default function Pipeline(): ReactNode {
   const stytchClient = useStytch();
@@ -40,11 +40,7 @@ export default function Pipeline(): ReactNode {
   if (maybeRequestError) {
     return (
       <>
-        <Header
-          includeLinkToDashboard
-          user={userFromServer}
-          stytchClient={stytchClient}
-        />
+        <Header user={userFromServer} stytchClient={stytchClient} />
         <PageContent>
           <h2>❌ Load Error</h2>
           {maybeRequestError}
@@ -61,11 +57,7 @@ export default function Pipeline(): ReactNode {
   ) {
     return (
       <>
-        <Header
-          includeLinkToDashboard
-          user={userFromServer}
-          stytchClient={stytchClient}
-        />
+        <Header user={userFromServer} stytchClient={stytchClient} />
         <PageContent>
           <Spinner />
         </PageContent>
@@ -78,11 +70,7 @@ export default function Pipeline(): ReactNode {
 
   return (
     <>
-      <Header
-        includeLinkToDashboard
-        user={userFromServer}
-        stytchClient={stytchClient}
-      />
+      <Header user={userFromServer} stytchClient={stytchClient} />
       {ownedBySomeoneElse && (
         <WarningSection>
           <b>WARNING!</b> You are not the owner of this pipeline, but you can

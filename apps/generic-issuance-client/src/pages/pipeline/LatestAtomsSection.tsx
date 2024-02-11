@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { Table } from "../components/Core";
+import { Table } from "../../components/Core";
 
 /**
  * Used to display the latest data that a given pipeline loaded during
