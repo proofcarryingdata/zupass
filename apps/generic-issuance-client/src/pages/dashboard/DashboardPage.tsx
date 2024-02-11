@@ -14,7 +14,7 @@ import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect, useMemo } from "react";
 import { Link as ReactLink } from "react-router-dom";
 import { PageContent } from "../../components/Core";
-import { Header } from "../../components/Header";
+import { Header } from "../../components/header/Header";
 import { GIContext } from "../../helpers/Context";
 import { useFetchAllPipelines } from "../../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
@@ -27,7 +27,7 @@ import {
 import { CreatePipelineButtonSection } from "./CreatePipelineButtonSection";
 import { PipelineTable } from "./PipelineTable";
 
-export default function Dashboard(): ReactNode {
+export default function DashboardPage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const ctx = useContext(GIContext);

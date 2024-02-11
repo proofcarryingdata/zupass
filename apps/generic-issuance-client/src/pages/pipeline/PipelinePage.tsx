@@ -5,7 +5,7 @@ import { ReactNode, useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
-import { Header } from "../../components/Header";
+import { Header } from "../../components/header/Header";
 import { GIContext } from "../../helpers/Context";
 import { useFetchPipeline } from "../../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
@@ -13,8 +13,9 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
 import { PipelineEditSection } from "./PipelineEditSection";
+import { PipelineTitleButton } from "./PipelineTitleButton";
 
-export default function Pipeline(): ReactNode {
+export default function PipelinePage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const params = useParams();
@@ -70,7 +71,14 @@ export default function Pipeline(): ReactNode {
 
   return (
     <>
-      <Header user={userFromServer} stytchClient={stytchClient} />
+      <Header
+        user={userFromServer}
+        stytchClient={stytchClient}
+        titleContent={(): ReactNode => (
+          <PipelineTitleButton pipeline={pipelineFromServer?.value} />
+        )}
+      />
+
       {ownedBySomeoneElse && (
         <WarningSection>
           <b>WARNING!</b> You are not the owner of this pipeline, but you can

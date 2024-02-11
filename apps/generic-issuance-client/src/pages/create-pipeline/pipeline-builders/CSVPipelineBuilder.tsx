@@ -3,7 +3,7 @@ import { ReactNode, useState } from "react";
 import {
   SAMPLE_CSV_DATA,
   SAMPLE_CSV_FEED_OPTIONS
-} from "../../pages/SamplePipelines";
+} from "../../SamplePipelines";
 import { FeedOptions } from "./FeedOptions";
 
 interface CSVPipelineBuilderProps {

@@ -2,7 +2,7 @@ import { Link } from "@chakra-ui/react";
 import { ReactNode } from "react";
 import { Link as ReactLink } from "react-router-dom";
 import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
+import { Header } from "../components/header/Header";
 
 export function NotFound(): ReactNode {
   return (

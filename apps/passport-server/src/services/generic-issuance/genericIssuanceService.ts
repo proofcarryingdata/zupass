@@ -447,7 +447,8 @@ export class GenericIssuanceService {
           url: f.feedUrl
         })),
         latestAtoms: latestAtoms,
-        loadSummary: summary
+        lastLoad: summary,
+        ownerEmail: user.email
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: summary });

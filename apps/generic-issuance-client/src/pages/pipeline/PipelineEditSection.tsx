@@ -1,4 +1,4 @@
-import { Box, Button, Stack } from "@chakra-ui/react";
+import { Box, Button, HStack, Stack } from "@chakra-ui/react";
 import { Editor } from "@monaco-editor/react";
 import {
   GenericIssuanceSelfResponseValue,
@@ -49,6 +49,17 @@ export function PipelineEditSection({
     setTextareaValue(value);
   }, []);
 
+  const onUndoClick = useCallback(async () => {
+    if (
+      pipeline &&
+      confirm(
+        "are you sure you want to undo these changes without saving them?"
+      )
+    ) {
+      setTextareaValue(stringifyAndFormat(pipeline));
+    }
+  }, [pipeline]);
+
   const onSaveClick = useCallback(async () => {
     if (userJWT) {
       setActionInProgress(`Updating pipeline '${pipeline.id}'...`);
@@ -88,32 +99,35 @@ export function PipelineEditSection({
       </Box>
       <p>
         {(!ownedBySomeoneElse || isAdminView) && (
-          <>
+          <HStack>
             {hasEdits && (
               <Button
                 size="sm"
-                disabled={
+                isDisabled={
                   !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
                 }
                 onClick={onSaveClick}
               >
-                {actionInProgress ? "Saving..." : "Save changes"}
+                {actionInProgress ? "Saving..." : "Save Changes"}
               </Button>
             )}
             {!hasEdits && (
               <Button size="sm" isDisabled={true}>
-                No Changes
+                Save Changes
               </Button>
             )}
             <Button
               size="sm"
               colorScheme="red"
-              disabled={ownedBySomeoneElse && !isAdminView}
+              isDisabled={ownedBySomeoneElse && !isAdminView}
               onClick={onDeleteClick}
             >
-              Delete pipeline
+              Delete Pipeline
             </Button>
-          </>
+            <Button onClick={onUndoClick} size="sm" isDisabled={!hasEdits}>
+              Reset Changes
+            </Button>
+          </HStack>
         )}
       </p>
     </Stack>

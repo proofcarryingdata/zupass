@@ -1,11 +1,14 @@
 import { Link } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
+  PipelineDefinition,
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { Link as ReactLink } from "react-router-dom";
-import { timeAgo } from "../helpers/util";
+import { timeAgo } from "../../helpers/util";
+
+export type PipelineStateDisplay = "starting" | "loaded" | "error" | "paused";
 
 export function pipelineStatus(
   latestRun: PipelineLoadSummary | undefined
@@ -21,9 +24,7 @@ export function pipelineStatus(
   return "Error";
 }
 
-export function pipelineIconFromStr(
-  str: "starting" | "loaded" | "error" | "paused"
-): ReactNode {
+export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
   if (str === "paused") {
     return "⏸️";
   }
@@ -50,6 +51,31 @@ export function pipelineIcon(
   }
 
   return "❌";
+}
+
+export const NAME_CUTOFF_LENGTH = 16;
+export const PLACEHOLDER_NAME = "untitled";
+
+export function pipelineDisplayNameStr(
+  pipeline?: PipelineDefinition
+): string | undefined {
+  if (!pipeline || !pipeline.options.name) {
+    return PLACEHOLDER_NAME;
+  }
+  return pipeline.options.name.substring(0, NAME_CUTOFF_LENGTH);
+}
+
+export function pipelineDisplayNameSpan(
+  pipeline?: PipelineDefinition
+): ReactNode {
+  const displayName = pipelineDisplayNameStr(pipeline);
+  const hasName = !!pipeline?.options?.name;
+
+  if (hasName) {
+    return <span>{displayName}</span>;
+  }
+
+  return <span style={{ color: "rgba(0,0,0,0.1)" }}>{displayName}</span>;
 }
 
 export function pipelineDetailPagePath(pipelineId: string): string {

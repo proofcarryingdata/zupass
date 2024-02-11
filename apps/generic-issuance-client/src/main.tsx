@@ -8,18 +8,18 @@ import { GlobalStyle } from "./components/GlobalStyle";
 import { RefreshSession } from "./components/RefreshSession";
 import { GIContext, GIContextState } from "./helpers/Context";
 import { NotFound } from "./pages/404";
-import CreatePipeline from "./pages/CreatePipeline";
 import Home from "./pages/Home";
-import Dashboard from "./pages/dashboard/Dashboard";
-import Pipeline from "./pages/pipeline/Pipeline";
+import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import PipelinePage from "./pages/pipeline/PipelinePage";
 
 const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 
 const router = createHashRouter([
   { path: "/", element: <Home /> },
-  { path: "/dashboard", element: <Dashboard /> },
-  { path: "/create-pipeline", element: <CreatePipeline /> },
-  { path: "/pipelines/:id", element: <Pipeline /> },
+  { path: "/dashboard", element: <DashboardPage /> },
+  { path: "/create-pipeline", element: <CreatePipelinePage /> },
+  { path: "/pipelines/:id", element: <PipelinePage /> },
   { path: "*", element: <NotFound /> }
 ]);
 

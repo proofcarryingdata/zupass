@@ -1,19 +1,19 @@
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useState } from "react";
-import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
-import { pipelineDetailPagePath } from "../components/PipelineDetails";
-import CSVPipelineBuilder from "../components/pipeline-builders/CSVPipelineBuilder";
-import LemonadePipelineBuilder from "../components/pipeline-builders/LemonadePipelineBuilder";
-import PretixPipelineBuilder from "../components/pipeline-builders/PretixPipelineBuilder";
-import RawJSONPipelineBuilder from "../components/pipeline-builders/RawJSONPipelineBuilder";
-import { savePipeline } from "../helpers/Mutations";
-import { useFetchSelf } from "../helpers/useFetchSelf";
-import { useJWT } from "../helpers/userHooks";
-import { SAMPLE_LEMONADE_PIPELINE } from "./SamplePipelines";
+import { PageContent } from "../../components/Core";
+import { Header } from "../../components/header/Header";
+import { pipelineDetailPagePath } from "../../components/pipeline-display/PipelineDetails";
+import { savePipeline } from "../../helpers/Mutations";
+import { useFetchSelf } from "../../helpers/useFetchSelf";
+import { useJWT } from "../../helpers/userHooks";
+import { SAMPLE_LEMONADE_PIPELINE } from "../SamplePipelines";
+import CSVPipelineBuilder from "./pipeline-builders/CSVPipelineBuilder";
+import LemonadePipelineBuilder from "./pipeline-builders/LemonadePipelineBuilder";
+import PretixPipelineBuilder from "./pipeline-builders/PretixPipelineBuilder";
+import RawJSONPipelineBuilder from "./pipeline-builders/RawJSONPipelineBuilder";
 
-export default function CreatePipeline(): ReactNode {
+export default function CreatePipelinePage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const user = useFetchSelf();

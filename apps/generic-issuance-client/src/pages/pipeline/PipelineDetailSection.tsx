@@ -4,9 +4,9 @@ import {
   AccordionButton,
   AccordionItem,
   AccordionPanel,
-  Heading,
   Link,
   ListItem,
+  OrderedList,
   UnorderedList
 } from "@chakra-ui/react";
 import {
@@ -20,6 +20,7 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
+import { PipelineTable } from "../dashboard/PipelineTable";
 import { LatestAtomsSection } from "./LatestAtomsSection";
 import { LoadSummarySection } from "./LoadSummarySection";
 
@@ -33,44 +34,52 @@ export function PipelineDetailSection({
   isAdminView: boolean;
 }): ReactNode {
   return (
-    <Accordion>
+    <Accordion defaultIndex={0}>
       <AccordionItem>
         <h2>
           <AccordionButton>Pipeline Info</AccordionButton>
         </h2>
 
         <AccordionPanel>
-          <Heading size="md">
-            {pipelineFromServer.options.name ? (
-              pipelineFromServer.options.name
-            ) : (
-              <span>'no name'</span>
-            )}
-          </Heading>
-          {pipelineInfo.feeds && (
-            <>
-              <Heading size="lg">Feeds</Heading>
-              <ol>
-                {pipelineInfo.feeds?.map((feed) => (
-                  <li key={feed.url}>
-                    <b>{feed.name}</b>
-                    {" - "}
-                    <a
-                      href={`${
-                        process.env.PASSPORT_CLIENT_URL
-                      }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
-                    >
-                      Subscription link
-                    </a>
-                    {" - "}
-                    <a href={feed.url}>Feed Link</a>{" "}
-                  </li>
-                ))}
-              </ol>
-            </>
-          )}
+          <PipelineTable
+            entries={[
+              {
+                extraInfo: pipelineInfo,
+                pipeline: pipelineFromServer
+              }
+            ]}
+            isAdminView={false}
+          />
         </AccordionPanel>
       </AccordionItem>
+
+      {pipelineInfo.feeds && (
+        <AccordionItem>
+          <AccordionButton>Feed Info</AccordionButton>
+          <AccordionPanel>
+            <OrderedList>
+              {pipelineInfo.feeds.map((feed) => (
+                <ListItem key={feed.url}>
+                  <b>{feed.name}</b>
+                  {" - "}
+                  <Link
+                    href={`${
+                      process.env.PASSPORT_CLIENT_URL
+                    }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
+                  >
+                    Subscription link <ExternalLinkIcon />
+                  </Link>
+                  {" - "}
+                  <Link href={feed.url}>
+                    Feed Link <ExternalLinkIcon />
+                  </Link>{" "}
+                </ListItem>
+              ))}
+            </OrderedList>
+          </AccordionPanel>
+        </AccordionItem>
+      )}
+
       {isAdminView && (
         <AccordionItem>
           <AccordionButton>Admin Details</AccordionButton>
@@ -107,7 +116,7 @@ export function PipelineDetailSection({
       <AccordionItem>
         <AccordionButton>Last Load</AccordionButton>
         <AccordionPanel>
-          <LoadSummarySection lastLoad={pipelineInfo.loadSummary} />
+          <LoadSummarySection lastLoad={pipelineInfo.lastLoad} />
         </AccordionPanel>
       </AccordionItem>
       <AccordionItem>

@@ -1,10 +1,10 @@
-import { Button, FormControl, FormLabel, Link, Switch } from "@chakra-ui/react";
+import { Button, FormControl, FormLabel, Switch } from "@chakra-ui/react";
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useContext } from "react";
-import { Link as ReactLink } from "react-router-dom";
 import styled from "styled-components";
-import { GIContext } from "../helpers/Context";
+import { GIContext } from "../../helpers/Context";
+import { PodboxButton } from "./PodboxButton";
 
 /**
  * A header that displays information about the logged-in user
@@ -13,10 +13,12 @@ import { GIContext } from "../helpers/Context";
  */
 export function Header({
   user,
-  stytchClient
+  stytchClient,
+  titleContent
 }: {
   user?: GenericIssuanceSelfResult;
   stytchClient?: ReturnType<typeof useStytch>;
+  titleContent?: () => ReactNode;
 }): ReactNode {
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
@@ -25,12 +27,14 @@ export function Header({
     ctx.setState({ isAdminMode: !ctx.isAdminMode });
   }, [ctx]);
 
-  const title = <Title key="title" />;
+  const podbox = <PodboxButton key="title" />;
 
   if (!user?.value) {
     return (
       <HeaderContainer>
-        <LeftHalf>{title}</LeftHalf>
+        <LeftHalf>
+          {podbox} {titleContent?.()}
+        </LeftHalf>
         <RightHalf>
           {/* to prevent page reflow on data load */}
           <Button style={{ visibility: "hidden" }}>...</Button>
@@ -39,7 +43,11 @@ export function Header({
     );
   }
 
-  leftElements.push(title);
+  leftElements.push(podbox);
+  const extraTitleContent = titleContent?.();
+  if (extraTitleContent) {
+    leftElements.push(<span key="extra-title">{extraTitleContent}</span>);
+  }
 
   if (user.value.isAdmin) {
     rightElements.push(
@@ -117,13 +125,3 @@ export const RightHalf = styled.div`
   align-items: center;
   gap: 16px;
 `;
-
-export const Title = (): ReactNode => (
-  <Link as={ReactLink} to="/dashboard">
-    <Button>
-      <span style={{ fontSize: "20pt" }}>📦</span>
-      &nbsp; &nbsp;
-      <span>Podbox</span>
-    </Button>
-  </Link>
-);

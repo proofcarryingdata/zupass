@@ -8,7 +8,7 @@ export function CreatePipelineButtonSection(): ReactNode {
       <Stack overflow="hidden" padding={4} gap={4}>
         <Box display="inline-block">
           <Box float="right">
-            <Link as={ReactLink} href="/create-pipeline">
+            <Link as={ReactLink} to="/create-pipeline">
               <Button colorScheme="green" size="sm">
                 Create Pipeline
               </Button>

@@ -30,7 +30,7 @@ import {
   pipelineIconFromStr,
   pipelineLastEdit,
   pipelineLink
-} from "../../components/PipelineDetails";
+} from "../../components/pipeline-display/PipelineDetails";
 import {
   getAllHoneycombLinkForPipeline,
   getLoadTraceHoneycombLinkForPipeline,

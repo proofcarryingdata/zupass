@@ -2,7 +2,7 @@ import { useStytch } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
+import { Header } from "../components/header/Header";
 import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "../helpers/userHooks";
 
