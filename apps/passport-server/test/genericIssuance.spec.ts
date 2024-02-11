@@ -31,16 +31,17 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ONE_SECOND_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
+import { rest } from "msw";
 import { SetupServer, setupServer } from "msw/node";
-import { LemonadeOAuthCredentials } from "../src/apis/lemonade/auth";
-import { ILemonadeAPI, LemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
+import urljoin from "url-join";
+import { ILemonadeAPI, getLemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
@@ -62,6 +63,7 @@ import {
   getMockLemonadeHandlers,
   loadApolloErrorMessages
 } from "./lemonade/MockLemonadeServer";
+import { TestTokenSource } from "./lemonade/TestTokenSource";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
 import { getGenericMockPretixAPIHandlers } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
@@ -168,14 +170,13 @@ describe("Generic Issuance", function () {
     `${EdgeCityDenverBouncer.first_name} ${EdgeCityDenverBouncer.last_name}`
   );
 
-  const lemonadeAPI: ILemonadeAPI = new LemonadeAPI({
-    // In the real API, the authorization token is an OAuth token, which maps
-    // back to the client ID. For testing purposes, we just send the client ID
-    // as the token, to avoid having to mock out the whole OAuth flow.
-    async getToken(credentials: LemonadeOAuthCredentials): Promise<string> {
-      return credentials.oauthClientId;
-    }
-  });
+  const lemonadeTokenSource = new TestTokenSource();
+  const lemonadeAPI: ILemonadeAPI = getLemonadeAPI(
+    // LemonadeAPI takes an optional `AuthTokenSource` as a parameter. This
+    // allows us to mock out the generation of tokens that would otherwise be
+    // done by making OAuth requests.
+    lemonadeTokenSource
+  );
   const lemonadeBackendUrl = "http://localhost";
   const lemonadePipelineDefinition: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
@@ -851,6 +852,88 @@ t2,i1`,
       expect(emptyEditorsDefinition.editorUserIds).to.be.empty;
     }
   });
+
+  step(
+    "Lemonade API will request new token when old one expires",
+    async function () {
+      // Because we initialized the LemonadeAPI with a TestTokenSource, we can
+      // track when LemonadeAPI refreshes its token. TestTokenSource returns an
+      // expiry time of Date.now() + ONE_DAY_MS, so advancing the clock beyond
+      // one day should trigger a new token refresh.
+      lemonadeTokenSource.called = 0;
+
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        {
+          oauthClientId: lemonadeOAuthClientId,
+          oauthAudience: "new-credentials",
+          oauthClientSecret: "new-credentials",
+          oauthServerUrl: "new-credentials"
+        },
+        EdgeCityDenver._id
+      );
+
+      expect(lemonadeTokenSource.called).to.eq(1);
+
+      MockDate.set(Date.now() + ONE_DAY_MS + 1);
+
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        {
+          oauthClientId: lemonadeOAuthClientId,
+          oauthAudience: "new-credentials",
+          oauthClientSecret: "new-credentials",
+          oauthServerUrl: "new-credentials"
+        },
+        EdgeCityDenver._id
+      );
+
+      expect(lemonadeTokenSource.called).to.eq(2);
+
+      // Since no time has elapsed since the last request, this request will
+      // not require a new token.
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        {
+          oauthClientId: lemonadeOAuthClientId,
+          oauthAudience: "new-credentials",
+          oauthClientSecret: "new-credentials",
+          oauthServerUrl: "new-credentials"
+        },
+        EdgeCityDenver._id
+      );
+
+      expect(lemonadeTokenSource.called).to.eq(2);
+
+      // Simulate an authorization failure, which will cause a new token to be
+      // requested.
+      mockServer.use(
+        rest.post(
+          urljoin(lemonadeBackendUrl, "/event/:eventId/export/tickets"),
+          (req, res, ctx) => {
+            // Calling .once() means that only the first request will be
+            // handled. So, the first time we request tickets, we get a 401
+            // and this will cause LemonadeAPI to get a new token. The next
+            // request will go to the default mock handler, which will succeed.
+            return res.once(ctx.status(401, "Unauthorized"));
+          }
+        )
+      );
+
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        {
+          oauthClientId: lemonadeOAuthClientId,
+          oauthAudience: "new-credentials",
+          oauthClientSecret: "new-credentials",
+          oauthServerUrl: "new-credentials"
+        },
+        EdgeCityDenver._id
+      );
+      // We should have seen one more token request
+      expect(lemonadeTokenSource.called).to.eq(3);
+    }
+  );
 
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);

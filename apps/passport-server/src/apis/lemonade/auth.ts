@@ -1,5 +1,5 @@
 import stringify from "fast-json-stable-stringify";
-import { Client, Issuer, TokenSet } from "openid-client";
+import { Client, Issuer } from "openid-client";
 
 /**
  * Credentials used for authenticating with Lemonade.
@@ -17,22 +17,28 @@ export interface LemonadeOAuthCredentials {
 }
 
 /**
+ * An authentication token for Lemonade back-end requests.
+ */
+export interface AuthToken {
+  expires_at_ms: number; // Milliseconds since 1/1/1970
+  token: string;
+}
+
+/**
  * To enable different auth token generation strategies in tests, provide an
  * interface that allows for swappable token generators.
  */
 export interface AuthTokenSource {
-  getToken(credentials: LemonadeOAuthCredentials): Promise<string>;
+  getToken(credentials: LemonadeOAuthCredentials): Promise<AuthToken>;
 }
 
 /**
- * In the OAuth token manager, we want to cache certain objects between calls,
- * as they contain reusable tokens or reusable OAuth data that can be used to
- * regenerate expired tokens.
+ * The OAuth issuer object requires a network request to initialize. In order
+ * to avoid making this request unnecessarily, we cache the initialized object.
  */
-interface CachedTokenIssuance {
+interface CachedOAuthClient {
   issuer: Issuer;
   client: Client;
-  tokenSet: TokenSet;
 }
 
 /**
@@ -41,67 +47,39 @@ interface CachedTokenIssuance {
 export class OAuthTokenManager implements AuthTokenSource {
   // Cache TokenSet and other OAuth data
   // Key is a string containing the credentials and backend URL
-  private cache: Map<string, CachedTokenIssuance>;
+  private clientCache: Map<string, CachedOAuthClient>;
+  private requestCache: Map<string, Promise<AuthToken>>;
 
   public constructor() {
-    this.cache = new Map();
+    this.clientCache = new Map();
+    this.requestCache = new Map();
   }
 
-  /**
-   * Turn OAuth credentials into a string. Doing it this way avoids possible
-   * issues with JSON stringifying object keys in different orders.
-   */
-  private stringifyCredentials(credentials: LemonadeOAuthCredentials): string {
-    return stringify(credentials);
-  }
-
-  /**
-   * Return a previously-fetched token, if it has not yet expired.
-   * If the previously-fetched token has expired, or no token has been fetched
-   * yet, fetch a new one.
-   *
-   * This call may make third-party server requests and so may be slow.
-   */
-  public async getToken(
+  private async getNewToken(
     credentials: LemonadeOAuthCredentials
-  ): Promise<string> {
-    if (
-      !credentials.oauthAudience ||
-      !credentials.oauthClientId ||
-      !credentials.oauthClientSecret ||
-      !credentials.oauthServerUrl
-    ) {
-      throw new Error("Invalid OAuth credentials");
-    }
-
+  ): Promise<AuthToken> {
     let issuer: Issuer | undefined;
     let client: Client | undefined;
 
-    const cacheKey = this.stringifyCredentials(credentials);
-    if (this.cache.has(cacheKey)) {
-      const cached = this.cache.get(cacheKey) as CachedTokenIssuance;
+    const cacheKey = stringify(credentials);
+
+    // Creating the client object involves making a "discovery" network request
+    // We can avoid doing this by caching the client.
+    if (this.clientCache.has(cacheKey)) {
+      const cached = this.clientCache.get(cacheKey) as CachedOAuthClient;
       issuer = cached.issuer;
       client = cached.client;
-      if (
-        cached.tokenSet.access_token &&
-        cached.tokenSet.expires_at &&
-        cached.tokenSet.expires_at * 1000 < Date.now()
-      ) {
-        // This is the happy path, and occurs most often
-        return cached.tokenSet.access_token as string;
-      }
     }
 
     const { oauthServerUrl, oauthClientId, oauthAudience, oauthClientSecret } =
       credentials;
 
-    // We probably had a cached Issuer object, but if not then create a new one
+    // If we do not already have an issuer object, create a new one
     if (!issuer) {
       issuer = await Issuer.discover(oauthServerUrl);
     }
 
-    // We probably have a cached OAuth client object, but if not then create a
-    // new one
+    // If we do not already have a client object, create a new one
     if (!client) {
       client = new issuer.Client({
         client_id: oauthClientId,
@@ -121,9 +99,50 @@ export class OAuthTokenManager implements AuthTokenSource {
       throw new Error("Access token is not defined");
     }
 
-    // Cache the TokenSet, Issuer, and Client
-    this.cache.set(cacheKey, { tokenSet, issuer, client });
+    if (!tokenSet.expires_at) {
+      throw new Error("Token has no expiry timestamp");
+    }
 
-    return tokenSet.access_token;
+    // Cache the Issuer and Client objects
+    this.clientCache.set(cacheKey, { issuer, client });
+
+    return {
+      token: tokenSet.access_token,
+      expires_at_ms: tokenSet.expires_at * 1000
+    };
+  }
+
+  /**
+   * Fetches a new AuthToken. If there is currently an active request for this
+   * set of credentials, return the promise for that request, otherwise create
+   * a new request.
+   *
+   * This prevents concurrent requests for new tokens for the same credentials.
+   */
+  public getToken(credentials: LemonadeOAuthCredentials): Promise<AuthToken> {
+    if (
+      !credentials.oauthAudience ||
+      !credentials.oauthClientId ||
+      !credentials.oauthClientSecret ||
+      !credentials.oauthServerUrl
+    ) {
+      throw new Error("Invalid OAuth credentials");
+    }
+
+    const credentialString = stringify(credentials);
+    // Will retrieve a cached promise, if one exists
+    let request = this.requestCache.get(credentialString);
+
+    if (!request) {
+      // Create a new request
+      request = this.getNewToken(credentials);
+      // Cache the request
+      this.requestCache.set(credentialString, request);
+      // When the request is complete, remove it from the cache, allowing new
+      // requests to be made
+      request.finally(() => this.requestCache.delete(credentialString));
+    }
+
+    return request;
   }
 }

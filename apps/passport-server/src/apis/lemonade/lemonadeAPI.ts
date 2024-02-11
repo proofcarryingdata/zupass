@@ -1,7 +1,9 @@
 import { parse } from "csv-parse/sync";
+import stringify from "fast-json-stable-stringify";
 import urljoin from "url-join";
 import { instrumentedFetch } from "../fetch";
 import {
+  AuthToken,
   AuthTokenSource,
   LemonadeOAuthCredentials,
   OAuthTokenManager
@@ -55,13 +57,15 @@ export interface ILemonadeAPI {
  * shared between all pipelines. This means that account-specific credentials
  * must be passed in on each API call.
  */
-export class LemonadeAPI implements ILemonadeAPI {
+class LemonadeAPI implements ILemonadeAPI {
   private clients: Map<string, LemonadeGraphQLClient>;
   private tokenSource: AuthTokenSource;
+  private authTokens: Map<string, AuthToken>;
 
-  public constructor(tokenSource: AuthTokenSource | undefined) {
+  public constructor(tokenSource: AuthTokenSource) {
     this.clients = new Map();
-    this.tokenSource = tokenSource ?? new OAuthTokenManager();
+    this.tokenSource = tokenSource;
+    this.authTokens = new Map();
   }
 
   /**
@@ -71,7 +75,25 @@ export class LemonadeAPI implements ILemonadeAPI {
   private async getToken(
     credentials: LemonadeOAuthCredentials
   ): Promise<string> {
-    return await this.tokenSource.getToken(credentials);
+    const credentialString = stringify(credentials);
+    let token: AuthToken | undefined = this.authTokens.get(credentialString);
+
+    // If we do not have a cached token or the token has expired, get a new one
+    if (!token || token.expires_at_ms <= Date.now()) {
+      token = await this.tokenSource.getToken(credentials);
+      this.authTokens.set(credentialString, token);
+    }
+
+    return token.token;
+  }
+
+  /**
+   * If we get an authorization failure on a request to the Lemonade back-end,
+   * we should invalidate the token that was used.
+   */
+  private invalidateToken(credentials: LemonadeOAuthCredentials): void {
+    const credentialString = stringify(credentials);
+    this.authTokens.delete(credentialString);
   }
 
   /**
@@ -154,15 +176,28 @@ export class LemonadeAPI implements ILemonadeAPI {
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTicket[]> {
-    const token = await this.getToken(credentials);
+    let token = await this.getToken(credentials);
     const url = urljoin(backendUrl, "event", lemonadeEventId, "export/tickets");
-    const result = await instrumentedFetch(url, {
+    let result = await instrumentedFetch(url, {
       method: "POST",
       headers: {
         Authorization: `Bearer ${token}`,
         "Content-type": "text/csv"
       }
     });
+    if (result.status === 401) {
+      // If we received an authentication failure, try again once with a new
+      // token
+      this.invalidateToken(credentials);
+      token = await this.getToken(credentials);
+      result = await instrumentedFetch(url, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${token}`,
+          "Content-type": "text/csv"
+        }
+      });
+    }
     const csvText = await result.text();
     const parsed = parse(csvText, {
       columns: true
@@ -195,6 +230,12 @@ export class LemonadeAPI implements ILemonadeAPI {
   }
 }
 
-export function getLemonadeAPI(): ILemonadeAPI {
-  return new LemonadeAPI(undefined);
+/**
+ * Returns a Lemonade API object. If no AuthTokenSource is provided, use
+ * OAuthTokenManager as the default.
+ */
+export function getLemonadeAPI(
+  tokenSource: AuthTokenSource = new OAuthTokenManager()
+): ILemonadeAPI {
+  return new LemonadeAPI(tokenSource);
 }

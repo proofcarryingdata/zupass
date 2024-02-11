@@ -1143,8 +1143,6 @@ export class GenericIssuanceService {
       timeCreated: new Date().toISOString(),
       timeUpdated: new Date().toISOString(),
       editorUserIds: [],
-      timeCreated: new Date().toISOString(),
-      timeUpdated: new Date().toISOString(),
       options: {
         feedOptions: {
           feedDescription: "lemonade test tickets",
