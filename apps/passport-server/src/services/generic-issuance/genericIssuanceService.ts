@@ -10,6 +10,7 @@ import {
   GenericIssuanceSendEmailResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
+  LemonadePipelineDefinition,
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineDefinitionSchema,
@@ -128,7 +129,8 @@ export class GenericIssuanceService {
 
   public async start(): Promise<void> {
     try {
-      await this.maybeInsertLocalDevTestPipeline();
+      await this.maybeInsertLocalDevTestPretixPipeline();
+      await this.maybeInsertLocalDevTestLemonadePipeline();
       await this.maybeSetupAdmins();
       await this.startPipelinesFromDefinitions();
       this.schedulePipelineLoadLoop();
@@ -1004,25 +1006,31 @@ export class GenericIssuanceService {
    * in local development, set the `TEST_PRETIX_KEY` and `TEST_PRETIX_ORG_URL` env
    * variables to the ones that Ivan shares with you to set up a Pretix pipeline.
    */
-  public async maybeInsertLocalDevTestPipeline(): Promise<void> {
+  public async maybeInsertLocalDevTestPretixPipeline(): Promise<void> {
     if (process.env.NODE_ENV === "production") {
       return;
     }
 
-    logger("[INIT] attempting to create test pipeline data");
+    logger("[INIT] attempting to create test pretix pipeline data");
 
     const testPretixAPIKey = process.env.TEST_PRETIX_KEY;
     const testPretixOrgUrl = process.env.TEST_PRETIX_ORG_URL;
     const createTestPretixPipeline = process.env.CREATE_TEST_PIPELINE;
 
     if (!createTestPretixPipeline || !testPretixAPIKey || !testPretixOrgUrl) {
-      logger("[INIT] not creating test pipeline data - missing env vars");
+      logger(
+        "[INIT] not creating test pretix pipeline data - missing env vars"
+      );
       return;
     }
 
-    const existingPipelines = await this.definitionDB.loadPipelineDefinitions();
+    const existingPipelines = (
+      await this.definitionDB.loadPipelineDefinitions()
+    ).filter((pipeline) => pipeline.type === PipelineType.Pretix);
     if (existingPipelines.length !== 0) {
-      logger("[INIT] there's already a pipeline - not creating test pipeline");
+      logger(
+        "[INIT] there's already a pretix pipeline - not creating pretix test pipeline"
+      );
       return;
     }
 
@@ -1031,7 +1039,7 @@ export class GenericIssuanceService {
     await sqlQuery(
       this.context.dbPool,
       "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
-      [ownerUUID, "test@example.com", true]
+      [ownerUUID, "pretixowner@example.com", true]
     );
 
     const pretixDefinitionId = "3d6d4c8e-4228-423e-9b0a-33709aa1b468";
@@ -1077,6 +1085,104 @@ export class GenericIssuanceService {
     };
 
     await this.definitionDB.setDefinition(pretixDefinition);
+  }
+
+  /**
+   * in local development, set the `TEST_LEMONADE_OAUTH_*` and
+   * `TEST_LEMONADE_BACKEND_URL` env variables to the ones that Rob shares
+   * with you to set up a Lemonade pipeline.
+   */
+  public async maybeInsertLocalDevTestLemonadePipeline(): Promise<void> {
+    if (process.env.NODE_ENV === "production") {
+      return;
+    }
+
+    logger("[INIT] attempting to create lemonade test pipeline data");
+
+    // OAuth credentials
+    const testLemonadeOAuthClientId = process.env.TEST_LEMONADE_OAUTH_CLIENT_ID;
+    const testLemonadeOAuthClientSecret =
+      process.env.TEST_LEMONADE_OAUTH_CLIENT_SECRET;
+    const testLemonadeOAuthAudience = process.env.TEST_LEMONADE_OAUTH_AUDIENCE;
+    const testLemonadeOAuthServerUrl =
+      process.env.TEST_LEMONADE_OAUTH_SERVER_URL;
+    // Backend (GraphQL) URL
+    const testLemonadeBackendUrl = process.env.TEST_LEMONADE_BACKEND_URL;
+
+    const createTestPipeline = process.env.CREATE_TEST_PIPELINE;
+
+    if (
+      !createTestPipeline ||
+      !testLemonadeBackendUrl ||
+      !testLemonadeOAuthAudience ||
+      !testLemonadeOAuthClientId ||
+      !testLemonadeOAuthClientSecret ||
+      !testLemonadeOAuthServerUrl
+    ) {
+      logger(
+        "[INIT] not creating test lemonade pipeline data - missing env vars"
+      );
+      return;
+    }
+
+    const existingPipelines = (
+      await this.definitionDB.loadPipelineDefinitions()
+    ).filter((pipeline) => pipeline.type === PipelineType.Lemonade);
+    if (existingPipelines.length !== 0) {
+      logger(
+        "[INIT] there's already a lemonade pipeline - not creating test lemonade pipeline"
+      );
+      return;
+    }
+
+    const ownerUUID = randomUUID();
+
+    await sqlQuery(
+      this.context.dbPool,
+      "INSERT INTO generic_issuance_users VALUES($1, $2, $3)",
+      [ownerUUID, "lemonadeowner@example.com", true]
+    );
+
+    const lemonadeDefinitionId = "ce64b1b6-06b3-4534-9052-747750daeb64";
+
+    const lemonadeDefinition: LemonadePipelineDefinition = {
+      ownerUserId: ownerUUID,
+      id: lemonadeDefinitionId,
+      timeCreated: new Date().toISOString(),
+      timeUpdated: new Date().toISOString(),
+      editorUserIds: [],
+      options: {
+        feedOptions: {
+          feedDescription: "lemonade test tickets",
+          feedDisplayName: "lemonade",
+          feedFolder: "generic/lemonade",
+          feedId: "0"
+        },
+        events: [
+          {
+            genericIssuanceEventId: randomUUID(),
+            externalId: "65c1faf41770460a0bb9aa1e",
+            name: "Lemonade staging",
+            ticketTypes: [
+              {
+                externalId: "65c1faf41770460a0bb9aa1f",
+                name: "GA",
+                genericIssuanceProductId: randomUUID(),
+                isSuperUser: true
+              }
+            ]
+          }
+        ],
+        backendUrl: testLemonadeBackendUrl,
+        oauthAudience: testLemonadeOAuthAudience,
+        oauthClientId: testLemonadeOAuthClientId,
+        oauthClientSecret: testLemonadeOAuthClientSecret,
+        oauthServerUrl: testLemonadeOAuthServerUrl
+      },
+      type: PipelineType.Lemonade
+    };
+
+    await this.definitionDB.setDefinition(lemonadeDefinition);
   }
 }
 
