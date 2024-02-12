@@ -31,7 +31,6 @@ export default function DashboardPage(): ReactNode {
   const ctx = useContext(GIContext);
   const pipelinesFromServer = useFetchAllPipelines();
   const user = useFetchSelf();
-
   const isAdminView = !!(ctx.isAdminMode && user?.value?.isAdmin);
 
   const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {

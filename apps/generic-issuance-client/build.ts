@@ -18,7 +18,19 @@ const genericIssuanceClientAppOpts: BuildOptions = {
     ),
     "process.env.PASSPORT_CLIENT_URL": JSON.stringify(
       process.env.PASSPORT_CLIENT_URL || "http://localhost:3000"
-    )
+    ),
+    ...(process.env.ROLLBAR_TOKEN !== undefined
+      ? {
+          "process.env.ROLLBAR_TOKEN": JSON.stringify(process.env.ROLLBAR_TOKEN)
+        }
+      : {}),
+    ...(process.env.ROLLBAR_ENV_NAME !== undefined
+      ? {
+          "process.env.ROLLBAR_ENV_NAME": JSON.stringify(
+            process.env.ROLLBAR_ENV_NAME
+          )
+        }
+      : {})
   },
   entryPoints: ["src/main.tsx"],
   plugins: [

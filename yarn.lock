@@ -4363,7 +4363,7 @@
   resolved "https://registry.yarnpkg.com/@remix-run/router/-/router-1.8.0.tgz#e848d2f669f601544df15ce2a313955e4bf0bafc"
   integrity sha512-mrfKqIHnSZRyIzBcanNJmVQELTnX+qagEDlcKO90RgRBVOZGSGvZKeDihTRfWcqoDn5N/NkUcwWTccnpN18Tfg==
 
-"@rollbar/react@^0.11.1":
+"@rollbar/react@^0.11.1", "@rollbar/react@^0.11.2":
   version "0.11.2"
   resolved "https://registry.yarnpkg.com/@rollbar/react/-/react-0.11.2.tgz#f5d71f21e9207f183080fa8a05a618ad78cf6d17"
   integrity sha512-fv/2dzVzjifcQ6w90TcsCLAANN2/ZAK30OTPNkMrJ1m1rSbCzKWEj2wbZFK/6vhuhEb5pAw6kuAR4ry3sIuFYw==
@@ -15835,7 +15835,7 @@ roarr@^7.15.0:
     safe-stable-stringify "^2.4.3"
     semver-compare "^1.0.0"
 
-rollbar@^2.26.1:
+rollbar@^2.26.1, rollbar@^2.26.2:
   version "2.26.2"
   resolved "https://registry.yarnpkg.com/rollbar/-/rollbar-2.26.2.tgz#58627dce65233e7433facb6366fd6e8817f396d3"
   integrity sha512-7ASvrlal87ek2vhTmpu2LPvkdlcnala1qeMT2Ra76s0KjWkQ8d1fTl6dk7AqHx1Qa/puahg3tYw7EPB7wYx9RQ==

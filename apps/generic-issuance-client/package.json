@@ -19,6 +19,7 @@
     "@monaco-editor/react": "^4.6.0",
     "@pcd/passport-interface": "0.10.0",
     "@pcd/util": "0.4.0",
+    "@rollbar/react": "^0.11.2",
     "@stytch/react": "^15.0.0",
     "@stytch/vanilla-js": "^4.4.2",
     "@tanstack/react-table": "^8.11.8",
@@ -31,6 +32,7 @@
     "react-icons": "^5.0.1",
     "react-redux": "^9.1.0",
     "react-router-dom": "^6.9.0",
+    "rollbar": "^2.26.2",
     "styled-components": "^5.3.6",
     "uuid": "^9.0.1"
   },
