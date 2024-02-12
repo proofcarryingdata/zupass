@@ -62,10 +62,10 @@ import {
   LemonadeUser
 } from "./lemonade/LemonadeDataMocker";
 import {
-  customTicketHandler,
+  customTicketHandler as customLemonadeTicketHandler,
   getMockLemonadeHandlers,
   loadApolloErrorMessages,
-  unregisteredUserTicketHandler
+  unregisteredUserTicketHandler as unregisteredLemonadeUserHandler
 } from "./lemonade/MockLemonadeServer";
 import { TestTokenSource } from "./lemonade/TestTokenSource";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
@@ -1100,7 +1100,7 @@ t2,i1`,
     "Lemonade tickets without user emails should not be loaded",
     async function () {
       mockServer.use(
-        unregisteredUserTicketHandler(lemonadeBackend, lemonadeBackendUrl)
+        unregisteredLemonadeUserHandler(lemonadeBackend, lemonadeBackendUrl)
       );
 
       expectToExist(giService);
@@ -1110,7 +1110,7 @@ t2,i1`,
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
       const runInfo = await pipeline.load();
 
-      // Despite receiving a ticket, the ticket was ignored due to lnot having
+      // Despite receiving a ticket, the ticket was ignored due to not having
       // a user email
       expect(runInfo.atomsLoaded).to.eq(0);
     }
@@ -1131,7 +1131,9 @@ t2,i1`,
           EdgeCityAttendeeTicket,
           EdgeCityDenverBouncerTicket
         ];
-        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+        mockServer.use(
+          customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
+        );
 
         const runInfo = await pipeline.load();
         // Both tickets should have been loaded
@@ -1152,7 +1154,9 @@ t2,i1`,
           // Empty type ID is not valid
           { ...EdgeCityDenverBouncerTicket, type_id: "" }
         ];
-        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+        mockServer.use(
+          customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
+        );
 
         const runInfo = await pipeline.load();
         // Despite receiving two tickets, only one should be parsed and saved
@@ -1165,6 +1169,36 @@ t2,i1`,
           1
         );
       }
+    }
+  );
+
+  step(
+    "Pretix should not load tickets for an event with invalid settings",
+    async function () {
+      const backup = pretixBackend.backup();
+      pretixBackend.setEventSettings(
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
+        { attendee_emails_asked: false, attendee_emails_required: false }
+      );
+
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+
+      const runInfo = await pipeline.load();
+
+      expect(runInfo.atomsLoaded).to.eq(0);
+      expectLength(
+        runInfo.latestLogs.filter(
+          (log) => log.level === PipelineLogLevel.Error
+        ),
+        1
+      );
+
+      pretixBackend.restore(backup);
     }
   );
 
