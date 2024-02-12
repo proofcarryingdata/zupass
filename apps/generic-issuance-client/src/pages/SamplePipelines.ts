@@ -22,7 +22,11 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
       paused: true,
       name: "test name",
       notes: "test notes",
-      lemonadeApiKey: "your-lemonade-api-key",
+      oauthAudience: "",
+      oauthClientId: "",
+      oauthClientSecret: "",
+      oauthServerUrl: "",
+      backendUrl: "",
       events: [],
       feedOptions: DEFAULT_FEED_OPTIONS
     }

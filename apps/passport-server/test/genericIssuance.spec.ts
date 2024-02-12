@@ -14,6 +14,7 @@ import {
   InfoResult,
   LemonadePipelineDefinition,
   PipelineDefinition,
+  PipelineLogLevel,
   PipelineType,
   PollFeedResult,
   PretixPipelineDefinition,
@@ -31,20 +32,19 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ONE_SECOND_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
-import { SetupServer } from "msw/node";
-import {
-  ILemonadeAPI,
-  LemonadeTicket,
-  LemonadeTicketTier,
-  LemonadeUser
-} from "../src/apis/lemonade/lemonadeAPI";
+import { rest } from "msw";
+import { SetupServer, setupServer } from "msw/node";
+import urljoin from "url-join";
+import { LemonadeOAuthCredentials } from "../src/apis/lemonade/auth";
+import { ILemonadeAPI, getLemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
+import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
 import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
@@ -57,10 +57,19 @@ import {
 } from "../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../src/types";
 import { testCSVPipeline } from "./generic-issuance/testCSVPipeline";
-import { LemonadeDataMocker } from "./lemonade/LemonadeDataMocker";
-import { MockLemonadeAPI } from "./lemonade/MockLemonadeAPI";
+import {
+  LemonadeDataMocker,
+  LemonadeUser
+} from "./lemonade/LemonadeDataMocker";
+import {
+  customTicketHandler,
+  getMockLemonadeHandlers,
+  loadApolloErrorMessages,
+  unregisteredUserTicketHandler
+} from "./lemonade/MockLemonadeServer";
+import { TestTokenSource } from "./lemonade/TestTokenSource";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
-import { getGenericMockPretixAPIServer } from "./pretix/MockGenericPretixServer";
+import { getMockGenericPretixHandlers } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import {
@@ -83,9 +92,15 @@ describe("Generic Issuance", function () {
   this.timeout(30_000);
   const now = Date.now();
 
+  // The Apollo client used by Lemonade does not load error messages by
+  // default, so we have to call this.
+  loadApolloErrorMessages();
+
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService | null;
+
+  const lemonadeOAuthClientId = "edge-city-client-id";
 
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
@@ -108,38 +123,37 @@ describe("Generic Issuance", function () {
 
   const lemonadeBackend = new LemonadeDataMocker();
 
-  /**
-   * TODO: test ingestion of the data we'll need for production.
-   */
-  const EdgeCityDenver = lemonadeBackend.addEvent("Edge City Denver");
+  const EdgeCityLemonadeAccount = lemonadeBackend.addAccount(
+    lemonadeOAuthClientId
+  );
+
+  const EdgeCityDenver = EdgeCityLemonadeAccount.addEvent("Edge City Denver");
 
   /**
-   * Attendee ticket tier. In reality there will be several.
-   *
-   * TODO: test that we can handle several attendee tiers.
+   * Attendee ticket type. In reality there will be several.
    */
-  const EdgeCityAttendeeTier: LemonadeTicketTier = lemonadeBackend.addTier(
-    EdgeCityDenver.id,
-    "ga"
-  );
-  const EdgeCityBouncerTier = lemonadeBackend.addTier(
-    EdgeCityDenver.id,
-    "bouncer"
-  );
+  const EdgeCityAttendeeTicketType: LemonadeTicketType =
+    EdgeCityLemonadeAccount.addTicketType(EdgeCityDenver._id, "ga");
+  const EdgeCityBouncerTicketType: LemonadeTicketType =
+    EdgeCityLemonadeAccount.addTicketType(EdgeCityDenver._id, "bouncer");
 
   /**
    * Most tests below need a person who is checking tickets {@link EdgeCityDenverBouncer}
    * and a person whose ticket needs to be checked in (@link Attendee)
    */
-  const EdgeCityDenverAttendee: LemonadeUser =
-    lemonadeBackend.addUser("attendee");
-  const EdgeCityDenverAttendeeIdentity = new Identity();
-  const EdgeCityAttendeeTicket: LemonadeTicket = lemonadeBackend.addTicket(
-    EdgeCityAttendeeTier.id,
-    EdgeCityDenver.id,
-    EdgeCityDenverAttendee.name,
-    EdgeCityDenverAttendee.email
+  const EdgeCityDenverAttendee: LemonadeUser = lemonadeBackend.addUser(
+    "attendee@example.com",
+    "attendee",
+    "smith"
   );
+  const EdgeCityDenverAttendeeIdentity = new Identity();
+  const EdgeCityAttendeeTicket: LemonadeTicket =
+    EdgeCityLemonadeAccount.addUserTicket(
+      EdgeCityDenver._id,
+      EdgeCityAttendeeTicketType._id,
+      EdgeCityDenverAttendee._id,
+      `${EdgeCityDenverAttendee.first_name} ${EdgeCityDenverAttendee.last_name}`
+    );
 
   /**
    * Similar to {@link EdgeCityDenverAttendee}
@@ -147,18 +161,29 @@ describe("Generic Issuance", function () {
    * i.e. a ticket whose 'product id' or 'tier' is set up to be a 'superuser' ticket
    * by the Generic Issuance User with id {@link edgeCityGIUserID}.
    */
-  const EdgeCityDenverBouncer: LemonadeUser =
-    lemonadeBackend.addUser("bouncer bob");
-  const EdgeCityBouncerIdentity = new Identity();
-  const EdgeCityDenverBouncerTicket = lemonadeBackend.addTicket(
-    EdgeCityBouncerTier.id,
-    EdgeCityDenver.id,
-    EdgeCityDenverBouncer.name,
-    EdgeCityDenverBouncer.email
+  const EdgeCityDenverBouncer: LemonadeUser = lemonadeBackend.addUser(
+    "bouncer@example.com",
+    "bouncer",
+    "bob"
   );
-  lemonadeBackend.makeCoHost(EdgeCityDenverBouncer.id, EdgeCityDenver.id);
-  const lemonadeAPI: ILemonadeAPI = new MockLemonadeAPI(lemonadeBackend);
-  const lemonadePipelineDefinition: LemonadePipelineDefinition = {
+  const EdgeCityBouncerIdentity = new Identity();
+  const EdgeCityDenverBouncerTicket = EdgeCityLemonadeAccount.addUserTicket(
+    EdgeCityDenver._id,
+    EdgeCityBouncerTicketType._id,
+    EdgeCityDenverBouncer._id,
+    `${EdgeCityDenverBouncer.first_name} ${EdgeCityDenverBouncer.last_name}`
+  );
+
+  const lemonadeTokenSource = new TestTokenSource();
+  const lemonadeAPI: ILemonadeAPI = getLemonadeAPI(
+    // LemonadeAPI takes an optional `AuthTokenSource` as a parameter. This
+    // allows us to mock out the generation of tokens that would otherwise be
+    // done by making OAuth requests.
+    // TestTokenSource simply returns the `oauthClientId` as the token.
+    lemonadeTokenSource
+  );
+  const lemonadeBackendUrl = "http://localhost";
+  const edgeCityPipeline: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
@@ -176,22 +201,29 @@ describe("Generic Issuance", function () {
         feedFolder: "Edge City",
         feedId: "edge-city"
       },
-      lemonadeApiKey: EdgeCityDenverBouncer.apiKey,
+      // Authentication values are not relevant for testing, except for `oauthClientId`
+      oauthAudience: "test",
+      oauthClientId: lemonadeOAuthClientId,
+      oauthClientSecret: "test",
+      oauthServerUrl: "test",
+      backendUrl: lemonadeBackendUrl,
       events: [
         {
-          externalId: EdgeCityDenver.id,
-          name: EdgeCityDenver.name,
+          externalId: EdgeCityDenver._id,
+          name: EdgeCityDenver.title,
           genericIssuanceEventId: randomUUID(),
-          ticketTiers: [
+          ticketTypes: [
             {
-              externalId: EdgeCityBouncerTier.id,
+              externalId: EdgeCityBouncerTicketType._id,
               genericIssuanceProductId: randomUUID(),
-              isSuperUser: true
+              isSuperUser: true,
+              name: "Bouncer"
             },
             {
-              externalId: EdgeCityAttendeeTier.id,
+              externalId: EdgeCityAttendeeTicketType._id,
               genericIssuanceProductId: randomUUID(),
-              isSuperUser: false
+              isSuperUser: false,
+              name: "Attendee"
             }
           ]
         }
@@ -200,7 +232,7 @@ describe("Generic Issuance", function () {
     type: PipelineType.Lemonade
   };
 
-  let pretixBackendServer: SetupServer;
+  let mockServer: SetupServer;
   const pretixBackend = new GenericPretixDataMocker();
   const ethLatAmPretixOrganizer = pretixBackend.get().ethLatAmOrganizer;
   const ethLatAmEvent = ethLatAmPretixOrganizer.ethLatAm;
@@ -288,15 +320,11 @@ t2,i1`,
     }
   };
 
-  const pipelineDefinitions = [
-    ethLatAmPipeline,
-    lemonadePipelineDefinition,
-    csvPipeline
-  ];
+  const pipelineDefinitions = [ethLatAmPipeline, edgeCityPipeline, csvPipeline];
 
   /**
    * Sets up a Zupass/Generic issuance backend with two pipelines:
-   * - {@link LemonadePipeline}, as defined by {@link lemonadePipelineDefinition}
+   * - {@link LemonadePipeline}, as defined by {@link edgeCityPipeline}
    * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
    */
   this.beforeAll(async () => {
@@ -337,11 +365,13 @@ t2,i1`,
     );
 
     const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
-    pretixBackendServer = getGenericMockPretixAPIServer(
-      pretixOrgUrls,
-      pretixBackend
+    mockServer = setupServer(
+      ...getMockGenericPretixHandlers(pretixOrgUrls, pretixBackend),
+      ...getMockLemonadeHandlers(lemonadeBackend, lemonadeBackendUrl)
     );
-    pretixBackendServer.listen({ onUnhandledRequest: "bypass" });
+    // The mock server will intercept any requests for URLs that are registered
+    // with it. Unhandled requests will bypass the mock server.
+    mockServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     giService = giBackend.services.genericIssuanceService;
@@ -360,7 +390,7 @@ t2,i1`,
   });
 
   this.afterEach(async () => {
-    pretixBackendServer.resetHandlers();
+    mockServer.resetHandlers();
     MockDate.reset();
   });
 
@@ -413,7 +443,7 @@ t2,i1`,
       const AttendeeTicket = AttendeeTickets[0];
       expectIsEdDSATicketPCD(AttendeeTicket);
       expect(AttendeeTicket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityAttendeeTicket.email)
+        .to.eq(EdgeCityAttendeeTicket.user_email)
         .to.eq(EdgeCityDenverAttendee.email);
 
       const BouncerTickets = await requestTicketsFromPipeline(
@@ -421,20 +451,20 @@ t2,i1`,
         edgeCityDenverTicketFeedUrl,
         edgeCityDenverPipeline.issuanceCapability.options.feedId,
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.email,
+        EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity
       );
       expectLength(BouncerTickets, 1);
       const BouncerTicket = BouncerTickets[0];
       expectIsEdDSATicketPCD(BouncerTicket);
       expect(BouncerTicket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityDenverBouncerTicket.email)
+        .to.eq(EdgeCityDenverBouncerTicket.user_email)
         .to.eq(EdgeCityDenverBouncer.email);
 
       const bouncerChecksInAttendee = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.email,
+        EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
@@ -444,7 +474,7 @@ t2,i1`,
       const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityDenverBouncerTicket.email,
+        EdgeCityDenverBouncerTicket.user_email,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
@@ -458,7 +488,7 @@ t2,i1`,
       const atteendeeChecksInBouncerResult = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityAttendeeTicket.email,
+        EdgeCityAttendeeTicket.user_email,
         EdgeCityDenverAttendeeIdentity,
         BouncerTicket
       );
@@ -472,7 +502,7 @@ t2,i1`,
         await requestCheckInPipelineTicket(
           edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
           newEdDSAPrivateKey(),
-          EdgeCityAttendeeTicket.email,
+          EdgeCityAttendeeTicket.user_email,
           EdgeCityDenverAttendeeIdentity,
           BouncerTicket
         );
@@ -671,7 +701,7 @@ t2,i1`,
         ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
-        EdgeCityBouncerIdentity,
+        EthLatAmBouncerIdentity,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
@@ -699,7 +729,7 @@ t2,i1`,
         ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
-        EdgeCityBouncerIdentity,
+        EthLatAmBouncerIdentity,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
@@ -740,7 +770,7 @@ t2,i1`,
         ethLatAmCheckinRoute,
         ZUPASS_EDDSA_PRIVATE_KEY,
         bouncerTicket.claim.ticket.attendeeEmail,
-        EdgeCityBouncerIdentity,
+        EthLatAmBouncerIdentity,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
@@ -763,6 +793,177 @@ t2,i1`,
         expectIsEdDSATicketPCD(bouncerTicket);
         expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
           pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+        );
+        // User is now checked in
+        expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
+      }
+    }
+  });
+
+  step("check-in and remote check-out works in Lemonade", async function () {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelines();
+    const pipeline = pipelines.find(LemonadePipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(edgeCityPipeline.id);
+    const edgeCityTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+
+    MockDate.set(Date.now() + ONE_SECOND_MS);
+    // Verify that bouncer is checked out in backend
+    await pipeline.load();
+    const bouncerTickets = await requestTicketsFromPipeline(
+      pipeline.issuanceCapability.options.feedFolder,
+      edgeCityTicketFeedUrl,
+      pipeline.issuanceCapability.options.feedId,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      EdgeCityDenverBouncer.email,
+      EdgeCityBouncerIdentity
+    );
+    expectLength(bouncerTickets, 1);
+    const bouncerTicket = bouncerTickets[0];
+    expectToExist(bouncerTicket);
+    expectIsEdDSATicketPCD(bouncerTicket);
+    expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+      EdgeCityDenverBouncer.email
+    );
+    // Bouncer ticket is checked out
+    expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+
+    // Now check the bouncer in
+    const edgeCityCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+
+    const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+      edgeCityCheckinRoute,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      bouncerTicket.claim.ticket.attendeeEmail,
+      EdgeCityBouncerIdentity,
+      bouncerTicket
+    );
+    expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+    const checkinTimestamp = Date.now();
+    MockDate.set(Date.now() + ONE_SECOND_MS);
+
+    // Reload the pipeline
+    await pipeline.load();
+    {
+      // Get updated tickets from feed
+      const bouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        edgeCityTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityDenverBouncer.email,
+        EdgeCityBouncerIdentity
+      );
+      expectLength(bouncerTickets, 1);
+      const bouncerTicket = bouncerTickets[0];
+      expectToExist(bouncerTicket);
+      expectIsEdDSATicketPCD(bouncerTicket);
+      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityDenverBouncer.email
+      );
+      // User is now checked in
+      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
+    }
+    {
+      // Trying to check in again should fail
+      const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+        edgeCityCheckinRoute,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        bouncerTicket.claim.ticket.attendeeEmail,
+        EdgeCityBouncerIdentity,
+        bouncerTicket
+      );
+      expect(bouncerCheckInBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date(checkinTimestamp).toISOString(),
+          checker: "Lemonade"
+        }
+      } as GenericIssuanceCheckInResponseValue);
+    }
+    {
+      // Check the bouncer out again
+      // There isn't a known way to do this in Lemonade, but it's worth testing
+      // for what would happen if it did
+      lemonadeBackend.checkOutUser(
+        lemonadeOAuthClientId,
+        EdgeCityDenver._id,
+        EdgeCityDenverBouncer._id
+      );
+    }
+    {
+      // Trying to check in again should fail because we have not yet reloaded
+      // data from Lemonade
+      const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+        edgeCityCheckinRoute,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        bouncerTicket.claim.ticket.attendeeEmail,
+        EdgeCityBouncerIdentity,
+        bouncerTicket
+      );
+      expect(bouncerCheckInBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date(checkinTimestamp).toISOString(),
+          checker: "Lemonade"
+        }
+      } as GenericIssuanceCheckInResponseValue);
+    }
+    // Verify that bouncer is checked out in backend
+    await pipeline.load();
+    {
+      const bouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        edgeCityTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityDenverBouncer.email,
+        EdgeCityBouncerIdentity
+      );
+      expectLength(bouncerTickets, 1);
+      const bouncerTicket = bouncerTickets[0];
+      expectToExist(bouncerTicket);
+      expectIsEdDSATicketPCD(bouncerTicket);
+      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityDenverBouncer.email
+      );
+      // Bouncer ticket is checked out
+      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+    }
+    {
+      // Now check the bouncer in
+      const edgeCityCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+
+      const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
+        edgeCityCheckinRoute,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        bouncerTicket.claim.ticket.attendeeEmail,
+        EdgeCityBouncerIdentity,
+        bouncerTicket
+      );
+      expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+      MockDate.set(Date.now() + ONE_SECOND_MS);
+
+      // Reload the pipeline
+      await pipeline.load();
+      {
+        const bouncerTickets = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          edgeCityTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityDenverBouncer.email,
+          EdgeCityBouncerIdentity
+        );
+        expectLength(bouncerTickets, 1);
+        const bouncerTicket = bouncerTickets[0];
+        expectToExist(bouncerTicket);
+        expectIsEdDSATicketPCD(bouncerTicket);
+        expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+          EdgeCityDenverBouncer.email
         );
         // User is now checked in
         expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
@@ -826,6 +1027,149 @@ t2,i1`,
     }
   });
 
+  step(
+    "Lemonade API will request new token when old one expires",
+    async function () {
+      // Because we initialized the LemonadeAPI with a TestTokenSource, we can
+      // track when LemonadeAPI refreshes its token. TestTokenSource returns an
+      // expiry time of Date.now() + ONE_DAY_MS, so advancing the clock beyond
+      // one day should trigger a new token refresh.
+      lemonadeTokenSource.called = 0;
+
+      const credentials: LemonadeOAuthCredentials = {
+        oauthClientId: lemonadeOAuthClientId,
+        oauthAudience: "new-credentials",
+        oauthClientSecret: "new-credentials",
+        oauthServerUrl: "new-credentials"
+      };
+
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        credentials,
+        EdgeCityDenver._id
+      );
+
+      expect(lemonadeTokenSource.called).to.eq(1);
+
+      MockDate.set(Date.now() + ONE_DAY_MS + 1);
+
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        credentials,
+        EdgeCityDenver._id
+      );
+
+      expect(lemonadeTokenSource.called).to.eq(2);
+
+      // Since no time has elapsed since the last request, this request will
+      // not require a new token.
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        credentials,
+        EdgeCityDenver._id
+      );
+
+      expect(lemonadeTokenSource.called).to.eq(2);
+
+      // Simulate an authorization failure, which will cause a new token to be
+      // requested.
+      mockServer.use(
+        rest.post(
+          urljoin(lemonadeBackendUrl, "/event/:eventId/export/tickets"),
+          (req, res, ctx) => {
+            // Calling .once() means that only the first request will be
+            // handled. So, the first time we request tickets, we get a 401
+            // and this will cause LemonadeAPI to get a new token. The next
+            // request will go to the default mock handler, which will succeed.
+            return res.once(ctx.status(401, "Unauthorized"));
+          }
+        )
+      );
+
+      await lemonadeAPI.getTickets(
+        lemonadeBackendUrl,
+        credentials,
+        EdgeCityDenver._id
+      );
+      // We should have seen one more token request
+      expect(lemonadeTokenSource.called).to.eq(3);
+    }
+  );
+
+  step(
+    "Lemonade tickets without user emails should not be loaded",
+    async function () {
+      mockServer.use(
+        unregisteredUserTicketHandler(lemonadeBackend, lemonadeBackendUrl)
+      );
+
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(edgeCityPipeline.id);
+      const runInfo = await pipeline.load();
+
+      // Despite receiving a ticket, the ticket was ignored due to lnot having
+      // a user email
+      expect(runInfo.atomsLoaded).to.eq(0);
+    }
+  );
+
+  step(
+    "Mix of valid and invalid Lemonade tickets results in only valid ones being accepted",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(edgeCityPipeline.id);
+
+      {
+        // Two valid tickets
+        const tickets: LemonadeTicket[] = [
+          EdgeCityAttendeeTicket,
+          EdgeCityDenverBouncerTicket
+        ];
+        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+
+        const runInfo = await pipeline.load();
+        // Both tickets should have been loaded
+        expect(runInfo.atomsLoaded).to.eq(2);
+        // Expect no errors to have been logged
+        expectLength(
+          runInfo.latestLogs.filter(
+            (log) => log.level === PipelineLogLevel.Error
+          ),
+          0
+        );
+      }
+
+      {
+        // One valid ticket and one invalid ticket
+        const tickets: LemonadeTicket[] = [
+          EdgeCityAttendeeTicket,
+          // Empty type ID is not valid
+          { ...EdgeCityDenverBouncerTicket, type_id: "" }
+        ];
+        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+
+        const runInfo = await pipeline.load();
+        // Despite receiving two tickets, only one should be parsed and saved
+        expect(runInfo.atomsLoaded).to.eq(1);
+        // Expect one error to have been logged
+        expectLength(
+          runInfo.latestLogs.filter(
+            (log) => log.level === PipelineLogLevel.Error
+          ),
+          1
+        );
+      }
+    }
+  );
+
+  // TODO Test Pretix with invalid back-end responses
+
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();
@@ -841,7 +1185,7 @@ t2,i1`,
 
   this.afterAll(async () => {
     await stopApplication(giBackend);
-    pretixBackendServer.close();
+    mockServer.close();
   });
 });
 

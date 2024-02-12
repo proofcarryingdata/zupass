@@ -1,12 +1,11 @@
 import { GenericPretixPosition } from "@pcd/passport-interface";
-import { rest } from "msw";
-import { SetupServer, setupServer } from "msw/node";
+import { RequestHandler, rest } from "msw";
 import { GenericPretixDataMocker } from "./GenericPretixDataMocker";
 
-export function getGenericMockPretixAPIServer(
+export function getMockGenericPretixHandlers(
   orgs: IterableIterator<string>,
   mocker: GenericPretixDataMocker
-): SetupServer {
+): RequestHandler[] {
   const handlers = [];
 
   for (const orgUrl of orgs) {
@@ -109,7 +108,5 @@ export function getGenericMockPretixAPIServer(
     );
   }
 
-  const server = setupServer(...handlers);
-
-  return server;
+  return handlers;
 }

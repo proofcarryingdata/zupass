@@ -2,150 +2,251 @@ import { randomUUID } from "crypto";
 import {
   LemonadeEvent,
   LemonadeTicket,
-  LemonadeTicketTier,
-  LemonadeUser
-} from "../../src/apis/lemonade/lemonadeAPI";
-import { randomEmail } from "../util/util";
+  LemonadeTicketType
+} from "../../src/apis/lemonade/types";
 
 /**
- * In-memory representation of Lemonade's backend, for testing purposes.
- * Incomplete, depends on how Lemonade actually implements their backend.
+ * For testing purposes, this models Lemonade users. This is Lemonade's model
+ * of a registered user, such as a person attending an event. We need to be
+ * able to add users in order to model the underlying domain behind tickets.
+ *
+ * Users and Accounts are related in Lemonade, but for our purposes we will
+ * ignore this connection: an Account represents the Lemonade account of the
+ * user whose credentials are being used by the pipeline to access the
+ * back-end, and a User is a user who is attending an event.
  */
-export class LemonadeDataMocker {
-  private events: LemonadeEvent[];
-  private users: LemonadeUser[];
+export interface LemonadeUser {
+  __typename: "User";
+  _id: string;
+  name: string;
+  first_name: string;
+  last_name: string;
+  email: string;
+}
 
-  public constructor() {
-    this.events = [];
-    this.users = [];
-  }
+/**
+ * Manages test data for a single Lemonade account, roughly similar to an
+ * organizer in Pretix. In the real API, the set of events, tickets etc.
+ * available to the user is determined by their OAuth credentials. An
+ * "account" here models the different sets of results that are available when
+ * authenticating with different credentials.
+ */
+class LemonadeAccount {
+  private events: Map<string, LemonadeEvent>;
+  private ticketTypes: Map<string, Map<string, LemonadeTicketType>>;
+  private tickets: Map<string, Map<string, LemonadeTicket>>;
+  // Reference to a shared map of users
+  private users: Map<string, LemonadeUser>;
 
-  public getUsersEvents(userId: string): LemonadeEvent[] {
-    return this.events.filter((e) => {
-      return e.permissionedUserIds.includes(userId);
-    });
-  }
-
-  public getEvent(eventId: string): LemonadeEvent | undefined {
-    return this.events.find((e) => e.id === eventId);
-  }
-
-  public getTier(
-    eventId: string,
-    tierId: string
-  ): LemonadeTicketTier | undefined {
-    const event = this.getEvent(eventId);
-
-    if (!event) {
-      return undefined;
-    }
-
-    return event.tiers.find((t) => t.id === tierId);
-  }
-
-  public addTicket(
-    tierId: string,
-    eventId: string,
-    attendeeName: string,
-    attendeeEmail: string
-  ): LemonadeTicket {
-    const newTicket: LemonadeTicket = {
-      checkedIn: false,
-      eventId,
-      id: randomUUID(),
-      email: attendeeEmail,
-      name: attendeeName,
-      tierId
-    };
-
-    const event = this.getEvent(eventId);
-
-    if (!event) {
-      throw new Error(`can't add ticket to event that doesn't exist`);
-    }
-
-    const tier = this.getTier(eventId, tierId);
-
-    if (!tier) {
-      throw new Error(`can't add ticket to tier that doesn't exist`);
-    }
-
-    event.tickets.push(newTicket);
-
-    return newTicket;
-  }
-
-  public addEvent(name: string): LemonadeEvent {
-    const newEvent: LemonadeEvent = {
-      id: randomUUID(),
-      name: name,
-      tickets: [],
-      tiers: [],
-      permissionedUserIds: []
-    };
-    this.events.push(newEvent);
-    return newEvent;
-  }
-
-  public addTier(eventId: string, name: string): LemonadeTicketTier {
-    const newTier: LemonadeTicketTier = {
-      id: randomUUID(),
-      name
-    };
-    const event = this.events.find((e) => e.id === eventId);
-    if (!event) {
-      throw new Error(`unable to find event with id ${eventId}`);
-    }
-    const existingTier = event.tiers.find((t) => t.name === name);
-    if (existingTier) {
-      throw new Error(
-        `event ${eventId} already has a ticket tier with name ${name}`
-      );
-    }
-    event.tiers.push(newTier);
-    return newTier;
-  }
-
-  public addUser(name?: string): LemonadeUser {
-    const newUser: LemonadeUser = {
-      email: randomEmail(),
-      id: randomUUID(),
-      apiKey: randomUUID(),
-      name: name ?? randomUUID()
-    };
-    this.users.push(newUser);
-    return newUser;
-  }
-
-  public getUser(userId: string): LemonadeUser | undefined {
-    return this.users.find((u) => u.id === userId);
-  }
-
-  public getUserByApiKey(apiKey: string): LemonadeUser | undefined {
-    return this.users.find((u) => u.apiKey === apiKey);
+  public constructor(users: Map<string, LemonadeUser>) {
+    this.events = new Map();
+    this.ticketTypes = new Map();
+    this.tickets = new Map();
+    // Store reference to user map shared between all accounts
+    this.users = users;
   }
 
   /**
-   * Co-hosts on Lemonade have check-in privelages.
+   * Add an event.
    */
-  public makeCoHost(userId: string, eventId: string): void {
-    const user = this.getUser(userId);
-    const event = this.getEvent(eventId);
+  public addEvent(title: string): LemonadeEvent {
+    const event: LemonadeEvent = {
+      title,
+      _id: randomUUID()
+    };
 
-    if (!user) {
-      throw new Error(`user ${userId} does not exist`);
+    this.events.set(event._id, event);
+    return event;
+  }
+
+  /**
+   * Add a ticket type. The eventId must match an existing event.
+   * See {@link addEvent}
+   */
+  public addTicketType(eventId: string, title: string): LemonadeTicketType {
+    if (!this.events.has(eventId)) {
+      throw new Error(`Can't add ticket type to non-existent event ${eventId}`);
     }
+    const ticketType: LemonadeTicketType = {
+      _id: randomUUID(),
+      title
+    };
 
-    if (!event) {
-      throw new Error(`event ${eventId} does not exist`);
+    const eventTicketTypes = this.ticketTypes.get(eventId) ?? new Map();
+    eventTicketTypes.set(ticketType._id, ticketType);
+    this.ticketTypes.set(eventId, eventTicketTypes);
+
+    return ticketType;
+  }
+
+  /**
+   * Add a ticket. The eventId and ticketTypeId must match existing events and
+   * ticket types, and the user ID must have been added via LemonadeDataMocker.
+   * See {@link addEvent} and {@link addTicketType}
+   */
+  public addUserTicket(
+    eventId: string,
+    ticketTypeId: string,
+    userId: string,
+    userName: string
+  ): LemonadeTicket {
+    if (!this.events.has(eventId)) {
+      throw new Error(`Can't add ticket to non-existent event ${eventId}`);
     }
-
-    if (event.permissionedUserIds.includes(user.id)) {
+    if (!this.ticketTypes.get(eventId)?.has(ticketTypeId)) {
       throw new Error(
-        `event ${eventId} already has user ${userId} as an admin`
+        `Can't add ticket of non-existent type ${ticketTypeId} to event ${eventId}`
+      );
+    }
+    if (!this.users.has(userId)) {
+      throw new Error(`Can't add ticket for non-existent user ${userId}`);
+    }
+    const user = this.users.get(userId) as LemonadeUser;
+    const ticket: LemonadeTicket = {
+      _id: randomUUID(),
+      type_id: ticketTypeId,
+      type_title: this.ticketTypes.get(eventId)?.get(ticketTypeId)
+        ?.title as string,
+      user_id: userId,
+      user_email: user.email,
+      user_name: userName,
+      user_first_name: user.first_name,
+      user_last_name: user.last_name,
+      checkin_date: null
+    };
+
+    const eventTickets = this.tickets.get(eventId) ?? new Map();
+    eventTickets.set(ticket._id, ticket);
+    this.tickets.set(eventId, eventTickets);
+
+    return ticket;
+  }
+
+  public getEvents(): Map<string, LemonadeEvent> {
+    return this.events;
+  }
+
+  public getTicketTypes(): Map<string, Map<string, LemonadeTicketType>> {
+    return this.ticketTypes;
+  }
+
+  public getTickets(): Map<string, Map<string, LemonadeTicket>> {
+    return this.tickets;
+  }
+
+  /**
+   * Check in a user.
+   */
+  public setCheckin(
+    eventId: string,
+    userId: string,
+    checkinDate: Date | null
+  ): void {
+    if (!this.events.has(eventId)) {
+      throw new Error(`Can't check in user to non-existent event ${eventId}`);
+    }
+    if (!this.users.has(userId)) {
+      throw new Error(`Can't check in non-existent user ${userId}`);
+    }
+
+    const tickets = this.getTickets().get(eventId)?.values();
+    let ticket;
+
+    if (
+      !tickets ||
+      !(ticket = [...tickets].find(
+        (t) => t.user_email === this.users.get(userId)?.email
+      ))
+    ) {
+      throw new Error(
+        `Can't find ticket assigned to user ${userId} for ${eventId}`
       );
     }
 
-    event.permissionedUserIds.push(userId);
+    // If the ticket exists and has already been checked in
+    if (ticket.checkin_date && checkinDate) {
+      throw new Error(`User ${userId} is already checked in to ${eventId}`);
+    }
+
+    if (!ticket.checkin_date && !checkinDate) {
+      throw new Error(`User ${userId} is already checked out from ${eventId}`);
+    }
+
+    // If checkinDate is a date, checks the user in. If null, checks the user
+    // out.
+    ticket.checkin_date = checkinDate;
+  }
+}
+
+/**
+ * In-memory representation of Lemonade's backend, for testing purposes.
+ */
+export class LemonadeDataMocker {
+  // Accounts are equivalent to 'organizers' in Pretix - they are the accounts
+  // that event organizers will have. Authenticated requests to Lemonade
+  // provide a "client ID" that belongs to the account.
+  // Map key is the client ID.
+  private accounts: Map<string, LemonadeAccount>;
+
+  // Users are registered users in the Lemonade system, e.g. ticket-holders.
+  // Map key is the user ID.
+  private users: Map<string, LemonadeUser>;
+
+  public constructor() {
+    this.accounts = new Map();
+    this.users = new Map();
+  }
+
+  /**
+   * Add a user, representing a user registered on Lemonade.
+   */
+  public addUser(
+    email: string,
+    firstName: string,
+    lastName: string
+  ): LemonadeUser {
+    const user: LemonadeUser = {
+      __typename: "User",
+      _id: randomUUID(),
+      email,
+      first_name: firstName,
+      last_name: lastName,
+      name: `${firstName}${lastName}`.toLocaleLowerCase()
+    };
+
+    this.users.set(user._id, user);
+
+    return user;
+  }
+
+  public addAccount(clientId: string): LemonadeAccount {
+    if (this.accounts.has(clientId)) {
+      throw new Error(`Account ${clientId} already exists`);
+    }
+
+    const account = new LemonadeAccount(this.users);
+    this.accounts.set(clientId, account);
+
+    return account;
+  }
+
+  public getAccount(clientId: string): LemonadeAccount {
+    if (!this.accounts.has(clientId)) {
+      throw new Error(`Could not get non-existent account ${clientId}`);
+    }
+
+    return this.accounts.get(clientId) as LemonadeAccount;
+  }
+
+  /**
+   * Simulates the effect of checking a user out. This is not currently
+   * possible in the Lemonade UI, but can be done via the API, so we have to
+   * account for the possibility that a previously checked-in user could become
+   * checked out.
+   */
+  public checkOutUser(clientId: string, eventId: string, userId: string): void {
+    const account = this.getAccount(clientId);
+    // Un-checked-in users are represented by a checkin date of `null`
+    account.setCheckin(eventId, userId, null);
   }
 }
