@@ -2,51 +2,43 @@ import { Tag, TagLabel } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   PipelineDefinition,
-  PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
+import { BsTicketPerforatedFill } from "react-icons/bs";
+import { FaCheck, FaHourglassHalf, FaRegPauseCircle } from "react-icons/fa";
+import { FaFileCsv } from "react-icons/fa6";
+import { GiCutLemon } from "react-icons/gi";
+import { MdError } from "react-icons/md";
 import { timeAgo } from "../helpers/util";
 import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
 import { PodLink } from "./Core";
 
 export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
-  if (str === "paused") {
-    return "⏸️";
+  if (str === "Paused") {
+    return <FaRegPauseCircle />;
   }
 
-  if (str === "starting") {
-    return "⏳";
+  if (str === "Starting") {
+    return <FaHourglassHalf />;
   }
 
-  if (str === "loaded") {
-    return "✅";
+  if (str === "Loaded") {
+    return <FaCheck />;
   }
 
-  return "❌";
-}
-
-export function pipelineStatusIcon(
-  latestRun: PipelineLoadSummary | undefined
-): ReactNode {
-  if (!latestRun) {
-    return "⏳";
-  }
-
-  if (latestRun.success) {
-    return "✅";
-  }
-
-  return "❌";
+  return <MdError />;
 }
 
 export function pipelineTypeIcon(type: PipelineType): ReactNode {
   const icon =
-    type === PipelineType.CSV
-      ? "🗒️"
-      : type === PipelineType.Lemonade
-      ? "🍋"
-      : "🎟️";
+    type === PipelineType.CSV ? (
+      <FaFileCsv />
+    ) : type === PipelineType.Lemonade ? (
+      <GiCutLemon />
+    ) : (
+      <BsTicketPerforatedFill />
+    );
 
   return icon;
 }
@@ -62,11 +54,22 @@ export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
 
   return (
     <Tag style={tagStyle}>
-      {pipelineTypeIcon(type)}
-      &nbsp;
       <TagLabel>{type}</TagLabel>
+      &nbsp;
+      {pipelineTypeIcon(type)}
     </Tag>
   );
+}
+export function pipelineStatusStr(
+  entry: GenericIssuancePipelineListEntry
+): PipelineStateDisplay {
+  return entry.pipeline.options?.paused
+    ? "Paused"
+    : !entry.extraInfo.lastLoad
+    ? "Starting"
+    : entry.extraInfo.lastLoad?.success
+    ? "Loaded"
+    : "Error";
 }
 
 export function PipelineStatusTag({
@@ -83,16 +86,18 @@ export function PipelineStatusTag({
   }
   return (
     <Tag style={tagStyle}>
-      {pipelineIconFromStr(status)}&nbsp;
       <TagLabel>{status}</TagLabel>
+      &nbsp;
+      {pipelineIconFromStr(status)}
     </Tag>
   );
 }
 
-const tagStyle = {
+const tagStyle: React.CSSProperties = {
   width: "120px",
   display: "flex",
-  justifyContent: "center",
+  flexDirection: "row",
+  justifyContent: "space-between",
   alignItems: "center",
   gap: "4px"
 };

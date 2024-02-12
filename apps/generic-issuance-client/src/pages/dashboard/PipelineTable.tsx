@@ -24,17 +24,18 @@ import {
   pipelineDetailPagePath,
   pipelineDisplayNameStr,
   pipelineLastEditStr,
-  pipelineLastLoadStr
+  pipelineLastLoadStr,
+  pipelineStatusStr
 } from "../../components/PipelineDisplayUtils";
 import {
   getAllHoneycombLinkForPipeline,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
 
-export type PipelineStateDisplay = "starting" | "loaded" | "error" | "paused";
+export type PipelineStateDisplay = "Starting" | "Loaded" | "Error" | "Paused";
 
 export type PipelineRow = {
-  status: "error" | "loaded" | "starting" | "paused";
+  status: PipelineStateDisplay;
   type: PipelineType;
   owner: string;
   timeCreated: string;
@@ -60,13 +61,7 @@ export function PipelineTable({
   const entryToRow = useCallback(
     (entry: GenericIssuancePipelineListEntry): PipelineRow => {
       return {
-        status: entry.pipeline.options?.paused
-          ? "paused"
-          : !entry.extraInfo.lastLoad
-          ? "starting"
-          : entry.extraInfo.lastLoad?.success
-          ? "loaded"
-          : "error",
+        status: pipelineStatusStr(entry),
         type: entry.pipeline.type,
         owner: entry.extraInfo.ownerEmail,
         timeCreated: entry.pipeline.timeCreated,
