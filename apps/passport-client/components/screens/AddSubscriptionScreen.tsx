@@ -12,6 +12,7 @@ import {
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
@@ -43,6 +44,7 @@ export function AddSubscriptionScreen(): JSX.Element {
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
+  const isDeepLink = url.length > 0;
   // When mailing out subscription links, senders can include a "suggested"
   // email. If the user is not logged in, they will be prompted to sign up
   // using that email. If the user is logged in, they will be warned that the
@@ -160,7 +162,7 @@ export function AddSubscriptionScreen(): JSX.Element {
           </MismatchedEmailWarning>
         )}
         {fetchError ||
-          (url.length === 0 && (
+          (!isDeepLink && (
             <>
               <Spacer h={16} />
               <div>Enter a URL to a feed provider:</div>
@@ -198,6 +200,7 @@ export function AddSubscriptionScreen(): JSX.Element {
                   info={info}
                   key={i}
                   showErrors={false}
+                  isDeepLink={isDeepLink}
                 />
               </React.Fragment>
             ))}
@@ -212,13 +215,15 @@ export function SubscriptionInfoRow({
   providerUrl,
   providerName,
   info,
-  showErrors
+  showErrors,
+  isDeepLink
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   providerName: string;
   info: Feed;
   showErrors: boolean;
+  isDeepLink: boolean;
 }): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
@@ -227,6 +232,7 @@ export function SubscriptionInfoRow({
   const error = alreadySubscribed
     ? subscriptions.getError(subscription.id)
     : null;
+  const navigate = useNavigate();
 
   const dispatch = useDispatch();
 
@@ -237,6 +243,10 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
+  const goHome = useCallback(() => {
+    navigate("/");
+  }, [navigate]);
+
   return (
     <InfoRowContainer>
       <FeedName>{info.name}</FeedName>
@@ -245,7 +255,7 @@ export function SubscriptionInfoRow({
       <Spacer h={8} />
       <hr />
       <Spacer h={8} />
-      {alreadySubscribed && showErrors && error && (
+      {!isDeepLink && alreadySubscribed && showErrors && error && (
         <>
           <SubscriptionErrors>
             <div>
@@ -258,7 +268,16 @@ export function SubscriptionInfoRow({
         </>
       )}
       {alreadySubscribed ? (
-        <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
+        isDeepLink ? (
+          <div>
+            You are already subscribed to{" "}
+            <strong>{existingSubscriptions[0].feed.name}</strong>.
+            <Spacer h={16} />
+            <Button onClick={goHome}>View my tickets</Button>
+          </div>
+        ) : (
+          <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
+        )
       ) : (
         <SubscribeSection
           providerUrl={providerUrl}
