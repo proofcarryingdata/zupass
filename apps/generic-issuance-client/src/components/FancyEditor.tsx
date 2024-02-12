@@ -1,4 +1,4 @@
-import { Box } from "@chakra-ui/react";
+import { Box, Spinner } from "@chakra-ui/react";
 import { Editor } from "@monaco-editor/react";
 import { ReactNode, useCallback } from "react";
 
@@ -35,6 +35,7 @@ export function FancyEditor({
         theme={dark ? "vs-dark" : "vs-light"}
         value={value}
         onChange={onValueChange}
+        loading={<Spinner />}
         options={{
           readonly: readonly,
           minimap: {
