@@ -61,8 +61,10 @@ import {
   LemonadeUser
 } from "./lemonade/LemonadeDataMocker";
 import {
+  customTicketHandler,
   getMockLemonadeHandlers,
-  loadApolloErrorMessages
+  loadApolloErrorMessages,
+  unregisteredUserTicketHandler
 } from "./lemonade/MockLemonadeServer";
 import { TestTokenSource } from "./lemonade/TestTokenSource";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
@@ -1093,7 +1095,65 @@ t2,i1`,
     }
   );
 
-  // TODO Test both Lemonade and Pretix with invalid back-end responses
+  step(
+    "Lemonade tickets without user emails should not be loaded",
+    async function () {
+      mockServer.use(
+        unregisteredUserTicketHandler(lemonadeBackend, lemonadeBackendUrl)
+      );
+
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(edgeCityPipeline.id);
+      const runInfo = await pipeline.load();
+
+      // Despite receiving a ticket, the ticket was ignored due to lnot having
+      // a user email
+      expect(runInfo.atomsLoaded).to.eq(0);
+    }
+  );
+
+  step(
+    "Mix of valid and invalid Lemonade tickets results in only valid ones being accepted",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(edgeCityPipeline.id);
+
+      {
+        // Two valid tickets
+        const tickets: LemonadeTicket[] = [
+          EdgeCityAttendeeTicket,
+          EdgeCityDenverBouncerTicket
+        ];
+        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+
+        const runInfo = await pipeline.load();
+        // Both tickets should have been loaded
+        expect(runInfo.atomsLoaded).to.eq(2);
+      }
+
+      {
+        // One valid ticket and one invalid ticket
+        const tickets: LemonadeTicket[] = [
+          EdgeCityAttendeeTicket,
+          // Empty type ID is not valid
+          { ...EdgeCityDenverBouncerTicket, type_id: "" }
+        ];
+        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+
+        const runInfo = await pipeline.load();
+        // Despite receiving two tickets, only one should be parsed and saved
+        expect(runInfo.atomsLoaded).to.eq(1);
+      }
+    }
+  );
+
+  // TODO Test Pretix with invalid back-end responses
 
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);

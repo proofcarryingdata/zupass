@@ -1,4 +1,5 @@
 import { loadDevMessages, loadErrorMessages } from "@apollo/client/dev";
+import { randomUUID } from "crypto";
 import { stringify as csv_stringify } from "csv-stringify/sync";
 import { MockedRequest, RequestHandler, graphql, rest } from "msw";
 import urljoin from "url-join";
@@ -14,6 +15,36 @@ export function loadApolloErrorMessages(): void {
   loadErrorMessages();
 }
 
+function getClientId(mocker: LemonadeDataMocker, req: MockedRequest): string {
+  const clientId = req.headers.get("Authorization")?.split(" ")[1];
+  if (!clientId || !mocker.getAccount(clientId)) {
+    throw new Error(`Invalid client ID: ${clientId}`);
+  }
+  return clientId;
+}
+
+function checkEventId(
+  mocker: LemonadeDataMocker,
+  clientId: string,
+  eventId: string
+): void {
+  if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
+    throw new Error(`Invalid event ID ${eventId}`);
+  }
+}
+
+function stringifyTickets(tickets: LemonadeTicket[]): string {
+  return csv_stringify(tickets, {
+    header: true,
+    cast: {
+      // Convert checkin date to an ISO string
+      date: (date) => {
+        return date.toISOString();
+      }
+    }
+  });
+}
+
 export function getMockLemonadeHandlers(
   mocker: LemonadeDataMocker,
   backendUrl: string
@@ -27,21 +58,11 @@ export function getMockLemonadeHandlers(
    * data set.
    * See {@link TestTokenSource} and {@link LemonadeAPI.getToken()}.
    */
-  const checkClientId = (
-    mocker: LemonadeDataMocker,
-    req: MockedRequest
-  ): string => {
-    const clientId = req.headers.get("Authorization")?.split(" ")[1];
-    if (!clientId || !mocker.getAccount(clientId)) {
-      throw new Error(`Invalid client ID: ${clientId}`);
-    }
-    return clientId;
-  };
 
   // Mock GraphQL endpoints
   handlers.push(
     graphql.query("GetHostingEvents", (req, res, ctx) => {
-      const clientId = checkClientId(mocker, req);
+      const clientId = getClientId(mocker, req);
       return res(
         ctx.data({
           getHostingEvents: [
@@ -52,11 +73,9 @@ export function getMockLemonadeHandlers(
     }),
 
     graphql.query("GetEventTicketTypes", (req, res, ctx) => {
-      const clientId = checkClientId(mocker, req);
+      const clientId = getClientId(mocker, req);
       const eventId = req.variables["input"]["event"];
-      if (!mocker.getAccount(clientId).getEvents().has(eventId)) {
-        throw new Error(`Invalid event ID ${eventId}`);
-      }
+      checkEventId(mocker, clientId, eventId);
       return res(
         ctx.data({
           getEventTicketTypes: {
@@ -75,7 +94,7 @@ export function getMockLemonadeHandlers(
     }),
 
     graphql.mutation("UpdateEventCheckin", (req, res, ctx) => {
-      const clientId = checkClientId(mocker, req);
+      const clientId = getClientId(mocker, req);
       const eventId = req.variables["event"];
       const userId = req.variables["user"];
       const active = req.variables["active"];
@@ -96,12 +115,11 @@ export function getMockLemonadeHandlers(
     rest.post(
       urljoin(backendUrl, "/event/:eventId/export/tickets"),
       (req, res, ctx) => {
-        const clientId = checkClientId(mocker, req);
+        const clientId = getClientId(mocker, req);
         const eventId = req.params["eventId"] as string;
-        if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
-          throw new Error(`Invalid event ID ${eventId}`);
-        }
-        const tickets: Partial<LemonadeTicket>[] = [
+        checkEventId(mocker, clientId, eventId);
+
+        const tickets = [
           ...(
             mocker.getAccount(clientId).getTickets().get(eventId) as Map<
               string,
@@ -109,19 +127,7 @@ export function getMockLemonadeHandlers(
             >
           ).values()
         ];
-        return res(
-          ctx.text(
-            csv_stringify(tickets, {
-              header: true,
-              cast: {
-                // Convert checkin date to an ISO string
-                date: (date) => {
-                  return date.toISOString();
-                }
-              }
-            })
-          )
-        );
+        return res(ctx.text(stringifyTickets(tickets)));
       }
     )
   );
@@ -129,31 +135,54 @@ export function getMockLemonadeHandlers(
   return handlers;
 }
 
-// export function badTicketHandler(backendUrl: string): RequestHandler {
-//   return rest.post(
-//     urljoin(backendUrl, "/event/:eventId/export/tickets"),
-//     (req, res, ctx) => {
-//       const clientId = checkClientId(mocker, req);
-//       const eventId = req.params["eventId"] as string;
-//       if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
-//         throw new Error(`Invalid event ID ${eventId}`);
-//       }
-//       const tickets:  = [
-//         {}
-//       ];
-//       return res(
-//         ctx.text(
-//           csv_stringify(tickets, {
-//             header: true,
-//             cast: {
-//               // Convert checkin date to an ISO string
-//               date: (date) => {
-//                 return date.toISOString();
-//               }
-//             }
-//           })
-//         )
-//       );
-//     }
-//   );
-// }
+export function unregisteredUserTicketHandler(
+  mocker: LemonadeDataMocker,
+  backendUrl: string
+): RequestHandler {
+  return rest.post(
+    urljoin(backendUrl, "/event/:eventId/export/tickets"),
+    (req, res, ctx) => {
+      const clientId = getClientId(mocker, req);
+      const eventId = req.params["eventId"] as string;
+      checkEventId(mocker, clientId, eventId);
+      const type = [
+        ...(
+          mocker.getAccount(clientId).getTicketTypes().get(eventId) as Map<
+            string,
+            LemonadeTicketType
+          >
+        ).values()
+      ][0];
+      // Represents a ticket that has been invited to an event, but the invitee
+      // has not yet registered with Lemonade. We skip these tickets in the
+      // pipeline, because they cannot be checked in as they do not have user
+      // IDs.
+      const tickets: LemonadeTicket[] = [
+        {
+          _id: randomUUID(),
+          user_email: "",
+          user_name: "",
+          user_first_name: "Invited",
+          user_last_name: "Unregistered",
+          user_id: "",
+          type_id: type._id,
+          type_title: type.title,
+          checkin_date: null
+        }
+      ];
+      return res(ctx.text(stringifyTickets(tickets)));
+    }
+  );
+}
+
+export function customTicketHandler(
+  backendUrl: string,
+  tickets: LemonadeTicket[]
+): RequestHandler {
+  return rest.post(
+    urljoin(backendUrl, "/event/:eventId/export/tickets"),
+    (req, res, ctx) => {
+      return res(ctx.text(stringifyTickets(tickets)));
+    }
+  );
+}

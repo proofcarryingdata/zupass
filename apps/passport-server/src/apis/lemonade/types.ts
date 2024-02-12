@@ -30,7 +30,7 @@ export const LemonadeTicketSchema = z.object({
   user_name: z.string(),
   user_first_name: z.string(),
   user_last_name: z.string(),
-  type_id: z.string(),
+  type_id: z.string().min(1, "Type ID cannot be empty"),
   type_title: z.string(),
   checkin_date: z.string().transform((arg) => {
     try {
