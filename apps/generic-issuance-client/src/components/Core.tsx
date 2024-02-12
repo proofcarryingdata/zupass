@@ -1,5 +1,5 @@
 import { ExternalLinkIcon } from "@chakra-ui/icons";
-import { Link } from "@chakra-ui/react";
+import { Link, Spinner } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
 import { Link as ReactLink } from "react-router-dom";
 import styled from "styled-components";
@@ -54,3 +54,11 @@ export const CodeLink = ({
 export const PageContent = styled.div`
   padding: 32px;
 `;
+
+export function SmallSpinner(): ReactNode {
+  return (
+    <span style={{ transform: "scale(0.5)" }}>
+      <Spinner />
+    </span>
+  );
+}

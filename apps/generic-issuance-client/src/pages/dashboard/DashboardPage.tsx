@@ -1,18 +1,16 @@
-import {
-  Box,
-  Heading,
-  ListItem,
-  Spinner,
-  Stack,
-  UnorderedList
-} from "@chakra-ui/react";
+import { Box, Heading, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   getError
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect, useMemo } from "react";
-import { HomeLink, PageContent, PodLink } from "../../components/Core";
+import {
+  HomeLink,
+  PageContent,
+  PodLink,
+  SmallSpinner
+} from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
@@ -85,7 +83,7 @@ export default function DashboardPage(): ReactNode {
         <GlobalPageHeader
           user={user}
           stytchClient={stytchClient}
-          titleContent={(): ReactNode => <Spinner />}
+          titleContent={(): ReactNode => <SmallSpinner />}
         />
         <LoadingContent />
       </>

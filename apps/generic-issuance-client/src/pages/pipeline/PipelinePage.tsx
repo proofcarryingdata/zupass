@@ -1,10 +1,9 @@
-import { Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { PageContent } from "../../components/Core";
+import { PageContent, SmallSpinner } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
@@ -62,7 +61,7 @@ export default function PipelinePage(): ReactNode {
         <GlobalPageHeader
           user={userFromServer}
           stytchClient={stytchClient}
-          titleContent={(): ReactNode => <Spinner />}
+          titleContent={(): ReactNode => <SmallSpinner />}
         />
         <LoadingContent />
       </>

@@ -110,7 +110,7 @@ export function PipelineEditSection({
       </Box>
 
       <FancyEditor
-        style={{ width: "800px" }}
+        style={{ width: "800px", height: "350px" }}
         language="json"
         value={editorValue}
         setValue={setEditorValue}
@@ -121,6 +121,7 @@ export function PipelineEditSection({
         <HStack>
           {hasEdits && (
             <Button
+              variant="outline"
               size="sm"
               isDisabled={
                 !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
@@ -131,20 +132,26 @@ export function PipelineEditSection({
             </Button>
           )}
           {!hasEdits && (
-            <Button size="sm" isDisabled={true}>
+            <Button size="sm" isDisabled={true} variant="outline">
               Save Changes
             </Button>
           )}
           <Button
+            variant="outline"
+            onClick={onUndoClick}
+            size="sm"
+            isDisabled={!hasEdits}
+          >
+            Reset Changes
+          </Button>
+          <Button
+            variant="outline"
             size="sm"
             colorScheme="red"
             isDisabled={ownedBySomeoneElse && !isAdminView}
             onClick={onDeleteClick}
           >
             Delete Pipeline
-          </Button>
-          <Button onClick={onUndoClick} size="sm" isDisabled={!hasEdits}>
-            Reset Changes
           </Button>
         </HStack>
       )}
