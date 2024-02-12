@@ -10,13 +10,13 @@ export function FancyEditor({
   dark,
   language
 }: {
-  readonly: boolean;
-  defaultValue?: string;
   value: string;
+  defaultValue?: string;
   setValue?: (val: string) => void;
   style?: React.CSSProperties;
   dark?: boolean;
   language?: string;
+  readonly?: boolean;
 }): ReactNode {
   const onValueChange = useCallback(
     (value: string): void => {

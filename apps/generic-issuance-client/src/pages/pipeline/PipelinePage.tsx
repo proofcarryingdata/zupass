@@ -13,7 +13,7 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
 import { PipelineEditSection } from "./PipelineEditSection";
-import { PipelineTitleButton } from "./PipelineTitleButton";
+import { PodboxButton } from "./PodboxButton";
 
 export default function PipelinePage(): ReactNode {
   const stytchClient = useStytch();
@@ -77,7 +77,7 @@ export default function PipelinePage(): ReactNode {
         user={userFromServer}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
-          <PipelineTitleButton pipeline={pipelineFromServer?.value} />
+          <PodboxButton pipeline={pipelineFromServer?.value} />
         )}
       />
 

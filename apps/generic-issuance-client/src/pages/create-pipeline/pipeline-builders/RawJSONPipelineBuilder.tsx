@@ -1,11 +1,12 @@
+import { Button, Stack } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
+import { FancyEditor } from "../../../components/FancyEditor";
 
 interface RawJSONPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
   initialValue?: string;
 }
 
-// TODO: Edit this once we have the RawJSON API integrated
 export default function RawJSONPipelineBuilder(
   props: RawJSONPipelineBuilderProps
 ): ReactNode {
@@ -13,22 +14,22 @@ export default function RawJSONPipelineBuilder(
     props.initialValue ?? ""
   );
   return (
-    <div
-      style={{
-        marginTop: "8px"
-      }}
-    >
-      <textarea
-        cols={80}
-        rows={25}
+    <Stack>
+      <FancyEditor
+        language="json"
+        style={{ height: "400px" }}
         value={newPipelineJSON}
-        onChange={(e): void => setNewPipelineJSON(e.target.value)}
+        setValue={setNewPipelineJSON}
+        readonly={false}
+        dark
       />
-      <div>
-        <button onClick={(): Promise<void> => props.onCreate(newPipelineJSON)}>
-          🐒 Create! 🚀
-        </button>
-      </div>
-    </div>
+      <Button
+        onClick={(): Promise<void> => props.onCreate(newPipelineJSON)}
+        variant="outline"
+        colorScheme="green"
+      >
+        Create
+      </Button>
+    </Stack>
   );
 }

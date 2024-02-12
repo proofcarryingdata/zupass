@@ -1,8 +1,9 @@
-import { Heading } from "@chakra-ui/react";
+import { Heading, Select, Stack } from "@chakra-ui/react";
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useState } from "react";
 import { PageContent } from "../../components/Core";
+import { LoadingContent } from "../../components/LoadingContent";
 import { pipelineDetailPagePath } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { savePipeline } from "../../helpers/Mutations";
@@ -49,7 +50,7 @@ export default function CreatePipelinePage(): ReactNode {
     return (
       <>
         <GlobalPageHeader user={user} stytchClient={stytchClient} />
-        <PageContent>creating pipeline...</PageContent>
+        <LoadingContent />
       </>
     );
   }
@@ -63,40 +64,43 @@ export default function CreatePipelinePage(): ReactNode {
           <Heading size="sm">Create Pipeline</Heading>
         )}
       />
+
       <PageContent>
-        <h1>Create your pipeline</h1>
-        <select
-          placeholder="Select your pipeline type.."
-          value={selectedPipelineType ?? ""}
-          onChange={(event): void => {
-            setSelectedPipelineType(event.target.value as PipelineType);
-          }}
-        >
-          <option value="" disabled selected>
-            Select your pipeline type...
-          </option>
-          {Object.entries(PipelineType).map(([key, value]) => (
-            <option key={key} value={value}>
-              {value}
+        <Stack>
+          <Select
+            width="300px"
+            placeholder="Select Pipeline Type"
+            value={selectedPipelineType ?? ""}
+            onChange={(event): void => {
+              setSelectedPipelineType(event.target.value as PipelineType);
+            }}
+          >
+            <option value="" disabled>
+              Select your pipeline type...
             </option>
-          ))}
-          <option value="JSON">JSON</option>
-        </select>
-        {selectedPipelineType === PipelineType.Pretix && (
-          <PretixPipelineBuilder onCreate={onCreateClick} />
-        )}
-        {selectedPipelineType === PipelineType.CSV && (
-          <CSVPipelineBuilder onCreate={onCreateClick} />
-        )}
-        {selectedPipelineType === PipelineType.Lemonade && (
-          <LemonadePipelineBuilder onCreate={onCreateClick} />
-        )}
-        {selectedPipelineType === "JSON" && (
-          <RawJSONPipelineBuilder
-            onCreate={onCreateClick}
-            initialValue={SAMPLE_LEMONADE_PIPELINE}
-          />
-        )}
+            {Object.entries(PipelineType).map(([key, value]) => (
+              <option key={key} value={value}>
+                {value}
+              </option>
+            ))}
+            <option value="JSON">JSON</option>
+          </Select>
+          {selectedPipelineType === PipelineType.Pretix && (
+            <PretixPipelineBuilder onCreate={onCreateClick} />
+          )}
+          {selectedPipelineType === PipelineType.CSV && (
+            <CSVPipelineBuilder onCreate={onCreateClick} />
+          )}
+          {selectedPipelineType === PipelineType.Lemonade && (
+            <LemonadePipelineBuilder onCreate={onCreateClick} />
+          )}
+          {selectedPipelineType === "JSON" && (
+            <RawJSONPipelineBuilder
+              onCreate={onCreateClick}
+              initialValue={SAMPLE_LEMONADE_PIPELINE}
+            />
+          )}
+        </Stack>
       </PageContent>
     </>
   );

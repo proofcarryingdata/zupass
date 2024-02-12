@@ -1,5 +1,7 @@
+import { Input } from "@chakra-ui/react";
 import { FeedIssuanceOptions } from "@pcd/passport-interface";
 import { ChangeEvent } from "react";
+import styled from "styled-components";
 
 interface FeedOptionsProps {
   feedOptions: FeedIssuanceOptions;
@@ -19,14 +21,14 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
   };
 
   return (
-    <table>
+    <FeedOptionsTable>
       <tbody>
         <tr>
           <td>
-            <label htmlFor="feedId">Feed ID:</label>
+            <label htmlFor="feedId">Feed ID</label>
           </td>
           <td>
-            <input
+            <Input
               type="text"
               id="feedId"
               name="feedId"
@@ -37,10 +39,10 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
         </tr>
         <tr>
           <td>
-            <label htmlFor="feedDisplayName">Feed Display Name:</label>
+            <label htmlFor="feedDisplayName">Feed Display Name</label>
           </td>
           <td>
-            <input
+            <Input
               type="text"
               id="feedDisplayName"
               name="feedDisplayName"
@@ -51,10 +53,10 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
         </tr>
         <tr>
           <td>
-            <label htmlFor="feedDescription">Feed Description:</label>
+            <label htmlFor="feedDescription">Feed Description</label>
           </td>
           <td>
-            <input
+            <Input
               type="text"
               id="feedDescription"
               name="feedDescription"
@@ -65,10 +67,10 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
         </tr>
         <tr>
           <td>
-            <label htmlFor="feedFolder">Feed Folder:</label>
+            <label htmlFor="feedFolder">Feed Folder</label>
           </td>
           <td>
-            <input
+            <Input
               type="text"
               id="feedFolder"
               name="feedFolder"
@@ -78,6 +80,17 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
           </td>
         </tr>
       </tbody>
-    </table>
+    </FeedOptionsTable>
   );
 };
+
+const FeedOptionsTable = styled.table`
+  tbody {
+    tr {
+      td:first-child {
+        text-align: right;
+        padding-right: 16px;
+      }
+    }
+  }
+`;

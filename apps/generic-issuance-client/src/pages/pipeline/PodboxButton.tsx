@@ -3,7 +3,7 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { PipelineDisplayNameText } from "../../components/PipelineDisplayUtils";
 
-export function PipelineTitleButton({
+export function PodboxButton({
   pipeline
 }: {
   pipeline?: PipelineDefinition;
