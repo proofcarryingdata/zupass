@@ -51,7 +51,7 @@ export function expectFalse(value: boolean): asserts value is true {
 }
 
 /**
- * Use in place of `expect(value).to.eq(true)`
+ * Use in place of `expect(array.length).to.eq(length)`
  */
 export function expectLength<T>(
   array: Array<T> | undefined,

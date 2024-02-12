@@ -14,6 +14,7 @@ import {
   InfoResult,
   LemonadePipelineDefinition,
   PipelineDefinition,
+  PipelineLogLevel,
   PipelineType,
   PollFeedResult,
   PretixPipelineDefinition,
@@ -1135,6 +1136,13 @@ t2,i1`,
         const runInfo = await pipeline.load();
         // Both tickets should have been loaded
         expect(runInfo.atomsLoaded).to.eq(2);
+        // Expect no errors to have been logged
+        expectLength(
+          runInfo.latestLogs.filter(
+            (log) => log.level === PipelineLogLevel.Error
+          ),
+          0
+        );
       }
 
       {
@@ -1149,6 +1157,13 @@ t2,i1`,
         const runInfo = await pipeline.load();
         // Despite receiving two tickets, only one should be parsed and saved
         expect(runInfo.atomsLoaded).to.eq(1);
+        // Expect one error to have been logged
+        expectLength(
+          runInfo.latestLogs.filter(
+            (log) => log.level === PipelineLogLevel.Error
+          ),
+          1
+        );
       }
     }
   );
