@@ -1,4 +1,12 @@
-import { Box, Heading, ListItem, Stack, UnorderedList } from "@chakra-ui/react";
+import {
+  Badge,
+  Box,
+  HStack,
+  Heading,
+  ListItem,
+  Stack,
+  UnorderedList
+} from "@chakra-ui/react";
 import {
   GenericIssuancePipelineListEntry,
   getError
@@ -94,7 +102,17 @@ export default function DashboardPage(): ReactNode {
       <GlobalPageHeader
         user={user}
         stytchClient={stytchClient}
-        titleContent={(): ReactNode => <Heading size="sm">Dashboard</Heading>}
+        titleContent={(): ReactNode => (
+          <HStack>
+            <Heading size="sm">Dashboard</Heading>
+            {user.value && (
+              <>
+                <span>{user.value.email}</span>
+                <Badge>{user.value.id}</Badge>
+              </>
+            )}
+          </HStack>
+        )}
       />
       <PageContent>
         {pipelineEntries.length ? (

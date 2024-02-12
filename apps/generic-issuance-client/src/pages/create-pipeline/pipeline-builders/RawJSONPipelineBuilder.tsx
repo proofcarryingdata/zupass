@@ -24,6 +24,7 @@ export default function RawJSONPipelineBuilder(
         dark
       />
       <Button
+        width="md"
         onClick={(): Promise<void> => props.onCreate(newPipelineJSON)}
         variant="outline"
         colorScheme="green"

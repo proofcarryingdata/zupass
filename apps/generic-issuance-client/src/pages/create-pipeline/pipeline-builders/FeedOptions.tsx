@@ -29,6 +29,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
           </td>
           <td>
             <Input
+              width="md"
               type="text"
               id="feedId"
               name="feedId"
@@ -43,6 +44,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
           </td>
           <td>
             <Input
+              width="md"
               type="text"
               id="feedDisplayName"
               name="feedDisplayName"
@@ -57,6 +59,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
           </td>
           <td>
             <Input
+              width="md"
               type="text"
               id="feedDescription"
               name="feedDescription"
@@ -71,6 +74,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
           </td>
           <td>
             <Input
+              width="md"
               type="text"
               id="feedFolder"
               name="feedFolder"
@@ -90,6 +94,7 @@ const FeedOptionsTable = styled.table`
       td:first-child {
         text-align: right;
         padding-right: 16px;
+        width: 200px;
       }
     }
   }

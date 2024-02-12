@@ -1,3 +1,4 @@
+import { Badge, HStack, Heading } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect } from "react";
@@ -5,6 +6,7 @@ import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent, SmallSpinner } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
+import { PipelineDisplayNameText } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
 import { useFetchPipeline } from "../../helpers/useFetchPipeline";
@@ -13,7 +15,6 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
 import { PipelineEditSection } from "./PipelineEditSection";
-import { PodboxButton } from "./PodboxButton";
 
 export default function PipelinePage(): ReactNode {
   const stytchClient = useStytch();
@@ -43,7 +44,7 @@ export default function PipelinePage(): ReactNode {
       <>
         <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
         <PageContent>
-          <h2>❌ Load Error</h2>
+          <Heading size="md">❌ Load Error</Heading>
           {maybeRequestError}
         </PageContent>
       </>
@@ -77,7 +78,11 @@ export default function PipelinePage(): ReactNode {
         user={userFromServer}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
-          <PodboxButton pipeline={pipelineFromServer?.value} />
+          <HStack>
+            <span>Pipeline</span>
+            <PipelineDisplayNameText pipeline={pipelineFromServer.value} />{" "}
+            <Badge>{pipelineFromServer.value?.id}</Badge>
+          </HStack>
         )}
       />
 

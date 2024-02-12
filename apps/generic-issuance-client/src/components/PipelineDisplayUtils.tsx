@@ -79,13 +79,13 @@ export function PipelineStatusTag({
 }): ReactNode {
   if (!status) {
     return (
-      <Tag style={tagStyle}>
+      <Tag style={smallerTagStyle}>
         <TagLabel>{status}</TagLabel>
       </Tag>
     );
   }
   return (
-    <Tag style={tagStyle}>
+    <Tag style={smallerTagStyle}>
       <TagLabel>{status}</TagLabel>
       &nbsp;
       {pipelineIconFromStr(status)}
@@ -100,6 +100,11 @@ const tagStyle: React.CSSProperties = {
   justifyContent: "space-between",
   alignItems: "center",
   gap: "4px"
+};
+
+const smallerTagStyle: React.CSSProperties = {
+  ...tagStyle,
+  width: "100px"
 };
 
 export const NAME_CUTOFF_LENGTH = 24;
@@ -128,7 +133,7 @@ export function PipelineDisplayNameText({
   const hasName = !!pipeline?.options?.name;
 
   if (hasName) {
-    return <span>{displayName}</span>;
+    return <span style={{ fontWeight: "bold" }}>{displayName}</span>;
   }
 
   return (

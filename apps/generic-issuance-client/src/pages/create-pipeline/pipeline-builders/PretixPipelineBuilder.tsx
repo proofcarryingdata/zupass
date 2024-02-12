@@ -1,4 +1,14 @@
 import {
+  Button,
+  Checkbox,
+  FormControl,
+  FormLabel,
+  Input,
+  Radio,
+  RadioGroup,
+  Stack
+} from "@chakra-ui/react";
+import {
   FeedIssuanceOptions,
   GenericIssuanceFetchPretixEventsResponseValue,
   PipelineType,
@@ -90,49 +100,60 @@ export default function PretixPipelineBuilder(
           }
         }}
       >
-        <div>
-          <label htmlFor="orgUrl">Pretix Organizer URL:</label>
-          <input
-            type="url"
-            id="orgUrl"
-            name="orgUrl"
-            value={orgUrl}
-            onChange={(e): void => setOrgUrl(e.target.value)}
-            placeholder="Enter Pretix Organizer URL"
-          />
-        </div>
-        <div>
-          <label htmlFor="token">API Token:</label>
-          <input
-            type="text"
-            id="token"
-            name="token"
-            value={token}
-            onChange={(e): void => setToken(e.target.value)}
-            placeholder="Enter API Token"
-          />
-        </div>
-        <button type="submit">Search for events</button>
+        <Stack>
+          <FormControl>
+            <FormLabel htmlFor="orgUrl">Pretix Organizer URL</FormLabel>
+            <Input
+              width="lg"
+              type="url"
+              id="orgUrl"
+              name="orgUrl"
+              value={orgUrl}
+              onChange={(e): void => setOrgUrl(e.target.value)}
+              placeholder="Enter Pretix Organizer URL"
+            />
+          </FormControl>
+          <FormControl>
+            <FormLabel htmlFor="token">API Token:</FormLabel>
+            <Input
+              width="lg"
+              type="text"
+              id="token"
+              name="token"
+              value={token}
+              onChange={(e): void => setToken(e.target.value)}
+              placeholder="Enter API Token"
+            />
+          </FormControl>
+          <Button
+            width="sm"
+            type="submit"
+            variant="outline"
+            colorScheme="green"
+          >
+            Search for events
+          </Button>
+        </Stack>
       </form>
       {events && !events.length && <div>Your organizer has no events.</div>}
       {!!events?.length && (
-        <div>
-          <h2>Your Events</h2>
-          {events.map((e) => (
-            <div key={e.slug}>
-              <input
-                type="radio"
-                name="event"
-                value={e.slug}
-                checked={selectedEvent === e.slug}
-                onChange={handleSelectEvent}
-              />
-              <label htmlFor={e.slug}>
-                {e.slug} ({getI18nString(e.name)})
-              </label>
-            </div>
-          ))}
-        </div>
+        <FormControl>
+          <FormLabel>Select An Event</FormLabel>
+          <RadioGroup>
+            {events.map((e) => (
+              <div key={e.slug}>
+                <Radio
+                  name="event"
+                  value={e.slug}
+                  isChecked={selectedEvent === e.slug}
+                  onChange={handleSelectEvent}
+                >
+                  {e.slug} ({getI18nString(e.name)})
+                </Radio>
+              </div>
+            ))}
+          </RadioGroup>
+        </FormControl>
       )}
       {selectedEvent && products && !products.length && (
         <div>Your event has no products.</div>
@@ -154,9 +175,8 @@ export default function PretixPipelineBuilder(
                   <td>{p.externalId}</td>
                   <td>{p.name}</td>
                   <td>
-                    <input
-                      type="checkbox"
-                      checked={p.isSuperUser}
+                    <Checkbox
+                      isChecked={p.isSuperUser}
                       onChange={(): void => toggleSuperUser(p.externalId)}
                     />
                   </td>
@@ -168,7 +188,7 @@ export default function PretixPipelineBuilder(
             feedOptions={feedOptions}
             setFeedOptions={setFeedOptions}
           />
-          <button
+          <Button
             onClick={(): Promise<void> => {
               const pipeline: Partial<PretixPipelineDefinition> = {
                 type: PipelineType.Pretix,
@@ -197,7 +217,7 @@ export default function PretixPipelineBuilder(
             }}
           >
             Create Pipeline
-          </button>
+          </Button>
         </div>
       )}
     </div>

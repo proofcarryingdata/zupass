@@ -29,6 +29,7 @@ export default function CSVPipelineBuilder(
       />
       <FeedOptions feedOptions={feedOptions} setFeedOptions={setFeedOptions} />
       <Button
+        width="md"
         colorScheme="green"
         variant="outline"
         onClick={(): Promise<void> =>

@@ -22,10 +22,14 @@ export default function CreatePipelinePage(): ReactNode {
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [selectedPipelineType, setSelectedPipelineType] = useState<
     PipelineType | "JSON"
-  >("JSON");
+  >(PipelineType.Pretix);
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {
+      if (!confirm("are you sure you want to create this pipeline?")) {
+        return;
+      }
+
       if (userJWT) {
         setIsUploadingPipeline(true);
         savePipeline(userJWT, pipelineStringified)
@@ -68,8 +72,7 @@ export default function CreatePipelinePage(): ReactNode {
       <PageContent>
         <Stack>
           <Select
-            width="300px"
-            placeholder="Select Pipeline Type"
+            width="md"
             value={selectedPipelineType ?? ""}
             onChange={(event): void => {
               setSelectedPipelineType(event.target.value as PipelineType);
