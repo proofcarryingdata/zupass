@@ -12,35 +12,35 @@ import { GiCutLemon } from "react-icons/gi";
 import { MdError } from "react-icons/md";
 import { timeAgo } from "../helpers/util";
 import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
-import { PodLink } from "./Core";
 
 export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
-  if (str === "Paused") {
-    return <FaRegPauseCircle />;
+  switch (str) {
+    case "Paused":
+      return <FaRegPauseCircle />;
+    case "Starting":
+      return <FaHourglassHalf />;
+    case "Loaded":
+      return <FaCheck />;
+    case "Error":
+      return <MdError />;
+    default:
+      // compile-time error for when not all cases are covered
+      const _exhaustiveCheck: never = str;
   }
-
-  if (str === "Starting") {
-    return <FaHourglassHalf />;
-  }
-
-  if (str === "Loaded") {
-    return <FaCheck />;
-  }
-
-  return <MdError />;
 }
 
 export function pipelineTypeIcon(type: PipelineType): ReactNode {
-  const icon =
-    type === PipelineType.CSV ? (
-      <FaFileCsv />
-    ) : type === PipelineType.Lemonade ? (
-      <GiCutLemon />
-    ) : (
-      <BsTicketPerforatedFill />
-    );
-
-  return icon;
+  switch (type) {
+    case PipelineType.CSV:
+      return <FaFileCsv />;
+    case PipelineType.Lemonade:
+      return <GiCutLemon />;
+    case PipelineType.Pretix:
+      return <BsTicketPerforatedFill />;
+    default:
+      // compile-time error for when not all cases are covered
+      const _exhaustiveCheck: never = type;
+  }
 }
 
 export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
@@ -143,26 +143,6 @@ export function PipelineDisplayNameText({
 
 export function pipelineDetailPagePath(pipelineId: string): string {
   return `/pipelines/${pipelineId}`;
-}
-
-export function pipelineLink(pipelineId: string | undefined): ReactNode {
-  if (!pipelineId) {
-    return null;
-  }
-
-  return <PodLink to={pipelineDetailPagePath(pipelineId)}>edit</PodLink>;
-}
-
-export function pipelineOwner(
-  entry: GenericIssuancePipelineListEntry
-): ReactNode {
-  return entry.extraInfo.ownerEmail;
-}
-
-export function pipelineType(
-  entry: GenericIssuancePipelineListEntry
-): ReactNode {
-  return <span>{entry.pipeline.type}</span>;
 }
 
 export function pipelineCreatedAtStr(dateStr: string): string {

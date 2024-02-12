@@ -6,8 +6,8 @@ import { ZUPASS_SERVER_URL } from "../constants";
 TimeAgo.addDefaultLocale(en);
 export const timeAgo = new TimeAgo("en-US");
 
-export function stringifyAndFormat(obj: object): string {
-  return JSON.stringify(obj, null, 2);
+export function stringifyAndFormat(obj?: object): string {
+  return obj ? JSON.stringify(obj, null, 2) : "{\n}";
 }
 
 export function getLoadTraceHoneycombLinkForPipeline(

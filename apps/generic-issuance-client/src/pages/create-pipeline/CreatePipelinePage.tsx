@@ -22,7 +22,7 @@ export default function CreatePipelinePage(): ReactNode {
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [selectedPipelineType, setSelectedPipelineType] = useState<
     PipelineType | "JSON"
-  >(PipelineType.Pretix);
+  >("JSON");
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {

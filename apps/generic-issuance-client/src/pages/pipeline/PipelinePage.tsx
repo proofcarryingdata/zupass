@@ -16,6 +16,12 @@ import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
 import { PipelineEditSection } from "./PipelineEditSection";
 
+/**
+ * Page a user can navigate to to view and edit information regarding a
+ * given pipeline.
+ *
+ * e.g. /#/pipelines/3fe06df6-7a3f-45df-8046-44dca6e4e9ea
+ */
 export default function PipelinePage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
@@ -40,6 +46,7 @@ export default function PipelinePage(): ReactNode {
   }, [userJWT]);
 
   if (maybeRequestError) {
+    // TODO: make this nicer
     return (
       <>
         <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />

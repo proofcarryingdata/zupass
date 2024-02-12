@@ -143,6 +143,7 @@ export class CSVPipeline implements BasePipeline {
 
       const start = new Date();
       const logs: PipelineLog[] = [];
+      logs.push(makePLogInfo(`parsing csv`));
 
       try {
         const parsedCSV = await parseCSV(this.definition.options.csv);
@@ -154,11 +155,10 @@ export class CSVPipeline implements BasePipeline {
             row: row
           };
         });
-
         await this.db.clear(this.id);
-        logs.push(makePLogInfo(`clearing old data`));
+        logs.push(makePLogInfo(`cleared old data`));
         await this.db.save(this.id, atoms);
-        logs.push(makePLogInfo(`loaded csv ${this.definition.options.csv}`));
+        logs.push(makePLogInfo(`saved parsed data: ${atoms.length} entries`));
         span?.setAttribute("atom_count", atoms.length);
 
         return {

@@ -80,6 +80,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       GROUP BY p.id`
     );
 
+    // TODO: where should we check that the pipeline definitions
+    // we've loaded conform to the pipeline definition schema?
     return result.rows.map(
       (row: GenericIssuancePipelineRow): PipelineDefinition =>
         ({

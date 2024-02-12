@@ -964,6 +964,7 @@ export class GenericIssuanceService {
       span?.setAttribute("email", normalizedEmail);
 
       // TODO: Skip email auth on this.bypassEmail
+
       try {
         await this.stytchClient.magicLinks.email.loginOrCreate({
           email: normalizedEmail,

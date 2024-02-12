@@ -5,7 +5,11 @@ import styled from "styled-components";
 import { PageContent } from "./Core";
 import { GlobalPageHeader } from "./header/GlobalPageHeader";
 
-const ErrorDisplay = ({
+/**
+ * A React Component rendered in place of a page when a page
+ * encounters an error in its render operation.
+ */
+const PageShowingError = ({
   error
 }: {
   error;
@@ -29,7 +33,9 @@ export function PodboxErrorBoundary({
 }: {
   children?: ReactNode | ReactNode[];
 }): ReactNode {
-  return <ErrorBoundary fallbackUI={ErrorDisplay}>{children}</ErrorBoundary>;
+  return (
+    <ErrorBoundary fallbackUI={PageShowingError}>{children}</ErrorBoundary>
+  );
 }
 
 const ErrorStackPre = styled.pre`

@@ -13,7 +13,7 @@ import {
   getSortedRowModel,
   useReactTable
 } from "@tanstack/react-table";
-import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
+import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { PodLink } from "../../components/Core";
 import {
@@ -77,10 +77,6 @@ export function PipelineTable({
     },
     []
   );
-
-  useEffect(() => {
-    console.log("entries");
-  }, [entries]);
 
   const rows: PipelineRow[] = useMemo(() => {
     return entries.map(entryToRow);
@@ -162,10 +158,6 @@ export function PipelineTable({
           }
         ]
   );
-
-  useEffect(() => {
-    console.log("filteredColumns.length", filteredColumns.length);
-  }, [filteredColumns.length]);
 
   const table = useReactTable({
     columns: filteredColumns,

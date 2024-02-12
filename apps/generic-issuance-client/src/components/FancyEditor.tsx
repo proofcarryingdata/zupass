@@ -2,6 +2,10 @@ import { Box, Spinner } from "@chakra-ui/react";
 import { Editor } from "@monaco-editor/react";
 import { ReactNode, useCallback } from "react";
 
+/**
+ * Use in place of `textarea`. This component effectively wraps
+ * [@monaco-editor/react](https://www.npmjs.com/package/@monaco-editor/react)
+ */
 export function FancyEditor({
   readonly,
   value,

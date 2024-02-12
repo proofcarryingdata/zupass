@@ -1,3 +1,7 @@
+// This file contains declarations of Honeycomb queries, which can be used
+// by the server to create links to queries that help developers to trace
+// certain aspects of the backend application's behavior and performance.
+
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import {
   PipelineDefinition,
@@ -136,11 +140,11 @@ export function getAllGenericIssuanceHTTPQuery(): object {
   };
 }
 
-export function traceUser(user: PipelineUser | undefined): void {
+export function traceUser(user?: PipelineUser | undefined): void {
   traceFlattenedObject(getActiveSpan(), { user });
 }
 
-export function tracePipeline(pipeline: PipelineDefinition | undefined): void {
+export function tracePipeline(pipeline?: PipelineDefinition | undefined): void {
   traceFlattenedObject(getActiveSpan(), {
     pipeline: {
       id: pipeline?.id,
@@ -152,7 +156,7 @@ export function tracePipeline(pipeline: PipelineDefinition | undefined): void {
   });
 }
 
-export function traceLoadSummary(info: PipelineLoadSummary | undefined): void {
+export function traceLoadSummary(info?: PipelineLoadSummary | undefined): void {
   traceFlattenedObject(getActiveSpan(), {
     pipeline_load_summary: {
       atoms_loaded: info?.atomsLoaded,

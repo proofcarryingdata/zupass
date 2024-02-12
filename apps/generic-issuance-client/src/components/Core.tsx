@@ -3,8 +3,10 @@ import { Link, Spinner } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
 import { Link as ReactLink } from "react-router-dom";
 import styled from "styled-components";
-import { PCD_GITHUB_URL } from "../constants";
 
+/**
+ * Use in place of {@link Link} and {@link ReactLink}.
+ */
 export const PodLink = ({
   to,
   children,
@@ -41,20 +43,6 @@ export const HomeLink = (): JSX.Element => {
   return <PodLink to={"/"}>Home</PodLink>;
 };
 
-export const CodeLink = ({
-  file,
-  children
-}: {
-  file: string;
-  children: React.ReactNode;
-}): JSX.Element => {
-  return <PodLink to={PCD_GITHUB_URL + file}>{children}</PodLink>;
-};
-
-export const PageContent = styled.div`
-  padding: 32px;
-`;
-
 export function SmallSpinner(): ReactNode {
   return (
     <span style={{ transform: "scale(0.5)" }}>
@@ -62,3 +50,7 @@ export function SmallSpinner(): ReactNode {
     </span>
   );
 }
+
+export const PageContent = styled.div`
+  padding: 32px;
+`;

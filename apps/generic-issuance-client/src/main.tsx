@@ -26,7 +26,14 @@ const THEME = extendTheme({
 const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 
 const router = createHashRouter([
-  { path: "/", element: <Home />, ErrorBoundary: PodboxErrorBoundary },
+  {
+    path: "/",
+    element: (
+      <PodboxErrorBoundary>
+        <Home />
+      </PodboxErrorBoundary>
+    )
+  },
   {
     path: "/dashboard",
     element: (
