@@ -101,7 +101,7 @@ export function getMockLemonadeHandlers(
         if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
           throw new Error(`Invalid event ID ${eventId}`);
         }
-        const tickets = [
+        const tickets: Partial<LemonadeTicket>[] = [
           ...(
             mocker.getAccount(clientId).getTickets().get(eventId) as Map<
               string,
@@ -128,3 +128,32 @@ export function getMockLemonadeHandlers(
 
   return handlers;
 }
+
+// export function badTicketHandler(backendUrl: string): RequestHandler {
+//   return rest.post(
+//     urljoin(backendUrl, "/event/:eventId/export/tickets"),
+//     (req, res, ctx) => {
+//       const clientId = checkClientId(mocker, req);
+//       const eventId = req.params["eventId"] as string;
+//       if (!mocker.getAccount(clientId).getTickets().has(eventId)) {
+//         throw new Error(`Invalid event ID ${eventId}`);
+//       }
+//       const tickets:  = [
+//         {}
+//       ];
+//       return res(
+//         ctx.text(
+//           csv_stringify(tickets, {
+//             header: true,
+//             cast: {
+//               // Convert checkin date to an ISO string
+//               date: (date) => {
+//                 return date.toISOString();
+//               }
+//             }
+//           })
+//         )
+//       );
+//     }
+//   );
+// }

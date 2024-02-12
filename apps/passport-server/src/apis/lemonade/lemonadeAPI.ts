@@ -8,13 +8,11 @@ import {
   LemonadeOAuthCredentials,
   OAuthTokenManager
 } from "./auth";
-import { LemonadeGraphQLClient } from "./graphQLClient";
+import { LemonadeClient } from "./client";
 import {
   LemonadeCheckin,
   LemonadeEvent,
   LemonadeEvents,
-  LemonadeTicket,
-  LemonadeTicketSchema,
   LemonadeTicketTypes
 } from "./types";
 
@@ -37,7 +35,7 @@ export interface ILemonadeAPI {
     backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
-  ): Promise<LemonadeTicket[]>;
+  ): Promise<unknown[]>;
 
   checkinUser(
     backendUrl: string,
@@ -58,12 +56,10 @@ export interface ILemonadeAPI {
  * must be passed in on each API call.
  */
 class LemonadeAPI implements ILemonadeAPI {
-  private clients: Map<string, LemonadeGraphQLClient>;
   private tokenSource: AuthTokenSource;
   private authTokens: Map<string, AuthToken>;
 
   public constructor(tokenSource: AuthTokenSource) {
-    this.clients = new Map();
     this.tokenSource = tokenSource;
     this.authTokens = new Map();
   }
@@ -94,17 +90,6 @@ class LemonadeAPI implements ILemonadeAPI {
   private invalidateToken(credentials: LemonadeOAuthCredentials): void {
     const credentialString = stringify(credentials);
     this.authTokens.delete(credentialString);
-  }
-
-  /**
-   * Requests require clients, so we look up a previously-created client object
-   * for this request, if one exists. Otherwise, we create and store a new one.
-   */
-  private getClient(backendUrl: string): LemonadeGraphQLClient {
-    if (!this.clients.has(backendUrl)) {
-      this.clients.set(backendUrl, new LemonadeGraphQLClient(backendUrl));
-    }
-    return this.clients.get(backendUrl) as LemonadeGraphQLClient;
   }
 
   /**
@@ -143,10 +128,10 @@ class LemonadeAPI implements ILemonadeAPI {
     backendUrl: string,
     credentials: LemonadeOAuthCredentials
   ): Promise<LemonadeEvents> {
-    const client = this.getClient(backendUrl);
+    const client = new LemonadeClient(backendUrl);
     const token = await this.getToken(credentials);
 
-    return await this.paginate<LemonadeEvents[number]>((opts) =>
+    return this.paginate<LemonadeEvents[number]>((opts) =>
       client.getHostingEvents(token, opts)
     );
   }
@@ -159,9 +144,9 @@ class LemonadeAPI implements ILemonadeAPI {
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
   ): Promise<LemonadeTicketTypes> {
-    const client = this.getClient(backendUrl);
+    const client = new LemonadeClient(backendUrl);
     const token = await this.getToken(credentials);
-    return await client.getEventTicketTypes(token, {
+    return client.getEventTicketTypes(token, {
       input: { event: lemonadeEventId }
     });
   }
@@ -175,7 +160,7 @@ class LemonadeAPI implements ILemonadeAPI {
     backendUrl: string,
     credentials: LemonadeOAuthCredentials,
     lemonadeEventId: string
-  ): Promise<LemonadeTicket[]> {
+  ): Promise<unknown[]> {
     let token = await this.getToken(credentials);
     const url = urljoin(backendUrl, "event", lemonadeEventId, "export/tickets");
     let result = await instrumentedFetch(url, {
@@ -201,12 +186,8 @@ class LemonadeAPI implements ILemonadeAPI {
     const csvText = await result.text();
     const parsed = parse(csvText, {
       columns: true
-    });
-    const results = [];
-    for (const row of parsed) {
-      results.push(LemonadeTicketSchema.parse(row));
-    }
-    return results;
+    }) as unknown[];
+    return parsed;
   }
 
   /**
@@ -218,10 +199,10 @@ class LemonadeAPI implements ILemonadeAPI {
     lemonadeEventId: string,
     lemonadeUserId: string
   ): Promise<LemonadeCheckin> {
-    const client = this.getClient(backendUrl);
+    const client = new LemonadeClient(backendUrl);
     const token = await this.getToken(credentials);
 
-    return await client.updateEventCheckin(token, {
+    return client.updateEventCheckin(token, {
       event: lemonadeEventId,
       user: lemonadeUserId,
       // Setting this to 'false' would cancel the check-in

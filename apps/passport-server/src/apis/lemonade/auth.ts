@@ -105,11 +105,15 @@ export class OAuthTokenManager implements AuthTokenSource {
 
     // Make sure it has an access token
     if (!tokenSet.access_token) {
-      throw new Error("Access token is not defined");
+      throw new Error(
+        `Access token is not defined. Client ID ${oauthClientId}.`
+      );
     }
 
     if (!tokenSet.expires_at) {
-      throw new Error("Token has no expiry timestamp");
+      throw new Error(
+        `Token has no expiry timestamp. Client ID ${oauthClientId}`
+      );
     }
 
     // Cache the Issuer and Client objects

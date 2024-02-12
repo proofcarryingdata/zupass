@@ -181,9 +181,9 @@ export class PretixPipeline implements BasePipeline {
           const eventData = await this.loadEvent(event);
           logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
-          const errors = this.validateEventData(eventData, event);
-          logs.push(...errors.map((e) => makePLogErr(e)));
-          errors.push(...errors);
+          const validationErrors = this.validateEventData(eventData, event);
+          logs.push(...validationErrors.map((e) => makePLogErr(e)));
+          errors.push(...validationErrors);
 
           tickets.push(...(await this.ordersToTickets(event, eventData)));
         }

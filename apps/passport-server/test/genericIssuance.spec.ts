@@ -1093,6 +1093,8 @@ t2,i1`,
     }
   );
 
+  // TODO Test both Lemonade and Pretix with invalid back-end responses
+
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelines();

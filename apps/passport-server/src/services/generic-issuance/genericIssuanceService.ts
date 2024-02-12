@@ -1011,14 +1011,16 @@ export class GenericIssuanceService {
       return;
     }
 
-    logger("[INIT] attempting to create test pipeline data");
+    logger("[INIT] attempting to create test pretix pipeline data");
 
     const testPretixAPIKey = process.env.TEST_PRETIX_KEY;
     const testPretixOrgUrl = process.env.TEST_PRETIX_ORG_URL;
     const createTestPretixPipeline = process.env.CREATE_TEST_PIPELINE;
 
     if (!createTestPretixPipeline || !testPretixAPIKey || !testPretixOrgUrl) {
-      logger("[INIT] not creating test pipeline data - missing env vars");
+      logger(
+        "[INIT] not creating test pretix pipeline data - missing env vars"
+      );
       return;
     }
 
@@ -1026,7 +1028,9 @@ export class GenericIssuanceService {
       await this.definitionDB.loadPipelineDefinitions()
     ).filter((pipeline) => pipeline.type === PipelineType.Pretix);
     if (existingPipelines.length !== 0) {
-      logger("[INIT] there's already a pipeline - not creating test pipeline");
+      logger(
+        "[INIT] there's already a pretix pipeline - not creating pretix test pipeline"
+      );
       return;
     }
 
@@ -1093,7 +1097,7 @@ export class GenericIssuanceService {
       return;
     }
 
-    logger("[INIT] attempting to create test pipeline data");
+    logger("[INIT] attempting to create lemonade test pipeline data");
 
     // OAuth credentials
     const testLemonadeOAuthClientId = process.env.TEST_LEMONADE_OAUTH_CLIENT_ID;
@@ -1115,7 +1119,9 @@ export class GenericIssuanceService {
       !testLemonadeOAuthClientSecret ||
       !testLemonadeOAuthServerUrl
     ) {
-      logger("[INIT] not creating test pipeline data - missing env vars");
+      logger(
+        "[INIT] not creating test lemonade pipeline data - missing env vars"
+      );
       return;
     }
 
@@ -1123,7 +1129,9 @@ export class GenericIssuanceService {
       await this.definitionDB.loadPipelineDefinitions()
     ).filter((pipeline) => pipeline.type === PipelineType.Lemonade);
     if (existingPipelines.length !== 0) {
-      logger("[INIT] there's already a pipeline - not creating test pipeline");
+      logger(
+        "[INIT] there's already a lemonade pipeline - not creating test lemonade pipeline"
+      );
       return;
     }
 

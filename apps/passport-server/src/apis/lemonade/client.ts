@@ -21,10 +21,19 @@ import {
 } from "./types";
 
 /**
- * Wraps an Apollo GraphQL client. There is one client instance per backend
- * URL, so in practice there is likely to be only one instance.
+ * Wraps an Apollo GraphQL client, with convenience methods for the GraphQL
+ * operations supported by the Lemonade back-end.
+ * These operations are:
+ * - Querying for events that the account (as identified by the provided
+ *   {@link LemonadeOAuthCredentials}) has access to
+ * - Querying for the ticket types/tiers supported by an event
+ * - Updating a ticket's check-in status
+ *
+ * The GraphQL API is *not* used for regular pipeline data loading.
+ * Currently the GraphQL API is only used when configuring a pipeline (to
+ * discover which events/products are available), or when checking a user in.
  */
-export class LemonadeGraphQLClient {
+export class LemonadeClient {
   private gqlClient: ApolloClient<NormalizedCacheObject>;
 
   public constructor(backendUrl: string) {
