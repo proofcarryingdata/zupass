@@ -1,6 +1,6 @@
-import { Button, HStack, Heading, Input } from "@chakra-ui/react";
+import { Button, HStack, Input } from "@chakra-ui/react";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageContent } from "../components/Core";
 import { LoadingContent } from "../components/LoadingContent";
@@ -89,11 +89,7 @@ function Page(): JSX.Element {
 
   return (
     <>
-      <GlobalPageHeader
-        titleContent={(): ReactNode => (
-          <Heading size="sm">welcome to the pod-iverse</Heading>
-        )}
-      />
+      <GlobalPageHeader />
       <PageContent>
         {hasSentEmail && (
           <div>

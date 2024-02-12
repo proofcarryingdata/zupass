@@ -1,8 +1,8 @@
 import { Button } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
+import { FaTruckRampBox } from "react-icons/fa6";
 import { useLocation } from "react-router-dom";
 import { PodLink } from "../Core";
-
 export const PodboxButton = (): ReactNode => {
   const location = useLocation();
 
@@ -16,7 +16,9 @@ export const PodboxButton = (): ReactNode => {
       }, [location.pathname])}
     >
       <Button variant="outline">
-        <span style={{ fontSize: "20pt" }}>📦</span>
+        <span style={{ fontSize: "16pt" }}>
+          <FaTruckRampBox />
+        </span>
         &nbsp;&nbsp;
         <span>Podbox</span>
       </Button>

@@ -113,7 +113,7 @@ function App(): ReactNode {
         <RollbarProvider>
           <PodboxErrorBoundary>
             <ColorModeScript initialColorMode={THEME.config.initialColorMode} />
-            <ChakraProvider>
+            <ChakraProvider theme={THEME}>
               <StytchProvider stytch={stytch}>
                 <GIContext.Provider value={state}>
                   <RefreshSession />
