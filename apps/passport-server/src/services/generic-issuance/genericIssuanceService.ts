@@ -443,6 +443,14 @@ export class GenericIssuanceService {
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
 
+      const ownerUser = await this.userDB.getUser(
+        pipelineSlot.definition.ownerUserId
+      );
+
+      if (!ownerUser) {
+        throw new Error("owner does not exist");
+      }
+
       const info = {
         feeds: pipelineFeeds.map((f) => ({
           name: f.options.feedDisplayName,
@@ -450,7 +458,7 @@ export class GenericIssuanceService {
         })),
         latestAtoms: latestAtoms,
         lastLoad: summary,
-        ownerEmail: user.email
+        ownerEmail: ownerUser.email
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: summary });
