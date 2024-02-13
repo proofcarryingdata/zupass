@@ -34,7 +34,7 @@ export function PipelineDetailSection({
 }): ReactNode {
   return (
     <>
-      <Accordion defaultIndex={0}>
+      <Accordion defaultIndex={[0]} allowMultiple={true}>
         {pipelineInfo.feeds && (
           <AccordionItem>
             <AccordionButton>Zupass PCD Feeds</AccordionButton>
