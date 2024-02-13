@@ -4,7 +4,7 @@ import {
   PipelineDefinition,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useEffect } from "react";
+import { ReactNode } from "react";
 import { BsTicketPerforatedFill } from "react-icons/bs";
 import { FaCheck, FaHourglassHalf, FaRegPauseCircle } from "react-icons/fa";
 import { FaFileCsv } from "react-icons/fa6";
@@ -77,10 +77,6 @@ export function pipelineTypeIcon(type: PipelineType): ReactNode {
 }
 
 export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
-  useEffect(() => {
-    console.log(pipelineTypeColor(type));
-  }, [type]);
-
   if (!type) {
     return (
       <Tag style={tagStyle} colorScheme={pipelineTypeColor(type)}>
