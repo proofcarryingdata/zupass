@@ -30,6 +30,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { str } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
@@ -176,6 +177,16 @@ export class LemonadePipeline implements BasePipeline {
 
       const events = this.definition.options.events;
 
+      logs.push(
+        makePLogInfo(
+          `configured ticket types are ${str(
+            events.map((t) => {
+              return `${t.name} (${t.externalId})`;
+            })
+          )}`
+        )
+      );
+
       // For each event, fetch tickets
       const eventTickets = await Promise.all(
         events.map(async (eventConfig: LemonadePipelineEventConfig) => {
@@ -202,6 +213,18 @@ export class LemonadePipeline implements BasePipeline {
           // Get the supported types from event configuration
           const configuredTypes = new Set(
             eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
+          );
+
+          logs.push(
+            makePLogInfo(
+              `configured ticket types for event '${
+                eventConfig.externalId
+              }' are ${str(
+                eventConfig.ticketTypes.map((t) => {
+                  return `${t.name} (${t.externalId})`;
+                })
+              )}`
+            )
           );
 
           const validTickets = [];
@@ -237,6 +260,10 @@ export class LemonadePipeline implements BasePipeline {
               logger(`${LOG_TAG} ${message}`);
             }
           }
+
+          logs.push(
+            makePLogInfo(`loaded ${eventTickets.length} valid tickets`)
+          );
 
           return {
             eventConfig,
