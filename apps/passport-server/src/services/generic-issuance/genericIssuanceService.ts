@@ -458,7 +458,7 @@ export class GenericIssuanceService {
         })),
         latestAtoms: latestAtoms,
         lastLoad: summary,
-        ownerEmail: ownerUser?.email
+        ownerEmail: ownerUser.email
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: summary });
