@@ -1,8 +1,10 @@
+import { Button, HStack, Input } from "@chakra-ui/react";
 import { useStytch } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
+import { LoadingContent } from "../components/LoadingContent";
+import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
 import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "../helpers/userHooks";
 
@@ -61,7 +63,7 @@ function Page(): JSX.Element {
   if (sendingEmail) {
     return (
       <>
-        <Header />
+        <GlobalPageHeader />
         <PageContent>Sending Email...</PageContent>
       </>
     );
@@ -70,8 +72,8 @@ function Page(): JSX.Element {
   if (jwt) {
     return (
       <>
-        <Header />
-        <PageContent>Loading...</PageContent>
+        <GlobalPageHeader />
+        <LoadingContent />
       </>
     );
   }
@@ -79,7 +81,7 @@ function Page(): JSX.Element {
   if (token) {
     return (
       <>
-        <Header />
+        <GlobalPageHeader />
         <PageContent>Logging In...</PageContent>
       </>
     );
@@ -87,7 +89,7 @@ function Page(): JSX.Element {
 
   return (
     <>
-      <Header />
+      <GlobalPageHeader />
       <PageContent>
         {hasSentEmail && (
           <div>
@@ -106,19 +108,19 @@ function Page(): JSX.Element {
               return handleLoginClick();
             }}
           >
-            <label>
-              email:
-              <input
+            <HStack gap={2}>
+              <Input
+                width={300}
                 style={{
                   marginLeft: "8px"
                 }}
                 autoFocus
                 value={email}
                 onChange={(e): void => setEmail(e.target.value)}
-                placeholder="Enter your email"
+                placeholder="Your Email"
               />
-            </label>
-            <button type="submit">Login</button>
+              <Button type="submit">Login</Button>
+            </HStack>
           </form>
         )}
       </PageContent>

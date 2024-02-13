@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { SAMPLE_LEMONADE_PIPELINE } from "../pages/SamplePipelines";
+import { SAMPLE_LEMONADE_PIPELINE } from "../../SamplePipelines";
 import RawJSONPipelineBuilder from "./RawJSONPipelineBuilder";
 
 interface LemonadePipelineBuilderProps {

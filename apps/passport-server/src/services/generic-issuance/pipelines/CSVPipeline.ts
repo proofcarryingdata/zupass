@@ -1,8 +1,8 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
+  PipelineLoadSummary,
   PipelineLog,
-  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue
@@ -24,6 +24,7 @@ import {
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo } from "../util";
 import { BasePipeline, Pipeline } from "./types";
@@ -81,6 +82,7 @@ export class CSVPipeline implements BasePipeline {
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issue", async (span) => {
       logger(LOG_TAG, `issue`, req);
+      tracePipeline(this.definition);
 
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
@@ -134,15 +136,14 @@ export class CSVPipeline implements BasePipeline {
     });
   }
 
-  public async load(): Promise<PipelineRunInfo> {
+  public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
-      logger(LOG_TAG, "load");
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.definition.type);
+      tracePipeline(this.definition);
       logger(LOG_TAG, "load", this.id, this.definition.type);
 
       const start = new Date();
       const logs: PipelineLog[] = [];
+      logs.push(makePLogInfo(`parsing csv`));
 
       try {
         const parsedCSV = await parseCSV(this.definition.options.csv);
@@ -154,20 +155,19 @@ export class CSVPipeline implements BasePipeline {
             row: row
           };
         });
-
         await this.db.clear(this.id);
-        logs.push(makePLogInfo(`clearing old data`));
+        logs.push(makePLogInfo(`cleared old data`));
         await this.db.save(this.id, atoms);
-        logs.push(makePLogInfo(`loaded csv ${this.definition.options.csv}`));
+        logs.push(makePLogInfo(`saved parsed data: ${atoms.length} entries`));
         span?.setAttribute("atom_count", atoms.length);
 
         return {
           atomsLoaded: atoms.length,
-          lastRunEndTimestamp: Date.now(),
-          lastRunStartTimestamp: start.getTime(),
+          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: true
-        };
+        } satisfies PipelineLoadSummary;
       } catch (e) {
         setError(e, span);
         logs.push(makePLogErr(`failed to load csv: ${e}`));
@@ -175,11 +175,11 @@ export class CSVPipeline implements BasePipeline {
 
         return {
           atomsLoaded: 0,
-          lastRunEndTimestamp: Date.now(),
-          lastRunStartTimestamp: start.getTime(),
+          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: false
-        };
+        } satisfies PipelineLoadSummary;
       }
     });
   }

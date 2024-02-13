@@ -19,6 +19,9 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
     timeUpdated: new Date().toISOString(),
     editorUserIds: [],
     options: {
+      paused: true,
+      name: "test name",
+      notes: "test notes",
       oauthAudience: "",
       oauthClientId: "",
       oauthClientSecret: "",

@@ -3,7 +3,8 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
-import { setFlattenedObject, traced } from "../../telemetryService";
+import { traced } from "../../telemetryService";
+import { tracePipeline } from "../honeycombQueries";
 import { CSVPipeline } from "./CSVPipeline";
 import {
   LemonadePipeline,
@@ -31,11 +32,8 @@ export function instantiatePipeline(
   },
   zupassPublicKey: EdDSAPublicKey
 ): Promise<Pipeline> {
-  return traced("instantiatePipeline", "instantiatePipeline", async (span) => {
-    setFlattenedObject(span, {
-      type: definition.type,
-      id: definition.id
-    });
+  return traced("instantiatePipeline", "instantiatePipeline", async () => {
+    tracePipeline(definition);
 
     if (isLemonadePipelineDefinition(definition)) {
       return new LemonadePipeline(

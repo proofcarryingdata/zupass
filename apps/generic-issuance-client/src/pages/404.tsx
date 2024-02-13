@@ -1,15 +1,14 @@
 import { ReactNode } from "react";
-import { Link } from "react-router-dom";
-import { PageContent } from "../components/Core";
-import { Header } from "../components/Header";
+import { PageContent, PodLink } from "../components/Core";
+import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
 
 export function NotFound(): ReactNode {
   return (
     <>
-      <Header />
+      <GlobalPageHeader />
       <PageContent>
         This page doesn't exist. <br />
-        <Link to="/">Go to Podbox</Link>
+        <PodLink to="/">Go to Podbox</PodLink>
       </PageContent>
     </>
   );

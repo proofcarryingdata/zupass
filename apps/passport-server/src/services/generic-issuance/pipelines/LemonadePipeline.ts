@@ -17,8 +17,8 @@ import {
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   PipelineDefinition,
+  PipelineLoadSummary,
   PipelineLog,
-  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
@@ -30,6 +30,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { str } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
@@ -50,6 +51,7 @@ import {
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "../util";
 import { BasePipeline, Pipeline } from "./types";
@@ -160,15 +162,11 @@ export class LemonadePipeline implements BasePipeline {
    *   {@link DevconnectPretixSyncService}.
    * - clear tickets after each load? important!!!!
    */
-  public async load(): Promise<PipelineRunInfo> {
+  public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
+      tracePipeline(this.definition);
       const logs: PipelineLog[] = [];
-      const startTime = Date.now();
-
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
-
-      const loadStart = Date.now();
+      const loadStart = new Date();
 
       const credentials = {
         oauthAudience: this.definition.options.oauthAudience,
@@ -178,6 +176,16 @@ export class LemonadePipeline implements BasePipeline {
       };
 
       const events = this.definition.options.events;
+
+      logs.push(
+        makePLogInfo(
+          `configured ticket types are ${str(
+            events.map((t) => {
+              return `${t.name} (${t.externalId})`;
+            })
+          )}`
+        )
+      );
 
       // For each event, fetch tickets
       const eventTickets = await Promise.all(
@@ -205,6 +213,18 @@ export class LemonadePipeline implements BasePipeline {
           // Get the supported types from event configuration
           const configuredTypes = new Set(
             eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
+          );
+
+          logs.push(
+            makePLogInfo(
+              `configured ticket types for event '${
+                eventConfig.externalId
+              }' are ${str(
+                eventConfig.ticketTypes.map((t) => {
+                  return `${t.name} (${t.externalId})`;
+                })
+              )}`
+            )
           );
 
           const validTickets = [];
@@ -240,6 +260,10 @@ export class LemonadePipeline implements BasePipeline {
               logger(`${LOG_TAG} ${message}`);
             }
           }
+
+          logs.push(
+            makePLogInfo(`loaded ${eventTickets.length} valid tickets`)
+          );
 
           return {
             eventConfig,
@@ -282,12 +306,12 @@ export class LemonadePipeline implements BasePipeline {
       logger(
         LOG_TAG,
         `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-          loadEnd - loadStart
+          loadEnd - loadStart.getTime()
         }ms`
       );
 
       span?.setAttribute("atoms_saved", atomsToSave.length);
-      span?.setAttribute("load_duration_ms", loadEnd - loadStart);
+      span?.setAttribute("load_duration_ms", loadEnd - loadStart.getTime());
 
       // Remove any pending check-ins that succeeded before loading started.
       // Those that succeeded after loading started might not be represented in
@@ -297,7 +321,7 @@ export class LemonadePipeline implements BasePipeline {
       this.pendingCheckIns.forEach((value, key) => {
         if (
           value.status === CheckinStatus.Success &&
-          value.timestamp < loadStart
+          value.timestamp < loadStart.getTime()
         ) {
           this.pendingCheckIns.delete(key);
         }
@@ -305,11 +329,11 @@ export class LemonadePipeline implements BasePipeline {
 
       return {
         latestLogs: logs,
-        lastRunEndTimestamp: Date.now(),
-        lastRunStartTimestamp: startTime,
+        lastRunEndTimestamp: new Date().toISOString(),
+        lastRunStartTimestamp: loadStart.toISOString(),
         atomsLoaded: atomsToSave.length,
         success: true
-      } satisfies PipelineRunInfo;
+      } satisfies PipelineLoadSummary;
     });
   }
 
@@ -322,8 +346,7 @@ export class LemonadePipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issueLemonadeTicketPCDs", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
 
       if (!req.pcd) {
         throw new Error("missing credential pcd");
@@ -612,8 +635,7 @@ export class LemonadePipeline implements BasePipeline {
       LOG_NAME,
       "checkLemonadeTicketPCDCanBeCheckedIn",
       async (span) => {
-        span?.setAttribute("pipeline_id", this.id);
-        span?.setAttribute("pipeline_type", this.type);
+        tracePipeline(this.definition);
 
         let checkerTickets: LemonadeAtom[];
         let ticketId: string;
@@ -727,8 +749,8 @@ export class LemonadePipeline implements BasePipeline {
     request: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
     return traced(LOG_NAME, "checkinLemonadeTicketPCD", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
+
       logger(
         LOG_TAG,
         `got request to check in tickets with request ${JSON.stringify(
