@@ -4,6 +4,7 @@ import {
   HStack,
   Heading,
   ListItem,
+  Spinner,
   Stack,
   UnorderedList
 } from "@chakra-ui/react";
@@ -13,12 +14,7 @@ import {
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect, useMemo } from "react";
-import {
-  HomeLink,
-  PageContent,
-  PodLink,
-  SmallSpinner
-} from "../../components/Core";
+import { HomeLink, PageContent, PodLink } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { GIContext } from "../../helpers/Context";
@@ -38,22 +34,24 @@ export default function DashboardPage(): ReactNode {
   const userJWT = useJWT();
   const ctx = useContext(GIContext);
   const pipelinesFromServer = useFetchAllPipelines();
-  const user = useFetchSelf();
-  const isAdminView = !!(ctx.isAdminMode && user?.value?.isAdmin);
+  const userFromServer = useFetchSelf();
+  const isAdminView = !!(ctx.isAdminMode && userFromServer?.value?.isAdmin);
 
   const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {
-    if (!user?.value?.id) {
+    if (!userFromServer?.value?.id) {
       return [];
     }
 
     const entries = pipelinesFromServer?.value ?? [];
 
     if (!isAdminView) {
-      return entries.filter((e) => e.pipeline.ownerUserId === user.value.id);
+      return entries.filter(
+        (e) => e.pipeline.ownerUserId === userFromServer.value.id
+      );
     }
 
     return entries;
-  }, [isAdminView, pipelinesFromServer?.value, user?.value?.id]);
+  }, [isAdminView, pipelinesFromServer?.value, userFromServer?.value?.id]);
 
   useEffect(() => {
     if (!userJWT) {
@@ -63,13 +61,13 @@ export default function DashboardPage(): ReactNode {
 
   const maybeRequestError: string | undefined = getError(
     pipelinesFromServer,
-    user
+    userFromServer
   );
 
   if (maybeRequestError) {
     return (
       <>
-        <GlobalPageHeader user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
         <PageContent>
           <Heading size="md" colorScheme="orange">
             Error Loading Page
@@ -84,13 +82,13 @@ export default function DashboardPage(): ReactNode {
     );
   }
 
-  if (!user || !pipelinesFromServer) {
+  if (!userFromServer || !pipelinesFromServer) {
     return (
       <>
         <GlobalPageHeader
-          user={user}
+          user={userFromServer}
           stytchClient={stytchClient}
-          titleContent={(): ReactNode => <SmallSpinner />}
+          titleContent={(): ReactNode => <Spinner />}
         />
         <LoadingContent />
       </>
@@ -100,15 +98,15 @@ export default function DashboardPage(): ReactNode {
   return (
     <>
       <GlobalPageHeader
-        user={user}
+        user={userFromServer}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
           <HStack>
             <Heading size="sm">Dashboard</Heading>
-            {user.value && (
+            {userFromServer.value && (
               <>
-                <span>{user.value.email}</span>
-                <Badge>{user.value.id}</Badge>
+                <span>{userFromServer.value.email}</span>
+                <Badge>{userFromServer.value.id}</Badge>
               </>
             )}
           </HStack>

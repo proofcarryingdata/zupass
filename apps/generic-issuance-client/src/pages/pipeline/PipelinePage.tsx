@@ -1,10 +1,10 @@
-import { Badge, HStack, Heading } from "@chakra-ui/react";
+import { Badge, HStack, Heading, Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
 import { ReactNode, useContext, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
-import { PageContent, SmallSpinner } from "../../components/Core";
+import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { PipelineDisplayNameText } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
@@ -69,7 +69,7 @@ export default function PipelinePage(): ReactNode {
         <GlobalPageHeader
           user={userFromServer}
           stytchClient={stytchClient}
-          titleContent={(): ReactNode => <SmallSpinner />}
+          titleContent={(): ReactNode => <Spinner />}
         />
         <LoadingContent />
       </>
@@ -89,6 +89,7 @@ export default function PipelinePage(): ReactNode {
             <span>Pipeline</span>
             <PipelineDisplayNameText pipeline={pipelineFromServer.value} />{" "}
             <Badge>{pipelineFromServer.value?.id}</Badge>
+            <div>by {pipelineInfoFromServer.value?.ownerEmail}</div>
           </HStack>
         )}
       />
