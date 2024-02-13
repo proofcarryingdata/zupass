@@ -2,10 +2,7 @@ import { Button, Stack } from "@chakra-ui/react";
 import { FeedIssuanceOptions, PipelineType } from "@pcd/passport-interface";
 import { ReactNode, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
-import {
-  SAMPLE_CSV_DATA,
-  SAMPLE_CSV_FEED_OPTIONS
-} from "../../SamplePipelines";
+import { SAMPLE_CSV_DATA, SAMPLE_CSV_FEED_OPTIONS } from "../SamplePipelines";
 import { FeedOptions } from "./FeedOptions";
 
 interface CSVPipelineBuilderProps {

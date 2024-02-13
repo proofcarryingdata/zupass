@@ -2,13 +2,13 @@ import { Button, HStack, Input } from "@chakra-ui/react";
 import { useStytch } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageContent } from "../components/Core";
-import { LoadingContent } from "../components/LoadingContent";
-import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
-import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../constants";
-import { useJWT } from "../helpers/userHooks";
+import { PageContent } from "../../components/Core";
+import { LoadingContent } from "../../components/LoadingContent";
+import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
+import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../../constants";
+import { useJWT } from "../../helpers/userHooks";
 
-function Page(): JSX.Element {
+function LoginPage(): JSX.Element {
   const stytchClient = useStytch();
   const jwt = useJWT();
   const [email, setEmail] = useState("");
@@ -128,4 +128,4 @@ function Page(): JSX.Element {
   );
 }
 
-export default Page;
+export default LoginPage;

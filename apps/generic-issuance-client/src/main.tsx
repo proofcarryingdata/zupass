@@ -14,10 +14,10 @@ import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
 import { RollbarProvider } from "./components/RollbarProvider";
 import { GIContext, GIContextState } from "./helpers/Context";
-import { NotFound } from "./pages/404";
-import Home from "./pages/Home";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import { NotFound } from "./pages/pipeline/404";
+import Home from "./pages/pipeline/LoginPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
 
 const THEME = extendTheme({
