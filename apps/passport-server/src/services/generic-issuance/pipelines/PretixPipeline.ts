@@ -172,11 +172,31 @@ export class PretixPipeline implements BasePipeline {
           LOG_TAG,
           `loading for pipeline id ${this.id} with type ${this.type}`
         );
+        logs.push(makePLogInfo(`loading data for pipeline '${this.id}'`));
+        logs.push(
+          makePLogInfo(
+            `events are '${str(
+              this.definition.options.events.map((e): string => {
+                return `${e.name} ('${e.externalId}')`;
+              })
+            )}'`
+          )
+        );
 
         const tickets: PretixTicket[] = [];
         const errors: string[] = [];
 
         for (const event of this.definition.options.events) {
+          logs.push(
+            makePLogInfo(
+              `products for ${event.name} are '${str(
+                event.products.map((p): string => {
+                  return `${p.name} ('${p.externalId}')`;
+                })
+              )}'`
+            )
+          );
+
           const eventData = await this.loadEvent(event);
           logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
@@ -229,6 +249,7 @@ export class PretixPipeline implements BasePipeline {
 
         // TODO: error handling
         await this.db.save(this.definition.id, atomsToSave);
+        logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
         const loadEnd = Date.now();
 
