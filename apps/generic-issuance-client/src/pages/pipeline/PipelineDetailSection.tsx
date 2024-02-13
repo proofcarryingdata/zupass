@@ -80,7 +80,7 @@ export function PipelineDetailSection({
         {isAdminView && (
           <AccordionItem>
             <AccordionButton>
-              Tracing Links&nbsp;<Badge colorScheme="orange">Admin</Badge>
+              Tracing Links&nbsp;<Badge colorScheme="gray">Admin</Badge>
             </AccordionButton>
             <AccordionPanel>
               <UnorderedList>
