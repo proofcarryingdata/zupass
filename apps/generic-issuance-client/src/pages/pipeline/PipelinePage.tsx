@@ -87,7 +87,13 @@ export default function PipelinePage(): ReactNode {
         titleContent={(): ReactNode => (
           <HStack>
             <span>Pipeline</span>
-            <PipelineDisplayNameText pipeline={pipelineFromServer.value} />{" "}
+            <span
+              style={{
+                fontWeight: "bold"
+              }}
+            >
+              <PipelineDisplayNameText pipeline={pipelineFromServer.value} />{" "}
+            </span>
             <Badge>{pipelineFromServer.value?.id}</Badge>
             <div>by {pipelineInfoFromServer.value?.ownerEmail}</div>
           </HStack>

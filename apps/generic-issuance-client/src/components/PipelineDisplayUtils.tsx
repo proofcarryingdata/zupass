@@ -150,7 +150,7 @@ const smallerTagStyle: React.CSSProperties = {
   width: "100px"
 };
 
-export const NAME_CUTOFF_LENGTH = 24;
+export const NAME_CUTOFF_LENGTH = 36;
 export const PLACEHOLDER_NAME = "<untitled>";
 
 export function pipelineDisplayNameStr(pipeline?: PipelineDefinition): string {
@@ -176,7 +176,7 @@ export function PipelineDisplayNameText({
   const hasName = !!pipeline?.options?.name;
 
   if (hasName) {
-    return <span style={{ fontWeight: "bold" }}>{displayName}</span>;
+    return <span style={{}}>{displayName}</span>;
   }
 
   return (
