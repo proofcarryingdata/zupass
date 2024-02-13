@@ -19,19 +19,6 @@ export interface FeedCredentialPayload {
   timestamp: number;
 }
 
-/*
- * The payload encoded in the message of the SemaphoreSignaturePCD passed
- * as a credential to the checkin api within the Generic Issuance backend.
- *
- * TODO: move to a different file.
- */
-export interface GenericCheckinCredentialPayload {
-  emailPCD: SerializedPCD<EmailPCD>;
-  ticketIdToCheckIn: string;
-  eventId: string;
-  timestamp: number;
-}
-
 /**
  * Creates a feed credential payload with timestamp.
  */
@@ -40,24 +27,6 @@ export function createFeedCredentialPayload(
 ): FeedCredentialPayload {
   return {
     pcd: pcd,
-    timestamp: Date.now()
-  };
-}
-
-/**
- * Creates a credential payload for use in the Generic Issuance checkin API.
- *
- * TODO: move to a different file.
- */
-export function createGenericCheckinCredentialPayload(
-  emailPCD: SerializedPCD<EmailPCD>,
-  ticketId: string,
-  eventId: string
-): GenericCheckinCredentialPayload {
-  return {
-    emailPCD: emailPCD,
-    ticketIdToCheckIn: ticketId,
-    eventId,
     timestamp: Date.now()
   };
 }

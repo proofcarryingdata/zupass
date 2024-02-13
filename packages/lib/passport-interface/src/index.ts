@@ -1,3 +1,4 @@
+export * from "./CheckinCredential";
 export * from "./CredentialManager";
 export * from "./EncryptedStorage";
 export * from "./FeedAPI";
