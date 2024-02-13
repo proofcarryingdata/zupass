@@ -821,6 +821,7 @@ export class PretixPipeline implements BasePipeline {
             checkerEmailPCD.claim.semaphoreId
           );
         } catch (e) {
+          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
           span?.setAttribute("precheck_error", "InvalidSignature");
           return { canCheckIn: false, error: { name: "InvalidSignature" } };
@@ -938,6 +939,7 @@ export class PretixPipeline implements BasePipeline {
           checkerEmailPCD.claim.semaphoreId
         );
       } catch (e) {
+        logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { checkedIn: false, error: { name: "InvalidSignature" } };
