@@ -1,14 +1,16 @@
-import { Button, HStack, Input } from "@chakra-ui/react";
+import { Box, Button, HStack, Input, Spinner } from "@chakra-ui/react";
 import { useStytch } from "@stytch/react";
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { PageContent } from "../components/Core";
-import { LoadingContent } from "../components/LoadingContent";
-import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
-import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../constants";
-import { useJWT } from "../helpers/userHooks";
+import styled from "styled-components";
+import { PageContent } from "../../components/Core";
+import { LoadingContent } from "../../components/LoadingContent";
+import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
+import { PodboxLogo } from "../../components/header/PodboxButton";
+import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../../constants";
+import { useJWT } from "../../helpers/userHooks";
 
-function Page(): JSX.Element {
+function LoginPage(): JSX.Element {
   const stytchClient = useStytch();
   const jwt = useJWT();
   const [email, setEmail] = useState("");
@@ -60,15 +62,6 @@ function Page(): JSX.Element {
     }
   }, [jwt]);
 
-  if (sendingEmail) {
-    return (
-      <>
-        <GlobalPageHeader />
-        <PageContent>Sending Email...</PageContent>
-      </>
-    );
-  }
-
   if (jwt) {
     return (
       <>
@@ -89,18 +82,11 @@ function Page(): JSX.Element {
 
   return (
     <>
-      <GlobalPageHeader />
       <PageContent>
-        {hasSentEmail && (
-          <div>
-            Check your inbox for{" "}
-            <b>
-              <i>{email} </i>
-            </b>{" "}
-            to continue.
-          </div>
-        )}
-        {!hasSentEmail && (
+        <Container>
+          <Box marginBottom={6}>
+            <PodboxLogo />
+          </Box>
           <form
             onSubmit={(e): Promise<void> => {
               e.preventDefault();
@@ -108,24 +94,45 @@ function Page(): JSX.Element {
               return handleLoginClick();
             }}
           >
-            <HStack gap={2}>
-              <Input
-                width={300}
-                style={{
-                  marginLeft: "8px"
-                }}
-                autoFocus
-                value={email}
-                onChange={(e): void => setEmail(e.target.value)}
-                placeholder="Your Email"
-              />
-              <Button type="submit">Login</Button>
-            </HStack>
+            {!hasSentEmail && (
+              <HStack gap={2}>
+                <Input
+                  isDisabled={sendingEmail}
+                  width={300}
+                  style={{
+                    marginLeft: "8px"
+                  }}
+                  autoFocus
+                  value={email}
+                  onChange={(e): void => setEmail(e.target.value)}
+                  placeholder="email address"
+                />
+
+                <Button isDisabled={sendingEmail} type="submit">
+                  Login
+                </Button>
+                {sendingEmail && <Spinner />}
+              </HStack>
+            )}
+
+            {hasSentEmail && (
+              <Box>
+                Check your inbox for <b>{email}</b> to continue.
+              </Box>
+            )}
           </form>
-        )}
+        </Container>
       </PageContent>
     </>
   );
 }
 
-export default Page;
+const Container = styled.div`
+  display: flex;
+  justify-content: center;
+  flex-direction: column;
+  align-items: center;
+  min-height: 50vh;
+`;
+
+export default LoginPage;

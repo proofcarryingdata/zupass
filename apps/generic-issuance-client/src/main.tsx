@@ -6,7 +6,13 @@ import {
 } from "@chakra-ui/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
-import React, { ReactNode, useCallback, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
@@ -14,10 +20,10 @@ import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
 import { RollbarProvider } from "./components/RollbarProvider";
 import { GIContext, GIContextState } from "./helpers/Context";
-import { NotFound } from "./pages/404";
-import Home from "./pages/Home";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import { NotFound } from "./pages/pipeline/404";
+import Home from "./pages/pipeline/LoginPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
 
 const THEME = extendTheme({
@@ -103,9 +109,17 @@ function saveState(state: GIContextState): void {
 }
 
 function InitScripts(): ReactNode {
-  const { colorMode, setColorMode } = useColorMode();
-  console.log(colorMode);
-  setColorMode("dark");
+  const hasSet = useRef(false);
+
+  const { setColorMode } = useColorMode();
+
+  useEffect(() => {
+    if (!hasSet.current) {
+      hasSet.current = true;
+      setColorMode("dark");
+    }
+  }, [setColorMode]);
+
   return <></>;
 }
 

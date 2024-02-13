@@ -13,7 +13,9 @@ import { MdError } from "react-icons/md";
 import { timeAgo } from "../helpers/util";
 import { PipelineStateDisplay } from "../pages/dashboard/PipelineTable";
 
-export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
+export function pipelineStatusIconFromStr(
+  str: PipelineStateDisplay
+): ReactNode {
   switch (str) {
     case "Paused":
       return <FaRegPauseCircle />;
@@ -24,8 +26,39 @@ export function pipelineIconFromStr(str: PipelineStateDisplay): ReactNode {
     case "Error":
       return <MdError />;
     default:
+      console.warn(`pipelineStatusIconFromStr invalid - '${str}'`);
+      return null;
+  }
+}
+
+export function pipelineStatusColorFromStr(str?: PipelineStateDisplay): string {
+  switch (str) {
+    case "Paused":
+      return "gray";
+    case "Starting":
+      return "gray";
+    case "Loaded":
+      return "green";
+    case "Error":
+      return "red";
+    default:
+      console.warn(`pipelineStatusColorFromStr invalid - '${str}'`);
+      return "gray";
+  }
+}
+
+export function pipelineTypeColor(type?: PipelineType): string {
+  switch (type) {
+    case PipelineType.CSV:
+      return "blue";
+    case PipelineType.Lemonade:
+      return "yellow";
+    case PipelineType.Pretix:
+      return "purple";
+    default:
       // compile-time error for when not all cases are covered
-      const _exhaustiveCheck: never = str;
+      console.warn(`pipelineTypeColor invalid - '${type}'`);
+      return "gray";
   }
 }
 
@@ -38,22 +71,22 @@ export function pipelineTypeIcon(type: PipelineType): ReactNode {
     case PipelineType.Pretix:
       return <BsTicketPerforatedFill />;
     default:
-      // compile-time error for when not all cases are covered
-      const _exhaustiveCheck: never = type;
+      console.warn(`pipelineTypeIcon invalid - '${type}'`);
+      return null;
   }
 }
 
 export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
   if (!type) {
     return (
-      <Tag style={tagStyle}>
+      <Tag style={tagStyle} colorScheme={pipelineTypeColor(type)}>
         <TagLabel>{type}</TagLabel>
       </Tag>
     );
   }
 
   return (
-    <Tag style={tagStyle}>
+    <Tag style={tagStyle} colorScheme={pipelineTypeColor(type)}>
       <TagLabel>{type}</TagLabel>
       &nbsp;
       {pipelineTypeIcon(type)}
@@ -79,16 +112,22 @@ export function PipelineStatusTag({
 }): ReactNode {
   if (!status) {
     return (
-      <Tag style={smallerTagStyle}>
+      <Tag
+        style={smallerTagStyle}
+        colorScheme={pipelineStatusColorFromStr(status)}
+      >
         <TagLabel>{status}</TagLabel>
       </Tag>
     );
   }
   return (
-    <Tag style={smallerTagStyle}>
+    <Tag
+      style={smallerTagStyle}
+      colorScheme={pipelineStatusColorFromStr(status)}
+    >
       <TagLabel>{status}</TagLabel>
       &nbsp;
-      {pipelineIconFromStr(status)}
+      {pipelineStatusIconFromStr(status)}
     </Tag>
   );
 }
@@ -107,7 +146,7 @@ const smallerTagStyle: React.CSSProperties = {
   width: "100px"
 };
 
-export const NAME_CUTOFF_LENGTH = 24;
+export const NAME_CUTOFF_LENGTH = 36;
 export const PLACEHOLDER_NAME = "<untitled>";
 
 export function pipelineDisplayNameStr(pipeline?: PipelineDefinition): string {
@@ -133,7 +172,7 @@ export function PipelineDisplayNameText({
   const hasName = !!pipeline?.options?.name;
 
   if (hasName) {
-    return <span style={{ fontWeight: "bold" }}>{displayName}</span>;
+    return <span style={{}}>{displayName}</span>;
   }
 
   return (

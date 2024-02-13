@@ -91,18 +91,17 @@ export function PipelineTable({
           <PipelineDisplayNameText pipeline={table.row.original.pipeline} />
         )
       }),
+
       columnHelper.accessor("timeUpdated", {
         header: "edited",
         cell: (props) => pipelineLastEditStr(props.row.original.timeUpdated)
       }),
+
       columnHelper.accessor("timeCreated", {
         header: "created",
         cell: (props) => pipelineCreatedAtStr(props.row.original.timeCreated)
       }),
-      columnHelper.accessor("lastLoad", {
-        header: "Last Load",
-        cell: (props) => pipelineLastLoadStr(props.row.original.lastLoad)
-      }),
+
       isAdminView
         ? columnHelper.accessor("owner", {
             header: "Owner",
@@ -114,12 +113,19 @@ export function PipelineTable({
         header: "type",
         cell: (props) => <PipelineTypeTag type={props.row.original.type} />
       }),
+
       columnHelper.accessor("status", {
         header: "Status",
         cell: (props) => (
           <PipelineStatusTag status={props.row.original.status} />
         )
       }),
+
+      columnHelper.accessor("lastLoad", {
+        header: "Last Load",
+        cell: (props) => pipelineLastLoadStr(props.row.original.lastLoad)
+      }),
+
       isAdminView
         ? columnHelper.accessor("loadTraceLink", {
             enableSorting: false,
@@ -131,6 +137,7 @@ export function PipelineTable({
             )
           })
         : undefined,
+
       isAdminView
         ? columnHelper.accessor("allTraceLink", {
             enableSorting: false,
