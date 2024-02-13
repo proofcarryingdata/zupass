@@ -9,7 +9,7 @@ import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { savePipeline } from "../../helpers/Mutations";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useJWT } from "../../helpers/userHooks";
-import { SAMPLE_LEMONADE_PIPELINE } from "./SamplePipelines";
+import { SAMPLE_LEMONADE_PIPELINE } from "../SamplePipelines";
 import CSVPipelineBuilder from "./pipeline-builders/CSVPipelineBuilder";
 import LemonadePipelineBuilder from "./pipeline-builders/LemonadePipelineBuilder";
 import PretixPipelineBuilder from "./pipeline-builders/PretixPipelineBuilder";

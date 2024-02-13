@@ -1,4 +1,4 @@
-import { Button } from "@chakra-ui/react";
+import { Button, HStack } from "@chakra-ui/react";
 import { ReactNode, useCallback } from "react";
 import { FaTruckRampBox } from "react-icons/fa6";
 import { useLocation } from "react-router-dom";
@@ -22,12 +22,20 @@ export const PodboxButton = (): ReactNode => {
       }, [location.pathname])}
     >
       <Button variant="outline">
-        <span style={{ fontSize: "16pt" }}>
-          <FaTruckRampBox />
-        </span>
-        &nbsp;&nbsp;
-        <span>Podbox</span>
+        <PodboxLogo />
       </Button>
     </PodLink>
+  );
+};
+
+export const PodboxLogo = (): ReactNode => {
+  return (
+    <HStack>
+      <span style={{ fontSize: "16pt" }}>
+        <FaTruckRampBox />
+      </span>
+      &nbsp;&nbsp;
+      <span>Podbox</span>
+    </HStack>
   );
 };

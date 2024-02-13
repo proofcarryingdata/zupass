@@ -22,7 +22,7 @@ import { ChangeEvent, ReactNode, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
 import { ZUPASS_SERVER_URL } from "../../../constants";
 import { useJWT } from "../../../helpers/userHooks";
-import { DEFAULT_FEED_OPTIONS } from "../SamplePipelines";
+import { DEFAULT_FEED_OPTIONS } from "../../SamplePipelines";
 import { FeedOptions } from "./FeedOptions";
 
 interface PretixPipelineBuilderProps {
