@@ -43,6 +43,10 @@ const buttonStyle = `
   background: var(--accent-dark);
   opacity: 1;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   &:hover {
     background: var(--accent-darker);
   }
@@ -53,6 +57,7 @@ const buttonStyle = `
 
 export const BtnBase = styled.button<{ size?: "large" | "small" }>`
   ${buttonStyle}
+
   ${({ disabled }): FlattenSimpleInterpolation =>
     disabled === true
       ? css`
@@ -67,7 +72,7 @@ export const BtnBase = styled.button<{ size?: "large" | "small" }>`
       : css`
           height: unset;
           width: unset;
-          display: inline-block;
+          display: inline-flex;
           padding: 8px 16px;
           border-radius: 32px;
         `}

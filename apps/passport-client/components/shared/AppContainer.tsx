@@ -30,7 +30,7 @@ export function AppContainer({
     <>
       <GlobalBackground color={col} />
       <Background>
-        <Container>
+        <CenterColumn>
           {children && (
             <Toaster
               toastOptions={{
@@ -45,7 +45,7 @@ export function AppContainer({
           )}
           {children ?? <ScreenLoader text="Zupass" />}
           {error && <ErrorPopup error={error} onClose={onClose} />}
-        </Container>
+        </CenterColumn>
       </Background>
     </>
   );
@@ -62,7 +62,7 @@ const Background = styled.div`
   min-height: 100%;
 `;
 
-const Container = styled.div`
+const CenterColumn = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;

@@ -144,6 +144,8 @@ export function AddSubscriptionScreen(): JSX.Element {
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
         <H2>Add subscription</H2>
+        <p>test asdf lorem ipsum</p>
+
         {mismatchedEmails && (
           <MismatchedEmailWarning>
             <Spacer h={16} />
@@ -159,6 +161,7 @@ export function AddSubscriptionScreen(): JSX.Element {
             </p>
           </MismatchedEmailWarning>
         )}
+
         {fetchError ||
           (url.length === 0 && (
             <>
@@ -185,7 +188,9 @@ export function AddSubscriptionScreen(): JSX.Element {
             </>
           ))}
         <Spacer h={8} />
+
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
+
         <div>
           {infos &&
             infos.map((info, i) => (
