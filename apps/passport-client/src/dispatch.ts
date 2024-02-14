@@ -101,6 +101,7 @@ export type Action =
   | { type: "password-change-on-other-tab" }
   | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
   | { type: "remove-pcd"; id: string }
+  | { type: "remove-all-pcds-in-folder"; folder: string }
   | { type: "sync" }
   | { type: "resolve-subscription-error"; subscriptionId: string }
   | {
@@ -200,6 +201,8 @@ export async function dispatch(
       return addPCDs(state, update, action.pcds, action.upsert);
     case "remove-pcd":
       return removePCD(state, update, action.id);
+    case "remove-all-pcds-in-folder":
+      return removeAllPCDsInFolder(state, update, action.folder);
     case "participant-invalid":
       return userInvalid(update);
     case "sync":
@@ -1122,4 +1125,20 @@ async function mergeImport(
       }
     });
   }
+}
+
+async function removeAllPCDsInFolder(
+  state: AppState,
+  update: ZuUpdate,
+  folder: string
+): Promise<void> {
+  const packages = await getPackages();
+  const pcds = new PCDCollection(
+    packages,
+    state.pcds.getAll(),
+    state.pcds.folders
+  );
+  pcds.removeAllPCDsInFolder(folder);
+  update({ pcds });
+  window.scrollTo({ top: 0 });
 }
