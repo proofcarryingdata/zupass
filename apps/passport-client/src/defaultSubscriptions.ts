@@ -5,28 +5,62 @@ import {
 } from "@pcd/passport-interface";
 import { appConfig } from "../src/appConfig";
 
-const DEFAULT_FEED_URL = `${appConfig.zupassServer}/feeds`;
-const DEFAULT_FEED_PROVIDER_NAME = "Zupass";
+const ZUPASS_FEED_URL = `${appConfig.zupassServer}/feeds`;
+const ZUPASS_FEED_PROVIDER_NAME = "Zupass";
+const ZUPASS_SERVER_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
-const DEFAULT_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
+const DEFAULT_FEED_URLS = getDefaultFeedURLs();
+console.log({ DEFAULT_FEED_URLS });
+
+function getDefaultFeedURLs(): string[] {
+  const res = JSON.parse(process.env.DEFAULT_FEED_URLS || "[]");
+  console.log({ res });
+  if (!Array.isArray(res) || res.some((e) => typeof e !== "string")) {
+    console.error("DEFAULT_FEED_URLS must be an array of strings");
+    return [];
+  }
+  return res;
+}
 
 export function isDefaultSubscription(sub: Subscription): boolean {
-  return sub.providerUrl === DEFAULT_FEED_URL && DEFAULT_FEEDS.has(sub.feed.id);
+  return (
+    (sub.providerUrl === ZUPASS_FEED_URL &&
+      ZUPASS_SERVER_FEEDS.has(sub.feed.id)) ||
+    DEFAULT_FEED_URLS.includes(sub.providerUrl)
+  );
 }
 
 export async function addDefaultSubscriptions(
   subscriptions: FeedSubscriptionManager
 ): Promise<void> {
-  if (!subscriptions.hasProvider(DEFAULT_FEED_URL)) {
-    subscriptions.addProvider(DEFAULT_FEED_URL, DEFAULT_FEED_PROVIDER_NAME);
+  if (!subscriptions.hasProvider(ZUPASS_FEED_URL)) {
+    subscriptions.addProvider(ZUPASS_FEED_URL, ZUPASS_FEED_PROVIDER_NAME);
   }
 
   for (const id in zupassDefaultSubscriptions) {
     subscriptions.subscribe(
-      DEFAULT_FEED_URL,
+      ZUPASS_FEED_URL,
       zupassDefaultSubscriptions[id],
       // Replace the existing subscription if it already exists
       true
     );
+  }
+
+  console.log("addDefaultSubscriptions", { DEFAULT_FEED_URLS });
+  for (const feedUrl of DEFAULT_FEED_URLS) {
+    if (!subscriptions.hasProvider(feedUrl)) {
+      const { feeds, providerName, providerUrl } =
+        await subscriptions.listFeeds(feedUrl);
+      console.log({ feeds, providerName, providerUrl });
+      subscriptions.addProvider(providerUrl, providerName);
+      for (const feed of feeds) {
+        subscriptions.subscribe(
+          providerUrl,
+          feed,
+          // Replace the existing subscription if it already exists
+          true
+        );
+      }
+    }
   }
 }
