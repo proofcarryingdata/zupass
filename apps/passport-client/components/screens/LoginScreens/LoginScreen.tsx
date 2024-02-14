@@ -11,12 +11,14 @@ import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
   pendingAddRequestKey,
   pendingAddSubscriptionRequestKey,
+  pendingGenericIssuanceCheckinRequestKey,
   pendingGetWithoutProvingRequestKey,
   pendingProofRequestKey,
   pendingViewFrogCryptoRequestKey,
   pendingViewSubscriptionsRequestKey,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
+  setPendingGenericIssuanceCheckinRequest,
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
   setPendingViewFrogCryptoRequest,
@@ -55,7 +57,9 @@ export function LoginScreen(): JSX.Element {
   const pendingViewFrogCryptoRequest = query?.get(
     pendingViewFrogCryptoRequestKey
   );
-
+  const pendingGenericIssuanceCheckinRequest = query?.get(
+    pendingGenericIssuanceCheckinRequestKey
+  );
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
@@ -77,6 +81,11 @@ export function LoginScreen(): JSX.Element {
     } else if (pendingViewFrogCryptoRequest != null) {
       setPendingViewFrogCryptoRequest(pendingViewFrogCryptoRequest);
       pendingRequestForLogging = pendingViewFrogCryptoRequestKey;
+    } else if (pendingGenericIssuanceCheckinRequest != null) {
+      setPendingGenericIssuanceCheckinRequest(
+        pendingGenericIssuanceCheckinRequest
+      );
+      pendingRequestForLogging = pendingGenericIssuanceCheckinRequestKey;
     }
 
     if (pendingRequestForLogging != null) {
@@ -90,7 +99,8 @@ export function LoginScreen(): JSX.Element {
     pendingProveRequest,
     pendingViewSubscriptionsRequest,
     pendingAddSubscriptionRequest,
-    pendingViewFrogCryptoRequest
+    pendingViewFrogCryptoRequest,
+    pendingGenericIssuanceCheckinRequest
   ]);
 
   const suggestedEmail = query?.get("email");

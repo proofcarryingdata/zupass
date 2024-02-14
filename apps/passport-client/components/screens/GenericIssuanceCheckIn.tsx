@@ -20,9 +20,16 @@ import {
   useLaserScannerKeystrokeInput,
   usePCDCollection,
   useQuery,
+  useSelf,
+  useUserForcedToLogout,
   useUserIdentityPCD
 } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
+import {
+  clearAllPendingRequests,
+  pendingGenericIssuanceCheckinRequestKey,
+  setPendingGenericIssuanceCheckinRequest
+} from "../../src/sessionStorage";
 import { Button, H5 } from "../core";
 import { RippleLoader } from "../core/RippleLoader";
 import { AppContainer } from "../shared/AppContainer";
@@ -58,6 +65,25 @@ export function GenericIssuanceCheckInScreen(): JSX.Element {
     ticketId,
     eventId
   } = useTicketDataFromQuery();
+
+  const self = useSelf();
+  const userForcedToLogout = useUserForcedToLogout();
+  const query = useQuery();
+
+  useEffect(() => {
+    if (self == null || userForcedToLogout) {
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify(
+        query.get("id") ? { id: query.get("id") } : { pcd: query.get("pcd") }
+      );
+      setPendingGenericIssuanceCheckinRequest(stringifiedRequest);
+      if (self == null) {
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingGenericIssuanceCheckinRequestKey}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
+    }
+  }, [self, userForcedToLogout, query]);
 
   let content = null;
 

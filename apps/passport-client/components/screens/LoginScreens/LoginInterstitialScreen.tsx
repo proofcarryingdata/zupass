@@ -6,6 +6,7 @@ import {
   clearAllPendingRequests,
   getPendingAddRequest,
   getPendingAddSubscriptionPageRequest,
+  getPendingGenericIssuanceCheckinRequest,
   getPendingGetWithoutProvingRequest,
   getPendingHaloRequest,
   getPendingProofRequest,
@@ -61,6 +62,15 @@ export function LoginInterstitialScreen(): JSX.Element {
         );
         clearAllPendingRequests();
         navigate(`/frogscriptions/${encReq}`, { replace: true });
+      } else if (getPendingGenericIssuanceCheckinRequest() != null) {
+        console.log("Redirecting to Generic Issuance checkin screen");
+        const encReq = new URLSearchParams(
+          JSON.parse(getPendingGenericIssuanceCheckinRequest())
+        ).toString();
+        clearAllPendingRequests();
+        navigate(`/generic-checkin?${encReq}`, {
+          replace: true
+        });
       } else {
         window.location.hash = "#/";
       }
