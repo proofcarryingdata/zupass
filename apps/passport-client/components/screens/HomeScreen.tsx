@@ -108,8 +108,6 @@ export function HomeScreenImpl(): JSX.Element {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
-  if (self == null) return null;
-
   const onRemoveAllClick = useCallback(() => {
     if (
       window.confirm(
@@ -119,6 +117,8 @@ export function HomeScreenImpl(): JSX.Element {
       dispatch({ type: "remove-all-pcds-in-folder", folder: browsingFolder });
     }
   }, [browsingFolder, dispatch]);
+
+  if (self == null) return null;
 
   return (
     <>
