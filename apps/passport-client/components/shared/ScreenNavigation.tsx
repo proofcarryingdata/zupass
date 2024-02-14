@@ -12,7 +12,7 @@ export function ScreenNavigation({
   return (
     <Container>
       <a href={"/#" + to}>
-        <Button size="small" style="secondary">
+        <Button size="large" style="outline">
           <ContentsWrapper>
             <IoIosArrowBack size={18} />
 

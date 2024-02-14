@@ -12,13 +12,15 @@ export function Button({
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  style?: "primary" | "secondary" | "danger";
+  style?: "primary" | "secondary" | "danger" | "outline";
   size?: "large" | "small";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
 }): JSX.Element {
   const Btn =
-    style === "danger"
+    style === "outline"
+      ? BtnOutline
+      : style === "danger"
       ? BtnDanger
       : style === "secondary"
       ? BtnSecondary
@@ -30,7 +32,7 @@ export function Button({
   );
 }
 
-const buttonStyle = `
+const buttonStyle = css`
   user-select: none;
   word-break: break-word;
   width: 100%;
@@ -91,6 +93,15 @@ const BtnSecondary = styled(BtnBase)`
   background: #696969;
   &:hover {
     background: #7a7a7a;
+  }
+`;
+
+const BtnOutline = styled(BtnBase)`
+  border: 1px solid white;
+  color: #fff;
+  background: rgba(0, 0, 0, 0.2);
+  &:hover {
+    background: rgba(0, 0, 0, 0.1);
   }
 `;
 
