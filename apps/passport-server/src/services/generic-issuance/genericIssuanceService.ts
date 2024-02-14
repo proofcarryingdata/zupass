@@ -22,6 +22,7 @@ import {
   PretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
+import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
@@ -95,6 +96,7 @@ export class GenericIssuanceService {
   private genericIssuanceClientUrl: string;
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
+  private rsaPrivateKey: string;
   private bypassEmail: boolean;
   private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
@@ -126,6 +128,7 @@ export class GenericIssuanceService {
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
     this.zupassPublicKey = zupassPublicKey;
+    this.rsaPrivateKey = newRSAPrivateKey();
   }
 
   public async start(): Promise<void> {
@@ -198,7 +201,8 @@ export class GenericIssuanceService {
                 lemonadeAPI: this.lemonadeAPI,
                 genericPretixAPI: this.genericPretixAPI
               },
-              this.zupassPublicKey
+              this.zupassPublicKey,
+              this.rsaPrivateKey
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -901,7 +905,8 @@ export class GenericIssuanceService {
           genericPretixAPI: this.genericPretixAPI,
           lemonadeAPI: this.lemonadeAPI
         },
-        this.zupassPublicKey
+        this.zupassPublicKey,
+        this.rsaPrivateKey
       );
 
       await this.performPipelineLoad(pipelineSlot);

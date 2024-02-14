@@ -10,7 +10,6 @@ import {
 import { PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
-import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
@@ -58,13 +57,14 @@ export class CSVPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
     db: IPipelineAtomDB,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    rsaPrivateKey: string
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
-    this.rsaKey = newRSAPrivateKey();
+    this.rsaKey = rsaPrivateKey;
 
     this.capabilities = [
       {
