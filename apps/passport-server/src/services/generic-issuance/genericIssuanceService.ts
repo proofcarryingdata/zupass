@@ -754,7 +754,9 @@ export class GenericIssuanceService {
           existingPipelineDefinition
         );
         if (
-          existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId
+          existingPipelineDefinition.ownerUserId !==
+            newDefinition.ownerUserId &&
+          !user.isAdmin
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
@@ -890,6 +892,7 @@ export class GenericIssuanceService {
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
+      pipelineSlot.definition = definition;
       pipelineSlot.instance = await instantiatePipeline(
         this.eddsaPrivateKey,
         definition,
