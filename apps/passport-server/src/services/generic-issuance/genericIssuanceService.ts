@@ -449,11 +449,7 @@ export class GenericIssuanceService {
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
 
-      const ownerUser = await this.userDB.getUser(
-        pipelineSlot.definition.ownerUserId
-      );
-
-      if (!ownerUser) {
+      if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");
       }
 
@@ -464,7 +460,7 @@ export class GenericIssuanceService {
         })),
         latestAtoms: latestAtoms,
         lastLoad: summary,
-        ownerEmail: ownerUser.email
+        ownerEmail: pipelineSlot.owner.email
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: summary });
@@ -770,6 +766,8 @@ export class GenericIssuanceService {
         span?.setAttribute("is_new", true);
         newDefinition.ownerUserId = user.id;
         newDefinition.id = uuidV4();
+        newDefinition.timeCreated = new Date().toISOString();
+        newDefinition.timeUpdated = new Date().toISOString();
       }
 
       let validatedNewDefinition: PipelineDefinition = newDefinition;
@@ -783,27 +781,22 @@ export class GenericIssuanceService {
         throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
       }
 
-      if (existingSlot) {
-        existingSlot.owner = await this.userDB.getUser(
-          validatedNewDefinition.ownerUserId
-        );
-      }
-
       logger(
         LOG_TAG,
         `executing upsert of pipeline ${str(validatedNewDefinition)}`
       );
       tracePipeline(validatedNewDefinition);
       await this.definitionDB.setDefinition(validatedNewDefinition);
+      if (existingSlot) {
+        existingSlot.owner = await this.userDB.getUser(
+          validatedNewDefinition.ownerUserId
+        );
+      }
       await this.definitionDB.saveLoadSummary(
         validatedNewDefinition.id,
         undefined
       );
       await this.atomDB.clear(validatedNewDefinition.id);
-      await this.definitionDB.saveLoadSummary(
-        validatedNewDefinition.id,
-        undefined
-      );
       // purposely not awaited
       this.restartPipeline(validatedNewDefinition.id);
       return validatedNewDefinition;
@@ -891,10 +884,9 @@ export class GenericIssuanceService {
           owner: await this.userDB.getUser(definition.ownerUserId)
         };
         this.pipelineSlots.push(pipelineSlot);
+      } else {
+        pipelineSlot.owner = await this.userDB.getUser(definition.ownerUserId);
       }
-      pipelineSlot.owner = await this.userDB.getUser(
-        pipelineSlot.definition.ownerUserId
-      );
 
       tracePipeline(pipelineSlot.definition);
       traceUser(pipelineSlot?.owner);
@@ -1244,6 +1236,8 @@ export async function startGenericIssuanceService(
   lemonadeAPI: ILemonadeAPI | null,
   genericPretixAPI: IGenericPretixAPI | null
 ): Promise<GenericIssuanceService | null> {
+  logger("[INIT] attempting to start Generic Issuance service");
+
   if (!lemonadeAPI) {
     logger(
       "[INIT] not starting generic issuance service - missing lemonade API"

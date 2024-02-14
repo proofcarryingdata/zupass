@@ -161,9 +161,14 @@ export class CSVPipeline implements BasePipeline {
         logs.push(makePLogInfo(`saved parsed data: ${atoms.length} entries`));
         span?.setAttribute("atom_count", atoms.length);
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
+        );
+
         return {
           atomsLoaded: atoms.length,
-          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: true
@@ -173,9 +178,14 @@ export class CSVPipeline implements BasePipeline {
         logs.push(makePLogErr(`failed to load csv: ${e}`));
         logs.push(makePLogErr(`csv was ${this.definition.options.csv}`));
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
+        );
+
         return {
           atomsLoaded: 0,
-          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: false

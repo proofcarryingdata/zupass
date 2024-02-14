@@ -357,9 +357,16 @@ export class LemonadePipeline implements BasePipeline {
         }
       });
 
+      const end = new Date();
+      logs.push(
+        makePLogInfo(
+          `load finished in ${end.getTime() - loadStart.getTime()}ms`
+        )
+      );
+
       return {
         latestLogs: logs,
-        lastRunEndTimestamp: new Date().toISOString(),
+        lastRunEndTimestamp: end.toISOString(),
         lastRunStartTimestamp: loadStart.toISOString(),
         atomsLoaded: atomsToSave.length,
         success: true
