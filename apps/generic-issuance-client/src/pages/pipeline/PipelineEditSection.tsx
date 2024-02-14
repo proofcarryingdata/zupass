@@ -95,7 +95,7 @@ export function PipelineEditSection({
         readonly={ownedBySomeoneElse && !isAdminView}
       />
 
-      {(!ownedBySomeoneElse || isAdminView) && (
+      {isAdminView && (
         <HStack>
           {hasEdits && (
             <Button

@@ -754,7 +754,9 @@ export class GenericIssuanceService {
           existingPipelineDefinition
         );
         if (
-          existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId
+          existingPipelineDefinition.ownerUserId !==
+            newDefinition.ownerUserId &&
+          !user.isAdmin
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
