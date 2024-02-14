@@ -31,9 +31,9 @@
     "@pcd/semaphore-identity-pcd": "0.10.0",
     "@pcd/semaphore-signature-pcd": "0.10.0",
     "@pcd/util": "0.4.0",
-    "@semaphore-protocol/group": "^3.14.0",
-    "@semaphore-protocol/identity": "^3.14.0",
-    "@semaphore-protocol/proof": "^3.14.0",
+    "@semaphore-protocol/group": "^3.15.2",
+    "@semaphore-protocol/identity": "^3.15.2",
+    "@semaphore-protocol/proof": "^3.15.2",
     "json-bigint": "^1.0.0",
     "typescript": "^5.3.3",
     "uuid": "^9.0.0"
