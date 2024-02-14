@@ -253,17 +253,8 @@ export class LemonadePipeline implements BasePipeline {
                 logs.push(makePLogInfo(`parsed ticket ${str(parseResult)}`));
 
                 const ticket = parseResult.data;
-                // Filter the tickets down to configured ticket types
-                logs.push(
-                  makePLogInfo(
-                    `CHECKING: ${
-                      ticket.type_id
-                    } is in configuredTicketTypeExternalIds: ${str([
-                      ...configuredTicketTypeExternalIds
-                    ])}`
-                  )
-                );
 
+                // Filter the tickets down to configured ticket types
                 if (configuredTicketTypeExternalIds.has(ticket.type_id)) {
                   // Tickets can appear for users who have been invited to the
                   // event, but have not registered with Lemonade. Such tickets
@@ -289,7 +280,11 @@ export class LemonadePipeline implements BasePipeline {
                   logger(`${LOG_TAG} ${message}`);
                 }
               } else {
-                const message = `Could not parse ticket '${maybeTicket}' for event ${eventConfig.name} ('${eventConfig.externalId}'), pipeline '${this.id}'`;
+                const message = `Could not parse ticket '${str(
+                  maybeTicket
+                )}' for event ${eventConfig.name} ('${
+                  eventConfig.externalId
+                }'), pipeline '${this.id}'`;
                 logs.push(makePLogErr(message));
                 logger(`${LOG_TAG} ${message}`);
               }
