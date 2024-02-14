@@ -33,6 +33,9 @@
       "path": "../../pcd/semaphore-identity-pcd"
     },
     {
+      "path": "../../pcd/semaphore-signature-pcd"
+    },
+    {
       "path": "../../lib/util"
     },
     {
