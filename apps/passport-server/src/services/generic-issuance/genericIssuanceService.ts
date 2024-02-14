@@ -53,6 +53,7 @@ import {
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
+import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { makePLogErr, makePLogInfo } from "./util";
@@ -449,11 +450,7 @@ export class GenericIssuanceService {
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
 
-      const ownerUser = await this.userDB.getUser(
-        pipelineSlot.definition.ownerUserId
-      );
-
-      if (!ownerUser) {
+      if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");
       }
 
@@ -464,7 +461,7 @@ export class GenericIssuanceService {
         })),
         latestAtoms: latestAtoms,
         lastLoad: summary,
-        ownerEmail: ownerUser.email
+        ownerEmail: pipelineSlot.owner.email
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: summary });
@@ -748,6 +745,9 @@ export class GenericIssuanceService {
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         newDefinition.id
       );
+      const existingSlot = this.pipelineSlots.find(
+        (slot) => slot.definition.id === existingPipelineDefinition?.id
+      );
 
       if (existingPipelineDefinition) {
         span?.setAttribute("is_new", false);
@@ -767,6 +767,8 @@ export class GenericIssuanceService {
         span?.setAttribute("is_new", true);
         newDefinition.ownerUserId = user.id;
         newDefinition.id = uuidV4();
+        newDefinition.timeCreated = new Date().toISOString();
+        newDefinition.timeUpdated = new Date().toISOString();
       }
 
       let validatedNewDefinition: PipelineDefinition = newDefinition;
@@ -780,12 +782,23 @@ export class GenericIssuanceService {
         throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
       }
 
+      if (isCSVPipelineDefinition(validatedNewDefinition)) {
+        if (validatedNewDefinition.options.csv.length > 80_000) {
+          throw new Error("csv too large");
+        }
+      }
+
       logger(
         LOG_TAG,
         `executing upsert of pipeline ${str(validatedNewDefinition)}`
       );
       tracePipeline(validatedNewDefinition);
       await this.definitionDB.setDefinition(validatedNewDefinition);
+      if (existingSlot) {
+        existingSlot.owner = await this.userDB.getUser(
+          validatedNewDefinition.ownerUserId
+        );
+      }
       await this.definitionDB.saveLoadSummary(
         validatedNewDefinition.id,
         undefined
@@ -878,10 +891,9 @@ export class GenericIssuanceService {
           owner: await this.userDB.getUser(definition.ownerUserId)
         };
         this.pipelineSlots.push(pipelineSlot);
+      } else {
+        pipelineSlot.owner = await this.userDB.getUser(definition.ownerUserId);
       }
-      pipelineSlot.owner = await this.userDB.getUser(
-        pipelineSlot.definition.ownerUserId
-      );
 
       tracePipeline(pipelineSlot.definition);
       traceUser(pipelineSlot?.owner);
@@ -1231,6 +1243,8 @@ export async function startGenericIssuanceService(
   lemonadeAPI: ILemonadeAPI | null,
   genericPretixAPI: IGenericPretixAPI | null
 ): Promise<GenericIssuanceService | null> {
+  logger("[INIT] attempting to start Generic Issuance service");
+
   if (!lemonadeAPI) {
     logger(
       "[INIT] not starting generic issuance service - missing lemonade API"

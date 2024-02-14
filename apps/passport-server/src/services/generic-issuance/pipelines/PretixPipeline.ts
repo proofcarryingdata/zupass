@@ -8,6 +8,7 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  CSVPipelineDefinition,
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
@@ -276,8 +277,15 @@ export class PretixPipeline implements BasePipeline {
           }
         });
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(
+            `load finished in ${end.getTime() - startTime.getTime()}ms`
+          )
+        );
+
         return {
-          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: startTime.toISOString(),
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
@@ -1168,7 +1176,7 @@ export function isPretixPipelineDefinition(
 
 export function isCSVPipelineDefinition(
   d: PipelineDefinition
-): d is PretixPipelineDefinition {
+): d is CSVPipelineDefinition {
   return d.type === PipelineType.CSV;
 }
 
