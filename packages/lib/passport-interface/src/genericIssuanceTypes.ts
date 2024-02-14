@@ -112,6 +112,7 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   oauthServerUrl: z.string(),
   backendUrl: z.string(),
   events: z.array(LemonadePipelineEventConfigSchema),
+  superuserEmails: z.array(z.string()).optional(),
   feedOptions: FeedIssuanceOptionsSchema
 });
 
