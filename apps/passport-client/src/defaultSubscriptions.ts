@@ -10,11 +10,9 @@ const ZUPASS_FEED_PROVIDER_NAME = "Zupass";
 const ZUPASS_SERVER_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
 const DEFAULT_FEED_URLS = getDefaultFeedURLs();
-console.log({ DEFAULT_FEED_URLS });
 
 function getDefaultFeedURLs(): string[] {
   const res = JSON.parse(process.env.DEFAULT_FEED_URLS || "[]");
-  console.log({ res });
   if (!Array.isArray(res) || res.some((e) => typeof e !== "string")) {
     console.error("DEFAULT_FEED_URLS must be an array of strings");
     return [];
@@ -46,12 +44,10 @@ export async function addDefaultSubscriptions(
     );
   }
 
-  console.log("addDefaultSubscriptions", { DEFAULT_FEED_URLS });
   for (const feedUrl of DEFAULT_FEED_URLS) {
     if (!subscriptions.hasProvider(feedUrl)) {
       const { feeds, providerName, providerUrl } =
         await subscriptions.listFeeds(feedUrl);
-      console.log({ feeds, providerName, providerUrl });
       subscriptions.addProvider(providerUrl, providerName);
       for (const feed of feeds) {
         subscriptions.subscribe(
