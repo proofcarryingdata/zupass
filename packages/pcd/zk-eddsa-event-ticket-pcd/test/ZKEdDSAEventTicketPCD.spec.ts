@@ -5,6 +5,7 @@ import { v4 as uuid } from "uuid";
 
 import {
   EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName,
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
@@ -24,8 +25,7 @@ import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDClaim,
-  ZKEdDSAEventTicketPCDPackage,
-  ZKEdDSAEventTicketPCDTypeName
+  ZKEdDSAEventTicketPCDPackage
 } from "../src";
 
 import "mocha";
@@ -222,7 +222,7 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       ticket: {
         value: serializedTicketPCD,
         argumentType: ArgumentTypeName.PCD,
-        pcdType: ZKEdDSAEventTicketPCDTypeName
+        pcdType: EdDSATicketPCDTypeName
       },
       identity: {
         value: serializedIdentityPCD,
