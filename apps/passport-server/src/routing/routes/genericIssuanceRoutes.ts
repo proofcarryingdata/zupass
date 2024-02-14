@@ -1,4 +1,3 @@
-import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
@@ -23,7 +22,14 @@ import {
 } from "@pcd/passport-interface";
 import express from "express";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
-import { setFlattenedObject } from "../../services/telemetryService";
+import {
+  getAllGenericIssuanceHTTPQuery,
+  getAllGenericIssuanceQuery,
+  getPipelineAllHQuery,
+  getPipelineLoadHQuery as getPipelineDataLoadHQuery,
+  traceUser
+} from "../../services/generic-issuance/honeycombQueries";
+import { createQueryUrl } from "../../services/telemetryService";
 import { GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkBody, checkUrlParam } from "../params";
@@ -62,7 +68,7 @@ export function initGenericIssuanceRoutes(
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const user = await genericIssuanceService.authenticateStytchSession(req);
-    setFlattenedObject(getActiveSpan(), { user });
+    traceUser(user);
 
     const result: GenericIssuanceSelfResponseValue = {
       email: user.email,
@@ -112,7 +118,7 @@ export function initGenericIssuanceRoutes(
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     const user = await genericIssuanceService.authenticateStytchSession(req);
-    setFlattenedObject(getActiveSpan(), { user });
+    traceUser(user);
 
     const reqBody = req.body as PipelineInfoRequest;
     const result = await genericIssuanceService.handleGetPipelineInfo(
@@ -187,7 +193,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceUser(user);
 
       const result =
         await genericIssuanceService.getAllUserPipelineDefinitions(user);
@@ -205,7 +211,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceUser(user);
 
       const result = await genericIssuanceService.loadPipelineDefinition(
         user,
@@ -223,7 +229,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceUser(user);
 
       const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
       const result = await genericIssuanceService.upsertPipelineDefinition(
@@ -242,7 +248,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const user = await genericIssuanceService.authenticateStytchSession(req);
-      setFlattenedObject(getActiveSpan(), { user });
+      traceUser(user);
 
       const result = await genericIssuanceService.deletePipelineDefinition(
         user,
@@ -252,11 +258,60 @@ export function initGenericIssuanceRoutes(
     }
   );
 
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get(
+    "/generic-issuance/api/pipeline-honeycomb/load/:id",
+    async (req, res) => {
+      const pipelineId = checkUrlParam(req, "id");
+      const query = getPipelineDataLoadHQuery(pipelineId);
+      const queryUrl = await createQueryUrl(query);
+      res.redirect(queryUrl);
+    }
+  );
+
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get(
+    "/generic-issuance/api/pipeline-honeycomb/all/:id",
+    async (req, res) => {
+      const pipelineId = checkUrlParam(req, "id");
+      const query = getPipelineAllHQuery(pipelineId);
+      const queryUrl = await createQueryUrl(query);
+      res.redirect(queryUrl);
+    }
+  );
+
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get(
+    "/generic-issuance/api/pipeline-honeycomb/all-http",
+    async (req, res) => {
+      const query = getAllGenericIssuanceHTTPQuery();
+      const queryUrl = await createQueryUrl(query);
+      res.redirect(queryUrl);
+    }
+  );
+
+  /**
+   * Doesn't need auth as the location that we're redirecting to has its own auth layer.
+   */
+  app.get("/generic-issuance/api/pipeline-honeycomb/all/", async (req, res) => {
+    const query = getAllGenericIssuanceQuery();
+    const queryUrl = await createQueryUrl(query);
+    res.redirect(queryUrl);
+  });
+
   app.post(
     "/generic-issuance/api/fetch-pretix-events",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      await genericIssuanceService.authenticateStytchSession(req);
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      traceUser(user);
+
       const events = await genericIssuanceService.fetchAllPretixEvents(
         checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
           req,
@@ -275,7 +330,9 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      await genericIssuanceService.authenticateStytchSession(req);
+      const user = await genericIssuanceService.authenticateStytchSession(req);
+      traceUser(user);
+
       const events = await genericIssuanceService.fetchPretixProducts(
         checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
           req,

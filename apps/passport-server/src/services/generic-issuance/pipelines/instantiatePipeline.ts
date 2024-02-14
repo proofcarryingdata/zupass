@@ -3,7 +3,8 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
-import { setFlattenedObject, traced } from "../../telemetryService";
+import { traced } from "../../telemetryService";
+import { tracePipeline } from "../honeycombQueries";
 import { CSVPipeline } from "./CSVPipeline";
 import {
   LemonadePipeline,
@@ -29,13 +30,11 @@ export function instantiatePipeline(
     lemonadeAPI: ILemonadeAPI;
     genericPretixAPI: IGenericPretixAPI;
   },
-  zupassPublicKey: EdDSAPublicKey
+  zupassPublicKey: EdDSAPublicKey,
+  rsaPrivateKey: string
 ): Promise<Pipeline> {
-  return traced("instantiatePipeline", "instantiatePipeline", async (span) => {
-    setFlattenedObject(span, {
-      type: definition.type,
-      id: definition.id
-    });
+  return traced("instantiatePipeline", "instantiatePipeline", async () => {
+    tracePipeline(definition);
 
     if (isLemonadePipelineDefinition(definition)) {
       return new LemonadePipeline(
@@ -54,7 +53,13 @@ export function instantiatePipeline(
         zupassPublicKey
       );
     } else if (isCSVPipelineDefinition(definition)) {
-      return new CSVPipeline(eddsaPrivateKey, definition, db, zupassPublicKey);
+      return new CSVPipeline(
+        eddsaPrivateKey,
+        definition,
+        db,
+        zupassPublicKey,
+        rsaPrivateKey
+      );
     }
 
     throw new Error(

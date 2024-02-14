@@ -1,122 +1,48 @@
-import React, { useCallback, useState } from "react";
-import { Link } from "react-router-dom";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
-import { PCD_GITHUB_URL } from "../constants";
+import { ExternalLinkIcon } from "@chakra-ui/icons";
+import { Link } from "@chakra-ui/react";
+import { ReactNode, useCallback } from "react";
+import { Link as ReactLink } from "react-router-dom";
+import styled from "styled-components";
 
-export const Container = styled.div`
-  font-family: system-ui, sans-serif;
-  border: 1px solid black;
-  border-radius: 8px;
-  padding: 8px;
-  margin-bottom: 8px;
-`;
-
-export const HomeLink = (): JSX.Element => {
-  return <Link to={"/"}>Home</Link>;
-};
-
-export const CodeLink = ({
-  file,
-  children
+/**
+ * Use in place of {@link Link} and {@link ReactLink}.
+ */
+export const PodLink = ({
+  to,
+  children,
+  isExternal,
+  onClick
 }: {
-  file: string;
-  children: React.ReactNode;
+  to: string;
+  children?: ReactNode;
+  isExternal?: boolean;
+  onClick?: () => void;
 }): JSX.Element => {
-  return <a href={PCD_GITHUB_URL + file}>{children}</a>;
-};
-
-export const CollapsableCode = ({
-  code,
-  label
-}: {
-  code: string;
-  label?: string;
-}): JSX.Element => {
-  const [collapsed, setCollapsed] = useState(true);
-
-  const toggle = useCallback(() => {
-    setCollapsed((collapsed) => !collapsed);
-  }, []);
-
-  let buttonText = collapsed ? "Expand" : "Collapse";
-  if (label !== undefined) {
-    buttonText += " " + label;
-  }
-
-  if (collapsed) {
-    return <button onClick={toggle}>{buttonText}</button>;
-  }
+  const onClickWrapper = useCallback(
+    (e: React.MouseEvent) => {
+      e.stopPropagation();
+      onClick?.();
+    },
+    [onClick]
+  );
 
   return (
-    <>
-      <button onClick={toggle}>{buttonText}</button>
-      <CollapsableCodeContainer>
-        <pre>{code}</pre>
-      </CollapsableCodeContainer>
-    </>
+    <Link
+      to={to}
+      as={ReactLink}
+      isExternal={isExternal}
+      onClick={onClickWrapper}
+    >
+      {children}
+      {isExternal && <ExternalLinkIcon mx="2px" />}
+    </Link>
   );
 };
 
-const CollapsableCodeContainer = styled.div`
-  border-radius: 8px;
-  border: 1px solid grey;
-  overflow-y: scroll;
-  max-width: 100%;
-  padding: 8px;
-`;
+export const HomeLink = (): JSX.Element => {
+  return <PodLink to={"/"}>Home</PodLink>;
+};
 
 export const PageContent = styled.div`
   padding: 32px;
-`;
-
-export const GOLD = "#f4ff1f";
-export const TABLE_BORDER_COLOR = "#5d5d5d";
-export const TABLE_BORDER_WIDTH = "2px";
-export const CELL_PADDING = "4px 8px";
-
-export const Table = styled.table`
-  ${({ twoColumn }: { twoColumn?: boolean }): FlattenSimpleInterpolation => css`
-    border-collapse: collapse;
-
-    thead {
-      user-select: none;
-
-      tr {
-        font-weight: bold;
-        text-decoration: underline;
-        text-align: right;
-
-        th {
-          padding: ${CELL_PADDING};
-          border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
-        }
-      }
-    }
-
-    tr {
-      td {
-        padding: ${CELL_PADDING};
-        border: ${TABLE_BORDER_WIDTH} solid ${TABLE_BORDER_COLOR};
-      }
-
-      ${twoColumn &&
-      css`
-        td:first-child {
-          text-align: left;
-        }
-        td:last-child {
-          text-align: right;
-        }
-      `}
-    }
-  `}
-`;
-
-export const TextButton = styled.span`
-  cursor: pointer;
-  user-select: none;
-
-  &:hover {
-    text-decoration: underline;
-  }
 `;

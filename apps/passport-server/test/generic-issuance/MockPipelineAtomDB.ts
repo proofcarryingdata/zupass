@@ -2,10 +2,9 @@ import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../src/database/queries/pipelineAtomDB";
-import { logger } from "../../src/util/logger";
 
 const LOG_NAME = "MockPipelineAtomDB";
-const LOG_TAG = `[${LOG_NAME}]`;
+const _LOG_TAG = `[${LOG_NAME}]`;
 
 /**
  * A mock implementation of {@link IPipelineAtomDB} for testing purposes.
@@ -20,8 +19,6 @@ export class MockPipelineAtomDB implements IPipelineAtomDB {
   }
 
   public async save(pipelineID: string, atoms: PipelineAtom[]): Promise<void> {
-    logger(LOG_TAG, "save", atoms);
-
     if (!this.data[pipelineID]) {
       this.data[pipelineID] = {};
     }

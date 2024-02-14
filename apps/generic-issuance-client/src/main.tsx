@@ -1,25 +1,81 @@
+import {
+  ChakraProvider,
+  ColorModeScript,
+  extendTheme,
+  useColorMode
+} from "@chakra-ui/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
-import React, { ReactNode, useCallback, useState } from "react";
+import React, {
+  ReactNode,
+  useCallback,
+  useEffect,
+  useRef,
+  useState
+} from "react";
 import { createRoot } from "react-dom/client";
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
+import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
+import { RollbarProvider } from "./components/RollbarProvider";
 import { GIContext, GIContextState } from "./helpers/Context";
-import { NotFound } from "./pages/404";
-import CreatePipeline from "./pages/CreatePipeline";
-import Dashboard from "./pages/Dashboard";
-import Home from "./pages/Home";
-import Pipeline from "./pages/Pipeline";
+import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
+import DashboardPage from "./pages/dashboard/DashboardPage";
+import { NotFound } from "./pages/pipeline/404";
+import Home from "./pages/pipeline/LoginPage";
+import PipelinePage from "./pages/pipeline/PipelinePage";
+
+const THEME = extendTheme({
+  config: {
+    initialColorMode: "light",
+    useSystemColorMode: false
+  }
+});
 
 const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
 
 const router = createHashRouter([
-  { path: "/", element: <Home /> },
-  { path: "/dashboard", element: <Dashboard /> },
-  { path: "/create-pipeline", element: <CreatePipeline /> },
-  { path: "/pipelines/:id", element: <Pipeline /> },
-  { path: "*", element: <NotFound /> }
+  {
+    path: "/",
+    element: (
+      <PodboxErrorBoundary>
+        <Home />
+      </PodboxErrorBoundary>
+    )
+  },
+  {
+    path: "/dashboard",
+    element: (
+      <PodboxErrorBoundary>
+        <DashboardPage />
+      </PodboxErrorBoundary>
+    )
+  },
+  {
+    path: "/create-pipeline",
+    element: (
+      <PodboxErrorBoundary>
+        <CreatePipelinePage />
+      </PodboxErrorBoundary>
+    )
+  },
+  {
+    path: "/pipelines/:id",
+    element: (
+      <PodboxErrorBoundary>
+        <PipelinePage />
+      </PodboxErrorBoundary>
+    )
+  },
+  {
+    path: "*",
+    element: (
+      <PodboxErrorBoundary>
+        <NotFound />
+      </PodboxErrorBoundary>
+    )
+  }
 ]);
 
 function loadInitalState(): Partial<GIContextState> {
@@ -52,6 +108,21 @@ function saveState(state: GIContextState): void {
   );
 }
 
+function InitScripts(): ReactNode {
+  const hasSet = useRef(false);
+
+  const { setColorMode } = useColorMode();
+
+  useEffect(() => {
+    if (!hasSet.current) {
+      hasSet.current = true;
+      setColorMode("dark");
+    }
+  }, [setColorMode]);
+
+  return <></>;
+}
+
 function App(): ReactNode {
   const [state, setState] = useState<GIContextState>(
     () => loadInitalState() as GIContextState
@@ -69,15 +140,25 @@ function App(): ReactNode {
   }, []);
 
   return (
-    <React.StrictMode>
-      <StytchProvider stytch={stytch}>
-        <GIContext.Provider value={state}>
-          <RefreshSession />
-          <GlobalStyle />
-          <RouterProvider router={router} />
-        </GIContext.Provider>
-      </StytchProvider>
-    </React.StrictMode>
+    <>
+      <React.StrictMode>
+        <RollbarProvider>
+          <PodboxErrorBoundary>
+            <ColorModeScript initialColorMode={THEME.config.initialColorMode} />
+            <ChakraProvider theme={THEME}>
+              <StytchProvider stytch={stytch}>
+                <GIContext.Provider value={state}>
+                  <InitScripts />
+                  <RefreshSession />
+                  <GlobalStyle />
+                  <RouterProvider router={router} />
+                </GIContext.Provider>
+              </StytchProvider>
+            </ChakraProvider>
+          </PodboxErrorBoundary>
+        </RollbarProvider>
+      </React.StrictMode>
+    </>
   );
 }
 

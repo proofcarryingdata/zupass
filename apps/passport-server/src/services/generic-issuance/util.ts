@@ -9,7 +9,12 @@ export function makePLog(
   log: string,
   metadata?: unknown
 ): PipelineLog {
-  return { timestampCreated: Date.now(), level, value: log, metadata };
+  return {
+    timestampCreated: new Date().toISOString(),
+    level,
+    value: log,
+    metadata
+  };
 }
 
 /**
@@ -17,7 +22,7 @@ export function makePLog(
  */
 export function makePLogInfo(log: string, metadata?: unknown): PipelineLog {
   return {
-    timestampCreated: Date.now(),
+    timestampCreated: new Date().toISOString(),
     level: PipelineLogLevel.Info,
     value: log,
     metadata
@@ -29,7 +34,7 @@ export function makePLogInfo(log: string, metadata?: unknown): PipelineLog {
  */
 export function makePLogWarn(log: string, metadata?: unknown): PipelineLog {
   return {
-    timestampCreated: Date.now(),
+    timestampCreated: new Date().toISOString(),
     level: PipelineLogLevel.Warning,
     value: log,
     metadata
@@ -41,7 +46,7 @@ export function makePLogWarn(log: string, metadata?: unknown): PipelineLog {
  */
 export function makePLogErr(log: string, metadata?: unknown): PipelineLog {
   return {
-    timestampCreated: Date.now(),
+    timestampCreated: new Date().toISOString(),
     level: PipelineLogLevel.Error,
     value: log,
     metadata

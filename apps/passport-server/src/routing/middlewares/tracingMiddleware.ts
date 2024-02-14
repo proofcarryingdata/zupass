@@ -22,6 +22,10 @@ export function tracingMiddleware(): RequestHandler {
 
         res.on("close", () => {
           span?.setAttribute("statusCode", res.statusCode);
+          span?.setAttribute(
+            "statusFamily",
+            Math.floor(res.statusCode / 100) * 100
+          );
           // TODO: what to do tracing-wise if a request hangs?
           span?.end();
         });

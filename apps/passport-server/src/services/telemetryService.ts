@@ -59,6 +59,67 @@ export const enum MarkerType {
   Deploy = "deploy"
 }
 
+export interface HoneyAuthCtx {
+  envSlug: string;
+  teamSlug: string;
+}
+
+let cachedCtx: HoneyAuthCtx | undefined = undefined;
+
+export async function getHoneyAuthCtx(): Promise<HoneyAuthCtx> {
+  if (!honeyClient?.apiHost) {
+    throw new Error("missing honeycomb client");
+  }
+
+  if (cachedCtx) {
+    return cachedCtx;
+  }
+
+  // eslint-disable-next-line no-restricted-globals
+  const res = await fetch("https://api.honeycomb.io/1/auth", {
+    headers: {
+      "Content-Type": "application/json",
+      Accept: "application/json",
+      "X-Honeycomb-Team": honeyClient.writeKey
+    }
+  });
+
+  const result = await res.json();
+
+  if (!result?.environment?.slug) {
+    throw new Error("expected to be able to get environment slug");
+  }
+
+  if (!result?.team?.slug) {
+    throw new Error("expected to be able to get team slug");
+  }
+
+  cachedCtx = {
+    envSlug: result?.environment?.slug,
+    teamSlug: result?.team?.slug
+  };
+  return cachedCtx;
+}
+
+export async function createQueryUrl(query: object): Promise<string> {
+  if (!honeyClient?.apiHost) {
+    throw new Error("missing honeycomb client");
+  }
+
+  if (!query) {
+    throw new Error("missing query");
+  }
+
+  const authEnv = await getHoneyAuthCtx();
+  const encodedQueryDefinition = encodeURIComponent(JSON.stringify(query));
+  const queryURL =
+    `https://ui.honeycomb.io/${authEnv.teamSlug}/environments/` +
+    `${authEnv.envSlug}/datasets/${DATASET_SLUG}` +
+    `?query=${encodedQueryDefinition}`;
+
+  return queryURL;
+}
+
 export async function writeMarker(
   name: string,
   type: string,
@@ -151,7 +212,7 @@ export function setError(e: unknown, span?: Span): void {
   }
 }
 
-export function setFlattenedObject(
+export function traceFlattenedObject(
   span: Span | undefined,
   val: object | undefined
 ): void {

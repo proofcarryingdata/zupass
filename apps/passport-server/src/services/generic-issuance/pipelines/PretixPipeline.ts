@@ -8,7 +8,7 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  GenericCheckinCredentialPayload,
+  CSVPipelineDefinition,
   GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
@@ -21,22 +21,19 @@ import {
   GenericPretixProduct,
   GenericPretixProductCategory,
   PipelineDefinition,
+  PipelineLoadSummary,
   PipelineLog,
-  PipelineRunInfo,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixEventConfig,
   PretixPipelineDefinition,
   PretixProductConfig,
+  verifyCheckinCredential,
   verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { normalizeEmail, str } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
@@ -57,6 +54,7 @@ import {
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
+import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo } from "../util";
 import { BasePipeline, Pipeline } from "./types";
@@ -158,26 +156,44 @@ export class PretixPipeline implements BasePipeline {
    * TODO:
    * - clear tickets after each load? important!!!!
    */
-  public async load(): Promise<PipelineRunInfo> {
-    return traced<PipelineRunInfo>(
+  public async load(): Promise<PipelineLoadSummary> {
+    return traced<PipelineLoadSummary>(
       LOG_NAME,
       "load",
-      async (span): Promise<PipelineRunInfo> => {
-        const startTime = Date.now();
+      async (span): Promise<PipelineLoadSummary> => {
+        tracePipeline(this.definition);
+        const startTime = new Date();
         const logs: PipelineLog[] = [];
-
-        span?.setAttribute("pipeline_id", this.id);
-        span?.setAttribute("pipeline_type", this.type);
 
         logger(
           LOG_TAG,
           `loading for pipeline id ${this.id} with type ${this.type}`
+        );
+        logs.push(makePLogInfo(`loading data for pipeline '${this.id}'`));
+        logs.push(
+          makePLogInfo(
+            `events are '${str(
+              this.definition.options.events.map((e): string => {
+                return `${e.name} ('${e.externalId}')`;
+              })
+            )}'`
+          )
         );
 
         const tickets: PretixTicket[] = [];
         const errors: string[] = [];
 
         for (const event of this.definition.options.events) {
+          logs.push(
+            makePLogInfo(
+              `products for ${event.name} are '${str(
+                event.products.map((p): string => {
+                  return `${p.name} ('${p.externalId}')`;
+                })
+              )}'`
+            )
+          );
+
           const eventData = await this.loadEvent(event);
           logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
@@ -199,8 +215,8 @@ export class PretixPipeline implements BasePipeline {
 
           return {
             atomsLoaded: 0,
-            lastRunEndTimestamp: Date.now(),
-            lastRunStartTimestamp: startTime,
+            lastRunEndTimestamp: new Date().toISOString(),
+            lastRunStartTimestamp: startTime.toISOString(),
             latestLogs: logs,
             success: false
           };
@@ -230,13 +246,14 @@ export class PretixPipeline implements BasePipeline {
 
         // TODO: error handling
         await this.db.save(this.definition.id, atomsToSave);
+        logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
         const loadEnd = Date.now();
 
         logger(
           LOG_TAG,
           `loaded ${atomsToSave.length} atoms for pipeline id ${this.id} in ${
-            loadEnd - startTime
+            loadEnd - startTime.getTime()
           }ms`
         );
 
@@ -250,19 +267,26 @@ export class PretixPipeline implements BasePipeline {
         this.pendingCheckIns.forEach((value, key) => {
           if (
             value.status === CheckinStatus.Success &&
-            value.timestamp < startTime
+            value.timestamp < startTime.getTime()
           ) {
             this.pendingCheckIns.delete(key);
           }
         });
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(
+            `load finished in ${end.getTime() - startTime.getTime()}ms`
+          )
+        );
+
         return {
-          lastRunEndTimestamp: Date.now(),
-          lastRunStartTimestamp: startTime,
+          lastRunEndTimestamp: end.toISOString(),
+          lastRunStartTimestamp: startTime.toISOString(),
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
           success: true
-        } satisfies PipelineRunInfo;
+        } satisfies PipelineLoadSummary;
       }
     );
   }
@@ -274,6 +298,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async loadEvent(event: PretixEventConfig): Promise<PretixEventData> {
     return traced(LOG_NAME, "loadEvent", async () => {
+      tracePipeline(this.definition);
       logger(LOG_TAG, `loadEvent`, event);
 
       const orgUrl = this.definition.options.pretixOrgUrl;
@@ -577,8 +602,8 @@ export class PretixPipeline implements BasePipeline {
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
     return traced(LOG_NAME, "issuePretixTicketPCDs", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
+
       if (!req.pcd) {
         throw new Error("missing credential pcd");
       }
@@ -694,31 +719,6 @@ export class PretixPipeline implements BasePipeline {
   }
 
   /**
-   * When checking tickets in, the user submits various pieces of data, wrapped
-   * in a Semaphore signature.
-   * Here we verify the signature, and return the encoded payload.
-   */
-  private async unwrapCheckInSignature(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<GenericCheckinCredentialPayload> {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      credential.pcd
-    );
-    const signaturePCDValid =
-      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-    if (!signaturePCDValid) {
-      throw new Error("Invalid signature");
-    }
-
-    const payload: GenericCheckinCredentialPayload = JSON.parse(
-      signaturePCD.claim.signedMessage
-    );
-
-    return payload;
-  }
-
-  /**
    * Given a ticket to check in, and a set of tickets belonging to the user
    * performing the check-in, verify that at least one of the user's tickets
    * belongs to a matching event and is a superuser ticket.
@@ -784,17 +784,16 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "checkPretixTicketPCDCanBeCheckedIn",
       async (span) => {
-        span?.setAttribute("pipeline_id", this.id);
-        span?.setAttribute("pipeline_type", this.type);
+        tracePipeline(this.definition);
 
         let checkerTickets: PretixAtom[];
         let ticketId: string;
 
         try {
-          const payload = await this.unwrapCheckInSignature(request.credential);
-          const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.emailPCD.pcd
-          );
+          const payload = await verifyCheckinCredential(request.credential);
+          ticketId = payload.ticketIdToCheckIn;
+          const checkerEmailPCD = payload.emailPCD;
+
           if (
             !isEqualEdDSAPublicKey(
               checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
@@ -822,6 +821,7 @@ export class PretixPipeline implements BasePipeline {
             checkerEmailPCD.claim.semaphoreId
           );
         } catch (e) {
+          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
           span?.setAttribute("precheck_error", "InvalidSignature");
           return { canCheckIn: false, error: { name: "InvalidSignature" } };
@@ -898,8 +898,8 @@ export class PretixPipeline implements BasePipeline {
     request: GenericIssuanceCheckInRequest
   ): Promise<GenericIssuanceCheckInResponseValue> {
     return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
-      span?.setAttribute("pipeline_id", this.id);
-      span?.setAttribute("pipeline_type", this.type);
+      tracePipeline(this.definition);
+
       logger(
         LOG_TAG,
         `got request to check in tickets with request ${JSON.stringify(
@@ -911,10 +911,9 @@ export class PretixPipeline implements BasePipeline {
       let ticketId: string;
 
       try {
-        const payload = await this.unwrapCheckInSignature(request.credential);
-        const checkerEmailPCD = await EmailPCDPackage.deserialize(
-          payload.emailPCD.pcd
-        );
+        const payload = await verifyCheckinCredential(request.credential);
+        ticketId = payload.ticketIdToCheckIn;
+        const checkerEmailPCD = payload.emailPCD;
 
         if (
           !isEqualEdDSAPublicKey(
@@ -940,6 +939,7 @@ export class PretixPipeline implements BasePipeline {
           checkerEmailPCD.claim.semaphoreId
         );
       } catch (e) {
+        logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { checkedIn: false, error: { name: "InvalidSignature" } };
@@ -1148,7 +1148,7 @@ export function isPretixPipelineDefinition(
 
 export function isCSVPipelineDefinition(
   d: PipelineDefinition
-): d is PretixPipelineDefinition {
+): d is CSVPipelineDefinition {
   return d.type === PipelineType.CSV;
 }
 

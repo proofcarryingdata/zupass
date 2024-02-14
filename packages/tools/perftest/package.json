@@ -1,0 +1,34 @@
+{
+  "name": "@pcd/perftest",
+  "private": true,
+  "version": "0.0.1",
+  "license": "MIT",
+  "scripts": {
+    "start": "yarn ts-node src/index.ts",
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "commander": "^11.0.0",
+    "conf": "^11.0.2",
+    "log-symbols": "^4.1.0",
+    "uuid": "^9.0.0",
+    "@pcd/eddsa-ticket-pcd": "^0.5.0",
+    "@pcd/pcd-types": "^0.10.0",
+    "@pcd/semaphore-identity-pcd": "^0.10.0",
+    "@pcd/semaphore-signature-pcd": "^0.10.0",
+    "@pcd/util": "^0.4.0",
+    "@pcd/zk-eddsa-event-ticket-pcd": "^0.4.0",
+    "@semaphore-protocol/identity": "^3.14.0"
+  },
+  "devDependencies": {
+    "ts-node": "*",
+    "@pcd/eslint-config-custom": "*",
+    "@pcd/tsconfig": "*",
+    "eslint": "^7.32.0",
+    "typescript": "^5.3.3"
+  },
+  "publishConfig": {
+    "access": "restricted"
+  }
+}

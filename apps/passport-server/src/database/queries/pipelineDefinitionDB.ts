@@ -1,6 +1,6 @@
 import {
   PipelineDefinition,
-  PipelineRunInfo,
+  PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
 import _ from "lodash";
@@ -22,11 +22,13 @@ export interface IPipelineDefinitionDB {
   getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
   setDefinition(definition: PipelineDefinition): Promise<void>;
   setDefinitions(definitions: PipelineDefinition[]): Promise<void>;
-  saveLastRunInfo(
+  saveLoadSummary(
     definitionID: string,
-    lastRunInfo?: PipelineRunInfo
+    lastRunInfo?: PipelineLoadSummary
   ): Promise<void>;
-  getLatestRunInfo(definitionID: string): Promise<PipelineRunInfo | undefined>;
+  getLastLoadSummary(
+    definitionID: string
+  ): Promise<PipelineLoadSummary | undefined>;
 }
 
 /**
@@ -50,9 +52,9 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * Intentionally saving these in-memory.
    * TODO: save to db as an extra column in the PipelineDefinition table.
    */
-  public async getLatestRunInfo(
+  public async getLastLoadSummary(
     definitionID: string
-  ): Promise<PipelineRunInfo | undefined> {
+  ): Promise<PipelineLoadSummary | undefined> {
     return this.runInfos[definitionID];
   }
 
@@ -60,9 +62,9 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * Intentionally saving these in-memory.
    * TODO: save to db as an extra column in the PipelineDefinition table.
    */
-  public async saveLastRunInfo(
+  public async saveLoadSummary(
     definitionID: string,
-    lastRunInfo: PipelineRunInfo | undefined
+    lastRunInfo: PipelineLoadSummary | undefined
   ): Promise<void> {
     this.runInfos[definitionID] = lastRunInfo;
   }
@@ -78,6 +80,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       GROUP BY p.id`
     );
 
+    // TODO: where should we check that the pipeline definitions
+    // we've loaded conform to the pipeline definition schema?
     return result.rows.map(
       (row: GenericIssuancePipelineRow): PipelineDefinition =>
         ({
