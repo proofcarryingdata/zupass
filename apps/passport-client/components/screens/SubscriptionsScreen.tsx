@@ -12,7 +12,7 @@ import {
   setPendingViewSubscriptionsRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { Button, H2, Spacer } from "../core";
+import { Button, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
@@ -46,15 +46,14 @@ export function SubscriptionsScreen(): JSX.Element {
       <MaybeModal />
       <AppContainer bg="gray">
         <ScreenNavigation label={"Home"} to="/" />
+        <Spacer h={8} />
+        <Button onClick={onAddNewClicked}>Subscribe</Button>
+        <Spacer h={8} />
         <Container>
-          <H2>Your Subscriptions</H2>
-          <Spacer h={16} />
           <p>
             Feed subscriptions allow Zupass to access PCDs from the internet!
             You can subscribe to feeds hosted by third party developers.
           </p>
-          <Spacer h={32} />
-          <Button onClick={onAddNewClicked}>Add a new subscription</Button>
           <Spacer h={16} />
           {subs.getActiveSubscriptions().length === 0 && (
             <div>You have no subscriptions.</div>
@@ -76,7 +75,7 @@ function SubscriptionTree({
   );
 
   return (
-    <div>
+    <>
       {byProvider.map(([providerUrl, subscriptionsList]) => (
         <SingleProvider
           key={providerUrl}
@@ -85,7 +84,7 @@ function SubscriptionTree({
           subscriptionsList={subscriptionsList}
         />
       ))}
-    </div>
+    </>
   );
 }
 
@@ -101,10 +100,6 @@ function SingleProvider({
   const providerName = subscriptions.getProvider(providerUrl).providerName;
   return (
     <ProviderContainer>
-      <ProviderHeader>
-        Subscriptions provided by <ProviderName>{providerUrl}</ProviderName>
-      </ProviderHeader>
-      <Spacer h={8} />
       {subscriptionsList.map((s) => (
         <React.Fragment key={s.id}>
           <Spacer h={16} />

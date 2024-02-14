@@ -32,7 +32,7 @@ import {
   setPendingAddSubscriptionRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BigInput, Button, H2, Spacer } from "../core";
+import { BigInput, Button, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { Spinner } from "../shared/Spinner";
@@ -143,8 +143,12 @@ export function AddSubscriptionScreen(): JSX.Element {
       <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
       <SubscriptionsScreenContainer>
         <Spacer h={16} />
-        <H2>Add subscription</H2>
-        <p>test asdf lorem ipsum</p>
+        <p>
+          You can subscribe to PCD feeds hosted on the internet. PCD feeds ask
+          your Zupass to prove your identity, or prove that you are logged into
+          Zupass with a particular email address, and use that information,
+          encoded as a PCD, to determine what new PCDs to give you.
+        </p>
 
         {mismatchedEmails && (
           <MismatchedEmailWarning>
@@ -242,38 +246,84 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
+  const [moreInfo, setMoreInfo] = useState(false);
+
+  const containerStyle: React.CSSProperties = moreInfo
+    ? {
+        border: "1px solid white",
+        padding: "16px",
+        borderRadius: "16px",
+        backgroundColor: "rgba(255, 255, 255, 0.05)"
+      }
+    : {};
+
   return (
-    <InfoRowContainer>
-      <FeedName>{info.name}</FeedName>
+    <InfoRowContainer style={containerStyle}>
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          alignItems: "center",
+          maxWidth: "100%"
+        }}
+      >
+        <FeedName
+          style={
+            moreInfo
+              ? {
+                  fontWeight: "bold"
+                }
+              : {}
+          }
+        >
+          {info.name}
+        </FeedName>
+        <div style={{ flexShrink: "0" }}>
+          <Button size="xs" onClick={(): void => setMoreInfo((more) => !more)}>
+            {moreInfo ? "Less Info" : "More Info"}
+          </Button>
+        </div>
+      </div>
+
       <Spacer h={8} />
       <Description>{info.description}</Description>
-      <Spacer h={8} />
-      <hr />
-      <Spacer h={8} />
-      {alreadySubscribed && showErrors && error && (
+      {moreInfo ? (
         <>
-          <SubscriptionErrors>
-            <div>
-              Errors were encountered when processing this subscription.
-            </div>
-            <Spacer h={8} />
-            <Button onClick={openResolveErrorModal}>Resolve</Button>
-          </SubscriptionErrors>
           <Spacer h={8} />
+          {alreadySubscribed && showErrors && error && (
+            <>
+              <SubscriptionErrors>
+                <div>
+                  Errors were encountered when processing this subscription.
+                </div>
+                <Spacer h={8} />
+                <Button onClick={openResolveErrorModal}>Resolve</Button>
+              </SubscriptionErrors>
+              <Spacer h={8} />
+            </>
+          )}
+          {alreadySubscribed ? (
+            <AlreadySubscribed
+              existingSubscription={existingSubscriptions[0]}
+            />
+          ) : (
+            <SubscribeSection
+              providerUrl={providerUrl}
+              providerName={providerName}
+              info={info}
+            />
+          )}
         </>
-      )}
-      {alreadySubscribed ? (
-        <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
       ) : (
-        <SubscribeSection
-          providerUrl={providerUrl}
-          providerName={providerName}
-          info={info}
-        />
+        <></>
       )}
     </InfoRowContainer>
   );
 }
+
+const MoreInfoContainer = styled.div`
+  background-color: green;
+`;
 
 function SubscribeSection({
   providerUrl,
@@ -449,7 +499,7 @@ function AlreadySubscribed({
       )}
       <Spacer h={8} />
       {!isDefaultSubscription(existingSubscription) && (
-        <Button onClick={onUnsubscribeClick} size="small" style="danger">
+        <Button onClick={onUnsubscribeClick} size="xs" style="danger">
           Unsubscribe
         </Button>
       )}
@@ -458,11 +508,10 @@ function AlreadySubscribed({
 }
 
 const InfoRowContainer = styled.div`
-  padding: 16px;
-  border: 1px solid white;
-  border-radius: 12px;
-  background: var(--bg-lite-gray);
+  padding-top: 8px;
 `;
+
+const ExpandButtonContainer = styled.div``;
 
 const SubscriptionsScreenContainer = styled.div`
   padding-bottom: 16px;
@@ -472,7 +521,12 @@ const SubscriptionsScreenContainer = styled.div`
 
 const FeedName = styled.div`
   font-weight: bold;
-  font-size: 18px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  padding-right: 16px;
+  box-sizing: border-box;
+  overflow: hidden;
+  flex-shrink: 1;
 `;
 
 const Description = styled.p``;

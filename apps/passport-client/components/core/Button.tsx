@@ -13,7 +13,7 @@ export function Button({
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
   style?: "primary" | "secondary" | "danger" | "outline";
-  size?: "large" | "small";
+  size?: "large" | "small" | "xs";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
 }): JSX.Element {
@@ -57,7 +57,7 @@ const buttonStyle = css`
   }
 `;
 
-export const BtnBase = styled.button<{ size?: "large" | "small" }>`
+export const BtnBase = styled.button<{ size?: "large" | "small" | "xs" }>`
   ${buttonStyle}
 
   ${({ disabled }): FlattenSimpleInterpolation =>
@@ -68,9 +68,21 @@ export const BtnBase = styled.button<{ size?: "large" | "small" }>`
         `
       : css``}
 
-  ${({ size }: { size?: "large" | "small" }): FlattenSimpleInterpolation =>
+  ${({
+    size
+  }: {
+    size?: "large" | "small" | "xs";
+  }): FlattenSimpleInterpolation =>
     size === undefined || size === "large"
       ? css``
+      : size === "xs"
+      ? css`
+          font-size: 8pt;
+          padding: 4px 8px;
+          box-sizing: border-box;
+          display: inline-flex;
+          width: fit-content;
+        `
       : css`
           height: unset;
           width: unset;
@@ -99,9 +111,9 @@ const BtnSecondary = styled(BtnBase)`
 const BtnOutline = styled(BtnBase)`
   border: 1px solid white;
   color: #fff;
-  background: rgba(0, 0, 0, 0.2);
+  background-color: var(--bg-dark-primary);
   &:hover {
-    background: rgba(0, 0, 0, 0.1);
+    background-color: var(--bg-lite-primary);
   }
 `;
 
