@@ -13,13 +13,13 @@ import {
   getError
 } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useContext, useEffect, useMemo } from "react";
+import { ReactNode, useEffect, useMemo } from "react";
 import { HomeLink, PageContent, PodLink } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
-import { GIContext } from "../../helpers/Context";
 import { useFetchAllPipelines } from "../../helpers/useFetchAllPipelines";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
+import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import {
   getAllHoneycombLinkForAllGenericIssuance,
@@ -32,26 +32,23 @@ import { PipelineTable } from "./PipelineTable";
 export default function DashboardPage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
-  const ctx = useContext(GIContext);
-  const pipelinesFromServer = useFetchAllPipelines();
-  const userFromServer = useFetchSelf();
-  const isAdminView = !!(ctx.isAdminMode && userFromServer?.value?.isAdmin);
+  const pipelines = useFetchAllPipelines();
+  const user = useFetchSelf();
+  const isAdminView = useIsAdminView(user?.value);
 
   const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {
-    if (!userFromServer?.value?.id) {
+    if (!user?.value?.id) {
       return [];
     }
 
-    const entries = pipelinesFromServer?.value ?? [];
+    const entries = pipelines?.value ?? [];
 
     if (!isAdminView) {
-      return entries.filter(
-        (e) => e.pipeline.ownerUserId === userFromServer.value.id
-      );
+      return entries.filter((e) => e.pipeline.ownerUserId === user.value.id);
     }
 
     return entries;
-  }, [isAdminView, pipelinesFromServer?.value, userFromServer?.value?.id]);
+  }, [isAdminView, pipelines?.value, user?.value?.id]);
 
   useEffect(() => {
     if (!userJWT) {
@@ -59,15 +56,12 @@ export default function DashboardPage(): ReactNode {
     }
   }, [userJWT]);
 
-  const maybeRequestError: string | undefined = getError(
-    pipelinesFromServer,
-    userFromServer
-  );
+  const maybeRequestError: string | undefined = getError(pipelines, user);
 
   if (maybeRequestError) {
     return (
       <>
-        <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} stytchClient={stytchClient} />
         <PageContent>
           <Heading size="md" colorScheme="orange">
             Error Loading Page
@@ -82,11 +76,11 @@ export default function DashboardPage(): ReactNode {
     );
   }
 
-  if (!userFromServer || !pipelinesFromServer) {
+  if (!user || !pipelines) {
     return (
       <>
         <GlobalPageHeader
-          user={userFromServer}
+          user={user}
           stytchClient={stytchClient}
           titleContent={(): ReactNode => <Spinner />}
         />
@@ -98,15 +92,15 @@ export default function DashboardPage(): ReactNode {
   return (
     <>
       <GlobalPageHeader
-        user={userFromServer}
+        user={user}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
           <HStack>
             <Heading size="sm">Dashboard</Heading>
-            {userFromServer.value && (
+            {user.value && (
               <>
-                <span>{userFromServer.value.email}</span>
-                <Badge>{userFromServer.value.id}</Badge>
+                <span>{user.value.email}</span>
+                <Badge>{user.value.id}</Badge>
               </>
             )}
           </HStack>
@@ -119,7 +113,7 @@ export default function DashboardPage(): ReactNode {
           <span>No pipelines. Create one below.</span>
         )}
 
-        <CreatePipelineButtonSection />
+        {<CreatePipelineButtonSection />}
 
         {isAdminView && <DashboardAdminSection />}
       </PageContent>

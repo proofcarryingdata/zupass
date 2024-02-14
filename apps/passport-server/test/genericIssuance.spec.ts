@@ -174,6 +174,23 @@ describe("Generic Issuance", function () {
     `${EdgeCityDenverBouncer.first_name} ${EdgeCityDenverBouncer.last_name}`
   );
 
+  /**
+   * Similar to {@link EdgeCityBouncerIdentity}, except configured to be
+   * a bouncer via the {@link LemonadePipelineOptions#superuserEmails}
+   */
+  const EdgeCityDenverBouncer2: LemonadeUser = lemonadeBackend.addUser(
+    "bouncer2@example.com",
+    "bouncer2",
+    "joe"
+  );
+  const EdgeCityBouncer2Identity = new Identity();
+  const EdgeCityDenverBouncer2Ticket = EdgeCityLemonadeAccount.addUserTicket(
+    EdgeCityDenver._id,
+    EdgeCityAttendeeTicketType._id,
+    EdgeCityDenverBouncer2._id,
+    `${EdgeCityDenverBouncer2.first_name} ${EdgeCityDenverBouncer2.last_name}`
+  );
+
   const lemonadeTokenSource = new TestTokenSource();
   const lemonadeAPI: ILemonadeAPI = getLemonadeAPI(
     // LemonadeAPI takes an optional `AuthTokenSource` as a parameter. This
@@ -207,6 +224,7 @@ describe("Generic Issuance", function () {
       oauthClientSecret: "test",
       oauthServerUrl: "test",
       backendUrl: lemonadeBackendUrl,
+      superuserEmails: [EdgeCityDenverBouncer2.email],
       events: [
         {
           externalId: EdgeCityDenver._id,
@@ -510,6 +528,30 @@ t2,i1`,
         checkedIn: false,
         error: { name: "InvalidSignature" }
       } satisfies GenericIssuanceCheckInResponseValue);
+
+      const Bouncer2Tickets = await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityDenverBouncer2Ticket.user_email,
+        EdgeCityBouncer2Identity
+      );
+      expectLength(Bouncer2Tickets, 1);
+      const Bouncer2Ticket = Bouncer2Tickets[0];
+      expectIsEdDSATicketPCD(Bouncer2Ticket);
+      expect(Bouncer2Ticket.claim.ticket.attendeeEmail)
+        .to.eq(EdgeCityDenverBouncer2Ticket.user_email)
+        .to.eq(EdgeCityDenverBouncer2.email);
+
+      const bouncer2ChecksInSelf = await requestCheckInPipelineTicket(
+        edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityDenverBouncer2Ticket.user_email,
+        EdgeCityBouncer2Identity,
+        Bouncer2Ticket
+      );
+      expect(bouncer2ChecksInSelf.value).to.deep.eq({ checkedIn: true });
 
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
     }

@@ -22,6 +22,7 @@ import {
   PretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
+import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
@@ -69,6 +70,7 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export interface PipelineSlot {
   definition: PipelineDefinition;
   instance?: Pipeline;
+  owner?: PipelineUser;
 }
 
 export class GenericIssuanceService {
@@ -95,6 +97,7 @@ export class GenericIssuanceService {
   private genericIssuanceClientUrl: string;
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
+  private rsaPrivateKey: string;
   private bypassEmail: boolean;
   private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
@@ -126,6 +129,7 @@ export class GenericIssuanceService {
       process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
       process.env.NODE_ENV !== "production";
     this.zupassPublicKey = zupassPublicKey;
+    this.rsaPrivateKey = newRSAPrivateKey();
   }
 
   public async start(): Promise<void> {
@@ -183,7 +187,8 @@ export class GenericIssuanceService {
       this.pipelineSlots = await Promise.all(
         pipelinesFromDB.map(async (pd: PipelineDefinition) => {
           const slot: PipelineSlot = {
-            definition: pd
+            definition: pd,
+            owner: await this.userDB.getUser(pd.ownerUserId)
           };
 
           // attempt to instantiate a {@link Pipeline}
@@ -198,7 +203,8 @@ export class GenericIssuanceService {
                 lemonadeAPI: this.lemonadeAPI,
                 genericPretixAPI: this.genericPretixAPI
               },
-              this.zupassPublicKey
+              this.zupassPublicKey,
+              this.rsaPrivateKey
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -509,7 +515,7 @@ export class GenericIssuanceService {
             }
           } satisfies Feed
         ],
-        providerName: "PCD-ifier",
+        providerName: "Podbox",
         providerUrl: feedCapability.feedUrl
       } satisfies ListFeedsResponseValue;
 
@@ -644,27 +650,23 @@ export class GenericIssuanceService {
       async (span) => {
         logger(SERVICE_NAME, "getAllUserPipelineDefinitions", str(user));
 
-        const allDefinitions: PipelineDefinition[] =
-          await this.definitionDB.loadPipelineDefinitions();
-
-        const visiblePipelines = allDefinitions.filter((d) =>
-          this.userHasPipelineDefinitionAccess(user, d)
+        const visiblePipelines = this.pipelineSlots.filter((slot) =>
+          this.userHasPipelineDefinitionAccess(user, slot.definition)
         );
         span?.setAttribute("pipeline_count", visiblePipelines.length);
 
         return Promise.all(
-          visiblePipelines.map(async (p) => {
-            const owner = await this.userDB.getUser(p.ownerUserId);
-            if (!owner) {
-              throw new Error(`couldn't load user for id '${p.ownerUserId}'`);
-            }
-            const summary = await this.definitionDB.getLastLoadSummary(p.id);
+          visiblePipelines.map(async (slot) => {
+            const owner = slot.owner;
+            const summary = await this.definitionDB.getLastLoadSummary(
+              slot.definition.id
+            );
             return {
               extraInfo: {
-                ownerEmail: owner.email,
+                ownerEmail: owner?.email,
                 lastLoad: summary
               },
-              pipeline: p
+              pipeline: slot.definition
             } satisfies GenericIssuancePipelineListEntry;
           })
         );
@@ -754,7 +756,9 @@ export class GenericIssuanceService {
           existingPipelineDefinition
         );
         if (
-          existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId
+          existingPipelineDefinition.ownerUserId !==
+            newDefinition.ownerUserId &&
+          !user.isAdmin
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
@@ -857,6 +861,9 @@ export class GenericIssuanceService {
           LOG_TAG,
           `can't restart pipeline with id ${pipelineId} - doesn't exist in database`
         );
+        this.pipelineSlots = this.pipelineSlots.filter(
+          (slot) => slot.definition.id !== pipelineId
+        );
         return;
       }
 
@@ -867,12 +874,17 @@ export class GenericIssuanceService {
 
       if (!pipelineSlot) {
         pipelineSlot = {
-          definition: definition
+          definition: definition,
+          owner: await this.userDB.getUser(definition.ownerUserId)
         };
         this.pipelineSlots.push(pipelineSlot);
       }
+      pipelineSlot.owner = await this.userDB.getUser(
+        pipelineSlot.definition.ownerUserId
+      );
 
       tracePipeline(pipelineSlot.definition);
+      traceUser(pipelineSlot?.owner);
 
       if (pipelineSlot.instance) {
         logger(
@@ -890,6 +902,7 @@ export class GenericIssuanceService {
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
+      pipelineSlot.definition = definition;
       pipelineSlot.instance = await instantiatePipeline(
         this.eddsaPrivateKey,
         definition,
@@ -898,7 +911,8 @@ export class GenericIssuanceService {
           genericPretixAPI: this.genericPretixAPI,
           lemonadeAPI: this.lemonadeAPI
         },
-        this.zupassPublicKey
+        this.zupassPublicKey,
+        this.rsaPrivateKey
       );
 
       await this.performPipelineLoad(pipelineSlot);

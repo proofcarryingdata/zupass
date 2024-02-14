@@ -2,7 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import { flattenObject } from "../src";
 
-describe.only("various utils functions should work", async function () {
+describe("various utils functions should work", async function () {
   it("flattenObject should work", function () {
     const obj = { a: "b", c: "d", e: { f: "g", h: "i" }, j: [], k: {} };
 

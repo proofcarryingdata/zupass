@@ -936,7 +936,7 @@ export type GenericIssuanceGetAllUserPipelinesResponseValue =
 export type GenericIssuancePipelineListEntry = {
   pipeline: PipelineDefinition;
   extraInfo: {
-    ownerEmail: string;
+    ownerEmail?: string;
     lastLoad?: PipelineLoadSummary;
     feeds?: PipelineFeedInfo[];
     latestAtoms?: object[];

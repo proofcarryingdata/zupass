@@ -165,6 +165,7 @@ export class LemonadePipeline implements BasePipeline {
   public async load(): Promise<PipelineLoadSummary> {
     return traced(LOG_NAME, "load", async (span) => {
       tracePipeline(this.definition);
+
       const logs: PipelineLog[] = [];
       const loadStart = new Date();
 
@@ -175,101 +176,130 @@ export class LemonadePipeline implements BasePipeline {
         oauthServerUrl: this.definition.options.oauthServerUrl
       };
 
-      const events = this.definition.options.events;
-
-      logs.push(
-        makePLogInfo(
-          `configured ticket types are ${str(
-            events.map((t) => {
-              return `${t.name} (${t.externalId})`;
-            })
-          )}`
-        )
-      );
+      const configuredEvents = this.definition.options.events;
 
       // For each event, fetch tickets
       const eventTickets = await Promise.all(
-        events.map(async (eventConfig: LemonadePipelineEventConfig) => {
-          let eventTickets: unknown[];
-          try {
-            // Get tickets for this event
-            eventTickets = await this.api.getTickets(
+        configuredEvents.map(
+          async (eventConfig: LemonadePipelineEventConfig) => {
+            const liveTicketTypes = await this.api.getEventTicketTypes(
               this.definition.options.backendUrl,
               credentials,
               eventConfig.externalId
             );
-          } catch (e) {
-            const message =
-              e instanceof Error ? e.message : `Received error: ${e}`;
-            logs.push(makePLogErr(message));
-            return { eventConfig, tickets: [] };
-          }
 
-          logs.push(
-            makePLogInfo(`loaded event data for ${eventConfig.externalId}`)
-          );
+            logs.push(
+              makePLogInfo(
+                `ticket types for event loaded from lemonade for event ${
+                  eventConfig.name
+                } ('${eventConfig.externalId}') are: ${str(
+                  liveTicketTypes.ticket_types.map((t) => {
+                    return `${t._id} (${t.title})`;
+                  })
+                )}`
+              )
+            );
 
-          // We only want to return tickets which are of a supported type
-          // Get the supported types from event configuration
-          const configuredTypes = new Set(
-            eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
-          );
-
-          logs.push(
-            makePLogInfo(
-              `configured ticket types for event '${
+            let ticketsFromLemonade: unknown[];
+            try {
+              ticketsFromLemonade = await this.api.getTickets(
+                this.definition.options.backendUrl,
+                credentials,
                 eventConfig.externalId
-              }' are ${str(
-                eventConfig.ticketTypes.map((t) => {
-                  return `${t.name} (${t.externalId})`;
-                })
-              )}`
-            )
-          );
+              );
+            } catch (e) {
+              const message =
+                e instanceof Error ? e.message : `Received error: ${e}`;
+              logs.push(makePLogErr(message));
+              return { eventConfig, tickets: [] };
+            }
 
-          const validTickets = [];
+            logs.push(
+              makePLogInfo(
+                `loaded ${ticketsFromLemonade.length} tickets for ${eventConfig.name} ('${eventConfig.externalId}').`
+              )
+            );
+            logs.push(makePLogInfo(str(ticketsFromLemonade)));
 
-          for (const maybeTicket of eventTickets) {
-            // By parsing tickets individually, we allow valid tickets to
-            // proceed even if some tickets must be skipped.
-            // Because a pipeline load completely replaces the previously
-            // loaded data, this may mean that changes in ticket state in
-            // Lemonade can cause tickets to disappear, if the new state is one
-            // that we cannot parse.
-            const parseResult = LemonadeTicketSchema.safeParse(maybeTicket);
-            if (parseResult.success) {
-              const ticket = parseResult.data;
-              // Filter the tickets down to configured ticket types
-              if (configuredTypes.has(ticket.type_id)) {
-                // Tickets can appear for users who have been invited to the
-                // event, but have not registered with Lemonade. Such tickets
-                // can't be checked in, so we should avoid creating ticket PCDs
-                // for them. We can detect this by checking for a `user_email`
-                // value with content.
-                if (ticket.user_email.length > 0) {
-                  validTickets.push(ticket);
+            // We only want to return tickets which are of a supported type
+            // Get the supported types from event configuration
+            const configuredTicketTypeExternalIds = new Set(
+              eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
+            );
+
+            logs.push(
+              makePLogInfo(
+                `configured ticket types for event '${
+                  eventConfig.externalId
+                }' are ${str(
+                  eventConfig.ticketTypes.map((t) => {
+                    return `${t.name} (${t.externalId})`;
+                  })
+                )}`
+              )
+            );
+
+            const validTickets = [];
+
+            for (const maybeTicket of ticketsFromLemonade) {
+              // By parsing tickets individually, we allow valid tickets to
+              // proceed even if some tickets must be skipped.
+              // Because a pipeline load completely replaces the previously
+              // loaded data, this may mean that changes in ticket state in
+              // Lemonade can cause tickets to disappear, if the new state is one
+              // that we cannot parse.
+              const parseResult = LemonadeTicketSchema.safeParse(maybeTicket);
+              if (parseResult.success) {
+                logs.push(makePLogInfo(`parsed ticket ${str(parseResult)}`));
+
+                const ticket = parseResult.data;
+
+                // Filter the tickets down to configured ticket types
+                if (configuredTicketTypeExternalIds.has(ticket.type_id)) {
+                  // Tickets can appear for users who have been invited to the
+                  // event, but have not registered with Lemonade. Such tickets
+                  // can't be checked in, so we should avoid creating ticket PCDs
+                  // for them. We can detect this by checking for a `user_email`
+                  // value with content.
+                  if (ticket.user_email.length > 0) {
+                    validTickets.push(ticket);
+                  } else {
+                    const message = `ticket owner hasn't created lemonade account ${str(
+                      ticket
+                    )} , pipeline '${this.id}'`;
+                    logs.push(makePLogWarn(message));
+                    logger(`${LOG_TAG} ${message}`);
+                  }
+                } else {
+                  const message = `Unsupported ticket type ${
+                    ticket.type_title
+                  } ('${ticket.type_id}') on ticket ${str(ticket)}, pipeline '${
+                    this.id
+                  }'`;
+                  logs.push(makePLogWarn(message));
+                  logger(`${LOG_TAG} ${message}`);
                 }
               } else {
-                const message = `Unsupported ticket type ${ticket.type_title} (${ticket.type_id}) on ticket ${ticket._id}, pipeline ${this.id}`;
-                logs.push(makePLogWarn(message));
+                const message = `Could not parse ticket '${str(
+                  maybeTicket
+                )}' for event ${eventConfig.name} ('${
+                  eventConfig.externalId
+                }'), pipeline '${this.id}'`;
+                logs.push(makePLogErr(message));
                 logger(`${LOG_TAG} ${message}`);
               }
-            } else {
-              const message = `Could not parse ticket for event ${eventConfig.genericIssuanceEventId}, pipeline ${this.id}`;
-              logs.push(makePLogErr(message));
-              logger(`${LOG_TAG} ${message}`);
             }
+
+            logs.push(
+              makePLogInfo(`loaded ${validTickets.length} valid tickets`)
+            );
+
+            return {
+              eventConfig,
+              tickets: validTickets
+            };
           }
-
-          logs.push(
-            makePLogInfo(`loaded ${eventTickets.length} valid tickets`)
-          );
-
-          return {
-            eventConfig,
-            tickets: validTickets
-          };
-        })
+        )
       );
 
       const atomsToSave = eventTickets.flatMap(
@@ -604,6 +634,19 @@ export class LemonadePipeline implements BasePipeline {
     const checkerEventTickets = checkerTickets.filter(
       (t) => t.lemonadeEventId === lemonadeEventId
     );
+    const checkerEmailIsSuperuser =
+      checkerTickets.find((t) => {
+        if (!this.definition.options.superuserEmails) {
+          return false;
+        }
+
+        if (!t.email) {
+          return false;
+        }
+
+        return this.definition.options.superuserEmails.includes(t.email);
+      }) !== undefined;
+
     const checkerEventTicketTypes = checkerEventTickets.map((t) => {
       const ticketTypeConfig = eventConfig.ticketTypes.find(
         (ticketTypes) => ticketTypes.externalId === t.lemonadeTicketTypeId
@@ -614,7 +657,7 @@ export class LemonadePipeline implements BasePipeline {
       (t) => t?.isSuperUser
     );
 
-    if (!hasSuperUserTicket) {
+    if (!hasSuperUserTicket && !checkerEmailIsSuperuser) {
       return { name: "NotSuperuser" };
     }
 
