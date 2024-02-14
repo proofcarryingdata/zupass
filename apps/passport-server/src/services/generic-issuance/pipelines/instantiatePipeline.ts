@@ -30,7 +30,8 @@ export function instantiatePipeline(
     lemonadeAPI: ILemonadeAPI;
     genericPretixAPI: IGenericPretixAPI;
   },
-  zupassPublicKey: EdDSAPublicKey
+  zupassPublicKey: EdDSAPublicKey,
+  rsaPrivateKey: string
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
@@ -52,7 +53,13 @@ export function instantiatePipeline(
         zupassPublicKey
       );
     } else if (isCSVPipelineDefinition(definition)) {
-      return new CSVPipeline(eddsaPrivateKey, definition, db, zupassPublicKey);
+      return new CSVPipeline(
+        eddsaPrivateKey,
+        definition,
+        db,
+        zupassPublicKey,
+        rsaPrivateKey
+      );
     }
 
     throw new Error(
