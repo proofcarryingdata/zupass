@@ -139,6 +139,5 @@ export function clearPendingGenericIssuanceCheckinRequest(): void {
 
 export function getPendingGenericIssuanceCheckinRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingGenericIssuanceCheckinRequestKey);
-  console.log(value);
   return value == null ? undefined : value;
 }

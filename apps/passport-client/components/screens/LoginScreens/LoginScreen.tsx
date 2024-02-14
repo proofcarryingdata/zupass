@@ -82,7 +82,6 @@ export function LoginScreen(): JSX.Element {
       setPendingViewFrogCryptoRequest(pendingViewFrogCryptoRequest);
       pendingRequestForLogging = pendingViewFrogCryptoRequestKey;
     } else if (pendingGenericIssuanceCheckinRequest != null) {
-      console.log(pendingGenericIssuanceCheckinRequest);
       setPendingGenericIssuanceCheckinRequest(
         pendingGenericIssuanceCheckinRequest
       );
