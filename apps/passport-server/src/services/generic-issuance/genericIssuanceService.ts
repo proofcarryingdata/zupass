@@ -48,6 +48,7 @@ import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
 import { PagerDutyService } from "../pagerDutyService";
+import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
@@ -120,6 +121,7 @@ export class GenericIssuanceService {
   private stopped = false;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
+  private cacheService: PersistentCacheService;
 
   public constructor(
     context: ApplicationContext,
@@ -132,7 +134,8 @@ export class GenericIssuanceService {
     eddsaPrivateKey: string,
     zupassPublicKey: EdDSAPublicKey,
     pagerdutyService: PagerDutyService | null,
-    discordService: DiscordService | null
+    discordService: DiscordService | null,
+    cacheService: PersistentCacheService
   ) {
     this.pagerdutyService = pagerdutyService;
     this.discordService = discordService;
@@ -152,6 +155,7 @@ export class GenericIssuanceService {
       process.env.NODE_ENV !== "production";
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = newRSAPrivateKey();
+    this.cacheService = cacheService;
   }
 
   public async start(): Promise<void> {
@@ -226,7 +230,8 @@ export class GenericIssuanceService {
                 genericPretixAPI: this.genericPretixAPI
               },
               this.zupassPublicKey,
-              this.rsaPrivateKey
+              this.rsaPrivateKey,
+              this.cacheService
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -1103,7 +1108,8 @@ export class GenericIssuanceService {
           lemonadeAPI: this.lemonadeAPI
         },
         this.zupassPublicKey,
-        this.rsaPrivateKey
+        this.rsaPrivateKey,
+        this.cacheService
       );
 
       await this.performPipelineLoad(pipelineSlot);
@@ -1421,9 +1427,17 @@ export async function startGenericIssuanceService(
   lemonadeAPI: ILemonadeAPI | null,
   genericPretixAPI: IGenericPretixAPI | null,
   pagerDutyService: PagerDutyService | null,
-  discordService: DiscordService | null
+  discordService: DiscordService | null,
+  cacheService: PersistentCacheService | null
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
+
+  if (!cacheService) {
+    logger(
+      "[INIT] not starting generic issuance service - missing persistent cache service"
+    );
+    return null;
+  }
 
   if (!lemonadeAPI) {
     logger(
@@ -1496,7 +1510,8 @@ export async function startGenericIssuanceService(
     pkeyEnv,
     zupassPublicKey,
     pagerDutyService,
-    discordService
+    discordService,
+    cacheService
   );
 
   issuanceService.start();

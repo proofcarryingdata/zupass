@@ -3,6 +3,7 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
 import { CSVPipeline } from "./CSVPipeline";
@@ -31,7 +32,8 @@ export function instantiatePipeline(
     genericPretixAPI: IGenericPretixAPI;
   },
   zupassPublicKey: EdDSAPublicKey,
-  rsaPrivateKey: string
+  rsaPrivateKey: string,
+  cacheService: PersistentCacheService
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
@@ -42,7 +44,8 @@ export function instantiatePipeline(
         definition,
         db,
         apis.lemonadeAPI,
-        zupassPublicKey
+        zupassPublicKey,
+        cacheService
       );
     } else if (isPretixPipelineDefinition(definition)) {
       return new PretixPipeline(
@@ -50,7 +53,8 @@ export function instantiatePipeline(
         definition,
         db,
         apis.genericPretixAPI,
-        zupassPublicKey
+        zupassPublicKey,
+        cacheService
       );
     } else if (isCSVPipelineDefinition(definition)) {
       return new CSVPipeline(

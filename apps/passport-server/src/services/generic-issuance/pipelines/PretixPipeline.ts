@@ -43,6 +43,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
+import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
 import {
   CheckinCapability,
@@ -78,6 +79,7 @@ export class PretixPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
+  private cacheService: PersistentCacheService;
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
@@ -112,7 +114,8 @@ export class PretixPipeline implements BasePipeline {
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB,
     api: IGenericPretixAPI,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    cacheService: PersistentCacheService
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -142,6 +145,7 @@ export class PretixPipeline implements BasePipeline {
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
+    this.cacheService = cacheService;
   }
 
   public async stop(): Promise<void> {
@@ -645,11 +649,8 @@ export class PretixPipeline implements BasePipeline {
         this.atomToTicketData(t, credential.claim.identityCommitment)
       );
 
-      // TODO: cache this intelligently
       const tickets = await Promise.all(
-        ticketDatas.map((t) =>
-          this.ticketDataToTicketPCD(t, this.eddsaPrivateKey)
-        )
+        ticketDatas.map((t) => this.getOrGenerateTicket(t))
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -694,6 +695,82 @@ export class PretixPipeline implements BasePipeline {
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
     };
+  }
+
+  private async getOrGenerateTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD> {
+    return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
+      span?.setAttribute("ticket_id", ticketData.ticketId);
+      span?.setAttribute("ticket_email", ticketData.attendeeEmail);
+      span?.setAttribute("ticket_name", ticketData.attendeeName);
+
+      const cachedTicket = await this.getCachedTicket(ticketData);
+
+      if (cachedTicket) {
+        return cachedTicket;
+      }
+
+      logger(`${LOG_TAG} cache miss for ticket id ${ticketData.ticketId}`);
+
+      const generatedTicket = await this.ticketDataToTicketPCD(
+        ticketData,
+        this.eddsaPrivateKey
+      );
+
+      try {
+        this.cacheTicket(generatedTicket);
+      } catch (e) {
+        logger(
+          `${LOG_TAG} error caching ticket ${ticketData.ticketId} ` +
+            `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName})`
+        );
+      }
+
+      return generatedTicket;
+    });
+  }
+
+  private static async getTicketCacheKey(
+    ticketData: ITicketData
+  ): Promise<string> {
+    const ticketCopy: Partial<ITicketData> = { ...ticketData };
+    // the reason we remove `timestampSigned` from the cache key
+    // is that it changes every time we instantiate `ITicketData`
+    // for a particular devconnect ticket, rendering the caching
+    // ineffective.
+    delete ticketCopy.timestampSigned;
+    const hash = await getHash(JSON.stringify(ticketCopy));
+    return hash;
+  }
+
+  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+    const key = await PretixPipeline.getTicketCacheKey(ticket.claim.ticket);
+    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    this.cacheService.setValue(key, JSON.stringify(serialized));
+  }
+
+  private async getCachedTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD | undefined> {
+    const key = await PretixPipeline.getTicketCacheKey(ticketData);
+    const serializedTicket = await this.cacheService.getValue(key);
+    if (!serializedTicket) {
+      logger(`${LOG_TAG} cache miss for ticket id ${ticketData.ticketId}`);
+      return undefined;
+    }
+    logger(`${LOG_TAG} cache hit for ticket id ${ticketData.ticketId}`);
+    const parsedTicket = JSON.parse(serializedTicket.cache_value);
+
+    try {
+      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+        parsedTicket.pcd
+      );
+      return deserializedTicket;
+    } catch (e) {
+      logger(`${LOG_TAG} failed to parse cached ticket ${key}`, e);
+      return undefined;
+    }
   }
 
   private async ticketDataToTicketPCD(
