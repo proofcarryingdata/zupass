@@ -2,7 +2,8 @@ import { Box, Button, HStack, Stack } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
-  PipelineInfoResponseValue
+  PipelineInfoResponseValue,
+  PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import { FancyEditor } from "../../components/FancyEditor";
@@ -95,7 +96,7 @@ export function PipelineEditSection({
         readonly={ownedBySomeoneElse && !isAdminView}
       />
 
-      {isAdminView && (
+      {isAdminView || user.isAdmin || pipeline?.type === PipelineType.CSV ? (
         <HStack>
           {hasEdits && (
             <Button
@@ -134,6 +135,8 @@ export function PipelineEditSection({
             Delete Pipeline
           </Button>
         </HStack>
+      ) : (
+        <></>
       )}
     </Stack>
   );
