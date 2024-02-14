@@ -748,6 +748,9 @@ export class GenericIssuanceService {
       const existingPipelineDefinition = await this.definitionDB.getDefinition(
         newDefinition.id
       );
+      const existingSlot = this.pipelineSlots.find(
+        (slot) => slot.definition.id === existingPipelineDefinition?.id
+      );
 
       if (existingPipelineDefinition) {
         span?.setAttribute("is_new", false);
@@ -780,6 +783,12 @@ export class GenericIssuanceService {
         throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
       }
 
+      if (existingSlot) {
+        existingSlot.owner = await this.userDB.getUser(
+          validatedNewDefinition.ownerUserId
+        );
+      }
+
       logger(
         LOG_TAG,
         `executing upsert of pipeline ${str(validatedNewDefinition)}`
@@ -791,6 +800,10 @@ export class GenericIssuanceService {
         undefined
       );
       await this.atomDB.clear(validatedNewDefinition.id);
+      await this.definitionDB.saveLoadSummary(
+        validatedNewDefinition.id,
+        undefined
+      );
       // purposely not awaited
       this.restartPipeline(validatedNewDefinition.id);
       return validatedNewDefinition;
