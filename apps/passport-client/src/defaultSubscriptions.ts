@@ -10,6 +10,8 @@ const ZUPASS_FEED_PROVIDER_NAME = "Zupass";
 const ZUPASS_SERVER_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
 const DEFAULT_FEED_URLS = getDefaultFeedURLs();
+const LEMONADE_LEGACY_FEED_URL_PREFIX =
+  "https://zupass.lemonade.social/tickets";
 
 function getDefaultFeedURLs(): string[] {
   const res = JSON.parse(process.env.DEFAULT_FEED_URLS || "[]");
@@ -58,5 +60,16 @@ export async function addDefaultSubscriptions(
         );
       }
     }
+  }
+
+  // Unsubscribe from legacy Lemonade feeds, if they exist
+  const legacyLemonadeProviders = subscriptions
+    .getProviders()
+    .filter((p) => p.providerUrl.startsWith(LEMONADE_LEGACY_FEED_URL_PREFIX));
+  for (const { providerUrl } of legacyLemonadeProviders) {
+    for (const sub of subscriptions.getSubscriptionsForProvider(providerUrl)) {
+      subscriptions.unsubscribe(sub.id);
+    }
+    subscriptions.removeProvider(providerUrl);
   }
 }
