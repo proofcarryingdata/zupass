@@ -8,6 +8,7 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  CSVPipelineDefinition,
   GenericCheckinCredentialPayload,
   GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
@@ -1175,7 +1176,7 @@ export function isPretixPipelineDefinition(
 
 export function isCSVPipelineDefinition(
   d: PipelineDefinition
-): d is PretixPipelineDefinition {
+): d is CSVPipelineDefinition {
   return d.type === PipelineType.CSV;
 }
 

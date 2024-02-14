@@ -53,6 +53,7 @@ import {
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
+import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { makePLogErr, makePLogInfo } from "./util";
@@ -779,6 +780,12 @@ export class GenericIssuanceService {
       } catch (e) {
         logger(LOG_TAG, "invalid pipeline definition", e);
         throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
+      }
+
+      if (isCSVPipelineDefinition(validatedNewDefinition)) {
+        if (validatedNewDefinition.options.csv.length > 80_000) {
+          throw new Error("csv too large");
+        }
       }
 
       logger(
