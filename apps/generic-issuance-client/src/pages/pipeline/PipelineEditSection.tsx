@@ -88,7 +88,7 @@ export function PipelineEditSection({
       </Box>
 
       <FancyEditor
-        style={{ width: "800px", height: "350px" }}
+        style={{ width: "800px", height: "450px" }}
         language="json"
         value={editorValue}
         setValue={setEditorValue}

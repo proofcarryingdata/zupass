@@ -17,7 +17,7 @@ export function PipelineLatestDataSection({
   return (
     <FancyEditor
       dark
-      style={{ width: "100%", height: "200px" }}
+      style={{ width: "100%", height: "300px" }}
       readonly={true}
       value={latestAtoms.map((log) => JSON.stringify(log)).join("\n")}
     />
