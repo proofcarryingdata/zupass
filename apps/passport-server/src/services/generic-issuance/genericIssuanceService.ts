@@ -892,6 +892,7 @@ export class GenericIssuanceService {
 
       logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
 
+      pipelineSlot.definition = definition;
       pipelineSlot.instance = await instantiatePipeline(
         this.eddsaPrivateKey,
         definition,
