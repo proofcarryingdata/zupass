@@ -662,7 +662,7 @@ export class LemonadePipeline implements BasePipeline {
       (t) => t?.isSuperUser
     );
 
-    if (!hasSuperUserTicket || checkerEmailIsSuperuser) {
+    if (!hasSuperUserTicket && !checkerEmailIsSuperuser) {
       return { name: "NotSuperuser" };
     }
 

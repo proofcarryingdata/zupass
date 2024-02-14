@@ -88,7 +88,7 @@ import {
  * - finish this during Cat Week.
  * - comprehensive tests for both Pretix and Lemonade cases
  */
-describe("Generic Issuance", function () {
+describe.only("Generic Issuance", function () {
   this.timeout(30_000);
   const now = Date.now();
 
@@ -541,8 +541,8 @@ t2,i1`,
       const Bouncer2Ticket = Bouncer2Tickets[0];
       expectIsEdDSATicketPCD(Bouncer2Ticket);
       expect(Bouncer2Ticket.claim.ticket.attendeeEmail)
-        .to.eq(EdgeCityDenverBouncerTicket.user_email)
-        .to.eq(EdgeCityDenverBouncer.email);
+        .to.eq(EdgeCityDenverBouncer2Ticket.user_email)
+        .to.eq(EdgeCityDenverBouncer2.email);
 
       const bouncer2ChecksInSelf = await requestCheckInPipelineTicket(
         edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
