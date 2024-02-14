@@ -177,9 +177,25 @@ export class LemonadePipeline implements BasePipeline {
 
       const events = this.definition.options.events;
 
+      const ticketTypes = await this.api.getEventTicketTypes(
+        this.definition.options.backendUrl,
+        credentials,
+        "658ea462c59c03c8436f54cb"
+      );
+
       logs.push(
         makePLogInfo(
-          `configured ticket types are ${str(
+          `ticket types loaded from API are: ${str(
+            ticketTypes.ticket_types.map((t) => {
+              return `${t._id} (${t.title})`;
+            })
+          )}`
+        )
+      );
+
+      logs.push(
+        makePLogInfo(
+          `configured ticket types are: ${str(
             events.map((t) => {
               return `${t.name} (${t.externalId})`;
             })
@@ -214,6 +230,8 @@ export class LemonadePipeline implements BasePipeline {
           const configuredTypes = new Set(
             eventConfig.ticketTypes.map((ticketType) => ticketType.externalId)
           );
+
+          logs.push(makePLogInfo("tickets: " + str(eventTickets)));
 
           logs.push(
             makePLogInfo(
