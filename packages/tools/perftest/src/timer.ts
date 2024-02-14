@@ -90,14 +90,12 @@ program
       pcdOperation: string,
       iterationCount: number
     ) => {
-      console.log("ART_DBG: action()");
       const testCases: (() => TimerCase)[] = [];
 
       // Single package, or all packages
       let packageNames = [pcdPackage];
       if (pcdPackage === "all") {
         packageNames = Object.keys(TIME_TEST_CONFIGS);
-        console.log("ART_DBG", packageNames);
       }
 
       for (const curPackageName of packageNames) {
