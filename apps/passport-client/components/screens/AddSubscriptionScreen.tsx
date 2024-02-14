@@ -5,7 +5,6 @@ import {
   FeedSubscriptionManager,
   Subscription
 } from "@pcd/passport-interface";
-import { icons } from "@pcd/passport-ui";
 import {
   PCDPermission,
   isAppendToFolderPermission,
@@ -276,7 +275,7 @@ export function SubscriptionInfoRow({
             <strong>{existingSubscriptions[0].feed.name}</strong>.
             <Spacer h={16} />
             <div>
-              <strong>Browse</strong>
+              <strong>Browse subscribed folders:</strong>
             </div>
             <FolderContainer>
               {folders.map((folder) => (
@@ -486,9 +485,8 @@ function FolderLink({ folder }: { folder: string }): JSX.Element {
     navigate(`/?folder=${encodeURIComponent(folder)}`);
   }, [folder, navigate]);
   return (
-    <FolderButton onClick={goToFolder}>
-      <img draggable="false" src={icons.folder} width={18} height={18} />{" "}
-      {folder}
+    <FolderButton>
+      <Button onClick={goToFolder}>{folder}</Button>
     </FolderButton>
   );
 }
@@ -530,35 +528,10 @@ const MismatchedEmailWarning = styled.div`
   }
 `;
 
-const FolderButton = styled.div`
-  user-select: none;
-  padding: 8px 12px;
-  cursor: pointer;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: row;
-  gap: 12px;
-  border-bottom: 1px solid grey;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background: var(--primary-lite);
-  }
+const FolderContainer = styled.div`
+  margin: 8px 0px;
 `;
 
-const FolderContainer = styled.div`
-  border-radius: 12px;
-  border: 1px solid grey;
-  background: var(--primary-dark);
-  overflow: hidden;
-  margin: 4px 8px;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: flex-start;
-  align-items: stretch;
-  flex-direction: column;
+const FolderButton = styled.div`
+  margin: 16px 0px;
 `;
