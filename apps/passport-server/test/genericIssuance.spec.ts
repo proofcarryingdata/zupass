@@ -88,7 +88,7 @@ import {
  * - finish this during Cat Week.
  * - comprehensive tests for both Pretix and Lemonade cases
  */
-describe.only("Generic Issuance", function () {
+describe("Generic Issuance", function () {
   this.timeout(30_000);
   const now = Date.now();
 
