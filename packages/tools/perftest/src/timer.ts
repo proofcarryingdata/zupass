@@ -1,4 +1,5 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { program } from "commander";
 import logSymbols from "log-symbols";
@@ -7,6 +8,10 @@ import {
   EdDSATicketVerifyCase
 } from "./cases/EdDSATicketTimer";
 import {
+  SemaphoreSignatureProveCase,
+  SemaphoreSignatureVerifyCase
+} from "./cases/SemaphoreSignatureTimer";
+import {
   ZKEdDSAEventTicketProveCase,
   ZKEdDSAEventTicketVerifyCase
 } from "./cases/ZKEdDSAEventTicketTimer";
@@ -14,17 +19,32 @@ import { DemoCase, TimerCase } from "./types";
 
 const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
   demo: {
-    demo: () => new DemoCase()
+    prove: () => new DemoCase(),
+    verify: () => new DemoCase()
   },
   [EdDSATicketPCDPackage.name]: {
     prove: () => new EdDSATicketProveCase(),
     verify: () => new EdDSATicketVerifyCase()
+  },
+  [SemaphoreSignaturePCDPackage.name]: {
+    prove: () => new SemaphoreSignatureProveCase(),
+    verify: () => new SemaphoreSignatureVerifyCase()
   },
   [ZKEdDSAEventTicketPCDPackage.name]: {
     prove: () => new ZKEdDSAEventTicketProveCase(),
     verify: () => new ZKEdDSAEventTicketVerifyCase()
   }
 };
+
+function makeHelpPackageList(): string {
+  let outStr = "\nSupported packages + operations:\n";
+  for (const packageName of Object.keys(TIME_TEST_CONFIGS)) {
+    for (const operationName of Object.keys(TIME_TEST_CONFIGS[packageName])) {
+      outStr += `\t${packageName} ${operationName}\n`;
+    }
+  }
+  return outStr;
+}
 
 async function timeOp(
   opName: string,
@@ -60,42 +80,58 @@ async function timerDriver(
 program
   .command("timer")
   .description("Time a set of operations for a PCD packge")
-  .argument("<pcd-package>", "Supported PCD package.")
-  .argument("<operation>", "PCD operation (prove, verify).")
+  .argument("<pcd-package>", "Name of PCD package to test or 'all'.")
+  .argument("<operation>", "Name of PCD operation or 'all'.")
   .argument("[count]", "Count of iterations for averaging.", 10)
+  .addHelpText("after", makeHelpPackageList())
   .action(
     async (
-      packageName: string,
+      pcdPackage: string,
       pcdOperation: string,
       iterationCount: number
     ) => {
+      console.log("ART_DBG: action()");
       const testCases: (() => TimerCase)[] = [];
-      if (packageName !== "all") {
-        const testPackage = TIME_TEST_CONFIGS[packageName];
-        if (!testPackage) {
+
+      // Single package, or all packages
+      let packageNames = [pcdPackage];
+      if (pcdPackage === "all") {
+        packageNames = Object.keys(TIME_TEST_CONFIGS);
+        console.log("ART_DBG", packageNames);
+      }
+
+      for (const curPackageName of packageNames) {
+        // Check the selected package exists.
+        const packageConfigs = TIME_TEST_CONFIGS[curPackageName];
+        if (!packageConfigs) {
           console.error(
             `${logSymbols.error}`,
-            `No test config for package ${packageName}`
+            `No test config for package: ${curPackageName}${makeHelpPackageList()}`
           );
           process.exit(1);
         }
-        const testCase = testPackage[pcdOperation];
-        if (!testCase) {
-          console.error(
-            `${logSymbols.error}`,
-            `No test config for operation ${packageName}.${pcdOperation}`
-          );
-          process.exit(1);
-        }
-        testCases.push(testCase);
-      } else {
-        for (const testPackage of Object.values(TIME_TEST_CONFIGS)) {
-          for (const testCase of Object.values(testPackage)) {
-            testCases.push(testCase);
+
+        // Single operation or all operations.
+        if (pcdOperation === "all") {
+          for (const operationName of Object.keys(packageConfigs)) {
+            testCases.push(packageConfigs[operationName]);
           }
+        } else {
+          // Check the selected operation exists.
+          const testCase = packageConfigs[pcdOperation];
+          if (!testCase) {
+            console.error(
+              `${logSymbols.error}`,
+              `No test config for operation: ${pcdPackage} ${pcdOperation}${makeHelpPackageList()}`
+            );
+            process.exit(1);
+          }
+
+          testCases.push(testCase);
         }
       }
 
+      // Execute test cases.
       try {
         for (const testCase of testCases) {
           await timerDriver(testCase, iterationCount);

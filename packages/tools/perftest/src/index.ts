@@ -7,7 +7,7 @@ import "./timer";
 program
   .name("pcd-perftest")
   .description("Command line tool for testing PCD performance.")
-  .version("0.0.1", "-v, --version", "Show PCD pertest CLI version.")
+  .version("0.0.1", "-v, --version", "Show PCD perftest CLI version.")
   .configureOutput({
     outputError: (message) => {
       console.info(`\n ${logSymbols.error}`, message);

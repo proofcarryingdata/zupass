@@ -1,6 +1,6 @@
 <p align="center">
     <h1 align="center">
-        @pcd/artifacts
+        @pcd/perftest
     </h1>
 </p>
 
@@ -28,6 +28,6 @@ To run:
 
 For example:
 
-    yarn start timer demo demo
     yarn start timer all all
+    yarn start timer demo prove
     yarn start timer eddsa-ticket-pcd prove
