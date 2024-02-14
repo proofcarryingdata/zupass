@@ -509,7 +509,7 @@ export class GenericIssuanceService {
             }
           } satisfies Feed
         ],
-        providerName: "PCD-ifier",
+        providerName: "Podbox",
         providerUrl: feedCapability.feedUrl
       } satisfies ListFeedsResponseValue;
 
