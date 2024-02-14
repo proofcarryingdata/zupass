@@ -639,6 +639,19 @@ export class LemonadePipeline implements BasePipeline {
     const checkerEventTickets = checkerTickets.filter(
       (t) => t.lemonadeEventId === lemonadeEventId
     );
+    const checkerEmailIsSuperuser =
+      checkerTickets.find((t) => {
+        if (!this.definition.options.superuserEmails) {
+          return false;
+        }
+
+        if (!t.email) {
+          return false;
+        }
+
+        return this.definition.options.superuserEmails.includes(t.email);
+      }) !== undefined;
+
     const checkerEventTicketTypes = checkerEventTickets.map((t) => {
       const ticketTypeConfig = eventConfig.ticketTypes.find(
         (ticketTypes) => ticketTypes.externalId === t.lemonadeTicketTypeId
@@ -649,7 +662,7 @@ export class LemonadePipeline implements BasePipeline {
       (t) => t?.isSuperUser
     );
 
-    if (!hasSuperUserTicket) {
+    if (!hasSuperUserTicket || checkerEmailIsSuperuser) {
       return { name: "NotSuperuser" };
     }
 
