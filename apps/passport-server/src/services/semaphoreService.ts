@@ -41,7 +41,7 @@ export const enum SemaphoreGroups {
  * that Zupass is aware of.
  */
 export class SemaphoreService {
-  private interval: NodeJS.Timer | undefined;
+  private interval: ReturnType<typeof setInterval> | undefined;
   private groups: Map<string, NamedGroup>;
   private dbPool: Pool;
 
