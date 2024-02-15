@@ -13,6 +13,7 @@ import {
 } from "@pcd/pcd-collection";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
@@ -37,6 +38,7 @@ import { BigInput, Button, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { Spinner } from "../shared/Spinner";
+import { FolderCard, FolderExplorerContainer } from "./HomeScreen/Folder";
 
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
@@ -251,6 +253,13 @@ export function SubscriptionInfoRow({
     : [];
 
   const [moreInfo, setMoreInfo] = useState(lockExpanded);
+  const navigate = useNavigate();
+  const goToFolder = useCallback(
+    (folder: string) => {
+      navigate(`/?folder=${encodeURIComponent(folder)}`);
+    },
+    [navigate]
+  );
 
   return (
     <InfoRowContainer
@@ -314,9 +323,17 @@ export function SubscriptionInfoRow({
                   <strong>Browse subscribed folders:</strong>
                 </div>
                 <FolderContainer>
-                  {folders.map((folder) => (
-                    <FolderLink key={folder} folder={folder} />
-                  ))}
+                  <FolderExplorerContainer>
+                    {folders.map((folder) => (
+                      <FolderCard
+                        key={folder}
+                        onFolderClick={(): void => {
+                          goToFolder(folder);
+                        }}
+                        folder={folder}
+                      />
+                    ))}
+                  </FolderExplorerContainer>
                 </FolderContainer>
               </div>
             ) : (
