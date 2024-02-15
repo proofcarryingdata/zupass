@@ -180,7 +180,7 @@ export function AddSubscriptionScreen(): JSX.Element {
               disabled={fetching || alreadyFetched}
               onClick={onFetchFeedsClick}
             >
-              <Spinner show={fetching} text="Get possible subscriptions" />
+              <Spinner show={fetching} text="List Feeds" />
             </Button>
           </>
         )}
@@ -199,7 +199,7 @@ export function AddSubscriptionScreen(): JSX.Element {
                   key={i}
                   showErrors={false}
                   isDeepLink={isDeepLink}
-                  lockMoreInfo={true}
+                  lockExpanded={true}
                 />
               </React.Fragment>
             ))}
@@ -216,7 +216,8 @@ export function SubscriptionInfoRow({
   info,
   showErrors,
   isDeepLink,
-  lockMoreInfo
+  lockExpanded,
+  onExpanded
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
@@ -224,7 +225,8 @@ export function SubscriptionInfoRow({
   info: Feed;
   showErrors: boolean;
   isDeepLink: boolean;
-  lockMoreInfo?: boolean;
+  lockExpanded?: boolean;
+  onExpanded?: () => void;
 }): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
@@ -249,12 +251,12 @@ export function SubscriptionInfoRow({
       )
     : [];
 
-  const [moreInfo, setMoreInfo] = useState(lockMoreInfo);
+  const [moreInfo, setMoreInfo] = useState(lockExpanded);
 
   return (
     <InfoRowContainer
       style={
-        moreInfo || lockMoreInfo
+        moreInfo || lockExpanded
           ? {
               border: "1px solid white",
               padding: "16px",
@@ -266,12 +268,20 @@ export function SubscriptionInfoRow({
     >
       <FeedNameRow>
         <div>{info.name}</div>
-        {!lockMoreInfo && (
+        {!lockExpanded && (
           <div>
             <Button
               style="secondary"
               size="xs"
-              onClick={(): void => setMoreInfo((more) => !more)}
+              onClick={(): void =>
+                setMoreInfo((more) => {
+                  const newValue = !more;
+                  if (newValue) {
+                    onExpanded?.();
+                  }
+                  return newValue;
+                })
+              }
             >
               info
             </Button>
@@ -367,7 +377,11 @@ function SubscribeSection({
   }, [providerUrl, info, dispatch, providerName]);
 
   const credentialHumanReadableName =
-    info.credentialRequest.pcdType === EmailPCDTypeName ? "Verified Email" : "";
+    info.credentialRequest.pcdType === undefined
+      ? "Signature"
+      : info.credentialRequest.pcdType === EmailPCDTypeName
+      ? "Verified Email"
+      : "";
 
   // This UI should probably resemble the proving screen much more, giving
   // the user more information about what information will be disclosed in
@@ -502,9 +516,12 @@ function AlreadySubscribed({
       {isDefaultSubscription(existingSubscription) ? (
         <>This is a default Zupass subscription, so you can't unsubscribe.</>
       ) : (
-        <Button onClick={onUnsubscribeClick} style="danger">
-          Unsubscribe
-        </Button>
+        <>
+          <Spacer h={8} />
+          <Button onClick={onUnsubscribeClick} style="danger">
+            Unsubscribe
+          </Button>
+        </>
       )}
     </div>
   );

@@ -117,12 +117,6 @@ function SingleProvider({
   );
 }
 
-const ProviderHeader = styled.div``;
-
-const ProviderName = styled.span`
-  font-weight: bold;
-`;
-
 const Container = styled.div`
   padding-bottom: 16px;
   padding-top: 16px;
