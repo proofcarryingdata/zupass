@@ -482,7 +482,8 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   private static async getTicketCacheKey(
-    ticketData: ITicketData
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
   ): Promise<string> {
     const ticketCopy: Partial<ITicketData> = { ...ticketData };
     // the reason we remove `timestampSigned` from the cache key
@@ -490,12 +491,15 @@ export class LemonadePipeline implements BasePipeline {
     // for a particular devconnect ticket, rendering the caching
     // ineffective.
     delete ticketCopy.timestampSigned;
-    const hash = await getHash(JSON.stringify(ticketCopy));
+    const hash = await getHash(JSON.stringify(ticketCopy) + eddsaPrivateKey);
     return hash;
   }
 
   private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
-    const key = await LemonadePipeline.getTicketCacheKey(ticket.claim.ticket);
+    const key = await LemonadePipeline.getTicketCacheKey(
+      ticket.claim.ticket,
+      this.eddsaPrivateKey
+    );
     const serialized = await EdDSATicketPCDPackage.serialize(ticket);
     this.cacheService.setValue(key, JSON.stringify(serialized));
   }
@@ -503,7 +507,10 @@ export class LemonadePipeline implements BasePipeline {
   private async getCachedTicket(
     ticketData: ITicketData
   ): Promise<EdDSATicketPCD | undefined> {
-    const key = await LemonadePipeline.getTicketCacheKey(ticketData);
+    const key = await LemonadePipeline.getTicketCacheKey(
+      ticketData,
+      this.eddsaPrivateKey
+    );
     const serializedTicket = await this.cacheService.getValue(key);
     if (!serializedTicket) {
       logger(`${LOG_TAG} cache miss for ticket id ${ticketData.ticketId}`);
