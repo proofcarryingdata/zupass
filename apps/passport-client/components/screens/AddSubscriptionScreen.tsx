@@ -499,7 +499,9 @@ function AlreadySubscribed({
         options
       )}
       <Spacer h={8} />
-      {!isDefaultSubscription(existingSubscription) && (
+      {isDefaultSubscription(existingSubscription) ? (
+        <>This is a default Zupass subscription, so you can't unsubscribe.</>
+      ) : (
         <Button onClick={onUnsubscribeClick} style="danger">
           Unsubscribe
         </Button>
