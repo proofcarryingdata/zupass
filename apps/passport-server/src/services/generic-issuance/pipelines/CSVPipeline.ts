@@ -10,7 +10,6 @@ import {
 import { PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
-import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
@@ -58,13 +57,14 @@ export class CSVPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
     db: IPipelineAtomDB,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    rsaPrivateKey: string
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
-    this.rsaKey = newRSAPrivateKey();
+    this.rsaKey = rsaPrivateKey;
 
     this.capabilities = [
       {
@@ -161,9 +161,14 @@ export class CSVPipeline implements BasePipeline {
         logs.push(makePLogInfo(`saved parsed data: ${atoms.length} entries`));
         span?.setAttribute("atom_count", atoms.length);
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
+        );
+
         return {
           atomsLoaded: atoms.length,
-          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: true
@@ -173,9 +178,14 @@ export class CSVPipeline implements BasePipeline {
         logs.push(makePLogErr(`failed to load csv: ${e}`));
         logs.push(makePLogErr(`csv was ${this.definition.options.csv}`));
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
+        );
+
         return {
           atomsLoaded: 0,
-          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
           success: false

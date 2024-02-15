@@ -18,7 +18,7 @@ export function PipelineLatestLogsSection({
   return (
     <FancyEditor
       dark
-      style={{ width: "100%", height: "200px" }}
+      style={{ width: "100%", height: "300px" }}
       readonly={true}
       value={lastLoad.latestLogs
         .map((log) => `${log.timestampCreated} - ${log.level} - ${log.value}`)

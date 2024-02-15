@@ -63,7 +63,7 @@ export function PipelineTable({
       return {
         status: pipelineStatusStr(entry),
         type: entry.pipeline.type,
-        owner: entry.extraInfo.ownerEmail,
+        owner: entry.extraInfo.ownerEmail ?? "",
         timeCreated: entry.pipeline.timeCreated,
         timeUpdated: entry.pipeline.timeUpdated,
         id: entry.pipeline.id,

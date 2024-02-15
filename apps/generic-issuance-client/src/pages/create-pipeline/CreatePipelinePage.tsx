@@ -1,7 +1,7 @@
 import { Heading, Select, Stack } from "@chakra-ui/react";
 import { PipelineType } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useMemo, useState } from "react";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { pipelineDetailPagePath } from "../../components/PipelineDisplayUtils";
@@ -15,14 +15,15 @@ import LemonadePipelineBuilder from "./pipeline-builders/LemonadePipelineBuilder
 import PretixPipelineBuilder from "./pipeline-builders/PretixPipelineBuilder";
 import RawJSONPipelineBuilder from "./pipeline-builders/RawJSONPipelineBuilder";
 
+type ClientPipelineType = PipelineType | "JSON";
+
 export default function CreatePipelinePage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const user = useFetchSelf();
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
-  const [selectedPipelineType, setSelectedPipelineType] = useState<
-    PipelineType | "JSON"
-  >("JSON");
+  const [selectedPipelineType, setSelectedPipelineType] =
+    useState<ClientPipelineType>(PipelineType.CSV);
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {
@@ -50,6 +51,36 @@ export default function CreatePipelinePage(): ReactNode {
     [userJWT]
   );
 
+  /**
+   * Non-admin users can only create pipelines of the given types.
+   * Complete set of pipeline types can be found in {@link PipelineType}.
+   */
+  const NON_ADMIN_PIPELINE_TYPES: ClientPipelineType[] = useMemo(
+    () => [PipelineType.CSV],
+    []
+  );
+
+  const options = useMemo(() => {
+    let optionEntries = Object.entries(PipelineType) as [
+      ClientPipelineType,
+      string
+    ][];
+
+    optionEntries.push(["JSON", "JSON"]);
+
+    if (!user?.value?.isAdmin) {
+      optionEntries = optionEntries.filter(([k]) => {
+        return NON_ADMIN_PIPELINE_TYPES.includes(k);
+      });
+    }
+
+    return optionEntries.map(([key, value]) => (
+      <option key={key} value={value}>
+        {value}
+      </option>
+    ));
+  }, [NON_ADMIN_PIPELINE_TYPES, user?.value?.isAdmin]);
+
   if (isUploadingPipeline) {
     return (
       <>
@@ -65,7 +96,7 @@ export default function CreatePipelinePage(): ReactNode {
         user={user}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
-          <Heading size="sm">Create Pipeline</Heading>
+          <Heading size="sm">Create a Pipeline</Heading>
         )}
       />
 
@@ -81,12 +112,7 @@ export default function CreatePipelinePage(): ReactNode {
             <option value="" disabled>
               Select your pipeline type...
             </option>
-            {Object.entries(PipelineType).map(([key, value]) => (
-              <option key={key} value={value}>
-                {value}
-              </option>
-            ))}
-            <option value="JSON">JSON</option>
+            {options}
           </Select>
           {selectedPipelineType === PipelineType.Pretix && (
             <PretixPipelineBuilder onCreate={onCreateClick} />

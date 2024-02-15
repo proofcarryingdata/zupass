@@ -8,7 +8,7 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  GenericCheckinCredentialPayload,
+  CSVPipelineDefinition,
   GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
@@ -29,14 +29,11 @@ import {
   PretixEventConfig,
   PretixPipelineDefinition,
   PretixProductConfig,
+  verifyCheckinCredential,
   verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { normalizeEmail, str } from "@pcd/util";
 import { v5 as uuidv5 } from "uuid";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
@@ -276,8 +273,15 @@ export class PretixPipeline implements BasePipeline {
           }
         });
 
+        const end = new Date();
+        logs.push(
+          makePLogInfo(
+            `load finished in ${end.getTime() - startTime.getTime()}ms`
+          )
+        );
+
         return {
-          lastRunEndTimestamp: new Date().toISOString(),
+          lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: startTime.toISOString(),
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
@@ -715,31 +719,6 @@ export class PretixPipeline implements BasePipeline {
   }
 
   /**
-   * When checking tickets in, the user submits various pieces of data, wrapped
-   * in a Semaphore signature.
-   * Here we verify the signature, and return the encoded payload.
-   */
-  private async unwrapCheckInSignature(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<GenericCheckinCredentialPayload> {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      credential.pcd
-    );
-    const signaturePCDValid =
-      await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-    if (!signaturePCDValid) {
-      throw new Error("Invalid signature");
-    }
-
-    const payload: GenericCheckinCredentialPayload = JSON.parse(
-      signaturePCD.claim.signedMessage
-    );
-
-    return payload;
-  }
-
-  /**
    * Given a ticket to check in, and a set of tickets belonging to the user
    * performing the check-in, verify that at least one of the user's tickets
    * belongs to a matching event and is a superuser ticket.
@@ -811,10 +790,10 @@ export class PretixPipeline implements BasePipeline {
         let ticketId: string;
 
         try {
-          const payload = await this.unwrapCheckInSignature(request.credential);
-          const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.emailPCD.pcd
-          );
+          const payload = await verifyCheckinCredential(request.credential);
+          ticketId = payload.ticketIdToCheckIn;
+          const checkerEmailPCD = payload.emailPCD;
+
           if (
             !isEqualEdDSAPublicKey(
               checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
@@ -842,6 +821,7 @@ export class PretixPipeline implements BasePipeline {
             checkerEmailPCD.claim.semaphoreId
           );
         } catch (e) {
+          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
           span?.setAttribute("precheck_error", "InvalidSignature");
           return { canCheckIn: false, error: { name: "InvalidSignature" } };
@@ -931,10 +911,9 @@ export class PretixPipeline implements BasePipeline {
       let ticketId: string;
 
       try {
-        const payload = await this.unwrapCheckInSignature(request.credential);
-        const checkerEmailPCD = await EmailPCDPackage.deserialize(
-          payload.emailPCD.pcd
-        );
+        const payload = await verifyCheckinCredential(request.credential);
+        ticketId = payload.ticketIdToCheckIn;
+        const checkerEmailPCD = payload.emailPCD;
 
         if (
           !isEqualEdDSAPublicKey(
@@ -960,6 +939,7 @@ export class PretixPipeline implements BasePipeline {
           checkerEmailPCD.claim.semaphoreId
         );
       } catch (e) {
+        logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { checkedIn: false, error: { name: "InvalidSignature" } };
@@ -1168,7 +1148,7 @@ export function isPretixPipelineDefinition(
 
 export function isCSVPipelineDefinition(
   d: PipelineDefinition
-): d is PretixPipelineDefinition {
+): d is CSVPipelineDefinition {
   return d.type === PipelineType.CSV;
 }
 
