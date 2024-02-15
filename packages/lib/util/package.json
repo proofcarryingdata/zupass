@@ -26,6 +26,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "buffer": "^6.0.3",
     "chai": "^4.3.7",
     "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"

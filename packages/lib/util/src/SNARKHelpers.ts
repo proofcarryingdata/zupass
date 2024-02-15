@@ -28,5 +28,5 @@ export function babyJubIsNegativeOne(value: string): boolean {
 export function generateSnarkMessageHash(signal: string): bigint {
   // right shift to fit into a field element, which is 254 bits long
   // shift by 8 ensures we have a 253 bit element
-  return BigInt("0x" + sha256(signal)) >> BigInt(8);
+  return BigInt("0x" + sha256(signal)) >> 8n;
 }

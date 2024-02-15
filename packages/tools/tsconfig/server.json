@@ -3,7 +3,7 @@
   "display": "Next.js",
   "extends": "./base.json",
   "compilerOptions": {
-    "target": "es6",
+    "target": "ES2020",
     "lib": ["esnext", "DOM", "DOM.Iterable"],
     "skipLibCheck": true,
     "strict": true,

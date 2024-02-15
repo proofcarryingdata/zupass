@@ -169,7 +169,7 @@ describe("EdDSA frog should work", function () {
     }
 
     await testVerifyBadClaim((claim) => {
-      claim.message[0] = BigInt(1);
+      claim.message[0] = 1n;
     });
     await testVerifyBadClaim((claim) => {
       claim.publicKey[0] = "123";
