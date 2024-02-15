@@ -25,7 +25,7 @@ export class PersistentCacheService {
    */
   private static readonly CACHE_GARBAGE_COLLECT_INTERVAL_MS = 60_000;
 
-  private expirationInterval: NodeJS.Timer | undefined;
+  private expirationInterval: ReturnType<typeof setInterval> | undefined;
   private db: Pool;
   private rollbarService: RollbarService | null;
 

@@ -10,7 +10,7 @@ export function toHexString(bytes: Uint8Array): string {
 /**
  * Converts a hex string to a byte-array.  Opposite of toHexString().
  */
-export function fromHexString(hexString: string): Uint8Array {
+export function fromHexString(hexString: string): Buffer {
   return Buffer.from(hexString, "hex");
 }
 

@@ -24,7 +24,7 @@ export class FrogCryptoFeedHost extends FeedHost<FrogCryptoFeed> {
   private readonly feedRequestHandler: (
     feed: FrogCryptoFeed
   ) => (request: PollFeedRequest) => Promise<PollFeedResponseValue>;
-  private interval: NodeJS.Timer | undefined;
+  private interval: ReturnType<typeof setInterval> | undefined;
 
   public constructor(
     dbPool: Pool,
