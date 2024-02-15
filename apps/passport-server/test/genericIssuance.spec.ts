@@ -62,10 +62,10 @@ import {
   LemonadeUser
 } from "./lemonade/LemonadeDataMocker";
 import {
-  customTicketHandler,
+  customLemonadeTicketHandler,
   getMockLemonadeHandlers,
   loadApolloErrorMessages,
-  unregisteredUserTicketHandler
+  unregisteredLemonadeUserHandler
 } from "./lemonade/MockLemonadeServer";
 import { TestTokenSource } from "./lemonade/TestTokenSource";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
@@ -1142,7 +1142,7 @@ t2,i1`,
     "Lemonade tickets without user emails should not be loaded",
     async function () {
       mockServer.use(
-        unregisteredUserTicketHandler(lemonadeBackend, lemonadeBackendUrl)
+        unregisteredLemonadeUserHandler(lemonadeBackend, lemonadeBackendUrl)
       );
 
       expectToExist(giService);
@@ -1152,7 +1152,7 @@ t2,i1`,
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
       const runInfo = await pipeline.load();
 
-      // Despite receiving a ticket, the ticket was ignored due to lnot having
+      // Despite receiving a ticket, the ticket was ignored due to not having
       // a user email
       expect(runInfo.atomsLoaded).to.eq(0);
     }
@@ -1173,7 +1173,9 @@ t2,i1`,
           EdgeCityAttendeeTicket,
           EdgeCityDenverBouncerTicket
         ];
-        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+        mockServer.use(
+          customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
+        );
 
         const runInfo = await pipeline.load();
         // Both tickets should have been loaded
@@ -1194,7 +1196,9 @@ t2,i1`,
           // Empty type ID is not valid
           { ...EdgeCityDenverBouncerTicket, type_id: "" }
         ];
-        mockServer.use(customTicketHandler(lemonadeBackendUrl, tickets));
+        mockServer.use(
+          customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
+        );
 
         const runInfo = await pipeline.load();
         // Despite receiving two tickets, only one should be parsed and saved
@@ -1210,7 +1214,73 @@ t2,i1`,
     }
   );
 
-  // TODO Test Pretix with invalid back-end responses
+  step(
+    "Pretix should not load tickets for an event with invalid settings",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+
+      const backup = pretixBackend.backup();
+      // These event settings are invalid, and so the Pretix pipeline should
+      // refuse to load any tickets for the event.
+      pretixBackend.setEventSettings(
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
+        { attendee_emails_asked: false, attendee_emails_required: false }
+      );
+
+      const runInfo = await pipeline.load();
+      expect(runInfo.atomsLoaded).to.eq(0);
+      expectLength(
+        runInfo.latestLogs.filter(
+          (log) => log.level === PipelineLogLevel.Error
+        ),
+        1
+      );
+
+      pretixBackend.restore(backup);
+    }
+  );
+
+  step(
+    "Pretix should not load tickets for events which have products with invalid settings",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      const pipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+
+      // The setup of products is considered to be part of the event
+      // configuration, so a mis-configured product will block the loading of
+      // any tickets for the event, even if there are no tickets using this
+      // product.
+
+      const backup = pretixBackend.backup();
+      pretixBackend.updateProduct(
+        ethLatAmPretixOrganizer.orgUrl,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAm.slug,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmTShirtProduct.id,
+        (product) => {
+          product.generate_tickets = true;
+        }
+      );
+
+      const runInfo = await pipeline.load();
+      expect(runInfo.atomsLoaded).to.eq(0);
+      expectLength(
+        runInfo.latestLogs.filter(
+          (log) => log.level === PipelineLogLevel.Error
+        ),
+        1
+      );
+
+      pretixBackend.restore(backup);
+    }
+  );
 
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);

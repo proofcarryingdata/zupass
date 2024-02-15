@@ -135,7 +135,7 @@ export function getMockLemonadeHandlers(
   return handlers;
 }
 
-export function unregisteredUserTicketHandler(
+export function unregisteredLemonadeUserHandler(
   mocker: LemonadeDataMocker,
   backendUrl: string
 ): RequestHandler {
@@ -175,7 +175,7 @@ export function unregisteredUserTicketHandler(
   );
 }
 
-export function customTicketHandler(
+export function customLemonadeTicketHandler(
   backendUrl: string,
   tickets: LemonadeTicket[]
 ): RequestHandler {
