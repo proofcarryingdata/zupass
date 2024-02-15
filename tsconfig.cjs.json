@@ -22,6 +22,9 @@
       "path": "packages/lib/pcd-types/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/pod/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/util/tsconfig.cjs.json"
     },
     {

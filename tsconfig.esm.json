@@ -22,6 +22,9 @@
       "path": "packages/lib/pcd-types/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/pod/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/util/tsconfig.esm.json"
     },
     {

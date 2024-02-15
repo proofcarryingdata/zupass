@@ -6341,6 +6341,21 @@
   dependencies:
     "@zag-js/dom-query" "0.16.0"
 
+"@zk-kit/baby-jubjub@0.1.1":
+  version "0.1.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-0.1.1.tgz#8da922d1c0138ca8668c6ba1134ec04f51b24804"
+  integrity sha512-eWpUSpKKpllGZXE6mdS1IVuegRjY2Yu+3Qccyfg0+gMI8+p0ruioMM/MCK3tg2lRIUJTVd+16UghVcK0145yWg==
+  dependencies:
+    "@zk-kit/utils" "0.1.0"
+
+"@zk-kit/eddsa-poseidon@0.5.1":
+  version "0.5.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.5.1.tgz#7fef431f441f5385f82e6005cdf83d72d298e8c2"
+  integrity sha512-sPyoyjwg9EZ+tHLGxOG+FDj9XJK1knVjm27nTMV4ZSiQIf0427QWnLhOk7b6zMvFmEpBWTG9gneJ5pr3jzJ4zg==
+  dependencies:
+    "@zk-kit/baby-jubjub" "0.1.1"
+    "@zk-kit/utils" "0.1.0"
+
 "@zk-kit/groth16@0.3.0":
   version "0.3.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/groth16/-/groth16-0.3.0.tgz#74240beb26e98e4ea3546159108ca968ed7c019b"
@@ -6348,6 +6363,11 @@
   dependencies:
     circom_runtime "0.1.24"
     ffjavascript "0.2.60"
+
+"@zk-kit/imt@2.0.0-beta.1":
+  version "2.0.0-beta.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/imt/-/imt-2.0.0-beta.1.tgz#c24ff6dce063e2c451593d78218ddc9a6a837ffd"
+  integrity sha512-WcRhNcWhPrf0MPEuQXnLnb/AfdIxVZpGF/BAI9iAnW/OHYU4Z4H3sFMip60HwXQqmbF+8z54b0rT2FcE5HtBfw==
 
 "@zk-kit/incremental-merkle-tree@0.4.3", "@zk-kit/incremental-merkle-tree@^0.4.3":
   version "0.4.3"
@@ -6358,6 +6378,11 @@
   version "1.1.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.1.0.tgz#6b0ccce56f9e05ccf73f7ea4fa746d5ef7d24b1d"
   integrity sha512-WnNR/GQse3lX8zOHMU8zwhgX8u3qPoul8w4GjJ0WDHq+VGJimo7EGheRZ/ILeBQabnlzAerdv3vBqYBehBeoKA==
+
+"@zk-kit/utils@0.1.0":
+  version "0.1.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.1.0.tgz#6c134c22541efc6e634d4a89884c8bfe209b2da1"
+  integrity sha512-MZmuw2w2StB7XOSNg1TW4VwnBJ746UDmdXTvxwDO/U85UZfGfM3zb53gG35qz5sWpQo/DjfoKqaScmh6HUtQpA==
 
 "@zxing/browser@0.0.7":
   version "0.0.7"
@@ -14737,6 +14762,11 @@ poseidon-lite@^0.0.2:
   version "0.0.2"
   resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.0.2.tgz#dc1a7c57f9393a586c5c9efc21b72b77e2c1acb6"
   integrity sha512-bGdDPTOQkJbBjbtSEWc3gY+YhqlGTxGlZ8041F8TGGg5QyGGp1Cfs4b8AEnFFjHbkPg6WdWXUgEjU1GKOKWAPw==
+
+poseidon-lite@^0.2.0:
+  version "0.2.0"
+  resolved "https://registry.yarnpkg.com/poseidon-lite/-/poseidon-lite-0.2.0.tgz#dbc242ebd9c10c32d507a533fa497231d168fd72"
+  integrity sha512-vivDZnGmz8W4G/GzVA72PXkfYStjilu83rjjUfpL4PueKcC8nfX6hCPh2XhoC5FBgC6y0TA3YuUeUo5YCcNoig==
 
 postcss-import@^15.1.0:
   version "15.1.0"
