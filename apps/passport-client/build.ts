@@ -41,6 +41,13 @@ const define = {
           process.env.DEFAULT_FEED_URLS
         )
       }
+    : {}),
+  ...(process.env.PODBOX_CLIENT_URL !== undefined
+    ? {
+        "process.env.PODBOX_CLIENT_URL": JSON.stringify(
+          process.env.PODBOX_CLIENT_URL
+        )
+      }
     : {})
 };
 

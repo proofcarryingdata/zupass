@@ -32,6 +32,10 @@ a:visited {
   color: var(--accent-dark);
   text-decoration: none;
 }
+a:hover {
+  text-decoration: underline;
+  cursor: pointer;
+}
 
 /* IBM Plex Sans */
 @font-face {

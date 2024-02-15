@@ -27,6 +27,10 @@ export function ScreenNavigation({
 const Container = styled.div`
   margin-top: 24px;
   width: 100%;
+
+  a {
+    text-decoration: none;
+  }
 `;
 
 const ContentsWrapper = styled.a`

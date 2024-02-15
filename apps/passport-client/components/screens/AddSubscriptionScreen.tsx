@@ -14,7 +14,7 @@ import {
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import styled from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
   useCredentialCache,
@@ -246,59 +246,28 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
-  const folders = subscription
-    ? _.uniq(subscription.feed.permissions.map((p) => p.folder)).sort((a, b) =>
-        a.localeCompare(b)
-      )
-    : [];
-
   const [moreInfo, setMoreInfo] = useState(lockExpanded);
-  const navigate = useNavigate();
-  const goToFolder = useCallback(
-    (folder: string) => {
-      navigate(`/?folder=${encodeURIComponent(folder)}`);
-    },
-    [navigate]
-  );
 
   return (
     <InfoRowContainer
-      style={
-        moreInfo || lockExpanded
-          ? {
-              border: "1px solid white",
-              padding: "16px",
-              borderRadius: "16px",
-              backgroundColor: "rgba(255, 255, 255, 0.05)"
-            }
-          : undefined
+      expanded={moreInfo || lockExpanded}
+      lockExpanded={lockExpanded}
+      onClick={(): void =>
+        setMoreInfo((more) => {
+          const newValue = lockExpanded ? true : !more;
+          if (newValue) {
+            onExpanded?.();
+          }
+          return newValue;
+        })
       }
     >
       <FeedNameRow>
         <div>{info.name}</div>
-        {!lockExpanded && (
-          <div>
-            <Button
-              style="secondary"
-              size="xs"
-              onClick={(): void =>
-                setMoreInfo((more) => {
-                  const newValue = !more;
-                  if (newValue) {
-                    onExpanded?.();
-                  }
-                  return newValue;
-                })
-              }
-            >
-              info
-            </Button>
-          </div>
-        )}
       </FeedNameRow>
       <Spacer h={8} />
       <Description>{info.description}</Description>
-      {moreInfo ? (
+      {moreInfo && (
         <>
           <Spacer h={8} />
           {!isDeepLink && alreadySubscribed && showErrors && error && (
@@ -314,33 +283,9 @@ export function SubscriptionInfoRow({
             </>
           )}
           {alreadySubscribed ? (
-            isDeepLink ? (
-              <div>
-                You are subscribed to{" "}
-                <strong>{existingSubscriptions[0].feed.name}</strong>.
-                <Spacer h={16} />
-                <div>
-                  <strong>Browse subscribed folders:</strong>
-                </div>
-                <FolderContainer>
-                  <FolderExplorerContainer>
-                    {folders.map((folder) => (
-                      <FolderCard
-                        key={folder}
-                        onFolderClick={(): void => {
-                          goToFolder(folder);
-                        }}
-                        folder={folder}
-                      />
-                    ))}
-                  </FolderExplorerContainer>
-                </FolderContainer>
-              </div>
-            ) : (
-              <AlreadySubscribed
-                existingSubscription={existingSubscriptions[0]}
-              />
-            )
+            <AlreadySubscribed
+              existingSubscription={existingSubscriptions[0]}
+            />
           ) : (
             <SubscribeSection
               providerUrl={providerUrl}
@@ -349,8 +294,6 @@ export function SubscriptionInfoRow({
             />
           )}
         </>
-      ) : (
-        <></>
       )}
     </InfoRowContainer>
   );
@@ -501,6 +444,19 @@ function AlreadySubscribed({
     day: "numeric"
   };
 
+  const navigate = useNavigate();
+  const folders = existingSubscription
+    ? _.uniq(existingSubscription.feed.permissions.map((p) => p.folder)).sort(
+        (a, b) => a.localeCompare(b)
+      )
+    : [];
+  const goToFolder = useCallback(
+    (folder: string) => {
+      navigate(`/?folder=${encodeURIComponent(folder)}`);
+    },
+    [navigate]
+  );
+
   return (
     <div>
       {existingSubscription.ended && (
@@ -522,28 +478,83 @@ function AlreadySubscribed({
           />
         </>
       )}
-      <Spacer h={16} />
-      You subscribed to this feed on{" "}
-      {new Date(existingSubscription.subscribedTimestamp).toLocaleDateString(
-        navigator.language,
-        options
-      )}
+      <Spacer h={8} />
+
+      <>
+        You subscribed to this feed on{" "}
+        {new Date(existingSubscription.subscribedTimestamp).toLocaleDateString(
+          navigator.language,
+          options
+        )}
+      </>
+
+      <Spacer h={8} />
+      <FolderExplorerContainer>
+        {folders.map((folder) => (
+          <FolderCard
+            key={folder}
+            onFolderClick={(): void => {
+              goToFolder(folder);
+            }}
+            folder={folder}
+          />
+        ))}
+      </FolderExplorerContainer>
       <Spacer h={8} />
       {isDefaultSubscription(existingSubscription) ? (
-        <>This is a default Zupass subscription, so you can't unsubscribe.</>
+        <></>
       ) : (
-        <>
-          <Spacer h={8} />
-          <Button onClick={onUnsubscribeClick} style="danger">
-            Unsubscribe
-          </Button>
-        </>
+        <Button onClick={onUnsubscribeClick} style="danger">
+          Unsubscribe
+        </Button>
       )}
     </div>
   );
 }
 
-const InfoRowContainer = styled.div``;
+const InfoRowContainer = styled.div`
+  ${({
+    expanded,
+    lockExpanded
+  }: {
+    expanded;
+    lockExpanded;
+  }): FlattenSimpleInterpolation => css`
+    transition: background-color 300ms;
+
+    ${expanded
+      ? css`
+          border: 1px solid white;
+          padding: 16px;
+          border-radius: 16px;
+          background-color: rgba(255, 255, 255, 0.05);
+          cursor: pointer;
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        `
+      : css`
+          user-select: none;
+          cursor: pointer;
+
+          border: 1px solid white;
+          padding: 16px;
+          border-radius: 16px;
+          background-color: rgba(255, 255, 255, 0.05);
+
+          &:hover {
+            background-color: rgba(255, 255, 255, 0.1);
+          }
+        `}
+
+    ${lockExpanded
+      ? css`
+          cursor: initial;
+        `
+      : css``}
+  `}
+`;
 
 const SubscriptionsScreenContainer = styled.div`
   padding-bottom: 16px;
@@ -588,8 +599,4 @@ const MismatchedEmailWarning = styled.div`
   p {
     margin-bottom: 16px;
   }
-`;
-
-const FolderContainer = styled.div`
-  margin: 8px 0px;
 `;

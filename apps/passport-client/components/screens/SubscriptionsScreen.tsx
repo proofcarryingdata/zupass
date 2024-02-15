@@ -55,6 +55,16 @@ export function SubscriptionsScreen(): JSX.Element {
             You can subscribe to feeds hosted by third party developers.
           </p>
           <Spacer h={8} />
+          <p>
+            To create your own PCD feed, you can either implement, host, and
+            maintain your own{" "}
+            <a href="https://github.com/proofcarryingdata/zupass/tree/main/examples/zupass-feed-server">
+              feed server
+            </a>
+            , or use <a href={process.env.PODBOX_CLIENT_URL}>Podbox</a> as an
+            all-in-one feed hosting solution.
+          </p>
+          <Spacer h={8} />
           {subs.getActiveSubscriptions().length === 0 && (
             <div>You have no subscriptions.</div>
           )}
