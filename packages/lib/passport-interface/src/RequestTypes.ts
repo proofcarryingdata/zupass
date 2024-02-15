@@ -505,6 +505,8 @@ export interface ZupassUserJson {
   email: string;
   salt: string | null;
   terms_agreed: number;
+  time_created: number;
+  time_updated: number;
 }
 
 /**
