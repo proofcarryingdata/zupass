@@ -62,10 +62,10 @@ import {
   LemonadeUser
 } from "./lemonade/LemonadeDataMocker";
 import {
-  customTicketHandler as customLemonadeTicketHandler,
+  customLemonadeTicketHandler,
   getMockLemonadeHandlers,
   loadApolloErrorMessages,
-  unregisteredUserTicketHandler as unregisteredLemonadeUserHandler
+  unregisteredLemonadeUserHandler
 } from "./lemonade/MockLemonadeServer";
 import { TestTokenSource } from "./lemonade/TestTokenSource";
 import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
