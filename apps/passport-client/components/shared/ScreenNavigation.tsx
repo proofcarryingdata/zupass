@@ -25,7 +25,7 @@ export function ScreenNavigation({
 }
 
 const Container = styled.div`
-  margin-top: 16px;
+  margin-top: 24px;
   width: 100%;
 `;
 

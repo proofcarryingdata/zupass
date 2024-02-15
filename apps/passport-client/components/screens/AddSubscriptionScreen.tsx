@@ -13,7 +13,6 @@ import {
 } from "@pcd/pcd-collection";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
@@ -527,18 +526,6 @@ function AlreadySubscribed({
   );
 }
 
-function FolderLink({ folder }: { folder: string }): JSX.Element {
-  const navigate = useNavigate();
-  const goToFolder = useCallback(() => {
-    navigate(`/?folder=${encodeURIComponent(folder)}`);
-  }, [folder, navigate]);
-  return (
-    <FolderButton>
-      <Button onClick={goToFolder}>{folder}</Button>
-    </FolderButton>
-  );
-}
-
 const InfoRowContainer = styled.div``;
 
 const SubscriptionsScreenContainer = styled.div`
@@ -588,8 +575,4 @@ const MismatchedEmailWarning = styled.div`
 
 const FolderContainer = styled.div`
   margin: 8px 0px;
-`;
-
-const FolderButton = styled.div`
-  margin: 16px 0px;
 `;
