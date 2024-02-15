@@ -370,4 +370,6 @@ export interface GenericIssuanceUserRow {
   id: string;
   email: string;
   is_admin: boolean;
+  time_created: Date;
+  time_updated: Date;
 }

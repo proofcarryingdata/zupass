@@ -32,7 +32,9 @@ export class PipelineUserDB implements IPipelineUserDB {
     return {
       id: row.id,
       email: row.email,
-      isAdmin: row.is_admin
+      isAdmin: row.is_admin,
+      timeCreated: row.time_created,
+      timeUpdated: row.time_updated
     };
   }
 
@@ -82,9 +84,9 @@ export class PipelineUserDB implements IPipelineUserDB {
       `
     INSERT INTO generic_issuance_users (id, email, is_admin) VALUES($1, $2, $3)
     ON CONFLICT(id) DO UPDATE
-    SET (email, is_admin) = ($2, $3)
+    SET (email, is_admin, time_updated) = ($2, $3, $4)
     `,
-      [user.id, normalizeEmail(user.email), user.isAdmin]
+      [user.id, normalizeEmail(user.email), user.isAdmin, new Date()]
     );
   }
 }
