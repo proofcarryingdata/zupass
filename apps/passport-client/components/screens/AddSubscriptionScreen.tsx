@@ -34,7 +34,7 @@ import {
   setPendingAddSubscriptionRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { BigInput, Button, H2, Spacer } from "../core";
+import { BigInput, Button, Spacer } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { Spinner } from "../shared/Spinner";
@@ -117,6 +117,9 @@ export function AddSubscriptionScreen(): JSX.Element {
       .catch((e) => {
         console.log(`error fetching subscription infos ${e}`);
         setFetching(false);
+        setInfos(undefined);
+        setFetchedProviderUrl(undefined);
+        setFetchedProviderName(undefined);
         setFetchError(
           "Unable to fetch subscriptions. Check that the URL is correct, or try again later."
         );
@@ -144,12 +147,10 @@ export function AddSubscriptionScreen(): JSX.Element {
   return (
     <AppContainer bg="gray">
       <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
+      <Spacer h={8} />
       <SubscriptionsScreenContainer>
-        <Spacer h={16} />
-        <H2>Add subscription</H2>
         {mismatchedEmails && (
           <MismatchedEmailWarning>
-            <Spacer h={16} />
             <p>
               Your email is <strong>{self.email}</strong> but the subscription
               link was sent to <strong>{suggestedEmail}</strong>.
@@ -162,11 +163,9 @@ export function AddSubscriptionScreen(): JSX.Element {
             </p>
           </MismatchedEmailWarning>
         )}
+
         {(fetchError || !isDeepLink) && (
           <>
-            <Spacer h={16} />
-            <div>Enter a URL to a feed provider:</div>
-            <Spacer h={8} />
             <BigInput
               autoCorrect="off"
               autoCapitalize="off"
@@ -176,23 +175,22 @@ export function AddSubscriptionScreen(): JSX.Element {
                 setProviderUrl(e.target.value);
               }}
             />
-            <Spacer h={16} />
+            <Spacer h={8} />
             <Button
               disabled={fetching || alreadyFetched}
               onClick={onFetchFeedsClick}
             >
               <Spinner show={fetching} text="Get possible subscriptions" />
             </Button>
-            <Spacer h={16} />
           </>
         )}
-        <Spacer h={8} />
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
         <div>
+          <Spacer h={8} />
           {infos &&
             infos.map((info, i) => (
               <React.Fragment key={i}>
-                <Spacer h={16} />
+                <Spacer h={8} />
                 <SubscriptionInfoRow
                   subscriptions={subs}
                   providerUrl={fetchedProviderUrl}
@@ -201,6 +199,7 @@ export function AddSubscriptionScreen(): JSX.Element {
                   key={i}
                   showErrors={false}
                   isDeepLink={isDeepLink}
+                  lockMoreInfo={true}
                 />
               </React.Fragment>
             ))}
@@ -216,7 +215,8 @@ export function SubscriptionInfoRow({
   providerName,
   info,
   showErrors,
-  isDeepLink
+  isDeepLink,
+  lockMoreInfo
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
@@ -224,6 +224,7 @@ export function SubscriptionInfoRow({
   info: Feed;
   showErrors: boolean;
   isDeepLink: boolean;
+  lockMoreInfo?: boolean;
 }): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
@@ -248,50 +249,82 @@ export function SubscriptionInfoRow({
       )
     : [];
 
+  const [moreInfo, setMoreInfo] = useState(lockMoreInfo);
+
   return (
-    <InfoRowContainer>
-      <FeedName>{info.name}</FeedName>
+    <InfoRowContainer
+      style={
+        moreInfo || lockMoreInfo
+          ? {
+              border: "1px solid white",
+              padding: "16px",
+              borderRadius: "16px",
+              backgroundColor: "rgba(255, 255, 255, 0.05)"
+            }
+          : undefined
+      }
+    >
+      <FeedNameRow>
+        <div>{info.name}</div>
+        {!lockMoreInfo && (
+          <div>
+            <Button
+              style="secondary"
+              size="xs"
+              onClick={(): void => setMoreInfo((more) => !more)}
+            >
+              info
+            </Button>
+          </div>
+        )}
+      </FeedNameRow>
       <Spacer h={8} />
       <Description>{info.description}</Description>
-      <Spacer h={8} />
-      <hr />
-      <Spacer h={8} />
-      {!isDeepLink && alreadySubscribed && showErrors && error && (
+      {moreInfo ? (
         <>
-          <SubscriptionErrors>
-            <div>
-              Errors were encountered when processing this subscription.
-            </div>
-            <Spacer h={8} />
-            <Button onClick={openResolveErrorModal}>Resolve</Button>
-          </SubscriptionErrors>
           <Spacer h={8} />
+          {!isDeepLink && alreadySubscribed && showErrors && error && (
+            <>
+              <SubscriptionErrors>
+                <div>
+                  Errors were encountered when processing this subscription.
+                </div>
+                <Spacer h={8} />
+                <Button onClick={openResolveErrorModal}>Resolve</Button>
+              </SubscriptionErrors>
+              <Spacer h={8} />
+            </>
+          )}
+          {alreadySubscribed ? (
+            isDeepLink ? (
+              <div>
+                You are subscribed to{" "}
+                <strong>{existingSubscriptions[0].feed.name}</strong>.
+                <Spacer h={16} />
+                <div>
+                  <strong>Browse subscribed folders:</strong>
+                </div>
+                <FolderContainer>
+                  {folders.map((folder) => (
+                    <FolderLink key={folder} folder={folder} />
+                  ))}
+                </FolderContainer>
+              </div>
+            ) : (
+              <AlreadySubscribed
+                existingSubscription={existingSubscriptions[0]}
+              />
+            )
+          ) : (
+            <SubscribeSection
+              providerUrl={providerUrl}
+              providerName={providerName}
+              info={info}
+            />
+          )}
         </>
-      )}
-      {alreadySubscribed ? (
-        isDeepLink ? (
-          <div>
-            You are subscribed to{" "}
-            <strong>{existingSubscriptions[0].feed.name}</strong>.
-            <Spacer h={16} />
-            <div>
-              <strong>Browse subscribed folders:</strong>
-            </div>
-            <FolderContainer>
-              {folders.map((folder) => (
-                <FolderLink key={folder} folder={folder} />
-              ))}
-            </FolderContainer>
-          </div>
-        ) : (
-          <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
-        )
       ) : (
-        <SubscribeSection
-          providerUrl={providerUrl}
-          providerName={providerName}
-          info={info}
-        />
+        <></>
       )}
     </InfoRowContainer>
   );
@@ -359,11 +392,7 @@ function SubscribeSection({
       <div>This feed requires the following permissions:</div>
       <PermissionsView permissions={info.permissions} />
       <Spacer h={16} />
-      <Button
-        disabled={missingCredentialPCD}
-        onClick={onSubscribeClick}
-        size="small"
-      >
+      <Button disabled={missingCredentialPCD} onClick={onSubscribeClick}>
         Subscribe
       </Button>
     </>
@@ -471,7 +500,7 @@ function AlreadySubscribed({
       )}
       <Spacer h={8} />
       {!isDefaultSubscription(existingSubscription) && (
-        <Button onClick={onUnsubscribeClick} size="small" style="danger">
+        <Button onClick={onUnsubscribeClick} style="danger">
           Unsubscribe
         </Button>
       )}
@@ -491,22 +520,32 @@ function FolderLink({ folder }: { folder: string }): JSX.Element {
   );
 }
 
-const InfoRowContainer = styled.div`
-  padding: 16px;
-  border: 1px solid white;
-  border-radius: 12px;
-  background: var(--bg-lite-gray);
-`;
+const InfoRowContainer = styled.div``;
 
 const SubscriptionsScreenContainer = styled.div`
   padding-bottom: 16px;
-  padding-top: 16px;
   width: 100%;
 `;
 
-const FeedName = styled.div`
+const FeedNameRow = styled.div`
   font-weight: bold;
   font-size: 18px;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  max-width: 100%;
+
+  div:first-child {
+    flex-shrink: 1;
+    flex-grow: 1;
+    overflow: hidden;
+    white-space: nowrap;
+    text-overflow: ellipsis;
+  }
+
+  div:last-child {
+    flex-shrink: 0;
+  }
 `;
 
 const Description = styled.p``;

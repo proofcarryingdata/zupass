@@ -47,14 +47,14 @@ export function SubscriptionsScreen(): JSX.Element {
       <AppContainer bg="gray">
         <ScreenNavigation label={"Home"} to="/" />
         <Spacer h={8} />
-        <Button onClick={onAddNewClicked}>Subscribe</Button>
+        <Button onClick={onAddNewClicked}>Add Subscription</Button>
         <Spacer h={8} />
         <Container>
           <p>
             Feed subscriptions allow Zupass to access PCDs from the internet!
             You can subscribe to feeds hosted by third party developers.
           </p>
-          <Spacer h={16} />
+          <Spacer h={8} />
           {subs.getActiveSubscriptions().length === 0 && (
             <div>You have no subscriptions.</div>
           )}
