@@ -1,17 +1,17 @@
 import { Badge, HStack, Heading, Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { useStytch } from "@stytch/react";
-import { ReactNode, useContext, useEffect } from "react";
+import { ReactNode, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { PipelineDisplayNameText } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
-import { GIContext } from "../../helpers/Context";
 import { useFetchPipeline } from "../../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
+import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
 import { PipelineEditSection } from "./PipelineEditSection";
@@ -26,17 +26,17 @@ export default function PipelinePage(): ReactNode {
   const stytchClient = useStytch();
   const userJWT = useJWT();
   const params = useParams();
-  const ctx = useContext(GIContext);
   const pipelineId: string | undefined = params.id;
-  const userFromServer = useFetchSelf();
-  const pipelineFromServer = useFetchPipeline(pipelineId);
-  const pipelineInfoFromServer = useFetchPipelineInfo(pipelineId);
-  const pipelineInfo = pipelineInfoFromServer?.value;
-  const isAdminView = !!userFromServer?.value?.isAdmin && !!ctx.isAdminMode;
+  const user = useFetchSelf();
+  const pipelineDefinition = useFetchPipeline(pipelineId);
+  const pipelineInfoResult = useFetchPipelineInfo(pipelineId);
+  const pipelineInfo = pipelineInfoResult?.value;
+  const isAdminView = useIsAdminView(user?.value);
+
   const maybeRequestError: string | undefined = getError(
-    userFromServer,
-    pipelineFromServer,
-    pipelineInfoFromServer
+    user,
+    pipelineDefinition,
+    pipelineInfoResult
   );
 
   useEffect(() => {
@@ -49,7 +49,7 @@ export default function PipelinePage(): ReactNode {
     // TODO: make this nicer
     return (
       <>
-        <GlobalPageHeader user={userFromServer} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} stytchClient={stytchClient} />
         <PageContent>
           <Heading size="md">❌ Load Error</Heading>
           {maybeRequestError}
@@ -58,16 +58,11 @@ export default function PipelinePage(): ReactNode {
     );
   }
 
-  if (
-    !userFromServer ||
-    !pipelineFromServer ||
-    !pipelineInfoFromServer ||
-    !pipelineInfo
-  ) {
+  if (!user || !pipelineDefinition || !pipelineInfo || !pipelineInfo) {
     return (
       <>
         <GlobalPageHeader
-          user={userFromServer}
+          user={user}
           stytchClient={stytchClient}
           titleContent={(): ReactNode => <Spinner />}
         />
@@ -77,12 +72,12 @@ export default function PipelinePage(): ReactNode {
   }
 
   const ownedBySomeoneElse =
-    pipelineFromServer.value?.ownerUserId !== userFromServer?.value?.id;
+    pipelineDefinition.value?.ownerUserId !== user?.value?.id;
 
   return (
     <>
       <GlobalPageHeader
-        user={userFromServer}
+        user={user}
         stytchClient={stytchClient}
         titleContent={(): ReactNode => (
           <HStack>
@@ -92,10 +87,10 @@ export default function PipelinePage(): ReactNode {
                 fontWeight: "bold"
               }}
             >
-              <PipelineDisplayNameText pipeline={pipelineFromServer.value} />{" "}
+              <PipelineDisplayNameText pipeline={pipelineDefinition.value} />{" "}
             </span>
-            <Badge>{pipelineFromServer.value?.id}</Badge>
-            <div>by {pipelineInfoFromServer.value?.ownerEmail}</div>
+            <Badge>{pipelineDefinition.value?.id}</Badge>
+            <div>by {pipelineInfo?.ownerEmail}</div>
           </HStack>
         )}
       />
@@ -110,24 +105,24 @@ export default function PipelinePage(): ReactNode {
       <PageContent>
         <TwoColumns>
           <div className="col2">
-            {pipelineInfoFromServer.success &&
-              pipelineFromServer.success &&
-              userFromServer.success && (
+            {pipelineInfoResult.success &&
+              pipelineDefinition.success &&
+              user.success && (
                 <PipelineEditSection
-                  user={userFromServer.value}
-                  pipelineInfo={pipelineInfoFromServer.value}
-                  pipeline={pipelineFromServer.value}
+                  user={user.value}
+                  pipelineInfo={pipelineInfo}
+                  pipeline={pipelineDefinition.value}
                   isAdminView={isAdminView}
                 />
               )}
           </div>
           <div className="col1">
-            {pipelineInfoFromServer.success &&
-              pipelineFromServer.success &&
-              userFromServer.success && (
+            {pipelineInfoResult &&
+              pipelineDefinition.success &&
+              user.success && (
                 <PipelineDetailSection
-                  pipelineInfo={pipelineInfoFromServer.value}
-                  pipelineFromServer={pipelineFromServer.value}
+                  pipelineInfo={pipelineInfo}
+                  pipelineFromServer={pipelineDefinition.value}
                   isAdminView={isAdminView}
                 />
               )}

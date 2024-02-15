@@ -15,6 +15,7 @@ import React, {
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import {
+  useDispatch,
   useFolders,
   usePCDCollection,
   usePCDsInFolder,
@@ -22,7 +23,7 @@ import {
 } from "../../src/appHooks";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { isFrogCryptoFolder } from "../../src/util";
-import { Placeholder, Spacer } from "../core";
+import { Button, Placeholder, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { AppHeader } from "../shared/AppHeader";
@@ -42,6 +43,7 @@ export function HomeScreenImpl(): JSX.Element {
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
 
   const pcdCollection = usePCDCollection();
   const [searchParams, setSearchParams] = useSearchParams();
@@ -106,6 +108,16 @@ export function HomeScreenImpl(): JSX.Element {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
+  const onRemoveAllClick = useCallback(() => {
+    if (
+      window.confirm(
+        "Are you sure you want to remove all PCDs in this folder? They will be permanently deleted!"
+      )
+    ) {
+      dispatch({ type: "remove-all-pcds-in-folder", folder: browsingFolder });
+    }
+  }, [browsingFolder, dispatch]);
+
   if (self == null) return null;
 
   return (
@@ -159,6 +171,20 @@ export function HomeScreenImpl(): JSX.Element {
                 <PCDCardList pcds={pcdsInFolder} />
               ) : (
                 <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+              )}
+              {pcdsInFolder.length > 0 && !isRoot && (
+                <>
+                  <Spacer h={16} />
+                  <RemoveAllContainer>
+                    <Button
+                      style="danger"
+                      size="small"
+                      onClick={onRemoveAllClick}
+                    >
+                      Remove all
+                    </Button>
+                  </RemoveAllContainer>
+                </>
               )}
             </>
           )}
@@ -297,4 +323,11 @@ const FolderEntryContainer = styled.div`
   &:hover {
     background: var(--primary-lite);
   }
+`;
+
+const RemoveAllContainer = styled.div`
+  padding: 0px 16px 16px 16px;
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
 `;

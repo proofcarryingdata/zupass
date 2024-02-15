@@ -38,6 +38,6 @@ export function flattenObject(
   return res;
 }
 
-export function str(val: object): string {
+export function str(val: unknown): string {
   return JSON.stringify(val);
 }

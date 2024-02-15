@@ -109,6 +109,7 @@ function SingleProvider({
             info={s.feed}
             subscriptions={subscriptions}
             showErrors={!s.ended}
+            isDeepLink={false}
           />
         </React.Fragment>
       ))}

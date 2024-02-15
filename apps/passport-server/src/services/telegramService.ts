@@ -1,8 +1,11 @@
 import { autoRetry } from "@grammyjs/auto-retry";
 import { Menu } from "@grammyjs/menu";
-import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
-  EDGE_CITY_EVENT_ID,
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  isEqualEdDSAPublicKey
+} from "@pcd/eddsa-pcd";
+import {
   LEMONADE_EDDSA_PUBKEY,
   NullifierHashPayload,
   PayloadType,
@@ -884,31 +887,32 @@ export class TelegramService {
   }
 
   /**
-   * Returns the expected EdDSA public key for a given ticket PCD.
-   * All ticket PCDs should have the Zupass public key as a signer,
-   * except for the Edge City ticket PCDs, which should have the
-   * Lemonade public key as a signer.
+   * Returns all EdDSA public keys that have been whitelisted to
+   * sign ticket PCDs that gate entry into Telegram groups. This
+   * includes the Zupass public key that signs Zuzalu, Devconnect,
+   * and ZuConnect PCDs, the Lemonade public key that signs legacy
+   * Edge City PCDs, and the generic issuance public key that signs
+   * all other ticket PCDs, including the new Edge City PCDs.
+   *
+   * TODO: Remove LEMONADE_EDDSA_PUBKEY once the original Edge City
+   * feed server has been deprecated.
    */
-  private async getExpectedTicketSigner(
-    pcd: ZKEdDSAEventTicketPCD
-  ): Promise<[string, string]> {
-    const {
-      validEventIds,
-      partialTicket: { eventId }
-    } = pcd.claim;
-    if (
-      (validEventIds?.length === 1 &&
-        validEventIds[0] === EDGE_CITY_EVENT_ID) ||
-      (eventId && eventId === EDGE_CITY_EVENT_ID)
-    ) {
-      return LEMONADE_EDDSA_PUBKEY;
-    }
+  private async getExpectedTicketSigners(): Promise<EdDSAPublicKey[]> {
+    if (!process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+      throw new Error("Missing generic issuance eddsa private key .env value");
+    const GENERIC_ISSUANCE_EDDSA_PUBKEY = await getEdDSAPublicKey(
+      process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY
+    );
     if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
       throw new Error(`Missing server eddsa private key .env value`);
     const ZUPASS_EDDSA_PUBKEY = await getEdDSAPublicKey(
       process.env.SERVER_EDDSA_PRIVATE_KEY
     );
-    return ZUPASS_EDDSA_PUBKEY;
+    return [
+      ZUPASS_EDDSA_PUBKEY,
+      LEMONADE_EDDSA_PUBKEY,
+      GENERIC_ISSUANCE_EDDSA_PUBKEY
+    ];
   }
 
   private async verifyZKEdDSAEventTicketPCD(
@@ -927,11 +931,11 @@ export class TelegramService {
 
       let signerMatch = false;
 
-      const expectedSigner = await this.getExpectedTicketSigner(pcd);
+      const expectedSigners = await this.getExpectedTicketSigners();
 
-      signerMatch =
-        pcd.claim.signer[0] === expectedSigner[0] &&
-        pcd.claim.signer[1] === expectedSigner[1];
+      signerMatch = expectedSigners.some((expectedSigner) =>
+        isEqualEdDSAPublicKey(expectedSigner, pcd.claim.signer)
+      );
 
       span?.setAttribute("signerMatch", signerMatch);
 

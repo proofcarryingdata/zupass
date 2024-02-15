@@ -11,7 +11,9 @@ import {
   isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
+import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 import {
@@ -43,6 +45,7 @@ export function AddSubscriptionScreen(): JSX.Element {
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
+  const isDeepLink = url.length > 0;
   // When mailing out subscription links, senders can include a "suggested"
   // email. If the user is not logged in, they will be prompted to sign up
   // using that email. If the user is logged in, they will be warned that the
@@ -159,31 +162,30 @@ export function AddSubscriptionScreen(): JSX.Element {
             </p>
           </MismatchedEmailWarning>
         )}
-        {fetchError ||
-          (url.length === 0 && (
-            <>
-              <Spacer h={16} />
-              <div>Enter a URL to a feed provider:</div>
-              <Spacer h={8} />
-              <BigInput
-                autoCorrect="off"
-                autoCapitalize="off"
-                disabled={fetching}
-                value={providerUrl}
-                onChange={(e): void => {
-                  setProviderUrl(e.target.value);
-                }}
-              />
-              <Spacer h={16} />
-              <Button
-                disabled={fetching || alreadyFetched}
-                onClick={onFetchFeedsClick}
-              >
-                <Spinner show={fetching} text="Get possible subscriptions" />
-              </Button>
-              <Spacer h={16} />
-            </>
-          ))}
+        {(fetchError || !isDeepLink) && (
+          <>
+            <Spacer h={16} />
+            <div>Enter a URL to a feed provider:</div>
+            <Spacer h={8} />
+            <BigInput
+              autoCorrect="off"
+              autoCapitalize="off"
+              disabled={fetching}
+              value={providerUrl}
+              onChange={(e): void => {
+                setProviderUrl(e.target.value);
+              }}
+            />
+            <Spacer h={16} />
+            <Button
+              disabled={fetching || alreadyFetched}
+              onClick={onFetchFeedsClick}
+            >
+              <Spinner show={fetching} text="Get possible subscriptions" />
+            </Button>
+            <Spacer h={16} />
+          </>
+        )}
         <Spacer h={8} />
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
         <div>
@@ -198,6 +200,7 @@ export function AddSubscriptionScreen(): JSX.Element {
                   info={info}
                   key={i}
                   showErrors={false}
+                  isDeepLink={isDeepLink}
                 />
               </React.Fragment>
             ))}
@@ -212,13 +215,15 @@ export function SubscriptionInfoRow({
   providerUrl,
   providerName,
   info,
-  showErrors
+  showErrors,
+  isDeepLink
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   providerName: string;
   info: Feed;
   showErrors: boolean;
+  isDeepLink: boolean;
 }): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
@@ -237,6 +242,12 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
+  const folders = subscription
+    ? _.uniq(subscription.feed.permissions.map((p) => p.folder)).sort((a, b) =>
+        a.localeCompare(b)
+      )
+    : [];
+
   return (
     <InfoRowContainer>
       <FeedName>{info.name}</FeedName>
@@ -245,7 +256,7 @@ export function SubscriptionInfoRow({
       <Spacer h={8} />
       <hr />
       <Spacer h={8} />
-      {alreadySubscribed && showErrors && error && (
+      {!isDeepLink && alreadySubscribed && showErrors && error && (
         <>
           <SubscriptionErrors>
             <div>
@@ -258,7 +269,23 @@ export function SubscriptionInfoRow({
         </>
       )}
       {alreadySubscribed ? (
-        <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
+        isDeepLink ? (
+          <div>
+            You are subscribed to{" "}
+            <strong>{existingSubscriptions[0].feed.name}</strong>.
+            <Spacer h={16} />
+            <div>
+              <strong>Browse subscribed folders:</strong>
+            </div>
+            <FolderContainer>
+              {folders.map((folder) => (
+                <FolderLink key={folder} folder={folder} />
+              ))}
+            </FolderContainer>
+          </div>
+        ) : (
+          <AlreadySubscribed existingSubscription={existingSubscriptions[0]} />
+        )
       ) : (
         <SubscribeSection
           providerUrl={providerUrl}
@@ -452,6 +479,18 @@ function AlreadySubscribed({
   );
 }
 
+function FolderLink({ folder }: { folder: string }): JSX.Element {
+  const navigate = useNavigate();
+  const goToFolder = useCallback(() => {
+    navigate(`/?folder=${encodeURIComponent(folder)}`);
+  }, [folder, navigate]);
+  return (
+    <FolderButton>
+      <Button onClick={goToFolder}>{folder}</Button>
+    </FolderButton>
+  );
+}
+
 const InfoRowContainer = styled.div`
   padding: 16px;
   border: 1px solid white;
@@ -487,4 +526,12 @@ const MismatchedEmailWarning = styled.div`
   p {
     margin-bottom: 16px;
   }
+`;
+
+const FolderContainer = styled.div`
+  margin: 8px 0px;
+`;
+
+const FolderButton = styled.div`
+  margin: 16px 0px;
 `;

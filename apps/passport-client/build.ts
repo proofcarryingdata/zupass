@@ -34,6 +34,13 @@ const define = {
           process.env.FROGCRYPTO_SERVER_URL
         )
       }
+    : {}),
+  ...(process.env.DEFAULT_FEED_URLS !== undefined
+    ? {
+        "process.env.DEFAULT_FEED_URLS": JSON.stringify(
+          process.env.DEFAULT_FEED_URLS
+        )
+      }
     : {})
 };
 
