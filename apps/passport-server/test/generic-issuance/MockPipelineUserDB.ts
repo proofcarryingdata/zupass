@@ -23,8 +23,16 @@ export class MockPipelineUserDB implements IPipelineUserDB {
     this.users = {};
   }
 
-  public async setUser(user: PipelineUser): Promise<void> {
-    this.users[user.id] = user;
+  public async setUser(
+    user: Omit<PipelineUser, "timeCreated" | "timeUpdated">
+  ): Promise<PipelineUser> {
+    const updated = {
+      ...user,
+      timeUpdated: new Date(),
+      timeCreated: this.users[user.id]?.timeCreated ?? new Date()
+    };
+    this.users[user.id] = updated;
+    return updated;
   }
 
   public async getUser(userID: string): Promise<PipelineUser | undefined> {
