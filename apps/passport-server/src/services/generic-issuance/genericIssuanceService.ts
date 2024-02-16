@@ -387,7 +387,10 @@ export class GenericIssuanceService {
     // in the if - send alert beginnings
     if (!runInfo.success) {
       // pagerduty
-      if (slot.definition.options.alerts?.loadIncidentPagePolicy) {
+      if (
+        slot.definition.options.alerts?.loadIncidentPagePolicy &&
+        slot.definition.options.alerts?.pagerduty
+      ) {
         const incidentMessage = `pipeline load error: '${pipelineDisplayName}'`;
         const incident = await this.pagerdutyService?.triggerIncident(
           incidentMessage,

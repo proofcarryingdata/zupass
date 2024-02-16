@@ -26,6 +26,7 @@ const BasePipelineDefinitionSchema = z.object({
 });
 
 const AlertsOptionsSchema = z.object({
+  pagerduty: z.boolean().optional(),
   loadIncidentPagePolicy: z.nativeEnum(IncidentPolicy).optional(),
   discordTags: z.array(z.string()).optional(),
   discordAlerts: z.boolean().optional()
