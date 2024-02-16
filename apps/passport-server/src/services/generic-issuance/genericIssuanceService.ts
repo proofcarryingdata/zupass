@@ -27,6 +27,7 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Request } from "express";
+import _ from "lodash";
 import stytch, { Client, Session } from "stytch";
 import urljoin from "url-join";
 import { v4 as uuidV4 } from "uuid";
@@ -927,6 +928,16 @@ export class GenericIssuanceService {
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
+
+        if (
+          !user.isAdmin &&
+          !_.isEqual(
+            existingPipelineDefinition.options.alerts,
+            newDefinition.options.alerts
+          )
+        ) {
+          throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
+        }
       } else {
         // NEW PIPELINE!
         span?.setAttribute("is_new", true);
@@ -934,6 +945,10 @@ export class GenericIssuanceService {
         newDefinition.id = uuidV4();
         newDefinition.timeCreated = new Date().toISOString();
         newDefinition.timeUpdated = new Date().toISOString();
+
+        if (!user.isAdmin && !!newDefinition.options.alerts) {
+          throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
+        }
       }
 
       let validatedNewDefinition: PipelineDefinition = newDefinition;
