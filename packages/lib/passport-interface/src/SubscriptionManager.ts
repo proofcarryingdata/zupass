@@ -395,7 +395,7 @@ export class FeedSubscriptionManager {
       );
     }
 
-    let sub;
+    let sub: Subscription;
 
     if (existingSubscription) {
       sub = existingSubscription;
