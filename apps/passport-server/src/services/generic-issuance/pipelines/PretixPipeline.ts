@@ -201,7 +201,6 @@ export class PretixPipeline implements BasePipeline {
           const eventData = await this.loadEvent(event);
           logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
-          logs.push(makePLogInfo(str(eventData)));
           const validationErrors = this.validateEventData(eventData, event);
           logs.push(...validationErrors.map((e) => makePLogErr(e)));
           errors.push(...validationErrors);
@@ -557,7 +556,6 @@ export class PretixPipeline implements BasePipeline {
           checkins,
           answers
         } = position;
-        ("UELHW8EL");
 
         const product = products.get(item.toString());
 
@@ -567,10 +565,6 @@ export class PretixPipeline implements BasePipeline {
             a.question_identifier ===
               product?.nameQuestionPretixQuestionIdentitifier
         )?.answer;
-
-        logs?.push(
-          makePLogInfo("name answer - " + nameQuestionAnswer ?? "<no answer>")
-        );
 
         // The product should always exist, since the validation functions
         // ensure it. But TypeScript doesn't know that.
@@ -611,7 +605,11 @@ export class PretixPipeline implements BasePipeline {
 
           if (resolvedName === "") {
             logs?.push(
-              makePLogWarn(`no resolved name for ticket ${str(position)}`)
+              makePLogWarn(
+                `no resolved name for ticket id '${str(
+                  id
+                )}' with email '${email}'`
+              )
             );
           }
 
