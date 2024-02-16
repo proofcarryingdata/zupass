@@ -168,6 +168,7 @@ export class CSVPipeline implements BasePipeline {
 
         return {
           atomsLoaded: atoms.length,
+          atomsExpected: parsedCSV.length,
           lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,
@@ -185,6 +186,7 @@ export class CSVPipeline implements BasePipeline {
 
         return {
           atomsLoaded: 0,
+          atomsExpected: 0,
           lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: start.toISOString(),
           latestLogs: logs,

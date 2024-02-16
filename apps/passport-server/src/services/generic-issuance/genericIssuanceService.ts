@@ -59,7 +59,12 @@ import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
 import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
-import { makePLogErr, makePLogInfo } from "./util";
+import {
+  getErrorLogs,
+  getWarningLogs,
+  makePLogErr,
+  makePLogInfo
+} from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -269,6 +274,7 @@ export class GenericIssuanceService {
             lastRunEndTimestamp: new Date().toISOString(),
             lastRunStartTimestamp: new Date().toISOString(),
             latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
+            atomsExpected: 0,
             success: true
           };
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
@@ -285,6 +291,7 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: startTime.toISOString(),
             lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr("failed to start pipeline")],
+            atomsExpected: 0,
             atomsLoaded: 0,
             success: false
           };
@@ -318,6 +325,7 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: startTime.toISOString(),
             lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
+            atomsExpected: 0,
             atomsLoaded: 0,
             success: false
           } satisfies PipelineLoadSummary;
@@ -372,6 +380,14 @@ export class GenericIssuanceService {
   ): Promise<void> {
     const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
     const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
+    const errorLogs = getErrorLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.errorLogIgnoreRegexes
+    );
+    const warningLogs = getWarningLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.warningLogIgnoreRegexes
+    );
 
     function discordTagList(ids?: string[]): string {
       return ids ? " " + ids.map((id) => `<@${id}>`).join(" ") + " " : "";
@@ -384,17 +400,56 @@ export class GenericIssuanceService {
       slot.definition.id
     );
 
-    // in the if - send alert beginnings
+    let shouldAlert = false;
+    const alertReasons: string[] = [];
+
     if (!runInfo.success) {
+      shouldAlert = true;
+      alertReasons.push("pipeline load error");
+    }
+
+    if (
+      errorLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogErrors
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has error logs\n: ${JSON.stringify(errorLogs, null, 2)}`
+      );
+    }
+
+    if (
+      warningLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogWarnings
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has warning logs\n ${JSON.stringify(warningLogs, null, 2)}`
+      );
+    }
+
+    if (
+      runInfo.atomsLoaded !== runInfo.atomsExpected &&
+      slot.definition.options.alerts?.alertOnAtomMismatch
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline atoms count ${runInfo.atomsLoaded} mismatches data count ${runInfo.atomsExpected}`
+      );
+    }
+
+    const alertReason = alertReasons.join("\n\n");
+
+    // in the if - send alert beginnings
+    if (shouldAlert) {
       // pagerduty
       if (
         slot.definition.options.alerts?.loadIncidentPagePolicy &&
         slot.definition.options.alerts?.pagerduty
       ) {
-        const incidentMessage = `pipeline load error: '${pipelineDisplayName}'`;
         const incident = await this.pagerdutyService?.triggerIncident(
-          incidentMessage,
-          pipelineUrl,
+          `pipeline load error: '${pipelineDisplayName}'`,
+          `${pipelineUrl}\n${alertReason}`,
           slot.definition.options.alerts?.loadIncidentPagePolicy,
           `pipeline-load-error-` + slot.definition.id
         );
@@ -423,7 +478,8 @@ export class GenericIssuanceService {
           this?.discordService?.sendAlert(
             `🚨  [Podbox](${podboxUrl}) Alert${discordTagList(
               slot.definition.options.alerts.discordTags
-            )}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵`
+            )}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵 -\n` +
+              `\`\`\`\n${alertReason}\n\`\`\``
           );
         }
       }

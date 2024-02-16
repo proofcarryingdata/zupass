@@ -29,7 +29,12 @@ const AlertsOptionsSchema = z.object({
   pagerduty: z.boolean().optional(),
   loadIncidentPagePolicy: z.nativeEnum(IncidentPolicy).optional(),
   discordTags: z.array(z.string()).optional(),
-  discordAlerts: z.boolean().optional()
+  discordAlerts: z.boolean().optional(),
+  alertOnLogErrors: z.boolean().optional(),
+  errorLogIgnoreRegexes: z.array(z.string()).optional(),
+  alertOnLogWarnings: z.boolean().optional(),
+  warningLogIgnoreRegexes: z.array(z.string()).optional(),
+  alertOnAtomMismatch: z.boolean().optional()
 });
 
 export type AlertsOptions = z.infer<typeof AlertsOptionsSchema>;

@@ -52,3 +52,31 @@ export function makePLogErr(log: string, metadata?: unknown): PipelineLog {
     metadata
   };
 }
+
+export function getErrorLogs(
+  logs?: PipelineLog[],
+  ignoreRegexes?: string[]
+): PipelineLog[] {
+  return logs
+    ? logs
+        .filter((l) => l.level === PipelineLogLevel.Error)
+        .filter((l) => !matchesRegex(l.value, ignoreRegexes))
+    : [];
+}
+
+export function getWarningLogs(
+  logs?: PipelineLog[],
+  ignoreRegexes?: string[]
+): PipelineLog[] {
+  return logs
+    ? logs
+        .filter((l) => l.level === PipelineLogLevel.Warning)
+        .filter((l) => !matchesRegex(l.value, ignoreRegexes))
+    : [];
+}
+
+function matchesRegex(str: string, regexes?: string[]): boolean {
+  return regexes
+    ? regexes.filter((r) => new RegExp(r).test(str)).length !== 0
+    : false;
+}

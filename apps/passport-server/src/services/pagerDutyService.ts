@@ -126,23 +126,22 @@ export class PagerDutyService {
 export function startPagerDutyService(): PagerDutyService | null {
   logger("[INIT] attempting to start pager duty");
 
-  const apiKey = process.env.PAGER_DUTY_API_KEY;
-  const serviceId = process.env.PAGER_DUTY_SERVICE_ID;
-
-  if (!apiKey) {
+  if (!process.env.PAGER_DUTY_API_KEY) {
     logger(
       "[INIT] can't start pager duty - missing environment variable PAGER_DUTY_API_KEY"
     );
     return null;
   }
 
-  if (!serviceId) {
+  if (!process.env.PAGER_DUTY_SERVICE_ID) {
     logger(
       "[INIT] can't start pager duty - missing environment variable PAGER_DUTY_API_KEY"
     );
-
     return null;
   }
 
-  return new PagerDutyService(apiKey, serviceId);
+  return new PagerDutyService(
+    process.env.PAGER_DUTY_API_KEY,
+    process.env.PAGER_DUTY_SERVICE_ID
+  );
 }
