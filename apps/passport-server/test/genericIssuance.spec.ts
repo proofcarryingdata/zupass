@@ -1219,7 +1219,10 @@ t2,i1`,
         const tickets: LemonadeTicket[] = [
           EdgeCityAttendeeTicket,
           // Empty type ID is not valid
-          { ...EdgeCityDenverBouncerTicket, type_id: "" }
+          {
+            ...EdgeCityDenverBouncerTicket,
+            _id: undefined as unknown as string
+          }
         ];
         mockServer.use(
           customLemonadeTicketHandler(lemonadeBackendUrl, tickets)
