@@ -51,6 +51,8 @@ export interface TelegramChat {
 export interface ZuzaluUser extends ZuzaluPretixTicket {
   commitment: string | null;
   uuid: string | null;
+  time_created: Date;
+  time_updated: Date;
 }
 
 export interface DevconnectPretixTicket {
@@ -152,6 +154,8 @@ export interface UserRow {
    * revert back to `false`.
    */
   extra_issuance: boolean;
+  time_created: Date;
+  time_updated: Date;
 }
 
 export interface EncryptedStorageModel {
@@ -370,4 +374,6 @@ export interface GenericIssuanceUserRow {
   id: string;
   email: string;
   is_admin: boolean;
+  time_created: Date;
+  time_updated: Date;
 }

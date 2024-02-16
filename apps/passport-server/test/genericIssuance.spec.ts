@@ -90,6 +90,7 @@ import {
  */
 describe("Generic Issuance", function () {
   this.timeout(30_000);
+  const nowDate = new Date();
   const now = Date.now();
 
   // The Apollo client used by Lemonade does not load error messages by
@@ -364,21 +365,37 @@ t2,i1`,
     const ethLatAmGIUser: PipelineUser = {
       id: ethLatAmGIUserID,
       email: ethLatAmGIUserEmail,
-      isAdmin: false
+      isAdmin: false,
+      timeCreated: nowDate,
+      timeUpdated: nowDate
     };
     await userDB.setUser(ethLatAmGIUser);
     assertUserMatches(
-      { id: ethLatAmGIUserID, email: ethLatAmGIUserEmail, isAdmin: false },
+      {
+        id: ethLatAmGIUserID,
+        email: ethLatAmGIUserEmail,
+        isAdmin: false,
+        timeCreated: nowDate,
+        timeUpdated: nowDate
+      },
       await userDB.getUser(ethLatAmGIUser.id)
     );
     const edgeCityDenverUser: PipelineUser = {
       id: edgeCityGIUserID,
       email: edgeCityGIUserEmail,
-      isAdmin: false
+      isAdmin: false,
+      timeCreated: nowDate,
+      timeUpdated: nowDate
     };
     await userDB.setUser(edgeCityDenverUser);
     assertUserMatches(
-      { id: edgeCityGIUserID, email: edgeCityGIUserEmail, isAdmin: false },
+      {
+        id: edgeCityGIUserID,
+        email: edgeCityGIUserEmail,
+        isAdmin: false,
+        timeCreated: nowDate,
+        timeUpdated: nowDate
+      },
       await userDB.getUser(edgeCityDenverUser.id)
     );
 
@@ -418,11 +435,19 @@ t2,i1`,
     const adminUser: PipelineUser = {
       id: adminGIUserId,
       email: adminGIUserEmail,
-      isAdmin: true
+      isAdmin: true,
+      timeCreated: nowDate,
+      timeUpdated: nowDate
     };
     await userDB.setUser(adminUser);
     assertUserMatches(
-      { id: adminGIUserId, email: adminGIUserEmail, isAdmin: true },
+      {
+        id: adminGIUserId,
+        email: adminGIUserEmail,
+        isAdmin: true,
+        timeCreated: nowDate,
+        timeUpdated: nowDate
+      },
       await userDB.getUser(adminUser.id)
     );
 

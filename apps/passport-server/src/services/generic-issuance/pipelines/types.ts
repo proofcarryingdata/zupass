@@ -24,4 +24,6 @@ export interface PipelineUser {
   id: string;
   email: string;
   isAdmin: boolean;
+  timeCreated: Date;
+  timeUpdated: Date;
 }

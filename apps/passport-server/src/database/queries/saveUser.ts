@@ -38,8 +38,16 @@ export async function upsertUser(
 INSERT INTO users (uuid, email, commitment, salt, encryption_key, terms_agreed, extra_issuance)
 VALUES (gen_random_uuid(), $1, $2, $3, $4, $5, $6)
 ON CONFLICT (email) DO UPDATE SET 
-commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6`,
-    [email, commitment, salt, encryptionKey, terms_agreed, extra_issuance]
+commitment = $2, salt = $3, encryption_key = $4, terms_agreed = $5, extra_issuance=$6, time_updated=$7`,
+    [
+      email,
+      commitment,
+      salt,
+      encryptionKey,
+      terms_agreed,
+      extra_issuance,
+      new Date()
+    ]
   );
   const uuidResult = await sqlQuery(
     client,

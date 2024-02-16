@@ -9,7 +9,9 @@ export interface IPipelineUserDB {
   clearAllUsers(): Promise<void>;
   getUser(userID: string): Promise<PipelineUser | undefined>;
   getUserByEmail(email: string): Promise<PipelineUser | undefined>;
-  setUser(user: PipelineUser): Promise<void>;
+  setUser(
+    user: Omit<PipelineUser, "timeCreated" | "timeUpdated">
+  ): Promise<PipelineUser>;
   setUserAdmin(email: string, isAdmin: boolean): Promise<void>;
 }
 
@@ -32,7 +34,9 @@ export class PipelineUserDB implements IPipelineUserDB {
     return {
       id: row.id,
       email: row.email,
-      isAdmin: row.is_admin
+      isAdmin: row.is_admin,
+      timeCreated: row.time_created,
+      timeUpdated: row.time_updated
     };
   }
 
@@ -76,15 +80,20 @@ export class PipelineUserDB implements IPipelineUserDB {
     }
   }
 
-  public async setUser(user: PipelineUser): Promise<void> {
-    await sqlQuery(
+  public async setUser(
+    user: Omit<PipelineUser, "timeCreated" | "timeUpdated">
+  ): Promise<PipelineUser> {
+    const res = await sqlQuery(
       this.db,
       `
     INSERT INTO generic_issuance_users (id, email, is_admin) VALUES($1, $2, $3)
     ON CONFLICT(id) DO UPDATE
-    SET (email, is_admin) = ($2, $3)
+    SET (email, is_admin, time_updated) = ($2, $3, $4)
+    returning *
     `,
-      [user.id, normalizeEmail(user.email), user.isAdmin]
+      [user.id, normalizeEmail(user.email), user.isAdmin, new Date()]
     );
+
+    return this.dbRowToPipelineUser(res.rows[0]);
   }
 }

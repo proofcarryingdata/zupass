@@ -942,14 +942,13 @@ export class GenericIssuanceService {
         return existingUser;
       }
       span?.setAttribute("is_new", true);
-      const newUser: PipelineUser = {
+      const newUser: Omit<PipelineUser, "timeCreated" | "timeUpdated"> = {
         id: uuidV4(),
         email,
         isAdmin: this.getEnvAdminEmails().includes(email)
       };
       traceUser(existingUser);
-      await this.userDB.setUser(newUser);
-      return newUser;
+      return this.userDB.setUser(newUser);
     });
   }
 
