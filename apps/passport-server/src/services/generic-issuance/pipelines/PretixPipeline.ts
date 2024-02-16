@@ -57,7 +57,7 @@ import {
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
-import { makePLogErr, makePLogInfo } from "../util";
+import { makePLogErr, makePLogInfo, makePLogWarn } from "../util";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";
@@ -201,18 +201,19 @@ export class PretixPipeline implements BasePipeline {
           const eventData = await this.loadEvent(event);
           logs.push(makePLogInfo(`loaded event data for ${event.externalId}`));
 
+          logs.push(makePLogInfo(str(eventData)));
           const validationErrors = this.validateEventData(eventData, event);
           logs.push(...validationErrors.map((e) => makePLogErr(e)));
           errors.push(...validationErrors);
 
-          tickets.push(...(await this.ordersToTickets(event, eventData)));
+          tickets.push(...(await this.ordersToTickets(event, eventData, logs)));
         }
 
         if (errors.length > 0) {
           span?.setAttribute("error_count", errors);
           logger(
             LOG_TAG,
-            `failed to load pipeline '${this.id}' of type '${
+            `failed to load Pretix pipeline '${this.id}' of type '${
               this.type
             }'; errors: ${str(errors)}`
           );
@@ -527,7 +528,8 @@ export class PretixPipeline implements BasePipeline {
    */
   private async ordersToTickets(
     eventConfig: PretixEventConfig,
-    eventData: PretixEventData
+    eventData: PretixEventData,
+    logs?: PipelineLog[]
   ): Promise<PretixTicket[]> {
     const tickets: PretixTicket[] = [];
     const { orders } = eventData;
@@ -545,15 +547,31 @@ export class PretixPipeline implements BasePipeline {
       if (order.status !== "p") {
         continue;
       }
-      for (const {
-        id,
-        item,
-        attendee_name,
-        attendee_email,
-        secret,
-        checkins
-      } of order.positions) {
+      for (const position of order.positions) {
+        const {
+          id,
+          item,
+          attendee_name,
+          attendee_email,
+          secret,
+          checkins,
+          answers
+        } = position;
+        ("UELHW8EL");
+
         const product = products.get(item.toString());
+
+        const nameQuestionAnswer = answers?.find(
+          (a) =>
+            product?.nameQuestionPretixQuestionIdentitifier != null &&
+            a.question_identifier ===
+              product?.nameQuestionPretixQuestionIdentitifier
+        )?.answer;
+
+        logs?.push(
+          makePLogInfo("name answer - " + nameQuestionAnswer ?? "<no answer>")
+        );
+
         // The product should always exist, since the validation functions
         // ensure it. But TypeScript doesn't know that.
         if (product) {
@@ -588,11 +606,20 @@ export class PretixPipeline implements BasePipeline {
             }
           }
 
+          const resolvedName =
+            nameQuestionAnswer ?? attendee_name ?? order.name ?? "";
+
+          if (resolvedName === "") {
+            logs?.push(
+              makePLogWarn(`no resolved name for ticket ${str(position)}`)
+            );
+          }
+
           tickets.push({
             email,
             product,
             event: eventConfig,
-            full_name: attendee_name ?? order.name ?? "", // Fallback since we have a not-null constraint
+            full_name: resolvedName,
             is_consumed: pretix_checkin_timestamp !== null,
             position_id: id.toString(),
             secret,

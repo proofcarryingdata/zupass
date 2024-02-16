@@ -27,6 +27,17 @@ const GenericPretixCheckinSchema = z.object({
   type: z.enum(["entry", "exit"])
 });
 
+// This records all attendee answers to questions that they
+// filled in when purchasing their ticket
+const GenericPretixAnswerSchema = z.object({
+  question: z.number(),
+  answer: z.string(),
+  question_identifier: z.string(),
+  options: z.array(z.number()),
+  option_identifiers: z.array(z.string())
+});
+export type GenericPretixAnswer = z.infer<typeof GenericPretixAnswerSchema>;
+
 // Unclear why this is called a "position" rather than a ticket.
 const GenericPretixPositionSchema = z.object({
   id: z.number(),
@@ -34,11 +45,12 @@ const GenericPretixPositionSchema = z.object({
   positionid: z.number(),
   item: z.number(),
   price: z.string(),
-  attendee_name: z.string(), // first and last
+  attendee_name: z.string().optional().nullable(), // first and last
   attendee_email: z.string().toLowerCase().trim().nullable(),
   subevent: z.number().nullable(),
   secret: z.string(),
-  checkins: z.array(GenericPretixCheckinSchema)
+  checkins: z.array(GenericPretixCheckinSchema),
+  answers: z.array(GenericPretixAnswerSchema).optional()
 });
 
 // A Pretix order. For our purposes, each order contains one ticket.
