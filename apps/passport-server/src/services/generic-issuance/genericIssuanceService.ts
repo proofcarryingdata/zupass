@@ -46,7 +46,7 @@ import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
-import { PagerDutyService, PolicyName } from "../pagerDutyService";
+import { PagerDutyService } from "../pagerDutyService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
@@ -371,6 +371,12 @@ export class GenericIssuanceService {
     runInfo: PipelineLoadSummary
   ): Promise<void> {
     const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
+    const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
+
+    function discordTagList(ids?: string[]): string {
+      return ids ? " " + ids.map((id) => `<@${id}>`).join(" ") + " " : "";
+    }
+
     const pipelineUrl = urljoin(
       podboxUrl,
       `/#/`,
@@ -381,50 +387,55 @@ export class GenericIssuanceService {
     // in the if - send alert beginnings
     if (!runInfo.success) {
       // pagerduty
-      const incidentMessage = `pipeline load error`;
-
-      const incident = await this.pagerdutyService?.triggerIncident(
-        incidentMessage,
-        pipelineUrl,
-        PolicyName.JustIvan,
-        `pipeline-load-error-` + slot.definition.id
-      );
-      if (incident) {
-        slot.loadIncidentId = incident.id;
+      if (slot.definition.options.alerts?.loadIncidentPagePolicy) {
+        const incidentMessage = `pipeline load error: '${pipelineDisplayName}'`;
+        const incident = await this.pagerdutyService?.triggerIncident(
+          incidentMessage,
+          pipelineUrl,
+          slot.definition.options.alerts?.loadIncidentPagePolicy,
+          `pipeline-load-error-` + slot.definition.id
+        );
+        if (incident) {
+          slot.loadIncidentId = incident.id;
+        }
       }
 
       // discord
-      let shouldMessageDiscord = false;
-      if (
-        // haven't messaged yet
-        !slot.lastLoadDiscordMsgTimestamp ||
-        // messaged too recently
-        (slot.lastLoadDiscordMsgTimestamp &&
-          Date.now() >
-            slot.lastLoadDiscordMsgTimestamp.getTime() +
-              GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
-      ) {
-        slot.lastLoadDiscordMsgTimestamp = new Date();
-        shouldMessageDiscord = true;
-      }
+      if (slot.definition.options.alerts?.discordAlerts) {
+        let shouldMessageDiscord = false;
+        if (
+          // haven't messaged yet
+          !slot.lastLoadDiscordMsgTimestamp ||
+          // messaged too recently
+          (slot.lastLoadDiscordMsgTimestamp &&
+            Date.now() >
+              slot.lastLoadDiscordMsgTimestamp.getTime() +
+                GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
+        ) {
+          slot.lastLoadDiscordMsgTimestamp = new Date();
+          shouldMessageDiscord = true;
+        }
 
-      if (shouldMessageDiscord) {
-        this?.discordService?.sendAlert(
-          `🚨  [Podbox](${podboxUrl}) alert\n[\`${
-            slot?.definition.options?.name ?? "untitled"
-          }\`](${pipelineUrl}) failed to load`
-        );
+        if (shouldMessageDiscord) {
+          this?.discordService?.sendAlert(
+            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList(
+              slot.definition.options.alerts.discordTags
+            )}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵`
+          );
+        }
       }
     }
     // send alert resolutions
     else {
-      if (slot.lastLoadDiscordMsgTimestamp) {
-        this?.discordService?.sendAlert(
-          `🚨  [Podbox](${podboxUrl}) alert\n[\`${
-            slot?.definition.options?.name ?? "untitled"
-          }\`](${pipelineUrl}) load error resolved ✅`
-        );
-        slot.lastLoadDiscordMsgTimestamp = undefined;
+      if (slot.definition.options.alerts?.discordAlerts) {
+        if (slot.lastLoadDiscordMsgTimestamp) {
+          this?.discordService?.sendAlert(
+            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList(
+              slot.definition.options.alerts.discordTags
+            )}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved ✅`
+          );
+          slot.lastLoadDiscordMsgTimestamp = undefined;
+        }
       }
       if (slot.loadIncidentId) {
         const incidentId = slot.loadIncidentId;

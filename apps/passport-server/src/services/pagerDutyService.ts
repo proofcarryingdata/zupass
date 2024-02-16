@@ -1,4 +1,5 @@
 import { api } from "@pagerduty/pdjs";
+import { IncidentPolicy } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
 import { v4 as uuid } from "uuid";
 import { logger } from "../util/logger";
@@ -7,19 +8,13 @@ import { setError, traceFlattenedObject, traced } from "./telemetryService";
 const SERVICE_NAME = "PagerDutyService";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export enum PolicyName {
-  Everyone = "Everyone",
-  JustIvan = "JustIvan",
-  JustRichard = "JustRichard"
-}
-
-const ESCALATION_POLICIES: Record<PolicyName, string /* policy id */> = {
-  [PolicyName.Everyone]: "P6SUJ1N",
-  [PolicyName.JustIvan]: "P3PE907",
-  [PolicyName.JustRichard]: "P88YCS9"
+const ESCALATION_POLICIES: Record<IncidentPolicy, string /* policy id */> = {
+  [IncidentPolicy.Everyone]: "P6SUJ1N",
+  [IncidentPolicy.JustIvan]: "P3PE907",
+  [IncidentPolicy.JustRichard]: "P88YCS9"
 };
 
-function getPolicyId(name: PolicyName): string {
+function getPolicyId(name: IncidentPolicy): string {
   return ESCALATION_POLICIES[name];
 }
 
@@ -35,14 +30,14 @@ export class PagerDutyService {
   public async triggerIncident(
     title: string,
     message?: string,
-    policyName?: PolicyName,
+    policyName?: IncidentPolicy,
     incidentKey?: string
   ): Promise<{ id: string; key: string } | undefined> {
     return traced("PagerDutyService", "triggerIncident", async (span) => {
       try {
         incidentKey = incidentKey ?? uuid();
         message = message ?? "";
-        const policyId = getPolicyId(policyName ?? PolicyName.Everyone);
+        const policyId = getPolicyId(policyName ?? IncidentPolicy.Everyone);
         logger(LOG_TAG, `triggering incident '${title}' ('${incidentKey}')`);
         const request = {
           headers: {
