@@ -280,7 +280,7 @@ export class LemonadePipeline implements BasePipeline {
                   maybeTicket
                 )}' for event ${eventConfig.name} ('${
                   eventConfig.externalId
-                }'), pipeline '${this.id}'`;
+                }'), pipeline '${this.id}' because ${str(parseResult.error)}`;
                 logs.push(makePLogErr(message));
                 logger(`${LOG_TAG} ${message}`);
               }
