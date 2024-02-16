@@ -1,10 +1,5 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
-import { icons } from "@pcd/passport-ui";
-import {
-  getNameFromPath,
-  getParentFolder,
-  isRootFolder
-} from "@pcd/pcd-collection";
+import { getParentFolder, isRootFolder } from "@pcd/pcd-collection";
 import React, {
   useCallback,
   useEffect,
@@ -12,6 +7,7 @@ import React, {
   useMemo,
   useState
 } from "react";
+import { PiArrowBendLeftUpBold } from "react-icons/pi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -20,17 +16,23 @@ import {
   usePCDCollection,
   usePCDsInFolder,
   useSelf
-} from "../../src/appHooks";
-import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { isFrogCryptoFolder } from "../../src/util";
-import { Button, Placeholder, Spacer } from "../core";
-import { MaybeModal } from "../modals/Modal";
-import { AppContainer } from "../shared/AppContainer";
-import { AppHeader } from "../shared/AppHeader";
-import { LoadingIssuedPCDs } from "../shared/LoadingIssuedPCDs";
-import { PCDCardList } from "../shared/PCDCardList";
-import { FrogFolder } from "./FrogScreens/FrogFolder";
-import { FrogHomeSection } from "./FrogScreens/FrogHomeSection";
+} from "../../../src/appHooks";
+import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
+import { isFrogCryptoFolder } from "../../../src/util";
+import { Button, Placeholder, Spacer } from "../../core";
+import { MaybeModal } from "../../modals/Modal";
+import { AppContainer } from "../../shared/AppContainer";
+import { AppHeader } from "../../shared/AppHeader";
+import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
+import { PCDCardList } from "../../shared/PCDCardList";
+import { FrogFolder } from "../FrogScreens/FrogFolder";
+import { FrogHomeSection } from "../FrogScreens/FrogHomeSection";
+import {
+  FolderCard,
+  FolderEntryContainer,
+  FolderExplorerContainer,
+  FolderHeader
+} from "./Folder";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
 
@@ -223,44 +225,13 @@ function FolderDetails({
       style={noChildFolders ? { borderBottom: "none" } : undefined}
     >
       <span className="btn">
-        <img draggable="false" src={icons.upArrow} width={18} height={18} />
+        <PiArrowBendLeftUpBold size={18} />
       </span>
+
       <span className="name">{folder}</span>
     </FolderHeader>
   );
 }
-
-function FolderCard({
-  folder,
-  onFolderClick
-}: {
-  folder: string;
-  onFolderClick: (folder: string) => void;
-}): JSX.Element {
-  const onClick = useCallback(() => {
-    onFolderClick(folder);
-  }, [folder, onFolderClick]);
-
-  return (
-    <FolderEntryContainer onClick={onClick}>
-      <img draggable="false" src={icons.folder} width={18} height={18} />
-      {getNameFromPath(folder)}
-    </FolderEntryContainer>
-  );
-}
-
-const FolderExplorerContainer = styled.div`
-  border-radius: 12px;
-  border: 1px solid grey;
-  background: var(--primary-dark);
-  overflow: hidden;
-  margin: 12px 8px;
-  box-sizing: border-box;
-  display: flex;
-  justify-content: flex-start;
-  align-items: stretch;
-  flex-direction: column;
-`;
 
 const Separator = styled.div`
   width: 100%;
@@ -269,60 +240,6 @@ const Separator = styled.div`
   margin-bottom: 32px;
   background-color: grey;
   user-select: none;
-`;
-
-const FolderHeader = styled.div`
-  box-sizing: border-box;
-  display: flex;
-  justify-content: center;
-  align-items: flex-start;
-  flex-direction: row;
-  border-bottom: 1px solid grey;
-  background: var(--bg-dark-gray);
-  cursor: pointer;
-  user-select: none;
-
-  &:hover {
-    background: var(--bg-lite-gray);
-  }
-
-  .name {
-    flex-grow: 1;
-    padding: 12px 16px;
-    border-left: none;
-    box-sizing: border-box;
-  }
-
-  .btn {
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center;
-    flex-grow: 0;
-    display: inline-block;
-    padding-top: 16px;
-    padding-left: 12px;
-  }
-`;
-
-const FolderEntryContainer = styled.div`
-  user-select: none;
-  padding: 12px 16px;
-  cursor: pointer;
-  display: flex;
-  justify-content: flex-start;
-  align-items: center;
-  flex-direction: row;
-  gap: 12px;
-  border-bottom: 1px solid grey;
-
-  &:last-child {
-    border-bottom: none;
-  }
-
-  &:hover {
-    background: var(--primary-lite);
-  }
 `;
 
 const RemoveAllContainer = styled.div`

@@ -12,7 +12,7 @@ import {
   setPendingViewSubscriptionsRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
-import { Button, H2, Spacer } from "../core";
+import { Button, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
@@ -46,11 +46,27 @@ export function SubscriptionsScreen(): JSX.Element {
       <MaybeModal />
       <AppContainer bg="gray">
         <ScreenNavigation label={"Home"} to="/" />
+        <Spacer h={8} />
+        <Button onClick={onAddNewClicked}>Add Subscription</Button>
+        <Spacer h={8} />
         <Container>
-          <H2>Your Subscriptions</H2>
-          <Spacer h={32} />
-          <Button onClick={onAddNewClicked}>Add a new subscription</Button>
-          <Spacer h={16} />
+          <p>
+            Feed subscriptions allow Zupass to access PCDs from the internet!
+            You can subscribe to feeds hosted by third party developers.
+          </p>
+          <Spacer h={8} />
+          <p>
+            To create your own PCD feed, you can either implement, host, and
+            maintain your own{" "}
+            <a href="https://github.com/proofcarryingdata/zupass/tree/main/examples/zupass-feed-server">
+              feed server
+            </a>
+            , or use <a href={process.env.PODBOX_CLIENT_URL}>Podbox</a> as an
+            all-in-one feed hosting solution.
+          </p>
+          <Spacer h={8} />
+          <p>Your subscriptions are:</p>
+          <Spacer h={8} />
           {subs.getActiveSubscriptions().length === 0 && (
             <div>You have no subscriptions.</div>
           )}
@@ -71,7 +87,7 @@ function SubscriptionTree({
   );
 
   return (
-    <div>
+    <>
       {byProvider.map(([providerUrl, subscriptionsList]) => (
         <SingleProvider
           key={providerUrl}
@@ -80,7 +96,7 @@ function SubscriptionTree({
           subscriptionsList={subscriptionsList}
         />
       ))}
-    </div>
+    </>
   );
 }
 
@@ -96,13 +112,9 @@ function SingleProvider({
   const providerName = subscriptions.getProvider(providerUrl).providerName;
   return (
     <ProviderContainer>
-      <ProviderHeader>
-        Subscriptions provided by <ProviderName>{providerUrl}</ProviderName>
-      </ProviderHeader>
-      <Spacer h={8} />
       {subscriptionsList.map((s) => (
         <React.Fragment key={s.id}>
-          <Spacer h={16} />
+          <Spacer h={8} />
           <SubscriptionInfoRow
             providerUrl={providerUrl}
             providerName={providerName}
@@ -116,12 +128,6 @@ function SingleProvider({
     </ProviderContainer>
   );
 }
-
-const ProviderHeader = styled.div``;
-
-const ProviderName = styled.span`
-  font-weight: bold;
-`;
 
 const Container = styled.div`
   padding-bottom: 16px;

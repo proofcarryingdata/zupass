@@ -15,9 +15,10 @@ export const H1 = styled.h1<{ col?: string }>`
 
 export const H2 = styled.h2<{ col?: string }>`
   color: ${(p): string => p.col || "var(--accent-dark)"};
-  letter-spacing: 3.5px;
-  font-size: 22px;
-  font-weight: 300;
+  letter-spacing: 2.5px;
+  font-size: 25px;
+  font-weight: 500;
+  text-align: center;
 `;
 
 export const H3 = styled.h3<{ col?: string }>`

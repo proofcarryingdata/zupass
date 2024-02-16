@@ -19,7 +19,7 @@ import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSu
 import { GenericIssuanceCheckInScreen } from "../components/screens/GenericIssuanceCheckIn";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
-import { HomeScreen } from "../components/screens/HomeScreen";
+import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";

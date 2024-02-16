@@ -1,6 +1,6 @@
-import { icons } from "@pcd/passport-ui";
-import { Link } from "react-router-dom";
+import { IoIosArrowBack } from "react-icons/io";
 import styled from "styled-components";
+import { Button } from "../core";
 
 export function ScreenNavigation({
   to,
@@ -10,33 +10,35 @@ export function ScreenNavigation({
   label: string;
 }): JSX.Element {
   return (
-    <Navigation>
-      <BackLink to={to}>
-        <BackIcon src={icons.back} />
-        <span>{label}</span>
-      </BackLink>
-    </Navigation>
+    <Container>
+      <a href={"/#" + to}>
+        <Button size="large" style="outline">
+          <ContentsWrapper>
+            <IoIosArrowBack size={18} />
+
+            <span>{label}</span>
+          </ContentsWrapper>
+        </Button>
+      </a>
+    </Container>
   );
 }
 
-const Navigation = styled.div`
-  text-align: left;
+const Container = styled.div`
+  margin-top: 24px;
   width: 100%;
-  padding-bottom: 8px;
-`;
 
-const BackIcon = styled.img`
-  width: 16px;
-  height: 16px;
-`;
-
-const BackLink = styled(Link)`
-  display: inline-flex;
-  padding: 8px;
-  border-radius: 8px;
-  align-items: center;
-  column-gap: 8px;
-  &:hover {
-    background: var(--bg-lite-gray);
+  a {
+    text-decoration: none;
   }
+`;
+
+const ContentsWrapper = styled.a`
+  justify-content: center;
+  align-items: center;
+  display: inline-flex;
+  color: white;
+  gap: 4px;
+  font-size: 11pt;
+  margin-right: 10px;
 `;

@@ -12,13 +12,15 @@ export function Button({
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  style?: "primary" | "secondary" | "danger";
-  size?: "large" | "small";
+  style?: "primary" | "secondary" | "danger" | "outline";
+  size?: "large" | "small" | "xs";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
 }): JSX.Element {
   const Btn =
-    style === "danger"
+    style === "outline"
+      ? BtnOutline
+      : style === "danger"
       ? BtnDanger
       : style === "secondary"
       ? BtnSecondary
@@ -30,7 +32,7 @@ export function Button({
   );
 }
 
-const buttonStyle = `
+const buttonStyle = css`
   user-select: none;
   word-break: break-word;
   width: 100%;
@@ -43,6 +45,10 @@ const buttonStyle = `
   background: var(--accent-dark);
   opacity: 1;
   cursor: pointer;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
   &:hover {
     background: var(--accent-darker);
   }
@@ -51,8 +57,9 @@ const buttonStyle = `
   }
 `;
 
-export const BtnBase = styled.button<{ size?: "large" | "small" }>`
+export const BtnBase = styled.button<{ size?: "large" | "small" | "xs" }>`
   ${buttonStyle}
+
   ${({ disabled }): FlattenSimpleInterpolation =>
     disabled === true
       ? css`
@@ -61,13 +68,25 @@ export const BtnBase = styled.button<{ size?: "large" | "small" }>`
         `
       : css``}
 
-  ${({ size }: { size?: "large" | "small" }): FlattenSimpleInterpolation =>
+  ${({
+    size
+  }: {
+    size?: "large" | "small" | "xs";
+  }): FlattenSimpleInterpolation =>
     size === undefined || size === "large"
       ? css``
+      : size === "xs"
+      ? css`
+          font-size: 8pt;
+          padding: 4px 8px;
+          box-sizing: border-box;
+          display: inline-flex;
+          width: fit-content;
+        `
       : css`
           height: unset;
           width: unset;
-          display: inline-block;
+          display: inline-flex;
           padding: 8px 16px;
           border-radius: 32px;
         `}
@@ -86,6 +105,15 @@ const BtnSecondary = styled(BtnBase)`
   background: #696969;
   &:hover {
     background: #7a7a7a;
+  }
+`;
+
+const BtnOutline = styled(BtnBase)`
+  border: 1px solid white;
+  color: #fff;
+  background-color: var(--bg-dark-primary);
+  &:hover {
+    background-color: var(--bg-lite-primary);
   }
 `;
 
