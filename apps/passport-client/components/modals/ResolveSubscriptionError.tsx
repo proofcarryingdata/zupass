@@ -7,6 +7,7 @@ import {
 } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { PCDPermission, matchActionToPermission } from "@pcd/pcd-collection";
+import { sleep } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
@@ -31,7 +32,7 @@ export function ResolveSubscriptionErrorModal(): JSX.Element {
 
   return (
     <ErrorContainer>
-      <div>{error ? "Subscription error" : "Subscription updated"}</div>
+      <div>{error ? "" : "Subscription updated"}</div>
       <Spacer h={8} />
       {error && error.type === SubscriptionErrorType.FetchError && (
         <FetchError subscription={subscription} subscriptions={subscriptions} />
@@ -71,6 +72,7 @@ function FetchError({
 
   const onRefreshClick = useCallback(async () => {
     setPolling(true);
+    await sleep(1000);
 
     dispatch({
       type: "sync-subscription",
@@ -99,17 +101,17 @@ function FetchError({
         Could not load the feed. This may be due to poor network connectivity,
         or because the feed is unavailable.
       </div>
+      <Spacer h={16} />
+      <Button disabled={polling} onClick={onRefreshClick}>
+        <Spinner text="Retry Loading Feed" show={polling} />
+      </Button>
+      <Spacer h={16} />
       {error?.e?.message && (
         <>
           <Spacer h={16} />
           <div>{error?.e?.message}</div>
         </>
       )}
-      <Spacer h={16} />
-      <Button disabled={polling} onClick={onRefreshClick}>
-        <Spinner text="Retry Loading Feed" show={polling} />
-      </Button>
-      <Spacer h={16} />
       {stillFailing && (
         <div>Still unable to load the feed. Please try again later.</div>
       )}
