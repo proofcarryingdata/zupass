@@ -778,7 +778,9 @@ export class PretixPipeline implements BasePipeline {
     }
 
     try {
-      logger(`${LOG_TAG} cache hit for ticket id ${ticketData.ticketId} on pipeline ${this.id}`);
+      logger(
+        `${LOG_TAG} cache hit for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
+      );
       const parsedTicket = JSON.parse(serializedTicket.cache_value);
       const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
         parsedTicket.pcd
