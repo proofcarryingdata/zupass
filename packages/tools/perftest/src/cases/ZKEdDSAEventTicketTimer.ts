@@ -38,8 +38,8 @@ async function setupProveArgs(): Promise<ZKEdDSAEventTicketPCDArgs> {
   const prvKey =
     "0001020304050607080900010203040506070809000102030405060708090001";
 
-  const WATERMARK = BigInt(6);
-  const EXTERNAL_NULLIFIER = BigInt(42);
+  const WATERMARK = 6n;
+  const EXTERNAL_NULLIFIER = 42n;
 
   const ticketData: ITicketData = {
     // the fields below are not signed and are used for display purposes
