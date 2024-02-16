@@ -187,7 +187,7 @@ export function AddSubscriptionScreen(): JSX.Element {
         )}
         {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
         <div>
-          <Spacer h={8} />
+          <Spacer h={16} />
           {infos &&
             infos.map((info, i) => (
               <React.Fragment key={i}>
@@ -524,37 +524,35 @@ const InfoRowContainer = styled.div`
       background-color 100ms,
       border 100ms;
 
+    background-color: rgba(255, 255, 255, 0.05);
+
+    user-select: none;
+
     ${expanded
       ? css`
-          border: 1px solid white;
+          border: 1px solid #ddd;
           padding: 16px;
           border-radius: 16px;
-          background-color: rgba(255, 255, 255, 0.05);
           cursor: pointer;
-
-          &:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-          }
         `
       : css`
-          user-select: none;
           cursor: pointer;
-
+          user-select: none;
           border: 1px solid grey;
           padding: 16px;
           border-radius: 16px;
-          background-color: rgba(255, 255, 255, 0.05);
-
-          &:hover {
-            background-color: rgba(255, 255, 255, 0.1);
-          }
         `}
 
     ${lockExpanded
       ? css`
           cursor: initial;
         `
-      : css``}
+      : css`
+          &:hover {
+            border: 1px solid white;
+            background-color: rgba(255, 255, 255, 0.07);
+          }
+        `}
   `}
 `;
 

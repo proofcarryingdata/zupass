@@ -65,6 +65,8 @@ export function SubscriptionsScreen(): JSX.Element {
             all-in-one feed hosting solution.
           </p>
           <Spacer h={8} />
+          <p>Your subscriptions are:</p>
+          <Spacer h={8} />
           {subs.getActiveSubscriptions().length === 0 && (
             <div>You have no subscriptions.</div>
           )}
@@ -112,7 +114,7 @@ function SingleProvider({
     <ProviderContainer>
       {subscriptionsList.map((s) => (
         <React.Fragment key={s.id}>
-          <Spacer h={16} />
+          <Spacer h={8} />
           <SubscriptionInfoRow
             providerUrl={providerUrl}
             providerName={providerName}
