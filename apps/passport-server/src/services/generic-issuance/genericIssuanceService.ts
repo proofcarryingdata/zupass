@@ -28,6 +28,7 @@ import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Request } from "express";
 import stytch, { Client, Session } from "stytch";
+import urljoin from "url-join";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
@@ -44,6 +45,8 @@ import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import { DiscordService } from "../discordService";
+import { PagerDutyService, PolicyName } from "../pagerDutyService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
@@ -53,10 +56,10 @@ import {
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
+import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { makePLogErr, makePLogInfo } from "./util";
-import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -70,11 +73,17 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  */
 export interface PipelineSlot {
   definition: PipelineDefinition;
+
+  // runtime information - intentionally ephemeral
   instance?: Pipeline;
   owner?: PipelineUser;
+  loadIncidentId?: string;
+  lastLoadDiscordMsgTimestamp?: Date;
 }
 
 export class GenericIssuanceService {
+  private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
+
   /**
    * The pipeline data reload algorithm works as follows:
    * 1. concurrently load all data for all pipelines
@@ -103,6 +112,8 @@ export class GenericIssuanceService {
   private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
+  private pagerdutyService: PagerDutyService | null;
+  private discordService: DiscordService | null;
 
   public constructor(
     context: ApplicationContext,
@@ -113,8 +124,12 @@ export class GenericIssuanceService {
     genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    pagerdutyService: PagerDutyService | null,
+    discordService: DiscordService | null
   ) {
+    this.pagerdutyService = pagerdutyService;
+    this.discordService = discordService;
     this.context = context;
     this.rollbarService = rollbarService;
     this.userDB = new PipelineUserDB(context.dbPool);
@@ -249,13 +264,15 @@ export class GenericIssuanceService {
             LOG_TAG,
             `pipeline '${pipelineSlot.definition.id}' is paused, not loading`
           );
-          return {
+          const summary = {
             atomsLoaded: 0,
             lastRunEndTimestamp: new Date().toISOString(),
             lastRunStartTimestamp: new Date().toISOString(),
             latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
             success: true
           };
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
         }
 
         if (!pipeline) {
@@ -273,6 +290,7 @@ export class GenericIssuanceService {
           };
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         }
 
@@ -290,6 +308,7 @@ export class GenericIssuanceService {
           );
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         } catch (e) {
           this.rollbarService?.reportError(e);
@@ -304,6 +323,7 @@ export class GenericIssuanceService {
           } satisfies PipelineLoadSummary;
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         }
       }
@@ -337,6 +357,81 @@ export class GenericIssuanceService {
         })
       );
     });
+  }
+
+  /**
+   * To be called after a pipeline finishes loading, either as part of the global
+   * pipeline loading schedule, or because the pipeline's definition was updated.
+   * Alerts the appropriate channels depending on the result of the pipeline load.
+   *
+   * Pipelines can be configured to opt in or out of alerts.
+   */
+  private async maybeAlertForPipelineRun(
+    slot: PipelineSlot,
+    runInfo: PipelineLoadSummary
+  ): Promise<void> {
+    const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
+    const pipelineUrl = urljoin(
+      podboxUrl,
+      `/#/`,
+      "pipelines",
+      slot.definition.id
+    );
+
+    // in the if - send alert beginnings
+    if (!runInfo.success) {
+      // pagerduty
+      const incidentMessage = `pipeline load error`;
+
+      const incident = await this.pagerdutyService?.triggerIncident(
+        incidentMessage,
+        pipelineUrl,
+        PolicyName.JustIvan,
+        `pipeline-load-error-` + slot.definition.id
+      );
+      if (incident) {
+        slot.loadIncidentId = incident.id;
+      }
+
+      // discord
+      let shouldMessageDiscord = false;
+      if (
+        // haven't messaged yet
+        !slot.lastLoadDiscordMsgTimestamp ||
+        // messaged too recently
+        (slot.lastLoadDiscordMsgTimestamp &&
+          Date.now() >
+            slot.lastLoadDiscordMsgTimestamp.getTime() +
+              GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
+      ) {
+        slot.lastLoadDiscordMsgTimestamp = new Date();
+        shouldMessageDiscord = true;
+      }
+
+      if (shouldMessageDiscord) {
+        this?.discordService?.sendAlert(
+          `🚨  [Podbox](${podboxUrl}) alert\n[\`${
+            slot?.definition.options?.name ?? "untitled"
+          }\`](${pipelineUrl}) failed to load`
+        );
+      }
+    }
+    // send alert resolutions
+    else {
+      if (slot.lastLoadDiscordMsgTimestamp) {
+        this?.discordService?.sendAlert(
+          `🚨  [Podbox](${podboxUrl}) alert\n[\`${
+            slot?.definition.options?.name ?? "untitled"
+          }\`](${pipelineUrl}) load error resolved ✅`
+        );
+        slot.lastLoadDiscordMsgTimestamp = undefined;
+      }
+      if (slot.loadIncidentId) {
+        const incidentId = slot.loadIncidentId;
+        slot.loadIncidentId = undefined;
+        await this.pagerdutyService?.resolveIncident(incidentId);
+      }
+    }
   }
 
   /**
@@ -1240,7 +1335,9 @@ export async function startGenericIssuanceService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   lemonadeAPI: ILemonadeAPI | null,
-  genericPretixAPI: IGenericPretixAPI | null
+  genericPretixAPI: IGenericPretixAPI | null,
+  pagerDutyService: PagerDutyService | null,
+  discordService: DiscordService | null
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
 
@@ -1313,7 +1410,9 @@ export async function startGenericIssuanceService(
     genericIssuanceClientUrl,
     genericPretixAPI,
     pkeyEnv,
-    zupassPublicKey
+    zupassPublicKey,
+    pagerDutyService,
+    discordService
   );
 
   issuanceService.start();

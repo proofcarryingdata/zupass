@@ -22,6 +22,7 @@ import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
+import { PagerDutyService } from "./services/pagerDutyService";
 import { PersistentCacheService } from "./services/persistentCacheService";
 import { PoapService } from "./services/poapService";
 import { ProvingService } from "./services/provingService";
@@ -66,6 +67,7 @@ export interface GlobalServices {
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
   genericIssuanceService: GenericIssuanceService | null;
+  pagerDutyService: PagerDutyService | null;
 }
 
 export interface Zupass {
