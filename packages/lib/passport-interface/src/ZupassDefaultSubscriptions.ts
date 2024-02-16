@@ -5,29 +5,13 @@ export const zupassDefaultSubscriptions: Record<
   ZupassFeedIds.Email | ZupassFeedIds.Zuzalu_23 | ZupassFeedIds.Zuconnect_23,
   Feed
 > = {
-  [ZupassFeedIds.Zuzalu_23]: {
-    id: ZupassFeedIds.Zuzalu_23,
-    name: "Zuzalu tickets",
-    description: "Your Zuzalu Tickets",
-    partialArgs: undefined,
-    credentialRequest: {
-      signatureType: "sempahore-signature-pcd"
-    },
-    permissions: [
-      {
-        folder: "Zuzalu '23",
-        type: PCDPermissionType.DeleteFolder
-      },
-      {
-        folder: "Zuzalu '23",
-        type: PCDPermissionType.ReplaceInFolder
-      }
-    ]
-  },
   [ZupassFeedIds.Email]: {
     id: ZupassFeedIds.Email,
     name: "Zupass Verified Emails",
-    description: "Emails verified by Zupass",
+    description:
+      "PCDs representing Zupass Server's attestation that you own " +
+      "the email address corresponding to your Zupass account. Can be " +
+      "used to request PCDs from other PCD feeds.",
     partialArgs: undefined,
     credentialRequest: {
       signatureType: "sempahore-signature-pcd"
@@ -43,10 +27,31 @@ export const zupassDefaultSubscriptions: Record<
       }
     ]
   },
+
+  [ZupassFeedIds.Zuzalu_23]: {
+    id: ZupassFeedIds.Zuzalu_23,
+    name: "Zuzalu Tickets",
+    description: "EdDSATicketPCDs representing Zuzalu Tickets.",
+    partialArgs: undefined,
+    credentialRequest: {
+      signatureType: "sempahore-signature-pcd"
+    },
+    permissions: [
+      {
+        folder: "Zuzalu '23",
+        type: PCDPermissionType.DeleteFolder
+      },
+      {
+        folder: "Zuzalu '23",
+        type: PCDPermissionType.ReplaceInFolder
+      }
+    ]
+  },
+
   [ZupassFeedIds.Zuconnect_23]: {
     id: ZupassFeedIds.Zuconnect_23,
-    name: "Zuconnect tickets",
-    description: "Your Zuconnect Tickets",
+    name: "Zuconnect Tickets",
+    description: "EdDSATicketPCDs representing Zuconnect Tickets.",
     partialArgs: undefined,
     credentialRequest: {
       signatureType: "sempahore-signature-pcd"
