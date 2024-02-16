@@ -14,7 +14,7 @@ import {
   useResolvingSubscriptionId,
   useSubscriptions
 } from "../../src/appHooks";
-import { Button, H2 } from "../core";
+import { Button } from "../core";
 import { PermissionsView } from "../screens/AddSubscriptionScreen";
 import { Spinner } from "../shared/Spinner";
 
@@ -31,8 +31,8 @@ export function ResolveSubscriptionErrorModal(): JSX.Element {
 
   return (
     <ErrorContainer>
-      <H2>{error ? "Subscription error" : "Subscription updated"}</H2>
-      <Spacer h={24} />
+      <div>{error ? "Subscription error" : "Subscription updated"}</div>
+      <Spacer h={8} />
       {error && error.type === SubscriptionErrorType.FetchError && (
         <FetchError subscription={subscription} subscriptions={subscriptions} />
       )}
@@ -107,7 +107,7 @@ function FetchError({
       )}
       <Spacer h={16} />
       <Button disabled={polling} onClick={onRefreshClick}>
-        <Spinner text="Refresh feed" show={polling} />
+        <Spinner text="Retry Loading Feed" show={polling} />
       </Button>
       <Spacer h={16} />
       {stillFailing && (

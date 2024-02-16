@@ -270,18 +270,6 @@ export function SubscriptionInfoRow({
       {moreInfo && (
         <>
           <Spacer h={8} />
-          {!isDeepLink && alreadySubscribed && showErrors && error && (
-            <>
-              <SubscriptionErrors>
-                <div>
-                  Errors were encountered when processing this subscription.
-                </div>
-                <Spacer h={8} />
-                <Button onClick={openResolveErrorModal}>Resolve</Button>
-              </SubscriptionErrors>
-              <Spacer h={8} />
-            </>
-          )}
           {alreadySubscribed ? (
             <AlreadySubscribed
               existingSubscription={existingSubscriptions[0]}
@@ -292,6 +280,19 @@ export function SubscriptionInfoRow({
               providerName={providerName}
               info={info}
             />
+          )}
+          {!isDeepLink && alreadySubscribed && showErrors && error && (
+            <>
+              <Spacer h={8} />
+              <SubscriptionErrors>
+                <div>
+                  Errors were encountered when processing this subscription.
+                </div>
+                <Spacer h={8} />
+                <Button onClick={openResolveErrorModal}>Resolve</Button>
+              </SubscriptionErrors>
+              <Spacer h={8} />
+            </>
           )}
         </>
       )}
@@ -488,8 +489,13 @@ function AlreadySubscribed({
         )}
       </>
 
+      <Spacer h={16} />
+
+      <>This feed can write to the following folders:</>
+
       <Spacer h={8} />
-      <FolderExplorerContainer>
+
+      <FolderExplorerContainer style={{ margin: 0 }}>
         {folders.map((folder) => (
           <FolderCard
             key={folder}
@@ -500,13 +506,16 @@ function AlreadySubscribed({
           />
         ))}
       </FolderExplorerContainer>
-      <Spacer h={8} />
+
       {isDefaultSubscription(existingSubscription) ? (
         <></>
       ) : (
-        <Button onClick={onUnsubscribeClick} style="danger">
-          Unsubscribe
-        </Button>
+        <>
+          <Spacer h={16} />
+          <Button onClick={onUnsubscribeClick} style="danger">
+            Unsubscribe
+          </Button>
+        </>
       )}
     </div>
   );
@@ -551,13 +560,17 @@ const InfoRowContainer = styled.div`
           &:hover {
             border: 1px solid white;
             background-color: rgba(255, 255, 255, 0.07);
+
+            &:active {
+              background-color: rgba(255, 255, 255, 0.1);
+            }
           }
         `}
   `}
 `;
 
 const SubscriptionsScreenContainer = styled.div`
-  padding-bottom: 16px;
+  padding-bottom: 128px;
   width: 100%;
 `;
 
@@ -585,9 +598,9 @@ const FeedNameRow = styled.div`
 const Description = styled.p``;
 
 const SubscriptionErrors = styled.div`
-  border-radius: 16px;
+  /* border-radius: 8px;
   padding: 16px;
-  background-color: var(--bg-dark-gray);
+  background-color: var(--danger); */
 `;
 
 const PermissionListItem = styled.li`

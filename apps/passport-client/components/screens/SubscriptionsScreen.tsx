@@ -130,7 +130,7 @@ function SingleProvider({
 }
 
 const Container = styled.div`
-  padding-bottom: 16px;
+  padding-bottom: 128px;
   padding-top: 16px;
 `;
 
