@@ -13,6 +13,7 @@ import {
 } from "@pcd/pcd-collection";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import Markdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { appConfig } from "../../src/appConfig";
@@ -266,7 +267,7 @@ export function SubscriptionInfoRow({
         <div>{info.name}</div>
       </FeedNameRow>
       <Spacer h={8} />
-      <Description>{info.description}</Description>
+      <Markdown>{info.description}</Markdown>
       {moreInfo && (
         <>
           <Spacer h={8} />
