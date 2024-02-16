@@ -112,19 +112,25 @@ describe("POD cryptography should work", async function () {
     expect(verified).to.be.true;
 
     const zkrMerkleMaxDepth = 10;
-    const zkrSig = unpackSignature(signature);
-    const zrkPub = unpackPublicKey(publicKey);
-    const zkrTestInput: Record<string, string | string[]> = {
-      objectContentID: merkleTree.root.toString(),
-      objectSignerPubkeyAx: zrkPub[0].toString(),
-      objectSignerPubkeyAy: zrkPub[1].toString(),
-      objectSignatureR8x: zkrSig.R8[0].toString(),
-      objectSignatureR8y: zkrSig.R8[1].toString(),
-      objectSignatureS: zkrSig.S.toString()
-    };
+    const zkrMaxEntries = 5;
 
-    let entryIndex = 0;
-    for (const entryName of ["owner"]) {
+    const zkrSig = unpackSignature(signature);
+    const zkrPub = unpackPublicKey(publicKey);
+
+    const zkrEntryNameHash = [];
+    const zkrEntryValue = [];
+    const zkrEntryIsValueEnabled = [];
+    const zkrEntryIsValueRevealed = [];
+    const zkrEntryProofDepth = [];
+    const zkrEntryProofIndex = [];
+    const zkrEntryProofSiblings = [];
+    const testEntries = ["owner", "A", "C", "E"];
+    for (let entryIndex = 0; entryIndex < zkrMaxEntries; entryIndex++) {
+      const isEntryEnabled = entryIndex < testEntries.length;
+      const entryName = isEntryEnabled
+        ? testEntries[entryIndex]
+        : testEntries[0];
+
       const entryProof = generatePODMerkleProof(podMap, merkleTree, entryName);
       expect(entryProof.root).to.eq(merkleTree.root);
       expect(entryProof.leaf).to.eq(podNameHash(entryName));
@@ -139,43 +145,60 @@ describe("POD cryptography should work", async function () {
 
       console.log("Entry proof", entryName, entryProof);
 
-      zkrTestInput[`entry${entryIndex}NameHash`] = entryProof.leaf.toString();
+      zkrEntryNameHash.push(entryProof.leaf.toString());
       const entryValueType = podMap.get(entryName)?.type;
-      if (entryValueType === "cryptographic" || entryValueType === "int") {
-        zkrTestInput[`entry${entryIndex}Value`] = `${podMap.get(entryName)
-          ?.value}`;
-        zkrTestInput[`entry${entryIndex}IsValueEnabled`] = "1";
-        zkrTestInput[`entry${entryIndex}IsValueRevealed`] = "1";
+      if (!isEntryEnabled) {
+        zkrEntryValue.push("0");
+        zkrEntryIsValueEnabled.push("0");
+        zkrEntryIsValueRevealed.push("0");
+      } else if (
+        entryValueType === "cryptographic" ||
+        entryValueType === "int"
+      ) {
+        zkrEntryValue.push(`${podMap.get(entryName)?.value}`);
+        zkrEntryIsValueEnabled.push("1");
+        zkrEntryIsValueRevealed.push("1");
       } else {
-        zkrTestInput[`entry${entryIndex}Value`] = "0";
-        zkrTestInput[`entry${entryIndex}IsValueEnabled`] = "0";
-        zkrTestInput[`entry${entryIndex}IsValueRevealed`] = "0";
+        zkrEntryValue.push("0");
+        zkrEntryIsValueEnabled.push("0");
+        zkrEntryIsValueRevealed.push("0");
       }
-      zkrTestInput[`entry${entryIndex}ProofDepth`] =
-        entryProof.siblings.length.toString();
-      zkrTestInput[`entry${entryIndex}ProofIndex`] =
-        entryProof.index.toString();
+      zkrEntryProofDepth.push(entryProof.siblings.length.toString());
+      zkrEntryProofIndex.push(entryProof.index.toString());
 
-      const zkrSiblings = [];
+      const zkrCurSiblings = [];
       for (let sibIndex = 0; sibIndex < zkrMerkleMaxDepth; sibIndex++) {
-        zkrSiblings.push(
+        zkrCurSiblings.push(
           (sibIndex < entryProof.siblings.length
             ? entryProof.siblings[sibIndex]
             : 0n
           ).toString()
         );
       }
-      zkrTestInput[`entry${entryIndex}ProofSiblings`] = zkrSiblings;
-      entryIndex++;
+      zkrEntryProofSiblings.push(zkrCurSiblings);
     }
 
-    zkrTestInput.isOwnerEnabled = "1";
-    zkrTestInput.ownerSemaphoreV3IdentityNullifier =
-      ownerIdentity.nullifier.toString();
-    zkrTestInput.ownerSemaphoreV3IdentityTrapdoor =
-      ownerIdentity.trapdoor.toString();
-    zkrTestInput.externalNullifier = "42";
-    zkrTestInput.isNullfierHashRevealed = "1";
+    const zkrTestInput: Record<string, string | string[] | string[][]> = {
+      objectContentID: merkleTree.root.toString(),
+      objectSignerPubkeyAx: zkrPub[0].toString(),
+      objectSignerPubkeyAy: zkrPub[1].toString(),
+      objectSignatureR8x: zkrSig.R8[0].toString(),
+      objectSignatureR8y: zkrSig.R8[1].toString(),
+      objectSignatureS: zkrSig.S.toString(),
+      entryNameHash: zkrEntryNameHash,
+      entryValue: zkrEntryValue,
+      entryIsValueEnabled: zkrEntryIsValueEnabled,
+      entryIsValueRevealed: zkrEntryIsValueRevealed,
+      entryProofDepth: zkrEntryProofDepth,
+      entryProofIndex: zkrEntryProofIndex,
+      entryProofSiblings: zkrEntryProofSiblings,
+      isOwnerEnabled: "1",
+      ownerSemaphoreV3IdentityNullifier: ownerIdentity.nullifier.toString(),
+      ownerSemaphoreV3IdentityTrapdoor: ownerIdentity.trapdoor.toString(),
+      externalNullifier: "42",
+      isNullfierHashRevealed: "1",
+      watermark: "1337"
+    };
 
     console.log("/* INPUT =", JSON.stringify(zkrTestInput, null, 2), "*/");
   });
