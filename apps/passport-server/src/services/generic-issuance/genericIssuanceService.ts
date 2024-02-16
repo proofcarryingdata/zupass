@@ -389,10 +389,13 @@ export class GenericIssuanceService {
       runInfo.latestLogs,
       slot.definition.options.alerts?.warningLogIgnoreRegexes
     );
-
-    function discordTagList(ids?: string[]): string {
-      return ids ? " " + ids.map((id) => `<@${id}>`).join(" ") + " " : "";
-    }
+    const discordTagList = slot.definition.options.alerts?.discordTags
+      ? " " +
+        slot.definition.options.alerts?.discordTags
+          .map((id) => `<@${id}>`)
+          .join(" ") +
+        " "
+      : "";
 
     const pipelineUrl = urljoin(
       podboxUrl,
@@ -477,9 +480,7 @@ export class GenericIssuanceService {
 
         if (shouldMessageDiscord) {
           this?.discordService?.sendAlert(
-            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList(
-              slot.definition.options.alerts.discordTags
-            )}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵 -\n` +
+            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵 -\n` +
               `\`\`\`\n${alertReason}\n\`\`\``
           );
         }
@@ -490,9 +491,7 @@ export class GenericIssuanceService {
       if (slot.definition.options.alerts?.discordAlerts) {
         if (slot.lastLoadDiscordMsgTimestamp) {
           this?.discordService?.sendAlert(
-            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList(
-              slot.definition.options.alerts.discordTags
-            )}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved ✅`
+            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved ✅`
           );
           slot.lastLoadDiscordMsgTimestamp = undefined;
         }
