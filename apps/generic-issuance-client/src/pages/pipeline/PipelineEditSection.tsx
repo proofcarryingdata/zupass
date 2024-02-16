@@ -5,6 +5,7 @@ import {
   PipelineInfoResponseValue,
   PipelineType
 } from "@pcd/passport-interface";
+import _ from "lodash";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import { FancyEditor } from "../../components/FancyEditor";
 import { deletePipeline, savePipeline } from "../../helpers/Mutations";
@@ -45,6 +46,38 @@ export function PipelineEditSection({
       }
     }
   }, [pipeline.id, userJWT]);
+
+  const onDuplicateClick = useCallback(async () => {
+    if (
+      !userJWT ||
+      !confirm(
+        "Are you sure you would like to duplicate this pipeline? " +
+          "It'll be added to your account in a 'paused' state."
+      )
+    ) {
+      return;
+    }
+
+    setActionInProgress(`Duplicating pipeline '${pipeline.id}'...`);
+    const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+    delete copyDefinition.id;
+    delete copyDefinition.ownerUserId;
+    copyDefinition.options = {
+      ...copyDefinition.options,
+      paused: true,
+      name: (copyDefinition.options?.name ?? "untitled") + " (copy)"
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const stringifiedDefinition = JSON.stringify(copyDefinition);
+    const res = await savePipeline(userJWT, stringifiedDefinition);
+
+    if (res.success) {
+      window.location.href = "/#/dashboard";
+    } else {
+      alert(res.error);
+    }
+  }, [pipeline, userJWT]);
 
   const onUndoClick = useCallback(async () => {
     if (
@@ -133,6 +166,15 @@ export function PipelineEditSection({
             onClick={onDeleteClick}
           >
             Delete Pipeline
+          </Button>
+
+          <Button
+            variant="outline"
+            size="sm"
+            isDisabled={ownedBySomeoneElse && !isAdminView}
+            onClick={onDuplicateClick}
+          >
+            Duplicate Pipeline
           </Button>
         </HStack>
       ) : (
