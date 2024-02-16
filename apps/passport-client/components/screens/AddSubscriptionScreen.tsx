@@ -520,7 +520,9 @@ const InfoRowContainer = styled.div`
     expanded;
     lockExpanded;
   }): FlattenSimpleInterpolation => css`
-    transition: background-color 300ms;
+    transition:
+      background-color 100ms,
+      border 100ms;
 
     ${expanded
       ? css`
@@ -538,7 +540,7 @@ const InfoRowContainer = styled.div`
           user-select: none;
           cursor: pointer;
 
-          border: 1px solid white;
+          border: 1px solid grey;
           padding: 16px;
           border-radius: 16px;
           background-color: rgba(255, 255, 255, 0.05);

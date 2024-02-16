@@ -1,5 +1,4 @@
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
-import { icons } from "@pcd/passport-ui";
 import { getParentFolder, isRootFolder } from "@pcd/pcd-collection";
 import React, {
   useCallback,
@@ -8,6 +7,7 @@ import React, {
   useMemo,
   useState
 } from "react";
+import { PiArrowBendLeftUpBold } from "react-icons/pi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -225,8 +225,9 @@ function FolderDetails({
       style={noChildFolders ? { borderBottom: "none" } : undefined}
     >
       <span className="btn">
-        <img draggable="false" src={icons.upArrow} width={18} height={18} />
+        <PiArrowBendLeftUpBold size={18} />
       </span>
+
       <span className="name">{folder}</span>
     </FolderHeader>
   );

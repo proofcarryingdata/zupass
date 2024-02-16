@@ -1,9 +1,7 @@
-import { icons } from "@pcd/passport-ui";
 import { getNameFromPath } from "@pcd/pcd-collection";
 import { useCallback } from "react";
-import { useNavigate } from "react-router-dom";
+import { FaFolderOpen } from "react-icons/fa6";
 import styled from "styled-components";
-import { Button } from "../../core";
 
 export function FolderCard({
   folder,
@@ -18,27 +16,11 @@ export function FolderCard({
 
   return (
     <FolderEntryContainer onClick={onClick}>
-      <img draggable="false" src={icons.folder} width={18} height={18} />
+      <FaFolderOpen size={18} />
       {getNameFromPath(folder)}
     </FolderEntryContainer>
   );
 }
-
-export function FolderLink({ folder }: { folder: string }): JSX.Element {
-  const navigate = useNavigate();
-  const goToFolder = useCallback(() => {
-    navigate(`/?folder=${encodeURIComponent(folder)}`);
-  }, [folder, navigate]);
-  return (
-    <FolderButton>
-      <Button onClick={goToFolder}>{folder}</Button>
-    </FolderButton>
-  );
-}
-
-const FolderButton = styled.div`
-  margin: 16px 0px;
-`;
 
 export const FolderExplorerContainer = styled.div`
   border-radius: 12px;
@@ -60,12 +42,15 @@ export const FolderHeader = styled.div`
   align-items: flex-start;
   flex-direction: row;
   border-bottom: 1px solid grey;
-  background: var(--bg-dark-gray);
+  background-color: var(--bg-dark-gray);
   cursor: pointer;
   user-select: none;
+  padding-left: 8px;
+  padding-right: 8px;
+  transition: background-color 100ms;
 
   &:hover {
-    background: var(--bg-lite-gray);
+    background-color: var(--bg-lite-gray);
   }
 
   .name {
@@ -90,6 +75,8 @@ export const FolderHeader = styled.div`
 export const FolderEntryContainer = styled.div`
   user-select: none;
   padding: 12px 16px;
+  padding-left: 24px;
+
   cursor: pointer;
   display: flex;
   justify-content: flex-start;

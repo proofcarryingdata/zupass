@@ -4415,10 +4415,10 @@
     "@noble/hashes" "~1.3.0"
     "@scure/base" "~1.1.0"
 
-"@semaphore-protocol/group@^3.14.0":
-  version "3.14.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.14.0.tgz#61b416e0bf464eaa9093d59aba4642c2b7f36cf3"
-  integrity sha512-vJ120EPGtRcCU3G038UPyHBITgAIQHF+vBzgCOQb7hzU3EyaA/mPVNt7/INxeK6luGaXts8oJZeSY+IjvP1kHw==
+"@semaphore-protocol/group@^3.15.2":
+  version "3.15.2"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/group/-/group-3.15.2.tgz#31d24b302982fd51760548cdfc0a7df6e3523a75"
+  integrity sha512-amDjSRattdViYUOZs40+4quKm+C1/F1fvyOvng9QGW2kkc138vombltyL4ix0mGSSPuqy/7ToH6wrfGivIfJFw==
   dependencies:
     "@ethersproject/bignumber" "^5.7.0"
     "@ethersproject/bytes" "^5.7.0"
@@ -4436,10 +4436,10 @@
     "@ethersproject/strings" "^5.6.1"
     circomlibjs "0.0.8"
 
-"@semaphore-protocol/identity@^3.14.0":
-  version "3.14.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.14.0.tgz#6dcd7313ad3aa125dbfee7e7f8b6ee734314d84b"
-  integrity sha512-OdxuWF2BXoIKY3bAwfkG/kdhIMuki2rvRRvFPQ/VFZxb0XyQ6+dFVmddMTO2y/QW9vc9oAvtkZOebst9CD52zw==
+"@semaphore-protocol/identity@^3.15.2":
+  version "3.15.2"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/identity/-/identity-3.15.2.tgz#8c5e75c01c25d1dcabfefe89fbe8aefe5dd21922"
+  integrity sha512-MJ1MO5QL+oX+OFK2rHAPjQ6+kKgGxCsVJLNdn1soRawxbrxH9A6tV9AsVHV0DN4saegQ4qaOOy1XO1PAN6PiQA==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/keccak256" "^5.7.0"
@@ -4447,18 +4447,17 @@
     "@ethersproject/strings" "^5.6.1"
     js-sha512 "^0.8.0"
 
-"@semaphore-protocol/proof@^3.14.0":
-  version "3.14.0"
-  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.14.0.tgz#2239ab5248a49f1af2df26b805dd3e02a3674221"
-  integrity sha512-PeanPut15OsZRywp6ilDwx3D3PnVfJJ9AFDoz/I4zKal/DcUPxcgv195YSsqLDr67Ud/2Y8Zs19PMvuJtTdzSg==
+"@semaphore-protocol/proof@^3.15.2":
+  version "3.15.2"
+  resolved "https://registry.yarnpkg.com/@semaphore-protocol/proof/-/proof-3.15.2.tgz#729b327b1ae358b00f805886d4b521066bfba97e"
+  integrity sha512-b0PuqYk9au/qRUmmRtAWE6MmkC/LY/vIt1dAUIKB0IzIPnzJ4QwXTNAWJoP3LXduhzaFJmNvLOj4ViB9GDh8+w==
   dependencies:
     "@ethersproject/bignumber" "^5.5.0"
     "@ethersproject/bytes" "^5.7.0"
     "@ethersproject/keccak256" "^5.7.0"
     "@ethersproject/strings" "^5.5.0"
+    "@zk-kit/groth16" "0.3.0"
     "@zk-kit/incremental-merkle-tree" "0.4.3"
-    circom_runtime "0.1.24"
-    ffjavascript "0.2.60"
 
 "@sendgrid/client@^7.7.0":
   version "7.7.0"
@@ -6341,6 +6340,14 @@
   integrity sha512-a7U/HSopvQbrDU4GLerpqiMcHKEkQkNPeDZJWz38cw/6Upunh41GjHetq5TB84hxyCaDzJ6q2nEdNoBQfC0FKA==
   dependencies:
     "@zag-js/dom-query" "0.16.0"
+
+"@zk-kit/groth16@0.3.0":
+  version "0.3.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/groth16/-/groth16-0.3.0.tgz#74240beb26e98e4ea3546159108ca968ed7c019b"
+  integrity sha512-rvTrzMcpxFy0lkiIveI5HHovVbyBQ+eDuh/RGAb0SHkzIxJ8kiPjSXvRXUmEdq278ZdhHvrCZSz5J53oIBuoFw==
+  dependencies:
+    circom_runtime "0.1.24"
+    ffjavascript "0.2.60"
 
 "@zk-kit/incremental-merkle-tree@0.4.3", "@zk-kit/incremental-merkle-tree@^0.4.3":
   version "0.4.3"
