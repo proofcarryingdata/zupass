@@ -1,3 +1,4 @@
+import { Buffer } from "buffer";
 import { parse as uuidParse, stringify as uuidStringify } from "uuid";
 
 /**

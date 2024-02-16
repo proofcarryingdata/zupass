@@ -1,6 +1,6 @@
 {
   "compilerOptions": {
-    "target": "es5",
+    "target": "ES2020",
     "lib": ["dom", "dom.iterable", "esnext"],
     "allowJs": true,
     "skipLibCheck": true,
@@ -27,8 +27,8 @@
     "compilerOptions": {
       "module": "commonjs",
       "outDir": "dist",
-      "lib": ["es2019"],
-      "target": "es2019",
+      "lib": ["ES2020"],
+      "target": "ES2020",
       "isolatedModules": false,
       "noEmit": false
     }
