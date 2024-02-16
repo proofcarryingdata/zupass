@@ -27,7 +27,9 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Request } from "express";
+import _ from "lodash";
 import stytch, { Client, Session } from "stytch";
+import urljoin from "url-join";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
@@ -44,6 +46,8 @@ import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import { DiscordService } from "../discordService";
+import { PagerDutyService } from "../pagerDutyService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
@@ -53,10 +57,15 @@ import {
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
+import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
-import { makePLogErr, makePLogInfo } from "./util";
-import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
+import {
+  getErrorLogs,
+  getWarningLogs,
+  makePLogErr,
+  makePLogInfo
+} from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -70,11 +79,17 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  */
 export interface PipelineSlot {
   definition: PipelineDefinition;
+
+  // runtime information - intentionally ephemeral
   instance?: Pipeline;
   owner?: PipelineUser;
+  loadIncidentId?: string;
+  lastLoadDiscordMsgTimestamp?: Date;
 }
 
 export class GenericIssuanceService {
+  private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
+
   /**
    * The pipeline data reload algorithm works as follows:
    * 1. concurrently load all data for all pipelines
@@ -103,6 +118,8 @@ export class GenericIssuanceService {
   private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
+  private pagerdutyService: PagerDutyService | null;
+  private discordService: DiscordService | null;
 
   public constructor(
     context: ApplicationContext,
@@ -113,8 +130,12 @@ export class GenericIssuanceService {
     genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    pagerdutyService: PagerDutyService | null,
+    discordService: DiscordService | null
   ) {
+    this.pagerdutyService = pagerdutyService;
+    this.discordService = discordService;
     this.context = context;
     this.rollbarService = rollbarService;
     this.userDB = new PipelineUserDB(context.dbPool);
@@ -249,13 +270,16 @@ export class GenericIssuanceService {
             LOG_TAG,
             `pipeline '${pipelineSlot.definition.id}' is paused, not loading`
           );
-          return {
+          const summary = {
             atomsLoaded: 0,
             lastRunEndTimestamp: new Date().toISOString(),
             lastRunStartTimestamp: new Date().toISOString(),
             latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
+            atomsExpected: 0,
             success: true
           };
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
         }
 
         if (!pipeline) {
@@ -268,11 +292,13 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: startTime.toISOString(),
             lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr("failed to start pipeline")],
+            atomsExpected: 0,
             atomsLoaded: 0,
             success: false
           };
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         }
 
@@ -290,6 +316,7 @@ export class GenericIssuanceService {
           );
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         } catch (e) {
           this.rollbarService?.reportError(e);
@@ -299,11 +326,13 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: startTime.toISOString(),
             lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
+            atomsExpected: 0,
             atomsLoaded: 0,
             success: false
           } satisfies PipelineLoadSummary;
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         }
       }
@@ -337,6 +366,142 @@ export class GenericIssuanceService {
         })
       );
     });
+  }
+
+  /**
+   * To be called after a pipeline finishes loading, either as part of the global
+   * pipeline loading schedule, or because the pipeline's definition was updated.
+   * Alerts the appropriate channels depending on the result of the pipeline load.
+   *
+   * Pipelines can be configured to opt in or out of alerts.
+   */
+  private async maybeAlertForPipelineRun(
+    slot: PipelineSlot,
+    runInfo: PipelineLoadSummary
+  ): Promise<void> {
+    const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
+    const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
+    const errorLogs = getErrorLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.errorLogIgnoreRegexes
+    );
+    const warningLogs = getWarningLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.warningLogIgnoreRegexes
+    );
+    const discordTagList = slot.definition.options.alerts?.discordTags
+      ? " " +
+        slot.definition.options.alerts?.discordTags
+          .map((id) => `<@${id}>`)
+          .join(" ") +
+        " "
+      : "";
+
+    const pipelineUrl = urljoin(
+      podboxUrl,
+      `/#/`,
+      "pipelines",
+      slot.definition.id
+    );
+
+    let shouldAlert = false;
+    const alertReasons: string[] = [];
+
+    if (!runInfo.success) {
+      shouldAlert = true;
+      alertReasons.push("pipeline load error");
+    }
+
+    if (
+      errorLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogErrors
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has error logs\n: ${JSON.stringify(errorLogs, null, 2)}`
+      );
+    }
+
+    if (
+      warningLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogWarnings
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has warning logs\n ${JSON.stringify(warningLogs, null, 2)}`
+      );
+    }
+
+    if (
+      runInfo.atomsLoaded !== runInfo.atomsExpected &&
+      slot.definition.options.alerts?.alertOnAtomMismatch
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline atoms count ${runInfo.atomsLoaded} mismatches data count ${runInfo.atomsExpected}`
+      );
+    }
+
+    const alertReason = alertReasons.join("\n\n");
+
+    // in the if - send alert beginnings
+    if (shouldAlert) {
+      // pagerduty
+      if (
+        slot.definition.options.alerts?.loadIncidentPagePolicy &&
+        slot.definition.options.alerts?.pagerduty
+      ) {
+        const incident = await this.pagerdutyService?.triggerIncident(
+          `pipeline load error: '${pipelineDisplayName}'`,
+          `${pipelineUrl}\n${alertReason}`,
+          slot.definition.options.alerts?.loadIncidentPagePolicy,
+          `pipeline-load-error-` + slot.definition.id
+        );
+        if (incident) {
+          slot.loadIncidentId = incident.id;
+        }
+      }
+
+      // discord
+      if (slot.definition.options.alerts?.discordAlerts) {
+        let shouldMessageDiscord = false;
+        if (
+          // haven't messaged yet
+          !slot.lastLoadDiscordMsgTimestamp ||
+          // messaged too recently
+          (slot.lastLoadDiscordMsgTimestamp &&
+            Date.now() >
+              slot.lastLoadDiscordMsgTimestamp.getTime() +
+                GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
+        ) {
+          slot.lastLoadDiscordMsgTimestamp = new Date();
+          shouldMessageDiscord = true;
+        }
+
+        if (shouldMessageDiscord) {
+          this?.discordService?.sendAlert(
+            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵 -\n` +
+              `\`\`\`\n${alertReason}\n\`\`\``
+          );
+        }
+      }
+    }
+    // send alert resolutions
+    else {
+      if (slot.definition.options.alerts?.discordAlerts) {
+        if (slot.lastLoadDiscordMsgTimestamp) {
+          this?.discordService?.sendAlert(
+            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved ✅`
+          );
+          slot.lastLoadDiscordMsgTimestamp = undefined;
+        }
+      }
+      if (slot.loadIncidentId) {
+        const incidentId = slot.loadIncidentId;
+        slot.loadIncidentId = undefined;
+        await this.pagerdutyService?.resolveIncident(incidentId);
+      }
+    }
   }
 
   /**
@@ -762,6 +927,16 @@ export class GenericIssuanceService {
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
+
+        if (
+          !user.isAdmin &&
+          !_.isEqual(
+            existingPipelineDefinition.options.alerts,
+            newDefinition.options.alerts
+          )
+        ) {
+          throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
+        }
       } else {
         // NEW PIPELINE!
         span?.setAttribute("is_new", true);
@@ -769,6 +944,10 @@ export class GenericIssuanceService {
         newDefinition.id = uuidV4();
         newDefinition.timeCreated = new Date().toISOString();
         newDefinition.timeUpdated = new Date().toISOString();
+
+        if (!user.isAdmin && !!newDefinition.options.alerts) {
+          throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
+        }
       }
 
       let validatedNewDefinition: PipelineDefinition = newDefinition;
@@ -1240,7 +1419,9 @@ export async function startGenericIssuanceService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   lemonadeAPI: ILemonadeAPI | null,
-  genericPretixAPI: IGenericPretixAPI | null
+  genericPretixAPI: IGenericPretixAPI | null,
+  pagerDutyService: PagerDutyService | null,
+  discordService: DiscordService | null
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
 
@@ -1313,7 +1494,9 @@ export async function startGenericIssuanceService(
     genericIssuanceClientUrl,
     genericPretixAPI,
     pkeyEnv,
-    zupassPublicKey
+    zupassPublicKey,
+    pagerDutyService,
+    discordService
   );
 
   issuanceService.start();

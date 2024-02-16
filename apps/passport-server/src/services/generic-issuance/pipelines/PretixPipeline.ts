@@ -215,6 +215,7 @@ export class PretixPipeline implements BasePipeline {
 
           return {
             atomsLoaded: 0,
+            atomsExpected: 0,
             lastRunEndTimestamp: new Date().toISOString(),
             lastRunStartTimestamp: startTime.toISOString(),
             latestLogs: logs,
@@ -285,6 +286,7 @@ export class PretixPipeline implements BasePipeline {
           lastRunStartTimestamp: startTime.toISOString(),
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
+          atomsExpected: atomsToSave.length,
           success: true
         } satisfies PipelineLoadSummary;
       }

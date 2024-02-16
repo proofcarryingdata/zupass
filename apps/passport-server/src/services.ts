@@ -9,6 +9,7 @@ import { startIssuanceService } from "./services/issuanceService";
 import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
+import { startPagerDutyService } from "./services/pagerDutyService";
 import { startPersistentCacheService } from "./services/persistentCacheService";
 import { startPoapService } from "./services/poapService";
 import { startProvingService } from "./services/provingService";
@@ -31,6 +32,7 @@ export async function startServices(
   instrumentPCDs();
 
   const multiprocessService = startMultiProcessService();
+  const pagerDutyService = startPagerDutyService();
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
   const rateLimitService = startRateLimitService(context, rollbarService);
@@ -87,7 +89,9 @@ export async function startServices(
     context,
     rollbarService,
     apis.lemonadeAPI,
-    apis.genericPretixAPI
+    apis.genericPretixAPI,
+    pagerDutyService,
+    discordService
   );
 
   const services: GlobalServices = {
@@ -110,7 +114,8 @@ export async function startServices(
     persistentCacheService,
     multiprocessService,
     rateLimitService,
-    genericIssuanceService
+    genericIssuanceService,
+    pagerDutyService
   };
 
   return services;

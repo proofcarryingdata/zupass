@@ -174,6 +174,8 @@ export class LemonadePipeline implements BasePipeline {
 
       const configuredEvents = this.definition.options.events;
 
+      let atomsExpected = 0;
+
       // For each event, fetch tickets
       const eventTickets = await Promise.all(
         configuredEvents.map(
@@ -236,7 +238,7 @@ export class LemonadePipeline implements BasePipeline {
             );
 
             const validTickets = [];
-
+            atomsExpected += ticketsFromLemonade.length;
             for (const maybeTicket of ticketsFromLemonade) {
               // By parsing tickets individually, we allow valid tickets to
               // proceed even if some tickets must be skipped.
@@ -265,6 +267,7 @@ export class LemonadePipeline implements BasePipeline {
                     )} , pipeline '${this.id}'`;
                     logs.push(makePLogWarn(message));
                     logger(`${LOG_TAG} ${message}`);
+                    atomsExpected--;
                   }
                 } else {
                   const message = `Unsupported ticket type ${
@@ -365,6 +368,7 @@ export class LemonadePipeline implements BasePipeline {
         lastRunEndTimestamp: end.toISOString(),
         lastRunStartTimestamp: loadStart.toISOString(),
         atomsLoaded: atomsToSave.length,
+        atomsExpected: atomsExpected,
         success: true
       } satisfies PipelineLoadSummary;
     });

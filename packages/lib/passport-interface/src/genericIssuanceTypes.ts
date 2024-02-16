@@ -11,6 +11,12 @@ export enum PipelineType {
   CSV = "CSV"
 }
 
+export enum IncidentPolicy {
+  Everyone = "Everyone",
+  JustIvan = "JustIvan",
+  JustRichard = "JustRichard"
+}
+
 const BasePipelineDefinitionSchema = z.object({
   id: z.string().uuid(),
   ownerUserId: z.string().uuid(),
@@ -19,10 +25,25 @@ const BasePipelineDefinitionSchema = z.object({
   timeUpdated: z.string()
 });
 
+const AlertsOptionsSchema = z.object({
+  pagerduty: z.boolean().optional(),
+  loadIncidentPagePolicy: z.nativeEnum(IncidentPolicy).optional(),
+  discordTags: z.array(z.string()).optional(),
+  discordAlerts: z.boolean().optional(),
+  alertOnLogErrors: z.boolean().optional(),
+  errorLogIgnoreRegexes: z.array(z.string()).optional(),
+  alertOnLogWarnings: z.boolean().optional(),
+  warningLogIgnoreRegexes: z.array(z.string()).optional(),
+  alertOnAtomMismatch: z.boolean().optional()
+});
+
+export type AlertsOptions = z.infer<typeof AlertsOptionsSchema>;
+
 const BasePipelineOptionsSchema = z.object({
   paused: z.boolean().optional(),
   name: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  alerts: AlertsOptionsSchema.optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
