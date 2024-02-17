@@ -73,10 +73,11 @@ export function PipelineEditSection({
     const res = await savePipeline(userJWT, stringifiedDefinition);
 
     if (res.success) {
-      window.location.href = "/#/dashboard";
+      window.location.href = "/#/pipelines/" + res.value.id;
     } else {
       alert(res.error);
     }
+    setActionInProgress(undefined);
   }, [pipeline, userJWT]);
 
   const onUndoClick = useCallback(async () => {
