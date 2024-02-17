@@ -109,16 +109,26 @@ function saveState(state: GIContextState): void {
 }
 
 function InitScripts(): ReactNode {
-  const hasSet = useRef(false);
+  const hasSetColorMode = useRef(false);
+  const hasSetTitle = useRef(false);
 
   const { setColorMode } = useColorMode();
 
   useEffect(() => {
-    if (!hasSet.current) {
-      hasSet.current = true;
+    if (!hasSetColorMode.current) {
+      hasSetColorMode.current = true;
       setColorMode("dark");
     }
   }, [setColorMode]);
+
+  useEffect(() => {
+    if (!hasSetTitle.current) {
+      hasSetTitle.current = true;
+      if (process.env.PODBOX_TITLE_TAG != null) {
+        document.title = `Podbox (${process.env.PODBOX_TITLE_TAG})`;
+      }
+    }
+  }, []);
 
   return <></>;
 }

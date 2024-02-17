@@ -108,6 +108,7 @@
     "PODBOX_CLIENT_URL",
     "PAGER_DUTY_API_KEY",
     "PAGER_DUTY_SERVICE_ID",
+    "PODBOX_TITLE_TAG",
     "//// add env vars above this line ////"
   ]
 }
