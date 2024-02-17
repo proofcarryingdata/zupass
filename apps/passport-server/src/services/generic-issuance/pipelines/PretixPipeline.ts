@@ -291,6 +291,7 @@ export class PretixPipeline implements BasePipeline {
           latestLogs: logs,
           atomsLoaded: atomsToSave.length,
           atomsExpected: atomsToSave.length,
+          errorMessage: undefined,
           success: true
         } satisfies PipelineLoadSummary;
       }

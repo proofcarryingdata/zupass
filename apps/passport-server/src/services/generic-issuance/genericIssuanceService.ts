@@ -299,7 +299,8 @@ export class GenericIssuanceService {
             latestLogs: [makePLogErr("failed to start pipeline")],
             atomsExpected: 0,
             atomsLoaded: 0,
-            success: false
+            success: false,
+            errorMessage: "failed to start pipeline"
           };
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
@@ -333,6 +334,9 @@ export class GenericIssuanceService {
             latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
             atomsExpected: 0,
             atomsLoaded: 0,
+            errorMessage: `failed to load pipeline\n${e}\n${
+              e instanceof Error ? e.stack : ""
+            }`,
             success: false
           } satisfies PipelineLoadSummary;
           this.definitionDB.saveLoadSummary(pipelineId, summary);

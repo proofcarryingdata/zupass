@@ -373,6 +373,7 @@ export class LemonadePipeline implements BasePipeline {
         lastRunStartTimestamp: loadStart.toISOString(),
         atomsLoaded: atomsToSave.length,
         atomsExpected: atomsExpected,
+        errorMessage: undefined,
         success: true
       } satisfies PipelineLoadSummary;
     });
