@@ -22,10 +22,8 @@ describe("POD cryptography should work", async function () {
     "0001020304050607080900010203040506070809000102030405060708090001";
 
   const expectedPublicKeyPoint = [
-    BigInt(
-      "0x1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2"
-    ),
-    BigInt("0x1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4")
+    0x1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2n,
+    0x1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4n
   ] as Point<bigint>;
 
   const ownerIdentity = new Identity(
@@ -33,16 +31,16 @@ describe("POD cryptography should work", async function () {
   );
 
   const sampleEntries = {
-    E: { type: "cryptographic", value: BigInt(0xdeadbeef) },
-    F: { type: "cryptographic", value: BigInt(0xffffffff) },
+    E: { type: "cryptographic", value: 0xdeadbeefn },
+    F: { type: "cryptographic", value: 0xffffffffn },
     C: { type: "string", value: "hello" },
     D: { type: "string", value: "foobar" },
-    A: { type: "int", value: BigInt(123) },
-    B: { type: "int", value: BigInt(321) },
-    G: { type: "int", value: BigInt(7) },
-    H: { type: "int", value: BigInt(8) },
-    I: { type: "int", value: BigInt(9) },
-    J: { type: "int", value: BigInt(10) },
+    A: { type: "int", value: 123n },
+    B: { type: "int", value: 321n },
+    G: { type: "int", value: 7n },
+    H: { type: "int", value: 8n },
+    I: { type: "int", value: 9n },
+    J: { type: "int", value: 10n },
     owner: { type: "cryptographic", value: ownerIdentity.commitment }
   } as PODEntries;
 
@@ -120,11 +118,11 @@ describe("POD cryptography should work", async function () {
     const zkrEntryNameHash = [];
     const zkrEntryValue = [];
     const zkrEntryIsValueEnabled = [];
-    const zkrEntryIsValueRevealed = [];
+    const zkrEntryIsValueHashRevealed = [];
     const zkrEntryProofDepth = [];
     const zkrEntryProofIndex = [];
     const zkrEntryProofSiblings = [];
-    const testEntries = ["owner", "A", "C", "E"];
+    const testEntries = ["A", "owner", "C", "E"];
     for (let entryIndex = 0; entryIndex < zkrMaxEntries; entryIndex++) {
       const isEntryEnabled = entryIndex < testEntries.length;
       const entryName = isEntryEnabled
@@ -150,18 +148,18 @@ describe("POD cryptography should work", async function () {
       if (!isEntryEnabled) {
         zkrEntryValue.push("0");
         zkrEntryIsValueEnabled.push("0");
-        zkrEntryIsValueRevealed.push("0");
+        zkrEntryIsValueHashRevealed.push("0");
       } else if (
         entryValueType === "cryptographic" ||
         entryValueType === "int"
       ) {
         zkrEntryValue.push(`${podMap.get(entryName)?.value}`);
         zkrEntryIsValueEnabled.push("1");
-        zkrEntryIsValueRevealed.push("1");
+        zkrEntryIsValueHashRevealed.push(entryIndex % 2 == 0 ? "1" : "0");
       } else {
         zkrEntryValue.push("0");
         zkrEntryIsValueEnabled.push("0");
-        zkrEntryIsValueRevealed.push("0");
+        zkrEntryIsValueHashRevealed.push(entryIndex % 2 == 0 ? "1" : "0");
       }
       zkrEntryProofDepth.push(entryProof.siblings.length.toString());
       zkrEntryProofIndex.push(entryProof.index.toString());
@@ -188,16 +186,16 @@ describe("POD cryptography should work", async function () {
       entryNameHash: zkrEntryNameHash,
       entryValue: zkrEntryValue,
       entryIsValueEnabled: zkrEntryIsValueEnabled,
-      entryIsValueRevealed: zkrEntryIsValueRevealed,
+      entryIsValueHashRevealed: zkrEntryIsValueHashRevealed,
       entryProofDepth: zkrEntryProofDepth,
       entryProofIndex: zkrEntryProofIndex,
       entryProofSiblings: zkrEntryProofSiblings,
-      isOwnerEnabled: "1",
+      ownerEntryIndex: "1",
       ownerSemaphoreV3IdentityNullifier: ownerIdentity.nullifier.toString(),
       ownerSemaphoreV3IdentityTrapdoor: ownerIdentity.trapdoor.toString(),
-      externalNullifier: "42",
-      isNullfierHashRevealed: "1",
-      watermark: "1337"
+      ownerExternalNullifier: "42",
+      ownerIsNullfierHashRevealed: "1",
+      globalWatermark: "1337"
     };
 
     console.log("/* INPUT =", JSON.stringify(zkrTestInput, null, 2), "*/");
