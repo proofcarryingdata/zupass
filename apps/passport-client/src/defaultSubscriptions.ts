@@ -47,18 +47,20 @@ export async function addDefaultSubscriptions(
   }
 
   for (const feedUrl of DEFAULT_FEED_URLS) {
+    const { feeds, providerName, providerUrl } =
+      await subscriptions.listFeeds(feedUrl);
+
     if (!subscriptions.hasProvider(feedUrl)) {
-      const { feeds, providerName, providerUrl } =
-        await subscriptions.listFeeds(feedUrl);
       subscriptions.addProvider(providerUrl, providerName);
-      for (const feed of feeds) {
-        subscriptions.subscribe(
-          providerUrl,
-          feed,
-          // Replace the existing subscription if it already exists
-          true
-        );
-      }
+    }
+
+    for (const feed of feeds) {
+      subscriptions.subscribe(
+        providerUrl,
+        feed,
+        // Replace the existing subscription if it already exists
+        true
+      );
     }
   }
 

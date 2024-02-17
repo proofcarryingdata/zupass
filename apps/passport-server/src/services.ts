@@ -91,7 +91,8 @@ export async function startServices(
     apis.lemonadeAPI,
     apis.genericPretixAPI,
     pagerDutyService,
-    discordService
+    discordService,
+    persistentCacheService
   );
 
   const services: GlobalServices = {

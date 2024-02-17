@@ -36,6 +36,7 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { logger } from "../../../util/logger";
+import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
 import {
   CheckinCapability,
@@ -93,6 +94,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private db: IPipelineAtomDB<LemonadeAtom>;
   private api: ILemonadeAPI;
+  private cacheService: PersistentCacheService;
 
   public get id(): string {
     return this.definition.id;
@@ -111,7 +113,8 @@ export class LemonadePipeline implements BasePipeline {
     definition: LemonadePipelineDefinition,
     db: IPipelineAtomDB,
     api: ILemonadeAPI,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    cacheService: PersistentCacheService
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -142,6 +145,7 @@ export class LemonadePipeline implements BasePipeline {
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
+    this.cacheService = cacheService;
   }
 
   public async stop(): Promise<void> {
@@ -307,7 +311,7 @@ export class LemonadePipeline implements BasePipeline {
             (t) =>
               ({
                 id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
-                email: t.user_email,
+                email: t.user_email.toLowerCase(),
                 name:
                   t.user_first_name.length > 0 || t.user_last_name.length > 0
                     ? `${t.user_first_name} ${t.user_last_name}`.trim()
@@ -369,6 +373,7 @@ export class LemonadePipeline implements BasePipeline {
         lastRunStartTimestamp: loadStart.toISOString(),
         atomsLoaded: atomsToSave.length,
         atomsExpected: atomsExpected,
+        errorMessage: undefined,
         success: true
       } satisfies PipelineLoadSummary;
     });
@@ -414,7 +419,7 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
 
-      const email = emailPCD.claim.emailAddress;
+      const email = emailPCD.claim.emailAddress.toLowerCase();
       const relevantTickets = await this.db.loadByEmail(this.id, email);
       const ticketDatas = relevantTickets.map((t) =>
         this.atomToTicketData(t, credential.claim.identityCommitment)
@@ -423,11 +428,8 @@ export class LemonadePipeline implements BasePipeline {
       span?.setAttribute("email", email);
       span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
 
-      // TODO: cache this intelligently
       const tickets = await Promise.all(
-        ticketDatas.map((t) =>
-          this.ticketDataToTicketPCD(t, this.eddsaPrivateKey)
-        )
+        ticketDatas.map((t) => this.getOrGenerateTicket(t))
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -444,6 +446,104 @@ export class LemonadePipeline implements BasePipeline {
         ]
       };
     });
+  }
+
+  private async getOrGenerateTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD> {
+    return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
+      span?.setAttribute("ticket_id", ticketData.ticketId);
+      span?.setAttribute("ticket_email", ticketData.attendeeEmail);
+      span?.setAttribute("ticket_name", ticketData.attendeeName);
+
+      const cachedTicket = await this.getCachedTicket(ticketData);
+
+      if (cachedTicket) {
+        span?.setAttribute("from_cache", true);
+        return cachedTicket;
+      }
+
+      logger(
+        `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
+      );
+
+      const generatedTicket = await this.ticketDataToTicketPCD(
+        ticketData,
+        this.eddsaPrivateKey
+      );
+
+      try {
+        this.cacheTicket(generatedTicket);
+      } catch (e) {
+        logger(
+          `${LOG_TAG} error caching ticket ${ticketData.ticketId} ` +
+            `${ticketData.attendeeEmail} for ${ticketData.eventId} (${ticketData.eventName}) on pipeline ${this.id}`
+        );
+      }
+
+      return generatedTicket;
+    });
+  }
+
+  private static async getTicketCacheKey(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string,
+    pipelineId: string
+  ): Promise<string> {
+    const ticketCopy: Partial<ITicketData> = { ...ticketData };
+    // the reason we remove `timestampSigned` from the cache key
+    // is that it changes every time we instantiate `ITicketData`
+    // for a particular devconnect ticket, rendering the caching
+    // ineffective.
+    delete ticketCopy.timestampSigned;
+    const hash = await getHash(
+      JSON.stringify(ticketCopy) + eddsaPrivateKey + pipelineId
+    );
+    return hash;
+  }
+
+  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+    const key = await LemonadePipeline.getTicketCacheKey(
+      ticket.claim.ticket,
+      this.eddsaPrivateKey,
+      this.id
+    );
+    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    this.cacheService.setValue(key, JSON.stringify(serialized));
+  }
+
+  private async getCachedTicket(
+    ticketData: ITicketData
+  ): Promise<EdDSATicketPCD | undefined> {
+    const key = await LemonadePipeline.getTicketCacheKey(
+      ticketData,
+      this.eddsaPrivateKey,
+      this.id
+    );
+    const serializedTicket = await this.cacheService.getValue(key);
+    if (!serializedTicket) {
+      logger(
+        `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
+      );
+      return undefined;
+    }
+
+    try {
+      logger(
+        `${LOG_TAG} cache hit for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
+      );
+      const parsedTicket = JSON.parse(serializedTicket.cache_value);
+      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
+        parsedTicket.pcd
+      );
+      return deserializedTicket;
+    } catch (e) {
+      logger(
+        `${LOG_TAG} failed to parse cached ticket ${key} on pipeline ${this.id}`,
+        e
+      );
+      return undefined;
+    }
   }
 
   private async ticketDataToTicketPCD(
@@ -562,7 +662,7 @@ export class LemonadePipeline implements BasePipeline {
     return {
       // unsigned fields
       attendeeName: atom.name,
-      attendeeEmail: atom.email,
+      attendeeEmail: atom.email.toLowerCase(),
       eventName: this.lemonadeAtomToEventName(atom),
       ticketName: this.lemonadeAtomToTicketName(atom),
       checkerEmail: undefined, // Doesn't exist in Lemonade
