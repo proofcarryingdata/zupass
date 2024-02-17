@@ -30,6 +30,13 @@ const genericIssuanceClientAppOpts: BuildOptions = {
             process.env.ROLLBAR_ENV_NAME
           )
         }
+      : {}),
+    ...(process.env.PODBOX_TITLE_TAG !== undefined
+      ? {
+          "process.env.PODBOX_TITLE_TAG": JSON.stringify(
+            process.env.PODBOX_TITLE_TAG
+          )
+        }
       : {})
   },
   entryPoints: ["src/main.tsx"],
