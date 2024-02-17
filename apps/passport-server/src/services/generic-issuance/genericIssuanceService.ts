@@ -489,8 +489,11 @@ export class GenericIssuanceService {
 
         if (shouldMessageDiscord) {
           this?.discordService?.sendAlert(
-            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵 -\n` +
-              `\`\`\`\n${alertReason}\n\`\`\``
+            `🚨   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵\n` +
+              `\`\`\`\n${alertReason}\`\`\`\n` +
+              (runInfo.errorMessage
+                ? `\`\`\`\n${runInfo.errorMessage}\n\`\`\``
+                : ``)
           );
         }
       }
@@ -500,7 +503,7 @@ export class GenericIssuanceService {
       if (slot.definition.options.alerts?.discordAlerts) {
         if (slot.lastLoadDiscordMsgTimestamp) {
           this?.discordService?.sendAlert(
-            `🚨  [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved ✅`
+            `✅   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved`
           );
           slot.lastLoadDiscordMsgTimestamp = undefined;
         }
