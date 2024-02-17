@@ -30,7 +30,7 @@ describe("POD cryptography should work", async function () {
     '["329061722381819402313027227353491409557029289040211387019699013780657641967", "99353161014976810914716773124042455250852206298527174581112949561812190422"]'
   );
 
-  const sampleEntries = {
+  const sampleEntries1 = {
     E: { type: "cryptographic", value: 123n },
     F: { type: "cryptographic", value: 0xffffffffn },
     C: { type: "string", value: "hello" },
@@ -44,49 +44,55 @@ describe("POD cryptography should work", async function () {
     owner: { type: "cryptographic", value: ownerIdentity.commitment }
   } as PODEntries;
 
-  const expectedCount = Object.entries(sampleEntries).length;
-  const expectedNameOrder = [...Object.keys(sampleEntries)].sort();
+  const expectedCount1 = Object.entries(sampleEntries1).length;
+  const expectedNameOrder1 = [...Object.keys(sampleEntries1)].sort();
+
+  const sampleEntries2 = {
+    attendee: { type: "cryptographic", value: ownerIdentity.commitment },
+    eventID: { type: "cryptographic", value: 456n },
+    ticketID: { type: "cryptographic", value: 999n }
+  };
 
   it("merklizePOD should process sample", function () {
-    const { podMap, merkleTree } = merklizePOD(sampleEntries);
-    expect(podMap).to.have.length(expectedCount);
-    expect(merkleTree.size).to.eq(expectedCount * 2);
-    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder);
+    const { podMap, merkleTree } = merklizePOD(sampleEntries1);
+    expect(podMap).to.have.length(expectedCount1);
+    expect(merkleTree.size).to.eq(expectedCount1 * 2);
+    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder1);
   });
 
   it("should sign and verify a POD", function () {
     const { podMap, merkleTree, signature, publicKey } = signPOD(
-      sampleEntries,
+      sampleEntries1,
       privateKey
     );
-    expect(podMap).to.have.length(expectedCount);
-    expect(merkleTree.size).to.eq(expectedCount * 2);
-    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder);
+    expect(podMap).to.have.length(expectedCount1);
+    expect(merkleTree.size).to.eq(expectedCount1 * 2);
+    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder1);
     expect(publicKey).to.eq(packPublicKey(expectedPublicKeyPoint));
 
-    const verified = verifyPOD(sampleEntries, signature, publicKey);
+    const verified = verifyPOD(sampleEntries1, signature, publicKey);
     expect(verified).to.be.true;
   });
 
   it("should generate and verify an entry Merkle proof", function () {
     const { podMap, merkleTree, signature, publicKey } = signPOD(
-      sampleEntries,
+      sampleEntries1,
       privateKey
     );
-    expect(podMap).to.have.length(expectedCount);
-    expect(merkleTree.size).to.eq(expectedCount * 2);
-    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder);
+    expect(podMap).to.have.length(expectedCount1);
+    expect(merkleTree.size).to.eq(expectedCount1 * 2);
+    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder1);
     expect(publicKey).to.eq(packPublicKey(expectedPublicKeyPoint));
 
-    const verified = verifyPOD(sampleEntries, signature, publicKey);
+    const verified = verifyPOD(sampleEntries1, signature, publicKey);
     expect(verified).to.be.true;
 
-    for (const entryName of Object.keys(sampleEntries)) {
+    for (const entryName of Object.keys(sampleEntries1)) {
       const entryProof = generatePODMerkleProof(podMap, merkleTree, entryName);
       expect(entryProof.root).to.eq(merkleTree.root);
       expect(entryProof.leaf).to.eq(podNameHash(entryName));
       expect(entryProof.siblings[0]).to.eq(
-        podValueHash(sampleEntries[entryName])
+        podValueHash(sampleEntries1[entryName])
       );
       expect(entryProof.index % 2).to.eq(0);
       // entryProof.index isn't always equal to entryIndex*2 due to combining
@@ -97,24 +103,45 @@ describe("POD cryptography should work", async function () {
   });
 
   it("should generate test data for zkrepl", function () {
-    const { podMap, merkleTree, signature, publicKey } = signPOD(
-      sampleEntries,
-      privateKey
-    );
-    expect(podMap).to.have.length(expectedCount);
-    expect(merkleTree.size).to.eq(expectedCount * 2);
-    expect([...podMap.keys()]).to.deep.eq(expectedNameOrder);
-    expect(publicKey).to.eq(packPublicKey(expectedPublicKeyPoint));
-
-    const verified = verifyPOD(sampleEntries, signature, publicKey);
-    expect(verified).to.be.true;
-
+    const zkrMaxObjects = 3;
+    const zkrMaxEntries = 10;
     const zkrMerkleMaxDepth = 10;
-    const zkrMaxEntries = 5;
 
-    const zkrSig = unpackSignature(signature);
-    const zkrPub = unpackPublicKey(publicKey);
+    const pods = [];
+    const zkrSigs = [];
+    const zkrPubs = [];
+    const testObjects = [sampleEntries1, sampleEntries2];
+    for (const inputEntries of testObjects) {
+      const { podMap, merkleTree, signature, publicKey } = signPOD(
+        inputEntries,
+        privateKey
+      );
+      const verified = verifyPOD(inputEntries, signature, publicKey);
+      expect(verified).to.be.true;
+      pods.push({ podMap, merkleTree, signature, publicKey });
+      zkrSigs.push(unpackSignature(signature));
+      zkrPubs.push(unpackPublicKey(publicKey));
+    }
 
+    const zkrObjectContentID = [];
+    const zkrObjectSignerPubkeyAx = [];
+    const zkrObjectSignerPubkeyAy = [];
+    const zkrObjectSignatureR8x = [];
+    const zkrObjectSignatureR8y = [];
+    const zkrObjectSignatureS = [];
+
+    for (let objectIndex = 0; objectIndex < zkrMaxObjects; objectIndex++) {
+      const isObjectEnabled = objectIndex < testObjects.length;
+      const i = isObjectEnabled ? objectIndex : 0;
+      zkrObjectContentID.push(pods[i].merkleTree.root.toString());
+      zkrObjectSignerPubkeyAx.push(zkrPubs[i][0].toString());
+      zkrObjectSignerPubkeyAy.push(zkrPubs[i][1].toString());
+      zkrObjectSignatureR8x.push(zkrSigs[i].R8[0].toString());
+      zkrObjectSignatureR8y.push(zkrSigs[i].R8[1].toString());
+      zkrObjectSignatureS.push(zkrSigs[i].S.toString());
+    }
+
+    const zkrEntryObjectIndex = [];
     const zkrEntryNameHash = [];
     const zkrEntryValue = [];
     const zkrEntryIsValueEnabled = [];
@@ -123,30 +150,34 @@ describe("POD cryptography should work", async function () {
     const zkrEntryProofDepth = [];
     const zkrEntryProofIndex = [];
     const zkrEntryProofSiblings = [];
-    const testEntries = ["A", "owner", "C", "E"];
-    const equalEntries: Record<string, string> = { A: "E" };
+    const testEntries = [
+      { n: "A", o: 0, eq: 3 },
+      { n: "owner", o: 0, eq: undefined },
+      { n: "C", o: 0, eq: undefined },
+      { n: "E", o: 0, eq: undefined },
+      { n: "attendee", o: 1, eq: 1 },
+      { n: "eventID", o: 1, eq: undefined }
+    ];
     for (let entryIndex = 0; entryIndex < zkrMaxEntries; entryIndex++) {
       const isEntryEnabled = entryIndex < testEntries.length;
-      const entryName = isEntryEnabled
+      const entryInfo = isEntryEnabled
         ? testEntries[entryIndex]
         : testEntries[0];
+      const entryName = entryInfo.n;
+      const entryObject = pods[entryInfo.o];
+      zkrEntryObjectIndex.push(entryInfo.o.toString());
 
-      const entryProof = generatePODMerkleProof(podMap, merkleTree, entryName);
-      expect(entryProof.root).to.eq(merkleTree.root);
-      expect(entryProof.leaf).to.eq(podNameHash(entryName));
-      expect(entryProof.siblings[0]).to.eq(
-        podValueHash(sampleEntries[entryName])
+      const entryProof = generatePODMerkleProof(
+        entryObject.podMap,
+        entryObject.merkleTree,
+        entryName
       );
-      expect(entryProof.index % 2).to.eq(0);
-      // entryProof.index isn't always equal to entryIndex*2 due to combining
-      // of nodes in the LeanIMT
-
       expect(verifyPODMerkeProof(entryProof)).to.be.true;
 
       console.log("Entry proof", entryName, entryProof);
 
       zkrEntryNameHash.push(entryProof.leaf.toString());
-      const entryValueType = podMap.get(entryName)?.type;
+      const entryValueType = entryObject.podMap.get(entryName)?.type;
       if (!isEntryEnabled) {
         zkrEntryValue.push("0");
         zkrEntryIsValueEnabled.push("0");
@@ -155,7 +186,7 @@ describe("POD cryptography should work", async function () {
         entryValueType === "cryptographic" ||
         entryValueType === "int"
       ) {
-        zkrEntryValue.push(`${podMap.get(entryName)?.value}`);
+        zkrEntryValue.push(`${entryObject.podMap.get(entryName)?.value}`);
         zkrEntryIsValueEnabled.push("1");
         zkrEntryIsValueHashRevealed.push(entryIndex % 2 == 0 ? "1" : "0");
       } else {
@@ -164,10 +195,8 @@ describe("POD cryptography should work", async function () {
         zkrEntryIsValueHashRevealed.push(entryIndex % 2 == 0 ? "1" : "0");
       }
 
-      if (Object.keys(equalEntries).includes(entryName)) {
-        zkrEntryEqualToOtherEntryByIndex.push(
-          testEntries.indexOf(equalEntries[entryName]).toString()
-        );
+      if (entryInfo.eq !== undefined) {
+        zkrEntryEqualToOtherEntryByIndex.push(entryInfo.eq.toString());
       } else {
         zkrEntryEqualToOtherEntryByIndex.push(entryIndex.toString());
       }
@@ -187,17 +216,18 @@ describe("POD cryptography should work", async function () {
     }
 
     const zkrTestInput: Record<string, string | string[] | string[][]> = {
-      objectContentID: merkleTree.root.toString(),
-      objectSignerPubkeyAx: zkrPub[0].toString(),
-      objectSignerPubkeyAy: zkrPub[1].toString(),
-      objectSignatureR8x: zkrSig.R8[0].toString(),
-      objectSignatureR8y: zkrSig.R8[1].toString(),
-      objectSignatureS: zkrSig.S.toString(),
+      objectContentID: zkrObjectContentID,
+      objectSignerPubkeyAx: zkrObjectSignerPubkeyAx,
+      objectSignerPubkeyAy: zkrObjectSignerPubkeyAy,
+      objectSignatureR8x: zkrObjectSignatureR8x,
+      objectSignatureR8y: zkrObjectSignatureR8y,
+      objectSignatureS: zkrObjectSignatureS,
+      entryObjectIndex: zkrEntryObjectIndex,
       entryNameHash: zkrEntryNameHash,
       entryValue: zkrEntryValue,
       entryIsValueEnabled: zkrEntryIsValueEnabled,
       entryIsValueHashRevealed: zkrEntryIsValueHashRevealed,
-      zkrEntryEqualToOtherEntryByIndex: zkrEntryEqualToOtherEntryByIndex,
+      entryEqualToOtherEntryByIndex: zkrEntryEqualToOtherEntryByIndex,
       entryProofDepth: zkrEntryProofDepth,
       entryProofIndex: zkrEntryProofIndex,
       entryProofSiblings: zkrEntryProofSiblings,
