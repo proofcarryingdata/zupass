@@ -454,6 +454,7 @@ export interface PipelineLoadSummary {
   atomsLoaded: number;
   atomsExpected: number;
   success: boolean;
+  errorMessage?: string;
 }
 
 export interface PipelineLog {
