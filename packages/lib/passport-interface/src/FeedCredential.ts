@@ -4,10 +4,12 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ONE_HOUR_MS } from "@pcd/util";
+import { ONE_HOUR_MS, ONE_MINUTE_MS } from "@pcd/util";
 
-// Timestamps last for one hour
-const TIMESTAMP_MAX_AGE = ONE_HOUR_MS;
+// Timestamps last for one hour and 20 minutes
+// Compare to CACHE_TTL in CredentialManager.ts, which is one hour, meaning
+// that client-side cached credentials will be refreshed before they expire
+const TIMESTAMP_MAX_AGE = ONE_HOUR_MS + 20 * ONE_MINUTE_MS;
 
 /*
  * The payload encoded in the message of the SemaphoreSignaturePCD passed
