@@ -31,7 +31,7 @@ describe("POD cryptography should work", async function () {
   );
 
   const sampleEntries = {
-    E: { type: "cryptographic", value: 0xdeadbeefn },
+    E: { type: "cryptographic", value: 123n },
     F: { type: "cryptographic", value: 0xffffffffn },
     C: { type: "string", value: "hello" },
     D: { type: "string", value: "foobar" },
@@ -119,10 +119,12 @@ describe("POD cryptography should work", async function () {
     const zkrEntryValue = [];
     const zkrEntryIsValueEnabled = [];
     const zkrEntryIsValueHashRevealed = [];
+    const zkrEntryEqualToOtherEntryByIndex = [];
     const zkrEntryProofDepth = [];
     const zkrEntryProofIndex = [];
     const zkrEntryProofSiblings = [];
     const testEntries = ["A", "owner", "C", "E"];
+    const equalEntries: Record<string, string> = { A: "E" };
     for (let entryIndex = 0; entryIndex < zkrMaxEntries; entryIndex++) {
       const isEntryEnabled = entryIndex < testEntries.length;
       const entryName = isEntryEnabled
@@ -161,6 +163,14 @@ describe("POD cryptography should work", async function () {
         zkrEntryIsValueEnabled.push("0");
         zkrEntryIsValueHashRevealed.push(entryIndex % 2 == 0 ? "1" : "0");
       }
+
+      if (Object.keys(equalEntries).includes(entryName)) {
+        zkrEntryEqualToOtherEntryByIndex.push(
+          testEntries.indexOf(equalEntries[entryName]).toString()
+        );
+      } else {
+        zkrEntryEqualToOtherEntryByIndex.push(entryIndex.toString());
+      }
       zkrEntryProofDepth.push(entryProof.siblings.length.toString());
       zkrEntryProofIndex.push(entryProof.index.toString());
 
@@ -187,6 +197,7 @@ describe("POD cryptography should work", async function () {
       entryValue: zkrEntryValue,
       entryIsValueEnabled: zkrEntryIsValueEnabled,
       entryIsValueHashRevealed: zkrEntryIsValueHashRevealed,
+      zkrEntryEqualToOtherEntryByIndex: zkrEntryEqualToOtherEntryByIndex,
       entryProofDepth: zkrEntryProofDepth,
       entryProofIndex: zkrEntryProofIndex,
       entryProofSiblings: zkrEntryProofSiblings,
