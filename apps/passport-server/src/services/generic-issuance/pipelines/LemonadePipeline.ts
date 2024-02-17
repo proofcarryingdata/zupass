@@ -311,7 +311,7 @@ export class LemonadePipeline implements BasePipeline {
             (t) =>
               ({
                 id: uuidv5(t._id, eventConfig.genericIssuanceEventId),
-                email: t.user_email,
+                email: t.user_email.toLowerCase(),
                 name:
                   t.user_first_name.length > 0 || t.user_last_name.length > 0
                     ? `${t.user_first_name} ${t.user_last_name}`.trim()
@@ -419,7 +419,7 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
 
-      const email = emailPCD.claim.emailAddress;
+      const email = emailPCD.claim.emailAddress.toLowerCase();
       const relevantTickets = await this.db.loadByEmail(this.id, email);
       const ticketDatas = relevantTickets.map((t) =>
         this.atomToTicketData(t, credential.claim.identityCommitment)
@@ -662,7 +662,7 @@ export class LemonadePipeline implements BasePipeline {
     return {
       // unsigned fields
       attendeeName: atom.name,
-      attendeeEmail: atom.email,
+      attendeeEmail: atom.email.toLowerCase(),
       eventName: this.lemonadeAtomToEventName(atom),
       ticketName: this.lemonadeAtomToTicketName(atom),
       checkerEmail: undefined, // Doesn't exist in Lemonade
