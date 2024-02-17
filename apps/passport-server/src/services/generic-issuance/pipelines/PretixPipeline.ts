@@ -562,7 +562,7 @@ export class PretixPipeline implements BasePipeline {
         const nameQuestionAnswer = answers?.find(
           (a) =>
             product?.nameQuestionPretixQuestionIdentitifier != null &&
-            a.question_identifier ===
+            a?.question_identifier ===
               product?.nameQuestionPretixQuestionIdentitifier
         )?.answer;
 

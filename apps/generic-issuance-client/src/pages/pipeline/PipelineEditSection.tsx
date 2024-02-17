@@ -169,14 +169,16 @@ export function PipelineEditSection({
             Delete Pipeline
           </Button>
 
-          <Button
-            variant="outline"
-            size="sm"
-            isDisabled={ownedBySomeoneElse && !isAdminView}
-            onClick={onDuplicateClick}
-          >
-            Duplicate Pipeline
-          </Button>
+          {isAdminView && (
+            <Button
+              variant="outline"
+              size="sm"
+              isDisabled={ownedBySomeoneElse && !isAdminView}
+              onClick={onDuplicateClick}
+            >
+              Duplicate Pipeline
+            </Button>
+          )}
         </HStack>
       ) : (
         <></>
