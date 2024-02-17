@@ -172,7 +172,16 @@ const PretixProductConfigSchema = z.object({
    * Is a user with this product a "superuser"?
    * Superusers are able to check tickets in to events.
    */
-  isSuperUser: z.boolean()
+  isSuperUser: z.boolean(),
+  /**
+   * If the attendee's name is collected by a question
+   * other than the default attendee name question, this
+   * field lets you configure Podbox to prefer to read
+   * names from answers to the question with this `question_identifier`
+   *
+   * see pretix docs here: https://docs.pretix.eu/en/latest/api/resources/orders.html#order-position-resource
+   */
+  nameQuestionPretixQuestionIdentitifier: z.string().optional()
 });
 
 /**

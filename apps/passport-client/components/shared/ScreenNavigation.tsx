@@ -15,7 +15,6 @@ export function ScreenNavigation({
         <Button size="large" style="outline">
           <ContentsWrapper>
             <IoIosArrowBack size={18} />
-
             <span>{label}</span>
           </ContentsWrapper>
         </Button>
@@ -33,7 +32,7 @@ const Container = styled.div`
   }
 `;
 
-const ContentsWrapper = styled.a`
+const ContentsWrapper = styled.div`
   justify-content: center;
   align-items: center;
   display: inline-flex;

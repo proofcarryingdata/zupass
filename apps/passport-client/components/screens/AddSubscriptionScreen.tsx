@@ -12,7 +12,17 @@ import {
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
 import _ from "lodash";
-import React, { useCallback, useEffect, useMemo, useState } from "react";
+import React, {
+  MouseEvent,
+  useCallback,
+  useEffect,
+  useMemo,
+  useRef,
+  useState
+} from "react";
+import { FaCheck } from "react-icons/fa";
+import { MdError } from "react-icons/md";
+import Markdown from "react-markdown";
 import { useNavigate } from "react-router-dom";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { appConfig } from "../../src/appConfig";
@@ -247,41 +257,47 @@ export function SubscriptionInfoRow({
   }, [dispatch, subscription]);
 
   const [moreInfo, setMoreInfo] = useState(lockExpanded);
+  const ref = useRef<HTMLDivElement>();
 
   return (
     <InfoRowContainer
+      ref={(element): void => {
+        ref.current = element;
+      }}
       expanded={moreInfo || lockExpanded}
       lockExpanded={lockExpanded}
-      onClick={(): void =>
+      onClick={(e: MouseEvent): void => {
+        const targetTag = (e.target as HTMLElement).tagName.toLowerCase();
+        if (["a", "button"].includes(targetTag)) {
+          return;
+        }
+
         setMoreInfo((more) => {
           const newValue = lockExpanded ? true : !more;
           if (newValue) {
             onExpanded?.();
           }
           return newValue;
-        })
-      }
+        });
+      }}
     >
       <FeedNameRow>
-        <div>{info.name}</div>
+        {error ? (
+          <>
+            <MdError color="var(--danger-bright)" size={24} />
+          </>
+        ) : (
+          <>
+            <FaCheck size={24} />
+          </>
+        )}
+        {info.name}
       </FeedNameRow>
       <Spacer h={8} />
-      <Description>{info.description}</Description>
+      <Markdown>{info.description}</Markdown>
       {moreInfo && (
         <>
           <Spacer h={8} />
-          {!isDeepLink && alreadySubscribed && showErrors && error && (
-            <>
-              <SubscriptionErrors>
-                <div>
-                  Errors were encountered when processing this subscription.
-                </div>
-                <Spacer h={8} />
-                <Button onClick={openResolveErrorModal}>Resolve</Button>
-              </SubscriptionErrors>
-              <Spacer h={8} />
-            </>
-          )}
           {alreadySubscribed ? (
             <AlreadySubscribed
               existingSubscription={existingSubscriptions[0]}
@@ -292,6 +308,15 @@ export function SubscriptionInfoRow({
               providerName={providerName}
               info={info}
             />
+          )}
+          {!isDeepLink && alreadySubscribed && showErrors && error && (
+            <>
+              <Spacer h={8} />
+              <SubscriptionErrors>
+                <Button onClick={openResolveErrorModal}>Resolve Errors</Button>
+              </SubscriptionErrors>
+              <Spacer h={8} />
+            </>
           )}
         </>
       )}
@@ -488,8 +513,13 @@ function AlreadySubscribed({
         )}
       </>
 
+      <Spacer h={16} />
+
+      <>This feed can write to the following folders:</>
+
       <Spacer h={8} />
-      <FolderExplorerContainer>
+
+      <FolderExplorerContainer style={{ margin: 0 }}>
         {folders.map((folder) => (
           <FolderCard
             key={folder}
@@ -500,13 +530,16 @@ function AlreadySubscribed({
           />
         ))}
       </FolderExplorerContainer>
-      <Spacer h={8} />
+
       {isDefaultSubscription(existingSubscription) ? (
         <></>
       ) : (
-        <Button onClick={onUnsubscribeClick} style="danger">
-          Unsubscribe
-        </Button>
+        <>
+          <Spacer h={16} />
+          <Button onClick={onUnsubscribeClick} style="danger">
+            Unsubscribe
+          </Button>
+        </>
       )}
     </div>
   );
@@ -551,13 +584,17 @@ const InfoRowContainer = styled.div`
           &:hover {
             border: 1px solid white;
             background-color: rgba(255, 255, 255, 0.07);
+
+            &:active {
+              background-color: rgba(255, 255, 255, 0.1);
+            }
           }
         `}
   `}
 `;
 
 const SubscriptionsScreenContainer = styled.div`
-  padding-bottom: 16px;
+  padding-bottom: 128px;
   width: 100%;
 `;
 
@@ -569,7 +606,7 @@ const FeedNameRow = styled.div`
   align-items: center;
   max-width: 100%;
 
-  div:first-child {
+  div:nth-child(2) {
     flex-shrink: 1;
     flex-grow: 1;
     overflow: hidden;
@@ -577,18 +614,12 @@ const FeedNameRow = styled.div`
     text-overflow: ellipsis;
   }
 
-  div:last-child {
+  div:nth-child(3) {
     flex-shrink: 0;
   }
 `;
 
-const Description = styled.p``;
-
-const SubscriptionErrors = styled.div`
-  border-radius: 16px;
-  padding: 16px;
-  background-color: var(--bg-dark-gray);
-`;
+const SubscriptionErrors = styled.div``;
 
 const PermissionListItem = styled.li`
   margin-left: 14px;
