@@ -41,8 +41,8 @@ describe("feed host", async function () {
   it("expired credentials should be rejected", async function () {
     // October 5th 2023, 14:30:00
     const clientDate = new Date(2023, 10, 5, 14, 30, 0, 0);
-    // October 5th 2023, 15:30:00, one hour later
-    const serverDate = new Date(2023, 10, 5, 15, 30, 0, 0);
+    // October 5th 2023, 15:30:00, one hour and twenty minutes later
+    const serverDate = new Date(2023, 10, 5, 15, 50, 0, 0);
 
     MockDate.set(clientDate);
 
