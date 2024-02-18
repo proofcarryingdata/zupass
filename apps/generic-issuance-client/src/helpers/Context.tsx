@@ -12,10 +12,17 @@ export interface GIContextState {
   setState: (state: Partial<GIContextState>) => void;
   error?: GIError;
   isAdminMode?: boolean;
+  logout: () => void;
+  handleAuthToken: (token?: string) => Promise<void>;
+  devModeAuthToken?: string;
 }
 
 export const GIContext = createContext<GIContextState>({
   error: undefined,
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  setState: (_state: GIContextState) => {}
+  setState: (_state: GIContextState) => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  logout: () => {},
+  // eslint-disable-next-line @typescript-eslint/no-empty-function
+  handleAuthToken: async (_token?: string): Promise<void> => {}
 });

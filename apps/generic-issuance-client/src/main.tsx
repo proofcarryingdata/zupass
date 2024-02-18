@@ -6,6 +6,7 @@ import {
 } from "@chakra-ui/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
+import validator from "email-validator";
 import React, {
   ReactNode,
   useCallback,
@@ -14,16 +15,18 @@ import React, {
   useState
 } from "react";
 import { createRoot } from "react-dom/client";
+
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
 import { RollbarProvider } from "./components/RollbarProvider";
+import { IS_PROD, SESSION_DURATION_MINUTES } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import { NotFound } from "./pages/pipeline/404";
-import Home from "./pages/pipeline/LoginPage";
+import LoginPage from "./pages/pipeline/LoginPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
 
 const THEME = extendTheme({
@@ -33,14 +36,20 @@ const THEME = extendTheme({
   }
 });
 
-const stytch = new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN as string);
+const stytch = process.env.STYTCH_PUBLIC_TOKEN
+  ? new StytchUIClient(process.env.STYTCH_PUBLIC_TOKEN)
+  : undefined;
+
+if (IS_PROD && !stytch) {
+  throw new Error("expected to have stytch in prod");
+}
 
 const router = createHashRouter([
   {
     path: "/",
     element: (
       <PodboxErrorBoundary>
-        <Home />
+        <LoginPage />
       </PodboxErrorBoundary>
     )
   },
@@ -78,12 +87,18 @@ const router = createHashRouter([
   }
 ]);
 
-function loadInitalState(): Partial<GIContextState> {
+const DEV_JWT_KEY = "local-dev-jwt";
+const ADMIN_MODE_KEY = "setting-admin-mode";
+
+function useInitialState(): GIContextState {
+  const [devModeAuthToken, setDevModeAuthToken] = useState<string | undefined>(
+    window.localStorage.getItem(DEV_JWT_KEY) ?? undefined
+  );
+
   let isAdminMode = undefined;
 
   try {
-    const adminSerializedValue =
-      window.localStorage.getItem("setting-admin-mode");
+    const adminSerializedValue = window.localStorage.getItem(ADMIN_MODE_KEY);
 
     if (!adminSerializedValue) {
       throw new Error();
@@ -94,8 +109,43 @@ function loadInitalState(): Partial<GIContextState> {
     //
   }
 
-  const initialState: Partial<GIContextState> = {
-    isAdminMode
+  const initialState: GIContextState = {
+    // eslint-disable-next-line @typescript-eslint/no-empty-function
+    setState: () => {},
+    isAdminMode,
+    devModeAuthToken,
+    logout: () => {
+      if (stytch) {
+        stytch.session.revoke();
+      } else {
+        window.localStorage.removeItem(DEV_JWT_KEY);
+        setDevModeAuthToken(undefined);
+        window.location.reload();
+      }
+    },
+    handleAuthToken: async (token?: string) => {
+      if (!token || token === devModeAuthToken) {
+        return;
+      }
+
+      if (validator.validate(token)) {
+        window.localStorage.setItem(DEV_JWT_KEY, token);
+        setDevModeAuthToken(token);
+        window.location.reload();
+      } else {
+        try {
+          if (stytch) {
+            await stytch.magicLinks.authenticate(token, {
+              session_duration_minutes: SESSION_DURATION_MINUTES
+            });
+          } else {
+            throw new Error("expected stytch client to exist");
+          }
+        } catch (e) {
+          console.error(e);
+        }
+      }
+    }
   };
 
   return initialState;
@@ -103,7 +153,7 @@ function loadInitalState(): Partial<GIContextState> {
 
 function saveState(state: GIContextState): void {
   window.localStorage.setItem(
-    "setting-admin-mode",
+    ADMIN_MODE_KEY,
     JSON.stringify(!!state.isAdminMode)
   );
 }
@@ -134,9 +184,9 @@ function InitScripts(): ReactNode {
 }
 
 function App(): ReactNode {
-  const [state, setState] = useState<GIContextState>(
-    () => loadInitalState() as GIContextState
-  );
+  const initialState = useInitialState();
+
+  const [state, setState] = useState<GIContextState>(initialState);
 
   state.setState = useCallback((partial: Partial<GIContextState>) => {
     setState((state) => {
@@ -156,14 +206,22 @@ function App(): ReactNode {
           <PodboxErrorBoundary>
             <ColorModeScript initialColorMode={THEME.config.initialColorMode} />
             <ChakraProvider theme={THEME}>
-              <StytchProvider stytch={stytch}>
+              {stytch ? (
+                <StytchProvider stytch={stytch}>
+                  <GIContext.Provider value={state}>
+                    <InitScripts />
+                    <RefreshSession />
+                    <GlobalStyle />
+                    <RouterProvider router={router} />
+                  </GIContext.Provider>
+                </StytchProvider>
+              ) : (
                 <GIContext.Provider value={state}>
                   <InitScripts />
-                  <RefreshSession />
                   <GlobalStyle />
                   <RouterProvider router={router} />
                 </GIContext.Provider>
-              </StytchProvider>
+              )}
             </ChakraProvider>
           </PodboxErrorBoundary>
         </RollbarProvider>
@@ -172,4 +230,6 @@ function App(): ReactNode {
   );
 }
 
-createRoot(document.getElementById("root") as HTMLElement).render(<App />);
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+const root = createRoot(document.querySelector("#root") as unknown as any);
+root.render(<App />);

@@ -1,53 +1,51 @@
 import { Box, Button, HStack, Input, Spinner } from "@chakra-ui/react";
-import { useStytch } from "@stytch/react";
-import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useContext, useEffect, useState } from "react";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { PodboxLogo } from "../../components/header/PodboxButton";
-import { SESSION_DURATION_MINUTES, ZUPASS_SERVER_URL } from "../../constants";
+import { ZUPASS_SERVER_URL } from "../../constants";
+import { GIContext } from "../../helpers/Context";
 import { useJWT } from "../../helpers/userHooks";
 
 function LoginPage(): JSX.Element {
-  const stytchClient = useStytch();
   const jwt = useJWT();
+  const context = useContext(GIContext);
   const [email, setEmail] = useState("");
   const [sendingEmail, setSendingEmail] = useState(false);
   const [hasSentEmail, setHasSentEmail] = useState(false);
-  const [checkedToken, setCheckedToken] = useState(false);
   const searchParams = new URLSearchParams(window.location.search);
-  const token = searchParams.get("token");
-  const navigate = useNavigate();
+  const token = searchParams.get("token") ?? undefined;
 
   // On receiving email code token, try to call Stytch API to authenticate.
   // Sets cookies (session and session JWT) if successful, which redirects
   // to dashboard.
   useEffect(() => {
-    if (!token || checkedToken) return;
-    stytchClient.magicLinks
-      .authenticate(token, {
-        session_duration_minutes: SESSION_DURATION_MINUTES
-      })
-      .then(() => {
-        setCheckedToken(true);
-      })
-      .catch((e) => console.error(e));
-  }, [stytchClient, token, checkedToken, navigate]);
+    context.handleAuthToken(token);
+  }, [context, token]);
 
   const handleLoginClick = async (): Promise<void> => {
     if (!email || hasSentEmail) return;
 
     try {
       setSendingEmail(true);
-      await fetch(
+      const res = await fetch(
         new URL(
           `/generic-issuance/api/user/send-email/${email}`,
           ZUPASS_SERVER_URL
         ),
         { method: "POST" }
       );
+
+      // handles dev-mode email bypass case where
+      // instead of sending a confirmation link code,
+      // the server redirects to what the link in the
+      // confirmation code would have taken the user to.
+      if (res.status.toString().startsWith("3")) {
+        window.location.href = await res.text();
+      }
+
       setHasSentEmail(true);
     } catch (e) {
       alert(e);

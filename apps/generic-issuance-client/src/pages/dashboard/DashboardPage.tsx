@@ -12,7 +12,6 @@ import {
   GenericIssuancePipelineListEntry,
   getError
 } from "@pcd/passport-interface";
-import { useStytch } from "@stytch/react";
 import { ReactNode, useEffect, useMemo } from "react";
 import { HomeLink, PageContent, PodLink } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
@@ -30,7 +29,6 @@ import { CreatePipelineButtonSection } from "./CreatePipelineButtonSection";
 import { PipelineTable } from "./PipelineTable";
 
 export default function DashboardPage(): ReactNode {
-  const stytchClient = useStytch();
   const userJWT = useJWT();
   const pipelines = useFetchAllPipelines();
   const user = useFetchSelf();
@@ -61,7 +59,7 @@ export default function DashboardPage(): ReactNode {
   if (maybeRequestError) {
     return (
       <>
-        <GlobalPageHeader user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} />
         <PageContent>
           <Heading size="md" colorScheme="orange">
             Error Loading Page
@@ -81,7 +79,6 @@ export default function DashboardPage(): ReactNode {
       <>
         <GlobalPageHeader
           user={user}
-          stytchClient={stytchClient}
           titleContent={(): ReactNode => <Spinner />}
         />
         <LoadingContent />
@@ -93,7 +90,6 @@ export default function DashboardPage(): ReactNode {
     <>
       <GlobalPageHeader
         user={user}
-        stytchClient={stytchClient}
         titleContent={(): ReactNode => (
           <HStack>
             <Heading size="sm">Dashboard</Heading>

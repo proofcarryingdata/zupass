@@ -10,28 +10,43 @@
     "tsconfig.json": "jsonc",
     "ts-library.json": "jsonc"
   },
-  "editor.formatOnSave": true,
-  "editor.defaultFormatter": "esbenp.prettier-vscode",
   "[typescript]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.organizeImports": "always",
+      "source.fixAll": "always"
     }
   },
   "[typescriptreact]": {
     "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.organizeImports": true
+      "source.organizeImports": "always",
+      "source.fixAll": "always"
     }
   },
-  "editor.tabSize": 2,
-  "[typescript][typescriptreact]": {
+  "[jsonc]": {
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
     "editor.codeActionsOnSave": {
-      "source.organizeImports": "explicit"
+      "source.organizeImports": "always",
+      "source.fixAll": "always"
     }
   },
   "eslint.rules.customizations": [
-    { "rule": "prettier/prettier", "severity": "off" },
-    { "rule": "import/no-unresolved", "severity": "off" }
-  ]
+    {
+      "rule": "prettier/prettier",
+      "severity": "off"
+    },
+    {
+      "rule": "import/no-unresolved",
+      "severity": "off"
+    }
+  ],
+  "editor.defaultFormatter": "esbenp.prettier-vscode",
+  "prettier.configPath": ".prettierrc",
+  "editor.tabSize": 2,
+  "editor.formatOnSave": true,
+  "javascript.preferences.quoteStyle": "double",
+  "typescript.format.semicolons": "insert",
+  "typescript.preferences.quoteStyle": "double",
+  "typescript.enablePromptUseWorkspaceTsdk": true
 }

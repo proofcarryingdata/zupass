@@ -109,7 +109,7 @@ export class GenericIssuanceService {
 
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
-  private stytchClient: Client;
+  private stytchClient: Client | undefined;
 
   private genericIssuanceClientUrl: string;
   private eddsaPrivateKey: string;
@@ -128,7 +128,7 @@ export class GenericIssuanceService {
     rollbarService: RollbarService | null,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
-    stytchClient: Client,
+    stytchClient: Client | undefined,
     genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string,
@@ -1162,20 +1162,37 @@ export class GenericIssuanceService {
 
   public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
-      const reqBody = req?.body;
-      const jwt = reqBody?.jwt;
       try {
+        const reqBody = req?.body;
+        const jwt = reqBody?.jwt;
         span?.setAttribute("has_jwt", !!jwt);
-        const { session } = await this.stytchClient.sessions.authenticateJwt({
-          session_jwt: jwt
-        });
-        const email = this.getEmailFromStytchSession(session);
-        const user = await this.createOrGetUser(email);
-        traceUser(user);
-        return user;
+
+        // 1) make sure environemnt has been configured properly
+        if (!this.stytchClient && process.env.NODE_ENV === "production") {
+          throw new Error("expected to have stytch client in production ");
+        }
+
+        // 2) if we have a stytch client - check the user's JWT's session
+        if (this.stytchClient) {
+          const { session } = await this.stytchClient.sessions.authenticateJwt({
+            session_jwt: jwt
+          });
+          const email = this.getEmailFromStytchSession(session);
+          const user = await this.createOrGetUser(email);
+          traceUser(user);
+          return user;
+        } else {
+          // 3) if we don't have a stytch client, and that's a valid state,
+          //    treats a jwt whose contents is some string with just an email
+          //    address in it as a valid JWT authenticate the requester to be
+          //    logged in as a new or existing user with the given email address
+          const user = await this.createOrGetUser(jwt);
+          traceUser(user);
+          return user;
+        }
       } catch (e) {
-        logger(LOG_TAG, `failed to authenticate with jwt '${jwt}'`, e);
-        throw new PCDHTTPError(401, "Not authorized");
+        logger(LOG_TAG, "failed to authenticate stytch session", e);
+        throw e;
       }
     });
   }
@@ -1190,22 +1207,35 @@ export class GenericIssuanceService {
 
       // TODO: Skip email auth on this.bypassEmail
 
-      try {
-        await this.stytchClient.magicLinks.email.loginOrCreate({
-          email: normalizedEmail,
-          login_magic_link_url: this.genericIssuanceClientUrl,
-          login_expiration_minutes: 10,
-          signup_magic_link_url: this.genericIssuanceClientUrl,
-          signup_expiration_minutes: 10
-        });
-        logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
-      } catch (e) {
-        setError(e, span);
-        logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
-        throw new PCDHTTPError(500, "Failed to send generic issuance email");
-      }
+      if (!this.stytchClient) {
+        if (process.env.NODE_ENV === "production") {
+          throw new Error(LOG_TAG + " missing stytch client");
+        }
 
-      return undefined;
+        if (process.env.STYTCH_BYPASS !== "true") {
+          throw new Error(LOG_TAG + " missing stytch client");
+        }
+
+        // sending email with token is a no-op om case
+        return undefined;
+      } else {
+        try {
+          await this.stytchClient.magicLinks.email.loginOrCreate({
+            email: normalizedEmail,
+            login_magic_link_url: this.genericIssuanceClientUrl,
+            login_expiration_minutes: 10,
+            signup_magic_link_url: this.genericIssuanceClientUrl,
+            signup_expiration_minutes: 10
+          });
+          logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
+        } catch (e) {
+          setError(e, span);
+          logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
+          throw new PCDHTTPError(500, "Failed to send generic issuance email");
+        }
+
+        return undefined;
+      }
     });
   }
 
@@ -1466,22 +1496,29 @@ export async function startGenericIssuanceService(
     return null;
   }
 
+  const BYPASS_EMAIL =
+    process.env.NODE_ENV !== "production" && process.env.STYTCH_BYPASS;
+
   const projectIdEnv = process.env.STYTCH_PROJECT_ID;
-  if (projectIdEnv == null) {
-    logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
-    return null;
-  }
-
   const secretEnv = process.env.STYTCH_SECRET;
-  if (secretEnv == null) {
-    logger("[INIT] missing environment variable STYTCH_SECRET");
-    return null;
-  }
+  let stytchClient: Client | undefined = undefined;
 
-  const stytchClient = new stytch.Client({
-    project_id: projectIdEnv,
-    secret: secretEnv
-  });
+  if (!BYPASS_EMAIL) {
+    if (projectIdEnv == null) {
+      logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
+      return null;
+    }
+
+    if (secretEnv == null) {
+      logger("[INIT] missing environment variable STYTCH_SECRET");
+      return null;
+    }
+
+    stytchClient = new stytch.Client({
+      project_id: projectIdEnv,
+      secret: secretEnv
+    });
+  }
 
   const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
   if (genericIssuanceClientUrl == null) {

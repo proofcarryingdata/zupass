@@ -1,6 +1,5 @@
 import { Heading, Select, Stack } from "@chakra-ui/react";
 import { PipelineType } from "@pcd/passport-interface";
-import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
@@ -18,7 +17,6 @@ import RawJSONPipelineBuilder from "./pipeline-builders/RawJSONPipelineBuilder";
 type ClientPipelineType = PipelineType | "JSON";
 
 export default function CreatePipelinePage(): ReactNode {
-  const stytchClient = useStytch();
   const userJWT = useJWT();
   const user = useFetchSelf();
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
@@ -84,7 +82,7 @@ export default function CreatePipelinePage(): ReactNode {
   if (isUploadingPipeline) {
     return (
       <>
-        <GlobalPageHeader user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} />
         <LoadingContent />
       </>
     );
@@ -94,7 +92,6 @@ export default function CreatePipelinePage(): ReactNode {
     <>
       <GlobalPageHeader
         user={user}
-        stytchClient={stytchClient}
         titleContent={(): ReactNode => (
           <Heading size="sm">Create a Pipeline</Heading>
         )}
