@@ -114,35 +114,36 @@ function useInitialState(): GIContextState {
     setState: () => {},
     isAdminMode,
     devModeAuthToken,
-    logout: () => {
+    logout: async () => {
       if (stytch) {
-        stytch.session.revoke();
+        await stytch.session.revoke();
+        window.location.reload();
       } else {
         window.localStorage.removeItem(DEV_JWT_KEY);
         setDevModeAuthToken(undefined);
         window.location.reload();
       }
     },
-    handleAuthToken: async (token?: string) => {
+    handleAuthToken: async (token?: string): Promise<void> => {
       if (!token || token === devModeAuthToken) {
         return;
       }
 
-      if (validator.validate(token)) {
-        window.localStorage.setItem(DEV_JWT_KEY, token);
-        setDevModeAuthToken(token);
-        window.location.reload();
+      if (!stytch) {
+        if (validator.validate(token)) {
+          window.localStorage.setItem(DEV_JWT_KEY, token);
+          setDevModeAuthToken(token);
+          window.location.reload();
+        } else {
+          throw new Error("token must be email in stytch-less mode");
+        }
       } else {
-        try {
-          if (stytch) {
-            await stytch.magicLinks.authenticate(token, {
-              session_duration_minutes: SESSION_DURATION_MINUTES
-            });
-          } else {
-            throw new Error("expected stytch client to exist");
-          }
-        } catch (e) {
-          console.error(e);
+        if (stytch) {
+          await stytch.magicLinks.authenticate(token, {
+            session_duration_minutes: SESSION_DURATION_MINUTES
+          });
+        } else {
+          throw new Error("expected stytch client to exist");
         }
       }
     }
@@ -230,6 +231,7 @@ function App(): ReactNode {
   );
 }
 
-// eslint-disable-next-line @typescript-eslint/no-explicit-any
-const root = createRoot(document.querySelector("#root") as unknown as any);
+const root = createRoot(
+  document.querySelector("#root") as unknown as HTMLDivElement
+);
 root.render(<App />);

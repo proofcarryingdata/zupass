@@ -42,7 +42,6 @@ import {
   IPipelineUserDB,
   PipelineUserDB
 } from "../../database/queries/pipelineUserDB";
-import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -51,6 +50,7 @@ import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
+import { sqlQuery } from "./../../database/sqlQuery";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -214,7 +214,7 @@ export class GenericIssuanceService {
         pipelinesFromDB.map(async (pd: PipelineDefinition) => {
           const slot: PipelineSlot = {
             definition: pd,
-            owner: await this.userDB.getUser(pd.ownerUserId)
+            owner: await this.userDB.getUserById(pd.ownerUserId)
           };
 
           // attempt to instantiate a {@link Pipeline}
@@ -264,7 +264,7 @@ export class GenericIssuanceService {
             ` of type '${pipeline?.type}'` +
             ` belonging to ${pipelineSlot.definition.ownerUserId}`
         );
-        const owner = await this.userDB.getUser(
+        const owner = await this.userDB.getUserById(
           pipelineSlot.definition.ownerUserId
         );
         traceUser(owner);
@@ -986,7 +986,7 @@ export class GenericIssuanceService {
       tracePipeline(validatedNewDefinition);
       await this.definitionDB.setDefinition(validatedNewDefinition);
       if (existingSlot) {
-        existingSlot.owner = await this.userDB.getUser(
+        existingSlot.owner = await this.userDB.getUserById(
           validatedNewDefinition.ownerUserId
         );
       }
@@ -1079,11 +1079,13 @@ export class GenericIssuanceService {
       if (!pipelineSlot) {
         pipelineSlot = {
           definition: definition,
-          owner: await this.userDB.getUser(definition.ownerUserId)
+          owner: await this.userDB.getUserById(definition.ownerUserId)
         };
         this.pipelineSlots.push(pipelineSlot);
       } else {
-        pipelineSlot.owner = await this.userDB.getUser(definition.ownerUserId);
+        pipelineSlot.owner = await this.userDB.getUserById(
+          definition.ownerUserId
+        );
       }
 
       tracePipeline(pipelineSlot.definition);
@@ -1124,23 +1126,8 @@ export class GenericIssuanceService {
   }
 
   public async createOrGetUser(email: string): Promise<PipelineUser> {
-    return traced(SERVICE_NAME, "createOrGetUser", async (span) => {
-      span?.setAttribute("email", email);
-
-      const existingUser = await this.userDB.getUserByEmail(email);
-      if (existingUser != null) {
-        span?.setAttribute("is_new", false);
-        traceUser(existingUser);
-        return existingUser;
-      }
-      span?.setAttribute("is_new", true);
-      const newUser: Omit<PipelineUser, "timeCreated" | "timeUpdated"> = {
-        id: uuidV4(),
-        email,
-        isAdmin: this.getEnvAdminEmails().includes(email)
-      };
-      traceUser(existingUser);
-      return this.userDB.setUser(newUser);
+    return traced(SERVICE_NAME, "createOrGetUser", async () => {
+      return this.userDB.getOrCreateUser(email);
     });
   }
 
@@ -1216,7 +1203,7 @@ export class GenericIssuanceService {
           throw new Error(LOG_TAG + " missing stytch client");
         }
 
-        // sending email with token is a no-op om case
+        // sending email with token is a no-op case
         return undefined;
       } else {
         try {
@@ -1239,35 +1226,12 @@ export class GenericIssuanceService {
     });
   }
 
-  private getEnvAdminEmails(): string[] {
-    if (!process.env.GENERIC_ISSUANCE_ADMINS) {
-      return [];
-    }
-
-    try {
-      const adminEmailsFromEnv: string[] = JSON.parse(
-        process.env.GENERIC_ISSUANCE_ADMINS
-      );
-
-      if (!(adminEmailsFromEnv instanceof Array)) {
-        throw new Error(
-          `expected environment variable 'GENERIC_ISSUANCE_ADMINS' ` +
-            `to be an array of strings`
-        );
-      }
-
-      return adminEmailsFromEnv;
-    } catch (e) {
-      return [];
-    }
-  }
-
   private async maybeSetupAdmins(): Promise<void> {
     try {
-      const adminEmailsFromEnv = this.getEnvAdminEmails();
+      const adminEmailsFromEnv = this.userDB.getEnvAdminEmails();
       logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
       for (const email of adminEmailsFromEnv) {
-        await this.userDB.setUserAdmin(email, true);
+        await this.userDB.setUserIsAdmin(email, true);
       }
     } catch (e) {
       logger(LOG_TAG, `failed to set up generic issuance admins`, e);
@@ -1497,7 +1461,8 @@ export async function startGenericIssuanceService(
   }
 
   const BYPASS_EMAIL =
-    process.env.NODE_ENV !== "production" && process.env.STYTCH_BYPASS;
+    process.env.NODE_ENV !== "production" &&
+    process.env.STYTCH_BYPASS === "true";
 
   const projectIdEnv = process.env.STYTCH_PROJECT_ID;
   const secretEnv = process.env.STYTCH_SECRET;
@@ -1514,11 +1479,14 @@ export async function startGenericIssuanceService(
       return null;
     }
 
+    logger("[INIT] XYZXYZ instantiating stytch clieent");
     stytchClient = new stytch.Client({
       project_id: projectIdEnv,
       secret: secretEnv
     });
   }
+
+  logger("[INIT] XYZXYZ instantiated", stytchClient);
 
   const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
   if (genericIssuanceClientUrl == null) {

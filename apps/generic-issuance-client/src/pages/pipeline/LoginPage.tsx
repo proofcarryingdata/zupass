@@ -1,5 +1,5 @@
-import { Box, Button, HStack, Input, Spinner } from "@chakra-ui/react";
-import { useContext, useEffect, useState } from "react";
+import { Box, Button, Input, Spinner, VStack } from "@chakra-ui/react";
+import { useContext, useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
@@ -12,17 +12,30 @@ import { useJWT } from "../../helpers/userHooks";
 function LoginPage(): JSX.Element {
   const jwt = useJWT();
   const context = useContext(GIContext);
-  const [email, setEmail] = useState("");
+  const [email, setEmail] = useState(
+    process.env.STYTCH_PUBLIC_TOKEN ? "" : "admin@podbox.dev"
+  );
   const [sendingEmail, setSendingEmail] = useState(false);
   const [hasSentEmail, setHasSentEmail] = useState(false);
   const searchParams = new URLSearchParams(window.location.search);
   const token = searchParams.get("token") ?? undefined;
+  const recievedAuthToken = useRef(false);
 
   // On receiving email code token, try to call Stytch API to authenticate.
   // Sets cookies (session and session JWT) if successful, which redirects
   // to dashboard.
   useEffect(() => {
-    context.handleAuthToken(token);
+    if (!recievedAuthToken.current && token) {
+      recievedAuthToken.current = true;
+      context
+        .handleAuthToken(token)
+        .then(() => {
+          window.location.href = "/#/dashboard";
+        })
+        .catch((e) => {
+          alert(e);
+        });
+    }
   }, [context, token]);
 
   const handleLoginClick = async (): Promise<void> => {
@@ -93,24 +106,26 @@ function LoginPage(): JSX.Element {
             }}
           >
             {!hasSentEmail && (
-              <HStack gap={2}>
+              <VStack gap={2}>
                 <Input
                   isDisabled={sendingEmail}
                   width={300}
-                  style={{
-                    marginLeft: "8px"
-                  }}
                   autoFocus
                   value={email}
                   onChange={(e): void => setEmail(e.target.value)}
                   placeholder="email address"
                 />
 
-                <Button isDisabled={sendingEmail} type="submit">
+                <Button
+                  isDisabled={sendingEmail}
+                  type="submit"
+                  w="100%"
+                  variant="outline"
+                >
                   Login
                 </Button>
-                {sendingEmail && <Spinner />}
-              </HStack>
+                {sendingEmail && <Spinner marginTop={4} />}
+              </VStack>
             )}
 
             {hasSentEmail && (

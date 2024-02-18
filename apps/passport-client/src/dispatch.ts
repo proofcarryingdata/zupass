@@ -1132,13 +1132,8 @@ async function removeAllPCDsInFolder(
   update: ZuUpdate,
   folder: string
 ): Promise<void> {
-  const packages = await getPackages();
-  const pcds = new PCDCollection(
-    packages,
-    state.pcds.getAll(),
-    state.pcds.folders
-  );
-  pcds.removeAllPCDsInFolder(folder);
-  update({ pcds });
+  state.pcds.removeAllPCDsInFolder(folder);
+  await savePCDs(state.pcds);
+  update({ pcds: state.pcds });
   window.scrollTo({ top: 0 });
 }

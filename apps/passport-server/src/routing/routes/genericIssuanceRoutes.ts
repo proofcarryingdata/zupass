@@ -181,7 +181,7 @@ export function initGenericIssuanceRoutes(
       const email = checkUrlParam(req, "email");
       const result = await genericIssuanceService.sendLoginEmail(email);
 
-      if (process.env.STYTCH_BYPASS) {
+      if (process.env.STYTCH_BYPASS === "true") {
         if (IS_PROD) {
           throw new Error("can't bypass email in prod");
         }

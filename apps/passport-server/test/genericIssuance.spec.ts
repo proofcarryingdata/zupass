@@ -369,7 +369,7 @@ t2,i1`,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.setUser(ethLatAmGIUser);
+    await userDB.updateUserById(ethLatAmGIUser);
     assertUserMatches(
       {
         id: ethLatAmGIUserID,
@@ -378,7 +378,7 @@ t2,i1`,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUser(ethLatAmGIUser.id)
+      await userDB.getUserById(ethLatAmGIUser.id)
     );
     const edgeCityDenverUser: PipelineUser = {
       id: edgeCityGIUserID,
@@ -387,7 +387,7 @@ t2,i1`,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.setUser(edgeCityDenverUser);
+    await userDB.updateUserById(edgeCityDenverUser);
     assertUserMatches(
       {
         id: edgeCityGIUserID,
@@ -396,7 +396,7 @@ t2,i1`,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUser(edgeCityDenverUser.id)
+      await userDB.getUserById(edgeCityDenverUser.id)
     );
 
     const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
@@ -439,7 +439,7 @@ t2,i1`,
       timeCreated: nowDate,
       timeUpdated: nowDate
     };
-    await userDB.setUser(adminUser);
+    await userDB.updateUserById(adminUser);
     assertUserMatches(
       {
         id: adminGIUserId,
@@ -448,7 +448,7 @@ t2,i1`,
         timeCreated: nowDate,
         timeUpdated: nowDate
       },
-      await userDB.getUser(adminUser.id)
+      await userDB.getUserById(adminUser.id)
     );
 
     // TODO: comprehensive tests of create update read delete
