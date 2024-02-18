@@ -59,6 +59,36 @@ export type BasePipelineDefinition = z.infer<
   typeof BasePipelineDefinitionSchema
 >;
 
+/**
+ * Pipeline definitions can also include manually-added tickets. Pipelines that
+ * support this will create tickets according to these specifications, in
+ * addition to those loaded from their primary data source.
+ */
+const ManualTicketSchema = z.object({
+  /**
+   * The ID of the ticket.
+   */
+  id: z.string().uuid(),
+  /**
+   * The generic issuance UUID of the event that the ticket is for.
+   */
+  eventId: z.string().uuid(),
+  /**
+   * The generic issuance UUID for the product/ticket type.
+   */
+  productId: z.string().uuid(),
+  /**
+   * The email to assign the ticket to.
+   */
+  attendeeEmail: z.string(),
+  /**
+   * The full name of the attendee.
+   */
+  attendeeName: z.string()
+});
+
+export type ManualTicket = z.infer<typeof ManualTicketSchema>;
+
 const LemonadePipelineTicketTypeConfigSchema = z.object({
   /**
    * The ID of this ticket type on the Lemonade end.
@@ -134,7 +164,32 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   backendUrl: z.string(),
   events: z.array(LemonadePipelineEventConfigSchema),
   superuserEmails: z.array(z.string()).optional(),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  manualTickets: z.array(ManualTicketSchema).optional().default([])
+}).refine((val) => {
+  // Validate that the manual tickets have event and product IDs that match the
+  // event configuration.
+  const events = new Map(
+    val.events.map((ev) => [ev.genericIssuanceEventId, ev])
+  );
+  for (const manualTicket of val.manualTickets) {
+    // Check that the event exists
+    const manualTicketEvent = events.get(manualTicket.eventId);
+    if (!manualTicketEvent) {
+      return false;
+    }
+    // Check that the event has a product with the product ID on the ticket
+    if (
+      !manualTicketEvent.ticketTypes.find(
+        (ticketType) =>
+          ticketType.genericIssuanceProductId === manualTicket.productId
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 });
 
 export type LemonadePipelineOptions = z.infer<
@@ -221,7 +276,8 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   pretixAPIKey: z.string(),
   pretixOrgUrl: z.string(),
   events: z.array(PretixEventConfigSchema),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  manualTickets: z.array(ManualTicketSchema).optional().default([])
 });
 
 export type PretixPipelineOptions = z.infer<typeof PretixPipelineOptionsSchema>;

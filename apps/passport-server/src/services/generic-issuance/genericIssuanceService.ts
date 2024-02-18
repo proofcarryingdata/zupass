@@ -1312,6 +1312,7 @@ export class GenericIssuanceService {
             ]
           }
         ],
+        manualTickets: [],
         pretixAPIKey: testPretixAPIKey,
         pretixOrgUrl: testPretixOrgUrl
       },
@@ -1411,7 +1412,8 @@ export class GenericIssuanceService {
         oauthAudience: testLemonadeOAuthAudience,
         oauthClientId: testLemonadeOAuthClientId,
         oauthClientSecret: testLemonadeOAuthClientSecret,
-        oauthServerUrl: testLemonadeOAuthServerUrl
+        oauthServerUrl: testLemonadeOAuthServerUrl,
+        manualTickets: []
       },
       type: PipelineType.Lemonade
     };

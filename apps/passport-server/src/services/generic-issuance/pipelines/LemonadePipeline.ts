@@ -15,6 +15,7 @@ import {
   GenericIssuancePreCheckResponseValue,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
+  ManualTicket,
   PipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
@@ -169,7 +170,7 @@ export class LemonadePipeline implements BasePipeline {
       const logs: PipelineLog[] = [];
       const loadStart = new Date();
 
-      const credentials = {
+      const credentials: LemonadeOAuthCredentials = {
         oauthAudience: this.definition.options.oauthAudience,
         oauthClientId: this.definition.options.oauthClientId,
         oauthClientSecret: this.definition.options.oauthClientSecret,
@@ -379,6 +380,81 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
+  private manualTicketToTicketData(
+    manualTicket: ManualTicket,
+    sempahoreId: string
+  ): ITicketData {
+    const event = this.definition.options.events.find(
+      (event) => event.genericIssuanceEventId === manualTicket.eventId
+    );
+
+    /**
+     * This should never happen, due to validation of the pipeline definition
+     * during parsing. See {@link LemonadePipelineOptionsSchema}.
+     */
+    if (!event) {
+      throw new Error(
+        `Manual ticket specifies non-existent event ID ${manualTicket.eventId} on pipeline ${this.id}`
+      );
+    }
+    const product = event.ticketTypes.find(
+      (product) => product.genericIssuanceProductId === manualTicket.productId
+    );
+    // As above, this should be prevented by pipeline definition validation
+    if (!product) {
+      throw new Error(
+        `Manual ticket specifies non-existent product ID ${manualTicket.productId} on pipeline ${this.id}`
+      );
+    }
+    return {
+      ticketId: manualTicket.id,
+      eventId: manualTicket.eventId,
+      productId: manualTicket.productId,
+      attendeeEmail: manualTicket.attendeeEmail,
+      attendeeName: manualTicket.attendeeName,
+      attendeeSemaphoreId: sempahoreId,
+      isConsumed: false,
+      isRevoked: false,
+      timestampSigned: Date.now(),
+      timestampConsumed: 0,
+      ticketCategory: TicketCategory.Generic,
+      eventName: event.name,
+      ticketName: product.name,
+      checkerEmail: undefined
+    };
+  }
+
+  private async getTicketsForEmail(
+    email: string,
+    identityCommitment: string
+  ): Promise<EdDSATicketPCD[]> {
+    // Load atom-backed tickets
+    const relevantTickets = await this.db.loadByEmail(this.id, email);
+    // Convert atoms to ticket data
+    const ticketDatas = relevantTickets.map((t) =>
+      this.atomToTicketData(t, identityCommitment)
+    );
+    // Load manual tickets from the definition
+    const manualTickets = this.definition.options.manualTickets.filter(
+      (manualTicket) => {
+        return manualTicket.attendeeEmail.toLowerCase() === email;
+      }
+    );
+    // Convert manual tickets to ticket data and add to array
+    ticketDatas.push(
+      ...manualTickets.map((manualTicket) =>
+        this.manualTicketToTicketData(manualTicket, identityCommitment)
+      )
+    );
+
+    // Turn ticket data into PCDs
+    const tickets = await Promise.all(
+      ticketDatas.map((t) => this.getOrGenerateTicket(t))
+    );
+
+    return tickets;
+  }
+
   /**
    * TODO:
    * - proper validation of credentials.
@@ -420,16 +496,12 @@ export class LemonadePipeline implements BasePipeline {
       }
 
       const email = emailPCD.claim.emailAddress.toLowerCase();
-      const relevantTickets = await this.db.loadByEmail(this.id, email);
-      const ticketDatas = relevantTickets.map((t) =>
-        this.atomToTicketData(t, credential.claim.identityCommitment)
-      );
-
       span?.setAttribute("email", email);
       span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
 
-      const tickets = await Promise.all(
-        ticketDatas.map((t) => this.getOrGenerateTicket(t))
+      const tickets = await this.getTicketsForEmail(
+        email,
+        credential.claim.identityCommitment
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -691,7 +763,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async canCheckIn(
     ticketAtom: LemonadeAtom,
-    checkerTickets: LemonadeAtom[]
+    checkerTickets: EdDSATicketPCD[]
   ): Promise<true | GenericIssuanceCheckInError> {
     const lemonadeEventId = ticketAtom.lemonadeEventId;
 
@@ -712,9 +784,8 @@ export class LemonadePipeline implements BasePipeline {
     if (!ticketTypeConfig) {
       return { name: "InvalidTicket" };
     }
-
     const checkerEventTickets = checkerTickets.filter(
-      (t) => t.lemonadeEventId === lemonadeEventId
+      (t) => t.claim.ticket.eventId === eventConfig.genericIssuanceEventId
     );
     const checkerEmailIsSuperuser =
       checkerTickets.find((t) => {
@@ -722,16 +793,15 @@ export class LemonadePipeline implements BasePipeline {
           return false;
         }
 
-        if (!t.email) {
-          return false;
-        }
-
-        return this.definition.options.superuserEmails.includes(t.email);
+        return this.definition.options.superuserEmails.includes(
+          t.claim.ticket.attendeeEmail
+        );
       }) !== undefined;
 
     const checkerEventTicketTypes = checkerEventTickets.map((t) => {
       const ticketTypeConfig = eventConfig.ticketTypes.find(
-        (ticketTypes) => ticketTypes.externalId === t.lemonadeTicketTypeId
+        (ticketTypes) =>
+          ticketTypes.genericIssuanceProductId === t.claim.ticket.productId
       );
       return ticketTypeConfig;
     });
@@ -762,7 +832,7 @@ export class LemonadePipeline implements BasePipeline {
       async (span) => {
         tracePipeline(this.definition);
 
-        let checkerTickets: LemonadeAtom[];
+        let checkerTickets: EdDSATicketPCD[];
         let ticketId: string;
 
         try {
@@ -782,9 +852,9 @@ export class LemonadePipeline implements BasePipeline {
             return { canCheckIn: false, error: { name: "InvalidSignature" } };
           }
 
-          checkerTickets = await this.db.loadByEmail(
-            this.id,
-            checkerEmailPCD.claim.emailAddress
+          checkerTickets = await this.getTicketsForEmail(
+            checkerEmailPCD.claim.emailAddress,
+            checkerEmailPCD.claim.semaphoreId
           );
 
           span?.setAttribute("ticket_id", ticketId);
@@ -882,7 +952,7 @@ export class LemonadePipeline implements BasePipeline {
         )}`
       );
 
-      let checkerTickets: LemonadeAtom[];
+      let checkerTickets: EdDSATicketPCD[];
       let ticketId: string;
 
       try {
@@ -902,9 +972,11 @@ export class LemonadePipeline implements BasePipeline {
           return { checkedIn: false, error: { name: "InvalidSignature" } };
         }
 
-        checkerTickets = await this.db.loadByEmail(
-          this.id,
-          checkerEmailPCD.claim.emailAddress
+        // This will load full ticket PCDs. However, since the checker is
+        // online, their tickets will almost certainly be cached.
+        checkerTickets = await this.getTicketsForEmail(
+          checkerEmailPCD.claim.emailAddress,
+          checkerEmailPCD.claim.semaphoreId
         );
         ticketId = payload.ticketIdToCheckIn;
         span?.setAttribute("ticket_id", ticketId);
@@ -992,7 +1064,9 @@ export class LemonadePipeline implements BasePipeline {
               ticketAtom.id
             } for event ${this.lemonadeAtomToZupassEventId(
               ticketAtom
-            )} on behalf of checker ${checkerTickets[0].email}`
+            )} on behalf of checker ${
+              checkerTickets[0].claim.ticket.attendeeEmail
+            }`
           );
           setError(e, span);
           span?.setAttribute("checkin_error", "ServerError");

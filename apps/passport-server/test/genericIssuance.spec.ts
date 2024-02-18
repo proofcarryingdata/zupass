@@ -192,6 +192,12 @@ describe("Generic Issuance", function () {
     `${EdgeCityDenverBouncer2.first_name} ${EdgeCityDenverBouncer2.last_name}`
   );
 
+  const EdgeCityManualAttendeeIdentity = new Identity();
+  const EdgeCityManualAttendeeEmail = "manual_attendee@example.com";
+
+  const EdgeCityManualBouncerIdentity = new Identity();
+  const EdgeCityManualBouncerEmail = "manual_bouncer@example.com";
+
   const lemonadeTokenSource = new TestTokenSource();
   const lemonadeAPI: ILemonadeAPI = getLemonadeAPI(
     // LemonadeAPI takes an optional `AuthTokenSource` as a parameter. This
@@ -201,6 +207,9 @@ describe("Generic Issuance", function () {
     lemonadeTokenSource
   );
   const lemonadeBackendUrl = "http://localhost";
+  const edgeCityDenverEventId = randomUUID();
+  const edgeCityDenverAttendeeProductId = randomUUID();
+  const edgeCityDenverBouncerProductId = randomUUID();
   const edgeCityPipeline: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
     timeCreated: new Date().toISOString(),
@@ -230,21 +239,37 @@ describe("Generic Issuance", function () {
         {
           externalId: EdgeCityDenver._id,
           name: EdgeCityDenver.title,
-          genericIssuanceEventId: randomUUID(),
+          genericIssuanceEventId: edgeCityDenverEventId,
           ticketTypes: [
             {
               externalId: EdgeCityBouncerTicketType._id,
-              genericIssuanceProductId: randomUUID(),
+              genericIssuanceProductId: edgeCityDenverBouncerProductId,
               isSuperUser: true,
               name: "Bouncer"
             },
             {
               externalId: EdgeCityAttendeeTicketType._id,
-              genericIssuanceProductId: randomUUID(),
+              genericIssuanceProductId: edgeCityDenverAttendeeProductId,
               isSuperUser: false,
               name: "Attendee"
             }
           ]
+        }
+      ],
+      manualTickets: [
+        {
+          id: randomUUID(),
+          eventId: edgeCityDenverEventId,
+          productId: edgeCityDenverAttendeeProductId,
+          attendeeName: "Manual Attendee",
+          attendeeEmail: EdgeCityManualAttendeeEmail
+        },
+        {
+          id: randomUUID(),
+          eventId: edgeCityDenverEventId,
+          productId: edgeCityDenverBouncerProductId,
+          attendeeName: "Manual Bouncer",
+          attendeeEmail: EdgeCityManualBouncerEmail
         }
       ]
     },
@@ -309,6 +334,7 @@ describe("Generic Issuance", function () {
           })
         }
       ],
+      manualTickets: [],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
       pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
     },
@@ -577,6 +603,51 @@ t2,i1`,
         Bouncer2Ticket
       );
       expect(bouncer2ChecksInSelf.value).to.deep.eq({ checkedIn: true });
+
+      const ManualAttendeeTickets = await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityManualAttendeeEmail,
+        EdgeCityManualAttendeeIdentity
+      );
+      expectLength(ManualAttendeeTickets, 1);
+      const ManualAttendeeTicket = ManualAttendeeTickets[0];
+      expectIsEdDSATicketPCD(ManualAttendeeTicket);
+      expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityManualAttendeeEmail
+      );
+
+      const ManualBouncerTickets = await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityManualBouncerEmail,
+        EdgeCityManualBouncerIdentity
+      );
+      expectLength(ManualBouncerTickets, 1);
+      const ManualBouncerTicket = ManualBouncerTickets[0];
+      expectIsEdDSATicketPCD(ManualBouncerTicket);
+      expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityManualBouncerEmail
+      );
+
+      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
+        edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityManualBouncerEmail,
+        EdgeCityManualBouncerIdentity,
+        BouncerTicket
+      );
+      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+        checkedIn: true
+      });
+
+      // TODO test checking in manual attendee/bouncer
+      // Currently not supported as these are not present in the Lemonade
+      // backend, will be implemented with the pipeline as the check-in backend
 
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
     }
