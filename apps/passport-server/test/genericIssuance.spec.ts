@@ -368,6 +368,7 @@ describe("Generic Issuance", function () {
           attendeeName: "Manual Bouncer"
         }
       ],
+      manualTickets: [],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
       pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
     },
