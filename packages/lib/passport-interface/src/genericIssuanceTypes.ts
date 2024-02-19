@@ -278,6 +278,27 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(PretixEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: z.array(ManualTicketSchema).optional().default([])
+}).refine((val) => {
+  // Validate that the manual tickets have event and product IDs that match the
+  // event configuration.
+  const events = new Map(val.events.map((ev) => [ev.genericIssuanceId, ev]));
+  for (const manualTicket of val.manualTickets) {
+    // Check that the event exists
+    const manualTicketEvent = events.get(manualTicket.eventId);
+    if (!manualTicketEvent) {
+      return false;
+    }
+    // Check that the event has a product with the product ID on the ticket
+    if (
+      !manualTicketEvent.products.find(
+        (product) => product.genericIssuanceId === manualTicket.productId
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 });
 
 export type PretixPipelineOptions = z.infer<typeof PretixPipelineOptionsSchema>;

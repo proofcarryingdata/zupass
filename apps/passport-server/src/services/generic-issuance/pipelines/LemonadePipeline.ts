@@ -355,7 +355,7 @@ export class LemonadePipeline implements BasePipeline {
       this.pendingCheckIns.forEach((value, key) => {
         if (
           value.status === CheckinStatus.Success &&
-          value.timestamp < loadStart.getTime()
+          value.timestamp <= loadStart.getTime()
         ) {
           this.pendingCheckIns.delete(key);
         }

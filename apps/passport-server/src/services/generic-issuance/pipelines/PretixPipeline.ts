@@ -20,6 +20,7 @@ import {
   GenericPretixOrder,
   GenericPretixProduct,
   GenericPretixProductCategory,
+  ManualTicket,
   PipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
@@ -272,7 +273,7 @@ export class PretixPipeline implements BasePipeline {
         this.pendingCheckIns.forEach((value, key) => {
           if (
             value.status === CheckinStatus.Success &&
-            value.timestamp < startTime.getTime()
+            value.timestamp <= startTime.getTime()
           ) {
             this.pendingCheckIns.delete(key);
           }
@@ -630,6 +631,81 @@ export class PretixPipeline implements BasePipeline {
     return tickets;
   }
 
+  private manualTicketToTicketData(
+    manualTicket: ManualTicket,
+    sempahoreId: string
+  ): ITicketData {
+    const event = this.definition.options.events.find(
+      (event) => event.genericIssuanceId === manualTicket.eventId
+    );
+
+    /**
+     * This should never happen, due to validation of the pipeline definition
+     * during parsing. See {@link PretixPipelineOptionsSchema}.
+     */
+    if (!event) {
+      throw new Error(
+        `Manual ticket specifies non-existent event ID ${manualTicket.eventId} on pipeline ${this.id}`
+      );
+    }
+    const product = event.products.find(
+      (product) => product.genericIssuanceId === manualTicket.productId
+    );
+    // As above, this should be prevented by pipeline definition validation
+    if (!product) {
+      throw new Error(
+        `Manual ticket specifies non-existent product ID ${manualTicket.productId} on pipeline ${this.id}`
+      );
+    }
+    return {
+      ticketId: manualTicket.id,
+      eventId: manualTicket.eventId,
+      productId: manualTicket.productId,
+      attendeeEmail: manualTicket.attendeeEmail,
+      attendeeName: manualTicket.attendeeName,
+      attendeeSemaphoreId: sempahoreId,
+      isConsumed: false,
+      isRevoked: false,
+      timestampSigned: Date.now(),
+      timestampConsumed: 0,
+      ticketCategory: TicketCategory.Generic,
+      eventName: event.name,
+      ticketName: product.name,
+      checkerEmail: undefined
+    };
+  }
+
+  private async getTicketsForEmail(
+    email: string,
+    identityCommitment: string
+  ): Promise<EdDSATicketPCD[]> {
+    // Load atom-backed tickets
+    const relevantTickets = await this.db.loadByEmail(this.id, email);
+    // Convert atoms to ticket data
+    const ticketDatas = relevantTickets.map((t) =>
+      this.atomToTicketData(t, identityCommitment)
+    );
+    // Load manual tickets from the definition
+    const manualTickets = this.definition.options.manualTickets.filter(
+      (manualTicket) => {
+        return manualTicket.attendeeEmail.toLowerCase() === email;
+      }
+    );
+    // Convert manual tickets to ticket data and add to array
+    ticketDatas.push(
+      ...manualTickets.map((manualTicket) =>
+        this.manualTicketToTicketData(manualTicket, identityCommitment)
+      )
+    );
+
+    // Turn ticket data into PCDs
+    const tickets = await Promise.all(
+      ticketDatas.map((t) => this.getOrGenerateTicket(t))
+    );
+
+    return tickets;
+  }
+
   private async issuePretixTicketPCDs(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
@@ -669,14 +745,9 @@ export class PretixPipeline implements BasePipeline {
       span?.setAttribute("email", email);
       span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
 
-      const relevantTickets = await this.db.loadByEmail(this.id, email);
-
-      const ticketDatas = relevantTickets.map((t) =>
-        this.atomToTicketData(t, credential.claim.identityCommitment)
-      );
-
-      const tickets = await Promise.all(
-        ticketDatas.map((t) => this.getOrGenerateTicket(t))
+      const tickets = await this.getTicketsForEmail(
+        email,
+        credential.claim.identityCommitment
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -855,7 +926,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async canCheckIn(
     ticketAtom: PretixAtom,
-    checkerTickets: PretixAtom[]
+    checkerTickets: EdDSATicketPCD[]
   ): Promise<true | GenericIssuanceCheckInError> {
     const pretixEventId = this.atomToPretixEventId(ticketAtom);
 
@@ -878,11 +949,11 @@ export class PretixPipeline implements BasePipeline {
     }
 
     const checkerEventTickets = checkerTickets.filter(
-      (t) => t.eventId === eventConfig.genericIssuanceId
+      (t) => t.claim.ticket.eventId === eventConfig.genericIssuanceId
     );
     const checkerProducts = checkerEventTickets.map((t) => {
       const productConfig = eventConfig.products.find(
-        (p) => p.genericIssuanceId === t.productId
+        (p) => p.genericIssuanceId === t.claim.ticket.productId
       );
       return productConfig;
     });
@@ -913,7 +984,7 @@ export class PretixPipeline implements BasePipeline {
       async (span) => {
         tracePipeline(this.definition);
 
-        let checkerTickets: PretixAtom[];
+        let checkerTickets: EdDSATicketPCD[];
         let ticketId: string;
 
         try {
@@ -933,9 +1004,9 @@ export class PretixPipeline implements BasePipeline {
             return { canCheckIn: false, error: { name: "InvalidSignature" } };
           }
 
-          checkerTickets = await this.db.loadByEmail(
-            this.id,
-            checkerEmailPCD.claim.emailAddress
+          checkerTickets = await this.getTicketsForEmail(
+            checkerEmailPCD.claim.emailAddress,
+            checkerEmailPCD.claim.semaphoreId
           );
           ticketId = payload.ticketIdToCheckIn;
           span?.setAttribute("ticket_id", ticketId);
@@ -1034,7 +1105,7 @@ export class PretixPipeline implements BasePipeline {
         )}`
       );
 
-      let checkerTickets: PretixAtom[];
+      let checkerTickets: EdDSATicketPCD[];
       let ticketId: string;
 
       try {
@@ -1054,9 +1125,9 @@ export class PretixPipeline implements BasePipeline {
           return { checkedIn: false, error: { name: "InvalidSignature" } };
         }
 
-        checkerTickets = await this.db.loadByEmail(
-          this.id,
-          checkerEmailPCD.claim.emailAddress
+        checkerTickets = await this.getTicketsForEmail(
+          checkerEmailPCD.claim.emailAddress,
+          checkerEmailPCD.claim.semaphoreId
         );
         ticketId = payload.ticketIdToCheckIn;
         span?.setAttribute("ticket_id", ticketId);
@@ -1146,7 +1217,7 @@ export class PretixPipeline implements BasePipeline {
           });
         } catch (e) {
           logger(
-            `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerTickets[0].email}`
+            `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerTickets[0].claim.ticket.attendeeEmail}`
           );
           setError(e, span);
           span?.setAttribute("checkin_error", "ServerError");

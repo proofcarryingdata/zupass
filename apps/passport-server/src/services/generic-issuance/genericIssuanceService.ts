@@ -1312,9 +1312,9 @@ export class GenericIssuanceService {
             ]
           }
         ],
-        manualTickets: [],
         pretixAPIKey: testPretixAPIKey,
-        pretixOrgUrl: testPretixOrgUrl
+        pretixOrgUrl: testPretixOrgUrl,
+        manualTickets: []
       },
       type: PipelineType.Pretix
     };
