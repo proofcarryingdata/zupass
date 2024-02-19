@@ -35,6 +35,10 @@ import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
+  IPipelineCheckinDB,
+  PipelineCheckinDB
+} from "../../database/queries/pipelineCheckinDB";
+import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../database/queries/pipelineDefinitionDB";
@@ -106,6 +110,7 @@ export class GenericIssuanceService {
   private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
+  private checkinDB: IPipelineCheckinDB;
 
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
@@ -143,6 +148,7 @@ export class GenericIssuanceService {
     this.userDB = new PipelineUserDB(context.dbPool);
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
+    this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;

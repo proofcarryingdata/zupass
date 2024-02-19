@@ -1008,7 +1008,7 @@ export class LemonadePipeline implements BasePipeline {
 
       if (canCheckInResult === true) {
         if (ticketAtom.checkinDate instanceof Date) {
-          span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
           return {
             checkedIn: false,
             error: {
