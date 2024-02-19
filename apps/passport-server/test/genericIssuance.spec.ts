@@ -827,8 +827,8 @@ t2,i1`,
       const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
         pipeline.checkinCapability.getCheckinUrl(),
         ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityManualBouncerEmail,
-        EdgeCityManualBouncerIdentity,
+        EthLatAmManualBouncerEmail,
+        EthLatAmManualBouncerIdentity,
         bouncerTicket
       );
       expect(manualBouncerChecksInBouncer.value).to.deep.eq({
