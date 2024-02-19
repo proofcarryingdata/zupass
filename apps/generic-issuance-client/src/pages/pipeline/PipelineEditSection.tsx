@@ -92,7 +92,7 @@ export function PipelineEditSection({
   }, [pipeline]);
 
   const onSaveClick = useCallback(async () => {
-    if (userJWT) {
+    if (userJWT && confirm("are you sure you want to update this pipeline?")) {
       setActionInProgress(`Updating pipeline '${pipeline.id}'...`);
       const res = await savePipeline(userJWT, editorValue);
       if (res.success) {

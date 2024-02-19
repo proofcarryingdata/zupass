@@ -24,6 +24,7 @@
     "@stytch/vanilla-js": "^4.4.2",
     "@tanstack/react-table": "^8.11.8",
     "dotenv": "^16.4.1",
+    "email-validator": "^2.0.4",
     "framer-motion": "^11.0.3",
     "javascript-time-ago": "^2.5.9",
     "lodash": "^4.17.21",

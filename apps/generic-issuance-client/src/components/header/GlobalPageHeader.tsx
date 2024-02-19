@@ -1,6 +1,5 @@
 import { Button, FormControl, FormLabel, Switch } from "@chakra-ui/react";
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
-import { useStytch } from "@stytch/react";
 import { ReactNode, useCallback, useContext } from "react";
 import styled from "styled-components";
 import { GIContext } from "../../helpers/Context";
@@ -13,11 +12,9 @@ import { PodboxButton } from "./PodboxButton";
  */
 export function GlobalPageHeader({
   user,
-  stytchClient,
   titleContent
 }: {
   user?: GenericIssuanceSelfResult;
-  stytchClient?: ReturnType<typeof useStytch>;
   titleContent?: () => ReactNode;
 }): ReactNode {
   const leftElements: ReactNode[] = [];
@@ -85,7 +82,7 @@ export function GlobalPageHeader({
         onClick={async (): Promise<void> => {
           if (confirm("Are you sure you want to log out?")) {
             try {
-              await stytchClient?.session.revoke();
+              await ctx.logout();
               window.location.href = "/";
             } catch (e) {
               // TODO: better error handling

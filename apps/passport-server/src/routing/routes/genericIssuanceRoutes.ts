@@ -21,6 +21,7 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import express from "express";
+import urljoin from "url-join";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
 import {
   getAllGenericIssuanceHTTPQuery,
@@ -31,6 +32,7 @@ import {
 } from "../../services/generic-issuance/honeycombQueries";
 import { createQueryUrl } from "../../services/telemetryService";
 import { GlobalServices } from "../../types";
+import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
@@ -171,17 +173,28 @@ export function initGenericIssuanceRoutes(
     }
   );
 
-  /**
-   * TODO: auth?
-   */
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const result = await genericIssuanceService.sendLoginEmail(
-        checkUrlParam(req, "email")
-      );
-      res.json(result satisfies GenericIssuanceSendEmailResponseValue);
+      const email = checkUrlParam(req, "email");
+      if (process.env.STYTCH_BYPASS === "true") {
+        if (IS_PROD) {
+          throw new Error("can't bypass email in prod");
+        }
+
+        res
+          .status(302)
+          .send(
+            urljoin(
+              process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "",
+              "?token=" + encodeURIComponent(email)
+            )
+          );
+      } else {
+        const result = await genericIssuanceService.sendLoginEmail(email);
+        res.json(result satisfies GenericIssuanceSendEmailResponseValue);
+      }
     }
   );
 

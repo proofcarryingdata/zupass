@@ -10,7 +10,7 @@ import { execWithRetry } from "../util/retry";
  * Retries queries that fail due to a connection error.
  */
 export function sqlQuery(
-  pool: Pool,
+  pool: Pool | PoolClient,
   query: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args?: any[]
@@ -33,13 +33,15 @@ export function sqlQuery(
 }
 
 async function execQueryWithRetry(
-  pool: Pool,
+  pool: Pool | PoolClient,
   query: string,
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   args?: any[]
 ): Promise<QueryResult> {
   return execWithRetry(
     () => {
+      // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+      // @ts-ignore
       return pool.query(query, args);
     },
     (e) => {
