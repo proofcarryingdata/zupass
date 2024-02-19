@@ -7,6 +7,8 @@ export interface IPipelineCheckinDB {
     pipelineId: string,
     ticketId: string
   ): Promise<PipelineCheckin | undefined>;
+  // Fetch all check-ins for a pipeline
+  getByPipelineId(pipelineId: string): Promise<PipelineCheckin[]>;
   // Add a check-in record for a ticket ID
   checkIn(pipelineId: string, ticketId: string, timestamp: Date): Promise<void>;
   // Delete check-in for a ticket ID
@@ -46,6 +48,24 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
         timestamp: result.rows[0].checkin_timestamp
       };
     }
+  }
+
+  /**
+   * Retrieve all check-ins for a pipeline.
+   */
+  public async getByPipelineId(pipelineId: string): Promise<PipelineCheckin[]> {
+    const result = await sqlQuery(
+      this.db,
+      `SELECT * FROM generic_issuance_checkins WHERE pipeline_id = $1`,
+      [pipelineId]
+    );
+
+    return result.rows.map((row) => {
+      return {
+        ticketId: row.ticket_id,
+        timestamp: row.checkin_timestamp
+      } satisfies PipelineCheckin;
+    });
   }
 
   /**
