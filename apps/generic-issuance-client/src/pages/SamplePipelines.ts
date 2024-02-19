@@ -28,7 +28,8 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
       oauthServerUrl: "",
       backendUrl: "",
       events: [],
-      feedOptions: DEFAULT_FEED_OPTIONS
+      feedOptions: DEFAULT_FEED_OPTIONS,
+      manualTickets: []
     }
   } satisfies Partial<LemonadePipelineDefinition>,
   null,
