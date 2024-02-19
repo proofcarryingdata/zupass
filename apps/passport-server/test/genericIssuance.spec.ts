@@ -49,7 +49,10 @@ import { stopApplication } from "../src/application";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
-import { LemonadePipeline } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import {
+  LEMONADE_CHECKER,
+  LemonadePipeline
+} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
 import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
   Pipeline,
@@ -678,6 +681,36 @@ t2,i1`,
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         checkedIn: true
       });
+
+      const manualBouncerChecksInManualAttendeeAgain =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualBouncerEmail,
+          EdgeCityManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date().toISOString(),
+          checker: LEMONADE_CHECKER
+        }
+      } satisfies GenericIssuanceCheckInResponseValue);
+
+      const manualAttendeeChecksInManualBouncer =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualAttendeeEmail,
+          EdgeCityManualAttendeeIdentity,
+          ManualBouncerTicket
+        );
+      expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
 
       // TODO test checking in manual attendee/bouncer
       // Currently not supported as these are not present in the Lemonade

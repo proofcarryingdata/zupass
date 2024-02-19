@@ -59,7 +59,7 @@ import { BasePipeline, Pipeline } from "./types";
 const LOG_NAME = "LemonadePipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
-const LEMONADE_CHECKER = "Lemonade";
+export const LEMONADE_CHECKER = "Lemonade";
 
 export function isLemonadePipelineDefinition(
   d: PipelineDefinition
