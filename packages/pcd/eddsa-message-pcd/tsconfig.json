@@ -1,0 +1,10 @@
+{
+  "extends": "@pcd/tsconfig/ts-library.json",
+  "include": ["src", "test"],
+  "exclude": ["dist", "build", "node_modules"],
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "rootDir": "."
+  }
+}
