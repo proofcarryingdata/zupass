@@ -1139,6 +1139,7 @@ async function removeAllPCDsInFolder(
     state.pcds.folders
   );
   pcds.removeAllPCDsInFolder(folder);
+  await savePCDs(pcds);
   update({ pcds });
   window.scrollTo({ top: 0 });
 }
