@@ -13,6 +13,11 @@ export interface IPipelineCheckinDB {
   checkOut(pipelineId: string, ticketId: string): Promise<number>;
 }
 
+/**
+ * Manages the database of check-ins, currently only used for "manual tickets"
+ * which are created via Pipeline configuration rather than imported from a
+ * back-end system.
+ */
 export class PipelineCheckinDB implements IPipelineCheckinDB {
   private db: Pool;
 
@@ -78,6 +83,9 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
   }
 }
 
+/**
+ * A record of a check-in.
+ */
 export interface PipelineCheckin {
   ticketId: string;
   timestamp: Date;
