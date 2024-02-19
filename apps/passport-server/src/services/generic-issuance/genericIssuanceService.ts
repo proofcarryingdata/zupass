@@ -1312,7 +1312,6 @@ export class GenericIssuanceService {
             ]
           }
         ],
-        manualTickets: [],
         pretixAPIKey: testPretixAPIKey,
         pretixOrgUrl: testPretixOrgUrl,
         manualTickets: []
