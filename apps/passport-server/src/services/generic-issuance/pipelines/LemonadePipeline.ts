@@ -799,11 +799,8 @@ export class LemonadePipeline implements BasePipeline {
         );
       }
     }
-    for (const manualTicket of this.definition.options.manualTickets) {
-      if (
-        manualTicket.attendeeEmail.toLowerCase() === checkerEmail &&
-        manualTicket.eventId === eventConfig.genericIssuanceEventId
-      ) {
+    for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
+      if (manualTicket.eventId === eventConfig.genericIssuanceEventId) {
         checkerProductIds.push(manualTicket.productId);
       }
     }
@@ -889,13 +886,14 @@ export class LemonadePipeline implements BasePipeline {
         // Check permissions
         const canCheckInResult = await this.canCheckIn(eventId, checkerEmail);
 
-        const ticketAtom = await this.db.loadById(this.id, ticketId);
-        if (!ticketAtom) {
-          span?.setAttribute("precheck_error", "InvalidTicket");
-          return { canCheckIn: false, error: { name: "InvalidTicket" } };
-        }
-
         if (canCheckInResult === true) {
+          const ticketAtom = await this.db.loadById(this.id, ticketId);
+          if (!ticketAtom) {
+            span?.setAttribute("precheck_error", "InvalidTicket");
+            return { canCheckIn: false, error: { name: "InvalidTicket" } };
+          }
+          // Only check if ticket is already checked in here, to avoid leaking
+          // information about ticket check-in status to unpermitted users.
           if (ticketAtom.checkinDate instanceof Date) {
             span?.setAttribute("precheck_error", "AlreadyCheckedIn");
             return {
@@ -984,7 +982,6 @@ export class LemonadePipeline implements BasePipeline {
           return { checkedIn: false, error: { name: "InvalidSignature" } };
         }
 
-        ticketId = payload.ticketIdToCheckIn;
         span?.setAttribute("ticket_id", ticketId);
         span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
         span?.setAttribute(
@@ -1161,9 +1158,7 @@ export class LemonadePipeline implements BasePipeline {
         );
         setError(e, span);
         span?.setAttribute("checkin_error", "ServerError");
-
         this.pendingCheckIns.delete(ticketAtom.id);
-
         return { checkedIn: false, error: { name: "ServerError" } };
       }
       return { checkedIn: true };
