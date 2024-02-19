@@ -917,19 +917,18 @@ export class PretixPipeline implements BasePipeline {
   }
 
   /**
-   * Given a ticket to check in, and a set of tickets belonging to the user
-   * performing the check-in, verify that at least one of the user's tickets
-   * belongs to a matching event and is a superuser ticket.
+   * Given a ticket to check in, and the email address of the user performing
+   * the check-in, verify that at least one of the user's tickets belongs to a
+   * matching event and is a superuser ticket.
    *
    * Returns true if the user has the permission to check the ticket in, or an
    * error if not.
    */
   private async canCheckIn(
     ticketAtom: PretixAtom,
-    checkerTickets: EdDSATicketPCD[]
+    checkerEmail: string
   ): Promise<true | GenericIssuanceCheckInError> {
     const pretixEventId = this.atomToPretixEventId(ticketAtom);
-
     const pretixProductId = this.atomToPretixProductId(ticketAtom);
 
     const eventConfig = this.definition.options.events.find(
@@ -948,17 +947,33 @@ export class PretixPipeline implements BasePipeline {
       return { name: "InvalidTicket" };
     }
 
-    const checkerEventTickets = checkerTickets.filter(
-      (t) => t.claim.ticket.eventId === eventConfig.genericIssuanceId
-    );
-    const checkerProducts = checkerEventTickets.map((t) => {
+    // Collect all of the product IDs that the checker owns for this event
+    const checkerProductIds: string[] = [];
+    for (const checkerTicketAtom of await this.db.loadByEmail(
+      this.id,
+      checkerEmail
+    )) {
+      if (checkerTicketAtom.eventId === ticketAtom.eventId) {
+        checkerProductIds.push(checkerTicketAtom.productId);
+      }
+    }
+    for (const manualTicket of this.definition.options.manualTickets) {
+      if (
+        manualTicket.attendeeEmail.toLowerCase() === checkerEmail &&
+        manualTicket.eventId === eventConfig.genericIssuanceId
+      ) {
+        checkerProductIds.push(manualTicket.productId);
+      }
+    }
+
+    const checkerProducts = checkerProductIds.map((productId) => {
       const productConfig = eventConfig.products.find(
-        (p) => p.genericIssuanceId === t.claim.ticket.productId
+        (product) => product.genericIssuanceId === productId
       );
       return productConfig;
     });
     const hasSuperUserProductTicket = checkerProducts.find(
-      (t) => t?.isSuperUser
+      (p) => p?.isSuperUser
     );
 
     if (!hasSuperUserProductTicket) {
@@ -984,7 +999,7 @@ export class PretixPipeline implements BasePipeline {
       async (span) => {
         tracePipeline(this.definition);
 
-        let checkerTickets: EdDSATicketPCD[];
+        let checkerEmail: string;
         let ticketId: string;
 
         try {
@@ -1004,10 +1019,6 @@ export class PretixPipeline implements BasePipeline {
             return { canCheckIn: false, error: { name: "InvalidSignature" } };
           }
 
-          checkerTickets = await this.getTicketsForEmail(
-            checkerEmailPCD.claim.emailAddress,
-            checkerEmailPCD.claim.semaphoreId
-          );
           ticketId = payload.ticketIdToCheckIn;
           span?.setAttribute("ticket_id", ticketId);
           span?.setAttribute(
@@ -1018,6 +1029,7 @@ export class PretixPipeline implements BasePipeline {
             "checked_semaphore_id",
             checkerEmailPCD.claim.semaphoreId
           );
+          checkerEmail = checkerEmailPCD.claim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1034,7 +1046,7 @@ export class PretixPipeline implements BasePipeline {
         // Check permissions
         const canCheckInResult = await this.canCheckIn(
           ticketAtom,
-          checkerTickets
+          checkerEmail
         );
 
         if (canCheckInResult === true) {
@@ -1105,7 +1117,7 @@ export class PretixPipeline implements BasePipeline {
         )}`
       );
 
-      let checkerTickets: EdDSATicketPCD[];
+      let checkerEmail: string;
       let ticketId: string;
 
       try {
@@ -1125,10 +1137,6 @@ export class PretixPipeline implements BasePipeline {
           return { checkedIn: false, error: { name: "InvalidSignature" } };
         }
 
-        checkerTickets = await this.getTicketsForEmail(
-          checkerEmailPCD.claim.emailAddress,
-          checkerEmailPCD.claim.semaphoreId
-        );
         ticketId = payload.ticketIdToCheckIn;
         span?.setAttribute("ticket_id", ticketId);
         span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
@@ -1136,6 +1144,7 @@ export class PretixPipeline implements BasePipeline {
           "checked_semaphore_id",
           checkerEmailPCD.claim.semaphoreId
         );
+        checkerEmail = checkerEmailPCD.claim.emailAddress;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
@@ -1149,10 +1158,7 @@ export class PretixPipeline implements BasePipeline {
         return { checkedIn: false, error: { name: "InvalidTicket" } };
       }
 
-      const canCheckInResult = await this.canCheckIn(
-        ticketAtom,
-        checkerTickets
-      );
+      const canCheckInResult = await this.canCheckIn(ticketAtom, checkerEmail);
 
       if (canCheckInResult === true) {
         if (ticketAtom.isConsumed) {
@@ -1217,7 +1223,7 @@ export class PretixPipeline implements BasePipeline {
           });
         } catch (e) {
           logger(
-            `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerTickets[0].claim.ticket.attendeeEmail}`
+            `${LOG_TAG} Failed to check in ticket ${ticketAtom.id} for event ${ticketAtom.eventId} on behalf of checker ${checkerEmail}`
           );
           setError(e, span);
           span?.setAttribute("checkin_error", "ServerError");

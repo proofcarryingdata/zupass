@@ -754,19 +754,18 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   /**
-   * Given a ticket to check in, and a set of tickets belonging to the user
-   * performing the check-in, verify that at least one of the user's tickets
-   * belongs to a matching event and is a superuser ticket.
+   * Given a ticket to check in, and the email address of the user performing
+   * the check-in, verify that at least one of the user's tickets belongs to a
+   * matching event and is a superuser ticket.
    *
    * Returns true if the user has the permission to check the ticket in, or an
    * error if not.
    */
   private async canCheckIn(
     ticketAtom: LemonadeAtom,
-    checkerTickets: EdDSATicketPCD[]
+    checkerEmail: string
   ): Promise<true | GenericIssuanceCheckInError> {
     const lemonadeEventId = ticketAtom.lemonadeEventId;
-
     const lemonadeTicketType = ticketAtom.lemonadeTicketTypeId;
 
     const eventConfig = this.definition.options.events.find(
@@ -784,24 +783,34 @@ export class LemonadePipeline implements BasePipeline {
     if (!ticketTypeConfig) {
       return { name: "InvalidTicket" };
     }
-    const checkerEventTickets = checkerTickets.filter(
-      (t) => t.claim.ticket.eventId === eventConfig.genericIssuanceEventId
-    );
-    const checkerEmailIsSuperuser =
-      checkerTickets.find((t) => {
-        if (!this.definition.options.superuserEmails) {
-          return false;
-        }
 
-        return this.definition.options.superuserEmails.includes(
-          t.claim.ticket.attendeeEmail
+    // Collect all of the product IDs that the checker owns for this event
+    const checkerProductIds: string[] = [];
+    for (const checkerTicketAtom of await this.db.loadByEmail(
+      this.id,
+      checkerEmail
+    )) {
+      if (checkerTicketAtom.lemonadeEventId === lemonadeEventId) {
+        checkerProductIds.push(
+          this.lemonadeAtomToZupassProductId(checkerTicketAtom)
         );
-      }) !== undefined;
+      }
+    }
+    for (const manualTicket of this.definition.options.manualTickets) {
+      if (
+        manualTicket.attendeeEmail.toLowerCase() === checkerEmail &&
+        manualTicket.eventId === eventConfig.genericIssuanceEventId
+      ) {
+        checkerProductIds.push(manualTicket.productId);
+      }
+    }
 
-    const checkerEventTicketTypes = checkerEventTickets.map((t) => {
+    const checkerEmailIsSuperuser =
+      this.definition.options.superuserEmails?.includes(checkerEmail) ?? false;
+
+    const checkerEventTicketTypes = checkerProductIds.map((productId) => {
       const ticketTypeConfig = eventConfig.ticketTypes.find(
-        (ticketTypes) =>
-          ticketTypes.genericIssuanceProductId === t.claim.ticket.productId
+        (ticketTypes) => ticketTypes.genericIssuanceProductId === productId
       );
       return ticketTypeConfig;
     });
@@ -832,7 +841,7 @@ export class LemonadePipeline implements BasePipeline {
       async (span) => {
         tracePipeline(this.definition);
 
-        let checkerTickets: EdDSATicketPCD[];
+        let checkerEmail: string;
         let ticketId: string;
 
         try {
@@ -852,11 +861,6 @@ export class LemonadePipeline implements BasePipeline {
             return { canCheckIn: false, error: { name: "InvalidSignature" } };
           }
 
-          checkerTickets = await this.getTicketsForEmail(
-            checkerEmailPCD.claim.emailAddress,
-            checkerEmailPCD.claim.semaphoreId
-          );
-
           span?.setAttribute("ticket_id", ticketId);
           span?.setAttribute(
             "checker_email",
@@ -866,6 +870,8 @@ export class LemonadePipeline implements BasePipeline {
             "checked_semaphore_id",
             checkerEmailPCD.claim.semaphoreId
           );
+
+          checkerEmail = checkerEmailPCD.claim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -882,7 +888,7 @@ export class LemonadePipeline implements BasePipeline {
         // Check permissions
         const canCheckInResult = await this.canCheckIn(
           ticketAtom,
-          checkerTickets
+          checkerEmail
         );
 
         if (canCheckInResult === true) {
@@ -952,7 +958,7 @@ export class LemonadePipeline implements BasePipeline {
         )}`
       );
 
-      let checkerTickets: EdDSATicketPCD[];
+      let checkerEmail: string;
       let ticketId: string;
 
       try {
@@ -972,12 +978,6 @@ export class LemonadePipeline implements BasePipeline {
           return { checkedIn: false, error: { name: "InvalidSignature" } };
         }
 
-        // This will load full ticket PCDs. However, since the checker is
-        // online, their tickets will almost certainly be cached.
-        checkerTickets = await this.getTicketsForEmail(
-          checkerEmailPCD.claim.emailAddress,
-          checkerEmailPCD.claim.semaphoreId
-        );
         ticketId = payload.ticketIdToCheckIn;
         span?.setAttribute("ticket_id", ticketId);
         span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
@@ -985,6 +985,7 @@ export class LemonadePipeline implements BasePipeline {
           "checked_semaphore_id",
           checkerEmailPCD.claim.semaphoreId
         );
+        checkerEmail = checkerEmailPCD.claim.emailAddress;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
@@ -998,10 +999,7 @@ export class LemonadePipeline implements BasePipeline {
         return { checkedIn: false, error: { name: "InvalidTicket" } };
       }
 
-      const canCheckInResult = await this.canCheckIn(
-        ticketAtom,
-        checkerTickets
-      );
+      const canCheckInResult = await this.canCheckIn(ticketAtom, checkerEmail);
 
       if (canCheckInResult === true) {
         if (ticketAtom.checkinDate instanceof Date) {
@@ -1064,9 +1062,7 @@ export class LemonadePipeline implements BasePipeline {
               ticketAtom.id
             } for event ${this.lemonadeAtomToZupassEventId(
               ticketAtom
-            )} on behalf of checker ${
-              checkerTickets[0].claim.ticket.attendeeEmail
-            }`
+            )} on behalf of checker ${checkerEmail}`
           );
           setError(e, span);
           span?.setAttribute("checkin_error", "ServerError");
