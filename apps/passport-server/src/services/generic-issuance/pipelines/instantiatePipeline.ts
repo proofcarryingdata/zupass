@@ -6,7 +6,7 @@ import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
-import { CSVPipeline } from "./CSVPipeline";
+import { CSVPipeline } from "./CSVPipeline/CSVPipeline";
 import {
   LemonadePipeline,
   isLemonadePipelineDefinition

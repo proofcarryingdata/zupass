@@ -1,6 +1,7 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
+  CSVPipelineType,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -8,25 +9,24 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
   IPipelineAtomDB,
   PipelineAtom
-} from "../../../database/queries/pipelineAtomDB";
-import { logger } from "../../../util/logger";
-import { setError, traced } from "../../telemetryService";
+} from "../../../../database/queries/pipelineAtomDB";
+import { logger } from "../../../../util/logger";
+import { setError, traced } from "../../../telemetryService";
 import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
-} from "../capabilities/FeedIssuanceCapability";
-import { PipelineCapability } from "../capabilities/types";
-import { tracePipeline } from "../honeycombQueries";
-import { BasePipelineCapability } from "../types";
-import { makePLogErr, makePLogInfo } from "../util";
-import { BasePipeline, Pipeline } from "./types";
+} from "../../capabilities/FeedIssuanceCapability";
+import { PipelineCapability } from "../../capabilities/types";
+import { tracePipeline } from "../../honeycombQueries";
+import { BasePipelineCapability } from "../../types";
+import { makePLogErr, makePLogInfo } from "../../util";
+import { BasePipeline, Pipeline } from "../types";
+import { makeCSVPCD } from "./makeCSVPCD";
 
 const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -43,7 +43,7 @@ export class CSVPipeline implements BasePipeline {
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
-  private rsaKey: string;
+  private rsaPrivateKey: string;
 
   public get id(): string {
     return this.definition.id;
@@ -64,7 +64,7 @@ export class CSVPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
-    this.rsaKey = rsaPrivateKey;
+    this.rsaPrivateKey = rsaPrivateKey;
 
     this.capabilities = [
       {
@@ -87,36 +87,17 @@ export class CSVPipeline implements BasePipeline {
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
 
-      const defaultTitle = "Cat";
-      const defaultImg =
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg";
-
       const serializedPCDs = await Promise.all(
-        atoms.map(async (atom: CSVAtom) => {
-          const imgTitle = atom.row[0] ?? defaultTitle;
-          const imgUrl = atom.row[1] ?? defaultImg;
-
-          const pcd = await RSAImagePCDPackage.prove({
-            id: {
-              argumentType: ArgumentTypeName.String,
-              value: uuid()
-            },
-            privateKey: {
-              argumentType: ArgumentTypeName.String,
-              value: this.rsaKey
-            },
-            title: {
-              argumentType: ArgumentTypeName.String,
-              value: imgTitle
-            },
-            url: {
-              argumentType: ArgumentTypeName.String,
-              value: imgUrl
+        atoms.map(async (atom: CSVAtom) =>
+          makeCSVPCD(
+            atom.row,
+            this.definition.options.outputType ?? CSVPipelineType.RSAImage,
+            {
+              eddsaPrivateKey: this.eddsaPrivateKey,
+              rsaPrivateKey: this.rsaPrivateKey
             }
-          });
-          const serialized = await RSAImagePCDPackage.serialize(pcd);
-          return serialized;
-        })
+          )
+        )
       );
 
       return {

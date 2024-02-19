@@ -1,6 +1,6 @@
 import { PipelineLoadSummary, PipelineType } from "@pcd/passport-interface";
 import { BasePipelineCapability } from "../types";
-import { CSVPipeline } from "./CSVPipeline";
+import { CSVPipeline } from "./CSVPipeline/CSVPipeline";
 import { LemonadePipeline } from "./LemonadePipeline";
 import { PretixPipeline } from "./PretixPipeline";
 
