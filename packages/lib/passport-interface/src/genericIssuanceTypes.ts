@@ -80,11 +80,11 @@ const ManualTicketSchema = z.object({
   /**
    * The email to assign the ticket to.
    */
-  attendeeEmail: z.string(),
+  attendeeEmail: z.string().email(),
   /**
    * The full name of the attendee.
    */
-  attendeeName: z.string()
+  attendeeName: z.string().min(1)
 });
 
 export type ManualTicket = z.infer<typeof ManualTicketSchema>;
