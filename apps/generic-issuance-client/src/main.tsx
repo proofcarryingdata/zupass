@@ -135,16 +135,14 @@ function useInitialState(): GIContextState {
           setDevModeAuthToken(token);
           window.location.reload();
         } else {
-          throw new Error("token must be email in stytch-less mode");
+          alert("please use a valid email address");
+          window.location.href = "/#/";
+          return;
         }
       } else {
-        if (stytch) {
-          await stytch.magicLinks.authenticate(token, {
-            session_duration_minutes: SESSION_DURATION_MINUTES
-          });
-        } else {
-          throw new Error("expected stytch client to exist");
-        }
+        await stytch.magicLinks.authenticate(token, {
+          session_duration_minutes: SESSION_DURATION_MINUTES
+        });
       }
     }
   };
