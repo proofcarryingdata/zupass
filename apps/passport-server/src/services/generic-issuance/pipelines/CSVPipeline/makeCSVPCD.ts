@@ -1,5 +1,5 @@
 import { EdDSAMessagePCDPackage } from "@pcd/eddsa-message-pcd";
-import { CSVPipelineType } from "@pcd/passport-interface";
+import { CSVPipelineOutputType } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { v4 as uuid } from "uuid";
@@ -7,7 +7,7 @@ import { traced } from "../../../telemetryService";
 
 export async function makeCSVPCD(
   inputRow: string[],
-  type: CSVPipelineType,
+  type: CSVPipelineOutputType,
   opts: {
     rsaPrivateKey: string;
     eddsaPrivateKey: string;
@@ -17,11 +17,12 @@ export async function makeCSVPCD(
     span?.setAttribute("output_type", type);
 
     switch (type) {
-      case CSVPipelineType.RSAImage:
+      case CSVPipelineOutputType.RSAImage:
         return makeRSACSVPCD(inputRow, opts.rsaPrivateKey);
-      case CSVPipelineType.EdDSAMessage:
+      case CSVPipelineOutputType.EdDSAMessage:
         return makeEdDSAMessageCSVPCD(inputRow, opts.eddsaPrivateKey);
-      case CSVPipelineType.EdDSATicket:
+      case CSVPipelineOutputType.EdDSATicket:
+      default:
         throw new Error("not implemented");
     }
   });

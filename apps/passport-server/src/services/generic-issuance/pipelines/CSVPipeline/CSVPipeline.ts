@@ -1,7 +1,7 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
-  CSVPipelineType,
+  CSVPipelineOutputType,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -65,7 +65,6 @@ export class CSVPipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = rsaPrivateKey;
-
     this.capabilities = [
       {
         type: PipelineCapability.FeedIssuance,
@@ -87,11 +86,13 @@ export class CSVPipeline implements BasePipeline {
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
 
+      // TODO: cache these
       const serializedPCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) =>
           makeCSVPCD(
             atom.row,
-            this.definition.options.outputType ?? CSVPipelineType.RSAImage,
+            this.definition.options.outputType ??
+              CSVPipelineOutputType.RSAImage,
             {
               eddsaPrivateKey: this.eddsaPrivateKey,
               rsaPrivateKey: this.rsaPrivateKey
