@@ -115,7 +115,6 @@ export class GenericIssuanceService {
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
   private rsaPrivateKey: string;
-  private bypassEmail: boolean;
   private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
@@ -150,9 +149,6 @@ export class GenericIssuanceService {
     this.pipelineSlots = [];
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
-    this.bypassEmail =
-      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production";
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = newRSAPrivateKey();
     this.cacheService = cacheService;
@@ -1125,8 +1121,8 @@ export class GenericIssuanceService {
     });
   }
 
-  public async createOrGetUser(email: string): Promise<PipelineUser> {
-    return traced(SERVICE_NAME, "createOrGetUser", async () => {
+  public async getOrCreateUser(email: string): Promise<PipelineUser> {
+    return traced(SERVICE_NAME, "getOrCreateUser", async () => {
       return this.userDB.getOrCreateUser(email);
     });
   }
@@ -1149,12 +1145,14 @@ export class GenericIssuanceService {
 
   public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
+      const reqBody = req?.body;
+      const jwt = reqBody?.jwt;
+
       try {
-        const reqBody = req?.body;
-        const jwt = reqBody?.jwt;
         span?.setAttribute("has_jwt", !!jwt);
 
-        // 1) make sure environemnt has been configured properly
+        // 1) make sure environment has been configured properly
+        //    i.e. if stytch is missing, we MUST be in development
         if (!this.stytchClient && process.env.NODE_ENV === "production") {
           throw new Error("expected to have stytch client in production ");
         }
@@ -1165,7 +1163,7 @@ export class GenericIssuanceService {
             session_jwt: jwt
           });
           const email = this.getEmailFromStytchSession(session);
-          const user = await this.createOrGetUser(email);
+          const user = await this.getOrCreateUser(email);
           traceUser(user);
           return user;
         } else {
@@ -1173,13 +1171,13 @@ export class GenericIssuanceService {
           //    treats a jwt whose contents is some string with just an email
           //    address in it as a valid JWT authenticate the requester to be
           //    logged in as a new or existing user with the given email address
-          const user = await this.createOrGetUser(jwt);
+          const user = await this.getOrCreateUser(jwt);
           traceUser(user);
           return user;
         }
       } catch (e) {
-        logger(LOG_TAG, "failed to authenticate stytch session", e);
-        throw e;
+        logger(LOG_TAG, "failed to authenticate stytch session", jwt, e);
+        throw new PCDHTTPError(401);
       }
     });
   }
@@ -1192,9 +1190,9 @@ export class GenericIssuanceService {
       logger(LOG_TAG, "sendLoginEmail", normalizedEmail);
       span?.setAttribute("email", normalizedEmail);
 
-      // TODO: Skip email auth on this.bypassEmail
-
       if (!this.stytchClient) {
+        span?.setAttribute("bypass", true);
+
         if (process.env.NODE_ENV === "production") {
           throw new Error(LOG_TAG + " missing stytch client");
         }
@@ -1203,7 +1201,7 @@ export class GenericIssuanceService {
           throw new Error(LOG_TAG + " missing stytch client");
         }
 
-        // sending email with token is a no-op case
+        // sending email with STYTCH_BYPASS enabled is a no-op case
         return undefined;
       } else {
         try {
@@ -1460,6 +1458,15 @@ export async function startGenericIssuanceService(
     return null;
   }
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.STYTCH_BYPASS === "true"
+  ) {
+    throw new Error(
+      "cannot create generic issuance service without stytch in production "
+    );
+  }
+
   const BYPASS_EMAIL =
     process.env.NODE_ENV !== "production" &&
     process.env.STYTCH_BYPASS === "true";
@@ -1479,14 +1486,11 @@ export async function startGenericIssuanceService(
       return null;
     }
 
-    logger("[INIT] XYZXYZ instantiating stytch clieent");
     stytchClient = new stytch.Client({
       project_id: projectIdEnv,
       secret: secretEnv
     });
   }
-
-  logger("[INIT] XYZXYZ instantiated", stytchClient);
 
   const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
   if (genericIssuanceClientUrl == null) {

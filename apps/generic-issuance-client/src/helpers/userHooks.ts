@@ -1,6 +1,8 @@
 import { useStytch } from "@stytch/react";
 import { IS_PROD } from "../constants";
 
+export const DEV_JWT_KEY = "local-dev-jwt";
+
 /**
  * If stytch is configured, return an instance of stytch. Otherwise return undefined.
  */
@@ -21,7 +23,7 @@ export function useJWT(): string | undefined {
   const stytchClient = useWrappedStytch();
 
   if (!stytchClient) {
-    return window.localStorage.getItem("local-dev-jwt") ?? undefined;
+    return window.localStorage.getItem(DEV_JWT_KEY) ?? undefined;
   }
 
   const userJWT = stytchClient.session?.getTokens()?.session_jwt;

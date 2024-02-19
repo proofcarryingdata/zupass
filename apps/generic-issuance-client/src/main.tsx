@@ -23,6 +23,7 @@ import { RefreshSession } from "./components/RefreshSession";
 import { RollbarProvider } from "./components/RollbarProvider";
 import { IS_PROD, SESSION_DURATION_MINUTES } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
+import { DEV_JWT_KEY } from "./helpers/userHooks";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import { NotFound } from "./pages/pipeline/404";
@@ -87,12 +88,11 @@ const router = createHashRouter([
   }
 ]);
 
-const DEV_JWT_KEY = "local-dev-jwt";
 const ADMIN_MODE_KEY = "setting-admin-mode";
 
 function useInitialState(): GIContextState {
   const [devModeAuthToken, setDevModeAuthToken] = useState<string | undefined>(
-    window.localStorage.getItem(DEV_JWT_KEY) ?? undefined
+    !stytch ? window.localStorage.getItem(DEV_JWT_KEY) ?? undefined : undefined
   );
 
   let isAdminMode = undefined;

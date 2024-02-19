@@ -177,10 +177,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-
       const email = checkUrlParam(req, "email");
-      const result = await genericIssuanceService.sendLoginEmail(email);
-
       if (process.env.STYTCH_BYPASS === "true") {
         if (IS_PROD) {
           throw new Error("can't bypass email in prod");
@@ -194,10 +191,10 @@ export function initGenericIssuanceRoutes(
               "?token=" + encodeURIComponent(email)
             )
           );
-        return;
+      } else {
+        const result = await genericIssuanceService.sendLoginEmail(email);
+        res.json(result satisfies GenericIssuanceSendEmailResponseValue);
       }
-
-      res.json(result satisfies GenericIssuanceSendEmailResponseValue);
     }
   );
 

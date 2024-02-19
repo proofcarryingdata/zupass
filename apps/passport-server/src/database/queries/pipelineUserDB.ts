@@ -127,7 +127,7 @@ export class PipelineUserDB implements IPipelineUserDB {
     const res = await sqlQuery(
       db ?? this.db,
       `select * from generic_issuance_users where email = $1`,
-      [email]
+      [normalizeEmail(email)]
     );
 
     if (res.rowCount === 0) {
