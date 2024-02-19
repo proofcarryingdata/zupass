@@ -210,7 +210,8 @@ export default function PretixPipelineBuilder(
                           {}
                       )
                     }
-                  ]
+                  ],
+                  manualTickets: []
                 }
               };
               return props.onCreate(JSON.stringify(pipeline));
