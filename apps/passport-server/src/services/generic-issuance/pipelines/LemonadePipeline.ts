@@ -424,6 +424,11 @@ export class LemonadePipeline implements BasePipeline {
     };
   }
 
+  /**
+   * Retrieves all tickets for a single email address, including both tickets
+   * from the Lemonade backend and manually-specified tickets from the Pipeline
+   * definition.
+   */
   private async getTicketsForEmail(
     email: string,
     identityCommitment: string
