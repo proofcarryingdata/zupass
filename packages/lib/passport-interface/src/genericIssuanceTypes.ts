@@ -238,8 +238,18 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
+export enum CSVPipelineType {
+  RSAImage = "RSAImage",
+  EdDSAMessage = "EdDSAMessage",
+  EdDSATicket = "EdDSATicket"
+}
+
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
+  outputType: z
+    .nativeEnum(CSVPipelineType)
+    .optional()
+    .default(CSVPipelineType.RSAImage),
   feedOptions: FeedIssuanceOptionsSchema
 });
 
