@@ -3,6 +3,7 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
@@ -33,7 +34,8 @@ export function instantiatePipeline(
   },
   zupassPublicKey: EdDSAPublicKey,
   rsaPrivateKey: string,
-  cacheService: PersistentCacheService
+  cacheService: PersistentCacheService,
+  checkinDb: IPipelineCheckinDB
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
@@ -45,7 +47,8 @@ export function instantiatePipeline(
         db,
         apis.lemonadeAPI,
         zupassPublicKey,
-        cacheService
+        cacheService,
+        checkinDb
       );
     } else if (isPretixPipelineDefinition(definition)) {
       return new PretixPipeline(

@@ -233,7 +233,8 @@ export class GenericIssuanceService {
               },
               this.zupassPublicKey,
               this.rsaPrivateKey,
-              this.cacheService
+              this.cacheService,
+              this.checkinDB
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -1120,7 +1121,8 @@ export class GenericIssuanceService {
         },
         this.zupassPublicKey,
         this.rsaPrivateKey,
-        this.cacheService
+        this.cacheService,
+        this.checkinDB
       );
 
       await this.performPipelineLoad(pipelineSlot);

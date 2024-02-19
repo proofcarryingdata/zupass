@@ -667,14 +667,15 @@ t2,i1`,
         EdgeCityManualBouncerEmail
       );
 
-      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
-        edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityManualBouncerEmail,
-        EdgeCityManualBouncerIdentity,
-        BouncerTicket
-      );
-      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+      const manualBouncerChecksInManualAttendee =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualBouncerEmail,
+          EdgeCityManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         checkedIn: true
       });
 
@@ -834,10 +835,6 @@ t2,i1`,
       expect(manualBouncerChecksInBouncer.value).to.deep.eq({
         checkedIn: true
       });
-
-      // TODO test checking in manual attendee/bouncer
-      // Currently not supported as these are not present in the Lemonade
-      // backend, will be implemented with the pipeline as the check-in backend
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
