@@ -26,8 +26,9 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/pcd-types": "0.10.0",
     "@pcd/eddsa-pcd": "0.5.0",
+    "@pcd/pcd-types": "0.10.0",
+    "@trufflesuite/bigint-buffer": "^1.1.10",
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0"

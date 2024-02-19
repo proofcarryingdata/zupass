@@ -1,9 +1,10 @@
-import { EdDSAPCD, prove, verify } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
+import { v4 as uuid } from "uuid";
+import { EdDSAMessagePCDPackage } from "../src";
 
-describe("eddsa-pcd should work", function () {
+describe("eddsa-message-pcd should work", function () {
   this.timeout(30_000);
 
   // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
@@ -15,27 +16,29 @@ describe("eddsa-pcd should work", function () {
     "1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4"
   ];
 
-  // Three parameters which represent bigints
-  const message: string[] = ["0x12345", "0x54321", "0xdeadbeef"];
+  it("should work", async function () {
+    const testTitle = "test title";
+    const testMessage = "message";
 
-  it("should be able to sign and verify using the PCD class", async function () {
-    const pcd: EdDSAPCD = await prove({
-      message: {
-        value: message,
-        argumentType: ArgumentTypeName.StringArray
+    const pcd = await EdDSAMessagePCDPackage.prove({
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: uuid()
       },
       privateKey: {
-        value: prvKey,
-        argumentType: ArgumentTypeName.String
+        argumentType: ArgumentTypeName.String,
+        value: prvKey
       },
-      id: {
-        value: undefined,
-        argumentType: ArgumentTypeName.String
+      title: {
+        argumentType: ArgumentTypeName.String,
+        value: testTitle
+      },
+      markdown: {
+        argumentType: ArgumentTypeName.String,
+        value: testMessage
       }
     });
 
-    expect(await verify(pcd)).to.be.true;
-    expect(pcd.claim.message).to.deep.eq(message.map((s) => BigInt(s)));
-    expect(pcd.claim.publicKey).to.deep.eq(expectedPublicKey);
+    expect(await EdDSAMessagePCDPackage.verify(pcd)).to.eq(true);
   });
 });

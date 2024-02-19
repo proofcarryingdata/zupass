@@ -29,6 +29,7 @@ export interface EdDSAMessagePCDClaim {}
 
 export interface EdDSAMessagePCDProof {
   eddsaPCD: EdDSAPCD;
+  bodyLength: number;
 }
 
 export class EdDSAMessagePCD
@@ -71,20 +72,26 @@ export async function prove(
   };
 
   const stringifiedBody = JSON.stringify(body);
-  const bodyAsBigIntArray = stringToBigInts(stringifiedBody);
+  const bodyAsBigIntArray = stringToBigInts(stringifiedBody).map((v) =>
+    v.toString()
+  );
 
   const proof = await EdDSAPCDPackage.prove({
     id: args.id,
     privateKey: args.privateKey,
     message: {
       argumentType: ArgumentTypeName.StringArray,
-      value: bodyAsBigIntArray.map((v) => v.toString())
+      value: bodyAsBigIntArray
     }
   });
 
   const id = args.id.value ?? uuid();
 
-  return new EdDSAMessagePCD(id, {}, { eddsaPCD: proof });
+  return new EdDSAMessagePCD(
+    id,
+    {},
+    { eddsaPCD: proof, bodyLength: stringifiedBody.length }
+  );
 }
 
 export async function verify(pcd: EdDSAMessagePCD): Promise<boolean> {
@@ -107,7 +114,8 @@ export async function serialize(
     type: EdDSAMessagePCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
-      eddsaPCD: serializedEdDSAPCD
+      eddsaPCD: serializedEdDSAPCD,
+      bodyLength: pcd.proof.bodyLength
     })
   } as SerializedPCD<EdDSAMessagePCD>;
 }
@@ -122,14 +130,17 @@ export async function deserialize(
   return new EdDSAMessagePCD(
     deserializedWrapper.id,
     {},
-    { eddsaPCD: deserializedEdDSAPCD }
+    {
+      eddsaPCD: deserializedEdDSAPCD,
+      bodyLength: deserializedWrapper.bodyLength
+    }
   );
 }
 
 export function getDisplayOptions(pcd: EdDSAMessagePCD): DisplayOptions {
   try {
     const body = pcd.proof.eddsaPCD.claim.message;
-    const strBody = bigIntsToStr(body);
+    const strBody = bigIntsToStr(body, pcd.proof.bodyLength);
     const imageData = JSON.parse(strBody);
     const header = imageData.title;
     return {
