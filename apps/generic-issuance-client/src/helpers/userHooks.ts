@@ -2,7 +2,7 @@ import { useStytch } from "@stytch/react";
 import { IS_PROD } from "../constants";
 
 /**
- * If stytch is configured, return an instance of stytch. otherwise return undefined.
+ * If stytch is configured, return an instance of stytch. Otherwise return undefined.
  */
 export function useWrappedStytch(): ReturnType<typeof useStytch> | undefined {
   if (process.env.STYTCH_PUBLIC_TOKEN) {
