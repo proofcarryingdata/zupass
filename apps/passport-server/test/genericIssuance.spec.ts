@@ -53,7 +53,10 @@ import {
   LEMONADE_CHECKER,
   LemonadePipeline
 } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import {
+  PRETIX_CHECKER,
+  PretixPipeline
+} from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
   Pipeline,
   PipelineUser
@@ -858,16 +861,47 @@ t2,i1`,
       MockDate.set(Date.now() + ONE_SECOND_MS);
       await pipeline.load();
 
-      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
-        pipeline.checkinCapability.getCheckinUrl(),
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        EthLatAmManualBouncerEmail,
-        EthLatAmManualBouncerIdentity,
-        bouncerTicket
-      );
-      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+      const manualBouncerChecksInManualAttendee =
+        await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualBouncerEmail,
+          EthLatAmManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         checkedIn: true
       });
+
+      const manualBouncerChecksInManualAttendeeAgain =
+        await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualBouncerEmail,
+          EthLatAmManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date().toISOString(),
+          checker: PRETIX_CHECKER
+        }
+      } satisfies GenericIssuanceCheckInResponseValue);
+
+      const manualAttendeeChecksInManualBouncer =
+        await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualAttendeeIdentity,
+          ManualBouncerTicket
+        );
+      expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }

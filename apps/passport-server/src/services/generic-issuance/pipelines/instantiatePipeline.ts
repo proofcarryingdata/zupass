@@ -57,7 +57,8 @@ export function instantiatePipeline(
         db,
         apis.genericPretixAPI,
         zupassPublicKey,
-        cacheService
+        cacheService,
+        checkinDb
       );
     } else if (isCSVPipelineDefinition(definition)) {
       return new CSVPipeline(
