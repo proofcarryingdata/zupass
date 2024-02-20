@@ -1,4 +1,4 @@
-import { Button, Select } from "@chakra-ui/react";
+import { Button, HStack, Select } from "@chakra-ui/react";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
@@ -8,6 +8,7 @@ import {
 import { ReactNode, useEffect, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import { getSampleCSVData, getSampleFeedOptions } from "../../SamplePipelines";
+import { PreviewType } from "../../pipeline/PipelineEditSection/CSVPreview";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -26,6 +27,7 @@ export default function CSVPipelineBuilder(
   const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(() =>
     getSampleFeedOptions(DEFAULT_OUTPUT_TYPE)
   );
+  const [previewType, setPreviewType] = useState<PreviewType | undefined>();
 
   useEffect(() => {
     setCsv(getSampleCSVData(outputType));
@@ -49,6 +51,31 @@ export default function CSVPipelineBuilder(
             value={csv}
             setValue={setCsv}
           />
+          <HStack mt={2}>
+            <Button
+              disabled={previewType === undefined}
+              colorScheme={previewType === undefined ? "blue" : undefined}
+              onClick={(): void => setPreviewType(undefined)}
+            >
+              Edit
+            </Button>
+            <Button
+              disabled={previewType === PreviewType.CSVSheet}
+              colorScheme={
+                previewType === PreviewType.CSVSheet ? "blue" : undefined
+              }
+              onClick={(): void => setPreviewType(PreviewType.CSVSheet)}
+            >
+              Preview as Spreadsheet
+            </Button>
+            <Button
+              disabled={previewType === PreviewType.PCD}
+              colorScheme={previewType === PreviewType.PCD ? "blue" : undefined}
+              onClick={(): void => setPreviewType(PreviewType.PCD)}
+            >
+              Preview as Zupass
+            </Button>
+          </HStack>
         </div>
         <div className="col2">
           <Select

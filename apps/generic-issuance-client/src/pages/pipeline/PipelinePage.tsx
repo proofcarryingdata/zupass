@@ -13,7 +13,7 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
-import { PipelineEditSection } from "./PipelineEditSection";
+import { PipelineEditSection } from "./PipelineEditSection/PipelineEditSection";
 
 /**
  * Page a user can navigate to to view and edit information regarding a
