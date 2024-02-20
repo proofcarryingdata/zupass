@@ -1,5 +1,7 @@
 import { EdDSAFrogPCDTypeName } from "@pcd/eddsa-frog-pcd";
 import { EdDSAFrogPCDUI } from "@pcd/eddsa-frog-pcd-ui";
+import { EdDSAMessagePCDTypeName } from "@pcd/eddsa-message-pcd";
+import { EdDSAMessagePCDUI } from "@pcd/eddsa-message-pcd-ui";
 import { EdDSAPCDTypeName } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
@@ -39,7 +41,8 @@ const renderablePCDs = [
   SemaphoreIdentityPCDTypeName,
   SemaphoreSignaturePCDTypeName,
   ZKEdDSAEventTicketPCDTypeName,
-  RSAImagePCDTypeName
+  RSAImagePCDTypeName,
+  EdDSAMessagePCDTypeName
 ] as const;
 
 export type RenderablePCDType = (typeof renderablePCDs)[number];
@@ -59,5 +62,6 @@ export const pcdRenderers: {
   [SemaphoreIdentityPCDTypeName]: SemaphoreIdentityPCDUI,
   [SemaphoreSignaturePCDTypeName]: SemaphoreSignaturePCDUI,
   [ZKEdDSAEventTicketPCDTypeName]: ZKEdDSAEventTicketPCDUI,
-  [RSAImagePCDTypeName]: RSAImagePCDUI
+  [RSAImagePCDTypeName]: RSAImagePCDUI,
+  [EdDSAMessagePCDTypeName]: EdDSAMessagePCDUI
 };

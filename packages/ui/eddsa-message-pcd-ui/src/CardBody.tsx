@@ -3,7 +3,7 @@ import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useMemo } from "react";
 
-export const RSAImagePCDUI: PCDUI<EdDSAMessagePCD> = {
+export const EdDSAMessagePCDUI: PCDUI<EdDSAMessagePCD> = {
   renderCardBody: RSAImageCardBody
 };
 

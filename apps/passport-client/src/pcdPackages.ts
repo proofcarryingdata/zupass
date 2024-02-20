@@ -1,4 +1,5 @@
 import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { EdDSAMessagePCDPackage } from "@pcd/eddsa-message-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
@@ -56,6 +57,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.zkey"
   });
 
+  await EdDSAMessagePCDPackage.init?.({});
+
   return [
     SemaphoreGroupPCDPackage,
     SemaphoreIdentityPCDPackage,
@@ -70,6 +73,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EdDSATicketPCDPackage,
     ZKEdDSAEventTicketPCDPackage,
     RSAImagePCDPackage,
-    EmailPCDPackage
+    EmailPCDPackage,
+    EdDSAMessagePCDPackage
   ];
 }
