@@ -239,7 +239,6 @@ export type PretixPipelineDefinition = z.infer<
 >;
 
 export enum CSVPipelineOutputType {
-  RSAImage = "RSAImage",
   EdDSAMessage = "EdDSAMessage",
   EdDSATicket = "EdDSATicket"
 }

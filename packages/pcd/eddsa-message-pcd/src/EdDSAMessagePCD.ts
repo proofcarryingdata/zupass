@@ -1,15 +1,14 @@
 import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import {
-  ArgumentTypeName,
   DisplayOptions,
   PCD,
   PCDPackage,
   SerializedPCD,
   StringArgument
 } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import JSONBig from "json-bigint";
-import { v4 as uuid } from "uuid";
-import { getEdDSAMessageBody, stringToBigInts } from "./utils";
+import { eddsaSign, getMessage } from "./utils";
 
 export const EdDSAMessagePCDTypeName = "eddsa-message-pcd";
 
@@ -20,9 +19,34 @@ export type EdDSAMessagePCDArgs = {
   markdown: StringArgument;
 };
 
-export interface EdDSAMessagePCDBody {
-  message: string;
-  title: string;
+/**
+ * EdDSA signed message. Signing generally provided by {@link prove}.
+ */
+export interface BaseSignedMessage {
+  /**
+   * ID. Generally set to equal the id of its wrapping
+   * {@link EdDSAMessagePCD}.
+   */
+  id?: string;
+
+  /**
+   * Used by Zupass client as the display name shown in the
+   * title of PCDs.
+   */
+  displayName?: string;
+
+  /**
+   * Markdown formatted body.
+   */
+  mdBody?: string;
+
+  authorSemaphoreV3Id?: string;
+  authorSemaphoreV3Signature?: SerializedPCD<SemaphoreSignaturePCD>;
+
+  authorSemaphoreV4Id?: string;
+  authorSemaphoreV4Signature?: SerializedPCD<SemaphoreSignaturePCD>;
+
+  nonce?: number;
 }
 
 export interface EdDSAMessagePCDClaim {}
@@ -66,32 +90,12 @@ export async function prove(
     throw new Error("missing private key");
   }
 
-  const body: EdDSAMessagePCDBody = {
-    message: args.markdown.value,
-    title: args.title.value
+  const body: BaseSignedMessage = {
+    mdBody: args.markdown.value,
+    displayName: args.title.value
   };
 
-  const stringifiedBody = JSON.stringify(body);
-  const bodyAsBigIntArray = stringToBigInts(stringifiedBody).map((v) =>
-    v.toString()
-  );
-
-  const proof = await EdDSAPCDPackage.prove({
-    id: args.id,
-    privateKey: args.privateKey,
-    message: {
-      argumentType: ArgumentTypeName.StringArray,
-      value: bodyAsBigIntArray
-    }
-  });
-
-  const id = args.id.value ?? uuid();
-
-  return new EdDSAMessagePCD(
-    id,
-    {},
-    { eddsaPCD: proof, bodyLength: stringifiedBody.length }
-  );
+  return eddsaSign(body, args.privateKey.value);
 }
 
 export async function verify(pcd: EdDSAMessagePCD): Promise<boolean> {
@@ -138,9 +142,9 @@ export async function deserialize(
 }
 
 export function getDisplayOptions(pcd: EdDSAMessagePCD): DisplayOptions {
-  const body = getEdDSAMessageBody(pcd);
+  const body = getMessage(pcd);
   return {
-    header: body?.title ?? "untitled",
+    header: body?.displayName ?? "untitled",
     displayName: "msg-" + pcd.id.substring(0, 4)
   };
 }

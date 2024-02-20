@@ -9,6 +9,7 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
+import { SerializedPCD } from "@pcd/pcd-types";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
@@ -26,7 +27,8 @@ import { tracePipeline } from "../../honeycombQueries";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../../util";
 import { BasePipeline, Pipeline } from "../types";
-import { makeCSVPCD } from "./makeCSVPCD";
+import { makeMarkdownPCD } from "./makeMarkdownPCD";
+import { makeTicketPCD } from "./makeTicketPCD";
 
 const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -87,7 +89,8 @@ export class CSVPipeline implements BasePipeline {
       span?.setAttribute("atoms", atoms.length);
 
       const outputType =
-        this.definition.options.outputType ?? CSVPipelineOutputType.RSAImage;
+        this.definition.options.outputType ??
+        CSVPipelineOutputType.EdDSAMessage;
 
       // TODO: cache these
       const serializedPCDs = await Promise.all(
@@ -95,7 +98,7 @@ export class CSVPipeline implements BasePipeline {
           makeCSVPCD(
             atom.row,
             this.definition.options.outputType ??
-              CSVPipelineOutputType.RSAImage,
+              CSVPipelineOutputType.EdDSAMessage,
             {
               eddsaPrivateKey: this.eddsaPrivateKey,
               rsaPrivateKey: this.rsaPrivateKey
@@ -225,5 +228,29 @@ export function parseCSV(csv: string): Promise<string[][]> {
       parser.write(csv);
       parser.end();
     });
+  });
+}
+
+export async function makeCSVPCD(
+  inputRow: string[],
+  type: CSVPipelineOutputType,
+  opts: {
+    rsaPrivateKey: string;
+    eddsaPrivateKey: string;
+  }
+): Promise<SerializedPCD> {
+  return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
+    span?.setAttribute("output_type", type);
+
+    switch (type) {
+      case CSVPipelineOutputType.EdDSAMessage:
+        return makeMarkdownPCD(inputRow, opts.eddsaPrivateKey);
+      case CSVPipelineOutputType.EdDSATicket:
+        return makeTicketPCD(inputRow, opts.eddsaPrivateKey);
+      default:
+        // will not compile in case we add a new output type
+        // if you've added another type, plz add an impl here XD
+        return null as never;
+    }
   });
 }
