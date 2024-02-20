@@ -1,4 +1,4 @@
-import { Card, FormControl, FormLabel, Heading, Input } from "@chakra-ui/react";
+import { Card, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { FeedIssuanceOptions } from "@pcd/passport-interface";
 import { ChangeEvent } from "react";
 import styled from "styled-components";
@@ -21,12 +21,9 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
   };
 
   return (
-    <Card padding={4} maxWidth={480}>
-      <Heading size="lg" mb={4}>
-        Feed Options
-      </Heading>
+    <Card padding={6} maxWidth={480} height={"100%"}>
       <FormControl mb={4}>
-        <FormLabel>Feed Display Name</FormLabel>
+        <FormLabel>Zupass Feed Display Name</FormLabel>
         <Input
           width="100%"
           type="text"
@@ -38,7 +35,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
       </FormControl>
 
       <FormControl mb={4}>
-        <FormLabel>Feed Description</FormLabel>
+        <FormLabel>Zupass Feed Description</FormLabel>
         <Input
           width="100%"
           type="text"
@@ -49,7 +46,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
         />
       </FormControl>
 
-      <FormControl mb={4}>
+      <FormControl>
         <FormLabel>Feed Folder</FormLabel>
         <Input
           width="100%"

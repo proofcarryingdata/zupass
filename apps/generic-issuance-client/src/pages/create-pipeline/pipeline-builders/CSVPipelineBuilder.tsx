@@ -42,44 +42,6 @@ export default function CSVPipelineBuilder(
             value={csv}
             setValue={setCsv}
           />
-
-          <Select
-            bg="rgba(29,29,29,1)"
-            width="100%"
-            mb={4}
-            value={outputType}
-            onChange={(e): void => {
-              setOutputType(e.target.value as CSVPipelineOutputType);
-            }}
-          >
-            {Object.entries(CSVPipelineOutputType).map(([k, v]) => (
-              <option value={v} key={v}>
-                output type: {k}
-              </option>
-            ))}
-          </Select>
-
-          <Button
-            width="100%"
-            colorScheme="green"
-            onClick={(): Promise<void> =>
-              props.onCreate(
-                JSON.stringify({
-                  type: PipelineType.CSV,
-                  timeCreated: new Date().toISOString(),
-                  timeUpdated: new Date().toISOString(),
-                  editorUserIds: [],
-                  options: {
-                    csv,
-                    feedOptions,
-                    outputType
-                  }
-                } satisfies Partial<CSVPipelineDefinition>)
-              )
-            }
-          >
-            Create
-          </Button>
         </div>
         <div className="col2">
           <FeedOptions
@@ -88,6 +50,41 @@ export default function CSVPipelineBuilder(
           />
         </div>
       </TwoColumns>
+      <Select
+        bg="rgba(29,29,29,1)"
+        width="100%"
+        value={outputType}
+        onChange={(e): void => {
+          setOutputType(e.target.value as CSVPipelineOutputType);
+        }}
+      >
+        {Object.entries(CSVPipelineOutputType).map(([k, v]) => (
+          <option value={v} key={v}>
+            output type: {k}
+          </option>
+        ))}
+      </Select>
+      <Button
+        width="100%"
+        colorScheme="green"
+        onClick={(): Promise<void> =>
+          props.onCreate(
+            JSON.stringify({
+              type: PipelineType.CSV,
+              timeCreated: new Date().toISOString(),
+              timeUpdated: new Date().toISOString(),
+              editorUserIds: [],
+              options: {
+                csv,
+                feedOptions,
+                outputType
+              }
+            } satisfies Partial<CSVPipelineDefinition>)
+          )
+        }
+      >
+        Create
+      </Button>
     </>
   );
 }
