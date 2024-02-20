@@ -215,6 +215,17 @@ describe("POD cryptography should work", async function () {
       zkrEntryProofSiblings.push(zkrCurSiblings);
     }
 
+    function array2Bits(boolArray: string[]): string {
+      let bits = 0n;
+      for (let i = 0; i < boolArray.length; i++) {
+        expect(boolArray[i]).to.be.oneOf(["0", "1"]);
+        if (boolArray[i] === "1") {
+          bits |= 1n << BigInt(i);
+        }
+      }
+      return bits.toString();
+    }
+
     const zkrTestInput: Record<string, string | string[] | string[][]> = {
       objectContentID: zkrObjectContentID,
       objectSignerPubkeyAx: zkrObjectSignerPubkeyAx,
@@ -225,7 +236,7 @@ describe("POD cryptography should work", async function () {
       entryObjectIndex: zkrEntryObjectIndex,
       entryNameHash: zkrEntryNameHash,
       entryValue: zkrEntryValue,
-      entryIsValueEnabled: zkrEntryIsValueEnabled,
+      entryIsValueEnabled: array2Bits(zkrEntryIsValueEnabled),
       entryIsValueHashRevealed: zkrEntryIsValueHashRevealed,
       entryEqualToOtherEntryByIndex: zkrEntryEqualToOtherEntryByIndex,
       entryProofDepth: zkrEntryProofDepth,
