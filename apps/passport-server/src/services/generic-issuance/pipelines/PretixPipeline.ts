@@ -154,6 +154,10 @@ export class PretixPipeline implements BasePipeline {
     this.checkinDb = checkinDb;
   }
 
+  public async start(): Promise<void> {
+    await this.cleanUpManualCheckins();
+  }
+
   public async stop(): Promise<void> {
     logger(LOG_TAG, `stopping PretixPipeline with id ${this.id}`);
     // TODO: what to actually do for a stopped pipeline?
@@ -302,6 +306,31 @@ export class PretixPipeline implements BasePipeline {
         } satisfies PipelineLoadSummary;
       }
     );
+  }
+
+  /**
+   * If manual tickets are removed after being checked in, they can leave
+   * orphaned check-in data behind. This method cleans those up.
+   */
+  private async cleanUpManualCheckins(): Promise<void> {
+    return traced(LOG_NAME, "cleanUpManualCheckins", async (span) => {
+      const ticketIds = new Set(
+        this.definition.options.manualTickets.map(
+          (manualTicket) => manualTicket.id
+        )
+      );
+      const checkIns = await this.checkinDb.getByPipelineId(this.id);
+      for (const checkIn of checkIns) {
+        if (!ticketIds.has(checkIn.ticketId)) {
+          logger(
+            `${LOG_TAG} Deleting orphaned check-in for ${checkIn.ticketId} on pipeline ${this.id}`
+          );
+          span?.setAttribute("deleted_checkin_ticket_id", checkIn.ticketId);
+
+          await this.checkinDb.deleteCheckIn(this.id, checkIn.ticketId);
+        }
+      }
+    });
   }
 
   /**

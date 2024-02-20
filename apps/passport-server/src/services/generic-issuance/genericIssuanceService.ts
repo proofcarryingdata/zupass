@@ -911,7 +911,10 @@ export class GenericIssuanceService {
   public async upsertPipelineDefinition(
     user: PipelineUser,
     newDefinition: PipelineDefinition
-  ): Promise<PipelineDefinition> {
+  ): Promise<{
+    definition: PipelineDefinition;
+    restartPromise: Promise<void>;
+  }> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       logger(
         SERVICE_NAME,
@@ -999,8 +1002,8 @@ export class GenericIssuanceService {
       );
       await this.atomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
-      this.restartPipeline(validatedNewDefinition.id);
-      return validatedNewDefinition;
+      const restartPromise = this.restartPipeline(validatedNewDefinition.id);
+      return { definition: validatedNewDefinition, restartPromise };
     });
   }
 

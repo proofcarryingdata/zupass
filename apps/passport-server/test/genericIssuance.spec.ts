@@ -46,6 +46,7 @@ import { LemonadeOAuthCredentials } from "../src/apis/lemonade/auth";
 import { ILemonadeAPI, getLemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
 import { stopApplication } from "../src/application";
+import { PipelineCheckinDB } from "../src/database/queries/pipelineCheckinDB";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
@@ -906,6 +907,44 @@ t2,i1`,
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
   );
+
+  step("check-ins for deleted manual tickets are removed", async function () {
+    expectToExist(giService);
+
+    const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
+    const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+    // Manual attendee ticket was checked in
+    expectLength(checkins, 1);
+
+    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const adminUser = await userDB.getUserById(adminGIUserId);
+    expectToExist(adminUser);
+
+    // Delete the manual tickets from the definition
+    const newPipelineDefinition = structuredClone(ethLatAmPipeline);
+    newPipelineDefinition.options.manualTickets = [];
+    // Update the definition
+    const { restartPromise } = await giService.upsertPipelineDefinition(
+      adminUser,
+      newPipelineDefinition
+    );
+    // On restart, the pipeline will delete the orphaned checkins
+    await restartPromise;
+
+    // Find the running pipeline
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expectLength(pipelines, 3);
+    const pipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(newPipelineDefinition.id);
+    // Verify that there are no checkins in the DB now
+    {
+      const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+      // no checkins are found as the tickets have been deleted
+      expectLength(checkins, 0);
+    }
+  });
 
   step("CSVPipeline", async function () {
     expectToExist(giService);

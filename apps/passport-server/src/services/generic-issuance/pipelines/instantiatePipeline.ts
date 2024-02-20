@@ -40,8 +40,10 @@ export function instantiatePipeline(
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
 
+    let pipeline: Pipeline | undefined = undefined;
+
     if (isLemonadePipelineDefinition(definition)) {
-      return new LemonadePipeline(
+      pipeline = new LemonadePipeline(
         eddsaPrivateKey,
         definition,
         db,
@@ -51,7 +53,7 @@ export function instantiatePipeline(
         checkinDb
       );
     } else if (isPretixPipelineDefinition(definition)) {
-      return new PretixPipeline(
+      pipeline = new PretixPipeline(
         eddsaPrivateKey,
         definition,
         db,
@@ -61,13 +63,18 @@ export function instantiatePipeline(
         checkinDb
       );
     } else if (isCSVPipelineDefinition(definition)) {
-      return new CSVPipeline(
+      pipeline = new CSVPipeline(
         eddsaPrivateKey,
         definition,
         db,
         zupassPublicKey,
         rsaPrivateKey
       );
+    }
+
+    if (pipeline) {
+      await pipeline.start();
+      return pipeline;
     }
 
     throw new Error(

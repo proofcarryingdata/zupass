@@ -12,7 +12,7 @@ export interface IPipelineCheckinDB {
   // Add a check-in record for a ticket ID
   checkIn(pipelineId: string, ticketId: string, timestamp: Date): Promise<void>;
   // Delete check-in for a ticket ID
-  checkOut(pipelineId: string, ticketId: string): Promise<number>;
+  deleteCheckIn(pipelineId: string, ticketId: string): Promise<number>;
 }
 
 /**
@@ -90,7 +90,10 @@ export class PipelineCheckinDB implements IPipelineCheckinDB {
    * Delete a check-in. Returns the number of affected rows, which should be
    * exactly 1 if the ticket was previously checked in.
    */
-  public async checkOut(pipelineId: string, ticketId: string): Promise<number> {
+  public async deleteCheckIn(
+    pipelineId: string,
+    ticketId: string
+  ): Promise<number> {
     const result = await sqlQuery(
       this.db,
       `

@@ -17,6 +17,7 @@ export interface BasePipeline {
   type: PipelineType;
   capabilities: readonly BasePipelineCapability[];
   load(): Promise<PipelineLoadSummary>;
+  start(): Promise<void>;
   stop(): Promise<void>;
 }
 
