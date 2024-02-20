@@ -7,26 +7,28 @@ import {
 } from "@pcd/passport-interface";
 import { ReactNode, useEffect, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
-import { SAMPLE_CSV_FEED_OPTIONS, getSampleCSV } from "../../SamplePipelines";
+import { getSampleCSVData, getSampleFeedOptions } from "../../SamplePipelines";
 import { FeedOptions } from "./FeedOptions";
 
 interface CSVPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
 }
 
+const DEFAULT_OUTPUT_TYPE = CSVPipelineOutputType.RSAImage;
+
 export default function CSVPipelineBuilder(
   props: CSVPipelineBuilderProps
 ): ReactNode {
-  const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(
-    SAMPLE_CSV_FEED_OPTIONS
+  const [outputType, setOutputType] =
+    useState<CSVPipelineOutputType>(DEFAULT_OUTPUT_TYPE);
+  const [csv, setCsv] = useState(() => getSampleCSVData(DEFAULT_OUTPUT_TYPE));
+  const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(() =>
+    getSampleFeedOptions(DEFAULT_OUTPUT_TYPE)
   );
-  const [outputType, setOutputType] = useState<CSVPipelineOutputType>(
-    CSVPipelineOutputType.RSAImage
-  );
-  const [csv, setCsv] = useState("");
 
   useEffect(() => {
-    setCsv(getSampleCSV(outputType));
+    setCsv(getSampleCSVData(outputType));
+    setFeedOptions(getSampleFeedOptions(outputType));
   }, [outputType]);
 
   return (

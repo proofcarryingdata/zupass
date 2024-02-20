@@ -55,7 +55,7 @@ Test Title,Test Message`;
 export const SAMPLE_CSV_EDSA_TICKET = `Title,Image
 Test Title,Test Message`;
 
-export function getSampleCSV(outputType: CSVPipelineOutputType): string {
+export function getSampleCSVData(outputType: CSVPipelineOutputType): string {
   switch (outputType) {
     case CSVPipelineOutputType.RSAImage:
       return SAMPLE_CSV_DATA_RSAIMAGE;
@@ -68,11 +68,40 @@ export function getSampleCSV(outputType: CSVPipelineOutputType): string {
   }
 }
 
-export const SAMPLE_CSV_FEED_OPTIONS = {
+export function getSampleFeedOptions(
+  outputType: CSVPipelineOutputType
+): FeedIssuanceOptions {
+  switch (outputType) {
+    case CSVPipelineOutputType.RSAImage:
+      return SAMPLE_CSV_FEED_OPTIONS_RSAImage;
+    case CSVPipelineOutputType.EdDSAMessage:
+      return SAMPLE_CSV_FEED_OPTIONS_EdDSAMessage;
+    case CSVPipelineOutputType.EdDSATicket:
+      return SAMPLE_CSV_FEED_OPTIONS_EdDSATicket;
+    default:
+      throw new Error("not implemented");
+  }
+}
+
+export const SAMPLE_CSV_FEED_OPTIONS_RSAImage = {
   feedId: "0",
   feedDisplayName: "Podbox Weeks",
   feedDescription: "Feed of animals - one for each week of Podbox",
-  feedFolder: "podbox-weeks"
+  feedFolder: "Podbox Weeks"
+} satisfies FeedIssuanceOptions;
+
+export const SAMPLE_CSV_FEED_OPTIONS_EdDSAMessage = {
+  feedId: "0",
+  feedDisplayName: "Announcements",
+  feedDescription: "Sample Announcements Feed",
+  feedFolder: "Announcements"
+} satisfies FeedIssuanceOptions;
+
+export const SAMPLE_CSV_FEED_OPTIONS_EdDSATicket = {
+  feedId: "0",
+  feedDisplayName: "CSV Tickets",
+  feedDescription: "Feed of tickets backed by a CSV",
+  feedFolder: "CSV Tickets"
 } satisfies FeedIssuanceOptions;
 
 export const SAMPLE_CSV_PIPELINE = JSON.stringify(

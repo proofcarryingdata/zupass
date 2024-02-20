@@ -86,6 +86,9 @@ export class CSVPipeline implements BasePipeline {
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
 
+      const outputType =
+        this.definition.options.outputType ?? CSVPipelineOutputType.RSAImage;
+
       // TODO: cache these
       const serializedPCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) =>
@@ -99,6 +102,13 @@ export class CSVPipeline implements BasePipeline {
             }
           )
         )
+      );
+
+      logger(
+        LOG_TAG,
+        `pipeline ${this.id} of type ${outputType} issuing`,
+        serializedPCDs.length,
+        "PCDs"
       );
 
       return {
