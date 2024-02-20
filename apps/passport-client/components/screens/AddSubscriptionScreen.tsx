@@ -1,4 +1,5 @@
 import { EmailPCDTypeName } from "@pcd/email-pcd";
+import { Emitter } from "@pcd/emitter";
 import {
   CredentialManager,
   Feed,
@@ -11,6 +12,7 @@ import {
   isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
+import { sleep } from "@pcd/util";
 import _ from "lodash";
 import React, {
   MouseEvent,
@@ -228,7 +230,7 @@ export function SubscriptionInfoRow({
   showErrors,
   isDeepLink,
   isExpanded,
-  setIsExpanded
+  onClose
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
@@ -237,7 +239,7 @@ export function SubscriptionInfoRow({
   showErrors: boolean;
   isDeepLink: boolean;
   isExpanded?: boolean;
-  setIsExpanded?: (isExpanded?: boolean) => void;
+  onClose?: Emitter<unknown>;
 }): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
@@ -258,6 +260,12 @@ export function SubscriptionInfoRow({
   const [moreInfo, setMoreInfo] = useState(isExpanded);
   const ref = useRef<HTMLDivElement>();
 
+  useEffect(() => {
+    return onClose?.listen(() => {
+      setMoreInfo(false);
+    });
+  }, [onClose, isExpanded]);
+
   return (
     <InfoRowContainer
       ref={(element): void => {
@@ -265,33 +273,35 @@ export function SubscriptionInfoRow({
       }}
       expanded={moreInfo || isExpanded}
       lockExpanded={isExpanded}
-      onClick={(e: MouseEvent): void => {
+      onClick={async (e: MouseEvent): Promise<void> => {
         const targetTag = (e.target as HTMLElement).tagName.toLowerCase();
         if (["a", "button"].includes(targetTag)) {
           return;
         }
 
-        ref.current?.scrollIntoView({
-          behavior: "instant"
-        });
+        const nowOpen = !moreInfo;
 
-        setMoreInfo((more) => {
-          const newValue = isExpanded ? true : !more;
-          if (newValue) {
-            setIsExpanded?.(newValue);
-          }
-          return newValue;
-        });
+        if (nowOpen) {
+          onClose?.emit({});
+          await sleep(0);
+          ref.current?.scrollIntoView({
+            behavior: "instant"
+          });
+          window.scrollBy(0, -50);
+          setMoreInfo(true);
+        } else {
+          onClose?.emit({});
+        }
       }}
     >
       <FeedNameRow>
         {error ? (
           <>
-            <MdError color="var(--danger-bright)" size={24} />
+            <MdError color="var(--danger-bright)" size={18} />
           </>
         ) : (
           <>
-            <FaCheck size={24} />
+            <FaCheck size={18} />
           </>
         )}
         {info.name}
@@ -528,7 +538,7 @@ function AlreadySubscribed({
         )}
       </>
 
-      <Spacer h={16} />
+      <Spacer h={24} />
 
       <>This feed can write to the following folders:</>
 

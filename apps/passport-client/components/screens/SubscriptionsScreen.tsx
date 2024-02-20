@@ -1,5 +1,6 @@
+import { Emitter } from "@pcd/emitter";
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
-import React, { useCallback, useEffect } from "react";
+import React, { useCallback, useEffect, useMemo } from "react";
 import styled from "styled-components";
 import {
   useSelf,
@@ -24,6 +25,10 @@ export function SubscriptionsScreen(): JSX.Element {
   const { value: subs } = useSubscriptions();
   const self = useSelf();
   const userForcedToLogout = useUserForcedToLogout();
+
+  const closeEmitter = useMemo(() => {
+    return new Emitter<never>();
+  }, []);
 
   useEffect(() => {
     if (self == null || userForcedToLogout) {
@@ -72,18 +77,20 @@ export function SubscriptionsScreen(): JSX.Element {
           {subs.getActiveSubscriptions().length === 0 && (
             <div>You have no subscriptions.</div>
           )}
-          <SubscriptionTree subscriptions={subs} />
+          <SubscriptionTree subscriptions={subs} closeEmitter={closeEmitter} />
         </Container>
-        <Spacer h={1024} />
+        <Spacer h={512} />
       </AppContainer>
     </>
   );
 }
 
 function SubscriptionTree({
-  subscriptions
+  subscriptions,
+  closeEmitter
 }: {
   subscriptions: FeedSubscriptionManager;
+  closeEmitter: Emitter<unknown>;
 }): JSX.Element {
   const byProvider = Array.from(
     subscriptions.getSubscriptionsByProvider().entries()
@@ -93,6 +100,7 @@ function SubscriptionTree({
     <>
       {byProvider.map(([providerUrl, subscriptionsList]) => (
         <SingleProvider
+          closeEmitter={closeEmitter}
           key={providerUrl}
           subscriptions={subscriptions}
           providerUrl={providerUrl}
@@ -106,11 +114,13 @@ function SubscriptionTree({
 function SingleProvider({
   subscriptions,
   subscriptionsList,
-  providerUrl
+  providerUrl,
+  closeEmitter
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
   subscriptionsList: Subscription[];
+  closeEmitter?: Emitter<unknown>;
 }): JSX.Element {
   const providerName = subscriptions.getProvider(providerUrl).providerName;
   return (
@@ -125,6 +135,7 @@ function SingleProvider({
             subscriptions={subscriptions}
             showErrors={!s.ended}
             isDeepLink={false}
+            onClose={closeEmitter}
           />
         </React.Fragment>
       ))}
