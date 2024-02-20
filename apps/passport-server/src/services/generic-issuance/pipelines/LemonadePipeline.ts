@@ -413,35 +413,8 @@ export class LemonadePipeline implements BasePipeline {
     manualTicket: ManualTicket,
     sempahoreId: string
   ): Promise<ITicketData> {
-    const event = this.definition.options.events.find(
-      (event) => event.genericIssuanceEventId === manualTicket.eventId
-    );
-
-    /**
-     * This should never happen, due to validation of the pipeline definition
-     * during parsing. See {@link LemonadePipelineOptionsSchema}.
-     */
-    if (!event) {
-      throw new Error(
-        `Manual ticket specifies non-existent event ID ${manualTicket.eventId} on pipeline ${this.id}`
-      );
-    }
-    const product = event.ticketTypes.find(
-      (product) => product.genericIssuanceProductId === manualTicket.productId
-    );
-    // As above, this should be prevented by pipeline definition validation
-    if (!product) {
-      throw new Error(
-        `Manual ticket specifies non-existent product ID ${manualTicket.productId} on pipeline ${this.id}`
-      );
-    }
-
-    /**
-     * TODO:
-     * refactor the above into simpler "get event", "get product" methods that throw if the thing isn't found
-     * replace their usage here, and also use them in the pre-check response
-     * port all of this to the Pretix pipeline
-     */
+    const event = this.getEventById(manualTicket.eventId);
+    const product = this.getTicketTypeById(event, manualTicket.productId);
 
     const checkIn = await this.checkinDb.getByTicketId(
       this.id,

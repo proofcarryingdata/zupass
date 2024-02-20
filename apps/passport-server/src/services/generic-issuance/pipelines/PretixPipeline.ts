@@ -671,28 +671,8 @@ export class PretixPipeline implements BasePipeline {
     manualTicket: ManualTicket,
     sempahoreId: string
   ): Promise<ITicketData> {
-    const event = this.definition.options.events.find(
-      (event) => event.genericIssuanceId === manualTicket.eventId
-    );
-
-    /**
-     * This should never happen, due to validation of the pipeline definition
-     * during parsing. See {@link PretixPipelineOptionsSchema}.
-     */
-    if (!event) {
-      throw new Error(
-        `Manual ticket specifies non-existent event ID ${manualTicket.eventId} on pipeline ${this.id}`
-      );
-    }
-    const product = event.products.find(
-      (product) => product.genericIssuanceId === manualTicket.productId
-    );
-    // As above, this should be prevented by pipeline definition validation
-    if (!product) {
-      throw new Error(
-        `Manual ticket specifies non-existent product ID ${manualTicket.productId} on pipeline ${this.id}`
-      );
-    }
+    const event = this.getEventById(manualTicket.eventId);
+    const product = this.getProductById(event, manualTicket.productId);
 
     const checkIn = await this.checkinDb.getByTicketId(
       this.id,
@@ -1451,53 +1431,17 @@ export class PretixPipeline implements BasePipeline {
   }
 
   private atomToEventName(atom: PretixAtom): string {
-    const event = this.definition.options.events.find(
-      (event) => event.genericIssuanceId === atom.eventId
-    );
-
-    if (!event) {
-      throw new Error(
-        `no pretix event with id ${atom.eventId} in pipeline ${this.id}`
-      );
-    }
-
-    return event.name;
+    return this.getEventById(atom.eventId).name;
   }
 
   private atomToTicketName(atom: PretixAtom): string {
-    const event = this.definition.options.events.find(
-      (event) => event.genericIssuanceId === atom.eventId
-    );
-
-    if (!event) {
-      throw new Error(
-        `no pretix event with id ${atom.eventId} in pipeline ${this.id}`
-      );
-    }
-
-    const product = event.products.find(
-      (product) => product.genericIssuanceId === atom.productId
-    );
-
-    if (!product) {
-      throw new Error(
-        `no pretix product with id ${atom.productId} in pipeline ${this.id}`
-      );
-    }
-
+    const event = this.getEventById(atom.eventId);
+    const product = this.getProductById(event, atom.productId);
     return product.name;
   }
 
   private atomToPretixEventId(ticketAtom: PretixAtom): string {
-    const correspondingEventConfig = this.definition.options.events.find(
-      (e) => e.genericIssuanceId === ticketAtom.eventId
-    );
-
-    if (!correspondingEventConfig) {
-      throw new Error("no matching event id");
-    }
-
-    return correspondingEventConfig.externalId;
+    return this.getEventById(ticketAtom.eventId).externalId;
   }
 
   private getEventById(eventId: string): PretixEventConfig {
