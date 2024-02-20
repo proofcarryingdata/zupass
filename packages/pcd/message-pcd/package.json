@@ -1,5 +1,5 @@
 {
-  "name": "@pcd/eddsa-message-pcd-ui",
+  "name": "@pcd/message-pcd",
   "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
@@ -22,27 +22,31 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "@pcd/eddsa-message-pcd": "0.0.1",
-    "@pcd/passport-ui": "0.10.0",
+    "@pcd/eddsa-pcd": "0.5.0",
     "@pcd/pcd-types": "0.10.0",
-    "react-markdown": "^9.0.1"
+    "@pcd/semaphore-signature-pcd": "0.10.0",
+    "@trufflesuite/bigint-buffer": "^1.1.10",
+    "chai": "^4.3.7",
+    "json-bigint": "^1.0.0",
+    "uuid": "^9.0.0",
+    "zod": "^3.22.4"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
-    "@types/react": "^18.0.22",
-    "@types/react-dom": "^18.0.7",
+    "@types/json-bigint": "^1.0.1",
+    "@types/mocha": "^10.0.1",
+    "@types/uuid": "^9.0.0",
     "eslint": "^7.32.0",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {
     "access": "public"
-  },
-  "peerDependencies": {
-    "react": "^18.2.0",
-    "react-dom": "^18.2.0"
   }
 }

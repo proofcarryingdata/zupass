@@ -1,10 +1,10 @@
 import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
-import { EdDSAMessagePCDPackage } from "@pcd/eddsa-message-pcd";
 import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
+import { EdDSAMessagePCDPackage } from "@pcd/message-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";

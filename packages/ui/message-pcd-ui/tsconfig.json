@@ -4,7 +4,7 @@
   "exclude": ["dist", "build", "node_modules"],
   "references": [
     {
-      "path": "../../pcd/eddsa-message-pcd"
+      "path": "../../pcd/message-pcd"
     },
     {
       "path": "../../lib/passport-ui"

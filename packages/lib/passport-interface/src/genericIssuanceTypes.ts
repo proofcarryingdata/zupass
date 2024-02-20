@@ -239,6 +239,9 @@ export type PretixPipelineDefinition = z.infer<
 >;
 
 export enum CSVPipelineOutputType {
+  /**
+   * {@link EdDSAMessagePCD}
+   */
   EdDSAMessage = "EdDSAMessage",
   EdDSATicket = "EdDSATicket"
 }

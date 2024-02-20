@@ -14,7 +14,7 @@ interface CSVPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
 }
 
-const DEFAULT_OUTPUT_TYPE = CSVPipelineOutputType.RSAImage;
+const DEFAULT_OUTPUT_TYPE = CSVPipelineOutputType.EdDSAMessage;
 
 export default function CSVPipelineBuilder(
   props: CSVPipelineBuilderProps

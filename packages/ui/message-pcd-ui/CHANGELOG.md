@@ -1,4 +1,4 @@
-# @pcd/eddsa-message-pcd-ui
+# @pcd/message-pcd-ui
 
 ## 0.1.0
 

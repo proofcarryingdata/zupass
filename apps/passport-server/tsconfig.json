@@ -1,13 +1,7 @@
 {
   "extends": "@pcd/tsconfig/server.json",
-  "include": [
-    "**/*.ts",
-    "**/*.d.ts"
-  ],
-  "exclude": [
-    "node_modules",
-    "build"
-  ],
+  "include": ["**/*.ts", "**/*.d.ts"],
+  "exclude": ["node_modules", "build"],
   "compilerOptions": {
     "outDir": "./build",
     "noEmit": false,
@@ -19,9 +13,7 @@
     // dependencies includes @types/generic-pool, which is broken and causes
     // build failures.
     // See https://github.com/proofcarryingdata/zupass/pull/1400
-    "types": [
-      "mocha-steps"
-    ],
+    "types": ["mocha-steps"],
     "typeRoots": [
       "src/util/declarations/",
       "./node_modules/@types/",
@@ -33,7 +25,7 @@
       "path": "../../packages/pcd/eddsa-frog-pcd"
     },
     {
-      "path": "../../packages/pcd/eddsa-message-pcd"
+      "path": "../../packages/pcd/message-pcd"
     },
     {
       "path": "../../packages/pcd/eddsa-pcd"

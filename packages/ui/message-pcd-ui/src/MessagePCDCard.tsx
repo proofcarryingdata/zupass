@@ -1,4 +1,4 @@
-import { EdDSAMessagePCD, getEdDSAMessageBody } from "@pcd/eddsa-message-pcd";
+import { EdDSAMessagePCD, getEdDSAMessageBody } from "@pcd/message-pcd";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useMemo } from "react";

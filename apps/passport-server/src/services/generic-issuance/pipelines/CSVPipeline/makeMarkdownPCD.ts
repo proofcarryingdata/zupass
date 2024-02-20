@@ -1,7 +1,4 @@
-import {
-  EdDSAMessagePCD,
-  EdDSAMessagePCDPackage
-} from "@pcd/eddsa-message-pcd";
+import { EdDSAMessagePCD, EdDSAMessagePCDPackage } from "@pcd/message-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { v4 as uuid } from "uuid";
 import { traced } from "../../../telemetryService";

@@ -8,7 +8,7 @@
   "include": ["src", "src/*.json"],
   "references": [
     {
-      "path": "../../pcd/eddsa-message-pcd/tsconfig.cjs.json"
+      "path": "../../pcd/message-pcd/tsconfig.cjs.json"
     },
     {
       "path": "../../lib/passport-ui/tsconfig.cjs.json"

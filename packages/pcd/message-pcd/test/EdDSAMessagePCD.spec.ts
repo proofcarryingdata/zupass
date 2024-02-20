@@ -4,7 +4,7 @@ import "mocha";
 import { v4 as uuid } from "uuid";
 import { EdDSAMessagePCDPackage } from "../src";
 
-describe("eddsa-message-pcd should work", function () {
+describe("message-pcd should work", function () {
   this.timeout(30_000);
 
   // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103

@@ -28,7 +28,7 @@
       "path": "packages/pcd/eddsa-frog-pcd/tsconfig.esm.json"
     },
     {
-      "path": "packages/pcd/eddsa-message-pcd/tsconfig.esm.json"
+      "path": "packages/pcd/message-pcd/tsconfig.esm.json"
     },
     {
       "path": "packages/pcd/eddsa-pcd/tsconfig.esm.json"
@@ -85,7 +85,7 @@
       "path": "packages/ui/eddsa-frog-pcd-ui/tsconfig.esm.json"
     },
     {
-      "path": "packages/ui/eddsa-message-pcd-ui/tsconfig.esm.json"
+      "path": "packages/ui/message-pcd-ui/tsconfig.esm.json"
     },
     {
       "path": "packages/ui/eddsa-pcd-ui/tsconfig.esm.json"
