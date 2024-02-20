@@ -686,6 +686,27 @@ t2,i1`,
         checkedIn: true
       });
 
+      {
+        const ManualAttendeeTickets = await requestTicketsFromPipeline(
+          edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+          edgeCityDenverTicketFeedUrl,
+          edgeCityDenverPipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualAttendeeEmail,
+          EdgeCityManualAttendeeIdentity
+        );
+        expectLength(ManualAttendeeTickets, 1);
+        const ManualAttendeeTicket = ManualAttendeeTickets[0];
+        expectIsEdDSATicketPCD(ManualAttendeeTicket);
+        expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+          EdgeCityManualAttendeeEmail
+        );
+        expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
+          Date.now()
+        );
+      }
+
       const manualBouncerChecksInManualAttendeeAgain =
         await requestCheckInPipelineTicket(
           edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
@@ -873,6 +894,27 @@ t2,i1`,
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         checkedIn: true
       });
+
+      {
+        const ManualAttendeeTickets = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          ethLatAmTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualAttendeeIdentity
+        );
+        expectLength(ManualAttendeeTickets, 1);
+        const ManualAttendeeTicket = ManualAttendeeTickets[0];
+        expectIsEdDSATicketPCD(ManualAttendeeTicket);
+        expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+          EthLatAmManualAttendeeEmail
+        );
+        expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
+          Date.now()
+        );
+      }
 
       const manualBouncerChecksInManualAttendeeAgain =
         await requestCheckInPipelineTicket(
