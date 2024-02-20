@@ -27,7 +27,8 @@
   "dependencies": {
     "@pcd/eddsa-message-pcd": "0.0.1",
     "@pcd/passport-ui": "0.10.0",
-    "@pcd/pcd-types": "0.10.0"
+    "@pcd/pcd-types": "0.10.0",
+    "react-markdown": "^9.0.1"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",

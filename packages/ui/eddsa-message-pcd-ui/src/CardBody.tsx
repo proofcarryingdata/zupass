@@ -2,6 +2,7 @@ import { EdDSAMessagePCD, getEdDSAMessageBody } from "@pcd/eddsa-message-pcd";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useMemo } from "react";
+import Markdown from "react-markdown";
 
 export const EdDSAMessagePCDUI: PCDUI<EdDSAMessagePCD> = {
   renderCardBody: RSAImageCardBody
@@ -17,7 +18,11 @@ export function RSAImageCardBody({
     return body?.message;
   }, [pcd]);
 
-  return <Container>{strMessage}</Container>;
+  return (
+    <Container>
+      <Markdown>{strMessage}</Markdown>
+    </Container>
+  );
 }
 
 const Container = styled.div`
