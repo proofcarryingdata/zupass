@@ -5,10 +5,10 @@ import { useMemo } from "react";
 import Markdown from "react-markdown";
 
 export const EdDSAMessagePCDUI: PCDUI<EdDSAMessagePCD> = {
-  renderCardBody: RSAImageCardBody
+  renderCardBody: EdDSAMessageCardBody
 };
 
-export function RSAImageCardBody({
+export function EdDSAMessageCardBody({
   pcd
 }: {
   pcd: EdDSAMessagePCD;

@@ -49,7 +49,7 @@ Inchworm,https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Geometrid_Mot
 Jackrabbit,https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Brooklyn_Museum_-_California_Hare_-_John_J._Audubon.jpg/440px-Brooklyn_Museum_-_California_Hare_-_John_J._Audubon.jpg`;
 
 export const SAMPLE_CSV_EDSDA_MESSAGE = `Title,Message
-Test Title,"hello world\\n![test alt text](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"`;
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"`;
 
 // TODO
 export const SAMPLE_CSV_EDSA_TICKET = `Title,Image
