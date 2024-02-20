@@ -56,12 +56,12 @@ export const SAMPLE_CSV_EDSA_TICKET = `Title,Image
 Test Title,Test Message`;
 
 export function getSampleCSVData(
-  outputType = CSVPipelineOutputType.EdDSAMessage
+  outputType = CSVPipelineOutputType.Message
 ): string {
   switch (outputType) {
-    case CSVPipelineOutputType.EdDSAMessage:
+    case CSVPipelineOutputType.Message:
       return SAMPLE_CSV_EDSDA_MESSAGE;
-    case CSVPipelineOutputType.EdDSATicket:
+    case CSVPipelineOutputType.Ticket:
       return SAMPLE_CSV_EDSA_TICKET;
     default:
       return "not implemented";
@@ -72,9 +72,9 @@ export function getSampleFeedOptions(
   outputType: CSVPipelineOutputType
 ): FeedIssuanceOptions {
   switch (outputType) {
-    case CSVPipelineOutputType.EdDSAMessage:
+    case CSVPipelineOutputType.Message:
       return SAMPLE_CSV_FEED_OPTIONS_EdDSAMessage;
-    case CSVPipelineOutputType.EdDSATicket:
+    case CSVPipelineOutputType.Ticket:
       return SAMPLE_CSV_FEED_OPTIONS_EdDSATicket;
     default:
       throw new Error("not implemented");
@@ -109,8 +109,8 @@ export const SAMPLE_CSV_PIPELINE = JSON.stringify(
     timeUpdated: new Date().toISOString(),
     editorUserIds: [],
     options: {
-      csv: getSampleCSVData(CSVPipelineOutputType.EdDSAMessage),
-      outputType: CSVPipelineOutputType.EdDSAMessage,
+      csv: getSampleCSVData(CSVPipelineOutputType.Message),
+      outputType: CSVPipelineOutputType.Message,
       feedOptions: {
         feedId: "0",
         feedDisplayName: "Podbox Weeks",

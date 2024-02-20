@@ -14,7 +14,7 @@ interface CSVPipelineBuilderProps {
   onCreate: (pipelineStringified: string) => Promise<void>;
 }
 
-const DEFAULT_OUTPUT_TYPE = CSVPipelineOutputType.EdDSAMessage;
+const DEFAULT_OUTPUT_TYPE = CSVPipelineOutputType.Message;
 
 export default function CSVPipelineBuilder(
   props: CSVPipelineBuilderProps
@@ -39,7 +39,7 @@ export default function CSVPipelineBuilder(
         value={csv}
         setValue={setCsv}
       />
-      <div>PCD Output Type:</div>
+      <div>Output Type:</div>
       <Select
         width="sm"
         value={outputType}
@@ -48,7 +48,9 @@ export default function CSVPipelineBuilder(
         }}
       >
         {Object.entries(CSVPipelineOutputType).map(([k, v]) => (
-          <option value={k}>{v}</option>
+          <option value={v} key={v}>
+            {k}
+          </option>
         ))}
       </Select>
       <br />

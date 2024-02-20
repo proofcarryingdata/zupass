@@ -242,8 +242,8 @@ export enum CSVPipelineOutputType {
   /**
    * {@link EdDSAMessagePCD}
    */
-  EdDSAMessage = "EdDSAMessage",
-  EdDSATicket = "EdDSATicket"
+  Message = "EdDSAMessage",
+  Ticket = "EdDSATicket"
 }
 
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({

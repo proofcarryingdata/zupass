@@ -89,16 +89,14 @@ export class CSVPipeline implements BasePipeline {
       span?.setAttribute("atoms", atoms.length);
 
       const outputType =
-        this.definition.options.outputType ??
-        CSVPipelineOutputType.EdDSAMessage;
+        this.definition.options.outputType ?? CSVPipelineOutputType.Message;
 
       // TODO: cache these
       const serializedPCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) =>
           makeCSVPCD(
             atom.row,
-            this.definition.options.outputType ??
-              CSVPipelineOutputType.EdDSAMessage,
+            this.definition.options.outputType ?? CSVPipelineOutputType.Message,
             {
               eddsaPrivateKey: this.eddsaPrivateKey,
               rsaPrivateKey: this.rsaPrivateKey
@@ -243,9 +241,9 @@ export async function makeCSVPCD(
     span?.setAttribute("output_type", type);
 
     switch (type) {
-      case CSVPipelineOutputType.EdDSAMessage:
+      case CSVPipelineOutputType.Message:
         return makeMessagePCD(inputRow, opts.eddsaPrivateKey);
-      case CSVPipelineOutputType.EdDSATicket:
+      case CSVPipelineOutputType.Ticket:
         return makeTicketPCD(inputRow, opts.eddsaPrivateKey);
       default:
         // will not compile in case we add a new output type
