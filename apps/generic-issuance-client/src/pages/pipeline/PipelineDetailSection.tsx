@@ -7,7 +7,6 @@ import {
   Badge,
   Box,
   Button,
-  Card,
   ListItem,
   UnorderedList
 } from "@chakra-ui/react";
@@ -37,7 +36,7 @@ export function PipelineDetailSection({
 }): ReactNode {
   return (
     <>
-      <Card padding={4} mb={4}>
+      <Box padding={4} mb={4}>
         {pipelineInfo.feeds &&
           pipelineInfo.feeds.map((feed, i) => (
             <Box key={feed.url} mb={i === 0 ? 0 : 2}>
@@ -61,7 +60,7 @@ export function PipelineDetailSection({
               )}
             </Box>
           ))}
-      </Card>
+      </Box>
       <Accordion defaultIndex={[]} allowMultiple={true}>
         <AccordionItem>
           <AccordionButton>Latest Logs</AccordionButton>

@@ -101,14 +101,26 @@ export async function serialize(
 }
 
 export async function deserialize(serialized: string): Promise<MessagePCD> {
+  console.log("deserializing", serialized);
   const wrapper = JSONBig().parse(serialized);
+  console.log("deserializing 2", wrapper);
   const deserializedEdDSAPCD = await EdDSAPCDPackage.deserialize(
     wrapper.eddsaPCD.pcd
   );
-  const parsedMessage = parseBigintifiedMsg({
+  console.log("------", deserializedEdDSAPCD);
+  console.log("deserializing 3", deserializedEdDSAPCD);
+  console.log("deserializing 4", deserializedEdDSAPCD.claim.message[0]);
+  console.log("deserializing 5", wrapper.bodyLength);
+  console.log("------", wrapper.bodyLength);
+
+  const arg = {
     int: deserializedEdDSAPCD.claim.message[0],
     len: wrapper.bodyLength
-  } as MsgAsInt);
+  } as MsgAsInt;
+  console.log("deserializing 9999", arg);
+  console.log("------", wrapper.bodyLength);
+
+  const parsedMessage = parseBigintifiedMsg(arg);
 
   return new MessagePCD(wrapper.id, parsedMessage, {
     signature: deserializedEdDSAPCD,

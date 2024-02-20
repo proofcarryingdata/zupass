@@ -249,4 +249,17 @@ export class LemonadeDataMocker {
     // Un-checked-in users are represented by a checkin date of `null`
     account.setCheckin(eventId, userId, null);
   }
+
+  /**
+   * Checks all tickets out, useful for resetting check-in status.
+   */
+  public checkOutAll(): void {
+    for (const account of this.accounts.values()) {
+      for (const [eventId, eventTickets] of account.getTickets().entries()) {
+        for (const ticket of eventTickets.values()) {
+          account.setCheckin(eventId, ticket.user_id, null);
+        }
+      }
+    }
+  }
 }

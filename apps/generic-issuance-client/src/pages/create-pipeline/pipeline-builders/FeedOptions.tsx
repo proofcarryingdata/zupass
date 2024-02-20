@@ -1,7 +1,6 @@
 import { Card, FormControl, FormLabel, Input } from "@chakra-ui/react";
 import { FeedIssuanceOptions } from "@pcd/passport-interface";
 import { ChangeEvent } from "react";
-import styled from "styled-components";
 
 interface FeedOptionsProps {
   feedOptions: FeedIssuanceOptions;
@@ -60,15 +59,3 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
     </Card>
   );
 };
-
-const FeedOptionsTable = styled.table`
-  tbody {
-    tr {
-      td:first-child {
-        text-align: right;
-        padding-right: 16px;
-        width: 200px;
-      }
-    }
-  }
-`;

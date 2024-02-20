@@ -28,7 +28,11 @@ const Container = styled.div`
   overflow: hidden;
   width: 100%;
 
+  p {
+  }
+
   img {
+    margin-top: 8px;
     box-sizing: border-box;
     border-radius: 16px;
     overflow: hidden;

@@ -122,6 +122,12 @@ describe("Generic Issuance", function () {
   const EthLatAmBouncerIdentity = new Identity();
   const EthLatAmAttendeeIdentity = new Identity();
 
+  const EthLatAmManualAttendeeIdentity = new Identity();
+  const EthLatAmManualAttendeeEmail = "manual_attendee@example.com";
+
+  const EthLatAmManualBouncerIdentity = new Identity();
+  const EthLatAmManualBouncerEmail = "manual_bouncer@example.com";
+
   const lemonadeBackend = new LemonadeDataMocker();
 
   const EdgeCityLemonadeAccount = lemonadeBackend.addAccount(
@@ -192,6 +198,12 @@ describe("Generic Issuance", function () {
     `${EdgeCityDenverBouncer2.first_name} ${EdgeCityDenverBouncer2.last_name}`
   );
 
+  const EdgeCityManualAttendeeIdentity = new Identity();
+  const EdgeCityManualAttendeeEmail = "manual_attendee@example.com";
+
+  const EdgeCityManualBouncerIdentity = new Identity();
+  const EdgeCityManualBouncerEmail = "manual_bouncer@example.com";
+
   const lemonadeTokenSource = new TestTokenSource();
   const lemonadeAPI: ILemonadeAPI = getLemonadeAPI(
     // LemonadeAPI takes an optional `AuthTokenSource` as a parameter. This
@@ -201,6 +213,9 @@ describe("Generic Issuance", function () {
     lemonadeTokenSource
   );
   const lemonadeBackendUrl = "http://localhost";
+  const edgeCityDenverEventId = randomUUID();
+  const edgeCityDenverAttendeeProductId = randomUUID();
+  const edgeCityDenverBouncerProductId = randomUUID();
   const edgeCityPipeline: LemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
     timeCreated: new Date().toISOString(),
@@ -230,21 +245,37 @@ describe("Generic Issuance", function () {
         {
           externalId: EdgeCityDenver._id,
           name: EdgeCityDenver.title,
-          genericIssuanceEventId: randomUUID(),
+          genericIssuanceEventId: edgeCityDenverEventId,
           ticketTypes: [
             {
               externalId: EdgeCityBouncerTicketType._id,
-              genericIssuanceProductId: randomUUID(),
+              genericIssuanceProductId: edgeCityDenverBouncerProductId,
               isSuperUser: true,
               name: "Bouncer"
             },
             {
               externalId: EdgeCityAttendeeTicketType._id,
-              genericIssuanceProductId: randomUUID(),
+              genericIssuanceProductId: edgeCityDenverAttendeeProductId,
               isSuperUser: false,
               name: "Attendee"
             }
           ]
+        }
+      ],
+      manualTickets: [
+        {
+          id: randomUUID(),
+          eventId: edgeCityDenverEventId,
+          productId: edgeCityDenverAttendeeProductId,
+          attendeeName: "Manual Attendee",
+          attendeeEmail: EdgeCityManualAttendeeEmail
+        },
+        {
+          id: randomUUID(),
+          eventId: edgeCityDenverEventId,
+          productId: edgeCityDenverBouncerProductId,
+          attendeeName: "Manual Bouncer",
+          attendeeEmail: EdgeCityManualBouncerEmail
         }
       ]
     },
@@ -271,6 +302,32 @@ describe("Generic Issuance", function () {
   expectLength(ethLatAmSuperuserProductIds, 1);
   expect([]);
 
+  const ethLatAmEventId = randomUUID();
+  const ethLatAmConfiguredEvents = [
+    {
+      genericIssuanceId: ethLatAmEventId,
+      externalId: ethLatAmEvent.slug,
+      name: "Eth LatAm",
+      products: ethLatAmProducts.map((product: GenericPretixProduct) => {
+        return {
+          externalId: product.id.toString(),
+          genericIssuanceId: randomUUID(),
+          name: getI18nString(product.name),
+          isSuperUser: ethLatAmSuperuserProductIds.includes(product.id)
+        };
+      })
+    }
+  ];
+
+  const ethLatAmAttendeeProduct = ethLatAmConfiguredEvents[0].products.find(
+    (product) => product.name == "eth-latam-attendee-product"
+  );
+  expectToExist(ethLatAmAttendeeProduct);
+  const ethLatAmBouncerProduct = ethLatAmConfiguredEvents[0].products.find(
+    (product) => product.name == "eth-lat-am-bouncer-product"
+  );
+  expectToExist(ethLatAmBouncerProduct);
+
   const ethLatAmPipeline: PretixPipelineDefinition = {
     ownerUserId: ethLatAmGIUserID,
     timeCreated: new Date().toISOString(),
@@ -294,19 +351,21 @@ describe("Generic Issuance", function () {
         // some other built in functionality? We've been thinking about issuing
         // announcements for edge city, what might a cool announcement look like?
       },
-      events: [
+      events: ethLatAmConfiguredEvents,
+      manualTickets: [
         {
-          genericIssuanceId: randomUUID(),
-          externalId: ethLatAmEvent.slug,
-          name: "Eth LatAm",
-          products: ethLatAmProducts.map((product: GenericPretixProduct) => {
-            return {
-              externalId: product.id.toString(),
-              genericIssuanceId: randomUUID(),
-              name: getI18nString(product.name),
-              isSuperUser: ethLatAmSuperuserProductIds.includes(product.id)
-            };
-          })
+          id: randomUUID(),
+          eventId: ethLatAmEventId,
+          productId: ethLatAmAttendeeProduct.genericIssuanceId,
+          attendeeEmail: EthLatAmManualAttendeeEmail,
+          attendeeName: "Manual Attendee"
+        },
+        {
+          id: randomUUID(),
+          eventId: ethLatAmEventId,
+          productId: ethLatAmBouncerProduct.genericIssuanceId,
+          attendeeEmail: EthLatAmManualBouncerEmail,
+          attendeeName: "Manual Bouncer"
         }
       ],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
@@ -578,6 +637,51 @@ t2,i1`,
       );
       expect(bouncer2ChecksInSelf.value).to.deep.eq({ checkedIn: true });
 
+      const ManualAttendeeTickets = await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityManualAttendeeEmail,
+        EdgeCityManualAttendeeIdentity
+      );
+      expectLength(ManualAttendeeTickets, 1);
+      const ManualAttendeeTicket = ManualAttendeeTickets[0];
+      expectIsEdDSATicketPCD(ManualAttendeeTicket);
+      expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityManualAttendeeEmail
+      );
+
+      const ManualBouncerTickets = await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityManualBouncerEmail,
+        EdgeCityManualBouncerIdentity
+      );
+      expectLength(ManualBouncerTickets, 1);
+      const ManualBouncerTicket = ManualBouncerTickets[0];
+      expectIsEdDSATicketPCD(ManualBouncerTicket);
+      expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityManualBouncerEmail
+      );
+
+      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
+        edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityManualBouncerEmail,
+        EdgeCityManualBouncerIdentity,
+        BouncerTicket
+      );
+      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+        checkedIn: true
+      });
+
+      // TODO test checking in manual attendee/bouncer
+      // Currently not supported as these are not present in the Lemonade
+      // backend, will be implemented with the pipeline as the check-in backend
+
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
     }
   );
@@ -681,6 +785,59 @@ t2,i1`,
         checkedIn: false,
         error: { name: "InvalidSignature" }
       } satisfies GenericIssuanceCheckInResponseValue);
+
+      const ManualAttendeeTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        ethLatAmTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EthLatAmManualAttendeeEmail,
+        EthLatAmManualAttendeeIdentity
+      );
+      expectLength(ManualAttendeeTickets, 1);
+      const ManualAttendeeTicket = ManualAttendeeTickets[0];
+      expectIsEdDSATicketPCD(ManualAttendeeTicket);
+      expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+        EthLatAmManualAttendeeEmail
+      );
+
+      const ManualBouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        ethLatAmTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EthLatAmManualBouncerEmail,
+        EthLatAmManualBouncerIdentity
+      );
+      expectLength(ManualBouncerTickets, 1);
+      const ManualBouncerTicket = ManualBouncerTickets[0];
+      expectIsEdDSATicketPCD(ManualBouncerTicket);
+      expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        EthLatAmManualBouncerEmail
+      );
+
+      pretixBackend.checkOut(
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
+        bouncerTicket.claim.ticket.attendeeEmail
+      );
+      MockDate.set(Date.now() + ONE_SECOND_MS);
+      await pipeline.load();
+
+      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
+        pipeline.checkinCapability.getCheckinUrl(),
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EthLatAmManualBouncerEmail,
+        EthLatAmManualBouncerIdentity,
+        bouncerTicket
+      );
+      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+        checkedIn: true
+      });
+
+      // TODO test checking in manual attendee/bouncer
+      // Currently not supported as these are not present in the Lemonade
+      // backend, will be implemented with the pipeline as the check-in backend
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
@@ -874,6 +1031,8 @@ t2,i1`,
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(edgeCityPipeline.id);
     const edgeCityTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+
+    lemonadeBackend.checkOutAll();
 
     MockDate.set(Date.now() + ONE_SECOND_MS);
     // Verify that bouncer is checked out in backend

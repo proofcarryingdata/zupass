@@ -15,6 +15,7 @@ import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
+import { Overscroll } from "../shared/Overscroll";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 
@@ -44,6 +45,7 @@ export function SubscriptionsScreen(): JSX.Element {
   return (
     <>
       <MaybeModal />
+      <Overscroll />
       <AppContainer bg="gray">
         <ScreenNavigation label={"Home"} to="/" />
         <Spacer h={8} />
@@ -72,6 +74,7 @@ export function SubscriptionsScreen(): JSX.Element {
           )}
           <SubscriptionTree subscriptions={subs} />
         </Container>
+        <Spacer h={1024} />
       </AppContainer>
     </>
   );
@@ -111,7 +114,7 @@ function SingleProvider({
 }): JSX.Element {
   const providerName = subscriptions.getProvider(providerUrl).providerName;
   return (
-    <ProviderContainer>
+    <>
       {subscriptionsList.map((s) => (
         <React.Fragment key={s.id}>
           <Spacer h={8} />
@@ -125,7 +128,7 @@ function SingleProvider({
           />
         </React.Fragment>
       ))}
-    </ProviderContainer>
+    </>
   );
 }
 
@@ -133,5 +136,3 @@ const Container = styled.div`
   padding-bottom: 128px;
   padding-top: 16px;
 `;
-
-const ProviderContainer = styled.div``;

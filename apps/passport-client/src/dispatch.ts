@@ -24,6 +24,7 @@ import {
 } from "@pcd/semaphore-identity-pcd";
 import { sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import _ from "lodash";
 import { createContext } from "react";
 import { appConfig } from "./appConfig";
 import {
@@ -110,7 +111,11 @@ export type Action =
       providerName: string;
       feed: Feed;
     }
-  | { type: "remove-subscription"; subscriptionId: string }
+  | {
+      type: "remove-subscription";
+      subscriptionId: string;
+      deleteContents?: boolean;
+    }
   | {
       type: "update-subscription-permissions";
       subscriptionId: string;
@@ -218,7 +223,12 @@ export async function dispatch(
         action.feed
       );
     case "remove-subscription":
-      return removeSubscription(state, update, action.subscriptionId);
+      return removeSubscription(
+        state,
+        update,
+        action.subscriptionId,
+        action.deleteContents
+      );
     case "update-subscription-permissions":
       return updateSubscriptionPermissions(
         state,
@@ -966,12 +976,36 @@ async function addSubscription(
 async function removeSubscription(
   state: AppState,
   update: ZuUpdate,
-  subscriptionId: string
+  subscriptionId: string,
+  deleteContents?: boolean
 ): Promise<void> {
+  const existingSubscription =
+    state.subscriptions.getSubscription(subscriptionId);
+
   state.subscriptions.unsubscribe(subscriptionId);
   await saveSubscriptions(state.subscriptions);
+
+  if (deleteContents) {
+    const subscriptionFolders = existingSubscription
+      ? _.uniq(existingSubscription.feed.permissions.map((p) => p.folder)).sort(
+          (a, b) => a.localeCompare(b)
+        )
+      : [];
+
+    for (const [_, folder] of Object.entries(state.pcds.folders)) {
+      for (const subFolder of subscriptionFolders) {
+        if (folder.startsWith(subFolder)) {
+          state.pcds.removeAllPCDsInFolder(folder);
+        }
+      }
+    }
+  }
+
+  await savePCDs(state.pcds);
+
   update({
-    subscriptions: state.subscriptions
+    subscriptions: state.subscriptions,
+    pcds: state.pcds
   });
 }
 

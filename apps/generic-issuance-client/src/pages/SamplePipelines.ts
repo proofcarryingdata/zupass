@@ -29,34 +29,33 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
       oauthServerUrl: "",
       backendUrl: "",
       events: [],
-      feedOptions: DEFAULT_FEED_OPTIONS
+      feedOptions: DEFAULT_FEED_OPTIONS,
+      manualTickets: []
     }
   } satisfies Partial<LemonadePipelineDefinition>,
   null,
   2
 );
 
-// export const SAMPLE_CSV_DATA_RSAIMAGE = `Title,Image
-// Ant,https://upload.wikimedia.org/wikipedia/commons/thumb/2/2c/Bullant_head_detail.jpg/440px-Bullant_head_detail.jpg
-// Bat,https://upload.wikimedia.org/wikipedia/commons/thumb/b/b4/Flying_fox_at_botanical_gardens_in_Sydney_%28cropped_and_flipped%29.jpg/160px-Flying_fox_at_botanical_gardens_in_Sydney_%28cropped_and_flipped%29.jpg
-// Cat,https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/362px-Cat_August_2010-4.jpg
-// Dodo,https://upload.wikimedia.org/wikipedia/commons/thumb/7/79/Dronte_17th_Century_color_corrected.jpg/272px-Dronte_17th_Century_color_corrected.jpg
-// Eel,https://upload.wikimedia.org/wikipedia/commons/thumb/e/ed/FMIB_35739_Anguilla_vulgaris_--_Anguilla.jpeg/443px-FMIB_35739_Anguilla_vulgaris_--_Anguilla.jpeg
-// Fox,https://upload.wikimedia.org/wikipedia/commons/thumb/3/30/Vulpes_vulpes_ssp_fulvus.jpg/440px-Vulpes_vulpes_ssp_fulvus.jpg
-// Gator,https://upload.wikimedia.org/wikipedia/commons/thumb/6/65/AmericanAlligator.JPG/240px-AmericanAlligator.JPG
-// Hippo,https://upload.wikimedia.org/wikipedia/commons/thumb/f/f2/Portrait_Hippopotamus_in_the_water.jpg/440px-Portrait_Hippopotamus_in_the_water.jpg
-// Inchworm,https://upload.wikimedia.org/wikipedia/commons/thumb/5/52/Geometrid_Moths_%28Geometridae%29_caterpillar_-2.jpg/346px-Geometrid_Moths_%28Geometridae%29_caterpillar_-2.jpg
-// Jackrabbit,https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Brooklyn_Museum_-_California_Hare_-_John_J._Audubon.jpg/440px-Brooklyn_Museum_-_California_Hare_-_John_J._Audubon.jpg`;
+export const SAMPLE_CSV_EDSDA_MESSAGE = `
 
-export const SAMPLE_CSV_EDSDA_MESSAGE = `Title,Message
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
-Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"`;
+
+Title,Message
+Frogville Bake Off,Join the annual Frogville Bake Off this weekend. Sweet treats and community fun! ![View more](https://i.ibb.co/R2sYtTS/1.webp).
+Tech Toad Talks,Dive into the latest in lily pad tech at the Tech Toad Talks. Innovation leaps ahead! ![View more](https://i.ibb.co/WcWXJbc/2.webp).
+Croak Choir Concert,Experience the harmonies of the Croak Choir under the moonlight. A symphony of sounds! ![View more](https://i.ibb.co/1KTCJwc/3.webp).
+Hopscotch Championship,Compete or cheer in the Frogville Hopscotch Championship. Who will be the leap champion? ![View more](https://i.ibb.co/djdmRfP/4.webp).
+Green Thumb Gardeners,Share tips and seeds at the Green Thumb Gardeners meet. Grow your garden dreams! ![View more](https://i.ibb.co/4t06pct/5.webp).
+Froglet Film Festival,"Watch the best in amphibian cinema at the Froglet Film Festival. Lights, camera, croak! ![View more](https://i.ibb.co/YDMFQhq/6.webp)."
+Mystic Pond Meditation,Find peace and tranquility at the Mystic Pond Meditation session. Serenity in nature. ![View more](https://i.ibb.co/BZxXKM3/7.webp).
+Bug Brew Crafters,Sample the finest in bug brews at our local crafters meet. A taste adventure! ![View more](https://i.ibb.co/qBBpwyH/8.webp).
+Starlight Storytelling,Gather for magical tales at the Starlight Storytelling night. Dreams under the stars. ![View more](https://i.ibb.co/tpnXb4h/9.webp).
+
+
+`
+  .split("\n")
+  .filter((l) => l.length > 0)
+  .join("\n");
 
 // TODO
 export const SAMPLE_CSV_EDSA_TICKET = `Title,Image
@@ -80,33 +79,26 @@ export function getSampleFeedOptions(
 ): FeedIssuanceOptions {
   switch (outputType) {
     case CSVPipelineOutputType.Message:
-      return SAMPLE_CSV_FEED_OPTIONS_EdDSAMessage;
+      return MESSAGE_CSV_FEED_OPTS;
     case CSVPipelineOutputType.Ticket:
-      return SAMPLE_CSV_FEED_OPTIONS_EdDSATicket;
+      return TICKET_FEED_OPTS;
     default:
       throw new Error("not implemented");
   }
 }
 
-export const SAMPLE_CSV_FEED_OPTIONS_RSAImage = {
+export const MESSAGE_CSV_FEED_OPTS = {
   feedId: "0",
-  feedDisplayName: "Podbox Weeks",
-  feedDescription: "Feed of animals - one for each week of Podbox",
-  feedFolder: "Podbox Weeks"
+  feedDisplayName: "frogville_bulletin_board.csv",
+  feedDescription: "frogville_bulletin_board",
+  feedFolder: "frogville XD/announcements"
 } satisfies FeedIssuanceOptions;
 
-export const SAMPLE_CSV_FEED_OPTIONS_EdDSAMessage = {
+export const TICKET_FEED_OPTS = {
   feedId: "0",
-  feedDisplayName: "Announcements",
-  feedDescription: "Sample Announcements Feed",
-  feedFolder: "Announcements"
-} satisfies FeedIssuanceOptions;
-
-export const SAMPLE_CSV_FEED_OPTIONS_EdDSATicket = {
-  feedId: "0",
-  feedDisplayName: "CSV Tickets",
-  feedDescription: "Feed of tickets backed by a CSV",
-  feedFolder: "CSV Tickets"
+  feedDisplayName: "frogville_ball_tickets",
+  feedDescription: "frogville_ball_tickets",
+  feedFolder: "frogville XD/frog ball"
 } satisfies FeedIssuanceOptions;
 
 export const SAMPLE_CSV_PIPELINE = JSON.stringify(
@@ -118,12 +110,7 @@ export const SAMPLE_CSV_PIPELINE = JSON.stringify(
     options: {
       csv: getSampleCSVData(CSVPipelineOutputType.Message),
       outputType: CSVPipelineOutputType.Message,
-      feedOptions: {
-        feedId: "0",
-        feedDisplayName: "Podbox Weeks",
-        feedDescription: "Feed of animals - one for each week of Podbox",
-        feedFolder: "podbox-weeks"
-      }
+      feedOptions: TICKET_FEED_OPTS
     }
   } satisfies Partial<CSVPipelineDefinition>,
   null,
