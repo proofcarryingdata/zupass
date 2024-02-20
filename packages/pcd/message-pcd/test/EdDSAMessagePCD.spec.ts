@@ -2,7 +2,7 @@ import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
-import { EdDSAMessagePCDPackage } from "../src";
+import { MessagePCDPackage } from "../src";
 
 describe("message-pcd should work", function () {
   this.timeout(30_000);
@@ -20,7 +20,7 @@ describe("message-pcd should work", function () {
     const testTitle = "test title";
     const testMessage = "message";
 
-    const pcd = await EdDSAMessagePCDPackage.prove({
+    const pcd = await MessagePCDPackage.prove({
       id: {
         argumentType: ArgumentTypeName.String,
         value: uuid()
@@ -39,6 +39,6 @@ describe("message-pcd should work", function () {
       }
     });
 
-    expect(await EdDSAMessagePCDPackage.verify(pcd)).to.eq(true);
+    expect(await MessagePCDPackage.verify(pcd)).to.eq(true);
   });
 });

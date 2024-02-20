@@ -1,26 +1,29 @@
-import { EdDSAMessagePCD, getEdDSAMessageBody } from "@pcd/message-pcd";
+import { MessagePCD, getMessage } from "@pcd/message-pcd";
 import { styled } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { useMemo } from "react";
 import Markdown from "react-markdown";
 
-export const EdDSAMessagePCDUI: PCDUI<EdDSAMessagePCD> = {
+export const MessagePCDUI: PCDUI<MessagePCD> = {
   renderCardBody: EdDSAMessageCardBody
 };
 
 export function EdDSAMessageCardBody({
   pcd
 }: {
-  pcd: EdDSAMessagePCD;
+  pcd: MessagePCD;
 }): JSX.Element {
-  const strMessage = useMemo(() => {
-    const body = getEdDSAMessageBody(pcd);
-    return body?.message;
+  const mdBody = useMemo(() => {
+    return getMessage(pcd)?.mdBody;
   }, [pcd]);
 
   return (
     <Container>
-      <Markdown>{strMessage}</Markdown>
+      {mdBody ? (
+        <Markdown>{mdBody}</Markdown>
+      ) : (
+        <div style={{ opacity: 0.5 }}></div>
+      )}
     </Container>
   );
 }

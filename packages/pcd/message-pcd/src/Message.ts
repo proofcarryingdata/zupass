@@ -47,9 +47,7 @@ export type Message = z.infer<typeof MessageSchema>;
 /**
  *
  */
-export function getMessage<T extends Message>(
-  eddsaSig: MessagePCD<T>
-): (Message & T) | undefined {
+export function getMessage(eddsaSig: MessagePCD): Message | undefined {
   try {
     checkExists(eddsaSig.proof.signature.claim.message[0]);
     // by convention, MessagePCD serializes into an EdDSAPCD by converting
@@ -59,7 +57,7 @@ export function getMessage<T extends Message>(
       stringifiedData,
       eddsaSig.proof.stringLength
     );
-    const imageData = JSON.parse(strBody) as Message & T;
+    const imageData = JSON.parse(strBody) as Message;
     return imageData;
   } catch (e) {
     console.warn(e);

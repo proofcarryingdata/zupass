@@ -11,12 +11,12 @@ import JSONBig from "json-bigint";
 import { Message, getMessage } from "./Message";
 import { eddsaSign } from "./utils/eddsaSign";
 
-export const EdDSAMessagePCDTypeName = "message-pcd";
+export const MessagePCDTypeName = "message-pcd";
 
-export type MessagePCDArgs<T> = {
+export type MessagePCDArgs = {
   privateKey: StringArgument;
   id: StringArgument;
-  message: ObjectArgument<Message<T>>;
+  message: ObjectArgument<Message>;
 };
 
 export interface Proof {
@@ -31,22 +31,20 @@ export interface Proof {
   stringLength: number;
 }
 
-export class MessagePCD<MsgT extends Message> implements PCD<MsgT, Proof> {
-  type = EdDSAMessagePCDTypeName;
-  claim: MsgT;
+export class MessagePCD implements PCD<Message, Proof> {
+  type = MessagePCDTypeName;
+  claim: Message;
   proof: Proof;
   id: string;
 
-  public constructor(id: string, claim: MsgT, proof: Proof) {
+  public constructor(id: string, claim: Message, proof: Proof) {
     this.id = id;
     this.claim = claim;
     this.proof = proof;
   }
 }
 
-export async function prove<T extends Message>(
-  args: MessagePCDArgs<T>
-): Promise<MessagePCD<T>> {
+export async function prove(args: MessagePCDArgs): Promise<MessagePCD> {
   if (args.message.value == null) {
     throw new Error("missing message");
   }
@@ -60,7 +58,7 @@ export async function prove<T extends Message>(
 
 export async function verify(pcd: MessagePCD): Promise<boolean> {
   try {
-    const valid = await EdDSAPCDPackage.verify(pcd.proof.eddsaPCD);
+    const valid = await EdDSAPCDPackage.verify(pcd.proof.signature);
     return valid;
   } catch (e) {
     return false;
@@ -70,13 +68,13 @@ export async function verify(pcd: MessagePCD): Promise<boolean> {
 export async function serialize(
   pcd: MessagePCD
 ): Promise<SerializedPCD<MessagePCD>> {
-  const serialized = await EdDSAPCDPackage.serialize(pcd.proof.eddsaPCD);
+  const serialized = await EdDSAPCDPackage.serialize(pcd.proof.signature);
   return {
-    type: EdDSAMessagePCDTypeName,
+    type: MessagePCDTypeName,
     pcd: JSONBig().stringify({
       id: pcd.id,
       eddsaPCD: serialized,
-      bodyLength: pcd.proof.bodyLength
+      bodyLength: pcd.proof.stringLength
     })
   } as SerializedPCD<MessagePCD>;
 }
@@ -107,12 +105,8 @@ export function getDisplayOptions(pcd: MessagePCD): DisplayOptions {
 /**
  * PCD-conforming wrapper to sign markdown messages using an EdDSA keypair.
  */
-export const EdDSAMessagePCDPackage: PCDPackage<
-  Message,
-  Proof,
-  MessagePCDArgs
-> = {
-  name: EdDSAMessagePCDTypeName,
+export const MessagePCDPackage: PCDPackage<Message, Proof, MessagePCDArgs> = {
+  name: MessagePCDTypeName,
   getDisplayOptions,
   prove,
   verify,

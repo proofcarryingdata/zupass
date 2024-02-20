@@ -4,7 +4,7 @@ import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
-import { EdDSAMessagePCDPackage } from "@pcd/message-pcd";
+import { MessagePCDPackage } from "@pcd/message-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
@@ -57,7 +57,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     zkeyFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.zkey"
   });
 
-  await EdDSAMessagePCDPackage.init?.({});
+  await MessagePCDPackage.init?.({});
 
   return [
     SemaphoreGroupPCDPackage,
@@ -74,6 +74,6 @@ async function loadPackages(): Promise<PCDPackage[]> {
     ZKEdDSAEventTicketPCDPackage,
     RSAImagePCDPackage,
     EmailPCDPackage,
-    EdDSAMessagePCDPackage
+    MessagePCDPackage
   ];
 }

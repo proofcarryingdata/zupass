@@ -28,6 +28,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "@pcd/message-pcd": "0.0.1",
     "medium-zoom": "^1.0.8",
     "pako": "^2.1.0",
     "qr-image": "^3.2.0",

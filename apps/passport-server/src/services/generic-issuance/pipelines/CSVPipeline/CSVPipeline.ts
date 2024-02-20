@@ -27,7 +27,7 @@ import { tracePipeline } from "../../honeycombQueries";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../../util";
 import { BasePipeline, Pipeline } from "../types";
-import { makeMarkdownPCD } from "./makeMarkdownPCD";
+import { makeMessagePCD } from "./makeMessagePCD";
 import { makeTicketPCD } from "./makeTicketPCD";
 
 const LOG_NAME = "CSVPipeline";
@@ -244,7 +244,7 @@ export async function makeCSVPCD(
 
     switch (type) {
       case CSVPipelineOutputType.EdDSAMessage:
-        return makeMarkdownPCD(inputRow, opts.eddsaPrivateKey);
+        return makeMessagePCD(inputRow, opts.eddsaPrivateKey);
       case CSVPipelineOutputType.EdDSATicket:
         return makeTicketPCD(inputRow, opts.eddsaPrivateKey);
       default:

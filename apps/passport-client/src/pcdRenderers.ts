@@ -9,8 +9,8 @@ import { EthereumOwnershipPCDTypeName } from "@pcd/ethereum-ownership-pcd";
 import { EthereumOwnershipPCDUI } from "@pcd/ethereum-ownership-pcd-ui";
 import { HaLoNoncePCDTypeName } from "@pcd/halo-nonce-pcd";
 import { HaLoNoncePCDUI } from "@pcd/halo-nonce-pcd-ui";
-import { EdDSAMessagePCDTypeName } from "@pcd/message-pcd";
-import { EdDSAMessagePCDUI } from "@pcd/message-pcd-ui";
+import { MessagePCDTypeName } from "@pcd/message-pcd";
+import { MessagePCDUI } from "@pcd/message-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { RSAImagePCDTypeName } from "@pcd/rsa-image-pcd";
 import { RSAImagePCDUI } from "@pcd/rsa-image-pcd-ui";
@@ -42,7 +42,7 @@ const renderablePCDs = [
   SemaphoreSignaturePCDTypeName,
   ZKEdDSAEventTicketPCDTypeName,
   RSAImagePCDTypeName,
-  EdDSAMessagePCDTypeName
+  MessagePCDTypeName
 ] as const;
 
 export type RenderablePCDType = (typeof renderablePCDs)[number];
@@ -63,5 +63,5 @@ export const pcdRenderers: {
   [SemaphoreSignaturePCDTypeName]: SemaphoreSignaturePCDUI,
   [ZKEdDSAEventTicketPCDTypeName]: ZKEdDSAEventTicketPCDUI,
   [RSAImagePCDTypeName]: RSAImagePCDUI,
-  [EdDSAMessagePCDTypeName]: EdDSAMessagePCDUI
+  [MessagePCDTypeName]: MessagePCDUI
 };
