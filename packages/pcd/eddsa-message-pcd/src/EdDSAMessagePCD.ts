@@ -9,7 +9,7 @@ import {
 } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { bigIntsToStr, stringToBigInts } from "./utils";
+import { getEdDSAMessageBody, stringToBigInts } from "./utils";
 
 export const EdDSAMessagePCDTypeName = "eddsa-message-pcd";
 
@@ -138,22 +138,11 @@ export async function deserialize(
 }
 
 export function getDisplayOptions(pcd: EdDSAMessagePCD): DisplayOptions {
-  try {
-    const body = pcd.proof.eddsaPCD.claim.message;
-    const strBody = bigIntsToStr(body, pcd.proof.bodyLength);
-    const imageData = JSON.parse(strBody);
-    const header = imageData.title;
-    return {
-      header: header,
-      displayName: "msg-" + pcd.id.substring(0, 4)
-    };
-  } catch (e) {
-    console.warn(e);
-    return {
-      header: pcd.id,
-      displayName: pcd.id
-    };
-  }
+  const body = getEdDSAMessageBody(pcd);
+  return {
+    header: body?.title ?? "untitled",
+    displayName: "msg-" + pcd.id.substring(0, 4)
+  };
 }
 
 /**

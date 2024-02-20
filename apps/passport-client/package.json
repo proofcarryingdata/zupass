@@ -16,6 +16,7 @@
     "@pcd/eddsa-frog-pcd": "0.2.0",
     "@pcd/eddsa-frog-pcd-ui": "0.1.0",
     "@pcd/eddsa-message-pcd": "0.0.1",
+    "@pcd/eddsa-message-pcd-ui": "0.0.1",
     "@pcd/eddsa-pcd": "0.5.0",
     "@pcd/eddsa-pcd-ui": "0.1.0",
     "@pcd/eddsa-ticket-pcd": "0.5.0",

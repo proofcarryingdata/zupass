@@ -5,10 +5,13 @@
     "module": "CommonJS",
     "tsBuildInfoFile": "./tsconfig.cjs.tsbuildinfo"
   },
-  "include": ["src", "artifacts/*.json"],
+  "include": ["src", "src/*.json"],
   "references": [
     {
-      "path": "../eddsa-pcd/tsconfig.cjs.json"
+      "path": "../../pcd/eddsa-message-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/passport-ui/tsconfig.cjs.json"
     },
     {
       "path": "../../lib/pcd-types/tsconfig.cjs.json"
