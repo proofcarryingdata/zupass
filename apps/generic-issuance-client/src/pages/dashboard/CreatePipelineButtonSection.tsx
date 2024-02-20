@@ -7,11 +7,9 @@ export function CreatePipelineButtonSection(): ReactNode {
     <div>
       <Stack overflow="hidden" padding={4} gap={4}>
         <Box display="inline-block">
-          <Box float="right">
+          <Box>
             <PodLink to="/create-pipeline">
-              <Button colorScheme="green" size="sm" variant="outline">
-                Create Pipeline
-              </Button>
+              <Button colorScheme="green">Create Pipeline</Button>
             </PodLink>
           </Box>
         </Box>

@@ -103,13 +103,13 @@ export default function DashboardPage(): ReactNode {
         )}
       />
       <PageContent>
+        <CreatePipelineButtonSection />
+
         {pipelineEntries.length ? (
           <PipelineTable entries={pipelineEntries} isAdminView={isAdminView} />
         ) : (
           <span>No pipelines. Create one below.</span>
         )}
-
-        {<CreatePipelineButtonSection />}
 
         {isAdminView && <DashboardAdminSection />}
       </PageContent>
