@@ -1,12 +1,13 @@
 import { Heading, Select, Stack } from "@chakra-ui/react";
 import { PipelineType } from "@pcd/passport-interface";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { pipelineDetailPagePath } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { savePipeline } from "../../helpers/Mutations";
 import { useFetchSelf } from "../../helpers/useFetchSelf";
+import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { SAMPLE_LEMONADE_PIPELINE } from "../SamplePipelines";
 import CSVPipelineBuilder from "./pipeline-builders/CSVPipelineBuilder";
@@ -22,6 +23,7 @@ export default function CreatePipelinePage(): ReactNode {
   const [isUploadingPipeline, setIsUploadingPipeline] = useState(false);
   const [selectedPipelineType, setSelectedPipelineType] =
     useState<ClientPipelineType>(PipelineType.CSV);
+  const isAdminView = useIsAdminView(user?.value);
 
   const onCreateClick = useCallback(
     async (pipelineStringified: string) => {
@@ -79,6 +81,12 @@ export default function CreatePipelinePage(): ReactNode {
     ));
   }, [NON_ADMIN_PIPELINE_TYPES, user?.value?.isAdmin]);
 
+  useEffect(() => {
+    if (!isAdminView && selectedPipelineType !== PipelineType.CSV) {
+      setSelectedPipelineType(PipelineType.CSV);
+    }
+  }, [isAdminView, selectedPipelineType]);
+
   if (isUploadingPipeline) {
     return (
       <>
@@ -97,21 +105,23 @@ export default function CreatePipelinePage(): ReactNode {
         )}
       />
 
-      <PageContent style={{ paddingTop: 0 }}>
+      <PageContent>
         <Stack gap={2}>
-          <Select
-            bg="rgba(29,29,29,1)"
-            width="100%"
-            value={selectedPipelineType ?? ""}
-            onChange={(event): void => {
-              setSelectedPipelineType(event.target.value as PipelineType);
-            }}
-          >
-            <option value="" disabled>
-              Select your pipeline type...
-            </option>
-            {options}
-          </Select>
+          {isAdminView && (
+            <Select
+              bg="rgba(29,29,29,1)"
+              width="100%"
+              value={selectedPipelineType ?? ""}
+              onChange={(event): void => {
+                setSelectedPipelineType(event.target.value as PipelineType);
+              }}
+            >
+              <option value="" disabled>
+                Select your pipeline type...
+              </option>
+              {options}
+            </Select>
+          )}
 
           {selectedPipelineType === PipelineType.Pretix && (
             <PretixPipelineBuilder onCreate={onCreateClick} />

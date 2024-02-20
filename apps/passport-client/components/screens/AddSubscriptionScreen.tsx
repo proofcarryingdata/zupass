@@ -537,7 +537,7 @@ function AlreadySubscribed({
         <>
           <Spacer h={16} />
           <Button onClick={onUnsubscribeClick} style="danger">
-            Unsubscribe
+            Remove
           </Button>
         </>
       )}

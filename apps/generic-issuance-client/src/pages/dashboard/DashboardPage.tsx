@@ -108,7 +108,7 @@ export default function DashboardPage(): ReactNode {
         {pipelineEntries.length ? (
           <PipelineTable entries={pipelineEntries} isAdminView={isAdminView} />
         ) : (
-          <span>No pipelines. Create one below.</span>
+          <span>No pipelines. Create one above.</span>
         )}
 
         {isAdminView && <DashboardAdminSection />}
