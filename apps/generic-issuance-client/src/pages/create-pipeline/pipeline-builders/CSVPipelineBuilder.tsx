@@ -5,12 +5,9 @@ import {
   FeedIssuanceOptions,
   PipelineType
 } from "@pcd/passport-interface";
-import { ReactNode, useState } from "react";
+import { ReactNode, useEffect, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
-import {
-  SAMPLE_CSV_DATA,
-  SAMPLE_CSV_FEED_OPTIONS
-} from "../../SamplePipelines";
+import { SAMPLE_CSV_FEED_OPTIONS, getSampleCSV } from "../../SamplePipelines";
 import { FeedOptions } from "./FeedOptions";
 
 interface CSVPipelineBuilderProps {
@@ -26,7 +23,11 @@ export default function CSVPipelineBuilder(
   const [outputType, setOutputType] = useState<CSVPipelineOutputType>(
     CSVPipelineOutputType.RSAImage
   );
-  const [csv, setCsv] = useState(SAMPLE_CSV_DATA);
+  const [csv, setCsv] = useState("");
+
+  useEffect(() => {
+    setCsv(getSampleCSV(outputType));
+  }, [outputType]);
 
   return (
     <Stack gap={4}>
