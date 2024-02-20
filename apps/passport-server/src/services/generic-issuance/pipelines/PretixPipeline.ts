@@ -155,6 +155,8 @@ export class PretixPipeline implements BasePipeline {
   }
 
   public async start(): Promise<void> {
+    // On startup, the pipeline definition may have changed, and manual tickets
+    // may have been deleted. If so, clean up any check-ins for those tickets.
     await this.cleanUpManualCheckins();
   }
 
@@ -978,7 +980,7 @@ export class PretixPipeline implements BasePipeline {
    * Returns true if the user has the permission to check the ticket in, or an
    * error if not.
    */
-  private async canCheckIn(
+  private async canCheckInForEvent(
     eventId: string,
     checkerEmail: string
   ): Promise<true | GenericIssuanceCheckInError> {
@@ -1018,6 +1020,77 @@ export class PretixPipeline implements BasePipeline {
     }
 
     return { name: "NotSuperuser" };
+  }
+
+  private async canCheckInPretixTicket(
+    ticketAtom: PretixAtom
+  ): Promise<true | GenericIssuanceCheckInError> {
+    return traced(LOG_NAME, "canCheckInPretixTicket", async (span) => {
+      // Is the ticket already checked in?
+      // Only check if ticket is already checked in here, to avoid leaking
+      // information about ticket check-in status to unpermitted users.
+      if (ticketAtom.timestampConsumed instanceof Date) {
+        span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+        return {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: ticketAtom.timestampConsumed.toISOString(),
+          checker: PRETIX_CHECKER
+        };
+      }
+
+      // Is there a pending check-in for the ticket?
+      // If so, return as though this has succeeded.
+      const pendingCheckin = this.pendingCheckIns.get(ticketAtom.id);
+      if (pendingCheckin) {
+        span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+        return {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
+          checker: PRETIX_CHECKER
+        };
+      }
+
+      return true;
+    });
+  }
+
+  /**
+   * Verifies that a manual ticket can be checked in. The only reason for this
+   * to be disallowed is if the ticket has already been checked in, or if there
+   * is a pending check-in.
+   */
+  private async canCheckInManualTicket(
+    manualTicket: ManualTicket
+  ): Promise<true | GenericIssuanceCheckInError> {
+    return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
+      // Is the ticket already checked in?
+      const checkIn = await this.checkinDb.getByTicketId(
+        this.id,
+        manualTicket.id
+      );
+
+      if (checkIn) {
+        span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+        return {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: checkIn.timestamp.toISOString(),
+          checker: PRETIX_CHECKER
+        };
+      }
+
+      // Is there a pending check-in for the ticket?
+      const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
+      if (pendingCheckin) {
+        span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+        return {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
+          checker: PRETIX_CHECKER
+        };
+      }
+
+      return true;
+    });
   }
 
   /**
@@ -1076,59 +1149,80 @@ export class PretixPipeline implements BasePipeline {
           return { canCheckIn: false, error: { name: "InvalidSignature" } };
         }
 
-        // Check permissions
-        const canCheckInResult = await this.canCheckIn(eventId, checkerEmail);
+        try {
+          // Verify that checker can check in tickets for the specified event
+          const canCheckInResult = await this.canCheckInForEvent(
+            eventId,
+            checkerEmail
+          );
 
-        if (canCheckInResult === true) {
+          if (canCheckInResult !== true) {
+            span?.setAttribute("precheck_error", canCheckInResult.name);
+            return { canCheckIn: false, error: canCheckInResult };
+          }
+
+          // First see if we have an atom which matches the ticket ID
           const ticketAtom = await this.db.loadById(this.id, ticketId);
-          if (!ticketAtom) {
-            span?.setAttribute("precheck_error", "InvalidTicket");
-            return { canCheckIn: false, error: { name: "InvalidTicket" } };
-          }
-          // Only check if ticket is already checked in here, to avoid leaking
-          // information about ticket check-in status to unpermitted users.
-          if (ticketAtom.isConsumed) {
-            span?.setAttribute("precheck_error", "AlreadyCheckedIn");
-            return {
-              canCheckIn: false,
-              error: {
-                name: "AlreadyCheckedIn",
-                checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
-                checker: PRETIX_CHECKER // Pretix does not store a "checker" so use a constant
-              }
-            };
-          }
-
-          let pendingCheckin;
-          if ((pendingCheckin = this.pendingCheckIns.get(ticketAtom.id))) {
-            if (
-              pendingCheckin.status === CheckinStatus.Pending ||
-              pendingCheckin.status === CheckinStatus.Success
-            ) {
-              span?.setAttribute("precheck_error", "AlreadyCheckedIn");
+          if (ticketAtom && ticketAtom.eventId === eventId) {
+            const canCheckInTicketResult =
+              await this.canCheckInPretixTicket(ticketAtom);
+            if (canCheckInTicketResult !== true) {
               return {
                 canCheckIn: false,
-                error: {
-                  name: "AlreadyCheckedIn",
-                  checkinTimestamp: new Date(
-                    pendingCheckin.timestamp
-                  ).toISOString(),
-                  checker: PRETIX_CHECKER
-                }
+                error: canCheckInTicketResult
+              };
+            } else {
+              return {
+                canCheckIn: true,
+                eventName: this.atomToEventName(ticketAtom),
+                ticketName: this.atomToTicketName(ticketAtom),
+                attendeeEmail: ticketAtom.email as string,
+                attendeeName: ticketAtom.name
               };
             }
+          } else {
+            // No Pretix atom found, try looking for a manual ticket
+            const manualTicket = this.getManualTicketById(ticketId);
+            if (manualTicket && manualTicket.eventId === eventId) {
+              // Manual ticket found
+              const canCheckInTicketResult =
+                await this.canCheckInManualTicket(manualTicket);
+              if (canCheckInTicketResult !== true) {
+                return {
+                  canCheckIn: false,
+                  error: canCheckInTicketResult
+                };
+              } else {
+                const eventConfig = this.getEventById(manualTicket.eventId);
+                const ticketType = this.getProductById(
+                  eventConfig,
+                  manualTicket.productId
+                );
+                return {
+                  canCheckIn: true,
+                  eventName: eventConfig.name,
+                  ticketName: ticketType.name,
+                  attendeeEmail: manualTicket.attendeeEmail,
+                  attendeeName: manualTicket.attendeeName
+                };
+              }
+            }
           }
-          return {
-            canCheckIn: true,
-            eventName: this.atomToEventName(ticketAtom),
-            ticketName: this.atomToTicketName(ticketAtom),
-            attendeeEmail: ticketAtom.email as string,
-            attendeeName: ticketAtom.name
-          };
-        } else {
-          span?.setAttribute("precheck_error", canCheckInResult.name);
-          return { canCheckIn: false, error: canCheckInResult };
+        } catch (e) {
+          logger(
+            `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${checkerEmail} on pipeline ${this.id}`,
+            e
+          );
+          setError(e);
+          span?.setAttribute("checkin_error", "InvalidTicket");
+          return { canCheckIn: false, error: { name: "InvalidTicket" } };
         }
+        // Didn't find any matching ticket
+        logger(
+          `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
+        );
+        span?.setAttribute("checkin_error", "InvalidTicket");
+        return { canCheckIn: false, error: { name: "InvalidTicket" } };
       }
     );
   }
@@ -1187,7 +1281,10 @@ export class PretixPipeline implements BasePipeline {
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { checkedIn: false, error: { name: "InvalidSignature" } };
       }
-      const canCheckInResult = await this.canCheckIn(eventId, checkerEmail);
+      const canCheckInResult = await this.canCheckInForEvent(
+        eventId,
+        checkerEmail
+      );
       if (canCheckInResult !== true) {
         return { checkedIn: false, error: canCheckInResult };
       }
@@ -1213,6 +1310,9 @@ export class PretixPipeline implements BasePipeline {
     });
   }
 
+  /**
+   * Checks a manual ticket into the DB.
+   */
   private async checkInManualTicket(
     manualTicket: ManualTicket,
     checkerEmail: string
@@ -1220,22 +1320,15 @@ export class PretixPipeline implements BasePipeline {
     return traced(LOG_NAME, "checkInManualTicket", async (span) => {
       const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
       if (pendingCheckin) {
-        if (
-          pendingCheckin.status === CheckinStatus.Pending ||
-          pendingCheckin.status === CheckinStatus.Success
-        ) {
-          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-          return {
-            checkedIn: false,
-            error: {
-              name: "AlreadyCheckedIn",
-              checkinTimestamp: new Date(
-                pendingCheckin.timestamp
-              ).toISOString(),
-              checker: PRETIX_CHECKER
-            }
-          };
-        }
+        span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+        return {
+          checkedIn: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
+            checker: PRETIX_CHECKER
+          }
+        };
       }
 
       try {
@@ -1252,6 +1345,8 @@ export class PretixPipeline implements BasePipeline {
         this.pendingCheckIns.delete(manualTicket.id);
 
         if (e instanceof DatabaseError) {
+          // We may have received a DatabaseError due to an insertion conflict
+          // Detect this conflict by looking for an existing check-in.
           const existingCheckin = await this.checkinDb.getByTicketId(
             this.id,
             manualTicket.id
@@ -1275,6 +1370,9 @@ export class PretixPipeline implements BasePipeline {
     });
   }
 
+  /**
+   * Check in a ticket to the Pretix back-end.
+   */
   private async checkInPretixTicket(
     ticketAtom: PretixAtom,
     checkerEmail: string
@@ -1402,56 +1500,29 @@ export class PretixPipeline implements BasePipeline {
     return correspondingEventConfig.externalId;
   }
 
-  private atomToPretixProductId(ticketAtom: PretixAtom): string {
-    const correspondingEventConfig = this.definition.options.events.find(
-      (e) => e.genericIssuanceId === ticketAtom.eventId
+  private getEventById(eventId: string): PretixEventConfig {
+    const eventConfig = this.definition.options.events.find(
+      (ev) => ev.genericIssuanceId === eventId
     );
-
-    if (!correspondingEventConfig) {
-      throw new Error("no matching event id");
+    if (!eventConfig) {
+      throw new Error(`Could not find event ${eventId} on pipeline ${this.id}`);
     }
-
-    const correspondingProductConfig = correspondingEventConfig.products.find(
-      (p) => p.genericIssuanceId === ticketAtom.productId
-    );
-
-    if (!correspondingProductConfig) {
-      throw new Error("no matching product id");
-    }
-
-    return correspondingProductConfig.externalId;
+    return eventConfig;
   }
 
-  private eddsaTicketToPretixEventId(ticket: EdDSATicketPCD): string {
-    const correspondingEventConfig = this.definition.options.events.find(
-      (e) => e.genericIssuanceId === ticket.claim.ticket.eventId
+  private getProductById(
+    event: PretixEventConfig,
+    productId: string
+  ): PretixProductConfig {
+    const productConfig = event.products.find(
+      (product) => product.genericIssuanceId === productId
     );
-
-    if (!correspondingEventConfig) {
-      throw new Error("no matching event id");
+    if (!productConfig) {
+      throw new Error(
+        `Could not find product ${productId} for event ${event.genericIssuanceId} on pipeline ${this.id}`
+      );
     }
-
-    return correspondingEventConfig.externalId;
-  }
-
-  private eddsaTicketToPretixProductId(ticket: EdDSATicketPCD): string {
-    const correspondingEventConfig = this.definition.options.events.find(
-      (e) => e.genericIssuanceId === ticket.claim.ticket.eventId
-    );
-
-    if (!correspondingEventConfig) {
-      throw new Error("no matching event id");
-    }
-
-    const correspondingProductConfig = correspondingEventConfig.products.find(
-      (p) => p.genericIssuanceId === ticket.claim.ticket.productId
-    );
-
-    if (!correspondingProductConfig) {
-      throw new Error("no matching product id");
-    }
-
-    return correspondingProductConfig.externalId;
+    return productConfig;
   }
 
   public static is(p: Pipeline): p is PretixPipeline {
