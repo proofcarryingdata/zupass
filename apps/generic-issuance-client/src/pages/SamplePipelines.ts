@@ -41,15 +41,16 @@ export const SAMPLE_CSV_EDSDA_MESSAGE = `
 
 
 Title,Message
-Frogville Bake Off,Join the annual Frogville Bake Off this weekend. Sweet treats and community fun! ![View more](https://i.ibb.co/R2sYtTS/1.webp).
-Tech Toad Talks,Dive into the latest in lily pad tech at the Tech Toad Talks. Innovation leaps ahead! ![View more](https://i.ibb.co/WcWXJbc/2.webp).
-Croak Choir Concert,Experience the harmonies of the Croak Choir under the moonlight. A symphony of sounds! ![View more](https://i.ibb.co/1KTCJwc/3.webp).
-Hopscotch Championship,Compete or cheer in the Frogville Hopscotch Championship. Who will be the leap champion? ![View more](https://i.ibb.co/djdmRfP/4.webp).
-Green Thumb Gardeners,Share tips and seeds at the Green Thumb Gardeners meet. Grow your garden dreams! ![View more](https://i.ibb.co/4t06pct/5.webp).
-Froglet Film Festival,"Watch the best in amphibian cinema at the Froglet Film Festival. Lights, camera, croak! ![View more](https://i.ibb.co/YDMFQhq/6.webp)."
-Mystic Pond Meditation,Find peace and tranquility at the Mystic Pond Meditation session. Serenity in nature. ![View more](https://i.ibb.co/BZxXKM3/7.webp).
-Bug Brew Crafters,Sample the finest in bug brews at our local crafters meet. A taste adventure! ![View more](https://i.ibb.co/qBBpwyH/8.webp).
-Starlight Storytelling,Gather for magical tales at the Starlight Storytelling night. Dreams under the stars. ![View more](https://i.ibb.co/tpnXb4h/9.webp).
+Art Museum Visit,"Explore the **Denver Art Museum** to discover a world of art ranging from indigenous works to contemporary exhibits. With bold architecture and interactive installations, it's a cultural journey. The museum's diverse collections ensure there's something for everyone. ![](https://i.ibb.co/1LwGxwP/1.webp)"
+Larimer Square Lights,"Walk through **Larimer Square** at dusk, where the lights create a magical atmosphere perfect for exploring Denver's most historic block. Enjoy boutique shopping, gourmet dining, and vibrant nightlife all in one place. ![xd](https://i.ibb.co/GkjHhs4/2.webp)"
+Nuggets Game Night,"Experience the thrill of a **Denver Nuggets** game at the Ball Arena. Feel the energy of the crowd as you watch top-tier basketball, making for an unforgettable night of sports in Denver. ![xd](https://i.ibb.co/yFVwGK6/3.webp)"
+Brewery Tour Fun,"Take a **brewery tour** in the RiNo District, where the craft beer scene thrives. Sample some of Denver's finest ales and lagers, and learn about the brewing process from passionate local brewers. ![xd](https://i.ibb.co/Zm5CKCf/4.webp)"
+Snowshoeing Rockies,"Enjoy a serene **snowshoeing adventure** in the nearby Rocky Mountains. Traverse through snow-covered trails, breathe in the crisp mountain air, and marvel at the stunning winter landscapes. ![xd](https://i.ibb.co/fn5wSQs/5.webp)"
+Red Rocks Concert,Attend a **live music performance** at Red Rocks Amphitheatre. This iconic venue offers an unparalleled acoustic experience set against the backdrop of breathtaking natural beauty. ![xd](https://i.ibb.co/ynRHfS7/10.webp)
+Culinary Delights,"Indulge in a **culinary experience** in Denver's food scene, featuring farm-to-table restaurants and innovative chefs. Taste the local flavors through dishes crafted with the freshest ingredients. ![xd](https://i.ibb.co/zGC0Z27/6.webp)"
+Botanic Gardens Peace,"Explore the **Denver Botanic Gardens**, a tranquil oasis in the city. Even in winter, the gardens offer a peaceful retreat with indoor conservatories showcasing exotic plants from around the world. ![xd](https://i.ibb.co/vVNrDty/7.webp)"
+Ghostly Capitol Hill,"Join a **ghost tour** in the historic Capitol Hill neighborhood. Dive into Denver's spooky side with stories of hauntings and mysteries that lurk in the city's oldest buildings. ![xd](https://i.ibb.co/XJ0BPgb/8.webp)"
+Winter Hike Views,"Take a **winter hike** in the Denver Mountain Parks. Embrace the beauty of the season with trails that offer spectacular views and a chance to spot local wildlife in their natural habitat. ![xd](https://i.ibb.co/T4P4Ssf/9.webp)"
 
 
 `
@@ -58,8 +59,19 @@ Starlight Storytelling,Gather for magical tales at the Starlight Storytelling ni
   .join("\n");
 
 // TODO
-export const SAMPLE_CSV_EDSA_TICKET = `Title,Image
-Test Title,Test Message`;
+export const SAMPLE_CSV_EDSA_TICKET = `
+
+
+Event Title,Ticket Tier,Name,Email
+Eth Denver,GA,Ivan,ivan@0xparc.org
+Eth Denver,VIP,ichub,ivan@0xparc.org
+
+
+
+`
+  .split("\n")
+  .filter((l) => l.length > 0)
+  .join("\n");
 
 export function getSampleCSVData(
   outputType = CSVPipelineOutputType.Message
@@ -89,16 +101,16 @@ export function getSampleFeedOptions(
 
 export const MESSAGE_CSV_FEED_OPTS = {
   feedId: "0",
-  feedDisplayName: "frogville_bulletin_board.csv",
-  feedDescription: "frogville_bulletin_board",
-  feedFolder: "frogville XD/announcements"
+  feedDisplayName: "denver_activities.csv",
+  feedDescription: "Denver Activities",
+  feedFolder: "EthDenver/activities.csv"
 } satisfies FeedIssuanceOptions;
 
 export const TICKET_FEED_OPTS = {
   feedId: "0",
-  feedDisplayName: "frogville_ball_tickets",
-  feedDescription: "frogville_ball_tickets",
-  feedFolder: "frogville XD/frog ball"
+  feedDisplayName: "eth_denver_tickets.csv",
+  feedDescription: "eth_denver_tickets",
+  feedFolder: "EthDenver"
 } satisfies FeedIssuanceOptions;
 
 export const SAMPLE_CSV_PIPELINE = JSON.stringify(

@@ -29,9 +29,7 @@ export function bigintifyMsg(msg: Message): MsgAsInt {
 export function parseBigintifiedMsg(int: MsgAsInt): Message {
   const buf = toBufferBE(int.int, int.len);
   const msgString = buf.toString("utf-8");
-  console.log("deserializing 99", msgString);
   try {
-    console.log("deserializing 100", JSON.parse(msgString));
     const msg = MessageSchema.parse(JSON.parse(msgString));
     return msg;
   } catch (e) {

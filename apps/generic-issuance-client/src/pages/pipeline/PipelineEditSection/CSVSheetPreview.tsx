@@ -10,10 +10,12 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
   const [parseError, setParseError] = useState<Error>();
 
   useEffect(() => {
+    console.log("parsing csv", csv);
     parseCSV(csv)
       .then((parsed) => {
         setParsed(parsed);
         setParseError(undefined);
+        console.log("parsed", parsed);
       })
       .catch((e) => {
         setParsed([]);
@@ -52,6 +54,7 @@ const Container = styled.div`
   box-sizing: border-box;
   overflow: hidden;
   overflow-y: scroll;
+  overflow-x: scroll;
   height: 100%;
   width: 100%;
 

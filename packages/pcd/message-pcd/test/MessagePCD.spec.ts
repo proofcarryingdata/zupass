@@ -1,8 +1,10 @@
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
 import { v4 as uuid } from "uuid";
 import { MessagePCDPackage } from "../src";
+import { checkMsg } from "../src/utils/checkMsg";
 
 describe("message-pcd should work", function () {
   this.timeout(30_000);
@@ -11,7 +13,7 @@ describe("message-pcd should work", function () {
   const prvKey =
     "0001020304050607080900010203040506070809000102030405060708090001";
 
-  const expectedPublicKey = [
+  const expectedPublicKey: EdDSAPublicKey = [
     "1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2",
     "1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4"
   ];
@@ -40,6 +42,8 @@ describe("message-pcd should work", function () {
 
     expect(await MessagePCDPackage.verify(pcd)).to.eq(true);
 
+    expect(async () => await checkMsg(pcd, expectedPublicKey)).to.not.throw();
+
     const ser = await MessagePCDPackage.serialize(pcd);
     const copy1 = await MessagePCDPackage.deserialize(ser.pcd);
 
@@ -49,6 +53,8 @@ describe("message-pcd should work", function () {
     expect(await MessagePCDPackage.verify(copy1)).to.eq(true);
     copy1.proof.signature.claim.message[0]++;
     expect(await MessagePCDPackage.verify(copy1)).to.eq(false);
+
+    // expect(async () => await checkMsg(copy1, expectedPublicKey)).to.throw();
 
     ///////////////////////////////// tamper case 2
     /////////////////////////////////

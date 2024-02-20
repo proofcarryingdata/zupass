@@ -22,8 +22,8 @@ export async function makeTicketPCD(
         argumentType: ArgumentTypeName.Object,
         value: {
           // The fields below are not signed and are used for display purposes.
-          eventName: "a",
-          ticketName: "b",
+          eventName: inputRow[0],
+          ticketName: inputRow[1],
           checkerEmail: undefined, // change if checkin feature enabled for csv pipelines
           imageUrl: undefined,
           imageAltText: undefined,
@@ -34,12 +34,12 @@ export async function makeTicketPCD(
           productId: randomUUID(), // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
           timestampConsumed: 0, // change if checkin feature enabled for csv pipelines
           timestampSigned: Date.now(),
-          attendeeSemaphoreId: randomUUID(),
+          attendeeSemaphoreId: BigInt(0).toString(),
           isConsumed: false, // change if checkin feature enabled for csv pipelines
           isRevoked: false,
           ticketCategory: TicketCategory.Generic,
-          attendeeName: "test name",
-          attendeeEmail: "test@test.com"
+          attendeeName: inputRow[2],
+          attendeeEmail: inputRow[3]
         }
       }
     });

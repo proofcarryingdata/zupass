@@ -484,6 +484,8 @@ function AlreadySubscribed({
         subscriptionId: existingSubscription.id,
         deleteContents
       });
+
+      window.scrollTo(0, 0);
     }
   }, [existingSubscription.feed.name, existingSubscription.id, dispatch]);
 
