@@ -20,6 +20,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express from "express";
 import urljoin from "url-join";
 import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
@@ -371,4 +372,104 @@ export function initGenericIssuanceRoutes(
     checkGenericIssuanceServiceStarted(genericIssuanceService);
     res.send(await genericIssuanceService.getBalances());
   });
+
+  /**
+   * Gets the latest Semaphore group for a given semaphore group id.
+   */
+  app.get(
+    "/generic-issuance/api/semaphore/:pipelineId/:groupId",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const groupId = checkUrlParam(req, "groupId");
+
+      const result = await genericIssuanceService.handleGetSemaphoreGroup(
+        pipelineId,
+        groupId
+      );
+
+      res.json(result satisfies SerializedSemaphoreGroup);
+    }
+  );
+
+  /**
+   * Gets the root for the latest Semaphore group for a given group id.
+   */
+  app.get(
+    "/generic-issuance/api/semaphore/:pipelineId/:groupId/latest-root",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const groupId = checkUrlParam(req, "groupId");
+
+      const result =
+        await genericIssuanceService.handleGetLatestSemaphoreGroupRoot(
+          pipelineId,
+          groupId
+        );
+
+      res.json(result);
+    }
+  );
+
+  /**
+   * Gets historical Semaphore group for a given Semaphore group id and root.
+   */
+  app.get(
+    "/generic-issuance/api/semaphore/:pipelineId/:groupId/:root",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const groupId = checkUrlParam(req, "groupId");
+      const root = checkUrlParam(req, "root");
+
+      const result =
+        await genericIssuanceService.handleGetHistoricalSemaphoreGroup(
+          pipelineId,
+          groupId,
+          root
+        );
+
+      res.json(result satisfies SerializedSemaphoreGroup);
+    }
+  );
+
+  /**
+   * Checks the validity of a given Semaphore group id and root.
+   */
+  app.get(
+    "/generic-issuance/api/semaphore/:pipelineId/:groupId/valid/:root",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+      const groupId = checkUrlParam(req, "groupId");
+      const root = checkUrlParam(req, "root");
+
+      const result = await genericIssuanceService.handleGetValidSemaphoreGroup(
+        pipelineId,
+        groupId,
+        root
+      );
+
+      res.json(result);
+    }
+  );
+
+  /**
+   * Gets the list of supported Semaphore groups for a pipeline.
+   */
+  app.get(
+    "/generic-issuance/api/semaphore-groups/:pipelineId",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const pipelineId = checkUrlParam(req, "pipelineId");
+
+      const result =
+        await genericIssuanceService.handleGetPipelineSemaphoreGroups(
+          pipelineId
+        );
+
+      res.json(result);
+    }
+  );
 }

@@ -43,6 +43,8 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
   IContactSharingDB
@@ -50,6 +52,7 @@ import {
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
+import { SemaphoreGroupProvider } from "../SemaphoreGroupProvider";
 import {
   CheckinCapability,
   CheckinStatus,
@@ -59,6 +62,7 @@ import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
+import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
@@ -111,6 +115,10 @@ export class LemonadePipeline implements BasePipeline {
   private api: ILemonadeAPI;
   private cacheService: PersistentCacheService;
   private loaded: boolean;
+  private consumerDB: IPipelineConsumerDB;
+  private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
+
+  private semaphoreGroupProvider: SemaphoreGroupProvider;
 
   public get id(): string {
     return this.definition.id;
@@ -124,6 +132,10 @@ export class LemonadePipeline implements BasePipeline {
     return this.capabilities[1] as CheckinCapability;
   }
 
+  public get semaphoreGroupCapability(): SemaphoreGroupCapability {
+    return this.capabilities[2] as SemaphoreGroupCapability;
+  }
+
   public constructor(
     eddsaPrivateKey: string,
     definition: LemonadePipelineDefinition,
@@ -133,7 +145,9 @@ export class LemonadePipeline implements BasePipeline {
     cacheService: PersistentCacheService,
     checkinDb: IPipelineCheckinDB,
     contactDB: IContactSharingDB,
-    badgeDB: IBadgeGiftingDB
+    badgeDB: IBadgeGiftingDB,
+    consumerDB: IPipelineConsumerDB,
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -143,6 +157,13 @@ export class LemonadePipeline implements BasePipeline {
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
     this.loaded = false;
+
+    this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+      this.id,
+      this.definition.options.semaphoreGroups ?? [],
+      consumerDB,
+      semaphoreHistoryDB
+    );
 
     this.capabilities = [
       {
@@ -164,17 +185,37 @@ export class LemonadePipeline implements BasePipeline {
           );
         },
         preCheck: this.precheckTicketAction.bind(this)
-      } satisfies CheckinCapability
+      } satisfies CheckinCapability,
+      {
+        type: PipelineCapability.SemaphoreGroup,
+        getSerializedGroup: this.semaphoreGroupProvider.getSerializedGroup.bind(
+          this.semaphoreGroupProvider
+        ),
+        getGroupRoot: this.semaphoreGroupProvider.getGroupRoot.bind(
+          this.semaphoreGroupProvider
+        ),
+        getSerializedHistoricalGroup:
+          this.semaphoreGroupProvider.getSerializedHistoricalGroup.bind(
+            this.semaphoreGroupProvider
+          ),
+        getSupportedGroups: this.semaphoreGroupProvider.getSupportedGroups.bind(
+          this.semaphoreGroupProvider
+        )
+      } satisfies SemaphoreGroupCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
     this.checkinDb = checkinDb;
+    this.consumerDB = consumerDB;
+    this.semaphoreHistoryDB = semaphoreHistoryDB;
   }
 
   public async start(): Promise<void> {
     // On startup, the pipeline definition may have changed, and manual tickets
     // may have been deleted. If so, clean up any check-ins for those tickets.
     await this.cleanUpManualCheckins();
+    // Initialize the Semaphore Group provider by loading groups from the DB
+    await this.semaphoreGroupProvider.start();
   }
 
   public async stop(): Promise<void> {
@@ -341,9 +382,16 @@ export class LemonadePipeline implements BasePipeline {
                     : t.user_name,
                 lemonadeEventId: eventConfig.externalId,
                 lemonadeTicketTypeId: t.type_id,
+                genericIssuanceEventId: eventConfig.genericIssuanceEventId,
+                // The 'as string' cast here is safe because we know that the
+                // ticket type exists, having earlier filtered out tickets for
+                // which the ticket type does not exist.
+                genericIssuanceProductId: eventConfig.ticketTypes.find(
+                  (ticketType) => ticketType.externalId === t.type_id
+                )?.genericIssuanceProductId as string,
                 lemonadeUserId: t.user_id,
                 checkinDate: t.checkin_date
-              }) as LemonadeAtom
+              }) satisfies LemonadeAtom
           );
         }
       );
@@ -390,6 +438,10 @@ export class LemonadePipeline implements BasePipeline {
         )
       );
 
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        await this.triggerSemaphoreGroupUpdate();
+      }
+
       return {
         latestLogs: logs,
         lastRunEndTimestamp: end.toISOString(),
@@ -397,9 +449,52 @@ export class LemonadePipeline implements BasePipeline {
         atomsLoaded: atomsToSave.length,
         atomsExpected: atomsExpected,
         errorMessage: undefined,
+        semaphoreGroups:
+          this.semaphoreGroupCapability.getSupportedGroups().groups,
         success: true
       } satisfies PipelineLoadSummary;
     });
+  }
+
+  /**
+   * Collects data that is require for Semaphore groups to update.
+   * Returns an array of { eventId, productId, email } objects, which the
+   * SemaphoreGroupProvider will use to look up Semaphore IDs and match them
+   * to configured Semaphore groups.
+   */
+  private async semaphoreGroupData(): Promise<
+    { email: string; eventId: string; productId: string }[]
+  > {
+    return traced(LOG_NAME, "semaphoreGroupData", async (span) => {
+      const data = [];
+      for (const atom of await this.db.load(this.id)) {
+        data.push({
+          email: atom.email as string,
+          eventId: atom.genericIssuanceEventId,
+          productId: atom.genericIssuanceProductId
+        });
+      }
+
+      for (const manualTicket of this.definition.options.manualTickets ?? []) {
+        data.push({
+          email: manualTicket.attendeeEmail,
+          eventId: manualTicket.eventId,
+          productId: manualTicket.productId
+        });
+      }
+
+      span?.setAttribute("ticket_data_length", data.length);
+
+      return data;
+    });
+  }
+
+  /**
+   * Tell the Semaphore group provider to update memberships.
+   */
+  private async triggerSemaphoreGroupUpdate(): Promise<void> {
+    const data = await this.semaphoreGroupData();
+    await this.semaphoreGroupProvider.update(data);
   }
 
   /**
@@ -650,6 +745,21 @@ export class LemonadePipeline implements BasePipeline {
       ) {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
+
+      const now = new Date();
+      // TODO check the timeUpdated retuned from save(), which will equal now
+      // if a new or updated commitment was recorded, in which case the
+      // Semaphore groups need to be updated. They will be updated on next
+      // load(), but this means there's some latency between a new user
+      // authenticating and being added to their Semaphore groups.
+
+      // Consumer is validated, so save them in the consumer list
+      await this.consumerDB.save(
+        this.id,
+        emailPCD.claim.emailAddress,
+        emailPCD.claim.semaphoreId,
+        now
+      );
 
       const email = emailPCD.claim.emailAddress.toLowerCase();
       span?.setAttribute("email", email);
@@ -954,8 +1064,8 @@ export class LemonadePipeline implements BasePipeline {
 
       // signed fields
       ticketId: atom.id,
-      eventId: this.lemonadeAtomToZupassEventId(atom),
-      productId: this.lemonadeAtomToZupassProductId(atom),
+      eventId: atom.genericIssuanceEventId,
+      productId: atom.genericIssuanceProductId,
       timestampConsumed:
         atom.checkinDate instanceof Date ? atom.checkinDate.getTime() : 0,
       timestampSigned: Date.now(),
@@ -988,10 +1098,8 @@ export class LemonadePipeline implements BasePipeline {
       this.id,
       checkerEmail
     )) {
-      if (this.lemonadeAtomToZupassEventId(checkerTicketAtom) === eventId) {
-        checkerProductIds.push(
-          this.lemonadeAtomToZupassProductId(checkerTicketAtom)
-        );
+      if (checkerTicketAtom.genericIssuanceEventId === eventId) {
+        checkerProductIds.push(checkerTicketAtom.genericIssuanceProductId);
       }
     }
     for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
@@ -1638,6 +1746,8 @@ export interface LemonadeAtom extends PipelineAtom {
   name: string;
   lemonadeEventId: string;
   lemonadeTicketTypeId: string;
+  genericIssuanceEventId: string;
+  genericIssuanceProductId: string;
   lemonadeUserId: string;
   checkinDate: Date | null;
 }

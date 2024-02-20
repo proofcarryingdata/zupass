@@ -4,9 +4,14 @@ import {
   EdgeCityBalance,
   Feed,
   GenericIssuanceCheckInRequest,
+  GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
+  GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuancePreCheckRequest,
+  GenericIssuanceSemaphoreGroupResponseValue,
+  GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
   LemonadePipelineDefinition,
@@ -41,9 +46,17 @@ import {
   PipelineCheckinDB
 } from "../../database/queries/pipelineCheckinDB";
 import {
+  IPipelineConsumerDB,
+  PipelineConsumerDB
+} from "../../database/queries/pipelineConsumerDB";
+import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../database/queries/pipelineDefinitionDB";
+import {
+  IPipelineSemaphoreHistoryDB,
+  PipelineSemaphoreHistoryDB
+} from "../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IPipelineUserDB,
   PipelineUserDB
@@ -69,6 +82,7 @@ import {
   ensureFeedIssuanceCapability,
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
+import { ensureSemaphoreGroupCapability } from "./capabilities/SemaphoreGroupCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
 import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
@@ -121,6 +135,8 @@ export class GenericIssuanceService {
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
+  private consumerDB: IPipelineConsumerDB;
+  private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
 
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
@@ -159,6 +175,8 @@ export class GenericIssuanceService {
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
+    this.consumerDB = new PipelineConsumerDB(context.dbPool);
+    this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -248,7 +266,9 @@ export class GenericIssuanceService {
               this.cacheService,
               this.checkinDB,
               this.contactDB,
-              this.badgeDB
+              this.badgeDB,
+              this.consumerDB,
+              this.semaphoreHistoryDB
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -643,6 +663,9 @@ export class GenericIssuanceService {
         pipelineInstance.id
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
+      const latestConsumers = await this.consumerDB.loadAll(
+        pipelineInstance.id
+      );
 
       if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");
@@ -654,6 +677,14 @@ export class GenericIssuanceService {
           url: f.feedUrl
         })),
         latestAtoms: latestAtoms,
+        latestConsumers: latestConsumers
+          .map((consumer) => ({
+            email: consumer.email,
+            commitment: consumer.commitment,
+            timeCreated: consumer.timeCreated.toISOString(),
+            timeUpdated: consumer.timeUpdated.toISOString()
+          }))
+          .sort((a, b) => b.timeUpdated.localeCompare(a.timeUpdated)),
         lastLoad: summary,
         ownerEmail: pipelineSlot.owner.email
       } satisfies PipelineInfoResponseValue;
@@ -827,6 +858,115 @@ export class GenericIssuanceService {
         `can't find pipeline to check-in for event ${eventId}`
       );
     });
+  }
+
+  public async handleGetSemaphoreGroup(
+    pipelineId: string,
+    groupId: string
+  ): Promise<GenericIssuanceSemaphoreGroupResponseValue> {
+    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+    const pipeline = await this.ensurePipelineStarted(pipelineId);
+    tracePipeline(pipelineSlot.definition);
+
+    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+
+    // Retrieving this via the capability might be unnecessary, since we have
+    // access to the PipelineSemaphoreGroupDB already, and could just look the
+    // data up from there.
+    const serializedGroup =
+      await semaphoreGroupCapability.getSerializedGroup(groupId);
+    if (!serializedGroup) {
+      throw new PCDHTTPError(
+        403,
+        `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
+      );
+    }
+
+    return serializedGroup;
+  }
+
+  public async handleGetLatestSemaphoreGroupRoot(
+    pipelineId: string,
+    groupId: string
+  ): Promise<GenericIssuanceSemaphoreGroupRootResponseValue> {
+    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+    const pipeline = await this.ensurePipelineStarted(pipelineId);
+    tracePipeline(pipelineSlot.definition);
+
+    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+
+    // Retrieving this via the capability might be unnecessary, since we have
+    // access to the PipelineSemaphoreGroupDB already, and could just look the
+    // data up from there.
+    const rootHash = await semaphoreGroupCapability.getGroupRoot(groupId);
+    if (rootHash === undefined) {
+      throw new PCDHTTPError(
+        403,
+        `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
+      );
+    }
+
+    return rootHash;
+  }
+
+  public async handleGetHistoricalSemaphoreGroup(
+    pipelineId: string,
+    groupId: string,
+    root: string
+  ): Promise<GenericIssuanceHistoricalSemaphoreGroupResponseValue> {
+    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+    const pipeline = await this.ensurePipelineStarted(pipelineId);
+    tracePipeline(pipelineSlot.definition);
+
+    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+
+    // Retrieving this via the capability might be unnecessary, since we have
+    // access to the PipelineSemaphoreGroupDB already, and could just look the
+    // data up from there.
+    const serializedGroup =
+      await semaphoreGroupCapability.getSerializedHistoricalGroup(
+        groupId,
+        root
+      );
+    if (!serializedGroup) {
+      throw new PCDHTTPError(
+        403,
+        `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
+      );
+    }
+
+    return serializedGroup;
+  }
+
+  public async handleGetValidSemaphoreGroup(
+    pipelineId: string,
+    groupId: string,
+    root: string
+  ): Promise<GenericIssuanceValidSemaphoreGroupResponseValue> {
+    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+    const pipeline = await this.ensurePipelineStarted(pipelineId);
+    tracePipeline(pipelineSlot.definition);
+    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+    const serializedGroup =
+      await semaphoreGroupCapability.getSerializedHistoricalGroup(
+        groupId,
+        root
+      );
+
+    return {
+      valid: serializedGroup !== undefined
+    };
+  }
+
+  public async handleGetPipelineSemaphoreGroups(
+    pipelineId: string
+  ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
+    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+    const pipeline = await this.ensurePipelineStarted(pipelineId);
+    tracePipeline(pipelineSlot.definition);
+    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+
+    return semaphoreGroupCapability.getSupportedGroups();
   }
 
   /**
@@ -1141,7 +1281,9 @@ export class GenericIssuanceService {
         this.cacheService,
         this.checkinDB,
         this.contactDB,
-        this.badgeDB
+        this.badgeDB,
+        this.consumerDB,
+        this.semaphoreHistoryDB
       );
 
       await this.performPipelineLoad(pipelineSlot);
@@ -1440,7 +1582,8 @@ export class GenericIssuanceService {
         oauthClientId: testLemonadeOAuthClientId,
         oauthClientSecret: testLemonadeOAuthClientSecret,
         oauthServerUrl: testLemonadeOAuthServerUrl,
-        manualTickets: []
+        manualTickets: [],
+        semaphoreGroups: []
       },
       type: PipelineType.Lemonade
     };

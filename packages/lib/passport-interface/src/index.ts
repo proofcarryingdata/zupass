@@ -42,6 +42,7 @@ export * from "./api/requestGenericIssuanceFetchPretixProducts";
 export * from "./api/requestGenericIssuanceGetAllUserPipelines";
 export * from "./api/requestGenericIssuanceGetPipeline";
 export * from "./api/requestGenericIssuanceSelf";
+export * from "./api/requestGenericIssuanceSemaphoreGroup";
 export * from "./api/requestGenericIssuanceUpsertPipeline";
 export * from "./api/requestIssuanceServiceEnabled";
 export * from "./api/requestKnownTickets";

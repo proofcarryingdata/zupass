@@ -22,8 +22,10 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
+import { PipelineLatestConsumersSection } from "./PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./PipelineLatestLogsSection";
+import { PipelineSemaphoreGroupsSection } from "./PipelineSemaphoreGroupsSection";
 
 export function PipelineDetailSection({
   pipelineInfo,
@@ -73,6 +75,22 @@ export function PipelineDetailSection({
           <AccordionButton>Latest Data</AccordionButton>
           <AccordionPanel>
             <PipelineLatestDataSection latestAtoms={pipelineInfo.latestAtoms} />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Consumers</AccordionButton>
+          <AccordionPanel>
+            <PipelineLatestConsumersSection
+              latestConsumers={pipelineInfo.latestConsumers}
+            />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Semaphore Groups</AccordionButton>
+          <AccordionPanel>
+            <PipelineSemaphoreGroupsSection lastLoad={pipelineInfo.lastLoad} />
           </AccordionPanel>
         </AccordionItem>
 

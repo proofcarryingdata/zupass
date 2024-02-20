@@ -21,12 +21,18 @@ import {
   createFeedCredentialPayload,
   createTicketActionCredentialPayload,
   getI18nString,
+  requestGenericIssuanceSemaphoreGroup,
   requestPipelineInfo,
   requestPodboxTicketAction,
   requestPollFeed
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import {
+  SemaphoreGroupPCDPackage,
+  deserializeSemaphoreGroup,
+  serializeSemaphoreGroup
+} from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   SemaphoreSignaturePCD,
@@ -47,6 +53,7 @@ import { ILemonadeAPI, getLemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
 import { stopApplication } from "../src/application";
 import { PipelineCheckinDB } from "../src/database/queries/pipelineCheckinDB";
+import { PipelineConsumerDB } from "../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
@@ -222,6 +229,12 @@ describe("Generic Issuance", function () {
     // TestTokenSource simply returns the `oauthClientId` as the token.
     lemonadeTokenSource
   );
+  const edgeCitySemaphoreGroupIds = {
+    all: randomUUID(),
+    bouncers: randomUUID(),
+    attendees: randomUUID(),
+    attendeesAndBouncers: randomUUID()
+  };
   const lemonadeBackendUrl = "http://localhost";
   const edgeCityDenverEventId = randomUUID();
   const edgeCityDenverAttendeeProductId = randomUUID();
@@ -286,6 +299,54 @@ describe("Generic Issuance", function () {
           productId: edgeCityDenverBouncerProductId,
           attendeeName: "Manual Bouncer",
           attendeeEmail: EdgeCityManualBouncerEmail
+        }
+      ],
+      semaphoreGroups: [
+        {
+          // All attendees, irrespective of product type
+          name: "All",
+          groupId: edgeCitySemaphoreGroupIds.all,
+          membershipTickets: [{ eventId: edgeCityDenverEventId }]
+        },
+        {
+          // Holders of bouncer-tier tickets
+          name: "Bouncers",
+          groupId: edgeCitySemaphoreGroupIds.bouncers,
+          membershipTickets: [
+            {
+              eventId: edgeCityDenverEventId,
+              productId: edgeCityDenverBouncerProductId
+            }
+          ]
+        },
+        {
+          // Holders of attendee-tier tickets
+          name: "Attendees",
+          groupId: edgeCitySemaphoreGroupIds.attendees,
+          membershipTickets: [
+            {
+              eventId: edgeCityDenverEventId,
+              productId: edgeCityDenverAttendeeProductId
+            }
+          ]
+        },
+        {
+          // Both holders of bouncer-tier tickets and attendee-tier tickets.
+          // In this case, this group will have the same membership as the
+          // "all" group, but if there were more tiers then this demonstrates
+          // how it would be possible to create arbitrary groupings.
+          name: "Attendees and Bouncers",
+          groupId: edgeCitySemaphoreGroupIds.attendeesAndBouncers,
+          membershipTickets: [
+            {
+              eventId: edgeCityDenverEventId,
+              productId: edgeCityDenverBouncerProductId
+            },
+            {
+              eventId: edgeCityDenverEventId,
+              productId: edgeCityDenverAttendeeProductId
+            }
+          ]
         }
       ]
     },
@@ -746,7 +807,220 @@ t2,i1`,
       // Currently not supported as these are not present in the Lemonade
       // backend, will be implemented with the pipeline as the check-in backend
 
+      // Verify that consumers were saved for each user who requested tickets
+      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumers = await consumerDB.loadByEmails(
+        edgeCityDenverPipeline.id,
+        [
+          EdgeCityManualAttendeeEmail,
+          EdgeCityManualBouncerEmail,
+          EdgeCityDenverAttendee.email,
+          EdgeCityDenverBouncer.email,
+          EdgeCityDenverBouncer2.email
+        ]
+      );
+      expectLength(consumers, 5);
+      expect(consumers).to.deep.include.members([
+        {
+          email: EdgeCityManualAttendeeEmail,
+          commitment: EdgeCityManualAttendeeIdentity.commitment.toString()
+        },
+        {
+          email: EdgeCityManualBouncerEmail,
+          commitment: EdgeCityManualBouncerIdentity.commitment.toString()
+        },
+        {
+          email: EdgeCityDenverAttendee.email,
+          commitment: EdgeCityDenverAttendeeIdentity.commitment.toString()
+        },
+        {
+          email: EdgeCityDenverBouncer.email,
+          commitment: EdgeCityBouncerIdentity.commitment.toString()
+        },
+        {
+          email: EdgeCityDenverBouncer2.email,
+          commitment: EdgeCityBouncer2Identity.commitment.toString()
+        }
+      ]);
+
       await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
+    }
+  );
+
+  step(
+    "Lemonade pipeline Semaphore groups contain correct members",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      expectToExist(pipelines);
+      expectLength(pipelines, 3);
+      const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(edgeCityDenverPipeline);
+
+      await edgeCityDenverPipeline.load();
+
+      const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        edgeCityDenverPipeline.id,
+        edgeCitySemaphoreGroupIds.all
+      );
+
+      expectTrue(semaphoreGroupAll.success);
+      expectLength(semaphoreGroupAll.value.members, 5);
+      expect(semaphoreGroupAll.value.members).to.deep.include.members([
+        EdgeCityBouncerIdentity.commitment.toString(),
+        EdgeCityBouncer2Identity.commitment.toString(),
+        EdgeCityDenverAttendeeIdentity.commitment.toString(),
+        EdgeCityManualAttendeeIdentity.commitment.toString(),
+        EdgeCityManualBouncerIdentity.commitment.toString()
+      ]);
+
+      const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        edgeCityDenverPipeline.id,
+        edgeCitySemaphoreGroupIds.bouncers
+      );
+
+      expectTrue(semaphoreGroupBouncers.success);
+      expectLength(semaphoreGroupBouncers.value.members, 2);
+      expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
+        EdgeCityBouncerIdentity.commitment.toString(),
+        EdgeCityManualBouncerIdentity.commitment.toString()
+      ]);
+
+      const semaphoreGroupAttendees =
+        await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          edgeCityDenverPipeline.id,
+          edgeCitySemaphoreGroupIds.attendees
+        );
+
+      expectTrue(semaphoreGroupAttendees.success);
+      expectLength(semaphoreGroupAttendees.value.members, 3);
+      expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+        EdgeCityDenverAttendeeIdentity.commitment.toString(),
+        EdgeCityManualAttendeeIdentity.commitment.toString(),
+        // Bouncer2 has a specially configured "superuser email", but is not
+        // a holder of a bouncer-tier ticket. Having a "superuser email" allows
+        // a user to perform check-ins, but does not change the product type of
+        // their ticket, and so does not change their Semaphore group
+        // memberships.
+        EdgeCityBouncer2Identity.commitment.toString()
+      ]);
+
+      const semaphoreGroupAttendeesAndBouncers =
+        await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          edgeCityDenverPipeline.id,
+          edgeCitySemaphoreGroupIds.attendeesAndBouncers
+        );
+
+      expectTrue(semaphoreGroupAttendeesAndBouncers.success);
+      expectLength(semaphoreGroupAttendeesAndBouncers.value.members, 5);
+      expect(
+        semaphoreGroupAttendeesAndBouncers.value.members
+      ).to.deep.include.members([
+        EdgeCityBouncerIdentity.commitment.toString(),
+        EdgeCityBouncer2Identity.commitment.toString(),
+        EdgeCityDenverAttendeeIdentity.commitment.toString(),
+        EdgeCityManualAttendeeIdentity.commitment.toString(),
+        EdgeCityManualBouncerIdentity.commitment.toString()
+      ]);
+    }
+  );
+
+  step(
+    "New users can sign up, get added to group, prove group membership",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      expectToExist(pipelines);
+      expectLength(pipelines, 3);
+      const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(edgeCityDenverPipeline);
+
+      // Test that a new user is added to the attendee group
+
+      const newUser = lemonadeBackend.addUser(
+        "newuser@example.com",
+        "New",
+        "User"
+      );
+      const newUserIdentity = new Identity();
+      EdgeCityLemonadeAccount.addUserTicket(
+        EdgeCityDenver._id,
+        EdgeCityAttendeeTicketType._id,
+        newUser._id,
+        newUser.name
+      );
+      await edgeCityDenverPipeline.load();
+      const edgeCityDenverTicketFeedUrl =
+        edgeCityDenverPipeline.issuanceCapability.feedUrl;
+      // The pipeline doesn't know that the user exists until they hit the feed
+      const NewUserTickets = await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        newUser.email,
+        newUserIdentity
+      );
+      expectLength(NewUserTickets, 1);
+
+      {
+        // Necessary to trigger Semaphore group update
+        await edgeCityDenverPipeline.load();
+        const semaphoreGroupAttendees =
+          await requestGenericIssuanceSemaphoreGroup(
+            process.env.PASSPORT_SERVER_URL as string,
+            edgeCityDenverPipeline.id,
+            edgeCitySemaphoreGroupIds.attendees
+          );
+
+        expectTrue(semaphoreGroupAttendees.success);
+        expectLength(semaphoreGroupAttendees.value.members, 4);
+        expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+          EdgeCityDenverAttendeeIdentity.commitment.toString(),
+          EdgeCityManualAttendeeIdentity.commitment.toString(),
+          EdgeCityBouncer2Identity.commitment.toString(),
+          newUserIdentity.commitment.toString()
+        ]);
+      }
+
+      // Get the Semaphore group from the API
+      const groupResponse = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        edgeCityDenverPipeline.id,
+        edgeCitySemaphoreGroupIds.attendees
+      );
+      expectTrue(groupResponse.success);
+      const group = deserializeSemaphoreGroup(groupResponse.value);
+
+      const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
+        identity: newUserIdentity
+      });
+
+      const groupPCD = await SemaphoreGroupPCDPackage.prove({
+        externalNullifier: {
+          argumentType: ArgumentTypeName.BigInt,
+          value: group.root.toString()
+        },
+        signal: {
+          argumentType: ArgumentTypeName.BigInt,
+          value: "1"
+        },
+        group: {
+          argumentType: ArgumentTypeName.Object,
+          value: serializeSemaphoreGroup(group, groupResponse.value.name)
+        },
+        identity: {
+          argumentType: ArgumentTypeName.PCD,
+          pcdType: SemaphoreIdentityPCDPackage.name,
+          value: await SemaphoreIdentityPCDPackage.serialize(newUserIdentityPCD)
+        }
+      });
+
+      expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
     }
   );
 
@@ -956,6 +1230,34 @@ t2,i1`,
         success: false,
         error: { name: "NotSuperuser" }
       } satisfies PodboxTicketActionResponseValue);
+
+      // Verify that consumers were saved for each user who requested tickets
+      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumers = await consumerDB.loadByEmails(ethLatAmPipeline.id, [
+        EthLatAmManualAttendeeEmail,
+        EthLatAmManualBouncerEmail,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      ]);
+      expectLength(consumers, 4);
+      expect(consumers).to.deep.include.members([
+        {
+          email: EthLatAmManualAttendeeEmail,
+          commitment: EthLatAmManualAttendeeIdentity.commitment.toString()
+        },
+        {
+          email: EthLatAmManualBouncerEmail,
+          commitment: EthLatAmManualBouncerIdentity.commitment.toString()
+        },
+        {
+          email: pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+          commitment: EthLatAmAttendeeIdentity.commitment.toString()
+        },
+        {
+          email: pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+          commitment: EthLatAmBouncerIdentity.commitment.toString()
+        }
+      ]);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }

@@ -26,6 +26,9 @@ export default function Page(): JSX.Element {
     zupassPendingPCDStr,
     ZUPASS_SERVER_URL
   );
+  const [semaphoreGroupUrl, setSemaphoreGroupUrl] = useState<string>(
+    EVERYONE_SEMAPHORE_GROUP_URL
+  );
   const pcdStr = usePCDMultiplexer(zupassPCDStr, serverPCDStr);
   const [valid, setValid] = useState<boolean | undefined>();
   const onVerified = (valid: boolean): void => {
@@ -33,7 +36,7 @@ export default function Page(): JSX.Element {
   };
   const { proof, group } = useSemaphoreGroupProof(
     pcdStr,
-    EVERYONE_SEMAPHORE_GROUP_URL,
+    semaphoreGroupUrl,
     "consumer-client",
     onVerified
   );
@@ -65,12 +68,26 @@ export default function Page(): JSX.Element {
         .
       </p>
       <ExampleContainer>
+        <label>
+          {" "}
+          <input
+            style={{ marginBottom: "8px" }}
+            placeholder="Semaphore Group URL"
+            type="text"
+            value={semaphoreGroupUrl}
+            onChange={(e): void => setSemaphoreGroupUrl(e.target.value)}
+          />
+          Semaphore Group URL
+        </label>
+
+        <br />
         <button
           onClick={(): void =>
             requestMembershipProof(
               debugChecked,
               serverProving,
-              "consumer-client"
+              "consumer-client",
+              semaphoreGroupUrl
             )
           }
           disabled={valid}
@@ -126,7 +143,8 @@ export default function Page(): JSX.Element {
 function requestMembershipProof(
   debug: boolean,
   proveOnServer: boolean,
-  originalSiteName: string
+  originalSiteName: string,
+  remoteUrl: string
 ): void {
   const popupUrl = window.location.origin + "#/popup";
   const proofUrl = constructZupassPcdGetRequestUrl<
@@ -146,7 +164,7 @@ function requestMembershipProof(
       group: {
         argumentType: ArgumentTypeName.Object,
         userProvided: false,
-        remoteUrl: EVERYONE_SEMAPHORE_GROUP_URL,
+        remoteUrl,
         description: "The Semaphore group which you are proving you belong to."
       },
       identity: {

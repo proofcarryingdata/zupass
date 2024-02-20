@@ -30,7 +30,8 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
       backendUrl: "",
       events: [],
       feedOptions: DEFAULT_FEED_OPTIONS,
-      manualTickets: []
+      manualTickets: [],
+      semaphoreGroups: []
     }
   } satisfies Partial<LemonadePipelineDefinition>,
   null,

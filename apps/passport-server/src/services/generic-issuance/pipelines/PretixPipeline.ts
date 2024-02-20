@@ -44,6 +44,7 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -101,6 +102,7 @@ export class PretixPipeline implements BasePipeline {
   private db: IPipelineAtomDB<PretixAtom>;
   private api: IGenericPretixAPI;
   private checkinDb: IPipelineCheckinDB;
+  private consumerDB: IPipelineConsumerDB;
 
   public get id(): string {
     return this.definition.id;
@@ -121,7 +123,8 @@ export class PretixPipeline implements BasePipeline {
     api: IGenericPretixAPI,
     zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
-    checkinDb: IPipelineCheckinDB
+    checkinDb: IPipelineCheckinDB,
+    consumerDB: IPipelineConsumerDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -154,6 +157,7 @@ export class PretixPipeline implements BasePipeline {
     this.cacheService = cacheService;
     this.checkinDb = checkinDb;
     this.loaded = false;
+    this.consumerDB = consumerDB;
   }
 
   public async start(): Promise<void> {
@@ -782,6 +786,14 @@ export class PretixPipeline implements BasePipeline {
       ) {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
+
+      // Consumer is validated, so save them in the consumer list
+      await this.consumerDB.save(
+        this.id,
+        emailPCD.claim.emailAddress,
+        emailPCD.claim.semaphoreId,
+        new Date()
+      );
 
       const email = emailPCD.claim.emailAddress;
       span?.setAttribute("email", email);

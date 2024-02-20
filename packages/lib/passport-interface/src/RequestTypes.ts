@@ -2,6 +2,7 @@ import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import {
   DexFrog,
@@ -459,6 +460,12 @@ export interface PipelineLoadSummary {
   atomsExpected: number;
   success: boolean;
   errorMessage?: string;
+  semaphoreGroups?: {
+    groupId: string;
+    name: string;
+    memberCount: number;
+    url: string;
+  }[];
 }
 
 export interface PipelineLog {
@@ -473,11 +480,19 @@ export interface PipelineInfoRequest {
   pipelineId: string;
 }
 
+export interface PipelineInfoConsumer {
+  email: string;
+  commitment: string;
+  timeCreated: string;
+  timeUpdated: string;
+}
+
 export interface PipelineInfoResponseValue {
   ownerEmail: string;
   lastLoad?: PipelineLoadSummary;
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
+  latestConsumers?: PipelineInfoConsumer[];
 }
 
 export interface ListSingleFeedRequest {
@@ -1052,3 +1067,22 @@ export type GenericIssuanceSelf = {
 export type GenericIssuanceSelfResponseValue = GenericIssuanceSelf;
 
 export type GenericIssuanceSelfRequest = { jwt: string };
+
+export type GenericIssuanceSemaphoreGroupResponseValue =
+  SerializedSemaphoreGroup;
+
+export type GenericIssuanceHistoricalSemaphoreGroupResponseValue =
+  SerializedSemaphoreGroup;
+
+export type GenericIssuancePipelineSemaphoreGroupsResponseValue = {
+  groups: {
+    name: string;
+    groupId: string;
+  }[];
+};
+
+export type GenericIssuanceValidSemaphoreGroupResponseValue = {
+  valid: boolean;
+};
+
+export type GenericIssuanceSemaphoreGroupRootResponseValue = string;
