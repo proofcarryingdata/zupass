@@ -414,10 +414,10 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
-  private manualTicketToTicketData(
+  private async manualTicketToTicketData(
     manualTicket: ManualTicket,
     sempahoreId: string
-  ): ITicketData {
+  ): Promise<ITicketData> {
     const event = this.definition.options.events.find(
       (event) => event.genericIssuanceEventId === manualTicket.eventId
     );
@@ -440,6 +440,12 @@ export class LemonadePipeline implements BasePipeline {
         `Manual ticket specifies non-existent product ID ${manualTicket.productId} on pipeline ${this.id}`
       );
     }
+
+    const checkIn = await this.checkinDb.getByTicketId(
+      this.id,
+      manualTicket.id
+    );
+
     return {
       ticketId: manualTicket.id,
       eventId: manualTicket.eventId,
@@ -447,10 +453,10 @@ export class LemonadePipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
-      isConsumed: false,
+      isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
-      timestampConsumed: 0,
+      timestampConsumed: checkIn ? checkIn.timestamp.getTime() : 0,
       ticketCategory: TicketCategory.Generic,
       eventName: event.name,
       ticketName: product.name,
@@ -489,9 +495,11 @@ export class LemonadePipeline implements BasePipeline {
     const manualTickets = this.getManualTicketsForEmail(email);
     // Convert manual tickets to ticket data and add to array
     ticketDatas.push(
-      ...manualTickets.map((manualTicket) =>
-        this.manualTicketToTicketData(manualTicket, identityCommitment)
-      )
+      ...(await Promise.all(
+        manualTickets.map((manualTicket) =>
+          this.manualTicketToTicketData(manualTicket, identityCommitment)
+        )
+      ))
     );
 
     // Turn ticket data into PCDs

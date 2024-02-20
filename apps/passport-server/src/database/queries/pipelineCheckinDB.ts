@@ -1,6 +1,12 @@
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
+/**
+ * Stores check-in records for "manual tickets". These are tickets which are
+ * not fetched from remote back-end systems and are therefore not remotely
+ * checked-in. Instead, they are specified in the pipeline configuration and
+ * are checked in by updating records in the DB.
+ */
 export interface IPipelineCheckinDB {
   // Fetch a check-in record
   getByTicketId(
