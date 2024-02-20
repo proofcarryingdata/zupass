@@ -1,4 +1,4 @@
-import { Input } from "@chakra-ui/react";
+import { Card, FormControl, FormLabel, Heading, Input } from "@chakra-ui/react";
 import { FeedIssuanceOptions } from "@pcd/passport-interface";
 import { ChangeEvent } from "react";
 import styled from "styled-components";
@@ -21,70 +21,46 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
   };
 
   return (
-    <FeedOptionsTable>
-      <tbody>
-        <tr>
-          <td>
-            <label htmlFor="feedId">Feed ID</label>
-          </td>
-          <td>
-            <Input
-              width="md"
-              type="text"
-              id="feedId"
-              name="feedId"
-              value={feedOptions.feedId}
-              onChange={handleChange}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label htmlFor="feedDisplayName">Feed Display Name</label>
-          </td>
-          <td>
-            <Input
-              width="md"
-              type="text"
-              id="feedDisplayName"
-              name="feedDisplayName"
-              value={feedOptions.feedDisplayName}
-              onChange={handleChange}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label htmlFor="feedDescription">Feed Description</label>
-          </td>
-          <td>
-            <Input
-              width="md"
-              type="text"
-              id="feedDescription"
-              name="feedDescription"
-              value={feedOptions.feedDescription}
-              onChange={handleChange}
-            />
-          </td>
-        </tr>
-        <tr>
-          <td>
-            <label htmlFor="feedFolder">Feed Folder</label>
-          </td>
-          <td>
-            <Input
-              width="md"
-              type="text"
-              id="feedFolder"
-              name="feedFolder"
-              value={feedOptions.feedFolder}
-              onChange={handleChange}
-            />
-          </td>
-        </tr>
-      </tbody>
-    </FeedOptionsTable>
+    <Card padding={4} maxWidth={480}>
+      <Heading size="lg" mb={4}>
+        Feed Options
+      </Heading>
+      <FormControl mb={4}>
+        <FormLabel>Feed Display Name</FormLabel>
+        <Input
+          width="100%"
+          type="text"
+          id="feedDisplayName"
+          name="feedDisplayName"
+          value={feedOptions.feedDisplayName}
+          onChange={handleChange}
+        />
+      </FormControl>
+
+      <FormControl mb={4}>
+        <FormLabel>Feed Description</FormLabel>
+        <Input
+          width="100%"
+          type="text"
+          id="feedDescription"
+          name="feedDescription"
+          value={feedOptions.feedDescription}
+          onChange={handleChange}
+        />
+      </FormControl>
+
+      <FormControl mb={4}>
+        <FormLabel>Feed Folder</FormLabel>
+        <Input
+          width="100%"
+          type="text"
+          id="feedFolder"
+          name="feedFolder"
+          value={feedOptions.feedFolder}
+          onChange={handleChange}
+        />
+      </FormControl>
+    </Card>
   );
 };
 

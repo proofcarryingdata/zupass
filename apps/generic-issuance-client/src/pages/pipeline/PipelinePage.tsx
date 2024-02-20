@@ -134,7 +134,7 @@ const WarningSection = styled.div`
   background-color: rgba(238, 255, 0, 0.1);
 `;
 
-const TwoColumns = styled.div`
+export const TwoColumns = styled.div`
   max-width: 100%;
   overflow-x: hidden;
   display: flex;

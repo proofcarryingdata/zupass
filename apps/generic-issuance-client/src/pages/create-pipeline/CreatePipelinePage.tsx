@@ -72,9 +72,9 @@ export default function CreatePipelinePage(): ReactNode {
       });
     }
 
-    return optionEntries.map(([key, value]) => (
-      <option key={key} value={value}>
-        {value}
+    return optionEntries.map(([k, v]) => (
+      <option key={k} value={v}>
+        pipeline type: {v}
       </option>
     ));
   }, [NON_ADMIN_PIPELINE_TYPES, user?.value?.isAdmin]);
@@ -97,10 +97,11 @@ export default function CreatePipelinePage(): ReactNode {
         )}
       />
 
-      <PageContent>
-        <Stack>
+      <PageContent style={{ paddingTop: 0 }}>
+        <Stack gap={2}>
           <Select
-            width="md"
+            bg="rgba(29,29,29,1)"
+            width="100%"
             value={selectedPipelineType ?? ""}
             onChange={(event): void => {
               setSelectedPipelineType(event.target.value as PipelineType);
@@ -111,15 +112,19 @@ export default function CreatePipelinePage(): ReactNode {
             </option>
             {options}
           </Select>
+
           {selectedPipelineType === PipelineType.Pretix && (
             <PretixPipelineBuilder onCreate={onCreateClick} />
           )}
+
           {selectedPipelineType === PipelineType.CSV && (
             <CSVPipelineBuilder onCreate={onCreateClick} />
           )}
+
           {selectedPipelineType === PipelineType.Lemonade && (
             <LemonadePipelineBuilder onCreate={onCreateClick} />
           )}
+
           {selectedPipelineType === "JSON" && (
             <RawJSONPipelineBuilder
               onCreate={onCreateClick}

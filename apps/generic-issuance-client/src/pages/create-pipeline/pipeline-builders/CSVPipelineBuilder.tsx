@@ -1,4 +1,4 @@
-import { Button, Select, Stack } from "@chakra-ui/react";
+import { Button, Select } from "@chakra-ui/react";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
@@ -8,6 +8,7 @@ import {
 import { ReactNode, useEffect, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import { getSampleCSVData, getSampleFeedOptions } from "../../SamplePipelines";
+import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
 interface CSVPipelineBuilderProps {
@@ -32,51 +33,61 @@ export default function CSVPipelineBuilder(
   }, [outputType]);
 
   return (
-    <Stack gap={4}>
-      <FancyEditor
-        style={{ height: "300px" }}
-        dark
-        value={csv}
-        setValue={setCsv}
-      />
-      <div>Output Type:</div>
-      <Select
-        width="sm"
-        value={outputType}
-        onChange={(e): void => {
-          setOutputType(e.target.value as CSVPipelineOutputType);
-        }}
-      >
-        {Object.entries(CSVPipelineOutputType).map(([k, v]) => (
-          <option value={v} key={v}>
-            {k}
-          </option>
-        ))}
-      </Select>
-      <br />
-      <FeedOptions feedOptions={feedOptions} setFeedOptions={setFeedOptions} />
-      <Button
-        width="md"
-        colorScheme="green"
-        variant="outline"
-        onClick={(): Promise<void> =>
-          props.onCreate(
-            JSON.stringify({
-              type: PipelineType.CSV,
-              timeCreated: new Date().toISOString(),
-              timeUpdated: new Date().toISOString(),
-              editorUserIds: [],
-              options: {
-                csv,
-                feedOptions,
-                outputType
-              }
-            } satisfies Partial<CSVPipelineDefinition>)
-          )
-        }
-      >
-        Create
-      </Button>
-    </Stack>
+    <>
+      <TwoColumns style={{ gap: "8px" }}>
+        <div className="col1">
+          <FancyEditor
+            style={{ height: "300px" }}
+            dark
+            value={csv}
+            setValue={setCsv}
+          />
+
+          <Select
+            bg="rgba(29,29,29,1)"
+            width="100%"
+            mb={4}
+            value={outputType}
+            onChange={(e): void => {
+              setOutputType(e.target.value as CSVPipelineOutputType);
+            }}
+          >
+            {Object.entries(CSVPipelineOutputType).map(([k, v]) => (
+              <option value={v} key={v}>
+                output type: {k}
+              </option>
+            ))}
+          </Select>
+
+          <Button
+            width="100%"
+            colorScheme="green"
+            onClick={(): Promise<void> =>
+              props.onCreate(
+                JSON.stringify({
+                  type: PipelineType.CSV,
+                  timeCreated: new Date().toISOString(),
+                  timeUpdated: new Date().toISOString(),
+                  editorUserIds: [],
+                  options: {
+                    csv,
+                    feedOptions,
+                    outputType
+                  }
+                } satisfies Partial<CSVPipelineDefinition>)
+              )
+            }
+          >
+            Create
+          </Button>
+        </div>
+        <div className="col2">
+          <FeedOptions
+            feedOptions={feedOptions}
+            setFeedOptions={setFeedOptions}
+          />
+        </div>
+      </TwoColumns>
+    </>
   );
 }
