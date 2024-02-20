@@ -1224,22 +1224,15 @@ export class LemonadePipeline implements BasePipeline {
 
       const pendingCheckin = this.pendingCheckIns.get(ticketAtom.id);
       if (pendingCheckin) {
-        if (
-          pendingCheckin.status === CheckinStatus.Pending ||
-          pendingCheckin.status === CheckinStatus.Success
-        ) {
-          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-          return {
-            checkedIn: false,
-            error: {
-              name: "AlreadyCheckedIn",
-              checkinTimestamp: new Date(
-                pendingCheckin.timestamp
-              ).toISOString(),
-              checker: LEMONADE_CHECKER
-            }
-          };
-        }
+        span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+        return {
+          checkedIn: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
+            checker: LEMONADE_CHECKER
+          }
+        };
       }
 
       this.pendingCheckIns.set(ticketAtom.id, {

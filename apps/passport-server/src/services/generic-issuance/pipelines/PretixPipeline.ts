@@ -1373,22 +1373,15 @@ export class PretixPipeline implements BasePipeline {
       const pretixEventId = this.atomToPretixEventId(ticketAtom);
       const pendingCheckin = this.pendingCheckIns.get(ticketAtom.id);
       if (pendingCheckin) {
-        if (
-          pendingCheckin.status === CheckinStatus.Pending ||
-          pendingCheckin.status === CheckinStatus.Success
-        ) {
-          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-          return {
-            checkedIn: false,
-            error: {
-              name: "AlreadyCheckedIn",
-              checkinTimestamp: new Date(
-                pendingCheckin.timestamp
-              ).toISOString(),
-              checker: PRETIX_CHECKER
-            }
-          };
-        }
+        span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+        return {
+          checkedIn: false,
+          error: {
+            name: "AlreadyCheckedIn",
+            checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
+            checker: PRETIX_CHECKER
+          }
+        };
       }
 
       try {
