@@ -1,7 +1,9 @@
 import { EdDSAMessagePCDPackage } from "@pcd/eddsa-message-pcd";
+import { EdDSATicketPCDPackage, TicketCategory } from "@pcd/eddsa-ticket-pcd";
 import { CSVPipelineOutputType } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
+import { randomUUID } from "crypto";
 import { v4 as uuid } from "uuid";
 import { traced } from "../../../telemetryService";
 
@@ -22,6 +24,7 @@ export async function makeCSVPCD(
       case CSVPipelineOutputType.EdDSAMessage:
         return makeEdDSAMessageCSVPCD(inputRow, opts.eddsaPrivateKey);
       case CSVPipelineOutputType.EdDSATicket:
+        return makeEdDSATicketCSVPCD(inputRow, opts.eddsaPrivateKey);
       default:
         throw new Error("not implemented");
     }
@@ -93,6 +96,52 @@ export async function makeEdDSAMessageCSVPCD(
       }
     });
     const serialized = await EdDSAMessagePCDPackage.serialize(pcd);
+    return serialized;
+  });
+}
+
+makeEdDSATicketCSVPCD;
+
+export async function makeEdDSATicketCSVPCD(
+  inputRow: string[],
+  eddsaPrivateKey: string
+): Promise<SerializedPCD> {
+  return traced("CSVPipeline", "makeEdDSAMessageCSVPCD", async () => {
+    const pcd = await EdDSATicketPCDPackage.prove({
+      id: {
+        argumentType: ArgumentTypeName.String,
+        value: uuid()
+      },
+      privateKey: {
+        argumentType: ArgumentTypeName.String,
+        value: eddsaPrivateKey
+      },
+      ticket: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          // The fields below are not signed and are used for display purposes.
+          eventName: "a",
+          ticketName: "b",
+          checkerEmail: undefined, // change if checkin feature enabled for csv pipelines
+          imageUrl: undefined,
+          imageAltText: undefined,
+          // The fields below are signed using the passport-server's private EdDSA key
+          // and can be used by 3rd parties to represent their own tickets.
+          ticketId: randomUUID(), // The ticket ID is a unique identifier of the ticket.
+          eventId: randomUUID(), // The event ID uniquely identifies an event.
+          productId: randomUUID(), // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
+          timestampConsumed: 0, // change if checkin feature enabled for csv pipelines
+          timestampSigned: Date.now(),
+          attendeeSemaphoreId: randomUUID(),
+          isConsumed: false, // change if checkin feature enabled for csv pipelines
+          isRevoked: false,
+          ticketCategory: TicketCategory.Generic,
+          attendeeName: "test name",
+          attendeeEmail: "test@test.com"
+        }
+      }
+    });
+    const serialized = await EdDSATicketPCDPackage.serialize(pcd);
     return serialized;
   });
 }
