@@ -1,4 +1,4 @@
-# @pcd/rsa-image-pcd
+# @pcd/message-pcd
 
 ## 0.0.1
 

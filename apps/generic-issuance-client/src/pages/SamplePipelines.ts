@@ -49,6 +49,13 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
 // Jackrabbit,https://upload.wikimedia.org/wikipedia/commons/thumb/6/62/Brooklyn_Museum_-_California_Hare_-_John_J._Audubon.jpg/440px-Brooklyn_Museum_-_California_Hare_-_John_J._Audubon.jpg`;
 
 export const SAMPLE_CSV_EDSDA_MESSAGE = `Title,Message
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
+Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"
 Announcement of Cat,"We'd like to announce the following cat:  \n  ![cat](https://upload.wikimedia.org/wikipedia/commons/thumb/1/15/Cat_August_2010-4.jpg/181px-Cat_August_2010-4.jpg)"`;
 
 // TODO

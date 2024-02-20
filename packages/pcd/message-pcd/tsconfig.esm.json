@@ -12,6 +12,9 @@
     },
     {
       "path": "../../lib/pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../semaphore-signature-pcd/tsconfig.esm.json"
     }
   ]
 }

@@ -131,7 +131,7 @@ export function PipelineEditSection({
       />
 
       {isAdminView || user.isAdmin || pipeline?.type === PipelineType.CSV ? (
-        <HStack>
+        <HStack minWidth="fit-content">
           {hasEdits && (
             <Button
               variant="outline"

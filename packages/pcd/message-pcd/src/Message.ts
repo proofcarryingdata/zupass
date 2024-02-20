@@ -1,7 +1,4 @@
-import { checkExists } from "@pcd/pcd-types";
 import { z } from "zod";
-import { MessagePCD } from "./MessagePCD";
-import { derializeUtf8String } from "./utils/serialization";
 
 const MessageMetadataSchema = z.object({
   authorSemaphoreV3Signature: z.string().optional(), // SerializedPCD<SemaphoreSignaturePCD>
@@ -10,7 +7,7 @@ const MessageMetadataSchema = z.object({
 
 export type MessageMetadata = z.infer<typeof MessageMetadataSchema>;
 
-const MessageSchema = z.object({
+export const MessageSchema = z.object({
   metadata: MessageMetadataSchema.optional(),
 
   /**
@@ -43,24 +40,3 @@ const MessageSchema = z.object({
  * Similar to {@link LemonadePipelineDefinition} but for Pretix-based Pipelines.
  */
 export type Message = z.infer<typeof MessageSchema>;
-
-/**
- *
- */
-export function getMessage(eddsaSig: MessagePCD): Message | undefined {
-  try {
-    checkExists(eddsaSig.proof.signature.claim.message[0]);
-    // by convention, MessagePCD serializes into an EdDSAPCD by converting
-    // its `message` field
-    const stringifiedData = eddsaSig.proof.signature.claim.message[0];
-    const strBody = derializeUtf8String(
-      stringifiedData,
-      eddsaSig.proof.stringLength
-    );
-    const imageData = JSON.parse(strBody) as Message;
-    return imageData;
-  } catch (e) {
-    console.warn(e);
-    return undefined;
-  }
-}

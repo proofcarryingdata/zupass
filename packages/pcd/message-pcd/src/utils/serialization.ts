@@ -1,30 +1,34 @@
 import { toBigIntBE, toBufferBE } from "@trufflesuite/bigint-buffer";
-import { Message } from "../Message";
+import { Message, MessageSchema } from "../Message";
 
-export type SerializedMessage = string & {
-  _never: never;
+export type MsgAsInt = {
+  _msg_as_int: never;
+  int: bigint;
+  len: number;
 };
 
-export function serializeMessage(message: Message): SerializedMessage {
-  return JSON.stringify(message) as SerializedMessage;
+export type StringifiedMessage = string & {
+  _stringified: never;
+};
+
+export function stringifyMsg(message: Message): StringifiedMessage {
+  return JSON.stringify(message) as StringifiedMessage;
 }
 
-export function deserializeMessage(
-  serializedMessage: SerializedMessage
-): Message {
+export function destringifyMsg(serializedMessage: StringifiedMessage): Message {
   return JSON.parse(serializedMessage) as Message;
 }
 
-export function serializeUtf8String(utf8String: string): bigint {
-  const stringBuf = Buffer.from(utf8String, "utf-8");
-  const bigInt = toBigIntBE(stringBuf);
-  return bigInt;
+export function bigintifyMsg(msg: Message): MsgAsInt {
+  const str = stringifyMsg(msg);
+  const buf = Buffer.from(str, "utf-8");
+  const int = toBigIntBE(buf);
+  return { int, len: str.length } as MsgAsInt;
 }
 
-export function derializeUtf8String(
-  serializedUtf8String: bigint,
-  originalStringLength: number
-): string {
-  const buf = toBufferBE(serializedUtf8String, originalStringLength);
-  return buf.toString("utf-8");
+export function parseBigintifiedMsg(int: MsgAsInt): Message {
+  const buf = toBufferBE(int.int, int.len);
+  const msgString = buf.toString("utf-8");
+  const msg = MessageSchema.parse(JSON.parse(msgString));
+  return msg;
 }

@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
 import {
   DisplayOptions,
   PCD,
@@ -137,7 +138,11 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
     // anything other than stringified big integers to sign.
     message = args.message.value.map((fieldStr: string) => BigInt(fieldStr));
   } catch (e) {
-    throw new Error("Could not convert message contents to bigint type");
+    throw new Error(
+      `Could not convert message contents ${e} to bigint type\n${e}\n${
+        e instanceof Error ? e.stack : ""
+      }`
+    );
   }
 
   // Retrieves the id from the arguments or creates a new random id.

@@ -21,7 +21,7 @@ export const FeedOptions: React.FC<FeedOptionsProps> = ({
   };
 
   return (
-    <Card padding={6} maxWidth={480}>
+    <Card padding={6} flexGrow="1" minW="400px">
       <FormControl mb={4}>
         <FormLabel>Zupass Feed Display Name</FormLabel>
         <Input

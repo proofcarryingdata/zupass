@@ -1,4 +1,4 @@
-import { Button, HStack, Select } from "@chakra-ui/react";
+import { Box, Button, Card, HStack, Select } from "@chakra-ui/react";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
@@ -8,7 +8,10 @@ import {
 import { ReactNode, useEffect, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import { getSampleCSVData, getSampleFeedOptions } from "../../SamplePipelines";
-import { PreviewType } from "../../pipeline/PipelineEditSection/CSVPreview";
+import {
+  CSVPreview,
+  PreviewType
+} from "../../pipeline/PipelineEditSection/CSVPreview";
 import { TwoColumns } from "../../pipeline/PipelinePage";
 import { FeedOptions } from "./FeedOptions";
 
@@ -27,7 +30,9 @@ export default function CSVPipelineBuilder(
   const [feedOptions, setFeedOptions] = useState<FeedIssuanceOptions>(() =>
     getSampleFeedOptions(DEFAULT_OUTPUT_TYPE)
   );
-  const [previewType, setPreviewType] = useState<PreviewType | undefined>();
+  const [previewType, setPreviewType] = useState<PreviewType | undefined>(
+    PreviewType.CSVSheet
+  );
 
   useEffect(() => {
     setCsv(getSampleCSVData(outputType));
@@ -40,26 +45,32 @@ export default function CSVPipelineBuilder(
         style={{
           gap: "8px",
           height: "100%",
-          justifyContent: "center",
+          justifyContent: "space-between",
           alignItems: "stretch"
         }}
       >
-        <div className="col1" style={{ maxWidth: "50%" }}>
-          <FancyEditor
-            style={{ height: "500px" }}
-            dark
-            value={csv}
-            setValue={setCsv}
-          />
-          <HStack mt={2}>
+        <div
+          className="col1"
+          style={{ minWidth: "fit-content", width: "fit-content", flexGrow: 0 }}
+        >
+          <Card overflow="hidden" width="fit-content">
+            <Box maxW="800px" minW="800px" height="500px">
+              {previewType === undefined && (
+                <FancyEditor
+                  style={{ height: "500px", width: "800px" }}
+                  dark
+                  value={csv}
+                  setValue={setCsv}
+                />
+              )}
+              {previewType !== undefined && (
+                <CSVPreview csv={csv} previewType={previewType} />
+              )}
+            </Box>
+          </Card>
+          <HStack mt={2} minWidth="fit-content" width="fit-content">
             <Button
-              disabled={previewType === undefined}
-              colorScheme={previewType === undefined ? "blue" : undefined}
-              onClick={(): void => setPreviewType(undefined)}
-            >
-              Edit
-            </Button>
-            <Button
+              flexShrink={0}
               disabled={previewType === PreviewType.CSVSheet}
               colorScheme={
                 previewType === PreviewType.CSVSheet ? "blue" : undefined
@@ -68,16 +79,29 @@ export default function CSVPipelineBuilder(
             >
               Preview as Spreadsheet
             </Button>
-            <Button
+            {/* TODO */}
+            {/* <Button
+              flexShrink={0}
               disabled={previewType === PreviewType.PCD}
               colorScheme={previewType === PreviewType.PCD ? "blue" : undefined}
               onClick={(): void => setPreviewType(PreviewType.PCD)}
             >
               Preview as Zupass
+            </Button> */}
+            <Button
+              flexShrink={0}
+              disabled={previewType === undefined}
+              colorScheme={previewType === undefined ? "blue" : undefined}
+              onClick={(): void => setPreviewType(undefined)}
+            >
+              Edit CSV
             </Button>
           </HStack>
         </div>
-        <div className="col2">
+        <div
+          className="col2"
+          style={{ display: "flex", flexDirection: "column", flexGrow: 1 }}
+        >
           <Select
             bg="rgba(29,29,29,1)"
             mb={2}
@@ -101,7 +125,8 @@ export default function CSVPipelineBuilder(
 
           <Button
             mt={2}
-            width="100%"
+            width="100px"
+            maxW="100px"
             colorScheme="green"
             onClick={(): Promise<void> =>
               props.onCreate(

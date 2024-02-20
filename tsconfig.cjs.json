@@ -28,9 +28,6 @@
       "path": "packages/pcd/eddsa-frog-pcd/tsconfig.cjs.json"
     },
     {
-      "path": "packages/pcd/message-pcd/tsconfig.cjs.json"
-    },
-    {
       "path": "packages/pcd/eddsa-pcd/tsconfig.cjs.json"
     },
     {
@@ -50,6 +47,9 @@
     },
     {
       "path": "packages/pcd/input-test-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/message-pcd/tsconfig.cjs.json"
     },
     {
       "path": "packages/pcd/rln-pcd/tsconfig.cjs.json"
@@ -85,9 +85,6 @@
       "path": "packages/ui/eddsa-frog-pcd-ui/tsconfig.cjs.json"
     },
     {
-      "path": "packages/ui/message-pcd-ui/tsconfig.cjs.json"
-    },
-    {
       "path": "packages/ui/eddsa-pcd-ui/tsconfig.cjs.json"
     },
     {
@@ -104,6 +101,9 @@
     },
     {
       "path": "packages/ui/halo-nonce-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/message-pcd-ui/tsconfig.cjs.json"
     },
     {
       "path": "packages/ui/rsa-image-pcd-ui/tsconfig.cjs.json"

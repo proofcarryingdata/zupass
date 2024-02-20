@@ -29,16 +29,32 @@ describe("message-pcd should work", function () {
         argumentType: ArgumentTypeName.String,
         value: prvKey
       },
-      title: {
-        argumentType: ArgumentTypeName.String,
-        value: testTitle
-      },
-      markdown: {
-        argumentType: ArgumentTypeName.String,
-        value: testMessage
+      message: {
+        argumentType: ArgumentTypeName.Object,
+        value: {
+          displayName: testTitle,
+          mdBody: testMessage
+        }
       }
     });
 
     expect(await MessagePCDPackage.verify(pcd)).to.eq(true);
+
+    const ser = await MessagePCDPackage.serialize(pcd);
+    const copy1 = await MessagePCDPackage.deserialize(ser.pcd);
+
+    ///////////////////////////////// tamper case 1
+    /////////////////////////////////
+    expect(pcd).to.deep.eq(copy1);
+    expect(await MessagePCDPackage.verify(copy1)).to.eq(true);
+    copy1.proof.signature.claim.message[0]++;
+    expect(await MessagePCDPackage.verify(copy1)).to.eq(false);
+
+    ///////////////////////////////// tamper case 2
+    /////////////////////////////////
+    const copy2 = await MessagePCDPackage.deserialize(ser.pcd);
+    expect(true).to.eq(await MessagePCDPackage.verify(copy2));
+    copy2.claim.mdBody = "XD";
+    expect(false).to.eq(await MessagePCDPackage.verify(copy2));
   });
 });

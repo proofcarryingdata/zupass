@@ -105,7 +105,7 @@ export default function CreatePipelinePage(): ReactNode {
         )}
       />
 
-      <PageContent>
+      <PageContent style={{ padding: "16px" }}>
         <Stack gap={2}>
           {isAdminView && (
             <Select

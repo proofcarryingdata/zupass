@@ -20,6 +20,9 @@
     },
     {
       "path": "../../lib/pcd-types"
+    },
+    {
+      "path": "../semaphore-signature-pcd"
     }
   ]
 }
