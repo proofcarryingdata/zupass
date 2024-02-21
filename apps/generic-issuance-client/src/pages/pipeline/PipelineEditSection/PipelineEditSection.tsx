@@ -7,11 +7,11 @@ import {
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode, useCallback, useMemo, useState } from "react";
-import { FancyEditor } from "../../components/FancyEditor";
-import { deletePipeline, savePipeline } from "../../helpers/Mutations";
-import { useJWT } from "../../helpers/userHooks";
-import { stringifyAndFormat } from "../../helpers/util";
-import { PipelineTable } from "../dashboard/PipelineTable";
+import { FancyEditor } from "../../../components/FancyEditor";
+import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
+import { useJWT } from "../../../helpers/userHooks";
+import { stringifyAndFormat } from "../../../helpers/util";
+import { PipelineTable } from "../../dashboard/PipelineTable";
 
 export function PipelineEditSection({
   user,
@@ -131,7 +131,7 @@ export function PipelineEditSection({
       />
 
       {isAdminView || user.isAdmin || pipeline?.type === PipelineType.CSV ? (
-        <HStack>
+        <HStack minWidth="fit-content">
           {hasEdits && (
             <Button
               variant="outline"

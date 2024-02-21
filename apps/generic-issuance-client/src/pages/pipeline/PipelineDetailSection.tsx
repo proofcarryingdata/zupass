@@ -1,11 +1,13 @@
+import { ExternalLinkIcon } from "@chakra-ui/icons";
 import {
   Accordion,
   AccordionButton,
   AccordionItem,
   AccordionPanel,
   Badge,
+  Box,
+  Button,
   ListItem,
-  OrderedList,
   UnorderedList
 } from "@chakra-ui/react";
 import {
@@ -34,35 +36,32 @@ export function PipelineDetailSection({
 }): ReactNode {
   return (
     <>
-      <Accordion defaultIndex={[0]} allowMultiple={true}>
-        {pipelineInfo.feeds && (
-          <AccordionItem>
-            <AccordionButton>Zupass PCD Feeds</AccordionButton>
-            <AccordionPanel>
-              <OrderedList>
-                {pipelineInfo.feeds.map((feed) => (
-                  <ListItem key={feed.url}>
-                    <b>{feed.name}</b>
-                    {" - "}
-                    <PodLink
-                      isExternal={true}
-                      to={`${
-                        process.env.PASSPORT_CLIENT_URL
-                      }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
-                    >
-                      Subscription Link
-                    </PodLink>
-                    {" - "}
-                    <PodLink to={feed.url} isExternal={true}>
-                      Feed Link
-                    </PodLink>{" "}
-                  </ListItem>
-                ))}
-              </OrderedList>
-            </AccordionPanel>
-          </AccordionItem>
-        )}
-
+      <Box padding={4} mb={4}>
+        {pipelineInfo.feeds &&
+          pipelineInfo.feeds.map((feed, i) => (
+            <Box key={feed.url} mb={i === 0 ? 0 : 2}>
+              <PodLink
+                hideIcon
+                isExternal
+                to={`${
+                  process.env.PASSPORT_CLIENT_URL
+                }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
+              >
+                <Button colorScheme="green">
+                  <Box mr={2}>{feed.name} Feed for Zupass</Box>{" "}
+                  <ExternalLinkIcon mx="2px" />
+                </Button>
+              </PodLink>
+              <Box ml={4} display="inline-block"></Box>
+              {isAdminView && (
+                <PodLink to={feed.url} isExternal={true}>
+                  Feed Link
+                </PodLink>
+              )}
+            </Box>
+          ))}
+      </Box>
+      <Accordion defaultIndex={[]} allowMultiple={true}>
         <AccordionItem>
           <AccordionButton>Latest Logs</AccordionButton>
           <AccordionPanel>

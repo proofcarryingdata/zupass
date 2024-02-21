@@ -92,6 +92,8 @@ export default function DashboardPage(): ReactNode {
         user={user}
         titleContent={(): ReactNode => (
           <HStack>
+            <CreatePipelineButtonSection />
+
             <Heading size="sm">Dashboard</Heading>
             {user.value && (
               <>
@@ -106,10 +108,8 @@ export default function DashboardPage(): ReactNode {
         {pipelineEntries.length ? (
           <PipelineTable entries={pipelineEntries} isAdminView={isAdminView} />
         ) : (
-          <span>No pipelines. Create one below.</span>
+          <span>No pipelines. Create one above.</span>
         )}
-
-        {<CreatePipelineButtonSection />}
 
         {isAdminView && <DashboardAdminSection />}
       </PageContent>

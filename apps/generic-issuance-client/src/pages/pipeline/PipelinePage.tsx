@@ -13,7 +13,7 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
-import { PipelineEditSection } from "./PipelineEditSection";
+import { PipelineEditSection } from "./PipelineEditSection/PipelineEditSection";
 
 /**
  * Page a user can navigate to to view and edit information regarding a
@@ -134,7 +134,7 @@ const WarningSection = styled.div`
   background-color: rgba(238, 255, 0, 0.1);
 `;
 
-const TwoColumns = styled.div`
+export const TwoColumns = styled.div`
   max-width: 100%;
   overflow-x: hidden;
   display: flex;

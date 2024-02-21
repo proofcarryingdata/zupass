@@ -25,6 +25,9 @@
       "path": "../../packages/pcd/eddsa-frog-pcd"
     },
     {
+      "path": "../../packages/pcd/message-pcd"
+    },
+    {
       "path": "../../packages/pcd/eddsa-pcd"
     },
     {

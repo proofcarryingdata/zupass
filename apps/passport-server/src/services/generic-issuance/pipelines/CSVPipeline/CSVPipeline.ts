@@ -1,32 +1,36 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
+  CSVPipelineOutputType,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
+import { SerializedPCD } from "@pcd/pcd-types";
 import { parse } from "csv-parse";
 import { v4 as uuid } from "uuid";
 import {
   IPipelineAtomDB,
   PipelineAtom
-} from "../../../database/queries/pipelineAtomDB";
-import { logger } from "../../../util/logger";
-import { setError, traced } from "../../telemetryService";
+} from "../../../../database/queries/pipelineAtomDB";
+import { logger } from "../../../../util/logger";
+import { setError, traced } from "../../../telemetryService";
 import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
-} from "../capabilities/FeedIssuanceCapability";
-import { PipelineCapability } from "../capabilities/types";
-import { tracePipeline } from "../honeycombQueries";
-import { BasePipelineCapability } from "../types";
-import { makePLogErr, makePLogInfo } from "../util";
-import { BasePipeline, Pipeline } from "./types";
+} from "../../capabilities/FeedIssuanceCapability";
+import { PipelineCapability } from "../../capabilities/types";
+import { tracePipeline } from "../../honeycombQueries";
+import { BasePipelineCapability } from "../../types";
+import { makePLogErr, makePLogInfo } from "../../util";
+import { BasePipeline, Pipeline } from "../types";
+import { makeMessagePCD } from "./makeMessagePCD";
+import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
 
 const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -43,7 +47,7 @@ export class CSVPipeline implements BasePipeline {
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
-  private rsaKey: string;
+  private rsaPrivateKey: string;
 
   public get id(): string {
     return this.definition.id;
@@ -64,8 +68,7 @@ export class CSVPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
     this.zupassPublicKey = zupassPublicKey;
-    this.rsaKey = rsaPrivateKey;
-
+    this.rsaPrivateKey = rsaPrivateKey;
     this.capabilities = [
       {
         type: PipelineCapability.FeedIssuance,
@@ -87,36 +90,58 @@ export class CSVPipeline implements BasePipeline {
       const atoms = await this.db.load(this.id);
       span?.setAttribute("atoms", atoms.length);
 
-      const defaultTitle = "Cat";
-      const defaultImg =
-        "https://upload.wikimedia.org/wikipedia/commons/thumb/7/74/A-Cat.jpg/1600px-A-Cat.jpg";
+      const outputType =
+        this.definition.options.outputType ?? CSVPipelineOutputType.Message;
 
-      const serializedPCDs = await Promise.all(
-        atoms.map(async (atom: CSVAtom) => {
-          const imgTitle = atom.row[0] ?? defaultTitle;
-          const imgUrl = atom.row[1] ?? defaultImg;
+      let requesterEmail: string | undefined;
+      let requesterSemaphoreId: string | undefined;
 
-          const pcd = await RSAImagePCDPackage.prove({
-            id: {
-              argumentType: ArgumentTypeName.String,
-              value: uuid()
-            },
-            privateKey: {
-              argumentType: ArgumentTypeName.String,
-              value: this.rsaKey
-            },
-            title: {
-              argumentType: ArgumentTypeName.String,
-              value: imgTitle
-            },
-            url: {
-              argumentType: ArgumentTypeName.String,
-              value: imgUrl
+      if (req.pcd) {
+        try {
+          const { pcd: credential, payload } = await verifyFeedCredential(
+            req.pcd
+          );
+          if (!payload.pcd) {
+            throw new Error("missing email pcd");
+          }
+          const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+          if (
+            emailPCD.claim.semaphoreId !== credential.claim.identityCommitment
+          ) {
+            throw new Error(`Semaphore signature does not match email PCD`);
+          }
+
+          requesterEmail = emailPCD.claim.emailAddress;
+          requesterSemaphoreId = emailPCD.claim.semaphoreId;
+        } catch (e) {
+          logger(LOG_TAG, "credential PCD not verified for req", req);
+        }
+      }
+
+      // TODO: cache these
+      const somePCDs = await Promise.all(
+        atoms.map(async (atom: CSVAtom) =>
+          makeCSVPCD(
+            atom.row,
+            this.definition.options.outputType ?? CSVPipelineOutputType.Message,
+            {
+              requesterEmail,
+              requesterSemaphoreId,
+              eddsaPrivateKey: this.eddsaPrivateKey,
+              rsaPrivateKey: this.rsaPrivateKey,
+              pipelineId: this.id
             }
-          });
-          const serialized = await RSAImagePCDPackage.serialize(pcd);
-          return serialized;
-        })
+          )
+        )
+      );
+
+      const pcds = somePCDs.filter((p) => !!p) as SerializedPCD[];
+
+      logger(
+        LOG_TAG,
+        `pipeline ${this.id} of type ${outputType} issuing`,
+        pcds.length,
+        "PCDs"
       );
 
       return {
@@ -129,7 +154,7 @@ export class CSVPipeline implements BasePipeline {
           {
             type: PCDActionType.ReplaceInFolder,
             folder: this.definition.options.feedOptions.feedFolder,
-            pcds: serializedPCDs
+            pcds
           }
         ]
       };
@@ -165,6 +190,19 @@ export class CSVPipeline implements BasePipeline {
         logs.push(
           makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
         );
+
+        if (
+          this.definition.options.outputType === CSVPipelineOutputType.Ticket
+        ) {
+          logs.push(
+            makePLogInfo(
+              `\n\nevent and product ids summary:\n${summarizeEventAndProductIds(
+                this.id,
+                atoms.map((a) => a.row)
+              )}`
+            )
+          );
+        }
 
         return {
           atomsLoaded: atoms.length,
@@ -233,5 +271,38 @@ export function parseCSV(csv: string): Promise<string[][]> {
       parser.write(csv);
       parser.end();
     });
+  });
+}
+
+export async function makeCSVPCD(
+  inputRow: string[],
+  type: CSVPipelineOutputType,
+  opts: {
+    requesterEmail?: string;
+    requesterSemaphoreId?: string;
+    rsaPrivateKey: string;
+    eddsaPrivateKey: string;
+    pipelineId: string;
+  }
+): Promise<SerializedPCD | undefined> {
+  return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
+    span?.setAttribute("output_type", type);
+
+    switch (type) {
+      case CSVPipelineOutputType.Message:
+        return makeMessagePCD(inputRow, opts.eddsaPrivateKey);
+      case CSVPipelineOutputType.Ticket:
+        return makeTicketPCD(
+          inputRow,
+          opts.eddsaPrivateKey,
+          opts.requesterEmail,
+          opts.requesterSemaphoreId,
+          opts.pipelineId
+        );
+      default:
+        // will not compile in case we add a new output type
+        // if you've added another type, plz add an impl here XD
+        return null as never;
+    }
   });
 }

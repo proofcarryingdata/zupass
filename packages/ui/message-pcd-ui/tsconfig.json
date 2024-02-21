@@ -1,0 +1,21 @@
+{
+  "extends": "@pcd/tsconfig/ts-library.json",
+  "include": ["src", "test"],
+  "exclude": ["dist", "build", "node_modules"],
+  "references": [
+    {
+      "path": "../../pcd/message-pcd"
+    },
+    {
+      "path": "../../lib/passport-ui"
+    },
+    {
+      "path": "../../lib/pcd-types"
+    }
+  ],
+  "compilerOptions": {
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "rootDir": "."
+  }
+}

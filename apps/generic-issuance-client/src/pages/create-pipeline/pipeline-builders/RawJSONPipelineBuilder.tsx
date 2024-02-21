@@ -1,4 +1,4 @@
-import { Button, Stack } from "@chakra-ui/react";
+import { Button } from "@chakra-ui/react";
 import { ReactNode, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 
@@ -14,7 +14,7 @@ export default function RawJSONPipelineBuilder(
     props.initialValue ?? ""
   );
   return (
-    <Stack>
+    <>
       <FancyEditor
         language="json"
         style={{ height: "400px" }}
@@ -23,14 +23,14 @@ export default function RawJSONPipelineBuilder(
         readonly={false}
         dark
       />
+
       <Button
-        width="md"
+        width="100%"
         onClick={(): Promise<void> => props.onCreate(newPipelineJSON)}
-        variant="outline"
         colorScheme="green"
       >
         Create
       </Button>
-    </Stack>
+    </>
   );
 }

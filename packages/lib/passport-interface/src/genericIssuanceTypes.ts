@@ -315,8 +315,17 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
+export enum CSVPipelineOutputType {
+  /**
+   * {@link EdDSAMessagePCD}
+   */
+  Message = "EdDSAMessage",
+  Ticket = "EdDSATicket"
+}
+
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
+  outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
   feedOptions: FeedIssuanceOptionsSchema
 });
 

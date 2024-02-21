@@ -1,4 +1,5 @@
 import { EmailPCDTypeName } from "@pcd/email-pcd";
+import { Emitter } from "@pcd/emitter";
 import {
   CredentialManager,
   Feed,
@@ -11,6 +12,7 @@ import {
   isDeleteFolderPermission,
   isReplaceInFolderPermission
 } from "@pcd/pcd-collection";
+import { sleep } from "@pcd/util";
 import _ from "lodash";
 import React, {
   MouseEvent,
@@ -210,7 +212,7 @@ export function AddSubscriptionScreen(): JSX.Element {
                   key={i}
                   showErrors={false}
                   isDeepLink={isDeepLink}
-                  lockExpanded={true}
+                  isExpanded={true}
                 />
               </React.Fragment>
             ))}
@@ -227,8 +229,8 @@ export function SubscriptionInfoRow({
   info,
   showErrors,
   isDeepLink,
-  lockExpanded,
-  onExpanded
+  isExpanded,
+  onClose
 }: {
   subscriptions: FeedSubscriptionManager;
   providerUrl: string;
@@ -236,8 +238,8 @@ export function SubscriptionInfoRow({
   info: Feed;
   showErrors: boolean;
   isDeepLink: boolean;
-  lockExpanded?: boolean;
-  onExpanded?: () => void;
+  isExpanded?: boolean;
+  onClose?: Emitter<unknown>;
 }): JSX.Element {
   const existingSubscriptions =
     subscriptions.getSubscriptionsByProviderAndFeedId(providerUrl, info.id);
@@ -248,7 +250,6 @@ export function SubscriptionInfoRow({
     : null;
 
   const dispatch = useDispatch();
-
   const openResolveErrorModal = useCallback(() => {
     dispatch({
       type: "resolve-subscription-error",
@@ -256,47 +257,59 @@ export function SubscriptionInfoRow({
     });
   }, [dispatch, subscription]);
 
-  const [moreInfo, setMoreInfo] = useState(lockExpanded);
+  const [moreInfo, setMoreInfo] = useState(isExpanded);
   const ref = useRef<HTMLDivElement>();
+
+  useEffect(() => {
+    return onClose?.listen(() => {
+      setMoreInfo(false);
+    });
+  }, [onClose, isExpanded]);
 
   return (
     <InfoRowContainer
       ref={(element): void => {
         ref.current = element;
       }}
-      expanded={moreInfo || lockExpanded}
-      lockExpanded={lockExpanded}
-      onClick={(e: MouseEvent): void => {
+      expanded={moreInfo || isExpanded}
+      lockExpanded={isExpanded}
+      onClick={async (e: MouseEvent): Promise<void> => {
         const targetTag = (e.target as HTMLElement).tagName.toLowerCase();
         if (["a", "button"].includes(targetTag)) {
           return;
         }
 
-        setMoreInfo((more) => {
-          const newValue = lockExpanded ? true : !more;
-          if (newValue) {
-            onExpanded?.();
-          }
-          return newValue;
-        });
+        const nowOpen = !moreInfo;
+
+        if (nowOpen) {
+          onClose?.emit({});
+          await sleep(0);
+          ref.current?.scrollIntoView({
+            behavior: "instant"
+          });
+          window.scrollBy(0, -50);
+          setMoreInfo(true);
+        } else {
+          onClose?.emit({});
+        }
       }}
     >
       <FeedNameRow>
         {error ? (
           <>
-            <MdError color="var(--danger-bright)" size={24} />
+            <MdError color="var(--danger-bright)" size={18} />
           </>
         ) : (
           <>
-            <FaCheck size={24} />
+            <FaCheck size={18} />
           </>
         )}
         {info.name}
       </FeedNameRow>
       <Spacer h={8} />
-      <Markdown>{info.description}</Markdown>
       {moreInfo && (
         <>
+          <Markdown>{info.description}</Markdown>
           <Spacer h={8} />
           {alreadySubscribed ? (
             <AlreadySubscribed
@@ -449,16 +462,30 @@ function AlreadySubscribed({
   existingSubscription: Subscription;
 }): JSX.Element {
   const dispatch = useDispatch();
-  const onUnsubscribeClick = useCallback(() => {
+  const onUnsubscribeClick = useCallback(async () => {
     if (
       window.confirm(
         `Are you sure you want to unsubscribe from ${existingSubscription.feed.name}?`
       )
     ) {
-      dispatch({
+      let deleteContents = false;
+
+      if (
+        window.confirm(
+          "would you also like to delete all PCDs" +
+            " in the folder controlled by this feed?"
+        )
+      ) {
+        deleteContents = true;
+      }
+
+      await dispatch({
         type: "remove-subscription",
-        subscriptionId: existingSubscription.id
+        subscriptionId: existingSubscription.id,
+        deleteContents
       });
+
+      window.scrollTo(0, 0);
     }
   }, [existingSubscription.feed.name, existingSubscription.id, dispatch]);
 
@@ -513,7 +540,7 @@ function AlreadySubscribed({
         )}
       </>
 
-      <Spacer h={16} />
+      <Spacer h={24} />
 
       <>This feed can write to the following folders:</>
 
@@ -537,7 +564,7 @@ function AlreadySubscribed({
         <>
           <Spacer h={16} />
           <Button onClick={onUnsubscribeClick} style="danger">
-            Unsubscribe
+            Remove
           </Button>
         </>
       )}

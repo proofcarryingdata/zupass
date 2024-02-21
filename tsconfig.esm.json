@@ -49,6 +49,9 @@
       "path": "packages/pcd/input-test-pcd/tsconfig.esm.json"
     },
     {
+      "path": "packages/pcd/message-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "packages/pcd/rln-pcd/tsconfig.esm.json"
     },
     {
@@ -98,6 +101,9 @@
     },
     {
       "path": "packages/ui/halo-nonce-pcd-ui/tsconfig.esm.json"
+    },
+    {
+      "path": "packages/ui/message-pcd-ui/tsconfig.esm.json"
     },
     {
       "path": "packages/ui/rsa-image-pcd-ui/tsconfig.esm.json"
