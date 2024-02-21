@@ -4,9 +4,9 @@ import {
   ErrorContainer,
   ErrorTitle,
   Spread
-} from "../PodboxScannedTicketScreen";
+} from "../../../PodboxScannedTicketScreen";
 
-export function PodboxTicketErrorSection({
+export function PodboxCheckInErrorSection({
   error
 }: {
   error: GenericIssuanceCheckInError;

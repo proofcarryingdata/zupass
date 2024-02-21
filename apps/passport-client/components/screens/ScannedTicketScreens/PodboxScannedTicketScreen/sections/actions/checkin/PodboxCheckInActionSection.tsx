@@ -10,24 +10,29 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import urljoin from "url-join";
-import { appConfig } from "../../../../../../src/appConfig";
+import { appConfig } from "../../../../../../../src/appConfig";
 import {
   usePCDCollection,
   useUserIdentityPCD
-} from "../../../../../../src/appHooks";
-import { loadUsingLaserScanner } from "../../../../../../src/localstorage";
-import { Button } from "../../../../../core";
-import { RippleLoader } from "../../../../../core/RippleLoader";
+} from "../../../../../../../src/appHooks";
+import { loadUsingLaserScanner } from "../../../../../../../src/localstorage";
+import { Button } from "../../../../../../core";
+import { RippleLoader } from "../../../../../../core/RippleLoader";
 import {
   CheckinSectionContainer,
   CheckinSuccess,
   Home,
   ScanAnotherTicket,
   StatusContainer
-} from "../../PodboxScannedTicketScreen";
-import { PodboxTicketErrorSection } from "../PodboxTicketErrorSection";
+} from "../../../PodboxScannedTicketScreen";
+import { PodboxCheckInErrorSection } from "./PodboxTicketErrorSection";
 
-export function PodboxCheckin2ActionSection({
+/**
+ * Given a Podbox ticket that Zupass has determined the curent user
+ * has the ability to check in, renders a screen that allows the user
+ * to perform a checkin of the scanned ticket.
+ */
+export function PodboxCheckInActionSection({
   ticketId,
   eventId
 }: {
@@ -113,12 +118,13 @@ export function PodboxCheckin2ActionSection({
             </>
           ) : (
             <>
-              <PodboxTicketErrorSection error={checkinError} />
+              <PodboxCheckInErrorSection error={checkinError} />
               <Spacer h={16} />
               <ScanAnotherTicket />
               {!usingLaserScanner && <Home />}
             </>
           )}
+          PodboxCheckInErrorSection
         </>
       )}
     </CheckinSectionContainer>

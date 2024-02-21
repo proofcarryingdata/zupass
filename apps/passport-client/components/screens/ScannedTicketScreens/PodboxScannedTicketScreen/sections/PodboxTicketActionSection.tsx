@@ -3,7 +3,7 @@ import { RippleLoader } from "../../../../core/RippleLoader";
 import { TicketError } from "../../DevconnectCheckinByIdScreen";
 import { usePreCheckTicket } from "../hooks/usePrecheckTicket";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
-import { PodboxCheckin2ActionSection } from "./actions/PodboxCheckin2ActionSection";
+import { PodboxCheckInActionSection } from "./actions/checkin/PodboxCheckInActionSection";
 
 /**
  * - checks whether this ticket is valid and what the Current Zupass
@@ -38,7 +38,7 @@ export function PodboxTicketActionSection({
     content = (
       <>
         <PodboxTicketInfoSection ticketData={checkTicketByIdResult.value} />
-        <PodboxCheckin2ActionSection ticketId={ticketId} eventId={eventId} />
+        <PodboxCheckInActionSection ticketId={ticketId} eventId={eventId} />
       </>
     );
   }
