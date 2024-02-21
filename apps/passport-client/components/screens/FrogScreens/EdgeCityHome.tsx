@@ -33,13 +33,14 @@ export function EdgeCityHome(): JSX.Element {
 
       {
         <Score>
-          You have collected <strong>196</strong> points by checking into
-          activities, voting in Zupolls, subscribing to feeds, and collecting
-          contact cards.
+          You have collected <strong>196</strong> points.
         </Score>
       }
+      <Score>
+        You earned these points by checking into activities, voting in polls,
+        and adding contacts.
+      </Score>
       <PCDCardList pcds={edgeCityPCDs} />
-      <img src="https://i.ibb.co/wCbDYR5/edgecircle.webp" />
 
       {/* {frogSubs.length > 0 &&
         (frogPCDs.length === 0 && !myScore ? (
