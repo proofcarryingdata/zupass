@@ -317,7 +317,7 @@ export class PretixPipeline implements BasePipeline {
   private async cleanUpManualCheckins(): Promise<void> {
     return traced(LOG_NAME, "cleanUpManualCheckins", async (span) => {
       const ticketIds = new Set(
-        this.definition.options.manualTickets.map(
+        (this.definition.options.manualTickets ?? []).map(
           (manualTicket) => manualTicket.id
         )
       );
@@ -698,13 +698,15 @@ export class PretixPipeline implements BasePipeline {
   }
 
   private getManualTicketsForEmail(email: string): ManualTicket[] {
-    return this.definition.options.manualTickets.filter((manualTicket) => {
-      return manualTicket.attendeeEmail.toLowerCase() === email;
-    });
+    return (this.definition.options.manualTickets ?? []).filter(
+      (manualTicket) => {
+        return manualTicket.attendeeEmail.toLowerCase() === email;
+      }
+    );
   }
 
   private getManualTicketById(id: string): ManualTicket | undefined {
-    return this.definition.options.manualTickets.find(
+    return (this.definition.options.manualTickets ?? []).find(
       (manualTicket) => manualTicket.id === id
     );
   }
