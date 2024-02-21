@@ -1,13 +1,6 @@
 import { GenericIssuanceCheckInError } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import { loadUsingLaserScanner } from "../../../../src/localstorage";
-import {
-  ErrorContainer,
-  ErrorTitle,
-  Home,
-  ScanAnotherTicket,
-  Spread
-} from "./GenericIssuanceCheckIn";
+import { ErrorContainer, ErrorTitle, Spread } from "./GenericIssuanceCheckIn";
 
 export function TicketErrorContent({
   error
@@ -84,26 +77,4 @@ export function TicketErrorContent({
   }
 
   return <ErrorContainer>{errorContent}</ErrorContainer>;
-}
-
-function TicketError({
-  error
-}: {
-  error: GenericIssuanceCheckInError;
-}): JSX.Element {
-  const usingLaserScanner = loadUsingLaserScanner();
-  return (
-    <>
-      <TicketErrorContent error={error} />
-      <div
-        style={{
-          marginTop: "16px",
-          width: "100%"
-        }}
-      >
-        <ScanAnotherTicket />
-        {!usingLaserScanner && <Home />}
-      </div>
-    </>
-  );
 }
