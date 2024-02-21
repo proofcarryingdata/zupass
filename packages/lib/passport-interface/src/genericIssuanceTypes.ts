@@ -165,14 +165,14 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(LemonadePipelineEventConfigSchema),
   superuserEmails: z.array(z.string()).optional(),
   feedOptions: FeedIssuanceOptionsSchema,
-  manualTickets: z.array(ManualTicketSchema).optional().default([])
+  manualTickets: z.array(ManualTicketSchema).optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
   const events = new Map(
     val.events.map((ev) => [ev.genericIssuanceEventId, ev])
   );
-  for (const manualTicket of val.manualTickets) {
+  for (const manualTicket of val.manualTickets ?? []) {
     // Check that the event exists
     const manualTicketEvent = events.get(manualTicket.eventId);
     if (!manualTicketEvent) {
