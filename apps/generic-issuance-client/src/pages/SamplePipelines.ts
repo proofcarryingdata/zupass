@@ -61,13 +61,13 @@ Winter Hike Views,"Take a **winter hike** in the Denver Mountain Parks. Embrace 
 export const SAMPLE_CSV_EDSA_TICKET = `
 
 
-eventName,ticketName,attendeeName,attendeeEmail,imageUrl,,
-Europe,GA,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
-Europe,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
-Europe,VIP,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
-Europe,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
-America,GA,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/USA_orthographic.svg/440px-USA_orthographic.svg.png,,
-America,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/USA_orthographic.svg/440px-USA_orthographic.svg.png,,
+eventName,ticketName,attendeeName,attendeeEmail,imageUrl,id
+Europe,GA,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,optional
+Europe,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,Not necessary
+Europe,VIP,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,"Used to dedupe tickets that have duplicate (eventName, ticketName, attendeeEmail) tuples"
+Europe,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,
+America,GA,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/USA_orthographic.svg/440px-USA_orthographic.svg.png,
+America,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/USA_orthographic.svg/440px-USA_orthographic.svg.png,
 
 
 

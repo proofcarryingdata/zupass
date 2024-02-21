@@ -30,7 +30,7 @@ import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../../util";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
-import { makeTicketPCD } from "./makeTicketPCD";
+import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
 
 const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -128,7 +128,8 @@ export class CSVPipeline implements BasePipeline {
               requesterEmail,
               requesterSemaphoreId,
               eddsaPrivateKey: this.eddsaPrivateKey,
-              rsaPrivateKey: this.rsaPrivateKey
+              rsaPrivateKey: this.rsaPrivateKey,
+              pipelineId: this.id
             }
           )
         )
@@ -189,6 +190,19 @@ export class CSVPipeline implements BasePipeline {
         logs.push(
           makePLogInfo(`load finished in ${end.getTime() - start.getTime()}ms`)
         );
+
+        if (
+          this.definition.options.outputType === CSVPipelineOutputType.Ticket
+        ) {
+          logs.push(
+            makePLogInfo(
+              `\n\nevent and product ids summary:\n${summarizeEventAndProductIds(
+                this.id,
+                atoms.map((a) => a.row)
+              )}`
+            )
+          );
+        }
 
         return {
           atomsLoaded: atoms.length,
@@ -268,6 +282,7 @@ export async function makeCSVPCD(
     requesterSemaphoreId?: string;
     rsaPrivateKey: string;
     eddsaPrivateKey: string;
+    pipelineId: string;
   }
 ): Promise<SerializedPCD | undefined> {
   return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
@@ -281,7 +296,8 @@ export async function makeCSVPCD(
           inputRow,
           opts.eddsaPrivateKey,
           opts.requesterEmail,
-          opts.requesterSemaphoreId
+          opts.requesterSemaphoreId,
+          opts.pipelineId
         );
       default:
         // will not compile in case we add a new output type
