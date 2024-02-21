@@ -27,13 +27,17 @@ export const MessageSchema = z.object({
    */
   mdBody: z.string().optional(),
 
+  htmlBody: z.string().optional(),
+  iframeUrl: z.string().optional(),
+  pipelineID: z.string().optional(),
+
   // potentially useful values for the future below.
 
   authorSemaphoreV3Id: z.string().optional(),
   authorSemaphoreV4Id: z.string().optional(),
   nonce: z.number().optional(),
-  buf: z.instanceof(Buffer).optional(),
-  type: z.string().optional()
+  type: z.string().optional(),
+  scode: z.number().optional()
 });
 
 /**
