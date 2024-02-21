@@ -15,6 +15,16 @@ import {
   useUserIdentityPCD
 } from "../../../../../src/appHooks";
 
+/**
+ * Once a ticket has been scanned by the qr code reader, Zupass makes a
+ * request to the Podbox backend to determine what it can do with a ticket.
+ * The possibilities are:
+ *
+ * - nothing
+ * - check this user in
+ * - give this user a badge
+ * - give this user your contact card.
+ */
 export function usePreCheckTicket(
   ticketId: string | undefined,
   eventId: string | undefined
