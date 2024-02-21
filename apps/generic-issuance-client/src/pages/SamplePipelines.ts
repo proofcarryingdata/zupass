@@ -61,11 +61,13 @@ Winter Hike Views,"Take a **winter hike** in the Denver Mountain Parks. Embrace 
 export const SAMPLE_CSV_EDSA_TICKET = `
 
 
-Event Title,Ticket Tier,Name,Email
-Eth Denver,GA,Ivan,ivan@0xparc.org
-Eth Denver,VIP,ichub,ivan@0xparc.org
-Eth Denver,GA,ichub,ivan+test@0xparc.org
-Eth Denver,VIP,ichub,ivan+test@0xparc.org
+eventName,ticketName,attendeeName,attendeeEmail,imageUrl,,
+Europe,GA,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
+Europe,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
+Europe,VIP,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
+Europe,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/4/44/Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg/440px-Europe_orthographic_Caucasus_Urals_boundary_%28with_borders%29.svg.png,,
+America,GA,Ivan,ivan@0xparc.org,https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/USA_orthographic.svg/440px-USA_orthographic.svg.png,,
+America,GA,Richard,richard@pcd.team,https://upload.wikimedia.org/wikipedia/commons/thumb/d/dc/USA_orthographic.svg/440px-USA_orthographic.svg.png,,
 
 
 

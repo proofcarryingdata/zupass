@@ -1,14 +1,34 @@
 import { EdDSATicketPCDPackage, TicketCategory } from "@pcd/eddsa-ticket-pcd";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { randomUUID } from "crypto";
 import { v4 as uuid } from "uuid";
 import { traced } from "../../../telemetryService";
 
 export async function makeTicketPCD(
   inputRow: string[],
-  eddsaPrivateKey: string
-): Promise<SerializedPCD> {
+  eddsaPrivateKey: string,
+  requesterEmail: string | undefined,
+  requesterSemaphoreId: string | undefined
+): Promise<SerializedPCD | undefined> {
   return traced("", "makeEdDSAMessageCSVPCD", async () => {
+    if (!requesterEmail || !requesterSemaphoreId) {
+      return undefined;
+    }
+
+    const eventName: string = inputRow[0];
+    const ticketName: string = inputRow[1];
+    const attendeeName: string = inputRow[2];
+    const attendeeEmail: string = inputRow[3];
+    const imageUrl: string = inputRow[4];
+
+    const ticketId: string = uuid();
+    const eventId: string = uuid();
+    const productId: string = uuid();
+    const attendeeSemaphoreId: string = requesterSemaphoreId;
+
+    if (attendeeEmail !== requesterEmail) {
+      return undefined;
+    }
+
     const pcd = await EdDSATicketPCDPackage.prove({
       id: {
         argumentType: ArgumentTypeName.String,
@@ -22,24 +42,24 @@ export async function makeTicketPCD(
         argumentType: ArgumentTypeName.Object,
         value: {
           // The fields below are not signed and are used for display purposes.
-          eventName: inputRow[0],
-          ticketName: inputRow[1],
+          eventName,
+          ticketName,
           checkerEmail: undefined, // change if checkin feature enabled for csv pipelines
-          imageUrl: undefined,
+          imageUrl,
           imageAltText: undefined,
           // The fields below are signed using the passport-server's private EdDSA key
           // and can be used by 3rd parties to represent their own tickets.
-          ticketId: randomUUID(), // The ticket ID is a unique identifier of the ticket.
-          eventId: randomUUID(), // The event ID uniquely identifies an event.
-          productId: randomUUID(), // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
+          ticketId, // The ticket ID is a unique identifier of the ticket.
+          eventId, // The event ID uniquely identifies an event.
+          productId, // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
           timestampConsumed: 0, // change if checkin feature enabled for csv pipelines
           timestampSigned: Date.now(),
-          attendeeSemaphoreId: BigInt(0).toString(),
+          attendeeSemaphoreId,
           isConsumed: false, // change if checkin feature enabled for csv pipelines
           isRevoked: false,
           ticketCategory: TicketCategory.Generic,
-          attendeeName: inputRow[2],
-          attendeeEmail: inputRow[3]
+          attendeeName,
+          attendeeEmail
         }
       }
     });

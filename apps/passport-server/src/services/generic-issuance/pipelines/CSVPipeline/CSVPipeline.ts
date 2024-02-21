@@ -1,4 +1,5 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
@@ -6,7 +7,8 @@ import {
   PipelineLog,
   PipelineType,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  verifyFeedCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -91,13 +93,40 @@ export class CSVPipeline implements BasePipeline {
       const outputType =
         this.definition.options.outputType ?? CSVPipelineOutputType.Message;
 
+      let requesterEmail: string | undefined;
+      let requesterSemaphoreId: string | undefined;
+
+      if (req.pcd) {
+        try {
+          const { pcd: credential, payload } = await verifyFeedCredential(
+            req.pcd
+          );
+          if (!payload.pcd) {
+            throw new Error("missing email pcd");
+          }
+          const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+          if (
+            emailPCD.claim.semaphoreId !== credential.claim.identityCommitment
+          ) {
+            throw new Error(`Semaphore signature does not match email PCD`);
+          }
+
+          requesterEmail = emailPCD.claim.emailAddress;
+          requesterSemaphoreId = emailPCD.claim.semaphoreId;
+        } catch (e) {
+          logger(LOG_TAG, "credential PCD not verified for req", req);
+        }
+      }
+
       // TODO: cache these
-      const serializedPCDs = await Promise.all(
+      const somePCDs = await Promise.all(
         atoms.map(async (atom: CSVAtom) =>
           makeCSVPCD(
             atom.row,
             this.definition.options.outputType ?? CSVPipelineOutputType.Message,
             {
+              requesterEmail,
+              requesterSemaphoreId,
               eddsaPrivateKey: this.eddsaPrivateKey,
               rsaPrivateKey: this.rsaPrivateKey
             }
@@ -105,10 +134,12 @@ export class CSVPipeline implements BasePipeline {
         )
       );
 
+      const pcds = somePCDs.filter((p) => !!p) as SerializedPCD[];
+
       logger(
         LOG_TAG,
         `pipeline ${this.id} of type ${outputType} issuing`,
-        serializedPCDs.length,
+        pcds.length,
         "PCDs"
       );
 
@@ -122,7 +153,7 @@ export class CSVPipeline implements BasePipeline {
           {
             type: PCDActionType.ReplaceInFolder,
             folder: this.definition.options.feedOptions.feedFolder,
-            pcds: serializedPCDs
+            pcds
           }
         ]
       };
@@ -233,10 +264,12 @@ export async function makeCSVPCD(
   inputRow: string[],
   type: CSVPipelineOutputType,
   opts: {
+    requesterEmail?: string;
+    requesterSemaphoreId?: string;
     rsaPrivateKey: string;
     eddsaPrivateKey: string;
   }
-): Promise<SerializedPCD> {
+): Promise<SerializedPCD | undefined> {
   return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
     span?.setAttribute("output_type", type);
 
@@ -244,7 +277,12 @@ export async function makeCSVPCD(
       case CSVPipelineOutputType.Message:
         return makeMessagePCD(inputRow, opts.eddsaPrivateKey);
       case CSVPipelineOutputType.Ticket:
-        return makeTicketPCD(inputRow, opts.eddsaPrivateKey);
+        return makeTicketPCD(
+          inputRow,
+          opts.eddsaPrivateKey,
+          opts.requesterEmail,
+          opts.requesterSemaphoreId
+        );
       default:
         // will not compile in case we add a new output type
         // if you've added another type, plz add an impl here XD
