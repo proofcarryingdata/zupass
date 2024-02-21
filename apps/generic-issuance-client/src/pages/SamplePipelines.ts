@@ -64,6 +64,8 @@ export const SAMPLE_CSV_EDSA_TICKET = `
 Event Title,Ticket Tier,Name,Email
 Eth Denver,GA,Ivan,ivan@0xparc.org
 Eth Denver,VIP,ichub,ivan@0xparc.org
+Eth Denver,GA,ichub,ivan+test@0xparc.org
+Eth Denver,VIP,ichub,ivan+test@0xparc.org
 
 
 
