@@ -37,7 +37,7 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
   2
 );
 
-export const SAMPLE_CSV_EDSDA_MESSAGE = `
+export const SAMPLE_CSV_EDDSA_MESSAGE = `
 
 
 Title,Message
@@ -58,7 +58,7 @@ Winter Hike Views,"Take a **winter hike** in the Denver Mountain Parks. Embrace 
   .filter((l) => l.length > 0)
   .join("\n");
 
-export const SAMPLE_CSV_EDSA_TICKET = `
+export const SAMPLE_CSV_EDDSA_TICKET = `
 
 
 eventName,ticketName,attendeeName,attendeeEmail,imageUrl,id
@@ -81,9 +81,9 @@ export function getSampleCSVData(
 ): string {
   switch (outputType) {
     case CSVPipelineOutputType.Message:
-      return SAMPLE_CSV_EDSDA_MESSAGE;
+      return SAMPLE_CSV_EDDSA_MESSAGE;
     case CSVPipelineOutputType.Ticket:
-      return SAMPLE_CSV_EDSA_TICKET;
+      return SAMPLE_CSV_EDDSA_TICKET;
     default:
       return "not implemented";
   }
