@@ -16,7 +16,7 @@ import { Button, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
 import { useTicketDataFromQuery } from "./hooks/useTicketDataFromQuery";
-import { PodboxPreCheckTicketSection } from "./sections/PodboxPreCheckTicketSection";
+import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection";
 
 /**
  * Shows the check-in screen for a generic issuance ticket.
@@ -37,7 +37,7 @@ import { PodboxPreCheckTicketSection } from "./sections/PodboxPreCheckTicketSect
  * If this pre-check fails, the user is shown an error message.
  * If it succeeds, the check-in form is shown, along with the ticket metadata.
  */
-export function GenericIssuanceCheckInScreen(): JSX.Element {
+export function PodboxScannedTicketScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
   const {
     loading: parsingTicketData,
@@ -75,7 +75,7 @@ export function GenericIssuanceCheckInScreen(): JSX.Element {
     );
   } else {
     content = (
-      <PodboxPreCheckTicketSection ticketId={ticketId} eventId={eventId} />
+      <PodboxTicketActionSection ticketId={ticketId} eventId={eventId} />
     );
   }
 

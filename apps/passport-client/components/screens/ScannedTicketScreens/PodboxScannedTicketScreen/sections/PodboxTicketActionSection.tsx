@@ -2,14 +2,16 @@ import { Spacer } from "@pcd/passport-ui";
 import { RippleLoader } from "../../../../core/RippleLoader";
 import { TicketError } from "../../DevconnectCheckinByIdScreen";
 import { usePreCheckTicket } from "../hooks/usePrecheckTicket";
-import { CheckInPodboxTicketSection } from "./PodboxCheckInTicketSection";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
+import { PodboxCheckActionSection } from "./actions/PodboxCheckActionSection";
 
 /**
- * Before check-in can be attempted, verify that the user can check the ticket
- * in, and show the results of the check.
+ * - checks whether this ticket is valid and what the Current Zupass
+ *   can do with the ticket.
+ *
+ * - uses this information to render the appropriate sections.
  */
-export function PodboxPreCheckTicketSection({
+export function PodboxTicketActionSection({
   ticketId,
   eventId
 }: {
@@ -36,7 +38,7 @@ export function PodboxPreCheckTicketSection({
     content = (
       <>
         <PodboxTicketInfoSection ticketData={checkTicketByIdResult.value} />
-        <CheckInPodboxTicketSection ticketId={ticketId} eventId={eventId} />
+        <PodboxCheckActionSection ticketId={ticketId} eventId={eventId} />
       </>
     );
   }

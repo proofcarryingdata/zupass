@@ -10,6 +10,12 @@ export type TicketIdAndEventId = {
   error: string | null;
 };
 
+/**
+ * The {@link PodboxScannedTicketScreen} receives a ticket from the scanner
+ * via the `id` query string parameter. This hook attempts to load the ticket
+ * from the query string parameter, and returns the status of that load by
+ * returning a {@link TicketIdAndEventId}.
+ */
 export function useTicketDataFromQuery(): TicketIdAndEventId {
   const query = useQuery();
   const id = query.get("id");
