@@ -18,13 +18,14 @@ import {
   useSelf
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
-import { isFrogCryptoFolder } from "../../../src/util";
+import { isEdgeCityFolder, isFrogCryptoFolder } from "../../../src/util";
 import { Button, Placeholder, Spacer } from "../../core";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
+import { EdgeCityHome } from "../FrogScreens/EdgeCityHome";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { FrogHomeSection } from "../FrogScreens/FrogHomeSection";
 import {
@@ -104,6 +105,7 @@ export function HomeScreenImpl(): JSX.Element {
 
   const isRoot = isRootFolder(browsingFolder);
   const isFrogCrypto = isFrogCryptoFolder(browsingFolder);
+  const isEdgeCity = isEdgeCityFolder(browsingFolder);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
@@ -166,6 +168,8 @@ export function HomeScreenImpl(): JSX.Element {
 
           {isFrogCrypto ? (
             <FrogHomeSection />
+          ) : isEdgeCity ? (
+            <EdgeCityHome />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
