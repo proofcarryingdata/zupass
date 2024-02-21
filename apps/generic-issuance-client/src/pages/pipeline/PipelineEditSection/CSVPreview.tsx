@@ -1,5 +1,4 @@
 import { ReactNode } from "react";
-import { CSVPCDPreview } from "./CSVPCDPreview";
 import { CSVSheetPreview } from "./CSVSheetPreview";
 
 export function CSVPreview({
@@ -16,14 +15,11 @@ export function CSVPreview({
   switch (previewType) {
     case PreviewType.CSVSheet:
       return <CSVSheetPreview csv={csv} />;
-    case PreviewType.PCD:
-      return <CSVPCDPreview csv={csv} />;
     default:
       return null as never;
   }
 }
 
 export enum PreviewType {
-  CSVSheet = "CSVSheet",
-  PCD = "PCD"
+  CSVSheet = "CSVSheet"
 }

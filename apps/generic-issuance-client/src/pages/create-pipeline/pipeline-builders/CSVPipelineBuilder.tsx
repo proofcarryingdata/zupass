@@ -79,15 +79,7 @@ export default function CSVPipelineBuilder(
             >
               Preview as Spreadsheet
             </Button>
-            {/* TODO */}
-            {/* <Button
-              flexShrink={0}
-              disabled={previewType === PreviewType.PCD}
-              colorScheme={previewType === PreviewType.PCD ? "blue" : undefined}
-              onClick={(): void => setPreviewType(PreviewType.PCD)}
-            >
-              Preview as Zupass
-            </Button> */}
+
             <Button
               flexShrink={0}
               disabled={previewType === undefined}

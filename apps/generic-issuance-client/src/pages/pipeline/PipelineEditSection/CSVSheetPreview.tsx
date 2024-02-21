@@ -10,12 +10,10 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
   const [parseError, setParseError] = useState<Error>();
 
   useEffect(() => {
-    console.log("parsing csv", csv);
     parseCSV(csv)
       .then((parsed) => {
         setParsed(parsed);
         setParseError(undefined);
-        console.log("parsed", parsed);
       })
       .catch((e) => {
         setParsed([]);
@@ -23,16 +21,16 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
       });
   }, [csv]);
 
-  useEffect(() => {
-    console.log("TEST", parsed, parseError);
-  }, [parseError, parsed]);
-
   const data: Array<Array<{ value: string }>> = useMemo(() => {
     const copy = [...parsed];
     copy.shift();
 
     return copy.map((row) => row.map((value) => ({ value })));
   }, [parsed]);
+
+  if (parseError) {
+    return <Container>{parseError.message}</Container>;
+  }
 
   return (
     <Container>
