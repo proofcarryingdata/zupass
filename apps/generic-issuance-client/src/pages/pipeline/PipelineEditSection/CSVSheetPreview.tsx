@@ -24,7 +24,6 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
   const data: Array<Array<{ value: string }>> = useMemo(() => {
     const copy = [...parsed];
     copy.shift();
-
     return copy.map((row) => row.map((value) => ({ value })));
   }, [parsed]);
 
@@ -35,6 +34,10 @@ export function CSVSheetPreview({ csv }: { csv: string }): ReactNode {
   return (
     <Container>
       <Spreadsheet
+        onChange={(_data: unknown): void => {
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          setParsed([...parsed]);
+        }}
         darkMode={true}
         data={data}
         columnLabels={parsed[0]}
