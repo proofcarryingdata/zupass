@@ -68,7 +68,10 @@ import {
   unregisteredLemonadeUserHandler
 } from "./lemonade/MockLemonadeServer";
 import { TestTokenSource } from "./lemonade/TestTokenSource";
-import { GenericPretixDataMocker } from "./pretix/GenericPretixDataMocker";
+import {
+  GenericPretixDataMocker,
+  NAME_QUESTION_IDENTIFIER
+} from "./pretix/GenericPretixDataMocker";
 import { getMockGenericPretixHandlers } from "./pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -313,7 +316,8 @@ describe("Generic Issuance", function () {
           externalId: product.id.toString(),
           genericIssuanceId: randomUUID(),
           name: getI18nString(product.name),
-          isSuperUser: ethLatAmSuperuserProductIds.includes(product.id)
+          isSuperUser: ethLatAmSuperuserProductIds.includes(product.id),
+          nameQuestionPretixQuestionIdentitifier: NAME_QUESTION_IDENTIFIER
         };
       })
     }
@@ -718,6 +722,9 @@ t2,i1`,
       expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
         pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
       );
+      expect(attendeeTicket.claim.ticket.attendeeName).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
+      );
 
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
@@ -733,6 +740,9 @@ t2,i1`,
       expectIsEdDSATicketPCD(bouncerTicket);
       expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+      expect(bouncerTicket.claim.ticket.attendeeName).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
       );
 
       const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
