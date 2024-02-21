@@ -13,7 +13,7 @@ import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/Checkin/DevconnectCheckinByIdScreen";
-import { GenericIssuanceCheckInScreen } from "../components/screens/Checkin/PodboxScanScreen/GenericIssuanceCheckIn";
+import { GenericIssuanceCheckInScreen } from "../components/screens/Checkin/PodboxScanTicketScreen/PodboxScanTicketScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/Checkin/SecondPartyTicketVerifyScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";

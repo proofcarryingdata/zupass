@@ -1,8 +1,8 @@
 import { GenericIssuanceCheckInError } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import { ErrorContainer, ErrorTitle, Spread } from "./GenericIssuanceCheckIn";
+import { ErrorContainer, ErrorTitle, Spread } from "../PodboxScanTicketScreen";
 
-export function TicketErrorContent({
+export function PodboxTicketErrorSection({
   error
 }: {
   error: GenericIssuanceCheckInError;

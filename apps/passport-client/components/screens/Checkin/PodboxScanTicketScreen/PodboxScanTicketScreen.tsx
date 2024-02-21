@@ -15,8 +15,8 @@ import {
 import { Button, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
-import { PreCheckTicket } from "./PreCheckTicket";
-import { useTicketDataFromQuery } from "./useTicketDataFromQuery";
+import { useTicketDataFromQuery } from "./hooks/useTicketDataFromQuery";
+import { PodboxPreCheckTicketSection } from "./sections/PodboxPreCheckTicketSection";
 
 /**
  * Shows the check-in screen for a generic issuance ticket.
@@ -74,7 +74,9 @@ export function GenericIssuanceCheckInScreen(): JSX.Element {
       </div>
     );
   } else {
-    content = <PreCheckTicket ticketId={ticketId} eventId={eventId} />;
+    content = (
+      <PodboxPreCheckTicketSection ticketId={ticketId} eventId={eventId} />
+    );
   }
 
   return (

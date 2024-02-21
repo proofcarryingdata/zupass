@@ -1,7 +1,7 @@
 import { decodeQRPayload } from "@pcd/passport-ui";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
-import { useQuery } from "../../../../src/appHooks";
+import { useQuery } from "../../../../../src/appHooks";
 
 export type TicketIdAndEventId = {
   loading: boolean;

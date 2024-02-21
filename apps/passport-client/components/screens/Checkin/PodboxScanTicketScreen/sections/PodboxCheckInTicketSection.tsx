@@ -10,21 +10,24 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import urljoin from "url-join";
-import { appConfig } from "../../../../src/appConfig";
-import { usePCDCollection, useUserIdentityPCD } from "../../../../src/appHooks";
-import { loadUsingLaserScanner } from "../../../../src/localstorage";
-import { Button } from "../../../core";
-import { RippleLoader } from "../../../core/RippleLoader";
+import { appConfig } from "../../../../../src/appConfig";
+import {
+  usePCDCollection,
+  useUserIdentityPCD
+} from "../../../../../src/appHooks";
+import { loadUsingLaserScanner } from "../../../../../src/localstorage";
+import { Button } from "../../../../core";
+import { RippleLoader } from "../../../../core/RippleLoader";
 import {
   CheckinSectionContainer,
   CheckinSuccess,
   Home,
   ScanAnotherTicket,
   StatusContainer
-} from "./GenericIssuanceCheckIn";
-import { TicketErrorContent } from "./TicketError";
+} from "../PodboxScanTicketScreen";
+import { PodboxTicketErrorSection } from "./PodboxTicketErrorSection";
 
-export function CheckInSection({
+export function CheckInPodboxTicketSection({
   ticketId,
   eventId
 }: {
@@ -110,7 +113,7 @@ export function CheckInSection({
             </>
           ) : (
             <>
-              <TicketErrorContent error={checkinError} />
+              <PodboxTicketErrorSection error={checkinError} />
               <Spacer h={16} />
               <ScanAnotherTicket />
               {!usingLaserScanner && <Home />}

@@ -3,34 +3,10 @@ import {
   CardBodyContainer,
   CardHeader,
   CardOutlineExpanded
-} from "../../../shared/PCDCard";
-import { CheckInSection } from "./CheckinSection";
-import { Spread, TicketInfoContainer } from "./GenericIssuanceCheckIn";
+} from "../../../../shared/PCDCard";
+import { Spread, TicketInfoContainer } from "../PodboxScanTicketScreen";
 
-/**
- * Ticket can be checked in. Show ticket info, and the check-in form.
- */
-export function GenericIssuanceUserReadyForCheckin({
-  ticketData,
-  ticketId,
-  eventId
-}: {
-  ticketData: Extract<
-    GenericIssuancePreCheckResponseValue,
-    { canCheckIn: true }
-  >;
-  ticketId: string;
-  eventId: string;
-}): JSX.Element {
-  return (
-    <>
-      <TicketInfoSection ticketData={ticketData} />
-      <CheckInSection ticketId={ticketId} eventId={eventId} />
-    </>
-  );
-}
-
-function TicketInfoSection({
+export function PodboxTicketInfoSection({
   ticketData
 }: {
   ticketData: Extract<

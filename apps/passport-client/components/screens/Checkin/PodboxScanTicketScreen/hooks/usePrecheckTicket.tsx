@@ -4,57 +4,16 @@ import {
   createGenericCheckinCredentialPayload,
   requestGenericIssuancePreCheck
 } from "@pcd/passport-interface";
-import { Spacer } from "@pcd/passport-ui";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useEffect, useState } from "react";
 import urljoin from "url-join";
-import { appConfig } from "../../../../src/appConfig";
-import { usePCDCollection, useUserIdentityPCD } from "../../../../src/appHooks";
-import { RippleLoader } from "../../../core/RippleLoader";
-import { TicketError } from "../DevconnectCheckinByIdScreen";
-import { GenericIssuanceUserReadyForCheckin } from "./GenericIssuanceUserReadyForCheckin";
-
-/**
- * Before check-in can be attempted, verify that the user can check the ticket
- * in, and show the results of the check.
- */
-export function PreCheckTicket({
-  ticketId,
-  eventId
-}: {
-  ticketId: string;
-  eventId: string;
-}): JSX.Element {
-  const { loading: checkingTicket, result: checkTicketByIdResult } =
-    usePreCheckTicket(ticketId, eventId);
-
-  let content = null;
-
-  if (checkingTicket) {
-    content = (
-      <div>
-        <Spacer h={32} />
-        <RippleLoader />
-      </div>
-    );
-  } else if (checkTicketByIdResult.success === false) {
-    content = <TicketError error={{ name: "ServerError" }} />;
-  } else if (checkTicketByIdResult.value.canCheckIn === false) {
-    content = <TicketError error={checkTicketByIdResult.value.error} />;
-  } else {
-    content = (
-      <GenericIssuanceUserReadyForCheckin
-        ticketId={ticketId}
-        eventId={eventId}
-        ticketData={checkTicketByIdResult.value}
-      />
-    );
-  }
-
-  return content;
-}
+import { appConfig } from "../../../../../src/appConfig";
+import {
+  usePCDCollection,
+  useUserIdentityPCD
+} from "../../../../../src/appHooks";
 
 export function usePreCheckTicket(
   ticketId: string | undefined,
