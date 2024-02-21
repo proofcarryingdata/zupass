@@ -140,7 +140,8 @@ class LemonadeAccount {
   public setCheckin(
     eventId: string,
     userId: string,
-    checkinDate: Date | null
+    checkinDate: Date | null,
+    force = false
   ): void {
     if (!this.events.has(eventId)) {
       throw new Error(`Can't check in user to non-existent event ${eventId}`);
@@ -164,11 +165,11 @@ class LemonadeAccount {
     }
 
     // If the ticket exists and has already been checked in
-    if (ticket.checkin_date && checkinDate) {
+    if (ticket.checkin_date && checkinDate && !force) {
       throw new Error(`User ${userId} is already checked in to ${eventId}`);
     }
 
-    if (!ticket.checkin_date && !checkinDate) {
+    if (!ticket.checkin_date && !checkinDate && !force) {
       throw new Error(`User ${userId} is already checked out from ${eventId}`);
     }
 
@@ -257,7 +258,7 @@ export class LemonadeDataMocker {
     for (const account of this.accounts.values()) {
       for (const [eventId, eventTickets] of account.getTickets().entries()) {
         for (const ticket of eventTickets.values()) {
-          account.setCheckin(eventId, ticket.user_id, null);
+          account.setCheckin(eventId, ticket.user_id, null, true);
         }
       }
     }

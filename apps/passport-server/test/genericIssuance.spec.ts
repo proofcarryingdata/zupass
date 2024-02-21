@@ -46,11 +46,18 @@ import { LemonadeOAuthCredentials } from "../src/apis/lemonade/auth";
 import { ILemonadeAPI, getLemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
 import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
 import { stopApplication } from "../src/application";
+import { PipelineCheckinDB } from "../src/database/queries/pipelineCheckinDB";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
 import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
-import { LemonadePipeline } from "../src/services/generic-issuance/pipelines/LemonadePipeline";
-import { PretixPipeline } from "../src/services/generic-issuance/pipelines/PretixPipeline";
+import {
+  LEMONADE_CHECKER,
+  LemonadePipeline
+} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+import {
+  PRETIX_CHECKER,
+  PretixPipeline
+} from "../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
   Pipeline,
   PipelineUser
@@ -671,16 +678,68 @@ t2,i1`,
         EdgeCityManualBouncerEmail
       );
 
-      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
-        edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        EdgeCityManualBouncerEmail,
-        EdgeCityManualBouncerIdentity,
-        BouncerTicket
-      );
-      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+      const manualBouncerChecksInManualAttendee =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualBouncerEmail,
+          EdgeCityManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         checkedIn: true
       });
+
+      {
+        const ManualAttendeeTickets = await requestTicketsFromPipeline(
+          edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+          edgeCityDenverTicketFeedUrl,
+          edgeCityDenverPipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualAttendeeEmail,
+          EdgeCityManualAttendeeIdentity
+        );
+        expectLength(ManualAttendeeTickets, 1);
+        const ManualAttendeeTicket = ManualAttendeeTickets[0];
+        expectIsEdDSATicketPCD(ManualAttendeeTicket);
+        expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+          EdgeCityManualAttendeeEmail
+        );
+        expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
+          Date.now()
+        );
+      }
+
+      const manualBouncerChecksInManualAttendeeAgain =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualBouncerEmail,
+          EdgeCityManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date().toISOString(),
+          checker: LEMONADE_CHECKER
+        }
+      } satisfies GenericIssuanceCheckInResponseValue);
+
+      const manualAttendeeChecksInManualBouncer =
+        await requestCheckInPipelineTicket(
+          edgeCityDenverPipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EdgeCityManualAttendeeEmail,
+          EdgeCityManualAttendeeIdentity,
+          ManualBouncerTicket
+        );
+      expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
 
       // TODO test checking in manual attendee/bouncer
       // Currently not supported as these are not present in the Lemonade
@@ -834,24 +893,110 @@ t2,i1`,
       MockDate.set(Date.now() + ONE_SECOND_MS);
       await pipeline.load();
 
-      const manualBouncerChecksInBouncer = await requestCheckInPipelineTicket(
-        pipeline.checkinCapability.getCheckinUrl(),
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        EthLatAmManualBouncerEmail,
-        EthLatAmManualBouncerIdentity,
-        bouncerTicket
-      );
-      expect(manualBouncerChecksInBouncer.value).to.deep.eq({
+      const manualBouncerChecksInManualAttendee =
+        await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualBouncerEmail,
+          EthLatAmManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
         checkedIn: true
       });
 
-      // TODO test checking in manual attendee/bouncer
-      // Currently not supported as these are not present in the Lemonade
-      // backend, will be implemented with the pipeline as the check-in backend
+      {
+        const ManualAttendeeTickets = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          ethLatAmTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualAttendeeIdentity
+        );
+        expectLength(ManualAttendeeTickets, 1);
+        const ManualAttendeeTicket = ManualAttendeeTickets[0];
+        expectIsEdDSATicketPCD(ManualAttendeeTicket);
+        expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+          EthLatAmManualAttendeeEmail
+        );
+        expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
+          Date.now()
+        );
+      }
+
+      const manualBouncerChecksInManualAttendeeAgain =
+        await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualBouncerEmail,
+          EthLatAmManualBouncerIdentity,
+          ManualAttendeeTicket
+        );
+      expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
+        checkedIn: false,
+        error: {
+          name: "AlreadyCheckedIn",
+          checkinTimestamp: new Date().toISOString(),
+          checker: PRETIX_CHECKER
+        }
+      } satisfies GenericIssuanceCheckInResponseValue);
+
+      const manualAttendeeChecksInManualBouncer =
+        await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          EthLatAmManualAttendeeEmail,
+          EthLatAmManualAttendeeIdentity,
+          ManualBouncerTicket
+        );
+      expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
+        checkedIn: false,
+        error: { name: "NotSuperuser" }
+      } satisfies GenericIssuanceCheckInResponseValue);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
   );
+
+  step("check-ins for deleted manual tickets are removed", async function () {
+    expectToExist(giService);
+
+    const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
+    const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+    // Manual attendee ticket was checked in
+    expectLength(checkins, 1);
+
+    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const adminUser = await userDB.getUserById(adminGIUserId);
+    expectToExist(adminUser);
+
+    // Delete the manual tickets from the definition
+    const newPipelineDefinition = structuredClone(ethLatAmPipeline);
+    newPipelineDefinition.options.manualTickets = [];
+    // Update the definition
+    const { restartPromise } = await giService.upsertPipelineDefinition(
+      adminUser,
+      newPipelineDefinition
+    );
+    // On restart, the pipeline will delete the orphaned checkins
+    await restartPromise;
+
+    // Find the running pipeline
+    const pipelines = await giService.getAllPipelines();
+    expectToExist(pipelines);
+    expectLength(pipelines, 3);
+    const pipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(newPipelineDefinition.id);
+    // Verify that there are no checkins in the DB now
+    {
+      const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
+      // no checkins are found as the tickets have been deleted
+      expectLength(checkins, 0);
+    }
+  });
 
   step("CSVPipeline", async function () {
     expectToExist(giService);

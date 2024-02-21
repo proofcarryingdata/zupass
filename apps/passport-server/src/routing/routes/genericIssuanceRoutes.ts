@@ -245,10 +245,11 @@ export function initGenericIssuanceRoutes(
       traceUser(user);
 
       const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
-      const result = await genericIssuanceService.upsertPipelineDefinition(
-        user,
-        reqBody.pipeline
-      );
+      const { definition: result } =
+        await genericIssuanceService.upsertPipelineDefinition(
+          user,
+          reqBody.pipeline
+        );
       res.json(result satisfies GenericIssuanceUpsertPipelineResponseValue);
     }
   );

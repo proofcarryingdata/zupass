@@ -234,6 +234,10 @@ export class CSVPipeline implements BasePipeline {
     });
   }
 
+  public async start(): Promise<void> {
+    logger(LOG_TAG, `starting csv pipeline`);
+  }
+
   public async stop(): Promise<void> {
     logger(LOG_TAG, `stopping csv pipeline`);
   }

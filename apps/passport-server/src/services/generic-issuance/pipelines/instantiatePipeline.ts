@@ -3,6 +3,7 @@ import { PipelineDefinition } from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
@@ -33,37 +34,47 @@ export function instantiatePipeline(
   },
   zupassPublicKey: EdDSAPublicKey,
   rsaPrivateKey: string,
-  cacheService: PersistentCacheService
+  cacheService: PersistentCacheService,
+  checkinDb: IPipelineCheckinDB
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
 
+    let pipeline: Pipeline | undefined = undefined;
+
     if (isLemonadePipelineDefinition(definition)) {
-      return new LemonadePipeline(
+      pipeline = new LemonadePipeline(
         eddsaPrivateKey,
         definition,
         db,
         apis.lemonadeAPI,
         zupassPublicKey,
-        cacheService
+        cacheService,
+        checkinDb
       );
     } else if (isPretixPipelineDefinition(definition)) {
-      return new PretixPipeline(
+      pipeline = new PretixPipeline(
         eddsaPrivateKey,
         definition,
         db,
         apis.genericPretixAPI,
         zupassPublicKey,
-        cacheService
+        cacheService,
+        checkinDb
       );
     } else if (isCSVPipelineDefinition(definition)) {
-      return new CSVPipeline(
+      pipeline = new CSVPipeline(
         eddsaPrivateKey,
         definition,
         db,
         zupassPublicKey,
         rsaPrivateKey
       );
+    }
+
+    if (pipeline) {
+      await pipeline.start();
+      return pipeline;
     }
 
     throw new Error(

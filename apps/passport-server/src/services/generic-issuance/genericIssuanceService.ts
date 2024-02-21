@@ -35,6 +35,10 @@ import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
+  IPipelineCheckinDB,
+  PipelineCheckinDB
+} from "../../database/queries/pipelineCheckinDB";
+import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../database/queries/pipelineDefinitionDB";
@@ -106,6 +110,7 @@ export class GenericIssuanceService {
   private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
+  private checkinDB: IPipelineCheckinDB;
 
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
@@ -143,6 +148,7 @@ export class GenericIssuanceService {
     this.userDB = new PipelineUserDB(context.dbPool);
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
+    this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -227,7 +233,8 @@ export class GenericIssuanceService {
               },
               this.zupassPublicKey,
               this.rsaPrivateKey,
-              this.cacheService
+              this.cacheService,
+              this.checkinDB
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -904,7 +911,10 @@ export class GenericIssuanceService {
   public async upsertPipelineDefinition(
     user: PipelineUser,
     newDefinition: PipelineDefinition
-  ): Promise<PipelineDefinition> {
+  ): Promise<{
+    definition: PipelineDefinition;
+    restartPromise: Promise<void>;
+  }> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       logger(
         SERVICE_NAME,
@@ -992,8 +1002,8 @@ export class GenericIssuanceService {
       );
       await this.atomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
-      this.restartPipeline(validatedNewDefinition.id);
-      return validatedNewDefinition;
+      const restartPromise = this.restartPipeline(validatedNewDefinition.id);
+      return { definition: validatedNewDefinition, restartPromise };
     });
   }
 
@@ -1114,7 +1124,8 @@ export class GenericIssuanceService {
         },
         this.zupassPublicKey,
         this.rsaPrivateKey,
-        this.cacheService
+        this.cacheService,
+        this.checkinDB
       );
 
       await this.performPipelineLoad(pipelineSlot);
