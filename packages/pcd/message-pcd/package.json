@@ -36,6 +36,7 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
+    "@types/chai-as-promised": "^7.1.5",
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/json-bigint": "^1.0.1",

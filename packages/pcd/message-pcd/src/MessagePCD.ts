@@ -67,13 +67,14 @@ export async function prove(args: Args): Promise<MessagePCD> {
 export async function verify(msg: MessagePCD): Promise<boolean> {
   try {
     const msgInt = bigintifyMsg(msg.claim);
+    const intInPCD = msg.proof.signature.claim.message[0];
 
     if (msgInt.len !== msg.proof.stringLength) {
       throw new Error("msg len mismatch");
     }
 
     if (
-      msgInt.int !== msg.proof.signature.claim.message[0] ||
+      msgInt.int !== intInPCD ||
       msg.proof.signature.claim.message.length !== 1
     ) {
       throw new Error("msg mismatch");

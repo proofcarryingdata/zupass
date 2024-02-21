@@ -18,6 +18,9 @@ export async function checkMsg(
   const verified = await MessagePCDPackage.verify(msg);
 
   if (!verified) {
-    throw new Error("PCD not verified: " + msg);
+    throw new Error(
+      "PCD not verified: " +
+        JSON.stringify(await MessagePCDPackage.serialize(msg))
+    );
   }
 }
