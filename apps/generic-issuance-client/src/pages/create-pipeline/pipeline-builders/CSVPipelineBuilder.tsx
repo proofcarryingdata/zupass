@@ -31,7 +31,7 @@ export default function CSVPipelineBuilder(
     getSampleFeedOptions(DEFAULT_OUTPUT_TYPE)
   );
   const [previewType, setPreviewType] = useState<PreviewType | undefined>(
-    PreviewType.CSVSheet
+    undefined
   );
 
   useEffect(() => {
@@ -71,22 +71,22 @@ export default function CSVPipelineBuilder(
           <HStack mt={2} minWidth="fit-content" width="fit-content">
             <Button
               flexShrink={0}
+              disabled={previewType === undefined}
+              colorScheme={previewType === undefined ? "blue" : undefined}
+              onClick={(): void => setPreviewType(undefined)}
+            >
+              CSV
+            </Button>
+
+            <Button
+              flexShrink={0}
               disabled={previewType === PreviewType.CSVSheet}
               colorScheme={
                 previewType === PreviewType.CSVSheet ? "blue" : undefined
               }
               onClick={(): void => setPreviewType(PreviewType.CSVSheet)}
             >
-              Preview as Spreadsheet
-            </Button>
-
-            <Button
-              flexShrink={0}
-              disabled={previewType === undefined}
-              colorScheme={previewType === undefined ? "blue" : undefined}
-              onClick={(): void => setPreviewType(undefined)}
-            >
-              Edit CSV
+              Preview
             </Button>
           </HStack>
         </div>
