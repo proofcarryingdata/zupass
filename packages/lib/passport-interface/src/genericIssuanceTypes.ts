@@ -90,11 +90,13 @@ const ManualTicketSchema = z.object({
 const ManualTicketListSchema = z
   .array(ManualTicketSchema)
   .optional()
-  .default([])
   .refine(
     (manualTickets) =>
+      // If manualTickets is undefined then that's OK
+      manualTickets === undefined ||
+      // Otherwise make sure each one has a unique ID
       manualTickets.length ===
-      new Set(manualTickets.map((manualTicket) => manualTicket.id)).size,
+        new Set(manualTickets.map((manualTicket) => manualTicket.id)).size,
     { message: "Ticket IDs must be unique" }
   );
 
