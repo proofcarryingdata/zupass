@@ -59,8 +59,8 @@ import {
 } from "../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
+import { makePLogErr, makePLogInfo, makePLogWarn } from "../logs";
 import { BasePipelineCapability } from "../types";
-import { makePLogErr, makePLogInfo, makePLogWarn } from "../util";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";

@@ -1,4 +1,5 @@
 import { PipelineLog, PipelineLogLevel } from "@pcd/passport-interface";
+import { matchesRegex } from "@pcd/util";
 
 /**
  * Helper function to instantiate a {@link PipelineLog}, used to communicate
@@ -73,10 +74,4 @@ export function getWarningLogs(
         .filter((l) => l.level === PipelineLogLevel.Warning)
         .filter((l) => !matchesRegex(l.value, ignoreRegexes))
     : [];
-}
-
-function matchesRegex(str: string, regexes?: string[]): boolean {
-  return regexes
-    ? regexes.filter((r) => new RegExp(r).test(str)).length !== 0
-    : false;
 }

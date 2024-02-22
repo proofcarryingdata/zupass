@@ -40,3 +40,9 @@ export function flattenObject(
 export function str(val: unknown): string {
   return JSON.stringify(val);
 }
+
+export function matchesRegex(str: string, regexes?: string[]): boolean {
+  return regexes
+    ? regexes.filter((r) => new RegExp(r).test(str)).length !== 0
+    : false;
+}

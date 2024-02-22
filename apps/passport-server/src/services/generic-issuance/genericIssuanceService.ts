@@ -62,15 +62,15 @@ import {
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
-import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
-import { instantiatePipeline } from "./pipelines/instantiatePipeline";
-import { Pipeline, PipelineUser } from "./pipelines/types";
 import {
   getErrorLogs,
   getWarningLogs,
   makePLogErr,
   makePLogInfo
-} from "./util";
+} from "./logs";
+import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
+import { instantiatePipeline } from "./pipelines/instantiatePipeline";
+import { Pipeline, PipelineUser } from "./pipelines/types";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;

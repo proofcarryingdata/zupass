@@ -26,8 +26,8 @@ import {
 } from "../../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
+import { makePLogErr, makePLogInfo } from "../../logs";
 import { BasePipelineCapability } from "../../types";
-import { makePLogErr, makePLogInfo } from "../../util";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
 import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
