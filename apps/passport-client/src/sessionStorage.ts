@@ -5,7 +5,7 @@ export function clearAllPendingRequests(): void {
   clearPendingProofRequest();
   clearPendingViewSubscriptionsRequest();
   clearPendingAddSubscriptionRequest();
-  clearPendingGenericIssuanceCheckinRequest();
+  clearPendingPodboxScannedRequest();
 }
 
 export function hasPendingRequest(): boolean {
@@ -17,7 +17,7 @@ export function hasPendingRequest(): boolean {
     getPendingViewSubscriptionsPageRequest() ||
     getPendingAddSubscriptionPageRequest() ||
     getPendingViewFrogCryptoPageRequest() ||
-    getPendingGenericIssuanceCheckinRequest()
+    getPendingPodboxScannedRequest()
   );
 }
 
@@ -126,18 +126,17 @@ export function getPendingViewFrogCryptoPageRequest(): string | undefined {
   return value == null ? undefined : value;
 }
 
-export const pendingGenericIssuanceCheckinRequestKey =
-  "pendingGenericIssuanceCheckin";
+export const pendingPodboxScannedRequestKey = "pendingPodboxScannedRequestKey";
 
-export function setPendingGenericIssuanceCheckinRequest(request: string): void {
-  sessionStorage.setItem(pendingGenericIssuanceCheckinRequestKey, request);
+export function setPendingPodboxScannedRequest(request: string): void {
+  sessionStorage.setItem(pendingPodboxScannedRequestKey, request);
 }
 
-export function clearPendingGenericIssuanceCheckinRequest(): void {
-  sessionStorage.removeItem(pendingGenericIssuanceCheckinRequestKey);
+export function clearPendingPodboxScannedRequest(): void {
+  sessionStorage.removeItem(pendingPodboxScannedRequestKey);
 }
 
-export function getPendingGenericIssuanceCheckinRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingGenericIssuanceCheckinRequestKey);
+export function getPendingPodboxScannedRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingPodboxScannedRequestKey);
   return value == null ? undefined : value;
 }

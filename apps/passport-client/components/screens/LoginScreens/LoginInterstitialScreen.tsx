@@ -6,9 +6,9 @@ import {
   clearAllPendingRequests,
   getPendingAddRequest,
   getPendingAddSubscriptionPageRequest,
-  getPendingGenericIssuanceCheckinRequest,
   getPendingGetWithoutProvingRequest,
   getPendingHaloRequest,
+  getPendingPodboxScannedRequest,
   getPendingProofRequest,
   getPendingViewFrogCryptoPageRequest,
   getPendingViewSubscriptionsPageRequest
@@ -62,10 +62,10 @@ export function LoginInterstitialScreen(): JSX.Element {
         );
         clearAllPendingRequests();
         navigate(`/frogscriptions/${encReq}`, { replace: true });
-      } else if (getPendingGenericIssuanceCheckinRequest() != null) {
+      } else if (getPendingPodboxScannedRequest() != null) {
         console.log("Redirecting to Generic Issuance checkin screen");
         const encReq = new URLSearchParams(
-          JSON.parse(getPendingGenericIssuanceCheckinRequest())
+          JSON.parse(getPendingPodboxScannedRequest())
         ).toString();
         clearAllPendingRequests();
         navigate(`/generic-checkin?${encReq}`, {

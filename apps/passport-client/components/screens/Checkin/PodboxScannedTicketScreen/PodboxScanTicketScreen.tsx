@@ -16,10 +16,10 @@ import { Button, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
 import { useTicketDataFromQuery } from "./hooks/useTicketDataFromQuery";
-import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection";
+import { PodboxPreCheckTicketSection } from "./sections/PodboxPreCheckTicketSection";
 
 /**
- * Screen that gets shown to a user when they scan a Podbox-issued ticket.
+ * Shows the check-in screen for a generic issuance ticket.
  *
  * On load, this parses ticket data from the URL. This can either be a base64-
  * encoded JSON string with a ticket ID and event ID, or a serialized
@@ -37,9 +37,8 @@ import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection"
  * If this pre-check fails, the user is shown an error message.
  * If it succeeds, the check-in form is shown, along with the ticket metadata.
  */
-export function PodboxScannedTicketScreen(): JSX.Element {
+export function GenericIssuanceCheckInScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
-
   const {
     loading: parsingTicketData,
     ticketId,
@@ -76,7 +75,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     );
   } else {
     content = (
-      <PodboxTicketActionSection ticketId={ticketId} eventId={eventId} />
+      <PodboxPreCheckTicketSection ticketId={ticketId} eventId={eventId} />
     );
   }
 
@@ -87,7 +86,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
   );
 }
 
-export function ScanAnotherTicketButton(): JSX.Element {
+export function ScanAnotherTicket(): JSX.Element {
   const onClick = useCallback(() => {
     window.location.href = "/#/scan";
   }, []);
@@ -99,7 +98,7 @@ export function ScanAnotherTicketButton(): JSX.Element {
   );
 }
 
-export function GoHomeButton(): JSX.Element {
+export function Home(): JSX.Element {
   const onClick = useCallback(() => {
     window.location.href = "/#/";
   }, []);

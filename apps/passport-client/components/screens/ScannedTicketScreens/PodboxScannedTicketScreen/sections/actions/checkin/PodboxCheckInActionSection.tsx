@@ -21,8 +21,8 @@ import { RippleLoader } from "../../../../../../core/RippleLoader";
 import {
   CheckinSectionContainer,
   CheckinSuccess,
-  Home,
-  ScanAnotherTicket,
+  GoHomeButton,
+  ScanAnotherTicketButton,
   StatusContainer
 } from "../../../PodboxScannedTicketScreen";
 import { PodboxCheckInErrorSection } from "./PodboxTicketErrorSection";
@@ -101,8 +101,8 @@ export function PodboxCheckInActionSection({
         <>
           <Button onClick={onCheckInClick}>Check In</Button>
           <Spacer h={8} />
-          <ScanAnotherTicket />
-          {!usingLaserScanner && <Home />}
+          <ScanAnotherTicketButton />
+          {!usingLaserScanner && <GoHomeButton />}
         </>
       )}
       {inProgress && <RippleLoader />}
@@ -113,15 +113,15 @@ export function PodboxCheckInActionSection({
               <StatusContainer>
                 <CheckinSuccess>Checked In ✅</CheckinSuccess>
               </StatusContainer>
-              <ScanAnotherTicket />
-              {!usingLaserScanner && <Home />}
+              <ScanAnotherTicketButton />
+              {!usingLaserScanner && <GoHomeButton />}
             </>
           ) : (
             <>
               <PodboxCheckInErrorSection error={checkinError} />
               <Spacer h={16} />
-              <ScanAnotherTicket />
-              {!usingLaserScanner && <Home />}
+              <ScanAnotherTicketButton />
+              {!usingLaserScanner && <GoHomeButton />}
             </>
           )}
           PodboxCheckInErrorSection
