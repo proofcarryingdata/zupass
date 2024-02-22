@@ -1,12 +1,8 @@
 import { PodboxPrecheckError } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import {
-  ErrorContainer,
-  ErrorTitle,
-  Spread
-} from "../../../PodboxScannedTicketScreen";
+import { ErrorContainer, ErrorTitle, Spread } from "../PodboxScanTicketScreen";
 
-export function PodboxCheckInErrorSection({
+export function PodboxTicketErrorSection({
   error
 }: {
   error: PodboxPrecheckError;

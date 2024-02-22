@@ -9,11 +9,9 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   CSVPipelineDefinition,
-  GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -25,6 +23,8 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
+  PodboxPrecheckError,
+  PodboxPrecheckResultValue,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixEventConfig,
@@ -965,7 +965,7 @@ export class PretixPipeline implements BasePipeline {
   private async canCheckInForEvent(
     eventId: string,
     checkerEmail: string
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxPrecheckError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceId === eventId
     );
@@ -1006,7 +1006,7 @@ export class PretixPipeline implements BasePipeline {
 
   private async canCheckInPretixTicket(
     ticketAtom: PretixAtom
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxPrecheckError> {
     return traced(LOG_NAME, "canCheckInPretixTicket", async (span) => {
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
@@ -1043,7 +1043,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async canCheckInManualTicket(
     manualTicket: ManualTicket
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxPrecheckError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
       const checkIn = await this.checkinDb.getByTicketId(
@@ -1084,7 +1084,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async checkPretixTicketPCDCanBeCheckedIn(
     request: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue> {
+  ): Promise<PodboxPrecheckResultValue> {
     return traced(
       LOG_NAME,
       "checkPretixTicketPCDCanBeCheckedIn",

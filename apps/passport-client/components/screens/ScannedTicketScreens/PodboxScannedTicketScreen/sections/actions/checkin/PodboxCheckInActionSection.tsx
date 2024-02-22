@@ -1,6 +1,6 @@
 import { EmailPCD, EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
-  GenericIssuanceCheckInError,
+  PodboxPrecheckError,
   createGenericCheckinCredentialPayload,
   requestGenericIssuanceCheckIn
 } from "@pcd/passport-interface";
@@ -42,8 +42,9 @@ export function PodboxCheckInActionSection({
   const [inProgress, setInProgress] = useState(false);
   const [checkedIn, setCheckedIn] = useState(false);
   const [finishedCheckinAttempt, setFinishedCheckinAttempt] = useState(false);
-  const [checkinError, setCheckinError] =
-    useState<GenericIssuanceCheckInError | null>(null);
+  const [checkinError, setCheckinError] = useState<PodboxPrecheckError | null>(
+    null
+  );
   const usingLaserScanner = loadUsingLaserScanner();
   const pcdCollection = usePCDCollection();
   const identityPCD = useUserIdentityPCD();

@@ -852,12 +852,10 @@ export interface FrogCryptoUpdateFeedsResponseValue {
  * and {@link GenericIssuanceCheckRequest}. This type enumerates all the possible
  * problems.
  */
-export type GenericIssuanceCheckInError = { detailedMessage?: string } & (
+export type PodboxPrecheckError = { detailedMessage?: string } & (
   | { name: "NotSuperuser" }
   | {
       name: "AlreadyCheckedIn";
-      checkinTimestamp: string | undefined;
-      checker: string | undefined;
     }
   | { name: "InvalidSignature" }
   | { name: "InvalidTicket" }
@@ -888,7 +886,7 @@ export type GenericIssuanceCheckInResponseValue =
     }
   | {
       checkedIn: false;
-      error: GenericIssuanceCheckInError;
+      error: PodboxPrecheckError;
     };
 
 /**
@@ -911,24 +909,32 @@ export type GrantableBadge = {
   imageUrl: string;
 };
 
+export type PodboxPrecheckResult = {
+  canGetContactCard?: boolean;
+  canCheckIn?: boolean;
+  checkinTimestamp?: string | undefined;
+  checker?: string | undefined;
+  grantableBadges?: GrantableBadge[];
+
+  // The server will reveal these fields to other members
+  // of the same event
+  attendeeName: string;
+  attendeeEmail: string;
+  ticketName: string;
+  eventName: string;
+};
+
 /**
  * Checking the ticket either succeeds or fails, so no response value is defined for now.
  */
-export type GenericIssuancePreCheckResponseValue =
+export type PodboxPrecheckResultValue =
   | {
-      canGetContactCard: boolean;
-      canCheckIn: boolean;
-      grantableBadges?: GrantableBadge[];
-
-      // The server will reveal these fields to other members
-      // of the same event
-      attendeeName: string;
-      attendeeEmail: string;
-      ticketName: string;
-      eventName: string;
+      result: PodboxPrecheckResult;
+      error?: never;
     }
   | {
-      error: GenericIssuanceCheckInError;
+      result?: never;
+      error?: PodboxPrecheckError;
     };
 
 /**

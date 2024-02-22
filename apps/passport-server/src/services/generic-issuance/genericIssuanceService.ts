@@ -6,7 +6,6 @@ import {
   GenericIssuanceCheckInResponseValue,
   GenericIssuancePipelineListEntry,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
@@ -17,6 +16,7 @@ import {
   PipelineInfoResponseValue,
   PipelineLoadSummary,
   PipelineType,
+  PodboxPrecheckResultValue,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixPipelineDefinition
@@ -767,7 +767,7 @@ export class GenericIssuanceService {
    */
   public async handlePreCheck(
     req: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue> {
+  ): Promise<PodboxPrecheckResultValue> {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 

@@ -9,7 +9,6 @@ import {
   GenericIssuanceGetAllUserPipelinesResponseValue,
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   GenericIssuanceSelfResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
@@ -17,6 +16,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
+  PodboxPrecheckResultValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -169,7 +169,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const request = req.body as GenericIssuancePreCheckRequest;
       const result = await genericIssuanceService.handlePreCheck(request);
-      res.json(result satisfies GenericIssuancePreCheckResponseValue);
+      res.json(result satisfies PodboxPrecheckResultValue);
     }
   );
 

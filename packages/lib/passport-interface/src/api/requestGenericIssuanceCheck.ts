@@ -3,7 +3,7 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue
+  PodboxPrecheckResultValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -24,7 +24,7 @@ export async function requestGenericIssuancePreCheck(
     async (resText) => {
       return {
         success: true,
-        value: JSON.parse(resText) as GenericIssuancePreCheckResponseValue
+        value: JSON.parse(resText) as PodboxPrecheckResultValue
       };
     },
     {
@@ -34,4 +34,4 @@ export async function requestGenericIssuancePreCheck(
 }
 
 export type GenericIssuancePreCheckResult =
-  APIResult<GenericIssuancePreCheckResponseValue>;
+  APIResult<PodboxPrecheckResultValue>;

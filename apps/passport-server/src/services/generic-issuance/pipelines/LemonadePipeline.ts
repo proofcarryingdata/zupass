@@ -8,11 +8,9 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -21,8 +19,11 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
+  PodboxPrecheckError,
+  PodboxPrecheckResultValue,
   PollFeedRequest,
   PollFeedResponseValue,
+  PermissionedActions as TicketPrecheck,
   verifyCheckinCredential,
   verifyFeedCredential
 } from "@pcd/passport-interface";
@@ -789,16 +790,17 @@ export class LemonadePipeline implements BasePipeline {
    * Given an event and a checker email, verifies that the checker can perform
    * check-ins for the event.
    */
-  private async canCheckInForEvent(
+  private async getTicketPrecheck(
     eventId: string,
+    ticketId: string,
     checkerEmail: string
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<TicketPrecheck> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceEventId === eventId
     );
 
     if (!eventConfig) {
-      return { name: "InvalidTicket" };
+      throw new Error("invalid ticket");
     }
 
     // Collect all of the product IDs that the checker owns for this event
@@ -823,7 +825,9 @@ export class LemonadePipeline implements BasePipeline {
       this.definition.options.superuserEmails?.includes(checkerEmail) ?? false;
 
     if (checkerEmailIsSuperuser) {
-      return true;
+      return {
+        canCheckIn: true
+      };
     }
 
     const hasSuperUserTicket = checkerProductIds.some((productId) => {
@@ -835,10 +839,10 @@ export class LemonadePipeline implements BasePipeline {
     });
 
     if (hasSuperUserTicket) {
-      return true;
+      return { canCheckIn: true };
     }
 
-    return { name: "NotSuperuser" };
+    return {};
   }
 
   /**
@@ -848,7 +852,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async canCheckInLemonadeTicket(
     ticketAtom: LemonadeAtom
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxPrecheckError> {
     return traced(LOG_NAME, "canCheckInLemonadeTicket", async (span) => {
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
@@ -857,6 +861,7 @@ export class LemonadePipeline implements BasePipeline {
         span?.setAttribute("precheck_error", "AlreadyCheckedIn");
         return {
           name: "AlreadyCheckedIn",
+          success: false,
           checkinTimestamp: ticketAtom.checkinDate.toISOString(),
           checker: LEMONADE_CHECKER
         };
@@ -869,6 +874,7 @@ export class LemonadePipeline implements BasePipeline {
         span?.setAttribute("precheck_error", "AlreadyCheckedIn");
         return {
           name: "AlreadyCheckedIn",
+          success: false,
           checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
           checker: LEMONADE_CHECKER
         };
@@ -885,7 +891,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async canCheckInManualTicket(
     manualTicket: ManualTicket
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxPrecheckError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
       const checkIn = await this.checkinDb.getByTicketId(
@@ -897,6 +903,7 @@ export class LemonadePipeline implements BasePipeline {
         span?.setAttribute("precheck_error", "AlreadyCheckedIn");
         return {
           name: "AlreadyCheckedIn",
+          success: false,
           checkinTimestamp: checkIn.timestamp.toISOString(),
           checker: LEMONADE_CHECKER
         };
@@ -908,6 +915,7 @@ export class LemonadePipeline implements BasePipeline {
         span?.setAttribute("precheck_error", "AlreadyCheckedIn");
         return {
           name: "AlreadyCheckedIn",
+          success: false,
           checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
           checker: LEMONADE_CHECKER
         };
@@ -926,17 +934,18 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async checkLemonadeTicketPCDCanBeCheckedIn(
     request: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue> {
-    return traced(
+  ): Promise<PodboxPrecheckResultValue> {
+    return traced<PodboxPrecheckResultValue>(
       LOG_NAME,
       "checkLemonadeTicketPCDCanBeCheckedIn",
-      async (span) => {
+      async (span): Promise<PodboxPrecheckResultValue> => {
         tracePipeline(this.definition);
 
         let checkerEmail: string;
         let ticketId: string;
         let eventId: string;
 
+        // step 1) verify credentials
         try {
           const payload = await verifyCheckinCredential(request.credential);
           ticketId = payload.ticketIdToCheckIn;
@@ -952,7 +961,9 @@ export class LemonadePipeline implements BasePipeline {
             logger(
               `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
             );
-            return { canCheckIn: false, error: { name: "InvalidSignature" } };
+            return {
+              error: { name: "InvalidSignature" }
+            };
           }
 
           span?.setAttribute("ticket_id", ticketId);
@@ -970,20 +981,17 @@ export class LemonadePipeline implements BasePipeline {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
           span?.setAttribute("precheck_error", "InvalidSignature");
-          return { canCheckIn: false, error: { name: "InvalidSignature" } };
+          return {
+            error: { name: "InvalidSignature" }
+          };
         }
 
         try {
-          // Verify that checker can check in tickets for the specified event
-          const canCheckInResult = await this.canCheckInForEvent(
+          const precheck = await this.getTicketPrecheck(
             eventId,
+            ticketId,
             checkerEmail
           );
-
-          if (canCheckInResult !== true) {
-            span?.setAttribute("precheck_error", canCheckInResult.name);
-            return { canCheckIn: false, error: canCheckInResult };
-          }
 
           // First see if we have an atom which matches the ticket ID
           const ticketAtom = await this.db.loadById(this.id, ticketId);
@@ -1109,7 +1117,7 @@ export class LemonadePipeline implements BasePipeline {
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { checkedIn: false, error: { name: "InvalidSignature" } };
       }
-      const canCheckInResult = await this.canCheckInForEvent(
+      const canCheckInResult = await this.getTicketPrecheck(
         eventId,
         checkerEmail
       );

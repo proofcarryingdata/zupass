@@ -4,7 +4,7 @@ import {
   CardHeader,
   CardOutlineExpanded
 } from "../../../../shared/PCDCard";
-import { Spread, TicketInfoContainer } from "../PodboxScannedTicketScreen";
+import { Spread, TicketInfoContainer } from "../PodboxScanTicketScreen";
 
 export function PodboxTicketInfoSection({
   ticketData

@@ -2,7 +2,7 @@ import {
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue
+  PodboxPrecheckResultValue
 } from "@pcd/passport-interface";
 import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
@@ -38,7 +38,7 @@ export interface CheckinCapability extends BasePipelineCapability {
   // is invalid).
   preCheck(
     request: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue>;
+  ): Promise<PodboxPrecheckResultValue>;
 }
 
 export function isCheckinCapability(
