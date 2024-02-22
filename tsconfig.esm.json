@@ -7,6 +7,9 @@
       "path": "packages/lib/emitter/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/gpcircuits/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/passport-crypto/tsconfig.esm.json"
     },
     {

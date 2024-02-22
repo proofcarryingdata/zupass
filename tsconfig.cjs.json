@@ -7,6 +7,9 @@
       "path": "packages/lib/emitter/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/gpcircuits/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/passport-crypto/tsconfig.cjs.json"
     },
     {

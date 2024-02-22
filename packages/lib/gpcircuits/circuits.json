@@ -1,0 +1,11 @@
+{
+  "ValueOrNegativeOne": {
+    "file": "gpc-util",
+    "template": "ValueOrNegativeOne"
+  },
+  "InputSelector": {
+    "file": "gpc-util",
+    "template": "InputSelector",
+    "params": [2]
+  }
+}
