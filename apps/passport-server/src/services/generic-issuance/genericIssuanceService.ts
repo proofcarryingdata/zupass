@@ -64,6 +64,7 @@ import {
   makePLogInfo
 } from "./logs";
 import { PipelineSlot } from "./pipelines/PipelineScheduler";
+import { PipelineUserService } from "./pipelines/PipelineUserService";
 import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
@@ -106,6 +107,8 @@ export class GenericIssuanceService {
   private discordService: DiscordService | null;
   private cacheService: PersistentCacheService;
 
+  private userService: PipelineUserService;
+
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
@@ -137,11 +140,12 @@ export class GenericIssuanceService {
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = newRSAPrivateKey();
     this.cacheService = cacheService;
+    this.userService = new PipelineUserService(this.userDB);
   }
 
   public async start(): Promise<void> {
     try {
-      await this.maybeSetupAdmins();
+      await this.userService.start();
       await this.loadAndInstantiatePipelines();
       this.startPipelineLoadLoop();
     } catch (e) {
@@ -1210,18 +1214,6 @@ export class GenericIssuanceService {
         return undefined;
       }
     });
-  }
-
-  private async maybeSetupAdmins(): Promise<void> {
-    try {
-      const adminEmailsFromEnv = this.userDB.getEnvAdminEmails();
-      logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
-      for (const email of adminEmailsFromEnv) {
-        await this.userDB.setUserIsAdmin(email, true);
-      }
-    } catch (e) {
-      logger(LOG_TAG, `failed to set up generic issuance admins`, e);
-    }
   }
 }
 
