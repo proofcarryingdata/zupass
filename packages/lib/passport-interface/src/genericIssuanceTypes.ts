@@ -87,6 +87,19 @@ const ManualTicketSchema = z.object({
   attendeeName: z.string().min(1)
 });
 
+const ManualTicketListSchema = z
+  .array(ManualTicketSchema)
+  .optional()
+  .refine(
+    (manualTickets) =>
+      // If manualTickets is undefined then that's OK
+      manualTickets === undefined ||
+      // Otherwise make sure each one has a unique ID
+      manualTickets.length ===
+        new Set(manualTickets.map((manualTicket) => manualTicket.id)).size,
+    { message: "Ticket IDs must be unique" }
+  );
+
 export type ManualTicket = z.infer<typeof ManualTicketSchema>;
 
 const LemonadePipelineTicketTypeConfigSchema = z.object({
@@ -165,7 +178,7 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(LemonadePipelineEventConfigSchema),
   superuserEmails: z.array(z.string()).optional(),
   feedOptions: FeedIssuanceOptionsSchema,
-  manualTickets: z.array(ManualTicketSchema).optional()
+  manualTickets: ManualTicketListSchema
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -277,7 +290,7 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   pretixOrgUrl: z.string(),
   events: z.array(PretixEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema,
-  manualTickets: z.array(ManualTicketSchema).optional()
+  manualTickets: ManualTicketListSchema
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
