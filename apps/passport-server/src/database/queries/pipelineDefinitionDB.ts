@@ -7,6 +7,7 @@ import {
 import { existing } from "@pcd/util";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
+import { logger } from "../../util/logger";
 import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
@@ -104,6 +105,11 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     );
 
     const existingDefinitions = existing(parsedDefinitions);
+    const unparsedQty = existingDefinitions.length - parsedDefinitions.length;
+    logger(
+      `loaded ${existingDefinitions.length}/${parsedDefinitions.length} pipeline definitions ` +
+        `${unparsedQty === 0 ? "all parsed" : "some unparsed"}`
+    );
 
     return existingDefinitions;
   }
