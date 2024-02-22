@@ -1,4 +1,3 @@
-import { Spacer } from "@pcd/passport-ui";
 import { RippleLoader } from "../../../../core/RippleLoader";
 import { TicketError } from "../../DevconnectCheckinByIdScreen";
 import { usePreCheckTicket } from "../hooks/usePrecheckTicket";
@@ -25,8 +24,7 @@ export function PodboxTicketActionSection({
 
   if (checkingTicket) {
     content = (
-      <div>
-        <Spacer h={32} />
+      <div style={{ margin: "-16px" }}>
         <RippleLoader />
       </div>
     );

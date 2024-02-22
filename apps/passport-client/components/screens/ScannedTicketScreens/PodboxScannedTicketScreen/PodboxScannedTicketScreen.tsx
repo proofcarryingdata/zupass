@@ -69,9 +69,9 @@ export function PodboxScannedTicketScreen(): JSX.Element {
 
   if (parsingTicketData) {
     content = (
-      <div>
-        <Spacer h={32} />
+      <div style={{ margin: "-16px" }}>
         <RippleLoader />
+        <div>test</div>
       </div>
     );
   } else {
