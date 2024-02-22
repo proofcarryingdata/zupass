@@ -97,7 +97,11 @@ function EdDSATicketPCDCardBody({
 
 function TicketImage({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
   const { imageUrl, imageAltText } = pcd.claim.ticket;
-  return <img src={imageUrl} alt={imageAltText} />;
+  return (
+    <div style={{ padding: "8px" }}>
+      <img src={imageUrl} alt={imageAltText} />
+    </div>
+  );
 }
 
 function getHeader({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {

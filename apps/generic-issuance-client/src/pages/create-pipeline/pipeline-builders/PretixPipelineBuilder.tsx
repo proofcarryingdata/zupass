@@ -5,8 +5,7 @@ import {
   FormLabel,
   Input,
   Radio,
-  RadioGroup,
-  Stack
+  RadioGroup
 } from "@chakra-ui/react";
 import {
   FeedIssuanceOptions,
@@ -80,7 +79,7 @@ export default function PretixPipelineBuilder(
   };
 
   return (
-    <div>
+    <>
       <form
         onSubmit={async (e): Promise<void> => {
           e.preventDefault();
@@ -100,42 +99,39 @@ export default function PretixPipelineBuilder(
           }
         }}
       >
-        <Stack>
-          <FormControl>
-            <FormLabel htmlFor="orgUrl">Pretix Organizer URL</FormLabel>
-            <Input
-              width="lg"
-              type="url"
-              id="orgUrl"
-              name="orgUrl"
-              value={orgUrl}
-              onChange={(e): void => setOrgUrl(e.target.value)}
-              placeholder="Enter Pretix Organizer URL"
-            />
-          </FormControl>
-          <FormControl>
-            <FormLabel htmlFor="token">API Token:</FormLabel>
-            <Input
-              width="lg"
-              type="text"
-              id="token"
-              name="token"
-              value={token}
-              onChange={(e): void => setToken(e.target.value)}
-              placeholder="Enter API Token"
-            />
-          </FormControl>
-          <Button
-            width="sm"
-            type="submit"
-            variant="outline"
-            colorScheme="green"
-          >
-            Search for events
-          </Button>
-        </Stack>
+        <FormControl>
+          <FormLabel htmlFor="orgUrl">Pretix Organizer URL</FormLabel>
+          <Input
+            width="lg"
+            type="url"
+            id="orgUrl"
+            name="orgUrl"
+            value={orgUrl}
+            onChange={(e): void => setOrgUrl(e.target.value)}
+            placeholder="Enter Pretix Organizer URL"
+          />
+        </FormControl>
+
+        <FormControl>
+          <FormLabel htmlFor="token">API Token:</FormLabel>
+          <Input
+            width="lg"
+            type="text"
+            id="token"
+            name="token"
+            value={token}
+            onChange={(e): void => setToken(e.target.value)}
+            placeholder="Enter API Token"
+          />
+        </FormControl>
+
+        <Button width="sm" type="submit" variant="outline" colorScheme="green">
+          Search for events
+        </Button>
       </form>
+
       {events && !events.length && <div>Your organizer has no events.</div>}
+
       {!!events?.length && (
         <FormControl>
           <FormLabel>Select An Event</FormLabel>
@@ -155,9 +151,11 @@ export default function PretixPipelineBuilder(
           </RadioGroup>
         </FormControl>
       )}
+
       {selectedEvent && products && !products.length && (
         <div>Your event has no products.</div>
       )}
+
       {selectedEvent && !!products?.length && (
         <div>
           <h2>Your products</h2>
@@ -184,10 +182,12 @@ export default function PretixPipelineBuilder(
               ))}
             </tbody>
           </table>
+
           <FeedOptions
             feedOptions={feedOptions}
             setFeedOptions={setFeedOptions}
           />
+
           <Button
             onClick={(): Promise<void> => {
               const pipeline: Partial<PretixPipelineDefinition> = {
@@ -210,7 +210,8 @@ export default function PretixPipelineBuilder(
                           {}
                       )
                     }
-                  ]
+                  ],
+                  manualTickets: []
                 }
               };
               return props.onCreate(JSON.stringify(pipeline));
@@ -220,6 +221,6 @@ export default function PretixPipelineBuilder(
           </Button>
         </div>
       )}
-    </div>
+    </>
   );
 }

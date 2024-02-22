@@ -8,7 +8,6 @@ import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
-import { IPipelineUserDB } from "./database/queries/pipelineUserDB";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -22,6 +21,7 @@ import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
+import { PagerDutyService } from "./services/pagerDutyService";
 import { PersistentCacheService } from "./services/persistentCacheService";
 import { PoapService } from "./services/poapService";
 import { ProvingService } from "./services/provingService";
@@ -39,9 +39,6 @@ export interface ApplicationContext {
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
-
-  /// WIP. remove once we have real database APIs for these
-  pipelineUserDB: IPipelineUserDB;
   pipelineAtomDB: IPipelineAtomDB;
 }
 
@@ -66,6 +63,7 @@ export interface GlobalServices {
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
   genericIssuanceService: GenericIssuanceService | null;
+  pagerDutyService: PagerDutyService | null;
 }
 
 export interface Zupass {

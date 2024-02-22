@@ -18,12 +18,11 @@ export function normalizeEmail(email: string): string {
 export function flattenObject(
   obj: object | undefined
 ): Array<[string, string]> {
-  let res: Array<[string, string]> = [];
-
-  if (obj === undefined) {
-    return res;
+  if (obj === undefined || obj === null) {
+    return [];
   }
 
+  let res: Array<[string, string]> = [];
   for (const [k, v] of Object.entries(obj)) {
     if (typeof v === "string" || typeof v === "number") {
       res.push([k, v + ""]);

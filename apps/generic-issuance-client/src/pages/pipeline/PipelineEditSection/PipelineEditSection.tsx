@@ -5,12 +5,13 @@ import {
   PipelineInfoResponseValue,
   PipelineType
 } from "@pcd/passport-interface";
+import _ from "lodash";
 import { ReactNode, useCallback, useMemo, useState } from "react";
-import { FancyEditor } from "../../components/FancyEditor";
-import { deletePipeline, savePipeline } from "../../helpers/Mutations";
-import { useJWT } from "../../helpers/userHooks";
-import { stringifyAndFormat } from "../../helpers/util";
-import { PipelineTable } from "../dashboard/PipelineTable";
+import { FancyEditor } from "../../../components/FancyEditor";
+import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
+import { useJWT } from "../../../helpers/userHooks";
+import { stringifyAndFormat } from "../../../helpers/util";
+import { PipelineTable } from "../../dashboard/PipelineTable";
 
 export function PipelineEditSection({
   user,
@@ -46,6 +47,39 @@ export function PipelineEditSection({
     }
   }, [pipeline.id, userJWT]);
 
+  const onDuplicateClick = useCallback(async () => {
+    if (
+      !userJWT ||
+      !confirm(
+        "Are you sure you would like to duplicate this pipeline? " +
+          "It'll be added to your account in a 'paused' state."
+      )
+    ) {
+      return;
+    }
+
+    setActionInProgress(`Duplicating pipeline '${pipeline.id}'...`);
+    const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+    delete copyDefinition.id;
+    delete copyDefinition.ownerUserId;
+    copyDefinition.options = {
+      ...copyDefinition.options,
+      paused: true,
+      name: (copyDefinition.options?.name ?? "untitled") + " (copy)"
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } as any;
+
+    const stringifiedDefinition = JSON.stringify(copyDefinition);
+    const res = await savePipeline(userJWT, stringifiedDefinition);
+
+    if (res.success) {
+      window.location.href = "/#/pipelines/" + res.value.id;
+    } else {
+      alert(res.error);
+    }
+    setActionInProgress(undefined);
+  }, [pipeline, userJWT]);
+
   const onUndoClick = useCallback(async () => {
     if (
       pipeline &&
@@ -58,7 +92,7 @@ export function PipelineEditSection({
   }, [pipeline]);
 
   const onSaveClick = useCallback(async () => {
-    if (userJWT) {
+    if (userJWT && confirm("are you sure you want to update this pipeline?")) {
       setActionInProgress(`Updating pipeline '${pipeline.id}'...`);
       const res = await savePipeline(userJWT, editorValue);
       if (res.success) {
@@ -97,7 +131,7 @@ export function PipelineEditSection({
       />
 
       {isAdminView || user.isAdmin || pipeline?.type === PipelineType.CSV ? (
-        <HStack>
+        <HStack minWidth="fit-content">
           {hasEdits && (
             <Button
               variant="outline"
@@ -134,6 +168,17 @@ export function PipelineEditSection({
           >
             Delete Pipeline
           </Button>
+
+          {isAdminView && (
+            <Button
+              variant="outline"
+              size="sm"
+              isDisabled={ownedBySomeoneElse && !isAdminView}
+              onClick={onDuplicateClick}
+            >
+              Duplicate Pipeline
+            </Button>
+          )}
         </HStack>
       ) : (
         <></>

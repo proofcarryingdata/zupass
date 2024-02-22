@@ -24,13 +24,13 @@ export type LemonadeTicketTypes =
 export type LemonadeTicketType = LemonadeTicketTypes["ticket_types"][number];
 
 export const LemonadeTicketSchema = z.object({
-  _id: z.string(),
+  _id: z.string().min(1, "_id cannot be empty"),
   user_id: z.string(),
   user_email: z.string(),
   user_name: z.string(),
   user_first_name: z.string(),
   user_last_name: z.string(),
-  type_id: z.string().min(1, "Type ID cannot be empty"),
+  type_id: z.string(),
   type_title: z.string(),
   checkin_date: z.string().transform((arg) => {
     try {

@@ -2,7 +2,7 @@ import { PollFeedResult, requestPollFeed } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
 import { expect } from "chai";
 import { GenericIssuanceService } from "../../src/services/generic-issuance/genericIssuanceService";
-import { CSVPipeline } from "../../src/services/generic-issuance/pipelines/CSVPipeline";
+import { CSVPipeline } from "../../src/services/generic-issuance/pipelines/CSVPipeline/CSVPipeline";
 import { expectLength, expectToExist, expectTrue } from "../util/util";
 
 export async function requestCSVFeed(

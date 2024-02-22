@@ -27,11 +27,17 @@ import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { Request } from "express";
+import _ from "lodash";
 import stytch, { Client, Session } from "stytch";
+import urljoin from "url-join";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
+import {
+  IPipelineCheckinDB,
+  PipelineCheckinDB
+} from "../../database/queries/pipelineCheckinDB";
 import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
@@ -40,12 +46,15 @@ import {
   IPipelineUserDB,
   PipelineUserDB
 } from "../../database/queries/pipelineUserDB";
-import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
+import { DiscordService } from "../discordService";
+import { PagerDutyService } from "../pagerDutyService";
+import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
+import { sqlQuery } from "./../../database/sqlQuery";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -53,10 +62,15 @@ import {
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
+import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
-import { makePLogErr, makePLogInfo } from "./util";
-import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
+import {
+  getErrorLogs,
+  getWarningLogs,
+  makePLogErr,
+  makePLogInfo
+} from "./util";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -70,11 +84,17 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
  */
 export interface PipelineSlot {
   definition: PipelineDefinition;
+
+  // runtime information - intentionally ephemeral
   instance?: Pipeline;
   owner?: PipelineUser;
+  loadIncidentId?: string;
+  lastLoadDiscordMsgTimestamp?: Date;
 }
 
 export class GenericIssuanceService {
+  private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
+
   /**
    * The pipeline data reload algorithm works as follows:
    * 1. concurrently load all data for all pipelines
@@ -90,47 +110,54 @@ export class GenericIssuanceService {
   private userDB: IPipelineUserDB;
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
+  private checkinDB: IPipelineCheckinDB;
 
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
-  private stytchClient: Client;
+  private stytchClient: Client | undefined;
 
   private genericIssuanceClientUrl: string;
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
   private rsaPrivateKey: string;
-  private bypassEmail: boolean;
   private pipelineSlots: PipelineSlot[];
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
+  private pagerdutyService: PagerDutyService | null;
+  private discordService: DiscordService | null;
+  private cacheService: PersistentCacheService;
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
-    stytchClient: Client,
+    stytchClient: Client | undefined,
     genericIssuanceClientUrl: string,
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string,
-    zupassPublicKey: EdDSAPublicKey
+    zupassPublicKey: EdDSAPublicKey,
+    pagerdutyService: PagerDutyService | null,
+    discordService: DiscordService | null,
+    cacheService: PersistentCacheService
   ) {
+    this.pagerdutyService = pagerdutyService;
+    this.discordService = discordService;
     this.context = context;
     this.rollbarService = rollbarService;
     this.userDB = new PipelineUserDB(context.dbPool);
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.atomDB = atomDB;
+    this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelineSlots = [];
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
-    this.bypassEmail =
-      process.env.BYPASS_EMAIL_REGISTRATION === "true" &&
-      process.env.NODE_ENV !== "production";
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = newRSAPrivateKey();
+    this.cacheService = cacheService;
   }
 
   public async start(): Promise<void> {
@@ -189,7 +216,7 @@ export class GenericIssuanceService {
         pipelinesFromDB.map(async (pd: PipelineDefinition) => {
           const slot: PipelineSlot = {
             definition: pd,
-            owner: await this.userDB.getUser(pd.ownerUserId)
+            owner: await this.userDB.getUserById(pd.ownerUserId)
           };
 
           // attempt to instantiate a {@link Pipeline}
@@ -205,7 +232,9 @@ export class GenericIssuanceService {
                 genericPretixAPI: this.genericPretixAPI
               },
               this.zupassPublicKey,
-              this.rsaPrivateKey
+              this.rsaPrivateKey,
+              this.cacheService,
+              this.checkinDB
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -238,7 +267,7 @@ export class GenericIssuanceService {
             ` of type '${pipeline?.type}'` +
             ` belonging to ${pipelineSlot.definition.ownerUserId}`
         );
-        const owner = await this.userDB.getUser(
+        const owner = await this.userDB.getUserById(
           pipelineSlot.definition.ownerUserId
         );
         traceUser(owner);
@@ -249,13 +278,16 @@ export class GenericIssuanceService {
             LOG_TAG,
             `pipeline '${pipelineSlot.definition.id}' is paused, not loading`
           );
-          return {
+          const summary = {
             atomsLoaded: 0,
             lastRunEndTimestamp: new Date().toISOString(),
             lastRunStartTimestamp: new Date().toISOString(),
             latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
+            atomsExpected: 0,
             success: true
           };
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
         }
 
         if (!pipeline) {
@@ -268,11 +300,14 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: startTime.toISOString(),
             lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr("failed to start pipeline")],
+            atomsExpected: 0,
             atomsLoaded: 0,
-            success: false
+            success: false,
+            errorMessage: "failed to start pipeline"
           };
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         }
 
@@ -290,6 +325,7 @@ export class GenericIssuanceService {
           );
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         } catch (e) {
           this.rollbarService?.reportError(e);
@@ -299,11 +335,16 @@ export class GenericIssuanceService {
             lastRunStartTimestamp: startTime.toISOString(),
             lastRunEndTimestamp: new Date().toISOString(),
             latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
+            atomsExpected: 0,
             atomsLoaded: 0,
+            errorMessage: `failed to load pipeline\n${e}\n${
+              e instanceof Error ? e.stack : ""
+            }`,
             success: false
           } satisfies PipelineLoadSummary;
           this.definitionDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
         }
       }
@@ -337,6 +378,145 @@ export class GenericIssuanceService {
         })
       );
     });
+  }
+
+  /**
+   * To be called after a pipeline finishes loading, either as part of the global
+   * pipeline loading schedule, or because the pipeline's definition was updated.
+   * Alerts the appropriate channels depending on the result of the pipeline load.
+   *
+   * Pipelines can be configured to opt in or out of alerts.
+   */
+  private async maybeAlertForPipelineRun(
+    slot: PipelineSlot,
+    runInfo: PipelineLoadSummary
+  ): Promise<void> {
+    const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
+    const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
+    const errorLogs = getErrorLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.errorLogIgnoreRegexes
+    );
+    const warningLogs = getWarningLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.warningLogIgnoreRegexes
+    );
+    const discordTagList = slot.definition.options.alerts?.discordTags
+      ? " " +
+        slot.definition.options.alerts?.discordTags
+          .map((id) => `<@${id}>`)
+          .join(" ") +
+        " "
+      : "";
+
+    const pipelineUrl = urljoin(
+      podboxUrl,
+      `/#/`,
+      "pipelines",
+      slot.definition.id
+    );
+
+    let shouldAlert = false;
+    const alertReasons: string[] = [];
+
+    if (!runInfo.success) {
+      shouldAlert = true;
+      alertReasons.push("pipeline load error");
+    }
+
+    if (
+      errorLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogErrors
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has error logs\n: ${JSON.stringify(errorLogs, null, 2)}`
+      );
+    }
+
+    if (
+      warningLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogWarnings
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has warning logs\n ${JSON.stringify(warningLogs, null, 2)}`
+      );
+    }
+
+    if (
+      runInfo.atomsLoaded !== runInfo.atomsExpected &&
+      slot.definition.options.alerts?.alertOnAtomMismatch
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline atoms count ${runInfo.atomsLoaded} mismatches data count ${runInfo.atomsExpected}`
+      );
+    }
+
+    const alertReason = alertReasons.join("\n\n");
+
+    // in the if - send alert beginnings
+    if (shouldAlert) {
+      // pagerduty
+      if (
+        slot.definition.options.alerts?.loadIncidentPagePolicy &&
+        slot.definition.options.alerts?.pagerduty
+      ) {
+        const incident = await this.pagerdutyService?.triggerIncident(
+          `pipeline load error: '${pipelineDisplayName}'`,
+          `${pipelineUrl}\n${alertReason}`,
+          slot.definition.options.alerts?.loadIncidentPagePolicy,
+          `pipeline-load-error-` + slot.definition.id
+        );
+        if (incident) {
+          slot.loadIncidentId = incident.id;
+        }
+      }
+
+      // discord
+      if (slot.definition.options.alerts?.discordAlerts) {
+        let shouldMessageDiscord = false;
+        if (
+          // haven't messaged yet
+          !slot.lastLoadDiscordMsgTimestamp ||
+          // messaged too recently
+          (slot.lastLoadDiscordMsgTimestamp &&
+            Date.now() >
+              slot.lastLoadDiscordMsgTimestamp.getTime() +
+                GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
+        ) {
+          slot.lastLoadDiscordMsgTimestamp = new Date();
+          shouldMessageDiscord = true;
+        }
+
+        if (shouldMessageDiscord) {
+          this?.discordService?.sendAlert(
+            `🚨   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵\n` +
+              `\`\`\`\n${alertReason}\`\`\`\n` +
+              (runInfo.errorMessage
+                ? `\`\`\`\n${runInfo.errorMessage}\n\`\`\``
+                : ``)
+          );
+        }
+      }
+    }
+    // send alert resolutions
+    else {
+      if (slot.definition.options.alerts?.discordAlerts) {
+        if (slot.lastLoadDiscordMsgTimestamp) {
+          this?.discordService?.sendAlert(
+            `✅   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved`
+          );
+          slot.lastLoadDiscordMsgTimestamp = undefined;
+        }
+      }
+      if (slot.loadIncidentId) {
+        const incidentId = slot.loadIncidentId;
+        slot.loadIncidentId = undefined;
+        await this.pagerdutyService?.resolveIncident(incidentId);
+      }
+    }
   }
 
   /**
@@ -731,7 +911,10 @@ export class GenericIssuanceService {
   public async upsertPipelineDefinition(
     user: PipelineUser,
     newDefinition: PipelineDefinition
-  ): Promise<PipelineDefinition> {
+  ): Promise<{
+    definition: PipelineDefinition;
+    restartPromise: Promise<void>;
+  }> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       logger(
         SERVICE_NAME,
@@ -762,6 +945,16 @@ export class GenericIssuanceService {
         ) {
           throw new PCDHTTPError(400, "Cannot change owner of pipeline");
         }
+
+        if (
+          !user.isAdmin &&
+          !_.isEqual(
+            existingPipelineDefinition.options.alerts,
+            newDefinition.options.alerts
+          )
+        ) {
+          throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
+        }
       } else {
         // NEW PIPELINE!
         span?.setAttribute("is_new", true);
@@ -769,6 +962,10 @@ export class GenericIssuanceService {
         newDefinition.id = uuidV4();
         newDefinition.timeCreated = new Date().toISOString();
         newDefinition.timeUpdated = new Date().toISOString();
+
+        if (!user.isAdmin && !!newDefinition.options.alerts) {
+          throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
+        }
       }
 
       let validatedNewDefinition: PipelineDefinition = newDefinition;
@@ -795,7 +992,7 @@ export class GenericIssuanceService {
       tracePipeline(validatedNewDefinition);
       await this.definitionDB.setDefinition(validatedNewDefinition);
       if (existingSlot) {
-        existingSlot.owner = await this.userDB.getUser(
+        existingSlot.owner = await this.userDB.getUserById(
           validatedNewDefinition.ownerUserId
         );
       }
@@ -805,8 +1002,8 @@ export class GenericIssuanceService {
       );
       await this.atomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
-      this.restartPipeline(validatedNewDefinition.id);
-      return validatedNewDefinition;
+      const restartPromise = this.restartPipeline(validatedNewDefinition.id);
+      return { definition: validatedNewDefinition, restartPromise };
     });
   }
 
@@ -888,11 +1085,13 @@ export class GenericIssuanceService {
       if (!pipelineSlot) {
         pipelineSlot = {
           definition: definition,
-          owner: await this.userDB.getUser(definition.ownerUserId)
+          owner: await this.userDB.getUserById(definition.ownerUserId)
         };
         this.pipelineSlots.push(pipelineSlot);
       } else {
-        pipelineSlot.owner = await this.userDB.getUser(definition.ownerUserId);
+        pipelineSlot.owner = await this.userDB.getUserById(
+          definition.ownerUserId
+        );
       }
 
       tracePipeline(pipelineSlot.definition);
@@ -924,31 +1123,18 @@ export class GenericIssuanceService {
           lemonadeAPI: this.lemonadeAPI
         },
         this.zupassPublicKey,
-        this.rsaPrivateKey
+        this.rsaPrivateKey,
+        this.cacheService,
+        this.checkinDB
       );
 
       await this.performPipelineLoad(pipelineSlot);
     });
   }
 
-  public async createOrGetUser(email: string): Promise<PipelineUser> {
-    return traced(SERVICE_NAME, "createOrGetUser", async (span) => {
-      span?.setAttribute("email", email);
-
-      const existingUser = await this.userDB.getUserByEmail(email);
-      if (existingUser != null) {
-        span?.setAttribute("is_new", false);
-        traceUser(existingUser);
-        return existingUser;
-      }
-      span?.setAttribute("is_new", true);
-      const newUser: Omit<PipelineUser, "timeCreated" | "timeUpdated"> = {
-        id: uuidV4(),
-        email,
-        isAdmin: this.getEnvAdminEmails().includes(email)
-      };
-      traceUser(existingUser);
-      return this.userDB.setUser(newUser);
+  public async getOrCreateUser(email: string): Promise<PipelineUser> {
+    return traced(SERVICE_NAME, "getOrCreateUser", async () => {
+      return this.userDB.getOrCreateUser(email);
     });
   }
 
@@ -972,18 +1158,37 @@ export class GenericIssuanceService {
     return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
       const reqBody = req?.body;
       const jwt = reqBody?.jwt;
+
       try {
         span?.setAttribute("has_jwt", !!jwt);
-        const { session } = await this.stytchClient.sessions.authenticateJwt({
-          session_jwt: jwt
-        });
-        const email = this.getEmailFromStytchSession(session);
-        const user = await this.createOrGetUser(email);
-        traceUser(user);
-        return user;
+
+        // 1) make sure environment has been configured properly
+        //    i.e. if stytch is missing, we MUST be in development
+        if (!this.stytchClient && process.env.NODE_ENV === "production") {
+          throw new Error("expected to have stytch client in production ");
+        }
+
+        // 2) if we have a stytch client - check the user's JWT's session
+        if (this.stytchClient) {
+          const { session } = await this.stytchClient.sessions.authenticateJwt({
+            session_jwt: jwt
+          });
+          const email = this.getEmailFromStytchSession(session);
+          const user = await this.getOrCreateUser(email);
+          traceUser(user);
+          return user;
+        } else {
+          // 3) if we don't have a stytch client, and that's a valid state,
+          //    treats a jwt whose contents is some string with just an email
+          //    address in it as a valid JWT authenticate the requester to be
+          //    logged in as a new or existing user with the given email address
+          const user = await this.getOrCreateUser(jwt);
+          traceUser(user);
+          return user;
+        }
       } catch (e) {
-        logger(LOG_TAG, `failed to authenticate with jwt '${jwt}'`, e);
-        throw new PCDHTTPError(401, "Not authorized");
+        logger(LOG_TAG, "failed to authenticate stytch session", jwt, e);
+        throw new PCDHTTPError(401);
       }
     });
   }
@@ -996,56 +1201,46 @@ export class GenericIssuanceService {
       logger(LOG_TAG, "sendLoginEmail", normalizedEmail);
       span?.setAttribute("email", normalizedEmail);
 
-      // TODO: Skip email auth on this.bypassEmail
+      if (!this.stytchClient) {
+        span?.setAttribute("bypass", true);
 
-      try {
-        await this.stytchClient.magicLinks.email.loginOrCreate({
-          email: normalizedEmail,
-          login_magic_link_url: this.genericIssuanceClientUrl,
-          login_expiration_minutes: 10,
-          signup_magic_link_url: this.genericIssuanceClientUrl,
-          signup_expiration_minutes: 10
-        });
-        logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
-      } catch (e) {
-        setError(e, span);
-        logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
-        throw new PCDHTTPError(500, "Failed to send generic issuance email");
+        if (process.env.NODE_ENV === "production") {
+          throw new Error(LOG_TAG + " missing stytch client");
+        }
+
+        if (process.env.STYTCH_BYPASS !== "true") {
+          throw new Error(LOG_TAG + " missing stytch client");
+        }
+
+        // sending email with STYTCH_BYPASS enabled is a no-op case
+        return undefined;
+      } else {
+        try {
+          await this.stytchClient.magicLinks.email.loginOrCreate({
+            email: normalizedEmail,
+            login_magic_link_url: this.genericIssuanceClientUrl,
+            login_expiration_minutes: 10,
+            signup_magic_link_url: this.genericIssuanceClientUrl,
+            signup_expiration_minutes: 10
+          });
+          logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
+        } catch (e) {
+          setError(e, span);
+          logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
+          throw new PCDHTTPError(500, "Failed to send generic issuance email");
+        }
+
+        return undefined;
       }
-
-      return undefined;
     });
-  }
-
-  private getEnvAdminEmails(): string[] {
-    if (!process.env.GENERIC_ISSUANCE_ADMINS) {
-      return [];
-    }
-
-    try {
-      const adminEmailsFromEnv: string[] = JSON.parse(
-        process.env.GENERIC_ISSUANCE_ADMINS
-      );
-
-      if (!(adminEmailsFromEnv instanceof Array)) {
-        throw new Error(
-          `expected environment variable 'GENERIC_ISSUANCE_ADMINS' ` +
-            `to be an array of strings`
-        );
-      }
-
-      return adminEmailsFromEnv;
-    } catch (e) {
-      return [];
-    }
   }
 
   private async maybeSetupAdmins(): Promise<void> {
     try {
-      const adminEmailsFromEnv = this.getEnvAdminEmails();
+      const adminEmailsFromEnv = this.userDB.getEnvAdminEmails();
       logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
       for (const email of adminEmailsFromEnv) {
-        await this.userDB.setUserAdmin(email, true);
+        await this.userDB.setUserIsAdmin(email, true);
       }
     } catch (e) {
       logger(LOG_TAG, `failed to set up generic issuance admins`, e);
@@ -1129,7 +1324,8 @@ export class GenericIssuanceService {
           }
         ],
         pretixAPIKey: testPretixAPIKey,
-        pretixOrgUrl: testPretixOrgUrl
+        pretixOrgUrl: testPretixOrgUrl,
+        manualTickets: []
       },
       type: PipelineType.Pretix
     };
@@ -1227,7 +1423,8 @@ export class GenericIssuanceService {
         oauthAudience: testLemonadeOAuthAudience,
         oauthClientId: testLemonadeOAuthClientId,
         oauthClientSecret: testLemonadeOAuthClientSecret,
-        oauthServerUrl: testLemonadeOAuthServerUrl
+        oauthServerUrl: testLemonadeOAuthServerUrl,
+        manualTickets: []
       },
       type: PipelineType.Lemonade
     };
@@ -1240,9 +1437,19 @@ export async function startGenericIssuanceService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   lemonadeAPI: ILemonadeAPI | null,
-  genericPretixAPI: IGenericPretixAPI | null
+  genericPretixAPI: IGenericPretixAPI | null,
+  pagerDutyService: PagerDutyService | null,
+  discordService: DiscordService | null,
+  cacheService: PersistentCacheService | null
 ): Promise<GenericIssuanceService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
+
+  if (!cacheService) {
+    logger(
+      "[INIT] not starting generic issuance service - missing persistent cache service"
+    );
+    return null;
+  }
 
   if (!lemonadeAPI) {
     logger(
@@ -1264,22 +1471,39 @@ export async function startGenericIssuanceService(
     return null;
   }
 
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.STYTCH_BYPASS === "true"
+  ) {
+    throw new Error(
+      "cannot create generic issuance service without stytch in production "
+    );
+  }
+
+  const BYPASS_EMAIL =
+    process.env.NODE_ENV !== "production" &&
+    process.env.STYTCH_BYPASS === "true";
+
   const projectIdEnv = process.env.STYTCH_PROJECT_ID;
-  if (projectIdEnv == null) {
-    logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
-    return null;
-  }
-
   const secretEnv = process.env.STYTCH_SECRET;
-  if (secretEnv == null) {
-    logger("[INIT] missing environment variable STYTCH_SECRET");
-    return null;
-  }
+  let stytchClient: Client | undefined = undefined;
 
-  const stytchClient = new stytch.Client({
-    project_id: projectIdEnv,
-    secret: secretEnv
-  });
+  if (!BYPASS_EMAIL) {
+    if (projectIdEnv == null) {
+      logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
+      return null;
+    }
+
+    if (secretEnv == null) {
+      logger("[INIT] missing environment variable STYTCH_SECRET");
+      return null;
+    }
+
+    stytchClient = new stytch.Client({
+      project_id: projectIdEnv,
+      secret: secretEnv
+    });
+  }
 
   const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
   if (genericIssuanceClientUrl == null) {
@@ -1313,7 +1537,10 @@ export async function startGenericIssuanceService(
     genericIssuanceClientUrl,
     genericPretixAPI,
     pkeyEnv,
-    zupassPublicKey
+    zupassPublicKey,
+    pagerDutyService,
+    discordService,
+    cacheService
   );
 
   issuanceService.start();

@@ -11,12 +11,14 @@ export const PodLink = ({
   to,
   children,
   isExternal,
+  hideIcon,
   onClick
 }: {
   to: string;
   children?: ReactNode;
   isExternal?: boolean;
   onClick?: () => void;
+  hideIcon?: boolean;
 }): JSX.Element => {
   const onClickWrapper = useCallback(
     (e: React.MouseEvent) => {
@@ -34,7 +36,7 @@ export const PodLink = ({
       onClick={onClickWrapper}
     >
       {children}
-      {isExternal && <ExternalLinkIcon mx="2px" />}
+      {isExternal && !hideIcon && <ExternalLinkIcon mx="2px" />}
     </Link>
   );
 };

@@ -2225,8 +2225,8 @@ describe("devconnect functionality", function () {
       MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
       const payload = JSON.stringify(createFeedCredentialPayload());
 
-      // Attempt to use credential payload one hour later
-      MockDate.set(new Date(2023, 10, 5, 15, 30, 0));
+      // Attempt to use credential payload one hour and twenty minutes later
+      MockDate.set(new Date(2023, 10, 5, 15, 50, 0));
       const expressResponse = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,

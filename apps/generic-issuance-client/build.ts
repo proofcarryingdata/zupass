@@ -11,7 +11,13 @@ const genericIssuanceClientAppOpts: BuildOptions = {
   bundle: true,
   define: {
     "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
-    "process.env.STYTCH_PUBLIC_TOKEN": `'${process.env.STYTCH_PUBLIC_TOKEN}'`,
+    ...(process.env.STYTCH_PUBLIC_TOKEN !== undefined
+      ? {
+          "process.env.STYTCH_PUBLIC_TOKEN": JSON.stringify(
+            process.env.STYTCH_PUBLIC_TOKEN
+          )
+        }
+      : {}),
     "process.env.GENERIC_ISSUANCE_CLIENT_URL": `'${process.env.GENERIC_ISSUANCE_CLIENT_URL}'`,
     "process.env.PASSPORT_SERVER_URL": JSON.stringify(
       process.env.PASSPORT_SERVER_URL || "http://localhost:3002"
@@ -28,6 +34,13 @@ const genericIssuanceClientAppOpts: BuildOptions = {
       ? {
           "process.env.ROLLBAR_ENV_NAME": JSON.stringify(
             process.env.ROLLBAR_ENV_NAME
+          )
+        }
+      : {}),
+    ...(process.env.PODBOX_TITLE_TAG !== undefined
+      ? {
+          "process.env.PODBOX_TITLE_TAG": JSON.stringify(
+            process.env.PODBOX_TITLE_TAG
           )
         }
       : {})

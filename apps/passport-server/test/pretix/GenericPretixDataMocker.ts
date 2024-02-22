@@ -1,4 +1,5 @@
 import {
+  GenericPretixAnswer,
   GenericPretixEvent,
   GenericPretixEventSettings,
   GenericPretixOrder,
@@ -8,6 +9,8 @@ import {
 } from "@pcd/passport-interface";
 import { v4 as uuid } from "uuid";
 import { randomName } from "../util/util";
+
+export const NAME_QUESTION_IDENTIFIER = "name";
 
 export interface IMockGenericIssuancePretixBackendData {
   // aggregate data for simpler querying
@@ -35,6 +38,9 @@ export interface IOrganizer {
 
   ethLatAmAttendeeEmail: string;
   ethLatAmBouncerEmail: string;
+
+  ethLatAmAttendeeName: string;
+  ethLatAmBouncerName: string;
 
   // eth berlin setup type
 
@@ -311,12 +317,34 @@ export class GenericPretixDataMocker {
         [
           ethLatAmAttendeeProduct.id,
           ethLatAmAttendeeEmail,
-          ethLatAmAttendeeName
+          "", // Name left empty, question-answer name will be used instead
+          [
+            {
+              question: 1,
+              answer: ethLatAmAttendeeName,
+              question_identifier: NAME_QUESTION_IDENTIFIER,
+              options: [],
+              option_identifiers: []
+            }
+          ]
         ]
       ]),
 
       this.newOrder(ethLatAmBouncerEmail, ethLatAmBouncerName, [
-        [ethLatAmBouncerProduct.id, ethLatAmBouncerEmail, ethLatAmBouncerName]
+        [
+          ethLatAmBouncerProduct.id,
+          ethLatAmBouncerEmail,
+          "", // Name left empty, question-answer name will be used instead
+          [
+            {
+              question: 1,
+              answer: ethLatAmBouncerName,
+              question_identifier: NAME_QUESTION_IDENTIFIER,
+              options: [],
+              option_identifiers: []
+            }
+          ]
+        ]
       ])
 
       // TODO: more orders and positions
@@ -365,6 +393,9 @@ export class GenericPretixDataMocker {
 
       ethLatAmAttendeeEmail,
       ethLatAmBouncerEmail,
+
+      ethLatAmAttendeeName,
+      ethLatAmBouncerName,
 
       ethBerlin,
       ethBerlinSettings,
@@ -420,7 +451,8 @@ export class GenericPretixDataMocker {
     positions: [
       number /* product id */,
       string | null /* email */,
-      string | null /* name */
+      string | null /* name */,
+      GenericPretixAnswer[] | null
     ][]
   ): GenericPretixOrder {
     const orderId = this.randomOrderCode();
@@ -436,9 +468,16 @@ export class GenericPretixDataMocker {
       testmode: false,
       secret: this.randomPositionSecret(),
       email: orderEmail,
-      positions: positions.map(([product, email, name]) =>
+      positions: positions.map(([product, email, name, answers]) =>
         // TODO @rob - is the sub event id meant to be using `this.nextId()`
-        this.newPosition(orderId, email, name, product, this.nextId())
+        this.newPosition(
+          orderId,
+          email,
+          name,
+          product,
+          this.nextId(),
+          answers ?? []
+        )
       )
     };
   }
@@ -448,7 +487,8 @@ export class GenericPretixDataMocker {
     attendeeEmail: string | null,
     attendeeName: string | null,
     productId: number,
-    subEventId: number
+    subEventId: number,
+    answers: GenericPretixAnswer[]
   ): GenericPretixPosition {
     return {
       id: this.nextId(),
@@ -464,7 +504,8 @@ export class GenericPretixDataMocker {
       attendee_email: attendeeEmail,
       subevent: subEventId,
       secret: this.randomPositionSecret(),
-      checkins: []
+      checkins: [],
+      answers
     };
   }
 

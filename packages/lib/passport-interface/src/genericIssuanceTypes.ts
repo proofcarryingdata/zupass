@@ -11,6 +11,12 @@ export enum PipelineType {
   CSV = "CSV"
 }
 
+export enum IncidentPolicy {
+  Everyone = "Everyone",
+  JustIvan = "JustIvan",
+  JustRichard = "JustRichard"
+}
+
 const BasePipelineDefinitionSchema = z.object({
   id: z.string().uuid(),
   ownerUserId: z.string().uuid(),
@@ -19,10 +25,25 @@ const BasePipelineDefinitionSchema = z.object({
   timeUpdated: z.string()
 });
 
+const AlertsOptionsSchema = z.object({
+  pagerduty: z.boolean().optional(),
+  loadIncidentPagePolicy: z.nativeEnum(IncidentPolicy).optional(),
+  discordTags: z.array(z.string()).optional(),
+  discordAlerts: z.boolean().optional(),
+  alertOnLogErrors: z.boolean().optional(),
+  errorLogIgnoreRegexes: z.array(z.string()).optional(),
+  alertOnLogWarnings: z.boolean().optional(),
+  warningLogIgnoreRegexes: z.array(z.string()).optional(),
+  alertOnAtomMismatch: z.boolean().optional()
+});
+
+export type AlertsOptions = z.infer<typeof AlertsOptionsSchema>;
+
 const BasePipelineOptionsSchema = z.object({
   paused: z.boolean().optional(),
   name: z.string().optional(),
-  notes: z.string().optional()
+  notes: z.string().optional(),
+  alerts: AlertsOptionsSchema.optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
@@ -37,6 +58,36 @@ export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
 export type BasePipelineDefinition = z.infer<
   typeof BasePipelineDefinitionSchema
 >;
+
+/**
+ * Pipeline definitions can also include manually-added tickets. Pipelines that
+ * support this will create tickets according to these specifications, in
+ * addition to those loaded from their primary data source.
+ */
+const ManualTicketSchema = z.object({
+  /**
+   * The ID of the ticket.
+   */
+  id: z.string().uuid(),
+  /**
+   * The generic issuance UUID of the event that the ticket is for.
+   */
+  eventId: z.string().uuid(),
+  /**
+   * The generic issuance UUID for the product/ticket type.
+   */
+  productId: z.string().uuid(),
+  /**
+   * The email to assign the ticket to.
+   */
+  attendeeEmail: z.string().email(),
+  /**
+   * The full name of the attendee.
+   */
+  attendeeName: z.string().min(1)
+});
+
+export type ManualTicket = z.infer<typeof ManualTicketSchema>;
 
 const LemonadePipelineTicketTypeConfigSchema = z.object({
   /**
@@ -113,7 +164,32 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   backendUrl: z.string(),
   events: z.array(LemonadePipelineEventConfigSchema),
   superuserEmails: z.array(z.string()).optional(),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  manualTickets: z.array(ManualTicketSchema).optional()
+}).refine((val) => {
+  // Validate that the manual tickets have event and product IDs that match the
+  // event configuration.
+  const events = new Map(
+    val.events.map((ev) => [ev.genericIssuanceEventId, ev])
+  );
+  for (const manualTicket of val.manualTickets ?? []) {
+    // Check that the event exists
+    const manualTicketEvent = events.get(manualTicket.eventId);
+    if (!manualTicketEvent) {
+      return false;
+    }
+    // Check that the event has a product with the product ID on the ticket
+    if (
+      !manualTicketEvent.ticketTypes.find(
+        (ticketType) =>
+          ticketType.genericIssuanceProductId === manualTicket.productId
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 });
 
 export type LemonadePipelineOptions = z.infer<
@@ -151,7 +227,16 @@ const PretixProductConfigSchema = z.object({
    * Is a user with this product a "superuser"?
    * Superusers are able to check tickets in to events.
    */
-  isSuperUser: z.boolean()
+  isSuperUser: z.boolean(),
+  /**
+   * If the attendee's name is collected by a question
+   * other than the default attendee name question, this
+   * field lets you configure Podbox to prefer to read
+   * names from answers to the question with this `question_identifier`
+   *
+   * see pretix docs here: https://docs.pretix.eu/en/latest/api/resources/orders.html#order-position-resource
+   */
+  nameQuestionPretixQuestionIdentitifier: z.string().optional()
 });
 
 /**
@@ -191,7 +276,29 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   pretixAPIKey: z.string(),
   pretixOrgUrl: z.string(),
   events: z.array(PretixEventConfigSchema),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  manualTickets: z.array(ManualTicketSchema).optional()
+}).refine((val) => {
+  // Validate that the manual tickets have event and product IDs that match the
+  // event configuration.
+  const events = new Map(val.events.map((ev) => [ev.genericIssuanceId, ev]));
+  for (const manualTicket of val.manualTickets ?? []) {
+    // Check that the event exists
+    const manualTicketEvent = events.get(manualTicket.eventId);
+    if (!manualTicketEvent) {
+      return false;
+    }
+    // Check that the event has a product with the product ID on the ticket
+    if (
+      !manualTicketEvent.products.find(
+        (product) => product.genericIssuanceId === manualTicket.productId
+      )
+    ) {
+      return false;
+    }
+  }
+
+  return true;
 });
 
 export type PretixPipelineOptions = z.infer<typeof PretixPipelineOptionsSchema>;
@@ -208,8 +315,17 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
+export enum CSVPipelineOutputType {
+  /**
+   * {@link EdDSAMessagePCD}
+   */
+  Message = "EdDSAMessage",
+  Ticket = "EdDSATicket"
+}
+
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
+  outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
   feedOptions: FeedIssuanceOptionsSchema
 });
 

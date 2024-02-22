@@ -1,6 +1,5 @@
 import { Badge, HStack, Heading, Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
-import { useStytch } from "@stytch/react";
 import { ReactNode, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
@@ -14,7 +13,7 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
-import { PipelineEditSection } from "./PipelineEditSection";
+import { PipelineEditSection } from "./PipelineEditSection/PipelineEditSection";
 
 /**
  * Page a user can navigate to to view and edit information regarding a
@@ -23,7 +22,6 @@ import { PipelineEditSection } from "./PipelineEditSection";
  * e.g. /#/pipelines/3fe06df6-7a3f-45df-8046-44dca6e4e9ea
  */
 export default function PipelinePage(): ReactNode {
-  const stytchClient = useStytch();
   const userJWT = useJWT();
   const params = useParams();
   const pipelineId: string | undefined = params.id;
@@ -49,7 +47,7 @@ export default function PipelinePage(): ReactNode {
     // TODO: make this nicer
     return (
       <>
-        <GlobalPageHeader user={user} stytchClient={stytchClient} />
+        <GlobalPageHeader user={user} />
         <PageContent>
           <Heading size="md">❌ Load Error</Heading>
           {maybeRequestError}
@@ -63,7 +61,6 @@ export default function PipelinePage(): ReactNode {
       <>
         <GlobalPageHeader
           user={user}
-          stytchClient={stytchClient}
           titleContent={(): ReactNode => <Spinner />}
         />
         <LoadingContent />
@@ -78,7 +75,6 @@ export default function PipelinePage(): ReactNode {
     <>
       <GlobalPageHeader
         user={user}
-        stytchClient={stytchClient}
         titleContent={(): ReactNode => (
           <HStack>
             <span>Pipeline</span>
@@ -138,7 +134,7 @@ const WarningSection = styled.div`
   background-color: rgba(238, 255, 0, 0.1);
 `;
 
-const TwoColumns = styled.div`
+export const TwoColumns = styled.div`
   max-width: 100%;
   overflow-x: hidden;
   display: flex;
