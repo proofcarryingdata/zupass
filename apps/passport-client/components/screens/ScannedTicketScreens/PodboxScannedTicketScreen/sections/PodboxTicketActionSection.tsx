@@ -25,7 +25,7 @@ export function PodboxTicketActionSection({
   if (checkingTicket) {
     content = (
       <div style={{ margin: "-16px" }}>
-        <RippleLoader />
+        <RippleLoader text="checking permissions" />
       </div>
     );
   } else if (checkTicketByIdResult.success === false) {

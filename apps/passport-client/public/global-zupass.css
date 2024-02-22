@@ -180,6 +180,7 @@ img {
   display: flex;
   justify-content: center;
   align-items: center;
+  flex-direction: column;
 }
 
 .loader {
@@ -197,6 +198,10 @@ img {
 }
 .loader > div:nth-child(2) {
   animation-delay: -0.5s;
+}
+.loaderText {
+  color: var(--white);
+  opacity: 0.8;
 }
 
 @keyframes ripple {

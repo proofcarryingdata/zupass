@@ -70,8 +70,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
   if (parsingTicketData) {
     content = (
       <div style={{ margin: "-16px" }}>
-        <RippleLoader />
-        <div>test</div>
+        <RippleLoader text="parsing ticket" />
       </div>
     );
   } else {

@@ -105,7 +105,7 @@ export function PodboxCheckInActionSection({
           {!usingLaserScanner && <GoHomeButton />}
         </>
       )}
-      {inProgress && <RippleLoader />}
+      {inProgress && <RippleLoader text="checking in" />}
       {finishedCheckinAttempt && (
         <>
           {checkedIn ? (
