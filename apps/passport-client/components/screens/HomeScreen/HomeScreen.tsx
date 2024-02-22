@@ -1,5 +1,8 @@
-import { FrogCryptoFolderName } from "@pcd/passport-interface";
-import { getParentFolder, isRootFolder } from "@pcd/pcd-collection";
+import {
+  EdgeCityFolderName,
+  FrogCryptoFolderName
+} from "@pcd/passport-interface";
+import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
   useCallback,
   useEffect,
@@ -7,7 +10,6 @@ import React, {
   useMemo,
   useState
 } from "react";
-import { PiArrowBendLeftUpBold } from "react-icons/pi";
 import { useNavigate, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import {
@@ -30,9 +32,9 @@ import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { FrogHomeSection } from "../FrogScreens/FrogHomeSection";
 import {
   FolderCard,
+  FolderDetails,
   FolderEntryContainer,
-  FolderExplorerContainer,
-  FolderHeader
+  FolderExplorerContainer
 } from "./Folder";
 
 export const HomeScreen = React.memo(HomeScreenImpl);
@@ -137,26 +139,30 @@ export function HomeScreenImpl(): JSX.Element {
             <FolderExplorerContainer>
               {!isRoot && (
                 <FolderDetails
-                  noChildFolders={foldersInFolder.length === 0}
+                  noChildFolders={
+                    browsingFolder !== EdgeCityFolderName ||
+                    foldersInFolder.length === 0
+                  }
                   folder={browsingFolder}
                   onFolderClick={onFolderClick}
                 />
               )}
-              {foldersInFolder
-                .filter(
-                  // /FrogCrypto is a special and rendered by <FrogFolder />
-                  (folder) => folder !== FrogCryptoFolderName
-                )
-                .sort((a, b) => a.localeCompare(b))
-                .map((folder) => {
-                  return (
-                    <FolderCard
-                      key={folder}
-                      onFolderClick={onFolderClick}
-                      folder={folder}
-                    />
-                  );
-                })}
+              {browsingFolder !== EdgeCityFolderName &&
+                foldersInFolder
+                  .filter(
+                    // /FrogCrypto is a special and rendered by <FrogFolder />
+                    (folder) => folder !== FrogCryptoFolderName
+                  )
+                  .sort((a, b) => a.localeCompare(b))
+                  .map((folder) => {
+                    return (
+                      <FolderCard
+                        key={folder}
+                        onFolderClick={onFolderClick}
+                        folder={folder}
+                      />
+                    );
+                  })}
               {isRoot && (
                 <FrogFolder
                   Container={FolderEntryContainer}
@@ -209,33 +215,6 @@ const NoPcdsContainer = styled.div`
   user-select: none;
   color: rgba(255, 255, 255, 0.7);
 `;
-
-function FolderDetails({
-  folder,
-  onFolderClick,
-  noChildFolders
-}: {
-  folder: string;
-  onFolderClick: (folder: string) => void;
-  noChildFolders: boolean;
-}): JSX.Element {
-  const onUpOneClick = useCallback(() => {
-    onFolderClick(getParentFolder(folder));
-  }, [folder, onFolderClick]);
-
-  return (
-    <FolderHeader
-      onClick={onUpOneClick}
-      style={noChildFolders ? { borderBottom: "none" } : undefined}
-    >
-      <span className="btn">
-        <PiArrowBendLeftUpBold size={18} />
-      </span>
-
-      <span className="name">{folder}</span>
-    </FolderHeader>
-  );
-}
 
 const Separator = styled.div`
   width: 100%;

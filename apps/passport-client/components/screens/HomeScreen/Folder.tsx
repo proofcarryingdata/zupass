@@ -1,6 +1,7 @@
-import { getNameFromPath } from "@pcd/pcd-collection";
+import { getNameFromPath, getParentFolder } from "@pcd/pcd-collection";
 import { useCallback } from "react";
 import { FaFolderOpen } from "react-icons/fa6";
+import { PiArrowBendLeftUpBold } from "react-icons/pi";
 import styled from "styled-components";
 
 export function FolderCard({
@@ -93,3 +94,32 @@ export const FolderEntryContainer = styled.div`
     background: var(--primary-lite);
   }
 `;
+
+export function FolderDetails({
+  folder,
+  onFolderClick,
+  noChildFolders,
+  displayFolder
+}: {
+  folder: string;
+  onFolderClick: (folder: string) => void;
+  noChildFolders: boolean;
+  displayFolder?: string;
+}): JSX.Element {
+  const onUpOneClick = useCallback(() => {
+    onFolderClick(getParentFolder(folder));
+  }, [folder, onFolderClick]);
+
+  return (
+    <FolderHeader
+      onClick={onUpOneClick}
+      style={noChildFolders ? { borderBottom: "none" } : undefined}
+    >
+      <span className="btn">
+        <PiArrowBendLeftUpBold size={18} />
+      </span>
+
+      <span className="name">{displayFolder || folder}</span>
+    </FolderHeader>
+  );
+}
