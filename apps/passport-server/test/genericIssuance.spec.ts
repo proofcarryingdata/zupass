@@ -6,18 +6,18 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
-  CSVPipelineDefinition,
   FeedCredentialPayload,
+  FullCSVPipelineDefinition,
+  FullLemonadePipelineDefinition,
+  FullPretixPipelineDefinition,
   GenericIssuanceCheckInResponseValue,
   GenericIssuanceCheckInResult,
   GenericPretixProduct,
   InfoResult,
-  LemonadePipelineDefinition,
   PipelineDefinition,
   PipelineLogLevel,
   PipelineType,
   PollFeedResult,
-  PretixPipelineDefinition,
   createFeedCredentialPayload,
   createGenericCheckinCredentialPayload,
   getI18nString,
@@ -226,7 +226,7 @@ describe("Generic Issuance", function () {
   const edgeCityDenverEventId = randomUUID();
   const edgeCityDenverAttendeeProductId = randomUUID();
   const edgeCityDenverBouncerProductId = randomUUID();
-  const edgeCityPipeline: LemonadePipelineDefinition = {
+  const edgeCityPipeline: FullLemonadePipelineDefinition = {
     ownerUserId: edgeCityGIUserID,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
@@ -339,7 +339,7 @@ describe("Generic Issuance", function () {
   );
   expectToExist(ethLatAmBouncerProduct);
 
-  const ethLatAmPipeline: PretixPipelineDefinition = {
+  const ethLatAmPipeline: FullPretixPipelineDefinition = {
     ownerUserId: ethLatAmGIUserID,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
@@ -385,7 +385,7 @@ describe("Generic Issuance", function () {
     type: PipelineType.Pretix
   };
 
-  const csvPipeline: CSVPipelineDefinition = {
+  const csvPipeline: FullCSVPipelineDefinition = {
     type: PipelineType.CSV,
     ownerUserId: ethLatAmGIUserID,
     timeCreated: new Date().toISOString(),
@@ -1373,7 +1373,7 @@ t2,i1`,
 
       const pretixDefinition = definitions.find(
         (d) => d.type === PipelineType.Pretix
-      ) as PretixPipelineDefinition;
+      ) as FullPretixPipelineDefinition;
 
       const newKey = "TEST_KEY";
       pretixDefinition.options = {
@@ -1383,26 +1383,23 @@ t2,i1`,
       await definitionDB.setDefinition(pretixDefinition);
       const updatedPretixDefinition = (await definitionDB.getDefinition(
         pretixDefinition.id
-      )) as PretixPipelineDefinition;
-      expect(updatedPretixDefinition).to.exist;
-      expect(
-        (updatedPretixDefinition as PretixPipelineDefinition).options
-          .pretixAPIKey
-      ).to.eq(newKey);
+      )) as FullPretixPipelineDefinition;
+      expectToExist(updatedPretixDefinition);
+      expect(updatedPretixDefinition.options.pretixAPIKey).to.eq(newKey);
 
       updatedPretixDefinition.editorUserIds.push(edgeCityGIUserID);
       await definitionDB.setDefinition(updatedPretixDefinition);
-      const newEditorDefinition = (await definitionDB.getDefinition(
+      const newEditorDefinition = await definitionDB.getDefinition(
         updatedPretixDefinition.id
-      )) as PretixPipelineDefinition;
-      expect(newEditorDefinition).to.exist;
+      );
+      expectToExist(newEditorDefinition);
       expect(newEditorDefinition.editorUserIds).to.contain(edgeCityGIUserID);
 
       newEditorDefinition.editorUserIds = [];
       await definitionDB.setDefinition(newEditorDefinition);
       const emptyEditorsDefinition = (await definitionDB.getDefinition(
         updatedPretixDefinition.id
-      )) as PretixPipelineDefinition;
+      )) as FullPretixPipelineDefinition;
       expect(emptyEditorsDefinition).to.exist;
       expect(emptyEditorsDefinition.editorUserIds).to.be.empty;
     }

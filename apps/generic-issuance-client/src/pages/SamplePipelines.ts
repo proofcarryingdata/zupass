@@ -1,8 +1,8 @@
 import {
-  CSVPipelineDefinition,
   CSVPipelineOutputType,
   FeedIssuanceOptions,
-  LemonadePipelineDefinition,
+  FullCSVPipelineDefinition,
+  FullLemonadePipelineDefinition,
   PipelineType
 } from "@pcd/passport-interface";
 
@@ -32,7 +32,7 @@ export const SAMPLE_LEMONADE_PIPELINE = JSON.stringify(
       feedOptions: DEFAULT_FEED_OPTIONS,
       manualTickets: []
     }
-  } satisfies Partial<LemonadePipelineDefinition>,
+  } satisfies Partial<FullLemonadePipelineDefinition>,
   null,
   2
 );
@@ -127,7 +127,7 @@ export const SAMPLE_CSV_PIPELINE = JSON.stringify(
       outputType: CSVPipelineOutputType.Message,
       feedOptions: TICKET_FEED_OPTS
     }
-  } satisfies Partial<CSVPipelineDefinition>,
+  } satisfies Partial<FullCSVPipelineDefinition>,
   null,
   2
 );

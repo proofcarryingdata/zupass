@@ -9,9 +9,9 @@ import {
 } from "@chakra-ui/react";
 import {
   FeedIssuanceOptions,
+  FullPretixPipelineDefinition,
   GenericIssuanceFetchPretixEventsResponseValue,
   PipelineType,
-  PretixPipelineDefinition,
   PretixProductConfig,
   getI18nString,
   requestGenericIssuanceFetchPretixEvents,
@@ -190,7 +190,7 @@ export default function PretixPipelineBuilder(
 
           <Button
             onClick={(): Promise<void> => {
-              const pipeline: Partial<PretixPipelineDefinition> = {
+              const pipeline: Partial<FullPretixPipelineDefinition> = {
                 type: PipelineType.Pretix,
                 timeCreated: new Date().toISOString(),
                 timeUpdated: new Date().toISOString(),

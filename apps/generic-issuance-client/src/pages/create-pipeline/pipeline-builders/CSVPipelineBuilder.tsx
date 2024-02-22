@@ -1,8 +1,8 @@
 import { Box, Button, Card, HStack, Select } from "@chakra-ui/react";
 import {
-  CSVPipelineDefinition,
   CSVPipelineOutputType,
   FeedIssuanceOptions,
+  FullCSVPipelineDefinition,
   PipelineType
 } from "@pcd/passport-interface";
 import { ReactNode, useEffect, useState } from "react";
@@ -133,7 +133,7 @@ export default function CSVPipelineBuilder(
                     feedOptions,
                     outputType
                   }
-                } satisfies Partial<CSVPipelineDefinition>)
+                } satisfies Partial<FullCSVPipelineDefinition>)
               )
             }
           >

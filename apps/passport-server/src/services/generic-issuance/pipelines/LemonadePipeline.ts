@@ -8,12 +8,12 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  FullLemonadePipelineDefinition,
   GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
   GenericIssuancePreCheckResponseValue,
-  LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
@@ -64,7 +64,7 @@ export const LEMONADE_CHECKER = "Lemonade";
 
 export function isLemonadePipelineDefinition(
   d: PipelineDefinition
-): d is LemonadePipelineDefinition {
+): d is FullLemonadePipelineDefinition {
   return d.type === PipelineType.Lemonade;
 }
 
@@ -80,7 +80,7 @@ export class LemonadePipeline implements BasePipeline {
    * Used to sign {@link EdDSATicketPCD}
    */
   private eddsaPrivateKey: string;
-  private definition: LemonadePipelineDefinition;
+  private definition: FullLemonadePipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
 
   // Pending check-ins are check-ins which have either completed (and have
@@ -115,7 +115,7 @@ export class LemonadePipeline implements BasePipeline {
 
   public constructor(
     eddsaPrivateKey: string,
-    definition: LemonadePipelineDefinition,
+    definition: FullLemonadePipelineDefinition,
     db: IPipelineAtomDB,
     api: ILemonadeAPI,
     zupassPublicKey: EdDSAPublicKey,

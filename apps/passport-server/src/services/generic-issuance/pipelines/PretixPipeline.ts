@@ -8,7 +8,8 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  CSVPipelineDefinition,
+  FullCSVPipelineDefinition,
+  FullPretixPipelineDefinition,
   GenericIssuanceCheckInError,
   GenericIssuanceCheckInRequest,
   GenericIssuanceCheckInResponseValue,
@@ -28,7 +29,6 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   PretixEventConfig,
-  PretixPipelineDefinition,
   PretixProductConfig,
   verifyCheckinCredential,
   verifyFeedCredential
@@ -80,7 +80,7 @@ export class PretixPipeline implements BasePipeline {
    * Used to sign {@link EdDSATicketPCD}
    */
   private eddsaPrivateKey: string;
-  private definition: PretixPipelineDefinition;
+  private definition: FullPretixPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
   private cacheService: PersistentCacheService;
 
@@ -115,7 +115,7 @@ export class PretixPipeline implements BasePipeline {
 
   public constructor(
     eddsaPrivateKey: string,
-    definition: PretixPipelineDefinition,
+    definition: FullPretixPipelineDefinition,
     db: IPipelineAtomDB,
     api: IGenericPretixAPI,
     zupassPublicKey: EdDSAPublicKey,
@@ -1471,13 +1471,13 @@ export class PretixPipeline implements BasePipeline {
 
 export function isPretixPipelineDefinition(
   d: PipelineDefinition
-): d is PretixPipelineDefinition {
+): d is FullPretixPipelineDefinition {
   return d.type === PipelineType.Pretix;
 }
 
 export function isCSVPipelineDefinition(
   d: PipelineDefinition
-): d is CSVPipelineDefinition {
+): d is FullCSVPipelineDefinition {
   return d.type === PipelineType.CSV;
 }
 

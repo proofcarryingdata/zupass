@@ -1,8 +1,8 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
-  CSVPipelineDefinition,
   CSVPipelineOutputType,
+  FullCSVPipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -45,7 +45,7 @@ export class CSVPipeline implements BasePipeline {
 
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
-  private definition: CSVPipelineDefinition;
+  private definition: FullCSVPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
   private rsaPrivateKey: string;
 
@@ -59,7 +59,7 @@ export class CSVPipeline implements BasePipeline {
 
   public constructor(
     eddsaPrivateKey: string,
-    definition: CSVPipelineDefinition,
+    definition: FullCSVPipelineDefinition,
     db: IPipelineAtomDB,
     zupassPublicKey: EdDSAPublicKey,
     rsaPrivateKey: string

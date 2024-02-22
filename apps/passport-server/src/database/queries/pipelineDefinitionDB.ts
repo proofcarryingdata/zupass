@@ -4,7 +4,7 @@ import {
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
-import { existing } from "@pcd/util";
+import { existing, str } from "@pcd/util";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
 import { logger } from "../../util/logger";
@@ -84,7 +84,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
 
     const parsedDefinitions = result.rows.map(
       (row: GenericIssuancePipelineRow): PipelineDefinition | undefined => {
-        const parsedSchema = PipelineDefinitionSchema.safeParse({
+        const rawDefinition: PipelineDefinition = {
           id: row.id,
           ownerUserId: row.owner_user_id,
           editorUserIds: row.editor_user_ids.filter(
@@ -92,12 +92,19 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           ),
           type: row.pipeline_type as PipelineType,
           options: row.config,
-          timeCreated: row.time_created,
-          timeUpdated: row.time_updated
-        });
+          timeCreated: row.time_created.toString(),
+          timeUpdated: row.time_updated.toString()
+        };
+
+        const parsedSchema = PipelineDefinitionSchema.safeParse(rawDefinition);
 
         if (parsedSchema.success) {
           return parsedSchema.data;
+        } else {
+          logger(`failed to parse pipeline id '${row?.id}' - \n${str(
+            rawDefinition
+          )}\n\nerror:\n\n
+          ${parsedSchema.error}`);
         }
 
         return undefined;
@@ -163,8 +170,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
         ),
         type: row.pipeline_type as PipelineType,
         options: row.config,
-        timeCreated: row.time_created,
-        timeUpdated: row.time_updated
+        timeCreated: row.time_created.toString(),
+        timeUpdated: row.time_updated.toString()
       };
     }
   }

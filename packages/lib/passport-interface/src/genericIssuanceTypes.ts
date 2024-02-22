@@ -17,13 +17,19 @@ export enum IncidentPolicy {
   JustRichard = "JustRichard"
 }
 
-const BasePipelineDefinitionSchema = z.object({
+const BasePipelineDefinitionSchema = z.object({});
+
+const FromOtherSourcesDefinitionSchema = z.object({
   id: z.string().uuid(),
   ownerUserId: z.string().uuid(),
   editorUserIds: z.array(z.string().uuid()),
   timeCreated: z.string(),
   timeUpdated: z.string()
 });
+
+export type FromOtherSourcesDefinitionSchema = z.infer<
+  typeof FromOtherSourcesDefinitionSchema
+>;
 
 const AlertsOptionsSchema = z.object({
   pagerduty: z.boolean().optional(),
@@ -308,6 +314,20 @@ const PretixPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
   options: PretixPipelineOptionsSchema
 });
 
+export const FullPretixPipelineDefinitionSchema =
+  PretixPipelineDefinitionSchema.extend(FromOtherSourcesDefinitionSchema.shape);
+export type FullPretixPipelineDefinition = z.infer<
+  typeof FullPretixPipelineDefinitionSchema
+>;
+
+export const FullLemonadePipelineDefinitionSchema =
+  LemonadePipelineDefinitionSchema.extend(
+    FromOtherSourcesDefinitionSchema.shape
+  );
+export type FullLemonadePipelineDefinition = z.infer<
+  typeof FullLemonadePipelineDefinitionSchema
+>;
+
 /**
  * Similar to {@link LemonadePipelineDefinition} but for Pretix-based Pipelines.
  */
@@ -340,15 +360,28 @@ const CSVPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
  * Similar to {@link LemonadePipelineDefinition} but for CSV-based Pipelines.
  */
 export type CSVPipelineDefinition = z.infer<typeof CSVPipelineDefinitionSchema>;
+export const FullCSVPipelineDefinitionSchema =
+  CSVPipelineDefinitionSchema.extend(FromOtherSourcesDefinitionSchema.shape);
+export type FullCSVPipelineDefinition = z.infer<
+  typeof FullCSVPipelineDefinitionSchema
+>;
 
 /**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
 export const PipelineDefinitionSchema = z.union([
+  FullLemonadePipelineDefinitionSchema,
+  FullPretixPipelineDefinitionSchema,
+  FullCSVPipelineDefinitionSchema
+]);
+
+export const PipelineDefinitionSchema2 = z.union([
   LemonadePipelineDefinitionSchema,
   PretixPipelineDefinitionSchema,
   CSVPipelineDefinitionSchema
 ]);
+
+export type PipelineDefinition2 = z.infer<typeof PipelineDefinitionSchema2>;
 
 /**
  * Any new pipeline definitions need to be added to this type declaration. Note
