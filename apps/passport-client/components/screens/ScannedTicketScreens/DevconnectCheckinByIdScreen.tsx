@@ -11,21 +11,21 @@ import {
   useLaserScannerKeystrokeInput,
   useQuery,
   useStateContext
-} from "../../src/appHooks";
+} from "../../../src/appHooks";
 import {
   devconnectCheckByIdWithOffline,
   devconnectCheckInByIdWithOffline
-} from "../../src/checkin";
-import { loadUsingLaserScanner } from "../../src/localstorage";
-import { Button, H5 } from "../core";
-import { RippleLoader } from "../core/RippleLoader";
-import { AppContainer } from "../shared/AppContainer";
-import { IndicateIfOffline } from "../shared/IndicateIfOffline";
+} from "../../../src/checkin";
+import { loadUsingLaserScanner } from "../../../src/localstorage";
+import { Button, H5 } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
+import { AppContainer } from "../../shared/AppContainer";
+import { IndicateIfOffline } from "../../shared/IndicateIfOffline";
 import {
   CardBodyContainer,
   CardHeader,
   CardOutlineExpanded
-} from "../shared/PCDCard";
+} from "../../shared/PCDCard";
 
 export function DevconnectCheckinByIdScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();

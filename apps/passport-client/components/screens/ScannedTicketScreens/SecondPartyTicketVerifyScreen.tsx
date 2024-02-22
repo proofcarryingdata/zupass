@@ -10,21 +10,21 @@ import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
+import { appConfig } from "../../../src/appConfig";
 import {
   usePCDCollection,
   useQuery,
   useStateContext
-} from "../../src/appHooks";
-import { devconnectCheckByIdWithOffline } from "../../src/checkin";
-import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../core";
-import { LinkButton } from "../core/Button";
-import { AppContainer } from "../shared/AppContainer";
+} from "../../../src/appHooks";
+import { devconnectCheckByIdWithOffline } from "../../../src/checkin";
+import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../../core";
+import { LinkButton } from "../../core/Button";
+import { AppContainer } from "../../shared/AppContainer";
 import {
   CardContainerExpanded,
   CardHeader,
   CardOutlineExpanded
-} from "../shared/PCDCard";
+} from "../../shared/PCDCard";
 import {
   TicketError,
   UserReadyForCheckin

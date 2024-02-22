@@ -12,11 +12,9 @@ import { HashRouter, Route, Routes } from "react-router-dom";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
-import { DevconnectCheckinByIdScreen } from "../components/screens/DevconnectCheckinByIdScreen";
 import { EnterConfirmationCodeScreen } from "../components/screens/EnterConfirmationCodeScreen";
 import { FrogManagerScreen } from "../components/screens/FrogScreens/FrogManagerScreen";
 import { FrogSubscriptionScreen } from "../components/screens/FrogScreens/FrogSubscriptionScreen";
-import { GenericIssuanceCheckInScreen } from "../components/screens/GenericIssuanceCheckIn";
 import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProvingScreen";
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
@@ -32,7 +30,9 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
-import { SecondPartyTicketVerifyScreen } from "../components/screens/SecondPartyTicketVerifyScreen";
+import { DevconnectCheckinByIdScreen } from "../components/screens/ScannedTicketScreens/DevconnectCheckinByIdScreen";
+import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
+import { SecondPartyTicketVerifyScreen } from "../components/screens/ScannedTicketScreens/SecondPartyTicketVerifyScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
@@ -373,7 +373,7 @@ function RouterImpl(): JSX.Element {
           <Route path="import" element={<ImportBackupScreen />} />
           <Route
             path="generic-checkin"
-            element={<GenericIssuanceCheckInScreen />}
+            element={<PodboxScannedTicketScreen />}
           />
           <Route path="*" element={<MissingScreen />} />
         </Route>
