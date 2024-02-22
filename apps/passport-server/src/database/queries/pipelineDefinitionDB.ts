@@ -1,5 +1,6 @@
 import {
   PipelineDefinition,
+  PipelineDefinitionSchema,
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
@@ -84,7 +85,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     // we've loaded conform to the pipeline definition schema?
     return result.rows.map(
       (row: GenericIssuancePipelineRow): PipelineDefinition =>
-        ({
+        PipelineDefinitionSchema.parse({
           id: row.id,
           ownerUserId: row.owner_user_id,
           editorUserIds: row.editor_user_ids.filter(
