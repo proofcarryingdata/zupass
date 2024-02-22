@@ -94,7 +94,8 @@ const ManualTicketListSchema = z
   .refine(
     (manualTickets) =>
       manualTickets.length ===
-      new Set(manualTickets.map((manualTicket) => manualTicket.id)).size
+      new Set(manualTickets.map((manualTicket) => manualTicket.id)).size,
+    { message: "Ticket IDs must be unique" }
   );
 
 export type ManualTicket = z.infer<typeof ManualTicketSchema>;
