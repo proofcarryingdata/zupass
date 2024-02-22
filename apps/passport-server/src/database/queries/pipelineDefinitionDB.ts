@@ -4,6 +4,7 @@ import {
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
+import { existing } from "@pcd/util";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
 import { GenericIssuancePipelineRow } from "../models";
@@ -73,19 +74,16 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
     const result = await sqlQuery(
       this.db,
-      `
-      SELECT p.*, ARRAY_AGG(e.editor_id) AS editor_user_ids
+      `SELECT p.*, ARRAY_AGG(e.editor_id) AS editor_user_ids
       FROM generic_issuance_pipelines p
       LEFT JOIN generic_issuance_pipeline_editors e
       ON p.id = e.pipeline_id
       GROUP BY p.id`
     );
 
-    // TODO: where should we check that the pipeline definitions
-    // we've loaded conform to the pipeline definition schema?
-    return result.rows.map(
-      (row: GenericIssuancePipelineRow): PipelineDefinition =>
-        PipelineDefinitionSchema.parse({
+    const parsedDefinitions = result.rows.map(
+      (row: GenericIssuancePipelineRow): PipelineDefinition | undefined => {
+        const parsedSchema = PipelineDefinitionSchema.safeParse({
           id: row.id,
           ownerUserId: row.owner_user_id,
           editorUserIds: row.editor_user_ids.filter(
@@ -95,8 +93,19 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           options: row.config,
           timeCreated: row.time_created,
           timeUpdated: row.time_updated
-        }) satisfies PipelineDefinition
+        });
+
+        if (parsedSchema.success) {
+          return parsedSchema.data;
+        }
+
+        return undefined;
+      }
     );
+
+    const existingDefinitions = existing(parsedDefinitions);
+
+    return existingDefinitions;
   }
 
   public async clearAllDefinitions(): Promise<void> {
