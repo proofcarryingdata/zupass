@@ -905,20 +905,29 @@ export type GenericIssuancePreCheckRequest = {
   credential: SerializedPCD<SemaphoreSignaturePCD>;
 };
 
+export type GrantableBadge = {
+  id: string;
+  name: string;
+  imageUrl: string;
+};
+
 /**
  * Checking the ticket either succeeds or fails, so no response value is defined for now.
  */
 export type GenericIssuancePreCheckResponseValue =
   | {
-      canCheckIn: true;
-      // The server will reveal these fields to a superuser
+      canGetContactCard: boolean;
+      canCheckIn: boolean;
+      grantableBadges?: GrantableBadge[];
+
+      // The server will reveal these fields to other members
+      // of the same event
       attendeeName: string;
       attendeeEmail: string;
       ticketName: string;
       eventName: string;
     }
   | {
-      canCheckIn: false;
       error: GenericIssuanceCheckInError;
     };
 
