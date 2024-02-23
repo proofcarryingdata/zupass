@@ -1,6 +1,6 @@
 import { EdgeCityFolderName } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
-import { normalizePath } from "@pcd/pcd-collection";
+import { joinPath, normalizePath } from "@pcd/pcd-collection";
 import { useState } from "react";
 import styled from "styled-components";
 import { useFolders, usePCDsInFolder } from "../../../src/appHooks";
@@ -11,11 +11,11 @@ import { Button, ButtonGroup } from "./Button";
 const TABS = [
   {
     tab: "ticket",
-    label: "ticket"
+    label: "id"
   },
   {
     tab: "folders",
-    label: "badges"
+    label: "items"
   },
   {
     tab: "score",
@@ -39,6 +39,7 @@ export function EdgeCityHome(): JSX.Element {
   const folders = useFolders(browsingFolder);
   const folderPCDs = usePCDsInFolder(browsingFolder);
   const isRoot = normalizePath(browsingFolder) === EdgeCityFolderName;
+  const contactPCDs = usePCDsInFolder(joinPath(EdgeCityFolderName, "Contacts"));
   console.log({ folders, folderPCDs, isRoot, browsingFolder });
 
   return (
@@ -94,7 +95,7 @@ export function EdgeCityHome(): JSX.Element {
         </div>
       )}
       {tab === "score" && <div>Score goes here</div>}
-      {tab === "contacts" && <div>Contacts goes here</div>}
+      {tab === "contacts" && <PCDCardList pcds={contactPCDs} allExpanded />}
 
       {/* {frogSubs.length > 0 &&
         (frogPCDs.length === 0 && !myScore ? (
