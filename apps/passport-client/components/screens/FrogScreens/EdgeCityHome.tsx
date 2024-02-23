@@ -65,7 +65,7 @@ export function EdgeCityHome(): JSX.Element {
           </Button>
         ))}
       </ButtonGroup>
-      {tab === "ticket" && <PCDCardList pcds={edgeCityPCDs} />}
+      {tab === "ticket" && <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />}
       {tab === "folders" && (
         <div>
           {!isRoot && (
@@ -95,7 +95,9 @@ export function EdgeCityHome(): JSX.Element {
         </div>
       )}
       {tab === "score" && <div>Score goes here</div>}
-      {tab === "contacts" && <PCDCardList pcds={contactPCDs} allExpanded />}
+      {tab === "contacts" && (
+        <PCDCardList hideRemoveButton pcds={contactPCDs} allExpanded />
+      )}
 
       {/* {frogSubs.length > 0 &&
         (frogPCDs.length === 0 && !myScore ? (
