@@ -50,6 +50,7 @@ export function ProveAndAddScreen({
         initialArgs={request.args}
         pcdType={request.pcdType}
         onProve={onProve}
+        folder={request.folder}
       />
     );
   } else {

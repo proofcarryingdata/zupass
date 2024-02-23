@@ -37,7 +37,8 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   pcdType,
   initialArgs,
   options,
-  onProve
+  onProve,
+  folder
 }: {
   pcdType: string;
   initialArgs: ArgsOf<T>;
@@ -47,6 +48,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
     serializedPCD: SerializedPCD<PCDOf<T>> | undefined,
     pendingPCD: PendingPCD | undefined
   ) => void;
+  folder?: string;
 }): JSX.Element {
   const rollbar = useAppRollbar();
   const pcds = usePCDCollection();
@@ -140,6 +142,13 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         setArgs={setArgs}
         options={pcdPackage.getProveDisplayOptions?.()?.defaultArgs}
       />
+
+      {folder && (
+        <div>
+          PCD will be added to folder: <br />
+          <strong>{folder}</strong>
+        </div>
+      )}
 
       {error && <ErrorContainer>{error}</ErrorContainer>}
 

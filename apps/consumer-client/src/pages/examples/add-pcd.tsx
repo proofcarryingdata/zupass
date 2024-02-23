@@ -79,6 +79,9 @@ export default function Page(): JSX.Element {
             value={folder}
             placeholder="Enter folder name..."
             style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setFolder(e.target.value);
+            }}
           />
         </label>
         <br />

@@ -49,6 +49,12 @@ export function JustAddScreen({
         <H2>{"ADD PCD".toUpperCase()}</H2>
         <Spacer h={16} />
         {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
+        {request.folder && (
+          <div>
+            PCD will be added to folder:
+            <br /> <strong>{request.folder}</strong>
+          </div>
+        )}
         {error && JSON.stringify(error)}
         <Spacer h={16} />
         <Button onClick={onAddClick}>Add</Button>
