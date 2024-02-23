@@ -100,7 +100,12 @@ export type Action =
     }
   | { type: "change-password"; newEncryptionKey: string; newSalt: string }
   | { type: "password-change-on-other-tab" }
-  | { type: "add-pcds"; pcds: SerializedPCD[]; upsert?: boolean }
+  | {
+      type: "add-pcds";
+      pcds: SerializedPCD[];
+      upsert?: boolean;
+      folder?: string;
+    }
   | { type: "remove-pcd"; id: string }
   | { type: "remove-all-pcds-in-folder"; folder: string }
   | { type: "sync" }
@@ -203,7 +208,7 @@ export async function dispatch(
         update
       );
     case "add-pcds":
-      return addPCDs(state, update, action.pcds, action.upsert);
+      return addPCDs(state, update, action.pcds, action.upsert, action.folder);
     case "remove-pcd":
       return removePCD(state, update, action.id);
     case "remove-all-pcds-in-folder":
@@ -515,7 +520,8 @@ async function addPCDs(
   state: AppState,
   update: ZuUpdate,
   pcds: SerializedPCD[],
-  upsert?: boolean
+  upsert?: boolean,
+  folder?: string
 ): Promise<void> {
   // Require user to set up a password before adding PCDs
   if (state.self && !hasSetupPassword(state.self)) {
@@ -525,7 +531,14 @@ async function addPCDs(
       }
     });
   }
-  await state.pcds.deserializeAllAndAdd(pcds, { upsert });
+  const deserializedPCDs = await state.pcds.deserializeAll(pcds);
+  state.pcds.addAll(deserializedPCDs, { upsert });
+  if (folder !== undefined) {
+    state.pcds.bulkSetFolder(
+      deserializedPCDs.map((pcd) => pcd.id),
+      folder
+    );
+  }
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
 }

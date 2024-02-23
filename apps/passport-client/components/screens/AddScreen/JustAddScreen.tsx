@@ -28,12 +28,16 @@ export function JustAddScreen({
 
   const onAddClick = useCallback(async () => {
     try {
-      await dispatch({ type: "add-pcds", pcds: [request.pcd] });
+      await dispatch({
+        type: "add-pcds",
+        pcds: [request.pcd],
+        folder: request.folder
+      });
       setAdded(true);
     } catch (e) {
       await err(dispatch, "Error Adding PCD", e.message);
     }
-  }, [dispatch, request.pcd]);
+  }, [dispatch, request.folder, request.pcd]);
 
   let content;
 
