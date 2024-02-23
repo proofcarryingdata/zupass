@@ -1,8 +1,8 @@
 import {
+  ActionConfigResponseValue,
   GenericIssuanceCheckInRequest,
-  GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue
+  PodboxTicketActionResponseValue
 } from "@pcd/passport-interface";
 import urljoin from "url-join";
 import { BasePipelineCapability } from "../types";
@@ -21,7 +21,7 @@ export interface CheckinCapability extends BasePipelineCapability {
   type: PipelineCapability.Checkin;
   checkin(
     request: GenericIssuanceCheckInRequest
-  ): Promise<GenericIssuanceCheckInResponseValue>;
+  ): Promise<PodboxTicketActionResponseValue>;
   getCheckinUrl(): string;
   // Check-ins are based off ticket data, and tickets do not identify the
   // pipeline that issued them. As a workaround, the generic issuance service
@@ -38,7 +38,7 @@ export interface CheckinCapability extends BasePipelineCapability {
   // is invalid).
   preCheck(
     request: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue>;
+  ): Promise<ActionConfigResponseValue>;
 }
 
 export function isCheckinCapability(

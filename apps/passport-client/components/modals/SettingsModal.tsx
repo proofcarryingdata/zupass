@@ -40,7 +40,13 @@ export function SettingsModal({
         <Spacer h={16} />
         {!isProveOrAddScreen && (
           <>
-            <LinkButton $primary={true} to="/scan">
+            <LinkButton
+              $primary={true}
+              to="/scan"
+              onClick={(): void => {
+                dispatch({ type: "set-modal", modal: { modalType: "none" } });
+              }}
+            >
               Scan Ticket
             </LinkButton>
             <Spacer h={16} />
@@ -51,7 +57,7 @@ export function SettingsModal({
             <AccountExportButton />
             <Spacer h={16} />
             <LinkButton $primary={true} to="/import" onClick={close}>
-              Import Account Data
+              Import
             </LinkButton>
             <Spacer h={16} />
           </>
@@ -60,7 +66,7 @@ export function SettingsModal({
         <Button onClick={clearZupass} style="danger">
           Log Out
         </Button>
-        <Spacer h={24} />
+        <Spacer h={48} />
       </CenterColumn>
     </>
   );

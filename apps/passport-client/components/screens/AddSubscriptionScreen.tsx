@@ -47,6 +47,7 @@ import {
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { BigInput, Button, Spacer } from "../core";
+import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 import { Spinner } from "../shared/Spinner";
@@ -158,48 +159,47 @@ export function AddSubscriptionScreen(): JSX.Element {
   const alreadyFetched = fetchedProviderUrl === providerUrl;
 
   return (
-    <AppContainer bg="gray">
-      <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
-      <Spacer h={8} />
-      <SubscriptionsScreenContainer>
-        {mismatchedEmails && (
-          <MismatchedEmailWarning>
-            <p>
-              Your email is <strong>{self.email}</strong> but the subscription
-              link was sent to <strong>{suggestedEmail}</strong>.
-            </p>
-            <p>
-              This may mean that you cannot receive the expected PCDs. You may
-              be able to contact the issuer to change the email address to{" "}
-              <strong>{self.email}</strong>, or sign up for a new Zupass account
-              with <strong>{suggestedEmail}</strong>.
-            </p>
-          </MismatchedEmailWarning>
-        )}
+    <>
+      <MaybeModal />
+      <AppContainer bg="gray">
+        <ScreenNavigation label={"Subscriptions"} to="/subscriptions" />
+        <SubscriptionsScreenContainer>
+          {mismatchedEmails && (
+            <MismatchedEmailWarning>
+              <p>
+                Your email is <strong>{self.email}</strong> but the subscription
+                link was sent to <strong>{suggestedEmail}</strong>.
+              </p>
+              <p>
+                This may mean that you cannot receive the expected PCDs. You may
+                be able to contact the issuer to change the email address to{" "}
+                <strong>{self.email}</strong>, or sign up for a new Zupass
+                account with <strong>{suggestedEmail}</strong>.
+              </p>
+            </MismatchedEmailWarning>
+          )}
 
-        {(fetchError || !isDeepLink) && (
-          <>
-            <BigInput
-              autoCorrect="off"
-              autoCapitalize="off"
-              disabled={fetching}
-              value={providerUrl}
-              onChange={(e): void => {
-                setProviderUrl(e.target.value);
-              }}
-            />
-            <Spacer h={8} />
-            <Button
-              disabled={fetching || alreadyFetched}
-              onClick={onFetchFeedsClick}
-            >
-              <Spinner show={fetching} text="List Feeds" />
-            </Button>
-          </>
-        )}
-        {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
-        <div>
-          <Spacer h={16} />
+          {(fetchError || !isDeepLink) && (
+            <>
+              <BigInput
+                autoCorrect="off"
+                autoCapitalize="off"
+                disabled={fetching}
+                value={providerUrl}
+                onChange={(e): void => {
+                  setProviderUrl(e.target.value);
+                }}
+              />
+              <Spacer h={8} />
+              <Button
+                disabled={fetching || alreadyFetched}
+                onClick={onFetchFeedsClick}
+              >
+                <Spinner show={fetching} text="List Feeds" />
+              </Button>
+            </>
+          )}
+          {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
           {infos &&
             infos.map((info, i) => (
               <React.Fragment key={i}>
@@ -216,9 +216,9 @@ export function AddSubscriptionScreen(): JSX.Element {
                 />
               </React.Fragment>
             ))}
-        </div>
-      </SubscriptionsScreenContainer>
-    </AppContainer>
+        </SubscriptionsScreenContainer>
+      </AppContainer>
+    </>
   );
 }
 

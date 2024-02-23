@@ -8,11 +8,10 @@ import {
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
-  GenericIssuanceCheckInError,
+  ActionConfigResponseValue,
+  BadgeConfig,
   GenericIssuanceCheckInRequest,
-  GenericIssuanceCheckInResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -21,14 +20,18 @@ import {
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
+  PodboxTicketActionError,
+  PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
-  verifyCheckinCredential,
-  verifyFeedCredential
+  TicketInfo,
+  verifyFeedCredential,
+  verifyTicketActionCredential
 } from "@pcd/passport-interface";
-import { PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { str } from "@pcd/util";
+import { randomUUID } from "crypto";
 import { DatabaseError } from "pg";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
@@ -39,9 +42,13 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import {
+  IBadgeGiftingDB,
+  IContactSharingDB
+} from "../../../database/queries/ticketActionDBs";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
-import { setError, traced } from "../../telemetryService";
+import { setError, traceFlattenedObject, traced } from "../../telemetryService";
 import {
   CheckinCapability,
   CheckinStatus,
@@ -98,6 +105,8 @@ export class LemonadePipeline implements BasePipeline {
    */
   private db: IPipelineAtomDB<LemonadeAtom>;
   private checkinDb: IPipelineCheckinDB;
+  private contactDB: IContactSharingDB;
+  private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
   private cacheService: PersistentCacheService;
 
@@ -120,11 +129,15 @@ export class LemonadePipeline implements BasePipeline {
     api: ILemonadeAPI,
     zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
-    checkinDb: IPipelineCheckinDB
+    checkinDb: IPipelineCheckinDB,
+    contactDB: IContactSharingDB,
+    badgeDB: IBadgeGiftingDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<LemonadeAtom>;
+    this.contactDB = contactDB;
+    this.badgeDB = badgeDB;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
 
@@ -139,7 +152,7 @@ export class LemonadePipeline implements BasePipeline {
         )
       } satisfies FeedIssuanceCapability,
       {
-        checkin: this.checkinTicketPCD.bind(this),
+        checkin: this.executeTicketAction.bind(this),
         type: PipelineCapability.Checkin,
         getCheckinUrl: (): string => generateCheckinUrlPath(),
         canHandleCheckinForEvent: (eventId: string): boolean => {
@@ -147,7 +160,7 @@ export class LemonadePipeline implements BasePipeline {
             (ev) => ev.genericIssuanceEventId === eventId
           );
         },
-        preCheck: this.checkLemonadeTicketPCDCanBeCheckedIn.bind(this)
+        preCheck: this.precheckTicketAction.bind(this)
       } satisfies CheckinCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
@@ -453,6 +466,118 @@ export class LemonadePipeline implements BasePipeline {
     );
   }
 
+  private async getReceivedBadgesForEmail(
+    email: string
+  ): Promise<SerializedPCD<EdDSATicketPCD>[]> {
+    const badges = await this.badgeDB.getBadges(this.id, email);
+
+    const badgePCDs = await Promise.all(
+      badges.map(async (b) => {
+        const badgeConfig =
+          this.definition.options.ticketActions?.badges?.choices?.find(
+            (c) => c.id === b.id
+          );
+
+        if (!badgeConfig) {
+          return undefined;
+        }
+
+        const eventId = uuidv5(
+          `badge-${badgeConfig.eventName}-${badgeConfig.productName}`,
+          this.id
+        ); // The event ID uniquely identifies an event.
+        const productId = uuidv5(`product-${eventId}`, this.id); // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
+        const ticketId = uuidv5(`badge-${eventId}-${b.id}`, this.id); // The ticket
+
+        return await EdDSATicketPCDPackage.serialize(
+          await EdDSATicketPCDPackage.prove({
+            id: {
+              argumentType: ArgumentTypeName.String,
+              value: b.id
+            },
+            privateKey: {
+              argumentType: ArgumentTypeName.String,
+              value: this.eddsaPrivateKey
+            },
+            ticket: {
+              argumentType: ArgumentTypeName.Object,
+              value: {
+                // The fields below are not signed and are used for display purposes.
+                eventName: badgeConfig.eventName,
+                ticketName: badgeConfig.productName ?? "",
+                checkerEmail: undefined,
+                imageUrl: badgeConfig.imageUrl,
+                imageAltText: undefined,
+                // The fields below are signed using the passport-server's private EdDSA key
+                // and can be used by 3rd parties to represent their own tickets.
+                eventId, // The event ID uniquely identifies an event.
+                productId, // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
+                ticketId, // The ticket ID is a unique identifier of the ticket.
+                timestampConsumed: 0,
+                timestampSigned: Date.now(),
+                attendeeSemaphoreId: "",
+                isConsumed: false,
+                isRevoked: false,
+                ticketCategory: TicketCategory.Generic,
+                attendeeName: "",
+                attendeeEmail: ""
+              }
+            }
+          })
+        );
+      })
+    );
+
+    return badgePCDs.filter((pcd) => !!pcd) as SerializedPCD<EdDSATicketPCD>[];
+  }
+
+  private async getReceivedContactsForEmail(
+    email: string
+  ): Promise<SerializedPCD<EdDSATicketPCD>[]> {
+    const badges = await this.contactDB.getReceivedContacts(this.id, email);
+    return Promise.all(
+      badges.map(async (b) => {
+        return await EdDSATicketPCDPackage.serialize(
+          await EdDSATicketPCDPackage.prove({
+            id: {
+              argumentType: ArgumentTypeName.String,
+              value: `${b.email}->${email}`
+            },
+            privateKey: {
+              argumentType: ArgumentTypeName.String,
+              value: this.eddsaPrivateKey
+            },
+            ticket: {
+              argumentType: ArgumentTypeName.Object,
+              value: {
+                // The fields below are not signed and are used for display purposes.
+                eventName: "Contact Card",
+                ticketName: "",
+                checkerEmail: undefined,
+                imageUrl:
+                  "https://t4.ftcdn.net/jpg/00/97/58/97/360_F_97589769_t45CqXyzjz0KXwoBZT9PRaWGHRk5hQqQ.jpg",
+                imageAltText: undefined,
+                // The fields below are signed using the passport-server's private EdDSA key
+                // and can be used by 3rd parties to represent their own tickets.
+                ticketId: randomUUID(), // The ticket ID is a unique identifier of the ticket.
+                eventId: randomUUID(), // The event ID uniquely identifies an event.
+                productId: randomUUID(), // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
+                timestampConsumed: 0,
+                timestampSigned: Date.now(),
+                attendeeSemaphoreId: "",
+                isConsumed: false,
+                isRevoked: false,
+                ticketCategory: TicketCategory.Generic,
+                attendeeName: "",
+                attendeeEmail: b.email
+              }
+            }
+          })
+        );
+      })
+    );
+  }
+
   /**
    * Retrieves all tickets for a single email address, including both tickets
    * from the Lemonade backend and manually-specified tickets from the Pipeline
@@ -487,11 +612,6 @@ export class LemonadePipeline implements BasePipeline {
     return tickets;
   }
 
-  /**
-   * TODO:
-   * - proper validation of credentials.
-   * - be robust to any single ticket failing to convert.
-   */
   private async issueLemonadeTicketPCDs(
     req: PollFeedRequest
   ): Promise<PollFeedResponseValue> {
@@ -536,18 +656,55 @@ export class LemonadePipeline implements BasePipeline {
         credential.claim.identityCommitment
       );
 
-      span?.setAttribute("pcds_issued", tickets.length);
+      const ticketActions: PCDAction[] = [
+        {
+          type: PCDActionType.ReplaceInFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          pcds: await Promise.all(
+            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+          )
+        }
+      ];
+
+      const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
+      const contacts = await this.getReceivedContactsForEmail(email);
+      const contactActions: PCDAction[] = [
+        {
+          type: PCDActionType.DeleteFolder,
+          folder: contactsFolder,
+          recursive: true
+        },
+        {
+          type: PCDActionType.ReplaceInFolder,
+          folder: contactsFolder,
+          pcds: contacts
+        }
+      ];
+
+      const badgeFolder = `${this.definition.options.feedOptions.feedFolder}/badges`;
+      const badges = await this.getReceivedBadgesForEmail(email);
+      const badgeActions: PCDAction[] = [
+        {
+          type: PCDActionType.DeleteFolder,
+          folder: badgeFolder,
+          recursive: true
+        },
+        {
+          type: PCDActionType.ReplaceInFolder,
+          folder: badgeFolder,
+          pcds: badges
+        }
+      ];
+
+      traceFlattenedObject(span, {
+        pcds_issued: tickets.length + badges.length + contacts.length,
+        tickets_issued: tickets.length,
+        badges_issued: badges.length,
+        contacts_issued: contacts.length
+      });
 
       return {
-        actions: [
-          {
-            type: PCDActionType.ReplaceInFolder,
-            folder: this.definition.options.feedOptions.feedFolder,
-            pcds: await Promise.all(
-              tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-            )
-          }
-        ]
+        actions: [...ticketActions, ...contactActions, ...badgeActions]
       };
     });
   }
@@ -707,10 +864,16 @@ export class LemonadePipeline implements BasePipeline {
     return correspondingTicketTypeConfig.genericIssuanceProductId;
   }
 
-  private lemonadeAtomToEventName(atom: LemonadeAtom): string {
-    const event = this.definition.options.events.find(
-      (e) => e.externalId === atom.lemonadeEventId
+  private getEventByLemonadeId(
+    lemonadeId: string
+  ): LemonadePipelineEventConfig | undefined {
+    return this.definition.options.events.find(
+      (e) => e.externalId === lemonadeId
     );
+  }
+
+  private lemonadeAtomToEvent(atom: LemonadeAtom): LemonadePipelineEventConfig {
+    const event = this.getEventByLemonadeId(atom.lemonadeEventId);
 
     if (!event) {
       throw new Error(
@@ -718,7 +881,11 @@ export class LemonadePipeline implements BasePipeline {
       );
     }
 
-    return event.name;
+    return event;
+  }
+
+  private lemonadeAtomToEventName(atom: LemonadeAtom): string {
+    return this.lemonadeAtomToEvent(atom).name;
   }
 
   /**
@@ -786,13 +953,13 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   /**
-   * Given an event and a checker email, verifies that the checker can perform
+   * Given an event and a checker email, verifies that the checker has permission to perform
    * check-ins for the event.
    */
   private async canCheckInForEvent(
     eventId: string,
     checkerEmail: string
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceEventId === eventId
     );
@@ -822,10 +989,6 @@ export class LemonadePipeline implements BasePipeline {
     const checkerEmailIsSuperuser =
       this.definition.options.superuserEmails?.includes(checkerEmail) ?? false;
 
-    if (checkerEmailIsSuperuser) {
-      return true;
-    }
-
     const hasSuperUserTicket = checkerProductIds.some((productId) => {
       return eventConfig.ticketTypes.find(
         (ticketType) =>
@@ -834,11 +997,11 @@ export class LemonadePipeline implements BasePipeline {
       );
     });
 
-    if (hasSuperUserTicket) {
-      return true;
+    if (!hasSuperUserTicket && !checkerEmailIsSuperuser) {
+      return { name: "NotSuperuser" };
     }
 
-    return { name: "NotSuperuser" };
+    return true;
   }
 
   /**
@@ -846,9 +1009,9 @@ export class LemonadePipeline implements BasePipeline {
    * this to be disallowed is if the ticket is already checked in, or if there
    * is a pending check-in.
    */
-  private async canCheckInLemonadeTicket(
+  private async notCheckedIn(
     ticketAtom: LemonadeAtom
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInLemonadeTicket", async (span) => {
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
@@ -883,9 +1046,9 @@ export class LemonadePipeline implements BasePipeline {
    * to be disallowed is if the ticket has already been checked in, or if there
    * is a pending check-in.
    */
-  private async canCheckInManualTicket(
+  private async notCheckedInManual(
     manualTicket: ManualTicket
-  ): Promise<true | GenericIssuanceCheckInError> {
+  ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
       const checkIn = await this.checkinDb.getByTicketId(
@@ -924,24 +1087,57 @@ export class LemonadePipeline implements BasePipeline {
    * show an option to check the ticket in. If check-in is permitted, some
    * ticket data is returned.
    */
-  private async checkLemonadeTicketPCDCanBeCheckedIn(
+  private async precheckTicketAction(
     request: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue> {
-    return traced(
+  ): Promise<ActionConfigResponseValue> {
+    return traced<ActionConfigResponseValue>(
       LOG_NAME,
-      "checkLemonadeTicketPCDCanBeCheckedIn",
-      async (span) => {
+      "precheckTicketAction",
+      async (span): Promise<ActionConfigResponseValue> => {
         tracePipeline(this.definition);
 
-        let checkerEmail: string;
+        let actorEmail: string;
         let ticketId: string;
         let eventId: string;
 
+        const result: ActionConfigResponseValue = {
+          success: true,
+          giveBadgeActionInfo: undefined,
+          checkinActionInfo: undefined,
+          shareContactActionInfo: undefined
+        };
+
+        // 1) verify that the requester is who they say they are
         try {
-          const payload = await verifyCheckinCredential(request.credential);
-          ticketId = payload.ticketIdToCheckIn;
+          const payload = await verifyTicketActionCredential(
+            request.credential
+          );
+
+          if (payload.action.giftBadge) {
+            return {
+              success: true
+            };
+          } else if (payload.action.shareContact) {
+            return {
+              success: true
+            };
+          } else if (
+            !payload.action?.checkin ||
+            !payload.action.checkin.ticketId ||
+            !payload.eventId
+          ) {
+            return {
+              success: false,
+              error: { name: "ServerError", detailedMessage: "not implemented" }
+            };
+          }
+
+          ticketId = payload.action.checkin.ticketId;
           eventId = payload.eventId;
-          const checkerEmailPCD = payload.emailPCD;
+
+          const checkerEmailPCD = await EmailPCDPackage.deserialize(
+            payload.emailPCD.pcd
+          );
 
           if (
             !isEqualEdDSAPublicKey(
@@ -952,7 +1148,8 @@ export class LemonadePipeline implements BasePipeline {
             logger(
               `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
             );
-            return { canCheckIn: false, error: { name: "InvalidSignature" } };
+
+            return { success: false, error: { name: "InvalidSignature" } };
           }
 
           span?.setAttribute("ticket_id", ticketId);
@@ -965,94 +1162,129 @@ export class LemonadePipeline implements BasePipeline {
             checkerEmailPCD.claim.semaphoreId
           );
 
-          checkerEmail = checkerEmailPCD.claim.emailAddress;
+          actorEmail = checkerEmailPCD.claim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
           span?.setAttribute("precheck_error", "InvalidSignature");
-          return { canCheckIn: false, error: { name: "InvalidSignature" } };
+          return {
+            success: false,
+            error: { name: "InvalidSignature" }
+          };
         }
 
-        try {
-          // Verify that checker can check in tickets for the specified event
-          const canCheckInResult = await this.canCheckInForEvent(
-            eventId,
-            checkerEmail
-          );
+        const manualTicket = this.getManualTicketById(ticketId);
+        const ticketAtom = await this.db.loadById(this.id, ticketId);
 
-          if (canCheckInResult !== true) {
-            span?.setAttribute("precheck_error", canCheckInResult.name);
-            return { canCheckIn: false, error: canCheckInResult };
-          }
+        let eventConfig: LemonadePipelineEventConfig;
+        let ticketInfo: TicketInfo;
+        let alreadyCheckedIn;
 
-          // First see if we have an atom which matches the ticket ID
-          const ticketAtom = await this.db.loadById(this.id, ticketId);
-          if (
-            ticketAtom &&
-            // Ensure that the checker-provided event ID matches the ticket
-            this.lemonadeAtomToZupassEventId(ticketAtom) === eventId
-          ) {
-            const canCheckInTicketResult =
-              await this.canCheckInLemonadeTicket(ticketAtom);
-            if (canCheckInTicketResult !== true) {
-              return {
-                canCheckIn: false,
-                error: canCheckInTicketResult
-              };
-            } else {
-              return {
-                canCheckIn: true,
-                eventName: this.lemonadeAtomToEventName(ticketAtom),
-                ticketName: this.lemonadeAtomToTicketName(ticketAtom),
-                attendeeEmail: ticketAtom.email as string,
-                attendeeName: ticketAtom.name
-              };
-            }
-          } else {
-            // No Lemonade atom found, try looking for a manual ticket
-            const manualTicket = this.getManualTicketById(ticketId);
-            if (manualTicket && manualTicket.eventId === eventId) {
-              // Manual ticket found
-              const canCheckInTicketResult =
-                await this.canCheckInManualTicket(manualTicket);
-              if (canCheckInTicketResult !== true) {
-                return {
-                  canCheckIn: false,
-                  error: canCheckInTicketResult
-                };
-              } else {
-                const eventConfig = this.getEventById(manualTicket.eventId);
-                const ticketType = this.getTicketTypeById(
-                  eventConfig,
-                  manualTicket.productId
-                );
-                return {
-                  canCheckIn: true,
-                  eventName: eventConfig.name,
-                  ticketName: ticketType.name,
-                  attendeeEmail: manualTicket.attendeeEmail,
-                  attendeeName: manualTicket.attendeeName
-                };
-              }
-            }
-          }
-        } catch (e) {
-          logger(
-            `${LOG_TAG} Error when finding ticket ${ticketId} for checkin by ${checkerEmail} on pipeline ${this.id}`,
-            e
+        if (ticketAtom) {
+          eventConfig = this.lemonadeAtomToEvent(ticketAtom);
+          ticketInfo = {
+            eventName: eventConfig.name,
+            ticketName: this.lemonadeAtomToTicketName(ticketAtom),
+            attendeeEmail: ticketAtom.email as string,
+            attendeeName: ticketAtom.name
+          };
+          alreadyCheckedIn = await this.notCheckedIn(ticketAtom);
+        } else if (manualTicket) {
+          eventConfig = this.getEventById(manualTicket.eventId);
+          const ticketType = this.getTicketTypeById(
+            eventConfig,
+            manualTicket.productId
           );
-          setError(e);
-          span?.setAttribute("checkin_error", "InvalidTicket");
-          return { canCheckIn: false, error: { name: "InvalidTicket" } };
+          ticketInfo = {
+            eventName: eventConfig.name,
+            ticketName: ticketType.name,
+            attendeeEmail: manualTicket.attendeeEmail,
+            attendeeName: manualTicket.attendeeName
+          };
+          alreadyCheckedIn = await this.notCheckedInManual(manualTicket);
+        } else {
+          return { success: false, error: { name: "InvalidTicket" } };
         }
-        // Didn't find any matching ticket
-        logger(
-          `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
-        );
-        span?.setAttribute("checkin_error", "InvalidTicket");
-        return { canCheckIn: false, error: { name: "InvalidTicket" } };
+
+        // 2) badge action
+        if (this.definition.options.ticketActions?.badges?.enabled) {
+          const badgesGiven = await this.badgeDB.getBadges(
+            this.id,
+            ticketAtom?.email
+          );
+
+          const badgesGiveableByUser =
+            this.getBadgesGiveableByEmail(actorEmail);
+
+          const notAlreadyGivenBadges = badgesGiveableByUser.filter(
+            (c) => !badgesGiven.find((b) => b.id === c.id)
+          );
+
+          result.giveBadgeActionInfo = {
+            permissioned: badgesGiveableByUser.length > 0,
+            giveableBadges: notAlreadyGivenBadges,
+            ticket: ticketInfo
+          };
+        }
+
+        // 3) contact action
+        if (this.definition.options.ticketActions?.contacts?.enabled) {
+          const received = await this.contactDB.getReceivedContacts(
+            this.id,
+            ticketAtom?.email
+          );
+
+          const alreadyReceived = !!received.find(
+            (r) => r.email === actorEmail
+          );
+
+          result.shareContactActionInfo = {
+            permissioned: true,
+            alreadyShared: alreadyReceived,
+            ticket: ticketInfo
+          };
+        }
+
+        // 4) screen config
+        result.actionScreenConfig =
+          this.definition.options.ticketActions?.screenConfig;
+
+        // 5) for the checkin action: verify that checker (identified by email address)
+        // can check in tickets for the specified event
+
+        const permissioned = await this.canCheckInForEvent(eventId, actorEmail);
+
+        if (permissioned !== true) {
+          result.checkinActionInfo = {
+            permissioned: false,
+            canCheckIn: false,
+            reason: { name: "NotSuperuser" }
+          };
+        } else if (alreadyCheckedIn !== true) {
+          result.checkinActionInfo = {
+            permissioned: true,
+            canCheckIn: false,
+            reason: alreadyCheckedIn
+          };
+        } else {
+          result.checkinActionInfo = {
+            permissioned: true,
+            canCheckIn: true,
+            ticket: ticketInfo
+          };
+        }
+
+        return result;
       }
     );
+  }
+
+  private getBadgesGiveableByEmail(email: string): BadgeConfig[] {
+    return (
+      this.definition.options.ticketActions?.badges?.choices ?? []
+    ).filter((b: BadgeConfig) => {
+      return b.givers?.includes(email) ?? false;
+    });
   }
 
   /**
@@ -1061,87 +1293,130 @@ export class LemonadePipeline implements BasePipeline {
    * the ticket is a Lemonade ticket or manually-added, and then calls the
    * appropriate function to attempt a check-in.
    */
-  private async checkinTicketPCD(
+  private async executeTicketAction(
     request: GenericIssuanceCheckInRequest
-  ): Promise<GenericIssuanceCheckInResponseValue> {
-    return traced(LOG_NAME, "checkinLemonadeTicketPCD", async (span) => {
-      tracePipeline(this.definition);
+  ): Promise<PodboxTicketActionResponseValue> {
+    return traced<PodboxTicketActionResponseValue>(
+      LOG_NAME,
+      "executeTicketAction",
+      async (span): Promise<PodboxTicketActionResponseValue> => {
+        tracePipeline(this.definition);
 
-      logger(
-        LOG_TAG,
-        `got request to check in tickets with request ${JSON.stringify(
-          request
-        )}`
-      );
-
-      let checkerEmail: string;
-      let ticketId: string;
-      let eventId: string;
-
-      try {
-        const payload = await verifyCheckinCredential(request.credential);
-        ticketId = payload.ticketIdToCheckIn;
-        eventId = payload.eventId;
-        const checkerEmailPCD = payload.emailPCD;
-
-        if (
-          !isEqualEdDSAPublicKey(
-            checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-            this.zupassPublicKey
-          )
-        ) {
-          logger(
-            `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
-          );
-          return { checkedIn: false, error: { name: "InvalidSignature" } };
-        }
-
-        span?.setAttribute("ticket_id", ticketId);
-        span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
-        span?.setAttribute(
-          "checked_semaphore_id",
-          checkerEmailPCD.claim.semaphoreId
+        const payload = await verifyTicketActionCredential(request.credential);
+        const emailPCD = await EmailPCDPackage.deserialize(
+          payload.emailPCD.pcd
         );
-        checkerEmail = checkerEmailPCD.claim.emailAddress;
-      } catch (e) {
-        logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
-        setError(e, span);
-        span?.setAttribute("checkin_error", "InvalidSignature");
-        return { checkedIn: false, error: { name: "InvalidSignature" } };
-      }
-      const canCheckInResult = await this.canCheckInForEvent(
-        eventId,
-        checkerEmail
-      );
-      if (canCheckInResult !== true) {
-        return { checkedIn: false, error: canCheckInResult };
-      }
+        const precheck = await this.precheckTicketAction(request);
+        logger(
+          LOG_TAG,
+          `got request to execute ticket action ${str(
+            request
+          )} - precheck - ${str(precheck)}`
+        );
 
-      // First see if we have an atom which matches the ticket ID
-      const ticketAtom = await this.db.loadById(this.id, ticketId);
-      if (
-        ticketAtom &&
-        // Ensure that the checker-provided event ID matches the ticket
-        this.lemonadeAtomToZupassEventId(ticketAtom) === eventId
-      ) {
-        // We found a Lemonade atom, so check in with the Lemonade backend
-        return this.checkInLemonadeTicket(ticketAtom, checkerEmail);
-      } else {
-        // No Lemonade atom found, try looking for a manual ticket
-        const manualTicket = this.getManualTicketById(ticketId);
-        if (manualTicket && manualTicket.eventId === eventId) {
-          // Manual ticket found, check in with the DB
-          return this.checkInManualTicket(manualTicket, checkerEmail);
-        } else {
-          // Didn't find any matching ticket
-          logger(
-            `${LOG_TAG} Could not find ticket ${ticketId} for event ${eventId} for checkin requested by ${checkerEmail} on pipeline ${this.id}`
+        if (!precheck.success) {
+          return precheck;
+        }
+
+        if (payload.action.shareContact) {
+          const ticketId = payload.action.shareContact.recipientTicketId;
+          const ticket = await this.db.loadById(this.id, ticketId);
+          const manualTicket = this.getManualTicketById(ticketId);
+          const recipientEmail = ticket?.email ?? manualTicket?.attendeeEmail;
+
+          if (recipientEmail) {
+            await this.contactDB.giveContact(this.id, recipientEmail, {
+              email: emailPCD.claim.emailAddress,
+              name: "",
+              timeCreated: Date.now()
+            });
+
+            return {
+              success: true
+            };
+          } else {
+            return {
+              success: false,
+              error: { name: "InvalidTicket" }
+            };
+          }
+        } else if (payload.action.giftBadge) {
+          const ticketId = payload.action.giftBadge.recipientTicketId;
+          const ticket = await this.db.loadById(this.id, ticketId);
+          const manualTicket = this.getManualTicketById(ticketId);
+          const recipientEmail = ticket?.email ?? manualTicket?.attendeeEmail;
+
+          if (recipientEmail) {
+            await this.badgeDB.giveBadges(
+              this.id,
+              recipientEmail,
+              payload.action.giftBadge.badgeIds.map((id) => {
+                return {
+                  id
+                };
+              })
+            );
+            return {
+              success: true
+            };
+          } else {
+            return {
+              success: false,
+              error: { name: "InvalidTicket" }
+            };
+          }
+        } else if (payload.action?.checkin) {
+          if (precheck.checkinActionInfo?.reason) {
+            return {
+              success: false,
+              error: precheck.checkinActionInfo?.reason
+            };
+          }
+          // First see if we have an atom which matches the ticket ID
+          const ticketAtom = await this.db.loadById(
+            this.id,
+            payload.action?.checkin.ticketId
           );
-          span?.setAttribute("checkin_error", "InvalidTicket");
-          return { checkedIn: false, error: { name: "InvalidTicket" } };
+          if (
+            ticketAtom &&
+            // Ensure that the checker-provided event ID matches the ticket
+            this.lemonadeAtomToZupassEventId(ticketAtom) === payload.eventId
+          ) {
+            // We found a Lemonade atom, so check in with the Lemonade backend
+            return this.lemonadeCheckin(
+              ticketAtom,
+              emailPCD.claim.emailAddress
+            );
+          } else {
+            // No Lemonade atom found, try looking for a manual ticket
+            const manualTicket = this.getManualTicketById(
+              payload.action.checkin.ticketId
+            );
+            if (manualTicket && manualTicket.eventId === payload.eventId) {
+              // Manual ticket found, check in with the DB
+              return this.checkInManualTicket(
+                manualTicket,
+                emailPCD.claim.emailAddress
+              );
+            } else {
+              // Didn't find any matching ticket
+              logger(
+                `${LOG_TAG} Could not find ticket ${payload.action?.checkin.ticketId} ` +
+                  `for event ${payload.eventId} for checkin requested by ${emailPCD.claim.emailAddress} ` +
+                  `on pipeline ${this.id}`
+              );
+              span?.setAttribute("checkin_error", "InvalidTicket");
+              return { success: false, error: { name: "InvalidTicket" } };
+            }
+          }
+        } else {
+          return {
+            success: false,
+            error: { name: "ServerError", detailedMessage: "not implemented" }
+          };
         }
       }
-    });
+    );
   }
 
   /**
@@ -1150,123 +1425,137 @@ export class LemonadePipeline implements BasePipeline {
   private async checkInManualTicket(
     manualTicket: ManualTicket,
     checkerEmail: string
-  ): Promise<GenericIssuanceCheckInResponseValue> {
-    return traced(LOG_NAME, "checkInManualTicket", async (span) => {
-      const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
-      if (pendingCheckin) {
-        span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-        return {
-          checkedIn: false,
-          error: {
-            name: "AlreadyCheckedIn",
-            checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
-            checker: LEMONADE_CHECKER
-          }
-        };
-      }
-
-      try {
-        await this.checkinDb.checkIn(this.id, manualTicket.id, new Date());
-        this.pendingCheckIns.set(manualTicket.id, {
-          status: CheckinStatus.Success,
-          timestamp: Date.now()
-        });
-      } catch (e) {
-        logger(
-          `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
-        );
-        setError(e, span);
-        this.pendingCheckIns.delete(manualTicket.id);
-
-        if (e instanceof DatabaseError) {
-          // We may have received a DatabaseError due to an insertion conflict
-          // Detect this conflict by looking for an existing check-in.
-          const existingCheckin = await this.checkinDb.getByTicketId(
-            this.id,
-            manualTicket.id
-          );
-          if (existingCheckin) {
-            span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-            return {
-              checkedIn: false,
-              error: {
-                name: "AlreadyCheckedIn",
-                checkinTimestamp: existingCheckin.timestamp.toISOString(),
-                checker: LEMONADE_CHECKER
-              }
-            };
-          }
+  ): Promise<PodboxTicketActionResponseValue> {
+    return traced<PodboxTicketActionResponseValue>(
+      LOG_NAME,
+      "checkInManualTicket",
+      async (span): Promise<PodboxTicketActionResponseValue> => {
+        const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
+        if (pendingCheckin) {
+          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+          return {
+            success: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: new Date(
+                pendingCheckin.timestamp
+              ).toISOString(),
+              checker: LEMONADE_CHECKER
+            }
+          };
         }
-        span?.setAttribute("checkin_error", "ServerError");
-        return { checkedIn: false, error: { name: "ServerError" } };
+
+        try {
+          await this.checkinDb.checkIn(this.id, manualTicket.id, new Date());
+          this.pendingCheckIns.set(manualTicket.id, {
+            status: CheckinStatus.Success,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          logger(
+            `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
+          );
+          setError(e, span);
+          this.pendingCheckIns.delete(manualTicket.id);
+
+          if (e instanceof DatabaseError) {
+            // We may have received a DatabaseError due to an insertion conflict
+            // Detect this conflict by looking for an existing check-in.
+            const existingCheckin = await this.checkinDb.getByTicketId(
+              this.id,
+              manualTicket.id
+            );
+            if (existingCheckin) {
+              span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+              return {
+                success: false,
+                error: {
+                  name: "AlreadyCheckedIn",
+                  checkinTimestamp: existingCheckin.timestamp.toISOString(),
+                  checker: LEMONADE_CHECKER
+                }
+              };
+            }
+          }
+          span?.setAttribute("checkin_error", "ServerError");
+          return { success: false, error: { name: "ServerError" } };
+        }
+
+        return { success: true };
       }
-      return { checkedIn: true };
-    });
+    );
   }
 
   /**
    * Check in a ticket to the Lemonade back-end.
    */
-  private async checkInLemonadeTicket(
+  private async lemonadeCheckin(
     ticketAtom: LemonadeAtom,
     checkerEmail: string
-  ): Promise<GenericIssuanceCheckInResponseValue> {
-    return traced(LOG_NAME, "checkInLemonadeTicket", async (span) => {
-      if (ticketAtom.checkinDate instanceof Date) {
-        span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-        return {
-          checkedIn: false,
-          error: {
-            name: "AlreadyCheckedIn",
-            checkinTimestamp: ticketAtom.checkinDate.toISOString(),
-            checker: LEMONADE_CHECKER
-          }
-        };
-      }
+  ): Promise<PodboxTicketActionResponseValue> {
+    return traced<PodboxTicketActionResponseValue>(
+      LOG_NAME,
+      "lemonadeTicketAction",
+      async (span): Promise<PodboxTicketActionResponseValue> => {
+        if (ticketAtom.checkinDate instanceof Date) {
+          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+          return {
+            success: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: ticketAtom.checkinDate.toISOString(),
+              checker: LEMONADE_CHECKER
+            }
+          };
+        }
 
-      const pendingCheckin = this.pendingCheckIns.get(ticketAtom.id);
-      if (pendingCheckin) {
-        span?.setAttribute("checkin_error", "AlreadyCheckedIn");
-        return {
-          checkedIn: false,
-          error: {
-            name: "AlreadyCheckedIn",
-            checkinTimestamp: new Date(pendingCheckin.timestamp).toISOString(),
-            checker: LEMONADE_CHECKER
-          }
-        };
-      }
+        const pendingCheckin = this.pendingCheckIns.get(ticketAtom.id);
+        if (pendingCheckin) {
+          span?.setAttribute("checkin_error", "AlreadyCheckedIn");
+          return {
+            success: false,
+            error: {
+              name: "AlreadyCheckedIn",
+              checkinTimestamp: new Date(
+                pendingCheckin.timestamp
+              ).toISOString(),
+              checker: LEMONADE_CHECKER
+            }
+          };
+        }
 
-      this.pendingCheckIns.set(ticketAtom.id, {
-        status: CheckinStatus.Pending,
-        timestamp: Date.now()
-      });
-      try {
-        await this.api.checkinUser(
-          this.definition.options.backendUrl,
-          this.getOAuthCredentials(),
-          ticketAtom.lemonadeEventId,
-          ticketAtom.lemonadeUserId
-        );
         this.pendingCheckIns.set(ticketAtom.id, {
-          status: CheckinStatus.Success,
+          status: CheckinStatus.Pending,
           timestamp: Date.now()
         });
-      } catch (e) {
-        logger(
-          `${LOG_TAG} Failed to check in ticket ${
-            ticketAtom.id
-          } for event ${this.lemonadeAtomToZupassEventId(
-            ticketAtom
-          )} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
-        );
-        setError(e, span);
-        span?.setAttribute("checkin_error", "ServerError");
-        this.pendingCheckIns.delete(ticketAtom.id);
-        return { checkedIn: false, error: { name: "ServerError" } };
+        try {
+          await this.api.checkinUser(
+            this.definition.options.backendUrl,
+            this.getOAuthCredentials(),
+            ticketAtom.lemonadeEventId,
+            ticketAtom.lemonadeUserId
+          );
+          this.pendingCheckIns.set(ticketAtom.id, {
+            status: CheckinStatus.Success,
+            timestamp: Date.now()
+          });
+        } catch (e) {
+          logger(
+            `${LOG_TAG} Failed to check in ticket ${
+              ticketAtom.id
+            } for event ${this.lemonadeAtomToZupassEventId(
+              ticketAtom
+            )} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
+          );
+          setError(e, span);
+          span?.setAttribute("checkin_error", "ServerError");
+          this.pendingCheckIns.delete(ticketAtom.id);
+          return { success: false, error: { name: "ServerError" } };
+        }
+
+        return { success: true };
       }
-      return { checkedIn: true };
-    });
+    );
   }
 
   private getOAuthCredentials(): LemonadeOAuthCredentials {

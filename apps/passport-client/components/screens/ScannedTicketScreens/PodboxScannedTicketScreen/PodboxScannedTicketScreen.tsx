@@ -1,6 +1,6 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useCallback, useEffect } from "react";
-import styled from "styled-components";
+import { useCallback, useEffect, useState } from "react";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import {
   useLaserScannerKeystrokeInput,
   useQuery,
@@ -12,9 +12,11 @@ import {
   pendingGenericIssuanceCheckinRequestKey,
   setPendingGenericIssuanceCheckinRequest
 } from "../../../../src/sessionStorage";
-import { Button, H5 } from "../../../core";
+import { Button, CenterColumn, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
+import { CardBodyContainer } from "../../../shared/PCDCard";
+import { usePreCheckTicket } from "./hooks/usePrecheckTicket";
 import { useTicketDataFromQuery } from "./hooks/useTicketDataFromQuery";
 import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection";
 
@@ -39,15 +41,21 @@ import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection"
  */
 export function PodboxScannedTicketScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
+  const userForcedToLogout = useUserForcedToLogout();
+  const query = useQuery();
+  const self = useSelf();
+  const [inProgress, setInProgress] = useState(false);
+
   const {
     loading: parsingTicketData,
     ticketId,
     eventId
   } = useTicketDataFromQuery();
 
-  const self = useSelf();
-  const userForcedToLogout = useUserForcedToLogout();
-  const query = useQuery();
+  const { loading: checkingTicket, result: precheck } = usePreCheckTicket(
+    ticketId,
+    eventId
+  );
 
   useEffect(() => {
     if (self == null || userForcedToLogout) {
@@ -64,49 +72,56 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     }
   }, [self, userForcedToLogout, query]);
 
-  let content = null;
-
-  if (parsingTicketData) {
-    content = (
-      <div>
-        <Spacer h={32} />
-        <RippleLoader />
-      </div>
-    );
-  } else {
-    content = (
-      <PodboxTicketActionSection ticketId={ticketId} eventId={eventId} />
+  if (parsingTicketData || checkingTicket) {
+    return (
+      <AppContainer bg={"primary"}>
+        <CenterColumn w={400}>
+          <Spacer h={32} />
+          <RippleLoader />
+        </CenterColumn>
+      </AppContainer>
     );
   }
 
   return (
     <AppContainer bg={"primary"}>
-      <Container>{content}</Container>
+      <CenterColumn w={400}>
+        <PodboxTicketActionSection
+          setIsLoading={setInProgress}
+          isLoading={inProgress}
+          precheck={precheck}
+          ticketId={ticketId}
+          eventId={eventId}
+        />
+      </CenterColumn>
     </AppContainer>
   );
 }
 
-export function ScanAnotherTicket(): JSX.Element {
+export function ScanAnotherTicket({
+  disabled
+}: {
+  disabled?: boolean;
+}): JSX.Element {
   const onClick = useCallback(() => {
     window.location.href = "/#/scan";
   }, []);
 
   return (
-    <Button style="secondary" onClick={onClick}>
-      Scan Another Ticket
+    <Button style="outline-lite" onClick={onClick} disabled={disabled}>
+      Scan Another
     </Button>
   );
 }
 
-export function Home(): JSX.Element {
+export function Home({ disabled }: { disabled?: boolean }): JSX.Element {
   const onClick = useCallback(() => {
     window.location.href = "/#/";
   }, []);
 
   return (
     <>
-      <Spacer h={8} />
-      <Button style="secondary" onClick={onClick}>
+      <Button style="outline-lite" onClick={onClick} disabled={disabled}>
         Home
       </Button>
     </>
@@ -129,22 +144,16 @@ export const CheckinSuccess = styled.span`
   font-size: 1.5em;
 `;
 
-export const CheckinSectionContainer = styled.div`
-  margin-top: 16px;
-`;
-
 export const Spread = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
 `;
 
-export const ErrorContainer = styled.div`
-  margin-top: 16px;
+export const ErrorContainer = styled(CardBodyContainer)`
   padding: 16px;
   border: 1px solid var(--danger);
   border-radius: 12px;
-  background: white;
 `;
 
 export const ErrorTitle = styled(H5)`
@@ -152,12 +161,26 @@ export const ErrorTitle = styled(H5)`
 `;
 
 export const StatusContainer = styled.div`
-  padding: 64px 16px;
-  background-color: #dfffc6;
-  margin-top: 16px;
-  margin-bottom: 16px;
-  border-radius: 12px;
-  display: flex;
-  justify-content: center;
-  align-items: center;
+  ${({
+    disabled,
+    size
+  }: {
+    disabled?: boolean;
+    size?: "small";
+  }): FlattenSimpleInterpolation => css`
+    padding: 64px 16px;
+    background-color: #dfffc6;
+    color: #33640d;
+    border-radius: 12px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    opacity: ${disabled ? "0.5" : "1"};
+
+    ${size === "small"
+      ? css`
+          padding: 16px 8px;
+        `
+      : css``}
+  `}
 `;

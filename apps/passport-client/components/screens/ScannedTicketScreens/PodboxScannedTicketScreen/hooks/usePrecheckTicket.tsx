@@ -1,7 +1,7 @@
 import { EmailPCD, EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
-  GenericIssuancePreCheckResult,
-  createGenericCheckinCredentialPayload,
+  PodboxActionPreCheckResult,
+  createTicketActionCredentialPayload,
   requestGenericIssuancePreCheck
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -35,11 +35,11 @@ export function usePreCheckTicket(
     }
   | {
       loading: false;
-      result: GenericIssuancePreCheckResult;
+      result: PodboxActionPreCheckResult;
     } {
   const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<
-    GenericIssuancePreCheckResult | undefined
+    PodboxActionPreCheckResult | undefined
   >();
   const pcdCollection = usePCDCollection();
   const identityPCD = useUserIdentityPCD();
@@ -58,9 +58,13 @@ export function usePreCheckTicket(
       }
 
       const serializedEmailPCD = await EmailPCDPackage.serialize(emailPCDs[0]);
-      const payload = createGenericCheckinCredentialPayload(
+      const payload = createTicketActionCredentialPayload(
         serializedEmailPCD,
-        ticketId,
+        {
+          checkin: {
+            ticketId
+          }
+        },
         eventId
       );
 

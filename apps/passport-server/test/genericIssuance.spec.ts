@@ -8,21 +8,21 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
   FeedCredentialPayload,
-  GenericIssuanceCheckInResponseValue,
-  GenericIssuanceCheckInResult,
   GenericPretixProduct,
   InfoResult,
   LemonadePipelineDefinition,
   PipelineDefinition,
   PipelineLogLevel,
   PipelineType,
+  PodboxTicketActionResponseValue,
+  PodboxTicketActionResult,
   PollFeedResult,
   PretixPipelineDefinition,
   createFeedCredentialPayload,
-  createGenericCheckinCredentialPayload,
+  createTicketActionCredentialPayload,
   getI18nString,
-  requestGenericIssuanceCheckIn,
   requestPipelineInfo,
+  requestPodboxTicketAction,
   requestPollFeed
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
@@ -581,7 +581,7 @@ t2,i1`,
         EdgeCityBouncerIdentity,
         AttendeeTicket
       );
-      expect(bouncerChecksInAttendee.value).to.deep.eq({ checkedIn: true });
+      expect(bouncerChecksInAttendee.value).to.deep.eq({ success: true });
 
       // can't check in a ticket that's already checked in
       const bouncerChecksInAttendeeAgain = await requestCheckInPipelineTicket(
@@ -593,7 +593,7 @@ t2,i1`,
       );
       // TODO check for specific error type
       expect(bouncerChecksInAttendeeAgain.value).to.deep.contain({
-        checkedIn: false
+        success: false
       });
 
       // can't check in a ticket using a ticket that isn't a
@@ -605,10 +605,11 @@ t2,i1`,
         EdgeCityDenverAttendeeIdentity,
         BouncerTicket
       );
+
       expect(atteendeeChecksInBouncerResult.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: { name: "NotSuperuser" }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       // can't check in a ticket with an email PCD signed by a non-Zupass private key
       const fakeBouncerCheckInBouncerResult =
@@ -620,9 +621,9 @@ t2,i1`,
           BouncerTicket
         );
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: { name: "InvalidSignature" }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       const Bouncer2Tickets = await requestTicketsFromPipeline(
         edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
@@ -646,7 +647,7 @@ t2,i1`,
         EdgeCityBouncer2Identity,
         Bouncer2Ticket
       );
-      expect(bouncer2ChecksInSelf.value).to.deep.eq({ checkedIn: true });
+      expect(bouncer2ChecksInSelf.value).to.deep.eq({ success: true });
 
       const ManualAttendeeTickets = await requestTicketsFromPipeline(
         edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
@@ -687,7 +688,7 @@ t2,i1`,
           ManualAttendeeTicket
         );
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
-        checkedIn: true
+        success: true
       });
 
       {
@@ -720,13 +721,13 @@ t2,i1`,
           ManualAttendeeTicket
         );
       expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: new Date().toISOString(),
           checker: LEMONADE_CHECKER
         }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       const manualAttendeeChecksInManualBouncer =
         await requestCheckInPipelineTicket(
@@ -737,9 +738,9 @@ t2,i1`,
           ManualBouncerTicket
         );
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: { name: "NotSuperuser" }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       // TODO test checking in manual attendee/bouncer
       // Currently not supported as these are not present in the Lemonade
@@ -813,7 +814,7 @@ t2,i1`,
         EdgeCityBouncerIdentity,
         bouncerTicket
       );
-      expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+      expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
 
       // can't check in a ticket that's already checked in
       const bouncerCheckInBouncerAgain = await requestCheckInPipelineTicket(
@@ -824,7 +825,7 @@ t2,i1`,
         bouncerTicket
       );
       expect(bouncerCheckInBouncerAgain.value).to.deep.contain({
-        checkedIn: false
+        success: false
       });
 
       // can't check in a ticket using a ticket that isn't a superuser ticket
@@ -837,9 +838,9 @@ t2,i1`,
       );
 
       expect(attendeeCheckInBouncerResult.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: { name: "NotSuperuser" }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       // can't check in a ticket with an email PCD signed by a non-Zupass private key
       const fakeBouncerCheckInBouncerResult =
@@ -851,9 +852,9 @@ t2,i1`,
           bouncerTicket
         );
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: { name: "InvalidSignature" }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       const ManualAttendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
@@ -902,7 +903,7 @@ t2,i1`,
           ManualAttendeeTicket
         );
       expect(manualBouncerChecksInManualAttendee.value).to.deep.eq({
-        checkedIn: true
+        success: true
       });
 
       {
@@ -935,13 +936,13 @@ t2,i1`,
           ManualAttendeeTicket
         );
       expect(manualBouncerChecksInManualAttendeeAgain.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: new Date().toISOString(),
           checker: PRETIX_CHECKER
         }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       const manualAttendeeChecksInManualBouncer =
         await requestCheckInPipelineTicket(
@@ -952,9 +953,9 @@ t2,i1`,
           ManualBouncerTicket
         );
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: { name: "NotSuperuser" }
-      } satisfies GenericIssuanceCheckInResponseValue);
+      } satisfies PodboxTicketActionResponseValue);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
     }
@@ -1048,7 +1049,7 @@ t2,i1`,
       EdgeCityBouncerIdentity,
       bouncerTicket
     );
-    expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+    expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
     const checkinTimestamp = Date.now();
     MockDate.set(Date.now() + ONE_SECOND_MS);
 
@@ -1084,13 +1085,13 @@ t2,i1`,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Pretix"
         }
-      } as GenericIssuanceCheckInResponseValue);
+      } as PodboxTicketActionResponseValue);
     }
     {
       // Check the bouncer out again
@@ -1112,13 +1113,13 @@ t2,i1`,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Pretix"
         }
-      } as GenericIssuanceCheckInResponseValue);
+      } as PodboxTicketActionResponseValue);
     }
     // Verify that bouncer is checked out in backend
     await pipeline.load();
@@ -1152,7 +1153,7 @@ t2,i1`,
         EthLatAmBouncerIdentity,
         bouncerTicket
       );
-      expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+      expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
       MockDate.set(Date.now() + ONE_SECOND_MS);
 
       // Reload the pipeline
@@ -1220,7 +1221,7 @@ t2,i1`,
       EdgeCityBouncerIdentity,
       bouncerTicket
     );
-    expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+    expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
     const checkinTimestamp = Date.now();
     MockDate.set(Date.now() + ONE_SECOND_MS);
 
@@ -1256,13 +1257,13 @@ t2,i1`,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Lemonade"
         }
-      } as GenericIssuanceCheckInResponseValue);
+      } as PodboxTicketActionResponseValue);
     }
     {
       // Check the bouncer out again
@@ -1285,13 +1286,13 @@ t2,i1`,
         bouncerTicket
       );
       expect(bouncerCheckInBouncer.value).to.deep.eq({
-        checkedIn: false,
+        success: false,
         error: {
           name: "AlreadyCheckedIn",
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Lemonade"
         }
-      } as GenericIssuanceCheckInResponseValue);
+      } as PodboxTicketActionResponseValue);
     }
     // Verify that bouncer is checked out in backend
     await pipeline.load();
@@ -1325,7 +1326,7 @@ t2,i1`,
         EdgeCityBouncerIdentity,
         bouncerTicket
       );
-      expect(bouncerCheckInBouncer.value).to.deep.eq({ checkedIn: true });
+      expect(bouncerCheckInBouncer.value).to.deep.eq({ success: true });
       MockDate.set(Date.now() + ONE_SECOND_MS);
 
       // Reload the pipeline
@@ -1789,7 +1790,7 @@ export async function requestCheckInPipelineTicket(
   checkerEmail: string,
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
-): Promise<GenericIssuanceCheckInResult> {
+): Promise<PodboxTicketActionResult> {
   const checkerEmailPCD = await EmailPCDPackage.prove({
     privateKey: {
       value: zupassEddsaPrivateKey,
@@ -1811,9 +1812,13 @@ export async function requestCheckInPipelineTicket(
   const serializedTicketCheckerEmailPCD =
     await EmailPCDPackage.serialize(checkerEmailPCD);
 
-  const ticketCheckerPayload = createGenericCheckinCredentialPayload(
+  const ticketCheckerPayload = createTicketActionCredentialPayload(
     serializedTicketCheckerEmailPCD,
-    ticket.claim.ticket.ticketId,
+    {
+      checkin: {
+        ticketId: ticket.claim.ticket.ticketId
+      }
+    },
     ticket.claim.ticket.eventId
   );
 
@@ -1822,10 +1827,7 @@ export async function requestCheckInPipelineTicket(
     ticketCheckerPayload
   );
 
-  return requestGenericIssuanceCheckIn(
-    checkinRoute,
-    ticketCheckerFeedCredential
-  );
+  return requestPodboxTicketAction(checkinRoute, ticketCheckerFeedCredential);
 }
 
 function assertUserMatches(

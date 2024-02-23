@@ -174,7 +174,7 @@ export function HomeScreenImpl(): JSX.Element {
               ) : (
                 <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
               )}
-              {pcdsInFolder.length > 0 && !isRoot && (
+              {pcdsInFolder.length > 1 && !isRoot && (
                 <>
                   <Spacer h={16} />
                   <RemoveAllContainer>

@@ -12,7 +12,11 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
-import { PipelineDefinition } from "./genericIssuanceTypes";
+import {
+  ActionScreenConfig,
+  BadgeConfig,
+  PipelineDefinition
+} from "./genericIssuanceTypes";
 import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
 
 /**
@@ -852,7 +856,7 @@ export interface FrogCryptoUpdateFeedsResponseValue {
  * and {@link GenericIssuanceCheckRequest}. This type enumerates all the possible
  * problems.
  */
-export type GenericIssuanceCheckInError = { detailedMessage?: string } & (
+export type PodboxTicketActionError = { detailedMessage?: string } & (
   | { name: "NotSuperuser" }
   | {
       name: "AlreadyCheckedIn";
@@ -882,13 +886,14 @@ export type GenericIssuanceCheckInRequest = {
 /**
  * Checking in either succeeds or fails, so no response value is defined for now.
  */
-export type GenericIssuanceCheckInResponseValue =
+export type PodboxTicketActionResponseValue =
   | {
-      checkedIn: true;
+      success: true;
+      error?: never;
     }
   | {
-      checkedIn: false;
-      error: GenericIssuanceCheckInError;
+      success: false;
+      error: PodboxTicketActionError;
     };
 
 /**
@@ -905,21 +910,65 @@ export type GenericIssuancePreCheckRequest = {
   credential: SerializedPCD<SemaphoreSignaturePCD>;
 };
 
-/**
- * Checking the ticket either succeeds or fails, so no response value is defined for now.
- */
-export type GenericIssuancePreCheckResponseValue =
+export type Badge = {
+  id: string;
+};
+
+export interface TicketInfo {
+  attendeeName: string;
+  attendeeEmail: string;
+  ticketName: string;
+  eventName: string;
+}
+
+export interface ShareContactActionInfo {
+  permissioned: boolean;
+  alreadyShared: boolean;
+  ticket: TicketInfo;
+}
+
+export type CheckinActionInfo =
   | {
+      permissioned: true;
       canCheckIn: true;
-      // The server will reveal these fields to a superuser
-      attendeeName: string;
-      attendeeEmail: string;
-      ticketName: string;
-      eventName: string;
+      ticket: TicketInfo;
+      reason?: never;
     }
   | {
+      permissioned: false;
       canCheckIn: false;
-      error: GenericIssuanceCheckInError;
+      ticket?: TicketInfo;
+      reason?: PodboxTicketActionError;
+    }
+  | {
+      permissioned: true;
+      canCheckIn: false;
+      ticket?: TicketInfo;
+      reason?: PodboxTicketActionError;
+    };
+
+export type GiveBadgeActionInfo = {
+  permissioned: boolean;
+  giveableBadges: BadgeConfig[];
+  ticket: TicketInfo;
+};
+
+export type ActionConfigResponseValue =
+  | {
+      success: true;
+      shareContactActionInfo?: ShareContactActionInfo;
+      giveBadgeActionInfo?: GiveBadgeActionInfo;
+      checkinActionInfo?: CheckinActionInfo;
+      actionScreenConfig?: ActionScreenConfig;
+    }
+  | {
+      success: false;
+      error: PodboxTicketActionError;
+      ticketInfo?: never;
+      shareContactActionInfo?: never;
+      giveBadgeActionInfo?: never;
+      checkinActionInfo?: never;
+      actionScreenConfig?: never;
     };
 
 /**

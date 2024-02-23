@@ -5,13 +5,34 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 
+export interface PodboxTicketAction {
+  checkin?: {
+    ticketId: string;
+  };
+  shareContact?: {
+    recipientTicketId: string;
+  };
+  giftBadge?: {
+    recipientTicketId: string;
+    badgeIds: string[];
+  };
+}
+
 /*
  * The payload encoded in the message of the SemaphoreSignaturePCD passed
  * as a credential to the checkin api within the Generic Issuance backend.
  */
-export interface GenericCheckinCredentialPayload {
+export interface TicketActionPayload {
+  /**
+   * The action a member of a pipeline wants to take.
+   */
+  action: PodboxTicketAction;
+
+  /**
+   * The email pcd proving their membership in the pipeline.
+   */
   emailPCD: SerializedPCD<EmailPCD>;
-  ticketIdToCheckIn: string;
+
   eventId: string;
   timestamp: number;
 }
@@ -19,7 +40,7 @@ export interface GenericCheckinCredentialPayload {
 /**
  * After verification, return the unserialized Email PCD.
  */
-export interface VerifiedCheckinCredential {
+export interface VerifiedTicketActionCredential {
   emailPCD: EmailPCD;
   ticketIdToCheckIn: string;
   eventId: string;
@@ -28,14 +49,14 @@ export interface VerifiedCheckinCredential {
 /**
  * Creates a credential payload for use in the Generic Issuance checkin API.
  */
-export function createGenericCheckinCredentialPayload(
+export function createTicketActionCredentialPayload(
   emailPCD: SerializedPCD<EmailPCD>,
-  ticketId: string,
+  action: PodboxTicketAction,
   eventId: string
-): GenericCheckinCredentialPayload {
+): TicketActionPayload {
   return {
-    emailPCD: emailPCD,
-    ticketIdToCheckIn: ticketId,
+    emailPCD,
+    action,
     eventId,
     timestamp: Date.now()
   };
@@ -45,9 +66,9 @@ export function createGenericCheckinCredentialPayload(
  * When checking tickets in, the user submits a payload wrapped in a Semaphore
  * signature.
  */
-export async function verifyCheckinCredential(
+export async function verifyTicketActionCredential(
   credential: SerializedPCD<SemaphoreSignaturePCD>
-): Promise<VerifiedCheckinCredential> {
+): Promise<TicketActionPayload> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
     credential.pcd
   );
@@ -58,7 +79,7 @@ export async function verifyCheckinCredential(
     throw new Error("Invalid signature");
   }
 
-  const payload: GenericCheckinCredentialPayload = JSON.parse(
+  const payload: TicketActionPayload = JSON.parse(
     signaturePCD.claim.signedMessage
   );
 
@@ -70,9 +91,5 @@ export async function verifyCheckinCredential(
     throw new Error("Invalid email PCD");
   }
 
-  return {
-    emailPCD,
-    ticketIdToCheckIn: payload.ticketIdToCheckIn,
-    eventId: payload.eventId
-  };
+  return payload;
 }
