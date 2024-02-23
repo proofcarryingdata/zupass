@@ -140,7 +140,7 @@ export function HomeScreenImpl(): JSX.Element {
               {!isRoot && (
                 <FolderDetails
                   noChildFolders={
-                    browsingFolder !== EdgeCityFolderName ||
+                    browsingFolder === EdgeCityFolderName ||
                     foldersInFolder.length === 0
                   }
                   folder={browsingFolder}
