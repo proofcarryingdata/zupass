@@ -24,6 +24,9 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
+      "path": "../pod"
+    },
+    {
       "path": "../util"
     }
   ]

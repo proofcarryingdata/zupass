@@ -7,5 +7,22 @@
     "file": "gpc-util",
     "template": "InputSelector",
     "params": [2]
+  },
+  "ObjectModule": {
+    "file": "object",
+    "template": "ObjectModule"
+  },
+  "OwnerModuleSemaphoreV3": {
+    "file": "owner",
+    "template": "OwnerModuleSemaphoreV3"
+  },
+  "EntryModule": {
+    "file": "entry",
+    "template": "EntryModule",
+    "params": [10]
+  },
+  "GlobalModule": {
+    "file": "global",
+    "template": "GlobalModule"
   }
 }

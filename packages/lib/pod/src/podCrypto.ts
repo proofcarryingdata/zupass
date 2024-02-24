@@ -49,6 +49,16 @@ export function podValueHash(podValue: PODValue): bigint {
   }
 }
 
+export function isPODNumericValue(podValue: PODValue): boolean {
+  switch (podValue.type) {
+    case "string":
+      return false;
+    case "int":
+    case "cryptographic":
+      return true;
+  }
+}
+
 export function merklizePOD(entries: PODEntries): {
   podMap: PODMap;
   merkleTree: LeanIMT<bigint>;

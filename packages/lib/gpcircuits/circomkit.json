@@ -9,7 +9,10 @@
   "dirBuild": "./build",
   "optimization": 1,
   "inspect": true,
-  "include": ["../../../node_modules"],
+  "include": [
+    "../../../node_modules",
+    "../../../node_modules/circomlib/circuits"
+  ],
   "cWitness": false,
   "groth16numContributions": 2,
   "groth16askForEntropy": false,

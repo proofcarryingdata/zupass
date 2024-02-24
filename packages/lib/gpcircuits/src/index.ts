@@ -1,3 +1,4 @@
-export default function (): void {
-  // Package typescript goes here
-}
+export * from "./entry";
+export * from "./global";
+export * from "./object";
+export * from "./types";

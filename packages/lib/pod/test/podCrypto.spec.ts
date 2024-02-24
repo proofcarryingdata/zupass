@@ -51,7 +51,7 @@ describe("POD cryptography should work", async function () {
     attendee: { type: "cryptographic", value: ownerIdentity.commitment },
     eventID: { type: "cryptographic", value: 456n },
     ticketID: { type: "cryptographic", value: 999n }
-  };
+  } as PODEntries;
 
   it("merklizePOD should process sample", function () {
     const { podMap, merkleTree } = merklizePOD(sampleEntries1);
@@ -237,7 +237,7 @@ describe("POD cryptography should work", async function () {
       entryNameHash: zkrEntryNameHash,
       entryValue: zkrEntryValue,
       entryIsValueEnabled: array2Bits(zkrEntryIsValueEnabled),
-      entryIsValueHashRevealed: zkrEntryIsValueHashRevealed,
+      entryIsValueHashRevealed: array2Bits(zkrEntryIsValueHashRevealed),
       entryEqualToOtherEntryByIndex: zkrEntryEqualToOtherEntryByIndex,
       entryProofDepth: zkrEntryProofDepth,
       entryProofIndex: zkrEntryProofIndex,
