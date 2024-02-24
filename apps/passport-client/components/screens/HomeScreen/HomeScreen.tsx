@@ -27,7 +27,7 @@ import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { EdgeCityHome } from "../FrogScreens/EdgeCityHome";
+import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import { FrogHomeSection } from "../FrogScreens/FrogHomeSection";
 import {
