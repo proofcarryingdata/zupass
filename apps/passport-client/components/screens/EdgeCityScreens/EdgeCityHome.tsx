@@ -1,5 +1,5 @@
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
-import { EdgeCityFolderName } from "@pcd/passport-interface";
+import { EdgeCityFolderName, HAT_TOKEN_NAME } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
@@ -8,6 +8,7 @@ import {
   usePCDsInFolder
 } from "../../../src/appHooks";
 import { PCDCardList } from "../../shared/PCDCardList";
+import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
 
 const TABS = [
@@ -16,7 +17,7 @@ const TABS = [
     label: "me"
   },
   {
-    tab: "folders",
+    tab: "experiences",
     label: "exp"
   },
   {
@@ -83,9 +84,15 @@ export function EdgeCityHome(): JSX.Element {
       {/* <img src="/images/edgecity/edgecity-banner.png" draggable={false} /> */}
 
       {/* TODO: Progress bar? Ranks? */}
-      <Score>
-        🐸 5.23 <ColorText>$ZUFROG</ColorText>
-      </Score>
+      <div>
+        <Caption>Balance</Caption>
+        <Balance>
+          <span>🐸</span>{" "}
+          <span>
+            9.4872 <ColorText>${HAT_TOKEN_NAME}</ColorText>
+          </span>
+        </Balance>
+      </div>
       {/* <CircleButton diameter={16} padding={8} onClick={openInfo}>
         <img draggable="false" src={icons.infoPrimary} width={34} height={34} />
       </CircleButton> */}
@@ -103,8 +110,14 @@ export function EdgeCityHome(): JSX.Element {
         ))}
       </ButtonGroup>
       {tab === "ticket" && <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />}
-      {tab === "folders" && (
+      {tab === "experiences" && (
         <div>
+          <ExperiencesHeader>
+            <p>
+              Earn ${HAT_TOKEN_NAME} by participating in community experiences.
+            </p>
+            {/* <p>Current $ZUPOINTS / $EXP exchange rate = 0.2201</p> */}
+          </ExperiencesHeader>
           {Object.entries(pcdsByEventName).map(([eventName, pcds]) => (
             <div>
               <CategoryHeader>
@@ -167,7 +180,6 @@ export function EdgeCityHome(): JSX.Element {
             //   );
             // })
           }
-
           {/* {!isRoot && folderPCDs.length > 0 && <Separator />}
           {!isRoot && <PCDCardList allExpanded pcds={folderPCDs} />} */}
           {selectedExperience && (
@@ -180,7 +192,19 @@ export function EdgeCityHome(): JSX.Element {
         </div>
       )}
       {/* TODO: Leaderboard */}
-      {tab === "score" && <div>Score goes here</div>}
+      {tab === "score" && (
+        <BalancesTab
+          score={{
+            score: 37,
+            rank: 2,
+            semaphore_id_hash: "2",
+            has_telegram_username: false
+          }}
+          refreshScore={async (): Promise<void> => {
+            console.log();
+          }}
+        />
+      )}
 
       {/* {frogSubs.length > 0 &&
         (frogPCDs.length === 0 && !myScore ? (
@@ -267,9 +291,23 @@ const Container = styled.div`
   gap: 32px;
 `;
 
-const Score = styled.div`
+const ExperiencesHeader = styled.div`
+  padding-bottom: 16px;
+  border-bottom: 1px solid grey;
+  margin-bottom: 16px;
+`;
+
+const Caption = styled.div`
+  font-size: 16px;
+  color: grey;
+  text-align: center;
+`;
+
+const Balance = styled.div`
   /* display: flex;
-  align-items: center; */
+  align-items: center;
+  justify-content: space-between; */
+
   font-size: 16px;
   text-align: center;
 `;
@@ -283,7 +321,7 @@ const Title = styled.div`
 const CategoryHeader = styled.div`
   display: flex;
   justify-content: space-between;
-  border-bottom: 1px solid grey;
+  /* border-bottom: 1px solid grey; */
   margin-bottom: 8px;
 `;
 
