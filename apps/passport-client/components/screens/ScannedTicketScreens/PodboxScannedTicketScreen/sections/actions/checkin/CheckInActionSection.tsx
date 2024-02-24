@@ -29,10 +29,9 @@ export function CheckInActionSection({
 }): JSX.Element {
   const executor = useExecuteTicketAction({
     eventId,
+    ticketId,
     action: {
-      checkin: {
-        ticketId: ticketId
-      }
+      checkin: true
     }
   });
 
@@ -90,7 +89,8 @@ export function CheckInActionSection({
   } else if (executor.result?.error) {
     return (
       <>
-        <ErrorContainer>😵 Couldn't Check Ticket In</ErrorContainer>
+        <ErrorContainer>Error Checking Ticket In</ErrorContainer>
+        <div>{executor.result?.error}</div>
         {divider}
       </>
     );

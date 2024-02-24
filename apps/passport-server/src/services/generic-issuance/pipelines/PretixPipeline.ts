@@ -1101,14 +1101,14 @@ export class PretixPipeline implements BasePipeline {
           );
           if (
             !payload.action?.checkin ||
-            !payload.action?.checkin?.ticketId ||
+            !payload?.ticketId ||
             !payload.eventId ||
             !payload.emailPCD
           ) {
             throw new Error("not implemented");
           }
 
-          ticketId = payload.action?.checkin.ticketId;
+          ticketId = payload.ticketId;
           eventId = payload.eventId;
           const checkerEmailPCD = await EmailPCDPackage.deserialize(
             payload.emailPCD.pcd
@@ -1302,15 +1302,11 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         const payload = await verifyTicketActionCredential(request.credential);
-        if (
-          !payload.action?.checkin?.ticketId ||
-          !payload.eventId ||
-          !payload.emailPCD
-        ) {
+        if (!payload.ticketId || !payload.eventId || !payload.emailPCD) {
           throw new Error("not implemented");
         }
 
-        ticketId = payload.action?.checkin?.ticketId;
+        ticketId = payload.ticketId;
         eventId = payload.eventId;
         const checkerEmailPCD = await EmailPCDPackage.deserialize(
           payload.emailPCD.pcd

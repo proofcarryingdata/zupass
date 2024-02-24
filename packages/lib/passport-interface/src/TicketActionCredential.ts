@@ -6,14 +6,9 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 
 export interface PodboxTicketAction {
-  checkin?: {
-    ticketId: string;
-  };
-  shareContact?: {
-    recipientTicketId: string;
-  };
+  checkin?: boolean;
+  getContact?: boolean;
   giftBadge?: {
-    recipientTicketId: string;
     badgeIds: string[];
   };
 }
@@ -33,6 +28,7 @@ export interface TicketActionPayload {
    */
   emailPCD: SerializedPCD<EmailPCD>;
 
+  ticketId: string;
   eventId: string;
   timestamp: number;
 }
@@ -52,12 +48,14 @@ export interface VerifiedTicketActionCredential {
 export function createTicketActionCredentialPayload(
   emailPCD: SerializedPCD<EmailPCD>,
   action: PodboxTicketAction,
-  eventId: string
+  eventId: string,
+  ticketId: string
 ): TicketActionPayload {
   return {
     emailPCD,
     action,
     eventId,
+    ticketId,
     timestamp: Date.now()
   };
 }

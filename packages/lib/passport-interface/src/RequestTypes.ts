@@ -865,6 +865,7 @@ export type PodboxTicketActionError = { detailedMessage?: string } & (
     }
   | { name: "InvalidSignature" }
   | { name: "InvalidTicket" }
+  | { name: "AlreadyReceived" }
   | { name: "TicketRevoked"; revokedTimestamp: number }
   | { name: "NetworkError" }
   | { name: "ServerError" }
@@ -921,9 +922,9 @@ export interface TicketInfo {
   eventName: string;
 }
 
-export interface ShareContactActionInfo {
+export interface GetContactActionInfo {
   permissioned: boolean;
-  alreadyShared: boolean;
+  alreadyReceived: boolean;
   ticket: TicketInfo;
 }
 
@@ -956,7 +957,7 @@ export type GiveBadgeActionInfo = {
 export type ActionConfigResponseValue =
   | {
       success: true;
-      shareContactActionInfo?: ShareContactActionInfo;
+      getContactActionInfo?: GetContactActionInfo;
       giveBadgeActionInfo?: GiveBadgeActionInfo;
       checkinActionInfo?: CheckinActionInfo;
       actionScreenConfig?: ActionScreenConfig;
@@ -965,7 +966,7 @@ export type ActionConfigResponseValue =
       success: false;
       error: PodboxTicketActionError;
       ticketInfo?: never;
-      shareContactActionInfo?: never;
+      getContactActionInfo?: never;
       giveBadgeActionInfo?: never;
       checkinActionInfo?: never;
       actionScreenConfig?: never;

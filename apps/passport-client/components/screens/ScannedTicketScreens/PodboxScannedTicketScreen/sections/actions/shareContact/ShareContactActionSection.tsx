@@ -23,10 +23,9 @@ export function ShareContactActionSection({
 }): ReactNode {
   const executor = useExecuteTicketAction({
     eventId,
+    ticketId,
     action: {
-      shareContact: {
-        recipientTicketId: ticketId
-      }
+      getContact: true
     }
   });
 
@@ -36,20 +35,17 @@ export function ShareContactActionSection({
 
   if (
     !precheck.value?.success ||
-    !precheck.value?.shareContactActionInfo?.permissioned
+    !precheck.value?.getContactActionInfo?.permissioned
   ) {
     // scanner can't issue contact to the scanee
     return null;
   }
 
-  if (
-    precheck.value?.shareContactActionInfo?.permissioned &&
-    precheck.value?.shareContactActionInfo?.alreadyShared
-  ) {
+  if (precheck.value?.getContactActionInfo?.alreadyReceived) {
     return (
       <>
         <StatusContainer size="small" disabled={isLoading}>
-          🪪 Contact Info Exchanged 🤝
+          Received Contact Card
         </StatusContainer>
         <Spacer h={8} />
       </>
@@ -69,19 +65,19 @@ export function ShareContactActionSection({
     return null;
   }
 
-  if (executor.result?.success) {
+  if (executor.result?.success && executor.result?.value?.success) {
     return (
       <>
         <StatusContainer size="small" disabled={isLoading}>
-          🪪 Contact Info Exchanged 🤝
+          Received Contact Card
         </StatusContainer>
         <Spacer h={8} />
       </>
     );
-  } else if (executor.result?.error) {
+  } else if (executor.result?.value?.success === false) {
     return (
       <>
-        <ErrorContainer>😵 Couldn't Share Contact Card</ErrorContainer>
+        <ErrorContainer>😵 Couldn't Share Contact Card b</ErrorContainer>
         <Spacer h={8} />
       </>
     );
@@ -90,7 +86,7 @@ export function ShareContactActionSection({
   return (
     <>
       <Button onClick={executor.execute} disabled={isLoading}>
-        Share Contact
+        Get Contact Card
       </Button>
       <Spacer h={8} />
     </>

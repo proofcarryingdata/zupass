@@ -21,7 +21,7 @@ import {
 import { useExecuteTicketAction } from "../useExecuteTicketAction";
 
 function badgeDisplayName(c: BadgeConfig): string {
-  return ticketDisplayName(`${c.eventName} - ${c.productName}`);
+  return ticketDisplayName(c.eventName, c.productName);
 }
 
 export function GiveBadgeActionSection({
@@ -44,9 +44,9 @@ export function GiveBadgeActionSection({
 
   const executor = useExecuteTicketAction({
     eventId,
+    ticketId,
     action: {
       giftBadge: {
-        recipientTicketId: ticketId,
         badgeIds: selectedBadge ? [selectedBadge.id] : []
       }
     }
@@ -105,7 +105,7 @@ export function GiveBadgeActionSection({
     return (
       <>
         <StatusContainer size="small" disabled={isLoading}>
-          🎁 Granted Badge '{badgeDisplayName(selectedBadge)}'
+          Gave {badgeDisplayName(selectedBadge)}
         </StatusContainer>
         <Spacer h={8} />
         <Button

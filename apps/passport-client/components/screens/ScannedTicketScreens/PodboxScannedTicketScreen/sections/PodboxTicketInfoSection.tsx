@@ -17,7 +17,7 @@ export function PodboxTicketInfoSection({
   const ticket: TicketInfo | undefined =
     precheck?.checkinActionInfo?.ticket ??
     precheck?.giveBadgeActionInfo?.ticket ??
-    precheck?.shareContactActionInfo?.ticket;
+    precheck?.getContactActionInfo?.ticket;
 
   if (ticket) {
     return (

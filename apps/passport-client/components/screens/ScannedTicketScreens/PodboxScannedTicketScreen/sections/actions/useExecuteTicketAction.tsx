@@ -32,10 +32,12 @@ export interface TicketActionExecutor {
  */
 export function useExecuteTicketAction({
   action,
-  eventId
+  eventId,
+  ticketId
 }: {
   action?: PodboxTicketAction;
   eventId: string;
+  ticketId: string;
 }): TicketActionExecutor {
   const pcdCollection = usePCDCollection();
   const identityPCD = useUserIdentityPCD();
@@ -69,7 +71,8 @@ export function useExecuteTicketAction({
               createTicketActionCredentialPayload(
                 await EmailPCDPackage.serialize(emailPCDs[0]),
                 action,
-                eventId
+                eventId,
+                ticketId
               )
             )
           }
@@ -79,7 +82,7 @@ export function useExecuteTicketAction({
     setLoading(false);
     setResult(checkinResult);
     return checkinResult;
-  }, [loading, pcdCollection, identityPCD, eventId, action]);
+  }, [loading, pcdCollection, identityPCD, action, eventId, ticketId]);
 
   const reset = useCallback(() => {
     setLoading(false);

@@ -1815,11 +1815,10 @@ export async function requestCheckInPipelineTicket(
   const ticketCheckerPayload = createTicketActionCredentialPayload(
     serializedTicketCheckerEmailPCD,
     {
-      checkin: {
-        ticketId: ticket.claim.ticket.ticketId
-      }
+      checkin: true
     },
-    ticket.claim.ticket.eventId
+    ticket.claim.ticket.eventId,
+    ticket.claim.ticket.ticketId
   );
 
   const ticketCheckerFeedCredential = await signFeedCredentialPayload(

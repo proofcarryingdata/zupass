@@ -60,12 +60,9 @@ export function usePreCheckTicket(
       const serializedEmailPCD = await EmailPCDPackage.serialize(emailPCDs[0]);
       const payload = createTicketActionCredentialPayload(
         serializedEmailPCD,
-        {
-          checkin: {
-            ticketId
-          }
-        },
-        eventId
+        { checkin: true },
+        eventId,
+        ticketId
       );
 
       const signedPayload = await SemaphoreSignaturePCDPackage.prove({
