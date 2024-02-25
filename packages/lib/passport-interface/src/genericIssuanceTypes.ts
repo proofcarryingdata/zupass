@@ -139,6 +139,19 @@ const SemaphoreGroupConfigSchema = z.object({
 
 export type SemaphoreGroupConfig = z.infer<typeof SemaphoreGroupConfigSchema>;
 
+const SemaphoreGroupListSchema = z
+  .array(SemaphoreGroupConfigSchema)
+  .optional()
+  .refine(
+    (groups) =>
+      // Groups being undefined is valid
+      groups === undefined ||
+      // If groups are defined, the number of unique IDs must equal the
+      // number of groups
+      groups.length === new Set(groups.map((group) => group.groupId)).size,
+    { message: "Semaphore group IDs must be unique" }
+  );
+
 /**
  * Generic Issuance-specific ticket type configuration - roughly corresponds to a
  * 'Product' in Pretix-land.
@@ -245,18 +258,7 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
   ticketActions: TicketActionsOptionsSchema.optional(),
-  semaphoreGroups: z
-    .array(SemaphoreGroupConfigSchema)
-    .optional()
-    .refine(
-      (groups) =>
-        // Groups being undefined is valid
-        groups === undefined ||
-        // If groups are defined, the number of unique IDs must equal the
-        // number of groups
-        groups.length === new Set(groups.map((group) => group.groupId)).size,
-      { message: "Semaphore group IDs must be unique" }
-    )
+  semaphoreGroups: SemaphoreGroupListSchema
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
