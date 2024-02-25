@@ -43,10 +43,12 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
+import { SemaphoreGroupProvider } from "../SemaphoreGroupProvider";
 import {
   CheckinCapability,
   CheckinStatus,
@@ -56,6 +58,7 @@ import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
+import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
@@ -101,6 +104,9 @@ export class PretixPipeline implements BasePipeline {
   private api: IGenericPretixAPI;
   private checkinDB: IPipelineCheckinDB;
   private consumerDB: IPipelineConsumerDB;
+  private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
+
+  private semaphoreGroupProvider: SemaphoreGroupProvider;
 
   public get id(): string {
     return this.definition.id;
@@ -114,6 +120,10 @@ export class PretixPipeline implements BasePipeline {
     return this.capabilities[1] as CheckinCapability;
   }
 
+  public get semaphoreGroupCapability(): SemaphoreGroupCapability {
+    return this.capabilities[2] as SemaphoreGroupCapability;
+  }
+
   public constructor(
     eddsaPrivateKey: string,
     definition: PretixPipelineDefinition,
@@ -122,13 +132,22 @@ export class PretixPipeline implements BasePipeline {
     zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
-    consumerDB: IPipelineConsumerDB
+    consumerDB: IPipelineConsumerDB,
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
+    this.consumerDB = consumerDB;
+    this.semaphoreHistoryDB = semaphoreHistoryDB;
+    this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+      this.definition.id,
+      this.definition.options.semaphoreGroups ?? [],
+      this.consumerDB,
+      this.semaphoreHistoryDB
+    );
     this.capabilities = [
       {
         issue: this.issuePretixTicketPCDs.bind(this),
@@ -149,19 +168,36 @@ export class PretixPipeline implements BasePipeline {
           );
         },
         preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
-      } satisfies CheckinCapability
+      } satisfies CheckinCapability,
+      {
+        type: PipelineCapability.SemaphoreGroup,
+        getSerializedGroup: this.semaphoreGroupProvider.getSerializedGroup.bind(
+          this.semaphoreGroupProvider
+        ),
+        getGroupRoot: this.semaphoreGroupProvider.getGroupRoot.bind(
+          this.semaphoreGroupProvider
+        ),
+        getSerializedHistoricalGroup:
+          this.semaphoreGroupProvider.getSerializedHistoricalGroup.bind(
+            this.semaphoreGroupProvider
+          ),
+        getSupportedGroups: this.semaphoreGroupProvider.getSupportedGroups.bind(
+          this.semaphoreGroupProvider
+        )
+      } satisfies SemaphoreGroupCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
     this.loaded = false;
     this.checkinDB = checkinDB;
-    this.consumerDB = consumerDB;
   }
 
   public async start(): Promise<void> {
     // On startup, the pipeline definition may have changed, and manual tickets
     // may have been deleted. If so, clean up any check-ins for those tickets.
     await this.cleanUpManualCheckins();
+    // Initialize the Semaphore Group provider by loading groups from the DB
+    await this.semaphoreGroupProvider.start();
   }
 
   public async stop(): Promise<void> {
@@ -302,6 +338,10 @@ export class PretixPipeline implements BasePipeline {
           )
         );
 
+        if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+          await this.triggerSemaphoreGroupUpdate();
+        }
+
         return {
           lastRunEndTimestamp: end.toISOString(),
           lastRunStartTimestamp: startTime.toISOString(),
@@ -313,6 +353,47 @@ export class PretixPipeline implements BasePipeline {
         } satisfies PipelineLoadSummary;
       }
     );
+  }
+
+  /**
+   * Collects data that is require for Semaphore groups to update.
+   * Returns an array of { eventId, productId, email } objects, which the
+   * SemaphoreGroupProvider will use to look up Semaphore IDs and match them
+   * to configured Semaphore groups.
+   */
+  private async semaphoreGroupData(): Promise<
+    { email: string; eventId: string; productId: string }[]
+  > {
+    return traced(LOG_NAME, "semaphoreGroupData", async (span) => {
+      const data = [];
+      for (const atom of await this.db.load(this.id)) {
+        data.push({
+          email: atom.email as string,
+          eventId: atom.eventId,
+          productId: atom.productId
+        });
+      }
+
+      for (const manualTicket of this.definition.options.manualTickets ?? []) {
+        data.push({
+          email: manualTicket.attendeeEmail,
+          eventId: manualTicket.eventId,
+          productId: manualTicket.productId
+        });
+      }
+
+      span?.setAttribute("ticket_data_length", data.length);
+
+      return data;
+    });
+  }
+
+  /**
+   * Tell the Semaphore group provider to update memberships.
+   */
+  private async triggerSemaphoreGroupUpdate(): Promise<void> {
+    const data = await this.semaphoreGroupData();
+    await this.semaphoreGroupProvider.update(data);
   }
 
   /**

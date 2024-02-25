@@ -1546,7 +1546,33 @@ export class GenericIssuanceService {
         ],
         pretixAPIKey: testPretixAPIKey,
         pretixOrgUrl: testPretixOrgUrl,
-        manualTickets: []
+        manualTickets: [],
+        semaphoreGroups: [
+          {
+            name: "Progcrypto Attendees",
+            groupId: "25d6d4d8-725f-41f2-8b53-7cd5bfacba16",
+            membershipTickets: [
+              {
+                eventId: "3dd02915-7a7e-412c-b792-046c9d654b75",
+                productId: "80d821f7-34a0-4d2f-9351-046b45694a74"
+              }
+            ]
+          },
+          {
+            name: "Progcrypto Organizers",
+            groupId: "a5754136-c942-4038-bbbe-c80a299f9288",
+            membershipTickets: [
+              {
+                eventId: "3dd02915-7a7e-412c-b792-046c9d654b75",
+                productId: "5f80443f-d767-4f6d-88fe-62eb927ae520"
+              },
+              {
+                eventId: "3dd02915-7a7e-412c-b792-046c9d654b75",
+                productId: "80d821f7-34a0-4d2f-9351-046b45694a74"
+              }
+            ]
+          }
+        ]
       },
       type: PipelineType.Pretix
     };
