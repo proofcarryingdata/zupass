@@ -109,6 +109,7 @@ export class LemonadePipeline implements BasePipeline {
   private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
   private cacheService: PersistentCacheService;
+  private loaded: boolean;
 
   public get id(): string {
     return this.definition.id;
@@ -140,6 +141,7 @@ export class LemonadePipeline implements BasePipeline {
     this.badgeDB = badgeDB;
     this.api = api;
     this.zupassPublicKey = zupassPublicKey;
+    this.loaded = false;
 
     this.capabilities = [
       {
@@ -314,6 +316,8 @@ export class LemonadePipeline implements BasePipeline {
             logs.push(
               makePLogInfo(`loaded ${validTickets.length} valid tickets`)
             );
+
+            this.loaded = true;
 
             return {
               eventConfig,
@@ -656,15 +660,23 @@ export class LemonadePipeline implements BasePipeline {
         credential.claim.identityCommitment
       );
 
-      const ticketActions: PCDAction[] = [
-        {
-          type: PCDActionType.ReplaceInFolder,
+      const ticketActions: PCDAction[] = [];
+
+      if (this.loaded) {
+        ticketActions.push({
+          type: PCDActionType.DeleteFolder,
           folder: this.definition.options.feedOptions.feedFolder,
-          pcds: await Promise.all(
-            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-          )
-        }
-      ];
+          recursive: true
+        });
+      }
+
+      ticketActions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: await Promise.all(
+          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+        )
+      });
 
       const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
       const contacts = await this.getReceivedContactsForEmail(email);
