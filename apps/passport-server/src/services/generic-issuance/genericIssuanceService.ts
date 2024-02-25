@@ -1462,20 +1462,20 @@ export class GenericIssuanceService {
         },
         events: [
           {
-            genericIssuanceId: randomUUID(),
+            genericIssuanceId: "3dd02915-7a7e-412c-b792-046c9d654b75",
             externalId: "progcrypto",
             name: "ProgCrypto (Internal Test)",
             products: [
               {
                 externalId: "369803",
                 name: "GA",
-                genericIssuanceId: randomUUID(),
+                genericIssuanceId: "80d821f7-34a0-4d2f-9351-046b45694a74",
                 isSuperUser: false
               },
               {
                 externalId: "374045",
                 name: "Organizer",
-                genericIssuanceId: randomUUID(),
+                genericIssuanceId: "5f80443f-d767-4f6d-88fe-62eb927ae520",
                 isSuperUser: true
               }
             ]
@@ -1564,14 +1564,15 @@ export class GenericIssuanceService {
         },
         events: [
           {
-            genericIssuanceEventId: randomUUID(),
+            genericIssuanceEventId: "536c96f5-feb8-4938-bcac-47d4e13847c6",
             externalId: "65c1faf41770460a0bb9aa1e",
             name: "Lemonade staging",
             ticketTypes: [
               {
                 externalId: "65c1faf41770460a0bb9aa1f",
                 name: "GA",
-                genericIssuanceProductId: randomUUID(),
+                genericIssuanceProductId:
+                  "9e39949c-b468-4c7e-a6a2-7735521f0bda",
                 isSuperUser: true
               }
             ]
