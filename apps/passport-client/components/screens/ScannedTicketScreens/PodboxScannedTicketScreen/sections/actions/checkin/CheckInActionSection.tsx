@@ -6,8 +6,8 @@ import {
   ErrorContainer,
   StatusContainer
 } from "../../../PodboxScannedTicketScreen";
+import { PodboxTicketActionErrorSection } from "../PodboxTicketActionErrorSection";
 import { useExecuteTicketAction } from "../useExecuteTicketAction";
-import { PodboxCheckInErrorSection } from "./PodboxTicketErrorSection";
 
 /**
  * Given a Podbox ticket that Zupass has determined the curent user
@@ -59,7 +59,7 @@ export function CheckInActionSection({
     if (precheck.value?.checkinActionInfo.reason?.name === "AlreadyCheckedIn") {
       return (
         <div style={isLoading ? { opacity: 0.7 } : {}}>
-          <PodboxCheckInErrorSection
+          <PodboxTicketActionErrorSection
             error={precheck.value?.checkinActionInfo.reason}
           />
           <Spacer h={8} />

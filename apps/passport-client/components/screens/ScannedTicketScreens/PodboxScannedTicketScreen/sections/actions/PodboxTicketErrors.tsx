@@ -4,9 +4,9 @@ import {
   ErrorContainer,
   ErrorTitle,
   Spread
-} from "../../../PodboxScannedTicketScreen";
+} from "../../PodboxScannedTicketScreen";
 
-export function PodboxCheckInErrorSection({
+export function PodboxTicketActionErrorSection({
   error
 }: {
   error: PodboxTicketActionError;
@@ -14,8 +14,30 @@ export function PodboxCheckInErrorSection({
   let errorContent = null;
 
   switch (error.name) {
+    case "NoActionsAvailable":
+      errorContent = (
+        <>
+          <ErrorTitle>No Actions Available</ErrorTitle>
+          <Spacer h={8} />
+          <div>You're not permissioned to do anything with this ticket.</div>
+        </>
+      );
+      break;
     case "AlreadyCheckedIn":
-      errorContent = null;
+      errorContent = (
+        <>
+          <ErrorTitle>Already checked in</ErrorTitle>
+          <Spacer h={8} />
+          <Spread>
+            <span>Checked in at</span>
+            <span>{new Date(error.checkinTimestamp).toLocaleString()}</span>
+          </Spread>
+          <Spread>
+            <span>Checked in by</span>
+            <span>{error.checker}</span>
+          </Spread>
+        </>
+      );
       break;
     case "InvalidSignature":
       errorContent = (
@@ -23,7 +45,6 @@ export function PodboxCheckInErrorSection({
           <ErrorTitle>Invalid Ticket Signature</ErrorTitle>
           <Spacer h={8} />
           <span>This ticket was not issued by Zupass.</span>
-          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -33,7 +54,6 @@ export function PodboxCheckInErrorSection({
           <ErrorTitle>Invalid ticket</ErrorTitle>
           <Spacer h={8} />
           <span>This ticket is invalid.</span>
-          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -52,7 +72,6 @@ export function PodboxCheckInErrorSection({
           <ErrorTitle>Network Error</ErrorTitle>
           <Spacer h={8} />
           <span>please try again</span>
-          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -64,14 +83,11 @@ export function PodboxCheckInErrorSection({
           <Spread>
             <span>Revoked at</span>
             <span>{error.revokedTimestamp}</span>
-            <div>{error.detailedMessage}</div>
           </Spread>
         </>
       );
       break;
   }
 
-  if (errorContent) {
-    return <ErrorContainer>{errorContent}</ErrorContainer>;
-  }
+  return <ErrorContainer>{errorContent}</ErrorContainer>;
 }
