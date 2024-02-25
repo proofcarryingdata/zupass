@@ -109,7 +109,7 @@ export class LemonadePipeline implements BasePipeline {
    * to be stored in-memory.
    */
   private db: IPipelineAtomDB<LemonadeAtom>;
-  private checkinDb: IPipelineCheckinDB;
+  private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
@@ -143,7 +143,7 @@ export class LemonadePipeline implements BasePipeline {
     api: ILemonadeAPI,
     zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
-    checkinDb: IPipelineCheckinDB,
+    checkinDB: IPipelineCheckinDB,
     contactDB: IContactSharingDB,
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
@@ -205,7 +205,7 @@ export class LemonadePipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
-    this.checkinDb = checkinDb;
+    this.checkinDB = checkinDB;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
   }
@@ -508,7 +508,7 @@ export class LemonadePipeline implements BasePipeline {
           (manualTicket) => manualTicket.id
         )
       );
-      const checkIns = await this.checkinDb.getByPipelineId(this.id);
+      const checkIns = await this.checkinDB.getByPipelineId(this.id);
       for (const checkIn of checkIns) {
         if (!ticketIds.has(checkIn.ticketId)) {
           logger(
@@ -516,7 +516,7 @@ export class LemonadePipeline implements BasePipeline {
           );
           span?.setAttribute("deleted_checkin_ticket_id", checkIn.ticketId);
 
-          this.checkinDb.deleteCheckIn(this.id, checkIn.ticketId);
+          this.checkinDB.deleteCheckIn(this.id, checkIn.ticketId);
         }
       }
     });
@@ -529,7 +529,7 @@ export class LemonadePipeline implements BasePipeline {
     const event = this.getEventById(manualTicket.eventId);
     const product = this.getTicketTypeById(event, manualTicket.productId);
 
-    const checkIn = await this.checkinDb.getByTicketId(
+    const checkIn = await this.checkinDB.getByTicketId(
       this.id,
       manualTicket.id
     );
@@ -1173,7 +1173,7 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
-      const checkIn = await this.checkinDb.getByTicketId(
+      const checkIn = await this.checkinDB.getByTicketId(
         this.id,
         manualTicket.id
       );
@@ -1587,7 +1587,7 @@ export class LemonadePipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDb.checkIn(this.id, manualTicket.id, new Date());
+          await this.checkinDB.checkIn(this.id, manualTicket.id, new Date());
           this.pendingCheckIns.set(manualTicket.id, {
             status: CheckinStatus.Success,
             timestamp: Date.now()
@@ -1602,7 +1602,7 @@ export class LemonadePipeline implements BasePipeline {
           if (e instanceof DatabaseError) {
             // We may have received a DatabaseError due to an insertion conflict
             // Detect this conflict by looking for an existing check-in.
-            const existingCheckin = await this.checkinDb.getByTicketId(
+            const existingCheckin = await this.checkinDB.getByTicketId(
               this.id,
               manualTicket.id
             );
