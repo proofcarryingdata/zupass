@@ -858,6 +858,7 @@ export interface FrogCryptoUpdateFeedsResponseValue {
  */
 export type PodboxTicketActionError = { detailedMessage?: string } & (
   | { name: "NotSuperuser" }
+  | { name: "NoActionsAvailable" }
   | {
       name: "AlreadyCheckedIn";
       checkinTimestamp: string | undefined;
@@ -925,7 +926,7 @@ export interface TicketInfo {
 export interface GetContactActionInfo {
   permissioned: boolean;
   alreadyReceived: boolean;
-  ticket: TicketInfo;
+  ticket?: TicketInfo;
 }
 
 export type CheckinActionInfo =

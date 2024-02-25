@@ -1768,11 +1768,11 @@ export function getTicketsFromFeedResponse(
   result: PollFeedResult
 ): Promise<EdDSATicketPCD[]> {
   expectTrue(result.success);
-  const firstAction = result.value.actions[0];
-  expectIsReplaceInFolderAction(firstAction);
-  expect(firstAction.folder).to.eq(expectedFolder);
+  const secondAction = result.value.actions[1];
+  expectIsReplaceInFolderAction(secondAction);
+  expect(secondAction.folder).to.eq(expectedFolder);
   return Promise.all(
-    firstAction.pcds.map((t) => EdDSATicketPCDPackage.deserialize(t.pcd))
+    secondAction.pcds.map((t) => EdDSATicketPCDPackage.deserialize(t.pcd))
   );
 }
 

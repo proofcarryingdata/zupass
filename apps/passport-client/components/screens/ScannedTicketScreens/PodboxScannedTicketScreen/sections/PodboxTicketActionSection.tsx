@@ -3,9 +3,9 @@ import { Spacer } from "@pcd/passport-ui";
 import { Dispatch, SetStateAction } from "react";
 import styled from "styled-components";
 import { loadUsingLaserScanner } from "../../../../../src/localstorage";
-import { TicketError } from "../../DevconnectCheckinByIdScreen";
 import { Home, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
+import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
 import { CheckInActionSection } from "./actions/checkin/CheckInActionSection";
 import { GiveBadgeActionSection } from "./actions/giveBadge/GiveBadgeActionSection";
 import { ShareContactActionSection } from "./actions/shareContact/ShareContactActionSection";
@@ -32,7 +32,37 @@ export function PodboxTicketActionSection({
   const usingLaserScanner = loadUsingLaserScanner();
 
   if (precheck.success === false) {
-    return <TicketError error={{ name: "ServerError" }} />;
+    return (
+      <>
+        <Spacer h={32} />
+        <TopRow>
+          {!usingLaserScanner && <Home disabled={isLoading} />}
+          <ScanAnotherTicket disabled={isLoading} />
+        </TopRow>
+        <Spacer h={16} />
+        <PodboxTicketActionErrorSection error={{ name: "ServerError" }} />
+      </>
+    );
+  }
+
+  if (
+    !precheck.value?.checkinActionInfo?.permissioned &&
+    !precheck.value?.getContactActionInfo?.permissioned &&
+    !precheck.value?.giveBadgeActionInfo?.permissioned
+  ) {
+    return (
+      <>
+        <Spacer h={32} />
+        <TopRow>
+          {!usingLaserScanner && <Home disabled={isLoading} />}
+          <ScanAnotherTicket disabled={isLoading} />
+        </TopRow>
+        <Spacer h={16} />
+        <PodboxTicketActionErrorSection
+          error={{ name: "NoActionsAvailable" }}
+        />
+      </>
+    );
   }
 
   return (
@@ -43,6 +73,7 @@ export function PodboxTicketActionSection({
         {!usingLaserScanner && <Home disabled={isLoading} />}
         <ScanAnotherTicket disabled={isLoading} />
       </TopRow>
+
       <Spacer h={8} />
 
       <PodboxTicketInfoSection

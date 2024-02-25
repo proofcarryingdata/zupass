@@ -33,7 +33,7 @@ import {
   verifyFeedCredential,
   verifyTicketActionCredential
 } from "@pcd/passport-interface";
-import { PCDActionType } from "@pcd/pcd-collection";
+import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { normalizeEmail, str } from "@pcd/util";
 import { DatabaseError } from "pg";
@@ -83,6 +83,7 @@ export class PretixPipeline implements BasePipeline {
   private definition: PretixPipelineDefinition;
   private zupassPublicKey: EdDSAPublicKey;
   private cacheService: PersistentCacheService;
+  private loaded: boolean;
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
@@ -152,6 +153,7 @@ export class PretixPipeline implements BasePipeline {
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
     this.checkinDb = checkinDb;
+    this.loaded = false;
   }
 
   public async start(): Promise<void> {
@@ -255,6 +257,7 @@ export class PretixPipeline implements BasePipeline {
             isConsumed: !!ticket.pretix_checkin_timestamp
           };
         });
+        this.loaded = true;
 
         logger(
           LOG_TAG,
@@ -791,17 +794,25 @@ export class PretixPipeline implements BasePipeline {
 
       span?.setAttribute("pcds_issued", tickets.length);
 
-      const result: PollFeedResponseValue = {
-        actions: [
-          {
-            type: PCDActionType.ReplaceInFolder,
-            folder: this.definition.options.feedOptions.feedFolder,
-            pcds: await Promise.all(
-              tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-            )
-          }
-        ]
-      };
+      const actions: PCDAction[] = [];
+
+      if (this.loaded) {
+        actions.push({
+          type: PCDActionType.DeleteFolder,
+          folder: this.definition.options.feedOptions.feedFolder,
+          recursive: true
+        });
+      }
+
+      actions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: await Promise.all(
+          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+        )
+      });
+
+      const result: PollFeedResponseValue = { actions };
 
       return result;
     });
