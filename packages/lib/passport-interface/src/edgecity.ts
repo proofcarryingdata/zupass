@@ -16,8 +16,11 @@ export interface EdgeCityScore {
   rank: number;
 }
 
-export const HAT_TOKEN_NAME = "ZUPOINTS";
+export const HAT_TOKEN_NAME = "ZUCASH";
 export const TOTAL_SUPPLY = 200;
+
+// TODO: Think about followers/following?
+export const CONTACT_EVENT_NAME = "Contacts";
 
 export const EVENT_NAME_TO_TOTAL_SUPPLY: Record<string, number> = {
   Zupoll: 3,

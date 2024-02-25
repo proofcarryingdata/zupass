@@ -1,7 +1,4 @@
-import {
-  EdgeCityFolderName,
-  FrogCryptoFolderName
-} from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
   useCallback,
@@ -139,15 +136,12 @@ export function HomeScreenImpl(): JSX.Element {
             <FolderExplorerContainer>
               {!isRoot && (
                 <FolderDetails
-                  noChildFolders={
-                    browsingFolder === EdgeCityFolderName ||
-                    foldersInFolder.length === 0
-                  }
+                  noChildFolders={isEdgeCity || foldersInFolder.length === 0}
                   folder={browsingFolder}
                   onFolderClick={onFolderClick}
                 />
               )}
-              {browsingFolder !== EdgeCityFolderName &&
+              {!isEdgeCity &&
                 foldersInFolder
                   .filter(
                     // /FrogCrypto is a special and rendered by <FrogFolder />
@@ -157,6 +151,16 @@ export function HomeScreenImpl(): JSX.Element {
                   .map((folder) => {
                     return (
                       <FolderCard
+                        style={
+                          isEdgeCityFolder(folder)
+                            ? {
+                                fontFamily: "PressStart2P",
+                                textTransform: "uppercase",
+                                // TODO: other colors?
+                                animation: "color-change 1s infinite"
+                              }
+                            : undefined
+                        }
                         key={folder}
                         onFolderClick={onFolderClick}
                         folder={folder}

@@ -52,7 +52,6 @@ export function EdgeCityHome(): JSX.Element {
     rootStyle.setProperty("--accent-dark", "white");
     rootStyle.setProperty("--accent-lite", "white");
 
-    // Optional: Cleanup function to reset the variables when the component unmounts
     return () => {
       rootStyle.removeProperty("--bg-dark-primary");
       rootStyle.removeProperty("--bg-lite-primary");
@@ -136,7 +135,7 @@ export function EdgeCityHome(): JSX.Element {
                 <CategoryHeader>
                   <span>{eventName}</span>
                   {/* TODO: Actually read N from config */}
-                  <span>{`${pcds.length}/${maxTimes}`}</span>
+                  <span>{`${pcds.length}/${maxTimes || "∞"}`}</span>
                 </CategoryHeader>
                 <ItemContainer>
                   {/* ONCLICK */}
@@ -342,11 +341,11 @@ const lightGreen = "#94EF69";
 const darkGreen = "#406F3A";
 
 const ColorText = styled.span`
-  -webkit-animation: color_change 1s infinite alternate;
-  -moz-animation: color_change 1s infinite alternate;
-  -ms-animation: color_change 1s infinite alternate;
-  -o-animation: color_change 1s infinite alternate;
-  animation: color_change 1s infinite alternate;
+  -webkit-animation: green-color-change 1s infinite alternate;
+  -moz-animation: green-color-change 1s infinite alternate;
+  -ms-animation: green-color-change 1s infinite alternate;
+  -o-animation: green-color-change 1s infinite alternate;
+  animation: green-color-change 1s infinite alternate;
 
   /* background: radial-gradient(circle, #76b852, #8dc73f, #76b852);
 
@@ -361,7 +360,7 @@ const ColorText = styled.span`
   font-weight: bold;
   cursor: pointer; */
 
-  @-webkit-keyframes color_change {
+  @-webkit-keyframes green-color-change {
     from {
       color: ${lightGreen};
     }
@@ -369,7 +368,7 @@ const ColorText = styled.span`
       color: ${darkGreen};
     }
   }
-  @-moz-keyframes color_change {
+  @-moz-keyframes green-color-change {
     from {
       color: ${lightGreen};
     }
@@ -377,7 +376,7 @@ const ColorText = styled.span`
       color: ${darkGreen};
     }
   }
-  @-ms-keyframes color_change {
+  @-ms-keyframes green-color-change {
     from {
       color: ${lightGreen};
     }
@@ -385,7 +384,7 @@ const ColorText = styled.span`
       color: ${darkGreen};
     }
   }
-  @-o-keyframes color_change {
+  @-o-keyframes green-color-change {
     from {
       color: ${lightGreen};
     }
@@ -393,7 +392,7 @@ const ColorText = styled.span`
       color: ${darkGreen};
     }
   }
-  @keyframes color_change {
+  @keyframes green-color-change {
     from {
       color: ${lightGreen};
     }
