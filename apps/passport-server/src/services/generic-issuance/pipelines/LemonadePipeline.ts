@@ -1245,16 +1245,22 @@ export class LemonadePipeline implements BasePipeline {
 
         // 3) contact action
         if (this.definition.options.ticketActions?.contacts?.enabled) {
-          const received = await this.contactDB.getContacts(
-            this.id,
-            actorEmail
-          );
-
-          result.getContactActionInfo = {
-            permissioned: true,
-            alreadyReceived: received.includes(ticketAtom?.email ?? ""),
-            ticket: ticketInfo
-          };
+          if (actorEmail === ticketInfo.attendeeEmail) {
+            result.getContactActionInfo = {
+              permissioned: false,
+              alreadyReceived: false
+            };
+          } else {
+            const received = await this.contactDB.getContacts(
+              this.id,
+              actorEmail
+            );
+            result.getContactActionInfo = {
+              permissioned: true,
+              alreadyReceived: received.includes(ticketAtom?.email ?? ""),
+              ticket: ticketInfo
+            };
+          }
         }
 
         // 4) screen config
