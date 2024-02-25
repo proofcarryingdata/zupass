@@ -9,11 +9,11 @@ export const AppHeader = React.memo(AppHeaderImpl);
 
 function AppHeaderImpl({
   children,
-  isEdgeCity,
+  isEdgeCity = false,
   isProveOrAddScreen = false
 }: {
   children?: React.ReactNode;
-  isEdgeCity: boolean;
+  isEdgeCity?: boolean;
   isProveOrAddScreen?: boolean;
 }): JSX.Element {
   const dispatch = useDispatch();
