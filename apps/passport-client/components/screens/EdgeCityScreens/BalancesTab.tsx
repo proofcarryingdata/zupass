@@ -79,7 +79,7 @@ function ScoreTable({
   myScore,
   getUsername
 }: {
-  getUsername: (semaphoreId: string) => string;
+  getUsername: (semaphoreId: string, lowercase?: boolean) => string;
   title: string;
   scores: FrogCryptoScore[];
   myScore?: FrogCryptoScore;
@@ -113,7 +113,8 @@ function ScoreTable({
           >
             <td>{score.rank}</td>
             <td>
-              {score.telegram_username ?? getUsername(score.semaphore_id_hash)}
+              {score.telegram_username ??
+                getUsername(score.semaphore_id_hash, true)}
             </td>
             <td style={{ textAlign: "right" }}>
               {(

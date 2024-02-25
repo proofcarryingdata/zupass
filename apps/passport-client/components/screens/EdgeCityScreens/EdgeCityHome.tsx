@@ -1,5 +1,9 @@
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
-import { EdgeCityFolderName, HAT_TOKEN_NAME } from "@pcd/passport-interface";
+import {
+  EVENT_NAME_TO_TOTAL_SUPPLY,
+  EdgeCityFolderName,
+  HAT_TOKEN_NAME
+} from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
 import {
@@ -78,8 +82,14 @@ export function EdgeCityHome(): JSX.Element {
 
   return (
     <Container>
-      <Title style={{ margin: "0 auto", whiteSpace: "nowrap" }}>
-        👾 EDGE CITY 👾
+      <Title
+        style={{
+          margin: "0 auto",
+          whiteSpace: "nowrap",
+          fontFamily: "PressStart2P"
+        }}
+      >
+        EDGE CITY
       </Title>
       {/* <img src="/images/edgecity/edgecity-banner.png" draggable={false} /> */}
 
@@ -114,74 +124,46 @@ export function EdgeCityHome(): JSX.Element {
         <div>
           <ExperiencesHeader>
             <p>
-              Earn ${HAT_TOKEN_NAME} by participating in community experiences.
+              Earn <strong>${HAT_TOKEN_NAME}</strong> by participating in
+              community experiences.
             </p>
             {/* <p>Current $ZUPOINTS / $EXP exchange rate = 0.2201</p> */}
           </ExperiencesHeader>
-          {Object.entries(pcdsByEventName).map(([eventName, pcds]) => (
-            <div>
-              <CategoryHeader>
-                <span>{eventName}</span>
-                {/* TODO: Actually read N from config */}
-                <span>{`${pcds.length}/n`}</span>
-              </CategoryHeader>
-              <ItemContainer>
-                {/* ONCLICK */}
-                {pcds.flatMap((pcd) => (
-                  <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
-                    <img
-                      src={(pcd as EdDSATicketPCD).claim.ticket?.imageUrl}
-                      draggable={false}
-                      // style={{ opacity: 0.2 }}
-                    />
-                  </ItemCard>
-                ))}
-              </ItemContainer>
-            </div>
-          ))}
-          {
-            // folders
-            []
-              // .filter((folder) => folder !== contactsFolder)
-              // .sort((a, b) => a.localeCompare(b))
-              .map((folder) => (
-                <div>
-                  <CategoryHeader>
-                    {folder.replace(
-                      new RegExp(`^${EdgeCityFolderName}\\/`),
-                      ""
-                    )}
-                  </CategoryHeader>
-                  <ItemContainer>
-                    {/* ONCLICK */}
-                    {[...pcds.getAllPCDsInFolder(folder)].flatMap((pcd) => (
-                      <ItemCard>
+          {Object.entries(pcdsByEventName).map(([eventName, pcds]) => {
+            const maxTimes = EVENT_NAME_TO_TOTAL_SUPPLY[eventName] ?? null;
+            return (
+              <div>
+                <CategoryHeader>
+                  <span>{eventName}</span>
+                  {/* TODO: Actually read N from config */}
+                  <span>{`${pcds.length}/${maxTimes}`}</span>
+                </CategoryHeader>
+                <ItemContainer>
+                  {/* ONCLICK */}
+                  {pcds.flatMap((pcd) => (
+                    <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
+                      <img
+                        src={pcd.claim.ticket?.imageUrl}
+                        draggable={false}
+                        // style={{ opacity: 0.2 }}
+                      />
+                    </ItemCard>
+                  ))}
+                  {maxTimes &&
+                    Array.from({ length: maxTimes - pcds.length }).map((_) => (
+                      <ItemCard style={{ cursor: "default" }}>
                         <img
-                          src={(pcd as EdDSATicketPCD).claim.ticket?.imageUrl}
+                          src={pcds[0].claim.ticket?.imageUrl}
                           draggable={false}
-                          // style={{ opacity: 0.2 }}
+                          style={{ opacity: 0.5 }}
                         />
                       </ItemCard>
                     ))}
-                  </ItemContainer>
-                </div>
-              ))
-            // .flatMap((folder) => pcds.getAllPCDsInFolder(folder))
-            // .map((pcd) => {
-            //   console.log({ pcd });
-            //   return (
-            //     <ItemCard>
-            //       <img
-            //         src={(pcd as EdDSATicketPCD).claim.ticket?.imageUrl}
-            //         draggable={false}
-            //         // style={{ opacity: 0.2 }}
-            //       />
-            //     </ItemCard>
-            //   );
-            // })
-          }
-          {/* {!isRoot && folderPCDs.length > 0 && <Separator />}
-          {!isRoot && <PCDCardList allExpanded pcds={folderPCDs} />} */}
+                </ItemContainer>
+              </div>
+            );
+          })}
+
           {selectedExperience && (
             <ExperienceModal
               color="black"
@@ -319,6 +301,7 @@ const Title = styled.div`
 `;
 
 const CategoryHeader = styled.div`
+  font-weight: bold;
   display: flex;
   justify-content: space-between;
   /* border-bottom: 1px solid grey; */
@@ -327,8 +310,9 @@ const CategoryHeader = styled.div`
 
 const ItemContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-gap: 10px;
+  grid-template-columns: repeat(7, 1fr);
+  grid-row-gap: 0px;
+  grid-column-gap: 10px;
 `;
 
 const ItemCard = styled.div`

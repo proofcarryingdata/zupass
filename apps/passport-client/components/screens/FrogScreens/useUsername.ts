@@ -4,7 +4,7 @@ import { useCallback, useEffect, useState } from "react";
 import { bigintToUint8Array, uint8arrayToBigint } from "../../../src/util";
 
 export function useUsernameGenerator():
-  | ((sempahoreId: string) => string)
+  | ((sempahoreId: string, lowercase?: boolean) => string)
   | null {
   const [pcdCrypto, setPCDCrypto] = useState<PCDCrypto | null>(null);
   useEffect(() => {
@@ -12,7 +12,7 @@ export function useUsernameGenerator():
   }, []);
 
   const generator = useCallback(
-    (sempahoreId: string) => {
+    (sempahoreId: string, lowercase = false) => {
       try {
         if (!pcdCrypto) {
           throw new Error("pcdCrypto is not initialized");
@@ -34,7 +34,9 @@ export function useUsernameGenerator():
         const randomAnimal: string =
           animals[Number(randomBigInt % BigInt(animals.length))];
 
-        return _.startCase(`${randomAdjective} ${randomAnimal}`);
+        return lowercase
+          ? randomAdjective + "_" + randomAnimal
+          : _.startCase(`${randomAdjective} ${randomAnimal}`);
       } catch (e) {
         console.debug("Error in useUsernameGenerator", e);
         return "An Unknown Toad";

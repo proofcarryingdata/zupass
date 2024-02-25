@@ -18,3 +18,13 @@ export interface EdgeCityScore {
 
 export const HAT_TOKEN_NAME = "ZUPOINTS";
 export const TOTAL_SUPPLY = 200;
+
+export const EVENT_NAME_TO_TOTAL_SUPPLY: Record<string, number> = {
+  Zupoll: 3,
+  Sauna: 14,
+  Hike: 1,
+  "Cold Plunge": 7,
+  Ceremonies: 2,
+  "Met Gary": 7,
+  "Met Zupass": 7
+};
