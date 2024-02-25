@@ -811,7 +811,9 @@ export class LemonadePipeline implements BasePipeline {
     ticketData: ITicketData,
     eddsaPrivateKey: string
   ): Promise<EdDSATicketPCD> {
-    const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
+    const stableId = await getHash(
+      `issued-ticket-${this.id}-${ticketData.ticketId}`
+    );
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
       ticket: {
