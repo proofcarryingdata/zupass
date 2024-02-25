@@ -2,7 +2,6 @@ import { Spacer } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import { useDispatch } from "../../src/appHooks";
 import { Button, CenterColumn, H2, TextCenter } from "../core";
-import { AppContainer } from "../shared/AppContainer";
 
 interface ConfirmSkipSetupModalProps {
   onConfirm: () => void;
@@ -18,8 +17,8 @@ export function ConfirmSkipSetupModal({
   }, [dispatch]);
 
   return (
-    <AppContainer bg="primary">
-      <Spacer h={8} />
+    <CenterColumn w={420}>
+      <Spacer h={64} />
       <H2>Skipping Password Setup</H2>
       <Spacer h={24} />
       <TextCenter>
@@ -36,6 +35,6 @@ export function ConfirmSkipSetupModal({
         <Spacer h={8} />
         <Button onClick={close}>Cancel</Button>
       </CenterColumn>
-    </AppContainer>
+    </CenterColumn>
   );
 }

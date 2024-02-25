@@ -3,7 +3,7 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   GenericIssuanceCheckInRequest,
-  GenericIssuanceCheckInResponseValue
+  PodboxTicketActionResponseValue
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -15,16 +15,16 @@ import { httpPostSimple } from "./makeRequest";
  *
  * Never rejects. All information encoded in the resolved response.
  */
-export async function requestGenericIssuanceCheckIn(
+export async function requestPodboxTicketAction(
   checkInUrl: string,
   signedPayload: SerializedPCD<SemaphoreSignaturePCD>
-): Promise<GenericIssuanceCheckInResult> {
+): Promise<PodboxTicketActionResult> {
   return httpPostSimple(
     urlJoin(checkInUrl),
     async (resText) => {
       return {
         success: true,
-        value: JSON.parse(resText) as GenericIssuanceCheckInResponseValue
+        value: JSON.parse(resText) as PodboxTicketActionResponseValue
       };
     },
     {
@@ -33,5 +33,5 @@ export async function requestGenericIssuanceCheckIn(
   );
 }
 
-export type GenericIssuanceCheckInResult =
-  APIResult<GenericIssuanceCheckInResponseValue>;
+export type PodboxTicketActionResult =
+  APIResult<PodboxTicketActionResponseValue>;

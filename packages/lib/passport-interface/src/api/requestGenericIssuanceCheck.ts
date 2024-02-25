@@ -2,8 +2,8 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
-  GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue
+  ActionConfigResponseValue,
+  GenericIssuancePreCheckRequest
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -18,13 +18,13 @@ import { httpPostSimple } from "./makeRequest";
 export async function requestGenericIssuancePreCheck(
   preCheckUrl: string,
   signedPayload: SerializedPCD<SemaphoreSignaturePCD>
-): Promise<GenericIssuancePreCheckResult> {
+): Promise<PodboxActionPreCheckResult> {
   return httpPostSimple(
     urlJoin(preCheckUrl),
     async (resText) => {
       return {
         success: true,
-        value: JSON.parse(resText) as GenericIssuancePreCheckResponseValue
+        value: JSON.parse(resText) as ActionConfigResponseValue
       };
     },
     {
@@ -33,5 +33,4 @@ export async function requestGenericIssuancePreCheck(
   );
 }
 
-export type GenericIssuancePreCheckResult =
-  APIResult<GenericIssuancePreCheckResponseValue>;
+export type PodboxActionPreCheckResult = APIResult<ActionConfigResponseValue>;

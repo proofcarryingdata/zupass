@@ -157,6 +157,52 @@ export type LemonadePipelineEventConfig = z.infer<
   typeof LemonadePipelineEventConfigSchema
 >;
 
+export const ActionScreenConfigSchema = z.object({
+  eventBannerUrl: z.string().optional(),
+  eventNameConfig: z.string().optional()
+});
+
+export type ActionScreenConfig = z.infer<typeof ActionScreenConfigSchema>;
+
+export const BadgeConfigSchema = z.object({
+  id: z.string(),
+  eventName: z.string(),
+  productName: z.string().optional(),
+  imageUrl: z.string(),
+  givers: z.array(z.string()).optional()
+});
+
+export type BadgeConfig = z.infer<typeof BadgeConfigSchema>;
+
+export const BadgesConfigSchema = z.object({
+  enabled: z.boolean().optional(),
+  choices: z.array(BadgeConfigSchema).optional()
+});
+
+export type BadgesConfig = z.infer<typeof BadgesConfigSchema>;
+
+export const ContactsConfigSchema = z.object({
+  enabled: z.boolean().optional()
+});
+
+export type ContactsConfig = z.infer<typeof ContactsConfigSchema>;
+
+/**
+ * Configuration of actions Podbox enables subscribers of the same Pipeline
+ * to perform on each other:
+ * - checking in
+ * - issuing 'badges'
+ * - pushing a contact card to scanee's zupass
+ * - potentially other actions, like throwing snowballs.
+ */
+const TicketActionsOptionsSchema = z.object({
+  badges: BadgesConfigSchema.optional(),
+  contacts: ContactsConfigSchema.optional(),
+  screenConfig: ActionScreenConfigSchema.optional()
+});
+
+export type TicketActions = z.infer<typeof TicketActionsOptionsSchema>;
+
 const FeedIssuanceOptionsSchema = z.object({
   feedId: z.string(),
   feedDisplayName: z.string(),
@@ -178,7 +224,8 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(LemonadePipelineEventConfigSchema),
   superuserEmails: z.array(z.string()).optional(),
   feedOptions: FeedIssuanceOptionsSchema,
-  manualTickets: ManualTicketListSchema
+  manualTickets: ManualTicketListSchema,
+  ticketActions: TicketActionsOptionsSchema.optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.

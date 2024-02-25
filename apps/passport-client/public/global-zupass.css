@@ -27,6 +27,10 @@ html {
   line-height: 1.5;
 }
 
+body {
+  overflow-y: scroll;
+}
+
 a,
 a:visited {
   color: var(--accent-dark);

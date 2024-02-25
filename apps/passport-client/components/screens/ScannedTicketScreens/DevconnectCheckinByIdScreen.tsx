@@ -203,7 +203,6 @@ function TicketErrorContent({ error }: { error: TicketError }): JSX.Element {
 }
 
 export function TicketError({ error }: { error: TicketError }): JSX.Element {
-  const usingLaserScanner = loadUsingLaserScanner();
   return (
     <>
       <TicketErrorContent error={error} />
@@ -214,7 +213,6 @@ export function TicketError({ error }: { error: TicketError }): JSX.Element {
         }}
       >
         <ScanAnotherTicket />
-        {!usingLaserScanner && <Home />}
       </div>
     </>
   );
@@ -226,8 +224,8 @@ function ScanAnotherTicket(): JSX.Element {
   }, []);
 
   return (
-    <Button style="secondary" onClick={onClick}>
-      Scan Another Ticket
+    <Button style="outline" onClick={onClick}>
+      Scan Another
     </Button>
   );
 }

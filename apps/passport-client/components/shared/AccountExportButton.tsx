@@ -48,7 +48,7 @@ export function AccountExportButton(): JSX.Element {
         to={url}
         onClick={showToast}
       >
-        Export Account Data
+        Export
       </LinkButton>
     )
   );

@@ -1,4 +1,4 @@
-import { GenericIssuanceCheckInError } from "@pcd/passport-interface";
+import { PodboxTicketActionError } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import {
   ErrorContainer,
@@ -9,26 +9,13 @@ import {
 export function PodboxCheckInErrorSection({
   error
 }: {
-  error: GenericIssuanceCheckInError;
+  error: PodboxTicketActionError;
 }): JSX.Element {
   let errorContent = null;
 
   switch (error.name) {
     case "AlreadyCheckedIn":
-      errorContent = (
-        <>
-          <ErrorTitle>Already checked in</ErrorTitle>
-          <Spacer h={8} />
-          <Spread>
-            <span>Checked in at</span>
-            <span>{new Date(error.checkinTimestamp).toLocaleString()}</span>
-          </Spread>
-          <Spread>
-            <span>Checked in by</span>
-            <span>{error.checker}</span>
-          </Spread>
-        </>
-      );
+      errorContent = null;
       break;
     case "InvalidSignature":
       errorContent = (
@@ -36,6 +23,7 @@ export function PodboxCheckInErrorSection({
           <ErrorTitle>Invalid Ticket Signature</ErrorTitle>
           <Spacer h={8} />
           <span>This ticket was not issued by Zupass.</span>
+          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -45,6 +33,7 @@ export function PodboxCheckInErrorSection({
           <ErrorTitle>Invalid ticket</ErrorTitle>
           <Spacer h={8} />
           <span>This ticket is invalid.</span>
+          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -63,6 +52,7 @@ export function PodboxCheckInErrorSection({
           <ErrorTitle>Network Error</ErrorTitle>
           <Spacer h={8} />
           <span>please try again</span>
+          <div>{error.detailedMessage}</div>
         </>
       );
       break;
@@ -74,11 +64,14 @@ export function PodboxCheckInErrorSection({
           <Spread>
             <span>Revoked at</span>
             <span>{error.revokedTimestamp}</span>
+            <div>{error.detailedMessage}</div>
           </Spread>
         </>
       );
       break;
   }
 
-  return <ErrorContainer>{errorContent}</ErrorContainer>;
+  if (errorContent) {
+    return <ErrorContainer>{errorContent}</ErrorContainer>;
+  }
 }

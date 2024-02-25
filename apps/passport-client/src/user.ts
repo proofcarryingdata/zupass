@@ -49,7 +49,7 @@ export function findUserIdentityPCD(
   pcds: PCDCollection,
   user: User
 ): SemaphoreIdentityPCD | undefined {
-  return findIdentityPCD(pcds, user.commitment);
+  return findIdentityPCD(pcds, user?.commitment);
 }
 
 export function findIdentityPCD(
