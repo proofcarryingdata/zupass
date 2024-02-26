@@ -112,7 +112,6 @@ export function isFrogCryptoFolder(folderPath: string): boolean {
  */
 export function isEdgeCityFolder(folderPath: string): boolean {
   const parts = splitPath(folderPath);
-  // TODO make constant
   return parts.length === 1 && parts[0] === EdgeCityFolderName;
 }
 

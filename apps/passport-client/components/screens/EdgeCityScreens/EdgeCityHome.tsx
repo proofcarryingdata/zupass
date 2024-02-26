@@ -60,7 +60,7 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
 }, []);
 
 /**
- * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
+ * Renders EdgeCity UI.
  */
 export function EdgeCityHome(): JSX.Element {
   const edgeCityPCDs = usePCDsInFolder(EdgeCityFolderName);
@@ -104,11 +104,9 @@ export function EdgeCityHome(): JSX.Element {
     const emailHash = `0x${sha256(`edgecity${email}`)}`;
     setScore(scores.find((s) => s.email_hash === emailHash));
   }, [scores, email]);
-  // const openInfo = (): void => {
-  //   console.log("hi");
-  // };
+
   useEffect(() => {
-    // Set CSS variables on the html element
+    // Set CSS variables on the html element to change into dark mode.
     const rootStyle = document.documentElement.style;
     rootStyle.setProperty("--bg-dark-primary", "black");
     rootStyle.setProperty("--bg-lite-primary", "black");
@@ -148,15 +146,7 @@ export function EdgeCityHome(): JSX.Element {
   if (error) {
     return (
       <Container>
-        <Title
-          style={{
-            margin: "0 auto",
-            whiteSpace: "nowrap",
-            fontFamily: "PressStart2P"
-          }}
-        >
-          EDGE CITY
-        </Title>
+        <Title>EDGE CITY</Title>
         <CenteredText style={{ color: "red" }}>
           Oh no! An error occurred: {error}
         </CenteredText>
@@ -169,15 +159,7 @@ export function EdgeCityHome(): JSX.Element {
   if (!score) {
     return (
       <Container>
-        <Title
-          style={{
-            margin: "0 auto",
-            whiteSpace: "nowrap",
-            fontFamily: "PressStart2P"
-          }}
-        >
-          EDGE CITY
-        </Title>
+        <Title>EDGE CITY</Title>
         <CenteredText>
           Please proceed to the check-in area to begin your experience.
         </CenteredText>
@@ -261,14 +243,10 @@ export function EdgeCityHome(): JSX.Element {
               ))}
               <Link to="/scan">
                 <ItemCard>
-                  {/* <FaPlusCircle style={{ width: "100%", height: "100%" }} /> */}
                   <img
                     src="https://i.ibb.co/SfPFn66/plus.webp"
                     draggable={false}
                   />
-                  {/* <Button style={{ border: "1px white solid", height: 20 }}>
-                    Add
-                  </Button> */}
                 </ItemCard>
               </Link>
             </ItemContainer>
@@ -310,15 +288,7 @@ export function EdgeCityHome(): JSX.Element {
           )}
         </div>
       )}
-      {tab === "score" && (
-        <BalancesTab
-          scores={scores}
-          score={score}
-          refreshScore={async (): Promise<void> => {
-            console.log();
-          }}
-        />
-      )}
+      {tab === "score" && <BalancesTab scores={scores} score={score} />}
     </Container>
   );
 }
@@ -359,6 +329,9 @@ const Title = styled.div`
   letter-spacing: 3.5px;
   font-size: 36px;
   font-weight: 200;
+  margin: 0 auto;
+  white-space: nowrap;
+  font-family: "PressStart2P";
 `;
 
 const CategoryHeader = styled.div`
@@ -463,7 +436,6 @@ const ColorText = styled.span`
   }
 `;
 
-// 417A35
 const Button = styled.button<{ pending?: boolean }>`
   font-size: 16px;
   padding: 8px;

@@ -4,7 +4,7 @@ import { RippleLoader } from "../../core/RippleLoader";
 import { useUsernameGenerator } from "../FrogScreens/useUsername";
 
 /**
- * The Score tab shows the user their score and the leaderboard.
+ * The Balances tab shows the user their score and the leaderboard.
  */
 export function BalancesTab({
   score,
@@ -12,7 +12,6 @@ export function BalancesTab({
 }: {
   score: EdgeCityBalance;
   scores: EdgeCityBalance[];
-  refreshScore: () => Promise<void>;
 }): JSX.Element {
   const getUsername = useUsernameGenerator();
 
@@ -22,7 +21,6 @@ export function BalancesTab({
 
   return (
     <Container>
-      {/* <div style={{ fontSize: 24 }}>${HAT_TOKEN_NAME}</div> */}
       <div
         style={{
           display: "flex",
@@ -35,14 +33,6 @@ export function BalancesTab({
         <span>Total Supply</span>
         <span>{TOTAL_SUPPLY} ZUC</span>
       </div>
-      {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span>ZUC/EXP Price</span>
-        <span>0.52</span>
-      </div> */}
-      {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
-        <span>Token Balances</span>
-        <span></span>
-      </div> */}
       <ScoreTable
         title="You"
         scores={[score]}
