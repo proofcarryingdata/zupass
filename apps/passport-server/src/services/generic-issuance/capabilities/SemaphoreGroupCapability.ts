@@ -14,8 +14,8 @@ export interface PipelineSemaphoreGroups {
 
 export interface SemaphoreGroupCapability extends BasePipelineCapability {
   type: PipelineCapability.SemaphoreGroup;
-  getGroupRoot(groupId: string): Promise<string | undefined>;
-  getSerializedGroup(
+  getLatestGroupRoot(groupId: string): Promise<string | undefined>;
+  getSerializedLatestGroup(
     groupId: string
   ): Promise<SerializedSemaphoreGroup | undefined>;
   getSerializedHistoricalGroup(

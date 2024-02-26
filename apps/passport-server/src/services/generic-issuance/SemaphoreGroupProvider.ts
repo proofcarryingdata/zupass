@@ -227,7 +227,7 @@ export class SemaphoreGroupProvider {
           group.removeMember(group.indexOf(BigInt(deletedId)));
         }
 
-        await this.semaphoreHistoryDB.add(
+        await this.semaphoreHistoryDB.addGroupHistory(
           this.pipelineId,
           groupConfig.groupId,
           group.root.toString(),

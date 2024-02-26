@@ -2,25 +2,46 @@ import { QueryResultRow } from "pg";
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
+/**
+ * Implements storage for Semaphore group histories. From a data storage
+ * perspective, a group is the sum of its history records, with the most recent
+ * history entry being the current state of the group.
+ */
 export interface IPipelineSemaphoreHistoryDB {
+  /**
+   * Groups belong to pipelines. This method should return the latest history
+   * entry for each group belonging to the pipeline.
+   */
   getLatestGroupsForPipeline(
     pipelineId: string
   ): Promise<PipelineSemaphoreGroupHistory[]>;
-  add(
+  /**
+   * Adds a history entry.
+   */
+  addGroupHistory(
     pipelineId: string,
     groupId: string,
     rootHash: string,
     serializedGroup: string
   ): Promise<void>;
+  /**
+   * Gets the latest history entry for a specific group.
+   */
   getLatestHistoryForGroup(
     pipelineId: string,
     groupId: string
   ): Promise<PipelineSemaphoreGroupHistory | undefined>;
+  /**
+   * Gets the history entry for a group with a specific root hash.
+   */
   getHistoricalGroup(
     pipelineId: string,
     groupId: string,
     rootHash: string
   ): Promise<PipelineSemaphoreGroupHistory | undefined>;
+  /**
+   * Deletes all history for a group.
+   */
   deleteGroup(pipelineId: string, groupId: string): Promise<void>;
 }
 
@@ -79,7 +100,7 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
    * Causes the serial `id` field to increment, which is used to determine the
    * order of historic entries for the `getLatestGroups` query.
    */
-  public async add(
+  public async addGroupHistory(
     pipelineId: string,
     groupId: string,
     rootHash: string,
