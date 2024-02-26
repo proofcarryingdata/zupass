@@ -34,40 +34,82 @@ export const BADGES_EDGE_CITY: BadgeConfig[] = [
     id: "Cold Plunge.Tuesday",
     eventName: "Cold Plunge",
     productName: "Tuesday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Wednesday",
     eventName: "Cold Plunge",
     productName: "Wednesday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Thursday",
     eventName: "Cold Plunge",
     productName: "Thursday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Friday",
     eventName: "Cold Plunge",
     productName: "Friday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Saturday",
     eventName: "Cold Plunge",
     productName: "Saturday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Sunday",
     eventName: "Cold Plunge",
+    productName: "Sunday",
+    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    givers: ["richard@pcd.team"]
+  },
+  {
+    id: "Sauna.Tuesday",
+    eventName: "Sauna",
+    productName: "Tuesday",
+    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    givers: ["richard@pcd.team"]
+  },
+  {
+    id: "Sauna.Wednesday",
+    eventName: "Sauna",
+    productName: "Wednesday",
+    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    givers: ["richard@pcd.team"]
+  },
+  {
+    id: "Sauna.Thursday",
+    eventName: "Sauna",
+    productName: "Thursday",
+    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    givers: ["richard@pcd.team"]
+  },
+  {
+    id: "Sauna.Friday",
+    eventName: "Sauna",
+    productName: "Friday",
+    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    givers: ["richard@pcd.team"]
+  },
+  {
+    id: "Sauna.Saturday",
+    eventName: "Sauna",
+    productName: "Saturday",
+    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    givers: ["richard@pcd.team"]
+  },
+  {
+    id: "Sauna.Sunday",
+    eventName: "Sauna",
     productName: "Sunday",
     imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
     givers: ["richard@pcd.team"]
