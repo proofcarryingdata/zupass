@@ -67,7 +67,7 @@ export function EdgeCityHome(): JSX.Element {
   const pcds = usePCDCollection();
   const [scores, setScores] = useState<EdgeCityBalance[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState(false);
+  const [error, setError] = useState('');
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const { email } = useSelf();
 
@@ -396,13 +396,12 @@ const CategoryHeader = styled.div`
   font-weight: bold;
   display: flex;
   justify-content: space-between;
-  /* border-bottom: 1px solid grey; */
   margin-bottom: 8px;
 `;
 
 const ItemContainer = styled.div`
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  grid-template-columns: repeat(6, 1fr);
   grid-row-gap: 0px;
   grid-column-gap: 10px;
 `;

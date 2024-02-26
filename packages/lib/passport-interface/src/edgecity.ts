@@ -30,14 +30,6 @@ export const BADGES_EDGE_CITY: BadgeConfig[] = [
     grantOnCheckin: true,
     givers: ["richard@pcd.team", "ivan@0xparc.org"]
   },
-
-  {
-    id: "Cold Plunge.Monday",
-    eventName: "Cold Plunge",
-    productName: "Monday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
-    givers: ["richard@pcd.team"]
-  },
   {
     id: "Cold Plunge.Tuesday",
     eventName: "Cold Plunge",
