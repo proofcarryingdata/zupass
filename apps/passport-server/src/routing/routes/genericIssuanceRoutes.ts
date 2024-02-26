@@ -366,4 +366,12 @@ export function initGenericIssuanceRoutes(
       );
     }
   );
+
+  // TODO:
+  // app.get("/edgecity/event-badges");
+
+  app.post("/edgecity/balances", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    res.send(await genericIssuanceService.getBalances());
+  });
 }

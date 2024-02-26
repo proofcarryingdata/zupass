@@ -8,11 +8,9 @@ export const EdgeCityFolderName = "Edge City";
 /**
  * User score data and computed rank
  */
-export interface EdgeCityScore {
-  semaphore_id_hash: string;
-  telegram_username?: string;
-  has_telegram_username: boolean;
-  score: number;
+export interface EdgeCityBalance {
+  email_hash: string;
+  balance: number;
   rank: number;
 }
 

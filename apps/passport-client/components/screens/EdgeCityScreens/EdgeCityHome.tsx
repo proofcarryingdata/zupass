@@ -1,16 +1,23 @@
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import {
   EVENT_NAME_TO_TOTAL_SUPPLY,
+  EdgeCityBalance,
   EdgeCityFolderName,
-  HAT_TOKEN_NAME
+  HAT_TOKEN_NAME,
+  TOTAL_SUPPLY,
+  requestEdgeCityBalances
 } from "@pcd/passport-interface";
+import { sha256 } from "js-sha256";
 import { useEffect, useState } from "react";
 import styled, { keyframes } from "styled-components";
+import { appConfig } from "../../../src/appConfig";
 import {
   useFolders,
   usePCDCollection,
-  usePCDsInFolder
+  usePCDsInFolder,
+  useSelf
 } from "../../../src/appHooks";
+import { RippleLoader } from "../../core/RippleLoader";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
@@ -40,6 +47,35 @@ export function EdgeCityHome(): JSX.Element {
   const [selectedExperience, setSelectedExperience] =
     useState<EdDSATicketPCD>(null);
   const pcds = usePCDCollection();
+  const [scores, setScores] = useState<EdgeCityBalance[]>([]);
+  const [score, setScore] = useState<EdgeCityBalance | undefined>();
+  console.log({ scores, score });
+  const { email } = useSelf();
+
+  useEffect(() => {
+    requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
+      if (res.success) {
+        setScores(
+          res.value.map((s) => ({
+            ...s,
+            balance:
+              (s.balance /
+                res.value.map((x) => x.balance).reduce((x, y) => x + y)) *
+              TOTAL_SUPPLY
+          }))
+        );
+      }
+    });
+  }, []);
+
+  useEffect(() => {
+    if (!scores.length || !email) {
+      setScore(undefined);
+      return;
+    }
+    const emailHash = `0x${sha256(`edgecity${email}`)}`;
+    setScore(scores.find((s) => s.email_hash === emailHash));
+  }, [scores, email]);
   // const openInfo = (): void => {
   //   console.log("hi");
   // };
@@ -79,6 +115,10 @@ export function EdgeCityHome(): JSX.Element {
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
+  if (!score) {
+    return <RippleLoader />;
+  }
+
   return (
     <Container>
       <Title
@@ -98,7 +138,7 @@ export function EdgeCityHome(): JSX.Element {
         <Balance>
           <span>🐸</span>{" "}
           <span>
-            9.4872 <ColorText>${HAT_TOKEN_NAME}</ColorText>
+            {score.balance.toFixed(4)} <ColorText>${HAT_TOKEN_NAME}</ColorText>
           </span>
         </Balance>
       </div>
@@ -175,12 +215,8 @@ export function EdgeCityHome(): JSX.Element {
       {/* TODO: Leaderboard */}
       {tab === "score" && (
         <BalancesTab
-          score={{
-            score: 37,
-            rank: 2,
-            semaphore_id_hash: "2",
-            has_telegram_username: false
-          }}
+          scores={scores}
+          score={score}
           refreshScore={async (): Promise<void> => {
             console.log();
           }}
