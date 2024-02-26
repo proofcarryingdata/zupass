@@ -150,6 +150,15 @@ const SemaphoreGroupListSchema = z
       // number of groups
       groups.length === new Set(groups.map((group) => group.groupId)).size,
     { message: "Semaphore group IDs must be unique" }
+  )
+  .refine(
+    (groups) =>
+      // Groups being undefined is valid
+      groups === undefined ||
+      // If groups are defined, the number of unique names must equal the
+      // number of groups
+      groups.length === new Set(groups.map((group) => group.name)).size,
+    { message: "Semaphore group names must be unique" }
   );
 
 /**
