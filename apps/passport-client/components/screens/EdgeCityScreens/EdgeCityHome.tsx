@@ -204,7 +204,7 @@ export function EdgeCityHome(): JSX.Element {
       </Title>
       <div style={{ width: "100%" }} onClick={(): void => setInfoOpen(true)}>
         <Caption>
-          Balance <span>ⓘ</span>
+          Balance <span style={{ cursor: "pointer" }}>ⓘ</span>
         </Caption>
         <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
