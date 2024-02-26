@@ -1,16 +1,10 @@
+import { PipelineSemaphoreGroupInfo } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import urljoin from "url-join";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { Pipeline } from "../pipelines/types";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
-
-/**
- * Describes the Semaphore groups supported by the pipeline.
- */
-export interface PipelineSemaphoreGroups {
-  groups: { name: string; groupId: string; memberCount: number; url: string }[];
-}
 
 export interface SemaphoreGroupCapability extends BasePipelineCapability {
   type: PipelineCapability.SemaphoreGroup;
@@ -22,7 +16,7 @@ export interface SemaphoreGroupCapability extends BasePipelineCapability {
     groupId: string,
     root: string
   ): Promise<SerializedSemaphoreGroup | undefined>;
-  getSupportedGroups(): PipelineSemaphoreGroups;
+  getSupportedGroups(): PipelineSemaphoreGroupInfo[];
 }
 
 export function isSemaphoreGroupCapability(

@@ -20,6 +20,7 @@ import {
   PipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
   PodboxTicketActionResponseValue,
@@ -66,10 +67,7 @@ import {
   FeedIssuanceCapability,
   makeGenericIssuanceFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
-import {
-  PipelineSemaphoreGroups,
-  SemaphoreGroupCapability
-} from "../capabilities/SemaphoreGroupCapability";
+import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
@@ -211,11 +209,8 @@ export class LemonadePipeline implements BasePipeline {
             rootHash
           );
         },
-        getSupportedGroups: (): PipelineSemaphoreGroups => {
-          return (
-            this.semaphoreGroupProvider?.getSupportedGroups() ??
-            ({ groups: [] } satisfies PipelineSemaphoreGroups)
-          );
+        getSupportedGroups: (): PipelineSemaphoreGroupInfo[] => {
+          return this.semaphoreGroupProvider?.getSupportedGroups() ?? [];
         }
       } satisfies SemaphoreGroupCapability
     ] as unknown as BasePipelineCapability[];
@@ -466,8 +461,7 @@ export class LemonadePipeline implements BasePipeline {
         atomsLoaded: atomsToSave.length,
         atomsExpected: atomsExpected,
         errorMessage: undefined,
-        semaphoreGroups:
-          this.semaphoreGroupProvider?.getSupportedGroups().groups,
+        semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
         success: true
       } satisfies PipelineLoadSummary;
     });

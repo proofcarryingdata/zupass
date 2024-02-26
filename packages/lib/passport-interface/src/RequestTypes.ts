@@ -452,6 +452,13 @@ export enum PipelineLogLevel {
   Error = "Error"
 }
 
+export interface PipelineSemaphoreGroupInfo {
+  name: string;
+  groupId: string;
+  memberCount: number;
+  url: string;
+}
+
 export interface PipelineLoadSummary {
   lastRunStartTimestamp: string;
   lastRunEndTimestamp: string;
@@ -460,12 +467,7 @@ export interface PipelineLoadSummary {
   atomsExpected: number;
   success: boolean;
   errorMessage?: string;
-  semaphoreGroups?: {
-    groupId: string;
-    name: string;
-    memberCount: number;
-    url: string;
-  }[];
+  semaphoreGroups?: PipelineSemaphoreGroupInfo[];
 }
 
 export interface PipelineLog {
@@ -1074,12 +1076,8 @@ export type GenericIssuanceSemaphoreGroupResponseValue =
 export type GenericIssuanceHistoricalSemaphoreGroupResponseValue =
   SerializedSemaphoreGroup;
 
-export type GenericIssuancePipelineSemaphoreGroupsResponseValue = {
-  groups: {
-    name: string;
-    groupId: string;
-  }[];
-};
+export type GenericIssuancePipelineSemaphoreGroupsResponseValue =
+  PipelineSemaphoreGroupInfo[];
 
 export type GenericIssuanceValidSemaphoreGroupResponseValue = {
   valid: boolean;

@@ -1,4 +1,7 @@
-import { SemaphoreGroupConfig } from "@pcd/passport-interface";
+import {
+  PipelineSemaphoreGroupInfo,
+  SemaphoreGroupConfig
+} from "@pcd/passport-interface";
 import {
   SerializedSemaphoreGroup,
   deserializeSemaphoreGroup,
@@ -9,10 +12,7 @@ import { Group } from "@semaphore-protocol/group";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../database/queries/pipelineSemaphoreHistoryDB";
 import { traced } from "../telemetryService";
-import {
-  PipelineSemaphoreGroups,
-  makeGenericIssuanceSemaphoreGroupUrl
-} from "./capabilities/SemaphoreGroupCapability";
+import { makeGenericIssuanceSemaphoreGroupUrl } from "./capabilities/SemaphoreGroupCapability";
 
 /**
  * When a pipeline wants to trigger an update for a Semaphore group, it passes
@@ -309,14 +309,12 @@ export class SemaphoreGroupProvider {
     return groupConfigToEmailList;
   }
 
-  public getSupportedGroups(): PipelineSemaphoreGroups {
-    return {
-      groups: (this.groupConfigs ?? []).map((sg) => ({
-        name: sg.name,
-        groupId: sg.groupId,
-        url: makeGenericIssuanceSemaphoreGroupUrl(this.pipelineId, sg.groupId),
-        memberCount: this.getLatestGroup(sg.groupId)?.members.length ?? 0
-      }))
-    };
+  public getSupportedGroups(): PipelineSemaphoreGroupInfo[] {
+    return (this.groupConfigs ?? []).map((sg) => ({
+      name: sg.name,
+      groupId: sg.groupId,
+      url: makeGenericIssuanceSemaphoreGroupUrl(this.pipelineId, sg.groupId),
+      memberCount: this.getLatestGroup(sg.groupId)?.members.length ?? 0
+    }));
   }
 }
