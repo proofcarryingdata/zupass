@@ -1,6 +1,7 @@
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import {
   BADGES_EDGE_CITY,
+  CONTACT_EVENT_NAME,
   EdgeCityBalance,
   EdgeCityFolderName,
   TOKEN_LONG_NAME,
@@ -9,6 +10,7 @@ import {
 } from "@pcd/passport-interface";
 import { sha256 } from "js-sha256";
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import styled, { keyframes } from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -244,13 +246,39 @@ export function EdgeCityHome(): JSX.Element {
               community experiences.
             </p>
           </ExperiencesHeader>
+          <div>
+            <CategoryHeader>
+              <span>{CONTACT_EVENT_NAME}</span>
+              <span>{`${
+                (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
+              }/${"∞"}`}</span>
+            </CategoryHeader>
+            <ItemContainer>
+              {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
+                <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
+                  <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
+                </ItemCard>
+              ))}
+              <Link to="/scan">
+                <ItemCard>
+                  {/* <FaPlusCircle style={{ width: "100%", height: "100%" }} /> */}
+                  <img
+                    src="https://i.ibb.co/SfPFn66/plus.webp"
+                    draggable={false}
+                  />
+                  {/* <Button style={{ border: "1px white solid", height: 20 }}>
+                    Add
+                  </Button> */}
+                </ItemCard>
+              </Link>
+            </ItemContainer>
+          </div>
           {groupedResult.map(({ eventName, total, imageUrl }) => {
             const pcds = pcdsByEventName[eventName] ?? [];
             return (
               <div>
                 <CategoryHeader>
                   <span>{eventName}</span>
-                  {/* TODO: Actually read N from config */}
                   <span>{`${pcds.length}/${total || "∞"}`}</span>
                 </CategoryHeader>
                 <ItemContainer>
@@ -259,16 +287,15 @@ export function EdgeCityHome(): JSX.Element {
                       <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
                     </ItemCard>
                   ))}
-                  {total &&
-                    Array.from({ length: total - pcds.length }).map((_) => (
-                      <ItemCard style={{ cursor: "default" }}>
-                        <img
-                          src={imageUrl}
-                          draggable={false}
-                          style={{ opacity: 0.5 }}
-                        />
-                      </ItemCard>
-                    ))}
+                  {Array.from({ length: total - pcds.length }).map((_) => (
+                    <ItemCard style={{ cursor: "default" }}>
+                      <img
+                        src={imageUrl}
+                        draggable={false}
+                        style={{ opacity: 0.5 }}
+                      />
+                    </ItemCard>
+                  ))}
                 </ItemContainer>
               </div>
             );
