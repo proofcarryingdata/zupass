@@ -160,9 +160,15 @@ export function EdgeCityHome(): JSX.Element {
     return (
       <Container>
         <Title>EDGE CITY</Title>
-        <CenteredText>
-          Please proceed to the check-in area to begin your experience.
-        </CenteredText>
+        <div>
+          <Caption>Balance</Caption>
+          <CenteredText style={{ fontSize: 20 }}>
+            <span>🐸</span>{" "}
+            <span>
+              0.00 <ColorText>${TOKEN_LONG_NAME}</ColorText>{" "}
+            </span>
+          </CenteredText>
+        </div>
 
         <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />
       </Container>

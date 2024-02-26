@@ -108,7 +108,7 @@ export function isFrogCryptoFolder(folderPath: string): boolean {
 }
 
 /**
- * Check if a folder path is a Edge City (sub) folder.
+ * Check if a folder path is the Edge City folder.
  */
 export function isEdgeCityFolder(folderPath: string): boolean {
   const parts = splitPath(folderPath);
