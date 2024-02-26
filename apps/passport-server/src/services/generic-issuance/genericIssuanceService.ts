@@ -874,7 +874,7 @@ export class GenericIssuanceService {
     // access to the PipelineSemaphoreGroupDB already, and could just look the
     // data up from there.
     const serializedGroup =
-      await semaphoreGroupCapability.getSerializedGroup(groupId);
+      await semaphoreGroupCapability.getSerializedLatestGroup(groupId);
     if (!serializedGroup) {
       throw new PCDHTTPError(
         403,
@@ -898,7 +898,7 @@ export class GenericIssuanceService {
     // Retrieving this via the capability might be unnecessary, since we have
     // access to the PipelineSemaphoreGroupDB already, and could just look the
     // data up from there.
-    const rootHash = await semaphoreGroupCapability.getGroupRoot(groupId);
+    const rootHash = await semaphoreGroupCapability.getLatestGroupRoot(groupId);
     if (rootHash === undefined) {
       throw new PCDHTTPError(
         403,

@@ -282,25 +282,31 @@ export class SemaphoreGroupProvider {
    * ID, and email), match these to configured Semaphore groups.
    */
   private groupEmailsFromTicketData(
-    ticketData: SemaphoreGroupTicketInfo[]
+    ticketDataList: SemaphoreGroupTicketInfo[]
   ): Map<SemaphoreGroupConfig, string[]> {
-    const groups = new Map<SemaphoreGroupConfig, string[]>();
-    for (const ticketInfo of ticketData) {
-      for (const groupConfig of this.groupConfigs) {
-        const groupMemberEmails = groups.get(groupConfig) ?? [];
-        for (const ticketSpec of groupConfig.membershipTickets) {
-          if (
-            ticketSpec.eventId === ticketInfo.eventId &&
-            (!ticketSpec.productId ||
-              ticketSpec.productId === ticketInfo.productId)
-          ) {
-            groupMemberEmails.push(ticketInfo.email);
+    // A mapping of group configurations to the email addresses which belong to
+    // tickets matching the criteria set out in the group configuration.
+    const groupConfigToEmailList = new Map<SemaphoreGroupConfig, string[]>();
+    for (const groupConfig of this.groupConfigs) {
+      const matchingEmails = ticketDataList
+        .filter((ticketData) => {
+          // See if the ticket matches any of the criteria for group membership
+          for (const ticketSpec of groupConfig.membershipTickets) {
+            if (
+              ticketSpec.eventId === ticketData.eventId &&
+              (!ticketSpec.productId ||
+                ticketSpec.productId === ticketData.productId)
+            ) {
+              return true;
+            }
           }
-        }
-        groups.set(groupConfig, groupMemberEmails);
-      }
+          return false;
+        })
+        .map((ticketData) => ticketData.email);
+      groupConfigToEmailList.set(groupConfig, matchingEmails);
     }
-    return groups;
+
+    return groupConfigToEmailList;
   }
 
   public getSupportedGroups(): PipelineSemaphoreGroups {
