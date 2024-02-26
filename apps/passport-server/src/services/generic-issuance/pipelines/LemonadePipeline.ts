@@ -1389,6 +1389,11 @@ export class LemonadePipeline implements BasePipeline {
               error: precheck.checkinActionInfo?.reason
             };
           }
+
+          const autoGrantBadges: BadgeConfig[] = (
+            this.definition.options?.ticketActions?.badges?.choices ?? []
+          ).filter((badge) => badge.grantOnCheckin);
+
           // First see if we have an atom which matches the ticket ID
           const ticketAtom = await this.db.loadById(this.id, payload.ticketId);
           if (
@@ -1396,6 +1401,15 @@ export class LemonadePipeline implements BasePipeline {
             // Ensure that the checker-provided event ID matches the ticket
             this.lemonadeAtomToZupassEventId(ticketAtom) === payload.eventId
           ) {
+            if (ticketAtom.email) {
+              await this.badgeDB.giveBadges(
+                this.id,
+                emailPCD.claim.emailAddress,
+                ticketAtom.email,
+                autoGrantBadges
+              );
+            }
+
             // We found a Lemonade atom, so check in with the Lemonade backend
             return this.lemonadeCheckin(
               ticketAtom,
@@ -1405,6 +1419,13 @@ export class LemonadePipeline implements BasePipeline {
             // No Lemonade atom found, try looking for a manual ticket
             const manualTicket = this.getManualTicketById(payload.ticketId);
             if (manualTicket && manualTicket.eventId === payload.eventId) {
+              await this.badgeDB.giveBadges(
+                this.id,
+                emailPCD.claim.emailAddress,
+                manualTicket.attendeeEmail,
+                autoGrantBadges
+              );
+
               // Manual ticket found, check in with the DB
               return this.checkInManualTicket(
                 manualTicket,
