@@ -557,9 +557,9 @@ export class LemonadePipeline implements BasePipeline {
               value: {
                 // The fields below are not signed and are used for display purposes.
                 eventName: CONTACT_EVENT_NAME,
-                ticketName: "",
+                ticketName: contact,
                 checkerEmail: undefined,
-                imageUrl: "https://art.pixilart.com/0d3e331972e3f3a.png",
+                imageUrl: "https://i.ibb.co/WcPcL0g/stick.webp",
                 imageAltText: undefined,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.
