@@ -45,6 +45,7 @@ export interface PCDGetWithoutProvingRequest extends PCDRequest {
 export interface PCDAddRequest extends PCDRequest {
   type: PCDRequestType.Add;
   pcd: SerializedPCD;
+  folder?: string;
 }
 
 export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
@@ -54,6 +55,7 @@ export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
   args: ArgsOf<T>;
   options?: ProveOptions;
   returnPCD?: boolean;
+  folder?: string;
 }
 
 export function getWithoutProvingUrl(
@@ -91,12 +93,14 @@ export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
 export function constructZupassPcdAddRequestUrl(
   zupassClientUrl: string,
   returnUrl: string,
-  pcd: SerializedPCD
+  pcd: SerializedPCD,
+  folder?: string
 ): string {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
-    pcd
+    pcd,
+    folder
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/add?request=${eqReq}`;
@@ -110,7 +114,8 @@ export function constructZupassPcdProveAndAddRequestUrl<
   pcdType: string,
   args: ArgsOf<T>,
   options?: ProveOptions,
-  returnPCD?: boolean
+  returnPCD?: boolean,
+  folder?: string
 ): string {
   const req: PCDProveAndAddRequest = {
     type: PCDRequestType.ProveAndAdd,
@@ -118,7 +123,8 @@ export function constructZupassPcdProveAndAddRequestUrl<
     pcdType,
     args,
     options,
-    returnPCD
+    returnPCD,
+    folder
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/add?request=${eqReq}`;

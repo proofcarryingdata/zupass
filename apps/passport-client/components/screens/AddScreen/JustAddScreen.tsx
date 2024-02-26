@@ -28,12 +28,16 @@ export function JustAddScreen({
 
   const onAddClick = useCallback(async () => {
     try {
-      await dispatch({ type: "add-pcds", pcds: [request.pcd] });
+      await dispatch({
+        type: "add-pcds",
+        pcds: [request.pcd],
+        folder: request.folder
+      });
       setAdded(true);
     } catch (e) {
       await err(dispatch, "Error Adding PCD", e.message);
     }
-  }, [dispatch, request.pcd]);
+  }, [dispatch, request.folder, request.pcd]);
 
   let content;
 
@@ -45,6 +49,12 @@ export function JustAddScreen({
         <H2>{"ADD PCD".toUpperCase()}</H2>
         <Spacer h={16} />
         {pcd && <PCDCard pcd={pcd} expanded={true} hideRemoveButton={true} />}
+        {request.folder && (
+          <div>
+            PCD will be added to folder:
+            <br /> <strong>{request.folder}</strong>
+          </div>
+        )}
         {error && JSON.stringify(error)}
         <Spacer h={16} />
         <Button onClick={onAddClick}>Add</Button>
