@@ -142,6 +142,7 @@ export function GiveBadgeActionSection({
       {!selectedBadge && !disabled && (
         <Select
           placeholder={"Give Badge"}
+          isSearchable={false}
           value={selectedBadge}
           options={badgeOptions}
           onChange={(val): void => setSelectedBadge(val)}
