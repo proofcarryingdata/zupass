@@ -17,7 +17,6 @@ import {
   usePCDsInFolder,
   useSelf
 } from "../../../src/appHooks";
-import { RippleLoader } from "../../core/RippleLoader";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
@@ -49,7 +48,6 @@ export function EdgeCityHome(): JSX.Element {
   const pcds = usePCDCollection();
   const [scores, setScores] = useState<EdgeCityBalance[]>([]);
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
-  console.log({ scores, score });
   const { email } = useSelf();
 
   useEffect(() => {
@@ -116,7 +114,24 @@ export function EdgeCityHome(): JSX.Element {
     }, {}); // Initial value of the accumulator is an empty object
 
   if (!score) {
-    return <RippleLoader />;
+    return (
+      <Container>
+        <Title
+          style={{
+            margin: "0 auto",
+            whiteSpace: "nowrap",
+            fontFamily: "PressStart2P"
+          }}
+        >
+          EDGE CITY
+        </Title>
+        <CenteredText>
+          Please proceed to the check-in area to begin your experience.
+        </CenteredText>
+
+        <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />
+      </Container>
+    );
   }
 
   return (
@@ -135,12 +150,12 @@ export function EdgeCityHome(): JSX.Element {
       {/* TODO: Progress bar? Ranks? */}
       <div>
         <Caption>Balance</Caption>
-        <Balance>
+        <CenteredText>
           <span>🐸</span>{" "}
           <span>
-            {score.balance.toFixed(4)} <ColorText>${HAT_TOKEN_NAME}</ColorText>
+            {score.balance.toFixed(2)} <ColorText>${HAT_TOKEN_NAME}</ColorText>
           </span>
-        </Balance>
+        </CenteredText>
       </div>
       {/* <CircleButton diameter={16} padding={8} onClick={openInfo}>
         <img draggable="false" src={icons.infoPrimary} width={34} height={34} />
@@ -315,16 +330,14 @@ const ExperiencesHeader = styled.div`
 `;
 
 const Caption = styled.div`
+  font-family: monospace;
   font-size: 16px;
   color: grey;
   text-align: center;
 `;
 
-const Balance = styled.div`
-  /* display: flex;
-  align-items: center;
-  justify-content: space-between; */
-
+const CenteredText = styled.div`
+  font-family: monospace;
   font-size: 16px;
   text-align: center;
 `;
