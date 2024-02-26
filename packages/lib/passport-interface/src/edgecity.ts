@@ -16,7 +16,7 @@ export interface EdgeCityBalance {
   rank: number;
 }
 
-export const HAT_TOKEN_NAME = "ZUCASH";
+export const TOKEN_LONG_NAME = "ZUCASH";
 export const TOTAL_SUPPLY = 200;
 
 // TODO: Think about followers/following?

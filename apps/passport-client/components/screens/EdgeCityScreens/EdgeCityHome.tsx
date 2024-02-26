@@ -3,7 +3,7 @@ import {
   BADGES_EDGE_CITY,
   EdgeCityBalance,
   EdgeCityFolderName,
-  HAT_TOKEN_NAME,
+  TOKEN_LONG_NAME,
   TOTAL_SUPPLY,
   requestEdgeCityBalances
 } from "@pcd/passport-interface";
@@ -18,6 +18,7 @@ import {
   useSelf
 } from "../../../src/appHooks";
 import { RippleLoader } from "../../core/RippleLoader";
+import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
@@ -64,6 +65,8 @@ export function EdgeCityHome(): JSX.Element {
   const [tab, setTab] = useState<TabId>("ticket");
   const [selectedExperience, setSelectedExperience] =
     useState<EdDSATicketPCD>(null);
+
+  const [infoOpen, setInfoOpen] = useState(false);
   const pcds = usePCDCollection();
   const [scores, setScores] = useState<EdgeCityBalance[]>([]);
   const [loading, setLoading] = useState(false);
@@ -185,6 +188,22 @@ export function EdgeCityHome(): JSX.Element {
 
   return (
     <Container>
+      <AdhocModal
+        open={infoOpen}
+        showCloseIcon={false}
+        onClose={(): void => setInfoOpen(false)}
+        center
+        styles={{
+          modal: {
+            maxWidth: "400px"
+          }
+        }}
+      >
+        <div>
+          <strong>${TOKEN_LONG_NAME}</strong> will be available to use soon.
+          Keep an eye out starting Friday, March 1st. 🐸
+        </div>
+      </AdhocModal>
       <Title
         style={{
           margin: "0 auto",
@@ -197,19 +216,17 @@ export function EdgeCityHome(): JSX.Element {
       {/* <img src="/images/edgecity/edgecity-banner.png" draggable={false} /> */}
 
       {/* TODO: Progress bar? Ranks? */}
-      <div>
-        <Caption>Balance</Caption>
-        <CenteredText>
+      <div style={{ width: "100%" }} onClick={(): void => setInfoOpen(true)}>
+        <Caption>
+          Balance <span>ⓘ</span>
+        </Caption>
+        <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
           <span>
-            {score.balance.toFixed(2)} <ColorText>${HAT_TOKEN_NAME}</ColorText>
+            {score.balance.toFixed(2)} <ColorText>${TOKEN_LONG_NAME}</ColorText>{" "}
           </span>
         </CenteredText>
       </div>
-      {/* <CircleButton diameter={16} padding={8} onClick={openInfo}>
-        <img draggable="false" src={icons.infoPrimary} width={34} height={34} />
-      </CircleButton> */}
-      {/* <Score>▓▓▓▓▓▓▓▓▓▓▓▓░░░░░░ 62%</Score> */}
       <ButtonGroup>
         {TABS.map(({ tab: t, label }) => (
           <Button
@@ -227,7 +244,7 @@ export function EdgeCityHome(): JSX.Element {
         <div>
           <ExperiencesHeader>
             <p>
-              Earn <strong>${HAT_TOKEN_NAME}</strong> by participating in
+              Earn <strong>${TOKEN_LONG_NAME}</strong> by participating in
               community experiences.
             </p>
           </ExperiencesHeader>
@@ -381,9 +398,9 @@ const Caption = styled.div`
 `;
 
 const CenteredText = styled.div`
-  font-family: monospace;
   font-size: 16px;
   text-align: center;
+  font-family: monospace;
 `;
 
 const Title = styled.div`
