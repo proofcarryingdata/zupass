@@ -1,6 +1,6 @@
 import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import {
-  EVENT_NAME_TO_TOTAL_SUPPLY,
+  BADGES_EDGE_CITY,
   EdgeCityBalance,
   EdgeCityFolderName,
   HAT_TOKEN_NAME,
@@ -36,6 +36,24 @@ const TABS = [
   }
 ] as const;
 type TabId = (typeof TABS)[number]["tab"];
+
+interface GroupedEvent {
+  eventName: string;
+  total: number;
+  imageUrl: string;
+}
+
+const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
+  const existingIndex = acc.findIndex(
+    (event) => event.eventName === item.eventName
+  );
+  if (existingIndex > -1) {
+    acc[existingIndex].total += 1;
+  } else {
+    acc.push({ eventName: item.eventName, total: 1, imageUrl: item.imageUrl });
+  }
+  return acc;
+}, []);
 
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
@@ -183,31 +201,27 @@ export function EdgeCityHome(): JSX.Element {
             </p>
             {/* <p>Current $ZUPOINTS / $EXP exchange rate = 0.2201</p> */}
           </ExperiencesHeader>
-          {Object.entries(pcdsByEventName).map(([eventName, pcds]) => {
-            const maxTimes = EVENT_NAME_TO_TOTAL_SUPPLY[eventName] ?? null;
+          {groupedResult.map(({ eventName, total, imageUrl }) => {
+            const pcds = pcdsByEventName[eventName] ?? [];
+            console.log({ pcds, pcdsByEventName, eventName });
             return (
               <div>
                 <CategoryHeader>
                   <span>{eventName}</span>
                   {/* TODO: Actually read N from config */}
-                  <span>{`${pcds.length}/${maxTimes || "∞"}`}</span>
+                  <span>{`${pcds.length}/${total || "∞"}`}</span>
                 </CategoryHeader>
                 <ItemContainer>
-                  {/* ONCLICK */}
                   {pcds.flatMap((pcd) => (
                     <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
-                      <img
-                        src={pcd.claim.ticket?.imageUrl}
-                        draggable={false}
-                        // style={{ opacity: 0.2 }}
-                      />
+                      <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
                     </ItemCard>
                   ))}
-                  {maxTimes &&
-                    Array.from({ length: maxTimes - pcds.length }).map((_) => (
+                  {total &&
+                    Array.from({ length: total - pcds.length }).map((_) => (
                       <ItemCard style={{ cursor: "default" }}>
                         <img
-                          src={pcds[0].claim.ticket?.imageUrl}
+                          src={imageUrl}
                           draggable={false}
                           style={{ opacity: 0.5 }}
                         />
