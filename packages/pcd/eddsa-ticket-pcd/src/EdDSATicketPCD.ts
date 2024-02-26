@@ -270,9 +270,9 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
 
   let header = displayName;
   if (ticketData.isRevoked) {
-    header = `[CANCELED] ${displayName})`;
+    header = `[CANCELED] ${displayName}`;
   } else if (ticketData.isConsumed) {
-    header = `[SCANNED] ${displayName})`;
+    header = `[SCANNED] ${displayName}`;
   }
 
   return {
