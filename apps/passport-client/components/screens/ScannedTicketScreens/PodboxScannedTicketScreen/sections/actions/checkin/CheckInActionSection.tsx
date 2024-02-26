@@ -39,14 +39,6 @@ export function CheckInActionSection({
     setInProgress(executor.loading);
   }, [executor.loading, setInProgress]);
 
-  const divider = (
-    <div>
-      <Spacer h={16} />
-      <hr />
-      <Spacer h={16} />
-    </div>
-  );
-
   if (
     !precheck.success ||
     !precheck.value.success ||
@@ -64,7 +56,6 @@ export function CheckInActionSection({
           />
           <Spacer h={8} />
           <Button disabled={true}>Already Checked In</Button>
-          {divider}
         </div>
       );
     }
@@ -83,7 +74,6 @@ export function CheckInActionSection({
     return (
       <>
         <StatusContainer size="small">Checked In</StatusContainer>
-        {divider}
       </>
     );
   } else if (executor.result?.error) {
@@ -91,7 +81,6 @@ export function CheckInActionSection({
       <>
         <ErrorContainer>Error Checking Ticket In</ErrorContainer>
         <div>{executor.result?.error}</div>
-        {divider}
       </>
     );
   }
@@ -101,7 +90,6 @@ export function CheckInActionSection({
       <Button onClick={executor.execute} disabled={isLoading}>
         Check In
       </Button>
-      {divider}
     </>
   );
 }

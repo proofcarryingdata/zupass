@@ -131,6 +131,16 @@ export function Modal(props: {
   fullScreen?: boolean;
 }): JSX.Element {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
+  useEffect(() => {
+    document.body.style.overflowY = "hidden";
+    document.body.style.paddingRight = "15px";
+    return () => {
+      document.body.style.overflowY = "scroll";
+      document.body.style.paddingRight = "0px";
+    };
+  }, [props.fullScreen]);
+
   return (
     <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
       <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
@@ -162,6 +172,13 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
+
+  ${({ $fullScreen }: { $fullScreen?: boolean }): FlattenSimpleInterpolation =>
+    $fullScreen
+      ? css``
+      : css`
+          padding: 32px;
+        `}
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`

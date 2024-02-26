@@ -31,6 +31,19 @@ export function PodboxTicketActionSection({
 }): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
 
+  const shouldShowDivider =
+    (precheck?.value?.giveBadgeActionInfo?.permissioned ||
+      precheck?.value?.getContactActionInfo?.permissioned) &&
+    precheck?.value?.checkinActionInfo?.permissioned;
+
+  const divider = shouldShowDivider ? (
+    <div>
+      <Spacer h={16} />
+      <hr />
+      <Spacer h={16} />
+    </div>
+  ) : null;
+
   if (precheck.success === false) {
     return (
       <>
@@ -74,7 +87,7 @@ export function PodboxTicketActionSection({
         <ScanAnotherTicket disabled={isLoading} />
       </TopRow>
 
-      <Spacer h={8} />
+      <Spacer h={16} />
 
       <PodboxTicketInfoSection
         precheck={precheck.value}
@@ -88,6 +101,8 @@ export function PodboxTicketActionSection({
         ticketId={ticketId}
         eventId={eventId}
       />
+
+      {divider}
 
       <ShareContactActionSection
         setIsLoading={setIsLoading}

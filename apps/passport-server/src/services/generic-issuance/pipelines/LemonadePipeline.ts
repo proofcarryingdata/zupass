@@ -1212,7 +1212,8 @@ export class LemonadePipeline implements BasePipeline {
           result.checkinActionInfo = {
             permissioned: true,
             canCheckIn: false,
-            reason: notCheckedIn
+            reason: notCheckedIn,
+            ticket: ticketInfo
           };
         } else {
           result.checkinActionInfo = {

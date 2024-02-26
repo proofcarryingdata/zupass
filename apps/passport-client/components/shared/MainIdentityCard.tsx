@@ -17,7 +17,7 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
           variant="bauhaus"
           name={actualUser.uuid}
           square={false}
-          colors={["#FFAD08", "#EDD75A", "#73B06F", "#0C8F8F", "#405059"]}
+          colors={["#FFAD08", "#EDD75A", "#b7ddb4", "#0C8F8F", "#2a3439"]}
         />
       </TextCenter>
       <Spacer h={16} />
@@ -28,5 +28,5 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
 const CardBody = styled.div`
   color: var(--primary-dark);
   border-radius: 0 0 12px 12px;
-  background: var(--primary-dark);
+  background: var(--primary-darker);
 `;
