@@ -27,15 +27,10 @@ export const BADGES_EDGE_CITY: BadgeConfig[] = [
     id: "Check In",
     eventName: "Check In",
     imageUrl: "https://i.ibb.co/QdhQkPC/wristband.webp",
+    grantOnCheckin: true,
     givers: ["richard@pcd.team", "ivan@0xparc.org"]
   },
-  {
-    id: "Cold Plunge.Monday",
-    eventName: "Cold Plunge",
-    productName: "Monday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
-    givers: ["richard@pcd.team"]
-  },
+
   {
     id: "Cold Plunge.Monday",
     eventName: "Cold Plunge",

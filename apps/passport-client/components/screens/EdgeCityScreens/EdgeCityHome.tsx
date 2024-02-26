@@ -17,6 +17,7 @@ import {
   usePCDsInFolder,
   useSelf
 } from "../../../src/appHooks";
+import { RippleLoader } from "../../core/RippleLoader";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
@@ -65,10 +66,13 @@ export function EdgeCityHome(): JSX.Element {
     useState<EdDSATicketPCD>(null);
   const pcds = usePCDCollection();
   const [scores, setScores] = useState<EdgeCityBalance[]>([]);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(false);
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const { email } = useSelf();
 
   useEffect(() => {
+    setLoading(true);
     requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
       if (res.success) {
         setScores(
@@ -80,7 +84,10 @@ export function EdgeCityHome(): JSX.Element {
               TOTAL_SUPPLY
           }))
         );
+      } else {
+        setError(res.error);
       }
+      setLoading(false);
     });
   }, []);
 
@@ -130,6 +137,30 @@ export function EdgeCityHome(): JSX.Element {
       }
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
+
+  if (loading) {
+    return <RippleLoader />;
+  }
+  if (error) {
+    return (
+      <Container>
+        <Title
+          style={{
+            margin: "0 auto",
+            whiteSpace: "nowrap",
+            fontFamily: "PressStart2P"
+          }}
+        >
+          EDGE CITY
+        </Title>
+        <CenteredText style={{ color: "red" }}>
+          Oh no! An error occurred: {error}
+        </CenteredText>
+
+        <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />
+      </Container>
+    );
+  }
 
   if (!score) {
     return (
@@ -199,7 +230,6 @@ export function EdgeCityHome(): JSX.Element {
               Earn <strong>${HAT_TOKEN_NAME}</strong> by participating in
               community experiences.
             </p>
-            {/* <p>Current $ZUPOINTS / $EXP exchange rate = 0.2201</p> */}
           </ExperiencesHeader>
           {groupedResult.map(({ eventName, total, imageUrl }) => {
             const pcds = pcdsByEventName[eventName] ?? [];

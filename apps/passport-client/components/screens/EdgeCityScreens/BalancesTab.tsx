@@ -1,4 +1,4 @@
-import { EdgeCityBalance, HAT_TOKEN_NAME } from "@pcd/passport-interface";
+import { EdgeCityBalance, TOTAL_SUPPLY } from "@pcd/passport-interface";
 import styled from "styled-components";
 import { RippleLoader } from "../../core/RippleLoader";
 import { useUsernameGenerator } from "../FrogScreens/useUsername";
@@ -14,10 +14,6 @@ export function BalancesTab({
   scores: EdgeCityBalance[];
   refreshScore: () => Promise<void>;
 }): JSX.Element {
-  // useEffect(() => {
-  //   refreshScores();
-  // }, [refreshScores]);
-
   const getUsername = useUsernameGenerator();
 
   if (!score || scores.length === 0 || !getUsername) {
@@ -26,10 +22,36 @@ export function BalancesTab({
 
   return (
     <Container>
-      <ScoreTable title="You" scores={[score]} getUsername={getUsername} />
+      {/* <div style={{ fontSize: 24 }}>${HAT_TOKEN_NAME}</div> */}
+      <div
+        style={{
+          display: "flex",
+          justifyContent: "space-between",
+          borderBottom: "1px solid grey",
+          paddingBottom: 16,
+          marginBottom: 16
+        }}
+      >
+        <span>Total Supply</span>
+        <span>{TOTAL_SUPPLY} ZUC</span>
+      </div>
+      {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <span>ZUC/EXP Price</span>
+        <span>0.52</span>
+      </div> */}
+      {/* <div style={{ display: "flex", justifyContent: "space-between" }}>
+        <span>Token Balances</span>
+        <span></span>
+      </div> */}
+      <ScoreTable
+        title="You"
+        scores={[score]}
+        myScore={score}
+        getUsername={getUsername}
+      />
       {scores.length > 0 && (
         <ScoreTable
-          title={`$${HAT_TOKEN_NAME} Balances`}
+          title={"Top holders"}
           scores={scores}
           myScore={score}
           getUsername={getUsername}
