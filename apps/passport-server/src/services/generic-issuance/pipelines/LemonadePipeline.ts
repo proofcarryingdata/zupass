@@ -1227,7 +1227,7 @@ export class LemonadePipeline implements BasePipeline {
         if (this.definition.options.ticketActions?.badges?.enabled) {
           const badgesGiven = await this.badgeDB.getBadges(
             this.id,
-            ticketAtom?.email
+            ticketInfo.attendeeEmail
           );
 
           const badgesGiveableByUser =
@@ -1258,7 +1258,7 @@ export class LemonadePipeline implements BasePipeline {
             );
             result.getContactActionInfo = {
               permissioned: true,
-              alreadyReceived: received.includes(ticketAtom?.email ?? ""),
+              alreadyReceived: received.includes(ticketInfo.attendeeEmail),
               ticket: ticketInfo
             };
           }
