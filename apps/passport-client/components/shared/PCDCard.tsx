@@ -41,7 +41,7 @@ function PCDCardImpl({
     return (
       <CardContainerExpanded>
         <CardOutlineExpanded>
-          <CardHeader>
+          <CardHeader isMainIdentity={isMainIdentity}>
             <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
           </CardHeader>
           <CardBodyContainer>
@@ -273,8 +273,20 @@ const CardHeaderCollapsed = styled.div`
 `;
 
 export const CardHeader = styled(H4)`
-  text-align: center;
-  padding: 10px;
+  ${({
+    isMainIdentity
+  }: {
+    isMainIdentity?: boolean;
+  }): FlattenSimpleInterpolation => css`
+    text-align: center;
+    padding: 10px;
+
+    ${isMainIdentity
+      ? css`
+          background: var(--primary-darker);
+        `
+      : css``}
+  `}
 `;
 
 const FooterContainer = styled.div`

@@ -28,5 +28,5 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
 const CardBody = styled.div`
   color: var(--primary-dark);
   border-radius: 0 0 12px 12px;
-  background: var(--primary-dark);
+  background: var(--primary-darker);
 `;
