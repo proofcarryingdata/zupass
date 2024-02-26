@@ -141,5 +141,12 @@ export const BADGES_EDGE_CITY: BadgeConfig[] = [
     productName: "Rob",
     imageUrl: "https://i.ibb.co/Lxz9TYp/hat.webp",
     givers: ["themanhimself@robknight.org.uk"]
+  },
+  {
+    id: "Met Gary.Monday",
+    eventName: "Met Gary",
+    productName: "Monday",
+    imageUrl: "https://i.ibb.co/7Swc8Gz/johnwick.webp",
+    givers: ["garysheng11@gmail.com"]
   }
 ];
