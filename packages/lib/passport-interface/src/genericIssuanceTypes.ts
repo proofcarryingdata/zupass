@@ -1,5 +1,3 @@
-// TODO: Add shared pipeline types here
-
 import { z } from "zod";
 
 /**
@@ -169,7 +167,8 @@ export const BadgeConfigSchema = z.object({
   eventName: z.string(),
   productName: z.string().optional(),
   imageUrl: z.string(),
-  givers: z.array(z.string()).optional()
+  givers: z.array(z.string()).optional(),
+  grantOnCheckin: z.boolean().optional()
 });
 
 export type BadgeConfig = z.infer<typeof BadgeConfigSchema>;
