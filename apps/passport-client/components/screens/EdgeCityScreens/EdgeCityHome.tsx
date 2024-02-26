@@ -67,7 +67,7 @@ export function EdgeCityHome(): JSX.Element {
   const pcds = usePCDCollection();
   const [scores, setScores] = useState<EdgeCityBalance[]>([]);
   const [loading, setLoading] = useState(false);
-  const [error, setError] = useState('');
+  const [error, setError] = useState("");
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const { email } = useSelf();
 
