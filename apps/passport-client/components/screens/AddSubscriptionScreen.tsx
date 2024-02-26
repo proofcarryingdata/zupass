@@ -181,6 +181,7 @@ export function AddSubscriptionScreen(): JSX.Element {
 
           {(fetchError || !isDeepLink) && (
             <>
+              <Spacer h={8} />
               <BigInput
                 autoCorrect="off"
                 autoCapitalize="off"
