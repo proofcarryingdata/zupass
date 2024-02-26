@@ -26,6 +26,11 @@ export interface SemaphoreGroupTicketInfo {
   email: string;
 }
 
+interface SemaphoreGroupChangeSet {
+  toAdd: string[];
+  toRemove: string[];
+}
+
 const SEMAPHORE_GROUP_DEPTH = 16;
 const LOG_NAME = "SemaphoreGroupProvider";
 
@@ -253,7 +258,7 @@ export class SemaphoreGroupProvider {
   private static calculateGroupChanges(
     group: Group,
     latestMembers: string[]
-  ): { toAdd: string[]; toRemove: string[] } {
+  ): SemaphoreGroupChangeSet {
     const groupMembers = group.members
       .filter((m) => m !== group.zeroValue)
       .map((m) => m.toString());
