@@ -38,7 +38,7 @@ export class SemaphoreGroupProvider {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private pipelineId: string;
-  // The in-memory representation of the groups, keyed by group ID.
+  // The in-memory representation of the latest groups, keyed by group ID.
   private groups: Map<string, Group>;
 
   public constructor(
@@ -57,16 +57,16 @@ export class SemaphoreGroupProvider {
   }
 
   /**
-   * Get a group from the in-memory representation.
+   * Get the latest group from the in-memory representation.
    */
-  public getGroup(groupId: string): Group | undefined {
+  private getLatestGroup(groupId: string): Group | undefined {
     return this.groups.get(groupId);
   }
 
   /**
-   * Get a group in serialized format.
+   * Get the latest group in serialized format.
    */
-  public async getSerializedGroup(
+  public async getSerializedLatestGroup(
     groupId: string
   ): Promise<SerializedSemaphoreGroup | undefined> {
     const group = await this.semaphoreHistoryDB.getLatestHistoryForGroup(
@@ -83,7 +83,9 @@ export class SemaphoreGroupProvider {
   /**
    * Get the latest root hash for a group.
    */
-  public async getGroupRoot(groupId: string): Promise<string | undefined> {
+  public async getLatestGroupRoot(
+    groupId: string
+  ): Promise<string | undefined> {
     const group = await this.semaphoreHistoryDB.getLatestHistoryForGroup(
       this.pipelineId,
       groupId
@@ -213,7 +215,7 @@ export class SemaphoreGroupProvider {
         );
       }
 
-      const { toAdd, toRemove } = this.calculateGroupChanges(
+      const { toAdd, toRemove } = SemaphoreGroupProvider.calculateGroupChanges(
         group,
         semaphoreIds
       );
@@ -248,7 +250,7 @@ export class SemaphoreGroupProvider {
    * Calculates the changes to the group compared to the latest set of
    * members.
    */
-  private calculateGroupChanges(
+  private static calculateGroupChanges(
     group: Group,
     latestMembers: string[]
   ): { toAdd: string[]; toRemove: string[] } {
@@ -302,7 +304,7 @@ export class SemaphoreGroupProvider {
         name: sg.name,
         groupId: sg.groupId,
         url: makeGenericIssuanceSemaphoreGroupUrl(this.pipelineId, sg.groupId),
-        memberCount: this.getGroup(sg.groupId)?.members.length ?? 0
+        memberCount: this.getLatestGroup(sg.groupId)?.members.length ?? 0
       }))
     };
   }

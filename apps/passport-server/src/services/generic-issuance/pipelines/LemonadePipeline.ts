@@ -195,12 +195,12 @@ export class LemonadePipeline implements BasePipeline {
         getSerializedLatestGroup: async (
           groupId: string
         ): Promise<SerializedSemaphoreGroup | undefined> => {
-          return this.semaphoreGroupProvider?.getSerializedGroup(groupId);
+          return this.semaphoreGroupProvider?.getSerializedLatestGroup(groupId);
         },
         getLatestGroupRoot: async (
           groupId: string
         ): Promise<string | undefined> => {
-          return this.semaphoreGroupProvider?.getGroupRoot(groupId);
+          return this.semaphoreGroupProvider?.getLatestGroupRoot(groupId);
         },
         getSerializedHistoricalGroup: async (
           groupId: string,
