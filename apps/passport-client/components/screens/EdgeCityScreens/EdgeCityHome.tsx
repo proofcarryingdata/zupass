@@ -123,7 +123,6 @@ export function EdgeCityHome(): JSX.Element {
       rootStyle.removeProperty("background");
     };
   }, []);
-  // TODO: Query param
   const folders = useFolders(EdgeCityFolderName);
 
   const pcdsByEventName: Record<string, EdDSATicketPCD[]> = folders
@@ -213,9 +212,6 @@ export function EdgeCityHome(): JSX.Element {
       >
         EDGE CITY
       </Title>
-      {/* <img src="/images/edgecity/edgecity-banner.png" draggable={false} /> */}
-
-      {/* TODO: Progress bar? Ranks? */}
       <div style={{ width: "100%" }} onClick={(): void => setInfoOpen(true)}>
         <Caption>
           Balance <span>ⓘ</span>
@@ -250,7 +246,6 @@ export function EdgeCityHome(): JSX.Element {
           </ExperiencesHeader>
           {groupedResult.map(({ eventName, total, imageUrl }) => {
             const pcds = pcdsByEventName[eventName] ?? [];
-            console.log({ pcds, pcdsByEventName, eventName });
             return (
               <div>
                 <CategoryHeader>
@@ -288,7 +283,6 @@ export function EdgeCityHome(): JSX.Element {
           )}
         </div>
       )}
-      {/* TODO: Leaderboard */}
       {tab === "score" && (
         <BalancesTab
           scores={scores}
@@ -298,75 +292,6 @@ export function EdgeCityHome(): JSX.Element {
           }}
         />
       )}
-
-      {/* {frogSubs.length > 0 &&
-        (frogPCDs.length === 0 && !myScore ? (
-          <>
-            <TypistText
-              onInit={(typewriter): TypewriterClass => {
-                const text = isFromSubscriptionRef.current
-                  ? `you hear a whisper. "come back again when you're stronger."`
-                  : "you're certain you saw a frog wearing a monocle.";
-
-                return typewriter
-                  .typeString(text)
-                  .pauseFor(500)
-                  .changeDeleteSpeed(20)
-                  .deleteChars(text.length)
-                  .typeString(
-                    retreatRef.current
-                      ? "retreat was ineffective. you enter the SWAMP."
-                      : "you enter the SWAMP."
-                  );
-              }}
-            >
-              <GetFrogTab
-                subscriptions={frogSubs}
-                userState={userState}
-                refreshUserState={refreshUserState}
-                pcds={frogPCDs}
-              />
-            </TypistText>
-          </>
-        ) : (
-          <>
-            {
-              // show frog card on first pull
-              // show tabs on second pull
-              myScore >= 2 && (
-                <ButtonGroup>
-                  {TABS.map(({ tab: t, label }) => (
-                    <Button
-                      key={t}
-                      disabled={tab === t}
-                      onClick={(): void => setTab(t)}
-                    >
-                      {label}
-                    </Button>
-                  ))}
-                </ButtonGroup>
-              )
-            }
-
-            {tab === "get" && (
-              <GetFrogTab
-                subscriptions={frogSubs}
-                userState={userState}
-                refreshUserState={refreshUserState}
-                pcds={frogPCDs}
-              />
-            )}
-            {tab === "score" && (
-              <ScoreTab
-                score={userState?.myScore}
-                refreshScore={refreshUserState}
-              />
-            )}
-            {tab === "dex" && (
-              <DexTab possibleFrogs={userState.possibleFrogs} pcds={frogPCDs} />
-            )}
-          </>
-        ))} */}
     </Container>
   );
 }
