@@ -15,26 +15,24 @@ export function PipelineLatestConsumersSection({
   }
 
   return (
-    <>
-      <ConsumerTable style={{ fontSize: "0.8rem" }}>
-        <tr>
-          <th>Email</th>
-          <th>Created</th>
-          <th>Updated</th>
-        </tr>
-        <>
-          {latestConsumers.map((consumer) => {
-            return (
-              <tr>
-                <td>{consumer.email}</td>
-                <td>{new Date(consumer.timeCreated).toLocaleString()}</td>
-                <td>{new Date(consumer.timeUpdated).toLocaleString()}</td>
-              </tr>
-            );
-          })}
-        </>
-      </ConsumerTable>
-    </>
+    <ConsumerTable style={{ fontSize: "0.8rem" }}>
+      <tr>
+        <th>Email</th>
+        <th>Created</th>
+        <th>Updated</th>
+      </tr>
+      <>
+        {latestConsumers.map((consumer) => {
+          return (
+            <tr>
+              <td>{consumer.email}</td>
+              <td>{new Date(consumer.timeCreated).toLocaleString()}</td>
+              <td>{new Date(consumer.timeUpdated).toLocaleString()}</td>
+            </tr>
+          );
+        })}
+      </>
+    </ConsumerTable>
   );
 }
 
@@ -48,8 +46,5 @@ const ConsumerTable = styled.table`
     font-family: var(--chakra-fonts-body) !important;
     font-weight: bold !important;
     text-align: left;
-  }
-
-  tr {
   }
 `;

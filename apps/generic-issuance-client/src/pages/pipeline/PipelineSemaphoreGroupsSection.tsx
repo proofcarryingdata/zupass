@@ -3,8 +3,7 @@ import { ReactNode } from "react";
 import { PodLink } from "../../components/Core";
 
 /**
- * Renders information about the last time this pipeline was run by Podbox.
- * Useful for debugging an integration, and figuring out what went wrong.
+ * Displays a list of the Semaphore groups for the pipeline.
  */
 export function PipelineSemaphoreGroupsSection({
   lastLoad

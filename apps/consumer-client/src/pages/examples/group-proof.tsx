@@ -69,7 +69,6 @@ export default function Page(): JSX.Element {
       </p>
       <ExampleContainer>
         <label>
-          {" "}
           <input
             style={{ marginBottom: "8px" }}
             placeholder="Semaphore Group URL"
