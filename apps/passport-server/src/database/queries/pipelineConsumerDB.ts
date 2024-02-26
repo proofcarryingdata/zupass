@@ -11,7 +11,10 @@ import { sqlQuery } from "../sqlQuery";
  * users who have authenticated with the pipeline, e.g. by requesting a feed.
  */
 export interface IPipelineConsumerDB {
-  // Save a consumer
+  // Save a consumer. Should update the commitment for a given email if the
+  // email already exists for a consumer, and if the commitment is different.
+  // If there is no change then there is no need to update anything, and the
+  // consumer's `timeUpdated` field should not change.
   save(
     pipelineId: string,
     email: string,
@@ -69,7 +72,9 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
   }
 
   /**
-   * Given a list of email addresses, load the consumer data for them.
+   * Given a list of email addresses, load the consumer data for them, if any
+   * exists. Some emails will not have consumer data, because they come from
+   * tickets which have not yet been issued via a feed.
    */
   public async loadByEmails(
     pipelineId: string,
