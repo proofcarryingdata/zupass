@@ -29,11 +29,15 @@ export function ProveAndAddScreen({
 
   const onProve = useCallback(
     async (_: unknown, serializedPCD: SerializedPCD) => {
-      dispatch({ type: "add-pcds", pcds: [serializedPCD] });
+      dispatch({
+        type: "add-pcds",
+        pcds: [serializedPCD],
+        folder: request.folder
+      });
       setProved(true);
       setSerializedPCD(serializedPCD);
     },
-    [dispatch]
+    [dispatch, request.folder]
   );
 
   let content: ReactNode;
@@ -46,6 +50,7 @@ export function ProveAndAddScreen({
         initialArgs={request.args}
         pcdType={request.pcdType}
         onProve={onProve}
+        folder={request.folder}
       />
     );
   } else {

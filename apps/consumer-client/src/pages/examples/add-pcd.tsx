@@ -34,6 +34,7 @@ import { sendZupassRequest } from "../../util";
 
 export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
+  const [folder, setFolder] = useState("");
 
   return (
     <div>
@@ -71,8 +72,26 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
+        <label>
+          Folder to add PCD to:
+          <input
+            type="text"
+            value={folder}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setFolder(e.target.value);
+            }}
+          />
+        </label>
+        <br />
         <button
-          onClick={(): Promise<void> => addSignatureProofPCD(signedMessage)}
+          onClick={(): Promise<void> =>
+            addSignatureProofPCD(
+              signedMessage,
+              folder.length > 0 ? folder : undefined
+            )
+          }
         >
           prove and add a signature proof
         </button>
@@ -350,7 +369,10 @@ async function addEdDSAPCD(): Promise<void> {
   sendZupassRequest(proofUrl);
 }
 
-async function addSignatureProofPCD(messageToSign: string): Promise<void> {
+async function addSignatureProofPCD(
+  messageToSign: string,
+  folder: string
+): Promise<void> {
   const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
   >(
@@ -372,7 +394,9 @@ async function addSignatureProofPCD(messageToSign: string): Promise<void> {
     },
     {
       title: "Semaphore Signature Proof"
-    }
+    },
+    false,
+    folder
   );
 
   sendZupassRequest(proofUrl);
