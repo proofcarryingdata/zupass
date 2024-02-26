@@ -1,6 +1,7 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   ActionConfigResponseValue,
+  EdgeCityBalance,
   Feed,
   GenericIssuanceCheckInRequest,
   GenericIssuancePipelineListEntry,
@@ -33,6 +34,7 @@ import urljoin from "url-join";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
+import { getBalances } from "../../database/queries/edgecity";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
   IPipelineCheckinDB,
@@ -1444,6 +1446,10 @@ export class GenericIssuanceService {
     };
 
     await this.definitionDB.setDefinition(lemonadeDefinition);
+  }
+
+  public async getBalances(): Promise<EdgeCityBalance[]> {
+    return getBalances(this.context.dbPool);
   }
 }
 

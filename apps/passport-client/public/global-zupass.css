@@ -89,6 +89,10 @@ a:hover {
   font-family: "SuperFunky";
   src: url(/fonts/SuperFunky.ttf) format("truetype");
 }
+@font-face {
+  font-family: "PressStart2P";
+  src: url(/fonts/PressStart2P.ttf) format("truetype");
+}
 
 /*! minireset.css v0.0.6 | MIT License | github.com/jgthms/minireset.css */
 html,

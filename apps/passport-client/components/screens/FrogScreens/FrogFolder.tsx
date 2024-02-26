@@ -2,8 +2,14 @@ import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
-import styled, { keyframes } from "styled-components";
+import styled, {
+  CSSProperties,
+  FlattenSimpleInterpolation,
+  css,
+  keyframes
+} from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
+import { isDuringEdgeCityDenver } from "../../../src/edgecityUtils";
 import { useUserFeedState } from "./FrogHomeSection";
 
 /**
@@ -24,14 +30,28 @@ export function FrogFolder({
   onFolderClick: (folder: string) => void;
   Container: React.ComponentType<
     PropsWithChildren<{
+      style: CSSProperties;
       onClick: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
     }>
   >;
 }): JSX.Element {
+  const frogcryptoDisabled = isDuringEdgeCityDenver();
   const fetchTimestamp = useFetchTimestamp();
 
   return (
-    <Container onClick={(): void => onFolderClick(FrogCryptoFolderName)}>
+    <Container
+      style={
+        frogcryptoDisabled
+          ? {
+              filter: "grayscale(100%)",
+              cursor: "default"
+            }
+          : {}
+      }
+      onClick={(): void => {
+        if (!isDuringEdgeCityDenver()) onFolderClick(FrogCryptoFolderName);
+      }}
+    >
       <img
         draggable="false"
         src="/images/frogs/pixel_frog.png"
@@ -39,15 +59,22 @@ export function FrogFolder({
         height={18}
       />
       <SuperFunkyFont>
-        {FrogCryptoFolderName.split("").map((letter, i) => (
-          <BounceText key={i} delay={i * 0.1}>
-            {letter}
-          </BounceText>
-        ))}
+        {isDuringEdgeCityDenver() ? (
+          <DisabledText>{FrogCryptoFolderName}</DisabledText>
+        ) : (
+          FrogCryptoFolderName.split("").map((letter, i) => (
+            <BounceText key={i} delay={i * 0.1}>
+              {letter}
+            </BounceText>
+          ))
+        )}
       </SuperFunkyFont>
-      {typeof fetchTimestamp === "number" && (
-        <NewFont>
-          <CountDown timestamp={fetchTimestamp} />
+      {(typeof fetchTimestamp === "number" || frogcryptoDisabled) && (
+        <NewFont $disabled={frogcryptoDisabled}>
+          <CountDown
+            timestamp={fetchTimestamp}
+            frogcryptoDisabled={frogcryptoDisabled}
+          />
         </NewFont>
       )}
     </Container>
@@ -95,19 +122,31 @@ function useFetchTimestamp(): number | null {
 /**
  * A countdown to a hard coded game start date.
  */
-function CountDown({ timestamp }: { timestamp: number }): JSX.Element {
+function CountDown({
+  timestamp,
+  frogcryptoDisabled
+}: {
+  timestamp: number;
+  frogcryptoDisabled: boolean;
+}): JSX.Element {
   const end = useMemo(() => {
     return new Date(timestamp);
   }, [timestamp]);
   const [diffText, setDiffText] = useState(
-    timestamp < Date.now() ? _.upperCase("Available Now") : ""
+    frogcryptoDisabled
+      ? _.upperCase("Returning Soon")
+      : timestamp < Date.now()
+      ? _.upperCase("Available Now")
+      : ""
   );
 
   useEffect(() => {
     const interval = setInterval(() => {
       const now = new Date();
       const diffMs = end.getTime() - now.getTime();
-      if (diffMs < 0) {
+      if (frogcryptoDisabled) {
+        setDiffText(_.upperCase("Returning Soon"));
+      } else if (diffMs < 0) {
         setDiffText(_.upperCase("Available Now"));
       } else {
         const diffString = prettyMilliseconds(diffMs, {
@@ -122,16 +161,24 @@ function CountDown({ timestamp }: { timestamp: number }): JSX.Element {
     return () => {
       clearInterval(interval);
     };
-  }, [end]);
+  }, [end, frogcryptoDisabled]);
 
   return <>{diffText}</>;
 }
 
-export const NewFont = styled.div`
+export const NewFont = styled.div<{ $disabled?: boolean }>`
   font-size: 14px;
-  animation: color-change 1s infinite;
   font-family: monospace;
   margin-left: auto;
+
+  ${({ $disabled }): FlattenSimpleInterpolation =>
+    !$disabled
+      ? css`
+          animation: color-change 1s infinite;
+        `
+      : css`
+          color: #ff9900; // Static color when disabled
+        `}
 
   @keyframes color-change {
     0% {
@@ -190,4 +237,9 @@ const bounceKeyframes = keyframes`
 const BounceText = styled.span<{ delay: number }>`
   animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
   -webkit-animation: ${bounceKeyframes} 5s infinite ${(p): number => p.delay}s;
+`;
+
+const DisabledText = styled.span`
+  background-color: white;
+  background-image: white;
 `;

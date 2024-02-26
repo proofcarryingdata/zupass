@@ -31,7 +31,8 @@ type SortState = {
 export function PCDCardList({
   pcds,
   defaultSortState,
-  allExpanded
+  allExpanded,
+  hideRemoveButton
 }: {
   pcds: PCD[];
   /**
@@ -42,6 +43,10 @@ export function PCDCardList({
    * If true, all PCDs will be expanded. Otherwise, the last clicked PCD is expanded.
    */
   allExpanded?: boolean;
+  /**
+   * If true, all PCDs will have the remove button hidden.
+   */
+  hideRemoveButton?: boolean;
 }): JSX.Element {
   const pcdCollection = usePCDCollection();
   const userIdentityPCD = useUserIdentityPCD();
@@ -116,6 +121,7 @@ export function PCDCardList({
       )}
       {sortedPCDs.map((pcd) => (
         <PCDCard
+          hideRemoveButton={hideRemoveButton}
           key={pcd.id}
           pcd={pcd}
           isMainIdentity={pcd.id === userIdentityPCDId}

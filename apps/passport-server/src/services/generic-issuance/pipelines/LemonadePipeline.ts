@@ -10,6 +10,7 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
   BadgeConfig,
+  CONTACT_EVENT_NAME,
   GenericIssuanceCheckInRequest,
   GenericIssuancePreCheckRequest,
   LemonadePipelineDefinition,
@@ -555,11 +556,10 @@ export class LemonadePipeline implements BasePipeline {
               argumentType: ArgumentTypeName.Object,
               value: {
                 // The fields below are not signed and are used for display purposes.
-                eventName: "Contact Card",
-                ticketName: "",
+                eventName: CONTACT_EVENT_NAME,
+                ticketName: contact,
                 checkerEmail: undefined,
-                imageUrl:
-                  "https://t4.ftcdn.net/jpg/00/97/58/97/360_F_97589769_t45CqXyzjz0KXwoBZT9PRaWGHRk5hQqQ.jpg",
+                imageUrl: "https://i.ibb.co/WcPcL0g/stick.webp",
                 imageAltText: undefined,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.

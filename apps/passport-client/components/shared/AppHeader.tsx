@@ -9,9 +9,11 @@ export const AppHeader = React.memo(AppHeaderImpl);
 
 function AppHeaderImpl({
   children,
+  isEdgeCity = false,
   isProveOrAddScreen = false
 }: {
   children?: React.ReactNode;
+  isEdgeCity?: boolean;
   isProveOrAddScreen?: boolean;
 }): JSX.Element {
   const dispatch = useDispatch();
@@ -41,7 +43,12 @@ function AppHeaderImpl({
   return (
     <AppHeaderWrap>
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <img draggable="false" src={icons.infoAccent} width={34} height={34} />
+        <img
+          draggable="false"
+          src={isEdgeCity ? icons.infoWhite : icons.infoAccent}
+          width={34}
+          height={34}
+        />
       </CircleButton>
       {children}
       {!isProveOrAddScreen && (
@@ -54,7 +61,7 @@ function AppHeaderImpl({
           <img
             title="Subscriptions"
             draggable="false"
-            src={icons.subscription}
+            src={isEdgeCity ? icons.subscriptionWhite : icons.subscription}
             width={34}
             height={34}
           />
@@ -63,7 +70,7 @@ function AppHeaderImpl({
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <img
           draggable="false"
-          src={icons.settingsAccent}
+          src={isEdgeCity ? icons.settingsWhite : icons.settingsAccent}
           width={34}
           height={34}
         />
