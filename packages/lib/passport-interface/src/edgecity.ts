@@ -27,5 +27,5 @@ export const EVENT_NAME_TO_TOTAL_SUPPLY: Record<string, number> = {
   "Cold Plunge": 7,
   Ceremonies: 2,
   "Met Gary": 7,
-  "Met Zupass": 7
+  "Met Zupass": 3
 };
