@@ -6,16 +6,25 @@ import { Pipeline } from "../pipelines/types";
 import { BasePipelineCapability } from "../types";
 import { PipelineCapability } from "./types";
 
+/**
+ * Declares the pipeline's capability to generate Semaphore group histories.
+ */
 export interface SemaphoreGroupCapability extends BasePipelineCapability {
   type: PipelineCapability.SemaphoreGroup;
+  // Gets the latest root for a given group ID
   getLatestGroupRoot(groupId: string): Promise<string | undefined>;
+  // Gets a serialized copy of the latest group for a given ID
   getSerializedLatestGroup(
     groupId: string
   ): Promise<SerializedSemaphoreGroup | undefined>;
+  // Gets a serialized copy of a group, for the history entry with a given root
+  // hash
   getSerializedHistoricalGroup(
     groupId: string,
     root: string
   ): Promise<SerializedSemaphoreGroup | undefined>;
+  // Gets information about the supported groups for this pipeline. Empty if
+  // there are no groups.
   getSupportedGroups(): PipelineSemaphoreGroupInfo[];
 }
 
