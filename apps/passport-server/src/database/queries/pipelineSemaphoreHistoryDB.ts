@@ -18,7 +18,7 @@ export interface IPipelineSemaphoreHistoryDB {
   /**
    * Adds a history entry.
    */
-  addGroupHistory(
+  addGroupHistoryEntry(
     pipelineId: string,
     groupId: string,
     rootHash: string,
@@ -42,7 +42,7 @@ export interface IPipelineSemaphoreHistoryDB {
   /**
    * Deletes all history for a group.
    */
-  deleteGroup(pipelineId: string, groupId: string): Promise<void>;
+  deleteGroupHistory(pipelineId: string, groupId: string): Promise<void>;
 }
 
 export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
@@ -100,7 +100,7 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
    * Causes the serial `id` field to increment, which is used to determine the
    * order of historic entries for the `getLatestGroups` query.
    */
-  public async addGroupHistory(
+  public async addGroupHistoryEntry(
     pipelineId: string,
     groupId: string,
     rootHash: string,
@@ -119,7 +119,10 @@ export class PipelineSemaphoreHistoryDB implements IPipelineSemaphoreHistoryDB {
   /**
    * Deletes the history of a Semaphore group.
    */
-  public async deleteGroup(pipelineId: string, groupId: string): Promise<void> {
+  public async deleteGroupHistory(
+    pipelineId: string,
+    groupId: string
+  ): Promise<void> {
     await sqlQuery(
       this.db,
       "DELETE FROM generic_issuance_semaphore_history WHERE pipeline_id = $1 AND group_id = $2",

@@ -168,7 +168,7 @@ export class SemaphoreGroupProvider {
       );
       for (const groupId of latestGroupMap.keys()) {
         if (!configuredGroupIds.has(groupId)) {
-          this.semaphoreHistoryDB.deleteGroup(this.pipelineId, groupId);
+          this.semaphoreHistoryDB.deleteGroupHistory(this.pipelineId, groupId);
         }
       }
     });
@@ -234,7 +234,7 @@ export class SemaphoreGroupProvider {
           group.removeMember(group.indexOf(BigInt(deletedId)));
         }
 
-        await this.semaphoreHistoryDB.addGroupHistory(
+        await this.semaphoreHistoryDB.addGroupHistoryEntry(
           this.pipelineId,
           groupConfig.groupId,
           group.root.toString(),
