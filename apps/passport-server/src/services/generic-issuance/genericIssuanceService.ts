@@ -864,109 +864,147 @@ export class GenericIssuanceService {
     pipelineId: string,
     groupId: string
   ): Promise<GenericIssuanceSemaphoreGroupResponseValue> {
-    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-    const pipeline = await this.ensurePipelineStarted(pipelineId);
-    tracePipeline(pipelineSlot.definition);
+    return traced(SERVICE_NAME, "handleGetSemaphoreGroup", async (span) => {
+      span?.setAttribute("pipeline_id", pipelineId);
+      span?.setAttribute("group_id", groupId);
+      const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+      const pipeline = await this.ensurePipelineStarted(pipelineId);
+      tracePipeline(pipelineSlot.definition);
 
-    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+      const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
 
-    // Retrieving this via the capability might be unnecessary, since we have
-    // access to the PipelineSemaphoreGroupDB already, and could just look the
-    // data up from there.
-    const serializedGroup =
-      await semaphoreGroupCapability.getSerializedLatestGroup(groupId);
-    if (!serializedGroup) {
-      throw new PCDHTTPError(
-        403,
-        `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
-      );
-    }
+      // Retrieving this via the capability might be unnecessary, since we have
+      // access to the PipelineSemaphoreGroupDB already, and could just look the
+      // data up from there.
+      const serializedGroup =
+        await semaphoreGroupCapability.getSerializedLatestGroup(groupId);
+      if (!serializedGroup) {
+        throw new PCDHTTPError(
+          403,
+          `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
+        );
+      }
 
-    return serializedGroup;
+      return serializedGroup;
+    });
   }
 
   public async handleGetLatestSemaphoreGroupRoot(
     pipelineId: string,
     groupId: string
   ): Promise<GenericIssuanceSemaphoreGroupRootResponseValue> {
-    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-    const pipeline = await this.ensurePipelineStarted(pipelineId);
-    tracePipeline(pipelineSlot.definition);
+    return traced(
+      SERVICE_NAME,
+      "handleGetLatestSemaphoreGroupRoot",
+      async (span) => {
+        span?.setAttribute("pipeline_id", pipelineId);
+        span?.setAttribute("group_id", groupId);
+        const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+        const pipeline = await this.ensurePipelineStarted(pipelineId);
+        tracePipeline(pipelineSlot.definition);
 
-    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+        const semaphoreGroupCapability =
+          ensureSemaphoreGroupCapability(pipeline);
 
-    // Retrieving this via the capability might be unnecessary, since we have
-    // access to the PipelineSemaphoreGroupDB already, and could just look the
-    // data up from there.
-    const rootHash = await semaphoreGroupCapability.getLatestGroupRoot(groupId);
-    if (rootHash === undefined) {
-      throw new PCDHTTPError(
-        403,
-        `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
-      );
-    }
+        // Retrieving this via the capability might be unnecessary, since we have
+        // access to the PipelineSemaphoreGroupDB already, and could just look the
+        // data up from there.
+        const rootHash =
+          await semaphoreGroupCapability.getLatestGroupRoot(groupId);
+        if (rootHash === undefined) {
+          throw new PCDHTTPError(
+            403,
+            `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
+          );
+        }
 
-    return rootHash;
+        return rootHash;
+      }
+    );
   }
 
   public async handleGetHistoricalSemaphoreGroup(
     pipelineId: string,
     groupId: string,
-    root: string
+    rootHash: string
   ): Promise<GenericIssuanceHistoricalSemaphoreGroupResponseValue> {
-    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-    const pipeline = await this.ensurePipelineStarted(pipelineId);
-    tracePipeline(pipelineSlot.definition);
+    return traced(
+      SERVICE_NAME,
+      "handleGetHistoricalSemaphoreGroup",
+      async (span) => {
+        span?.setAttribute("pipeline_id", pipelineId);
+        span?.setAttribute("group_id", groupId);
+        span?.setAttribute("root_hash", rootHash);
+        const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+        const pipeline = await this.ensurePipelineStarted(pipelineId);
+        tracePipeline(pipelineSlot.definition);
 
-    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+        const semaphoreGroupCapability =
+          ensureSemaphoreGroupCapability(pipeline);
+        const serializedGroup =
+          await semaphoreGroupCapability.getSerializedHistoricalGroup(
+            groupId,
+            rootHash
+          );
+        if (!serializedGroup) {
+          throw new PCDHTTPError(
+            403,
+            `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
+          );
+        }
 
-    // Retrieving this via the capability might be unnecessary, since we have
-    // access to the PipelineSemaphoreGroupDB already, and could just look the
-    // data up from there.
-    const serializedGroup =
-      await semaphoreGroupCapability.getSerializedHistoricalGroup(
-        groupId,
-        root
-      );
-    if (!serializedGroup) {
-      throw new PCDHTTPError(
-        403,
-        `can't find semaphore group ${groupId} for pipeline ${pipelineId}`
-      );
-    }
-
-    return serializedGroup;
+        return serializedGroup;
+      }
+    );
   }
 
   public async handleGetValidSemaphoreGroup(
     pipelineId: string,
     groupId: string,
-    root: string
+    rootHash: string
   ): Promise<GenericIssuanceValidSemaphoreGroupResponseValue> {
-    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-    const pipeline = await this.ensurePipelineStarted(pipelineId);
-    tracePipeline(pipelineSlot.definition);
-    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
-    const serializedGroup =
-      await semaphoreGroupCapability.getSerializedHistoricalGroup(
-        groupId,
-        root
-      );
+    return traced(
+      SERVICE_NAME,
+      "handleGetValidSemaphoreGroup",
+      async (span) => {
+        span?.setAttribute("pipeline_id", pipelineId);
+        span?.setAttribute("group_id", groupId);
+        span?.setAttribute("root_hash", rootHash);
+        const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+        const pipeline = await this.ensurePipelineStarted(pipelineId);
+        tracePipeline(pipelineSlot.definition);
+        const semaphoreGroupCapability =
+          ensureSemaphoreGroupCapability(pipeline);
+        const serializedGroup =
+          await semaphoreGroupCapability.getSerializedHistoricalGroup(
+            groupId,
+            rootHash
+          );
 
-    return {
-      valid: serializedGroup !== undefined
-    };
+        return {
+          valid: serializedGroup !== undefined
+        };
+      }
+    );
   }
 
   public async handleGetPipelineSemaphoreGroups(
     pipelineId: string
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
-    const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
-    const pipeline = await this.ensurePipelineStarted(pipelineId);
-    tracePipeline(pipelineSlot.definition);
-    const semaphoreGroupCapability = ensureSemaphoreGroupCapability(pipeline);
+    return traced(
+      SERVICE_NAME,
+      "handleGetPipelineSemaphoreGroups",
+      async (span) => {
+        span?.setAttribute("pipeline_id", pipelineId);
+        const pipelineSlot = await this.ensurePipelineSlotExists(pipelineId);
+        const pipeline = await this.ensurePipelineStarted(pipelineId);
+        tracePipeline(pipelineSlot.definition);
+        const semaphoreGroupCapability =
+          ensureSemaphoreGroupCapability(pipeline);
 
-    return semaphoreGroupCapability.getSupportedGroups();
+        return semaphoreGroupCapability.getSupportedGroups();
+      }
+    );
   }
 
   /**
