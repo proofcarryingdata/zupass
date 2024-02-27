@@ -1,3 +1,5 @@
+pragma circom 2.1.8;
+
 /**
  * Module for global constraints of a GPC proof, independent of any specific
  * object or entry.

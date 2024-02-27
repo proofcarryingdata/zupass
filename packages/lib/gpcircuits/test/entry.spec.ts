@@ -21,6 +21,8 @@ import {
 import { circomkit, privateKey, sampleEntries } from "./common";
 
 describe("entry.EntryModule should work", function () {
+  // Circuit compilation sometimes takes more than the default timeout of 2s.
+  this.timeout(10000);
   let circuit: WitnessTester<
     EntryModuleInputNamesType,
     EntryModuleOutputNamesType
@@ -190,7 +192,6 @@ describe("entry.EntryModule should work", function () {
       const badInput = { ...sampleInput };
       (badInput as Record<string, CircuitSignal | CircuitSignal[]>)[inputName] =
         0xbadn;
-      console.log(badInput);
 
       if (inputName === "isValueHashRevealed") {
         // isValueHashRevealed isn't directly constrained by this circuit, but
@@ -229,6 +230,8 @@ describe("entry.EntryModule should work", function () {
 });
 
 describe("entry.EntryConstraintModule should work", function () {
+  // Circuit compilation sometimes takes more than the default timeout of 2s.
+  this.timeout(10000);
   let circuit: WitnessTester<
     EntryConstraintModuleInputNamesType,
     EntryConstraintModuleOutputNamesType

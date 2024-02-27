@@ -105,7 +105,7 @@ describe("POD cryptography should work", async function () {
   it("should generate test data for zkrepl", function () {
     const zkrMaxObjects = 3;
     const zkrMaxEntries = 10;
-    const zkrMerkleMaxDepth = 10;
+    const zkrMerkleMaxDepth = 8;
 
     const pods = [];
     const zkrSigs = [];

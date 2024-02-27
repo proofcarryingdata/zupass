@@ -1,5 +1,6 @@
 import { PODEntries } from "@pcd/pod";
 import { Identity } from "@semaphore-protocol/identity";
+import { expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
@@ -36,3 +37,23 @@ export const sampleEntries = {
   J: { type: "int", value: 10n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } as PODEntries;
+
+// 3 entries, max depth 3
+export const sampleEntries2 = {
+  attendee: { type: "cryptographic", value: ownerIdentity.commitment },
+  eventID: { type: "cryptographic", value: 456n },
+  ticketID: { type: "cryptographic", value: 999n }
+} as PODEntries;
+
+// Convert an array of bit signals into a single packed bigint.
+// Error handling is via chai.expect, so only useful in unit tests.
+export function testArray2Bits(boolArray: bigint[]): bigint {
+  let bits = 0n;
+  for (let i = 0; i < boolArray.length; i++) {
+    expect(boolArray[i]).to.be.oneOf([0n, 1n]);
+    if (boolArray[i] === 1n) {
+      bits |= 1n << BigInt(i);
+    }
+  }
+  return bits;
+}

@@ -4,6 +4,8 @@ import "mocha";
 import { circomkit } from "./common";
 
 describe("gpc-util.ValueOrNegativeOne should work", function () {
+  // Circuit compilation sometimes takes more than the default timeout of 2s.
+  this.timeout(10000);
   let circuit: WitnessTester<["value", "shouldRevealValue"], ["out"]>;
 
   this.beforeAll(async () => {

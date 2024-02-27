@@ -1,3 +1,5 @@
+pragma circom 2.1.8;
+
 include "circomlib/circuits/poseidon.circom";
 include "gpc-util.circom";
 

@@ -24,5 +24,23 @@
   "GlobalModule": {
     "file": "global",
     "template": "GlobalModule"
+  },
+  "ProtoPODGPC": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [1, 5, 8],
+    "pubs": [
+      "objectSignerPubkeyAx",
+      "objectSignerPubkeyAy",
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueEnabled",
+      "entryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "ownerEntryIndex",
+      "ownerExternalNullifier",
+      "ownerIsNullfierHashRevealed",
+      "globalWatermark"
+    ]
   }
 }
