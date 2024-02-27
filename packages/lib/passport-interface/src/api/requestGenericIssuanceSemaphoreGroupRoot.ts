@@ -8,7 +8,7 @@ import { httpGetSimple } from "./makeRequest";
  *
  * Never rejects. All information encoded in the resolved response.
  */
-export async function requestGenericIssuanceValidSemaphoreGroup(
+export async function requestGenericIssuanceSemaphoreGroupRoot(
   zupassServerUrl: string,
   pipelineId: string,
   groupId: string
