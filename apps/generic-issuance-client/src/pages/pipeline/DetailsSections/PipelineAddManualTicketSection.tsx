@@ -10,8 +10,11 @@ import {
   PipelineDefinition,
   isLemonadePipelineDefinition
 } from "@pcd/passport-interface";
+import { randomUUID, validateEmail } from "@pcd/util";
 import { ReactNode, useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
+import { savePipeline } from "../../../helpers/Mutations";
+import { useJWT } from "../../../helpers/userHooks";
 
 export function shouldShowAddManualTicketSection(
   pipeline: PipelineDefinition
@@ -46,7 +49,10 @@ function LemonadeAddManualTicket({
 }: {
   pipeline: LemonadePipelineDefinition;
 }): ReactNode {
+  const userJWT = useJWT();
+  const [inProgress, setInProgress] = useState(false);
   const [ticketTypeId, setTicketTypeId] = useState("");
+  const [ticketTypeName, setTicketTypeName] = useState("");
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -60,6 +66,7 @@ function LemonadeAddManualTicket({
   }, [pipeline]);
 
   const [eventId, setEventId] = useState(eventIdOptions[0].value);
+  const [eventName, setEventName] = useState(eventIdOptions[0].name);
 
   const ticketTypeIdOptions: IOption[] = useMemo(() => {
     const event = pipeline.options.events.find(
@@ -76,9 +83,54 @@ function LemonadeAddManualTicket({
     return [];
   }, [eventId, pipeline.options.events]);
 
-  const onAddClick = useCallback(() => {
-    alert("click");
-  }, []);
+  const onAddClick = useCallback(async () => {
+    const pipelineCopy = JSON.parse(
+      JSON.stringify(pipeline)
+    ) as LemonadePipelineDefinition;
+
+    pipelineCopy.options.manualTickets =
+      pipelineCopy.options.manualTickets ?? [];
+
+    pipelineCopy.options.manualTickets.push({
+      attendeeEmail: email,
+      attendeeName: name,
+      eventId,
+      productId: ticketTypeId,
+      id: randomUUID()
+    });
+
+    if (
+      !confirm(
+        `are you sure you want to add this ticket?\n${name} (${email})\n${eventName} - ${ticketTypeName}`
+      )
+    ) {
+      return;
+    }
+
+    if (!userJWT) {
+      alert("not logged in");
+      return;
+    }
+
+    setInProgress(true);
+
+    const res = await savePipeline(userJWT, JSON.stringify(pipelineCopy));
+
+    if (res.success) {
+      window.location.reload();
+    } else {
+      alert(res.error);
+    }
+  }, [
+    email,
+    eventId,
+    eventName,
+    name,
+    pipeline,
+    ticketTypeId,
+    ticketTypeName,
+    userJWT
+  ]);
 
   return (
     <>
@@ -88,7 +140,13 @@ function LemonadeAddManualTicket({
           w="sm"
           mt={2}
           value={eventId}
-          onChange={(e): void => setEventId(e.target.value)}
+          onChange={(e): void => {
+            const id = e.target.value;
+            setEventId(id);
+            setEventName(
+              eventIdOptions.find((e) => e.value === id)?.name ?? ""
+            );
+          }}
         >
           {eventIdOptions.map((o) => (
             <option value={o.value} key={o.value}>
@@ -97,13 +155,20 @@ function LemonadeAddManualTicket({
           ))}
         </Select>
       </FormControl>
+
       <FormControl mb={2}>
         <FormLabel>Ticket Type</FormLabel>
         <Select
           w="sm"
           mt={2}
           value={ticketTypeId}
-          onChange={(e): void => setTicketTypeId(e.target.value)}
+          onChange={(e): void => {
+            const id = e.target.value;
+            setTicketTypeId(id);
+            setTicketTypeName(
+              ticketTypeIdOptions.find((e) => e.value === id)?.name ?? ""
+            );
+          }}
         >
           {ticketTypeIdOptions.map((o) => (
             <option value={o.value} key={o.value}>
@@ -112,6 +177,7 @@ function LemonadeAddManualTicket({
           ))}
         </Select>
       </FormControl>
+
       <FormControl mb={2}>
         <FormLabel>Attendee Name</FormLabel>
         <Input
@@ -122,9 +188,11 @@ function LemonadeAddManualTicket({
           width="sm"
         />
       </FormControl>
+
       <FormControl mb={2}>
         <FormLabel>Attendee Email</FormLabel>
         <Input
+          isInvalid={!validateEmail(email) && email.length !== 0}
           value={email}
           onChange={(e): void => setEmail(e.target.value)}
           placeholder="email@provider.tld"
@@ -134,7 +202,14 @@ function LemonadeAddManualTicket({
           data-1p-ignore
         />
       </FormControl>
-      <Button colorScheme="green" mt={4} width="sm" onClick={onAddClick}>
+
+      <Button
+        colorScheme="green"
+        mt={4}
+        width="sm"
+        onClick={onAddClick}
+        isLoading={inProgress}
+      >
         Add Ticket
       </Button>
     </>

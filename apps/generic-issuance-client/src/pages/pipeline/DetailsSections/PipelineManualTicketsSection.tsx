@@ -70,7 +70,7 @@ function LemonadeManualTicketTable({
 function PretixManualTicketTable({
   pipeline
 }: {
-  pipeline: PretixManualTicketTable;
+  pipeline: PretixPipelineDefinition;
 }): ReactNode {
   return <div>lemonade manual ticket table</div>;
 }
