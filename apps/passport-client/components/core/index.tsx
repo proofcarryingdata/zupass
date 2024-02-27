@@ -64,6 +64,7 @@ export const HR = styled.hr`
 
 export const CenterColumn = styled.div<{ w?: number }>`
   width: ${(p): string => (p.w ?? 280) + "px"};
+  max-width: 100%;
   margin: 0 auto;
 `;
 

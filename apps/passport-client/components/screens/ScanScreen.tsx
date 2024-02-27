@@ -1,5 +1,3 @@
-import { icons } from "@pcd/passport-ui";
-import { useCallback } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -7,9 +5,9 @@ import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
-import { CircleButton } from "../core/Button";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
+import { Home } from "./ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen(): JSX.Element {
@@ -20,8 +18,11 @@ export function ScanScreen(): JSX.Element {
   return (
     <AppContainer bg="gray">
       {!usingLaserScanner && (
-        <>
+        <QRContainer>
+          <Spacer h={8} />
+          <Home />
           <QrReader
+            className="qr"
             onResult={(result, error): void => {
               if (result != null) {
                 console.log(
@@ -39,8 +40,8 @@ export function ScanScreen(): JSX.Element {
             containerStyle={{ width: "100%" }}
           />
           <Spacer h={16} />
-          <TextCenter>Scan a ticket to verify</TextCenter>
-        </>
+          <TextCenter>Scan a ticket</TextCenter>
+        </QRContainer>
       )}
       {usingLaserScanner && (
         <>
@@ -73,20 +74,9 @@ export function ScanScreen(): JSX.Element {
   );
 }
 
-function CloseButton(): JSX.Element {
-  const nav = useNavigate();
-  const onClose = useCallback(() => nav("/"), [nav]);
-  return (
-    <CircleButton diameter={20} padding={16} onClick={onClose}>
-      <img draggable="false" src={icons.closeWhite} width={20} height={20} />
-    </CircleButton>
-  );
-}
-
 function ViewFinder(): JSX.Element {
   return (
     <ScanOverlayWrap>
-      <CloseButton />
       <Guidebox>
         <Corner top left />
         <Corner top />
@@ -101,6 +91,7 @@ const Orange = styled.span`
   font-weight: bold;
   color: orange;
 `;
+
 const ScanOverlayWrap = styled.div`
   position: absolute;
   top: 0;
@@ -139,4 +130,11 @@ const Corner = styled.div<{ top?: boolean; left?: boolean }>`
   ${(p): string => (p.left && !p.top ? "border-radius: 0 0 0 8px;" : "")};
   ${(p): string => (!p.left && p.top ? "border-radius: 0 8px 0 0;" : "")};
   ${(p): string => (!p.left && !p.top ? "border-radius: 0 0 8px 0;" : "")};
+`;
+
+const QRContainer = styled.div`
+  width: 100%;
+
+  .qr {
+  }
 `;

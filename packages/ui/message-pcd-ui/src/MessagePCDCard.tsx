@@ -15,7 +15,9 @@ export function EdDSAMessageCardBody({
   return (
     <Container>
       {pcd.claim.mdBody ? (
-        <Markdown>{pcd.claim.mdBody}</Markdown>
+        <div style={{ textAlign: "center" }}>
+          <Markdown>{pcd.claim.mdBody}</Markdown>
+        </div>
       ) : (
         <div style={{ opacity: 0.5 }}></div>
       )}

@@ -228,6 +228,26 @@ export async function deserialize(serialized: string): Promise<EdDSATicketPCD> {
   );
 }
 
+export function ticketDisplayName(
+  eventName?: string,
+  ticketName?: string
+): string {
+  let displayName = "";
+
+  if (eventName && eventName?.length > 0) {
+    displayName += eventName;
+  }
+
+  if (ticketName && ticketName?.length > 0) {
+    if (displayName.length === 0) {
+      displayName = ticketName;
+    } else {
+      displayName += ` (${ticketName})`;
+    }
+  }
+
+  return displayName.length === 0 ? "untitled" : displayName;
+}
 /**
  * Provides the information about the {@link EdDSATicketPCD} that will be displayed
  * to users on Zupass.
@@ -243,19 +263,21 @@ export function getDisplayOptions(pcd: EdDSATicketPCD): DisplayOptions {
     };
   }
 
-  let header = "Ticket";
+  const displayName = ticketDisplayName(
+    ticketData.eventName,
+    ticketData.ticketName
+  );
 
+  let header = displayName;
   if (ticketData.isRevoked) {
-    header = `[CANCELED] ${ticketData.eventName} (${ticketData.ticketName})`;
+    header = `[CANCELED] ${displayName}`;
   } else if (ticketData.isConsumed) {
-    header = `[SCANNED] ${ticketData.eventName} (${ticketData.ticketName})`;
-  } else if (ticketData.eventName && ticketData.ticketName) {
-    header = `${ticketData.eventName} (${ticketData.ticketName})`;
+    header = `[SCANNED] ${displayName}`;
   }
 
   return {
-    header: header,
-    displayName: `${ticketData.eventName} (${ticketData.ticketName})`
+    header,
+    displayName
   };
 }
 

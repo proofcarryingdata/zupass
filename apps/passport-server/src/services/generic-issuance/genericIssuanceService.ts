@@ -1,12 +1,11 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  ActionConfigResponseValue,
+  EdgeCityBalance,
   Feed,
-  GenericCheckinCredentialPayload,
   GenericIssuanceCheckInRequest,
-  GenericIssuanceCheckInResponseValue,
   GenericIssuancePipelineListEntry,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
@@ -17,9 +16,11 @@ import {
   PipelineInfoResponseValue,
   PipelineLoadSummary,
   PipelineType,
+  PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
-  PretixPipelineDefinition
+  PretixPipelineDefinition,
+  TicketActionPayload
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { newRSAPrivateKey } from "@pcd/rsa-pcd";
@@ -33,6 +34,7 @@ import urljoin from "url-join";
 import { v4 as uuidV4 } from "uuid";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
+import { getBalances } from "../../database/queries/edgecity";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
   IPipelineCheckinDB,
@@ -46,6 +48,12 @@ import {
   IPipelineUserDB,
   PipelineUserDB
 } from "../../database/queries/pipelineUserDB";
+import {
+  BadgeGiftingDB,
+  ContactSharingDB,
+  IBadgeGiftingDB,
+  IContactSharingDB
+} from "../../database/queries/ticketActionDBs";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -111,6 +119,8 @@ export class GenericIssuanceService {
   private definitionDB: IPipelineDefinitionDB;
   private atomDB: IPipelineAtomDB;
   private checkinDB: IPipelineCheckinDB;
+  private contactDB: IContactSharingDB;
+  private badgeDB: IBadgeGiftingDB;
 
   private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
@@ -158,6 +168,8 @@ export class GenericIssuanceService {
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = newRSAPrivateKey();
     this.cacheService = cacheService;
+    this.contactDB = new ContactSharingDB(this.context.dbPool);
+    this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
   }
 
   public async start(): Promise<void> {
@@ -234,7 +246,9 @@ export class GenericIssuanceService {
               this.zupassPublicKey,
               this.rsaPrivateKey,
               this.cacheService,
-              this.checkinDB
+              this.checkinDB,
+              this.contactDB,
+              this.badgeDB
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
@@ -712,7 +726,7 @@ export class GenericIssuanceService {
    */
   public async handleCheckIn(
     req: GenericIssuanceCheckInRequest
-  ): Promise<GenericIssuanceCheckInResponseValue> {
+  ): Promise<PodboxTicketActionResponseValue> {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
@@ -728,7 +742,7 @@ export class GenericIssuanceService {
         throw new Error("credential signature invalid");
       }
 
-      const payload: GenericCheckinCredentialPayload = JSON.parse(
+      const payload: TicketActionPayload = JSON.parse(
         signaturePCD.claim.signedMessage
       );
 
@@ -767,7 +781,7 @@ export class GenericIssuanceService {
    */
   public async handlePreCheck(
     req: GenericIssuancePreCheckRequest
-  ): Promise<GenericIssuancePreCheckResponseValue> {
+  ): Promise<ActionConfigResponseValue> {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
@@ -783,7 +797,7 @@ export class GenericIssuanceService {
         throw new Error("credential signature invalid");
       }
 
-      const payload: GenericCheckinCredentialPayload = JSON.parse(
+      const payload: TicketActionPayload = JSON.parse(
         signaturePCD.claim.signedMessage
       );
 
@@ -1125,7 +1139,9 @@ export class GenericIssuanceService {
         this.zupassPublicKey,
         this.rsaPrivateKey,
         this.cacheService,
-        this.checkinDB
+        this.checkinDB,
+        this.contactDB,
+        this.badgeDB
       );
 
       await this.performPipelineLoad(pipelineSlot);
@@ -1430,6 +1446,10 @@ export class GenericIssuanceService {
     };
 
     await this.definitionDB.setDefinition(lemonadeDefinition);
+  }
+
+  public async getBalances(): Promise<EdgeCityBalance[]> {
+    return getBalances(this.context.dbPool);
   }
 }
 

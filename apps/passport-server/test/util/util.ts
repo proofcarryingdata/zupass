@@ -74,7 +74,7 @@ export function expectLength<T>(
  * Should only be used in the process of developing tests.
  */
 export function safeExit(): void {
-  if (Math.random() < 2) {
+  if (safeTrue()) {
     // eslint-disable-next-line no-console
     console.log("\n*************");
     // eslint-disable-next-line no-console
@@ -83,6 +83,19 @@ export function safeExit(): void {
     console.log("*************\n");
     process.exit(0);
   }
+}
+
+/**
+ * Same as {@link safeExit}, but for throwing runtime Errors.
+ */
+export function safeThrow(): void {
+  if (safeTrue()) {
+    throw new Error("safeThrow");
+  }
+}
+
+export function safeTrue(): boolean {
+  return Math.random() < 2;
 }
 
 export function randomName(): string {

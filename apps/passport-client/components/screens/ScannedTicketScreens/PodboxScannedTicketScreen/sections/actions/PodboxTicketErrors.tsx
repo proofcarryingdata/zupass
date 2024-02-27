@@ -1,19 +1,28 @@
-import { GenericIssuanceCheckInError } from "@pcd/passport-interface";
+import { PodboxTicketActionError } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import {
   ErrorContainer,
   ErrorTitle,
   Spread
-} from "../../../PodboxScannedTicketScreen";
+} from "../../PodboxScannedTicketScreen";
 
-export function PodboxCheckInErrorSection({
+export function PodboxTicketActionErrorSection({
   error
 }: {
-  error: GenericIssuanceCheckInError;
+  error: PodboxTicketActionError;
 }): JSX.Element {
   let errorContent = null;
 
   switch (error.name) {
+    case "NoActionsAvailable":
+      errorContent = (
+        <>
+          <ErrorTitle>No Actions Available</ErrorTitle>
+          <Spacer h={8} />
+          <div>You're not permissioned to do anything with this ticket.</div>
+        </>
+      );
+      break;
     case "AlreadyCheckedIn":
       errorContent = (
         <>

@@ -1,4 +1,7 @@
-import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import {
+  EdgeCityFolderName,
+  FrogCryptoFolderName
+} from "@pcd/passport-interface";
 import { splitPath } from "@pcd/pcd-collection";
 import { sleep } from "@pcd/util";
 import validator from "email-validator";
@@ -102,6 +105,14 @@ export function maybeRedirect(text: string): string | null {
 export function isFrogCryptoFolder(folderPath: string): boolean {
   const parts = splitPath(folderPath);
   return parts[0] === FrogCryptoFolderName;
+}
+
+/**
+ * Check if a folder path is the Edge City folder.
+ */
+export function isEdgeCityFolder(folderPath: string): boolean {
+  const parts = splitPath(folderPath);
+  return parts.length === 1 && parts[0] === EdgeCityFolderName;
 }
 
 export function bigintToUint8Array(bigint: bigint): Uint8Array {

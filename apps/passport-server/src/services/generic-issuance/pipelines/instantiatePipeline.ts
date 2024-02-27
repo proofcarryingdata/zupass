@@ -4,6 +4,10 @@ import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import {
+  IBadgeGiftingDB,
+  IContactSharingDB
+} from "../../../database/queries/ticketActionDBs";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
@@ -35,7 +39,9 @@ export function instantiatePipeline(
   zupassPublicKey: EdDSAPublicKey,
   rsaPrivateKey: string,
   cacheService: PersistentCacheService,
-  checkinDb: IPipelineCheckinDB
+  checkinDB: IPipelineCheckinDB,
+  contactDB: IContactSharingDB,
+  badgeDB: IBadgeGiftingDB
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
@@ -50,7 +56,9 @@ export function instantiatePipeline(
         apis.lemonadeAPI,
         zupassPublicKey,
         cacheService,
-        checkinDb
+        checkinDB,
+        contactDB,
+        badgeDB
       );
     } else if (isPretixPipelineDefinition(definition)) {
       pipeline = new PretixPipeline(
@@ -60,7 +68,7 @@ export function instantiatePipeline(
         apis.genericPretixAPI,
         zupassPublicKey,
         cacheService,
-        checkinDb
+        checkinDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(

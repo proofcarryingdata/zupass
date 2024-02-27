@@ -6,7 +6,7 @@ import {
 import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { memo, useCallback, useContext, useMemo } from "react";
-import styled from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
 import { pcdRenderers } from "../../src/pcdRenderers";
@@ -41,7 +41,7 @@ function PCDCardImpl({
     return (
       <CardContainerExpanded>
         <CardOutlineExpanded>
-          <CardHeader>
+          <CardHeader isMainIdentity={isMainIdentity}>
             <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
           </CardHeader>
           <CardBodyContainer>
@@ -239,11 +239,18 @@ const CardContainerCollapsed = styled(CardContainerExpanded)`
 `;
 
 export const CardOutlineExpanded = styled.div`
-  width: 100%;
-  border-radius: 12px;
-  border: 1px solid var(--accent-dark);
-  background: var(--primary-dark);
-  overflow: hidden;
+  ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
+    width: 100%;
+    border-radius: 12px;
+    border: 1px solid var(--accent-dark);
+    background: var(--primary-dark);
+    overflow: hidden;
+
+    ${disabled &&
+    css`
+      opacity: 0.7;
+    `}
+  `}
 `;
 
 const CardOutlineCollapsed = styled.div`
@@ -266,8 +273,20 @@ const CardHeaderCollapsed = styled.div`
 `;
 
 export const CardHeader = styled(H4)`
-  text-align: center;
-  padding: 10px;
+  ${({
+    isMainIdentity
+  }: {
+    isMainIdentity?: boolean;
+  }): FlattenSimpleInterpolation => css`
+    text-align: center;
+    padding: 10px;
+
+    ${isMainIdentity
+      ? css`
+          background: var(--primary-darker);
+        `
+      : css``}
+  `}
 `;
 
 const FooterContainer = styled.div`

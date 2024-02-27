@@ -1,6 +1,6 @@
 import {
+  ActionConfigResponseValue,
   GenericIssuanceCheckInRequest,
-  GenericIssuanceCheckInResponseValue,
   GenericIssuanceDeletePipelineResponseValue,
   GenericIssuanceFetchPretixEventsRequest,
   GenericIssuanceFetchPretixEventsResponseValue,
@@ -9,7 +9,6 @@ import {
   GenericIssuanceGetAllUserPipelinesResponseValue,
   GenericIssuanceGetPipelineResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuancePreCheckResponseValue,
   GenericIssuanceSelfResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
@@ -17,6 +16,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
+  PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -156,7 +156,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const request = req.body as GenericIssuanceCheckInRequest;
       const result = await genericIssuanceService.handleCheckIn(request);
-      res.json(result satisfies GenericIssuanceCheckInResponseValue);
+      res.json(result satisfies PodboxTicketActionResponseValue);
     }
   );
 
@@ -169,7 +169,7 @@ export function initGenericIssuanceRoutes(
       checkGenericIssuanceServiceStarted(genericIssuanceService);
       const request = req.body as GenericIssuancePreCheckRequest;
       const result = await genericIssuanceService.handlePreCheck(request);
-      res.json(result satisfies GenericIssuancePreCheckResponseValue);
+      res.json(result satisfies ActionConfigResponseValue);
     }
   );
 
@@ -366,4 +366,9 @@ export function initGenericIssuanceRoutes(
       );
     }
   );
+
+  app.post("/edgecity/balances", async (req, res) => {
+    checkGenericIssuanceServiceStarted(genericIssuanceService);
+    res.send(await genericIssuanceService.getBalances());
+  });
 }

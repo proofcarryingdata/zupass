@@ -12,13 +12,15 @@ export function Button({
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
-  style?: "primary" | "secondary" | "danger" | "outline";
+  style?: "primary" | "secondary" | "danger" | "outline" | "outline-lite";
   size?: "large" | "small" | "xs";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
 }): JSX.Element {
   const Btn =
-    style === "outline"
+    style === "outline-lite"
+      ? BtnOutlineLite
+      : style === "outline"
       ? BtnOutline
       : style === "danger"
       ? BtnDanger
@@ -111,6 +113,15 @@ const BtnSecondary = styled(BtnBase)`
 const BtnOutline = styled(BtnBase)`
   border: 1px solid white;
   color: #fff;
+  background-color: var(--bg-dark-primary);
+  &:hover {
+    background-color: var(--bg-lite-primary);
+  }
+`;
+
+const BtnOutlineLite = styled(BtnBase)`
+  border: 1px solid grey;
+  color: #e7e7e7;
   background-color: var(--bg-dark-primary);
   &:hover {
     background-color: var(--bg-lite-primary);

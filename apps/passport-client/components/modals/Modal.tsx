@@ -1,15 +1,12 @@
 import { icons } from "@pcd/passport-ui";
 import React, { ReactNode, useCallback, useEffect } from "react";
-import styled, {
-  FlattenSimpleInterpolation,
-  createGlobalStyle,
-  css
-} from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
 import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
+import { Overscroll } from "../shared/Overscroll";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
 import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
@@ -53,15 +50,23 @@ export function MaybeModal({
 
   const body = getModalBody(modal, isProveOrAddScreen);
 
-  if (body == null) return null;
+  if (body == null)
+    return (
+      <>
+        <Overscroll />
+      </>
+    );
 
   return (
-    <Modal
-      fullScreen={fullScreen}
-      onClose={dismissable === true ? close : undefined}
-    >
-      {body}
-    </Modal>
+    <>
+      <Overscroll />
+      <Modal
+        fullScreen={fullScreen}
+        onClose={dismissable === true ? close : undefined}
+      >
+        {body}
+      </Modal>
+    </>
   );
 }
 
@@ -126,35 +131,35 @@ export function Modal(props: {
   fullScreen?: boolean;
 }): JSX.Element {
   const ignore = useCallback((e: React.MouseEvent) => e.stopPropagation(), []);
+
+  useEffect(() => {
+    document.body.style.overflowY = "hidden";
+    document.body.style.paddingRight = "15px";
+    return () => {
+      document.body.style.overflowY = "scroll";
+      document.body.style.paddingRight = "0px";
+    };
+  }, [props.fullScreen]);
+
   return (
-    <>
-      <NoScroll />
-      <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
-        <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
-          {props.onClose && (
-            <CircleButton diameter={20} padding={16} onClick={props.onClose}>
-              <img
-                draggable="false"
-                src={icons.closeWhite}
-                width={20}
-                height={20}
-              />
-            </CircleButton>
-          )}
-          <Spacer h={32} />
-          {props.children}
-        </ModalWrap>
-      </ModalBg>
-    </>
+    <ModalBg onClick={props.onClose} $fullScreen={props.fullScreen}>
+      <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
+        {props.onClose && (
+          <CircleButton diameter={20} padding={16} onClick={props.onClose}>
+            <img
+              draggable="false"
+              src={icons.closeWhite}
+              width={20}
+              height={20}
+            />
+          </CircleButton>
+        )}
+        <Spacer h={32} />
+        {props.children}
+      </ModalWrap>
+    </ModalBg>
   );
 }
-
-const NoScroll = createGlobalStyle`
-  html, body {
-    overflow: hidden;
-    max-height: 100vh;
-  }
-`;
 
 const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   position: fixed;
@@ -162,11 +167,18 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   left: 0;
   bottom: 0;
   right: 0;
-  overflow-y: scroll;
+  overflow-x: hidden;
+  overflow-y: hidden;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
   z-index: 999;
-  padding: ${(props): string => (props.$fullScreen ? "0" : "0 12px")};
+
+  ${({ $fullScreen }: { $fullScreen?: boolean }): FlattenSimpleInterpolation =>
+    $fullScreen
+      ? css``
+      : css`
+          padding: 32px;
+        `}
 `;
 
 const ModalWrap = styled.div<{ fullScreen?: boolean }>`
@@ -179,7 +191,7 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   max-width: 420px;
   margin: 64px auto;
   min-height: 480px;
-  padding: 12px;
+  padding: ${(props): string => (props.fullScreen ? "0" : "12px")};
   border-radius: 12px;
 
   ${({ fullScreen }): FlattenSimpleInterpolation =>
