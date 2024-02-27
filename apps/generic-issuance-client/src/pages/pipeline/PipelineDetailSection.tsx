@@ -25,7 +25,10 @@ import {
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
-import { PipelineManualTicketsSection } from "./DetailsSections/PipelineManualTicketsSection";
+import {
+  PipelineManualTicketsSection,
+  shouldShowManualTicketsSection
+} from "./DetailsSections/PipelineManualTicketsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 
 export function PipelineDetailSection({
@@ -64,7 +67,20 @@ export function PipelineDetailSection({
             </Box>
           ))}
       </Box>
+
       <Accordion defaultIndex={[]} allowMultiple={true}>
+        {shouldShowManualTicketsSection(pipeline) && (
+          <AccordionItem>
+            <AccordionButton>Manual Tickets</AccordionButton>
+            <AccordionPanel>
+              <PipelineManualTicketsSection
+                pipeline={pipeline}
+                isAdminView={isAdminView}
+              />
+            </AccordionPanel>
+          </AccordionItem>
+        )}
+
         <AccordionItem>
           <AccordionButton>Latest Logs</AccordionButton>
           <AccordionPanel>
@@ -92,16 +108,6 @@ export function PipelineDetailSection({
           <AccordionButton>Semaphore Groups</AccordionButton>
           <AccordionPanel>
             <PipelineSemaphoreGroupsSection lastLoad={pipelineInfo.lastLoad} />
-          </AccordionPanel>
-        </AccordionItem>
-
-        <AccordionItem>
-          <AccordionButton>Manual Tickets</AccordionButton>
-          <AccordionPanel>
-            <PipelineManualTicketsSection
-              pipeline={pipeline}
-              isAdminView={isAdminView}
-            />
           </AccordionPanel>
         </AccordionItem>
 
