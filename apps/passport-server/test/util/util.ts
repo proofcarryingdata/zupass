@@ -51,6 +51,23 @@ export function expectFalse(value: boolean): asserts value is true {
 }
 
 /**
+ * Timeout objects contain cyclical references, so we want to filter them out
+ * when stringifying to JSON. However, Timeout objects are a weird NodeJS thing
+ * and the class isn't importable, so we can't use instanceof to detect them.
+ * Instead, we check some properties.
+ */
+function isTimeoutObject(obj: unknown): boolean {
+  return (
+    !!obj &&
+    typeof obj === "object" &&
+    "ref" in obj &&
+    "unref" in obj &&
+    typeof obj.ref === "function" &&
+    typeof obj.unref === "function"
+  );
+}
+
+/**
  * Use in place of `expect(array.length).to.eq(length)`
  */
 export function expectLength<T>(
@@ -63,7 +80,17 @@ export function expectLength<T>(
 
   if (array.length !== length) {
     throw new Error(
-      `expected ${JSON.stringify(array, null, 2)} to have length ${length}`
+      `expected ${JSON.stringify(
+        array,
+        function (_key, value) {
+          if (isTimeoutObject(value)) {
+            return "Timeout";
+          } else {
+            return value;
+          }
+        },
+        2
+      )} to have length ${length}`
     );
   }
 }

@@ -4,5 +4,6 @@
  */
 export enum PipelineCapability {
   FeedIssuance = "FeedIssuance",
-  Checkin = "Checkin"
+  Checkin = "Checkin",
+  SemaphoreGroup = "SemaphoreGroup"
 }

@@ -147,3 +147,10 @@ export function pbcopy(data: string): void {
   proc.stdin.write(data);
   proc.stdin.end();
 }
+
+export function ensureDefined<T>(val: T | undefined, errorMessage?: string): T {
+  if (val === undefined) {
+    throw new Error(errorMessage ?? "Undefined value");
+  }
+  return val;
+}
