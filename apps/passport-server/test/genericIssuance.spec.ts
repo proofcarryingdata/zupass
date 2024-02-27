@@ -38,7 +38,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_MINUTE_MS, ONE_SECOND_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { randomUUID } from "crypto";
@@ -820,26 +820,37 @@ t2,i1`,
         ]
       );
       expectLength(consumers, 5);
+      const edgeCityIssuanceDateTime = new Date();
       expect(consumers).to.deep.include.members([
         {
           email: EdgeCityManualAttendeeEmail,
-          commitment: EdgeCityManualAttendeeIdentity.commitment.toString()
+          commitment: EdgeCityManualAttendeeIdentity.commitment.toString(),
+          timeCreated: edgeCityIssuanceDateTime,
+          timeUpdated: edgeCityIssuanceDateTime
         },
         {
           email: EdgeCityManualBouncerEmail,
-          commitment: EdgeCityManualBouncerIdentity.commitment.toString()
+          commitment: EdgeCityManualBouncerIdentity.commitment.toString(),
+          timeCreated: edgeCityIssuanceDateTime,
+          timeUpdated: edgeCityIssuanceDateTime
         },
         {
           email: EdgeCityDenverAttendee.email,
-          commitment: EdgeCityDenverAttendeeIdentity.commitment.toString()
+          commitment: EdgeCityDenverAttendeeIdentity.commitment.toString(),
+          timeCreated: edgeCityIssuanceDateTime,
+          timeUpdated: edgeCityIssuanceDateTime
         },
         {
           email: EdgeCityDenverBouncer.email,
-          commitment: EdgeCityBouncerIdentity.commitment.toString()
+          commitment: EdgeCityBouncerIdentity.commitment.toString(),
+          timeCreated: edgeCityIssuanceDateTime,
+          timeUpdated: edgeCityIssuanceDateTime
         },
         {
           email: EdgeCityDenverBouncer2.email,
-          commitment: EdgeCityBouncer2Identity.commitment.toString()
+          commitment: EdgeCityBouncer2Identity.commitment.toString(),
+          timeCreated: edgeCityIssuanceDateTime,
+          timeUpdated: edgeCityIssuanceDateTime
         }
       ]);
 
@@ -1022,6 +1033,16 @@ t2,i1`,
 
       expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
 
+      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumer = (
+        await consumerDB.loadByEmails(edgeCityPipeline.id, [newUser.email])
+      )[0];
+      expectToExist(consumer);
+      const consumerUpdated = consumer.timeUpdated;
+      const consumerCreated = consumer.timeCreated;
+      expect(consumerCreated.getTime()).to.eq(consumerUpdated.getTime());
+      MockDate.set(Date.now() + ONE_MINUTE_MS);
+
       const changedIdentity = new Identity();
       await requestTicketsFromPipeline(
         edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
@@ -1093,6 +1114,29 @@ t2,i1`,
 
         expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
       }
+
+      const consumerAfterChange = (
+        await consumerDB.loadByEmails(edgeCityDenverPipeline.id, [
+          newUser.email
+        ])
+      )[0];
+      const consumerUpdatedAfterChange = consumerAfterChange.timeUpdated;
+      const consumerCreatedAfterChange = consumerAfterChange.timeCreated;
+
+      // Consumer update occurred now
+      expect(consumerUpdatedAfterChange.getTime()).to.eq(Date.now());
+      // Creation time should never change
+      expect(consumerCreatedAfterChange.getTime()).to.eq(
+        consumerCreated.getTime()
+      );
+      // Update time should be later than creation time now
+      expect(consumerUpdatedAfterChange.getTime()).to.be.greaterThan(
+        consumerCreated.getTime()
+      );
+      // Update time should be later than original update time
+      expect(consumerUpdatedAfterChange.getTime()).to.be.greaterThan(
+        consumerUpdated.getTime()
+      );
     }
   );
 
@@ -1110,6 +1154,7 @@ t2,i1`,
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
       const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+      const ethLatAmIssuanceDateTime = new Date();
       const attendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,
@@ -1315,19 +1360,27 @@ t2,i1`,
       expect(consumers).to.deep.include.members([
         {
           email: EthLatAmManualAttendeeEmail,
-          commitment: EthLatAmManualAttendeeIdentity.commitment.toString()
+          commitment: EthLatAmManualAttendeeIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         },
         {
           email: EthLatAmManualBouncerEmail,
-          commitment: EthLatAmManualBouncerIdentity.commitment.toString()
+          commitment: EthLatAmManualBouncerIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         },
         {
           email: pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
-          commitment: EthLatAmAttendeeIdentity.commitment.toString()
+          commitment: EthLatAmAttendeeIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         },
         {
           email: pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
-          commitment: EthLatAmBouncerIdentity.commitment.toString()
+          commitment: EthLatAmBouncerIdentity.commitment.toString(),
+          timeCreated: ethLatAmIssuanceDateTime,
+          timeUpdated: ethLatAmIssuanceDateTime
         }
       ]);
 

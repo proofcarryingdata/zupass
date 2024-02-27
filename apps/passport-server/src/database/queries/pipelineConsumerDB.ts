@@ -1,7 +1,4 @@
-import {
-  PipelineConsumer,
-  PipelineConsumerWithoutTimestamps
-} from "@pcd/passport-interface";
+import { PipelineConsumer } from "@pcd/passport-interface";
 import { QueryResultRow } from "pg";
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
@@ -27,7 +24,7 @@ export interface IPipelineConsumerDB {
   loadByEmails(
     pipelineId: string,
     emailAddresses: string[]
-  ): Promise<PipelineConsumerWithoutTimestamps[]>;
+  ): Promise<PipelineConsumer[]>;
   loadAll(pipelineId: string): Promise<PipelineConsumer[]>;
 }
 
@@ -79,14 +76,14 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
   public async loadByEmails(
     pipelineId: string,
     emailAddresses: string[]
-  ): Promise<PipelineConsumerWithoutTimestamps[]> {
+  ): Promise<PipelineConsumer[]> {
     const result = await sqlQuery(
       this.db,
-      `SELECT email, commitment FROM generic_issuance_consumers WHERE pipeline_id = $1 AND email = ANY($2)`,
+      `SELECT * FROM generic_issuance_consumers WHERE pipeline_id = $1 AND email = ANY($2)`,
       [pipelineId, emailAddresses]
     );
 
-    return result.rows;
+    return result.rows.map(rowToPipelineConsumer);
   }
 
   /**

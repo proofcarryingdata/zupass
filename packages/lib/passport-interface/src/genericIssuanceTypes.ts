@@ -461,18 +461,15 @@ export const PipelineDefinitionSchema = z.union([
  */
 export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
 
-export interface PipelineConsumerWithoutTimestamps {
-  email: string; // the consumer's email address
-  commitment: string; // the consumer's semaphore commitment
-}
-
 /**
  * {@link Pipeline}s offer PCDs to users via authenticated channels such as
  * feeds. When a user authenticates in order to receive a PCD, we record this
  * in the DB, allowing us to reconstruct a list of authenticated users for
  * purposes such as Semaphore group management.
  */
-export interface PipelineConsumer extends PipelineConsumerWithoutTimestamps {
+export interface PipelineConsumer {
+  email: string; // the consumer's email address
+  commitment: string; // the consumer's semaphore commitment
   timeCreated: Date;
   timeUpdated: Date;
 }
