@@ -22,6 +22,10 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
+import {
+  PipelineAddManualTicketSection,
+  shouldShowAddManualTicketSection
+} from "./DetailsSections/PipelineAddManualTicketSection";
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
@@ -69,9 +73,21 @@ export function PipelineDetailSection({
       </Box>
 
       <Accordion defaultIndex={[]} allowMultiple={true}>
+        {shouldShowAddManualTicketSection(pipeline) && (
+          <AccordionItem>
+            <AccordionButton>Add Manual Tickets</AccordionButton>
+            <AccordionPanel>
+              <PipelineAddManualTicketSection
+                pipeline={pipeline}
+                isAdminView={isAdminView}
+              />
+            </AccordionPanel>
+          </AccordionItem>
+        )}
+
         {shouldShowManualTicketsSection(pipeline) && (
           <AccordionItem>
-            <AccordionButton>Manual Tickets</AccordionButton>
+            <AccordionButton>Existing Manual Tickets</AccordionButton>
             <AccordionPanel>
               <PipelineManualTicketsSection
                 pipeline={pipeline}
