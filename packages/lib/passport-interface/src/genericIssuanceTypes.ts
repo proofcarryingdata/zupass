@@ -312,6 +312,12 @@ export type LemonadePipelineDefinition = z.infer<
   typeof LemonadePipelineDefinitionSchema
 >;
 
+export function isLemonadePipelineDefinition(
+  d: PipelineDefinition
+): d is LemonadePipelineDefinition {
+  return d.type === PipelineType.Lemonade;
+}
+
 const PretixProductConfigSchema = z.object({
   /**
    * Pretix's item ID
@@ -417,6 +423,12 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
+export function isPretixPipelineDefinition(
+  d: PipelineDefinition
+): d is PretixPipelineDefinition {
+  return d.type === PipelineType.Pretix;
+}
+
 export enum CSVPipelineOutputType {
   /**
    * {@link EdDSAMessagePCD}
@@ -442,6 +454,12 @@ const CSVPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
  * Similar to {@link LemonadePipelineDefinition} but for CSV-based Pipelines.
  */
 export type CSVPipelineDefinition = z.infer<typeof CSVPipelineDefinitionSchema>;
+
+export function isCSVPipelineDefinition(
+  d: PipelineDefinition
+): d is CSVPipelineDefinition {
+  return d.type === PipelineType.CSV;
+}
 
 /**
  * This item is exported so that we can use it for validation on generic issuance server.

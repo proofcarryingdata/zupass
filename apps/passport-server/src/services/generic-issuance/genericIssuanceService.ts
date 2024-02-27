@@ -25,7 +25,8 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   PretixPipelineDefinition,
-  TicketActionPayload
+  TicketActionPayload,
+  isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { newRSAPrivateKey } from "@pcd/rsa-pcd";
@@ -87,7 +88,6 @@ import {
   isSemaphoreGroupCapability
 } from "./capabilities/SemaphoreGroupCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
-import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import {

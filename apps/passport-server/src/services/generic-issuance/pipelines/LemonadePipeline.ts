@@ -17,7 +17,6 @@ import {
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
-  PipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
@@ -78,12 +77,6 @@ const LOG_NAME = "LemonadePipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export const LEMONADE_CHECKER = "Lemonade";
-
-export function isLemonadePipelineDefinition(
-  d: PipelineDefinition
-): d is LemonadePipelineDefinition {
-  return d.type === PipelineType.Lemonade;
-}
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which

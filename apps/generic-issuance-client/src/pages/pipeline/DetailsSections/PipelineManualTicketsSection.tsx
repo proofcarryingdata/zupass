@@ -1,13 +1,9 @@
-import {
-  PipelineDefinition,
-  PipelineInfoResponseValue
-} from "@pcd/passport-interface";
+import { PipelineDefinition } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 
 export function PipelineManualTicketsSection({
   pipeline
 }: {
-  pipelineInfo: PipelineInfoResponseValue;
   pipeline: PipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
@@ -16,7 +12,7 @@ export function PipelineManualTicketsSection({
       manual tickets section
       <br />
       <br />
-      {pipeline.id}
+      {}
     </div>
   );
 }

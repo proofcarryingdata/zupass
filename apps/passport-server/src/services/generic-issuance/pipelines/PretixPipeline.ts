@@ -9,7 +9,6 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  CSVPipelineDefinition,
   GenericIssuanceCheckInRequest,
   GenericIssuancePreCheckRequest,
   GenericPretixCheckinList,
@@ -19,7 +18,6 @@ import {
   GenericPretixProduct,
   GenericPretixProductCategory,
   ManualTicket,
-  PipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -1576,18 +1574,6 @@ export class PretixPipeline implements BasePipeline {
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
   }
-}
-
-export function isPretixPipelineDefinition(
-  d: PipelineDefinition
-): d is PretixPipelineDefinition {
-  return d.type === PipelineType.Pretix;
-}
-
-export function isCSVPipelineDefinition(
-  d: PipelineDefinition
-): d is CSVPipelineDefinition {
-  return d.type === PipelineType.CSV;
 }
 
 // Collection of API data for a single event
