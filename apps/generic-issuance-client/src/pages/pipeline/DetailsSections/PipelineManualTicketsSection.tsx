@@ -1,3 +1,4 @@
+import { Table, Tbody, Th, Thead, Tr } from "@chakra-ui/react";
 import {
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
@@ -9,6 +10,7 @@ import {
   isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
+import styled from "styled-components";
 
 export function shouldShowManualTicketsSection(
   pipeline: PipelineDefinition
@@ -27,20 +29,53 @@ export function PipelineManualTicketsSection({
 }): ReactNode {
   const tix = pipeline.options.manualTickets;
 
+  let content = <></>;
+
   if (!tix || tix.length === 0) {
-    return <div>no manual tickets</div>;
+    content = <div>no manual tickets</div>;
+  } else if (isLemonadePipelineDefinition(pipeline)) {
+    content = <LemonadeManualTicketTable pipeline={pipeline} />;
+  } else if (isPretixPipelineDefinition(pipeline)) {
+    content = <PretixManualTicketTable pipeline={pipeline} />;
+  } else {
+    content = <div>unsupported pipeline type</div>;
   }
 
+  return <Container>{content}</Container>;
+}
+
+function LemonadeManualTicketTable({
+  pipeline
+}: {
+  pipeline: LemonadePipelineDefinition;
+}): ReactNode {
   return (
-    <div>
-      {tix.map((t) => (
-        <ManualTicket pipeline={pipeline} ticket={t} key={t.id} />
-      ))}
-    </div>
+    <Table>
+      <Thead>
+        <Tr>
+          <Th>email</Th>
+          <Th>event name</Th>
+          <Th>ticket type</Th>
+        </Tr>
+      </Thead>
+      <Tbody>
+        {pipeline.options.manualTickets?.map((t) => (
+          <ManualTicketRow ticket={t} pipeline={pipeline} />
+        ))}
+      </Tbody>
+    </Table>
   );
 }
 
-function ManualTicket({
+function PretixManualTicketTable({
+  pipeline
+}: {
+  pipeline: PretixManualTicketTable;
+}): ReactNode {
+  return <div>lemonade manual ticket table</div>;
+}
+
+function ManualTicketRow({
   ticket,
   pipeline
 }: {
@@ -66,9 +101,11 @@ function ManualLemonadeTicket({
   const details = getLemonadeTicketDetails(ticket, pipeline);
 
   return (
-    <div>
-      {ticket.attendeeEmail} - {details?.event?.name} - {details?.product?.name}
-    </div>
+    <tr>
+      <td>{ticket.attendeeEmail}</td>
+      <td>{details?.event?.name}</td>
+      <td>{details?.product?.name}</td>
+    </tr>
   );
 }
 
@@ -102,3 +139,9 @@ function ManualPretixTicket({
     </div>
   );
 }
+
+const Container = styled.div`
+  width: 100%;
+  max-height: 400px;
+  overflow-y: scroll;
+`;
