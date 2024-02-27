@@ -82,7 +82,10 @@ import {
   ensureFeedIssuanceCapability,
   isFeedIssuanceCapability
 } from "./capabilities/FeedIssuanceCapability";
-import { ensureSemaphoreGroupCapability } from "./capabilities/SemaphoreGroupCapability";
+import {
+  ensureSemaphoreGroupCapability,
+  isSemaphoreGroupCapability
+} from "./capabilities/SemaphoreGroupCapability";
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
 import { isCSVPipelineDefinition } from "./pipelines/PretixPipeline";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
@@ -663,9 +666,16 @@ export class GenericIssuanceService {
         pipelineInstance.id
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
-      const latestConsumers = await this.consumerDB.loadAll(
-        pipelineInstance.id
-      );
+      // Ugly, but if we get either undefined or 0, then negate it, then the
+      // boolean value is true if there are Semaphore groups and false if not.
+      const pipelineHasSemaphoreGroups = !pipelineInstance.capabilities
+        .find(isSemaphoreGroupCapability)
+        ?.getSupportedGroups().length;
+
+      // Only actually run the query if there are Semaphore groups
+      const latestConsumers = pipelineHasSemaphoreGroups
+        ? await this.consumerDB.loadAll(pipelineInstance.id)
+        : [];
 
       if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");
@@ -677,14 +687,16 @@ export class GenericIssuanceService {
           url: f.feedUrl
         })),
         latestAtoms: latestAtoms,
-        latestConsumers: latestConsumers
-          .map((consumer) => ({
-            email: consumer.email,
-            commitment: consumer.commitment,
-            timeCreated: consumer.timeCreated.toISOString(),
-            timeUpdated: consumer.timeUpdated.toISOString()
-          }))
-          .sort((a, b) => b.timeUpdated.localeCompare(a.timeUpdated)),
+        latestConsumers: !pipelineHasSemaphoreGroups
+          ? undefined
+          : latestConsumers
+              .map((consumer) => ({
+                email: consumer.email,
+                commitment: consumer.commitment,
+                timeCreated: consumer.timeCreated.toISOString(),
+                timeUpdated: consumer.timeUpdated.toISOString()
+              }))
+              .sort((a, b) => b.timeUpdated.localeCompare(a.timeUpdated)),
         lastLoad: summary,
         ownerEmail: pipelineSlot.owner.email
       } satisfies PipelineInfoResponseValue;
