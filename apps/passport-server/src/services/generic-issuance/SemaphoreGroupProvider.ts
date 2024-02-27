@@ -69,7 +69,7 @@ export class SemaphoreGroupProvider {
   }
 
   /**
-   * Get the latest group in serialized format.
+   * Get the latest group as a {@link SerializedSemaphoreGroup}.
    */
   public async getSerializedLatestGroup(
     groupId: string
@@ -102,8 +102,7 @@ export class SemaphoreGroupProvider {
   }
 
   /**
-   * Load a group from the history table.
-   * Parses the serializedGroup member as a {@link SerializedSemaphoreGroup}.
+   * Get a historical group as a {@link SerializedSemaphoreGroup}.
    */
   public async getSerializedHistoricalGroup(
     groupId: string,
