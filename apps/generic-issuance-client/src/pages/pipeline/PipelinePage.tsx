@@ -118,7 +118,7 @@ export default function PipelinePage(): ReactNode {
               user.success && (
                 <PipelineDetailSection
                   pipelineInfo={pipelineInfo}
-                  pipelineFromServer={pipelineDefinition.value}
+                  pipeline={pipelineDefinition.value}
                   isAdminView={isAdminView}
                 />
               )}

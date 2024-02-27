@@ -22,18 +22,19 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
-import { PipelineLatestConsumersSection } from "./PipelineLatestConsumersSection";
-import { PipelineLatestDataSection } from "./PipelineLatestDataSection";
-import { PipelineLatestLogsSection } from "./PipelineLatestLogsSection";
-import { PipelineSemaphoreGroupsSection } from "./PipelineSemaphoreGroupsSection";
+import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
+import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
+import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
+import { PipelineManualTicketsSection } from "./DetailsSections/PipelineManualTicketsSection";
+import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 
 export function PipelineDetailSection({
   pipelineInfo,
-  pipelineFromServer,
+  pipeline,
   isAdminView
 }: {
   pipelineInfo: PipelineInfoResponseValue;
-  pipelineFromServer: PipelineDefinition;
+  pipeline: PipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
   return (
@@ -94,6 +95,16 @@ export function PipelineDetailSection({
           </AccordionPanel>
         </AccordionItem>
 
+        <AccordionItem>
+          <AccordionButton>Manual Tickets</AccordionButton>
+          <AccordionPanel>
+            <PipelineManualTicketsSection
+              pipeline={pipeline}
+              isAdminView={isAdminView}
+            />
+          </AccordionPanel>
+        </AccordionItem>
+
         {isAdminView && (
           <AccordionItem>
             <AccordionButton>
@@ -104,9 +115,7 @@ export function PipelineDetailSection({
                 <ListItem>
                   <PodLink
                     isExternal={true}
-                    to={getLoadTraceHoneycombLinkForPipeline(
-                      pipelineFromServer.id
-                    )}
+                    to={getLoadTraceHoneycombLinkForPipeline(pipeline.id)}
                   >
                     data load traces {getHoneycombQueryDurationStr()}
                   </PodLink>
@@ -114,7 +123,7 @@ export function PipelineDetailSection({
                 <li>
                   <PodLink
                     isExternal={true}
-                    to={getAllHoneycombLinkForPipeline(pipelineFromServer.id)}
+                    to={getAllHoneycombLinkForPipeline(pipeline.id)}
                   >
                     all traces related to this pipeline{" "}
                     {getHoneycombQueryDurationStr()}
