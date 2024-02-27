@@ -22,7 +22,7 @@ export async function getBalances(pool: Pool): Promise<EdgeCityBalance[]> {
       ) AS subquery
       GROUP BY email
     ) AS final_query
-    ORDER BY balance DESC, email LIMIT 50;
+    ORDER BY balance DESC, email;
     `
   );
   return rows;
