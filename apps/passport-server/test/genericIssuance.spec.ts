@@ -1021,6 +1021,78 @@ t2,i1`,
       });
 
       expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
+
+      const changedIdentity = new Identity();
+      await requestTicketsFromPipeline(
+        edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
+        edgeCityDenverTicketFeedUrl,
+        edgeCityDenverPipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        newUser.email,
+        // The user has a new identity, which might occur if they reset their
+        // Zupass account
+        changedIdentity
+      );
+
+      {
+        // Necessary to trigger Semaphore group update
+        await edgeCityDenverPipeline.load();
+        const semaphoreGroupAttendees =
+          await requestGenericIssuanceSemaphoreGroup(
+            process.env.PASSPORT_SERVER_URL as string,
+            edgeCityDenverPipeline.id,
+            edgeCitySemaphoreGroupIds.attendees
+          );
+
+        expectTrue(semaphoreGroupAttendees.success);
+        expectLength(semaphoreGroupAttendees.value.members, 5);
+        expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+          EdgeCityDenverAttendeeIdentity.commitment.toString(),
+          EdgeCityManualAttendeeIdentity.commitment.toString(),
+          EdgeCityBouncer2Identity.commitment.toString(),
+          changedIdentity.commitment.toString(),
+          // The deleted entry is represented by a zeroValue
+          semaphoreGroupAttendees.value.zeroValue
+        ]);
+      }
+
+      {
+        // Get the Semaphore group from the API
+        const groupResponse = await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          edgeCityDenverPipeline.id,
+          edgeCitySemaphoreGroupIds.attendees
+        );
+        expectTrue(groupResponse.success);
+        const group = deserializeSemaphoreGroup(groupResponse.value);
+
+        const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
+          identity: changedIdentity // Use the changed identity
+        });
+
+        const groupPCD = await SemaphoreGroupPCDPackage.prove({
+          externalNullifier: {
+            argumentType: ArgumentTypeName.BigInt,
+            value: group.root.toString()
+          },
+          signal: {
+            argumentType: ArgumentTypeName.BigInt,
+            value: "1"
+          },
+          group: {
+            argumentType: ArgumentTypeName.Object,
+            value: serializeSemaphoreGroup(group, groupResponse.value.name)
+          },
+          identity: {
+            argumentType: ArgumentTypeName.PCD,
+            pcdType: SemaphoreIdentityPCDPackage.name,
+            value:
+              await SemaphoreIdentityPCDPackage.serialize(newUserIdentityPCD)
+          }
+        });
+
+        expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
+      }
     }
   );
 
