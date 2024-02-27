@@ -4,7 +4,7 @@ CREATE TABLE generic_issuance_semaphore_history (
   group_id UUID NOT NULL,
   root_hash VARCHAR NOT NULL,
   serialized_group VARCHAR NOT NULL,
-  time_created TIMESTAMPTZ NOT NULL DEFAULT now(),
+  time_created TIMESTAMP NOT NULL DEFAULT now(),
   -- If a pipeline is deleted, delete the semaphore groups
   CONSTRAINT fk_pipeline
     FOREIGN KEY (pipeline_id)

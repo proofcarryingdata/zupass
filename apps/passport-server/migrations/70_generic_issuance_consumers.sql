@@ -11,8 +11,8 @@ CREATE TABLE generic_issuance_consumers (
   -- At some point, we might consider users who have not actively consumed
   -- anything for a period of time to be inactive, so we store this data for
   -- some future-proofing and for metrics.
-  time_created TIMESTAMPTZ NOT NULL DEFAULT now(),
-  time_updated TIMESTAMPTZ NOT NULL DEFAULT now(),
+  time_created TIMESTAMP NOT NULL DEFAULT now(),
+  time_updated TIMESTAMP NOT NULL DEFAULT now(),
   -- The same email can only be saved for the same pipeline once
   -- If the user resets their account and returns with a new Semaphore ID, that
   -- will overwrite the previous one.
