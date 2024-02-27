@@ -75,7 +75,7 @@ export function PipelineDetailSection({
       <Accordion defaultIndex={[]} allowMultiple={true}>
         {shouldShowAddManualTicketSection(pipeline) && (
           <AccordionItem>
-            <AccordionButton>Add Manual Tickets</AccordionButton>
+            <AccordionButton>Add Manual Ticket</AccordionButton>
             <AccordionPanel>
               <PipelineAddManualTicketSection
                 pipeline={pipeline}
