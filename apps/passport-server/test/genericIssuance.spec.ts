@@ -306,13 +306,13 @@ describe("Generic Issuance", function () {
           // All attendees, irrespective of product type
           name: "All",
           groupId: edgeCitySemaphoreGroupIds.all,
-          membershipTickets: [{ eventId: edgeCityDenverEventId }]
+          memberCriteria: [{ eventId: edgeCityDenverEventId }]
         },
         {
           // Holders of bouncer-tier tickets
           name: "Bouncers",
           groupId: edgeCitySemaphoreGroupIds.bouncers,
-          membershipTickets: [
+          memberCriteria: [
             {
               eventId: edgeCityDenverEventId,
               productId: edgeCityDenverBouncerProductId
@@ -323,7 +323,7 @@ describe("Generic Issuance", function () {
           // Holders of attendee-tier tickets
           name: "Attendees",
           groupId: edgeCitySemaphoreGroupIds.attendees,
-          membershipTickets: [
+          memberCriteria: [
             {
               eventId: edgeCityDenverEventId,
               productId: edgeCityDenverAttendeeProductId
@@ -337,7 +337,7 @@ describe("Generic Issuance", function () {
           // how it would be possible to create arbitrary groupings.
           name: "Attendees and Bouncers",
           groupId: edgeCitySemaphoreGroupIds.attendeesAndBouncers,
-          membershipTickets: [
+          memberCriteria: [
             {
               eventId: edgeCityDenverEventId,
               productId: edgeCityDenverBouncerProductId

@@ -129,7 +129,7 @@ const SemaphoreGroupConfigSchema = z.object({
    */
   groupId: z.string().uuid(),
   name: z.string().min(1),
-  membershipTickets: z.array(
+  memberCriteria: z.array(
     z.object({
       eventId: z.string().uuid(),
       productId: z.string().uuid().optional()
