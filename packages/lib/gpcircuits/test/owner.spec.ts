@@ -2,13 +2,13 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { CircuitSignal } from "../src";
 import {
+  CircuitSignal,
   OwnerModuleSemaphoreV3Inputs,
   OwnerModuleSemaphoreV3OutputNamesType,
   OwnerModuleSemaphoreV3Outputs,
   OwnerModuleSemaphoreV3nputNamesType
-} from "../src/owner";
+} from "../src";
 import { circomkit, ownerIdentity } from "./common";
 
 describe("owner.OwnerModuleSemaphoreV3 should work", function () {
