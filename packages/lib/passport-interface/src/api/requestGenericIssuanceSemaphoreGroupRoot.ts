@@ -19,7 +19,7 @@ export async function requestGenericIssuanceSemaphoreGroupRoot(
       "/generic-issuance/api/semaphore",
       pipelineId,
       groupId,
-      "root"
+      "latest-root"
     ),
     async (resText) => ({
       value: JSON.parse(resText),

@@ -21,7 +21,10 @@ import {
   createFeedCredentialPayload,
   createTicketActionCredentialPayload,
   getI18nString,
+  requestGenericIssuanceHistoricalSemaphoreGroup,
   requestGenericIssuanceSemaphoreGroup,
+  requestGenericIssuanceSemaphoreGroupRoot,
+  requestGenericIssuanceValidSemaphoreGroup,
   requestPipelineInfo,
   requestPodboxTicketAction,
   requestPollFeed
@@ -978,34 +981,47 @@ t2,i1`,
       );
       expectLength(NewUserTickets, 1);
 
-      {
-        // Necessary to trigger Semaphore group update
-        await edgeCityDenverPipeline.load();
-        const semaphoreGroupAttendees =
-          await requestGenericIssuanceSemaphoreGroup(
-            process.env.PASSPORT_SERVER_URL as string,
-            edgeCityDenverPipeline.id,
-            edgeCitySemaphoreGroupIds.attendees
-          );
-
-        expectTrue(semaphoreGroupAttendees.success);
-        expectLength(semaphoreGroupAttendees.value.members, 4);
-        expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
-          EdgeCityDenverAttendeeIdentity.commitment.toString(),
-          EdgeCityManualAttendeeIdentity.commitment.toString(),
-          EdgeCityBouncer2Identity.commitment.toString(),
-          newUserIdentity.commitment.toString()
-        ]);
-      }
-
-      // Get the Semaphore group from the API
-      const groupResponse = await requestGenericIssuanceSemaphoreGroup(
+      // Necessary to trigger Semaphore group update
+      await edgeCityDenverPipeline.load();
+      const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
         edgeCitySemaphoreGroupIds.attendees
       );
-      expectTrue(groupResponse.success);
-      const group = deserializeSemaphoreGroup(groupResponse.value);
+
+      expectTrue(attendeeGroupResponse.success);
+      expectLength(attendeeGroupResponse.value.members, 4);
+      expect(attendeeGroupResponse.value.members).to.deep.include.members([
+        EdgeCityDenverAttendeeIdentity.commitment.toString(),
+        EdgeCityManualAttendeeIdentity.commitment.toString(),
+        EdgeCityBouncer2Identity.commitment.toString(),
+        newUserIdentity.commitment.toString()
+      ]);
+      const attendeeGroup = deserializeSemaphoreGroup(
+        attendeeGroupResponse.value
+      );
+
+      const attendeesGroupRootResponse =
+        await requestGenericIssuanceSemaphoreGroupRoot(
+          process.env.PASSPORT_SERVER_URL as string,
+          edgeCityDenverPipeline.id,
+          edgeCitySemaphoreGroupIds.attendees
+        );
+      expectTrue(attendeesGroupRootResponse.success);
+      expect(attendeesGroupRootResponse.value).to.eq(
+        deserializeSemaphoreGroup(attendeeGroupResponse.value).root.toString()
+      );
+
+      const attendeeGroupValidResponse =
+        await requestGenericIssuanceValidSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          edgeCityDenverPipeline.id,
+          edgeCitySemaphoreGroupIds.attendees,
+          attendeeGroup.root.toString()
+        );
+
+      expectTrue(attendeeGroupValidResponse.success);
+      expectTrue(attendeeGroupValidResponse.value.valid);
 
       const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
         identity: newUserIdentity
@@ -1014,7 +1030,7 @@ t2,i1`,
       const groupPCD = await SemaphoreGroupPCDPackage.prove({
         externalNullifier: {
           argumentType: ArgumentTypeName.BigInt,
-          value: group.root.toString()
+          value: attendeeGroup.root.toString()
         },
         signal: {
           argumentType: ArgumentTypeName.BigInt,
@@ -1022,7 +1038,10 @@ t2,i1`,
         },
         group: {
           argumentType: ArgumentTypeName.Object,
-          value: serializeSemaphoreGroup(group, groupResponse.value.name)
+          value: serializeSemaphoreGroup(
+            attendeeGroup,
+            attendeeGroupResponse.value.name
+          )
         },
         identity: {
           argumentType: ArgumentTypeName.PCD,
@@ -1058,34 +1077,67 @@ t2,i1`,
       {
         // Necessary to trigger Semaphore group update
         await edgeCityDenverPipeline.load();
-        const semaphoreGroupAttendees =
+        const newAttendeeGroupResponse =
           await requestGenericIssuanceSemaphoreGroup(
             process.env.PASSPORT_SERVER_URL as string,
             edgeCityDenverPipeline.id,
             edgeCitySemaphoreGroupIds.attendees
           );
 
-        expectTrue(semaphoreGroupAttendees.success);
-        expectLength(semaphoreGroupAttendees.value.members, 5);
-        expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+        expectTrue(newAttendeeGroupResponse.success);
+        expectLength(newAttendeeGroupResponse.value.members, 5);
+        expect(newAttendeeGroupResponse.value.members).to.deep.include.members([
           EdgeCityDenverAttendeeIdentity.commitment.toString(),
           EdgeCityManualAttendeeIdentity.commitment.toString(),
           EdgeCityBouncer2Identity.commitment.toString(),
           changedIdentity.commitment.toString(),
           // The deleted entry is represented by a zeroValue
-          semaphoreGroupAttendees.value.zeroValue
+          newAttendeeGroupResponse.value.zeroValue
         ]);
-      }
 
-      {
-        // Get the Semaphore group from the API
-        const groupResponse = await requestGenericIssuanceSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees
+        const newAttendeeGroup = deserializeSemaphoreGroup(
+          newAttendeeGroupResponse.value
         );
-        expectTrue(groupResponse.success);
-        const group = deserializeSemaphoreGroup(groupResponse.value);
+        expect(newAttendeeGroup.root).to.not.eq(attendeeGroup.root.toString());
+
+        // Requesting the root hash for the group should give us the new root
+        const newAttendeeGroupRootResponse =
+          await requestGenericIssuanceSemaphoreGroupRoot(
+            process.env.PASSPORT_SERVER_URL as string,
+            edgeCityDenverPipeline.id,
+            edgeCitySemaphoreGroupIds.attendees
+          );
+
+        expectTrue(newAttendeeGroupRootResponse.success);
+        expect(newAttendeeGroupRootResponse.value).to.eq(
+          newAttendeeGroup.root.toString()
+        );
+
+        const newAttendeeGroupValidResponse =
+          await requestGenericIssuanceValidSemaphoreGroup(
+            process.env.PASSPORT_SERVER_URL as string,
+            edgeCityDenverPipeline.id,
+            edgeCitySemaphoreGroupIds.attendees,
+            newAttendeeGroup.root.toString()
+          );
+
+        expectTrue(newAttendeeGroupValidResponse.success);
+        expectTrue(newAttendeeGroupValidResponse.value.valid);
+
+        // We should be able to get the old values for the group by providing
+        // the root hash.
+        const historicalGroupResponse =
+          await requestGenericIssuanceHistoricalSemaphoreGroup(
+            process.env.PASSPORT_SERVER_URL as string,
+            edgeCityDenverPipeline.id,
+            edgeCitySemaphoreGroupIds.attendees,
+            attendeeGroup.root.toString()
+          );
+
+        expectTrue(historicalGroupResponse.success);
+        expect(historicalGroupResponse.value.members).to.deep.eq(
+          attendeeGroupResponse.value.members
+        );
 
         const newUserIdentityPCD = await SemaphoreIdentityPCDPackage.prove({
           identity: changedIdentity // Use the changed identity
@@ -1094,7 +1146,7 @@ t2,i1`,
         const groupPCD = await SemaphoreGroupPCDPackage.prove({
           externalNullifier: {
             argumentType: ArgumentTypeName.BigInt,
-            value: group.root.toString()
+            value: newAttendeeGroup.root.toString()
           },
           signal: {
             argumentType: ArgumentTypeName.BigInt,
@@ -1102,7 +1154,10 @@ t2,i1`,
           },
           group: {
             argumentType: ArgumentTypeName.Object,
-            value: serializeSemaphoreGroup(group, groupResponse.value.name)
+            value: serializeSemaphoreGroup(
+              newAttendeeGroup,
+              newAttendeeGroupResponse.value.name
+            )
           },
           identity: {
             argumentType: ArgumentTypeName.PCD,
