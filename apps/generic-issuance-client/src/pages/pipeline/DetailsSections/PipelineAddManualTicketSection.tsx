@@ -11,7 +11,7 @@ import {
   isLemonadePipelineDefinition
 } from "@pcd/passport-interface";
 import { randomUUID, validateEmail } from "@pcd/util";
-import { ReactNode, useCallback, useMemo, useState } from "react";
+import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
 import styled from "styled-components";
 import { savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
@@ -51,8 +51,7 @@ function LemonadeAddManualTicket({
 }): ReactNode {
   const userJWT = useJWT();
   const [inProgress, setInProgress] = useState(false);
-  const [ticketTypeId, setTicketTypeId] = useState("");
-  const [ticketTypeName, setTicketTypeName] = useState("");
+
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -65,6 +64,8 @@ function LemonadeAddManualTicket({
     });
   }, [pipeline]);
 
+  const [ticketTypeId, setTicketTypeId] = useState("");
+  const [ticketTypeName, setTicketTypeName] = useState("");
   const [eventId, setEventId] = useState(eventIdOptions[0].value);
   const [eventName, setEventName] = useState(eventIdOptions[0].name);
 
@@ -83,7 +84,29 @@ function LemonadeAddManualTicket({
     return [];
   }, [eventId, pipeline.options.events]);
 
+  useEffect(() => {
+    setEventName(eventIdOptions.find((e) => e.value === eventId)?.name ?? "");
+    setTicketTypeName(
+      ticketTypeIdOptions.find((e) => e.value === ticketTypeId)?.name ?? ""
+    );
+  }, [ticketTypeId, eventId, eventIdOptions, ticketTypeIdOptions]);
+
   const onAddClick = useCallback(async () => {
+    if (name.length === 0) {
+      alert("please enter a name");
+      return;
+    }
+
+    if (email.length === 0) {
+      alert("please enter an email");
+      return;
+    }
+
+    if (!validateEmail(email)) {
+      alert("please enter a valid email");
+      return;
+    }
+
     const pipelineCopy = JSON.parse(
       JSON.stringify(pipeline)
     ) as LemonadePipelineDefinition;
@@ -101,7 +124,12 @@ function LemonadeAddManualTicket({
 
     if (
       !confirm(
-        `are you sure you want to add this ticket?\n${name} (${email})\n${eventName} - ${ticketTypeName}`
+        `are you sure you want to add this ticket?
+
+name: ${name}
+email: ${email}
+event: ${eventName}
+ticket: ${ticketTypeName}`
       )
     ) {
       return;
@@ -140,13 +168,7 @@ function LemonadeAddManualTicket({
           w="sm"
           mt={2}
           value={eventId}
-          onChange={(e): void => {
-            const id = e.target.value;
-            setEventId(id);
-            setEventName(
-              eventIdOptions.find((e) => e.value === id)?.name ?? ""
-            );
-          }}
+          onChange={(e): void => setEventId(e.target.value)}
         >
           {eventIdOptions.map((o) => (
             <option value={o.value} key={o.value}>
@@ -162,13 +184,7 @@ function LemonadeAddManualTicket({
           w="sm"
           mt={2}
           value={ticketTypeId}
-          onChange={(e): void => {
-            const id = e.target.value;
-            setTicketTypeId(id);
-            setTicketTypeName(
-              ticketTypeIdOptions.find((e) => e.value === id)?.name ?? ""
-            );
-          }}
+          onChange={(e): void => setTicketTypeId(e.target.value)}
         >
           {ticketTypeIdOptions.map((o) => (
             <option value={o.value} key={o.value}>
