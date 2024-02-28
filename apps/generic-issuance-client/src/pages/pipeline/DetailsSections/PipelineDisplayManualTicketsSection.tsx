@@ -10,7 +10,7 @@ import {
 import { ReactNode } from "react";
 import styled from "styled-components";
 
-export function shouldShowManualTicketsSection(
+export function supportsAddingManualTickets(
   pipeline: PipelineDefinition
 ): pipeline is LemonadePipelineDefinition {
   return isLemonadePipelineDefinition(pipeline);
@@ -50,9 +50,10 @@ function LemonadeManualTicketTable({
     <Table>
       <Thead>
         <Tr>
+          <Th>name</Th>
           <Th>email</Th>
-          <Th>event name</Th>
-          <Th>ticket type</Th>
+          <Th>event</Th>
+          <Th>type</Th>
         </Tr>
       </Thead>
       <Tbody>
@@ -75,6 +76,7 @@ function ManualLemonadeTicket({
 
   return (
     <tr>
+      <td>{ticket.attendeeName}</td>
       <td>{ticket.attendeeEmail}</td>
       <td>{details?.event?.name}</td>
       <td>{details?.product?.name}</td>
@@ -103,4 +105,13 @@ const Container = styled.div`
   width: 100%;
   max-height: 400px;
   overflow-y: scroll;
+
+  table {
+    font-size: 0.8em;
+
+    td {
+      border-bottom: 1px solid rgba(0, 0, 0, 0.5);
+      padding: 8px 0px;
+    }
+  }
 `;

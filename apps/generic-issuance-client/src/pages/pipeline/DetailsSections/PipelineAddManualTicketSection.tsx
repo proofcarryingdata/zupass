@@ -12,11 +12,10 @@ import {
 } from "@pcd/passport-interface";
 import { randomUUID, validateEmail } from "@pcd/util";
 import { ReactNode, useCallback, useEffect, useMemo, useState } from "react";
-import styled from "styled-components";
 import { savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 
-export function shouldShowAddManualTicketSection(
+export function supportsManualTicketTable(
   pipeline: PipelineDefinition
 ): pipeline is LemonadePipelineDefinition {
   return isLemonadePipelineDefinition(pipeline);
@@ -40,12 +39,7 @@ export function PipelineAddManualTicketSection({
     content = <div>unsupported pipeline type</div>;
   }
 
-  return <Container>{content}</Container>;
-}
-
-interface IOption {
-  value: string;
-  name: string;
+  return <div>{content}</div>;
 }
 
 function LemonadeAddManualTicket({
@@ -55,7 +49,6 @@ function LemonadeAddManualTicket({
 }): ReactNode {
   const userJWT = useJWT();
   const [inProgress, setInProgress] = useState(false);
-
   const [name, setName] = useState("");
   const [email, setEmail] = useState("");
 
@@ -68,10 +61,8 @@ function LemonadeAddManualTicket({
     });
   }, [pipeline]);
 
-  const [ticketTypeId, setTicketTypeId] = useState("");
-  const [ticketTypeName, setTicketTypeName] = useState("");
-  const [eventId, setEventId] = useState(eventIdOptions[0].value);
-  const [eventName, setEventName] = useState(eventIdOptions[0].name);
+  const [eventId, setEventId] = useState(eventIdOptions?.[0].value ?? "");
+  const [eventName, setEventName] = useState(eventIdOptions?.[0].name ?? "");
 
   const ticketTypeIdOptions: IOption[] = useMemo(() => {
     const event = pipeline.options.events.find(
@@ -87,6 +78,13 @@ function LemonadeAddManualTicket({
 
     return [];
   }, [eventId, pipeline.options.events]);
+
+  const [ticketTypeId, setTicketTypeId] = useState(
+    ticketTypeIdOptions?.[0]?.value ?? ""
+  );
+  const [ticketTypeName, setTicketTypeName] = useState(
+    ticketTypeIdOptions?.[0]?.name ?? ""
+  );
 
   useEffect(() => {
     setEventName(eventIdOptions.find((e) => e.value === eventId)?.name ?? "");
@@ -145,12 +143,12 @@ ticket: ${ticketTypeName}`
     }
 
     setInProgress(true);
-
     const res = await savePipeline(userJWT, JSON.stringify(pipelineCopy));
 
     if (res.success) {
       window.location.reload();
     } else {
+      setInProgress(false);
       alert(res.error);
     }
   }, [
@@ -224,8 +222,8 @@ ticket: ${ticketTypeName}`
       </FormControl>
 
       <Button
-        colorScheme="green"
-        mt={4}
+        colorScheme="blue"
+        mt={1}
         width="sm"
         onClick={onAddClick}
         isLoading={inProgress}
@@ -236,8 +234,10 @@ ticket: ${ticketTypeName}`
   );
 }
 
-const Container = styled.div`
-  width: 100%;
-  max-height: 400px;
-  overflow-y: scroll;
-`;
+/**
+ * For use in <select> element.
+ */
+interface IOption {
+  value: string;
+  name: string;
+}

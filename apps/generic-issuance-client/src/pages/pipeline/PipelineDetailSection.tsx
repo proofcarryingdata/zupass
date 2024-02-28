@@ -24,15 +24,15 @@ import {
 } from "../../helpers/util";
 import {
   PipelineAddManualTicketSection,
-  shouldShowAddManualTicketSection
+  supportsManualTicketTable
 } from "./DetailsSections/PipelineAddManualTicketSection";
+import {
+  PipelineDisplayManualTicketsSection,
+  supportsAddingManualTickets
+} from "./DetailsSections/PipelineDisplayManualTicketsSection";
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
-import {
-  PipelineManualTicketsSection,
-  shouldShowManualTicketsSection
-} from "./DetailsSections/PipelineManualTicketsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 
 export function PipelineDetailSection({
@@ -73,7 +73,7 @@ export function PipelineDetailSection({
       </Box>
 
       <Accordion defaultIndex={[]} allowMultiple={true}>
-        {shouldShowAddManualTicketSection(pipeline) && (
+        {supportsManualTicketTable(pipeline) && isAdminView && (
           <AccordionItem>
             <AccordionButton>Add Manual Ticket</AccordionButton>
             <AccordionPanel>
@@ -85,11 +85,11 @@ export function PipelineDetailSection({
           </AccordionItem>
         )}
 
-        {shouldShowManualTicketsSection(pipeline) && (
+        {supportsAddingManualTickets(pipeline) && isAdminView && (
           <AccordionItem>
             <AccordionButton>Existing Manual Tickets</AccordionButton>
             <AccordionPanel>
-              <PipelineManualTicketsSection
+              <PipelineDisplayManualTicketsSection
                 pipeline={pipeline}
                 isAdminView={isAdminView}
               />
