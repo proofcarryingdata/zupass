@@ -667,8 +667,14 @@ export class GenericIssuanceService {
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
 
+      // If the pipeline has semaphore groups, we want to populate consumer
+      // data. If there are no semaphore groups, we don't.
+      // Rather than inspect the configuration, which depends on knowing all
+      // of the possible pipeline types and the structure of their
+      // configurations, we can ask the SemaphoreGroupCapability if it has any
+      // groups (if one exists). Only if the SemaphoreGroupCapability exists
+      // and has supported groups will we include consumer data.
       let pipelineHasSemaphoreGroups = false;
-
       const semaphoreGroupCapability = pipelineInstance.capabilities.find(
         isSemaphoreGroupCapability
       );
