@@ -783,9 +783,13 @@ export class LemonadePipeline implements BasePipeline {
         // If the update time is now, that means our save() operation caused
         // a change in the consumer DB, and we have to update the Semaphore
         // groups. This is rare, since most saves will not cause a change.
+        // It will, however, always occur the first time the user hits a
+        // feed with Semaphore groups enabled (which might not be the first
+        // time they *ever* hit that feed, if Semaphore groups were not
+        // initialy enabled).
         // It seems reasonable to await on the update here, even though it will
-        // slow down the first response time, as it ensures that the user is
-        // present in all of the necessary Semaphore groups.
+        // slow down the response time, as it ensures that the user is present
+        // in all of the necessary Semaphore groups.
         if (consumer.timeUpdated.getTime() === now.getTime()) {
           span?.setAttribute("semaphore_groups_updated", true);
           await this.triggerSemaphoreGroupUpdate();
