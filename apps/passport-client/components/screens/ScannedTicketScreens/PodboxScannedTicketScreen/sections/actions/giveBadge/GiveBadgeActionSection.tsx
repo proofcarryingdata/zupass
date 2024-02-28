@@ -11,9 +11,9 @@ import {
   useMemo,
   useState
 } from "react";
+import styled from "styled-components";
 import { Button, Spacer } from "../../../../../../core";
 import { RippleLoader } from "../../../../../../core/RippleLoader";
-import Select from "../../../../../../shared/Select";
 import {
   ErrorContainer,
   StatusContainer
@@ -140,13 +140,16 @@ export function GiveBadgeActionSection({
   return (
     <div style={{ userSelect: "none" }}>
       {!selectedBadge && !disabled && (
-        <Select
-          placeholder={"Give Badge"}
-          isSearchable={false}
-          value={selectedBadge}
-          options={badgeOptions}
-          onChange={(val): void => setSelectedBadge(val)}
-        />
+        <BadgeSelect
+          value={selectedBadge?.id}
+          onChange={(e): void =>
+            setSelectedBadge(badgeOptions.find((b) => b.id === e.target.value))
+          }
+        >
+          {badgeOptions.map((b) => {
+            return <option value={b.id}>{b.label}</option>;
+          })}
+        </BadgeSelect>
       )}
       {selectedBadge && (
         <>
@@ -172,3 +175,8 @@ export function GiveBadgeActionSection({
     </div>
   );
 }
+
+const BadgeSelect = styled.select`
+  width: 100%;
+  cursor: pointer;
+`;
