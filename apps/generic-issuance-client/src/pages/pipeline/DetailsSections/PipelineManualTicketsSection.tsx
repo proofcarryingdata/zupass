@@ -6,8 +6,7 @@ import {
   ManualTicket,
   PipelineDefinition,
   PretixPipelineDefinition,
-  isLemonadePipelineDefinition,
-  isPretixPipelineDefinition
+  isLemonadePipelineDefinition
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import styled from "styled-components";
@@ -15,10 +14,7 @@ import styled from "styled-components";
 export function shouldShowManualTicketsSection(
   pipeline: PipelineDefinition
 ): pipeline is LemonadePipelineDefinition | PretixPipelineDefinition {
-  return (
-    isLemonadePipelineDefinition(pipeline) ||
-    isPretixPipelineDefinition(pipeline)
-  );
+  return isLemonadePipelineDefinition(pipeline);
 }
 
 export function PipelineManualTicketsSection({
@@ -35,8 +31,6 @@ export function PipelineManualTicketsSection({
     content = <div>no manual tickets</div>;
   } else if (isLemonadePipelineDefinition(pipeline)) {
     content = <LemonadeManualTicketTable pipeline={pipeline} />;
-  } else if (isPretixPipelineDefinition(pipeline)) {
-    content = <PretixManualTicketTable pipeline={pipeline} />;
   } else {
     content = <div>unsupported pipeline type</div>;
   }
@@ -67,14 +61,6 @@ function LemonadeManualTicketTable({
   );
 }
 
-function PretixManualTicketTable({
-  pipeline
-}: {
-  pipeline: PretixPipelineDefinition;
-}): ReactNode {
-  return <div>lemonade manual ticket table</div>;
-}
-
 function ManualTicketRow({
   ticket,
   pipeline
@@ -84,8 +70,6 @@ function ManualTicketRow({
 }): ReactNode {
   if (isLemonadePipelineDefinition(pipeline)) {
     return <ManualLemonadeTicket pipeline={pipeline} ticket={ticket} />;
-  } else if (isPretixPipelineDefinition(pipeline)) {
-    return <ManualPretixTicket pipeline={pipeline} ticket={ticket} />;
   } else {
     return <div>unsupported pipeline type</div>;
   }
@@ -124,20 +108,6 @@ function getLemonadeTicketDetails(
   );
 
   return { event, product };
-}
-
-function ManualPretixTicket({
-  ticket,
-  pipeline
-}: {
-  ticket: ManualTicket;
-  pipeline: PretixPipelineDefinition;
-}): ReactNode {
-  return (
-    <div>
-      {ticket.id} - {ticket.attendeeEmail}
-    </div>
-  );
 }
 
 const Container = styled.div`
