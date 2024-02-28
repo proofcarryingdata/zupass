@@ -1,5 +1,5 @@
 import { ReactNode } from "react";
-import { FancyEditor } from "../../components/FancyEditor";
+import { FancyEditor } from "../../../components/FancyEditor";
 
 /**
  * Used to display the latest data that a given pipeline loaded during

@@ -1,8 +1,17 @@
+import validator from "email-validator";
+
 /**
  * Normalizes email so that equivalent emails can be compared.
  */
 export function normalizeEmail(email: string): string {
   return email.toLowerCase().trim();
+}
+
+/**
+ * Returns whether or not the parameter is an email address.
+ */
+export function validateEmail(email: string): boolean {
+  return validator.validate(email);
 }
 
 /**
@@ -37,6 +46,9 @@ export function flattenObject(
   return res;
 }
 
+/**
+ * Shorthand for {@code JSON.stringify}
+ */
 export function str(val: unknown): string {
   return JSON.stringify(val);
 }

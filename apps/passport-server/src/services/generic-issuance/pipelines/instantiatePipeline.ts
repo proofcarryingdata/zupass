@@ -1,5 +1,10 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { PipelineDefinition } from "@pcd/passport-interface";
+import {
+  PipelineDefinition,
+  isCSVPipelineDefinition,
+  isLemonadePipelineDefinition,
+  isPretixPipelineDefinition
+} from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
@@ -14,15 +19,8 @@ import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
 import { CSVPipeline } from "./CSVPipeline/CSVPipeline";
-import {
-  LemonadePipeline,
-  isLemonadePipelineDefinition
-} from "./LemonadePipeline";
-import {
-  PretixPipeline,
-  isCSVPipelineDefinition,
-  isPretixPipelineDefinition
-} from "./PretixPipeline";
+import { LemonadePipeline } from "./LemonadePipeline";
+import { PretixPipeline } from "./PretixPipeline";
 import { Pipeline } from "./types";
 
 /**

@@ -1,6 +1,6 @@
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { PodLink } from "../../components/Core";
+import { PodLink } from "../../../components/Core";
 
 /**
  * Displays a list of the Semaphore groups for the pipeline.
