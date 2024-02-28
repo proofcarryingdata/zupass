@@ -11,7 +11,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
-import { ZUPASS_SUPPORT_EMAIL } from "@pcd/util";
+import { ZUPASS_SUPPORT_EMAIL, validateEmail } from "@pcd/util";
 import { Response } from "express";
 import { z } from "zod";
 import { UserRow } from "../database/models";
@@ -25,7 +25,6 @@ import {
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { validateEmail } from "../util/util";
 import { userRowToZupassUserJson } from "../util/zuzaluUser";
 import { EmailService } from "./emailService";
 import { EmailTokenService } from "./emailTokenService";

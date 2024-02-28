@@ -1,4 +1,5 @@
 import { requestLogToServer } from "@pcd/passport-interface";
+import { validateEmail } from "@pcd/util";
 import {
   ChangeEvent,
   FormEvent,
@@ -24,7 +25,6 @@ import {
   setPendingViewFrogCryptoRequest,
   setPendingViewSubscriptionsRequest
 } from "../../../src/sessionStorage";
-import { validateEmail } from "../../../src/util";
 import {
   BigInput,
   Button,
