@@ -666,11 +666,18 @@ export class GenericIssuanceService {
         pipelineInstance.id
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
-      // Ugly, but if we get either undefined or 0, then negate it, then the
-      // boolean value is true if there are Semaphore groups and false if not.
-      const pipelineHasSemaphoreGroups = !pipelineInstance.capabilities
-        .find(isSemaphoreGroupCapability)
-        ?.getSupportedGroups().length;
+
+      let pipelineHasSemaphoreGroups = false;
+
+      const semaphoreGroupCapability = pipelineInstance.capabilities.find(
+        isSemaphoreGroupCapability
+      );
+      if (
+        semaphoreGroupCapability &&
+        semaphoreGroupCapability.getSupportedGroups().length > 0
+      ) {
+        pipelineHasSemaphoreGroups = true;
+      }
 
       // Only actually run the query if there are Semaphore groups
       const latestConsumers = pipelineHasSemaphoreGroups
