@@ -6,14 +6,18 @@ import {
   CredentialManager,
   deserializeStorage,
   Feed,
+  FeedSubscriptionManager,
   KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
+  NetworkFeedApi,
   requestCreateNewUser,
   requestLogToServer,
   requestUser,
   serializeStorage,
   StorageWithRevision,
-  User
+  User,
+  zupassDefaultSubscriptions,
+  ZupassFeedIds
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
@@ -32,7 +36,11 @@ import {
   notifyLogoutToOtherTabs,
   notifyPasswordChangeToOtherTabs
 } from "./broadcastChannel";
-import { addDefaultSubscriptions } from "./defaultSubscriptions";
+import {
+  addDefaultSubscriptions,
+  addZupassProvider,
+  ZUPASS_FEED_URL
+} from "./defaultSubscriptions";
 import {
   loadEncryptionKey,
   loadPrivacyNoticeAgreed,
@@ -391,6 +399,24 @@ async function finishAccountCreation(
     });
     return; // Don't save the bad identity. User must reset account.
   }
+
+  const subscriptions = new FeedSubscriptionManager(new NetworkFeedApi());
+  addZupassProvider(subscriptions);
+  const emailSub = await subscriptions.subscribe(
+    ZUPASS_FEED_URL,
+    zupassDefaultSubscriptions[ZupassFeedIds.Email]
+  );
+
+  const actions = await subscriptions.pollSingleSubscription(
+    emailSub,
+    new CredentialManager(state.identity, state.pcds, new Map())
+  );
+  await applyActions(state.pcds, actions);
+
+  await savePCDs(state.pcds);
+  await saveSubscriptions(subscriptions);
+
+  update({ pcds: state.pcds, subscriptions });
 
   // Save PCDs to E2EE storage.  knownRevision=undefined is the way to create
   // a new entry.  It would also overwrite any conflicting data which may
