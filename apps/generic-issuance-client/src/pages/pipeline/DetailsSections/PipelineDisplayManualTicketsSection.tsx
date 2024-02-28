@@ -5,7 +5,6 @@ import {
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
   PipelineDefinition,
-  PretixPipelineDefinition,
   isLemonadePipelineDefinition
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
@@ -13,14 +12,18 @@ import styled from "styled-components";
 
 export function shouldShowManualTicketsSection(
   pipeline: PipelineDefinition
-): pipeline is LemonadePipelineDefinition | PretixPipelineDefinition {
+): pipeline is LemonadePipelineDefinition {
   return isLemonadePipelineDefinition(pipeline);
 }
 
-export function PipelineManualTicketsSection({
+/**
+ * For {@link LemonadePipeline} only. Shows a table of all of
+ * this pipeline's manual tickets
+ */
+export function PipelineDisplayManualTicketsSection({
   pipeline
 }: {
-  pipeline: LemonadePipelineDefinition | PretixPipelineDefinition;
+  pipeline: LemonadePipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
   const tix = pipeline.options.manualTickets;
@@ -54,25 +57,11 @@ function LemonadeManualTicketTable({
       </Thead>
       <Tbody>
         {pipeline.options.manualTickets?.map((t) => (
-          <ManualTicketRow ticket={t} pipeline={pipeline} />
+          <ManualLemonadeTicket ticket={t} pipeline={pipeline} />
         ))}
       </Tbody>
     </Table>
   );
-}
-
-function ManualTicketRow({
-  ticket,
-  pipeline
-}: {
-  ticket: ManualTicket;
-  pipeline: LemonadePipelineDefinition | PretixPipelineDefinition;
-}): ReactNode {
-  if (isLemonadePipelineDefinition(pipeline)) {
-    return <ManualLemonadeTicket pipeline={pipeline} ticket={ticket} />;
-  } else {
-    return <div>unsupported pipeline type</div>;
-  }
 }
 
 function ManualLemonadeTicket({

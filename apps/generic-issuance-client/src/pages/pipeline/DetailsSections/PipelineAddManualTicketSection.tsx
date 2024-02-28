@@ -22,6 +22,10 @@ export function shouldShowAddManualTicketSection(
   return isLemonadePipelineDefinition(pipeline);
 }
 
+/**
+ * For {@link LemonadePipeline} only. Shows a form that lets admins
+ * add manual tickets.
+ */
 export function PipelineAddManualTicketSection({
   pipeline
 }: {
