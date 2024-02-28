@@ -34,6 +34,7 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
+import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
@@ -116,6 +117,8 @@ export class LemonadePipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
+  private semaphoreGroup: Promise<void> | undefined;
+  private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
     return this.definition.id;
@@ -212,6 +215,7 @@ export class LemonadePipeline implements BasePipeline {
     this.checkinDB = checkinDB;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
   }
 
   public async start(): Promise<void> {
@@ -444,7 +448,7 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        await this.triggerSemaphoreGroupUpdate();
+        this.triggerSemaphoreGroupUpdate();
       }
 
       return {
@@ -493,10 +497,27 @@ export class LemonadePipeline implements BasePipeline {
 
   /**
    * Tell the Semaphore group provider to update memberships.
+   * Marked as public so that it can be called from tests, but otherwise should
+   * not be called from outside the class.
    */
-  private async triggerSemaphoreGroupUpdate(): Promise<void> {
-    const data = await this.semaphoreGroupData();
-    await this.semaphoreGroupProvider?.update(data);
+  public async triggerSemaphoreGroupUpdate(): Promise<void> {
+    return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
+      tracePipeline(this.definition);
+      // Whenever an update is triggered, we want to make sure that the
+      // fetching of data and the actual update are atomic.
+      // If there were two concurrenct updates, it might be possible for them
+      // to use slightly different data sets, but send them to the `update`
+      // method in the wrong order, producing unexpected outcomes. Although the
+      // group diffing mechanism would eventually cause the group to converge
+      // on the correct membership, we can avoid any temporary inconsistency by
+      // queuing update requests.
+      // By returning this promise, we allow the caller to await on the update
+      // having been processed.
+      return this.semaphoreUpdateQueue.add(async () => {
+        const data = await this.semaphoreGroupData();
+        await this.semaphoreGroupProvider?.update(data);
+      });
+    });
   }
 
   /**
@@ -751,19 +772,17 @@ export class LemonadePipeline implements BasePipeline {
       const now = new Date();
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        // TODO check the timeUpdated returned from save(), which will equal
-        // now if a new or updated commitment was recorded, in which case the
-        // Semaphore groups need to be updated. They will be updated on next
-        // load(), but this means there's some latency between a new user
-        // authenticating and being added to their Semaphore groups.
-
         // Consumer is validated, so save them in the consumer list
-        await this.consumerDB.save(
+        const consumer = await this.consumerDB.save(
           this.id,
           emailPCD.claim.emailAddress,
           emailPCD.claim.semaphoreId,
           now
         );
+
+        if (consumer.timeUpdated.getTime() === now.getTime()) {
+          await this.triggerSemaphoreGroupUpdate();
+        }
       }
 
       const email = emailPCD.claim.emailAddress.toLowerCase();

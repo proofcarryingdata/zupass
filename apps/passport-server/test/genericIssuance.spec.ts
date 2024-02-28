@@ -1008,6 +1008,19 @@ t2,i1`,
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(edgeCityDenverPipeline);
 
+      let semaphoreGroupUpdatePromise: Promise<void> | undefined;
+      let triggeredSemaphoreGroupUpdates = 0;
+      const triggerSemaphoreGroupUpdate =
+        edgeCityDenverPipeline.triggerSemaphoreGroupUpdate.bind(
+          edgeCityDenverPipeline
+        );
+      edgeCityDenverPipeline.triggerSemaphoreGroupUpdate =
+        (): Promise<void> => {
+          triggeredSemaphoreGroupUpdates++;
+          semaphoreGroupUpdatePromise = triggerSemaphoreGroupUpdate();
+          return semaphoreGroupUpdatePromise;
+        };
+
       // Test that a new user is added to the attendee group
 
       const newUser = lemonadeBackend.addUser(
@@ -1023,6 +1036,8 @@ t2,i1`,
         newUser.name
       );
       await edgeCityDenverPipeline.load();
+      // pipeline load triggers a Semaphore group update
+      expect(triggeredSemaphoreGroupUpdates).to.eq(1);
       const edgeCityDenverTicketFeedUrl =
         edgeCityDenverPipeline.issuanceCapability.feedUrl;
       // The pipeline doesn't know that the user exists until they hit the feed
@@ -1036,8 +1051,12 @@ t2,i1`,
       );
       expectLength(NewUserTickets, 1);
 
-      // Necessary to trigger Semaphore group update
-      await edgeCityDenverPipeline.load();
+      // The ticket request causes a consumer update.
+      // This will cause an asynchronous update to the Semaphore group, which
+      // we can await here because we are intercepting the Semaphore group
+      // updates above.
+      await semaphoreGroupUpdatePromise;
+      expect(triggeredSemaphoreGroupUpdates).to.eq(2);
       const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
@@ -1130,8 +1149,12 @@ t2,i1`,
       );
 
       {
-        // Necessary to trigger Semaphore group update
-        await edgeCityDenverPipeline.load();
+        // The ticket request causes a consumer update.
+        // This will cause an asynchronous update to the Semaphore group, which
+        // we can await here because we are intercepting the Semaphore group
+        // updates above.
+        expect(triggeredSemaphoreGroupUpdates).to.eq(3);
+        await semaphoreGroupUpdatePromise;
         const newAttendeeGroupResponse =
           await requestGenericIssuanceSemaphoreGroup(
             process.env.PASSPORT_SERVER_URL as string,
