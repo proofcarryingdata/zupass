@@ -114,7 +114,7 @@ export function PodboxTicketActionSection({
       />
 
       <GiveBadgeActionSection
-        setIsLoading={setIsLoading}
+        setInProgress={setIsLoading}
         isLoading={isLoading}
         precheck={precheck}
         ticketId={ticketId}

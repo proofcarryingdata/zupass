@@ -1,0 +1,2 @@
+alter table podbox_given_badges
+drop constraint unique_badges;

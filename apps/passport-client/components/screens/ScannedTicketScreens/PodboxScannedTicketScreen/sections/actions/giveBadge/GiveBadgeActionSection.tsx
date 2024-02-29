@@ -28,14 +28,14 @@ function badgeDisplayName(c: BadgeConfig): string {
 export function GiveBadgeActionSection({
   ticketId,
   eventId,
-  setIsLoading: setInProgress,
   precheck,
+  setInProgress,
   isLoading
 }: {
+  precheck: PodboxActionPreCheckResult;
   ticketId: string;
   eventId: string;
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
-  precheck: PodboxActionPreCheckResult;
+  setInProgress: Dispatch<SetStateAction<boolean>>;
   isLoading: boolean;
 }): ReactNode {
   const [selectedBadge, setSelectedBadge] = useState<BadgeConfig | undefined>();
@@ -140,7 +140,13 @@ export function GiveBadgeActionSection({
 
   return (
     <div style={{ userSelect: "none" }}>
-      <PerDayBadges precheck={precheck.value} />
+      <PerDayBadges
+        precheck={precheck.value}
+        eventId={eventId}
+        ticketId={ticketId}
+        setInProgress={setInProgress}
+        isLoading={isLoading}
+      />
 
       {!selectedBadge && !disabled && (
         <BadgeSelect
@@ -149,9 +155,13 @@ export function GiveBadgeActionSection({
             setSelectedBadge(badgeOptions.find((b) => b.id === e.target.value))
           }
         >
-          <option value={undefined}>choose a badge</option>
+          <option value={undefined}>choose a badge to give</option>
           {badgeOptions.map((b) => {
-            return <option value={b.id}>{b.label}</option>;
+            return (
+              <option value={b.id} key={b.id}>
+                {b.label}
+              </option>
+            );
           })}
         </BadgeSelect>
       )}

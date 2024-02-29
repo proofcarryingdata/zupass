@@ -44,7 +44,6 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
         insert into podbox_given_badges
         (pipeline_id, giver_email, receiver_email, badge_id, badge_name, badge_url)
         values ($1, $2, $3, $4, $5, $6)
-        on conflict(pipeline_id, giver_email, receiver_email, badge_id) do nothing
 `,
         [
           pipelineId,
