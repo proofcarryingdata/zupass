@@ -71,6 +71,7 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/fonts/PressStart2P.ttf",
   "/images/frogs/pixel_frog.png",
   "/images/afra.webp",
+  "/images/arjun.webp",
   "/images/cold.webp",
   "/images/hat.webp",
   "/images/johnwick.webp",

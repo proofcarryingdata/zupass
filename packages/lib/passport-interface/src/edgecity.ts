@@ -168,6 +168,13 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     givers: ["afrazhaowang@gmail.com"]
   },
   {
+    id: "Met Arjun",
+    eventName: "Met Arjun",
+    productName: "",
+    imageUrl: "/images/arjun.webp",
+    givers: ["arjun.khemani@gmail.com"]
+  },
+  {
     id: "Decentralized Social Hacker",
     eventName: "Decentralized Social Hacker",
     productName: "",
