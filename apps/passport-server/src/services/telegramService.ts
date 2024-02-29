@@ -874,7 +874,7 @@ export class TelegramService {
 
     logger(`[TELEGRAM] Starting ${bot.botInfo.username}`);
 
-    while (retryAttempts < this.MAX_RETRY_ATTEMPTS) {
+    while (retryAttempts++ < this.MAX_RETRY_ATTEMPTS) {
       try {
         // This will not resolve while the authBot remains running.
         await bot.start({
