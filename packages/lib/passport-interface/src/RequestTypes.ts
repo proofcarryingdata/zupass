@@ -970,10 +970,13 @@ export type CheckinActionInfo =
 export type RateLimitedBadge = {
   id: string;
   alreadyGivenInInterval: number;
+  maxInInterval: number;
   intervalMs: number;
 };
 
-export function isPerDayBadge(badge: BadgeConfig): boolean {
+export function isPerDayBadge(
+  badge: BadgeConfig
+): badge is BadgeConfig & { maxPerDay: number } {
   return badge.maxPerDay !== undefined;
 }
 

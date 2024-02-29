@@ -1339,7 +1339,7 @@ export class LemonadePipeline implements BasePipeline {
 
         // 2) badge action
         if (this.definition.options.ticketActions?.badges?.enabled) {
-          const badgesGiven = await this.badgeDB.getBadges(
+          const badgesGivenToTicketHolder = await this.badgeDB.getBadges(
             this.id,
             ticketInfo.attendeeEmail
           );
@@ -1347,21 +1347,21 @@ export class LemonadePipeline implements BasePipeline {
           const badgesGiveableByUser =
             this.getBadgesGiveableByEmail(actorEmail);
 
+          const rateLimitedGiveableByUser = badgesGiveableByUser.filter(
+            (b) => b.maxPerDay !== undefined
+          );
+
           const notAlreadyGivenBadges = badgesGiveableByUser.filter(
-            (c) => !badgesGiven.find((b) => b.id === c.id)
+            (c) => !badgesGivenToTicketHolder.find((b) => b.id === c.id)
           );
 
           const intervalMs = 24 * 60 * 60 * 1000;
-          const intervalEnd = Date.now();
-          const intervalStart = intervalEnd - intervalMs;
-          const rateLimitedBadgesGivenInInterval = badgesGiven.filter((b) => {
-            const config = badgesGiveableByUser.find((c) => c.id === b.id);
-            return (
-              config?.maxPerDay !== undefined &&
-              b.timeCreated > intervalStart &&
-              b.timeCreated < intervalEnd
-            );
-          });
+          const alreadyGivenRateLimited = await this.badgeDB.getGivenBadges(
+            this.id,
+            actorEmail,
+            rateLimitedGiveableByUser.map((b) => b.id),
+            intervalMs
+          );
 
           result.giveBadgeActionInfo = {
             permissioned: badgesGiveableByUser.length > 0,
@@ -1369,11 +1369,12 @@ export class LemonadePipeline implements BasePipeline {
             rateLimitedBadges: badgesGiveableByUser
               .filter(isPerDayBadge)
               .map((b) => ({
-                alreadyGivenInInterval: rateLimitedBadgesGivenInInterval.filter(
+                alreadyGivenInInterval: alreadyGivenRateLimited.filter(
                   (g) => g.id === b.id
                 ).length,
                 id: b.id,
-                intervalMs
+                intervalMs,
+                maxInInterval: b.maxPerDay
               })),
             ticket: ticketInfo
           };
