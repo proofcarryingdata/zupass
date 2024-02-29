@@ -4,6 +4,7 @@ import JSONBig from "json-bigint";
 import "mocha";
 import { POD, SavedPOD, unpackPublicKey, unpackSignature } from "../src";
 import {
+  expectedPublicKey,
   expectedPublicKeyPoint,
   privateKey,
   sampleEntries1,
@@ -21,7 +22,7 @@ describe("POD class should work", async function () {
       expect(pod.signature).to.not.be.empty;
       const unpackedSig = unpackSignature(pod.signature);
 
-      expect(pod.signerPublicKey).to.not.be.empty;
+      expect(pod.signerPublicKey).to.eq(expectedPublicKey);
       const unpackedPubKey = unpackPublicKey(pod.signerPublicKey);
       expect(unpackedPubKey).to.deep.eq(expectedPublicKeyPoint);
 

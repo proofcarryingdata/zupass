@@ -58,6 +58,9 @@
       "path": "packages/pcd/message-pcd/tsconfig.esm.json"
     },
     {
+      "path": "packages/pcd/pod-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "packages/pcd/rln-pcd/tsconfig.esm.json"
     },
     {
