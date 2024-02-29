@@ -96,7 +96,7 @@ function PerDayBadgeButton({
   const onClick = useCallback(async () => {
     setInProgress(true);
     giveBadge.execute().finally(() => {
-      setInProgress(false);
+      window.location.reload();
     });
   }, [giveBadge, setInProgress]);
   const earliestTimestamp = Math.min(...o.timestampsGiven);
@@ -107,7 +107,7 @@ function PerDayBadgeButton({
   useEffect(() => {
     const interval = setInterval(() => {
       setNow(Date.now());
-    }, 100);
+    }, 450);
     return () => clearInterval(interval);
   }, []);
 
