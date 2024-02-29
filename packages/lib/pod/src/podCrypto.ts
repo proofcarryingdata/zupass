@@ -10,19 +10,16 @@ import {
   signMessage,
   verifySignature
 } from "@zk-kit/eddsa-poseidon";
-import { LeanIMT, LeanIMTMerkleProof } from "@zk-kit/imt";
 import {
   BigNumber,
   bigNumberishToBigint,
   leBigintToBuffer,
   leBufferToBigint
 } from "@zk-kit/utils";
-import assert from "assert";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { PODEntries, PODMap, PODValue } from "./pod";
-import { makePODMap } from "./podUtil";
+import { PODValue } from "./podTypes";
 
 function podStringHash(input: string): bigint {
   // TODO(artwyman): Finalize choice of hash for POD names and string values.
@@ -49,31 +46,8 @@ export function podValueHash(podValue: PODValue): bigint {
   }
 }
 
-export function isPODNumericValue(podValue: PODValue): boolean {
-  switch (podValue.type) {
-    case "string":
-      return false;
-    case "int":
-    case "cryptographic":
-      return true;
-  }
-}
-
-export function merklizePOD(entries: PODEntries): {
-  podMap: PODMap;
-  merkleTree: LeanIMT<bigint>;
-} {
-  const podMap = makePODMap(entries);
-  const merkleTree = new LeanIMT<bigint>((a, b) => poseidon2([a, b]));
-  const hashes: bigint[] = [];
-  for (const [podName, podValue] of podMap.entries()) {
-    hashes.push(podNameHash(podName));
-    hashes.push(podValueHash(podValue));
-  }
-  assert.equal(hashes.length, podMap.size * 2);
-  merkleTree.insertMany(hashes);
-  assert.equal(merkleTree.size, hashes.length);
-  return { podMap, merkleTree };
+export function podMerkleTreeHash(left: bigint, right: bigint): bigint {
+  return poseidon2([left, right]);
 }
 
 export function packPoint(unpackedPoint: Point<BigNumber>): bigint {
@@ -83,14 +57,14 @@ export function packPoint(unpackedPoint: Point<BigNumber>): bigint {
   ]);
   // zk-kit/baby-jubjub's packPoint reverses byte order when compared to
   // the raw point (and compared to circomlibjs).  Reverse it back manually.
-  // TODO(artwyman): See if this is going to be fixed in zk-kit/baby-jubjub
+  // TODO(artwyman): This has been fixed in zk-kit.  Incorporate it when released.
   return leBufferToBigint(leBigintToBuffer(zkkPackedPoint).reverse());
 }
 
 export function unpackPoint(packedPoint: BigNumber): Point<bigint> | null {
   // zk-kit/baby-jubjub's packPoint reverses byte order when compared to
   // the raw point (and compared to circomlibjs).  Reverse it back manually.
-  // TODO(artwyman): See if this is going to be fixed in zk-kit/baby-jubjub
+  // TODO(artwyman): This has been fixed in zk-kit.  Incorporate it when released.
   const zkkPackedPoint = leBufferToBigint(
     leBigintToBuffer(BigInt(packedPoint)).reverse()
   );
@@ -127,13 +101,13 @@ export function unpackSignature(packedSigHex: string): Signature<bigint> {
 }
 
 // TODO(artwyman): Decide whether to use zk-kit/eddsa-poseidon's packPublicKey,
-// which uses a decimal format.
+// which uses a decimal format rather than hex.
 export function packPublicKey(unpackedPublicKey: Point<BigNumber>): string {
   return toHexString(leBigintToBuffer(packPoint(unpackedPublicKey)));
 }
 
 // TODO(artwyman): Decide whetehr to use zk-kit/eddsa-poseidon's unpackPublicKey,
-// which uses a decimal format.
+// which uses a decimal format rather than hex.
 export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
   const unpackedPublicKey = unpackPoint(
     leBufferToBigint(fromHexString(packedPublicKey))
@@ -148,7 +122,6 @@ export function signPODRoot(
   root: bigint,
   privateKey: string
 ): { signature: string; publicKey: string } {
-  // TODO(artwyman): ART_IMPL EdDSA signature
   const privateKeyBytes = fromHexString(privateKey);
   const signature = toHexString(
     packSignature(signMessage(privateKeyBytes, root))
@@ -163,60 +136,7 @@ export function verifyPODRootSignature(
   signature: string,
   publicKey: string
 ): boolean {
-  const unpackedPublicKey = unpackPoint(
-    leBufferToBigint(fromHexString(publicKey))
-  );
-  if (unpackedPublicKey === null) {
-    throw new Error(`Invalid packed public key point ${publicKey}.`);
-  }
+  const unpackedPublicKey = unpackPublicKey(publicKey);
   const unpackedSignature = unpackSignature(signature);
   return verifySignature(root, unpackedSignature, unpackedPublicKey);
-}
-
-export function signPOD(
-  entries: PODEntries,
-  privateKey: string
-): {
-  podMap: PODMap;
-  merkleTree: LeanIMT<bigint>;
-  signature: string;
-  publicKey: string;
-} {
-  const { podMap, merkleTree } = merklizePOD(entries);
-  const { signature, publicKey } = signPODRoot(merkleTree.root, privateKey);
-  return { podMap, merkleTree, signature, publicKey };
-}
-
-export function verifyPOD(
-  entries: PODEntries,
-  signature: string,
-  publicKey: string
-): boolean {
-  const { podMap: _, merkleTree } = merklizePOD(entries);
-  return verifyPODRootSignature(merkleTree.root, signature, publicKey);
-}
-
-export function getPODEntryIndex(podMap: PODMap, entryName: string): number {
-  const index = [...podMap.keys()].indexOf(entryName);
-  if (index < 0) {
-    throw new Error(`POD doesn't contain entry ${entryName}.`);
-  }
-  return index;
-}
-
-export function generatePODMerkleProof(
-  podMap: PODMap,
-  merkleTree: LeanIMT<bigint>,
-  entryName: string
-): LeanIMTMerkleProof<bigint> {
-  return merkleTree.generateProof(getPODEntryIndex(podMap, entryName) * 2);
-}
-
-export function verifyPODMerkeProof(
-  entryProof: LeanIMTMerkleProof<bigint>
-): boolean {
-  // TODO(artwyman): LeanIMT.verifyProof doesn't need the tree, just the hash
-  return new LeanIMT<bigint>((a, b) => poseidon2([a, b])).verifyProof(
-    entryProof
-  );
 }

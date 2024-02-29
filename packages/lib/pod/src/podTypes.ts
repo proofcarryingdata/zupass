@@ -1,0 +1,78 @@
+import { r as BabyJubjubR } from "@zk-kit/baby-jubjub";
+
+// TODO(artwyman): Docs on all types
+
+/**
+ * Name of a POD entry is a string with a limited character set, checked using
+ * POD_NAME_REGEX.
+ */
+export type PODName = string;
+
+/**
+ * Regex matching legal names for POD entries.
+ */
+export const POD_NAME_REGEX = new RegExp(/^\w+$/);
+
+/**
+ * POD value for a user-specififed string.  String values can contain any
+ * string.  They are not limited like names.
+ */
+export type PODStringValue = {
+  type: "string";
+  value: string;
+};
+
+/**
+ * POD value for unconstrained integer values such as hashes.  These can be
+ * any value which fits into a circuit signal.  The constants
+ * POD_CRYPTOGRAPHIC_MIN and POD_CRYPTOGRAPHIC_MAX specify the legal range.
+ */
+export type PODCryptographicValue = {
+  type: "cryptographic";
+  value: bigint;
+};
+
+/**
+ * Minimum legal value of a `cryptographic` entry value.
+ */
+export const POD_CRYPTOGRAPHIC_MIN = 0n;
+
+/**
+ * Maximum legal value of a `cryptographic` entry value.
+ */
+export const POD_CRYPTOGRAPHIC_MAX = BabyJubjubR - 1n;
+
+/**
+ * POD value for constrained integer values intended for comparison and
+ * arithmatic manipulation.  The constants POD_INT_MIN and POD_INT_MAX specify
+ * the legal range.
+ *
+ * `int` values are currently 63-bit unsigned values, but will probably become
+ * signed values in a future update.
+ */
+export type PODIntValue = {
+  type: "int";
+  value: bigint;
+};
+
+// TODO(artwyman): Decide on default int bounds and sign for POD.
+// These values limit int's to 31 bits unsigned, to leave room if we
+// decide on 63-bit signed later.
+
+/**
+ * Minimum legal value of an `int` entry value.
+ */
+export const POD_INT_MIN = 0n;
+
+/**
+ * Maximum legal value of an `int` entry value.
+ */
+export const POD_INT_MAX = (1n << 63n) - 1n;
+
+/**
+ * POD values are tagged with their type.  All values contain `type` and `value`
+ * fields, which Typescript separates into distinct types for validation.
+ */
+export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
+
+export type PODEntries = Record<PODName, PODValue>;

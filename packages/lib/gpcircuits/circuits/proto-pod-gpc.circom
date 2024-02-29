@@ -41,6 +41,8 @@ template ProtoPODGPC (MAX_OBJECTS, MAX_ENTRIES, MERKLE_MAX_DEPTH) {
         );
     }
 
+    // TODO(artwyman): Compare content IDs to ensure objects are unique.
+
     /*
      * 1+ EntryModule & EntryConstraintModule for each entry.
      * Each array corresponds to one input/output for each entry module.  Non-array inputs

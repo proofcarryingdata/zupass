@@ -29,12 +29,6 @@
       "path": "../../packages/ui/eddsa-frog-pcd-ui"
     },
     {
-      "path": "../../packages/pcd/message-pcd"
-    },
-    {
-      "path": "../../packages/ui/message-pcd-ui"
-    },
-    {
       "path": "../../packages/pcd/eddsa-pcd"
     },
     {
@@ -66,6 +60,12 @@
     },
     {
       "path": "../../packages/ui/halo-nonce-pcd-ui"
+    },
+    {
+      "path": "../../packages/pcd/message-pcd"
+    },
+    {
+      "path": "../../packages/ui/message-pcd-ui"
     },
     {
       "path": "../../packages/lib/passport-crypto"

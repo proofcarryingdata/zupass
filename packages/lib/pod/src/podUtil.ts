@@ -1,14 +1,11 @@
-import { r as BabyJubjubR } from "@zk-kit/baby-jubjub";
-import { PODEntries, PODMap, PODValue } from "./pod";
-
-export const POD_NAME_REGEX = new RegExp(/^\w+$/);
-
-export const POD_CRYPTOGRAPHIC_MIN = 0n;
-export const POD_CRYPTOGRAPHIC_MAX = BabyJubjubR - 1n;
-
-// TODO(artwyman): Decide on default int bounds and sign for POD.
-export const POD_INT_MIN = 0n;
-export const POD_INT_MAX = (1n << 64n) - 1n;
+import {
+  PODValue,
+  POD_CRYPTOGRAPHIC_MAX,
+  POD_CRYPTOGRAPHIC_MIN,
+  POD_INT_MAX,
+  POD_INT_MIN,
+  POD_NAME_REGEX
+} from "./podTypes";
 
 export function checkPODName(name?: string): string {
   if (!name) {
@@ -48,10 +45,10 @@ function checkBigintBounds(
 }
 
 export function checkPODValue(name: string, podValue?: PODValue): PODValue {
-  if (!podValue || !podValue.value) {
+  if (podValue === undefined || podValue.value === undefined) {
     throw new Error("POD values cannot be undefined.");
   }
-  if (!podValue.type) {
+  if (podValue.type === undefined) {
     throw new Error("POD values must have a type.");
   }
   switch (podValue.type) {
@@ -77,13 +74,16 @@ export function checkPODValue(name: string, podValue?: PODValue): PODValue {
   return podValue;
 }
 
-export function makePODMap(entries: PODEntries): PODMap {
-  const sortedNames = Object.keys(entries)
-    .map((name) => checkPODName(name))
-    .sort();
-  const podMap: PODMap = new Map();
-  for (const name of sortedNames) {
-    podMap.set(name, checkPODValue(name, entries[name]));
+export function isPODNumericValue(podValue: PODValue): boolean {
+  return getPODValueForCircuit(podValue) !== undefined;
+}
+
+export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
+  switch (podValue.type) {
+    case "string":
+      return undefined;
+    case "int":
+    case "cryptographic":
+      return podValue.value;
   }
-  return podMap;
 }

@@ -1,12 +1,4 @@
-import {
-  generatePODMerkleProof,
-  podValueHash,
-  signPOD,
-  unpackPublicKey,
-  unpackSignature,
-  verifyPOD,
-  verifyPODMerkeProof
-} from "@pcd/pod";
+import { POD, PODContent, unpackPublicKey, unpackSignature } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
@@ -280,15 +272,12 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
     const signatures = [];
     const publicKeys = [];
     for (const inputEntries of testObjects) {
-      const { podMap, merkleTree, signature, publicKey } = signPOD(
-        inputEntries,
-        privateKey
-      );
-      const verified = verifyPOD(inputEntries, signature, publicKey);
+      const pod = POD.sign(inputEntries, privateKey);
+      const verified = pod.verifySignature();
       expect(verified).to.be.true;
-      pods.push({ podMap, merkleTree, signature, publicKey });
-      signatures.push(unpackSignature(signature));
-      publicKeys.push(unpackPublicKey(publicKey));
+      pods.push(pod);
+      signatures.push(unpackSignature(pod.signature));
+      publicKeys.push(unpackPublicKey(pod.signerPublicKey));
     }
 
     // Fill in ObjectModule inputs.
@@ -303,7 +292,7 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
       const isObjectEnabled = objectIndex < testObjects.length;
       const i = isObjectEnabled ? objectIndex : 0;
 
-      sigObjectContentID.push(pods[i].merkleTree.root);
+      sigObjectContentID.push(pods[i].contentID);
       sigObjectSignerPubkeyAx.push(publicKeys[i][0]);
       sigObjectSignerPubkeyAy.push(publicKeys[i][1]);
       sigObjectSignatureR8x.push(signatures[i].R8[0]);
@@ -331,45 +320,30 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
 
       // Generate entry Merkle membership proof.
       const entryName = entryInfo.name;
-      const entryObject = pods[entryInfo.objectIndex];
-      const entryValue = entryObject.podMap.get(entryName);
-      if (!entryValue) {
-        throw new Error(`Missing entry value "${entryName}"!`);
-      }
-      const entryProof = generatePODMerkleProof(
-        entryObject.podMap,
-        entryObject.merkleTree,
-        entryName
-      );
-      expect(verifyPODMerkeProof(entryProof)).to.be.true;
+      const entryPOD = pods[entryInfo.objectIndex];
+      const podSignals =
+        entryPOD.content.generateEntryCircuitSignals(entryName);
+      expect(PODContent.verifyEntryProof(podSignals.proof)).to.be.true;
 
       // Fill in entry's identity info.
       sigEntryObjectIndex.push(BigInt(entryInfo.objectIndex));
-      sigEntryNameHash.push(entryProof.leaf);
+      sigEntryNameHash.push(podSignals.nameHash);
 
       // Fill in entry value for supported types.  Value hash is arbitrarily
       // revealed for even-numbered entries.
       const isValueHashRevealed = entryIndex % 2 == 0;
-      const entryValueHash = podValueHash(entryValue);
+      const entryValueHash = podSignals.valueHash;
       if (!isEntryEnabled) {
         sigEntryValue.push(0n);
         sigEntryIsValueEnabled.push(0n);
         sigEntryIsValueHashRevealed.push(0n);
         sigEntryRevealedValueHash.push(BABY_JUB_NEGATIVE_ONE);
-      } else if (
-        entryValue.type === "cryptographic" ||
-        entryValue.type === "int"
-      ) {
-        sigEntryValue.push(entryValue.value);
-        sigEntryIsValueEnabled.push(1n);
-        sigEntryIsValueHashRevealed.push(isValueHashRevealed ? 1n : 0n);
-        sigEntryRevealedValueHash.push(
-          isValueHashRevealed ? entryValueHash : BABY_JUB_NEGATIVE_ONE
-        );
       } else {
-        sigEntryValue.push(0n);
-        sigEntryIsValueEnabled.push(0n);
-        sigEntryIsValueHashRevealed.push(entryIndex % 2 == 0 ? 1n : 0n);
+        sigEntryValue.push(
+          podSignals.value !== undefined ? podSignals.value : 0n
+        );
+        sigEntryIsValueEnabled.push(podSignals.value !== undefined ? 1n : 0n);
+        sigEntryIsValueHashRevealed.push(isValueHashRevealed ? 1n : 0n);
         sigEntryRevealedValueHash.push(
           isValueHashRevealed ? entryValueHash : BABY_JUB_NEGATIVE_ONE
         );
@@ -387,15 +361,15 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
       } else {
         sigEntryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
       }
-      sigEntryProofDepth.push(BigInt(entryProof.siblings.length));
-      sigEntryProofIndex.push(BigInt(entryProof.index));
+      sigEntryProofDepth.push(BigInt(podSignals.proof.siblings.length));
+      sigEntryProofIndex.push(BigInt(podSignals.proof.index));
 
       // Fillin sibling array, padded with 0s to max length.
       const sigCurSiblings = [];
       for (let sibIndex = 0; sibIndex < paramMaxDepth; sibIndex++) {
         sigCurSiblings.push(
-          sibIndex < entryProof.siblings.length
-            ? entryProof.siblings[sibIndex]
+          sibIndex < podSignals.proof.siblings.length
+            ? podSignals.proof.siblings[sibIndex]
             : 0n
         );
       }

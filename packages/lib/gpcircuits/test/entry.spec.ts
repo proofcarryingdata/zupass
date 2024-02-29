@@ -1,10 +1,4 @@
-import {
-  generatePODMerkleProof,
-  isPODNumericValue,
-  podNameHash,
-  podValueHash,
-  signPOD
-} from "@pcd/pod";
+import { POD, isPODNumericValue, podNameHash, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
@@ -38,9 +32,9 @@ describe("entry.EntryModule should work", function () {
     inputs: EntryModuleInputs;
     outputs: EntryModuleOutputs;
   } {
-    const { podMap, merkleTree } = signPOD(sampleEntries, privateKey);
+    const pod = POD.sign(sampleEntries, privateKey);
 
-    const podValue = podMap.get(entryName);
+    const podValue = pod.content.getValue(entryName);
     if (!podValue) {
       throw new Error(`Missing entry for ${entryName}!`);
     }
@@ -53,7 +47,7 @@ describe("entry.EntryModule should work", function () {
       valueSignal = podValue.value;
     }
 
-    const merkleProof = generatePODMerkleProof(podMap, merkleTree, entryName);
+    const merkleProof = pod.content.generateEntryProof(entryName);
     const circuitSiblings = Array<bigint>(merkleDepth).fill(0n, 0, merkleDepth);
     for (let i = 0; i < merkleProof.siblings.length; i++) {
       circuitSiblings[i] = merkleProof.siblings[i];
@@ -61,7 +55,7 @@ describe("entry.EntryModule should work", function () {
 
     return {
       inputs: {
-        objectContentID: merkleTree.root,
+        objectContentID: pod.contentID,
         nameHash: podNameHash(entryName),
         isValueHashRevealed: isValueHashRevealed ? 1n : 0n,
         proofDepth: BigInt(merkleProof.siblings.length),

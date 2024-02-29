@@ -1,4 +1,4 @@
-import { signPOD, unpackPublicKey, unpackSignature } from "@pcd/pod";
+import { POD, unpackPublicKey, unpackSignature } from "@pcd/pod";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
@@ -19,16 +19,13 @@ describe("object.ObjectModule should work", function () {
   >;
 
   function makeTestSignals(): ObjectModuleInputs {
-    const { merkleTree, signature, publicKey } = signPOD(
-      sampleEntries,
-      privateKey
-    );
+    const pod = POD.sign(sampleEntries, privateKey);
 
-    const pub = unpackPublicKey(publicKey);
-    const sig = unpackSignature(signature);
+    const pub = unpackPublicKey(pod.signerPublicKey);
+    const sig = unpackSignature(pod.signature);
 
     return {
-      contentID: merkleTree.root,
+      contentID: pod.contentID,
       signerPubkeyAx: pub[0],
       signerPubkeyAy: pub[1],
       signatureR8x: sig.R8[0],
