@@ -1373,6 +1373,8 @@ export class LemonadePipeline implements BasePipeline {
                   (g) => g.id === b.id
                 ).length,
                 id: b.id,
+                eventName: b.eventName,
+                productName: b.productName,
                 intervalMs,
                 maxInInterval: b.maxPerDay
               })),

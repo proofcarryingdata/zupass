@@ -969,6 +969,8 @@ export type CheckinActionInfo =
 
 export type RateLimitedBadge = {
   id: string;
+  eventName: string;
+  productName?: string;
   alreadyGivenInInterval: number;
   maxInInterval: number;
   intervalMs: number;

@@ -98,10 +98,6 @@ export function GiveBadgeActionSection({
     );
   }
 
-  if (isLoading) {
-    return null;
-  }
-
   if (executor.result?.success) {
     return (
       <>
@@ -148,7 +144,7 @@ export function GiveBadgeActionSection({
         isLoading={isLoading}
       />
 
-      {!selectedBadge && !disabled && (
+      {!isLoading && !selectedBadge && !disabled && (
         <BadgeSelect
           value={selectedBadge?.id}
           onChange={(e): void =>
@@ -165,7 +161,8 @@ export function GiveBadgeActionSection({
           })}
         </BadgeSelect>
       )}
-      {selectedBadge && (
+
+      {!isLoading && selectedBadge && (
         <>
           <Button
             onClick={executor.execute}

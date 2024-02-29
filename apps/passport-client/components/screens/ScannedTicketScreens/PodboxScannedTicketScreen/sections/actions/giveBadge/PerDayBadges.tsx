@@ -1,10 +1,18 @@
+import { ticketDisplayName } from "@pcd/eddsa-ticket-pcd";
 import {
   ActionConfigResponseValue,
   RateLimitedBadge
 } from "@pcd/passport-interface";
-import { Dispatch, ReactNode, SetStateAction, useCallback } from "react";
+import {
+  Dispatch,
+  ReactNode,
+  SetStateAction,
+  useCallback,
+  useState
+} from "react";
 import styled from "styled-components";
-import { Button } from "../../../../../../core";
+import { Button, Spacer } from "../../../../../../core";
+import { RippleLoader } from "../../../../../../core/RippleLoader";
 import { useExecuteTicketAction } from "../useExecuteTicketAction";
 
 export function PerDayBadges({
@@ -21,6 +29,28 @@ export function PerDayBadges({
   isLoading: boolean;
 }): ReactNode {
   const options = precheck.giveBadgeActionInfo?.rateLimitedBadges ?? [];
+  const [giving, setGiving] = useState(false);
+
+  const wrappedSetInProgress = useCallback(
+    (inProgress) => {
+      setGiving(inProgress);
+      setInProgress(inProgress);
+    },
+    [setInProgress]
+  );
+
+  if (giving) {
+    return (
+      <>
+        <Spacer h={8} />
+        <RippleLoader />
+      </>
+    );
+  }
+
+  if (isLoading) {
+    return null;
+  }
 
   return (
     <Container>
@@ -31,8 +61,7 @@ export function PerDayBadges({
             key={o.id}
             eventId={eventId}
             ticketId={ticketId}
-            setInProgress={setInProgress}
-            isLoading={isLoading}
+            setInProgress={wrappedSetInProgress}
           />
         );
       })}
@@ -44,14 +73,12 @@ function PerDayBadgeButton({
   o,
   eventId,
   ticketId,
-  setInProgress,
-  isLoading
+  setInProgress
 }: {
   o: RateLimitedBadge;
   eventId: string;
   ticketId: string;
   setInProgress: Dispatch<SetStateAction<boolean>>;
-  isLoading: boolean;
 }): ReactNode {
   const isDisabled = o.alreadyGivenInInterval >= o.maxInInterval;
   const leftToGive = o.maxInInterval - o.alreadyGivenInInterval;
@@ -72,14 +99,12 @@ function PerDayBadgeButton({
   }, [giveBadge, setInProgress]);
 
   return (
-    <>
-      <pre>{JSON.stringify(o, null, 2)}</pre>
-      <Row>
-        <Button disabled={isDisabled} onClick={onClick}>
-          Give {o.id} ({leftToGive} left today)
-        </Button>
-      </Row>
-    </>
+    <Row>
+      <Button disabled={isDisabled} onClick={onClick}>
+        Give {ticketDisplayName(o.eventName, o.productName)} ({leftToGive} left
+        today)
+      </Button>
+    </Row>
   );
 }
 
