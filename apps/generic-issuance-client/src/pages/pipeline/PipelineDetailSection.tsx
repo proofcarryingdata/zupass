@@ -22,16 +22,26 @@ import {
   getHoneycombQueryDurationStr,
   getLoadTraceHoneycombLinkForPipeline
 } from "../../helpers/util";
-import { PipelineLatestDataSection } from "./PipelineLatestDataSection";
-import { PipelineLatestLogsSection } from "./PipelineLatestLogsSection";
+import {
+  PipelineAddManualTicketSection,
+  supportsManualTicketTable
+} from "./DetailsSections/PipelineAddManualTicketSection";
+import {
+  PipelineDisplayManualTicketsSection,
+  supportsAddingManualTickets
+} from "./DetailsSections/PipelineDisplayManualTicketsSection";
+import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
+import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
+import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
+import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 
 export function PipelineDetailSection({
   pipelineInfo,
-  pipelineFromServer,
+  pipeline,
   isAdminView
 }: {
   pipelineInfo: PipelineInfoResponseValue;
-  pipelineFromServer: PipelineDefinition;
+  pipeline: PipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
   return (
@@ -61,7 +71,32 @@ export function PipelineDetailSection({
             </Box>
           ))}
       </Box>
+
       <Accordion defaultIndex={[]} allowMultiple={true}>
+        {supportsManualTicketTable(pipeline) && isAdminView && (
+          <AccordionItem>
+            <AccordionButton>Add Manual Ticket</AccordionButton>
+            <AccordionPanel>
+              <PipelineAddManualTicketSection
+                pipeline={pipeline}
+                isAdminView={isAdminView}
+              />
+            </AccordionPanel>
+          </AccordionItem>
+        )}
+
+        {supportsAddingManualTickets(pipeline) && isAdminView && (
+          <AccordionItem>
+            <AccordionButton>Existing Manual Tickets</AccordionButton>
+            <AccordionPanel>
+              <PipelineDisplayManualTicketsSection
+                pipeline={pipeline}
+                isAdminView={isAdminView}
+              />
+            </AccordionPanel>
+          </AccordionItem>
+        )}
+
         <AccordionItem>
           <AccordionButton>Latest Logs</AccordionButton>
           <AccordionPanel>
@@ -76,6 +111,22 @@ export function PipelineDetailSection({
           </AccordionPanel>
         </AccordionItem>
 
+        <AccordionItem>
+          <AccordionButton>Consumers</AccordionButton>
+          <AccordionPanel>
+            <PipelineLatestConsumersSection
+              latestConsumers={pipelineInfo.latestConsumers}
+            />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Semaphore Groups</AccordionButton>
+          <AccordionPanel>
+            <PipelineSemaphoreGroupsSection lastLoad={pipelineInfo.lastLoad} />
+          </AccordionPanel>
+        </AccordionItem>
+
         {isAdminView && (
           <AccordionItem>
             <AccordionButton>
@@ -86,9 +137,7 @@ export function PipelineDetailSection({
                 <ListItem>
                   <PodLink
                     isExternal={true}
-                    to={getLoadTraceHoneycombLinkForPipeline(
-                      pipelineFromServer.id
-                    )}
+                    to={getLoadTraceHoneycombLinkForPipeline(pipeline.id)}
                   >
                     data load traces {getHoneycombQueryDurationStr()}
                   </PodLink>
@@ -96,7 +145,7 @@ export function PipelineDetailSection({
                 <li>
                   <PodLink
                     isExternal={true}
-                    to={getAllHoneycombLinkForPipeline(pipelineFromServer.id)}
+                    to={getAllHoneycombLinkForPipeline(pipeline.id)}
                   >
                     all traces related to this pipeline{" "}
                     {getHoneycombQueryDurationStr()}

@@ -1,9 +1,16 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { PipelineDefinition } from "@pcd/passport-interface";
+import {
+  PipelineDefinition,
+  isCSVPipelineDefinition,
+  isLemonadePipelineDefinition,
+  isPretixPipelineDefinition
+} from "@pcd/passport-interface";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
   IContactSharingDB
@@ -12,15 +19,8 @@ import { PersistentCacheService } from "../../persistentCacheService";
 import { traced } from "../../telemetryService";
 import { tracePipeline } from "../honeycombQueries";
 import { CSVPipeline } from "./CSVPipeline/CSVPipeline";
-import {
-  LemonadePipeline,
-  isLemonadePipelineDefinition
-} from "./LemonadePipeline";
-import {
-  PretixPipeline,
-  isCSVPipelineDefinition,
-  isPretixPipelineDefinition
-} from "./PretixPipeline";
+import { LemonadePipeline } from "./LemonadePipeline";
+import { PretixPipeline } from "./PretixPipeline";
 import { Pipeline } from "./types";
 
 /**
@@ -41,7 +41,9 @@ export function instantiatePipeline(
   cacheService: PersistentCacheService,
   checkinDB: IPipelineCheckinDB,
   contactDB: IContactSharingDB,
-  badgeDB: IBadgeGiftingDB
+  badgeDB: IBadgeGiftingDB,
+  consumerDB: IPipelineConsumerDB,
+  semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
@@ -58,7 +60,9 @@ export function instantiatePipeline(
         cacheService,
         checkinDB,
         contactDB,
-        badgeDB
+        badgeDB,
+        consumerDB,
+        semaphoreHistoryDB
       );
     } else if (isPretixPipelineDefinition(definition)) {
       pipeline = new PretixPipeline(
@@ -68,7 +72,8 @@ export function instantiatePipeline(
         apis.genericPretixAPI,
         zupassPublicKey,
         cacheService,
-        checkinDB
+        checkinDB,
+        consumerDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(

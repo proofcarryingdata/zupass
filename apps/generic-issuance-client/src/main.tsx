@@ -24,9 +24,9 @@ import { RollbarProvider } from "./components/RollbarProvider";
 import { IS_PROD, SESSION_DURATION_MINUTES } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
 import { DEV_JWT_KEY } from "./helpers/userHooks";
+import { NotFound } from "./pages/404";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
-import { NotFound } from "./pages/pipeline/404";
 import LoginPage from "./pages/pipeline/LoginPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
 

@@ -1,6 +1,6 @@
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import { FancyEditor } from "../../components/FancyEditor";
+import { FancyEditor } from "../../../components/FancyEditor";
 
 /**
  * Renders information about the last time this pipeline was run by Podbox.

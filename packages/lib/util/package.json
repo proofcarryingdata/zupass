@@ -28,6 +28,7 @@
   "dependencies": {
     "buffer": "^6.0.3",
     "chai": "^4.3.7",
+    "email-validator": "^2.0.4",
     "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"
   },
@@ -35,6 +36,7 @@
     "@pcd/eslint-config-custom": "*",
     "@pcd/tsconfig": "*",
     "@types/chai": "^4.3.5",
+    "@types/email-validator": "^1.0.6",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.2",
     "eslint": "^7.32.0",

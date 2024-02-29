@@ -1,5 +1,4 @@
 import { exec, spawn } from "child_process";
-import validator from "email-validator";
 import { promisify } from "util";
 import { logger } from "./logger";
 
@@ -24,10 +23,6 @@ export function randomEmailToken(): string {
   const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
   if (token.length !== 6) throw new Error("Unreachable");
   return token;
-}
-
-export function validateEmail(email: string): boolean {
-  return validator.validate(email);
 }
 
 export async function getCommitHash(): Promise<string> {
@@ -146,4 +141,11 @@ export function pbcopy(data: string): void {
   const proc = spawn("pbcopy");
   proc.stdin.write(data);
   proc.stdin.end();
+}
+
+export function ensureDefined<T>(val: T | undefined, errorMessage?: string): T {
+  if (val === undefined) {
+    throw new Error(errorMessage ?? "Undefined value");
+  }
+  return val;
 }

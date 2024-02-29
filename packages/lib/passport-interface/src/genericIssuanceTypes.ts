@@ -119,6 +119,48 @@ const LemonadePipelineTicketTypeConfigSchema = z.object({
   name: z.string()
 });
 
+const SemaphoreGroupConfigSchema = z.object({
+  /**
+   * Defines the set of event ID/product ID pairs that qualify a ticket-holder
+   * for membership in this group. If no product ID is specified, then all
+   * tickets for the event will qualify for group membership.
+   *
+   * The groupId is a UUID which the administrator should generate.
+   */
+  groupId: z.string().uuid(),
+  name: z.string().min(1),
+  memberCriteria: z.array(
+    z.object({
+      eventId: z.string().uuid(),
+      productId: z.string().uuid().optional()
+    })
+  )
+});
+
+export type SemaphoreGroupConfig = z.infer<typeof SemaphoreGroupConfigSchema>;
+
+const SemaphoreGroupListSchema = z
+  .array(SemaphoreGroupConfigSchema)
+  .optional()
+  .refine(
+    (groups) =>
+      // Groups being undefined is valid
+      groups === undefined ||
+      // If groups are defined, the number of unique IDs must equal the
+      // number of groups
+      groups.length === new Set(groups.map((group) => group.groupId)).size,
+    { message: "Semaphore group IDs must be unique" }
+  )
+  .refine(
+    (groups) =>
+      // Groups being undefined is valid
+      groups === undefined ||
+      // If groups are defined, the number of unique names must equal the
+      // number of groups
+      groups.length === new Set(groups.map((group) => group.name)).size,
+    { message: "Semaphore group names must be unique" }
+  );
+
 /**
  * Generic Issuance-specific ticket type configuration - roughly corresponds to a
  * 'Product' in Pretix-land.
@@ -224,7 +266,8 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   superuserEmails: z.array(z.string()).optional(),
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
-  ticketActions: TicketActionsOptionsSchema.optional()
+  ticketActions: TicketActionsOptionsSchema.optional(),
+  semaphoreGroups: SemaphoreGroupListSchema
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -268,6 +311,12 @@ const LemonadePipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
 export type LemonadePipelineDefinition = z.infer<
   typeof LemonadePipelineDefinitionSchema
 >;
+
+export function isLemonadePipelineDefinition(
+  d: PipelineDefinition
+): d is LemonadePipelineDefinition {
+  return d.type === PipelineType.Lemonade;
+}
 
 const PretixProductConfigSchema = z.object({
   /**
@@ -374,6 +423,12 @@ export type PretixPipelineDefinition = z.infer<
   typeof PretixPipelineDefinitionSchema
 >;
 
+export function isPretixPipelineDefinition(
+  d: PipelineDefinition
+): d is PretixPipelineDefinition {
+  return d.type === PipelineType.Pretix;
+}
+
 export enum CSVPipelineOutputType {
   /**
    * {@link EdDSAMessagePCD}
@@ -400,6 +455,12 @@ const CSVPipelineDefinitionSchema = BasePipelineDefinitionSchema.extend({
  */
 export type CSVPipelineDefinition = z.infer<typeof CSVPipelineDefinitionSchema>;
 
+export function isCSVPipelineDefinition(
+  d: PipelineDefinition
+): d is CSVPipelineDefinition {
+  return d.type === PipelineType.CSV;
+}
+
 /**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
@@ -417,3 +478,16 @@ export const PipelineDefinitionSchema = z.union([
  * of data sources.
  */
 export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
+
+/**
+ * {@link Pipeline}s offer PCDs to users via authenticated channels such as
+ * feeds. When a user authenticates in order to receive a PCD, we record this
+ * in the DB, allowing us to reconstruct a list of authenticated users for
+ * purposes such as Semaphore group management.
+ */
+export interface PipelineConsumer {
+  email: string; // the consumer's email address
+  commitment: string; // the consumer's semaphore commitment
+  timeCreated: Date;
+  timeUpdated: Date;
+}

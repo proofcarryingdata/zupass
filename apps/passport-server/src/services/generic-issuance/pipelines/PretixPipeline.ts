@@ -9,7 +9,6 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  CSVPipelineDefinition,
   GenericIssuanceCheckInRequest,
   GenericIssuancePreCheckRequest,
   GenericPretixCheckinList,
@@ -19,7 +18,6 @@ import {
   GenericPretixProduct,
   GenericPretixProductCategory,
   ManualTicket,
-  PipelineDefinition,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -44,6 +42,7 @@ import {
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
+import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -100,7 +99,8 @@ export class PretixPipeline implements BasePipeline {
    */
   private db: IPipelineAtomDB<PretixAtom>;
   private api: IGenericPretixAPI;
-  private checkinDb: IPipelineCheckinDB;
+  private checkinDB: IPipelineCheckinDB;
+  private consumerDB: IPipelineConsumerDB;
 
   public get id(): string {
     return this.definition.id;
@@ -121,7 +121,8 @@ export class PretixPipeline implements BasePipeline {
     api: IGenericPretixAPI,
     zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
-    checkinDb: IPipelineCheckinDB
+    checkinDB: IPipelineCheckinDB,
+    consumerDB: IPipelineConsumerDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -152,8 +153,9 @@ export class PretixPipeline implements BasePipeline {
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
     this.cacheService = cacheService;
-    this.checkinDb = checkinDb;
     this.loaded = false;
+    this.checkinDB = checkinDB;
+    this.consumerDB = consumerDB;
   }
 
   public async start(): Promise<void> {
@@ -324,7 +326,7 @@ export class PretixPipeline implements BasePipeline {
           (manualTicket) => manualTicket.id
         )
       );
-      const checkIns = await this.checkinDb.getByPipelineId(this.id);
+      const checkIns = await this.checkinDB.getByPipelineId(this.id);
       for (const checkIn of checkIns) {
         if (!ticketIds.has(checkIn.ticketId)) {
           logger(
@@ -332,7 +334,7 @@ export class PretixPipeline implements BasePipeline {
           );
           span?.setAttribute("deleted_checkin_ticket_id", checkIn.ticketId);
 
-          await this.checkinDb.deleteCheckIn(this.id, checkIn.ticketId);
+          await this.checkinDB.deleteCheckIn(this.id, checkIn.ticketId);
         }
       }
     });
@@ -677,7 +679,7 @@ export class PretixPipeline implements BasePipeline {
     const event = this.getEventById(manualTicket.eventId);
     const product = this.getProductById(event, manualTicket.productId);
 
-    const checkIn = await this.checkinDb.getByTicketId(
+    const checkIn = await this.checkinDB.getByTicketId(
       this.id,
       manualTicket.id
     );
@@ -782,6 +784,14 @@ export class PretixPipeline implements BasePipeline {
       ) {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
+
+      // Consumer is validated, so save them in the consumer list
+      await this.consumerDB.save(
+        this.id,
+        emailPCD.claim.emailAddress,
+        emailPCD.claim.semaphoreId,
+        new Date()
+      );
 
       const email = emailPCD.claim.emailAddress;
       span?.setAttribute("email", email);
@@ -1057,7 +1067,7 @@ export class PretixPipeline implements BasePipeline {
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
-      const checkIn = await this.checkinDb.getByTicketId(
+      const checkIn = await this.checkinDB.getByTicketId(
         this.id,
         manualTicket.id
       );
@@ -1404,7 +1414,7 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDb.checkIn(this.id, manualTicket.id, new Date());
+          await this.checkinDB.checkIn(this.id, manualTicket.id, new Date());
           this.pendingCheckIns.set(manualTicket.id, {
             status: CheckinStatus.Success,
             timestamp: Date.now()
@@ -1419,7 +1429,7 @@ export class PretixPipeline implements BasePipeline {
           if (e instanceof DatabaseError) {
             // We may have received a DatabaseError due to an insertion conflict
             // Detect this conflict by looking for an existing check-in.
-            const existingCheckin = await this.checkinDb.getByTicketId(
+            const existingCheckin = await this.checkinDB.getByTicketId(
               this.id,
               manualTicket.id
             );
@@ -1564,18 +1574,6 @@ export class PretixPipeline implements BasePipeline {
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
   }
-}
-
-export function isPretixPipelineDefinition(
-  d: PipelineDefinition
-): d is PretixPipelineDefinition {
-  return d.type === PipelineType.Pretix;
-}
-
-export function isCSVPipelineDefinition(
-  d: PipelineDefinition
-): d is CSVPipelineDefinition {
-  return d.type === PipelineType.CSV;
 }
 
 // Collection of API data for a single event
