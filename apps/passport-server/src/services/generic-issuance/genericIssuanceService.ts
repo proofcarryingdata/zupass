@@ -666,11 +666,24 @@ export class GenericIssuanceService {
         pipelineInstance.id
       );
       const latestAtoms = await this.atomDB.load(pipelineInstance.id);
-      // Ugly, but if we get either undefined or 0, then negate it, then the
-      // boolean value is true if there are Semaphore groups and false if not.
-      const pipelineHasSemaphoreGroups = !pipelineInstance.capabilities
-        .find(isSemaphoreGroupCapability)
-        ?.getSupportedGroups().length;
+
+      // If the pipeline has semaphore groups, we want to populate consumer
+      // data. If there are no semaphore groups, we don't.
+      // Rather than inspect the configuration, which depends on knowing all
+      // of the possible pipeline types and the structure of their
+      // configurations, we can ask the SemaphoreGroupCapability if it has any
+      // groups (if one exists). Only if the SemaphoreGroupCapability exists
+      // and has supported groups will we include consumer data.
+      let pipelineHasSemaphoreGroups = false;
+      const semaphoreGroupCapability = pipelineInstance.capabilities.find(
+        isSemaphoreGroupCapability
+      );
+      if (
+        semaphoreGroupCapability &&
+        semaphoreGroupCapability.getSupportedGroups().length > 0
+      ) {
+        pipelineHasSemaphoreGroups = true;
+      }
 
       // Only actually run the query if there are Semaphore groups
       const latestConsumers = pipelineHasSemaphoreGroups
@@ -1533,7 +1546,33 @@ export class GenericIssuanceService {
         ],
         pretixAPIKey: testPretixAPIKey,
         pretixOrgUrl: testPretixOrgUrl,
-        manualTickets: []
+        manualTickets: [],
+        semaphoreGroups: [
+          {
+            name: "Progcrypto Attendees",
+            groupId: "25d6d4d8-725f-41f2-8b53-7cd5bfacba16",
+            memberCriteria: [
+              {
+                eventId: "3dd02915-7a7e-412c-b792-046c9d654b75",
+                productId: "80d821f7-34a0-4d2f-9351-046b45694a74"
+              }
+            ]
+          },
+          {
+            name: "Progcrypto Organizers",
+            groupId: "a5754136-c942-4038-bbbe-c80a299f9288",
+            memberCriteria: [
+              {
+                eventId: "3dd02915-7a7e-412c-b792-046c9d654b75",
+                productId: "5f80443f-d767-4f6d-88fe-62eb927ae520"
+              },
+              {
+                eventId: "3dd02915-7a7e-412c-b792-046c9d654b75",
+                productId: "80d821f7-34a0-4d2f-9351-046b45694a74"
+              }
+            ]
+          }
+        ]
       },
       type: PipelineType.Pretix
     };

@@ -10,12 +10,12 @@ export function BalancesTab({
   score,
   scores
 }: {
-  score: EdgeCityBalance;
+  score?: EdgeCityBalance;
   scores: EdgeCityBalance[];
 }): JSX.Element {
   const getUsername = useUsernameGenerator();
 
-  if (!score || scores.length === 0 || !getUsername) {
+  if (scores.length === 0 || !getUsername) {
     return <RippleLoader />;
   }
 
@@ -33,12 +33,14 @@ export function BalancesTab({
         <span>Total Supply</span>
         <span>{TOTAL_SUPPLY} ZUC</span>
       </div>
-      <ScoreTable
-        title="You"
-        scores={[score]}
-        myScore={score}
-        getUsername={getUsername}
-      />
+      {score && (
+        <ScoreTable
+          title="You"
+          scores={[score]}
+          myScore={score}
+          getUsername={getUsername}
+        />
+      )}
       {scores.length > 0 && (
         <ScoreTable
           title={"Top holders"}

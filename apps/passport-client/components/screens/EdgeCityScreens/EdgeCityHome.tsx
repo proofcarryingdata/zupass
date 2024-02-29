@@ -11,7 +11,7 @@ import {
 import { sha256 } from "js-sha256";
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import styled, { keyframes } from "styled-components";
+import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
   useFolders,
@@ -45,6 +45,7 @@ interface GroupedEvent {
   eventName: string;
   total: number;
   imageUrl: string;
+  hiddenWhenEmpty: boolean;
 }
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
@@ -54,7 +55,12 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
   if (existingIndex > -1) {
     acc[existingIndex].total += 1;
   } else {
-    acc.push({ eventName: item.eventName, total: 1, imageUrl: item.imageUrl });
+    acc.push({
+      eventName: item.eventName,
+      total: 1,
+      imageUrl: item.imageUrl,
+      hiddenWhenEmpty: !!item.hiddenWhenEmpty
+    });
   }
   return acc;
 }, []);
@@ -150,27 +156,8 @@ export function EdgeCityHome(): JSX.Element {
       <Container>
         <Title>EDGE CITY</Title>
         <CenteredText style={{ color: "red" }}>
-          Oh no! An error occurred: {error}
+          Oh no! An error occurred. Please refresh to see your $ZUCASH.
         </CenteredText>
-
-        <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />
-      </Container>
-    );
-  }
-
-  if (!score) {
-    return (
-      <Container>
-        <Title>EDGE CITY</Title>
-        <div>
-          <Caption>Balance</Caption>
-          <CenteredText style={{ fontSize: 20 }}>
-            <span>🐸</span>{" "}
-            <span>
-              0.00 <ColorText>${TOKEN_LONG_NAME}</ColorText>{" "}
-            </span>
-          </CenteredText>
-        </div>
 
         <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />
       </Container>
@@ -211,7 +198,8 @@ export function EdgeCityHome(): JSX.Element {
         <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
           <span>
-            {score.balance.toFixed(2)} <ColorText>${TOKEN_LONG_NAME}</ColorText>{" "}
+            {score?.balance?.toFixed(2) ?? "0.00"}{" "}
+            <ColorText>${TOKEN_LONG_NAME}</ColorText>{" "}
           </span>
         </CenteredText>
       </div>
@@ -257,47 +245,52 @@ export function EdgeCityHome(): JSX.Element {
               ))}
               <Link to="/scan">
                 <ItemCard>
-                  <img
-                    src="https://i.ibb.co/SfPFn66/plus.webp"
-                    draggable={false}
-                  />
+                  <img src="/images/plus.webp" draggable={false} />
                 </ItemCard>
               </Link>
             </ItemContainer>
           </div>
-          {groupedResult.map(({ eventName, total, imageUrl }) => {
-            const pcds = pcdsByEventName[eventName] ?? [];
-            return (
-              <div key={eventName}>
-                <CategoryHeader>
-                  <span>{eventName}</span>
-                  <span>{`${pcds.length}/${total || "∞"}`}</span>
-                </CategoryHeader>
-                <ItemContainer>
-                  {pcds.flatMap((pcd) => (
-                    <ItemCard
-                      key={pcd.id}
-                      onClick={(): void => {
-                        setSelectedExperience(pcd);
-                        setSelectedExperienceIsContact(false);
-                      }}
-                    >
-                      <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
-                    </ItemCard>
-                  ))}
-                  {Array.from({ length: total - pcds.length }).map((_, i) => (
-                    <ItemCard style={{ cursor: "default" }} key={i}>
-                      <img
-                        src={imageUrl}
-                        draggable={false}
-                        style={{ opacity: 0.5 }}
-                      />
-                    </ItemCard>
-                  ))}
-                </ItemContainer>
-              </div>
-            );
-          })}
+          {groupedResult.map(
+            ({ eventName, total, imageUrl, hiddenWhenEmpty }) => {
+              const pcds = pcdsByEventName[eventName] ?? [];
+              if (hiddenWhenEmpty && pcds.length === 0) {
+                return null;
+              }
+              return (
+                <div key={eventName}>
+                  <CategoryHeader>
+                    <span>{eventName}</span>
+                    <span>{`${pcds.length}/${total || "∞"}`}</span>
+                  </CategoryHeader>
+                  <ItemContainer>
+                    {pcds.flatMap((pcd) => (
+                      <ItemCard
+                        key={pcd.id}
+                        onClick={(): void => {
+                          setSelectedExperience(pcd);
+                          setSelectedExperienceIsContact(false);
+                        }}
+                      >
+                        <img
+                          src={pcd.claim.ticket?.imageUrl}
+                          draggable={false}
+                        />
+                      </ItemCard>
+                    ))}
+                    {Array.from({ length: total - pcds.length }).map((_, i) => (
+                      <ItemCard style={{ cursor: "default" }} key={i}>
+                        <img
+                          src={imageUrl}
+                          draggable={false}
+                          style={{ opacity: 0.5 }}
+                        />
+                      </ItemCard>
+                    ))}
+                  </ItemContainer>
+                </div>
+              );
+            }
+          )}
 
           {selectedExperience && (
             <ExperienceModal
@@ -383,18 +376,6 @@ const ItemCard = styled.div`
   cursor: pointer;
 `;
 
-const pulse = keyframes`
-  0% {
-    background-size: 100% 100%;
-  }
-  50% {
-    background-size: 150% 150%;
-  }
-  100% {
-    background-size: 100% 100%;
-  }
-`;
-
 const lightGreen = "#94EF69";
 const darkGreen = "#406F3A";
 
@@ -404,19 +385,6 @@ const ColorText = styled.span`
   -ms-animation: green-color-change 1s infinite alternate;
   -o-animation: green-color-change 1s infinite alternate;
   animation: green-color-change 1s infinite alternate;
-
-  /* background: radial-gradient(circle, #76b852, #8dc73f, #76b852);
-
-  background-size: 100% 100%;
-  animation: ${pulse} 2s infinite;
-  color: white;
-  font-size: 2rem;
-  font-weight: bold;
-  text-shadow: 0px 0px 8px rgba(0, 0, 0, 0.5); */
-  /* color: #92eb6e;
-  
-  font-weight: bold;
-  cursor: pointer; */
 
   @-webkit-keyframes green-color-change {
     from {
