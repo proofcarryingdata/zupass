@@ -186,7 +186,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     id: "Star",
     eventName: "Star",
     productName: "",
-    imageUrl: "/images/star.webp",
+    imageUrl: "/images/star2.png",
     hiddenWhenEmpty: false,
     givers: ["*"]
   }
