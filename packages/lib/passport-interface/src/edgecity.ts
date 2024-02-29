@@ -181,5 +181,13 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     imageUrl: "/images/social.webp",
     hiddenWhenEmpty: true,
     givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"]
+  },
+  {
+    id: "Star",
+    eventName: "Star",
+    productName: "",
+    imageUrl: "/images/star.webp",
+    hiddenWhenEmpty: false,
+    givers: ["*"]
   }
 ];
