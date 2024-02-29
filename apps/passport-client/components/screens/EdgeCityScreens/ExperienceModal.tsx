@@ -16,6 +16,10 @@ export function ExperienceModal({
   isContact?: boolean;
   onClose: () => void;
 }): JSX.Element {
+  // see LemonadePipeline#getReceivedContactsForEmail
+  // for context on where this comes from.
+  const ticketUrl = pcd?.claim?.ticket?.imageAltText;
+
   return (
     <AdhocModal
       open={!!pcd}
@@ -32,7 +36,15 @@ export function ExperienceModal({
     >
       <Container index={0} count={1} color={color}>
         <PCDCard pcd={pcd} expanded hideRemoveButton hideHeader={isContact} />
-        {isContact && <Button>Actions</Button>}
+        {isContact && ticketUrl && (
+          <Button
+            onClick={(): void => {
+              window.location.href = ticketUrl;
+            }}
+          >
+            Actions
+          </Button>
+        )}
       </Container>
     </AdhocModal>
   );
