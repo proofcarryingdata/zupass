@@ -20,7 +20,10 @@ export function ExperienceModal({
       center
       styles={{
         modal: {
-          maxWidth: "400px"
+          maxWidth: "400px",
+          border: "1px solid #5e5e5e",
+          borderRadius: "8px",
+          padding: "8px"
         }
       }}
     >
