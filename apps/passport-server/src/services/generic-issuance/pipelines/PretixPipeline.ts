@@ -20,6 +20,7 @@ import {
   ManualTicket,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
   PodboxTicketActionResponseValue,
@@ -33,6 +34,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import { DatabaseError } from "pg";
 import { v5 as uuidv5 } from "uuid";
@@ -48,7 +50,10 @@ import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
-import { SemaphoreGroupProvider } from "../SemaphoreGroupProvider";
+import {
+  SemaphoreGroupProvider,
+  SemaphoreGroupTicketInfo
+} from "../SemaphoreGroupProvider";
 import {
   CheckinCapability,
   CheckinStatus,
@@ -105,8 +110,7 @@ export class PretixPipeline implements BasePipeline {
   private checkinDB: IPipelineCheckinDB;
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
-
-  private semaphoreGroupProvider: SemaphoreGroupProvider;
+  private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
 
   public get id(): string {
     return this.definition.id;
@@ -142,12 +146,14 @@ export class PretixPipeline implements BasePipeline {
     this.zupassPublicKey = zupassPublicKey;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
-    this.semaphoreGroupProvider = new SemaphoreGroupProvider(
-      this.definition.id,
-      this.definition.options.semaphoreGroups ?? [],
-      this.consumerDB,
-      this.semaphoreHistoryDB
-    );
+    if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+      this.semaphoreGroupProvider = new SemaphoreGroupProvider(
+        this.id,
+        this.definition.options.semaphoreGroups ?? [],
+        consumerDB,
+        semaphoreHistoryDB
+      );
+    }
     this.capabilities = [
       {
         issue: this.issuePretixTicketPCDs.bind(this),
@@ -171,19 +177,28 @@ export class PretixPipeline implements BasePipeline {
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
-        getSerializedGroup: this.semaphoreGroupProvider.getSerializedGroup.bind(
-          this.semaphoreGroupProvider
-        ),
-        getGroupRoot: this.semaphoreGroupProvider.getGroupRoot.bind(
-          this.semaphoreGroupProvider
-        ),
-        getSerializedHistoricalGroup:
-          this.semaphoreGroupProvider.getSerializedHistoricalGroup.bind(
-            this.semaphoreGroupProvider
-          ),
-        getSupportedGroups: this.semaphoreGroupProvider.getSupportedGroups.bind(
-          this.semaphoreGroupProvider
-        )
+        getSerializedLatestGroup: async (
+          groupId: string
+        ): Promise<SerializedSemaphoreGroup | undefined> => {
+          return this.semaphoreGroupProvider?.getSerializedLatestGroup(groupId);
+        },
+        getLatestGroupRoot: async (
+          groupId: string
+        ): Promise<string | undefined> => {
+          return this.semaphoreGroupProvider?.getLatestGroupRoot(groupId);
+        },
+        getSerializedHistoricalGroup: async (
+          groupId: string,
+          rootHash: string
+        ): Promise<SerializedSemaphoreGroup | undefined> => {
+          return this.semaphoreGroupProvider?.getSerializedHistoricalGroup(
+            groupId,
+            rootHash
+          );
+        },
+        getSupportedGroups: (): PipelineSemaphoreGroupInfo[] => {
+          return this.semaphoreGroupProvider?.getSupportedGroups() ?? [];
+        }
       } satisfies SemaphoreGroupCapability
     ] as unknown as BasePipelineCapability[];
     this.pendingCheckIns = new Map();
@@ -196,8 +211,9 @@ export class PretixPipeline implements BasePipeline {
     // On startup, the pipeline definition may have changed, and manual tickets
     // may have been deleted. If so, clean up any check-ins for those tickets.
     await this.cleanUpManualCheckins();
-    // Initialize the Semaphore Group provider by loading groups from the DB
-    await this.semaphoreGroupProvider.start();
+    // Initialize the Semaphore Group provider by loading groups from the DB,
+    // if one exists.
+    await this.semaphoreGroupProvider?.start();
   }
 
   public async stop(): Promise<void> {
@@ -361,9 +377,7 @@ export class PretixPipeline implements BasePipeline {
    * SemaphoreGroupProvider will use to look up Semaphore IDs and match them
    * to configured Semaphore groups.
    */
-  private async semaphoreGroupData(): Promise<
-    { email: string; eventId: string; productId: string }[]
-  > {
+  private async semaphoreGroupData(): Promise<SemaphoreGroupTicketInfo[]> {
     return traced(LOG_NAME, "semaphoreGroupData", async (span) => {
       const data = [];
       for (const atom of await this.db.load(this.id)) {
@@ -393,7 +407,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async triggerSemaphoreGroupUpdate(): Promise<void> {
     const data = await this.semaphoreGroupData();
-    await this.semaphoreGroupProvider.update(data);
+    await this.semaphoreGroupProvider?.update(data);
   }
 
   /**
@@ -866,13 +880,23 @@ export class PretixPipeline implements BasePipeline {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
 
-      // Consumer is validated, so save them in the consumer list
-      await this.consumerDB.save(
-        this.id,
-        emailPCD.claim.emailAddress,
-        emailPCD.claim.semaphoreId,
-        new Date()
-      );
+      const now = new Date();
+
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        // TODO check the timeUpdated returned from save(), which will equal
+        // now if a new or updated commitment was recorded, in which case the
+        // Semaphore groups need to be updated. They will be updated on next
+        // load(), but this means there's some latency between a new user
+        // authenticating and being added to their Semaphore groups.
+
+        // Consumer is validated, so save them in the consumer list
+        await this.consumerDB.save(
+          this.id,
+          emailPCD.claim.emailAddress,
+          emailPCD.claim.semaphoreId,
+          now
+        );
+      }
 
       const email = emailPCD.claim.emailAddress;
       span?.setAttribute("email", email);

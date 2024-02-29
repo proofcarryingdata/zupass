@@ -455,13 +455,13 @@ describe("Generic Issuance", function () {
           // All attendees, irrespective of product type
           name: "All EthLatAm Attendees",
           groupId: ethLatAmSemaphoreGroupIds.all,
-          membershipTickets: [{ eventId: ethLatAmEventId }]
+          memberCriteria: [{ eventId: ethLatAmEventId }]
         },
         {
           // Holders of bouncer-tier tickets
           name: "EthLatAm Bouncers",
           groupId: ethLatAmSemaphoreGroupIds.bouncers,
-          membershipTickets: [
+          memberCriteria: [
             {
               eventId: ethLatAmEventId,
               productId: ethLatAmBouncerProduct.genericIssuanceId
@@ -472,7 +472,7 @@ describe("Generic Issuance", function () {
           // Holders of attendee-tier tickets
           name: "EthLatAm Attendees",
           groupId: ethLatAmSemaphoreGroupIds.attendees,
-          membershipTickets: [
+          memberCriteria: [
             {
               eventId: ethLatAmEventId,
               productId: ethLatAmAttendeeProduct.genericIssuanceId
@@ -486,7 +486,7 @@ describe("Generic Issuance", function () {
           // how it would be possible to create arbitrary groupings.
           name: "EthLatAm Bouncers and Attendees",
           groupId: ethLatAmSemaphoreGroupIds.attendeesAndBouncers,
-          membershipTickets: [
+          memberCriteria: [
             {
               eventId: ethLatAmEventId,
               productId: ethLatAmBouncerProduct.genericIssuanceId
