@@ -19,6 +19,7 @@ import {
   StatusContainer
 } from "../../../PodboxScannedTicketScreen";
 import { useExecuteTicketAction } from "../useExecuteTicketAction";
+import { PerDayBadges } from "./PerDayBadges";
 
 function badgeDisplayName(c: BadgeConfig): string {
   return ticketDisplayName(c.eventName, c.productName);
@@ -139,6 +140,8 @@ export function GiveBadgeActionSection({
 
   return (
     <div style={{ userSelect: "none" }}>
+      <PerDayBadges />
+
       {!selectedBadge && !disabled && (
         <BadgeSelect
           value={selectedBadge?.id}
