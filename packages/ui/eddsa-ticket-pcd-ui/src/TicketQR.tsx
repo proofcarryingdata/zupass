@@ -1,7 +1,8 @@
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
-  getQRCodeColorOverride
+  getQRCodeColorOverride,
+  linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
 import {
   QRDisplayWithRegenerateAndStorage,
@@ -26,10 +27,6 @@ function makeVerifyLink(baseUrl: string, qrPayload: string): string {
   return urlJoin(baseUrl, `?pcd=${encodeURIComponent(qrPayload)}`);
 }
 
-function makeIdBasedVerifyLink(baseUrl: string, ticketId: string): string {
-  return urlJoin(baseUrl, `?id=${ticketId}`);
-}
-
 export function TicketQR({
   pcd,
   zk,
@@ -42,16 +39,11 @@ export function TicketQR({
 } & EdDSATicketPCDCardProps): JSX.Element {
   const generate = useCallback(async () => {
     if (idBasedVerifyURL && !zk) {
-      // For ID-based verification, we encode the ID with a timestamp to
-      // mitigate QR code re-use.
-      const encodedId = Buffer.from(
-        JSON.stringify({
-          ticketId: pcd.claim.ticket.ticketId,
-          eventId: pcd.claim.ticket.eventId,
-          timestamp: Date.now().toString()
-        })
-      ).toString("base64");
-      return makeIdBasedVerifyLink(idBasedVerifyURL, encodedId);
+      return linkToTicket(
+        idBasedVerifyURL,
+        pcd.claim.ticket.ticketId,
+        pcd.claim.ticket.eventId
+      );
     } else {
       // If we're not doing ID-based verification, then we need a ZK proof
       const serializedZKPCD = await makeSerializedZKProof(pcd, identityPCD);

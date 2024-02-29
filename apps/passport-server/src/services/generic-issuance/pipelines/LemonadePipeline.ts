@@ -3,7 +3,8 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -36,6 +37,7 @@ import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import { DatabaseError } from "pg";
+import urljoin from "url-join";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
@@ -640,6 +642,16 @@ export class LemonadePipeline implements BasePipeline {
     const contacts = await this.contactDB.getContacts(this.id, email);
     return Promise.all(
       contacts.map(async (contact) => {
+        // semaphore id intentially left blank, as I'm just trying to get the ticket
+        // so that I can link to it, not issue it/make proofs about it
+        const tickets = await this.getTicketsForEmail(contact, "");
+        const ticket = tickets?.[0]?.claim?.ticket;
+        const encodedLink = linkToTicket(
+          urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
+          ticket?.ticketId,
+          ticket?.eventId
+        );
+
         return await EdDSATicketPCDPackage.serialize(
           await EdDSATicketPCDPackage.prove({
             id: {
@@ -670,7 +682,8 @@ export class LemonadePipeline implements BasePipeline {
                 isConsumed: false,
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
-                attendeeName: "",
+                // we hack a link to the ticket into the attendee name field.
+                attendeeName: encodedLink,
                 attendeeEmail: contact
               }
             }
