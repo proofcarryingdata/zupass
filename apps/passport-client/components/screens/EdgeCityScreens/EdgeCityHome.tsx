@@ -246,6 +246,7 @@ export function EdgeCityHome(): JSX.Element {
             <ItemContainer>
               {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
                 <ItemCard
+                  key={pcd.id}
                   onClick={(): void => {
                     setSelectedExperience(pcd);
                     setSelectedExperienceIsContact(true);
@@ -267,7 +268,7 @@ export function EdgeCityHome(): JSX.Element {
           {groupedResult.map(({ eventName, total, imageUrl }) => {
             const pcds = pcdsByEventName[eventName] ?? [];
             return (
-              <div>
+              <div key={eventName}>
                 <CategoryHeader>
                   <span>{eventName}</span>
                   <span>{`${pcds.length}/${total || "∞"}`}</span>
@@ -275,6 +276,7 @@ export function EdgeCityHome(): JSX.Element {
                 <ItemContainer>
                   {pcds.flatMap((pcd) => (
                     <ItemCard
+                      key={pcd.id}
                       onClick={(): void => {
                         setSelectedExperience(pcd);
                         setSelectedExperienceIsContact(false);
@@ -283,8 +285,8 @@ export function EdgeCityHome(): JSX.Element {
                       <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
                     </ItemCard>
                   ))}
-                  {Array.from({ length: total - pcds.length }).map((_) => (
-                    <ItemCard style={{ cursor: "default" }}>
+                  {Array.from({ length: total - pcds.length }).map((_, i) => (
+                    <ItemCard style={{ cursor: "default" }} key={i}>
                       <img
                         src={imageUrl}
                         draggable={false}
