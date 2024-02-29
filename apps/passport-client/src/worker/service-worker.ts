@@ -70,6 +70,14 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/fonts/SuperFunky.ttf",
   "/fonts/PressStart2P.ttf",
   "/images/frogs/pixel_frog.png",
+  "/images/cold.webp",
+  "/images/hat.webp",
+  "/images/johnwick.webp",
+  "/images/owl.webp",
+  "/images/plus.webp",
+  "/images/sauna.webp",
+  "/images/social.webp",
+  "/images/wristband.webp",
   "/zxcvbn.js"
 ]);
 

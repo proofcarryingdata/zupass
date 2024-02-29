@@ -22,11 +22,15 @@ export const TOTAL_SUPPLY = 200;
 // TODO: Think about followers/following?
 export const CONTACT_EVENT_NAME = "Contacts";
 
-export const BADGES_EDGE_CITY: BadgeConfig[] = [
+export interface BadgeConfigUI extends BadgeConfig {
+  hiddenWhenEmpty?: boolean; // defines whether this badge is hidden in the UI when no badges of this ID been collected
+}
+
+export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
   {
     id: "Check In",
     eventName: "Check In",
-    imageUrl: "https://i.ibb.co/QdhQkPC/wristband.webp",
+    imageUrl: "/images/wristband.webp",
     grantOnCheckin: true,
     givers: ["richard@pcd.team", "ivan@0xparc.org"]
   },
@@ -34,119 +38,134 @@ export const BADGES_EDGE_CITY: BadgeConfig[] = [
     id: "Cold Plunge.Tuesday",
     eventName: "Cold Plunge",
     productName: "Tuesday",
-    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Wednesday",
     eventName: "Cold Plunge",
     productName: "Wednesday",
-    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Thursday",
     eventName: "Cold Plunge",
     productName: "Thursday",
-    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Friday",
     eventName: "Cold Plunge",
     productName: "Friday",
-    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Saturday",
     eventName: "Cold Plunge",
     productName: "Saturday",
-    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Cold Plunge.Sunday",
     eventName: "Cold Plunge",
     productName: "Sunday",
-    imageUrl: "https://i.ibb.co/RQW9rMQ/cold.webp",
+    imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Sauna.Tuesday",
     eventName: "Sauna",
     productName: "Tuesday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Sauna.Wednesday",
     eventName: "Sauna",
     productName: "Wednesday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Sauna.Thursday",
     eventName: "Sauna",
     productName: "Thursday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Sauna.Friday",
     eventName: "Sauna",
     productName: "Friday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Sauna.Saturday",
     eventName: "Sauna",
     productName: "Saturday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Sauna.Sunday",
     eventName: "Sauna",
     productName: "Sunday",
-    imageUrl: "https://i.ibb.co/kSsHTRG/saunaaaaa.webp",
+    imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Met Zupass.Josh",
     eventName: "Met Zupass",
     productName: "Josh",
-    imageUrl: "https://i.ibb.co/Lxz9TYp/hat.webp",
+    imageUrl: "/images/hat.webp",
     givers: ["jgarza@0xparc.org"]
   },
   {
     id: "Met Zupass.Richard",
     eventName: "Met Zupass",
     productName: "Richard",
-    imageUrl: "https://i.ibb.co/Lxz9TYp/hat.webp",
+    imageUrl: "/images/hat.webp",
     givers: ["richard@pcd.team"]
   },
   {
     id: "Met Zupass.Ivan",
     eventName: "Met Zupass",
     productName: "Ivan",
-    imageUrl: "https://i.ibb.co/Lxz9TYp/hat.webp",
+    imageUrl: "/images/hat.webp",
     givers: ["ivan@0xparc.org"]
   },
   {
     id: "Met Zupass.Rob",
     eventName: "Met Zupass",
     productName: "Rob",
-    imageUrl: "https://i.ibb.co/Lxz9TYp/hat.webp",
+    imageUrl: "/images/hat.webp",
     givers: ["themanhimself@robknight.org.uk"]
   },
   {
     id: "Met Gary.Monday",
     eventName: "Met Gary",
     productName: "Monday",
-    imageUrl: "https://i.ibb.co/7Swc8Gz/johnwick.webp",
+    imageUrl: "/images/johnwick.webp",
     givers: ["garysheng11@gmail.com"]
+  },
+  {
+    id: "Met Timour",
+    eventName: "Met Timour",
+    productName: "",
+    imageUrl: "/images/owl.webp",
+    givers: ["timour.kosters@gmail.com"]
+  },
+  {
+    id: "Decentralized Social Hacker",
+    eventName: "Decentralized Social Hacker",
+    productName: "",
+    imageUrl: "/images/social.webp",
+    hiddenWhenEmpty: true,
+    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"]
   }
 ];
