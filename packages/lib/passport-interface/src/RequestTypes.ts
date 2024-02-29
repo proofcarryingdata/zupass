@@ -931,6 +931,7 @@ export type GenericIssuancePreCheckRequest = {
 
 export type Badge = {
   id: string;
+  timeCreated: number;
 };
 
 export interface TicketInfo {
@@ -966,9 +967,20 @@ export type CheckinActionInfo =
       reason?: PodboxTicketActionError;
     };
 
+export type RateLimitedBadge = {
+  id: string;
+  alreadyGivenInInterval: number;
+  intervalMs: number;
+};
+
+export function isPerDayBadge(badge: BadgeConfig): boolean {
+  return badge.maxPerDay !== undefined;
+}
+
 export type GiveBadgeActionInfo = {
   permissioned: boolean;
   giveableBadges: BadgeConfig[];
+  rateLimitedBadges?: RateLimitedBadge[];
   ticket: TicketInfo;
 };
 

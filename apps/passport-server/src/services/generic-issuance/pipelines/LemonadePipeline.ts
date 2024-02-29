@@ -26,6 +26,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   TicketInfo,
+  isPerDayBadge,
   verifyFeedCredential,
   verifyTicketActionCredential
 } from "@pcd/passport-interface";
@@ -1350,9 +1351,30 @@ export class LemonadePipeline implements BasePipeline {
             (c) => !badgesGiven.find((b) => b.id === c.id)
           );
 
+          const intervalMs = 24 * 60 * 60 * 1000;
+          const intervalEnd = Date.now();
+          const intervalStart = intervalEnd - intervalMs;
+          const rateLimitedBadgesGivenInInterval = badgesGiven.filter((b) => {
+            const config = badgesGiveableByUser.find((c) => c.id === b.id);
+            return (
+              config?.maxPerDay !== undefined &&
+              b.timeCreated > intervalStart &&
+              b.timeCreated < intervalEnd
+            );
+          });
+
           result.giveBadgeActionInfo = {
             permissioned: badgesGiveableByUser.length > 0,
             giveableBadges: notAlreadyGivenBadges,
+            rateLimitedBadges: badgesGiveableByUser
+              .filter(isPerDayBadge)
+              .map((b) => ({
+                alreadyGivenInInterval: rateLimitedBadgesGivenInInterval.filter(
+                  (g) => g.id === b.id
+                ).length,
+                id: b.id,
+                intervalMs
+              })),
             ticket: ticketInfo
           };
         }

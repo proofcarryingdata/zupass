@@ -140,7 +140,7 @@ export function GiveBadgeActionSection({
 
   return (
     <div style={{ userSelect: "none" }}>
-      <PerDayBadges />
+      <PerDayBadges precheck={precheck.value} />
 
       {!selectedBadge && !disabled && (
         <BadgeSelect
@@ -149,6 +149,7 @@ export function GiveBadgeActionSection({
             setSelectedBadge(badgeOptions.find((b) => b.id === e.target.value))
           }
         >
+          <option value={undefined}>choose a badge</option>
           {badgeOptions.map((b) => {
             return <option value={b.id}>{b.label}</option>;
           })}

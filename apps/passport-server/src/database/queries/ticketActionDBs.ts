@@ -66,7 +66,8 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
 
     return res.rows.map((r): Badge => {
       return {
-        id: r.badge_id
+        id: r.badge_id,
+        timeCreated: r.time_created.getTime()
       };
     });
   }
