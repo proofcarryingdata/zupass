@@ -1390,7 +1390,7 @@ export class LemonadePipeline implements BasePipeline {
     return (
       this.definition.options.ticketActions?.badges?.choices ?? []
     ).filter((b: BadgeConfig) => {
-      return b.givers?.includes(email) ?? false;
+      return b.givers?.includes(email) || b.givers?.includes("*") || false;
     });
   }
 
