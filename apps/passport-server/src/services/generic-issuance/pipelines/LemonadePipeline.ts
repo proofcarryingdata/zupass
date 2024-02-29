@@ -670,7 +670,9 @@ export class LemonadePipeline implements BasePipeline {
                 ticketName: contact,
                 checkerEmail: undefined,
                 imageUrl: "https://i.ibb.co/WcPcL0g/stick.webp",
-                imageAltText: undefined,
+                // we hack a link to the ticket into the alt text field
+                // XD
+                imageAltText: encodedLink,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.
                 ticketId: randomUUID(), // The ticket ID is a unique identifier of the ticket.
@@ -682,8 +684,7 @@ export class LemonadePipeline implements BasePipeline {
                 isConsumed: false,
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
-                // we hack a link to the ticket into the attendee name field.
-                attendeeName: encodedLink,
+                attendeeName: ticket?.attendeeName,
                 attendeeEmail: contact
               }
             }
