@@ -15,6 +15,13 @@ export interface IBadgeGiftingDB {
     pipelineId: string,
     receiverEmail: string | undefined
   ): Promise<Badge[]>;
+
+  getGivenBadges(
+    pipelineId: string,
+    giverEmail: string,
+    badgeId: string,
+    startingAgoMs: number
+  ): Promise<Badge[]>;
 }
 
 export class BadgeGiftingDB implements IBadgeGiftingDB {
@@ -62,6 +69,32 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
       where pipeline_id=$1 and receiver_email=$2
 `,
       [pipelineId, receiverEmail]
+    );
+
+    return res.rows.map((r): Badge => {
+      return {
+        id: r.badge_id,
+        timeCreated: r.time_created.getTime()
+      };
+    });
+  }
+
+  public async getGivenBadges(
+    pipelineId: string,
+    giverEmail: string,
+    badgeId: string,
+    startingAgoMs: number
+  ): Promise<Badge[]> {
+    const res = await sqlQuery(
+      this.db,
+      `
+      select * from podbox_given_badges
+      where pipeline_id=$1
+        and giver_email=$2
+        and badge_id=$3
+        and time_created > NOW() - $4 * INTERVAL '1' second
+`,
+      [pipelineId, giverEmail, badgeId, Math.floor(startingAgoMs / 1000)]
     );
 
     return res.rows.map((r): Badge => {
