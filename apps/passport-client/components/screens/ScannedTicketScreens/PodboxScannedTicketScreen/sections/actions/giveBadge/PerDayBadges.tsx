@@ -3,6 +3,7 @@ import {
   ActionConfigResponseValue,
   RateLimitedBadge
 } from "@pcd/passport-interface";
+import { fmtDuration } from "@pcd/util";
 import {
   Dispatch,
   ReactNode,
@@ -114,8 +115,8 @@ function PerDayBadgeButton({
     return (
       <Row>
         <Button disabled={true}>
-          Give {ticketDisplayName(o.eventName, o.productName)} (Next Available
-          in {Math.floor(msUntilNextBadgeAvailable / 1000 / 60 / 60)}h)
+          Give {ticketDisplayName(o.eventName, o.productName)} (next in{" "}
+          {fmtDuration(msUntilNextBadgeAvailable)})
         </Button>
       </Row>
     );
@@ -134,14 +135,5 @@ function PerDayBadgeButton({
 export const Container = styled.div``;
 
 export const Row = styled.div`
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  flex-direction: row;
-  gap: 8px;
   margin-bottom: 8px;
-
-  button {
-    flex-grow: 1;
-  }
 `;
