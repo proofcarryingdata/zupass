@@ -8,6 +8,7 @@ import {
   ReactNode,
   SetStateAction,
   useCallback,
+  useEffect,
   useState
 } from "react";
 import styled from "styled-components";
@@ -97,10 +98,32 @@ function PerDayBadgeButton({
       setInProgress(false);
     });
   }, [giveBadge, setInProgress]);
+  const earliestTimestamp = Math.min(...o.timestampsGiven);
+  const nextBadgeAvailable = earliestTimestamp + o.intervalMs;
+  const [now, setNow] = useState(Date.now());
+  const msUntilNextBadgeAvailable = nextBadgeAvailable - now;
+
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setNow(Date.now());
+    }, 100);
+    return () => clearInterval(interval);
+  }, []);
+
+  if (isDisabled) {
+    return (
+      <Row>
+        <Button disabled={true}>
+          Give {ticketDisplayName(o.eventName, o.productName)} (Next Available
+          in {Math.floor(msUntilNextBadgeAvailable / 1000 / 60 / 60)}h)
+        </Button>
+      </Row>
+    );
+  }
 
   return (
     <Row>
-      <Button disabled={isDisabled} onClick={onClick}>
+      <Button onClick={onClick}>
         Give {ticketDisplayName(o.eventName, o.productName)} ({leftToGive} left
         today)
       </Button>

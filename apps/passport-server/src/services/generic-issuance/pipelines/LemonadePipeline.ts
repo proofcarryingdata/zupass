@@ -1376,7 +1376,10 @@ export class LemonadePipeline implements BasePipeline {
                 eventName: b.eventName,
                 productName: b.productName,
                 intervalMs,
-                maxInInterval: b.maxPerDay
+                maxInInterval: b.maxPerDay,
+                timestampsGiven: alreadyGivenRateLimited
+                  .filter((g) => g.id === b.id)
+                  .map((g) => g.timeCreated)
               })),
             ticket: ticketInfo
           };

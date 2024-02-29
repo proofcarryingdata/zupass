@@ -974,6 +974,7 @@ export type RateLimitedBadge = {
   alreadyGivenInInterval: number;
   maxInInterval: number;
   intervalMs: number;
+  timestampsGiven: number[];
 };
 
 export function isPerDayBadge(
