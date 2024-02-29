@@ -34,8 +34,7 @@ export function PodboxTicketActionSection({
   const shouldShowDivider =
     (precheck?.value?.giveBadgeActionInfo?.permissioned ||
       precheck?.value?.getContactActionInfo?.permissioned) &&
-    precheck?.value?.checkinActionInfo?.permissioned &&
-    !isLoading;
+    precheck?.value?.checkinActionInfo?.permissioned;
 
   const divider = shouldShowDivider ? (
     <div>
