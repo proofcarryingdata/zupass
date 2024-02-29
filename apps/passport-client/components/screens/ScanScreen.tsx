@@ -5,9 +5,7 @@ import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
-import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
-import { Home } from "./ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen(): JSX.Element {
@@ -16,11 +14,9 @@ export function ScanScreen(): JSX.Element {
   const nav = useNavigate();
 
   return (
-    <AppContainer bg="gray">
+    <>
       {!usingLaserScanner && (
         <QRContainer>
-          <Spacer h={8} />
-          <Home />
           <QrReader
             className="qr"
             onResult={(result, error): void => {
@@ -32,15 +28,17 @@ export function ScanScreen(): JSX.Element {
                 const newLoc = maybeRedirect(result.getText());
                 if (newLoc) nav(newLoc);
               } else if (error != null) {
-                //    console.info(error);
+                console.info(error);
               }
             }}
-            constraints={{ facingMode: "environment", aspectRatio: 1 }}
+            constraints={{
+              facingMode: "environment"
+              // aspectRatio: 0.5
+            }}
+            scanDelay={500}
             ViewFinder={ViewFinder}
             containerStyle={{ width: "100%" }}
           />
-          <Spacer h={16} />
-          <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>
       )}
       {usingLaserScanner && (
@@ -62,15 +60,15 @@ export function ScanScreen(): JSX.Element {
           </FullWidthRow>
         </>
       )}
-      <Spacer h={32} />
       <IndicateIfOffline>
+        <Spacer h={32} />
         <H5 style={{ color: "var(--danger)" }}>Offline Mode</H5>
         <Spacer h={8} />
         You're offline. Zupass is using a backed up copy of event tickets.
         Check-ins will be synced the next time you start the app with a working
         network connection.
       </IndicateIfOffline>
-    </AppContainer>
+    </>
   );
 }
 
@@ -86,11 +84,6 @@ function ViewFinder(): JSX.Element {
     </ScanOverlayWrap>
   );
 }
-
-const Orange = styled.span`
-  font-weight: bold;
-  color: orange;
-`;
 
 const ScanOverlayWrap = styled.div`
   position: absolute;
@@ -137,4 +130,9 @@ const QRContainer = styled.div`
 
   .qr {
   }
+`;
+
+const Orange = styled.span`
+  font-weight: bold;
+  color: orange;
 `;
