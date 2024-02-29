@@ -67,6 +67,8 @@ export function EdgeCityHome(): JSX.Element {
   const [tab, setTab] = useState<TabId>("ticket");
   const [selectedExperience, setSelectedExperience] =
     useState<EdDSATicketPCD>(null);
+  const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
+    useState(false);
 
   const [infoOpen, setInfoOpen] = useState(false);
   const pcds = usePCDCollection();
@@ -243,7 +245,12 @@ export function EdgeCityHome(): JSX.Element {
             </CategoryHeader>
             <ItemContainer>
               {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
-                <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
+                <ItemCard
+                  onClick={(): void => {
+                    setSelectedExperience(pcd);
+                    setSelectedExperienceIsContact(true);
+                  }}
+                >
                   <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
                 </ItemCard>
               ))}
@@ -267,7 +274,12 @@ export function EdgeCityHome(): JSX.Element {
                 </CategoryHeader>
                 <ItemContainer>
                   {pcds.flatMap((pcd) => (
-                    <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
+                    <ItemCard
+                      onClick={(): void => {
+                        setSelectedExperience(pcd);
+                        setSelectedExperienceIsContact(false);
+                      }}
+                    >
                       <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
                     </ItemCard>
                   ))}
@@ -289,7 +301,11 @@ export function EdgeCityHome(): JSX.Element {
             <ExperienceModal
               color="black"
               pcd={selectedExperience}
-              onClose={(): void => setSelectedExperience(null)}
+              isContact={selectedExperienceIsContact}
+              onClose={(): void => {
+                setSelectedExperience(null);
+                setSelectedExperienceIsContact(false);
+              }}
             />
           )}
         </div>

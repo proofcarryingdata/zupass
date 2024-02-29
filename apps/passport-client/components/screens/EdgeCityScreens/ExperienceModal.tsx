@@ -7,10 +7,12 @@ import { PCDCard } from "../../shared/PCDCard";
 export function ExperienceModal({
   pcd,
   color,
+  isContact,
   onClose
 }: {
   pcd: EdDSATicketPCD;
   color;
+  isContact?: boolean;
   onClose: () => void;
 }): JSX.Element {
   return (
@@ -28,7 +30,7 @@ export function ExperienceModal({
       }}
     >
       <Container index={0} count={1} color={color}>
-        <PCDCard pcd={pcd} expanded hideRemoveButton />
+        <PCDCard pcd={pcd} expanded hideRemoveButton hideHeader={isContact} />
       </Container>
     </AdhocModal>
   );
