@@ -161,6 +161,13 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     givers: ["timour.kosters@gmail.com"]
   },
   {
+    id: "Met Afra",
+    eventName: "Met Afra",
+    productName: "",
+    imageUrl: "/images/afra.webp",
+    givers: ["afrazhaowang@gmail.com"]
+  },
+  {
     id: "Decentralized Social Hacker",
     eventName: "Decentralized Social Hacker",
     productName: "",
