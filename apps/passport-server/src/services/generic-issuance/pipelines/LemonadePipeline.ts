@@ -117,7 +117,6 @@ export class LemonadePipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
-  private semaphoreGroup: Promise<void> | undefined;
   private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
@@ -448,7 +447,7 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        this.triggerSemaphoreGroupUpdate();
+        await this.triggerSemaphoreGroupUpdate();
       }
 
       return {

@@ -36,6 +36,7 @@ import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { normalizeEmail, str } from "@pcd/util";
+import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import { v5 as uuidv5 } from "uuid";
 import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
@@ -111,6 +112,7 @@ export class PretixPipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
+  private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
     return this.definition.id;
@@ -205,6 +207,7 @@ export class PretixPipeline implements BasePipeline {
     this.cacheService = cacheService;
     this.loaded = false;
     this.checkinDB = checkinDB;
+    this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
   }
 
   public async start(): Promise<void> {
@@ -402,12 +405,26 @@ export class PretixPipeline implements BasePipeline {
     });
   }
 
-  /**
-   * Tell the Semaphore group provider to update memberships.
-   */
-  private async triggerSemaphoreGroupUpdate(): Promise<void> {
+  public async triggerSemaphoreGroupUpdate(): Promise<void> {
     const data = await this.semaphoreGroupData();
-    await this.semaphoreGroupProvider?.update(data);
+    return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
+      await this.semaphoreGroupProvider?.update(data);
+      tracePipeline(this.definition);
+      // Whenever an update is triggered, we want to make sure that the
+      // fetching of data and the actual update are atomic.
+      // If there were two concurrenct updates, it might be possible for them
+      // to use slightly different data sets, but send them to the `update`
+      // method in the wrong order, producing unexpected outcomes. Although the
+      // group diffing mechanism would eventually cause the group to converge
+      // on the correct membership, we can avoid any temporary inconsistency by
+      // queuing update requests.
+      // By returning this promise, we allow the caller to await on the update
+      // having been processed.
+      return this.semaphoreUpdateQueue.add(async () => {
+        const data = await this.semaphoreGroupData();
+        await this.semaphoreGroupProvider?.update(data);
+      });
+    });
   }
 
   /**
@@ -883,19 +900,27 @@ export class PretixPipeline implements BasePipeline {
       const now = new Date();
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        // TODO check the timeUpdated returned from save(), which will equal
-        // now if a new or updated commitment was recorded, in which case the
-        // Semaphore groups need to be updated. They will be updated on next
-        // load(), but this means there's some latency between a new user
-        // authenticating and being added to their Semaphore groups.
-
-        // Consumer is validated, so save them in the consumer list
-        await this.consumerDB.save(
+        const consumer = await this.consumerDB.save(
           this.id,
           emailPCD.claim.emailAddress,
           emailPCD.claim.semaphoreId,
           now
         );
+
+        // If the update time is now, that means our save() operation caused
+        // a change in the consumer DB, and we have to update the Semaphore
+        // groups. This is rare, since most saves will not cause a change.
+        // It will, however, always occur the first time the user hits a
+        // feed with Semaphore groups enabled (which might not be the first
+        // time they *ever* hit that feed, if Semaphore groups were not
+        // initialy enabled).
+        // It seems reasonable to await on the update here, even though it will
+        // slow down the response time, as it ensures that the user is present
+        // in all of the necessary Semaphore groups.
+        if (consumer.timeUpdated.getTime() === now.getTime()) {
+          span?.setAttribute("semaphore_groups_updated", true);
+          await this.triggerSemaphoreGroupUpdate();
+        }
       }
 
       const email = emailPCD.claim.emailAddress;
