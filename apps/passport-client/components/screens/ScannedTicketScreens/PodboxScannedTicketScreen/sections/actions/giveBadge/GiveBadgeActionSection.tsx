@@ -152,13 +152,15 @@ export function GiveBadgeActionSection({
           }
         >
           <option value={undefined}>choose a badge to give</option>
-          {badgeOptions.map((b) => {
-            return (
-              <option value={b.id} key={b.id}>
-                {b.label}
-              </option>
-            );
-          })}
+          {badgeOptions
+            .filter((b) => b.maxPerDay === undefined)
+            .map((b) => {
+              return (
+                <option value={b.id} key={b.id}>
+                  {b.label}
+                </option>
+              );
+            })}
         </BadgeSelect>
       )}
 
