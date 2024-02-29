@@ -75,4 +75,14 @@ export const POD_INT_MAX = (1n << 63n) - 1n;
  */
 export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
 
+/**
+ * A set of entries defining a POD, represented in an object.  POD entries
+ * are always Merklized in sorted order.  Entries extracted from a `POD`
+ * instance will always iterate in sorted order, but inputs used to create
+ * a new POD need not be sorted beforehand.
+ *
+ * The type system isn't restrictive enough to guarantee that any PODEntries
+ * object is valid, but constructing a `POD` or `PODContent` object will
+ * ensure all entries are valid.
+ */
 export type PODEntries = Record<PODName, PODValue>;

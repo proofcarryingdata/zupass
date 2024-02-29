@@ -87,3 +87,18 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
       return podValue.value;
   }
 }
+
+export function clonePODValue(podValue: PODValue): PODValue {
+  // TODO(artwyman): When we support containers as values, this will have
+  // to become more complex.
+  return { ...podValue };
+}
+
+export function cloneOptionalPODValue(
+  podValue: PODValue | undefined
+): PODValue | undefined {
+  if (podValue === undefined) {
+    return undefined;
+  }
+  return clonePODValue(podValue);
+}
