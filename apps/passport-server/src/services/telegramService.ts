@@ -119,6 +119,8 @@ export class TelegramService {
   private anonBot: Bot<BotContext>;
   private forwardBot: Bot<BotContext> | undefined;
   private rollbarService: RollbarService | null;
+  private readonly MAX_RETRY_ATTEMPTS = 5;
+  private readonly RETRY_INTERVAL_SECONDS = 10;
 
   public constructor(
     context: ApplicationContext,
@@ -855,9 +857,14 @@ export class TelegramService {
    *
    * Since this function awaits on authBot.start(), it will likely be very long-
    * lived.
+   *
+   * Because of its flakiness, this function retries up to MAX_RETRY_ATTEMPTS
+   * times at an interval of RETRY_INTERVAL_SECONDS.
    */
   public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
     const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
+    let retryAttempts = 0;
+
     if (startDelay > 0) {
       logger(
         `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
@@ -867,22 +874,38 @@ export class TelegramService {
 
     logger(`[TELEGRAM] Starting ${bot.botInfo.username}`);
 
-    try {
-      // This will not resolve while the authBot remains running.
-      await bot.start({
-        allowed_updates: [
-          "chat_join_request",
-          "chat_member",
-          "message",
-          "callback_query"
-        ],
-        onStart: (info) => {
-          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+    while (retryAttempts < this.MAX_RETRY_ATTEMPTS) {
+      try {
+        // This will not resolve while the authBot remains running.
+        await bot.start({
+          allowed_updates: [
+            "chat_join_request",
+            "chat_member",
+            "message",
+            "callback_query"
+          ],
+          onStart: (info) => {
+            logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+          }
+        });
+        return; // Exit the function if start is successful
+      } catch (e) {
+        logger(`[TELEGRAM] Error starting ${bot.botInfo.username}`, e);
+        this.rollbarService?.reportError(e);
+
+        retryAttempts++;
+        if (retryAttempts >= this.MAX_RETRY_ATTEMPTS) {
+          logger(
+            `[TELEGRAM] Maximum retry attempts reached. Failed to start ${bot.botInfo.username}`
+          );
+          break; // Exit the loop if max attempts are reached
         }
-      });
-    } catch (e) {
-      logger(`[TELEGRAM] Error starting ${bot.botInfo.username}`, e);
-      this.rollbarService?.reportError(e);
+
+        logger(
+          `[TELEGRAM] Retrying to start ${bot.botInfo.username} in ${this.RETRY_INTERVAL_SECONDS} seconds...`
+        );
+        await sleep(this.RETRY_INTERVAL_SECONDS * 1_000); // Wait for RETRY_INTERVAL_SECONDS seconds before retrying
+      }
     }
   }
 
