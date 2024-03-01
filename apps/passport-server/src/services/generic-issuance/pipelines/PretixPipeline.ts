@@ -897,27 +897,17 @@ export class PretixPipeline implements BasePipeline {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
 
-      const now = new Date();
-
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        const consumer = await this.consumerDB.save(
+        const didUpdate = await this.consumerDB.save(
           this.id,
           emailPCD.claim.emailAddress,
           emailPCD.claim.semaphoreId,
-          now
+          new Date()
         );
 
-        // If the update time is now, that means our save() operation caused
-        // a change in the consumer DB, and we have to update the Semaphore
-        // groups. This is rare, since most saves will not cause a change.
-        // It will, however, always occur the first time the user hits a
-        // feed with Semaphore groups enabled (which might not be the first
-        // time they *ever* hit that feed, if Semaphore groups were not
-        // initialy enabled).
-        // It seems reasonable to await on the update here, even though it will
-        // slow down the response time, as it ensures that the user is present
-        // in all of the necessary Semaphore groups.
-        if (consumer.timeUpdated.getTime() === now.getTime()) {
+        // If the user's Semaphore commitment has changed, `didUpdate` will be
+        // true, and we need to update the Semaphore groups
+        if (didUpdate) {
           span?.setAttribute("semaphore_groups_updated", true);
           await this.triggerSemaphoreGroupUpdate();
         }
