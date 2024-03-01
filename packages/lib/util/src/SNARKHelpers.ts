@@ -25,8 +25,8 @@ export function babyJubIsNegativeOne(value: string): boolean {
  * @param signal The initial message.
  * @returns The outputted hash, fed in as a signal to the Semaphore proof.
  */
-export function generateSnarkMessageHash(signal: string): bigint {
+export function generateSnarkMessageHash(signal: string | undefined): bigint {
   // right shift to fit into a field element, which is 254 bits long
   // shift by 8 ensures we have a 253 bit element
-  return BigInt("0x" + sha256(signal)) >> 8n;
+  return BigInt("0x" + sha256(signal ?? "")) >> 8n;
 }

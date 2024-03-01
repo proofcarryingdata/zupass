@@ -42,7 +42,7 @@ export function ExperienceModal({
     >
       <Container index={0} count={1} color={color}>
         <PCDCard pcd={pcd} expanded hideRemoveButton hideHeader={isContact} />
-        {isContact && altText && (
+        {isContact && altText && altText !== "" && (
           <Button
             onClick={(): void => {
               window.location.href = altText;
@@ -51,7 +51,7 @@ export function ExperienceModal({
             Actions
           </Button>
         )}
-        {isStar && altText && email && (
+        {isStar && altText && altText !== "" && email && email !== "" && (
           <Button
             onClick={(): void => {
               window.location.href = altText;

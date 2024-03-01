@@ -657,7 +657,7 @@ export class LemonadePipeline implements BasePipeline {
                 ticketCategory: TicketCategory.Generic,
                 attendeeName: "",
                 // giver email in attendee email
-                attendeeEmail: b.giver
+                attendeeEmail: b.giver ?? ""
               }
             }
           })
@@ -677,7 +677,7 @@ export class LemonadePipeline implements BasePipeline {
         // semaphore id intentially left blank, as I'm just trying to get the ticket
         // so that I can link to it, not issue it/make proofs about it
         const tickets = await this.getTicketsForEmail(contact, "");
-        const ticket = tickets?.[0]?.claim?.ticket;
+        const ticket: ITicketData | undefined = tickets?.[0]?.claim?.ticket;
         const encodedLink = linkToTicket(
           urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
           ticket?.ticketId,
@@ -716,8 +716,8 @@ export class LemonadePipeline implements BasePipeline {
                 isConsumed: false,
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
-                attendeeName: ticket?.attendeeName,
-                attendeeEmail: contact
+                attendeeName: ticket?.attendeeName ?? "",
+                attendeeEmail: contact ?? ""
               }
             }
           })
