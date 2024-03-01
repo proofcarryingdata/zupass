@@ -62,6 +62,9 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
       [pipelineId, email, commitment, now]
     );
 
+    // If, after the query, the time_updated time is equal to now, then we know
+    // that something was inserted or updated, and return true so that the
+    // caller can take the appropriate action (e.g. updating Semaphore groups).
     return now.getTime() === result.rows[0].time_updated.getTime();
   }
 
