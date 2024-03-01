@@ -577,7 +577,7 @@ export class LemonadePipeline implements BasePipeline {
     const badges = await this.badgeDB.getBadges(this.id, email);
 
     const badgePCDs = await Promise.all(
-      badges.map(async (b) => {
+      badges.map(async (b, i) => {
         const badgeConfig =
           this.definition.options.ticketActions?.badges?.choices?.find(
             (c) => c.id === b.id
@@ -592,7 +592,7 @@ export class LemonadePipeline implements BasePipeline {
           this.id
         );
         const productId = uuidv5(`product-${eventId}`, this.id);
-        const ticketId = uuidv5(`ticket-${productId}-${email}`, this.id);
+        const ticketId = uuidv5(`ticket-${productId}-${email}-${i}`, this.id);
 
         return await EdDSATicketPCDPackage.serialize(
           await EdDSATicketPCDPackage.prove({
