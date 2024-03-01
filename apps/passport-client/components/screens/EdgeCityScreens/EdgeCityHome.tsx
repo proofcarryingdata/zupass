@@ -77,6 +77,8 @@ export function EdgeCityHome(): JSX.Element {
     useState<EdDSATicketPCD>(null);
   const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
     useState(false);
+  const [selectedExperienceIsStar, setSelectedExperienceIsStar] =
+    useState(false);
 
   const [infoOpen, setInfoOpen] = useState(false);
   const pcds = usePCDCollection();
@@ -240,6 +242,7 @@ export function EdgeCityHome(): JSX.Element {
                   onClick={(): void => {
                     setSelectedExperience(pcd);
                     setSelectedExperienceIsContact(true);
+                    setSelectedExperienceIsStar(true);
                   }}
                 >
                   <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
@@ -273,6 +276,7 @@ export function EdgeCityHome(): JSX.Element {
                         onClick={(): void => {
                           setSelectedExperience(pcd);
                           setSelectedExperienceIsContact(false);
+                          setSelectedExperienceIsStar(true);
                         }}
                       >
                         <img
@@ -301,9 +305,11 @@ export function EdgeCityHome(): JSX.Element {
               color="black"
               pcd={selectedExperience}
               isContact={selectedExperienceIsContact}
+              isStar={selectedExperienceIsStar}
               onClose={(): void => {
                 setSelectedExperience(null);
                 setSelectedExperienceIsContact(false);
+                setSelectedExperienceIsStar(true);
               }}
             />
           )}
