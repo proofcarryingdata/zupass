@@ -77,10 +77,17 @@ export class CredentialManager implements CredentialManagerAPI {
   public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
     for (const req of reqs) {
       if (!this.getCachedCredential(req.pcdType)) {
-        this.setCachedCredential(
-          req.pcdType,
-          await this.generateCredential(req)
-        );
+        try {
+          this.setCachedCredential(
+            req.pcdType,
+            await this.generateCredential(req)
+          );
+        } catch (e) {
+          // It can be possible for credential generation to fail if the user
+          // does not have the right kind of PCD. Because we are only
+          // pre-generating credentials here, we don't need to take any action
+          // if a single credential fails to generate.
+        }
       }
     }
   }
