@@ -1394,6 +1394,9 @@ export class LemonadePipeline implements BasePipeline {
             giveableBadges: notAlreadyGivenBadges,
             rateLimitedBadges: badgesGiveableByUser
               .filter(isPerDayBadge)
+              .filter(() => {
+                return ticketInfo.attendeeEmail !== actorEmail;
+              })
               .map((b) => ({
                 alreadyGivenInInterval: alreadyGivenRateLimited.filter(
                   (g) => g.id === b.id

@@ -38,7 +38,7 @@
     "@pcd/tsconfig": "*",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
-    "@types/url-join": "^4.0.3",
+    "@types/url-join": "4.0.1",
     "eslint": "^7.32.0",
     "typescript": "^5.3.3"
   },

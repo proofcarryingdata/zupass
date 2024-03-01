@@ -18,8 +18,11 @@ export function ExperienceModal({
   isStar?: boolean;
   onClose: () => void;
 }): JSX.Element {
-  // see LemonadePipeline#getReceivedContactsForEmail
-  // for context on where this comes from.
+  // see:
+  //   - LemonadePipeline#getReceivedContactsForEmail
+  //   - LemonadePipeline#getReceivedBadgesForEmail
+  //
+  // ... for context on where these come from
   const altText = pcd?.claim?.ticket?.imageAltText;
   const email = pcd?.claim?.ticket?.attendeeEmail;
 
