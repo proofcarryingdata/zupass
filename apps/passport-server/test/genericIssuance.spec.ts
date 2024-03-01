@@ -1009,7 +1009,6 @@ t2,i1`,
       expectToExist(edgeCityDenverPipeline);
 
       // Test that a new user is added to the attendee group
-
       const newUser = lemonadeBackend.addUser(
         "newuser@example.com",
         "New",
@@ -1036,8 +1035,6 @@ t2,i1`,
       );
       expectLength(NewUserTickets, 1);
 
-      // Necessary to trigger Semaphore group update
-      await edgeCityDenverPipeline.load();
       const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
@@ -1130,8 +1127,6 @@ t2,i1`,
       );
 
       {
-        // Necessary to trigger Semaphore group update
-        await edgeCityDenverPipeline.load();
         const newAttendeeGroupResponse =
           await requestGenericIssuanceSemaphoreGroup(
             process.env.PASSPORT_SERVER_URL as string,
