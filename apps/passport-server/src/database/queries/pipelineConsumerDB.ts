@@ -17,7 +17,7 @@ export interface IPipelineConsumerDB {
     email: string,
     commitment: string,
     now: Date
-  ): Promise<PipelineConsumer>;
+  ): Promise<boolean>;
   // Load all consumers whose email addresses are in an array. This is used
   // when we have a list of emails from tickets, and want to find the matching
   // consumers for them (typically so that we can build a Semaphore group).
@@ -37,17 +37,14 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
 
   /**
    * Save a consumer to the DB.
-   * If the commitment has changed, then `time_updated` will be set to `now`.
-   * This allows the caller to schedule a reload of the Semaphore group when a
-   * commitment is changed. `time_updated` will always be `now` on an insert of
-   * a new consumer record.
+   * Returns true if an update to the user's Semaphore commitment was recorded.
    */
   public async save(
     pipelineId: string,
     email: string,
     commitment: string,
     now: Date
-  ): Promise<PipelineConsumer> {
+  ): Promise<boolean> {
     const result = await sqlQuery(
       this.db,
       `
@@ -65,7 +62,10 @@ export class PipelineConsumerDB implements IPipelineConsumerDB {
       [pipelineId, email, commitment, now]
     );
 
-    return rowToPipelineConsumer(result.rows[0]);
+    // If, after the query, the time_updated time is equal to now, then we know
+    // that something was inserted or updated, and return true so that the
+    // caller can take the appropriate action (e.g. updating Semaphore groups).
+    return now.getTime() === result.rows[0].time_updated.getTime();
   }
 
   /**

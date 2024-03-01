@@ -5,7 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { appConfig } from "../src/appConfig";
 
-const ZUPASS_FEED_URL = `${appConfig.zupassServer}/feeds`;
+export const ZUPASS_FEED_URL = `${appConfig.zupassServer}/feeds`;
 const ZUPASS_FEED_PROVIDER_NAME = "Zupass";
 const ZUPASS_SERVER_FEEDS = new Set(Object.keys(zupassDefaultSubscriptions));
 
@@ -22,6 +22,14 @@ function getDefaultFeedURLs(): string[] {
   return res;
 }
 
+export function addZupassProvider(
+  subscriptions: FeedSubscriptionManager
+): void {
+  if (!subscriptions.hasProvider(ZUPASS_FEED_URL)) {
+    subscriptions.addProvider(ZUPASS_FEED_URL, ZUPASS_FEED_PROVIDER_NAME);
+  }
+}
+
 export function isDefaultSubscription(sub: Subscription): boolean {
   return (
     (sub.providerUrl === ZUPASS_FEED_URL &&
@@ -33,9 +41,7 @@ export function isDefaultSubscription(sub: Subscription): boolean {
 export async function addDefaultSubscriptions(
   subscriptions: FeedSubscriptionManager
 ): Promise<void> {
-  if (!subscriptions.hasProvider(ZUPASS_FEED_URL)) {
-    subscriptions.addProvider(ZUPASS_FEED_URL, ZUPASS_FEED_PROVIDER_NAME);
-  }
+  addZupassProvider(subscriptions);
 
   for (const id in zupassDefaultSubscriptions) {
     subscriptions.subscribe(
