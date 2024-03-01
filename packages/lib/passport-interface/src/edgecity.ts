@@ -29,10 +29,10 @@ export interface BadgeConfigUI extends BadgeConfig {
 
 export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
   {
-    id: "Stars",
-    eventName: "Stars",
+    id: "Star",
+    eventName: "Star",
     productName: "",
-    imageUrl: "/images/star2.png",
+    imageUrl: "/images/star.webp",
     hiddenWhenEmpty: false,
     infinite: true,
     givers: ["*"]
