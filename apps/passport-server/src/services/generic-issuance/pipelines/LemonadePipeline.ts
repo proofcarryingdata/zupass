@@ -1510,22 +1510,48 @@ export class LemonadePipeline implements BasePipeline {
           const manualTicket = this.getManualTicketById(ticketId);
           const recipientEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
-          if (recipientEmail) {
-            const matchingBadges: BadgeConfig[] =
-              payload.action.giftBadge.badgeIds
-                .map((id) =>
-                  (
-                    this.definition.options?.ticketActions?.badges?.choices ??
-                    []
-                  ).find((badge) => badge.id === id)
-                )
-                .filter((badge) => !!badge) as BadgeConfig[];
+          const matchingBadges: BadgeConfig[] =
+            payload.action.giftBadge.badgeIds
+              .map((id) =>
+                (
+                  this.definition.options?.ticketActions?.badges?.choices ?? []
+                ).find((badge) => badge.id === id)
+              )
+              .filter((badge) => !!badge) as BadgeConfig[];
 
+          const allowedBadges = matchingBadges.filter((b) => {
+            const matchingRateLimitedBadge =
+              precheck.giveBadgeActionInfo?.rateLimitedBadges?.find(
+                (r) => r.id === b.id
+              );
+
+            // prevent too many rate limited badges from being given
+            if (matchingRateLimitedBadge) {
+              if (
+                matchingRateLimitedBadge.alreadyGivenInInterval >=
+                matchingRateLimitedBadge.maxInInterval
+              ) {
+                return false;
+              }
+            }
+
+            // prevent wrong ppl from issuing wrong badges
+            if (
+              !b.givers?.includes("*") &&
+              !b.givers?.includes(emailPCD.claim.emailAddress)
+            ) {
+              return false;
+            }
+
+            return true;
+          });
+
+          if (recipientEmail) {
             await this.badgeDB.giveBadges(
               this.id,
               emailPCD.claim.emailAddress,
               recipientEmail,
-              matchingBadges
+              allowedBadges
             );
 
             return {
