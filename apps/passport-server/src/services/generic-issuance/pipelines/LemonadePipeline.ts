@@ -612,7 +612,8 @@ export class LemonadePipeline implements BasePipeline {
                 ticketName: badgeConfig.productName ?? "",
                 checkerEmail: undefined,
                 imageUrl: badgeConfig.imageUrl,
-                imageAltText: undefined,
+                // giver encoded in alt text
+                imageAltText: b.giver,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.
                 eventId, // The event ID uniquely identifies an event.

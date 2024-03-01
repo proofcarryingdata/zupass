@@ -73,7 +73,8 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
     return res.rows.map((r): Badge => {
       return {
         id: r.badge_id,
-        timeCreated: r.time_created.getTime()
+        timeCreated: r.time_created.getTime(),
+        giver: r.giver_email
       };
     });
   }
@@ -99,7 +100,8 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
     return res.rows.map((r): Badge => {
       return {
         id: r.badge_id,
-        timeCreated: r.time_created.getTime()
+        timeCreated: r.time_created.getTime(),
+        giver: r.giver_email
       };
     });
   }

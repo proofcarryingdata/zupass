@@ -932,6 +932,7 @@ export type GenericIssuancePreCheckRequest = {
 export type Badge = {
   id: string;
   timeCreated: number;
+  giver: string;
 };
 
 export interface TicketInfo {
