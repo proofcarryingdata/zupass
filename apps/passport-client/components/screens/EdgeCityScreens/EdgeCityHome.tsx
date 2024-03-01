@@ -242,7 +242,7 @@ export function EdgeCityHome(): JSX.Element {
                   onClick={(): void => {
                     setSelectedExperience(pcd);
                     setSelectedExperienceIsContact(true);
-                    setSelectedExperienceIsStar(true);
+                    setSelectedExperienceIsStar(false);
                   }}
                 >
                   <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
@@ -276,7 +276,7 @@ export function EdgeCityHome(): JSX.Element {
                         onClick={(): void => {
                           setSelectedExperience(pcd);
                           setSelectedExperienceIsContact(false);
-                          setSelectedExperienceIsStar(true);
+                          setSelectedExperienceIsStar(eventName === "Stars");
                         }}
                       >
                         <img
@@ -309,7 +309,7 @@ export function EdgeCityHome(): JSX.Element {
               onClose={(): void => {
                 setSelectedExperience(null);
                 setSelectedExperienceIsContact(false);
-                setSelectedExperienceIsStar(true);
+                setSelectedExperienceIsStar(false);
               }}
             />
           )}

@@ -21,6 +21,7 @@ export function ExperienceModal({
   // see LemonadePipeline#getReceivedContactsForEmail
   // for context on where this comes from.
   const altText = pcd?.claim?.ticket?.imageAltText;
+  const email = pcd?.claim?.ticket?.attendeeEmail;
 
   return (
     <AdhocModal
@@ -47,13 +48,13 @@ export function ExperienceModal({
             Actions
           </Button>
         )}
-        {isStar && altText && (
+        {isStar && altText && email && (
           <Button
             onClick={(): void => {
               window.location.href = altText;
             }}
           >
-            from: {altText}
+            from: {email}
           </Button>
         )}
       </Container>

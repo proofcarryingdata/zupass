@@ -587,6 +587,16 @@ export class LemonadePipeline implements BasePipeline {
           return undefined;
         }
 
+        // semaphore id intentially left blank, as I'm just trying to get the ticket
+        // so that I can link to it, not issue it/make proofs about it
+        const tickets = await this.getTicketsForEmail(b.giver, "");
+        const ticket = tickets?.[0]?.claim?.ticket;
+        const encodedLink = linkToTicket(
+          urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
+          ticket?.ticketId,
+          ticket?.eventId
+        );
+
         const eventId = uuidv5(
           `badge-${badgeConfig.id}-${badgeConfig.eventName}-${badgeConfig.productName}`,
           this.id
@@ -612,8 +622,8 @@ export class LemonadePipeline implements BasePipeline {
                 ticketName: badgeConfig.productName ?? "",
                 checkerEmail: undefined,
                 imageUrl: badgeConfig.imageUrl,
-                // giver encoded in alt text
-                imageAltText: b.giver,
+                // link to giver ticket encoded in alt text
+                imageAltText: encodedLink,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.
                 eventId, // The event ID uniquely identifies an event.
@@ -626,7 +636,8 @@ export class LemonadePipeline implements BasePipeline {
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
                 attendeeName: "",
-                attendeeEmail: ""
+                // giver email in attendee email
+                attendeeEmail: b.giver
               }
             }
           })
