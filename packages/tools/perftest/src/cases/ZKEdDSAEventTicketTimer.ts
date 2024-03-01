@@ -144,11 +144,11 @@ export class ZKEdDSAEventTicketProveCase extends TimerCase {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async setup(): Promise<void> {
+  async setup(_: number): Promise<void> {
     this.proveArgs = await setupProveArgs();
   }
 
-  async op(): Promise<void> {
+  async op(_: number): Promise<void> {
     if (!this.proveArgs) {
       throw new Error("Missing proveArgs.  Skipped setup?");
     }
@@ -170,11 +170,11 @@ export class ZKEdDSAEventTicketVerifyCase extends TimerCase {
     });
   }
 
-  async setup(): Promise<void> {
+  async setup(_: number): Promise<void> {
     this.pcd = await ZKEdDSAEventTicketPCDPackage.prove(await setupProveArgs());
   }
 
-  async op(): Promise<void> {
+  async op(_: number): Promise<void> {
     if (!this.pcd) {
       throw new Error("Missing PCD.  Skipped setup?");
     }

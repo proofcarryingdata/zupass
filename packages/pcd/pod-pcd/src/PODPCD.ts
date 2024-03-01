@@ -12,6 +12,12 @@ import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 
 /**
+ * A set of entries defining a POD, represented in an object.  See `@pcd/pod`
+ * for full definition and documentation.
+ */
+export type { PODEntries } from "@pcd/pod";
+
+/**
  * The globally unique type name of the {@link PODPCD}.
  */
 export const PODPCDTypeName = "pod-pcd";
