@@ -46,6 +46,7 @@ interface GroupedEvent {
   total: number;
   imageUrl: string;
   hiddenWhenEmpty: boolean;
+  infinite: boolean;
 }
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
@@ -59,7 +60,8 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
       eventName: item.eventName,
       total: 1,
       imageUrl: item.imageUrl,
-      hiddenWhenEmpty: !!item.hiddenWhenEmpty
+      hiddenWhenEmpty: !!item.hiddenWhenEmpty,
+      infinite: !!item.infinite
     });
   }
   return acc;
@@ -251,7 +253,7 @@ export function EdgeCityHome(): JSX.Element {
             </ItemContainer>
           </div>
           {groupedResult.map(
-            ({ eventName, total, imageUrl, hiddenWhenEmpty }) => {
+            ({ eventName, total, imageUrl, hiddenWhenEmpty, infinite }) => {
               const pcds = pcdsByEventName[eventName] ?? [];
               if (hiddenWhenEmpty && pcds.length === 0) {
                 return null;
@@ -260,7 +262,9 @@ export function EdgeCityHome(): JSX.Element {
                 <div key={eventName}>
                   <CategoryHeader>
                     <span>{eventName}</span>
-                    <span>{`${pcds.length}/${total || "∞"}`}</span>
+                    <span>{`${pcds.length}/${
+                      infinite ? "∞" : total || "∞"
+                    }`}</span>
                   </CategoryHeader>
                   <ItemContainer>
                     {pcds.flatMap((pcd) => (

@@ -32,7 +32,7 @@
     "chai": "^4.3.7",
     "json-bigint": "^1.0.0",
     "lodash": "^4.17.21",
-    "url-join": "^4.0.1",
+    "url-join": "4.0.1",
     "uuid": "^9.0.0"
   },
   "devDependencies": {
