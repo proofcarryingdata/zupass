@@ -1,6 +1,7 @@
 import { EdDSAFrogPCDTypeName } from "@pcd/eddsa-frog-pcd";
 import { EdDSAFrogPCDUI } from "@pcd/eddsa-frog-pcd-ui";
 import { EdDSAPCDTypeName } from "@pcd/eddsa-pcd";
+import { EdDSAPCDUI } from "@pcd/eddsa-pcd-ui";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
 import { EmailPCDTypeName } from "@pcd/email-pcd";
@@ -12,6 +13,8 @@ import { HaLoNoncePCDUI } from "@pcd/halo-nonce-pcd-ui";
 import { MessagePCDTypeName } from "@pcd/message-pcd";
 import { MessagePCDUI } from "@pcd/message-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
+import { PODPCDTypeName } from "@pcd/pod-pcd";
+import { PODPCDUI } from "@pcd/pod-pcd-ui";
 import { RSAImagePCDTypeName } from "@pcd/rsa-image-pcd";
 import { RSAImagePCDUI } from "@pcd/rsa-image-pcd-ui";
 import { RSAPCDTypeName } from "@pcd/rsa-pcd";
@@ -42,7 +45,8 @@ const renderablePCDs = [
   SemaphoreSignaturePCDTypeName,
   ZKEdDSAEventTicketPCDTypeName,
   RSAImagePCDTypeName,
-  MessagePCDTypeName
+  MessagePCDTypeName,
+  PODPCDTypeName
 ] as const;
 
 export type RenderablePCDType = (typeof renderablePCDs)[number];
@@ -51,7 +55,7 @@ export const pcdRenderers: {
   [key in RenderablePCDType]: PCDUI<PCD<unknown, unknown>, unknown>;
 } = {
   [EdDSATicketPCDTypeName]: EdDSATicketPCDUI,
-  [EdDSAPCDTypeName]: EdDSATicketPCDUI,
+  [EdDSAPCDTypeName]: EdDSAPCDUI,
   [EdDSAFrogPCDTypeName]: EdDSAFrogPCDUI,
   [EmailPCDTypeName]: EmailPCDUI,
   [EthereumOwnershipPCDTypeName]: EthereumOwnershipPCDUI,
@@ -63,5 +67,6 @@ export const pcdRenderers: {
   [SemaphoreSignaturePCDTypeName]: SemaphoreSignaturePCDUI,
   [ZKEdDSAEventTicketPCDTypeName]: ZKEdDSAEventTicketPCDUI,
   [RSAImagePCDTypeName]: RSAImagePCDUI,
-  [MessagePCDTypeName]: MessagePCDUI
+  [MessagePCDTypeName]: MessagePCDUI,
+  [PODPCDTypeName]: PODPCDUI
 };

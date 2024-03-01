@@ -140,11 +140,14 @@ export function clonePODEntries(entries: PODEntries): PODEntries {
   return newEntries;
 }
 
-export function serializePODEntries(entries: PODEntries): string {
+export function serializePODEntries(
+  entries: PODEntries,
+  space?: number
+): string {
   return JSONBig({
     useNativeBigInt: true,
     alwaysParseAsBig: true
-  }).stringify(entries);
+  }).stringify(entries, null, space);
 }
 
 export function deserializePODEntries(serializedEntries: string): PODEntries {
@@ -152,4 +155,45 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
     useNativeBigInt: true,
     alwaysParseAsBig: true
   }).parse(serializedEntries);
+}
+
+export function podEntriesToSimplifiedJSON(
+  entries: PODEntries,
+  space?: number
+): string {
+  const simplified: Record<string, bigint | string> = {};
+  for (const [name, value] of Object.entries(entries)) {
+    simplified[name] = value.value;
+  }
+  return JSONBig({
+    useNativeBigInt: true,
+    alwaysParseAsBig: true
+  }).stringify(simplified, null, space);
+}
+
+export function podEntriesFromSimplifiedJSON(
+  simplifiedJSON: string
+): PODEntries {
+  const simplifiedEntries = JSONBig({
+    useNativeBigInt: true,
+    alwaysParseAsBig: true
+  }).parse(simplifiedJSON) as Record<string, string | bigint>;
+  const entries: Record<string, PODValue> = {};
+  for (const [entryName, rawValue] of Object.entries(simplifiedEntries)) {
+    let entryValue: PODValue;
+    switch (typeof rawValue) {
+      case "bigint":
+        if (rawValue > POD_INT_MAX) {
+          entryValue = { type: "cryptographic", value: rawValue };
+        } else {
+          entryValue = { type: "int", value: rawValue };
+        }
+        break;
+      case "string":
+        entryValue = { type: "string", value: rawValue };
+        break;
+    }
+    entries[entryName] = entryValue;
+  }
+  return entries;
 }

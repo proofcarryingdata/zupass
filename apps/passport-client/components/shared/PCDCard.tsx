@@ -87,7 +87,7 @@ function HeaderContent({
   let header = null;
   if (isMainIdentity) {
     header = <>ZUPASS IDENTITY</>;
-  } else if (ui.getHeader) {
+  } else if (ui && ui.getHeader) {
     header = ui.getHeader({ pcd });
   } else if (displayOptions?.header) {
     header = <>{displayOptions.header.toUpperCase()}</>;

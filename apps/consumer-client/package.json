@@ -19,6 +19,8 @@
     "@pcd/ethereum-ownership-pcd": "0.10.0",
     "@pcd/passport-interface": "0.10.0",
     "@pcd/pcd-types": "0.10.0",
+    "@pcd/pod": "0.0.1",
+    "@pcd/pod-pcd": "0.0.1",
     "@pcd/semaphore-group-pcd": "0.10.0",
     "@pcd/semaphore-identity-pcd": "0.10.0",
     "@pcd/semaphore-signature-pcd": "0.10.0",

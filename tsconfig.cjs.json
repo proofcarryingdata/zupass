@@ -115,6 +115,9 @@
       "path": "packages/ui/message-pcd-ui/tsconfig.cjs.json"
     },
     {
+      "path": "packages/ui/pod-pcd-ui/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/ui/rsa-image-pcd-ui/tsconfig.cjs.json"
     },
     {
