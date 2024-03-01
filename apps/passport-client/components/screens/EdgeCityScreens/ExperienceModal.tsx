@@ -1,18 +1,31 @@
 import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import _ from "lodash";
 import styled from "styled-components";
+import { Button } from "../../core";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCard } from "../../shared/PCDCard";
 
 export function ExperienceModal({
   pcd,
   color,
+  isContact,
+  isStar,
   onClose
 }: {
   pcd: EdDSATicketPCD;
   color;
+  isContact?: boolean;
+  isStar?: boolean;
   onClose: () => void;
 }): JSX.Element {
+  // see:
+  //   - LemonadePipeline#getReceivedContactsForEmail
+  //   - LemonadePipeline#getReceivedBadgesForEmail
+  //
+  // ... for context on where these come from
+  const altText = pcd?.claim?.ticket?.imageAltText;
+  const email = pcd?.claim?.ticket?.attendeeEmail;
+
   return (
     <AdhocModal
       open={!!pcd}
@@ -20,12 +33,33 @@ export function ExperienceModal({
       center
       styles={{
         modal: {
-          maxWidth: "400px"
+          maxWidth: "400px",
+          border: "1px solid #5e5e5e",
+          borderRadius: "8px",
+          padding: "8px"
         }
       }}
     >
       <Container index={0} count={1} color={color}>
-        <PCDCard pcd={pcd} expanded hideRemoveButton />
+        <PCDCard pcd={pcd} expanded hideRemoveButton hideHeader={isContact} />
+        {isContact && altText && (
+          <Button
+            onClick={(): void => {
+              window.location.href = altText;
+            }}
+          >
+            Actions
+          </Button>
+        )}
+        {isStar && altText && email && (
+          <Button
+            onClick={(): void => {
+              window.location.href = altText;
+            }}
+          >
+            from: {email}
+          </Button>
+        )}
       </Container>
     </AdhocModal>
   );
@@ -35,6 +69,7 @@ const Container = styled.div<{ index: number; count: number; color: string }>`
   padding: 16px;
 
   display: flex;
+  flex-direction: column;
   gap: 4px;
   align-items: stretch;
   justify-content: space-around;

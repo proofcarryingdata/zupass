@@ -46,6 +46,7 @@ interface GroupedEvent {
   total: number;
   imageUrl: string;
   hiddenWhenEmpty: boolean;
+  infinite: boolean;
 }
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
@@ -59,7 +60,8 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
       eventName: item.eventName,
       total: 1,
       imageUrl: item.imageUrl,
-      hiddenWhenEmpty: !!item.hiddenWhenEmpty
+      hiddenWhenEmpty: !!item.hiddenWhenEmpty,
+      infinite: !!item.infinite
     });
   }
   return acc;
@@ -73,6 +75,10 @@ export function EdgeCityHome(): JSX.Element {
   const [tab, setTab] = useState<TabId>("ticket");
   const [selectedExperience, setSelectedExperience] =
     useState<EdDSATicketPCD>(null);
+  const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
+    useState(false);
+  const [selectedExperienceIsStar, setSelectedExperienceIsStar] =
+    useState(false);
 
   const [infoOpen, setInfoOpen] = useState(false);
   const pcds = usePCDCollection();
@@ -231,7 +237,14 @@ export function EdgeCityHome(): JSX.Element {
             </CategoryHeader>
             <ItemContainer>
               {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
-                <ItemCard onClick={(): void => setSelectedExperience(pcd)}>
+                <ItemCard
+                  key={pcd.id}
+                  onClick={(): void => {
+                    setSelectedExperience(pcd);
+                    setSelectedExperienceIsContact(true);
+                    setSelectedExperienceIsStar(false);
+                  }}
+                >
                   <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
                 </ItemCard>
               ))}
@@ -243,21 +256,28 @@ export function EdgeCityHome(): JSX.Element {
             </ItemContainer>
           </div>
           {groupedResult.map(
-            ({ eventName, total, imageUrl, hiddenWhenEmpty }) => {
+            ({ eventName, total, imageUrl, hiddenWhenEmpty, infinite }) => {
               const pcds = pcdsByEventName[eventName] ?? [];
               if (hiddenWhenEmpty && pcds.length === 0) {
                 return null;
               }
               return (
-                <div>
+                <div key={eventName}>
                   <CategoryHeader>
                     <span>{eventName}</span>
-                    <span>{`${pcds.length}/${total || "∞"}`}</span>
+                    <span>{`${pcds.length}/${
+                      infinite ? "∞" : total || "∞"
+                    }`}</span>
                   </CategoryHeader>
                   <ItemContainer>
                     {pcds.flatMap((pcd) => (
                       <ItemCard
-                        onClick={(): void => setSelectedExperience(pcd)}
+                        key={pcd.id}
+                        onClick={(): void => {
+                          setSelectedExperience(pcd);
+                          setSelectedExperienceIsContact(false);
+                          setSelectedExperienceIsStar(eventName === "Stars");
+                        }}
                       >
                         <img
                           src={pcd.claim.ticket?.imageUrl}
@@ -265,8 +285,8 @@ export function EdgeCityHome(): JSX.Element {
                         />
                       </ItemCard>
                     ))}
-                    {Array.from({ length: total - pcds.length }).map((_) => (
-                      <ItemCard style={{ cursor: "default" }}>
+                    {Array.from({ length: total - pcds.length }).map((_, i) => (
+                      <ItemCard style={{ cursor: "default" }} key={i}>
                         <img
                           src={imageUrl}
                           draggable={false}
@@ -284,7 +304,13 @@ export function EdgeCityHome(): JSX.Element {
             <ExperienceModal
               color="black"
               pcd={selectedExperience}
-              onClose={(): void => setSelectedExperience(null)}
+              isContact={selectedExperienceIsContact}
+              isStar={selectedExperienceIsStar}
+              onClose={(): void => {
+                setSelectedExperience(null);
+                setSelectedExperienceIsContact(false);
+                setSelectedExperienceIsStar(false);
+              }}
             />
           )}
         </div>

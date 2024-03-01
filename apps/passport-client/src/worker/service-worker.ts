@@ -79,6 +79,7 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/images/plus.webp",
   "/images/sauna.webp",
   "/images/social.webp",
+  "/images/star.webp",
   "/images/wristband.webp",
   "/zxcvbn.js"
 ]);

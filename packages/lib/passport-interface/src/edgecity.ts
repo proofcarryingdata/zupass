@@ -23,10 +23,20 @@ export const TOTAL_SUPPLY = 200;
 export const CONTACT_EVENT_NAME = "Contacts";
 
 export interface BadgeConfigUI extends BadgeConfig {
+  infinite?: boolean;
   hiddenWhenEmpty?: boolean; // defines whether this badge is hidden in the UI when no badges of this ID been collected
 }
 
 export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
+  {
+    id: "Star",
+    eventName: "Star",
+    productName: "",
+    imageUrl: "/images/star.webp",
+    hiddenWhenEmpty: false,
+    infinite: true,
+    givers: ["*"]
+  },
   {
     id: "Check In",
     eventName: "Check In",

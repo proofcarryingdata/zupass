@@ -210,7 +210,8 @@ export const BadgeConfigSchema = z.object({
   productName: z.string().optional(),
   imageUrl: z.string(),
   givers: z.array(z.string()).optional(),
-  grantOnCheckin: z.boolean().optional()
+  grantOnCheckin: z.boolean().optional(),
+  maxPerDay: z.number().optional()
 });
 
 export type BadgeConfig = z.infer<typeof BadgeConfigSchema>;

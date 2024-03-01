@@ -52,3 +52,28 @@ export function flattenObject(
 export function str(val: unknown): string {
   return JSON.stringify(val);
 }
+
+/**
+ * Formats a duration of milliseconds into hh:mm:ss.
+ */
+export function fmtDuration(totalMs: number): string {
+  const sec_num = Math.floor(totalMs / 1000);
+  const hours = Math.floor(sec_num / 3600);
+  const minutes = Math.floor((sec_num - hours * 3600) / 60);
+  const seconds = sec_num - hours * 3600 - minutes * 60;
+
+  let hoursFmt = hours + "";
+  let minutesFmt = minutes + "";
+  let secondsFmt = seconds + "";
+
+  if (hours < 10) {
+    hoursFmt = "0" + hours;
+  }
+  if (minutes < 10) {
+    minutesFmt = "0" + minutes;
+  }
+  if (seconds < 10) {
+    secondsFmt = "0" + seconds;
+  }
+  return hoursFmt + ":" + minutesFmt + ":" + secondsFmt;
+}
