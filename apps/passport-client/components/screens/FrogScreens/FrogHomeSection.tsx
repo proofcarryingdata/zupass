@@ -36,10 +36,10 @@ const TABS = [
     tab: "get",
     label: "get frogs"
   },
-  {
-    tab: "score",
-    label: "hi scores"
-  },
+  // {
+  //   tab: "score",
+  //   label: "hi scores"
+  // },
   {
     tab: "dex",
     label: "frogedex"
