@@ -22,6 +22,7 @@ import {
 import { RippleLoader } from "../../core/RippleLoader";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
+import { FolderCard, FolderExplorerContainer } from "../HomeScreen/Folder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
 
@@ -252,22 +253,24 @@ export function EdgeCityHome({
           <div>
             <CategoryHeader>
               <EventTitle>FROGCRYPTO</EventTitle>
-              <span>{`${
-                (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
-              }/${"∞"}`}</span>
+              <span></span>
             </CategoryHeader>
 
-            <CategoryDescription>Collect FROGS.</CategoryDescription>
+            <CategoryDescription>
+              FrogCrypto is back! Collect frogs to earn EXP. One frog nets you
+              0.1 EXP.
+            </CategoryDescription>
 
-            <ItemContainer>
-              <CTAButton
-                onClick={(): void => {
+            <FolderExplorerContainer
+              style={{ margin: 0, marginBottom: "16px", marginTop: "16px" }}
+            >
+              <FolderCard
+                onFolderClick={(): void => {
                   setBrowsingFolder("FrogCrypto");
                 }}
-              >
-                Collect
-              </CTAButton>
-            </ItemContainer>
+                folder={"/FrogCrypto"}
+              />
+            </FolderExplorerContainer>
           </div>
           <div>
             <CategoryHeader>
