@@ -92,7 +92,10 @@ export function HomeScreenImpl(): JSX.Element {
     const oldParams = Object.fromEntries(searchParams.entries());
 
     if (!browsingFolder) {
-      setSearchParams(undefined);
+      delete oldParams[FOLDER_QUERY_PARAM];
+      setSearchParams({
+        ...oldParams
+      });
     } else if (oldParams[FOLDER_QUERY_PARAM] !== browsingFolder) {
       setSearchParams({
         ...oldParams,

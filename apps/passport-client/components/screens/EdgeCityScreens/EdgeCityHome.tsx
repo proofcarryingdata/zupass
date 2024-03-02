@@ -247,6 +247,27 @@ export function EdgeCityHome(): JSX.Element {
           </ExperiencesHeader>
           <div>
             <CategoryHeader>
+              <EventTitle>FROGCRYPTO</EventTitle>
+              <span>{`${
+                (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
+              }/${"∞"}`}</span>
+            </CategoryHeader>
+
+            <CategoryDescription>Collect FROGS.</CategoryDescription>
+
+            <ItemContainer>
+              <CTAButton
+                onClick={(): void => {
+                  window.location.href =
+                    "http://localhost:3000/#/?folder=FrogCrypto";
+                }}
+              >
+                Collect
+              </CTAButton>
+            </ItemContainer>
+          </div>
+          <div>
+            <CategoryHeader>
               <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
               <span>{`${
                 (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
