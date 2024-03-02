@@ -43,8 +43,8 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     infinite: true,
     givers: ["*"],
     description:
-      "Scan another Edge City resident's ticket to give them a star of appreciation!" +
-      " You have 3 stars to give a day. Each received star is worth 1 EXP.",
+      "Scan another resident's ticket to give them a star of appreciation." +
+      " You have 3 stars to give a day, worth 10 EXP each.",
     button: {
       text: "Award Star",
       link: "/scan"
@@ -57,7 +57,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     grantOnCheckin: true,
     givers: ["richard@pcd.team", "ivan@0xparc.org"],
     description:
-      "Checking into Edge City earns you the Check In badge. Worth 1 EXP."
+      "Checking into Edge City earns you the Check In badge. Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Tuesday",
@@ -65,7 +65,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Tuesday",
     imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"],
-    description: "Revitalize your energy with a cold plunge! Worth 1 EXP."
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Wednesday",
@@ -73,7 +73,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Wednesday",
     imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"],
-    description: "Revitalize your energy with a cold plunge! Worth 1 EXP."
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Thursday",
@@ -81,7 +81,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Thursday",
     imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"],
-    description: "Revitalize your energy with a cold plunge! Worth 1 EXP."
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Friday",
@@ -89,7 +89,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Friday",
     imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"],
-    description: "Revitalize your energy with a cold plunge! Worth 1 EXP."
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Saturday",
@@ -97,7 +97,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Saturday",
     imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"],
-    description: "Revitalize your energy with a cold plunge! Worth 1 EXP."
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Sunday",
@@ -105,7 +105,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Sunday",
     imageUrl: "/images/cold.webp",
     givers: ["richard@pcd.team"],
-    description: "Revitalize your energy with a cold plunge! Worth 1 EXP."
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Sauna.Tuesday",
@@ -113,7 +113,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Tuesday",
     imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"],
-    description: "Go to the Sauna! One EXP per day."
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Wednesday",
@@ -121,7 +121,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Wednesday",
     imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"],
-    description: "Go to the Sauna! One EXP per day."
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Thursday",
@@ -129,7 +129,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Thursday",
     imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"],
-    description: "Go to the Sauna! One EXP per day."
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Friday",
@@ -137,7 +137,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Friday",
     imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"],
-    description: "Go to the Sauna! One EXP per day."
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Saturday",
@@ -145,7 +145,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Saturday",
     imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"],
-    description: "Go to the Sauna! One EXP per day."
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Sunday",
@@ -153,7 +153,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Sunday",
     imageUrl: "/images/sauna.webp",
     givers: ["richard@pcd.team"],
-    description: "Go to the Sauna! One EXP per day."
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Met Zupass.Josh",
@@ -161,7 +161,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Josh",
     imageUrl: "/images/hat.webp",
     givers: ["jgarza@0xparc.org"],
-    description: "Meet the Zupass team to earn EXP. 1 EXP per member."
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Zupass.Richard",
@@ -169,7 +169,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Richard",
     imageUrl: "/images/hat.webp",
     givers: ["richard@pcd.team"],
-    description: "Meet the Zupass team to earn EXP. 1 EXP per member."
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Zupass.Ivan",
@@ -177,7 +177,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Ivan",
     imageUrl: "/images/hat.webp",
     givers: ["ivan@0xparc.org"],
-    description: "Meet the Zupass team to earn EXP. 1 EXP per member."
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Zupass.Rob",
@@ -185,7 +185,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Rob",
     imageUrl: "/images/hat.webp",
     givers: ["themanhimself@robknight.org.uk"],
-    description: "Meet the Zupass team to earn EXP. 1 EXP per member."
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Gary.Monday",
@@ -227,7 +227,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     hiddenWhenEmpty: true,
     givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
     description:
-      "Attend the Edge City Hackathon on Sunday and get scanned" +
-      " by an organizer to get this badge. Worth 1 EXP."
+      "Attend the Decentralized Social Hackathon on Sunday and get scanned" +
+      " by an organizer to get this badge. Worth 10 EXP."
   }
 ];

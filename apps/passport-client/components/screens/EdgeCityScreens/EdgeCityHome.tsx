@@ -62,7 +62,7 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
   } else {
     acc.push({
       eventName: item.eventName,
-      total: 1,
+      total: item.infinite ? 0 : 1,
       imageUrl: item.imageUrl,
       hiddenWhenEmpty: !!item.hiddenWhenEmpty,
       infinite: !!item.infinite,
@@ -250,25 +250,20 @@ export function EdgeCityHome({
         <div>
           <ExperiencesHeader>
             <p>
-              Collect EXP by participating in community experiences. <br />{" "}
+              Collect EXP by participating in community experiences. <br />
               <br />
               Your EXP earns you a fraction of the {TOTAL_SUPPLY} available
               $ZUCASH.
-              <br />
-              <br />
-              At the end of Edge City, trade in your $ZUC for a special reward
-              🎁
             </p>
           </ExperiencesHeader>
-          <div>
+          <CategorySection>
             <CategoryHeader>
               <EventTitle>FROGCRYPTO</EventTitle>
               <span></span>
             </CategoryHeader>
 
             <CategoryDescription>
-              FrogCrypto is back! Collect frogs to earn EXP. One frog nets you
-              0.1 EXP.
+              FROGCRYPTO is back! Collect frogs to earn EXP.
             </CategoryDescription>
 
             <FrogCryptoButton
@@ -295,8 +290,8 @@ export function EdgeCityHome({
                 FrogCrypto
               </SuperFunkyFont>
             </FrogCryptoButton>
-          </div>
-          <div>
+          </CategorySection>
+          <CategorySection>
             <CategoryHeader>
               <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
               <span>{`${
@@ -305,8 +300,8 @@ export function EdgeCityHome({
             </CategoryHeader>
 
             <CategoryDescription>
-              Scan another Edge City resident's ticket to collect their contact
-              card. Each contact card is worth 1 EXP.
+              Scan another resident's ticket to collect their contact. Worth 10
+              EXP.
             </CategoryDescription>
 
             <ItemContainer>
@@ -326,7 +321,7 @@ export function EdgeCityHome({
                 <CTAButton>Collect Contact</CTAButton>
               </Link>
             </ItemContainer>
-          </div>
+          </CategorySection>
           {groupedResult.map(
             ({
               eventName,
@@ -342,7 +337,7 @@ export function EdgeCityHome({
                 return null;
               }
               return (
-                <div key={eventName}>
+                <CategorySection key={eventName}>
                   <CategoryHeader>
                     <EventTitle>{eventName}</EventTitle>
                     <span>{`${pcds.length}/${
@@ -357,7 +352,7 @@ export function EdgeCityHome({
                         onClick={(): void => {
                           setSelectedExperience(pcd);
                           setSelectedExperienceIsContact(false);
-                          setSelectedExperienceIsStar(eventName === "Stars");
+                          setSelectedExperienceIsStar(eventName === "Star");
                         }}
                       >
                         <img
@@ -381,7 +376,7 @@ export function EdgeCityHome({
                       </Link>
                     )}
                   </ItemContainer>
-                </div>
+                </CategorySection>
               );
             }
           )}
@@ -479,6 +474,7 @@ const ItemContainer = styled.div`
   grid-template-columns: repeat(6, 1fr);
   grid-row-gap: 0px;
   grid-column-gap: 10px;
+  margin-bottom: 10px;
 `;
 
 const ItemCard = styled.div`
@@ -613,4 +609,8 @@ const FrogCryptoButton = styled(Button)`
     padding: 500px !important;
     color: black;
   }
+`;
+
+const CategorySection = styled.div`
+  margin-bottom: 16px;
 `;

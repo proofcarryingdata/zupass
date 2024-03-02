@@ -26,14 +26,14 @@ export function BalancesTab({
       <TopSection>
         <Spread>
           <span>total supply</span>
-          <span>{TOTAL_SUPPLY} $ZUC</span>
+          <span>{TOTAL_SUPPLY} ZUC</span>
         </Spread>
         <Spread>
           <span>global EXP</span>
           <span>{totalExp.toFixed(1)} EXP</span>
         </Spread>
         <Spread>
-          <span>EXP/$ZUC</span>
+          <span>EXP/ZUC</span>
           <span>{(TOTAL_SUPPLY / totalExp).toFixed(3)}</span>
         </Spread>
         {score && (
