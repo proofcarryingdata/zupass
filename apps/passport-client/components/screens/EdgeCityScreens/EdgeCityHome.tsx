@@ -111,15 +111,17 @@ export function EdgeCityHome({
     setLoading(true);
     requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
       if (res.success) {
-        setTotalExp(res.value.map((x) => x.balance).reduce((x, y) => x + y));
+        const totalExp = Math.max(
+          res.value.map((x) => x.balance).reduce((x, y) => x + y),
+          0.1
+        );
+
+        setTotalExp(totalExp);
         setScores(
           res.value.map((s) => ({
             ...s,
             exp: s.balance,
-            balance:
-              (s.balance /
-                res.value.map((x) => x.balance).reduce((x, y) => x + y)) *
-              TOTAL_SUPPLY
+            balance: (s.balance / totalExp) * TOTAL_SUPPLY
           }))
         );
       } else {
