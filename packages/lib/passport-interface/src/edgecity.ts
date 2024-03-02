@@ -43,7 +43,8 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     infinite: true,
     givers: ["*"],
     description:
-      "Scan a ticket and give a star! You get to give 3 stars a day. Each star is worth 1 EXP.",
+      "Scan another Edge City resident's ticket to give them a star of appreciation!" +
+      " You have 3 stars to give a day. Each received star is worth 1 EXP.",
     button: {
       text: "Award Star",
       link: "/scan"
@@ -226,6 +227,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     hiddenWhenEmpty: true,
     givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
     description:
-      "Attend the Hackathon on Sunday and get scanned by an organizer to get this badge. Worth 1 EXP."
+      "Attend the Edge City Hackathon on Sunday and get scanned" +
+      " by an organizer to get this badge. Worth 1 EXP."
   }
 ];
