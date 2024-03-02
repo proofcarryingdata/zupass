@@ -12,7 +12,7 @@ import type { EmitterContainer } from "tsparticles-plugin-emitters";
 
 const fpsLimit = 120;
 
-export function useZucashConfetti(): () => Promise<void> {
+export function useZucashConfetti(element?: HTMLElement): () => Promise<void> {
   const [container, setContainer] = useState<Container | null>(null);
   // destroy confetti when component unmounts. this stops the confetti but if we
   // don't do this, confetii plays again when we switch back to GetFrog
@@ -55,6 +55,12 @@ export function useZucashConfetti(): () => Promise<void> {
       x: 50,
       y: 50
     };
+
+    if (element) {
+      const rect = element.getBoundingClientRect();
+      position.x = ((rect.x + rect.width / 2) / window.innerWidth) * 100;
+      position.y = ((rect.y + rect.height / 2) / window.innerHeight) * 100;
+    }
 
     const move: RecursivePartial<IMove> = {
       angle: {
@@ -212,7 +218,7 @@ export function useZucashConfetti(): () => Promise<void> {
         }
       })
       .then(setContainer);
-  }, [container]);
+  }, [container, element]);
 
   return confetti;
 }

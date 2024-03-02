@@ -25,6 +25,7 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
+import { useZucashConfetti } from "./useZucashConfetti";
 
 const TABS = [
   {
@@ -179,7 +180,8 @@ export function EdgeCityHome({
     }, {}); // Initial value of the accumulator is an empty object
 
   const [buttonRef, setButtonRef] = useState<HTMLButtonElement>();
-  // const confetti = useZucashConfetti();
+  const [ref, setRef] = useState<HTMLElement>();
+  const z_confetti = useZucashConfetti(ref);
 
   if (loading) {
     return <RippleLoader />;
@@ -225,7 +227,11 @@ export function EdgeCityHome({
       >
         EDGE CITY
       </Title>
-      <div style={{ width: "100%", userSelect: "none" }} onClick={confetti}>
+      <div
+        ref={(r): void => setRef(r)}
+        style={{ width: "100%", userSelect: "none", cursor: "pointer" }}
+        onClick={z_confetti}
+      >
         <Caption>Balance</Caption>
         <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
