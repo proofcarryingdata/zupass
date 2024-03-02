@@ -8,10 +8,12 @@ import { useUsernameGenerator } from "../FrogScreens/useUsername";
  */
 export function BalancesTab({
   score,
-  scores
+  scores,
+  totalExp
 }: {
   score?: EdgeCityBalance;
   scores: EdgeCityBalance[];
+  totalExp: number;
 }): JSX.Element {
   const getUsername = useUsernameGenerator();
 
@@ -21,18 +23,35 @@ export function BalancesTab({
 
   return (
     <Container>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          borderBottom: "1px solid grey",
-          paddingBottom: 16,
-          marginBottom: 16
-        }}
-      >
-        <span>Total Supply</span>
-        <span>{TOTAL_SUPPLY} ZUC</span>
-      </div>
+      <TopSection>
+        <Spread>
+          <span>global ZUC supply</span>
+          <span>{TOTAL_SUPPLY} ZUC</span>
+        </Spread>
+        <Spread>
+          <span>global EXP earned</span>
+          <span>{totalExp} EXP</span>
+        </Spread>
+        {score && (
+          <Spread>
+            <span>your EXP earned</span>
+            <span>{score.exp}&nbsp;EXP</span>
+          </Spread>
+        )}
+        {score && (
+          <Spread>
+            <span>your proportion of ZUC</span>
+            <span>{((score.exp / totalExp) * 100).toFixed(4)}%</span>
+          </Spread>
+        )}
+        {score && (
+          <Spread>
+            <span>your ZUC</span>
+            <span>{score.balance.toFixed(4)}</span>
+          </Spread>
+        )}
+      </TopSection>
+
       {score && (
         <ScoreTable
           title="You"
@@ -106,4 +125,17 @@ const Container = styled.div`
   flex-direction: column;
   align-items: stretch;
   gap: 16px;
+`;
+
+const Spread = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16;
+`;
+
+const TopSection = styled.div`
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-top: 1px solid grey;
+  border-bottom: 1px solid grey;
 `;

@@ -13,6 +13,7 @@ export const EdgeCityFolderName = "Edge City";
 export interface EdgeCityBalance {
   email_hash: string;
   balance: number;
+  exp?: number;
   rank: number;
 }
 

@@ -36,7 +36,7 @@ const TABS = [
   },
   {
     tab: "score",
-    label: "hi score"
+    label: "$zucash"
   }
 ] as const;
 type TabId = (typeof TABS)[number]["tab"];
@@ -88,15 +88,18 @@ export function EdgeCityHome(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
+  const [totalExp, setTotalExp] = useState(1);
   const { email } = useSelf();
 
   useEffect(() => {
     setLoading(true);
     requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
       if (res.success) {
+        setTotalExp(res.value.map((x) => x.balance).reduce((x, y) => x + y));
         setScores(
           res.value.map((s) => ({
             ...s,
+            exp: s.balance,
             balance:
               (s.balance /
                 res.value.map((x) => x.balance).reduce((x, y) => x + y)) *
@@ -330,7 +333,9 @@ export function EdgeCityHome(): JSX.Element {
           )}
         </div>
       )}
-      {tab === "score" && <BalancesTab scores={scores} score={score} />}
+      {tab === "score" && (
+        <BalancesTab scores={scores} score={score} totalExp={totalExp} />
+      )}
     </Container>
   );
 }
@@ -350,7 +355,6 @@ const Container = styled.div`
 
 const ExperiencesHeader = styled.div`
   padding-bottom: 16px;
-  /* border-bottom: 1px solid grey; */
   margin-bottom: 32px;
   text-align: center;
 `;
