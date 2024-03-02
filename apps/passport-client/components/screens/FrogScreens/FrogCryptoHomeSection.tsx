@@ -179,7 +179,13 @@ export function FrogCryptoHomeSection({
                 <>
                   <ButtonGroup>
                     <EdgeCityButton
-                      onClick={(): void => setBrowsingFolder("Edge City")}
+                      onClick={(e: React.MouseEvent): void => {
+                        (e.target as HTMLElement)?.classList?.add("big");
+                        (e.target as HTMLElement).innerText = "";
+                        setTimeout(() => {
+                          setBrowsingFolder("Edge City");
+                        }, 200);
+                      }}
                     >
                       EDGE CITY
                     </EdgeCityButton>
@@ -309,5 +315,11 @@ const EdgeCityButton = styled(Button)`
       transform: scale(1.2);
       padding: 16px;
     }
+  }
+
+  &.big {
+    transform: scale(3) !important;
+    padding: 500px !important;
+    color: black;
   }
 `;
