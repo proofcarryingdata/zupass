@@ -25,7 +25,7 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { FolderCard, FolderExplorerContainer } from "../HomeScreen/Folder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
-import { useZucashConfetti } from "./useZucashParticles";
+import { useZucashConfetti } from "./useZucashConfetti";
 
 const TABS = [
   {
