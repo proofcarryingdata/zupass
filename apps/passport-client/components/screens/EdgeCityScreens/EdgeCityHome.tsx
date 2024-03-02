@@ -277,7 +277,7 @@ export function EdgeCityHome({
               Collect frogs to earn EXP.
             </CategoryDescription>
 
-            <EdgeCityButton
+            <FrogCryptoButton
               ref={(r): void => setButtonRef(r)}
               onClick={(): void => {
                 buttonRef.classList?.add("big");
@@ -308,7 +308,7 @@ export function EdgeCityHome({
                   </div>
                 </div>
               </div>
-            </EdgeCityButton>
+            </FrogCryptoButton>
           </CategorySection>
           <CategorySection>
             <CategoryHeader>
@@ -507,54 +507,22 @@ const ItemCard = styled.div`
   cursor: pointer;
 `;
 
-const lightGreen = "#94EF69";
-const darkGreen = "#406F3A";
-
 const ColorText = styled.span`
-  -webkit-animation: green-color-change 1s infinite alternate;
-  -moz-animation: green-color-change 1s infinite alternate;
-  -ms-animation: green-color-change 1s infinite alternate;
-  -o-animation: green-color-change 1s infinite alternate;
-  animation: green-color-change 1s infinite alternate;
+  -webkit-animation: color-change 3s infinite alternate;
+  -moz-animation: color-change 3s infinite alternate;
+  -ms-animation: color-change 3s infinite alternate;
+  -o-animation: color-change 3s infinite alternate;
+  animation: color-change 3s infinite alternate;
 
-  @-webkit-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
+  @keyframes color-change {
+    0% {
+      color: #ff9900;
     }
-    to {
-      color: ${darkGreen};
+    50% {
+      color: #afffbc;
     }
-  }
-  @-moz-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
-    }
-  }
-  @-ms-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
-    }
-  }
-  @-o-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
-    }
-  }
-  @keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
+    100% {
+      color: #ff9900;
     }
   }
 `;
@@ -601,7 +569,7 @@ const CTAButton = styled(Button)`
   white-space: nowrap;
 `;
 
-const EdgeCityButton = styled.div`
+const FrogCryptoButton = styled.div`
   user-select: none;
   cursor: pointer;
   width: 100%;
@@ -609,7 +577,7 @@ const EdgeCityButton = styled.div`
   max-height: 50px;
   font-family: PressStart2P;
   position: relative;
-  z-index: 9999;
+  z-index: 9998;
 
   .wrapper {
     position: absolute;

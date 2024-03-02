@@ -325,7 +325,7 @@ const EdgeCityButton = styled.div`
   max-height: 50px;
   font-family: PressStart2P;
   position: relative;
-  z-index: 9999;
+  z-index: 9998;
 
   .wrapper {
     position: absolute;
