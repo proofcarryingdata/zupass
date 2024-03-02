@@ -244,9 +244,11 @@ export class FrogcryptoService {
         const { score: scoreAfterRoll } = await incrementScore(
           client,
           semaphoreId,
+          frogData.rarity,
           // non-frog frog doesn't get point
           frogData.biome === Biome.Unknown ? 0 : 1
         );
+
         if (scoreAfterRoll > FROG_SCORE_CAP) {
           throw new PCDHTTPError(403, "Frog faucet off.");
         }

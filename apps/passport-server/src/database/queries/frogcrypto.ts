@@ -7,7 +7,8 @@ import {
   FrogCryptoFeedBiomeConfigs,
   FrogCryptoFolderName,
   FrogCryptoFrogData,
-  FrogCryptoScore
+  FrogCryptoScore,
+  frogRarityToScore
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
 import _ from "lodash";
@@ -234,6 +235,7 @@ function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
 export async function incrementScore(
   client: Client,
   semaphoreId: string,
+  frogRarity: Rarity,
   increment = 1
 ): Promise<FrogCryptoScore> {
   // hack for edge city denver to count frogs collected during edge city
@@ -242,7 +244,7 @@ export async function incrementScore(
     (semaphore_id, score)
     values ($1, $2)
     on conflict (semaphore_id) do update set score = ecd_frog_scores.score + $2`,
-    [semaphoreId, 0.1]
+    [semaphoreId, frogRarityToScore(frogRarity)]
   );
 
   const res = await client.query(

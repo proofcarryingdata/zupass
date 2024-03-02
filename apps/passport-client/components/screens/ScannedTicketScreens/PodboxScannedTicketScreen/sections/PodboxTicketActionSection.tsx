@@ -2,7 +2,6 @@ import { PodboxActionPreCheckResult } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { Dispatch, SetStateAction } from "react";
 import styled from "styled-components";
-import { loadUsingLaserScanner } from "../../../../../src/localstorage";
 import { FakeBack, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
 import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
@@ -29,8 +28,6 @@ export function PodboxTicketActionSection({
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   precheck: PodboxActionPreCheckResult;
 }): JSX.Element {
-  const usingLaserScanner = loadUsingLaserScanner();
-
   const shouldShowDivider =
     (precheck?.value?.giveBadgeActionInfo?.permissioned ||
       precheck?.value?.getContactActionInfo?.permissioned) &&

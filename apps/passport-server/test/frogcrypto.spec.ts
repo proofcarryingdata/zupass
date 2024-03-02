@@ -1,4 +1,9 @@
-import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import {
+  Biome,
+  EdDSAFrogPCD,
+  EdDSAFrogPCDPackage,
+  Rarity
+} from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoFeed,
   FrogCryptoFolderName,
@@ -350,7 +355,12 @@ describe("frogcrypto functionality", function () {
     expect(feed.cooldown).to.eq(60);
 
     const client = await db.connect();
-    await incrementScore(client, identity.getCommitment().toString(), 1000);
+    await incrementScore(
+      client,
+      identity.getCommitment().toString(),
+      Rarity.Unknown,
+      1000
+    );
     await client.end();
 
     await testGetFrogFail(feed, DATE_EPOCH_1H, "Frog faucet off.");

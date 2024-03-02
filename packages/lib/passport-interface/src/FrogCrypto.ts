@@ -1,4 +1,4 @@
-import { Biome, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { Biome, EdDSAFrogPCDPackage, Rarity } from "@pcd/eddsa-frog-pcd";
 import _ from "lodash";
 import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
@@ -15,7 +15,7 @@ export const FROG_FREEROLLS = 2;
  *
  * Once a user reaches this score, they will no longer be able to earn more PCDs from this feed
  */
-export const FROG_SCORE_CAP = 1000;
+export const FROG_SCORE_CAP = 10000;
 
 /**
  * Map of configs for Biome(s) where PCDs can be issued from this feed
@@ -187,4 +187,32 @@ export interface FrogCryptoScore {
 export interface DexFrog {
   id: number;
   rarity: number;
+}
+
+export function frogRarityToScore(frogRarity: Rarity): number {
+  let rarityToEdgeCityScore = 1;
+
+  switch (frogRarity) {
+    case Rarity.Object:
+    case Rarity.Unknown:
+      rarityToEdgeCityScore *= 0;
+      break;
+    case Rarity.Common:
+      rarityToEdgeCityScore *= 1;
+      break;
+    case Rarity.Rare:
+      rarityToEdgeCityScore *= 4;
+      break;
+    case Rarity.Epic:
+      rarityToEdgeCityScore *= 10;
+      break;
+    case Rarity.Legendary:
+      rarityToEdgeCityScore *= 20;
+      break;
+    case Rarity.Mythic:
+      rarityToEdgeCityScore *= 100;
+      break;
+  }
+
+  return rarityToEdgeCityScore;
 }
