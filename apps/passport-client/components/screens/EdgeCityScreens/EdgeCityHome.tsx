@@ -243,11 +243,8 @@ export function EdgeCityHome({
         <div>
           <ExperiencesHeader>
             <p>
-              Collect EXP by participating in community experiences. Your
-              experiences are recorded below. One badge = One EXP. Your{" "}
-              <strong>${TOKEN_LONG_NAME}</strong> balance is proportianal to how
-              much of the global EXP you've earned. <br />
-              THIS IS A ZERO SUM GAME.
+              Collect EXP by participating in community experiences. <br />
+              EXP is converted into $ZUCASH.
             </p>
           </ExperiencesHeader>
           <div>
