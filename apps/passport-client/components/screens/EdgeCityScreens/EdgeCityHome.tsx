@@ -25,6 +25,7 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { FolderCard, FolderExplorerContainer } from "../HomeScreen/Folder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
+import { useZucashConfetti } from "./useZucashParticles";
 
 const TABS = [
   {
@@ -106,6 +107,7 @@ export function EdgeCityHome({
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
   const { email } = useSelf();
+  const confetti = useZucashConfetti();
 
   useEffect(() => {
     setLoading(true);
@@ -213,12 +215,13 @@ export function EdgeCityHome({
         style={{
           margin: "0 auto",
           whiteSpace: "nowrap",
-          fontFamily: "PressStart2P"
+          fontFamily: "PressStart2P",
+          userSelect: "none"
         }}
       >
         EDGE CITY
       </Title>
-      <div style={{ width: "100%" }}>
+      <div style={{ width: "100%", userSelect: "none" }} onClick={confetti}>
         <Caption>Balance</Caption>
         <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
