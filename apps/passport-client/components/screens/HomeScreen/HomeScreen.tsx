@@ -3,6 +3,7 @@ import {
   FrogCryptoFolderName
 } from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
+import _ from "lodash";
 import React, {
   useCallback,
   useEffect,
@@ -28,6 +29,7 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
+import { useZucashConfetti } from "../EdgeCityScreens/useZucashConfetti";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import {
@@ -72,6 +74,16 @@ export function HomeScreenImpl(): JSX.Element {
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
+
+  const confetti = useZucashConfetti();
+  const wrappedConfetti = useMemo(() => {
+    if (confetti instanceof Function) {
+      return _.debounce(confetti, 200);
+    }
+    return () => {
+      //
+    };
+  }, [confetti]);
 
   const setFolderAndTab = useCallback(
     (folder?: string, tab?: string) => {
@@ -201,9 +213,15 @@ export function HomeScreenImpl(): JSX.Element {
           )}
 
           {isFrogCrypto ? (
-            <FrogCryptoHomeSection setBrowsingFolder={setFolderAndTab} />
+            <FrogCryptoHomeSection
+              confetti={wrappedConfetti}
+              setBrowsingFolder={setFolderAndTab}
+            />
           ) : isEdgeCity ? (
-            <EdgeCityHome setBrowsingFolder={setFolderAndTab} />
+            <EdgeCityHome
+              confetti={wrappedConfetti}
+              setBrowsingFolder={setFolderAndTab}
+            />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

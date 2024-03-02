@@ -51,9 +51,11 @@ type TabId = (typeof TABS)[number]["tab"];
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
 export function FrogCryptoHomeSection({
-  setBrowsingFolder
+  setBrowsingFolder,
+  confetti
 }: {
-  setBrowsingFolder: (folder: string | undefined, tab?: string) => void;
+  setBrowsingFolder: (folder?: string, tab?: string) => void;
+  confetti: () => Promise<void>;
 }): JSX.Element {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const subs = useSubscriptions();
@@ -188,6 +190,7 @@ export function FrogCryptoHomeSection({
                         buttonRef.style.border = "none";
                         buttonRef.style.color = "transparent";
 
+                        confetti();
                         setTimeout(() => {
                           setBrowsingFolder("Edge City", "experiences");
                         }, 200);

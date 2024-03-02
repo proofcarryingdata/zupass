@@ -60,10 +60,12 @@ export function useZucashConfetti(): () => Promise<void> {
         }
       }
     };
+
     const position: IRangedCoordinates = {
       x: 50,
       y: 50
     };
+
     const move: RecursivePartial<IMove> = {
       angle: {
         value: 360,

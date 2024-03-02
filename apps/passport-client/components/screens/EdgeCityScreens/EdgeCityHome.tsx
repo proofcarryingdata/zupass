@@ -25,7 +25,6 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
-import { useZucashConfetti } from "./useZucashConfetti";
 
 const TABS = [
   {
@@ -78,9 +77,11 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
  * Renders EdgeCity UI.
  */
 export function EdgeCityHome({
-  setBrowsingFolder
+  setBrowsingFolder,
+  confetti
 }: {
   setBrowsingFolder: (folder?: string, tab?: string) => void;
+  confetti: () => Promise<void>;
 }): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") ?? "ticket";
@@ -107,7 +108,6 @@ export function EdgeCityHome({
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
   const { email } = useSelf();
-  const confetti = useZucashConfetti();
 
   useEffect(() => {
     setLoading(true);
@@ -278,6 +278,7 @@ export function EdgeCityHome({
                 buttonRef.innerText = "";
                 buttonRef.style.border = "none";
                 buttonRef.style.color = "transparent";
+                confetti();
                 setTimeout(() => {
                   setBrowsingFolder("FrogCrypto");
                 }, 200);
