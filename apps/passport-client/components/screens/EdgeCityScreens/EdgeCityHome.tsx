@@ -28,15 +28,15 @@ import { ExperienceModal } from "./ExperienceModal";
 const TABS = [
   {
     tab: "ticket",
-    label: "me"
+    label: "ticket"
   },
   {
     tab: "experiences",
-    label: "exp"
+    label: "inventory"
   },
   {
     tab: "score",
-    label: "bal"
+    label: "hi score"
   }
 ] as const;
 type TabId = (typeof TABS)[number]["tab"];
@@ -225,7 +225,7 @@ export function EdgeCityHome(): JSX.Element {
           <ExperiencesHeader>
             <p>
               Earn <strong>${TOKEN_LONG_NAME}</strong> by participating in
-              community experiences.
+              community experiences. Your experiences are recorded below.
             </p>
           </ExperiencesHeader>
           <div>
