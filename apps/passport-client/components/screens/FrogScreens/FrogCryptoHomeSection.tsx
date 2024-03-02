@@ -187,10 +187,11 @@ export function FrogCryptoHomeSection({
                         buttonRef.innerText = "";
                         buttonRef.style.border = "none";
                         buttonRef.style.color = "transparent";
+                        document.body.style.overflow = "hidden";
 
                         setTimeout(() => {
                           setBrowsingFolder("Edge City", "experiences");
-                        }, 200);
+                        }, 400);
                       }}
                     >
                       EDGE CITY
@@ -310,7 +311,7 @@ const EdgeCityButton = styled(Button)`
   border: 1px solid #ababab;
   font-family: PressStart2P;
   filter: drop-shadow(5px 5px 10px #484848);
-  transition: 300ms;
+  transition: 500ms;
   z-index: 99999;
 
   &:hover {
@@ -323,7 +324,7 @@ const EdgeCityButton = styled(Button)`
   }
 
   &.big {
-    transform: scale(30) scaleY(50) !important;
+    transform: scaleX(15) scaleY(100) !important;
     color: black;
   }
 `;

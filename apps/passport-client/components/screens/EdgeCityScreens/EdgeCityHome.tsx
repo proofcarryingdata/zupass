@@ -273,9 +273,10 @@ export function EdgeCityHome({
                 buttonRef.innerText = "";
                 buttonRef.style.border = "none";
                 buttonRef.style.color = "transparent";
+                document.body.style.overflow = "hidden";
                 setTimeout(() => {
                   setBrowsingFolder("FrogCrypto");
-                }, 200);
+                }, 400);
               }}
             >
               <SuperFunkyFont
@@ -588,7 +589,7 @@ const FrogCryptoButton = styled(Button)`
   border: 1px solid #ababab;
   font-family: inherit;
   filter: drop-shadow(5px 5px 10px #484848);
-  transition: 300ms;
+  transition: 500ms;
   margin-bottom: 16px;
   margin-top: 16px;
   z-index: 99999;
@@ -604,7 +605,7 @@ const FrogCryptoButton = styled(Button)`
   }
 
   &.big {
-    transform: scale(30) scaleY(50) !important;
+    transform: scaleX(15) scaleY(100) !important;
     color: black;
   }
 `;
