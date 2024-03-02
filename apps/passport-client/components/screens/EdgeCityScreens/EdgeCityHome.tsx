@@ -243,8 +243,14 @@ export function EdgeCityHome({
         <div>
           <ExperiencesHeader>
             <p>
-              Collect EXP by participating in community experiences. <br />
-              EXP is converted into $ZUCASH.
+              Collect EXP by participating in community experiences. <br />{" "}
+              <br />
+              Your EXP earns you a fraction of the {TOTAL_SUPPLY} available
+              $ZUCASH.
+              <br />
+              <br />
+              At the end of Edge City, trade in your $ZUC for a special reward
+              🎁
             </p>
           </ExperiencesHeader>
           <div>
@@ -278,7 +284,8 @@ export function EdgeCityHome({
             </CategoryHeader>
 
             <CategoryDescription>
-              Scan others' tickets to get contacts
+              Scan another Edge City resident's ticket to collect their contact
+              card. Each contact card is worth 1 EXP.
             </CategoryDescription>
 
             <ItemContainer>
