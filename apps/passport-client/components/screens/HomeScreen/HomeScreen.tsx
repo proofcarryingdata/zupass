@@ -185,7 +185,7 @@ export function HomeScreenImpl(): JSX.Element {
           {isFrogCrypto ? (
             <FrogHomeSection />
           ) : isEdgeCity ? (
-            <EdgeCityHome />
+            <EdgeCityHome setBrowsingFolder={setBrowsingFolder} />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

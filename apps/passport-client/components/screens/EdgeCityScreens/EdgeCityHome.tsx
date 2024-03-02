@@ -75,7 +75,11 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
 /**
  * Renders EdgeCity UI.
  */
-export function EdgeCityHome(): JSX.Element {
+export function EdgeCityHome({
+  setBrowsingFolder
+}: {
+  setBrowsingFolder: (folder: string | undefined) => void;
+}): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") ?? "ticket";
   const setTab = useCallback(
@@ -258,8 +262,7 @@ export function EdgeCityHome(): JSX.Element {
             <ItemContainer>
               <CTAButton
                 onClick={(): void => {
-                  window.location.href =
-                    "http://localhost:3000/#/?folder=FrogCrypto";
+                  setBrowsingFolder("FrogCrypto");
                 }}
               >
                 Collect
