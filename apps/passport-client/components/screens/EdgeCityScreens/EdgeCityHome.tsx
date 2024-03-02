@@ -24,6 +24,7 @@ import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
+
 const TABS = [
   {
     tab: "ticket",
@@ -38,6 +39,7 @@ const TABS = [
     label: "$zucash"
   }
 ] as const;
+
 type TabId = (typeof TABS)[number]["tab"];
 
 interface GroupedEvent {
@@ -47,6 +49,7 @@ interface GroupedEvent {
   hiddenWhenEmpty: boolean;
   infinite: boolean;
   description?: string;
+  button?: { text: string; link: string };
 }
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
@@ -62,7 +65,8 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
       imageUrl: item.imageUrl,
       hiddenWhenEmpty: !!item.hiddenWhenEmpty,
       infinite: !!item.infinite,
-      description: item.description
+      description: item.description,
+      button: item.button
     } satisfies GroupedEvent);
   }
   return acc;
@@ -266,9 +270,7 @@ export function EdgeCityHome(): JSX.Element {
                 </ItemCard>
               ))}
               <Link to="/scan">
-                <ItemCard>
-                  <img src="/images/plus.webp" draggable={false} />
-                </ItemCard>
+                <CTAButton>Collect Contact</CTAButton>
               </Link>
             </ItemContainer>
           </div>
@@ -279,7 +281,8 @@ export function EdgeCityHome(): JSX.Element {
               imageUrl,
               hiddenWhenEmpty,
               infinite,
-              description
+              description,
+              button
             }) => {
               const pcds = pcdsByEventName[eventName] ?? [];
               if (hiddenWhenEmpty && pcds.length === 0) {
@@ -293,7 +296,7 @@ export function EdgeCityHome(): JSX.Element {
                       infinite ? "∞" : total || "∞"
                     }`}</span>
                   </CategoryHeader>
-                  <CategoryDescription>{description}</CategoryDescription>
+                  <CategoryDescription>{description} </CategoryDescription>
                   <ItemContainer>
                     {pcds.flatMap((pcd) => (
                       <ItemCard
@@ -319,6 +322,11 @@ export function EdgeCityHome(): JSX.Element {
                         />
                       </ItemCard>
                     ))}
+                    {button && (
+                      <Link to={button.link}>
+                        <CTAButton>{button.text}</CTAButton>
+                      </Link>
+                    )}
                   </ItemContainer>
                 </div>
               );
@@ -409,6 +417,8 @@ const CategoryHeader = styled.div`
   font-weight: bold;
   display: flex;
   justify-content: space-between;
+  margin-bottom: 4px;
+  margin-top: 8px;
 `;
 
 const ItemContainer = styled.div`
@@ -515,4 +525,11 @@ const CategoryDescription = styled.div`
 
 const EventTitle = styled.span`
   text-decoration: underline;
+`;
+
+const CTAButton = styled(Button)`
+  border: 1px solid white;
+  font-size: 0.8em;
+  white-space: nowrap;
+  margin-top: 4px;
 `;

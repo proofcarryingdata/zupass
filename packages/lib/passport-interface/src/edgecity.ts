@@ -27,6 +27,10 @@ export interface BadgeConfigUI extends BadgeConfig {
   infinite?: boolean;
   hiddenWhenEmpty?: boolean; // defines whether this badge is hidden in the UI when no badges of this ID been collected
   description?: string;
+  button?: {
+    text: string;
+    link: string;
+  };
 }
 
 export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
@@ -39,7 +43,11 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     infinite: true,
     givers: ["*"],
     description:
-      "Scan a ticket and give a star! You get to give 3 stars a day. Each star is worth 1 EXP."
+      "Scan a ticket and give a star! You get to give 3 stars a day. Each star is worth 1 EXP.",
+    button: {
+      text: "Award Star",
+      link: "/scan"
+    }
   },
   {
     id: "Check In",
