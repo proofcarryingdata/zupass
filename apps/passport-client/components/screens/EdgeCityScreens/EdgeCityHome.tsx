@@ -211,10 +211,8 @@ export function EdgeCityHome(): JSX.Element {
       >
         EDGE CITY
       </Title>
-      <div style={{ width: "100%" }} onClick={(): void => setInfoOpen(true)}>
-        <Caption>
-          Balance <span style={{ cursor: "pointer" }}>ⓘ</span>
-        </Caption>
+      <div style={{ width: "100%" }}>
+        <Caption>Balance</Caption>
         <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
           <span>
@@ -240,8 +238,11 @@ export function EdgeCityHome(): JSX.Element {
         <div>
           <ExperiencesHeader>
             <p>
-              Earn <strong>${TOKEN_LONG_NAME}</strong> by participating in
-              community experiences. Your experiences are recorded below.
+              Collect EXP by participating in community experiences. Your
+              experiences are recorded below. One badge = One EXP. Your{" "}
+              <strong>${TOKEN_LONG_NAME}</strong> balance is proportianal to how
+              much of the global EXP you've earned. <br />
+              THIS IS A ZERO SUM GAME.
             </p>
           </ExperiencesHeader>
           <div>

@@ -192,7 +192,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "Monday",
     imageUrl: "/images/johnwick.webp",
     givers: ["garysheng11@gmail.com"],
-    description: "Can you find Gary?"
+    description: "Where's Gary?"
   },
   {
     id: "Met Timour",
@@ -208,7 +208,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "",
     imageUrl: "/images/afra.webp",
     givers: ["afrazhaowang@gmail.com"],
-    description: "Can you find Afra?"
+    description: "How about Afra?"
   },
   {
     id: "Met Arjun",
@@ -216,7 +216,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "",
     imageUrl: "/images/arjun.webp",
     givers: ["arjun.khemani@gmail.com"],
-    description: "Can you find Arjun?"
+    description: "And Arjun?"
   },
   {
     id: "Decentralized Social Hacker",
