@@ -73,6 +73,16 @@ export function HomeScreenImpl(): JSX.Element {
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
+  const setFolderAndTab = useCallback(
+    (folder?: string, tab?: string) => {
+      setBrowsingFolder(folder);
+      if (tab) {
+        setSearchParams({ tab });
+      }
+    },
+    [setSearchParams]
+  );
+
   useEffect(() => {
     if (self == null) {
       console.log("Redirecting to login screen");
@@ -191,9 +201,9 @@ export function HomeScreenImpl(): JSX.Element {
           )}
 
           {isFrogCrypto ? (
-            <FrogCryptoHomeSection setBrowsingFolder={setBrowsingFolder} />
+            <FrogCryptoHomeSection setBrowsingFolder={setFolderAndTab} />
           ) : isEdgeCity ? (
-            <EdgeCityHome setBrowsingFolder={setBrowsingFolder} />
+            <EdgeCityHome setBrowsingFolder={setFolderAndTab} />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

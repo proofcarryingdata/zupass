@@ -22,7 +22,7 @@ import {
 import { RippleLoader } from "../../core/RippleLoader";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { FolderCard, FolderExplorerContainer } from "../HomeScreen/Folder";
+import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
 import { useZucashConfetti } from "./useZucashConfetti";
@@ -80,7 +80,7 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
 export function EdgeCityHome({
   setBrowsingFolder
 }: {
-  setBrowsingFolder: (folder: string | undefined) => void;
+  setBrowsingFolder: (folder?: string, tab?: string) => void;
 }): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") ?? "ticket";
@@ -177,6 +177,8 @@ export function EdgeCityHome({
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
+  const [buttonRef, setButtonRef] = useState<HTMLButtonElement>();
+
   if (loading) {
     return <RippleLoader />;
   }
@@ -269,16 +271,29 @@ export function EdgeCityHome({
               0.1 EXP.
             </CategoryDescription>
 
-            <FolderExplorerContainer
-              style={{ margin: 0, marginBottom: "16px", marginTop: "16px" }}
-            >
-              <FolderCard
-                onFolderClick={(): void => {
+            <FrogCryptoButton
+              ref={(r): void => setButtonRef(r)}
+              onClick={(): void => {
+                buttonRef.classList?.add("big");
+                buttonRef.innerText = "";
+                buttonRef.style.border = "none";
+                buttonRef.style.color = "transparent";
+                setTimeout(() => {
                   setBrowsingFolder("FrogCrypto");
+                }, 200);
+              }}
+            >
+              <SuperFunkyFont
+                style={{
+                  width: "100%",
+                  display: "flex",
+                  justifyContent: "center",
+                  alignItems: "center"
                 }}
-                folder={"/FrogCrypto"}
-              />
-            </FolderExplorerContainer>
+              >
+                FrogCrypto
+              </SuperFunkyFont>
+            </FrogCryptoButton>
           </div>
           <div>
             <CategoryHeader>
@@ -569,4 +584,32 @@ const CTAButton = styled(Button)`
   font-size: 0.8em;
   white-space: nowrap;
   margin-top: 4px;
+`;
+
+const FrogCryptoButton = styled(Button)`
+  width: 100%;
+  background: #206b5e !important;
+  border: 1px solid #ababab;
+  font-family: inherit;
+  filter: drop-shadow(5px 5px 10px #484848);
+  transition: 300ms;
+  margin-bottom: 16px;
+  margin-top: 16px;
+
+  &:hover {
+    filter: drop-shadow(5px 5px 20px #484848);
+    transform: scale(1.1);
+    padding: 10px;
+
+    &:active {
+      transform: scale(1.2);
+      padding: 16px;
+    }
+  }
+
+  &.big {
+    transform: scale(3) !important;
+    padding: 500px !important;
+    color: black;
+  }
 `;

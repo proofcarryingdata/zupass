@@ -204,7 +204,8 @@ export const SuperFunkyFont = styled.div`
 
   * {
     background-size: 100%;
-    background-color: #ff9900;
+    background-color: #ff9900 !important;
+    color: #ff9900;
     background-image: linear-gradient(45deg, #ff9900, #afffbc);
     -webkit-background-clip: text;
     -moz-background-clip: text;

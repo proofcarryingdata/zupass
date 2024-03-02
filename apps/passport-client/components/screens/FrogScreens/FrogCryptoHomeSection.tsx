@@ -53,7 +53,7 @@ type TabId = (typeof TABS)[number]["tab"];
 export function FrogCryptoHomeSection({
   setBrowsingFolder
 }: {
-  setBrowsingFolder: (folder: string | undefined) => void;
+  setBrowsingFolder: (folder: string | undefined, tab?: string) => void;
 }): JSX.Element {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const subs = useSubscriptions();
@@ -87,6 +87,8 @@ export function FrogCryptoHomeSection({
   }, [setSearchParams]);
 
   useCheatCodeActivation();
+
+  const [buttonRef, setButtonRef] = useState<HTMLButtonElement>();
 
   if (!userState) {
     return <RippleLoader />;
@@ -179,11 +181,15 @@ export function FrogCryptoHomeSection({
                 <>
                   <ButtonGroup>
                     <EdgeCityButton
-                      onClick={(e: React.MouseEvent): void => {
-                        (e.target as HTMLElement)?.classList?.add("big");
-                        (e.target as HTMLElement).innerText = "";
+                      ref={(r): void => setButtonRef(r)}
+                      onClick={(): void => {
+                        buttonRef.classList?.add("big");
+                        buttonRef.innerText = "";
+                        buttonRef.style.border = "none";
+                        buttonRef.style.color = "transparent";
+
                         setTimeout(() => {
-                          setBrowsingFolder("Edge City");
+                          setBrowsingFolder("Edge City", "experiences");
                         }, 200);
                       }}
                     >
