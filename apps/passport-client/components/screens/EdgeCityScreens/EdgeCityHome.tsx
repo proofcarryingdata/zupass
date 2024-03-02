@@ -11,7 +11,7 @@ import {
 import { sha256 } from "js-sha256";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import styled from "styled-components";
+import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
   useFolders,
@@ -107,6 +107,7 @@ export function EdgeCityHome({
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
   const { email } = useSelf();
+  const [hide, setHide] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -196,7 +197,7 @@ export function EdgeCityHome({
   }
 
   return (
-    <Container>
+    <Container hide={hide}>
       <AdhocModal
         open={infoOpen}
         showCloseIcon={false}
@@ -247,7 +248,7 @@ export function EdgeCityHome({
       </ButtonGroup>
       {tab === "ticket" && <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />}
       {tab === "experiences" && (
-        <div>
+        <div style={{ zIndex: 10 }}>
           <ExperiencesHeader>
             <p>
               Collect EXP by participating in community experiences. <br />
@@ -274,6 +275,7 @@ export function EdgeCityHome({
                 buttonRef.style.border = "none";
                 buttonRef.style.color = "transparent";
                 document.body.style.overflow = "hidden";
+                setHide(true);
                 setTimeout(() => {
                   document.body.style.overflow = "initial";
                   setBrowsingFolder("FrogCrypto");
@@ -405,16 +407,25 @@ export function EdgeCityHome({
 }
 
 const Container = styled.div`
-  padding: 16px;
-  width: 100%;
-  height: 100%;
-  max-width: 100%;
-  font-family: monospace;
-  font-variant-numeric: tabular-nums;
+  ${({ hide }: { hide?: boolean }): FlattenSimpleInterpolation => css`
+    padding: 16px;
+    width: 100%;
+    height: 100%;
+    max-width: 100%;
+    font-family: monospace;
+    font-variant-numeric: tabular-nums;
 
-  display: flex;
-  flex-direction: column;
-  gap: 32px;
+    display: flex;
+    flex-direction: column;
+    gap: 32px;
+
+    ${hide &&
+    css`
+      * {
+        color: transparent;
+      }
+    `}
+  `}
 `;
 
 const ExperiencesHeader = styled.div`
