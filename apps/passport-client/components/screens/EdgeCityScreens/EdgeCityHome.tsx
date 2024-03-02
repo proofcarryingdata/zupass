@@ -354,9 +354,12 @@ const Container = styled.div`
 `;
 
 const ExperiencesHeader = styled.div`
-  padding-bottom: 16px;
-  margin-bottom: 32px;
   text-align: center;
+  margin-bottom: 32px;
+  padding-top: 16px;
+  padding-bottom: 16px;
+  border-top: 1px solid grey;
+  border-bottom: 1px solid grey;
 `;
 
 const Caption = styled.div`
