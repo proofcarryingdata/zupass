@@ -23,32 +23,36 @@ export function BalancesTab({
 
   return (
     <Container>
-      <TopSection>
+      <Section>
         <Spread>
-          <span>total supply</span>
-          <span>{TOTAL_SUPPLY} ZUC</span>
-        </Spread>
-        <Spread>
-          <span>global EXP</span>
+          <span>total EXP mined</span>
           <span>{totalExp.toFixed(1)} EXP</span>
         </Spread>
         <Spread>
-          <span>EXP/ZUC</span>
-          <span>{(TOTAL_SUPPLY / totalExp).toFixed(3)}</span>
+          <span>total $ZUCASH supply</span>
+          <span>{TOTAL_SUPPLY} ZUC</span>
         </Spread>
-        {score && (
+        <Spread>
+          <span>exchange rate</span>
+          <span>{(TOTAL_SUPPLY / totalExp).toFixed(3)} ZUC/EXP</span>
+        </Spread>
+      </Section>
+      {score && (
+        <Section>
           <Spread>
-            <span>your EXP</span>
+            <span>my EXP</span>
             <span>{(score.exp ?? 0).toFixed(1)}&nbsp;EXP</span>
           </Spread>
-        )}
-        {score && (
           <Spread>
-            <span>your slice of $ZUC</span>
+            <span>my $ZUCASH</span>
+            <span>{(score.balance ?? 0).toFixed(2)}&nbsp;ZUC</span>
+          </Spread>
+          <Spread>
+            <span>my share</span>
             <span>{((score.exp / totalExp) * 100).toFixed(3)}%</span>
           </Spread>
-        )}
-      </TopSection>
+        </Section>
+      )}
 
       {score && (
         <ScoreTable
@@ -131,9 +135,7 @@ const Spread = styled.div`
   margin-bottom: 16;
 `;
 
-const TopSection = styled.div`
-  padding-top: 16px;
+const Section = styled.div`
   padding-bottom: 16px;
-  border-top: 1px solid grey;
   border-bottom: 1px solid grey;
 `;

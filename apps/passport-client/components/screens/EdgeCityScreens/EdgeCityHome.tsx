@@ -263,7 +263,7 @@ export function EdgeCityHome({
             </CategoryHeader>
 
             <CategoryDescription>
-              FROGCRYPTO is back! Collect frogs to earn EXP.
+              Collect frogs to earn EXP.
             </CategoryDescription>
 
             <FrogCryptoButton
