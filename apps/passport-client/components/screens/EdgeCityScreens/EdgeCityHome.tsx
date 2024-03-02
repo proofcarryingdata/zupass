@@ -275,6 +275,7 @@ export function EdgeCityHome({
                 buttonRef.style.color = "transparent";
                 document.body.style.overflow = "hidden";
                 setTimeout(() => {
+                  document.body.style.overflow = "initial";
                   setBrowsingFolder("FrogCrypto");
                 }, 400);
               }}
