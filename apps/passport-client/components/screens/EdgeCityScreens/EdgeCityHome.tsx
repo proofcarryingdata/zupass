@@ -230,11 +230,16 @@ export function EdgeCityHome(): JSX.Element {
           </ExperiencesHeader>
           <div>
             <CategoryHeader>
-              <span>{CONTACT_EVENT_NAME}</span>
+              <span>{CONTACT_EVENT_NAME} </span>
               <span>{`${
                 (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
               }/${"∞"}`}</span>
             </CategoryHeader>
+
+            <CategoryDescription>
+              Scan others' tickets to get contacts
+            </CategoryDescription>
+
             <ItemContainer>
               {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
                 <ItemCard
@@ -365,7 +370,6 @@ const CategoryHeader = styled.div`
   font-weight: bold;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
 `;
 
 const ItemContainer = styled.div`
@@ -462,4 +466,10 @@ const ButtonGroup = styled.div`
   align-items: stretch;
   height: min-content;
   gap: 8px;
+`;
+
+const CategoryDescription = styled.div`
+  opacity: 0.9;
+  font-size: 0.8em;
+  margin-bottom: 8px;
 `;
