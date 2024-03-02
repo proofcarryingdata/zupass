@@ -419,9 +419,7 @@ const Container = styled.div`
 const ExperiencesHeader = styled.div`
   text-align: center;
   margin-bottom: 32px;
-  padding-top: 16px;
   padding-bottom: 16px;
-  border-top: 1px solid grey;
   border-bottom: 1px solid grey;
 `;
 
