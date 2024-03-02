@@ -28,6 +28,7 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
+import { useZucashConfetti } from "../EdgeCityScreens/useZucashConfetti";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
 import {
@@ -72,6 +73,7 @@ export function HomeScreenImpl(): JSX.Element {
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
+  const confetti = useZucashConfetti();
 
   const setFolderAndTab = useCallback(
     (folder?: string, tab?: string) => {
@@ -201,9 +203,15 @@ export function HomeScreenImpl(): JSX.Element {
           )}
 
           {isFrogCrypto ? (
-            <FrogCryptoHomeSection setBrowsingFolder={setFolderAndTab} />
+            <FrogCryptoHomeSection
+              confetti={confetti}
+              setBrowsingFolder={setFolderAndTab}
+            />
           ) : isEdgeCity ? (
-            <EdgeCityHome setBrowsingFolder={setFolderAndTab} />
+            <EdgeCityHome
+              confetti={confetti}
+              setBrowsingFolder={setFolderAndTab}
+            />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
