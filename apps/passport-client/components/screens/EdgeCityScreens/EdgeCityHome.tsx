@@ -487,10 +487,12 @@ const CategoryHeader = styled.div`
 `;
 
 const ItemContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-row-gap: 0px;
-  grid-column-gap: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
   margin-bottom: 10px;
 `;
 
@@ -500,7 +502,7 @@ const ItemCard = styled.div`
   align-items: stretch;
   justify-content: flex-start;
   gap: 4px;
-  aspect-ratio: 3 / 4;
+  max-width: 50px;
   min-width: 0;
   cursor: pointer;
 `;
@@ -597,7 +599,6 @@ const CTAButton = styled(Button)`
   border: 1px solid white;
   font-size: 0.8em;
   white-space: nowrap;
-  margin-top: 4px;
 `;
 
 const EdgeCityButton = styled.div`
