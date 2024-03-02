@@ -389,6 +389,20 @@ const Title = styled.div`
   margin: 0 auto;
   white-space: nowrap;
   font-family: "PressStart2P";
+
+  @keyframes color-change {
+    0% {
+      color: #ff9900;
+    }
+    50% {
+      color: #afffbc;
+    }
+    100% {
+      color: #ff9900;
+    }
+  }
+
+  animation: color-change 3s infinite;
 `;
 
 const CategoryHeader = styled.div`
