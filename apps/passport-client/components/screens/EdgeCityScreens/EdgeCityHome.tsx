@@ -9,8 +9,8 @@ import {
   requestEdgeCityBalances
 } from "@pcd/passport-interface";
 import { sha256 } from "js-sha256";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -24,7 +24,6 @@ import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
-
 const TABS = [
   {
     tab: "ticket",
@@ -73,8 +72,16 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
  * Renders EdgeCity UI.
  */
 export function EdgeCityHome(): JSX.Element {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") ?? "ticket";
+  const setTab = useCallback(
+    (tab: TabId) => {
+      setSearchParams({ ...Object.fromEntries(searchParams.entries()), tab });
+    },
+    [searchParams, setSearchParams]
+  );
+
   const edgeCityPCDs = usePCDsInFolder(EdgeCityFolderName);
-  const [tab, setTab] = useState<TabId>("ticket");
   const [selectedExperience, setSelectedExperience] =
     useState<EdDSATicketPCD>(null);
   const [selectedExperienceIsContact, setSelectedExperienceIsContact] =

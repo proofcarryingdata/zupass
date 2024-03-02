@@ -89,14 +89,17 @@ export function HomeScreenImpl(): JSX.Element {
   });
 
   useEffect(() => {
+    const oldParams = Object.fromEntries(searchParams.entries());
+
     if (!browsingFolder) {
       setSearchParams(undefined);
-    } else {
+    } else if (oldParams[FOLDER_QUERY_PARAM] !== browsingFolder) {
       setSearchParams({
+        ...oldParams,
         [FOLDER_QUERY_PARAM]: encodeURIComponent(browsingFolder)
       });
     }
-  }, [browsingFolder, setSearchParams]);
+  }, [browsingFolder, searchParams, setSearchParams]);
 
   const onFolderClick = useCallback((folder: string) => {
     setBrowsingFolder(folder);
