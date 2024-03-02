@@ -18,6 +18,7 @@ const ButtonsContainer = styled.div`
   align-items: center;
   flex-direction: row;
   gap: 8px;
+  margin-bottom: 16px;
 
   button {
     flex-grow: 1;
