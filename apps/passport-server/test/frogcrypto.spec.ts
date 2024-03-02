@@ -342,7 +342,7 @@ describe("frogcrypto functionality", function () {
     expectToExist(feedState);
     expect(feedState.feedId).to.eq(newFeed.id);
     expect(feedState.lastFetchedAt).to.eq(0);
-    expect(feedState.nextFetchAt).to.eq(newFeed.cooldown * 1000);
+    expect(feedState.nextFetchAt).to.eq(newFeed.cooldown * 10000);
     expect(feedState.active).to.be.false;
 
     MockDate.reset();
