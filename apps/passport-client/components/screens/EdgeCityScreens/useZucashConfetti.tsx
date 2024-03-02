@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { loadFull } from "tsparticles";
 import {
   Container,
   IMove,
@@ -21,20 +20,10 @@ export function useZucashConfetti(): () => Promise<void> {
     if (!container) {
       return;
     }
-
     return () => {
       container.destroy();
     };
   }, [container]);
-
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      await loadFull(tsParticles);
-      setReady(true);
-    };
-    load();
-  }, []);
 
   const confetti = useCallback(async () => {
     const opacitySpeed = (100 * 1000) / (3600 * fpsLimit);
@@ -53,9 +42,10 @@ export function useZucashConfetti(): () => Promise<void> {
             "$ZUCASH",
             "💰",
             "💸",
-            "🐸",
-            "🐸",
-            "🐸"
+            "💶",
+            "💷",
+            "💴",
+            "🤑"
           ]
         }
       }
@@ -224,5 +214,5 @@ export function useZucashConfetti(): () => Promise<void> {
       .then(setContainer);
   }, [container]);
 
-  return ready ? confetti : null;
+  return confetti;
 }

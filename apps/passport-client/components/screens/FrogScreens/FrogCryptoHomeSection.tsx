@@ -192,7 +192,7 @@ export function FrogCryptoHomeSection({
                         document.body.style.overflow = "hidden";
 
                         setTimeout(() => {
-                          document.body.style.overflow = "initial";
+                          document.body.style.overflowY = "scroll";
                           setBrowsingFolder("Edge City", "experiences");
                           confetti();
                         }, 400);

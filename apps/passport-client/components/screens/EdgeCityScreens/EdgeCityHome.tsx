@@ -278,7 +278,7 @@ export function EdgeCityHome({
                 document.body.style.overflow = "hidden";
                 setHide(true);
                 setTimeout(() => {
-                  document.body.style.overflow = "initial";
+                  document.body.style.overflowY = "scroll";
                   setBrowsingFolder("FrogCrypto");
                   confetti();
                 }, 400);

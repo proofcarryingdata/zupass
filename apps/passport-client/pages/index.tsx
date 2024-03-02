@@ -38,6 +38,7 @@ import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
 import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
+import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
 import {
   closeBroadcastChannel,
@@ -320,6 +321,8 @@ class App extends React.Component<object, AppState> {
 const Router = React.memo(RouterImpl);
 
 function RouterImpl(): JSX.Element {
+  useTsParticles();
+
   return (
     <HashRouter>
       <Routes>
