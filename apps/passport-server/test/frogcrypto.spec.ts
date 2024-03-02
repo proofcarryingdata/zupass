@@ -342,7 +342,7 @@ describe("frogcrypto functionality", function () {
     expectToExist(feedState);
     expect(feedState.feedId).to.eq(newFeed.id);
     expect(feedState.lastFetchedAt).to.eq(0);
-    expect(feedState.nextFetchAt).to.eq(newFeed.cooldown * 10000);
+    expect(feedState.nextFetchAt).to.eq(newFeed.cooldown * 1000);
     expect(feedState.active).to.be.false;
 
     MockDate.reset();
@@ -359,7 +359,7 @@ describe("frogcrypto functionality", function () {
       client,
       identity.getCommitment().toString(),
       Rarity.Unknown,
-      1000
+      100000
     );
     await client.end();
 
@@ -398,7 +398,7 @@ describe("frogcrypto functionality", function () {
     expectToExist(scores);
     expect(scores.length).to.greaterThan(1);
     expect(scores[0].rank).to.eq(1);
-    expect(scores[0].score).to.eq(1000);
+    expect(scores[0].score).to.eq(100000);
   });
 
   it("should return has_telegram_username and share tg username", async () => {
