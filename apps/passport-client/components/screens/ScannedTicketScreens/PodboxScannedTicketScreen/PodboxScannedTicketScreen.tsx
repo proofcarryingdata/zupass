@@ -128,6 +128,20 @@ export function Home({ disabled }: { disabled?: boolean }): JSX.Element {
   );
 }
 
+export function Back({ disabled }: { disabled?: boolean }): JSX.Element {
+  const onClick = useCallback(() => {
+    window.history.back();
+  }, []);
+
+  return (
+    <>
+      <Button style="outline-lite" onClick={onClick} disabled={disabled}>
+        Back
+      </Button>
+    </>
+  );
+}
+
 export const TicketInfoContainer = styled.div`
   padding: 16px;
 `;
