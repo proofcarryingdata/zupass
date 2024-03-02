@@ -25,33 +25,27 @@ export function BalancesTab({
     <Container>
       <TopSection>
         <Spread>
-          <span>global $ZUC supply</span>
+          <span>total supply</span>
           <span>{TOTAL_SUPPLY} $ZUC</span>
         </Spread>
         <Spread>
-          <span>global EXP earned</span>
-          <span>{totalExp} EXP</span>
+          <span>global EXP</span>
+          <span>{totalExp.toFixed(1)} EXP</span>
         </Spread>
         <Spread>
-          <span>exchange rate</span>
-          <span>1 EXP 🤝 {(TOTAL_SUPPLY / totalExp).toFixed(3)} $ZUC</span>
+          <span>EXP/$ZUC</span>
+          <span>{(TOTAL_SUPPLY / totalExp).toFixed(3)}</span>
         </Spread>
         {score && (
           <Spread>
-            <span>your EXP earned</span>
-            <span>{score.exp}&nbsp;EXP</span>
+            <span>your EXP</span>
+            <span>{(score.exp ?? 0).toFixed(1)}&nbsp;EXP</span>
           </Spread>
         )}
         {score && (
           <Spread>
-            <span>your proportion of $ZUC</span>
-            <span>{((score.exp / totalExp) * 100).toFixed(4)}%</span>
-          </Spread>
-        )}
-        {score && (
-          <Spread>
-            <span>your $ZUC</span>
-            <span>{score.balance.toFixed(4)}</span>
+            <span>your slice of $ZUC</span>
+            <span>{((score.exp / totalExp) * 100).toFixed(3)}%</span>
           </Spread>
         )}
       </TopSection>

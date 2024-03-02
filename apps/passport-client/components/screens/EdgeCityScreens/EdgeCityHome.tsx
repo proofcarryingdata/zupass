@@ -37,7 +37,7 @@ const TABS = [
   },
   {
     tab: "score",
-    label: "$zucash"
+    label: "balances"
   }
 ] as const;
 
