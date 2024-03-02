@@ -28,8 +28,8 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
+import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
-import { FrogHomeSection } from "../FrogScreens/FrogHomeSection";
 import {
   FolderCard,
   FolderDetails,
@@ -191,7 +191,7 @@ export function HomeScreenImpl(): JSX.Element {
           )}
 
           {isFrogCrypto ? (
-            <FrogHomeSection setBrowsingFolder={setBrowsingFolder} />
+            <FrogCryptoHomeSection setBrowsingFolder={setBrowsingFolder} />
           ) : isEdgeCity ? (
             <EdgeCityHome setBrowsingFolder={setBrowsingFolder} />
           ) : (

@@ -49,7 +49,7 @@ type TabId = (typeof TABS)[number]["tab"];
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
-export function FrogHomeSection({
+export function FrogCryptoHomeSection({
   setBrowsingFolder
 }: {
   setBrowsingFolder: (folder: string | undefined) => void;

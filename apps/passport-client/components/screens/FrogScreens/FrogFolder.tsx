@@ -10,7 +10,7 @@ import styled, {
 } from "styled-components";
 import { useSubscriptions } from "../../../src/appHooks";
 import { isDuringEdgeCityDenver } from "../../../src/edgecityUtils";
-import { useUserFeedState } from "./FrogHomeSection";
+import { useUserFeedState } from "./FrogCryptoHomeSection";
 
 /**
  * Render the FrogCrypto folder in the home screen.
