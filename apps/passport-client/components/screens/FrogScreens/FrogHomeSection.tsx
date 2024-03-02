@@ -27,7 +27,6 @@ import {
   useCheatCodeActivation
 } from "./FrogSubscriptionScreen";
 import { GetFrogTab } from "./GetFrogTab";
-import { scoreToEmoji } from "./ScoreTab";
 import { TypistText } from "./TypistText";
 import { useInitializeFrogSubscriptions } from "./useFrogFeed";
 
@@ -96,11 +95,12 @@ export function FrogHomeSection(): JSX.Element {
 
       <Countdown />
 
-      {myScore > 0 && (
+      {/* Score is disabled for frog crypto because it's vieweable in the edge city folder */}
+      {/* {myScore > 0 && (
         <Score>
           Score {myScore} | {scoreToEmoji(myScore)}
         </Score>
-      )}
+      )} */}
 
       {frogSubs.length === 0 && (
         <TypistText
@@ -273,6 +273,7 @@ const Container = styled.div`
   gap: 32px;
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Score = styled.div`
   font-size: 16px;
   text-align: center;
