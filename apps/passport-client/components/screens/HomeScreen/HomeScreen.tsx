@@ -80,7 +80,7 @@ export function HomeScreenImpl(): JSX.Element {
     if (confetti instanceof Function) {
       return _.debounce(confetti, 200);
     }
-    return () => {
+    return async () => {
       //
     };
   }, [confetti]);
