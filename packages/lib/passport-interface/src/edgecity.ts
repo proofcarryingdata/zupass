@@ -13,6 +13,7 @@ export const EdgeCityFolderName = "Edge City";
 export interface EdgeCityBalance {
   email_hash: string;
   balance: number;
+  exp?: number; // client-side only
   rank: number;
 }
 
@@ -25,6 +26,11 @@ export const CONTACT_EVENT_NAME = "Contacts";
 export interface BadgeConfigUI extends BadgeConfig {
   infinite?: boolean;
   hiddenWhenEmpty?: boolean; // defines whether this badge is hidden in the UI when no badges of this ID been collected
+  description?: string;
+  button?: {
+    text: string;
+    link: string;
+  };
 }
 
 export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
@@ -35,154 +41,183 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     imageUrl: "/images/star.webp",
     hiddenWhenEmpty: false,
     infinite: true,
-    givers: ["*"]
+    givers: ["*"],
+    description:
+      "Scan another resident's ticket to give them a star of appreciation." +
+      " You have 3 stars to give a day, worth 10 EXP each.",
+    button: {
+      text: "Award Star",
+      link: "/scan"
+    }
   },
   {
     id: "Check In",
     eventName: "Check In",
     imageUrl: "/images/wristband.webp",
     grantOnCheckin: true,
-    givers: ["richard@pcd.team", "ivan@0xparc.org"]
+    givers: ["richard@pcd.team", "ivan@0xparc.org"],
+    description:
+      "Checking into Edge City earns you the Check In badge. Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Tuesday",
     eventName: "Cold Plunge",
     productName: "Tuesday",
     imageUrl: "/images/cold.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Wednesday",
     eventName: "Cold Plunge",
     productName: "Wednesday",
     imageUrl: "/images/cold.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Thursday",
     eventName: "Cold Plunge",
     productName: "Thursday",
     imageUrl: "/images/cold.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Friday",
     eventName: "Cold Plunge",
     productName: "Friday",
     imageUrl: "/images/cold.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Saturday",
     eventName: "Cold Plunge",
     productName: "Saturday",
     imageUrl: "/images/cold.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Cold Plunge.Sunday",
     eventName: "Cold Plunge",
     productName: "Sunday",
     imageUrl: "/images/cold.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Revitalize your energy with a cold plunge! Worth 10 EXP."
   },
   {
     id: "Sauna.Tuesday",
     eventName: "Sauna",
     productName: "Tuesday",
     imageUrl: "/images/sauna.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Wednesday",
     eventName: "Sauna",
     productName: "Wednesday",
     imageUrl: "/images/sauna.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Thursday",
     eventName: "Sauna",
     productName: "Thursday",
     imageUrl: "/images/sauna.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Friday",
     eventName: "Sauna",
     productName: "Friday",
     imageUrl: "/images/sauna.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Saturday",
     eventName: "Sauna",
     productName: "Saturday",
     imageUrl: "/images/sauna.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Sauna.Sunday",
     eventName: "Sauna",
     productName: "Sunday",
     imageUrl: "/images/sauna.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Go to the Sauna! 10 EXP per day."
   },
   {
     id: "Met Zupass.Josh",
     eventName: "Met Zupass",
     productName: "Josh",
     imageUrl: "/images/hat.webp",
-    givers: ["jgarza@0xparc.org"]
+    givers: ["jgarza@0xparc.org"],
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Zupass.Richard",
     eventName: "Met Zupass",
     productName: "Richard",
     imageUrl: "/images/hat.webp",
-    givers: ["richard@pcd.team"]
+    givers: ["richard@pcd.team"],
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Zupass.Ivan",
     eventName: "Met Zupass",
     productName: "Ivan",
     imageUrl: "/images/hat.webp",
-    givers: ["ivan@0xparc.org"]
+    givers: ["ivan@0xparc.org"],
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Zupass.Rob",
     eventName: "Met Zupass",
     productName: "Rob",
     imageUrl: "/images/hat.webp",
-    givers: ["themanhimself@robknight.org.uk"]
+    givers: ["themanhimself@robknight.org.uk"],
+    description: "Meet the Zupass team. 10 EXP per member."
   },
   {
     id: "Met Gary.Monday",
     eventName: "Met Gary",
     productName: "Monday",
     imageUrl: "/images/johnwick.webp",
-    givers: ["garysheng11@gmail.com"]
+    givers: ["garysheng11@gmail.com"],
+    description: "Where's Gary?"
   },
   {
     id: "Met Timour",
     eventName: "Met Timour",
     productName: "",
     imageUrl: "/images/owl.webp",
-    givers: ["timour.kosters@gmail.com"]
+    givers: ["timour.kosters@gmail.com"],
+    description: "Can you find Timour?"
   },
   {
     id: "Met Afra",
     eventName: "Met Afra",
     productName: "",
     imageUrl: "/images/afra.webp",
-    givers: ["afrazhaowang@gmail.com"]
+    givers: ["afrazhaowang@gmail.com"],
+    description: "How about Afra?"
   },
   {
     id: "Met Arjun",
     eventName: "Met Arjun",
     productName: "",
     imageUrl: "/images/arjun.webp",
-    givers: ["arjun.khemani@gmail.com"]
+    givers: ["arjun.khemani@gmail.com"],
+    description: "And Arjun?"
   },
   {
     id: "Decentralized Social Hacker",
@@ -190,6 +225,9 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "",
     imageUrl: "/images/social.webp",
     hiddenWhenEmpty: true,
-    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"]
+    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
+    description:
+      "Attend the Decentralized Social Hackathon on Sunday and get scanned" +
+      " by an organizer to get this badge. Worth 10 EXP."
   }
 ];

@@ -275,9 +275,8 @@ const LoadingMessages = ({ biome }: { biome: string }): JSX.Element => {
       `Tip: Remember, rivers are trickier than they look. Watch out for those logs!`,
       `DID YOU KNOW? There are over five unique biomes, each a home to diverse frog species.`,
       `DID YOU KNOW? Frogs come in rarities: Common, Rare, Epic, Legendary, and Mythic.`,
-      `DID YOU KNOW? Each Frog is a PCD (Proof Carry Data), with attributes securely signed by Zupass, making them tamper-proof.`,
-      `DID YOU KNOW? End-to-end encryption protects your FrogPCDs. Remember, your password is key and cannot be reset; without it, recovery is impossible.`,
-      `Have you visited the Frog Lounge? It's a great place to meet other froggers! https://bit.ly/frogholders`
+      `DID YOU KNOW? Each Frog is a PCD (Proof Carrying Data), with attributes securely signed by Zupass, making them tamper-proof.`,
+      `DID YOU KNOW? End-to-end encryption protects your FrogPCDs. Remember, your password is key and cannot be reset; without it, recovery is impossible.`
     ],
     [biome]
   );

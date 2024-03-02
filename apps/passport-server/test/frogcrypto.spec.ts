@@ -1,4 +1,9 @@
-import { Biome, EdDSAFrogPCD, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import {
+  Biome,
+  EdDSAFrogPCD,
+  EdDSAFrogPCDPackage,
+  Rarity
+} from "@pcd/eddsa-frog-pcd";
 import {
   FrogCryptoFeed,
   FrogCryptoFolderName,
@@ -350,7 +355,12 @@ describe("frogcrypto functionality", function () {
     expect(feed.cooldown).to.eq(60);
 
     const client = await db.connect();
-    await incrementScore(client, identity.getCommitment().toString(), 1000);
+    await incrementScore(
+      client,
+      identity.getCommitment().toString(),
+      Rarity.Unknown,
+      100000
+    );
     await client.end();
 
     await testGetFrogFail(feed, DATE_EPOCH_1H, "Frog faucet off.");
@@ -388,7 +398,7 @@ describe("frogcrypto functionality", function () {
     expectToExist(scores);
     expect(scores.length).to.greaterThan(1);
     expect(scores[0].rank).to.eq(1);
-    expect(scores[0].score).to.eq(1000);
+    expect(scores[0].score).to.eq(100000);
   });
 
   it("should return has_telegram_username and share tg username", async () => {

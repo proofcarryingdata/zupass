@@ -8,10 +8,12 @@ import { useUsernameGenerator } from "../FrogScreens/useUsername";
  */
 export function BalancesTab({
   score,
-  scores
+  scores,
+  totalExp
 }: {
   score?: EdgeCityBalance;
   scores: EdgeCityBalance[];
+  totalExp: number;
 }): JSX.Element {
   const getUsername = useUsernameGenerator();
 
@@ -21,18 +23,37 @@ export function BalancesTab({
 
   return (
     <Container>
-      <div
-        style={{
-          display: "flex",
-          justifyContent: "space-between",
-          borderBottom: "1px solid grey",
-          paddingBottom: 16,
-          marginBottom: 16
-        }}
-      >
-        <span>Total Supply</span>
-        <span>{TOTAL_SUPPLY} ZUC</span>
-      </div>
+      <Section>
+        <Spread>
+          <span>total EXP mined</span>
+          <span>{totalExp.toFixed(1)} EXP</span>
+        </Spread>
+        <Spread>
+          <span>total $ZUCASH supply</span>
+          <span>{TOTAL_SUPPLY} ZUC</span>
+        </Spread>
+        <Spread>
+          <span>exchange rate</span>
+          <span>{(TOTAL_SUPPLY / totalExp).toFixed(3)} ZUC/EXP</span>
+        </Spread>
+      </Section>
+      {score && (
+        <Section>
+          <Spread>
+            <span>my EXP</span>
+            <span>{(score.exp ?? 0).toFixed(1)}&nbsp;EXP</span>
+          </Spread>
+          <Spread>
+            <span>my $ZUCASH</span>
+            <span>{(score.balance ?? 0).toFixed(2)}&nbsp;ZUC</span>
+          </Spread>
+          <Spread>
+            <span>my share</span>
+            <span>{((score.exp / totalExp) * 100).toFixed(3)}%</span>
+          </Spread>
+        </Section>
+      )}
+
       {score && (
         <ScoreTable
           title="You"
@@ -106,4 +127,15 @@ const Container = styled.div`
   flex-direction: column;
   align-items: stretch;
   gap: 16px;
+`;
+
+const Spread = styled.div`
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 16;
+`;
+
+const Section = styled.div`
+  padding-bottom: 16px;
+  border-bottom: 1px solid grey;
 `;

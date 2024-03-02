@@ -7,7 +7,23 @@ import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
-import { Home } from "./ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
+import {
+  Back,
+  Home
+} from "./ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  button {
+    flex-grow: 1;
+  }
+`;
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen(): JSX.Element {
@@ -20,7 +36,10 @@ export function ScanScreen(): JSX.Element {
       {!usingLaserScanner && (
         <QRContainer>
           <Spacer h={8} />
-          <Home />
+          <ButtonsContainer>
+            <Back />
+            <Home />
+          </ButtonsContainer>
           <QrReader
             className="qr"
             onResult={(result, error): void => {

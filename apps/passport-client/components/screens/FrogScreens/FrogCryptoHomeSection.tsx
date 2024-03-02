@@ -27,19 +27,21 @@ import {
   useCheatCodeActivation
 } from "./FrogSubscriptionScreen";
 import { GetFrogTab } from "./GetFrogTab";
-import { ScoreTab, scoreToEmoji } from "./ScoreTab";
 import { TypistText } from "./TypistText";
 import { useInitializeFrogSubscriptions } from "./useFrogFeed";
+
+const animSpeedMs = 500;
 
 const TABS = [
   {
     tab: "get",
     label: "get frogs"
   },
-  {
-    tab: "score",
-    label: "hi scores"
-  },
+  // turned off for edge city denver - score is traced in the ECD folder.
+  // {
+  //   tab: "score",
+  //   label: "hi scores"
+  // },
   {
     tab: "dex",
     label: "frogedex"
@@ -50,7 +52,13 @@ type TabId = (typeof TABS)[number]["tab"];
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
-export function FrogHomeSection(): JSX.Element {
+export function FrogCryptoHomeSection({
+  setBrowsingFolder,
+  confetti
+}: {
+  setBrowsingFolder: (folder?: string, tab?: string) => void;
+  confetti: () => Promise<void>;
+}): JSX.Element {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const subs = useSubscriptions();
   const frogSubs = useMemo(
@@ -84,6 +92,9 @@ export function FrogHomeSection(): JSX.Element {
 
   useCheatCodeActivation();
 
+  const [buttonRef, setButtonRef] = useState<HTMLElement>();
+  const [btnText, setBtnText] = useState("EDGE CITY");
+
   if (!userState) {
     return <RippleLoader />;
   }
@@ -96,11 +107,12 @@ export function FrogHomeSection(): JSX.Element {
 
       <Countdown />
 
-      {myScore > 0 && (
+      {/* Score is disabled for frog crypto because it's vieweable in the edge city folder */}
+      {/* {myScore > 0 && (
         <Score>
           Score {myScore} | {scoreToEmoji(myScore)}
         </Score>
-      )}
+      )} */}
 
       {frogSubs.length === 0 && (
         <TypistText
@@ -108,8 +120,8 @@ export function FrogHomeSection(): JSX.Element {
             typewriter
               .typeString(
                 isFromSubscriptionRef.current
-                  ? "a mysterious QR code portals you to the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
-                  : "you are walking through the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+                  ? "a mysterious QR code portals you to the DENVER HIGHLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+                  : "you are walking through the DENVER HIGHLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
               )
               .pauseFor(500)
               .typeString(
@@ -171,17 +183,43 @@ export function FrogHomeSection(): JSX.Element {
               // show frog card on first pull
               // show tabs on second pull
               myScore >= 2 && (
-                <ButtonGroup>
-                  {TABS.map(({ tab: t, label }) => (
-                    <Button
-                      key={t}
-                      disabled={tab === t}
-                      onClick={(): void => setTab(t)}
+                <>
+                  <ButtonGroup>
+                    <EdgeCityButton
+                      ref={(r): void => setButtonRef(r)}
+                      onClick={(): void => {
+                        buttonRef.classList.add("big");
+                        buttonRef.style.border = "none";
+                        buttonRef.style.color = "transparent";
+                        document.body.style.overflow = "hidden";
+                        setBtnText("");
+
+                        setTimeout(() => {
+                          document.body.style.overflowY = "scroll";
+                          setBrowsingFolder("Edge City", "experiences");
+                          confetti();
+                        }, animSpeedMs * 0.8);
+                      }}
                     >
-                      {label}
-                    </Button>
-                  ))}
-                </ButtonGroup>
+                      <div className="wrapper">
+                        <div className="expander">
+                          <div className="text">{btnText}</div>
+                        </div>
+                      </div>
+                    </EdgeCityButton>
+                  </ButtonGroup>
+                  <ButtonGroup>
+                    {TABS.map(({ tab: t, label }) => (
+                      <Button
+                        key={t}
+                        disabled={tab === t}
+                        onClick={(): void => setTab(t)}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                </>
               )
             }
 
@@ -193,12 +231,12 @@ export function FrogHomeSection(): JSX.Element {
                 pcds={frogPCDs}
               />
             )}
-            {tab === "score" && (
+            {/* {tab === "score" && (
               <ScoreTab
                 score={userState?.myScore}
                 refreshScore={refreshUserState}
               />
-            )}
+            )} */}
             {tab === "dex" && (
               <DexTab possibleFrogs={userState.possibleFrogs} pcds={frogPCDs} />
             )}
@@ -273,7 +311,66 @@ const Container = styled.div`
   gap: 32px;
 `;
 
+// eslint-disable-next-line @typescript-eslint/no-unused-vars
 const Score = styled.div`
   font-size: 16px;
   text-align: center;
+`;
+
+const EdgeCityButton = styled.div`
+  user-select: none;
+  cursor: pointer;
+  width: 100%;
+  height: 50px;
+  max-height: 50px;
+  font-family: PressStart2P;
+  position: relative;
+  z-index: 9998;
+
+  .wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .expander {
+    background-color: black;
+    transition: ${animSpeedMs}ms;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover {
+      transform: scale(1.05);
+
+      &:active {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  &.big {
+    .expander {
+      transition: ${animSpeedMs}ms;
+      position: absolute;
+      top: calc(50% - 100vh);
+      left: calc(50% - 100vw);
+      width: 200vw;
+      height: 200vh;
+    }
+  }
 `;

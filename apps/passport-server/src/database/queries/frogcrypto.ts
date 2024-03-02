@@ -1,4 +1,4 @@
-import { Rarity } from "@pcd/eddsa-frog-pcd";
+import { Rarity, frogRarityToScore } from "@pcd/eddsa-frog-pcd";
 import {
   DexFrog,
   FrogCryptoDbFeedData,
@@ -234,8 +234,18 @@ function toFrogData(dbFrogData: FrogCryptoDbFrogData): FrogCryptoFrogData {
 export async function incrementScore(
   client: Client,
   semaphoreId: string,
+  frogRarity: Rarity,
   increment = 1
 ): Promise<FrogCryptoScore> {
+  // hack for edge city denver to count frogs collected during edge city
+  await client.query(
+    `insert into ecd_frog_scores
+    (semaphore_id, score)
+    values ($1, $2)
+    on conflict (semaphore_id) do update set score = ecd_frog_scores.score + $2`,
+    [semaphoreId, frogRarityToScore(frogRarity)]
+  );
+
   const res = await client.query(
     `insert into frogcrypto_user_scores
     (semaphore_id, score)

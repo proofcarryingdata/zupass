@@ -9,8 +9,8 @@ import {
   requestEdgeCityBalances
 } from "@pcd/passport-interface";
 import { sha256 } from "js-sha256";
-import { useEffect, useState } from "react";
-import { Link } from "react-router-dom";
+import { useCallback, useEffect, useState } from "react";
+import { Link, useSearchParams } from "react-router-dom";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
@@ -22,23 +22,28 @@ import {
 import { RippleLoader } from "../../core/RippleLoader";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
+import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
+import { useZucashConfetti } from "./useZucashConfetti";
+
+const animSpeedMs = 500;
 
 const TABS = [
   {
     tab: "ticket",
-    label: "me"
+    label: "ticket"
   },
   {
     tab: "experiences",
-    label: "exp"
+    label: "inventory"
   },
   {
     tab: "score",
-    label: "bal"
+    label: "balances"
   }
 ] as const;
+
 type TabId = (typeof TABS)[number]["tab"];
 
 interface GroupedEvent {
@@ -47,6 +52,8 @@ interface GroupedEvent {
   imageUrl: string;
   hiddenWhenEmpty: boolean;
   infinite: boolean;
+  description?: string;
+  button?: { text: string; link: string };
 }
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
@@ -58,21 +65,37 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
   } else {
     acc.push({
       eventName: item.eventName,
-      total: 1,
+      total: item.infinite ? 0 : 1,
       imageUrl: item.imageUrl,
       hiddenWhenEmpty: !!item.hiddenWhenEmpty,
-      infinite: !!item.infinite
-    });
+      infinite: !!item.infinite,
+      description: item.description,
+      button: item.button
+    } satisfies GroupedEvent);
   }
   return acc;
-}, []);
+}, [] satisfies GroupedEvent[]);
 
 /**
  * Renders EdgeCity UI.
  */
-export function EdgeCityHome(): JSX.Element {
+export function EdgeCityHome({
+  setBrowsingFolder,
+  confetti
+}: {
+  setBrowsingFolder: (folder?: string, tab?: string) => void;
+  confetti: () => Promise<void>;
+}): JSX.Element {
+  const [searchParams, setSearchParams] = useSearchParams();
+  const tab = searchParams.get("tab") ?? "ticket";
+  const setTab = useCallback(
+    (tab: TabId) => {
+      setSearchParams({ ...Object.fromEntries(searchParams.entries()), tab });
+    },
+    [searchParams, setSearchParams]
+  );
+
   const edgeCityPCDs = usePCDsInFolder(EdgeCityFolderName);
-  const [tab, setTab] = useState<TabId>("ticket");
   const [selectedExperience, setSelectedExperience] =
     useState<EdDSATicketPCD>(null);
   const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
@@ -86,19 +109,24 @@ export function EdgeCityHome(): JSX.Element {
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
+  const [totalExp, setTotalExp] = useState(1);
   const { email } = useSelf();
 
   useEffect(() => {
     setLoading(true);
     requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
       if (res.success) {
+        const totalExp = Math.max(
+          res.value.map((x) => x.balance).reduce((x, y) => x + y),
+          0.1
+        );
+
+        setTotalExp(totalExp);
         setScores(
           res.value.map((s) => ({
             ...s,
-            balance:
-              (s.balance /
-                res.value.map((x) => x.balance).reduce((x, y) => x + y)) *
-              TOTAL_SUPPLY
+            exp: s.balance,
+            balance: (s.balance / totalExp) * TOTAL_SUPPLY
           }))
         );
       } else {
@@ -152,6 +180,12 @@ export function EdgeCityHome(): JSX.Element {
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
+  const [buttonRef, setButtonRef] = useState<HTMLElement>();
+
+  const [ref, setRef] = useState<HTMLElement>();
+  const [btnText, setBtnText] = useState("FrogCrypto");
+  const z_confetti = useZucashConfetti(ref);
+
   if (loading) {
     return <RippleLoader />;
   }
@@ -190,15 +224,18 @@ export function EdgeCityHome(): JSX.Element {
         style={{
           margin: "0 auto",
           whiteSpace: "nowrap",
-          fontFamily: "PressStart2P"
+          fontFamily: "PressStart2P",
+          userSelect: "none"
         }}
       >
         EDGE CITY
       </Title>
-      <div style={{ width: "100%" }} onClick={(): void => setInfoOpen(true)}>
-        <Caption>
-          Balance <span style={{ cursor: "pointer" }}>ⓘ</span>
-        </Caption>
+      <div
+        ref={(r): void => setRef(r)}
+        style={{ width: "100%", userSelect: "none", cursor: "pointer" }}
+        onClick={z_confetti}
+      >
+        <Caption>Balance</Caption>
         <CenteredText style={{ fontSize: 20 }}>
           <span>🐸</span>{" "}
           <span>
@@ -221,20 +258,71 @@ export function EdgeCityHome(): JSX.Element {
       </ButtonGroup>
       {tab === "ticket" && <PCDCardList hideRemoveButton pcds={edgeCityPCDs} />}
       {tab === "experiences" && (
-        <div>
+        <div style={{ zIndex: 10 }}>
           <ExperiencesHeader>
             <p>
-              Earn <strong>${TOKEN_LONG_NAME}</strong> by participating in
-              community experiences.
+              Collect EXP by participating in community experiences. <br />
+              <br />
+              Your EXP earns you a fraction of the {TOTAL_SUPPLY} available
+              $ZUCASH.
             </p>
           </ExperiencesHeader>
-          <div>
+          <CategorySection>
             <CategoryHeader>
-              <span>{CONTACT_EVENT_NAME}</span>
+              <EventTitle>FROGCRYPTO</EventTitle>
+              <span></span>
+            </CategoryHeader>
+
+            <CategoryDescription>
+              Collect frogs to earn EXP.
+            </CategoryDescription>
+
+            <FrogCryptoButton
+              ref={(r): void => setButtonRef(r)}
+              onClick={(): void => {
+                buttonRef.classList?.add("big");
+                buttonRef.style.border = "none";
+                buttonRef.style.color = "transparent";
+                document.body.style.overflow = "hidden";
+                setBtnText("");
+                setTimeout(() => {
+                  document.body.style.overflowY = "scroll";
+                  setBrowsingFolder("FrogCrypto");
+                  confetti();
+                }, 400);
+              }}
+            >
+              <div className="wrapper">
+                <div className="expander">
+                  <div className="text">
+                    <SuperFunkyFont
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                    >
+                      {btnText}
+                    </SuperFunkyFont>
+                  </div>
+                </div>
+              </div>
+            </FrogCryptoButton>
+          </CategorySection>
+          <CategorySection>
+            <CategoryHeader>
+              <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
               <span>{`${
                 (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
               }/${"∞"}`}</span>
             </CategoryHeader>
+
+            <CategoryDescription>
+              Scan another resident's ticket to collect their contact. Worth 10
+              EXP.
+            </CategoryDescription>
+
             <ItemContainer>
               {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
                 <ItemCard
@@ -249,26 +337,33 @@ export function EdgeCityHome(): JSX.Element {
                 </ItemCard>
               ))}
               <Link to="/scan">
-                <ItemCard>
-                  <img src="/images/plus.webp" draggable={false} />
-                </ItemCard>
+                <CTAButton>Collect Contact</CTAButton>
               </Link>
             </ItemContainer>
-          </div>
+          </CategorySection>
           {groupedResult.map(
-            ({ eventName, total, imageUrl, hiddenWhenEmpty, infinite }) => {
+            ({
+              eventName,
+              total,
+              imageUrl,
+              hiddenWhenEmpty,
+              infinite,
+              description,
+              button
+            }) => {
               const pcds = pcdsByEventName[eventName] ?? [];
               if (hiddenWhenEmpty && pcds.length === 0) {
                 return null;
               }
               return (
-                <div key={eventName}>
+                <CategorySection key={eventName}>
                   <CategoryHeader>
-                    <span>{eventName}</span>
+                    <EventTitle>{eventName}</EventTitle>
                     <span>{`${pcds.length}/${
                       infinite ? "∞" : total || "∞"
                     }`}</span>
                   </CategoryHeader>
+                  <CategoryDescription>{description} </CategoryDescription>
                   <ItemContainer>
                     {pcds.flatMap((pcd) => (
                       <ItemCard
@@ -276,7 +371,7 @@ export function EdgeCityHome(): JSX.Element {
                         onClick={(): void => {
                           setSelectedExperience(pcd);
                           setSelectedExperienceIsContact(false);
-                          setSelectedExperienceIsStar(eventName === "Stars");
+                          setSelectedExperienceIsStar(eventName === "Star");
                         }}
                       >
                         <img
@@ -294,8 +389,13 @@ export function EdgeCityHome(): JSX.Element {
                         />
                       </ItemCard>
                     ))}
+                    {button && (
+                      <Link to={button.link}>
+                        <CTAButton>{button.text}</CTAButton>
+                      </Link>
+                    )}
                   </ItemContainer>
-                </div>
+                </CategorySection>
               );
             }
           )}
@@ -315,7 +415,9 @@ export function EdgeCityHome(): JSX.Element {
           )}
         </div>
       )}
-      {tab === "score" && <BalancesTab scores={scores} score={score} />}
+      {tab === "score" && (
+        <BalancesTab scores={scores} score={score} totalExp={totalExp} />
+      )}
     </Container>
   );
 }
@@ -334,9 +436,10 @@ const Container = styled.div`
 `;
 
 const ExperiencesHeader = styled.div`
+  text-align: center;
+  margin-bottom: 32px;
   padding-bottom: 16px;
   border-bottom: 1px solid grey;
-  margin-bottom: 16px;
 `;
 
 const Caption = styled.div`
@@ -359,20 +462,38 @@ const Title = styled.div`
   margin: 0 auto;
   white-space: nowrap;
   font-family: "PressStart2P";
+
+  @keyframes color-change {
+    0% {
+      color: #ff9900;
+    }
+    50% {
+      color: #afffbc;
+    }
+    100% {
+      color: #ff9900;
+    }
+  }
+
+  animation: color-change 3s infinite;
 `;
 
 const CategoryHeader = styled.div`
   font-weight: bold;
   display: flex;
   justify-content: space-between;
-  margin-bottom: 8px;
+  margin-bottom: 4px;
+  margin-top: 8px;
 `;
 
 const ItemContainer = styled.div`
-  display: grid;
-  grid-template-columns: repeat(6, 1fr);
-  grid-row-gap: 0px;
-  grid-column-gap: 10px;
+  display: flex;
+  flex-direction: row;
+  flex-wrap: wrap;
+  justify-content: flex-start;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 10px;
 `;
 
 const ItemCard = styled.div`
@@ -381,59 +502,27 @@ const ItemCard = styled.div`
   align-items: stretch;
   justify-content: flex-start;
   gap: 4px;
-  aspect-ratio: 3 / 4;
+  max-width: 50px;
   min-width: 0;
   cursor: pointer;
 `;
 
-const lightGreen = "#94EF69";
-const darkGreen = "#406F3A";
-
 const ColorText = styled.span`
-  -webkit-animation: green-color-change 1s infinite alternate;
-  -moz-animation: green-color-change 1s infinite alternate;
-  -ms-animation: green-color-change 1s infinite alternate;
-  -o-animation: green-color-change 1s infinite alternate;
-  animation: green-color-change 1s infinite alternate;
+  -webkit-animation: color-change 3s infinite alternate;
+  -moz-animation: color-change 3s infinite alternate;
+  -ms-animation: color-change 3s infinite alternate;
+  -o-animation: color-change 3s infinite alternate;
+  animation: color-change 3s infinite alternate;
 
-  @-webkit-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
+  @keyframes color-change {
+    0% {
+      color: #ff9900;
     }
-    to {
-      color: ${darkGreen};
+    50% {
+      color: #afffbc;
     }
-  }
-  @-moz-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
-    }
-  }
-  @-ms-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
-    }
-  }
-  @-o-keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
-    }
-  }
-  @keyframes green-color-change {
-    from {
-      color: ${lightGreen};
-    }
-    to {
-      color: ${darkGreen};
+    100% {
+      color: #ff9900;
     }
   }
 `;
@@ -462,4 +551,82 @@ const ButtonGroup = styled.div`
   align-items: stretch;
   height: min-content;
   gap: 8px;
+`;
+
+const CategoryDescription = styled.div`
+  opacity: 0.9;
+  font-size: 0.8em;
+  margin-bottom: 8px;
+`;
+
+const EventTitle = styled.span`
+  text-decoration: underline;
+`;
+
+const CTAButton = styled(Button)`
+  border: 1px solid white;
+  font-size: 0.8em;
+  white-space: nowrap;
+`;
+
+const FrogCryptoButton = styled.div`
+  user-select: none;
+  cursor: pointer;
+  width: 100%;
+  height: 50px;
+  max-height: 50px;
+  font-family: PressStart2P;
+  position: relative;
+  z-index: 9998;
+
+  .wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
+
+  .expander {
+    background-color: #206b5e;
+    transition: ${animSpeedMs}ms;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover {
+      transform: scale(1.05);
+
+      &:active {
+        transform: scale(1.1);
+      }
+    }
+  }
+
+  &.big {
+    .expander {
+      transition: ${animSpeedMs}ms;
+      position: absolute;
+      top: calc(50% - 100vh);
+      left: calc(50% - 100vw);
+      width: 200vw;
+      height: 200vh;
+    }
+  }
+`;
+
+const CategorySection = styled.div`
+  margin-bottom: 16px;
 `;

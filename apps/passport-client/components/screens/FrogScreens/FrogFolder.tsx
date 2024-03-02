@@ -1,4 +1,7 @@
-import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import {
+  EdgeCityFolderName,
+  FrogCryptoFolderName
+} from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
@@ -8,9 +11,8 @@ import styled, {
   css,
   keyframes
 } from "styled-components";
-import { useSubscriptions } from "../../../src/appHooks";
-import { isDuringEdgeCityDenver } from "../../../src/edgecityUtils";
-import { useUserFeedState } from "./FrogHomeSection";
+import { usePCDsInFolder, useSubscriptions } from "../../../src/appHooks";
+import { useUserFeedState } from "./FrogCryptoHomeSection";
 
 /**
  * Render the FrogCrypto folder in the home screen.
@@ -35,7 +37,8 @@ export function FrogFolder({
     }>
   >;
 }): JSX.Element {
-  const frogcryptoDisabled = isDuringEdgeCityDenver();
+  const edgePCDs = usePCDsInFolder(EdgeCityFolderName);
+  const frogcryptoDisabled = edgePCDs.length === 0;
   const fetchTimestamp = useFetchTimestamp();
 
   return (
@@ -49,7 +52,7 @@ export function FrogFolder({
           : {}
       }
       onClick={(): void => {
-        if (!isDuringEdgeCityDenver()) onFolderClick(FrogCryptoFolderName);
+        if (!frogcryptoDisabled) onFolderClick(FrogCryptoFolderName);
       }}
     >
       <img
@@ -59,7 +62,7 @@ export function FrogFolder({
         height={18}
       />
       <SuperFunkyFont>
-        {isDuringEdgeCityDenver() ? (
+        {frogcryptoDisabled ? (
           <DisabledText>{FrogCryptoFolderName}</DisabledText>
         ) : (
           FrogCryptoFolderName.split("").map((letter, i) => (
@@ -201,7 +204,8 @@ export const SuperFunkyFont = styled.div`
 
   * {
     background-size: 100%;
-    background-color: #ff9900;
+    background-color: #ff9900 !important;
+    color: #ff9900;
     background-image: linear-gradient(45deg, #ff9900, #afffbc);
     -webkit-background-clip: text;
     -moz-background-clip: text;
