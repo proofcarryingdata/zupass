@@ -128,6 +128,20 @@ export function Home({ disabled }: { disabled?: boolean }): JSX.Element {
   );
 }
 
+export function FakeBack({ disabled }: { disabled?: boolean }): JSX.Element {
+  const onClick = useCallback(() => {
+    window.location.href = "/#/?folder=Edge%2520City&tab=experiences";
+  }, []);
+
+  return (
+    <>
+      <Button style="outline-lite" onClick={onClick} disabled={disabled}>
+        Back
+      </Button>
+    </>
+  );
+}
+
 export function Back({ disabled }: { disabled?: boolean }): JSX.Element {
   const onClick = useCallback(() => {
     window.history.back();
