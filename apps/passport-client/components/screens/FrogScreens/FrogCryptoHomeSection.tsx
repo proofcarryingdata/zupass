@@ -113,8 +113,8 @@ export function FrogCryptoHomeSection({
             typewriter
               .typeString(
                 isFromSubscriptionRef.current
-                  ? "a mysterious QR code portals you to the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
-                  : "you are walking through the ANATOLIAN WETLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+                  ? "a mysterious QR code portals you to the DENVER HIGHLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
+                  : "you are walking through the DENVER HIGHLANDS when you chance upon an ominous, misty SWAMP.<br/><br/>"
               )
               .pauseFor(500)
               .typeString(
