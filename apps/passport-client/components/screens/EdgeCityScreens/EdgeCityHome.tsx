@@ -25,6 +25,7 @@ import { PCDCardList } from "../../shared/PCDCardList";
 import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
+import { useZucashConfetti } from "./useZucashConfetti";
 
 const TABS = [
   {
@@ -77,11 +78,9 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
  * Renders EdgeCity UI.
  */
 export function EdgeCityHome({
-  setBrowsingFolder,
-  confetti
+  setBrowsingFolder
 }: {
   setBrowsingFolder: (folder?: string, tab?: string) => void;
-  confetti: () => Promise<void>;
 }): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") ?? "ticket";
@@ -178,6 +177,7 @@ export function EdgeCityHome({
     }, {}); // Initial value of the accumulator is an empty object
 
   const [buttonRef, setButtonRef] = useState<HTMLButtonElement>();
+  const confetti = useZucashConfetti();
 
   if (loading) {
     return <RippleLoader />;
@@ -273,7 +273,6 @@ export function EdgeCityHome({
                 buttonRef.innerText = "";
                 buttonRef.style.border = "none";
                 buttonRef.style.color = "transparent";
-                confetti();
                 setTimeout(() => {
                   setBrowsingFolder("FrogCrypto");
                 }, 200);
@@ -592,21 +591,20 @@ const FrogCryptoButton = styled(Button)`
   transition: 300ms;
   margin-bottom: 16px;
   margin-top: 16px;
+  z-index: 99999;
+  display: inline-block;
 
   &:hover {
     filter: drop-shadow(5px 5px 20px #484848);
     transform: scale(1.1);
-    padding: 10px;
 
     &:active {
       transform: scale(1.2);
-      padding: 16px;
     }
   }
 
   &.big {
-    transform: scale(3) !important;
-    padding: 500px !important;
+    transform: scale(30) scaleY(50) !important;
     color: black;
   }
 `;
