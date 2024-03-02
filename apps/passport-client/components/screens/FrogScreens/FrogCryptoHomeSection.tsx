@@ -30,6 +30,8 @@ import { GetFrogTab } from "./GetFrogTab";
 import { TypistText } from "./TypistText";
 import { useInitializeFrogSubscriptions } from "./useFrogFeed";
 
+const animSpeedMs = 500;
+
 const TABS = [
   {
     tab: "get",
@@ -90,7 +92,8 @@ export function FrogCryptoHomeSection({
 
   useCheatCodeActivation();
 
-  const [buttonRef, setButtonRef] = useState<HTMLButtonElement>();
+  const [buttonRef, setButtonRef] = useState<HTMLElement>();
+  const [btnText, setBtnText] = useState("EDGE CITY");
 
   if (!userState) {
     return <RippleLoader />;
@@ -185,20 +188,24 @@ export function FrogCryptoHomeSection({
                     <EdgeCityButton
                       ref={(r): void => setButtonRef(r)}
                       onClick={(): void => {
-                        buttonRef.classList?.add("big");
-                        buttonRef.innerText = "";
+                        buttonRef.classList.add("big");
                         buttonRef.style.border = "none";
                         buttonRef.style.color = "transparent";
                         document.body.style.overflow = "hidden";
+                        setBtnText("");
 
                         setTimeout(() => {
                           document.body.style.overflowY = "scroll";
                           setBrowsingFolder("Edge City", "experiences");
                           confetti();
-                        }, 400);
+                        }, animSpeedMs * 0.8);
                       }}
                     >
-                      EDGE CITY
+                      <div className="wrapper">
+                        <div className="expander">
+                          <div className="text">{btnText}</div>
+                        </div>
+                      </div>
                     </EdgeCityButton>
                   </ButtonGroup>
                   <ButtonGroup>
@@ -310,25 +317,60 @@ const Score = styled.div`
   text-align: center;
 `;
 
-const EdgeCityButton = styled(Button)`
-  background-color: black;
-  border: 1px solid #ababab;
+const EdgeCityButton = styled.div`
+  user-select: none;
+  cursor: pointer;
+  width: 100%;
+  height: 50px;
+  max-height: 50px;
   font-family: PressStart2P;
-  filter: drop-shadow(5px 5px 10px #484848);
-  transition: 500ms;
-  z-index: 99999;
+  position: relative;
+  z-index: 9999;
 
-  &:hover {
-    filter: drop-shadow(5px 5px 20px #484848);
-    transform: scale(1.1);
+  .wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
 
-    &:active {
-      transform: scale(1.2);
+  .expander {
+    background-color: black;
+    transition: ${animSpeedMs}ms;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover {
+      transform: scale(1.05);
+
+      &:active {
+        transform: scale(1.1);
+      }
     }
   }
 
   &.big {
-    transform: scaleX(15) scaleY(100) !important;
-    color: black;
+    .expander {
+      transition: ${animSpeedMs}ms;
+      position: absolute;
+      top: calc(50% - 100vh);
+      left: calc(50% - 100vw);
+      width: 200vw;
+      height: 200vh;
+    }
   }
 `;

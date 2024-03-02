@@ -11,7 +11,7 @@ import {
 import { sha256 } from "js-sha256";
 import { useCallback, useEffect, useState } from "react";
 import { Link, useSearchParams } from "react-router-dom";
-import styled, { FlattenSimpleInterpolation, css } from "styled-components";
+import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
 import {
   useFolders,
@@ -26,6 +26,8 @@ import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
 import { useZucashConfetti } from "./useZucashConfetti";
+
+const animSpeedMs = 500;
 
 const TABS = [
   {
@@ -109,7 +111,6 @@ export function EdgeCityHome({
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
   const { email } = useSelf();
-  const [hide, setHide] = useState(false);
 
   useEffect(() => {
     setLoading(true);
@@ -179,8 +180,10 @@ export function EdgeCityHome({
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
-  const [buttonRef, setButtonRef] = useState<HTMLButtonElement>();
+  const [buttonRef, setButtonRef] = useState<HTMLElement>();
+
   const [ref, setRef] = useState<HTMLElement>();
+  const [btnText, setBtnText] = useState("FrogCrypto");
   const z_confetti = useZucashConfetti(ref);
 
   if (loading) {
@@ -200,7 +203,7 @@ export function EdgeCityHome({
   }
 
   return (
-    <Container hide={hide}>
+    <Container>
       <AdhocModal
         open={infoOpen}
         showCloseIcon={false}
@@ -274,15 +277,14 @@ export function EdgeCityHome({
               Collect frogs to earn EXP.
             </CategoryDescription>
 
-            <FrogCryptoButton
+            <EdgeCityButton
               ref={(r): void => setButtonRef(r)}
               onClick={(): void => {
                 buttonRef.classList?.add("big");
-                buttonRef.innerText = "";
                 buttonRef.style.border = "none";
                 buttonRef.style.color = "transparent";
                 document.body.style.overflow = "hidden";
-                setHide(true);
+                setBtnText("");
                 setTimeout(() => {
                   document.body.style.overflowY = "scroll";
                   setBrowsingFolder("FrogCrypto");
@@ -290,17 +292,23 @@ export function EdgeCityHome({
                 }, 400);
               }}
             >
-              <SuperFunkyFont
-                style={{
-                  width: "100%",
-                  display: "flex",
-                  justifyContent: "center",
-                  alignItems: "center"
-                }}
-              >
-                FrogCrypto
-              </SuperFunkyFont>
-            </FrogCryptoButton>
+              <div className="wrapper">
+                <div className="expander">
+                  <div className="text">
+                    <SuperFunkyFont
+                      style={{
+                        width: "100%",
+                        display: "flex",
+                        justifyContent: "center",
+                        alignItems: "center"
+                      }}
+                    >
+                      {btnText}
+                    </SuperFunkyFont>
+                  </div>
+                </div>
+              </div>
+            </EdgeCityButton>
           </CategorySection>
           <CategorySection>
             <CategoryHeader>
@@ -415,25 +423,16 @@ export function EdgeCityHome({
 }
 
 const Container = styled.div`
-  ${({ hide }: { hide?: boolean }): FlattenSimpleInterpolation => css`
-    padding: 16px;
-    width: 100%;
-    height: 100%;
-    max-width: 100%;
-    font-family: monospace;
-    font-variant-numeric: tabular-nums;
+  padding: 16px;
+  width: 100%;
+  height: 100%;
+  max-width: 100%;
+  font-family: monospace;
+  font-variant-numeric: tabular-nums;
 
-    display: flex;
-    flex-direction: column;
-    gap: 32px;
-
-    ${hide &&
-    css`
-      * {
-        color: transparent;
-      }
-    `}
-  `}
+  display: flex;
+  flex-direction: column;
+  gap: 32px;
 `;
 
 const ExperiencesHeader = styled.div`
@@ -601,30 +600,61 @@ const CTAButton = styled(Button)`
   margin-top: 4px;
 `;
 
-const FrogCryptoButton = styled(Button)`
+const EdgeCityButton = styled.div`
+  user-select: none;
+  cursor: pointer;
   width: 100%;
-  background: #206b5e !important;
-  border: 1px solid #ababab;
-  font-family: inherit;
-  filter: drop-shadow(5px 5px 10px #484848);
-  transition: 500ms;
-  margin-bottom: 16px;
-  margin-top: 16px;
-  z-index: 99999;
-  display: inline-block;
+  height: 50px;
+  max-height: 50px;
+  font-family: PressStart2P;
+  position: relative;
+  z-index: 9999;
 
-  &:hover {
-    filter: drop-shadow(5px 5px 20px #484848);
-    transform: scale(1.1);
+  .wrapper {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: 100%;
+  }
 
-    &:active {
-      transform: scale(1.2);
+  .expander {
+    background-color: #206b5e;
+    transition: ${animSpeedMs}ms;
+    position: absolute;
+    top: 0%;
+    left: 0%;
+    width: 100%;
+    height: 100%;
+    border-radius: 4px;
+    border: 1px solid white;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    &:hover {
+      transform: scale(1.05);
+
+      &:active {
+        transform: scale(1.1);
+      }
     }
   }
 
   &.big {
-    transform: scaleX(15) scaleY(100) !important;
-    color: black;
+    .expander {
+      transition: ${animSpeedMs}ms;
+      position: absolute;
+      top: calc(50% - 100vh);
+      left: calc(50% - 100vw);
+      width: 200vw;
+      height: 200vh;
+    }
   }
 `;
 
