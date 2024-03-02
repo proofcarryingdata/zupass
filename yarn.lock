@@ -5210,10 +5210,10 @@
   resolved "https://registry.npmjs.org/@types/chai/-/chai-4.3.11.tgz"
   integrity sha512-qQR1dr2rGIHYlJulmr8Ioq3De0Le9E4MJ5AiaeAETJJpndT1uUNHsGFK3L/UIu+rbkQSdj8J/w2bCsBZc/Y5fQ==
 
-"@types/circomlibjs@0.1.4":
-  version "0.1.4"
-  resolved "https://registry.npmjs.org/@types/circomlibjs/-/circomlibjs-0.1.4.tgz"
-  integrity sha512-H5z8wQBsr1ng+4lS9Q3H7hCBoNd0I6U0CwpUCFsM+0ea5EXpAztMzmjzr4zkqv0EtwQc/ZtZkOvX7UZuXiS/Lg==
+"@types/circomlibjs@0.1.6":
+  version "0.1.6"
+  resolved "https://registry.yarnpkg.com/@types/circomlibjs/-/circomlibjs-0.1.6.tgz#dba1b9cc68ae4f75da045b8b14c50f3444b31d7f"
+  integrity sha512-yF174bPDaiKgejlZzCSqKwZaqXhlxMcVEHrAtstFohwP05OjtvHXOdxO6HQeTg8WwIdgMg7MJb1WyWZdUCGlPQ==
 
 "@types/connect@*":
   version "3.4.36"

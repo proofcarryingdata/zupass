@@ -12,6 +12,12 @@
   "references": [
     {
       "path": "../util/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/eddsa-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.esm.json"
     }
   ]
 }

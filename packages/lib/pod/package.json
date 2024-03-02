@@ -36,11 +36,14 @@
     "poseidon-lite": "^0.2.0"
   },
   "devDependencies": {
+    "@pcd/eddsa-pcd": "0.5.0",
     "@pcd/eslint-config-custom": "*",
+    "@pcd/pcd-types": "0.10.0",
     "@pcd/tsconfig": "*",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "circomlibjs": "^0.1.7",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",

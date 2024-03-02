@@ -31,7 +31,7 @@
     "test-generated-package": "tsx scripts/testTemplatePackage.ts"
   },
   "devDependencies": {
-    "@types/circomlibjs": "0.1.4",
+    "@types/circomlibjs": "0.1.6",
     "@types/snarkjs": "0.7.5",
     "plop": "^4.0.1",
     "prettier": "^3.0.0",

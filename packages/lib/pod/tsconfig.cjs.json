@@ -12,6 +12,12 @@
   "references": [
     {
       "path": "../util/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../pcd/eddsa-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.cjs.json"
     }
   ]
 }

@@ -25,6 +25,12 @@
   "references": [
     {
       "path": "../util"
+    },
+    {
+      "path": "../../pcd/eddsa-pcd"
+    },
+    {
+      "path": "../pcd-types"
     }
   ]
 }
