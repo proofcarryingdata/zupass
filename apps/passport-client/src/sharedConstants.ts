@@ -16,7 +16,7 @@ export const DEVCONNECT_2023_END = Date.parse(
 
 export const ECD_2024_START = Date.parse("Feb 24, 2024, 00:00:00 UTC-7");
 
-export const ECD_2024_END = Date.parse("March 1, 2024, 00:00:00 UTC-7");
+export const ECD_2024_END = Date.parse("March 4, 2024, 00:00:00 UTC-7");
 
 export const OUTDATED_BROWSER_ERROR_MESSAGE =
   "SecurityError: The operation is insecure";

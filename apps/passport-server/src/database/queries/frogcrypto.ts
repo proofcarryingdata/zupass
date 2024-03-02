@@ -236,7 +236,7 @@ export async function incrementScore(
   semaphoreId: string,
   increment = 1
 ): Promise<FrogCryptoScore> {
-  // hack for edge city to count frogs collected during edge city
+  // hack for edge city denver to count frogs collected during edge city
   await client.query(
     `insert into ecd_frog_scores
     (semaphore_id, score)

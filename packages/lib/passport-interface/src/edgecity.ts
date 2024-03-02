@@ -13,7 +13,7 @@ export const EdgeCityFolderName = "Edge City";
 export interface EdgeCityBalance {
   email_hash: string;
   balance: number;
-  exp?: number;
+  exp?: number; // client-side only
   rank: number;
 }
 
@@ -35,7 +35,7 @@ export interface BadgeConfigUI extends BadgeConfig {
 
 export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
   {
-    id: "Stars",
+    id: "Star",
     eventName: "Stars",
     productName: "",
     imageUrl: "/images/star.webp",

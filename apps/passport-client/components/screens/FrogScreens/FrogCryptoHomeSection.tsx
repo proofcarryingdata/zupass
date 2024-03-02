@@ -35,6 +35,7 @@ const TABS = [
     tab: "get",
     label: "get frogs"
   },
+  // turned off for edge city denver - score is traced in the ECD folder.
   // {
   //   tab: "score",
   //   label: "hi scores"
