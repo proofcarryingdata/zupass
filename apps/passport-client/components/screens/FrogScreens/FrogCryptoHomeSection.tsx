@@ -178,11 +178,11 @@ export function FrogCryptoHomeSection({
               myScore >= 2 && (
                 <>
                   <ButtonGroup>
-                    <Button
+                    <EdgeCityButton
                       onClick={(): void => setBrowsingFolder("Edge City")}
                     >
-                      Edge City Home
-                    </Button>
+                      EDGE CITY
+                    </EdgeCityButton>
                   </ButtonGroup>
                   <ButtonGroup>
                     {TABS.map(({ tab: t, label }) => (
@@ -291,4 +291,23 @@ const Container = styled.div`
 const Score = styled.div`
   font-size: 16px;
   text-align: center;
+`;
+
+const EdgeCityButton = styled(Button)`
+  background-color: black;
+  border: 1px solid #ababab;
+  font-family: PressStart2P;
+  filter: drop-shadow(5px 5px 10px #484848);
+  transition: 300ms;
+
+  &:hover {
+    filter: drop-shadow(5px 5px 20px #484848);
+    transform: scale(1.1);
+    padding: 10px;
+
+    &:active {
+      transform: scale(1.2);
+      padding: 16px;
+    }
+  }
 `;
