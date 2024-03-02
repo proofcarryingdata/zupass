@@ -171,7 +171,7 @@ const ModalBg = styled.div<{ $fullScreen?: boolean }>`
   overflow-y: hidden;
   background: rgba(0, 0, 0, 0.5);
   backdrop-filter: blur(4px);
-  z-index: 999;
+  z-index: 9999;
 
   ${({ $fullScreen }: { $fullScreen?: boolean }): FlattenSimpleInterpolation =>
     $fullScreen
