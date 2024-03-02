@@ -49,7 +49,11 @@ type TabId = (typeof TABS)[number]["tab"];
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
-export function FrogHomeSection(): JSX.Element {
+export function FrogHomeSection({
+  setBrowsingFolder
+}: {
+  setBrowsingFolder: (folder: string | undefined) => void;
+}): JSX.Element {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const subs = useSubscriptions();
   const frogSubs = useMemo(
@@ -171,17 +175,26 @@ export function FrogHomeSection(): JSX.Element {
               // show frog card on first pull
               // show tabs on second pull
               myScore >= 2 && (
-                <ButtonGroup>
-                  {TABS.map(({ tab: t, label }) => (
+                <>
+                  <ButtonGroup>
                     <Button
-                      key={t}
-                      disabled={tab === t}
-                      onClick={(): void => setTab(t)}
+                      onClick={(): void => setBrowsingFolder("Edge City")}
                     >
-                      {label}
+                      Edge City Home
                     </Button>
-                  ))}
-                </ButtonGroup>
+                  </ButtonGroup>
+                  <ButtonGroup>
+                    {TABS.map(({ tab: t, label }) => (
+                      <Button
+                        key={t}
+                        disabled={tab === t}
+                        onClick={(): void => setTab(t)}
+                      >
+                        {label}
+                      </Button>
+                    ))}
+                  </ButtonGroup>
+                </>
               )
             }
 
