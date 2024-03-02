@@ -4,6 +4,7 @@ import {
   EdDSAFrogPCDPackage,
   Rarity,
   Temperament,
+  frogRarityToScore,
   getEdDSAFrogData
 } from "@pcd/eddsa-frog-pcd";
 import {
@@ -108,6 +109,14 @@ function EdDSAFrogCardBody({ pcd }: { pcd: EdDSAFrogPCD }): JSX.Element {
           value={frogData.intelligence}
         />
         <FrogAttribute label="BTY" title="Beauty" value={frogData.beauty} />
+        {frogData.timestampSigned >
+          new Date("2024-03-02T11:29:46.795Z").getTime() && (
+          <FrogAttribute
+            label="EXP"
+            title="Beauty"
+            value={frogRarityToScore(frogData.rarity)}
+          />
+        )}
       </FrogInfo>
       <LinkButton onClick={(): void => setShowMore(!showMore)}>
         {showMore ? "Collapse" : "See more"}

@@ -1,4 +1,4 @@
-import { Biome, EdDSAFrogPCDPackage, Rarity } from "@pcd/eddsa-frog-pcd";
+import { Biome, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
 import _ from "lodash";
 import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
@@ -187,32 +187,4 @@ export interface FrogCryptoScore {
 export interface DexFrog {
   id: number;
   rarity: number;
-}
-
-export function frogRarityToScore(frogRarity: Rarity): number {
-  let rarityToEdgeCityScore = 1;
-
-  switch (frogRarity) {
-    case Rarity.Object:
-    case Rarity.Unknown:
-      rarityToEdgeCityScore *= 0;
-      break;
-    case Rarity.Common:
-      rarityToEdgeCityScore *= 1;
-      break;
-    case Rarity.Rare:
-      rarityToEdgeCityScore *= 4;
-      break;
-    case Rarity.Epic:
-      rarityToEdgeCityScore *= 10;
-      break;
-    case Rarity.Legendary:
-      rarityToEdgeCityScore *= 20;
-      break;
-    case Rarity.Mythic:
-      rarityToEdgeCityScore *= 100;
-      break;
-  }
-
-  return rarityToEdgeCityScore;
 }

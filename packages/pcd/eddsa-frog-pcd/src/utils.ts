@@ -1,6 +1,6 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { numberToBigInt } from "@pcd/util";
-import { EdDSAFrogPCD, IFrogData } from "./EdDSAFrogPCD";
+import { EdDSAFrogPCD, IFrogData, Rarity } from "./EdDSAFrogPCD";
 
 /**
  * A serialized frog data is a list of big integers, where each one is a field in {@link IFrogData}. It needs to be a list of big integers so that it can be passed into {@link EdDSAPCD} to be signed.
@@ -62,4 +62,32 @@ export function getEdDSAFrogData(pcd?: EdDSAFrogPCD): IFrogData | undefined {
  */
 export function getPublicKey(pcd?: EdDSAFrogPCD): EdDSAPublicKey | undefined {
   return pcd?.proof?.eddsaPCD?.claim?.publicKey;
+}
+
+export function frogRarityToScore(frogRarity: Rarity): number {
+  let rarityToEdgeCityScore = 1;
+
+  switch (frogRarity) {
+    case Rarity.Object:
+    case Rarity.Unknown:
+      rarityToEdgeCityScore *= 0;
+      break;
+    case Rarity.Common:
+      rarityToEdgeCityScore *= 1;
+      break;
+    case Rarity.Rare:
+      rarityToEdgeCityScore *= 4;
+      break;
+    case Rarity.Epic:
+      rarityToEdgeCityScore *= 10;
+      break;
+    case Rarity.Legendary:
+      rarityToEdgeCityScore *= 20;
+      break;
+    case Rarity.Mythic:
+      rarityToEdgeCityScore *= 100;
+      break;
+  }
+
+  return rarityToEdgeCityScore;
 }

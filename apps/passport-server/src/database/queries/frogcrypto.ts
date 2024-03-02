@@ -1,4 +1,4 @@
-import { Rarity } from "@pcd/eddsa-frog-pcd";
+import { Rarity, frogRarityToScore } from "@pcd/eddsa-frog-pcd";
 import {
   DexFrog,
   FrogCryptoDbFeedData,
@@ -7,8 +7,7 @@ import {
   FrogCryptoFeedBiomeConfigs,
   FrogCryptoFolderName,
   FrogCryptoFrogData,
-  FrogCryptoScore,
-  frogRarityToScore
+  FrogCryptoScore
 } from "@pcd/passport-interface";
 import { PCDPermissionType } from "@pcd/pcd-collection";
 import _ from "lodash";
