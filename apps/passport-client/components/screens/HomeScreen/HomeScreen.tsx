@@ -1,4 +1,7 @@
-import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import {
+  EdgeCityFolderName,
+  FrogCryptoFolderName
+} from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
   useCallback,
@@ -91,8 +94,13 @@ export function HomeScreenImpl(): JSX.Element {
   useEffect(() => {
     const oldParams = Object.fromEntries(searchParams.entries());
 
+    if (browsingFolder !== EdgeCityFolderName) {
+      delete oldParams["tab"];
+    }
+
     if (!browsingFolder) {
       delete oldParams[FOLDER_QUERY_PARAM];
+
       setSearchParams({
         ...oldParams
       });
