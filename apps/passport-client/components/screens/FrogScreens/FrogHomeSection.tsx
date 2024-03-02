@@ -27,7 +27,7 @@ import {
   useCheatCodeActivation
 } from "./FrogSubscriptionScreen";
 import { GetFrogTab } from "./GetFrogTab";
-import { ScoreTab, scoreToEmoji } from "./ScoreTab";
+import { scoreToEmoji } from "./ScoreTab";
 import { TypistText } from "./TypistText";
 import { useInitializeFrogSubscriptions } from "./useFrogFeed";
 
@@ -193,12 +193,12 @@ export function FrogHomeSection(): JSX.Element {
                 pcds={frogPCDs}
               />
             )}
-            {tab === "score" && (
+            {/* {tab === "score" && (
               <ScoreTab
                 score={userState?.myScore}
                 refreshScore={refreshUserState}
               />
-            )}
+            )} */}
             {tab === "dex" && (
               <DexTab possibleFrogs={userState.possibleFrogs} pcds={frogPCDs} />
             )}

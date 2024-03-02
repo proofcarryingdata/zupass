@@ -47,6 +47,7 @@ interface GroupedEvent {
   imageUrl: string;
   hiddenWhenEmpty: boolean;
   infinite: boolean;
+  description?: string;
 }
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
@@ -61,11 +62,12 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
       total: 1,
       imageUrl: item.imageUrl,
       hiddenWhenEmpty: !!item.hiddenWhenEmpty,
-      infinite: !!item.infinite
-    });
+      infinite: !!item.infinite,
+      description: item.description
+    } satisfies GroupedEvent);
   }
   return acc;
-}, []);
+}, [] satisfies GroupedEvent[]);
 
 /**
  * Renders EdgeCity UI.
@@ -230,7 +232,7 @@ export function EdgeCityHome(): JSX.Element {
           </ExperiencesHeader>
           <div>
             <CategoryHeader>
-              <span>{CONTACT_EVENT_NAME} </span>
+              <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
               <span>{`${
                 (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
               }/${"∞"}`}</span>
@@ -261,7 +263,14 @@ export function EdgeCityHome(): JSX.Element {
             </ItemContainer>
           </div>
           {groupedResult.map(
-            ({ eventName, total, imageUrl, hiddenWhenEmpty, infinite }) => {
+            ({
+              eventName,
+              total,
+              imageUrl,
+              hiddenWhenEmpty,
+              infinite,
+              description
+            }) => {
               const pcds = pcdsByEventName[eventName] ?? [];
               if (hiddenWhenEmpty && pcds.length === 0) {
                 return null;
@@ -269,11 +278,12 @@ export function EdgeCityHome(): JSX.Element {
               return (
                 <div key={eventName}>
                   <CategoryHeader>
-                    <span>{eventName}</span>
+                    <EventTitle>{eventName}</EventTitle>
                     <span>{`${pcds.length}/${
                       infinite ? "∞" : total || "∞"
                     }`}</span>
                   </CategoryHeader>
+                  <CategoryDescription>{description}</CategoryDescription>
                   <ItemContainer>
                     {pcds.flatMap((pcd) => (
                       <ItemCard
@@ -340,8 +350,9 @@ const Container = styled.div`
 
 const ExperiencesHeader = styled.div`
   padding-bottom: 16px;
-  border-bottom: 1px solid grey;
-  margin-bottom: 16px;
+  /* border-bottom: 1px solid grey; */
+  margin-bottom: 32px;
+  text-align: center;
 `;
 
 const Caption = styled.div`
@@ -472,4 +483,8 @@ const CategoryDescription = styled.div`
   opacity: 0.9;
   font-size: 0.8em;
   margin-bottom: 8px;
+`;
+
+const EventTitle = styled.span`
+  text-decoration: underline;
 `;
