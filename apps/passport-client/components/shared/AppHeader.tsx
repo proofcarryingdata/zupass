@@ -1,5 +1,6 @@
-import { icons } from "@pcd/passport-ui";
 import React, { useCallback } from "react";
+import { IoMdSettings } from "react-icons/io";
+import { MdInfo, MdOutlineQrCodeScanner, MdRssFeed } from "react-icons/md";
 import styled from "styled-components";
 import { useDispatch, useSubscriptions } from "../../src/appHooks";
 import { AppState } from "../../src/state";
@@ -34,6 +35,9 @@ function AppHeaderImpl({
     () => setModal({ modalType: "settings" }),
     [setModal]
   );
+
+  const openScanner = useCallback(() => (window.location.href = "/#/scan"), []);
+
   const openSubscriptions = useCallback(
     () => (window.location.href = "/#/subscriptions"),
     []
@@ -43,12 +47,7 @@ function AppHeaderImpl({
   return (
     <AppHeaderWrap>
       <CircleButton diameter={34} padding={8} onClick={openInfo}>
-        <img
-          draggable="false"
-          src={isEdgeCity ? icons.infoWhite : icons.infoAccent}
-          width={34}
-          height={34}
-        />
+        <MdInfo size={34} color={isEdgeCity ? "white" : "var(--accent-lite)"} />
       </CircleButton>
       {children}
       {!isProveOrAddScreen && (
@@ -58,21 +57,24 @@ function AppHeaderImpl({
               <ErrorDot />
             </ErrorDotContainer>
           )}
-          <img
-            title="Subscriptions"
-            draggable="false"
-            src={isEdgeCity ? icons.subscriptionWhite : icons.subscription}
-            width={34}
-            height={34}
+          <MdRssFeed
+            size={34}
+            color={isEdgeCity ? "white" : "var(--accent-lite)"}
           />
         </CircleButton>
       )}
+
+      <CircleButton diameter={34} padding={8} onClick={openScanner}>
+        <MdOutlineQrCodeScanner
+          size={34}
+          color={isEdgeCity ? "white" : "var(--accent-lite)"}
+        />
+      </CircleButton>
+
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
-        <img
-          draggable="false"
-          src={isEdgeCity ? icons.settingsWhite : icons.settingsAccent}
-          width={34}
-          height={34}
+        <IoMdSettings
+          size={34}
+          color={isEdgeCity ? "white" : "var(--accent-lite)"}
         />
       </CircleButton>
     </AppHeaderWrap>
