@@ -617,11 +617,13 @@ export class LemonadePipeline implements BasePipeline {
           ticket?.eventId
         );
 
-        const eventId = uuidv5(
+        const productId = uuidv5(
           `badge-${badgeConfig.id}-${badgeConfig.eventName}-${badgeConfig.productName}`,
           this.id
         );
-        const productId = uuidv5(`product-${eventId}`, this.id);
+        // This means that all badges given out at the same event have a common
+        // event ID, which is derived from the event's ID
+        const eventId = uuidv5(`badge-${ticket.eventId}`, this.id);
         const ticketId = uuidv5(`ticket-${productId}-${email}-${i}`, this.id);
 
         return await EdDSATicketPCDPackage.serialize(
@@ -651,7 +653,7 @@ export class LemonadePipeline implements BasePipeline {
                 ticketId, // The ticket ID is a unique identifier of the ticket.
                 timestampConsumed: 0,
                 timestampSigned: Date.now(),
-                attendeeSemaphoreId: "",
+                attendeeSemaphoreId: ticket.attendeeSemaphoreId,
                 isConsumed: false,
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
