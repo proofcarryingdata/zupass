@@ -75,6 +75,7 @@ const STABLE_CACHE_RESOURCES = new Set([
   "/images/cold.webp",
   "/images/egg.webp",
   "/images/elephant.webp",
+  "/images/frame.webp",
   "/images/gold-trophy.webp",
   "/images/hat.webp",
   "/images/johnwick.webp",

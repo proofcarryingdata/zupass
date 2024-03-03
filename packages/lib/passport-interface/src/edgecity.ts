@@ -273,5 +273,14 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     hiddenWhenEmpty: true,
     givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
     description: "Memes are decentralized social superpowers."
+  },
+  {
+    id: "Best Use of Frames",
+    eventName: "Best Use of Frames",
+    productName: "",
+    imageUrl: "/images/frame.webp",
+    hiddenWhenEmpty: true,
+    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
+    description: "For launching the best Farcaster Frame."
   }
 ];
