@@ -243,7 +243,35 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     hiddenWhenEmpty: true,
     givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
     description:
-      "Attend the Decentralized Social Hackathon on Sunday and get scanned" +
+      "Attend the Social Onesness Hackathon on Sunday and get scanned" +
       " by an organizer to get this badge. Worth 10 EXP."
+  },
+  {
+    id: "Community Favorite Award",
+    eventName: "Community Favorite Award",
+    productName: "",
+    imageUrl: "/images/gold-trophy.webp",
+    hiddenWhenEmpty: true,
+    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
+    description:
+      "Received the most number of community votes during the Social Oneness Hackathon."
+  },
+  {
+    id: "Occupy $ZUCASH",
+    eventName: "Occupy $ZUCASH",
+    productName: "",
+    imageUrl: "/images/money.webp",
+    hiddenWhenEmpty: true,
+    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
+    description: "Most creative hack that interacts with $ZUCASH distribution."
+  },
+  {
+    id: "Best Meme Hack",
+    eventName: "Best Meme Hack",
+    productName: "",
+    imageUrl: "/images/meme.webp",
+    hiddenWhenEmpty: true,
+    givers: ["abishek@zerion.io", "afrazhaowang@gmail.com"],
+    description: "Memes are decentralized social superpowers."
   }
 ];
