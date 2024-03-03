@@ -233,7 +233,7 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     productName: "",
     imageUrl: "/images/elephant.webp",
     givers: ["cait@maitri.network"],
-    description: "Cait's doin it right."
+    description: "Cait says, “you're doing it right!”"
   },
   {
     id: "Decentralized Social Hacker",
