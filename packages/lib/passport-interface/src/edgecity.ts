@@ -220,6 +220,22 @@ export const BADGES_EDGE_CITY: BadgeConfigUI[] = [
     description: "And Arjun?"
   },
   {
+    id: "Met Eggy",
+    eventName: "Met Eggy",
+    productName: "",
+    imageUrl: "/images/egg.webp",
+    givers: ["eggy@sola.day"],
+    description: "Or Eggy?"
+  },
+  {
+    id: "You're Doin it Right",
+    eventName: "You're Doin It Right",
+    productName: "",
+    imageUrl: "/images/elephant.webp",
+    givers: ["cait@maitri.network"],
+    description: "Cait says, “you're doing it right!”"
+  },
+  {
     id: "Decentralized Social Hacker",
     eventName: "Decentralized Social Hacker",
     productName: "",
