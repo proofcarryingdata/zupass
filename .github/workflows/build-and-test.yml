@@ -4,9 +4,11 @@ on:
   push:
     branches:
       - main
+      - artwyman/pod-prototype
   pull_request:
     branches:
       - main
+      - artwyman/pod-prototype
   merge_group:
 jobs:
   Build-and-Test:
