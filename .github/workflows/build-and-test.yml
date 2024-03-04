@@ -5,10 +5,12 @@ on:
     branches:
       - main
       - artwyman/pod-prototype
+      - artwyman/circom-ci
   pull_request:
     branches:
       - main
       - artwyman/pod-prototype
+      - artwyman/circom-ci
   merge_group:
 jobs:
   Build-and-Test:
