@@ -43,6 +43,18 @@ jobs:
       - name: Configure Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
 
+      - name: Cache circom and cargo
+        uses: actions/cache@v3
+        id: cache-circom
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            cibuild/circom/
+          key: ${{ runner.os }}-circom-${{ env.CIRCOM_VERSION }}
+
       - name: "Install circom"
         run: "scripts/ci/install_circom.sh $CIRCOM_VERSION"
 
