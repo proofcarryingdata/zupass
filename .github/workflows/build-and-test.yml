@@ -57,7 +57,12 @@ jobs:
           key: ${{ runner.os }}-circom-${{ env.CIRCOM_VERSION }}
 
       - name: "Install circom"
+        if: ${{ steps.cache-circom.outputs.cache-hit != 'true' }}
         run: "scripts/ci/install_circom.sh $CIRCOM_VERSION"
+
+      - name: "Add cached circom to PATH"
+        if: ${{ steps.cache-circom.outputs.cache-hit == 'true' }}
+        run: "echo '~/.cargo/bin' >> $GITHUB_PATH"
 
       - name: "Test circom"
         run: "circom --version"
