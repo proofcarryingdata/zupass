@@ -11,6 +11,8 @@ on:
 jobs:
   Build-and-Test:
     runs-on: ubuntu-latest
+    env:
+      CIRCOM_VERSION: v2.1.8
     services:
       postgres:
         image: postgres:15
@@ -37,6 +39,26 @@ jobs:
 
       - name: Configure Turbo cache
         uses: dtinth/setup-github-actions-caching-for-turbo@v1
+
+      - name: Cache circom and cargo
+        uses: actions/cache@v3
+        id: cache-circom
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            cibuild/circom/
+          key: ${{ runner.os }}-circom-${{ env.CIRCOM_VERSION }}
+
+      - name: "Install circom (if not cached)"
+        if: ${{ steps.cache-circom.outputs.cache-hit != 'true' }}
+        run: "scripts/ci/install_circom.sh $CIRCOM_VERSION"
+
+      - name: "Add cached circom to PATH (if cached)"
+        if: ${{ steps.cache-circom.outputs.cache-hit == 'true' }}
+        run: "echo '~/.cargo/bin' >> $GITHUB_PATH"
 
       - run: "yarn install"
       - name: "Check that yarn install did not cause changes to yarn.lock"

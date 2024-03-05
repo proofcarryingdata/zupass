@@ -45,3 +45,6 @@ logfile
 
 # vim
 *.swp
+
+# CI build artifacts
+cibuild
