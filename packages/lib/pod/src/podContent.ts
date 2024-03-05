@@ -7,7 +7,9 @@ import {
   checkPODValue,
   cloneOptionalPODValue,
   clonePODValue,
-  getPODValueForCircuit
+  deserializePODEntries,
+  getPODValueForCircuit,
+  serializePODEntries
 } from "./podUtil";
 
 type PODEntryInfo = { index: number; value: PODValue };
@@ -147,7 +149,7 @@ export class PODContent {
    */
   public listEntries(): { name: string; value: PODValue }[] {
     return [...this._map.entries()].map((e) => {
-      return { name: e[0], value: e[1].value };
+      return { name: e[0], value: clonePODValue(e[1].value) };
     });
   }
 
@@ -171,6 +173,26 @@ export class PODContent {
    */
   public getRawValue(name: string): PODValue["value"] | undefined {
     return this._map.get(name)?.value?.value;
+  }
+
+  /**
+   * Serializes this instance's entries as a JSON string, in a way which
+   * properly preserves all types.
+   */
+  public serialize(): string {
+    return serializePODEntries(this.asEntries());
+  }
+
+  /**
+   * Deserializes POD entries from JSON.
+   *
+   * @param serializedEntries a string previously created by {@link #serialize}.
+   * @returns a new PODContent instance
+   * @throws if the string isn't valid JSON, or represents entries which aren't
+   *   legal for inclusion in a POD
+   */
+  public static deserialize(serializedEntries: string): PODContent {
+    return PODContent.fromEntries(deserializePODEntries(serializedEntries));
   }
 
   /**

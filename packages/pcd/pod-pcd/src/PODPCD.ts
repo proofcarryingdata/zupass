@@ -173,7 +173,8 @@ export async function serialize(pcd: PODPCD): Promise<SerializedPCD<PODPCD>> {
       alwaysParseAsBig: true
     }).stringify({
       id: pcd.id,
-      pod: pcd.pod.getDataToSave()
+      claim: pcd.claim,
+      proof: pcd.proof
     })
   };
 }
@@ -189,15 +190,24 @@ export async function deserialize(serialized: string): Promise<PODPCD> {
     alwaysParseAsBig: true
   }).parse(serialized);
 
-  // TODO(artwyman): More careful schema validation, likely with Zod.
+  // TODO(artwyman): More careful schema validation, likely with Zod, with
+  // special handling of the PODEntries type and subtypes.
   // TODO(artwyman): Backward-compatible schema versioning.
   requireDefinedParameter(deserialized.id, "id");
-  requireDefinedParameter(deserialized.pod, "pod");
-  requireDefinedParameter(deserialized.pod.entries, "entries");
-  requireDefinedParameter(deserialized.pod.signature, "signature");
-  requireDefinedParameter(deserialized.pod.signerPublicKey, "signerPublicKey");
+  requireDefinedParameter(deserialized.claim, "claim");
+  requireDefinedParameter(deserialized.claim.entries, "entries");
+  requireDefinedParameter(
+    deserialized.claim.signerPublicKey,
+    "signerPublicKey"
+  );
+  requireDefinedParameter(deserialized.proof, "proof");
+  requireDefinedParameter(deserialized.proof.signature, "signature");
 
-  const loadedPOD = POD.loadFromData(deserialized.pod);
+  const loadedPOD = POD.load(
+    deserialized.claim.entries,
+    deserialized.proof.signature,
+    deserialized.claim.signerPublicKey
+  );
 
   return new PODPCD(deserialized.id, loadedPOD);
 }

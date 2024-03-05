@@ -1,18 +1,9 @@
+import { requireDefinedParameter } from "@pcd/util";
+import JSONBig from "json-bigint";
 import { PODContent } from "./podContent";
 import { signPODRoot, verifyPODRootSignature } from "./podCrypto";
 import { PODEntries } from "./podTypes";
-
-/**
- * Encapsulates the data in a POD which must be persisted in order to
- * reconstruct the same POD later.  These are data objects with no hidden
- * fields or behavior.  However there is no handling of serialization or
- * backward-compatibility at this level.
- */
-export type SavedPOD = {
-  entries: PODEntries;
-  signature: string;
-  signerPublicKey: string;
-};
+import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
 
 /**
  * Class encapsulating a signed POD with functions for common use cases.
@@ -106,37 +97,70 @@ export class POD {
   }
 
   /**
-   * Extracts minimal data needed to reconstruct this POD using
-   * `loadFromData()`.  This doesn't include derivable values such as
-   * the Merkle tree hashes.
-   *
-   * @returns the minimal data representing this POD
-   */
-  public getDataToSave(): SavedPOD {
-    return {
-      entries: this.content.asEntries(),
-      signature: this.signature,
-      signerPublicKey: this.signerPublicKey
-    };
-  }
-
-  /**
-   * Factory to create a new POD using saved data.  Derived values such as
-   * Merkle tree hashes will be calculated lazily as-needed.
+   * Factory to create a new POD using saved data signed previously.  Derived
+   * values such as Merkle tree hashes will be calculated lazily as-needed.
    *
    * Note that this method does not verify the signature.  To check the
    * validity of your POD, call `verifySignature()` separately.
    *
-   * @param savedPOD saved data fields provided by `getDataToSave()`, or
-   *   loaded from some external store
+   * @param entries saved entries
+   * @param signature saved signature
+   * @param signerPublicKey saved public key of signer
    * @returns a new POD
-   * @throws if any of the entries aren't legal for inclusion in a POD
+   * @throws if any arguments are malformed, or any of the entries aren't legal
+   *   for inclusion in a POD
    */
-  public static loadFromData(savedPOD: SavedPOD): POD {
+  public static load(
+    entries: PODEntries,
+    signature: string,
+    signerPublicKey: string
+  ): POD {
     return new POD(
-      PODContent.fromEntries(savedPOD.entries),
-      savedPOD.signature,
-      savedPOD.signerPublicKey
+      PODContent.fromEntries(entries),
+      checkSignatureFormat(signature),
+      checkPublicKeyFormat(signerPublicKey)
+    );
+  }
+
+  /**
+   * Serializes this instance as a JSON string.
+   */
+  public serialize(): string {
+    return JSONBig({
+      useNativeBigInt: true,
+      alwaysParseAsBig: true
+    }).stringify({
+      entries: this.content.asEntries(),
+      signature: this.signature,
+      signerPublicKey: this.signerPublicKey
+    });
+  }
+
+  /**
+   * Deserializes a POD from a JSON string.
+   *
+   * @param serializedPOD a string previously created by {@link #serialize}.
+   * @returns a new PODContent instance
+   * @throws if the string isn't valid JSON, or represents entries which aren't
+   *   legal for inclusion in a POD
+   */
+  public static deserialize(serializedPOD: string): POD {
+    const parsedPOD = JSONBig({
+      useNativeBigInt: true,
+      alwaysParseAsBig: true
+    }).parse(serializedPOD);
+
+    // TODO(artwyman): More careful schema validation, likely with Zod, with
+    // special handling of the PODEntries type and subtypes.
+    // TODO(artwyman): Backward-compatible schema versioning?
+    requireDefinedParameter(parsedPOD.entries, "entries");
+    requireDefinedParameter(parsedPOD.signature, "signature");
+    requireDefinedParameter(parsedPOD.signerPublicKey, "signerPublicKey");
+
+    return POD.load(
+      parsedPOD.entries,
+      parsedPOD.signature,
+      parsedPOD.signerPublicKey
     );
   }
 }

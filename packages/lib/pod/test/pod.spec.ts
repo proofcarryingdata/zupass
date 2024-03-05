@@ -1,8 +1,7 @@
 import { verifySignature } from "@zk-kit/eddsa-poseidon";
 import { expect } from "chai";
-import JSONBig from "json-bigint";
 import "mocha";
-import { POD, SavedPOD, unpackPublicKey, unpackSignature } from "../src";
+import { POD, unpackPublicKey, unpackSignature } from "../src";
 import {
   expectedPublicKey,
   expectedPublicKeyPoint,
@@ -36,19 +35,32 @@ describe("POD class should work", async function () {
       const signedPOD = POD.sign(sampleEntries, privateKey);
       expect(signedPOD.verifySignature()).to.be.true;
 
-      const savedPOD = signedPOD.getDataToSave();
-
-      const stringifier = JSONBig({
-        useNativeBigInt: true,
-        alwaysParseAsBig: true
-      });
-      const serialized = stringifier.stringify(savedPOD);
-      const deserialized = stringifier.parse(serialized) as SavedPOD;
-      const loadedPOD = POD.loadFromData(deserialized);
+      const loadedPOD = POD.load(
+        signedPOD.content.asEntries(),
+        signedPOD.signature,
+        signedPOD.signerPublicKey
+      );
       expect(loadedPOD.verifySignature()).to.be.true;
       expect(loadedPOD.content.asEntries()).to.deep.eq(sampleEntries);
       expect(loadedPOD.signature).to.eq(signedPOD.signature);
       expect(loadedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
     }
   });
+
+  it("should serialize and deserialize", function () {
+    for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
+      const signedPOD = POD.sign(sampleEntries, privateKey);
+      expect(signedPOD.verifySignature()).to.be.true;
+
+      const serialized = signedPOD.serialize();
+      const deserializedPOD = POD.deserialize(serialized);
+      expect(deserializedPOD.verifySignature()).to.be.true;
+      expect(deserializedPOD.content.asEntries()).to.deep.eq(sampleEntries);
+      expect(deserializedPOD.signature).to.eq(signedPOD.signature);
+      expect(deserializedPOD.signerPublicKey).to.eq(signedPOD.signerPublicKey);
+    }
+  });
+
+  // TODO(artwyman): Test malformed inputs
+  // TODO(artwyman): Test immutability - try to mutate returned values
 });

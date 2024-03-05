@@ -20,6 +20,11 @@ import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import { PODValue } from "./podTypes";
+import {
+  checkPrivateKeyFormat,
+  checkPublicKeyFormat,
+  checkSignatureFormat
+} from "./podUtil";
 
 function podStringHash(input: string): bigint {
   // TODO(artwyman): Finalize choice of hash for POD names and string values.
@@ -73,7 +78,7 @@ export function unpackPoint(packedPoint: BigNumber): Point<bigint> | null {
 }
 
 // TODO(artwyman): Submit this to zk-kit/eddsa-poseidon
-export function packSignature(rawSignature: Signature): Buffer {
+export function packSignature(rawSignature: Signature): string {
   const numericSignature: Signature<bigint> = {
     R8: rawSignature.R8.map((c) => bigNumberishToBigint(c)) as Point<bigint>,
     S: bigNumberishToBigint(rawSignature.S)
@@ -82,12 +87,12 @@ export function packSignature(rawSignature: Signature): Buffer {
   const packedBytes = Buffer.alloc(64);
   packedBytes.set(leBigintToBuffer(packedR8), 0);
   packedBytes.set(leBigintToBuffer(numericSignature.S), 32);
-  return packedBytes;
+  return toHexString(packedBytes);
 }
 
 // TODO(artwyman): Submit this to zk-kit/eddsa-poseidon
 export function unpackSignature(packedSigHex: string): Signature<bigint> {
-  const packedBytes = Buffer.from(packedSigHex, "hex");
+  const packedBytes = Buffer.from(checkSignatureFormat(packedSigHex), "hex");
   const sliceR8 = packedBytes.subarray(0, 32);
   const sliceS = packedBytes.subarray(32, 64);
   const unpackedR8 = unpackPoint(leBufferToBigint(sliceR8));
@@ -110,7 +115,7 @@ export function packPublicKey(unpackedPublicKey: Point<BigNumber>): string {
 // which uses a decimal format rather than hex.
 export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
   const unpackedPublicKey = unpackPoint(
-    leBufferToBigint(fromHexString(packedPublicKey))
+    leBufferToBigint(fromHexString(checkPublicKeyFormat(packedPublicKey)))
   );
   if (unpackedPublicKey === null) {
     throw new Error(`Invalid packed public key point ${packedPublicKey}.`);
@@ -118,14 +123,16 @@ export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
   return unpackedPublicKey;
 }
 
+export function unpackPrivateKey(packedPrivateKey: string): Buffer {
+  return fromHexString(checkPrivateKeyFormat(packedPrivateKey));
+}
+
 export function signPODRoot(
   root: bigint,
   privateKey: string
 ): { signature: string; publicKey: string } {
-  const privateKeyBytes = fromHexString(privateKey);
-  const signature = toHexString(
-    packSignature(signMessage(privateKeyBytes, root))
-  );
+  const privateKeyBytes = unpackPrivateKey(privateKey);
+  const signature = packSignature(signMessage(privateKeyBytes, root));
   const publicKey = packPublicKey(derivePublicKey(privateKeyBytes));
 
   return { signature, publicKey };
