@@ -74,7 +74,14 @@ export class PODVerifyCase extends TimerCase {
       this.pcds.push(
         // Reconstituting each PCD from saved data means verificaton will
         // need to rebuild derived data.
-        new PODPCD(i.toString(), POD.loadFromData(samplePOD.getDataToSave()))
+        new PODPCD(
+          i.toString(),
+          POD.load(
+            samplePOD.content.asEntries(),
+            samplePOD.signature,
+            samplePOD.signerPublicKey
+          )
+        )
       );
     }
   }
