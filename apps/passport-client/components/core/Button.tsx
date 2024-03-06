@@ -8,7 +8,8 @@ export function Button({
   style,
   type,
   size,
-  disabled
+  disabled,
+  styles
 }: {
   children: React.ReactNode;
   onClick?: (e: React.MouseEvent<HTMLButtonElement>) => void;
@@ -16,6 +17,7 @@ export function Button({
   size?: "large" | "small" | "xs";
   type?: "submit" | "button" | "reset";
   disabled?: boolean;
+  styles?: React.CSSProperties;
 }): JSX.Element {
   const Btn =
     style === "outline-lite"
@@ -28,7 +30,13 @@ export function Button({
       ? BtnSecondary
       : BtnBase;
   return (
-    <Btn type={type} size={size} onClick={onClick} disabled={disabled}>
+    <Btn
+      type={type}
+      size={size}
+      onClick={onClick}
+      disabled={disabled}
+      style={styles}
+    >
       {children}
     </Btn>
   );

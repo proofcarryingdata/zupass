@@ -11,14 +11,15 @@ import {
   useMemo,
   useState
 } from "react";
+import styled from "styled-components";
 import { Button, Spacer } from "../../../../../../core";
 import { RippleLoader } from "../../../../../../core/RippleLoader";
-import Select from "../../../../../../shared/Select";
 import {
   ErrorContainer,
   StatusContainer
 } from "../../../PodboxScannedTicketScreen";
 import { useExecuteTicketAction } from "../useExecuteTicketAction";
+import { PerDayBadges } from "./PerDayBadges";
 
 function badgeDisplayName(c: BadgeConfig): string {
   return ticketDisplayName(c.eventName, c.productName);
@@ -27,14 +28,14 @@ function badgeDisplayName(c: BadgeConfig): string {
 export function GiveBadgeActionSection({
   ticketId,
   eventId,
-  setIsLoading: setInProgress,
   precheck,
+  setInProgress,
   isLoading
 }: {
+  precheck: PodboxActionPreCheckResult;
   ticketId: string;
   eventId: string;
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
-  precheck: PodboxActionPreCheckResult;
+  setInProgress: Dispatch<SetStateAction<boolean>>;
   isLoading: boolean;
 }): ReactNode {
   const [selectedBadge, setSelectedBadge] = useState<BadgeConfig | undefined>();
@@ -97,10 +98,6 @@ export function GiveBadgeActionSection({
     );
   }
 
-  if (isLoading) {
-    return null;
-  }
-
   if (executor.result?.success) {
     return (
       <>
@@ -139,16 +136,35 @@ export function GiveBadgeActionSection({
 
   return (
     <div style={{ userSelect: "none" }}>
-      {!selectedBadge && !disabled && (
-        <Select
-          placeholder={"Give Badge"}
-          isSearchable={false}
-          value={selectedBadge}
-          options={badgeOptions}
-          onChange={(val): void => setSelectedBadge(val)}
-        />
+      <PerDayBadges
+        precheck={precheck.value}
+        eventId={eventId}
+        ticketId={ticketId}
+        setInProgress={setInProgress}
+        isLoading={isLoading}
+      />
+
+      {!isLoading && !selectedBadge && !disabled && (
+        <BadgeSelect
+          value={selectedBadge?.id}
+          onChange={(e): void =>
+            setSelectedBadge(badgeOptions.find((b) => b.id === e.target.value))
+          }
+        >
+          <option value={undefined}>choose a badge to give</option>
+          {badgeOptions
+            .filter((b) => b.maxPerDay === undefined)
+            .map((b) => {
+              return (
+                <option value={b.id} key={b.id}>
+                  {b.label}
+                </option>
+              );
+            })}
+        </BadgeSelect>
       )}
-      {selectedBadge && (
+
+      {!isLoading && selectedBadge && (
         <>
           <Button
             onClick={executor.execute}
@@ -172,3 +188,8 @@ export function GiveBadgeActionSection({
     </div>
   );
 }
+
+const BadgeSelect = styled.select`
+  width: 100%;
+  cursor: pointer;
+`;

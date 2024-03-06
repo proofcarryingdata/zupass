@@ -15,6 +15,13 @@ export interface IBadgeGiftingDB {
     pipelineId: string,
     receiverEmail: string | undefined
   ): Promise<Badge[]>;
+
+  getGivenBadges(
+    pipelineId: string,
+    giverEmail: string,
+    badgeIds: string[],
+    startingAgoMs: number
+  ): Promise<Badge[]>;
 }
 
 export class BadgeGiftingDB implements IBadgeGiftingDB {
@@ -37,7 +44,6 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
         insert into podbox_given_badges
         (pipeline_id, giver_email, receiver_email, badge_id, badge_name, badge_url)
         values ($1, $2, $3, $4, $5, $6)
-        on conflict(pipeline_id, giver_email, receiver_email, badge_id) do nothing
 `,
         [
           pipelineId,
@@ -66,7 +72,36 @@ export class BadgeGiftingDB implements IBadgeGiftingDB {
 
     return res.rows.map((r): Badge => {
       return {
-        id: r.badge_id
+        id: r.badge_id,
+        timeCreated: r.time_created.getTime(),
+        giver: r.giver_email
+      };
+    });
+  }
+
+  public async getGivenBadges(
+    pipelineId: string,
+    giverEmail: string,
+    badgeIds: string[],
+    startingAgoMs: number
+  ): Promise<Badge[]> {
+    const res = await sqlQuery(
+      this.db,
+      `
+      select * from podbox_given_badges
+      where pipeline_id=$1
+        and giver_email=$2
+        and badge_id = ANY($3)
+        and time_created > NOW() - $4 * INTERVAL '1' second
+`,
+      [pipelineId, giverEmail, badgeIds, Math.floor(startingAgoMs / 1000)]
+    );
+
+    return res.rows.map((r): Badge => {
+      return {
+        id: r.badge_id,
+        timeCreated: r.time_created.getTime(),
+        giver: r.giver_email
       };
     });
   }

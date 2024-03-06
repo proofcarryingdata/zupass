@@ -73,7 +73,8 @@ export function instantiatePipeline(
         zupassPublicKey,
         cacheService,
         checkinDB,
-        consumerDB
+        consumerDB,
+        semaphoreHistoryDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(

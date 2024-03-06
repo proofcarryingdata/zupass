@@ -25,13 +25,15 @@ function PCDCardImpl({
   pcd,
   expanded,
   onClick,
-  hideRemoveButton
+  hideRemoveButton,
+  hideHeader
 }: {
   pcd: PCD;
   expanded?: boolean;
   isMainIdentity?: boolean;
   onClick?: (id: string) => void;
   hideRemoveButton?: boolean;
+  hideHeader?: boolean;
 }): JSX.Element {
   const clickHandler = useCallback(() => {
     onClick(pcd.id);
@@ -41,9 +43,11 @@ function PCDCardImpl({
     return (
       <CardContainerExpanded>
         <CardOutlineExpanded>
-          <CardHeader isMainIdentity={isMainIdentity}>
-            <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
-          </CardHeader>
+          {!hideHeader && (
+            <CardHeader isMainIdentity={isMainIdentity}>
+              <HeaderContent pcd={pcd} isMainIdentity={isMainIdentity} />
+            </CardHeader>
+          )}
           <CardBodyContainer>
             <CardBody pcd={pcd} isMainIdentity={isMainIdentity} />
             {!hideRemoveButton && (

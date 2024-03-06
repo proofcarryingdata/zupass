@@ -1,5 +1,4 @@
 import { useCallback, useEffect, useState } from "react";
-import { loadFull } from "tsparticles";
 import {
   Container,
   IMove,
@@ -18,18 +17,10 @@ const fpsLimit = 120;
 export function useFrogParticles(
   ref: React.RefObject<HTMLDivElement> | null
 ): Container {
-  const [ready, setReady] = useState(false);
   const [container, setContainer] = useState<Container | null>(null);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      await loadFull(tsParticles);
-      setReady(true);
-    };
-    load();
-  }, []);
 
   useEffect(() => {
-    if (!ready || !ref) {
+    if (!ref) {
       return;
     }
 
@@ -116,7 +107,7 @@ export function useFrogParticles(
         }
       })
       .then(setContainer);
-  }, [ready, ref]);
+  }, [ref]);
 
   return container;
 }
@@ -134,15 +125,6 @@ export function useFrogConfetti(): () => Promise<void> {
       container.destroy();
     };
   }, [container]);
-
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      await loadFull(tsParticles);
-      setReady(true);
-    };
-    load();
-  }, []);
 
   const confetti = useCallback(async () => {
     const opacitySpeed = (100 * 1000) / (3600 * fpsLimit);
@@ -337,24 +319,16 @@ export function useFrogConfetti(): () => Promise<void> {
       .then(setContainer);
   }, [container]);
 
-  return ready ? confetti : null;
+  return confetti;
 }
 
 export function useCelestialPondParticles(
   ref: React.RefObject<HTMLDivElement> | null
 ): Container {
-  const [ready, setReady] = useState(false);
   const [container, setContainer] = useState<Container | null>(null);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      await loadFull(tsParticles);
-      setReady(true);
-    };
-    load();
-  }, []);
 
   useEffect(() => {
-    if (!ready || !ref) {
+    if (!ref) {
       return;
     }
 
@@ -443,7 +417,7 @@ export function useCelestialPondParticles(
         }
       })
       .then(setContainer);
-  }, [ready, ref]);
+  }, [ref]);
 
   return container;
 }
@@ -451,17 +425,8 @@ export function useCelestialPondParticles(
 export function useWrithingVoidParticles(
   ref: React.RefObject<HTMLDivElement> | null
 ): () => Promise<Container> {
-  const [ready, setReady] = useState(false);
-  useEffect(() => {
-    const load = async (): Promise<void> => {
-      await loadFull(tsParticles);
-      setReady(true);
-    };
-    load();
-  }, []);
-
   const play = useCallback(async () => {
-    if (!ready || !ref) {
+    if (!ref) {
       return;
     }
 
@@ -661,7 +626,7 @@ export function useWrithingVoidParticles(
         }
       ]
     });
-  }, [ready, ref]);
+  }, [ref]);
 
   return play;
 }

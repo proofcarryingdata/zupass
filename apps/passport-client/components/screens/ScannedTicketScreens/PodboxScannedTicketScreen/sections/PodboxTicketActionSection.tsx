@@ -2,8 +2,7 @@ import { PodboxActionPreCheckResult } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { Dispatch, SetStateAction } from "react";
 import styled from "styled-components";
-import { loadUsingLaserScanner } from "../../../../../src/localstorage";
-import { Home, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
+import { FakeBack, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
 import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
 import { CheckInActionSection } from "./actions/checkin/CheckInActionSection";
@@ -29,13 +28,10 @@ export function PodboxTicketActionSection({
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   precheck: PodboxActionPreCheckResult;
 }): JSX.Element {
-  const usingLaserScanner = loadUsingLaserScanner();
-
   const shouldShowDivider =
     (precheck?.value?.giveBadgeActionInfo?.permissioned ||
       precheck?.value?.getContactActionInfo?.permissioned) &&
-    precheck?.value?.checkinActionInfo?.permissioned &&
-    !isLoading;
+    precheck?.value?.checkinActionInfo?.permissioned;
 
   const divider = shouldShowDivider ? (
     <div>
@@ -50,7 +46,7 @@ export function PodboxTicketActionSection({
       <>
         <Spacer h={32} />
         <TopRow>
-          {!usingLaserScanner && <Home disabled={isLoading} />}
+          <FakeBack />
           <ScanAnotherTicket disabled={isLoading} />
         </TopRow>
         <Spacer h={16} />
@@ -68,7 +64,7 @@ export function PodboxTicketActionSection({
       <>
         <Spacer h={32} />
         <TopRow>
-          {!usingLaserScanner && <Home disabled={isLoading} />}
+          <FakeBack />
           <ScanAnotherTicket disabled={isLoading} />
         </TopRow>
         <Spacer h={16} />
@@ -84,7 +80,7 @@ export function PodboxTicketActionSection({
       <Spacer h={32} />
 
       <TopRow>
-        {!usingLaserScanner && <Home disabled={isLoading} />}
+        <FakeBack />
         <ScanAnotherTicket disabled={isLoading} />
       </TopRow>
 
@@ -114,7 +110,7 @@ export function PodboxTicketActionSection({
       />
 
       <GiveBadgeActionSection
-        setIsLoading={setIsLoading}
+        setInProgress={setIsLoading}
         isLoading={isLoading}
         precheck={precheck}
         ticketId={ticketId}

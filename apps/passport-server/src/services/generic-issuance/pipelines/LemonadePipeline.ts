@@ -3,7 +3,8 @@ import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
@@ -26,6 +27,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue,
   TicketInfo,
+  isPerDayBadge,
   verifyFeedCredential,
   verifyTicketActionCredential
 } from "@pcd/passport-interface";
@@ -34,7 +36,9 @@ import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
+import PQueue from "p-queue";
 import { DatabaseError } from "pg";
+import urljoin from "url-join";
 import { v5 as uuidv5 } from "uuid";
 import { LemonadeOAuthCredentials } from "../../../apis/lemonade/auth";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
@@ -116,6 +120,7 @@ export class LemonadePipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
+  private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
     return this.definition.id;
@@ -212,6 +217,7 @@ export class LemonadePipeline implements BasePipeline {
     this.checkinDB = checkinDB;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
   }
 
   public async start(): Promise<void> {
@@ -493,10 +499,27 @@ export class LemonadePipeline implements BasePipeline {
 
   /**
    * Tell the Semaphore group provider to update memberships.
+   * Marked as public so that it can be called from tests, but otherwise should
+   * not be called from outside the class.
    */
-  private async triggerSemaphoreGroupUpdate(): Promise<void> {
-    const data = await this.semaphoreGroupData();
-    await this.semaphoreGroupProvider?.update(data);
+  public async triggerSemaphoreGroupUpdate(): Promise<void> {
+    return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
+      tracePipeline(this.definition);
+      // Whenever an update is triggered, we want to make sure that the
+      // fetching of data and the actual update are atomic.
+      // If there were two concurrenct updates, it might be possible for them
+      // to use slightly different data sets, but send them to the `update`
+      // method in the wrong order, producing unexpected outcomes. Although the
+      // group diffing mechanism would eventually cause the group to converge
+      // on the correct membership, we can avoid any temporary inconsistency by
+      // queuing update requests.
+      // By returning this promise, we allow the caller to await on the update
+      // having been processed.
+      return this.semaphoreUpdateQueue.add(async () => {
+        const data = await this.semaphoreGroupData();
+        await this.semaphoreGroupProvider?.update(data);
+      });
+    });
   }
 
   /**
@@ -574,7 +597,7 @@ export class LemonadePipeline implements BasePipeline {
     const badges = await this.badgeDB.getBadges(this.id, email);
 
     const badgePCDs = await Promise.all(
-      badges.map(async (b) => {
+      badges.map(async (b, i) => {
         const badgeConfig =
           this.definition.options.ticketActions?.badges?.choices?.find(
             (c) => c.id === b.id
@@ -584,12 +607,24 @@ export class LemonadePipeline implements BasePipeline {
           return undefined;
         }
 
-        const eventId = uuidv5(
+        // semaphore id intentially left blank, as I'm just trying to get the ticket
+        // so that I can link to it, not issue it/make proofs about it
+        const tickets = await this.getTicketsForEmail(b.giver, "");
+        const ticket = tickets?.[0]?.claim?.ticket;
+        const encodedLink = linkToTicket(
+          urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
+          ticket?.ticketId,
+          ticket?.eventId
+        );
+
+        const productId = uuidv5(
           `badge-${badgeConfig.id}-${badgeConfig.eventName}-${badgeConfig.productName}`,
           this.id
         );
-        const productId = uuidv5(`product-${eventId}`, this.id);
-        const ticketId = uuidv5(`ticket-${productId}-${email}`, this.id);
+        // This means that all badges given out at the same event have a common
+        // event ID, which is derived from the event's ID
+        const eventId = uuidv5(`badge-${ticket.eventId}`, this.id);
+        const ticketId = uuidv5(`ticket-${productId}-${email}-${i}`, this.id);
 
         return await EdDSATicketPCDPackage.serialize(
           await EdDSATicketPCDPackage.prove({
@@ -609,7 +644,8 @@ export class LemonadePipeline implements BasePipeline {
                 ticketName: badgeConfig.productName ?? "",
                 checkerEmail: undefined,
                 imageUrl: badgeConfig.imageUrl,
-                imageAltText: undefined,
+                // link to giver ticket encoded in alt text
+                imageAltText: encodedLink,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.
                 eventId, // The event ID uniquely identifies an event.
@@ -617,12 +653,13 @@ export class LemonadePipeline implements BasePipeline {
                 ticketId, // The ticket ID is a unique identifier of the ticket.
                 timestampConsumed: 0,
                 timestampSigned: Date.now(),
-                attendeeSemaphoreId: "",
+                attendeeSemaphoreId: ticket.attendeeSemaphoreId,
                 isConsumed: false,
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
                 attendeeName: "",
-                attendeeEmail: ""
+                // giver email in attendee email
+                attendeeEmail: b.giver ?? ""
               }
             }
           })
@@ -639,6 +676,16 @@ export class LemonadePipeline implements BasePipeline {
     const contacts = await this.contactDB.getContacts(this.id, email);
     return Promise.all(
       contacts.map(async (contact) => {
+        // semaphore id intentially left blank, as I'm just trying to get the ticket
+        // so that I can link to it, not issue it/make proofs about it
+        const tickets = await this.getTicketsForEmail(contact, "");
+        const ticket: ITicketData | undefined = tickets?.[0]?.claim?.ticket;
+        const encodedLink = linkToTicket(
+          urljoin(process.env.PASSPORT_CLIENT_URL ?? "", "/#/generic-checkin"),
+          ticket?.ticketId,
+          ticket?.eventId
+        );
+
         return await EdDSATicketPCDPackage.serialize(
           await EdDSATicketPCDPackage.prove({
             id: {
@@ -657,7 +704,9 @@ export class LemonadePipeline implements BasePipeline {
                 ticketName: contact,
                 checkerEmail: undefined,
                 imageUrl: "https://i.ibb.co/WcPcL0g/stick.webp",
-                imageAltText: undefined,
+                // we hack a link to the ticket into the alt text field
+                // XD
+                imageAltText: encodedLink,
                 // The fields below are signed using the passport-server's private EdDSA key
                 // and can be used by 3rd parties to represent their own tickets.
                 ticketId: randomUUID(), // The ticket ID is a unique identifier of the ticket.
@@ -669,8 +718,8 @@ export class LemonadePipeline implements BasePipeline {
                 isConsumed: false,
                 isRevoked: false,
                 ticketCategory: TicketCategory.Generic,
-                attendeeName: "",
-                attendeeEmail: contact
+                attendeeName: ticket?.attendeeName ?? "",
+                attendeeEmail: contact ?? ""
               }
             }
           })
@@ -748,22 +797,21 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error(`Email PCD is not signed by Zupass`);
       }
 
-      const now = new Date();
-
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        // TODO check the timeUpdated returned from save(), which will equal
-        // now if a new or updated commitment was recorded, in which case the
-        // Semaphore groups need to be updated. They will be updated on next
-        // load(), but this means there's some latency between a new user
-        // authenticating and being added to their Semaphore groups.
-
         // Consumer is validated, so save them in the consumer list
-        await this.consumerDB.save(
+        const didUpdate = await this.consumerDB.save(
           this.id,
           emailPCD.claim.emailAddress,
           emailPCD.claim.semaphoreId,
-          now
+          new Date()
         );
+
+        // If the user's Semaphore commitment has changed, `didUpdate` will be
+        // true, and we need to update the Semaphore groups
+        if (didUpdate) {
+          span?.setAttribute("semaphore_groups_updated", true);
+          await this.triggerSemaphoreGroupUpdate();
+        }
       }
 
       const email = emailPCD.claim.emailAddress.toLowerCase();
@@ -1338,7 +1386,7 @@ export class LemonadePipeline implements BasePipeline {
 
         // 2) badge action
         if (this.definition.options.ticketActions?.badges?.enabled) {
-          const badgesGiven = await this.badgeDB.getBadges(
+          const badgesGivenToTicketHolder = await this.badgeDB.getBadges(
             this.id,
             ticketInfo.attendeeEmail
           );
@@ -1346,13 +1394,43 @@ export class LemonadePipeline implements BasePipeline {
           const badgesGiveableByUser =
             this.getBadgesGiveableByEmail(actorEmail);
 
+          const rateLimitedGiveableByUser = badgesGiveableByUser.filter(
+            (b) => b.maxPerDay !== undefined
+          );
+
           const notAlreadyGivenBadges = badgesGiveableByUser.filter(
-            (c) => !badgesGiven.find((b) => b.id === c.id)
+            (c) => !badgesGivenToTicketHolder.find((b) => b.id === c.id)
+          );
+
+          const intervalMs = 24 * 60 * 60 * 1000;
+          const alreadyGivenRateLimited = await this.badgeDB.getGivenBadges(
+            this.id,
+            actorEmail,
+            rateLimitedGiveableByUser.map((b) => b.id),
+            intervalMs
           );
 
           result.giveBadgeActionInfo = {
             permissioned: badgesGiveableByUser.length > 0,
             giveableBadges: notAlreadyGivenBadges,
+            rateLimitedBadges: badgesGiveableByUser
+              .filter(isPerDayBadge)
+              .filter(() => {
+                return ticketInfo.attendeeEmail !== actorEmail;
+              })
+              .map((b) => ({
+                alreadyGivenInInterval: alreadyGivenRateLimited.filter(
+                  (g) => g.id === b.id
+                ).length,
+                id: b.id,
+                eventName: b.eventName,
+                productName: b.productName,
+                intervalMs,
+                maxInInterval: b.maxPerDay,
+                timestampsGiven: alreadyGivenRateLimited
+                  .filter((g) => g.id === b.id)
+                  .map((g) => g.timeCreated)
+              })),
             ticket: ticketInfo
           };
         }
@@ -1390,7 +1468,7 @@ export class LemonadePipeline implements BasePipeline {
     return (
       this.definition.options.ticketActions?.badges?.choices ?? []
     ).filter((b: BadgeConfig) => {
-      return b.givers?.includes(email) ?? false;
+      return b.givers?.includes(email) || b.givers?.includes("*") || false;
     });
   }
 
@@ -1468,22 +1546,48 @@ export class LemonadePipeline implements BasePipeline {
           const manualTicket = this.getManualTicketById(ticketId);
           const recipientEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
-          if (recipientEmail) {
-            const matchingBadges: BadgeConfig[] =
-              payload.action.giftBadge.badgeIds
-                .map((id) =>
-                  (
-                    this.definition.options?.ticketActions?.badges?.choices ??
-                    []
-                  ).find((badge) => badge.id === id)
-                )
-                .filter((badge) => !!badge) as BadgeConfig[];
+          const matchingBadges: BadgeConfig[] =
+            payload.action.giftBadge.badgeIds
+              .map((id) =>
+                (
+                  this.definition.options?.ticketActions?.badges?.choices ?? []
+                ).find((badge) => badge.id === id)
+              )
+              .filter((badge) => !!badge) as BadgeConfig[];
 
+          const allowedBadges = matchingBadges.filter((b) => {
+            const matchingRateLimitedBadge =
+              precheck.giveBadgeActionInfo?.rateLimitedBadges?.find(
+                (r) => r.id === b.id
+              );
+
+            // prevent too many rate limited badges from being given
+            if (matchingRateLimitedBadge) {
+              if (
+                matchingRateLimitedBadge.alreadyGivenInInterval >=
+                matchingRateLimitedBadge.maxInInterval
+              ) {
+                return false;
+              }
+            }
+
+            // prevent wrong ppl from issuing wrong badges
+            if (
+              !b.givers?.includes("*") &&
+              !b.givers?.includes(emailPCD.claim.emailAddress)
+            ) {
+              return false;
+            }
+
+            return true;
+          });
+
+          if (recipientEmail) {
             await this.badgeDB.giveBadges(
               this.id,
               emailPCD.claim.emailAddress,
               recipientEmail,
-              matchingBadges
+              allowedBadges
             );
 
             return {

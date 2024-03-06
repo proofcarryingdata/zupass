@@ -403,6 +403,13 @@ describe("Generic Issuance", function () {
   );
   expectToExist(ethLatAmBouncerProduct);
 
+  const ethLatAmSemaphoreGroupIds = {
+    all: randomUUID(),
+    bouncers: randomUUID(),
+    attendees: randomUUID(),
+    attendeesAndBouncers: randomUUID()
+  };
+
   const ethLatAmPipeline: PretixPipelineDefinition = {
     ownerUserId: ethLatAmGIUserID,
     timeCreated: new Date().toISOString(),
@@ -441,6 +448,54 @@ describe("Generic Issuance", function () {
           productId: ethLatAmBouncerProduct.genericIssuanceId,
           attendeeEmail: EthLatAmManualBouncerEmail,
           attendeeName: "Manual Bouncer"
+        }
+      ],
+      semaphoreGroups: [
+        {
+          // All attendees, irrespective of product type
+          name: "All EthLatAm Attendees",
+          groupId: ethLatAmSemaphoreGroupIds.all,
+          memberCriteria: [{ eventId: ethLatAmEventId }]
+        },
+        {
+          // Holders of bouncer-tier tickets
+          name: "EthLatAm Bouncers",
+          groupId: ethLatAmSemaphoreGroupIds.bouncers,
+          memberCriteria: [
+            {
+              eventId: ethLatAmEventId,
+              productId: ethLatAmBouncerProduct.genericIssuanceId
+            }
+          ]
+        },
+        {
+          // Holders of attendee-tier tickets
+          name: "EthLatAm Attendees",
+          groupId: ethLatAmSemaphoreGroupIds.attendees,
+          memberCriteria: [
+            {
+              eventId: ethLatAmEventId,
+              productId: ethLatAmAttendeeProduct.genericIssuanceId
+            }
+          ]
+        },
+        {
+          // Both holders of bouncer-tier tickets and attendee-tier tickets.
+          // In this case, this group will have the same membership as the
+          // "all" group, but if there were more tiers then this demonstrates
+          // how it would be possible to create arbitrary groupings.
+          name: "EthLatAm Bouncers and Attendees",
+          groupId: ethLatAmSemaphoreGroupIds.attendeesAndBouncers,
+          memberCriteria: [
+            {
+              eventId: ethLatAmEventId,
+              productId: ethLatAmBouncerProduct.genericIssuanceId
+            },
+            {
+              eventId: ethLatAmEventId,
+              productId: ethLatAmAttendeeProduct.genericIssuanceId
+            }
+          ]
         }
       ],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
@@ -954,7 +1009,6 @@ t2,i1`,
       expectToExist(edgeCityDenverPipeline);
 
       // Test that a new user is added to the attendee group
-
       const newUser = lemonadeBackend.addUser(
         "newuser@example.com",
         "New",
@@ -981,8 +1035,6 @@ t2,i1`,
       );
       expectLength(NewUserTickets, 1);
 
-      // Necessary to trigger Semaphore group update
-      await edgeCityDenverPipeline.load();
       const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
@@ -1075,8 +1127,6 @@ t2,i1`,
       );
 
       {
-        // Necessary to trigger Semaphore group update
-        await edgeCityDenverPipeline.load();
         const newAttendeeGroupResponse =
           await requestGenericIssuanceSemaphoreGroup(
             process.env.PASSPORT_SERVER_URL as string,
@@ -1440,6 +1490,79 @@ t2,i1`,
       ]);
 
       await checkPipelineInfoEndpoint(giBackend, pipeline);
+    }
+  );
+
+  step(
+    "Pretix pipeline Semaphore groups contain correct members",
+    async function () {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelines();
+      expectToExist(pipelines);
+      expectLength(pipelines, 3);
+      const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(ethLatAmPipeline);
+
+      await ethLatAmPipeline.load();
+
+      const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.all
+      );
+      expectTrue(semaphoreGroupAll.success);
+      expectLength(semaphoreGroupAll.value.members, 4);
+      expect(semaphoreGroupAll.value.members).to.deep.include.members([
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
+      ]);
+
+      const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.bouncers
+      );
+
+      expectTrue(semaphoreGroupBouncers.success);
+      expectLength(semaphoreGroupBouncers.value.members, 2);
+      expect(semaphoreGroupBouncers.value.members).to.deep.include.members([
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
+      ]);
+
+      const semaphoreGroupAttendees =
+        await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          ethLatAmPipeline.id,
+          ethLatAmSemaphoreGroupIds.attendees
+        );
+
+      expectTrue(semaphoreGroupAttendees.success);
+      expectLength(semaphoreGroupAttendees.value.members, 2);
+      expect(semaphoreGroupAttendees.value.members).to.deep.include.members([
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString()
+      ]);
+
+      const semaphoreGroupAttendeesAndBouncers =
+        await requestGenericIssuanceSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          ethLatAmPipeline.id,
+          ethLatAmSemaphoreGroupIds.attendeesAndBouncers
+        );
+
+      expectTrue(semaphoreGroupAttendeesAndBouncers.success);
+      expectLength(semaphoreGroupAttendeesAndBouncers.value.members, 4);
+      expect(
+        semaphoreGroupAttendeesAndBouncers.value.members
+      ).to.deep.include.members([
+        EthLatAmBouncerIdentity.commitment.toString(),
+        EthLatAmAttendeeIdentity.commitment.toString(),
+        EthLatAmManualAttendeeIdentity.commitment.toString(),
+        EthLatAmManualBouncerIdentity.commitment.toString()
+      ]);
     }
   );
 

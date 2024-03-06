@@ -210,7 +210,8 @@ export const BadgeConfigSchema = z.object({
   productName: z.string().optional(),
   imageUrl: z.string(),
   givers: z.array(z.string()).optional(),
-  grantOnCheckin: z.boolean().optional()
+  grantOnCheckin: z.boolean().optional(),
+  maxPerDay: z.number().optional()
 });
 
 export type BadgeConfig = z.infer<typeof BadgeConfigSchema>;
@@ -385,7 +386,8 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   pretixOrgUrl: z.string(),
   events: z.array(PretixEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema,
-  manualTickets: ManualTicketListSchema
+  manualTickets: ManualTicketListSchema,
+  semaphoreGroups: SemaphoreGroupListSchema
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.

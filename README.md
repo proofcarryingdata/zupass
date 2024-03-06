@@ -60,7 +60,7 @@ The PCD SDK is a framework for developing applications that use PCDs for the pro
 In order to develop locally, you will need to set some environment variables. The only place
 where this needs to happen is in the `passport-server` project. We have included an example
 environment variable file which allows you to start a minimal version of the passport application
-that depends on no external services. You can find this file here: [apps/passport-server/.env.local.example](apps/passport-server/.env.local.example). In order to make the `passport-server` use these environment variables,
+that depends on no external services. You can find this file here: [apps/passport-server/.env.example](apps/passport-server/.env.example). In order to make the `passport-server` use these environment variables,
 you will need to copy the contents of the example file into an adjacent file called `.env`.
 
 If you are on the PCD team and need more environment variables, contact @ichub.

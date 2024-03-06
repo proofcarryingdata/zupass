@@ -1,4 +1,7 @@
-import { FrogCryptoFolderName } from "@pcd/passport-interface";
+import {
+  EdgeCityFolderName,
+  FrogCryptoFolderName
+} from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
   useCallback,
@@ -25,8 +28,10 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
+import { useZucashConfetti } from "../EdgeCityScreens/useZucashConfetti";
+import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
-import { FrogHomeSection } from "../FrogScreens/FrogHomeSection";
+import { useFrogConfetti } from "../FrogScreens/useFrogParticles";
 import {
   FolderCard,
   FolderDetails,
@@ -70,6 +75,19 @@ export function HomeScreenImpl(): JSX.Element {
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
+  const z_confetti = useZucashConfetti();
+  const f_confetti = useFrogConfetti();
+
+  const setFolderAndTab = useCallback(
+    (folder?: string, tab?: string) => {
+      setBrowsingFolder(folder);
+      if (tab) {
+        setSearchParams({ tab });
+      }
+    },
+    [setSearchParams]
+  );
+
   useEffect(() => {
     if (self == null) {
       console.log("Redirecting to login screen");
@@ -89,14 +107,25 @@ export function HomeScreenImpl(): JSX.Element {
   });
 
   useEffect(() => {
+    const oldParams = Object.fromEntries(searchParams.entries());
+
+    if (browsingFolder !== EdgeCityFolderName) {
+      delete oldParams["tab"];
+    }
+
     if (!browsingFolder) {
-      setSearchParams(undefined);
-    } else {
+      delete oldParams[FOLDER_QUERY_PARAM];
+
       setSearchParams({
+        ...oldParams
+      });
+    } else if (oldParams[FOLDER_QUERY_PARAM] !== browsingFolder) {
+      setSearchParams({
+        ...oldParams,
         [FOLDER_QUERY_PARAM]: encodeURIComponent(browsingFolder)
       });
     }
-  }, [browsingFolder, setSearchParams]);
+  }, [browsingFolder, searchParams, setSearchParams]);
 
   const onFolderClick = useCallback((folder: string) => {
     setBrowsingFolder(folder);
@@ -177,9 +206,15 @@ export function HomeScreenImpl(): JSX.Element {
           )}
 
           {isFrogCrypto ? (
-            <FrogHomeSection />
+            <FrogCryptoHomeSection
+              confetti={z_confetti}
+              setBrowsingFolder={setFolderAndTab}
+            />
           ) : isEdgeCity ? (
-            <EdgeCityHome />
+            <EdgeCityHome
+              confetti={f_confetti}
+              setBrowsingFolder={setFolderAndTab}
+            />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

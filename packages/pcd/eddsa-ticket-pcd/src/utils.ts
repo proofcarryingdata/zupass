@@ -5,6 +5,7 @@ import {
   numberToBigInt,
   uuidToBigInt
 } from "@pcd/util";
+import urlJoin from "url-join";
 import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
 
 /**
@@ -86,4 +87,23 @@ export function getQRCodeColorOverride(
 
   // Otherwise, don't override and use default.
   return undefined;
+}
+
+function makeIdBasedVerifyLink(baseUrl: string, ticketId: string): string {
+  return urlJoin(baseUrl, `?id=${ticketId}`);
+}
+
+export function linkToTicket(
+  baseUrl: string,
+  ticketId: string,
+  eventId: string
+): string {
+  const encodedId = Buffer.from(
+    JSON.stringify({
+      ticketId: ticketId,
+      eventId: eventId,
+      timestamp: Date.now().toString()
+    })
+  ).toString("base64");
+  return makeIdBasedVerifyLink(baseUrl, encodedId);
 }
