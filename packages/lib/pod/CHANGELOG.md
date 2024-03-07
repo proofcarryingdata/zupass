@@ -1,5 +1,11 @@
 # @pcd/pod
 
+## 0.0.2-alpha.2
+
+### Patch Changes
+
+- bump
+
 ## 0.0.2-alpha.1
 
 ### Patch Changes
