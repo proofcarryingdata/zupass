@@ -1,5 +1,33 @@
 # passport-client
 
+## 0.0.27-alpha.1
+
+### Patch Changes
+
+- Updated dependencies [efc0260f]
+- Updated dependencies
+- Updated dependencies [efc0260f]
+  - @pcd/pod@0.0.2-alpha.1
+  - @pcd/message-pcd@0.0.2-alpha.0
+  - @pcd/message-pcd-ui@0.0.2-alpha.0
+  - @pcd/pod-pcd@0.0.2-alpha.1
+  - @pcd/pod-pcd-ui@0.0.2-alpha.1
+  - @pcd/passport-ui@0.10.1-alpha.0
+  - @pcd/eddsa-frog-pcd-ui@0.1.1-alpha.0
+  - @pcd/eddsa-pcd-ui@0.1.1-alpha.0
+  - @pcd/eddsa-ticket-pcd-ui@0.1.1-alpha.0
+  - @pcd/email-pcd-ui@0.1.1-alpha.0
+  - @pcd/ethereum-ownership-pcd-ui@0.1.1-alpha.0
+  - @pcd/halo-nonce-pcd-ui@0.1.1-alpha.0
+  - @pcd/rsa-image-pcd-ui@0.1.1-alpha.0
+  - @pcd/rsa-pcd-ui@0.1.1-alpha.0
+  - @pcd/rsa-ticket-pcd-ui@0.1.1-alpha.0
+  - @pcd/semaphore-group-pcd-ui@0.1.1-alpha.0
+  - @pcd/semaphore-identity-pcd-ui@0.1.1-alpha.0
+  - @pcd/semaphore-signature-pcd-ui@0.1.1-alpha.0
+  - @pcd/zk-eddsa-event-ticket-pcd-ui@0.1.1-alpha.0
+  - @pcd/zk-eddsa-frog-pcd-ui@0.1.1-alpha.0
+
 ## 0.0.27-alpha.0
 
 ### Patch Changes

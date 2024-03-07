@@ -1,6 +1,6 @@
 {
   "name": "@pcd/message-pcd",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",

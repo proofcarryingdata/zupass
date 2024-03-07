@@ -1,5 +1,11 @@
 # @pcd/zk-eddsa-frog-pcd-ui
 
+## 0.1.1-alpha.0
+
+### Patch Changes
+
+- @pcd/passport-ui@0.10.1-alpha.0
+
 ## 0.1.0
 
 ### Minor Changes

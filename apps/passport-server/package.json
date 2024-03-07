@@ -1,6 +1,6 @@
 {
   "name": "passport-server",
-  "version": "0.0.26",
+  "version": "0.0.27-alpha.0",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -22,7 +22,7 @@
     "@opentelemetry/sdk-node": "^0.34.0",
     "@pagerduty/pdjs": "^2.2.4",
     "@pcd/eddsa-frog-pcd": "0.2.0",
-    "@pcd/message-pcd": "0.0.1",
+    "@pcd/message-pcd": "0.0.2-alpha.0",
     "@pcd/eddsa-pcd": "0.5.0",
     "@pcd/eddsa-ticket-pcd": "0.5.0",
     "@pcd/email-pcd": "0.5.0",

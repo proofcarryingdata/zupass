@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpcircuits",
-  "version": "0.0.1",
+  "version": "0.0.2-alpha.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -28,7 +28,7 @@
   "dependencies": {},
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/pod": "0.0.2-alpha.0",
+    "@pcd/pod": "0.0.2-alpha.1",
     "@pcd/tsconfig": "*",
     "@pcd/util": "^0.4.0",
     "@semaphore-protocol/identity": "^3.15.2",

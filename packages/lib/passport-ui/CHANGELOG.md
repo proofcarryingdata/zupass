@@ -1,5 +1,12 @@
 # @pcd/passport-ui
 
+## 0.10.1-alpha.0
+
+### Patch Changes
+
+- Updated dependencies [efc0260f]
+  - @pcd/message-pcd@0.0.2-alpha.0
+
 ## 0.10.0
 
 ### Minor Changes

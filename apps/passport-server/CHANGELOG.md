@@ -1,5 +1,12 @@
 # passport-server
 
+## 0.0.27-alpha.0
+
+### Patch Changes
+
+- Updated dependencies [efc0260f]
+  - @pcd/message-pcd@0.0.2-alpha.0
+
 ## 0.0.26
 
 ### Patch Changes
