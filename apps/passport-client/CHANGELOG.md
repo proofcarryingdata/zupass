@@ -1,5 +1,14 @@
 # passport-client
 
+## 0.0.27-alpha.0
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.0.2-alpha.0
+  - @pcd/pod-pcd@0.0.2-alpha.0
+  - @pcd/pod-pcd-ui@0.0.2-alpha.0
+
 ## 0.0.26
 
 ### Patch Changes

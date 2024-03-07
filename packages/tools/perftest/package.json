@@ -1,7 +1,7 @@
 {
   "name": "@pcd/perftest",
   "private": true,
-  "version": "0.0.1",
+  "version": "0.0.2-alpha.0",
   "license": "MIT",
   "scripts": {
     "start": "yarn ts-node src/index.ts",
@@ -15,8 +15,8 @@
     "uuid": "^9.0.0",
     "@pcd/eddsa-ticket-pcd": "^0.5.0",
     "@pcd/pcd-types": "^0.10.0",
-    "@pcd/pod": "^0.0.1",
-    "@pcd/pod-pcd": "^0.0.1",
+    "@pcd/pod": "^0.0.2-alpha.0",
+    "@pcd/pod-pcd": "^0.0.2-alpha.0",
     "@pcd/semaphore-identity-pcd": "^0.10.0",
     "@pcd/semaphore-signature-pcd": "^0.10.0",
     "@pcd/util": "^0.4.0",
