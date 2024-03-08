@@ -1,7 +1,7 @@
 {
   "name": "@pcd/pod-pcd",
   "private": true,
-  "version": "0.0.2-alpha.4",
+  "version": "0.0.2-alpha.5",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -28,7 +28,7 @@
   },
   "dependencies": {
     "@pcd/pcd-types": "0.10.0",
-    "@pcd/pod": "0.0.2-alpha.4",
+    "@pcd/pod": "0.0.2-alpha.5",
     "@pcd/util": "0.4.0",
     "json-bigint": "^1.0.0",
     "uuid": "^9.0.0"
