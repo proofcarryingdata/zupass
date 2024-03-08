@@ -1,6 +1,6 @@
 {
   "name": "consumer-client",
-  "version": "0.0.27-alpha.2",
+  "version": "0.0.27-alpha.3",
   "license": "GPL-3.0-or-later",
   "private": true,
   "scripts": {
@@ -19,8 +19,8 @@
     "@pcd/ethereum-ownership-pcd": "0.10.0",
     "@pcd/passport-interface": "0.10.0",
     "@pcd/pcd-types": "0.10.0",
-    "@pcd/pod": "0.0.2-alpha.2",
-    "@pcd/pod-pcd": "0.0.2-alpha.2",
+    "@pcd/pod": "0.0.2-alpha.3",
+    "@pcd/pod-pcd": "0.0.2-alpha.3",
     "@pcd/semaphore-group-pcd": "0.10.0",
     "@pcd/semaphore-identity-pcd": "0.10.0",
     "@pcd/semaphore-signature-pcd": "0.10.0",

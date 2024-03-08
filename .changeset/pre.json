@@ -62,6 +62,7 @@
     "@pcd/zk-eddsa-frog-pcd-ui": "0.1.0"
   },
   "changesets": [
+    "curly-baboons-fail",
     "dry-apples-doubt",
     "few-sheep-share",
     "sweet-ears-speak",
