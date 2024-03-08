@@ -28,7 +28,7 @@
   "dependencies": {},
   "devDependencies": {
     "@pcd/eslint-config-custom": "*",
-    "@pcd/pod": "0.0.2-alpha.3",
+    "@pcd/pod": "0.0.2-alpha.4",
     "@pcd/tsconfig": "*",
     "@pcd/util": "^0.4.0",
     "@semaphore-protocol/identity": "^3.15.2",

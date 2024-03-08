@@ -1,5 +1,13 @@
 # consumer-client
 
+## 0.0.27-alpha.4
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pod@0.0.2-alpha.4
+  - @pcd/pod-pcd@0.0.2-alpha.4
+
 ## 0.0.27-alpha.3
 
 ### Patch Changes
