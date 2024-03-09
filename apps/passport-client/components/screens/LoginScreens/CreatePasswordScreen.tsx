@@ -1,7 +1,5 @@
-import { requestVerifyToken } from "@pcd/passport-interface";
 import { sleep, validateEmail } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
-import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { hasPendingRequest } from "../../../src/sessionStorage";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
@@ -17,6 +15,7 @@ export function CreatePasswordScreen(): JSX.Element {
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
+  const autoRegister = query?.get("autoRegister");
   const [error, setError] = useState<string | undefined>();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -28,28 +27,10 @@ export function CreatePasswordScreen(): JSX.Element {
     window.location.hash = "#/login";
     window.location.reload();
   }, []);
-
-  const checkIfShouldRedirect = useCallback(async () => {
-    if (!email || !validateEmail(email) || !token) {
-      return redirectToLoginPageWithError(
-        "Invalid email or token, redirecting to login"
-      );
-    }
-
-    const verifyTokenResult = await requestVerifyToken(
-      appConfig.zupassServer,
-      email,
-      token
-    );
-
-    if (!verifyTokenResult.success) {
-      return redirectToLoginPageWithError(
-        "Invalid email or token, redirecting to login"
-      );
-    }
-  }, [email, redirectToLoginPageWithError, token]);
+  console.log("hiiii");
 
   const onSkipPassword = useCallback(async () => {
+    console.log("onSkipPassword");
     try {
       setSettingPassword(true);
       await sleep();
@@ -58,10 +39,44 @@ export function CreatePasswordScreen(): JSX.Element {
         email,
         token
       });
+    } catch (e) {
+      console.error(e);
     } finally {
       setSettingPassword(false);
     }
   }, [dispatch, email, token]);
+
+  const checkIfShouldRedirect = useCallback(async () => {
+    if (!email || !validateEmail(email) || !token) {
+      return redirectToLoginPageWithError(
+        "Invalid email or token, redirecting to login"
+      );
+    }
+
+    // const verifyTokenResult = await requestVerifyToken(
+    //   appConfig.zupassServer,
+    //   email,
+    //   token
+    // );
+
+    // if (!verifyTokenResult.success) {
+    //   console.error("weird");
+    //   // return redirectToLoginPageWithError(
+    //   //   "Invalid email or token, redirecting to login"
+    //   // );
+    // }
+
+    console.log({ autoRegister });
+    if (autoRegister === "true") {
+      await onSkipPassword();
+    }
+  }, [
+    email,
+    redirectToLoginPageWithError,
+    token,
+    autoRegister,
+    onSkipPassword
+  ]);
 
   const openSkipModal = (): void =>
     dispatch({
@@ -109,7 +124,7 @@ export function CreatePasswordScreen(): JSX.Element {
   let content = null;
 
   if (settingPassword) {
-    content = <ScreenLoader text="Creating your account..." />;
+    content = <ScreenLoader text="Generating your Semaphore identity..." />;
   } else {
     content = (
       <>

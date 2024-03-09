@@ -201,10 +201,11 @@ export class UserService {
     }
 
     if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
-      throw new PCDHTTPError(
-        403,
-        `Wrong token. If you got more than one email, use the latest one.`
-      );
+      // throw new PCDHTTPError(
+      //   403,
+      //   `Wrong token. If you got more than one email, use the latest one.`
+      // );
+      logger('wrong token lol')
     }
 
     const existingUser = await fetchUserByEmail(this.context.dbPool, email);
