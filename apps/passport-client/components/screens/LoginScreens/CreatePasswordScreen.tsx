@@ -16,6 +16,7 @@ export function CreatePasswordScreen(): JSX.Element {
   const email = query?.get("email");
   const token = query?.get("token");
   const autoRegister = query?.get("autoRegister");
+  const targetFolder = query?.get("targetFolder");
   const [error, setError] = useState<string | undefined>();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -37,14 +38,15 @@ export function CreatePasswordScreen(): JSX.Element {
       await dispatch({
         type: "create-user-skip-password",
         email,
-        token
+        token,
+        targetFolder
       });
     } catch (e) {
       console.error(e);
     } finally {
       setSettingPassword(false);
     }
-  }, [dispatch, email, token]);
+  }, [dispatch, email, token, targetFolder]);
 
   const checkIfShouldRedirect = useCallback(async () => {
     if (!email || !validateEmail(email) || !token) {

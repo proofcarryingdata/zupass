@@ -23,7 +23,8 @@ export function ScreenLoader({ text }: { text?: string }): JSX.Element {
         <Spacer h={128} />
         <RippleLoader />
         <Spacer h={24} />
-        {textVisible && text && <>{text}</>}
+        {/* {textVisible && text && <>{text}</>} */}
+        {<>{text ? text : "Generating your Semaphore identity..."}</>}
       </TextCenter>
     </CenterColumn>
   );

@@ -58,6 +58,7 @@ export function HomeScreenImpl(): JSX.Element {
     const folderPathFromQuery = decodeURIComponent(
       searchParams.get(FOLDER_QUERY_PARAM)
     );
+    console.log({ folderPathFromQuery });
     if (!folderPathFromQuery) {
       return "";
     }
@@ -67,8 +68,8 @@ export function HomeScreenImpl(): JSX.Element {
     }
 
     return pcdCollection.isValidFolder(folderPathFromQuery)
-      ? folderPathFromQuery
-      : "";
+      ? folderPathFromQuery || ""
+      : folderPathFromQuery || "";
   }, [pcdCollection, searchParams]);
 
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
@@ -89,7 +90,7 @@ export function HomeScreenImpl(): JSX.Element {
   );
 
   useEffect(() => {
-    if (self == null) {
+    if (self == null && browsingFolder == null) {
       console.log("Redirecting to login screen");
       navigate("/login", { replace: true });
     }

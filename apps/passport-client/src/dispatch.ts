@@ -75,6 +75,7 @@ export type Action =
       type: "create-user-skip-password";
       email: string;
       token: string;
+      targetFolder: string | undefined
     }
   | {
       type: "login";
@@ -181,6 +182,7 @@ export async function dispatch(
       return createNewUserSkipPassword(
         action.email,
         action.token,
+        action.targetFolder,
         state,
         update
       );
@@ -298,6 +300,7 @@ async function genPassport(
 async function createNewUserSkipPassword(
   email: string,
   token: string,
+  targetFolder: string | undefined,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
@@ -339,7 +342,7 @@ async function createNewUserSkipPassword(
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(newUserResult.value, state, update, targetFolder);
   }
 
   update({
@@ -397,7 +400,8 @@ async function createNewUserWithPassword(
 async function finishAccountCreation(
   user: User,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  targetFolder?: string
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -472,7 +476,7 @@ async function finishAccountCreation(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = "#/";
+    window.location.hash = targetFolder ? `#/?folder=${targetFolder}` : "#/";
   }
 }
 
