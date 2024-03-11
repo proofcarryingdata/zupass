@@ -36,7 +36,11 @@ export async function startServices(
   const discordService = await startDiscordService();
   const rollbarService = startRollbarService(context);
   const rateLimitService = startRateLimitService(context, rollbarService);
-  const telegramService = await startTelegramService(context, rollbarService);
+  const telegramService = await startTelegramService(
+    context,
+    rollbarService,
+    discordService
+  );
   const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
