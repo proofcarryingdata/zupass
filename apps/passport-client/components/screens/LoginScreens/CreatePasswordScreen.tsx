@@ -125,7 +125,7 @@ export function CreatePasswordScreen(): JSX.Element {
 
   let content = null;
 
-  if (settingPassword) {
+  if (settingPassword || autoRegister) {
     content = <ScreenLoader text="Generating your Semaphore identity..." />;
   } else {
     content = (
