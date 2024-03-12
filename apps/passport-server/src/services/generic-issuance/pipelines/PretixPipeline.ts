@@ -368,6 +368,7 @@ export class PretixPipeline implements BasePipeline {
           atomsLoaded: atomsToSave.length,
           atomsExpected: atomsToSave.length,
           errorMessage: undefined,
+          semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
           success: true
         } satisfies PipelineLoadSummary;
       }
@@ -406,9 +407,7 @@ export class PretixPipeline implements BasePipeline {
   }
 
   public async triggerSemaphoreGroupUpdate(): Promise<void> {
-    const data = await this.semaphoreGroupData();
     return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
-      await this.semaphoreGroupProvider?.update(data);
       tracePipeline(this.definition);
       // Whenever an update is triggered, we want to make sure that the
       // fetching of data and the actual update are atomic.
