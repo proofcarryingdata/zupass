@@ -7,7 +7,6 @@ import {
   deserializeStorage,
   Feed,
   FeedSubscriptionManager,
-  KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
@@ -135,10 +134,6 @@ export type Action =
       permissions: PCDPermission[];
     }
   | {
-      type: "set-known-ticket-types-and-keys";
-      knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
-    }
-  | {
       type: "handle-agreed-privacy-notice";
       version: number;
     }
@@ -248,12 +243,6 @@ export async function dispatch(
         update,
         action.subscriptionId,
         action.permissions
-      );
-    case "set-known-ticket-types-and-keys":
-      return setKnownTicketTypesAndKeys(
-        state,
-        update,
-        action.knownTicketTypesAndKeys
       );
     case "handle-agreed-privacy-notice":
       return handleAgreedPrivacyNotice(state, update, action.version);
@@ -985,6 +974,9 @@ async function syncSubscription(
   try {
     console.log("[SYNC] loading pcds from subscription", subscriptionId);
     const subscription = state.subscriptions.getSubscription(subscriptionId);
+    if (!subscription) {
+      throw new Error(`Subscription ${subscriptionId} not found`);
+    }
     const credentialManager = new CredentialManager(
       state.identity,
       state.pcds,
@@ -1006,7 +998,9 @@ async function syncSubscription(
     });
     onSuccess?.();
   } catch (e) {
-    onError?.(e);
+    if (e instanceof Error) {
+      onError?.(e);
+    }
     console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
   }
 }
@@ -1099,25 +1093,6 @@ async function updateSubscriptionPermissions(
   });
 }
 
-async function setKnownTicketTypesAndKeys(
-  _state: AppState,
-  update: ZuUpdate,
-  knownTicketTypesAndKeys: KnownTicketTypesAndKeys
-): Promise<void> {
-  const keyMap = {};
-  knownTicketTypesAndKeys.publicKeys.forEach((k) => {
-    if (!keyMap[k.publicKeyType]) {
-      keyMap[k.publicKeyType] = {};
-    }
-    keyMap[k.publicKeyType][k.publicKeyName] = k;
-  });
-
-  update({
-    knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
-    knownPublicKeys: keyMap
-  });
-}
-
 /**
  * After the user has agreed to the terms, save the updated user record, set
  * `loadedIssuedPCDs` to false in order to prompt a feed refresh, and dismiss
@@ -1128,12 +1103,14 @@ async function handleAgreedPrivacyNotice(
   update: ZuUpdate,
   version: number
 ): Promise<void> {
-  await saveSelf({ ...state.self, terms_agreed: version });
-  update({
-    self: { ...state.self, terms_agreed: version },
-    loadedIssuedPCDs: false,
-    modal: { modalType: "none" }
-  });
+  if (state.self) {
+    saveSelf({ ...state.self, terms_agreed: version });
+    update({
+      self: { ...state.self, terms_agreed: version },
+      loadedIssuedPCDs: false,
+      modal: { modalType: "none" }
+    });
+  }
 }
 
 /**

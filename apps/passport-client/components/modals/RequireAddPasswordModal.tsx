@@ -51,7 +51,9 @@ export function RequireAddPasswordModal(): JSX.Element {
       });
     } catch (e) {
       console.log("error setting password", e);
-      setError(e.message);
+      if (e instanceof Error) {
+        setError(e.message);
+      }
     } finally {
       setLoading(false);
     }

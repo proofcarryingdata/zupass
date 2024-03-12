@@ -48,7 +48,7 @@ export function MaybeModal({
       window.removeEventListener("keydown", listener, { capture: true });
   }, [close, dismissable]);
 
-  const body = getModalBody(modal, isProveOrAddScreen);
+  const body = getModalBody(modal, !!isProveOrAddScreen);
 
   if (!body)
     return (
@@ -190,12 +190,13 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   border-radius: 12px;
 
   ${({ fullScreen }): FlattenSimpleInterpolation =>
-    fullScreen &&
-    css`
-      width: 100vw;
-      max-width: 100vw;
-      height: 100vh;
-      margin: 0;
-      border-radius: 0;
-    `}
+    fullScreen
+      ? css`
+          width: 100vw;
+          max-width: 100vw;
+          height: 100vh;
+          margin: 0;
+          border-radius: 0;
+        `
+      : css``}
 `;

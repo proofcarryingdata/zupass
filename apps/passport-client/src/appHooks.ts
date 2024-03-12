@@ -76,7 +76,7 @@ export function useUserIdentityPCD(): SemaphoreIdentityPCD | undefined {
   const identityPCD = useMemo(() => {
     // Using wrapped PCDCollection ensures this memo updates when contents
     // change, not just the PCDCollection object.
-    return findUserIdentityPCD(wrappedPCDs.value, self);
+    return self && findUserIdentityPCD(wrappedPCDs.value, self);
   }, [self, wrappedPCDs]);
   return identityPCD;
 }
@@ -115,20 +115,20 @@ export function useSyncKey(): string | undefined {
   return useSelector<string | undefined>((s) => s.encryptionKey, []);
 }
 
-export function useSalt(): string | undefined {
-  return useSelector<string | undefined>((s) => s.self?.salt, []);
+export function useSalt(): string | null | undefined {
+  return useSelector<string | null | undefined>((s) => s.self?.salt, []);
 }
 
 export function useAppError(): AppError | undefined {
   return useSelector<AppError | undefined>((s) => s.error, []);
 }
 
-export function useLoadedIssuedPCDs(): boolean | undefined {
-  return useSelector<boolean | undefined>((s) => s.loadedIssuedPCDs, []);
+export function useLoadedIssuedPCDs(): boolean {
+  return useSelector<boolean>((s) => !!s.loadedIssuedPCDs, []);
 }
 
-export function useIsDownloaded(): boolean | undefined {
-  return useSelector<boolean | undefined>((s) => s.downloadedPCDs, []);
+export function useIsDownloaded(): boolean {
+  return useSelector<boolean>((s) => !!s.downloadedPCDs, []);
 }
 
 export function useServerStorageRevision(): string | undefined {
@@ -164,7 +164,7 @@ export function useIsSyncSettled(): boolean {
 }
 
 export function useIsLoggedIn(): boolean {
-  return useSelector<boolean | undefined>((s) => s.self !== undefined, []);
+  return useSelector<boolean>((s) => s.self !== undefined, []);
 }
 
 export function useResolvingSubscriptionId(): string | undefined {
@@ -214,7 +214,7 @@ export function useSubscriptions(): Wrapper<FeedSubscriptionManager> {
 // Hook that checks whether the user has set a password for their account
 export function useHasSetupPassword(): boolean {
   const self = useSelf();
-  return hasSetupPassword(self);
+  return !!self && hasSetupPassword(self);
 }
 
 // Hook that when invoked, requires the user to set a password if they haven't already
