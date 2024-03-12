@@ -2,7 +2,7 @@
   "name": "@pcd/perftest",
   "private": true,
   "version": "0.0.1",
-  "license": "MIT",
+  "license": "GPL-3.0-or-later",
   "scripts": {
     "start": "yarn ts-node src/index.ts",
     "lint": "eslint \"**/*.ts{,x}\"",
