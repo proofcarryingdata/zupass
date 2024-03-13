@@ -211,10 +211,7 @@ export function HomeScreenImpl(): JSX.Element {
               setBrowsingFolder={setFolderAndTab}
             />
           ) : isEdgeCity ? (
-            <EdgeCityHome
-              confetti={f_confetti}
-              setBrowsingFolder={setFolderAndTab}
-            />
+            <EdgeCityHome />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}

@@ -22,12 +22,9 @@ import {
 import { RippleLoader } from "../../core/RippleLoader";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
 import { useZucashConfetti } from "./useZucashConfetti";
-
-const animSpeedMs = 500;
 
 const TABS = [
   {
@@ -79,13 +76,7 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
 /**
  * Renders EdgeCity UI.
  */
-export function EdgeCityHome({
-  setBrowsingFolder,
-  confetti
-}: {
-  setBrowsingFolder: (folder?: string, tab?: string) => void;
-  confetti: () => Promise<void>;
-}): JSX.Element {
+export function EdgeCityHome(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") ?? "ticket";
   const setTab = useCallback(
@@ -180,10 +171,7 @@ export function EdgeCityHome({
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
-  const [buttonRef, setButtonRef] = useState<HTMLElement>();
-
   const [ref, setRef] = useState<HTMLElement>();
-  const [btnText, setBtnText] = useState("FrogCrypto");
   const z_confetti = useZucashConfetti(ref);
 
   if (loading) {
@@ -267,49 +255,6 @@ export function EdgeCityHome({
               $ZUCASH.
             </p>
           </ExperiencesHeader>
-          <CategorySection>
-            <CategoryHeader>
-              <EventTitle>FROGCRYPTO</EventTitle>
-              <span></span>
-            </CategoryHeader>
-
-            <CategoryDescription>
-              Collect frogs to earn EXP.
-            </CategoryDescription>
-
-            <FrogCryptoButton
-              ref={(r): void => setButtonRef(r)}
-              onClick={(): void => {
-                buttonRef.classList?.add("big");
-                buttonRef.style.border = "none";
-                buttonRef.style.color = "transparent";
-                document.body.style.overflow = "hidden";
-                setBtnText("");
-                setTimeout(() => {
-                  document.body.style.overflowY = "scroll";
-                  setBrowsingFolder("FrogCrypto");
-                  confetti();
-                }, 400);
-              }}
-            >
-              <div className="wrapper">
-                <div className="expander">
-                  <div className="text">
-                    <SuperFunkyFont
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      {btnText}
-                    </SuperFunkyFont>
-                  </div>
-                </div>
-              </div>
-            </FrogCryptoButton>
-          </CategorySection>
           <CategorySection>
             <CategoryHeader>
               <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
@@ -567,64 +512,6 @@ const CTAButton = styled(Button)`
   border: 1px solid white;
   font-size: 0.8em;
   white-space: nowrap;
-`;
-
-const FrogCryptoButton = styled.div`
-  user-select: none;
-  cursor: pointer;
-  width: 100%;
-  height: 50px;
-  max-height: 50px;
-  font-family: PressStart2P;
-  position: relative;
-  z-index: 9998;
-
-  .wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-  .expander {
-    background-color: #206b5e;
-    transition: ${animSpeedMs}ms;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    width: 100%;
-    height: 100%;
-    border-radius: 4px;
-    border: 1px solid white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    &:hover {
-      transform: scale(1.05);
-
-      &:active {
-        transform: scale(1.1);
-      }
-    }
-  }
-
-  &.big {
-    .expander {
-      transition: ${animSpeedMs}ms;
-      position: absolute;
-      top: calc(50% - 100vh);
-      left: calc(50% - 100vw);
-      width: 200vw;
-      height: 200vh;
-    }
-  }
 `;
 
 const CategorySection = styled.div`

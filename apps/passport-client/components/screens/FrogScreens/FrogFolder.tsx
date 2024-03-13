@@ -1,7 +1,4 @@
-import {
-  EdgeCityFolderName,
-  FrogCryptoFolderName
-} from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
@@ -11,7 +8,7 @@ import styled, {
   css,
   keyframes
 } from "styled-components";
-import { usePCDsInFolder, useSubscriptions } from "../../../src/appHooks";
+import { useSubscriptions } from "../../../src/appHooks";
 import { useUserFeedState } from "./FrogCryptoHomeSection";
 
 /**
@@ -37,8 +34,7 @@ export function FrogFolder({
     }>
   >;
 }): JSX.Element {
-  const edgePCDs = usePCDsInFolder(EdgeCityFolderName);
-  const frogcryptoDisabled = edgePCDs.length === 0;
+  const frogcryptoDisabled = true;
   const fetchTimestamp = useFetchTimestamp();
 
   return (
