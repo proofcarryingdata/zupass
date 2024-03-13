@@ -34,7 +34,7 @@
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
-    "@zk-kit/circuits": "^0.3.0",
+    "@zk-kit/circuits": "0.4.0",
     "circomkit": "^0.0.24",
     "circomlib": "^2.0.5",
     "eslint": "^7.32.0",

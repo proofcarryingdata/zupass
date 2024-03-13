@@ -6397,27 +6397,28 @@
   dependencies:
     "@zag-js/dom-query" "0.16.0"
 
-"@zk-kit/baby-jubjub@0.1.1":
-  version "0.1.1"
-  resolved "https://registry.npmjs.org/@zk-kit/baby-jubjub/-/baby-jubjub-0.1.1.tgz"
-  integrity sha512-eWpUSpKKpllGZXE6mdS1IVuegRjY2Yu+3Qccyfg0+gMI8+p0ruioMM/MCK3tg2lRIUJTVd+16UghVcK0145yWg==
-  dependencies:
-    "@zk-kit/utils" "0.1.0"
-
-"@zk-kit/circuits@^0.3.0":
+"@zk-kit/baby-jubjub@0.3.0":
   version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/circuits/-/circuits-0.3.0.tgz#716d932e9b09f33c71c7ff940a507e519ce0a6f4"
-  integrity sha512-v46KHC3sBRXUJbYi8d5PTAm3zCdBeArvWw3de+A2LcW/C9beYqBo8QJ/h6NWKZWOgpwqvCHzJa5HvyG6x3lIZQ==
+  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-0.3.0.tgz#78b8d3226670dd02dc8ced713aec64d6bb2a6e62"
+  integrity sha512-mA3/M/+4C2vDtc0SpXf/q/nsvwBh+s42ou176sgDzqIBQD/u/N+LaLGorDh+X5AD3dVMHb8rheFpnnrJmjsqdA==
+  dependencies:
+    "@zk-kit/utils" "0.6.0"
+
+"@zk-kit/circuits@0.4.0":
+  version "0.4.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/circuits/-/circuits-0.4.0.tgz#17a8333e8afe5a4e79260600a2dcefb2bc751a8f"
+  integrity sha512-Di7mokhwBS3qxVeCfHxGeNIpDg1kTnr1JXmsWiQMZLkRTn3Hugh6Tl07J394rWD0pIWRwPQsinaMVL2sB4F8yQ==
   dependencies:
     circomlib "^2.0.5"
 
-"@zk-kit/eddsa-poseidon@0.5.1":
-  version "0.5.1"
-  resolved "https://registry.npmjs.org/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.5.1.tgz"
-  integrity sha512-sPyoyjwg9EZ+tHLGxOG+FDj9XJK1knVjm27nTMV4ZSiQIf0427QWnLhOk7b6zMvFmEpBWTG9gneJ5pr3jzJ4zg==
+"@zk-kit/eddsa-poseidon@0.7.0":
+  version "0.7.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.7.0.tgz#24b889329047b64c31eda68c23cf203f19f5807d"
+  integrity sha512-eCZmd+NRr4ihHX9yvNP2tww+U7zDvxjy8vAPIBVUmkNWbUcMXrzmbd6ryemR3Flcfy/CB4bStOXaEeomqfTwbw==
   dependencies:
-    "@zk-kit/baby-jubjub" "0.1.1"
-    "@zk-kit/utils" "0.1.0"
+    "@zk-kit/baby-jubjub" "0.3.0"
+    "@zk-kit/utils" "0.6.0"
+    buffer "6.0.3"
 
 "@zk-kit/groth16@0.3.0":
   version "0.3.0"
@@ -6427,10 +6428,10 @@
     circom_runtime "0.1.24"
     ffjavascript "0.2.60"
 
-"@zk-kit/imt@2.0.0-beta.1":
-  version "2.0.0-beta.1"
-  resolved "https://registry.npmjs.org/@zk-kit/imt/-/imt-2.0.0-beta.1.tgz"
-  integrity sha512-WcRhNcWhPrf0MPEuQXnLnb/AfdIxVZpGF/BAI9iAnW/OHYU4Z4H3sFMip60HwXQqmbF+8z54b0rT2FcE5HtBfw==
+"@zk-kit/imt@2.0.0-beta.2":
+  version "2.0.0-beta.2"
+  resolved "https://registry.yarnpkg.com/@zk-kit/imt/-/imt-2.0.0-beta.2.tgz#6d95ff186cda57acfddce007d1ef3beea56d1da1"
+  integrity sha512-pTzGNW7SWNASwXGMOxvgNtlweX0Gak9IT5Bb4Xff7kJgQG1/CQy2GPwK74T+vCcpElJ3xQHgX+XJUyj7TeJRMg==
 
 "@zk-kit/incremental-merkle-tree@0.4.3", "@zk-kit/incremental-merkle-tree@^0.4.3":
   version "0.4.3"
@@ -6442,10 +6443,12 @@
   resolved "https://registry.npmjs.org/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.1.0.tgz"
   integrity sha512-WnNR/GQse3lX8zOHMU8zwhgX8u3qPoul8w4GjJ0WDHq+VGJimo7EGheRZ/ILeBQabnlzAerdv3vBqYBehBeoKA==
 
-"@zk-kit/utils@0.1.0":
-  version "0.1.0"
-  resolved "https://registry.npmjs.org/@zk-kit/utils/-/utils-0.1.0.tgz"
-  integrity sha512-MZmuw2w2StB7XOSNg1TW4VwnBJ746UDmdXTvxwDO/U85UZfGfM3zb53gG35qz5sWpQo/DjfoKqaScmh6HUtQpA==
+"@zk-kit/utils@0.6.0":
+  version "0.6.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.6.0.tgz#30124e98df8e29f7af31e19ce4dc6302f178c0a4"
+  integrity sha512-sUF1yVjlGmm7/NIN/+d+N8WOcI77bTzgV5+vZmp/S7lXcy4fmO+5TdHERRsDbs8Ep8K33EOC6V+U+JXzmjSe5A==
+  dependencies:
+    buffer "^6.0.3"
 
 "@zxing/browser@0.0.7":
   version "0.0.7"
@@ -7470,6 +7473,14 @@ buffer-xor@^1.0.3:
   resolved "https://registry.npmjs.org/buffer-xor/-/buffer-xor-1.0.3.tgz"
   integrity sha512-571s0T7nZWK6vB67HI5dyUF7wXiNcfaPPPTl6zYCNApANjIvYJTg7hlud/+cJpdAhS7dVzqMLmfhfHR3rAcOjQ==
 
+buffer@6.0.3, buffer@^6, buffer@^6.0.3:
+  version "6.0.3"
+  resolved "https://registry.npmjs.org/buffer/-/buffer-6.0.3.tgz"
+  integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
+  dependencies:
+    base64-js "^1.3.1"
+    ieee754 "^1.2.1"
+
 buffer@^5.0.5, buffer@^5.2.1, buffer@^5.5.0, buffer@^5.6.0:
   version "5.7.1"
   resolved "https://registry.npmjs.org/buffer/-/buffer-5.7.1.tgz"
@@ -7477,14 +7488,6 @@ buffer@^5.0.5, buffer@^5.2.1, buffer@^5.5.0, buffer@^5.6.0:
   dependencies:
     base64-js "^1.3.1"
     ieee754 "^1.1.13"
-
-buffer@^6, buffer@^6.0.3:
-  version "6.0.3"
-  resolved "https://registry.npmjs.org/buffer/-/buffer-6.0.3.tgz"
-  integrity sha512-FTiCpNxtwiZZHEZbcbTIcZjERVICn9yq/pDFkTl95/AxzD1naBctN7YO68riM/gLSDY7sdrMby8hofADYuuqOA==
-  dependencies:
-    base64-js "^1.3.1"
-    ieee754 "^1.2.1"
 
 bufferutil@^4.0.1, bufferutil@^4.0.3:
   version "4.0.7"

@@ -1,7 +1,6 @@
-import { verifySignature } from "@zk-kit/eddsa-poseidon";
 import { expect } from "chai";
 import "mocha";
-import { POD, unpackPublicKey, unpackSignature } from "../src";
+import { POD, unpackPublicKey, unpackSignature, verifySignature } from "../src";
 import {
   expectedPublicKey,
   expectedPublicKeyPoint,
