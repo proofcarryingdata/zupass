@@ -100,8 +100,9 @@ import {
   verifyUserEventIds
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit, isValidEmoji } from "../util/util";
+import { DiscordService } from "./discordService";
 import { RollbarService } from "./rollbarService";
-import { traced } from "./telemetryService";
+import { setError, traced } from "./telemetryService";
 
 const ALLOWED_TICKET_MANAGERS = [
   "cha0sg0d",
@@ -119,16 +120,21 @@ export class TelegramService {
   private anonBot: Bot<BotContext>;
   private forwardBot: Bot<BotContext> | undefined;
   private rollbarService: RollbarService | null;
+  private discordService: DiscordService | null;
+  private readonly MAX_RETRY_ATTEMPTS = 20;
+  private readonly RETRY_INTERVAL_SECONDS = 30;
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
+    discordService: DiscordService | null,
     authBot: Bot<BotContext>,
     anonBot: Bot<BotContext>,
     forwardBot?: Bot<BotContext>
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
+    this.discordService = discordService;
     this.authBot = authBot;
     this.anonBot = anonBot;
     this.forwardBot = forwardBot;
@@ -855,35 +861,64 @@ export class TelegramService {
    *
    * Since this function awaits on authBot.start(), it will likely be very long-
    * lived.
+   *
+   * Because of its flakiness, this function retries up to MAX_RETRY_ATTEMPTS
+   * times at an interval of RETRY_INTERVAL_SECONDS.
    */
   public async startBot(bot: Bot<BotContext, Api<RawApi>>): Promise<void> {
-    const startDelay = parseInt(process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0");
-    if (startDelay > 0) {
-      logger(
-        `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
+    return traced("telegram", "startBot", async (span) => {
+      const startDelay = parseInt(
+        process.env.TELEGRAM_BOT_START_DELAY_MS ?? "0"
       );
-      await sleep(startDelay);
-    }
+      let retryAttempts = 0;
 
-    logger(`[TELEGRAM] Starting ${bot.botInfo.username}`);
+      if (startDelay > 0) {
+        logger(
+          `[TELEGRAM] Delaying authBot startup by ${startDelay} milliseconds`
+        );
+        await sleep(startDelay);
+      }
 
-    try {
-      // This will not resolve while the authBot remains running.
-      await bot.start({
-        allowed_updates: [
-          "chat_join_request",
-          "chat_member",
-          "message",
-          "callback_query"
-        ],
-        onStart: (info) => {
-          logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+      logger(`[TELEGRAM] Starting ${bot.botInfo.username}`);
+
+      while (retryAttempts++ < this.MAX_RETRY_ATTEMPTS) {
+        try {
+          // This will not resolve while the authBot remains running.
+          await bot.start({
+            allowed_updates: [
+              "chat_join_request",
+              "chat_member",
+              "message",
+              "callback_query"
+            ],
+            onStart: (info) => {
+              logger(`[TELEGRAM] Started bot '${info.username}' successfully!`);
+            }
+          });
+          return; // Exit the function if start is successful
+        } catch (e) {
+          logger(`[TELEGRAM] Error starting ${bot.botInfo.username}`, e);
+          this.rollbarService?.reportError(e);
+
+          retryAttempts++;
+          if (retryAttempts >= this.MAX_RETRY_ATTEMPTS) {
+            logger(
+              `[TELEGRAM] Maximum retry attempts reached. Failed to start ${bot.botInfo.username}`
+            );
+            setError(e, span);
+            await this.discordService?.sendAlert(
+              `[TELEGRAM] Bot failed to start after ${this.MAX_RETRY_ATTEMPTS} attempts.\nError:\`\`\`\n${e}\`\`\`\n`
+            );
+            break; // Exit the loop if max attempts are reached
+          }
+
+          logger(
+            `[TELEGRAM] Retrying to start ${bot.botInfo.username} in ${this.RETRY_INTERVAL_SECONDS} seconds...`
+          );
+          await sleep(this.RETRY_INTERVAL_SECONDS * 1_000); // Wait for RETRY_INTERVAL_SECONDS seconds before retrying
         }
-      });
-    } catch (e) {
-      logger(`[TELEGRAM] Error starting ${bot.botInfo.username}`, e);
-      this.rollbarService?.reportError(e);
-    }
+      }
+    });
   }
 
   /**
@@ -1624,7 +1659,8 @@ export class TelegramService {
 
 export async function startTelegramService(
   context: ApplicationContext,
-  rollbarService: RollbarService | null
+  rollbarService: RollbarService | null,
+  discordService: DiscordService | null
 ): Promise<TelegramService | null> {
   const botToken = process.env.TELEGRAM_BOT_TOKEN;
   const anonBotToken = process.env.TELEGRAM_ANON_BOT_TOKEN;
@@ -1690,6 +1726,7 @@ export async function startTelegramService(
   const service = new TelegramService(
     context,
     rollbarService,
+    discordService,
     authBot,
     anonBot,
     forwardBot

@@ -287,7 +287,7 @@ export function initTelegramRoutes(
       logger(`[TELEGRAM] stopping bots`);
       await telegramService.stop();
       logger(`[TELEGRAM] restarting bots`);
-      startTelegramService(_context, null);
+      startTelegramService(_context, null, null);
       res.status(200).send(`Started bots`);
     }
   });

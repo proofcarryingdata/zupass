@@ -1,7 +1,7 @@
 {
   "name": "@pcd/util",
   "version": "0.4.0",
-  "license": "GPL-3.0-or-later",
+  "license": "MIT",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
   "types": "./dist/types/src/index.d.ts",
@@ -27,7 +27,6 @@
   },
   "dependencies": {
     "buffer": "^6.0.3",
-    "chai": "^4.3.7",
     "email-validator": "^2.0.4",
     "js-sha256": "^0.10.1",
     "uuid": "^9.0.0"
@@ -39,6 +38,7 @@
     "@types/email-validator": "^1.0.6",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.2",
+    "chai": "^4.3.7",
     "eslint": "^7.32.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
