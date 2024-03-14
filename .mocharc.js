@@ -3,5 +3,6 @@ module.exports = {
   forbidOnly: true,
   forbidPending: true,
   failZero: true,
-  bail: true
+  bail: true,
+  timeout: "60000"
 };

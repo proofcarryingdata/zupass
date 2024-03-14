@@ -45,3 +45,6 @@ logfile
 
 # vim
 *.swp
+
+# see scripts/testTemplatePackage.ts
+packages/tools/test-package/**
