@@ -34,6 +34,7 @@ export function FrogFolder({
     }>
   >;
 }): JSX.Element {
+  // TODO: Add a feature flagging system to prevent having to deploy a code change to change this flag.
   const frogcryptoDisabled = true;
   const fetchTimestamp = useFetchTimestamp();
 
