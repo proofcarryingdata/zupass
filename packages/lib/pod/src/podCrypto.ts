@@ -1,20 +1,16 @@
 import { fromHexString, toHexString } from "@pcd/util";
-import {
-  Point,
-  packPoint as zkkPackPoint,
-  unpackPoint as zkkUnpackPoint
-} from "@zk-kit/baby-jubjub";
+import { Point, packPoint, unpackPoint } from "@zk-kit/baby-jubjub";
 import {
   Signature,
   derivePublicKey,
   signMessage,
-  verifySignature
+  verifySignature as zkkVerifySignature
 } from "@zk-kit/eddsa-poseidon";
 import {
   BigNumber,
-  bigNumberishToBigint,
-  leBigintToBuffer,
-  leBufferToBigint
+  bigNumberishToBigInt,
+  leBigIntToBuffer,
+  leBufferToBigInt
 } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
@@ -55,38 +51,16 @@ export function podMerkleTreeHash(left: bigint, right: bigint): bigint {
   return poseidon2([left, right]);
 }
 
-export function packPoint(unpackedPoint: Point<BigNumber>): bigint {
-  const zkkPackedPoint = zkkPackPoint([
-    BigInt(unpackedPoint[0]),
-    BigInt(unpackedPoint[1])
-  ]);
-  // zk-kit/baby-jubjub's packPoint reverses byte order when compared to
-  // the raw point (and compared to circomlibjs).  Reverse it back manually.
-  // TODO(artwyman): This has been fixed in zk-kit.  Incorporate it when released.
-  return leBufferToBigint(leBigintToBuffer(zkkPackedPoint).reverse());
-}
-
-export function unpackPoint(packedPoint: BigNumber): Point<bigint> | null {
-  // zk-kit/baby-jubjub's packPoint reverses byte order when compared to
-  // the raw point (and compared to circomlibjs).  Reverse it back manually.
-  // TODO(artwyman): This has been fixed in zk-kit.  Incorporate it when released.
-  const zkkPackedPoint = leBufferToBigint(
-    leBigintToBuffer(BigInt(packedPoint)).reverse()
-  );
-  const unpackedPoint = zkkUnpackPoint(zkkPackedPoint);
-  return unpackedPoint;
-}
-
 // TODO(artwyman): Submit this to zk-kit/eddsa-poseidon
 export function packSignature(rawSignature: Signature): string {
   const numericSignature: Signature<bigint> = {
-    R8: rawSignature.R8.map((c) => bigNumberishToBigint(c)) as Point<bigint>,
-    S: bigNumberishToBigint(rawSignature.S)
+    R8: rawSignature.R8.map((c) => bigNumberishToBigInt(c)) as Point<bigint>,
+    S: bigNumberishToBigInt(rawSignature.S)
   };
   const packedR8 = packPoint(numericSignature.R8);
   const packedBytes = Buffer.alloc(64);
-  packedBytes.set(leBigintToBuffer(packedR8), 0);
-  packedBytes.set(leBigintToBuffer(numericSignature.S), 32);
+  packedBytes.set(leBigIntToBuffer(packedR8), 0);
+  packedBytes.set(leBigIntToBuffer(numericSignature.S), 32);
   return toHexString(packedBytes);
 }
 
@@ -95,27 +69,31 @@ export function unpackSignature(packedSigHex: string): Signature<bigint> {
   const packedBytes = Buffer.from(checkSignatureFormat(packedSigHex), "hex");
   const sliceR8 = packedBytes.subarray(0, 32);
   const sliceS = packedBytes.subarray(32, 64);
-  const unpackedR8 = unpackPoint(leBufferToBigint(sliceR8));
+  const unpackedR8 = unpackPoint(leBufferToBigInt(sliceR8));
   if (unpackedR8 === null) {
     throw new Error(`Invalid packed signature point ${toHexString(sliceS)}.`);
   }
   return {
     R8: unpackedR8,
-    S: leBufferToBigint(sliceS)
+    S: leBufferToBigInt(sliceS)
   };
 }
 
 // TODO(artwyman): Decide whether to use zk-kit/eddsa-poseidon's packPublicKey,
 // which uses a decimal format rather than hex.
 export function packPublicKey(unpackedPublicKey: Point<BigNumber>): string {
-  return toHexString(leBigintToBuffer(packPoint(unpackedPublicKey)));
+  const numericPublicKey = [
+    BigInt(unpackedPublicKey[0]),
+    BigInt(unpackedPublicKey[1])
+  ] as Point<bigint>;
+  return toHexString(leBigIntToBuffer(packPoint(numericPublicKey)));
 }
 
 // TODO(artwyman): Decide whetehr to use zk-kit/eddsa-poseidon's unpackPublicKey,
 // which uses a decimal format rather than hex.
 export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
   const unpackedPublicKey = unpackPoint(
-    leBufferToBigint(fromHexString(checkPublicKeyFormat(packedPublicKey)))
+    leBufferToBigInt(fromHexString(checkPublicKeyFormat(packedPublicKey)))
   );
   if (unpackedPublicKey === null) {
     throw new Error(`Invalid packed public key point ${packedPublicKey}.`);
@@ -127,13 +105,38 @@ export function unpackPrivateKey(packedPrivateKey: string): Buffer {
   return fromHexString(checkPrivateKeyFormat(packedPrivateKey));
 }
 
+// TODO(artwyman): Decide whether to submit change to zk-kit/eddsa-poseidon's
+// verifySignature, which insists on stringified bigints in Points.
+export function verifySignature(
+  message: bigint,
+  signature: Signature<bigint>,
+  publicKey: Point<bigint>
+): boolean {
+  const stringSignature = {
+    R8: [
+      signature.R8[0].toString(),
+      signature.R8[1].toString()
+    ] as Point<string>,
+    S: signature.S.toString()
+  };
+  const stringPublicKey: Point<string> = [
+    publicKey[0].toString(),
+    publicKey[1].toString()
+  ];
+  return zkkVerifySignature(message, stringSignature, stringPublicKey);
+}
+
 export function signPODRoot(
   root: bigint,
   privateKey: string
 ): { signature: string; publicKey: string } {
   const privateKeyBytes = unpackPrivateKey(privateKey);
-  const signature = packSignature(signMessage(privateKeyBytes, root));
-  const publicKey = packPublicKey(derivePublicKey(privateKeyBytes));
+
+  const unpackedSignature = signMessage(privateKeyBytes, root);
+  const signature = packSignature(unpackedSignature);
+
+  const unpackedPublicKey = derivePublicKey(privateKeyBytes);
+  const publicKey = packPublicKey(unpackedPublicKey);
 
   return { signature, publicKey };
 }

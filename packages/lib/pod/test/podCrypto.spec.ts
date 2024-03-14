@@ -1,11 +1,6 @@
 import { EdDSAPCDPackage, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { fromHexString } from "@pcd/util";
-import {
-  BigNumberish,
-  bigNumberishToBuffer,
-  isBigNumberish
-} from "@zk-kit/utils";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -17,21 +12,6 @@ import {
 } from "../src";
 import { AltCryptCircomlibjs } from "./alternateCrypto";
 import { privateKey, sampleEntries1 } from "./common";
-
-// copied from zk-kit/eddsa-poseidon/util
-export function checkPrivateKey(privateKey: BigNumberish): Buffer {
-  if (isBigNumberish(privateKey)) {
-    return bigNumberishToBuffer(privateKey);
-  }
-
-  if (typeof privateKey !== "string") {
-    throw TypeError(
-      "Invalid private key type. Supported types: number, bigint, buffer, string."
-    );
-  }
-
-  return Buffer.from(privateKey);
-}
 
 describe("podCrypto helpers should work", async function () {
   //TODO(artwyman): Test crypto helpers, removing this placeholder for manual examination.
@@ -131,6 +111,7 @@ describe("podCrypto use of zk-kit should be compatible with circomlibjs", async 
     const podContent = PODContent.fromEntries(sampleEntries1);
     const primaryImpl = signPODRoot(podContent.contentID, privateKey);
     const altImpl = altCrypto.signPODRoot(podContent.contentID, privateKey);
+    expect(altImpl).to.deep.eq(primaryImpl);
 
     // Swap data to prove that primary impl can verify alternate impl's output,
     // and vice versa.

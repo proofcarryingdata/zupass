@@ -7,6 +7,7 @@ on:
   pull_request:
     branches:
       - main
+      - artwyman/pod-prototype
   merge_group:
 jobs:
   Build-and-Test:
