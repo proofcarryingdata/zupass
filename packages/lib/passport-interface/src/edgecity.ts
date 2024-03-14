@@ -8,7 +8,7 @@ export const LEMONADE_EDDSA_PUBKEY: [string, string] = [
 export const EdgeCityFolderName = "Edge City";
 
 /**
- * User score data and computed rank
+ * User score data and computed rank.
  */
 export interface EdgeCityBalance {
   email_hash: string;

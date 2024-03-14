@@ -2,6 +2,8 @@ import assert from "assert";
 import { getLastValidVerifyUrl } from "../src/util";
 
 describe("util", async function () {
+  this.timeout(60_000);
+
   const mockOrigin = "https://zupass.org";
   const verifyUrl = `${mockOrigin}/#/verify?id=asdf`;
   const checkinUrl = `${mockOrigin}/#/checkin?id=asdf`;

@@ -26,7 +26,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("zuzalu pcdpass functionality", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
 
   let application: Zupass;
   let pretixMocker: ZuzaluPretixDataMocker;

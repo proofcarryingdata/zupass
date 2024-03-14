@@ -19,7 +19,7 @@ const expectedPublicKey: EdDSAPublicKey = [
 ];
 
 describe("message-pcd should work", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
 
   it("should work", async function () {
     const testTitle = "test title";

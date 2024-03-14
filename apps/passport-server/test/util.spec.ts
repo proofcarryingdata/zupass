@@ -4,7 +4,7 @@ import "mocha";
 import { isValidEmoji } from "../src/util/util";
 
 describe("passport-server utility functions", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
   it("isValidEmoji", () => {
     expect(isValidEmoji("🐸")).to.be.true;
     expect(isValidEmoji("🦔")).to.be.true;

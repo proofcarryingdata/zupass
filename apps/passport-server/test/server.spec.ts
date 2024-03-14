@@ -6,7 +6,7 @@ import { Zupass } from "../src/types";
 import { overrideEnvironment, testingEnv } from "./util/env";
 
 describe("web server functionality", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
 
   let application: Zupass;
 

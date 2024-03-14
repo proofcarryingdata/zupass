@@ -19,7 +19,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
 describe("ticket issuance cutoff date should work", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
 
   let application: Zupass;
   let db: Pool;

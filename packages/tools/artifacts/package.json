@@ -12,9 +12,6 @@
     "./README.md",
     "./LICENSE"
   ],
-  "engines": {
-    "node": ">=14.16"
-  },
   "scripts": {
     "start": "node src/index.js",
     "lint": "eslint **/*.js",

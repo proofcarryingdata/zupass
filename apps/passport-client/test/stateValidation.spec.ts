@@ -28,6 +28,8 @@ function newEdSAPCD(): Promise<EdDSAPCD> {
 }
 
 describe("validateAppState", async function () {
+  this.timeout(60_000);
+
   const crypto = await PCDCrypto.newInstance();
   const saltAndEncryptionKey = await crypto.generateSaltAndEncryptionKey(
     "testpassword123!@#asdf"

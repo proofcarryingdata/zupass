@@ -52,7 +52,7 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("zuconnect functionality", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
   let db: Pool;
   let server: SetupServer;
   let zuconnectTripshaSyncService: ZuconnectTripshaSyncService;
@@ -417,7 +417,7 @@ describe("zuconnect functionality", function () {
     expect(response?.value?.verified).to.be.true;
   });
 
-  step("should verify zuconnect tickets by ID", async () => {
+  it("should verify zuconnect tickets by ID", async () => {
     const response = await requestVerifyTicketById(
       application.expressContext.localEndpoint,
       {

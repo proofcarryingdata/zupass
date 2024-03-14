@@ -13,12 +13,14 @@
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "scripts/build.sh",
+    "build:packages": "scripts/build.sh --filter=./packages/**/*  --filter=!./apps/*",
     "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/* --filter=!./apps/anon-message-client --filter=!./apps/anon-message-client --filter=!./apps/kudosbot-client",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
     "docs": "yarn build && typedoc",
-    "lint": "turbo run lint --concurrency=1",
+    "lint": "turbo run lint",
     "test": "turbo run test --concurrency=1",
+    "test:ci": "turbo run test",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
@@ -28,7 +30,8 @@
     "check-references": "scripts/check-references.sh",
     "fix-references": "scripts/fix-references.sh",
     "generate-package": "plop --no-progress --plopfile 'templates/package/plopfile.mjs'",
-    "test-generated-package": "tsx scripts/testTemplatePackage.ts"
+    "test-generated-package": "tsx scripts/testTemplatePackage.ts",
+    "test-typedoc": "yarn typedoc --emit none"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",
@@ -41,14 +44,14 @@
     "verdaccio-memory": "^10.3.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^20"
   },
   "dependencies": {
     "@changesets/cli": "^2.26.0",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.10.4",
     "@types/react": "^18.0.22",
     "tsx": "^4.6.2",
-    "turbo": "^1.8.5",
+    "turbo": "^1.12.5",
     "turbowatch": "^2.29.4",
     "workspace-tools": "^0.36.4",
     "zx": "^7.2.3"

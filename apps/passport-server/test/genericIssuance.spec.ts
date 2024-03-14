@@ -109,7 +109,7 @@ import {
  * - comprehensive tests for both Pretix and Lemonade cases
  */
 describe("Generic Issuance", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
   const nowDate = new Date();
   const now = Date.now();
 

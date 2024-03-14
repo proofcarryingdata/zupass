@@ -12,6 +12,8 @@ function makeTestPayload(length: number): string {
 }
 
 describe("QR Code", async function () {
+  this.timeout(60_000);
+
   it("should encode and decode properly", async function () {
     const testPayload = makeTestPayload(1500);
     const encodedPayload = encodeQRPayload(testPayload);

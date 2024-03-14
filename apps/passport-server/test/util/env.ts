@@ -4,7 +4,13 @@ import { EnvironmentVariables } from "../../src/types";
 import { logger } from "../../src/util/logger";
 import { newDatabase } from "./newDatabase";
 
-const TEST_PORT = 47891;
+let TEST_PORT = Math.floor(
+  Math.random() * 37891 * Math.abs(Math.sin(process.pid)) + 20000
+);
+
+export function nextTestPort(): number {
+  return ++TEST_PORT;
+}
 
 export const testingEnv: EnvironmentVariables = Object.freeze({
   PORT: TEST_PORT,
@@ -61,6 +67,11 @@ export async function overrideEnvironment(
   }
 
   await newDatabase();
+
+  logger("[INIT] overriding port");
+
+  process.env.PORT = nextTestPort() + "";
+  process.env.PASSPORT_SERVER_URL = `http://localhost:${process.env.PORT}`;
 
   logger("[INIT] finished overriding environment variables");
 }

@@ -7,11 +7,11 @@ interface AppConfig {
   zupassServer: string;
   // The URL of the FrogCrypto feed host server.
   frogCryptoServer: string;
-  // The amount of time a zuzalu qr code proof is valid for
+  // The amount of time a zuzalu qr code proof is valid for.
   maxIdentityProofAgeMs: number;
-  // token that allows the client to upload errors to rollbar
+  // token that allows the client to upload errors to rollbar.
   rollbarToken: string | undefined;
-  // the environment to which the client uploads errors in rollbar
+  // the environment to which the client uploads errors in rollbar.
   rollbarEnvName: string | undefined;
 }
 

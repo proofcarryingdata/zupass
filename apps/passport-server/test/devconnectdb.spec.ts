@@ -68,7 +68,7 @@ interface ITestTicket extends DevconnectPretixTicketWithCheckin {
 const DEFAULT_CHECKIN_LIST_ID = "1";
 
 describe("database reads and writes for devconnect ticket features", function () {
-  this.timeout(30_000);
+  this.timeout(60_000);
 
   let db: Pool;
 
