@@ -249,43 +249,37 @@ export function EdgeCityHome(): JSX.Element {
         <div style={{ zIndex: 10 }}>
           <ExperiencesHeader>
             <p>
-              Collect EXP by participating in community experiences. <br />
-              <br />
-              Your EXP earns you a fraction of the {TOTAL_SUPPLY} available
-              $ZUCASH.
+              Thank you for participating. View the community experiences that
+              you have collected below.
             </p>
           </ExperiencesHeader>
-          <CategorySection>
-            <CategoryHeader>
-              <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
-              <span>{`${
-                (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
-              }/${"∞"}`}</span>
-            </CategoryHeader>
+          {!!pcdsByEventName[CONTACT_EVENT_NAME]?.length && (
+            <CategorySection>
+              <CategoryHeader>
+                <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
+                <span>{`${
+                  (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
+                }/${"∞"}`}</span>
+              </CategoryHeader>
 
-            <CategoryDescription>
-              Scan another resident's ticket to collect their contact. Worth 10
-              EXP.
-            </CategoryDescription>
+              <CategoryDescription />
 
-            <ItemContainer>
-              {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
-                <ItemCard
-                  key={pcd.id}
-                  onClick={(): void => {
-                    setSelectedExperience(pcd);
-                    setSelectedExperienceIsContact(true);
-                    setSelectedExperienceIsStar(false);
-                  }}
-                >
-                  <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
-                </ItemCard>
-              ))}
-              <Link to="/scan">
-                <CTAButton>Collect Contact</CTAButton>
-              </Link>
-            </ItemContainer>
-          </CategorySection>
+              <ItemContainer>
+                {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
+                  <ItemCard
+                    key={pcd.id}
+                    onClick={(): void => {
+                      setSelectedExperience(pcd);
+                      setSelectedExperienceIsContact(true);
+                      setSelectedExperienceIsStar(false);
+                    }}
+                  >
+                    <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
+                  </ItemCard>
+                ))}
+              </ItemContainer>
+            </CategorySection>
+          )}
           {groupedResult.map(
             ({
               eventName,
@@ -381,7 +375,6 @@ const Container = styled.div`
 `;
 
 const ExperiencesHeader = styled.div`
-  text-align: center;
   margin-bottom: 32px;
   padding-bottom: 16px;
   border-bottom: 1px solid grey;
