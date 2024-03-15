@@ -12,18 +12,18 @@ import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
   pendingAddRequestKey,
   pendingAddSubscriptionRequestKey,
-  pendingGenericIssuanceCheckinRequestKey,
   pendingGetWithoutProvingRequestKey,
   pendingProofRequestKey,
   pendingViewFrogCryptoRequestKey,
   pendingViewSubscriptionsRequestKey,
+  pendingZuboxCheckinRequestKey,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
-  setPendingGenericIssuanceCheckinRequest,
   setPendingGetWithoutProvingRequest,
   setPendingProofRequest,
   setPendingViewFrogCryptoRequest,
-  setPendingViewSubscriptionsRequest
+  setPendingViewSubscriptionsRequest,
+  setPendingZuboxCheckinRequest
 } from "../../../src/sessionStorage";
 import {
   BigInput,
@@ -57,9 +57,7 @@ export function LoginScreen(): JSX.Element {
   const pendingViewFrogCryptoRequest = query?.get(
     pendingViewFrogCryptoRequestKey
   );
-  const pendingGenericIssuanceCheckinRequest = query?.get(
-    pendingGenericIssuanceCheckinRequestKey
-  );
+  const pendingZuboxCheckinRequest = query?.get(pendingZuboxCheckinRequestKey);
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
@@ -81,11 +79,9 @@ export function LoginScreen(): JSX.Element {
     } else if (pendingViewFrogCryptoRequest != null) {
       setPendingViewFrogCryptoRequest(pendingViewFrogCryptoRequest);
       pendingRequestForLogging = pendingViewFrogCryptoRequestKey;
-    } else if (pendingGenericIssuanceCheckinRequest != null) {
-      setPendingGenericIssuanceCheckinRequest(
-        pendingGenericIssuanceCheckinRequest
-      );
-      pendingRequestForLogging = pendingGenericIssuanceCheckinRequestKey;
+    } else if (pendingZuboxCheckinRequest != null) {
+      setPendingZuboxCheckinRequest(pendingZuboxCheckinRequest);
+      pendingRequestForLogging = pendingZuboxCheckinRequestKey;
     }
 
     if (pendingRequestForLogging != null) {
@@ -100,7 +96,7 @@ export function LoginScreen(): JSX.Element {
     pendingViewSubscriptionsRequest,
     pendingAddSubscriptionRequest,
     pendingViewFrogCryptoRequest,
-    pendingGenericIssuanceCheckinRequest
+    pendingZuboxCheckinRequest
   ]);
 
   const suggestedEmail = query?.get("email");

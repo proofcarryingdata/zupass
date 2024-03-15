@@ -1,23 +1,29 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
-    "lint": {
-      "cache": true
-    },
     "pre-build": {
-      "cache": false,
+      "cache": true,
       "outputs": []
     },
     "build": {
-      "dependsOn": ["pre-build", "^build"],
+      "dependsOn": ["^pre-build", "^build"],
+      "inputs": [".nvmrc"],
       "outputs": [],
-      "cache": false
+      "cache": true,
+      "dotEnv": [".env"]
+    },
+    "lint": {
+      "dependsOn": ["build"],
+      "cache": true
     },
     "dev": {
-      "cache": false
+      "cache": false,
+      "persistent": true
     },
     "test": {
-      "cache": false
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", ".mocharc.js"],
+      "cache": true
     },
     "clean": {
       "outputs": [],
@@ -34,11 +40,75 @@
     "artifacts:download": {
       "outputs": [],
       "cache": false
+    },
+    "//#test-typedoc": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "typedoc.json"],
+      "outputs": [],
+      "cache": true
+    },
+    "//#test-generated-package": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "scripts/testTemplatePackage.ts"],
+      "outputs": [],
+      "cache": true
     }
   },
   "globalDependencies": [
     "packages/tools/eslint-config-custom/**",
-    "packages/tools/tsconfig/**"
+    "packages/tools/tsconfig/**",
+    "yarn.lock"
+  ],
+  "globalPassThroughEnv": [
+    "DATABASE_USERNAME",
+    "DATABASE_PASSWORD",
+    "DATABASE_HOST",
+    "DATABASE_DB_NAME",
+    "DATABASE_SSL",
+    "TIMING",
+    "BYPASS_EMAIL_REGISTRATION",
+    "SUPPRESS_LOGGING",
+    "SERVER_RSA_PRIVATE_KEY_BASE64",
+    "DISCORD_TOKEN",
+    "DISCORD_ALERTS_CHANNEL_ID",
+    "SERVER_EDDSA_PRIVATE_KEY",
+    "TELEGRAM_BOT_TOKEN",
+    "TELEGRAM_BOT_START_DELAY_MS",
+    "TELEGRAM_ANON_WEBSITE",
+    "TELEGRAM_ANON_BOT_DIRECT_LINK",
+    "MAX_DAILY_ANON_TOPIC_POSTS_PER_USER",
+    "TELEGRAM_KUDOSBOT_TOKEN",
+    "PRETIX_SYNC_DISABLED",
+    "WORKER_QUANTITY",
+    "ZUCONNECT_TRIPSHA_URL",
+    "ZUCONNECT_TRIPSHA_KEY",
+    "ZUCONNECT_MOCK_TICKETS",
+    "TELEGRAM_ANON_BOT_TOKEN",
+    "DEVCONNECT_REDACTION",
+    "TELEGRAM_FORWARD_BOT_TOKEN",
+    "FROGCRYPTO_ADMIN_USER_EMAILS",
+    "FROGCRYPTO_ASSETS_URL",
+    "TICKET_ISSUANCE_CUTOFF_DATE",
+    "GENERIC_RATE_LIMIT_DISABLED",
+    "WORKER_MODULE_PATH",
+    "GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY",
+    "STYTCH_PROJECT_ID",
+    "STYTCH_SECRET",
+    "GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY",
+    "TEST_PRETIX_KEY",
+    "TEST_PRETIX_ORG_URL",
+    "CREATE_TEST_PIPELINE",
+    "TELEGRAM_BOT_DISABLED",
+    "SEMAPHORE_SERVICE_DISABLED",
+    "GENERIC_ISSUANCE_ADMINS",
+    "TEST_LEMONADE_OAUTH_AUDIENCE",
+    "TEST_LEMONADE_OAUTH_CLIENT_ID",
+    "TEST_LEMONADE_OAUTH_CLIENT_SECRET",
+    "TEST_LEMONADE_OAUTH_SERVER_URL",
+    "TEST_LEMONADE_BACKEND_URL",
+    "PAGER_DUTY_API_KEY",
+    "PAGER_DUTY_SERVICE_ID",
+    "//// add env vars above this line ////"
   ],
   "globalEnv": [
     "DATABASE_USERNAME",

@@ -1,18 +1,15 @@
-import {
-  GenericIssuanceSelfResult,
-  requestGenericIssuanceSelf
-} from "@pcd/passport-interface";
+import { ZuboxSelfResult, requestZuboxSelf } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "./userHooks";
 
-export function useFetchSelf(): GenericIssuanceSelfResult | undefined {
+export function useFetchSelf(): ZuboxSelfResult | undefined {
   const jwt = useJWT();
-  const [result, setResult] = useState<GenericIssuanceSelfResult>();
+  const [result, setResult] = useState<ZuboxSelfResult>();
 
   useEffect(() => {
     if (jwt) {
-      requestGenericIssuanceSelf(ZUPASS_SERVER_URL, jwt).then((result) => {
+      requestZuboxSelf(ZUPASS_SERVER_URL, jwt).then((result) => {
         setResult(result);
       });
     }

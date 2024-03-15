@@ -6,7 +6,7 @@ import fs from "fs";
 
 dotenv.config();
 
-const genericIssuanceClientAppOpts: BuildOptions = {
+const zuboxClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
@@ -61,27 +61,27 @@ const genericIssuanceClientAppOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built Podbox client"))
+  .then(() => console.log("Built Podbox client artifacts"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
       const clientRes = await build({
-        ...genericIssuanceClientAppOpts,
+        ...zuboxClientAppOpts,
         minify: true
       });
-      console.error("Built", clientRes);
+      console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
-        `${genericIssuanceClientAppOpts.outdir}/bundle-size.json`,
+        `${zuboxClientAppOpts.outdir}/bundle-size.json`,
         JSON.stringify(clientRes.metafile)
       );
 
       break;
     case "dev":
-      const ctx = await context(genericIssuanceClientAppOpts);
+      const ctx = await context(zuboxClientAppOpts);
       await ctx.watch();
 
       const options = {

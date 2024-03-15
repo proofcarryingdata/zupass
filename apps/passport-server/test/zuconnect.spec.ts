@@ -417,7 +417,7 @@ describe("zuconnect functionality", function () {
     expect(response?.value?.verified).to.be.true;
   });
 
-  step("should verify zuconnect tickets by ID", async () => {
+  it("should verify zuconnect tickets by ID", async () => {
     const response = await requestVerifyTicketById(
       application.expressContext.localEndpoint,
       {

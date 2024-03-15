@@ -13,12 +13,12 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
+import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
 import {
   ActionScreenConfig,
   BadgeConfig,
   PipelineDefinition
-} from "./genericIssuanceTypes";
-import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
+} from "./zuboxTypes";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -869,11 +869,11 @@ export interface FrogCryptoUpdateFeedsResponseValue {
 }
 
 /*
- * Many problems can come up in {@link GenericIssuanceCheckInRequest}
- * and {@link GenericIssuanceCheckRequest}. This type enumerates all the possible
+ * Many problems can come up in {@link ZuboxCheckInRequest}
+ * and {@link ZuboxCheckRequest}. This type enumerates all the possible
  * problems.
  */
-export type PodboxTicketActionError = { detailedMessage?: string } & (
+export type ZuboxTicketActionError = { detailedMessage?: string } & (
   | { name: "NotSuperuser" }
   | { name: "NoActionsAvailable" }
   | {
@@ -892,7 +892,7 @@ export type PodboxTicketActionError = { detailedMessage?: string } & (
 /**
  * Request body for hitting the Generic Issuance checkin API on the backend.
  */
-export type GenericIssuanceCheckInRequest = {
+export type ZuboxCheckInRequest = {
   /**
    * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket
@@ -905,21 +905,21 @@ export type GenericIssuanceCheckInRequest = {
 /**
  * Checking in either succeeds or fails, so no response value is defined for now.
  */
-export type PodboxTicketActionResponseValue =
+export type ZuboxTicketActionResponseValue =
   | {
       success: true;
       error?: never;
     }
   | {
       success: false;
-      error: PodboxTicketActionError;
+      error: ZuboxTicketActionError;
     };
 
 /**
  * This is a "pre-checkin" step, which verifies that the user is able to check
  * the ticket in, before allowing them to attempt to do so.
  */
-export type GenericIssuancePreCheckRequest = {
+export type ZuboxPreCheckRequest = {
   /**
    * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket
@@ -959,13 +959,13 @@ export type CheckinActionInfo =
       permissioned: false;
       canCheckIn: false;
       ticket?: TicketInfo;
-      reason?: PodboxTicketActionError;
+      reason?: ZuboxTicketActionError;
     }
   | {
       permissioned: true;
       canCheckIn: false;
       ticket?: TicketInfo;
-      reason?: PodboxTicketActionError;
+      reason?: ZuboxTicketActionError;
     };
 
 export type RateLimitedBadge = {
@@ -1001,7 +1001,7 @@ export type ActionConfigResponseValue =
     }
   | {
       success: false;
-      error: PodboxTicketActionError;
+      error: ZuboxTicketActionError;
       ticketInfo?: never;
       getContactActionInfo?: never;
       giveBadgeActionInfo?: never;
@@ -1012,17 +1012,16 @@ export type ActionConfigResponseValue =
 /**
  * Sending email either succeeds or fails, so no response value is defined for now.
  */
-export type GenericIssuanceSendEmailResponseValue = undefined;
+export type ZuboxSendEmailResponseValue = undefined;
 
-export type GenericIssuanceGetAllUserPipelinesRequest = { jwt: string };
+export type ZuboxGetAllUserPipelinesRequest = { jwt: string };
 
 /**
  * Returns all pipeline definitions that a user has access to.
  */
-export type GenericIssuanceGetAllUserPipelinesResponseValue =
-  GenericIssuancePipelineListEntry[];
+export type ZuboxGetAllUserPipelinesResponseValue = ZuboxPipelineListEntry[];
 
-export type GenericIssuancePipelineListEntry = {
+export type ZuboxPipelineListEntry = {
   pipeline: PipelineDefinition;
   extraInfo: {
     ownerEmail?: string;
@@ -1036,14 +1035,14 @@ export type GenericIssuancePipelineListEntry = {
 /**
  * Returns the requested pipeline definition.
  */
-export type GenericIssuanceGetPipelineResponseValue = PipelineDefinition;
+export type ZuboxGetPipelineResponseValue = PipelineDefinition;
 
-export type GenericIssuanceGetPipelineRequest = { jwt: string };
+export type ZuboxGetPipelineRequest = { jwt: string };
 
 /**
  * Request body containing the pipeline definition to be upserted.
  */
-export type GenericIssuanceUpsertPipelineRequest = {
+export type ZuboxUpsertPipelineRequest = {
   pipeline: PipelineDefinition;
   jwt: string;
 };
@@ -1051,55 +1050,52 @@ export type GenericIssuanceUpsertPipelineRequest = {
 /**
  * Returns the upserted pipeline definition.
  */
-export type GenericIssuanceUpsertPipelineResponseValue = PipelineDefinition;
+export type ZuboxUpsertPipelineResponseValue = PipelineDefinition;
 
 /**
  * Deleting a pipeline definition either succeeds or fails, so no response value is defined for now.
  */
-export type GenericIssuanceDeletePipelineResponseValue = void;
+export type ZuboxDeletePipelineResponseValue = void;
 
-export type GenericIssuanceDeletePipelineRequest = { jwt: string };
+export type ZuboxDeletePipelineRequest = { jwt: string };
 
-export type GenericIssuanceFetchPretixEventsRequest = {
+export type ZuboxFetchPretixEventsRequest = {
   orgUrl: string;
   token: string;
   jwt: string;
 };
 
-export type GenericIssuanceFetchPretixEventsResponseValue =
-  GenericPretixEvent[];
+export type ZuboxFetchPretixEventsResponseValue = GenericPretixEvent[];
 
-export type GenericIssuanceFetchPretixProductsRequest = {
+export type ZuboxFetchPretixProductsRequest = {
   orgUrl: string;
   token: string;
   eventID: string;
   jwt: string;
 };
 
-export type GenericIssuanceFetchPretixProductsResponseValue =
-  GenericPretixProduct[];
+export type ZuboxFetchPretixProductsResponseValue = GenericPretixProduct[];
 
-export type GenericIssuanceSelf = {
+export type ZuboxSelf = {
   email: string;
   isAdmin: boolean;
   id: string;
 };
 
-export type GenericIssuanceSelfResponseValue = GenericIssuanceSelf;
+export type ZuboxSelfResponseValue = ZuboxSelf;
 
-export type GenericIssuanceSelfRequest = { jwt: string };
+export type ZuboxSelfRequest = { jwt: string };
 
-export type GenericIssuanceSemaphoreGroupResponseValue =
+export type ZuboxSemaphoreGroupResponseValue = SerializedSemaphoreGroup;
+
+export type ZuboxHistoricalSemaphoreGroupResponseValue =
   SerializedSemaphoreGroup;
 
-export type GenericIssuanceHistoricalSemaphoreGroupResponseValue =
-  SerializedSemaphoreGroup;
-
-export type GenericIssuancePipelineSemaphoreGroupsResponseValue =
+export type ZuboxPipelineSemaphoreGroupsResponseValue =
   PipelineSemaphoreGroupInfo[];
 
-export type GenericIssuanceValidSemaphoreGroupResponseValue = {
+export type ZuboxValidSemaphoreGroupResponseValue = {
   valid: boolean;
 };
 
-export type GenericIssuanceSemaphoreGroupRootResponseValue = string;
+export type ZuboxSemaphoreGroupRootResponseValue = string;

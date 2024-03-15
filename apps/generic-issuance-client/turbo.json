@@ -1,0 +1,18 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "dotEnv": [".env"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "public/favicon.svg",
+        "public/index.html",
+        "src/**",
+        "build.ts"
+      ],
+      "outputs": ["*.tsbuildinfo", "public/js/**"],
+      "cache": true
+    }
+  }
+}
