@@ -7,7 +7,7 @@ on:
       - main
   pull_request:
     branches:
-      - main
+      - "**"
   merge_group:
 
 # https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-concurrency-and-the-default-behavior
