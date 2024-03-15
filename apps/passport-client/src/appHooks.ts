@@ -34,7 +34,7 @@ import { getLastValidVerifyUrl, maybeRedirect } from "./util";
  *
  * This wrapper-based approach may re-render unnecessarily if PCDCollection's
  * change is a nop (such as re-issuing the same tickets), but is much cheaper
- * than analyzing and hashing the full PCDCollection contents..
+ * than analyzing and hashing the full PCDCollection contents...
  */
 export function useWrappedPCDCollection(): Wrapper<PCDCollection> {
   const pcds = useSelector<PCDCollection>((s) => s.pcds, []);
