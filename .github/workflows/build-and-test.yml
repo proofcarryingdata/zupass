@@ -6,7 +6,7 @@ on:
       - main
   pull_request:
     branches:
-      - main
+      - "**"
   merge_group:
 jobs:
   Build-and-Test:
