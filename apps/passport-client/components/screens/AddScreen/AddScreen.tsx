@@ -29,7 +29,7 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  * PCD can either be a `SerializedPCD` passed in via a url, or one that
  * is freshly generated in Zupass via a proving screen.
  */
-export function AddScreen(): JSX.Element {
+export function AddScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   useRequirePassword();
   const dispatch = useDispatch();

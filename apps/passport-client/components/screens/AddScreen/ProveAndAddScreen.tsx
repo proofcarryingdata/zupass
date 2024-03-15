@@ -1,5 +1,5 @@
 import { PCDProveAndAddRequest } from "@pcd/passport-interface";
-import { SerializedPCD } from "@pcd/pcd-types";
+import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { ReactNode, useCallback, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
@@ -28,14 +28,16 @@ export function ProveAndAddScreen({
   >();
 
   const onProve = useCallback(
-    async (_: unknown, serializedPCD: SerializedPCD) => {
-      dispatch({
-        type: "add-pcds",
-        pcds: [serializedPCD],
-        folder: request.folder
-      });
-      setProved(true);
-      setSerializedPCD(serializedPCD);
+    async (_: PCD | undefined, serializedPCD: SerializedPCD | undefined) => {
+      if (serializedPCD) {
+        dispatch({
+          type: "add-pcds",
+          pcds: [serializedPCD],
+          folder: request.folder
+        });
+        setProved(true);
+        setSerializedPCD(serializedPCD);
+      }
     },
     [dispatch, request.folder]
   );
@@ -75,7 +77,7 @@ export function ProveAndAddScreen({
           <Spacer h={24} />
           <AppHeader isProveOrAddScreen={true}>
             <H2>
-              {request.options.title || `Add and Prove ${request.pcdType}`}
+              {request?.options?.title || `Add and Prove ${request.pcdType}`}
             </H2>
           </AppHeader>
           <Spacer h={16} />

@@ -677,14 +677,16 @@ async function saveNewPasswordAndBroadcast(
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
-  const newSelf = { ...state.self, salt: newSalt };
-  saveSelf(newSelf);
-  saveEncryptionKey(newEncryptionKey);
-  notifyPasswordChangeToOtherTabs();
-  update({
-    encryptionKey: newEncryptionKey,
-    self: newSelf
-  });
+  if (state.self) {
+    const newSelf = { ...state.self, salt: newSalt };
+    saveSelf(newSelf);
+    saveEncryptionKey(newEncryptionKey);
+    notifyPasswordChangeToOtherTabs();
+    update({
+      encryptionKey: newEncryptionKey,
+      self: newSelf
+    });
+  }
 }
 
 function userInvalid(update: ZuUpdate): void {
@@ -1165,7 +1167,7 @@ async function mergeImport(
       !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
       !(
         isSemaphoreIdentityPCD(pcd) &&
-        pcd.claim.identity.getCommitment().toString() !== state.self.commitment
+        pcd.claim.identity.getCommitment().toString() !== state.self?.commitment
       ) &&
       !target.hasPCDWithId(pcd.id)
     );

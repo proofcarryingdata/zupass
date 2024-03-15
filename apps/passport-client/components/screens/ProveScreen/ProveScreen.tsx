@@ -24,14 +24,14 @@ import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
-export function ProveScreen(): JSX.Element {
+export function ProveScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
   const location = useLocation();
   const dispatch = useDispatch();
   const self = useSelf();
   const params = new URLSearchParams(location.search);
-  const request = JSON.parse(params.get("request")) as PCDGetRequest;
+  const request = JSON.parse(params.get("request") ?? "{}") as PCDGetRequest;
   const screen = getScreen(request);
   const userForcedToLogout = useUserForcedToLogout();
 

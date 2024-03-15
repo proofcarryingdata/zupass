@@ -120,10 +120,8 @@ export function saveCheckedInOfflineTickets(
     );
   }
 }
-export function loadCheckedInOfflineDevconnectTickets():
-  | OfflineDevconnectTicket[]
-  | undefined {
-  let tickets = [];
+export function loadCheckedInOfflineDevconnectTickets(): OfflineDevconnectTicket[] {
+  let tickets: OfflineDevconnectTicket[] = [];
 
   try {
     tickets = JSON.parse(
@@ -131,6 +129,7 @@ export function loadCheckedInOfflineDevconnectTickets():
     );
   } catch (e) {
     //
+    tickets = [];
   }
 
   return tickets;

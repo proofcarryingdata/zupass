@@ -18,8 +18,8 @@ export type TicketIdAndEventId = {
  */
 export function useTicketDataFromQuery(): TicketIdAndEventId {
   const query = useQuery();
-  const id = query.get("id");
-  const pcdStr = query.get("pcd");
+  const id = query?.get("id");
+  const pcdStr = query?.get("pcd");
 
   const [loading, setLoading] = useState<boolean>(true);
   const [ticketId, setTicketId] = useState<string | null>(null);
@@ -32,7 +32,7 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
     setEventId(null);
     setError(null);
 
-    if (!id) {
+    if (!id && pcdStr) {
       const decodedPCD = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
         const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
@@ -40,8 +40,8 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         );
         const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
         if (verified) {
-          setTicketId(pcd.claim.partialTicket.ticketId);
-          setEventId(pcd.claim.partialTicket.eventId);
+          setTicketId(pcd.claim.partialTicket.ticketId as string);
+          setEventId(pcd.claim.partialTicket.eventId as string);
           setLoading(false);
         } else {
           setLoading(false);

@@ -35,7 +35,7 @@ export function JustAddScreen({
       });
       setAdded(true);
     } catch (e) {
-      await err(dispatch, "Error Adding PCD", e.message);
+      err(dispatch, "Error Adding PCD", e instanceof Error ? e.message : "");
     }
   }, [dispatch, request.folder, request.pcd]);
 

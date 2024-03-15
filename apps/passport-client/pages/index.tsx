@@ -135,8 +135,8 @@ class App extends React.Component<object, AppState> {
   static getDerivedStateFromError(error: Error): Partial<AppState> {
     console.log("App caught error", error);
     const { message, stack } = error;
-    let shortStack = stack.substring(0, 280);
-    if (shortStack.length < stack.length) shortStack += "...";
+    let shortStack = (stack ?? "").substring(0, 280);
+    if (shortStack.length < (stack ?? "").length) shortStack += "...";
     return {
       error: { title: "Error", message, stack: shortStack }
     } as Partial<AppState>;
@@ -462,7 +462,7 @@ async function loadInitialState(): Promise<AppState> {
 
 registerServiceWorker();
 
-const root = createRoot(document.querySelector("#root"));
+const root = createRoot(document.querySelector("#root") as Element);
 root.render(
   <RollbarProvider>
     <App />
