@@ -10,7 +10,7 @@ export type FetchFn = (
   input: RequestInfo | URL,
   init?: RequestInit
 ) => Promise<Response>;
-//
+//.
 export interface IDevconnectPretixAPI {
   fetchOrders(
     orgUrl: string,

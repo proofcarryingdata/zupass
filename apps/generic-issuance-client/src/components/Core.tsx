@@ -5,7 +5,7 @@ import { Link as ReactLink } from "react-router-dom";
 import styled from "styled-components";
 
 /**
- * Use in place of {@link Link} and {@link ReactLink}.
+ * Use in place of {@link Link} and {@link ReactLink}..
  */
 export const PodLink = ({
   to,
