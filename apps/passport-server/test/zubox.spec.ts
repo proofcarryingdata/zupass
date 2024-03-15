@@ -97,15 +97,9 @@ import {
 } from "./util/util";
 
 /**
- * {@link ZuboxService}
- * Rough test of the generic issuance functionality defined in this PR, just
- * to make sure that ends are coming together neatly. Totally incomplete.
- *
- * TODO:
- * - finish this during Cat Week.
- * - comprehensive tests for both Pretix and Lemonade cases
+ * Testing {@link ZuboxService}.
  */
-describe("Generic Issuance", function () {
+describe("Zubox", function () {
   this.timeout(30_000);
   const nowDate = new Date();
   const now = Date.now();
@@ -115,27 +109,27 @@ describe("Generic Issuance", function () {
   loadApolloErrorMessages();
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
-  let giBackend: Zupass;
-  let giService: ZuboxService | null;
+  let zuboxBackend: Zupass;
+  let zuboxService: ZuboxService | null;
 
   const lemonadeOAuthClientId = "edge-city-client-id";
 
-  const adminGIUserId = randomUUID();
-  const adminGIUserEmail = "admin@test.com";
+  const adminZBUserId = randomUUID();
+  const adminZBUserEmail = "admin@test.com";
 
   /**
-   * Generic Issuance product user who has set up a {@link LemonadePipeline}
-   * via the Generic Issuance UI.
+   * Zubox product user who has set up a {@link LemonadePipeline}
+   * via the Zubox UI.
    */
-  const edgeCityGIUserID = randomUUID();
-  const edgeCityGIUserEmail = "edge-city-gi-user@test.com";
+  const edgeCityZBUserID = randomUUID();
+  const edgeCityZBUserEmail = "edge-city-zb-user@test.com";
 
   /**
-   * Generic Issuance product user who has set up a {@link PretixPipeline}
-   * via the Generic Issuance UI.
+   * Zubox product user who has set up a {@link PretixPipeline}
+   * via the Zubox UI.
    */
-  const ethLatAmGIUserID = randomUUID();
-  const ethLatAmGIUserEmail = "eth-lat-am-gi-user@test.com";
+  const ethLatAmZBUserID = randomUUID();
+  const ethLatAmZBUserEmail = "eth-lat-am-zb-user@test.com";
   const EthLatAmBouncerIdentity = new Identity();
   const EthLatAmAttendeeIdentity = new Identity();
 
@@ -183,7 +177,7 @@ describe("Generic Issuance", function () {
    * Similar to {@link EdgeCityDenverAttendee}
    * Person who has a {@link LemonadeTicket} that does not have a bouncer ticket,
    * i.e. a ticket whose 'product id' or 'tier' is set up to be a 'superuser' ticket
-   * by the Generic Issuance User with id {@link edgeCityGIUserID}.
+   * by the Zubox User with id {@link edgeCityZBUserID}.
    */
   const EdgeCityDenverBouncer: LemonadeUser = lemonadeBackend.addUser(
     "bouncer@example.com",
@@ -240,18 +234,13 @@ describe("Generic Issuance", function () {
   const edgeCityDenverAttendeeProductId = randomUUID();
   const edgeCityDenverBouncerProductId = randomUUID();
   const edgeCityPipeline: LemonadePipelineDefinition = {
-    ownerUserId: edgeCityGIUserID,
+    ownerUserId: edgeCityZBUserID,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
     id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
     editorUserIds: [],
     options: {
       feedOptions: {
-        // TODO: @richard what do the organizers want these tickets to be called?
         feedDescription: "Edge City Denver tickets!",
         feedDisplayName: "Edge City Denver",
         feedFolder: "Edge City",
@@ -408,14 +397,10 @@ describe("Generic Issuance", function () {
   };
 
   const ethLatAmPipeline: PretixPipelineDefinition = {
-    ownerUserId: ethLatAmGIUserID,
+    ownerUserId: ethLatAmZBUserID,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
     id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
     editorUserIds: [],
     options: {
       // https://ethlatam.org/
@@ -503,14 +488,10 @@ describe("Generic Issuance", function () {
 
   const csvPipeline: CSVPipelineDefinition = {
     type: PipelineType.CSV,
-    ownerUserId: ethLatAmGIUserID,
+    ownerUserId: ethLatAmZBUserID,
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
     id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
     editorUserIds: [],
     options: {
       csv: `title,image
@@ -528,7 +509,7 @@ t2,i1`,
   const pipelineDefinitions = [ethLatAmPipeline, edgeCityPipeline, csvPipeline];
 
   /**
-   * Sets up a Zupass/Generic issuance backend with two pipelines:
+   * Sets up a Zupass/Zubox backend with two pipelines:
    * - {@link LemonadePipeline}, as defined by {@link edgeCityPipeline}
    * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
    */
@@ -543,14 +524,14 @@ t2,i1`,
       ...testingEnv
     });
 
-    giBackend = await startTestingApp({
+    zuboxBackend = await startTestingApp({
       lemonadeAPI
     });
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB(zuboxBackend.context.dbPool);
     const ethLatAmGIUser: PipelineUser = {
-      id: ethLatAmGIUserID,
-      email: ethLatAmGIUserEmail,
+      id: ethLatAmZBUserID,
+      email: ethLatAmZBUserEmail,
       isAdmin: false,
       timeCreated: nowDate,
       timeUpdated: nowDate
@@ -558,8 +539,8 @@ t2,i1`,
     await userDB.updateUserById(ethLatAmGIUser);
     assertUserMatches(
       {
-        id: ethLatAmGIUserID,
-        email: ethLatAmGIUserEmail,
+        id: ethLatAmZBUserID,
+        email: ethLatAmZBUserEmail,
         isAdmin: false,
         timeCreated: nowDate,
         timeUpdated: nowDate
@@ -567,8 +548,8 @@ t2,i1`,
       await userDB.getUserById(ethLatAmGIUser.id)
     );
     const edgeCityDenverUser: PipelineUser = {
-      id: edgeCityGIUserID,
-      email: edgeCityGIUserEmail,
+      id: edgeCityZBUserID,
+      email: edgeCityZBUserEmail,
       isAdmin: false,
       timeCreated: nowDate,
       timeUpdated: nowDate
@@ -576,8 +557,8 @@ t2,i1`,
     await userDB.updateUserById(edgeCityDenverUser);
     assertUserMatches(
       {
-        id: edgeCityGIUserID,
-        email: edgeCityGIUserEmail,
+        id: edgeCityZBUserID,
+        email: edgeCityZBUserEmail,
         isAdmin: false,
         timeCreated: nowDate,
         timeUpdated: nowDate
@@ -595,15 +576,15 @@ t2,i1`,
     mockServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
-    giService = giBackend.services.zuboxService;
-    await giService?.stop();
+    zuboxService = zuboxBackend.services.zuboxService;
+    await zuboxService?.stop();
     const pipelineDefinitionDB = new PipelineDefinitionDB(
-      giBackend.context.dbPool
+      zuboxBackend.context.dbPool
     );
     await pipelineDefinitionDB.clearAllDefinitions();
     await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
-    await giService?.loadAndInstantiatePipelines();
-    await giService?.performAllPipelineLoads();
+    await zuboxService?.loadAndInstantiatePipelines();
+    await zuboxService?.performAllPipelineLoads();
   });
 
   this.beforeEach(async () => {
@@ -616,11 +597,11 @@ t2,i1`,
   });
 
   step("PipelineUserDB", async function () {
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
+    const userDB = new PipelineUserDB(zuboxBackend.context.dbPool);
 
     const adminUser: PipelineUser = {
-      id: adminGIUserId,
-      email: adminGIUserEmail,
+      id: adminZBUserId,
+      email: adminZBUserEmail,
       isAdmin: true,
       timeCreated: nowDate,
       timeUpdated: nowDate
@@ -628,8 +609,8 @@ t2,i1`,
     await userDB.updateUserById(adminUser);
     assertUserMatches(
       {
-        id: adminGIUserId,
-        email: adminGIUserEmail,
+        id: adminZBUserId,
+        email: adminZBUserEmail,
         isAdmin: true,
         timeCreated: nowDate,
         timeUpdated: nowDate
@@ -652,8 +633,8 @@ t2,i1`,
   step(
     "LemonadePipeline feed issuance and checkin for Edge City Denver",
     async () => {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -863,7 +844,7 @@ t2,i1`,
       // backend, will be implemented with the pipeline as the check-in backend
 
       // Verify that consumers were saved for each user who requested tickets
-      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumerDB = new PipelineConsumerDB(zuboxBackend.context.dbPool);
       const consumers = await consumerDB.loadByEmails(
         edgeCityDenverPipeline.id,
         [
@@ -909,15 +890,15 @@ t2,i1`,
         }
       ]);
 
-      await checkPipelineInfoEndpoint(giBackend, edgeCityDenverPipeline);
+      await checkPipelineInfoEndpoint(zuboxBackend, edgeCityDenverPipeline);
     }
   );
 
   step(
     "Lemonade pipeline Semaphore groups contain correct members",
     async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -997,8 +978,8 @@ t2,i1`,
   step(
     "New users can sign up, get added to group, prove group membership",
     async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -1098,7 +1079,7 @@ t2,i1`,
 
       expectTrue(await SemaphoreGroupPCDPackage.verify(groupPCD));
 
-      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumerDB = new PipelineConsumerDB(zuboxBackend.context.dbPool);
       const consumer = (
         await consumerDB.loadByEmails(edgeCityPipeline.id, [newUser.email])
       )[0];
@@ -1244,8 +1225,8 @@ t2,i1`,
   step(
     "PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm",
     async () => {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const pipeline = pipelines.find(PretixPipeline.is);
@@ -1447,7 +1428,7 @@ t2,i1`,
       } satisfies ZuboxTicketActionResponseValue);
 
       // Verify that consumers were saved for each user who requested tickets
-      const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
+      const consumerDB = new PipelineConsumerDB(zuboxBackend.context.dbPool);
       const consumers = await consumerDB.loadByEmails(ethLatAmPipeline.id, [
         EthLatAmManualAttendeeEmail,
         EthLatAmManualBouncerEmail,
@@ -1482,15 +1463,15 @@ t2,i1`,
         }
       ]);
 
-      await checkPipelineInfoEndpoint(giBackend, pipeline);
+      await checkPipelineInfoEndpoint(zuboxBackend, pipeline);
     }
   );
 
   step(
     "Pretix pipeline Semaphore groups contain correct members",
     async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
@@ -1559,22 +1540,22 @@ t2,i1`,
   );
 
   step("check-ins for deleted manual tickets are removed", async function () {
-    expectToExist(giService);
+    expectToExist(zuboxService);
 
-    const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
+    const checkinDB = new PipelineCheckinDB(zuboxBackend.context.dbPool);
     const checkins = await checkinDB.getByPipelineId(ethLatAmPipeline.id);
     // Manual attendee ticket was checked in
     expectLength(checkins, 1);
 
-    const userDB = new PipelineUserDB(giBackend.context.dbPool);
-    const adminUser = await userDB.getUserById(adminGIUserId);
+    const userDB = new PipelineUserDB(zuboxBackend.context.dbPool);
+    const adminUser = await userDB.getUserById(adminZBUserId);
     expectToExist(adminUser);
 
     // Delete the manual tickets from the definition
     const newPipelineDefinition = structuredClone(ethLatAmPipeline);
     newPipelineDefinition.options.manualTickets = [];
     // Update the definition
-    const { restartPromise } = await giService.upsertPipelineDefinition(
+    const { restartPromise } = await zuboxService.upsertPipelineDefinition(
       adminUser,
       newPipelineDefinition
     );
@@ -1582,7 +1563,7 @@ t2,i1`,
     await restartPromise;
 
     // Find the running pipeline
-    const pipelines = await giService.getAllPipelines();
+    const pipelines = await zuboxService.getAllPipelines();
     expectToExist(pipelines);
     expectLength(pipelines, 3);
     const pipeline = pipelines.find(PretixPipeline.is);
@@ -1597,13 +1578,13 @@ t2,i1`,
   });
 
   step("CSVPipeline", async function () {
-    expectToExist(giService);
-    await testCSVPipeline(giService);
+    expectToExist(zuboxService);
+    await testCSVPipeline(zuboxService);
   });
 
   step("check-in and remote check-out works in Pretix", async function () {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
+    expectToExist(zuboxService);
+    const pipelines = await zuboxService.getAllPipelines();
     const pipeline = pipelines.find(PretixPipeline.is);
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -1778,8 +1759,8 @@ t2,i1`,
   });
 
   step("check-in and remote check-out works in Lemonade", async function () {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
+    expectToExist(zuboxService);
+    const pipelines = await zuboxService.getAllPipelines();
     const pipeline = pipelines.find(LemonadePipeline.is);
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(edgeCityPipeline.id);
@@ -1955,7 +1936,7 @@ t2,i1`,
    * operations for {@link PipelineDefinition}s
    */
   step("PipelineDefinitionDB", async function () {
-    const definitionDB = new PipelineDefinitionDB(giBackend.context.dbPool);
+    const definitionDB = new PipelineDefinitionDB(zuboxBackend.context.dbPool);
     await definitionDB.clearAllDefinitions();
 
     {
@@ -1988,13 +1969,13 @@ t2,i1`,
           .pretixAPIKey
       ).to.eq(newKey);
 
-      updatedPretixDefinition.editorUserIds.push(edgeCityGIUserID);
+      updatedPretixDefinition.editorUserIds.push(edgeCityZBUserID);
       await definitionDB.setDefinition(updatedPretixDefinition);
       const newEditorDefinition = (await definitionDB.getDefinition(
         updatedPretixDefinition.id
       )) as PretixPipelineDefinition;
       expect(newEditorDefinition).to.exist;
-      expect(newEditorDefinition.editorUserIds).to.contain(edgeCityGIUserID);
+      expect(newEditorDefinition.editorUserIds).to.contain(edgeCityZBUserID);
 
       newEditorDefinition.editorUserIds = [];
       await definitionDB.setDefinition(newEditorDefinition);
@@ -2082,8 +2063,8 @@ t2,i1`,
         unregisteredLemonadeUserHandler(lemonadeBackend, lemonadeBackendUrl)
       );
 
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       const pipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
@@ -2098,8 +2079,8 @@ t2,i1`,
   step(
     "Mix of valid and invalid Lemonade tickets results in only valid ones being accepted",
     async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       const pipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
@@ -2157,8 +2138,8 @@ t2,i1`,
   step(
     "Pretix should not load tickets for an event with invalid settings",
     async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -2188,8 +2169,8 @@ t2,i1`,
   step(
     "Pretix should not load tickets for events which have products with invalid settings",
     async function () {
-      expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      expectToExist(zuboxService);
+      const pipelines = await zuboxService.getAllPipelines();
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -2222,9 +2203,9 @@ t2,i1`,
     }
   );
 
-  step("Authenticated Generic Issuance Endpoints", async () => {
-    expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
+  step("Authenticated Zubox Endpoints", async () => {
+    expectToExist(zuboxService);
+    const pipelines = await zuboxService.getAllPipelines();
     expectToExist(pipelines);
     expectLength(pipelines, 3);
     const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -2236,17 +2217,17 @@ t2,i1`,
   });
 
   this.afterAll(async () => {
-    await stopApplication(giBackend);
+    await stopApplication(zuboxBackend);
     mockServer.close();
   });
 });
 
 /**
- * Testing that the Generic Issuance backend calculates {@link InfoResult} about
- * pipeline {@link PretixPipeline} correctly by requesting it from the Generic
- * Issuance API routes.
+ * Testing that the Zubox backend calculates {@link InfoResult} about
+ * pipeline {@link PretixPipeline} correctly by requesting it from the
+ * Zubox API routes.
  *
- * This endpoint is used by the Generic Issuance frontend to assist a user in
+ * This endpoint is used by the Zubox frontend to assist a user in
  * managing their {@link Pipeline}.
  *
  * TODO: incorporate auth
