@@ -30,8 +30,6 @@ import { GetFrogTab } from "./GetFrogTab";
 import { TypistText } from "./TypistText";
 import { useInitializeFrogSubscriptions } from "./useFrogFeed";
 
-const animSpeedMs = 500;
-
 const TABS = [
   {
     tab: "get",
@@ -52,13 +50,7 @@ type TabId = (typeof TABS)[number]["tab"];
 /**
  * Renders FrogCrypto UI including rendering all EdDSAFrogPCDs.
  */
-export function FrogCryptoHomeSection({
-  setBrowsingFolder,
-  confetti
-}: {
-  setBrowsingFolder: (folder?: string, tab?: string) => void;
-  confetti: () => Promise<void>;
-}): JSX.Element {
+export function FrogCryptoHomeSection(): JSX.Element {
   const frogPCDs = usePCDsInFolder(FrogCryptoFolderName).filter(isEdDSAFrogPCD);
   const subs = useSubscriptions();
   const frogSubs = useMemo(
@@ -91,9 +83,6 @@ export function FrogCryptoHomeSection({
   }, [setSearchParams]);
 
   useCheatCodeActivation();
-
-  const [buttonRef, setButtonRef] = useState<HTMLElement>();
-  const [btnText, setBtnText] = useState("EDGE CITY");
 
   if (!userState) {
     return <RippleLoader />;
@@ -184,30 +173,6 @@ export function FrogCryptoHomeSection({
               // show tabs on second pull
               myScore >= 2 && (
                 <>
-                  <ButtonGroup>
-                    <EdgeCityButton
-                      ref={(r): void => setButtonRef(r)}
-                      onClick={(): void => {
-                        buttonRef.classList.add("big");
-                        buttonRef.style.border = "none";
-                        buttonRef.style.color = "transparent";
-                        document.body.style.overflow = "hidden";
-                        setBtnText("");
-
-                        setTimeout(() => {
-                          document.body.style.overflowY = "scroll";
-                          setBrowsingFolder("Edge City", "experiences");
-                          confetti();
-                        }, animSpeedMs * 0.8);
-                      }}
-                    >
-                      <div className="wrapper">
-                        <div className="expander">
-                          <div className="text">{btnText}</div>
-                        </div>
-                      </div>
-                    </EdgeCityButton>
-                  </ButtonGroup>
                   <ButtonGroup>
                     {TABS.map(({ tab: t, label }) => (
                       <Button
@@ -315,62 +280,4 @@ const Container = styled.div`
 const Score = styled.div`
   font-size: 16px;
   text-align: center;
-`;
-
-const EdgeCityButton = styled.div`
-  user-select: none;
-  cursor: pointer;
-  width: 100%;
-  height: 50px;
-  max-height: 50px;
-  font-family: PressStart2P;
-  position: relative;
-  z-index: 9998;
-
-  .wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-  .expander {
-    background-color: black;
-    transition: ${animSpeedMs}ms;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    width: 100%;
-    height: 100%;
-    border-radius: 4px;
-    border: 1px solid white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    &:hover {
-      transform: scale(1.05);
-
-      &:active {
-        transform: scale(1.1);
-      }
-    }
-  }
-
-  &.big {
-    .expander {
-      transition: ${animSpeedMs}ms;
-      position: absolute;
-      top: calc(50% - 100vh);
-      left: calc(50% - 100vw);
-      width: 200vw;
-      height: 200vh;
-    }
-  }
 `;
