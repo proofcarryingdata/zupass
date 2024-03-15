@@ -7,7 +7,7 @@
  * of PCD lives in that PCD type's corresponding {@link PCDPackage}. The package
  * exposes, among other things, `prove` and `verify` functions, which allow you to
  * create new instances of the PCD and, and verify that instances of the PCD are
- * indeed correct respectively.
+ * indeed correct respectively..
  */
 export interface PCD<C = unknown, P = unknown> {
   /**
