@@ -31,8 +31,8 @@ import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
 import { DevconnectCheckinByIdScreen } from "../components/screens/ScannedTicketScreens/DevconnectCheckinByIdScreen";
-import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 import { SecondPartyTicketVerifyScreen } from "../components/screens/ScannedTicketScreens/SecondPartyTicketVerifyScreen";
+import { ZuboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/ZuboxScannedTicketScreen/ZuboxScannedTicketScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
@@ -376,7 +376,7 @@ function RouterImpl(): JSX.Element {
           <Route path="import" element={<ImportBackupScreen />} />
           <Route
             path="generic-checkin"
-            element={<PodboxScannedTicketScreen />}
+            element={<ZuboxScannedTicketScreen />}
           />
           <Route path="*" element={<MissingScreen />} />
         </Route>

@@ -1,24 +1,24 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
-  GenericIssuanceDeletePipelineResponseValue,
-  GenericIssuanceFetchPretixEventsRequest,
-  GenericIssuanceFetchPretixEventsResponseValue,
-  GenericIssuanceFetchPretixProductsRequest,
-  GenericIssuanceFetchPretixProductsResponseValue,
-  GenericIssuanceGetAllUserPipelinesResponseValue,
-  GenericIssuanceGetPipelineResponseValue,
   GenericIssuancePreCheckRequest,
-  GenericIssuanceSelfResponseValue,
-  GenericIssuanceSendEmailResponseValue,
-  GenericIssuanceUpsertPipelineRequest,
-  GenericIssuanceUpsertPipelineResponseValue,
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
-  PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue
+  PollFeedResponseValue,
+  ZuboxCheckInRequest,
+  ZuboxDeletePipelineResponseValue,
+  ZuboxFetchPretixEventsRequest,
+  ZuboxFetchPretixEventsResponseValue,
+  ZuboxFetchPretixProductsRequest,
+  ZuboxFetchPretixProductsResponseValue,
+  ZuboxGetAllUserPipelinesResponseValue,
+  ZuboxGetPipelineResponseValue,
+  ZuboxSelfResponseValue,
+  ZuboxSendEmailResponseValue,
+  ZuboxTicketActionResponseValue,
+  ZuboxUpsertPipelineRequest,
+  ZuboxUpsertPipelineResponseValue
 } from "@pcd/passport-interface";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express from "express";
@@ -73,13 +73,13 @@ export function initGenericIssuanceRoutes(
     const user = await genericIssuanceService.authenticateStytchSession(req);
     traceUser(user);
 
-    const result: GenericIssuanceSelfResponseValue = {
+    const result: ZuboxSelfResponseValue = {
       email: user.email,
       isAdmin: user.isAdmin,
       id: user.id
     };
 
-    res.json(result satisfies GenericIssuanceSelfResponseValue);
+    res.json(result satisfies ZuboxSelfResponseValue);
   });
 
   /**
@@ -155,9 +155,9 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/check-in",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const request = req.body as GenericIssuanceCheckInRequest;
+      const request = req.body as ZuboxCheckInRequest;
       const result = await genericIssuanceService.handleCheckIn(request);
-      res.json(result satisfies PodboxTicketActionResponseValue);
+      res.json(result satisfies ZuboxTicketActionResponseValue);
     }
   );
 
@@ -194,7 +194,7 @@ export function initGenericIssuanceRoutes(
           );
       } else {
         const result = await genericIssuanceService.sendLoginEmail(email);
-        res.json(result satisfies GenericIssuanceSendEmailResponseValue);
+        res.json(result satisfies ZuboxSendEmailResponseValue);
       }
     }
   );
@@ -211,9 +211,7 @@ export function initGenericIssuanceRoutes(
 
       const result =
         await genericIssuanceService.getAllUserPipelineDefinitions(user);
-      res.json(
-        result satisfies GenericIssuanceGetAllUserPipelinesResponseValue
-      );
+      res.json(result satisfies ZuboxGetAllUserPipelinesResponseValue);
     }
   );
 
@@ -231,7 +229,7 @@ export function initGenericIssuanceRoutes(
         user,
         checkUrlParam(req, "id")
       );
-      res.json(result satisfies GenericIssuanceGetPipelineResponseValue);
+      res.json(result satisfies ZuboxGetPipelineResponseValue);
     }
   );
 
@@ -245,13 +243,13 @@ export function initGenericIssuanceRoutes(
       const user = await genericIssuanceService.authenticateStytchSession(req);
       traceUser(user);
 
-      const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
+      const reqBody = req.body as ZuboxUpsertPipelineRequest;
       const { definition: result } =
         await genericIssuanceService.upsertPipelineDefinition(
           user,
           reqBody.pipeline
         );
-      res.json(result satisfies GenericIssuanceUpsertPipelineResponseValue);
+      res.json(result satisfies ZuboxUpsertPipelineResponseValue);
     }
   );
 
@@ -269,7 +267,7 @@ export function initGenericIssuanceRoutes(
         user,
         checkUrlParam(req, "id")
       );
-      res.json(result satisfies GenericIssuanceDeletePipelineResponseValue);
+      res.json(result satisfies ZuboxDeletePipelineResponseValue);
     }
   );
 
@@ -328,16 +326,10 @@ export function initGenericIssuanceRoutes(
       traceUser(user);
 
       const events = await genericIssuanceService.fetchAllPretixEvents(
-        checkBody<GenericIssuanceFetchPretixEventsRequest, "orgUrl">(
-          req,
-          "orgUrl"
-        ),
-        checkBody<GenericIssuanceFetchPretixEventsRequest, "token">(
-          req,
-          "token"
-        )
+        checkBody<ZuboxFetchPretixEventsRequest, "orgUrl">(req, "orgUrl"),
+        checkBody<ZuboxFetchPretixEventsRequest, "token">(req, "token")
       );
-      res.json(events satisfies GenericIssuanceFetchPretixEventsResponseValue);
+      res.json(events satisfies ZuboxFetchPretixEventsResponseValue);
     }
   );
 
@@ -349,22 +341,11 @@ export function initGenericIssuanceRoutes(
       traceUser(user);
 
       const events = await genericIssuanceService.fetchPretixProducts(
-        checkBody<GenericIssuanceFetchPretixProductsRequest, "orgUrl">(
-          req,
-          "orgUrl"
-        ),
-        checkBody<GenericIssuanceFetchPretixProductsRequest, "token">(
-          req,
-          "token"
-        ),
-        checkBody<GenericIssuanceFetchPretixProductsRequest, "eventID">(
-          req,
-          "eventID"
-        )
+        checkBody<ZuboxFetchPretixProductsRequest, "orgUrl">(req, "orgUrl"),
+        checkBody<ZuboxFetchPretixProductsRequest, "token">(req, "token"),
+        checkBody<ZuboxFetchPretixProductsRequest, "eventID">(req, "eventID")
       );
-      res.json(
-        events satisfies GenericIssuanceFetchPretixProductsResponseValue
-      );
+      res.json(events satisfies ZuboxFetchPretixProductsResponseValue);
     }
   );
 

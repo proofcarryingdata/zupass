@@ -1,9 +1,9 @@
 import { Button, FormControl, FormLabel, Switch } from "@chakra-ui/react";
-import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
+import { ZuboxSelfResult } from "@pcd/passport-interface";
 import { ReactNode, useCallback, useContext } from "react";
 import styled from "styled-components";
 import { GIContext } from "../../helpers/Context";
-import { PodboxButton } from "./PodboxButton";
+import { ZuboxButton } from "./ZuboxButton";
 
 /**
  * A header that displays information about the logged-in user
@@ -14,7 +14,7 @@ export function GlobalPageHeader({
   user,
   titleContent
 }: {
-  user?: GenericIssuanceSelfResult;
+  user?: ZuboxSelfResult;
   titleContent?: () => ReactNode;
 }): ReactNode {
   const leftElements: ReactNode[] = [];
@@ -24,13 +24,13 @@ export function GlobalPageHeader({
     ctx.setState({ isAdminMode: !ctx.isAdminMode });
   }, [ctx]);
 
-  const podbox = <PodboxButton key="title" />;
+  const zubox = <ZuboxButton key="title" />;
 
   if (!user?.value) {
     return (
       <HeaderContainer>
         <LeftHalf>
-          {podbox} {titleContent?.()}
+          {zubox} {titleContent?.()}
         </LeftHalf>
         <RightHalf>
           {/* to prevent page reflow on data load */}
@@ -42,7 +42,7 @@ export function GlobalPageHeader({
     );
   }
 
-  leftElements.push(podbox);
+  leftElements.push(zubox);
   const extraTitleContent = titleContent?.();
   if (extraTitleContent) {
     leftElements.push(<span key="extra-title">{extraTitleContent}</span>);

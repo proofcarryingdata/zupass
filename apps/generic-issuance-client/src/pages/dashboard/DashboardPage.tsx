@@ -8,10 +8,7 @@ import {
   Stack,
   UnorderedList
 } from "@chakra-ui/react";
-import {
-  GenericIssuancePipelineListEntry,
-  getError
-} from "@pcd/passport-interface";
+import { ZuboxPipelineListEntry, getError } from "@pcd/passport-interface";
 import { ReactNode, useEffect, useMemo } from "react";
 import { HomeLink, PageContent, PodLink } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
@@ -34,7 +31,7 @@ export default function DashboardPage(): ReactNode {
   const user = useFetchSelf();
   const isAdminView = useIsAdminView(user?.value);
 
-  const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {
+  const pipelineEntries: ZuboxPipelineListEntry[] = useMemo(() => {
     if (!user?.value?.id) {
       return [];
     }
