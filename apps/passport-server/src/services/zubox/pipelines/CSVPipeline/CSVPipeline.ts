@@ -22,7 +22,7 @@ import { logger } from "../../../../util/logger";
 import { setError, traced } from "../../../telemetryService";
 import {
   FeedIssuanceCapability,
-  makeGenericIssuanceFeedUrl
+  makeZuboxFeedUrl
 } from "../../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
@@ -73,7 +73,7 @@ export class CSVPipeline implements BasePipeline {
       {
         type: PipelineCapability.FeedIssuance,
         issue: this.issue.bind(this),
-        feedUrl: makeGenericIssuanceFeedUrl(
+        feedUrl: makeZuboxFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
         ),

@@ -13,12 +13,12 @@ import {
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
 import { NamedAPIError } from "./api/apiResult";
+import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
 import {
   ActionScreenConfig,
   BadgeConfig,
   PipelineDefinition
-} from "./genericIssuanceTypes";
-import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
+} from "./zuboxTypes";
 
 /**
  * Ask the server to prove a PCD. The server reponds with a {@link PendingPCD}
@@ -869,8 +869,8 @@ export interface FrogCryptoUpdateFeedsResponseValue {
 }
 
 /*
- * Many problems can come up in {@link GenericIssuanceCheckInRequest}
- * and {@link GenericIssuanceCheckRequest}. This type enumerates all the possible
+ * Many problems can come up in {@link ZuboxCheckInRequest}
+ * and {@link ZuboxCheckRequest}. This type enumerates all the possible
  * problems.
  */
 export type ZuboxTicketActionError = { detailedMessage?: string } & (
@@ -919,7 +919,7 @@ export type ZuboxTicketActionResponseValue =
  * This is a "pre-checkin" step, which verifies that the user is able to check
  * the ticket in, before allowing them to attempt to do so.
  */
-export type GenericIssuancePreCheckRequest = {
+export type ZuboxPreCheckRequest = {
   /**
    * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket

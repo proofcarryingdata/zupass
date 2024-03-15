@@ -14,20 +14,20 @@ import {
   PipelineDefinition,
   PipelineLogLevel,
   PipelineType,
-  PodboxTicketActionResponseValue,
-  PodboxTicketActionResult,
   PollFeedResult,
   PretixPipelineDefinition,
+  ZuboxTicketActionResponseValue,
+  ZuboxTicketActionResult,
   createFeedCredentialPayload,
   createTicketActionCredentialPayload,
   getI18nString,
-  requestGenericIssuanceHistoricalSemaphoreGroup,
-  requestGenericIssuanceSemaphoreGroup,
-  requestGenericIssuanceSemaphoreGroupRoot,
-  requestGenericIssuanceValidSemaphoreGroup,
   requestPipelineInfo,
-  requestPodboxTicketAction,
-  requestPollFeed
+  requestPollFeed,
+  requestZuboxHistoricalSemaphoreGroup,
+  requestZuboxSemaphoreGroup,
+  requestZuboxSemaphoreGroupRoot,
+  requestZuboxTicketAction,
+  requestZuboxValidSemaphoreGroup
 } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -59,19 +59,16 @@ import { PipelineCheckinDB } from "../src/database/queries/pipelineCheckinDB";
 import { PipelineConsumerDB } from "../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
-import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
 import {
   LEMONADE_CHECKER,
   LemonadePipeline
-} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+} from "../src/services/zubox/pipelines/LemonadePipeline";
 import {
   PRETIX_CHECKER,
   PretixPipeline
-} from "../src/services/generic-issuance/pipelines/PretixPipeline";
-import {
-  Pipeline,
-  PipelineUser
-} from "../src/services/generic-issuance/pipelines/types";
+} from "../src/services/zubox/pipelines/PretixPipeline";
+import { Pipeline, PipelineUser } from "../src/services/zubox/pipelines/types";
+import { ZuboxService } from "../src/services/zubox/zuboxService";
 import { Zupass } from "../src/types";
 import { testCSVPipeline } from "./generic-issuance/testCSVPipeline";
 import {
@@ -100,7 +97,7 @@ import {
 } from "./util/util";
 
 /**
- * {@link GenericIssuanceService}
+ * {@link ZuboxService}
  * Rough test of the generic issuance functionality defined in this PR, just
  * to make sure that ends are coming together neatly. Totally incomplete.
  *
@@ -119,7 +116,7 @@ describe("Generic Issuance", function () {
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
-  let giService: GenericIssuanceService | null;
+  let giService: ZuboxService | null;
 
   const lemonadeOAuthClientId = "edge-city-client-id";
 
@@ -598,7 +595,7 @@ t2,i1`,
     mockServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
-    giService = giBackend.services.genericIssuanceService;
+    giService = giBackend.services.zuboxService;
     await giService?.stop();
     const pipelineDefinitionDB = new PipelineDefinitionDB(
       giBackend.context.dbPool
@@ -728,7 +725,7 @@ t2,i1`,
       expect(atteendeeChecksInBouncerResult.value).to.deep.eq({
         success: false,
         error: { name: "NotSuperuser" }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       // can't check in a ticket with an email PCD signed by a non-Zupass private key
       const fakeBouncerCheckInBouncerResult =
@@ -742,7 +739,7 @@ t2,i1`,
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
         success: false,
         error: { name: "InvalidSignature" }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       const Bouncer2Tickets = await requestTicketsFromPipeline(
         edgeCityDenverPipeline.issuanceCapability.options.feedFolder,
@@ -846,7 +843,7 @@ t2,i1`,
           checkinTimestamp: new Date().toISOString(),
           checker: LEMONADE_CHECKER
         }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       const manualAttendeeChecksInManualBouncer =
         await requestCheckInPipelineTicket(
@@ -859,7 +856,7 @@ t2,i1`,
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
         success: false,
         error: { name: "NotSuperuser" }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       // TODO test checking in manual attendee/bouncer
       // Currently not supported as these are not present in the Lemonade
@@ -928,7 +925,7 @@ t2,i1`,
 
       await edgeCityDenverPipeline.load();
 
-      const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
+      const semaphoreGroupAll = await requestZuboxSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
         edgeCitySemaphoreGroupIds.all
@@ -944,7 +941,7 @@ t2,i1`,
         EdgeCityManualBouncerIdentity.commitment.toString()
       ]);
 
-      const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
+      const semaphoreGroupBouncers = await requestZuboxSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
         edgeCitySemaphoreGroupIds.bouncers
@@ -957,12 +954,11 @@ t2,i1`,
         EdgeCityManualBouncerIdentity.commitment.toString()
       ]);
 
-      const semaphoreGroupAttendees =
-        await requestGenericIssuanceSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees
-        );
+      const semaphoreGroupAttendees = await requestZuboxSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        edgeCityDenverPipeline.id,
+        edgeCitySemaphoreGroupIds.attendees
+      );
 
       expectTrue(semaphoreGroupAttendees.success);
       expectLength(semaphoreGroupAttendees.value.members, 3);
@@ -978,7 +974,7 @@ t2,i1`,
       ]);
 
       const semaphoreGroupAttendeesAndBouncers =
-        await requestGenericIssuanceSemaphoreGroup(
+        await requestZuboxSemaphoreGroup(
           process.env.PASSPORT_SERVER_URL as string,
           edgeCityDenverPipeline.id,
           edgeCitySemaphoreGroupIds.attendeesAndBouncers
@@ -1035,7 +1031,7 @@ t2,i1`,
       );
       expectLength(NewUserTickets, 1);
 
-      const attendeeGroupResponse = await requestGenericIssuanceSemaphoreGroup(
+      const attendeeGroupResponse = await requestZuboxSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         edgeCityDenverPipeline.id,
         edgeCitySemaphoreGroupIds.attendees
@@ -1053,24 +1049,22 @@ t2,i1`,
         attendeeGroupResponse.value
       );
 
-      const attendeesGroupRootResponse =
-        await requestGenericIssuanceSemaphoreGroupRoot(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees
-        );
+      const attendeesGroupRootResponse = await requestZuboxSemaphoreGroupRoot(
+        process.env.PASSPORT_SERVER_URL as string,
+        edgeCityDenverPipeline.id,
+        edgeCitySemaphoreGroupIds.attendees
+      );
       expectTrue(attendeesGroupRootResponse.success);
       expect(attendeesGroupRootResponse.value).to.eq(
         deserializeSemaphoreGroup(attendeeGroupResponse.value).root.toString()
       );
 
-      const attendeeGroupValidResponse =
-        await requestGenericIssuanceValidSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          edgeCityDenverPipeline.id,
-          edgeCitySemaphoreGroupIds.attendees,
-          attendeeGroup.root.toString()
-        );
+      const attendeeGroupValidResponse = await requestZuboxValidSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        edgeCityDenverPipeline.id,
+        edgeCitySemaphoreGroupIds.attendees,
+        attendeeGroup.root.toString()
+      );
 
       expectTrue(attendeeGroupValidResponse.success);
       expectTrue(attendeeGroupValidResponse.value.valid);
@@ -1127,12 +1121,11 @@ t2,i1`,
       );
 
       {
-        const newAttendeeGroupResponse =
-          await requestGenericIssuanceSemaphoreGroup(
-            process.env.PASSPORT_SERVER_URL as string,
-            edgeCityDenverPipeline.id,
-            edgeCitySemaphoreGroupIds.attendees
-          );
+        const newAttendeeGroupResponse = await requestZuboxSemaphoreGroup(
+          process.env.PASSPORT_SERVER_URL as string,
+          edgeCityDenverPipeline.id,
+          edgeCitySemaphoreGroupIds.attendees
+        );
 
         expectTrue(newAttendeeGroupResponse.success);
         expectLength(newAttendeeGroupResponse.value.members, 5);
@@ -1152,7 +1145,7 @@ t2,i1`,
 
         // Requesting the root hash for the group should give us the new root
         const newAttendeeGroupRootResponse =
-          await requestGenericIssuanceSemaphoreGroupRoot(
+          await requestZuboxSemaphoreGroupRoot(
             process.env.PASSPORT_SERVER_URL as string,
             edgeCityDenverPipeline.id,
             edgeCitySemaphoreGroupIds.attendees
@@ -1164,7 +1157,7 @@ t2,i1`,
         );
 
         const newAttendeeGroupValidResponse =
-          await requestGenericIssuanceValidSemaphoreGroup(
+          await requestZuboxValidSemaphoreGroup(
             process.env.PASSPORT_SERVER_URL as string,
             edgeCityDenverPipeline.id,
             edgeCitySemaphoreGroupIds.attendees,
@@ -1177,7 +1170,7 @@ t2,i1`,
         // We should be able to get the old values for the group by providing
         // the root hash.
         const historicalGroupResponse =
-          await requestGenericIssuanceHistoricalSemaphoreGroup(
+          await requestZuboxHistoricalSemaphoreGroup(
             process.env.PASSPORT_SERVER_URL as string,
             edgeCityDenverPipeline.id,
             edgeCitySemaphoreGroupIds.attendees,
@@ -1336,7 +1329,7 @@ t2,i1`,
       expect(attendeeCheckInBouncerResult.value).to.deep.eq({
         success: false,
         error: { name: "NotSuperuser" }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       // can't check in a ticket with an email PCD signed by a non-Zupass private key
       const fakeBouncerCheckInBouncerResult =
@@ -1350,7 +1343,7 @@ t2,i1`,
       expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
         success: false,
         error: { name: "InvalidSignature" }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       const ManualAttendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
@@ -1438,7 +1431,7 @@ t2,i1`,
           checkinTimestamp: new Date().toISOString(),
           checker: PRETIX_CHECKER
         }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       const manualAttendeeChecksInManualBouncer =
         await requestCheckInPipelineTicket(
@@ -1451,7 +1444,7 @@ t2,i1`,
       expect(manualAttendeeChecksInManualBouncer.value).to.deep.eq({
         success: false,
         error: { name: "NotSuperuser" }
-      } satisfies PodboxTicketActionResponseValue);
+      } satisfies ZuboxTicketActionResponseValue);
 
       // Verify that consumers were saved for each user who requested tickets
       const consumerDB = new PipelineConsumerDB(giBackend.context.dbPool);
@@ -1505,7 +1498,7 @@ t2,i1`,
 
       await ethLatAmPipeline.load();
 
-      const semaphoreGroupAll = await requestGenericIssuanceSemaphoreGroup(
+      const semaphoreGroupAll = await requestZuboxSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         ethLatAmPipeline.id,
         ethLatAmSemaphoreGroupIds.all
@@ -1519,7 +1512,7 @@ t2,i1`,
         EthLatAmManualBouncerIdentity.commitment.toString()
       ]);
 
-      const semaphoreGroupBouncers = await requestGenericIssuanceSemaphoreGroup(
+      const semaphoreGroupBouncers = await requestZuboxSemaphoreGroup(
         process.env.PASSPORT_SERVER_URL as string,
         ethLatAmPipeline.id,
         ethLatAmSemaphoreGroupIds.bouncers
@@ -1532,12 +1525,11 @@ t2,i1`,
         EthLatAmManualBouncerIdentity.commitment.toString()
       ]);
 
-      const semaphoreGroupAttendees =
-        await requestGenericIssuanceSemaphoreGroup(
-          process.env.PASSPORT_SERVER_URL as string,
-          ethLatAmPipeline.id,
-          ethLatAmSemaphoreGroupIds.attendees
-        );
+      const semaphoreGroupAttendees = await requestZuboxSemaphoreGroup(
+        process.env.PASSPORT_SERVER_URL as string,
+        ethLatAmPipeline.id,
+        ethLatAmSemaphoreGroupIds.attendees
+      );
 
       expectTrue(semaphoreGroupAttendees.success);
       expectLength(semaphoreGroupAttendees.value.members, 2);
@@ -1547,7 +1539,7 @@ t2,i1`,
       ]);
 
       const semaphoreGroupAttendeesAndBouncers =
-        await requestGenericIssuanceSemaphoreGroup(
+        await requestZuboxSemaphoreGroup(
           process.env.PASSPORT_SERVER_URL as string,
           ethLatAmPipeline.id,
           ethLatAmSemaphoreGroupIds.attendeesAndBouncers
@@ -1696,7 +1688,7 @@ t2,i1`,
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Pretix"
         }
-      } as PodboxTicketActionResponseValue);
+      } as ZuboxTicketActionResponseValue);
     }
     {
       // Check the bouncer out again
@@ -1724,7 +1716,7 @@ t2,i1`,
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Pretix"
         }
-      } as PodboxTicketActionResponseValue);
+      } as ZuboxTicketActionResponseValue);
     }
     // Verify that bouncer is checked out in backend
     await pipeline.load();
@@ -1868,7 +1860,7 @@ t2,i1`,
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Lemonade"
         }
-      } as PodboxTicketActionResponseValue);
+      } as ZuboxTicketActionResponseValue);
     }
     {
       // Check the bouncer out again
@@ -1897,7 +1889,7 @@ t2,i1`,
           checkinTimestamp: new Date(checkinTimestamp).toISOString(),
           checker: "Lemonade"
         }
-      } as PodboxTicketActionResponseValue);
+      } as ZuboxTicketActionResponseValue);
     }
     // Verify that bouncer is checked out in backend
     await pipeline.load();
@@ -2312,7 +2304,7 @@ export async function signFeedCredentialPayload(
 export async function requestTicketsFromPipeline(
   expectedFolder: string,
   /**
-   * Generated by {@code makeGenericIssuanceFeedUrl}.
+   * Generated by {@code makeZuboxFeedUrl}.
    */
   feedUrl: string,
   feedId: string,
@@ -2395,7 +2387,7 @@ export async function requestCheckInPipelineTicket(
   checkerEmail: string,
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
-): Promise<PodboxTicketActionResult> {
+): Promise<ZuboxTicketActionResult> {
   const checkerEmailPCD = await EmailPCDPackage.prove({
     privateKey: {
       value: zupassEddsaPrivateKey,
@@ -2431,7 +2423,7 @@ export async function requestCheckInPipelineTicket(
     ticketCheckerPayload
   );
 
-  return requestPodboxTicketAction(checkinRoute, ticketCheckerFeedCredential);
+  return requestZuboxTicketAction(checkinRoute, ticketCheckerFeedCredential);
 }
 
 function assertUserMatches(

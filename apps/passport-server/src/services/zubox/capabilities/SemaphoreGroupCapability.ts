@@ -34,7 +34,7 @@ export function isSemaphoreGroupCapability(
   return capability.type === PipelineCapability.SemaphoreGroup;
 }
 
-export function makeGenericIssuanceSemaphoreGroupUrl(
+export function makeZuboxSemaphoreGroupUrl(
   pipelineId: string,
   groupId: string
 ): string {

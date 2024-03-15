@@ -3,15 +3,6 @@ import {
   ActionConfigResponseValue,
   EdgeCityBalance,
   Feed,
-  GenericIssuanceCheckInRequest,
-  GenericIssuanceHistoricalSemaphoreGroupResponseValue,
-  GenericIssuancePipelineListEntry,
-  GenericIssuancePipelineSemaphoreGroupsResponseValue,
-  GenericIssuancePreCheckRequest,
-  GenericIssuanceSemaphoreGroupResponseValue,
-  GenericIssuanceSemaphoreGroupRootResponseValue,
-  GenericIssuanceSendEmailResponseValue,
-  GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
   LemonadePipelineDefinition,
@@ -21,11 +12,19 @@ import {
   PipelineInfoResponseValue,
   PipelineLoadSummary,
   PipelineType,
-  PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixPipelineDefinition,
   TicketActionPayload,
+  ZuboxCheckInRequest,
+  ZuboxPipelineListEntry,
+  ZuboxPipelineSemaphoreGroupsResponseValue,
+  ZuboxPreCheckRequest,
+  ZuboxSemaphoreGroupResponseValue,
+  ZuboxSemaphoreGroupRootResponseValue,
+  ZuboxSendEmailResponseValue,
+  ZuboxTicketActionResponseValue,
+  ZuboxValidSemaphoreGroupResponseValue,
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
@@ -68,6 +67,7 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../database/queries/ticketActionDBs";
+import { sqlQuery } from "../../database/sqlQuery";
 import { PCDHTTPError } from "../../routing/pcdHttpError";
 import { ApplicationContext } from "../../types";
 import { logger } from "../../util/logger";
@@ -76,7 +76,6 @@ import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
 import { setError, traceFlattenedObject, traced } from "../telemetryService";
-import { sqlQuery } from "./../../database/sqlQuery";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -117,7 +116,7 @@ export interface PipelineSlot {
   lastLoadDiscordMsgTimestamp?: Date;
 }
 
-export class GenericIssuanceService {
+export class ZuboxService {
   private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
 
   /**
@@ -145,7 +144,7 @@ export class GenericIssuanceService {
   private genericPretixAPI: IGenericPretixAPI;
   private stytchClient: Client | undefined;
 
-  private genericIssuanceClientUrl: string;
+  private zuboxClientUrl: string;
   private eddsaPrivateKey: string;
   private zupassPublicKey: EdDSAPublicKey;
   private rsaPrivateKey: string;
@@ -162,7 +161,7 @@ export class GenericIssuanceService {
     atomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client | undefined,
-    genericIssuanceClientUrl: string,
+    zuboxClientUrl: string,
     pretixAPI: IGenericPretixAPI,
     eddsaPrivateKey: string,
     zupassPublicKey: EdDSAPublicKey,
@@ -185,7 +184,7 @@ export class GenericIssuanceService {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.pipelineSlots = [];
     this.stytchClient = stytchClient;
-    this.genericIssuanceClientUrl = genericIssuanceClientUrl;
+    this.zuboxClientUrl = zuboxClientUrl;
     this.zupassPublicKey = zupassPublicKey;
     this.rsaPrivateKey = newRSAPrivateKey();
     this.cacheService = cacheService;
@@ -202,7 +201,7 @@ export class GenericIssuanceService {
       this.startPipelineLoadLoop();
     } catch (e) {
       this.rollbarService?.reportError(e);
-      logger(LOG_TAG, "error starting GenericIssuanceService", e);
+      logger(LOG_TAG, "error starting ZuboxService", e);
       throw e;
     }
   }
@@ -428,7 +427,7 @@ export class GenericIssuanceService {
     slot: PipelineSlot,
     runInfo: PipelineLoadSummary
   ): Promise<void> {
-    const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
+    const zuboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
     const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
     const errorLogs = getErrorLogs(
       runInfo.latestLogs,
@@ -447,7 +446,7 @@ export class GenericIssuanceService {
       : "";
 
     const pipelineUrl = urljoin(
-      podboxUrl,
+      zuboxUrl,
       `/#/`,
       "pipelines",
       slot.definition.id
@@ -521,7 +520,7 @@ export class GenericIssuanceService {
           (slot.lastLoadDiscordMsgTimestamp &&
             Date.now() >
               slot.lastLoadDiscordMsgTimestamp.getTime() +
-                GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
+                ZuboxService.DISCORD_ALERT_TIMEOUT_MS)
         ) {
           slot.lastLoadDiscordMsgTimestamp = new Date();
           shouldMessageDiscord = true;
@@ -529,7 +528,7 @@ export class GenericIssuanceService {
 
         if (shouldMessageDiscord) {
           this?.discordService?.sendAlert(
-            `🚨   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵\n` +
+            `🚨   [Zubox](${zuboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵\n` +
               `\`\`\`\n${alertReason}\`\`\`\n` +
               (runInfo.errorMessage
                 ? `\`\`\`\n${runInfo.errorMessage}\n\`\`\``
@@ -543,7 +542,7 @@ export class GenericIssuanceService {
       if (slot.definition.options.alerts?.discordAlerts) {
         if (slot.lastLoadDiscordMsgTimestamp) {
           this?.discordService?.sendAlert(
-            `✅   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved`
+            `✅   [Zubox](${zuboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved`
           );
           slot.lastLoadDiscordMsgTimestamp = undefined;
         }
@@ -581,20 +580,17 @@ export class GenericIssuanceService {
     logger(
       LOG_TAG,
       "scheduling next pipeline refresh for",
-      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
+      Math.floor(ZuboxService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
       "s from now"
     );
-    span?.setAttribute(
-      "timeout_ms",
-      GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS
-    );
+    span?.setAttribute("timeout_ms", ZuboxService.PIPELINE_REFRESH_INTERVAL_MS);
 
     this.nextLoadTimeout = setTimeout(() => {
       if (this.stopped) {
         return;
       }
       this.startPipelineLoadLoop();
-    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
+    }, ZuboxService.PIPELINE_REFRESH_INTERVAL_MS);
     // });
   }
 
@@ -781,8 +777,8 @@ export class GenericIssuanceService {
    * TODO: better logging and tracing.
    */
   public async handleCheckIn(
-    req: GenericIssuanceCheckInRequest
-  ): Promise<PodboxTicketActionResponseValue> {
+    req: ZuboxCheckInRequest
+  ): Promise<ZuboxTicketActionResponseValue> {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
@@ -836,7 +832,7 @@ export class GenericIssuanceService {
    * Checks that a ticket could be checked in by the current user.
    */
   public async handlePreCheck(
-    req: GenericIssuancePreCheckRequest
+    req: ZuboxPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
@@ -888,7 +884,7 @@ export class GenericIssuanceService {
   public async handleGetSemaphoreGroup(
     pipelineId: string,
     groupId: string
-  ): Promise<GenericIssuanceSemaphoreGroupResponseValue> {
+  ): Promise<ZuboxSemaphoreGroupResponseValue> {
     return traced(SERVICE_NAME, "handleGetSemaphoreGroup", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
       span?.setAttribute("group_id", groupId);
@@ -917,7 +913,7 @@ export class GenericIssuanceService {
   public async handleGetLatestSemaphoreGroupRoot(
     pipelineId: string,
     groupId: string
-  ): Promise<GenericIssuanceSemaphoreGroupRootResponseValue> {
+  ): Promise<ZuboxSemaphoreGroupRootResponseValue> {
     return traced(
       SERVICE_NAME,
       "handleGetLatestSemaphoreGroupRoot",
@@ -952,7 +948,7 @@ export class GenericIssuanceService {
     pipelineId: string,
     groupId: string,
     rootHash: string
-  ): Promise<GenericIssuanceHistoricalSemaphoreGroupResponseValue> {
+  ): Promise<ZuboxSemaphoreGroupResponseValue> {
     return traced(
       SERVICE_NAME,
       "handleGetHistoricalSemaphoreGroup",
@@ -987,7 +983,7 @@ export class GenericIssuanceService {
     pipelineId: string,
     groupId: string,
     rootHash: string
-  ): Promise<GenericIssuanceValidSemaphoreGroupResponseValue> {
+  ): Promise<ZuboxValidSemaphoreGroupResponseValue> {
     return traced(
       SERVICE_NAME,
       "handleGetValidSemaphoreGroup",
@@ -1015,7 +1011,7 @@ export class GenericIssuanceService {
 
   public async handleGetPipelineSemaphoreGroups(
     pipelineId: string
-  ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
+  ): Promise<ZuboxPipelineSemaphoreGroupsResponseValue> {
     return traced(
       SERVICE_NAME,
       "handleGetPipelineSemaphoreGroups",
@@ -1037,7 +1033,7 @@ export class GenericIssuanceService {
    */
   public async getAllUserPipelineDefinitions(
     user: PipelineUser
-  ): Promise<GenericIssuancePipelineListEntry[]> {
+  ): Promise<ZuboxPipelineListEntry[]> {
     return traced(
       SERVICE_NAME,
       "getAllUserPipelineDefinitions",
@@ -1061,7 +1057,7 @@ export class GenericIssuanceService {
                 lastLoad: summary
               },
               pipeline: slot.definition
-            } satisfies GenericIssuancePipelineListEntry;
+            } satisfies ZuboxPipelineListEntry;
           })
         );
       }
@@ -1416,7 +1412,7 @@ export class GenericIssuanceService {
 
   public async sendLoginEmail(
     email: string
-  ): Promise<GenericIssuanceSendEmailResponseValue> {
+  ): Promise<ZuboxSendEmailResponseValue> {
     return traced(SERVICE_NAME, "sendLoginEmail", async (span) => {
       const normalizedEmail = normalizeEmail(email);
       logger(LOG_TAG, "sendLoginEmail", normalizedEmail);
@@ -1439,9 +1435,9 @@ export class GenericIssuanceService {
         try {
           await this.stytchClient.magicLinks.email.loginOrCreate({
             email: normalizedEmail,
-            login_magic_link_url: this.genericIssuanceClientUrl,
+            login_magic_link_url: this.zuboxClientUrl,
             login_expiration_minutes: 10,
-            signup_magic_link_url: this.genericIssuanceClientUrl,
+            signup_magic_link_url: this.zuboxClientUrl,
             signup_expiration_minutes: 10
           });
           logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
@@ -1686,7 +1682,7 @@ export class GenericIssuanceService {
   }
 }
 
-export async function startGenericIssuanceService(
+export async function startZuboxService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,
   lemonadeAPI: ILemonadeAPI | null,
@@ -1694,7 +1690,7 @@ export async function startGenericIssuanceService(
   pagerDutyService: PagerDutyService | null,
   discordService: DiscordService | null,
   cacheService: PersistentCacheService | null
-): Promise<GenericIssuanceService | null> {
+): Promise<ZuboxService | null> {
   logger("[INIT] attempting to start Generic Issuance service");
 
   if (!cacheService) {
@@ -1758,8 +1754,8 @@ export async function startGenericIssuanceService(
     });
   }
 
-  const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
-  if (genericIssuanceClientUrl == null) {
+  const zuboxClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
+  if (zuboxClientUrl == null) {
     logger("[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
     return null;
   }
@@ -1781,13 +1777,13 @@ export async function startGenericIssuanceService(
     return null;
   }
 
-  const issuanceService = new GenericIssuanceService(
+  const issuanceService = new ZuboxService(
     context,
     rollbarService,
     context.pipelineAtomDB,
     lemonadeAPI,
     stytchClient,
-    genericIssuanceClientUrl,
+    zuboxClientUrl,
     genericPretixAPI,
     pkeyEnv,
     zupassPublicKey,

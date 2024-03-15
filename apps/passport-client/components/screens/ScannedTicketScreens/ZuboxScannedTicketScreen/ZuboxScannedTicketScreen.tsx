@@ -9,8 +9,8 @@ import {
 } from "../../../../src/appHooks";
 import {
   clearAllPendingRequests,
-  pendingGenericIssuanceCheckinRequestKey,
-  setPendingGenericIssuanceCheckinRequest
+  pendingZuboxCheckinRequestKey,
+  setPendingZuboxCheckinRequest
 } from "../../../../src/sessionStorage";
 import { Button, CenterColumn, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
@@ -63,9 +63,9 @@ export function ZuboxScannedTicketScreen(): JSX.Element {
       const stringifiedRequest = JSON.stringify(
         query.get("id") ? { id: query.get("id") } : { pcd: query.get("pcd") }
       );
-      setPendingGenericIssuanceCheckinRequest(stringifiedRequest);
+      setPendingZuboxCheckinRequest(stringifiedRequest);
       if (self == null) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingGenericIssuanceCheckinRequestKey}=${encodeURIComponent(
+        window.location.href = `/#/login?redirectedFromAction=true&${pendingZuboxCheckinRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;
       }

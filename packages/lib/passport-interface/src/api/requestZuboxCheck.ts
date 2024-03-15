@@ -3,7 +3,7 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   ActionConfigResponseValue,
-  GenericIssuancePreCheckRequest
+  ZuboxPreCheckRequest
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
@@ -29,7 +29,7 @@ export async function requestZuboxPreCheck(
     },
     {
       credential: signedPayload
-    } satisfies GenericIssuancePreCheckRequest
+    } satisfies ZuboxPreCheckRequest
   );
 }
 

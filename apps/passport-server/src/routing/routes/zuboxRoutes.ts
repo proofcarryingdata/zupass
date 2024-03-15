@@ -1,6 +1,5 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuancePreCheckRequest,
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
@@ -14,6 +13,7 @@ import {
   ZuboxFetchPretixProductsResponseValue,
   ZuboxGetAllUserPipelinesResponseValue,
   ZuboxGetPipelineResponseValue,
+  ZuboxPreCheckRequest,
   ZuboxSelfResponseValue,
   ZuboxSendEmailResponseValue,
   ZuboxTicketActionResponseValue,
@@ -23,32 +23,32 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express from "express";
 import urljoin from "url-join";
-import { GenericIssuanceService } from "../../services/generic-issuance/genericIssuanceService";
+import { createQueryUrl } from "../../services/telemetryService";
 import {
-  getAllGenericIssuanceHTTPQuery,
-  getAllGenericIssuanceQuery,
+  getAllZuboxHTTPQuery,
+  getAllZuboxQuery,
   getPipelineAllHQuery,
   getPipelineLoadHQuery as getPipelineDataLoadHQuery,
   traceUser
-} from "../../services/generic-issuance/honeycombQueries";
-import { createQueryUrl } from "../../services/telemetryService";
+} from "../../services/zubox/honeycombQueries";
+import { ZuboxService } from "../../services/zubox/zuboxService";
 import { GlobalServices } from "../../types";
 import { IS_PROD } from "../../util/isProd";
 import { logger } from "../../util/logger";
 import { checkBody, checkUrlParam } from "../params";
 import { PCDHTTPError } from "../pcdHttpError";
 
-export function initGenericIssuanceRoutes(
+export function initZuboxRoutes(
   app: express.Application,
-  { genericIssuanceService }: GlobalServices
+  { zuboxService }: GlobalServices
 ): void {
   logger("[INIT] initializing generic issuance routes");
 
   /**
-   * Throws if we don't have an instance of {@link GenericIssuanceService}.
+   * Throws if we don't have an instance of {@link ZuboxService}.
    */
-  function checkGenericIssuanceServiceStarted(
-    issuanceService: GenericIssuanceService | null
+  function checkZuboxServiceStarted(
+    issuanceService: ZuboxService | null
   ): asserts issuanceService {
     if (!issuanceService) {
       throw new PCDHTTPError(503, "generic issuance service not instantiated");
@@ -56,7 +56,7 @@ export function initGenericIssuanceRoutes(
   }
 
   app.get("/generic-issuance/status", async (req, res) => {
-    if (genericIssuanceService) {
+    if (zuboxService) {
       res.send("started");
     } else {
       res.send("not started");
@@ -69,8 +69,8 @@ export function initGenericIssuanceRoutes(
    * P.S. GraphQL would be so nice.
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const user = await genericIssuanceService.authenticateStytchSession(req);
+    checkZuboxServiceStarted(zuboxService);
+    const user = await zuboxService.authenticateStytchSession(req);
     traceUser(user);
 
     const result: ZuboxSelfResponseValue = {
@@ -93,7 +93,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const feedId = checkUrlParam(req, "feedId");
       const request = req.body as PollFeedRequest;
@@ -105,10 +105,7 @@ export function initGenericIssuanceRoutes(
         );
       }
 
-      const result = await genericIssuanceService.handlePollFeed(
-        pipelineID,
-        request
-      );
+      const result = await zuboxService.handlePollFeed(pipelineID, request);
 
       res.json(result satisfies PollFeedResponseValue);
     }
@@ -119,12 +116,12 @@ export function initGenericIssuanceRoutes(
    * is visible to the logged in user
    */
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const user = await genericIssuanceService.authenticateStytchSession(req);
+    checkZuboxServiceStarted(zuboxService);
+    const user = await zuboxService.authenticateStytchSession(req);
     traceUser(user);
 
     const reqBody = req.body as PipelineInfoRequest;
-    const result = await genericIssuanceService.handleGetPipelineInfo(
+    const result = await zuboxService.handleGetPipelineInfo(
       user,
       reqBody.pipelineId
     );
@@ -137,13 +134,10 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/feed/:pipelineID/:feedId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineID = checkUrlParam(req, "pipelineID");
       const feedId = checkUrlParam(req, "feedId");
-      const result = await genericIssuanceService.handleListFeed(
-        pipelineID,
-        feedId
-      );
+      const result = await zuboxService.handleListFeed(pipelineID, feedId);
       res.json(result satisfies ListFeedsResponseValue);
     }
   );
@@ -154,9 +148,9 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/check-in",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const request = req.body as ZuboxCheckInRequest;
-      const result = await genericIssuanceService.handleCheckIn(request);
+      const result = await zuboxService.handleCheckIn(request);
       res.json(result satisfies ZuboxTicketActionResponseValue);
     }
   );
@@ -167,9 +161,9 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/pre-check",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const request = req.body as GenericIssuancePreCheckRequest;
-      const result = await genericIssuanceService.handlePreCheck(request);
+      checkZuboxServiceStarted(zuboxService);
+      const request = req.body as ZuboxPreCheckRequest;
+      const result = await zuboxService.handlePreCheck(request);
       res.json(result satisfies ActionConfigResponseValue);
     }
   );
@@ -177,7 +171,7 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/user/send-email/:email",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const email = checkUrlParam(req, "email");
       if (process.env.STYTCH_BYPASS === "true") {
         if (IS_PROD) {
@@ -193,7 +187,7 @@ export function initGenericIssuanceRoutes(
             )
           );
       } else {
-        const result = await genericIssuanceService.sendLoginEmail(email);
+        const result = await zuboxService.sendLoginEmail(email);
         res.json(result satisfies ZuboxSendEmailResponseValue);
       }
     }
@@ -205,12 +199,11 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
+      checkZuboxServiceStarted(zuboxService);
+      const user = await zuboxService.authenticateStytchSession(req);
       traceUser(user);
 
-      const result =
-        await genericIssuanceService.getAllUserPipelineDefinitions(user);
+      const result = await zuboxService.getAllUserPipelineDefinitions(user);
       res.json(result satisfies ZuboxGetAllUserPipelinesResponseValue);
     }
   );
@@ -221,11 +214,11 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/get-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
+      checkZuboxServiceStarted(zuboxService);
+      const user = await zuboxService.authenticateStytchSession(req);
       traceUser(user);
 
-      const result = await genericIssuanceService.loadPipelineDefinition(
+      const result = await zuboxService.loadPipelineDefinition(
         user,
         checkUrlParam(req, "id")
       );
@@ -239,16 +232,13 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
+      checkZuboxServiceStarted(zuboxService);
+      const user = await zuboxService.authenticateStytchSession(req);
       traceUser(user);
 
       const reqBody = req.body as ZuboxUpsertPipelineRequest;
       const { definition: result } =
-        await genericIssuanceService.upsertPipelineDefinition(
-          user,
-          reqBody.pipeline
-        );
+        await zuboxService.upsertPipelineDefinition(user, reqBody.pipeline);
       res.json(result satisfies ZuboxUpsertPipelineResponseValue);
     }
   );
@@ -259,11 +249,11 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
+      checkZuboxServiceStarted(zuboxService);
+      const user = await zuboxService.authenticateStytchSession(req);
       traceUser(user);
 
-      const result = await genericIssuanceService.deletePipelineDefinition(
+      const result = await zuboxService.deletePipelineDefinition(
         user,
         checkUrlParam(req, "id")
       );
@@ -303,7 +293,7 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/pipeline-honeycomb/all-http",
     async (req, res) => {
-      const query = getAllGenericIssuanceHTTPQuery();
+      const query = getAllZuboxHTTPQuery();
       const queryUrl = await createQueryUrl(query);
       res.redirect(queryUrl);
     }
@@ -313,7 +303,7 @@ export function initGenericIssuanceRoutes(
    * Doesn't need auth as the location that we're redirecting to has its own auth layer.
    */
   app.get("/generic-issuance/api/pipeline-honeycomb/all/", async (req, res) => {
-    const query = getAllGenericIssuanceQuery();
+    const query = getAllZuboxQuery();
     const queryUrl = await createQueryUrl(query);
     res.redirect(queryUrl);
   });
@@ -321,11 +311,11 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/fetch-pretix-events",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
+      checkZuboxServiceStarted(zuboxService);
+      const user = await zuboxService.authenticateStytchSession(req);
       traceUser(user);
 
-      const events = await genericIssuanceService.fetchAllPretixEvents(
+      const events = await zuboxService.fetchAllPretixEvents(
         checkBody<ZuboxFetchPretixEventsRequest, "orgUrl">(req, "orgUrl"),
         checkBody<ZuboxFetchPretixEventsRequest, "token">(req, "token")
       );
@@ -336,11 +326,11 @@ export function initGenericIssuanceRoutes(
   app.post(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService.authenticateStytchSession(req);
+      checkZuboxServiceStarted(zuboxService);
+      const user = await zuboxService.authenticateStytchSession(req);
       traceUser(user);
 
-      const events = await genericIssuanceService.fetchPretixProducts(
+      const events = await zuboxService.fetchPretixProducts(
         checkBody<ZuboxFetchPretixProductsRequest, "orgUrl">(req, "orgUrl"),
         checkBody<ZuboxFetchPretixProductsRequest, "token">(req, "token"),
         checkBody<ZuboxFetchPretixProductsRequest, "eventID">(req, "eventID")
@@ -350,8 +340,8 @@ export function initGenericIssuanceRoutes(
   );
 
   app.post("/edgecity/balances", async (req, res) => {
-    checkGenericIssuanceServiceStarted(genericIssuanceService);
-    res.send(await genericIssuanceService.getBalances());
+    checkZuboxServiceStarted(zuboxService);
+    res.send(await zuboxService.getBalances());
   });
 
   /**
@@ -360,11 +350,11 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
 
-      const result = await genericIssuanceService.handleGetSemaphoreGroup(
+      const result = await zuboxService.handleGetSemaphoreGroup(
         pipelineId,
         groupId
       );
@@ -379,15 +369,14 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId/latest-root",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
 
-      const result =
-        await genericIssuanceService.handleGetLatestSemaphoreGroupRoot(
-          pipelineId,
-          groupId
-        );
+      const result = await zuboxService.handleGetLatestSemaphoreGroupRoot(
+        pipelineId,
+        groupId
+      );
 
       res.json(result);
     }
@@ -399,17 +388,16 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId/:root",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
       const root = checkUrlParam(req, "root");
 
-      const result =
-        await genericIssuanceService.handleGetHistoricalSemaphoreGroup(
-          pipelineId,
-          groupId,
-          root
-        );
+      const result = await zuboxService.handleGetHistoricalSemaphoreGroup(
+        pipelineId,
+        groupId,
+        root
+      );
 
       res.json(result satisfies SerializedSemaphoreGroup);
     }
@@ -421,12 +409,12 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore/:pipelineId/:groupId/valid/:root",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineId = checkUrlParam(req, "pipelineId");
       const groupId = checkUrlParam(req, "groupId");
       const root = checkUrlParam(req, "root");
 
-      const result = await genericIssuanceService.handleGetValidSemaphoreGroup(
+      const result = await zuboxService.handleGetValidSemaphoreGroup(
         pipelineId,
         groupId,
         root
@@ -442,13 +430,11 @@ export function initGenericIssuanceRoutes(
   app.get(
     "/generic-issuance/api/semaphore-groups/:pipelineId",
     async (req: express.Request, res: express.Response) => {
-      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      checkZuboxServiceStarted(zuboxService);
       const pipelineId = checkUrlParam(req, "pipelineId");
 
       const result =
-        await genericIssuanceService.handleGetPipelineSemaphoreGroups(
-          pipelineId
-        );
+        await zuboxService.handleGetPipelineSemaphoreGroups(pipelineId);
 
       res.json(result);
     }

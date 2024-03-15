@@ -1,8 +1,8 @@
 import { PollFeedResult, requestPollFeed } from "@pcd/passport-interface";
 import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
 import { expect } from "chai";
-import { GenericIssuanceService } from "../../src/services/generic-issuance/genericIssuanceService";
-import { CSVPipeline } from "../../src/services/generic-issuance/pipelines/CSVPipeline/CSVPipeline";
+import { CSVPipeline } from "../../src/services/zubox/pipelines/CSVPipeline/CSVPipeline";
+import { ZuboxService } from "../../src/services/zubox/zuboxService";
 import { expectLength, expectToExist, expectTrue } from "../util/util";
 
 export async function requestCSVFeed(
@@ -12,9 +12,7 @@ export async function requestCSVFeed(
   return requestPollFeed(url, { feedId, pcd: undefined });
 }
 
-export async function testCSVPipeline(
-  giService: GenericIssuanceService
-): Promise<void> {
+export async function testCSVPipeline(giService: ZuboxService): Promise<void> {
   expectToExist(giService);
   const pipelines = await giService.getAllPipelines();
   expectLength(pipelines, 3);

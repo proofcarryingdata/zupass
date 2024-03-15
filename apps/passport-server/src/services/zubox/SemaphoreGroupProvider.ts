@@ -12,7 +12,7 @@ import { Group } from "@semaphore-protocol/group";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../database/queries/pipelineSemaphoreHistoryDB";
 import { traced } from "../telemetryService";
-import { makeGenericIssuanceSemaphoreGroupUrl } from "./capabilities/SemaphoreGroupCapability";
+import { makeZuboxSemaphoreGroupUrl } from "./capabilities/SemaphoreGroupCapability";
 
 /**
  * When a pipeline wants to trigger an update for a Semaphore group, it passes
@@ -312,7 +312,7 @@ export class SemaphoreGroupProvider {
     return (this.groupConfigs ?? []).map((sg) => ({
       name: sg.name,
       groupId: sg.groupId,
-      url: makeGenericIssuanceSemaphoreGroupUrl(this.pipelineId, sg.groupId),
+      url: makeZuboxSemaphoreGroupUrl(this.pipelineId, sg.groupId),
       memberCount: this.getLatestGroup(sg.groupId)?.members.length ?? 0
     }));
   }

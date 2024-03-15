@@ -4,7 +4,6 @@ import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startFrogcryptoService } from "./services/frogcryptoService";
-import { startGenericIssuanceService } from "./services/generic-issuance/genericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
@@ -19,6 +18,7 @@ import { startSemaphoreService } from "./services/semaphoreService";
 import { startTelegramService } from "./services/telegramService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
+import { startZuboxService } from "./services/zubox/zuboxService";
 import { startZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { startZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
@@ -89,7 +89,7 @@ export async function startServices(
     issuanceService
   );
   const poapService = startPoapService(context, rollbarService);
-  const genericIssuanceService = await startGenericIssuanceService(
+  const zuboxService = await startZuboxService(
     context,
     rollbarService,
     apis.lemonadeAPI,
@@ -119,7 +119,7 @@ export async function startServices(
     persistentCacheService,
     multiprocessService,
     rateLimitService,
-    genericIssuanceService,
+    zuboxService: zuboxService,
     pagerDutyService
   };
 
@@ -140,5 +140,5 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   await services.discordService?.stop();
   await services.multiprocessService.stop();
   services.rateLimitService?.stop();
-  services.genericIssuanceService?.stop();
+  services.zuboxService?.stop();
 }

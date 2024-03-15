@@ -1,11 +1,6 @@
 import { PipelineCapability } from "./capabilities/types";
 
-/**
- * TODO:
- * - this probably needs some more columns for login purposes
- * - create migration sql
- */
-export interface GenericIssuanceUser {
+export interface ZuboxUser {
   id: string;
   email: string;
   timeCreated: Date;

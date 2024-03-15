@@ -88,7 +88,7 @@ export function getPipelineAllHQuery(pipelineID: string): object {
 /**
  * Honeycomb query that displays pipeline executions for a given pipeline.
  */
-export function getAllGenericIssuanceQuery(): object {
+export function getAllZuboxQuery(): object {
   return {
     time_range: DEFAULT_QUERY_S,
     granularity: 0,
@@ -111,7 +111,7 @@ export function getAllGenericIssuanceQuery(): object {
 /**
  * Honeycomb query that displays pipeline executions for a given pipeline.
  */
-export function getAllGenericIssuanceHTTPQuery(): object {
+export function getAllZuboxHTTPQuery(): object {
   return {
     time_range: DEFAULT_QUERY_S,
     granularity: 0,

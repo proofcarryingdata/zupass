@@ -230,7 +230,7 @@ export const ContactsConfigSchema = z.object({
 export type ContactsConfig = z.infer<typeof ContactsConfigSchema>;
 
 /**
- * Configuration of actions Podbox enables subscribers of the same Pipeline
+ * Configuration of actions Zubox enables subscribers of the same Pipeline
  * to perform on each other:
  * - checking in
  * - issuing 'badges'
@@ -340,7 +340,7 @@ const PretixProductConfigSchema = z.object({
   /**
    * If the attendee's name is collected by a question
    * other than the default attendee name question, this
-   * field lets you configure Podbox to prefer to read
+   * field lets you configure Zubox to prefer to read
    * names from answers to the question with this `question_identifier`
    *
    * see pretix docs here: https://docs.pretix.eu/en/latest/api/resources/orders.html#order-position-resource

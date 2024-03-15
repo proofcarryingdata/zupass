@@ -12,7 +12,7 @@ import { httpPostSimple } from "./makeRequest";
 export async function requestZuboxFetchPretixEvents(
   zupassServerUrl: string,
   req: ZuboxFetchPretixEventsRequest
-): Promise<GenericIssuanceFetchPretixEventsResponse> {
+): Promise<ZuboxFetchPretixEventsResponse> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, `/generic-issuance/api/fetch-pretix-events`),
     async (resText) => ({
@@ -24,5 +24,5 @@ export async function requestZuboxFetchPretixEvents(
   );
 }
 
-export type GenericIssuanceFetchPretixEventsResponse =
+export type ZuboxFetchPretixEventsResponse =
   APIResult<ZuboxFetchPretixEventsResponseValue>;

@@ -12,8 +12,6 @@ import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
-  GenericIssuanceCheckInRequest,
-  GenericIssuancePreCheckRequest,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -22,11 +20,13 @@ import {
   PipelineLog,
   PipelineSemaphoreGroupInfo,
   PipelineType,
-  PodboxTicketActionError,
-  PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
   TicketInfo,
+  ZuboxCheckInRequest,
+  ZuboxPreCheckRequest,
+  ZuboxTicketActionError,
+  ZuboxTicketActionResponseValue,
   isPerDayBadge,
   verifyFeedCredential,
   verifyTicketActionCredential
@@ -68,7 +68,7 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  makeGenericIssuanceFeedUrl
+  makeZuboxFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
@@ -170,7 +170,7 @@ export class LemonadePipeline implements BasePipeline {
         issue: this.issueLemonadeTicketPCDs.bind(this),
         options: this.definition.options.feedOptions,
         type: PipelineCapability.FeedIssuance,
-        feedUrl: makeGenericIssuanceFeedUrl(
+        feedUrl: makeZuboxFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
         )
@@ -1136,7 +1136,7 @@ export class LemonadePipeline implements BasePipeline {
   private async canCheckInForEvent(
     eventId: string,
     checkerEmail: string
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<true | ZuboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceEventId === eventId
     );
@@ -1186,7 +1186,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async notCheckedIn(
     ticketAtom: LemonadeAtom
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<true | ZuboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInLemonadeTicket", async (span) => {
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
@@ -1223,7 +1223,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async notCheckedInManual(
     manualTicket: ManualTicket
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<true | ZuboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
       const checkIn = await this.checkinDB.getByTicketId(
@@ -1263,7 +1263,7 @@ export class LemonadePipeline implements BasePipeline {
    * ticket data is returned.
    */
   private async precheckTicketAction(
-    request: GenericIssuancePreCheckRequest
+    request: ZuboxPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced<ActionConfigResponseValue>(
       LOG_NAME,
@@ -1479,12 +1479,12 @@ export class LemonadePipeline implements BasePipeline {
    * appropriate function to attempt a check-in.
    */
   private async executeTicketAction(
-    request: GenericIssuanceCheckInRequest
-  ): Promise<PodboxTicketActionResponseValue> {
-    return traced<PodboxTicketActionResponseValue>(
+    request: ZuboxCheckInRequest
+  ): Promise<ZuboxTicketActionResponseValue> {
+    return traced<ZuboxTicketActionResponseValue>(
       LOG_NAME,
       "executeTicketAction",
-      async (span): Promise<PodboxTicketActionResponseValue> => {
+      async (span): Promise<ZuboxTicketActionResponseValue> => {
         tracePipeline(this.definition);
 
         const payload = await verifyTicketActionCredential(request.credential);
@@ -1675,11 +1675,11 @@ export class LemonadePipeline implements BasePipeline {
   private async checkInManualTicket(
     manualTicket: ManualTicket,
     checkerEmail: string
-  ): Promise<PodboxTicketActionResponseValue> {
-    return traced<PodboxTicketActionResponseValue>(
+  ): Promise<ZuboxTicketActionResponseValue> {
+    return traced<ZuboxTicketActionResponseValue>(
       LOG_NAME,
       "checkInManualTicket",
-      async (span): Promise<PodboxTicketActionResponseValue> => {
+      async (span): Promise<ZuboxTicketActionResponseValue> => {
         const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
         if (pendingCheckin) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
@@ -1742,11 +1742,11 @@ export class LemonadePipeline implements BasePipeline {
   private async lemonadeCheckin(
     ticketAtom: LemonadeAtom,
     checkerEmail: string
-  ): Promise<PodboxTicketActionResponseValue> {
-    return traced<PodboxTicketActionResponseValue>(
+  ): Promise<ZuboxTicketActionResponseValue> {
+    return traced<ZuboxTicketActionResponseValue>(
       LOG_NAME,
       "lemonadeTicketAction",
-      async (span): Promise<PodboxTicketActionResponseValue> => {
+      async (span): Promise<ZuboxTicketActionResponseValue> => {
         if (ticketAtom.checkinDate instanceof Date) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
           return {

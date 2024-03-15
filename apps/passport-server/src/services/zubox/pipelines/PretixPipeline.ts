@@ -9,8 +9,6 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
-  GenericIssuancePreCheckRequest,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -22,13 +20,15 @@ import {
   PipelineLog,
   PipelineSemaphoreGroupInfo,
   PipelineType,
-  PodboxTicketActionError,
-  PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixEventConfig,
   PretixPipelineDefinition,
   PretixProductConfig,
+  ZuboxCheckInRequest,
+  ZuboxPreCheckRequest,
+  ZuboxTicketActionError,
+  ZuboxTicketActionResponseValue,
   verifyFeedCredential,
   verifyTicketActionCredential
 } from "@pcd/passport-interface";
@@ -62,7 +62,7 @@ import {
 } from "../capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
-  makeGenericIssuanceFeedUrl
+  makeZuboxFeedUrl
 } from "../capabilities/FeedIssuanceCapability";
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
@@ -161,7 +161,7 @@ export class PretixPipeline implements BasePipeline {
         issue: this.issuePretixTicketPCDs.bind(this),
         options: this.definition.options.feedOptions,
         type: PipelineCapability.FeedIssuance,
-        feedUrl: makeGenericIssuanceFeedUrl(
+        feedUrl: makeZuboxFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
         )
@@ -1105,7 +1105,7 @@ export class PretixPipeline implements BasePipeline {
   private async canCheckInForEvent(
     eventId: string,
     checkerEmail: string
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<true | ZuboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceId === eventId
     );
@@ -1146,7 +1146,7 @@ export class PretixPipeline implements BasePipeline {
 
   private async canCheckInPretixTicket(
     ticketAtom: PretixAtom
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<true | ZuboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInPretixTicket", async (span) => {
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
@@ -1183,7 +1183,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async canCheckInManualTicket(
     manualTicket: ManualTicket
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<true | ZuboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
       const checkIn = await this.checkinDB.getByTicketId(
@@ -1223,7 +1223,7 @@ export class PretixPipeline implements BasePipeline {
    * ticket data is returned.
    */
   private async checkPretixTicketPCDCanBeCheckedIn(
-    request: GenericIssuancePreCheckRequest
+    request: ZuboxPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced<ActionConfigResponseValue>(
       LOG_NAME,
@@ -1424,8 +1424,8 @@ export class PretixPipeline implements BasePipeline {
    * a check-in API request to Pretix.
    */
   private async checkinPretixTicketPCDs(
-    request: GenericIssuanceCheckInRequest
-  ): Promise<PodboxTicketActionResponseValue> {
+    request: ZuboxCheckInRequest
+  ): Promise<ZuboxTicketActionResponseValue> {
     return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
       tracePipeline(this.definition);
 
@@ -1512,11 +1512,11 @@ export class PretixPipeline implements BasePipeline {
   private async checkInManualTicket(
     manualTicket: ManualTicket,
     checkerEmail: string
-  ): Promise<PodboxTicketActionResponseValue> {
-    return traced<PodboxTicketActionResponseValue>(
+  ): Promise<ZuboxTicketActionResponseValue> {
+    return traced<ZuboxTicketActionResponseValue>(
       LOG_NAME,
       "checkInManualTicket",
-      async (span): Promise<PodboxTicketActionResponseValue> => {
+      async (span): Promise<ZuboxTicketActionResponseValue> => {
         const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
         if (pendingCheckin) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
@@ -1578,11 +1578,11 @@ export class PretixPipeline implements BasePipeline {
   private async checkInPretixTicket(
     ticketAtom: PretixAtom,
     checkerEmail: string
-  ): Promise<PodboxTicketActionResponseValue> {
-    return traced<PodboxTicketActionResponseValue>(
+  ): Promise<ZuboxTicketActionResponseValue> {
+    return traced<ZuboxTicketActionResponseValue>(
       LOG_NAME,
       "checkInPretixTicket",
-      async (span): Promise<PodboxTicketActionResponseValue> => {
+      async (span): Promise<ZuboxTicketActionResponseValue> => {
         if (ticketAtom.isConsumed) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
           return {

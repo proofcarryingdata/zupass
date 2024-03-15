@@ -65,10 +65,7 @@ export function ensureFeedIssuanceCapability(
   return cap;
 }
 
-export function makeGenericIssuanceFeedUrl(
-  pipelineId: string,
-  feedId: string
-): string {
+export function makeZuboxFeedUrl(pipelineId: string, feedId: string): string {
   return urljoin(
     process.env.PASSPORT_SERVER_URL as string,
     `/generic-issuance/api/feed/${pipelineId}/${feedId}`
