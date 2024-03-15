@@ -1,6 +1,8 @@
 #!/bin/bash
-if [[ -z $DISABLE_BUILD_CACHE ]]; then
-  yarn turbo run build
+if [[ "$DISABLE_BUILD_CACHE" == "1" ]]; then
+  echo "skipping build cache"
+  yarn turbo run build "$@" --no-cache --force
 else
-  yarn turbo run build --no-cache --force
+  echo "using build cache"
+  yarn turbo run build "$@"
 fi

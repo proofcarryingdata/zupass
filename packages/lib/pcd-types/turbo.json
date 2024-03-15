@@ -1,0 +1,11 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**"],
+      "outputs": ["dist/**", "*.tsbuildinfo"],
+      "cache": true
+    }
+  }
+}

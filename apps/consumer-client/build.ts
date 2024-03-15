@@ -25,14 +25,14 @@ const consumerClientAppOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built consumer client"))
+  .then(() => console.log("Built consumer client artifacts"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
       const clientRes = await build({ ...consumerClientAppOpts, minify: true });
-      console.error("Built", clientRes);
+      console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
