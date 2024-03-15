@@ -1,17 +1,17 @@
 import {
-  GenericIssuanceGetAllUserPipelinesResponse,
-  requestGenericIssuanceGetAllUserPipelines
+  ZuboxGetAllUserPipelinesResponse,
+  requestZuboxGetAllUserPipelines
 } from "@pcd/passport-interface";
 import { useEffect, useState } from "react";
 import { ZUPASS_SERVER_URL } from "../constants";
 import { useJWT } from "./userHooks";
 
 export function useFetchAllPipelines():
-  | GenericIssuanceGetAllUserPipelinesResponse
+  | ZuboxGetAllUserPipelinesResponse
   | undefined {
   const jwt = useJWT();
   const [result, setResult] = useState<
-    GenericIssuanceGetAllUserPipelinesResponse | undefined
+    ZuboxGetAllUserPipelinesResponse | undefined
   >();
 
   useEffect(() => {
@@ -19,11 +19,9 @@ export function useFetchAllPipelines():
       return;
     }
 
-    requestGenericIssuanceGetAllUserPipelines(ZUPASS_SERVER_URL, jwt).then(
-      (res) => {
-        setResult(res);
-      }
-    );
+    requestZuboxGetAllUserPipelines(ZUPASS_SERVER_URL, jwt).then((res) => {
+      setResult(res);
+    });
   }, [jwt]);
 
   return result;

@@ -1,8 +1,8 @@
 import { Tag, TagLabel } from "@chakra-ui/react";
 import {
-  GenericIssuancePipelineListEntry,
   PipelineDefinition,
-  PipelineType
+  PipelineType,
+  ZuboxPipelineListEntry
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { BsTicketPerforatedFill } from "react-icons/bs";
@@ -94,7 +94,7 @@ export function PipelineTypeTag({ type }: { type?: PipelineType }): ReactNode {
   );
 }
 export function pipelineStatusStr(
-  entry: GenericIssuancePipelineListEntry
+  entry: ZuboxPipelineListEntry
 ): PipelineStateDisplay {
   return entry.pipeline.options?.paused
     ? "Paused"

@@ -18,9 +18,9 @@ import { createRoot } from "react-dom/client";
 
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
-import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
 import { RollbarProvider } from "./components/RollbarProvider";
+import { ZuboxErrorBoundary } from "./components/ZuboxErrorBoundary";
 import { IS_PROD, SESSION_DURATION_MINUTES } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
 import { DEV_JWT_KEY } from "./helpers/userHooks";
@@ -49,41 +49,41 @@ const router = createHashRouter([
   {
     path: "/",
     element: (
-      <PodboxErrorBoundary>
+      <ZuboxErrorBoundary>
         <LoginPage />
-      </PodboxErrorBoundary>
+      </ZuboxErrorBoundary>
     )
   },
   {
     path: "/dashboard",
     element: (
-      <PodboxErrorBoundary>
+      <ZuboxErrorBoundary>
         <DashboardPage />
-      </PodboxErrorBoundary>
+      </ZuboxErrorBoundary>
     )
   },
   {
     path: "/create-pipeline",
     element: (
-      <PodboxErrorBoundary>
+      <ZuboxErrorBoundary>
         <CreatePipelinePage />
-      </PodboxErrorBoundary>
+      </ZuboxErrorBoundary>
     )
   },
   {
     path: "/pipelines/:id",
     element: (
-      <PodboxErrorBoundary>
+      <ZuboxErrorBoundary>
         <PipelinePage />
-      </PodboxErrorBoundary>
+      </ZuboxErrorBoundary>
     )
   },
   {
     path: "*",
     element: (
-      <PodboxErrorBoundary>
+      <ZuboxErrorBoundary>
         <NotFound />
-      </PodboxErrorBoundary>
+      </ZuboxErrorBoundary>
     )
   }
 ]);
@@ -174,7 +174,7 @@ function InitScripts(): ReactNode {
     if (!hasSetTitle.current) {
       hasSetTitle.current = true;
       if (process.env.PODBOX_TITLE_TAG != null) {
-        document.title = `Podbox (${process.env.PODBOX_TITLE_TAG})`;
+        document.title = `Zubox (${process.env.PODBOX_TITLE_TAG})`;
       }
     }
   }, []);
@@ -202,7 +202,7 @@ function App(): ReactNode {
     <>
       <React.StrictMode>
         <RollbarProvider>
-          <PodboxErrorBoundary>
+          <ZuboxErrorBoundary>
             <ColorModeScript initialColorMode={THEME.config.initialColorMode} />
             <ChakraProvider theme={THEME}>
               {stytch ? (
@@ -222,7 +222,7 @@ function App(): ReactNode {
                 </GIContext.Provider>
               )}
             </ChakraProvider>
-          </PodboxErrorBoundary>
+          </ZuboxErrorBoundary>
         </RollbarProvider>
       </React.StrictMode>
     </>

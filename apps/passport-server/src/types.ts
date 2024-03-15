@@ -16,7 +16,6 @@ import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
-import { GenericIssuanceService } from "./services/generic-issuance/genericIssuanceService";
 import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
@@ -30,6 +29,7 @@ import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
+import { ZuboxService } from "./services/zubox/zuboxService";
 import { ZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
@@ -62,7 +62,7 @@ export interface GlobalServices {
   persistentCacheService: PersistentCacheService;
   multiprocessService: MultiProcessService;
   rateLimitService: RateLimitService;
-  genericIssuanceService: GenericIssuanceService | null;
+  zuboxService: ZuboxService | null;
   pagerDutyService: PagerDutyService | null;
 }
 

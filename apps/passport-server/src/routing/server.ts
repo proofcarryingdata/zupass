@@ -14,7 +14,6 @@ import { respondWithError } from "./pcdHttpError";
 import { initAccountRoutes } from "./routes/accountRoutes";
 import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initFrogcryptoRoutes } from "./routes/frogcryptoRoutes";
-import { initGenericIssuanceRoutes } from "./routes/genericIssuanceRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
 import { initKudosbotRoutes } from "./routes/kudosbotRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
@@ -25,6 +24,7 @@ import { initSemaphoreRoutes } from "./routes/semaphoreRoutes";
 import { initStaticRoutes } from "./routes/staticRoutes";
 import { initStatusRoutes } from "./routes/statusRoutes";
 import { initTelegramRoutes } from "./routes/telegramRoutes";
+import { initZuboxRoutes } from "./routes/zuboxRoutes";
 
 export async function startHttpServer(
   context: ApplicationContext,
@@ -64,17 +64,13 @@ export async function startHttpServer(
         // As a result, if we are receiving a request from generic issuance client, we set a single origin
         // equal to the generic issuance client URL and set credential to true. Otherwise, we return
         // a wildcard origin "*" and set credential to false.
-        const genericIssuanceClientUrl =
-          process.env.GENERIC_ISSUANCE_CLIENT_URL;
+        const zuboxClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
 
         let corsOptions: CorsOptions;
         const methods = ["GET", "POST", "PUT", "DELETE"];
-        if (
-          genericIssuanceClientUrl != null &&
-          req.header("Origin") === genericIssuanceClientUrl
-        ) {
+        if (zuboxClientUrl != null && req.header("Origin") === zuboxClientUrl) {
           corsOptions = {
-            origin: genericIssuanceClientUrl,
+            origin: zuboxClientUrl,
             credentials: true,
             methods
           };
@@ -154,7 +150,7 @@ function initAllRoutes(
   initFrogcryptoRoutes(app, context, globalServices);
   initPoapRoutes(app, context, globalServices);
   initLogRoutes(app);
-  initGenericIssuanceRoutes(app, globalServices);
+  initZuboxRoutes(app, globalServices);
 }
 
 export function stopHttpServer(app: Zupass): Promise<void> {

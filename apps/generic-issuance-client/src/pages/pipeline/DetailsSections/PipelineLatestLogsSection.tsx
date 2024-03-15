@@ -3,7 +3,7 @@ import { ReactNode } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 
 /**
- * Renders information about the last time this pipeline was run by Podbox.
+ * Renders information about the last time this pipeline was run by Zubox.
  * Useful for debugging an integration, and figuring out what went wrong.
  */
 export function PipelineLatestLogsSection({
