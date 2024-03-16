@@ -1,3 +1,4 @@
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { Point } from "@zk-kit/baby-jubjub";
 import { PODEntries } from "../src";
@@ -20,7 +21,7 @@ export const ownerIdentity = new Identity(
 
 export const sampleEntries1 = {
   E: { type: "cryptographic", value: 123n },
-  F: { type: "cryptographic", value: 0xffffffffn },
+  F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
   C: { type: "string", value: "hello" },
   D: { type: "string", value: "foobar" },
   A: { type: "int", value: 123n },
@@ -30,10 +31,10 @@ export const sampleEntries1 = {
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
-} as PODEntries;
+} satisfies PODEntries;
 
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
   ticketID: { type: "cryptographic", value: 999n }
-} as PODEntries;
+} satisfies PODEntries;

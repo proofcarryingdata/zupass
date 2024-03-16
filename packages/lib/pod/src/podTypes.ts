@@ -1,10 +1,8 @@
 import { r as BabyJubjubR } from "@zk-kit/baby-jubjub";
 
-// TODO(artwyman): Docs on all types
-
 /**
  * Name of a POD entry is a string with a limited character set, checked using
- * POD_NAME_REGEX.
+ * {@link POD_NAME_REGEX}.
  */
 export type PODName = string;
 
@@ -56,8 +54,8 @@ export type PODIntValue = {
 };
 
 // TODO(artwyman): Decide on default int bounds and sign for POD.
-// These values limit int's to 31 bits unsigned, to leave room if we
-// decide on 63-bit signed later.
+// These values limit ints to 63 bits unsigned, to leave room if we
+// decide on 64-bit signed later.
 
 /**
  * Minimum legal value of an `int` entry value.
@@ -81,7 +79,7 @@ export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
  * instance will always iterate in sorted order, but inputs used to create
  * a new POD need not be sorted beforehand.
  *
- * The type system isn't restrictive enough to guarantee that any PODEntries
+ * The type system isn't restrictive enough to guarantee that any `PODEntries`
  * object is valid, but constructing a `POD` or `PODContent` object will
  * ensure all entries are valid.
  */

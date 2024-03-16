@@ -37,7 +37,9 @@ export type PODPCDArgs = {
    * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
    */
   entries: ObjectArgument<PODEntries>;
-  // TODO(artwyman): Figure out if ObjectArgument works here.  May be better to be a serialized string.
+  // TODO(artwyman): Figure out if ObjectArgument works here.
+  // May be better to be a serialized string, or an array, or a custom type
+  // without bigints, depending on the needs of the prove screen.
 
   /**
    * The signer's EdDSA private key.  This is a 32-byte value used to sign the

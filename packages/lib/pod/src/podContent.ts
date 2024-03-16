@@ -81,7 +81,7 @@ export class PODContent {
       const name = sortedNames[i];
       podMap.set(name, { index: i, value: checkPODValue(name, entries[name]) });
     }
-    return new PODContent(podMap, undefined);
+    return new PODContent(podMap);
   }
 
   private get merkleTree(): LeanIMT<bigint> {

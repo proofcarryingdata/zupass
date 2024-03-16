@@ -11,13 +11,13 @@ import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { useState } from "react";
 
 export const PODPCDUI: PCDUI<PODPCD> = {
-  renderCardBody: EdDSACardBody
+  renderCardBody: PODPCDCardBody
 };
 
 /**
  * This component renders the body of a 'Card' that Zupass uses to display PCDs to the user.
  */
-function EdDSACardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
+function PODPCDCardBody({ pcd }: { pcd: PODPCD }): JSX.Element {
   const [sigStatus, setSigStatus] = useState("unvalidated");
 
   return (

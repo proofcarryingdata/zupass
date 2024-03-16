@@ -9,31 +9,80 @@ import {
   POD_NAME_REGEX
 } from "./podTypes";
 
-const PRIVATE_KEY_REGEX = new RegExp(/^[0-9A-Za-z]{64}$/);
-const PUBLIC_KEY_REGEX = new RegExp(/^[0-9A-Za-z]{64}$/);
-const SIGNATURE_REGEX = new RegExp(/^[0-9A-Za-z]{128}$/);
+// TODO(artwyman): Decide if these utils should all be published outside
+// of the package, or only a subset.
 
+/**
+ * Private keys are 32 bytes (any arbitrary bytes), represented as 64 hex
+ * digits.
+ */
+const PRIVATE_KEY_REGEX = new RegExp(/^[0-9A-Fa-f]{64}$/);
+
+/**
+ * Public keys are 32 bytes (a packed elliptic curve point), represented as 64
+ * hex digits.
+ */
+const PUBLIC_KEY_REGEX = new RegExp(/^[0-9A-Fa-f]{64}$/);
+
+/**
+ * Signatures are 64 bytes (one packed elliptic curve point, one scalar),
+ * represented as 128 hex digits.
+ */
+const SIGNATURE_REGEX = new RegExp(/^[0-9A-Fa-f]{128}$/);
+
+/**
+ * Checks that the input matches the proper format for a private key, as given
+ * by {@link PRIVATE_KEY_REGEX}.
+ *
+ * @param privateKey the string to check
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
 export function checkPrivateKeyFormat(privateKey: string): string {
-  if (!privateKey.match(PRIVATE_KEY_REGEX)) {
+  if (!privateKey || !privateKey.match(PRIVATE_KEY_REGEX)) {
     throw new TypeError("Private key should be 32 bytes hex-encoded.");
   }
   return privateKey;
 }
 
+/**
+ * Checks that the input matches the proper format for a public key, as given
+ * by {@link PUBLIC_KEY_REGEX}.
+ *
+ * @param publicKey the string to check
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
 export function checkPublicKeyFormat(publicKey: string): string {
-  if (!publicKey.match(PUBLIC_KEY_REGEX)) {
+  if (!publicKey || !publicKey.match(PUBLIC_KEY_REGEX)) {
     throw new TypeError("Public key should be 32 bytes hex-encoded.");
   }
   return publicKey;
 }
 
+/**
+ * Checks that the input matches the proper format for a signature, as given
+ * by {@link SIGNATURE_REGEX}.
+ *
+ * @param signature the string to check
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
 export function checkSignatureFormat(signature: string): string {
-  if (!signature.match(SIGNATURE_REGEX)) {
+  if (!signature || !signature.match(SIGNATURE_REGEX)) {
     throw new TypeError("Signature should be 64 bytes hex-encoded.");
   }
   return signature;
 }
 
+/**
+ * Checks that the input matches the proper format for an entry name, as given
+ * by {@link POD_NAME_REGEX}.
+ *
+ * @param name the string to check
+ * @returns the unmodified input, for easy chaining
+ * @throws TypeError if the format doesn't match
+ */
 export function checkPODName(name?: string): string {
   if (!name) {
     throw new TypeError("POD names cannot be undefined.");
@@ -45,33 +94,69 @@ export function checkPODName(name?: string): string {
   return name;
 }
 
+/**
+ * Checks that `value` has the run-time type given by `typeName`.
+ *
+ * @param nameForErrorMessages the name for this value, used only for error
+ *   messages.
+ * @param value the value to check
+ * @param typeName the expected type
+ * @returns he value unmodified, for easy chaining
+ * @throws TypeError if the value does not have the expected type
+ */
 function requireType(
-  name: string,
+  nameForErrorMessages: string,
   value: string | bigint,
   typeName: string
-): void {
-  if (typeof value != typeName) {
+): string | bigint {
+  if (typeof value !== typeName) {
     throw new TypeError(
-      `Invalid value for entry ${name}.  Expected type ${typeName}.`
+      `Invalid value for entry ${nameForErrorMessages}.  Expected type ${typeName}.`
     );
   }
+  return value;
 }
 
+/**
+ * Checks that the given value is between the given bounds.  The bounds are
+ * both inclusive, so that they can also be legal values in the same bounds.
+ *
+ * @param nameForErrorMessages the name of this value, used only for error
+ *   messages
+ * @param value the value to check
+ * @param minValue the minimum legal value (inclusive lower bound)
+ * @param maxValue the maximum legal value (inclusive upper bound)
+ * @returns the value unmodified, for easy chaining
+ * @throws TypeError if the value is outside of the bounds
+ */
 function checkBigintBounds(
-  name: string,
+  nameForErrorMessages: string,
   value: bigint,
-  lowerBound: bigint,
-  upperBound: bigint
-): void {
-  if (value < lowerBound || value > upperBound) {
+  minValue: bigint,
+  maxValue: bigint
+): bigint {
+  if (value < minValue || value > maxValue) {
     throw new TypeError(
-      `Invalid value for entry ${name}. \
-      Value ${value} is outside supported bounds: (min ${lowerBound}, max ${upperBound}).`
+      `Invalid value for entry ${nameForErrorMessages}. \
+      Value ${value} is outside supported bounds: (min ${minValue}, max ${maxValue}).`
     );
   }
+  return value;
 }
 
-export function checkPODValue(name: string, podValue?: PODValue): PODValue {
+/**
+ * Check that `PODValue` object has a value which matches the specified type.
+ *
+ * @param nameForErrorMessages the name of this value, which is used only for
+ *   error messages (not checked for legality).
+ * @param podValue the value to check
+ * @returns the unmodified value, for easy chaining
+ * @throws TypeError if the value is invalid
+ */
+export function checkPODValue(
+  nameForErrorMessages: string,
+  podValue?: PODValue
+): PODValue {
   if (podValue === undefined || podValue.value === undefined) {
     throw new TypeError("POD values cannot be undefined.");
   }
@@ -80,20 +165,25 @@ export function checkPODValue(name: string, podValue?: PODValue): PODValue {
   }
   switch (podValue.type) {
     case "string":
-      requireType(name, podValue.value, "string");
+      requireType(nameForErrorMessages, podValue.value, "string");
       break;
     case "cryptographic":
-      requireType(name, podValue.value, "bigint");
+      requireType(nameForErrorMessages, podValue.value, "bigint");
       checkBigintBounds(
-        name,
+        nameForErrorMessages,
         podValue.value,
         POD_CRYPTOGRAPHIC_MIN,
         POD_CRYPTOGRAPHIC_MAX
       );
       break;
     case "int":
-      requireType(name, podValue.value, "bigint");
-      checkBigintBounds(name, podValue.value, POD_INT_MIN, POD_INT_MAX);
+      requireType(nameForErrorMessages, podValue.value, "bigint");
+      checkBigintBounds(
+        nameForErrorMessages,
+        podValue.value,
+        POD_INT_MIN,
+        POD_INT_MAX
+      );
       break;
     default:
       throw new TypeError(
@@ -103,10 +193,25 @@ export function checkPODValue(name: string, podValue?: PODValue): PODValue {
   return podValue;
 }
 
+/**
+ * Checks whether a given value is a fixed-size numeric value, which can be
+ * represented in a circuit as a single signal.
+ *
+ * @param podValue the value to check
+ * @returns `true` if the given value is numeric
+ */
 export function isPODNumericValue(podValue: PODValue): boolean {
   return getPODValueForCircuit(podValue) !== undefined;
 }
 
+/**
+ * Gets the numeric representation of the given value for inclusion in a
+ * circuit, if any.
+ *
+ * @param podValue the value to convert
+ * @returns the numeric value, or undefined if this value cannot be represented
+ *   in a circuit
+ */
 export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
   switch (podValue.type) {
     case "string":
@@ -117,12 +222,20 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
   }
 }
 
+/**
+ * Makes a safe copy of a PODValue, so that modfications to the new value
+ * will not affect the original.
+ */
 export function clonePODValue(podValue: PODValue): PODValue {
   // TODO(artwyman): When we support containers as values, this will have
   // to become more complex.
   return { ...podValue };
 }
 
+/**
+ * Makes a safe copy of a PODValue (or undefined), so that modfications to the
+ * new value will not affect the original.
+ */
 export function cloneOptionalPODValue(
   podValue: PODValue | undefined
 ): PODValue | undefined {
@@ -132,6 +245,10 @@ export function cloneOptionalPODValue(
   return clonePODValue(podValue);
 }
 
+/**
+ * Makes a safe copy of the given `PODEntries`, so that modfications to the
+ * new entries will not affect the original.
+ */
 export function clonePODEntries(entries: PODEntries): PODEntries {
   const newEntries: PODEntries = {};
   for (const [entryName, entryValue] of Object.entries(entries)) {
@@ -140,6 +257,16 @@ export function clonePODEntries(entries: PODEntries): PODEntries {
   return newEntries;
 }
 
+/**
+ * Serializes `PODEntries` to a string in a full-fidelity format.  Calling
+ * {@link deserializePODEntries} will reconstruct the same `PODEntries`
+ * including their type information.
+ *
+ * @param entries the entries to serialize
+ * @param space pretty-printing configuration, as defined by the corresponding
+ *   argument to JSON.stringify.
+ * @returns a string representation
+ */
 export function serializePODEntries(
   entries: PODEntries,
   space?: number
@@ -150,6 +277,14 @@ export function serializePODEntries(
   }).stringify(entries, null, space);
 }
 
+/**
+ * Deserializes `PODEntries` from the full-fidelity format produced by
+ * {@link serializePODEntries}.
+ *
+ * @param serializedEntries a string representation of `PODEntries`
+ * @returns `PODEntries` deserialized from the string
+ * @throws if the serialized form is invalid
+ */
 export function deserializePODEntries(serializedEntries: string): PODEntries {
   return JSONBig({
     useNativeBigInt: true,
@@ -157,6 +292,18 @@ export function deserializePODEntries(serializedEntries: string): PODEntries {
   }).parse(serializedEntries);
 }
 
+/**
+ * Serializes `PODEntries` to a string in a simplified format optimized for
+ * compactness and human readability.  The simplified format discards type
+ * information.  Calling {@link deserializePODEntries} will construct
+ * `PODEntries` containing the same values, which will behave the same
+ * in hashing and circuits, but the type information may not be identical.
+ *
+ * @param entries the entries to serialize
+ * @param space pretty-printing configuration, as defined by the corresponding
+ *   argument to JSON.stringify.
+ * @returns a string representation
+ */
 export function podEntriesToSimplifiedJSON(
   entries: PODEntries,
   space?: number
@@ -171,6 +318,17 @@ export function podEntriesToSimplifiedJSON(
   }).stringify(simplified, null, space);
 }
 
+/**
+ * Deserializes `PODEntries` from the simplified format produced by
+ * {@link serializePODEntries}.  Type information is inferred from the values
+ * in a way which should preserve hashing and circuit behavior, but isn't
+ * guaranteed to be identical to the types before serialization.  For instance,
+ * small numbers are always annotated as `int`, rather than `cryptographic`.
+ *
+ * @param serializedEntries a string representation of `PODEntries`
+ * @returns `PODEntries` deserialized from the string
+ * @throws if the serialized form is invalid
+ */
 export function podEntriesFromSimplifiedJSON(
   simplifiedJSON: string
 ): PODEntries {

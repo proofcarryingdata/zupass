@@ -1,9 +1,11 @@
 import { PODEntries } from "@pcd/pod";
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
+import { CircuitSignal } from "../src";
 
 const configFilePath = path.join(__dirname, "../circomkit.json");
 const config = JSON.parse(readFileSync(configFilePath, "utf-8"));
@@ -26,7 +28,7 @@ export const ownerIdentity = new Identity(
 // Defined out of order, but will be sorted by POD construction.
 export const sampleEntries = {
   E: { type: "cryptographic", value: 123n },
-  F: { type: "cryptographic", value: 0xffffffffn },
+  F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
   C: { type: "string", value: "hello" },
   D: { type: "string", value: "foobar" },
   A: { type: "int", value: 123n },
@@ -36,17 +38,19 @@ export const sampleEntries = {
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
-} as PODEntries;
+} satisfies PODEntries;
 
 // 3 entries, max depth 3
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
   ticketID: { type: "cryptographic", value: 999n }
-} as PODEntries;
+} satisfies PODEntries;
 
-// Convert an array of bit signals into a single packed bigint.
-// Error handling is via chai.expect, so only useful in unit tests.
+/**
+ * Convert an array of bit signals into a single packed bigint.
+ * Error handling is via chai.expect, so only useful in unit tests.
+ */
 export function testArray2Bits(boolArray: bigint[]): bigint {
   let bits = 0n;
   for (let i = 0; i < boolArray.length; i++) {
@@ -56,4 +60,18 @@ export function testArray2Bits(boolArray: bigint[]): bigint {
     }
   }
   return bits;
+}
+
+/**
+ * Returns an array which is a copy of `inputArray` extended to `totalLength`,
+ * with new values filled with `fillValue` (default 0).
+ */
+export function extendedSignalArray(
+  inputArray: CircuitSignal[],
+  totalLength: number,
+  fillValue = 0n
+): CircuitSignal[] {
+  return inputArray.concat(
+    new Array(totalLength - inputArray.length).fill(fillValue)
+  );
 }

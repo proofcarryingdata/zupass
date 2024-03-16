@@ -16,7 +16,12 @@ include "gpc-util.circom";
  * They will usually be implicitly constrained when they are unpacked using
  * Num2Bits.
  */
-template EntryModule (MERKLE_MAX_DEPTH) {
+template EntryModule (
+    // Max depth of the Merkle proof that this entry appears in a POD.  This
+    // determines the size of the proofSiblings array input, and places an inclusive
+    // upper bound on the proofDepth input.
+    MERKLE_MAX_DEPTH
+) {
     // TODO(artwyman): enable flag?  Or do we simply require prover to provide satisfying values (unrevealed)?
 
     // Content ID is the root of the Merkle proof, while name hash is its leaf.
@@ -62,7 +67,12 @@ template EntryModule (MERKLE_MAX_DEPTH) {
  * 
  * Index is constrained to be within the range [0, MAX_ENTRIES).
  */
-template EntryConstraintModule(MAX_ENTRIES) {
+template EntryConstraintModule(
+    // Indicates the number of Entry modules included in this GPC, which is
+    // needed here to allow referring to other entries in the entryValueHashes
+    // input array.
+    MAX_ENTRIES
+) {
     // Identifying info about this entry itself, validated separately by EntryModule.
     signal input valueHash;
 

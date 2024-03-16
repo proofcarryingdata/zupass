@@ -29,7 +29,7 @@ describe("POD class should work", async function () {
     }
   });
 
-  it("should save and load without signing", function () {
+  it("should save and load a new pod without signing again", function () {
     for (const sampleEntries of [sampleEntries1, sampleEntries2]) {
       const signedPOD = POD.sign(sampleEntries, privateKey);
       expect(signedPOD.verifySignature()).to.be.true;

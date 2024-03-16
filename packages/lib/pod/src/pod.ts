@@ -44,7 +44,7 @@ export class POD {
 
   /**
    * The content ID (root hash) of this POD.  PODs containing the same data
-   * will have the same content ID.
+   * (names and values, regardless of type) will have the same content ID.
    */
   public get contentID(): bigint {
     return this._content.contentID;
@@ -52,7 +52,8 @@ export class POD {
 
   /**
    * The signature of this POD, in a packed string form.  This is an
-   * EdDSA-Poseidon signature, using the POD's content ID.
+   * EdDSA-Poseidon signature, with the POD's content ID as the signed message.
+   * The signature is made up of 64 bytes, expressed as 128 hex digits.
    */
   public get signature(): string {
     return this._signature;
@@ -60,7 +61,8 @@ export class POD {
 
   /**
    * The public key of the signer, in a packed string form.  This is
-   * an EdDSA-Poseidon public key.
+   * an EdDSA-Poseidon public key made up of 32 bytes, expressed as 64 hex
+   * digits.
    */
   public get signerPublicKey(): string {
     return this._signerPublicKey;
@@ -73,7 +75,8 @@ export class POD {
    *
    * @param entries the contents of the new POD.  These will be Merklized
    *   in order by name, regardless of the order of the input.
-   * @param signerPrivateKey the EdDSA private key of the signer.
+   * @param signerPrivateKey the EdDSA private key of the signer, required
+   *   to be 32 bytes, encoded as 64 hex digits.
    * @throws if any of the entries aren't legal for inclusion in a POD
    */
   public static sign(entries: PODEntries, signerPrivateKey: string): POD {

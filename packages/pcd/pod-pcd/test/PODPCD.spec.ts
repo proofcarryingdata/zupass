@@ -1,5 +1,6 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD, PODEntries } from "@pcd/pod";
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import "mocha";
 import { PODPCD, PODPCDPackage, prove } from "../src";
@@ -13,7 +14,7 @@ export const expectedPublicKey =
 
 export const sampleEntries = {
   E: { type: "cryptographic", value: 123n },
-  F: { type: "cryptographic", value: 0xffffffffn },
+  F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
   C: { type: "string", value: "hello" },
   D: { type: "string", value: "foobar" },
   A: { type: "int", value: 123n },
@@ -22,9 +23,12 @@ export const sampleEntries = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n }
-} as PODEntries;
+} satisfies PODEntries;
 
 describe("PODPCD Package", async function () {
+  // Note: The @pcd/pod package has its own unit tests, so we're not trying
+  // to duplicate that level of coverage here.  This suite should cover
+  // behavior specific to the @pcd/pod-pcd packge.
   const pod = POD.sign(sampleEntries, privateKey);
 
   async function makePCD(id: string | undefined): Promise<PODPCD> {
@@ -115,6 +119,6 @@ describe("PODPCD Package", async function () {
     }
     const displayOptions = PODPCDPackage.getDisplayOptions(pcd);
     expect(displayOptions.header).to.not.be.empty;
-    expect(displayOptions.header).to.not.be.empty;
+    expect(displayOptions.displayName).to.not.be.empty;
   });
 });

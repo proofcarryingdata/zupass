@@ -1,6 +1,7 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { POD } from "@pcd/pod";
 import { PODEntries, PODPCD, PODPCDArgs, PODPCDPackage } from "@pcd/pod-pcd";
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { TimerCase } from "../types";
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
@@ -12,7 +13,7 @@ export const expectedPublicKey =
 
 export const sampleEntries = {
   E: { type: "cryptographic", value: 123n },
-  F: { type: "cryptographic", value: 0xffffffffn },
+  F: { type: "cryptographic", value: BABY_JUB_NEGATIVE_ONE },
   C: { type: "string", value: "hello" },
   D: { type: "string", value: "foobar" },
   A: { type: "int", value: 123n },
@@ -21,7 +22,7 @@ export const sampleEntries = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n }
-} as PODEntries;
+} satisfies PODEntries;
 
 export const proveArgs: PODPCDArgs = {
   entries: {

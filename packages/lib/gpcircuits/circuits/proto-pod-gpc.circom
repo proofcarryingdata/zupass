@@ -10,23 +10,40 @@ include "owner.circom";
 /**
  * This template is the top level of a prototype GPC proof.  Its template parameters are
  * the sizing parameters which define a GPC family.  Its inputs define the
- * POD objects to be proven, as well as configurating the proof.
+ * POD objects to be proven, as well as configuring the proof.
  * 
  * There shouldn't be any "real" logic in this template, only interconnection of modules,
  * plus input/output handling.
  */
-template ProtoPODGPC (MAX_OBJECTS, MAX_ENTRIES, MERKLE_MAX_DEPTH) {
+template ProtoPODGPC (
+    // Indicates the number of Object modules included in this GPC, setting the
+    // largest number of distinct PODs which can be expressed.  This sets the
+    // size of inputs with the `object` prefix (whether arrays or bitfields).
+    MAX_OBJECTS,
+
+    // Indicates the number of Entry modules included in this GPC, setting the
+    // largest number of distinct POD entries which can be expressed.  These
+    // can be flexibly assigned to objects using the entryObjectIndex.  This
+    // sets the size of inputs with the `entry` prefix (whether arrays or
+    // bitfields).
+    MAX_ENTRIES,
+
+    // Max depth of the Merkle proof that this entry appears in a POD.  This
+    // determines the size of the entryProofSiblings array input, and places an
+    // inclusive upper bound on the proofDepth input.
+    MERKLE_MAX_DEPTH
+) {
     /*
-     * 1+ ObjectModules.   Each array corresponds to one input/output for each object module.
+     * 1+ ObjectModules.  Each array corresponds to one input/output for each object module.
      */
 
-    // Root hash of the object's Merkle tree representation
+    // Root hash of each object's Merkle tree representation
     signal input objectContentID[MAX_OBJECTS];
 
-    // Signer of ticket: EdDSA public key
+    // Signer of each object: EdDSA public key
     signal input objectSignerPubkeyAx[MAX_OBJECTS], objectSignerPubkeyAy[MAX_OBJECTS];
 
-    // Signature of ticket: EdDSA signaure
+    // Signature of each object: EdDSA signaure
     signal input objectSignatureR8x[MAX_OBJECTS], objectSignatureR8y[MAX_OBJECTS], objectSignatureS[MAX_OBJECTS];
 
     // Object module validates that the object's root is properly signed.
@@ -41,7 +58,8 @@ template ProtoPODGPC (MAX_OBJECTS, MAX_ENTRIES, MERKLE_MAX_DEPTH) {
         );
     }
 
-    // TODO(artwyman): Compare content IDs to ensure objects are unique.
+    // TODO(artwyman): Provide a way to (optionally?) ensure objects are unique
+    // (comparing content IDs, or signers, or signatures).
 
     /*
      * 1+ EntryModule & EntryConstraintModule for each entry.

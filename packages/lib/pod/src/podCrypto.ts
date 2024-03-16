@@ -22,20 +22,34 @@ import {
   checkSignatureFormat
 } from "./podUtil";
 
+/**
+ * Calculates the appropriate hash for a POD value represented as a string,
+ * which could be one of multiple value types (see {@link podValueHash}).
+ */
 function podStringHash(input: string): bigint {
   // TODO(artwyman): Finalize choice of hash for POD names and string values.
   return BigInt("0x" + sha256(input)) >> 8n;
 }
 
+/**
+ * Calculates the appropriate hash for a POD value represented as an integer,
+ * which could be one of multiple value types (see {@link podValueHash}).
+ */
 function podIntHash(input: bigint): bigint {
   // TODO(artwyman): Finalize choice of hash for POD integer values.
   return poseidon1([input]);
 }
 
+/**
+ * Calculates the appropriate hash for a POD entry name.
+ */
 export function podNameHash(podName: string): bigint {
   return podStringHash(podName);
 }
 
+/**
+ * Calculates the appropriate hash for a POD value of any type.
+ */
 export function podValueHash(podValue: PODValue): bigint {
   switch (podValue.type) {
     case "string":
@@ -47,11 +61,20 @@ export function podValueHash(podValue: PODValue): bigint {
   }
 }
 
+/**
+ * The hash function used to generate interior nodes in the Merkle tree
+ * representing a POD.  The inputs may be value hashes, or other inner
+ * nodes.
+ */
 export function podMerkleTreeHash(left: bigint, right: bigint): bigint {
   return poseidon2([left, right]);
 }
 
-// TODO(artwyman): Submit this to zk-kit/eddsa-poseidon
+/**
+ * Packs an EdDSA signature into a compact string representation.
+ * The output is 64 bytes, represented as 128 hex digits.
+ */
+// TODO(artwyman): Switch to zk-kit's version once it's released.
 export function packSignature(rawSignature: Signature): string {
   const numericSignature: Signature<bigint> = {
     R8: rawSignature.R8.map((c) => bigNumberishToBigInt(c)) as Point<bigint>,
@@ -64,7 +87,10 @@ export function packSignature(rawSignature: Signature): string {
   return toHexString(packedBytes);
 }
 
-// TODO(artwyman): Submit this to zk-kit/eddsa-poseidon
+/**
+ * Unpacks a signature produced by {@link packSignature}.
+ */
+// TODO(artwyman): Switch to zk-kit's version once it's released.
 export function unpackSignature(packedSigHex: string): Signature<bigint> {
   const packedBytes = Buffer.from(checkSignatureFormat(packedSigHex), "hex");
   const sliceR8 = packedBytes.subarray(0, 32);
@@ -79,8 +105,11 @@ export function unpackSignature(packedSigHex: string): Signature<bigint> {
   };
 }
 
-// TODO(artwyman): Decide whether to use zk-kit/eddsa-poseidon's packPublicKey,
-// which uses a decimal format rather than hex.
+/**
+ * Packs an EdDSA public key into a compact string represenation.  The output
+ * is 32 bytes, represented as 64 hex digits.
+ */
+// TODO(artwyman): Update to zk-kit's version when it returns bigint instead of decimal string.
 export function packPublicKey(unpackedPublicKey: Point<BigNumber>): string {
   const numericPublicKey = [
     BigInt(unpackedPublicKey[0]),
@@ -89,8 +118,10 @@ export function packPublicKey(unpackedPublicKey: Point<BigNumber>): string {
   return toHexString(leBigIntToBuffer(packPoint(numericPublicKey)));
 }
 
-// TODO(artwyman): Decide whetehr to use zk-kit/eddsa-poseidon's unpackPublicKey,
-// which uses a decimal format rather than hex.
+/**
+ * Unpacks a public key packed by {@packPublicKey}.
+ */
+// TODO(artwyman): Update to zk-kit's version when it returns bigint instead of decimal string.
 export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
   const unpackedPublicKey = unpackPoint(
     leBufferToBigInt(fromHexString(checkPublicKeyFormat(packedPublicKey)))
@@ -101,12 +132,18 @@ export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
   return unpackedPublicKey;
 }
 
+/**
+ * Unpacks a private key's bytes from a string.  The input must be 32 bytes,
+ * expressed as 64 hex digits.
+ */
 export function unpackPrivateKey(packedPrivateKey: string): Buffer {
   return fromHexString(checkPrivateKeyFormat(packedPrivateKey));
 }
 
-// TODO(artwyman): Decide whether to submit change to zk-kit/eddsa-poseidon's
-// verifySignature, which insists on stringified bigints in Points.
+/**
+ * Verify an EdDSA signature.
+ */
+// TODO(artwyman): Update to zk-kit's version when it returns bigint instead of decimal string.
 export function verifySignature(
   message: bigint,
   signature: Signature<bigint>,
@@ -126,6 +163,16 @@ export function verifySignature(
   return zkkVerifySignature(message, stringSignature, stringPublicKey);
 }
 
+/**
+ * Signs a POD.
+ *
+ * @param root the root hash (content ID) of the POD.
+ * @param privateKey the signer's private key, which is 32 bytes encoded as
+ *   64 hex digits.
+ * @returns The signature as well as the signer's public key for inclusion
+ *   in the POD.  The signature is 64 bytes encoded as 128 hex digits, while
+ *   the public key is 32 bytes encoded as 64 hex digits.
+ */
 export function signPODRoot(
   root: bigint,
   privateKey: string
@@ -141,6 +188,16 @@ export function signPODRoot(
   return { signature, publicKey };
 }
 
+/**
+ * Verifies the signature of a POD.
+ *
+ * @param root the root hash (content ID) of the POD.
+ * @param signature the signature in packed form, which is 64 bytes expressed
+ *   as 128 hex digits.
+ * @param publicKey the signer's public key in packed form, which is 32 bytes
+ *   expressed as 64 hex digits
+ * @returns `true` if the signature is valid
+ */
 export function verifyPODRootSignature(
   root: bigint,
   signature: string,

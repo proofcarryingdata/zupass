@@ -1,4 +1,9 @@
 #!/bin/bash
+#
+# This script installs circom in a clean environment running a GitHub action.
+# This is always a from-scratch install.  Caching is handled outside
+# of this script to avoid running every time.
+
 set -ex
 
 if [ -z "$1" ]

@@ -1,4 +1,4 @@
-import { POD, isPODNumericValue, podNameHash, podValueHash } from "@pcd/pod";
+import { POD, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
@@ -12,7 +12,12 @@ import {
   EntryModuleOutputNamesType,
   EntryModuleOutputs
 } from "../src";
-import { circomkit, privateKey, sampleEntries } from "./common";
+import {
+  circomkit,
+  extendedSignalArray,
+  privateKey,
+  sampleEntries
+} from "./common";
 
 describe("entry.EntryModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
@@ -39,29 +44,20 @@ describe("entry.EntryModule should work", function () {
       throw new Error(`Missing entry for ${entryName}!`);
     }
 
-    let valueSignal = 0n;
-    if (isValueEnabled && isPODNumericValue(podValue)) {
-      if (typeof podValue.value !== "bigint") {
-        throw new Error(`Unhandled POD value type ${podValue.type}!`);
-      }
-      valueSignal = podValue.value;
-    }
-
-    const merkleProof = pod.content.generateEntryProof(entryName);
-    const circuitSiblings = Array<bigint>(merkleDepth).fill(0n, 0, merkleDepth);
-    for (let i = 0; i < merkleProof.siblings.length; i++) {
-      circuitSiblings[i] = merkleProof.siblings[i];
-    }
+    const entrySignals = pod.content.generateEntryCircuitSignals(entryName);
 
     return {
       inputs: {
         objectContentID: pod.contentID,
-        nameHash: podNameHash(entryName),
+        nameHash: entrySignals.nameHash,
         isValueHashRevealed: isValueHashRevealed ? 1n : 0n,
-        proofDepth: BigInt(merkleProof.siblings.length),
-        proofIndex: BigInt(merkleProof.index),
-        proofSiblings: circuitSiblings,
-        value: valueSignal,
+        proofDepth: BigInt(entrySignals.proof.siblings.length),
+        proofIndex: BigInt(entrySignals.proof.index),
+        proofSiblings: extendedSignalArray(
+          entrySignals.proof.siblings,
+          merkleDepth
+        ),
+        value: entrySignals.value !== undefined ? entrySignals.value : 0n,
         isValueEnabled: isValueEnabled ? 1n : 0n
       },
       outputs: {
