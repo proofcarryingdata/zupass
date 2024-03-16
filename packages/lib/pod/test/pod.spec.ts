@@ -1,6 +1,7 @@
+import { verifySignature } from "@zk-kit/eddsa-poseidon";
 import { expect } from "chai";
 import "mocha";
-import { POD, unpackPublicKey, unpackSignature, verifySignature } from "../src";
+import { POD, decodePublicKey, decodeSignature } from "../src";
 import {
   expectedPublicKey,
   expectedPublicKeyPoint,
@@ -18,10 +19,10 @@ describe("POD class should work", async function () {
       expect(pod.content.asEntries()).to.deep.eq(sampleEntries);
       expect(pod.contentID).to.not.eq(0);
       expect(pod.signature).to.not.be.empty;
-      const unpackedSig = unpackSignature(pod.signature);
+      const unpackedSig = decodeSignature(pod.signature);
 
       expect(pod.signerPublicKey).to.eq(expectedPublicKey);
-      const unpackedPubKey = unpackPublicKey(pod.signerPublicKey);
+      const unpackedPubKey = decodePublicKey(pod.signerPublicKey);
       expect(unpackedPubKey).to.deep.eq(expectedPublicKeyPoint);
 
       expect(verifySignature(pod.contentID, unpackedSig, unpackedPubKey)).to.be

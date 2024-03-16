@@ -1,17 +1,16 @@
 import { fromHexString, toHexString } from "@pcd/util";
-import { Point, packPoint, unpackPoint } from "@zk-kit/baby-jubjub";
+import { Point } from "@zk-kit/baby-jubjub";
 import {
   Signature,
   derivePublicKey,
+  packPublicKey,
+  packSignature,
   signMessage,
-  verifySignature as zkkVerifySignature
+  unpackPublicKey,
+  unpackSignature,
+  verifySignature
 } from "@zk-kit/eddsa-poseidon";
-import {
-  BigNumber,
-  bigNumberishToBigInt,
-  leBigIntToBuffer,
-  leBufferToBigInt
-} from "@zk-kit/utils";
+import { BigNumber, leBigIntToBuffer, leBufferToBigInt } from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -71,100 +70,72 @@ export function podMerkleTreeHash(left: bigint, right: bigint): bigint {
 }
 
 /**
- * Packs an EdDSA signature into a compact string representation.
+ * Encodes an EdDSA signature into a compact string representation.
  * The output is 64 bytes, represented as 128 hex digits.
  */
-// TODO(artwyman): Switch to zk-kit's version once it's released.
-export function packSignature(rawSignature: Signature): string {
-  const numericSignature: Signature<bigint> = {
-    R8: rawSignature.R8.map((c) => bigNumberishToBigInt(c)) as Point<bigint>,
-    S: bigNumberishToBigInt(rawSignature.S)
-  };
-  const packedR8 = packPoint(numericSignature.R8);
-  const packedBytes = Buffer.alloc(64);
-  packedBytes.set(leBigIntToBuffer(packedR8), 0);
-  packedBytes.set(leBigIntToBuffer(numericSignature.S), 32);
-  return toHexString(packedBytes);
+export function encodeSignature(rawSignature: Signature): string {
+  return toHexString(packSignature(rawSignature));
 }
 
 /**
- * Unpacks a signature produced by {@link packSignature}.
+ * Decodes a signature produced by {@link encodeSignature}.  The input must be
+ * 64 bytes, represented as 128 hex digits.
+ *
+ * @throws TypeError if the signature format is incorrect
  */
-// TODO(artwyman): Switch to zk-kit's version once it's released.
-export function unpackSignature(packedSigHex: string): Signature<bigint> {
-  const packedBytes = Buffer.from(checkSignatureFormat(packedSigHex), "hex");
-  const sliceR8 = packedBytes.subarray(0, 32);
-  const sliceS = packedBytes.subarray(32, 64);
-  const unpackedR8 = unpackPoint(leBufferToBigInt(sliceR8));
-  if (unpackedR8 === null) {
-    throw new Error(`Invalid packed signature point ${toHexString(sliceS)}.`);
-  }
-  return {
-    R8: unpackedR8,
-    S: leBufferToBigInt(sliceS)
-  };
+export function decodeSignature(encodedSignature: string): Signature<bigint> {
+  return unpackSignature(fromHexString(checkSignatureFormat(encodedSignature)));
 }
 
 /**
- * Packs an EdDSA public key into a compact string represenation.  The output
+ * Encodes an EdDSA public key into a compact string represenation.  The output
  * is 32 bytes, represented as 64 hex digits.
  */
-// TODO(artwyman): Update to zk-kit's version when it returns bigint instead of decimal string.
-export function packPublicKey(unpackedPublicKey: Point<BigNumber>): string {
-  const numericPublicKey = [
-    BigInt(unpackedPublicKey[0]),
-    BigInt(unpackedPublicKey[1])
-  ] as Point<bigint>;
-  return toHexString(leBigIntToBuffer(packPoint(numericPublicKey)));
+export function encodePublicKey(rawPublicKey: Point<BigNumber>): string {
+  return toHexString(leBigIntToBuffer(packPublicKey(rawPublicKey)));
 }
 
 /**
- * Unpacks a public key packed by {@packPublicKey}.
+ * Decodes a public key packed by {@encodePublicKey}.  The input must be
+ * 32 bytes, represented as 64 hex digits.
+ *
+ * @throws TypeError if the public key format is incorrect.
  */
-// TODO(artwyman): Update to zk-kit's version when it returns bigint instead of decimal string.
-export function unpackPublicKey(packedPublicKey: string): Point<bigint> {
-  const unpackedPublicKey = unpackPoint(
-    leBufferToBigInt(fromHexString(checkPublicKeyFormat(packedPublicKey)))
+export function decodePublicKey(publicKey: string): Point<bigint> {
+  const rawPublicKey = unpackPublicKey(
+    leBufferToBigInt(fromHexString(checkPublicKeyFormat(publicKey)))
   );
-  if (unpackedPublicKey === null) {
-    throw new Error(`Invalid packed public key point ${packedPublicKey}.`);
+  if (rawPublicKey === null) {
+    throw new TypeError(`Invalid packed public key point ${publicKey}.`);
   }
-  return unpackedPublicKey;
+  return rawPublicKey;
 }
 
 /**
- * Unpacks a private key's bytes from a string.  The input must be 32 bytes,
+ * Encodes a private key to a string.  The input must be 32 bytes.  The output
+ * is represented as 64 hex digits.
+ *
+ * @throws TypeError if the size of the buffer is incorrect.
+ */
+export function encodePrivateKey(rawPrivateKey: Buffer): string {
+  if (rawPrivateKey.length !== 32) {
+    throw TypeError("Private key must be 32 bytes.");
+  }
+  return toHexString(rawPrivateKey);
+}
+
+/**
+ * Decodes a private key's bytes from a string.  The input must be 32 bytes,
  * expressed as 64 hex digits.
+ *
+ * @throws TypeError if the private key format is incorrect.
  */
-export function unpackPrivateKey(packedPrivateKey: string): Buffer {
-  return fromHexString(checkPrivateKeyFormat(packedPrivateKey));
+export function decodePrivateKey(privateKey: string): Buffer {
+  return fromHexString(checkPrivateKeyFormat(privateKey));
 }
 
 /**
- * Verify an EdDSA signature.
- */
-// TODO(artwyman): Update to zk-kit's version when it returns bigint instead of decimal string.
-export function verifySignature(
-  message: bigint,
-  signature: Signature<bigint>,
-  publicKey: Point<bigint>
-): boolean {
-  const stringSignature = {
-    R8: [
-      signature.R8[0].toString(),
-      signature.R8[1].toString()
-    ] as Point<string>,
-    S: signature.S.toString()
-  };
-  const stringPublicKey: Point<string> = [
-    publicKey[0].toString(),
-    publicKey[1].toString()
-  ];
-  return zkkVerifySignature(message, stringSignature, stringPublicKey);
-}
-
-/**
- * Signs a POD.
+ * Signs a POD's root hash.
  *
  * @param root the root hash (content ID) of the POD.
  * @param privateKey the signer's private key, which is 32 bytes encoded as
@@ -172,24 +143,25 @@ export function verifySignature(
  * @returns The signature as well as the signer's public key for inclusion
  *   in the POD.  The signature is 64 bytes encoded as 128 hex digits, while
  *   the public key is 32 bytes encoded as 64 hex digits.
+ * @throws TypeError if any of the individual arguments is incorrectly formatted
  */
 export function signPODRoot(
   root: bigint,
   privateKey: string
 ): { signature: string; publicKey: string } {
-  const privateKeyBytes = unpackPrivateKey(privateKey);
+  const privateKeyBytes = decodePrivateKey(privateKey);
 
   const unpackedSignature = signMessage(privateKeyBytes, root);
-  const signature = packSignature(unpackedSignature);
+  const signature = encodeSignature(unpackedSignature);
 
   const unpackedPublicKey = derivePublicKey(privateKeyBytes);
-  const publicKey = packPublicKey(unpackedPublicKey);
+  const publicKey = encodePublicKey(unpackedPublicKey);
 
   return { signature, publicKey };
 }
 
 /**
- * Verifies the signature of a POD.
+ * Verifies the signature of a POD root hash.
  *
  * @param root the root hash (content ID) of the POD.
  * @param signature the signature in packed form, which is 64 bytes expressed
@@ -197,13 +169,14 @@ export function signPODRoot(
  * @param publicKey the signer's public key in packed form, which is 32 bytes
  *   expressed as 64 hex digits
  * @returns `true` if the signature is valid
+ * @throws TypeError if any of the individual arguments incorrectly formatted
  */
 export function verifyPODRootSignature(
   root: bigint,
   signature: string,
   publicKey: string
 ): boolean {
-  const unpackedPublicKey = unpackPublicKey(publicKey);
-  const unpackedSignature = unpackSignature(signature);
+  const unpackedPublicKey = decodePublicKey(publicKey);
+  const unpackedSignature = decodeSignature(signature);
   return verifySignature(root, unpackedSignature, unpackedPublicKey);
 }

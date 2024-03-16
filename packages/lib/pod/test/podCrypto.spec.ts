@@ -6,8 +6,8 @@ import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
   PODContent,
+  decodePublicKey,
   signPODRoot,
-  unpackPublicKey,
   verifyPODRootSignature
 } from "../src";
 import { AltCryptCircomlibjs } from "./alternateCrypto";
@@ -24,7 +24,7 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
   it("EdDSA public/private key handling should match", async function () {
     const podContent = PODContent.fromEntries(sampleEntries1);
     const { publicKey } = signPODRoot(podContent.contentID, privateKey);
-    const unpackedPublicKey = unpackPublicKey(publicKey);
+    const unpackedPublicKey = decodePublicKey(publicKey);
     expect(unpackedPublicKey).to.not.be.null;
     if (!unpackedPublicKey) {
       throw new Error("Bad public key point!");
@@ -71,7 +71,7 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
     // Perform the same signing operation as if for a POD.
     const hashedMessage = poseidon2(pcdMessageNumbers);
     const { publicKey, signature } = signPODRoot(hashedMessage, privateKey);
-    const unpackedPublicKey = unpackPublicKey(publicKey);
+    const unpackedPublicKey = decodePublicKey(publicKey);
     expect(unpackedPublicKey).to.not.be.null;
     if (!unpackedPublicKey) {
       throw new Error("Bad public key point!");

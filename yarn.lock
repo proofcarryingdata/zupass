@@ -6411,13 +6411,13 @@
   dependencies:
     circomlib "^2.0.5"
 
-"@zk-kit/eddsa-poseidon@0.7.0":
-  version "0.7.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.7.0.tgz#24b889329047b64c31eda68c23cf203f19f5807d"
-  integrity sha512-eCZmd+NRr4ihHX9yvNP2tww+U7zDvxjy8vAPIBVUmkNWbUcMXrzmbd6ryemR3Flcfy/CB4bStOXaEeomqfTwbw==
+"@zk-kit/eddsa-poseidon@0.10.0":
+  version "0.10.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.10.0.tgz#3911ec364d9a286e9eca0d45a31c42db2e33f3f0"
+  integrity sha512-vfHupJeoj0YojulF+SUbeOD6MOamWV6uU/HVFwB7sJNA0N7gnzcjaN1aC5OYr0+5PHui/SYebzKA0LNCL+7M9g==
   dependencies:
     "@zk-kit/baby-jubjub" "0.3.0"
-    "@zk-kit/utils" "0.6.0"
+    "@zk-kit/utils" "0.8.1"
     buffer "6.0.3"
 
 "@zk-kit/groth16@0.3.0":
@@ -6447,6 +6447,13 @@
   version "0.6.0"
   resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.6.0.tgz#30124e98df8e29f7af31e19ce4dc6302f178c0a4"
   integrity sha512-sUF1yVjlGmm7/NIN/+d+N8WOcI77bTzgV5+vZmp/S7lXcy4fmO+5TdHERRsDbs8Ep8K33EOC6V+U+JXzmjSe5A==
+  dependencies:
+    buffer "^6.0.3"
+
+"@zk-kit/utils@0.8.1":
+  version "0.8.1"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.8.1.tgz#9d358542e6b223dde35f32f3e161d1d3a41b0644"
+  integrity sha512-m5cvnYo5IBZQCO8H5X0Mw3rGRGEoSqlYXVVF1+4M9IT3olDWcJHLPRqtYGF9zNf+vXV/21srpZ0hX3X2Lzp1TQ==
   dependencies:
     buffer "^6.0.3"
 

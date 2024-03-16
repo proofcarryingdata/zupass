@@ -67,12 +67,14 @@ export type PODPCDArgs = {
 export interface PODPCDClaim {
   /**
    * The entries of this POD, in sorted order as they are Merklized.
+   * See the {@link pod} accessor on {@link PODPCD} if you need to manipulate
+   * these entries as a POD object.
    */
   entries: PODEntries;
 
   /**
    * The EdDSA public key of the signer of this pod, in a packed string form.
-   * See {@link unpackPublicKey} in `@pcd/pod` if you need to manipulate or
+   * See {@link decodePublicKey} in `@pcd/pod` if you need to manipulate or
    * convert this value.
    */
   signerPublicKey: string;
@@ -85,7 +87,7 @@ export interface PODPCDClaim {
 export interface PODPCDProof {
   /**
    * The EdDSA signature of this POD's content ID, in a packed string form.
-   * See {@link unpackSignature} in `@pcd/pod` if you need to manipulate
+   * See {@link decodeSignature} in `@pcd/pod` if you need to manipulate
    * or convert this value.
    */
   signature: string;

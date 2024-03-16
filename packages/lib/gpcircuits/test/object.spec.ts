@@ -1,4 +1,4 @@
-import { POD, unpackPublicKey, unpackSignature } from "@pcd/pod";
+import { POD, decodePublicKey, decodeSignature } from "@pcd/pod";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
@@ -21,8 +21,8 @@ describe("object.ObjectModule should work", function () {
   function makeTestSignals(): ObjectModuleInputs {
     const pod = POD.sign(sampleEntries, privateKey);
 
-    const pub = unpackPublicKey(pod.signerPublicKey);
-    const sig = unpackSignature(pod.signature);
+    const pub = decodePublicKey(pod.signerPublicKey);
+    const sig = decodeSignature(pod.signature);
 
     return {
       contentID: pod.contentID,

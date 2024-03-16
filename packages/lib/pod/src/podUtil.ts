@@ -12,6 +12,9 @@ import {
 // TODO(artwyman): Decide if these utils should all be published outside
 // of the package, or only a subset.
 
+// TODO(artwyman): Consider Base64 encoding rather than hex for the formats
+// below.  It would be smaller.
+
 /**
  * Private keys are 32 bytes (any arbitrary bytes), represented as 64 hex
  * digits.

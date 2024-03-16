@@ -1,4 +1,4 @@
-import { POD, PODContent, unpackPublicKey, unpackSignature } from "@pcd/pod";
+import { POD, PODContent, decodePublicKey, decodeSignature } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
@@ -277,8 +277,8 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
       const verified = pod.verifySignature();
       expect(verified).to.be.true;
       pods.push(pod);
-      signatures.push(unpackSignature(pod.signature));
-      publicKeys.push(unpackPublicKey(pod.signerPublicKey));
+      signatures.push(decodeSignature(pod.signature));
+      publicKeys.push(decodePublicKey(pod.signerPublicKey));
     }
 
     // Fill in ObjectModule inputs.

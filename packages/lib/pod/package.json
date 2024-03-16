@@ -28,9 +28,9 @@
   "dependencies": {
     "@pcd/util": "0.4.0",
     "@zk-kit/baby-jubjub": "0.3.0",
-    "@zk-kit/eddsa-poseidon": "0.7.0",
+    "@zk-kit/eddsa-poseidon": "0.10.0",
     "@zk-kit/imt": "2.0.0-beta.2",
-    "@zk-kit/utils": "0.6.0",
+    "@zk-kit/utils": "0.8.1",
     "js-sha256": "^0.10.1",
     "json-bigint": "^1.0.0",
     "poseidon-lite": "^0.2.0"
