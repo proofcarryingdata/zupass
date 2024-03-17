@@ -39,7 +39,8 @@
     "plop": "^4.0.1",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
-    "typedoc": "^0.25.1",
+    "typedoc": "^0.25.12",
+    "typescript": "^5.3.3",
     "verdaccio": "^5.27.0",
     "verdaccio-memory": "^10.3.2"
   },
@@ -59,6 +60,7 @@
   "resolutions": {
     "@types/react": "^18.0.22",
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },

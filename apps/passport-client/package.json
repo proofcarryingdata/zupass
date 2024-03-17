@@ -13,6 +13,7 @@
     "analyze-bundle": "yarn build && esbuild-visualizer --metadata ./public/js/bundle-size.json --filename public/bundle-stats.html && open public/bundle-stats.html"
   },
   "dependencies": {
+    "@babel/runtime": "^7.24.0",
     "@pcd/eddsa-frog-pcd": "0.2.0",
     "@pcd/eddsa-frog-pcd-ui": "0.1.0",
     "@pcd/eddsa-pcd": "0.5.0",
@@ -54,6 +55,7 @@
     "@semaphore-protocol/identity": "^3.15.2",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
+    "csstype": "^3.1.3",
     "dotenv": "^16.0.3",
     "email-validator": "^2.0.4",
     "fast-json-stable-stringify": "^2.1.0",
@@ -62,6 +64,7 @@
     "js-sha256": "^0.11.0",
     "lodash": "^4.17.21",
     "pretty-ms": "^8.0.0",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
