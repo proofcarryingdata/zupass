@@ -43,7 +43,7 @@
     "@types/react": "^18.0.22",
     "@types/styled-components": "^5.1.26",
     "camelcase": "^8.0.0",
-    "eslint": "^7.32.0",
+    "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "nodemon": "^3.0.3",
     "prettier": "^3.1.1",

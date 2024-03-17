@@ -35,10 +35,12 @@
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.4",
+    "@types/node": "^20.11.28",
     "@types/snarkjs": "0.7.5",
     "plop": "^4.0.1",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
+    "typanion": "^3.14.0",
     "typedoc": "^0.25.12",
     "typescript": "^5.3.3",
     "verdaccio": "^5.27.0",
