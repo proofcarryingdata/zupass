@@ -30,8 +30,8 @@
     "libsodium-wrappers-sumo": "^0.7.11"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/libsodium-wrappers-sumo": "^0.7.6",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",

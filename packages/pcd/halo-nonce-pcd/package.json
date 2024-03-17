@@ -33,8 +33,8 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/elliptic": "^6.4.14",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",

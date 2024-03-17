@@ -91,7 +91,7 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@pcd/eslint-config-custom": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
     "@types/chai": "^4.3.11",
     "@types/email-validator": "^1.0.6",
     "@types/express": "^4.17.17",

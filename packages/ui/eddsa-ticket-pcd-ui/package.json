@@ -34,8 +34,8 @@
     "url-join": "4.0.1"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
     "@types/url-join": "4.0.1",

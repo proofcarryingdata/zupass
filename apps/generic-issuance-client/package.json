@@ -46,7 +46,7 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@pcd/eslint-config-custom": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
     "@types/javascript-time-ago": "^2.0.8",
     "@types/lodash": "^4.14.202",
     "@types/react": "^18.2.6",

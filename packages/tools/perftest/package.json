@@ -23,8 +23,8 @@
   },
   "devDependencies": {
     "ts-node": "*",
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "eslint": "^8.57.0",
     "typescript": "^5.3.3"
   },

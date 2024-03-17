@@ -36,9 +36,9 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
     "@pcd/rsa-pcd": "0.5.0",
-    "@pcd/tsconfig": "*",
+    "@pcd/tsconfig": "0.10.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.2",
