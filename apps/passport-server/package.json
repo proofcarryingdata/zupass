@@ -10,6 +10,7 @@
     "dev": "yarn tsc -p ./tsconfig.json && concurrently -r \"yarn start:dev\" \"yarn dev:worker\"",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
+    "test:single-threaded": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "test": "ts-mocha --parallel --require test/globalhooks.ts --config ../../.mocharc.js --exit test/**/*.spec.ts",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
     "clean": "rm -rf node_modules ./build"

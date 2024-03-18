@@ -17,7 +17,7 @@ export async function testCSVPipeline(
 ): Promise<void> {
   expectToExist(giService);
   const pipelines = await giService.getAllPipelineInstances();
-  expectLength(pipelines, 3);
+  expectLength(pipelines, 1);
   const csvPipeline = pipelines.find(CSVPipeline.is);
   expectToExist(csvPipeline);
   const loadRes = await csvPipeline.load();
