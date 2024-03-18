@@ -1,12 +1,8 @@
 {
   "$schema": "https://turbo.build/schema.json",
   "pipeline": {
-    "pre-build": {
-      "cache": true,
-      "outputs": []
-    },
     "build": {
-      "dependsOn": ["^pre-build", "^build"],
+      "dependsOn": ["^build"],
       "inputs": [".nvmrc"],
       "outputs": [],
       "cache": true,

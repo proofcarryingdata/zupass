@@ -1,22 +1,10 @@
 {
   "extends": ["//"],
   "pipeline": {
-    "pre-build": {
-      "dependsOn": [],
-      "inputs": ["$TURBO_DEFAULT$", "icons/**", "convert-icons.mjs"],
-      "outputs": ["dist/**", "*.tsbuildinfo"],
-      "cache": true
-    },
     "build": {
-      "dependsOn": ["^build", "pre-build"],
-      "inputs": [
-        "$TURBO_DEFAULT$",
-        "src/**",
-        "!src/icons**",
-        "test/**",
-        "icons/**"
-      ],
-      "outputs": ["dist/**", "*.tsbuildinfo", "src/icons/**"],
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "test/**"],
+      "outputs": ["dist/**", "*.tsbuildinfo"],
       "cache": true
     },
     "test": {
