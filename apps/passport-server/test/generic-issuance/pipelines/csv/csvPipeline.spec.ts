@@ -1,22 +1,28 @@
 import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { CSVPipelineDefinition, PipelineType } from "@pcd/passport-interface";
+import {
+  CSVPipelineDefinition,
+  PollFeedResult,
+  requestPollFeed
+} from "@pcd/passport-interface";
+import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
+import { expect } from "chai";
 import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
-import { stopApplication } from "../../../src/application";
-import { PipelineDefinitionDB } from "../../../src/database/queries/pipelineDefinitionDB";
-import { PipelineUserDB } from "../../../src/database/queries/pipelineUserDB";
-import { GenericIssuanceService } from "../../../src/services/generic-issuance/genericIssuanceService";
-import { CSVPipeline } from "../../../src/services/generic-issuance/pipelines/CSVPipeline/CSVPipeline";
-import { PipelineUser } from "../../../src/services/generic-issuance/pipelines/types";
-import { Zupass } from "../../../src/types";
-import { loadApolloErrorMessages } from "../../lemonade/MockLemonadeServer";
-import { overrideEnvironment, testingEnv } from "../../util/env";
-import { startTestingApp } from "../../util/startTestingApplication";
-import { expectLength, expectToExist } from "../../util/util";
-import { testCSVPipeline } from "../testCSVPipeline";
-import { assertUserMatches } from "../utils";
+import { stopApplication } from "../../../../src/application";
+import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
+import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
+import { GenericIssuanceService } from "../../../../src/services/generic-issuance/genericIssuanceService";
+import { CSVPipeline } from "../../../../src/services/generic-issuance/pipelines/CSVPipeline/CSVPipeline";
+import { PipelineUser } from "../../../../src/services/generic-issuance/pipelines/types";
+import { Zupass } from "../../../../src/types";
+import { loadApolloErrorMessages } from "../../../lemonade/MockLemonadeServer";
+import { overrideEnvironment, testingEnv } from "../../../util/env";
+import { startTestingApp } from "../../../util/startTestingApplication";
+import { expectLength, expectToExist, expectTrue } from "../../../util/util";
+import { assertUserMatches } from "../../utils";
+import { makeTestCSVPipelineDefinition } from "./testCsvPipelineDefinition";
 
 describe.only("Generic Issuance", function () {
   this.timeout(30_000);
@@ -33,29 +39,8 @@ describe.only("Generic Issuance", function () {
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
 
-  const csvPipeline: CSVPipelineDefinition = {
-    type: PipelineType.CSV,
-    ownerUserId: adminGIUserId,
-    timeCreated: new Date().toISOString(),
-    timeUpdated: new Date().toISOString(),
-    id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
-    editorUserIds: [],
-    options: {
-      csv: `title,image
-t1,i1
-t2,i1`,
-      feedOptions: {
-        feedDescription: "CSV goodies",
-        feedDisplayName: "CSV goodies",
-        feedFolder: "goodie bag",
-        feedId: "goodie-bag"
-      }
-    }
-  };
+  const csvPipeline: CSVPipelineDefinition =
+    makeTestCSVPipelineDefinition(adminGIUserId);
 
   const pipelineDefinitions = [csvPipeline];
 
@@ -141,7 +126,24 @@ t2,i1`,
 
   step("CSVPipeline", async function () {
     expectToExist(giService);
-    await testCSVPipeline(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    expectLength(pipelines, 1);
+    const csvPipeline = pipelines.find(CSVPipeline.is);
+    expectToExist(csvPipeline);
+    const loadRes = await csvPipeline.load();
+    expectTrue(loadRes.success);
+    const feedRes = await requestCSVFeed(
+      csvPipeline.feedCapability.feedUrl,
+      csvPipeline.feedCapability.options.feedId
+    );
+    expectTrue(feedRes.success);
+    expectLength(feedRes.value.actions, 2);
+    const pcdsAction = feedRes.value.actions[1];
+    expectIsReplaceInFolderAction(pcdsAction);
+    expectLength(pcdsAction.pcds, 2);
+    expect(pcdsAction.folder).to.eq(
+      csvPipeline.feedCapability.options.feedFolder
+    );
   });
 
   step("Authenticated Generic Issuance Endpoints", async () => {
@@ -157,3 +159,10 @@ t2,i1`,
     await stopApplication(giBackend);
   });
 });
+
+async function requestCSVFeed(
+  url: string,
+  feedId: string
+): Promise<PollFeedResult> {
+  return requestPollFeed(url, { feedId, pcd: undefined });
+}

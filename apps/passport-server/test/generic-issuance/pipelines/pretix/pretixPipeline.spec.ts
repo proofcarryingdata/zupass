@@ -17,32 +17,32 @@ import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { SetupServer, setupServer } from "msw/node";
-import { stopApplication } from "../../../src/application";
-import { PipelineCheckinDB } from "../../../src/database/queries/pipelineCheckinDB";
-import { PipelineConsumerDB } from "../../../src/database/queries/pipelineConsumerDB";
-import { PipelineDefinitionDB } from "../../../src/database/queries/pipelineDefinitionDB";
-import { PipelineUserDB } from "../../../src/database/queries/pipelineUserDB";
-import { GenericIssuanceService } from "../../../src/services/generic-issuance/genericIssuanceService";
+import { stopApplication } from "../../../../src/application";
+import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineCheckinDB";
+import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
+import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
+import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
+import { GenericIssuanceService } from "../../../../src/services/generic-issuance/genericIssuanceService";
 import {
   PRETIX_CHECKER,
   PretixPipeline
-} from "../../../src/services/generic-issuance/pipelines/PretixPipeline";
-import { PipelineUser } from "../../../src/services/generic-issuance/pipelines/types";
-import { Zupass } from "../../../src/types";
+} from "../../../../src/services/generic-issuance/pipelines/PretixPipeline";
+import { PipelineUser } from "../../../../src/services/generic-issuance/pipelines/types";
+import { Zupass } from "../../../../src/types";
 import {
   GenericPretixDataMocker,
   NAME_QUESTION_IDENTIFIER
-} from "../../pretix/GenericPretixDataMocker";
-import { getMockGenericPretixHandlers } from "../../pretix/MockGenericPretixServer";
-import { overrideEnvironment, testingEnv } from "../../util/env";
-import { startTestingApp } from "../../util/startTestingApplication";
-import { expectLength, expectToExist, expectTrue } from "../../util/util";
+} from "../../../pretix/GenericPretixDataMocker";
+import { getMockGenericPretixHandlers } from "../../../pretix/MockGenericPretixServer";
+import { overrideEnvironment, testingEnv } from "../../../util/env";
+import { startTestingApp } from "../../../util/startTestingApplication";
+import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline
-} from "../utils";
+} from "../../utils";
 
 describe.only("Generic Issuance", function () {
   this.timeout(30_000);
