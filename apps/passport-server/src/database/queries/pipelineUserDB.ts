@@ -1,10 +1,10 @@
 import { normalizeEmail } from "@pcd/util";
 import { Pool, PoolClient } from "postgres-pool";
 import { v4 as uuid } from "uuid";
+import { traceUser } from "../../services/generic-issuance/honeycombQueries";
+import { PipelineUser } from "../../services/generic-issuance/pipelines/types";
 import { traced } from "../../services/telemetryService";
-import { traceUser } from "../../services/zubox/honeycombQueries";
-import { PipelineUser } from "../../services/zubox/pipelines/types";
-import { ZuboxUserRow } from "../models";
+import { GenericIssuanceUserRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 export interface IPipelineUserDB {
@@ -85,7 +85,7 @@ export class PipelineUserDB implements IPipelineUserDB {
     );
   }
 
-  private dbRowToPipelineUser(row: ZuboxUserRow): PipelineUser {
+  private dbRowToPipelineUser(row: GenericIssuanceUserRow): PipelineUser {
     return {
       id: row.id,
       email: row.email,

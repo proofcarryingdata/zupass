@@ -5,7 +5,7 @@ export function clearAllPendingRequests(): void {
   clearPendingProofRequest();
   clearPendingViewSubscriptionsRequest();
   clearPendingAddSubscriptionRequest();
-  clearPendingZuboxCheckinRequest();
+  clearPendingGenericIssuanceCheckinRequest();
 }
 
 export function hasPendingRequest(): boolean {
@@ -17,7 +17,7 @@ export function hasPendingRequest(): boolean {
     getPendingViewSubscriptionsPageRequest() ||
     getPendingAddSubscriptionPageRequest() ||
     getPendingViewFrogCryptoPageRequest() ||
-    getPendingZuboxCheckinRequest()
+    getPendingGenericIssuanceCheckinRequest()
   );
 }
 
@@ -126,17 +126,18 @@ export function getPendingViewFrogCryptoPageRequest(): string | undefined {
   return value == null ? undefined : value;
 }
 
-export const pendingZuboxCheckinRequestKey = "pendingZuboxCheckin";
+export const pendingGenericIssuanceCheckinRequestKey =
+  "pendingGenericIssuanceCheckin";
 
-export function setPendingZuboxCheckinRequest(request: string): void {
-  sessionStorage.setItem(pendingZuboxCheckinRequestKey, request);
+export function setPendingGenericIssuanceCheckinRequest(request: string): void {
+  sessionStorage.setItem(pendingGenericIssuanceCheckinRequestKey, request);
 }
 
-export function clearPendingZuboxCheckinRequest(): void {
-  sessionStorage.removeItem(pendingZuboxCheckinRequestKey);
+export function clearPendingGenericIssuanceCheckinRequest(): void {
+  sessionStorage.removeItem(pendingGenericIssuanceCheckinRequestKey);
 }
 
-export function getPendingZuboxCheckinRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingZuboxCheckinRequestKey);
+export function getPendingGenericIssuanceCheckinRequest(): string | undefined {
+  const value = sessionStorage.getItem(pendingGenericIssuanceCheckinRequestKey);
   return value == null ? undefined : value;
 }

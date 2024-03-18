@@ -1,8 +1,8 @@
 import { Box, Button, HStack, Stack } from "@chakra-ui/react";
 import {
+  GenericIssuanceSelfResponseValue,
   PipelineDefinition,
-  PipelineInfoResponseValue,
-  ZuboxSelfResponseValue
+  PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode, useCallback, useMemo, useState } from "react";
@@ -18,7 +18,7 @@ export function PipelineEditSection({
   isAdminView,
   pipelineInfo
 }: {
-  user: ZuboxSelfResponseValue;
+  user: GenericIssuanceSelfResponseValue;
   pipeline: PipelineDefinition;
   pipelineInfo: PipelineInfoResponseValue;
   isAdminView: boolean;

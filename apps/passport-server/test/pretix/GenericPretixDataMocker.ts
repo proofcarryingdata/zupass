@@ -12,7 +12,7 @@ import { randomName } from "../util/util";
 
 export const NAME_QUESTION_IDENTIFIER = "name";
 
-export interface IMockZuboxPretixBackendData {
+export interface IMockGenericIssuancePretixBackendData {
   // aggregate data for simpler querying
   organizers: IOrganizer[];
   organizersByOrgUrl: Map<string, IOrganizer>;
@@ -69,21 +69,21 @@ export interface IOrganizer {
 
 export class GenericPretixDataMocker {
   private autoincrementingId = 123_456_789;
-  private data: IMockZuboxPretixBackendData;
+  private data: IMockGenericIssuancePretixBackendData;
 
   public constructor() {
     this.data = this.newMockData();
   }
 
-  public backup(): IMockZuboxPretixBackendData {
+  public backup(): IMockGenericIssuancePretixBackendData {
     return structuredClone(this.data);
   }
 
-  public restore(data: IMockZuboxPretixBackendData): void {
+  public restore(data: IMockGenericIssuancePretixBackendData): void {
     this.data = data;
   }
 
-  public get(): IMockZuboxPretixBackendData {
+  public get(): IMockGenericIssuancePretixBackendData {
     return this.data;
   }
 
@@ -227,7 +227,7 @@ export class GenericPretixDataMocker {
     }
   }
 
-  private newMockData(): IMockZuboxPretixBackendData {
+  private newMockData(): IMockGenericIssuancePretixBackendData {
     const organizer1 = this.newOrganizer("PRETIX_ORGANIZER_ONE");
     // const organizer2 = this.newOrganizer("PRETIX_ORGANIZER_TWO");
 

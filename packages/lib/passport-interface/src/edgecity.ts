@@ -1,4 +1,4 @@
-import { BadgeConfig } from "./zuboxTypes";
+import { BadgeConfig } from "./genericIssuanceTypes";
 
 export const EDGE_CITY_EVENT_ID = "31f76e79-09ed-59ee-aab0-befa73a56baf";
 export const LEMONADE_EDDSA_PUBKEY: [string, string] = [
