@@ -2,10 +2,10 @@ import { EdDSAFrogPCD, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import { DexFrog } from "@pcd/passport-interface";
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
 import { FaList } from "react-icons/fa6";
+import { MdGrid4X4 } from "react-icons/md";
 import styled from "styled-components";
 import { useDispatch } from "../../../src/appHooks";
 import { RippleLoader } from "../../core/RippleLoader";
-import { icons } from "../../icons";
 import { Button, ButtonGroup } from "./Button";
 import { FrogsModal } from "./FrogsModal";
 
@@ -81,7 +81,7 @@ export function DexTab({
           onClick={(): void => setMode("grid")}
           disabled={mode === "grid"}
         >
-          <img src={icons.grid} draggable={false} width={16} height={16} />
+          <MdGrid4X4 size={16} />
         </Button>
       </ButtonGroup>
       {mode === "grid" && (
