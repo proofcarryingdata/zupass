@@ -6,12 +6,12 @@ import {
   clearAllPendingRequests,
   getPendingAddRequest,
   getPendingAddSubscriptionPageRequest,
+  getPendingGenericIssuanceCheckinRequest,
   getPendingGetWithoutProvingRequest,
   getPendingHaloRequest,
   getPendingProofRequest,
   getPendingViewFrogCryptoPageRequest,
-  getPendingViewSubscriptionsPageRequest,
-  getPendingZuboxCheckinRequest
+  getPendingViewSubscriptionsPageRequest
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { CenterColumn } from "../../core";
@@ -62,10 +62,10 @@ export function LoginInterstitialScreen(): JSX.Element {
         );
         clearAllPendingRequests();
         navigate(`/frogscriptions/${encReq}`, { replace: true });
-      } else if (getPendingZuboxCheckinRequest() != null) {
+      } else if (getPendingGenericIssuanceCheckinRequest() != null) {
         console.log("Redirecting to Generic Issuance checkin screen");
         const encReq = new URLSearchParams(
-          JSON.parse(getPendingZuboxCheckinRequest())
+          JSON.parse(getPendingGenericIssuanceCheckinRequest())
         ).toString();
         clearAllPendingRequests();
         navigate(`/generic-checkin?${encReq}`, {

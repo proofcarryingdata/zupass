@@ -1,8 +1,8 @@
 import { Table, TableContainer, Td, Th, Thead, Tr } from "@chakra-ui/react";
 import {
+  GenericIssuancePipelineListEntry,
   PipelineDefinition,
-  PipelineType,
-  ZuboxPipelineListEntry
+  PipelineType
 } from "@pcd/passport-interface";
 import {
   ColumnDef,
@@ -54,12 +54,12 @@ export function PipelineTable({
   isAdminView,
   singleRowMode
 }: {
-  entries: ZuboxPipelineListEntry[];
+  entries: GenericIssuancePipelineListEntry[];
   isAdminView: boolean;
   singleRowMode?: boolean;
 }): ReactNode {
   const entryToRow = useCallback(
-    (entry: ZuboxPipelineListEntry): PipelineRow => {
+    (entry: GenericIssuancePipelineListEntry): PipelineRow => {
       return {
         status: pipelineStatusStr(entry),
         type: entry.pipeline.type,

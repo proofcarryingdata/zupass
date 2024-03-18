@@ -4,7 +4,7 @@ import styled from "styled-components";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
-import { ZuboxLogo } from "../../components/header/ZuboxButton";
+import { PodboxLogo } from "../../components/header/PodboxButton";
 import { ZUPASS_SERVER_URL } from "../../constants";
 import { GIContext } from "../../helpers/Context";
 import { useJWT } from "../../helpers/userHooks";
@@ -13,7 +13,7 @@ function LoginPage(): JSX.Element {
   const jwt = useJWT();
   const context = useContext(GIContext);
   const [email, setEmail] = useState(
-    process.env.STYTCH_PUBLIC_TOKEN ? "" : "admin@zubox.dev"
+    process.env.STYTCH_PUBLIC_TOKEN ? "" : "admin@podbox.dev"
   );
   const [sendingEmail, setSendingEmail] = useState(false);
   const [hasSentEmail, setHasSentEmail] = useState(false);
@@ -96,7 +96,7 @@ function LoginPage(): JSX.Element {
       <PageContent>
         <Container>
           <Box marginBottom={6}>
-            <ZuboxLogo />
+            <PodboxLogo />
           </Box>
           <form
             onSubmit={(e): Promise<void> => {

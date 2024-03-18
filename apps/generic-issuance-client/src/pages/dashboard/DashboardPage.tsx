@@ -8,7 +8,10 @@ import {
   Stack,
   UnorderedList
 } from "@chakra-ui/react";
-import { ZuboxPipelineListEntry, getError } from "@pcd/passport-interface";
+import {
+  GenericIssuancePipelineListEntry,
+  getError
+} from "@pcd/passport-interface";
 import { ReactNode, useEffect, useMemo } from "react";
 import { HomeLink, PageContent, PodLink } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
@@ -18,8 +21,8 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import {
-  getAllHoneycombLinkForAllZubox,
-  getAllHoneycombLinkForAllZuboxHttp,
+  getAllHoneycombLinkForAllGenericIssuance,
+  getAllHoneycombLinkForAllGenericIssuanceHttp,
   getHoneycombQueryDurationStr
 } from "../../helpers/util";
 import { CreatePipelineButtonSection } from "./CreatePipelineButtonSection";
@@ -31,7 +34,7 @@ export default function DashboardPage(): ReactNode {
   const user = useFetchSelf();
   const isAdminView = useIsAdminView(user?.value);
 
-  const pipelineEntries: ZuboxPipelineListEntry[] = useMemo(() => {
+  const pipelineEntries: GenericIssuancePipelineListEntry[] = useMemo(() => {
     if (!user?.value?.id) {
       return [];
     }
@@ -123,14 +126,17 @@ export function DashboardAdminSection(): ReactNode {
         </Heading>
         <UnorderedList>
           <ListItem>
-            <PodLink isExternal={true} to={getAllHoneycombLinkForAllZubox()}>
+            <PodLink
+              isExternal={true}
+              to={getAllHoneycombLinkForAllGenericIssuance()}
+            >
               all generic issuance traces {getHoneycombQueryDurationStr()}
             </PodLink>
           </ListItem>
           <li>
             <PodLink
               isExternal={true}
-              to={getAllHoneycombLinkForAllZuboxHttp()}
+              to={getAllHoneycombLinkForAllGenericIssuanceHttp()}
             >
               all generic issuance http traces {getHoneycombQueryDurationStr()}
             </PodLink>

@@ -8,7 +8,7 @@ export function NotFound(): ReactNode {
       <GlobalPageHeader />
       <PageContent>
         This page doesn't exist. <br />
-        <PodLink to="/">Go to Zubox</PodLink>
+        <PodLink to="/">Go to Podbox</PodLink>
       </PageContent>
     </>
   );

@@ -5,7 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
-import { ZuboxPipelineRow } from "../models";
+import { GenericIssuancePipelineRow } from "../models";
 import { sqlQuery, sqlTransaction } from "../sqlQuery";
 
 /**
@@ -83,7 +83,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     // TODO: where should we check that the pipeline definitions
     // we've loaded conform to the pipeline definition schema?
     return result.rows.map(
-      (row: ZuboxPipelineRow): PipelineDefinition =>
+      (row: GenericIssuancePipelineRow): PipelineDefinition =>
         ({
           id: row.id,
           ownerUserId: row.owner_user_id,
@@ -138,7 +138,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     if (result.rowCount === 0) {
       return undefined;
     } else {
-      const row: ZuboxPipelineRow = result.rows[0];
+      const row: GenericIssuancePipelineRow = result.rows[0];
       return {
         id: row.id,
         ownerUserId: row.owner_user_id,
@@ -163,7 +163,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       this.db,
       "Insert or update pipeline definition",
       async (client: PoolClient) => {
-        const pipeline: ZuboxPipelineRow = (
+        const pipeline: GenericIssuancePipelineRow = (
           await client.query(
             `
         INSERT INTO generic_issuance_pipelines (id, owner_user_id, pipeline_type, config) VALUES($1, $2, $3, $4)

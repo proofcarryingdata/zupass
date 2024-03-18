@@ -10,7 +10,7 @@ import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import {
   Back,
   Home
-} from "./ScannedTicketScreens/ZuboxScannedTicketScreen/ZuboxScannedTicketScreen";
+} from "./ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 
 const ButtonsContainer = styled.div`
   display: flex;

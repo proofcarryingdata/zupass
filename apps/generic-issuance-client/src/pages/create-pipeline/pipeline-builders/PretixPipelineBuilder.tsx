@@ -9,13 +9,13 @@ import {
 } from "@chakra-ui/react";
 import {
   FeedIssuanceOptions,
+  GenericIssuanceFetchPretixEventsResponseValue,
   PipelineType,
   PretixPipelineDefinition,
   PretixProductConfig,
-  ZuboxFetchPretixEventsResponseValue,
   getI18nString,
-  requestZuboxFetchPretixEvents,
-  requestZuboxFetchPretixProducts
+  requestGenericIssuanceFetchPretixEvents,
+  requestGenericIssuanceFetchPretixProducts
 } from "@pcd/passport-interface";
 import { ChangeEvent, ReactNode, useState } from "react";
 import { v4 as uuidV4 } from "uuid";
@@ -33,7 +33,8 @@ export default function PretixPipelineBuilder(
 ): ReactNode {
   const [orgUrl, setOrgUrl] = useState("");
   const [token, setToken] = useState("");
-  const [events, setEvents] = useState<ZuboxFetchPretixEventsResponseValue>();
+  const [events, setEvents] =
+    useState<GenericIssuanceFetchPretixEventsResponseValue>();
   const [selectedEvent, setSelectedEvent] = useState<string | undefined>();
   const [products, setProducts] = useState<PretixProductConfig[]>();
   const [feedOptions, setFeedOptions] =
@@ -50,12 +51,10 @@ export default function PretixPipelineBuilder(
     e: ChangeEvent<HTMLInputElement>
   ): Promise<void> => {
     setSelectedEvent(e.target.value);
-    const response = await requestZuboxFetchPretixProducts(ZUPASS_SERVER_URL, {
-      jwt,
-      orgUrl,
-      token,
-      eventID: e.target.value
-    });
+    const response = await requestGenericIssuanceFetchPretixProducts(
+      ZUPASS_SERVER_URL,
+      { jwt, orgUrl, token, eventID: e.target.value }
+    );
     if (response.success) {
       setProducts(
         response.value.map((p) => ({
@@ -88,7 +87,7 @@ export default function PretixPipelineBuilder(
             alert("You must enter both fields");
             return;
           }
-          const response = await requestZuboxFetchPretixEvents(
+          const response = await requestGenericIssuanceFetchPretixEvents(
             ZUPASS_SERVER_URL,
             { jwt, orgUrl, token }
           );

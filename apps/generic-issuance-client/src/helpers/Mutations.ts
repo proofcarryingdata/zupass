@@ -1,16 +1,16 @@
 import {
+  GenericIssuanceDeletePipelineResponse,
+  GenericIssuanceUpsertPipelineResponse,
   PipelineDefinition,
-  ZuboxDeletePipelineResponse,
-  ZuboxUpsertPipelineResponse,
-  requestZuboxDeletePipeline,
-  requestZuboxUpsertPipeline
+  requestGenericIssuanceDeletePipeline,
+  requestGenericIssuanceUpsertPipeline
 } from "@pcd/passport-interface";
 import { ZUPASS_SERVER_URL } from "../constants";
 
 export const savePipeline = async (
   userJWT: string,
   pipelineString: string
-): Promise<ZuboxUpsertPipelineResponse> => {
+): Promise<GenericIssuanceUpsertPipelineResponse> => {
   let pipeline: PipelineDefinition;
   try {
     pipeline = JSON.parse(pipelineString);
@@ -18,10 +18,13 @@ export const savePipeline = async (
     throw new Error(`Invalid JSON object: ${e}`);
   }
 
-  const saveResponse = await requestZuboxUpsertPipeline(ZUPASS_SERVER_URL, {
-    jwt: userJWT,
-    pipeline
-  });
+  const saveResponse = await requestGenericIssuanceUpsertPipeline(
+    ZUPASS_SERVER_URL,
+    {
+      jwt: userJWT,
+      pipeline
+    }
+  );
 
   return saveResponse;
 };
@@ -29,8 +32,8 @@ export const savePipeline = async (
 export const deletePipeline = async (
   userJWT: string,
   pipelineID: string
-): Promise<ZuboxDeletePipelineResponse> => {
-  const deleteResponse = await requestZuboxDeletePipeline(
+): Promise<GenericIssuanceDeletePipelineResponse> => {
+  const deleteResponse = await requestGenericIssuanceDeletePipeline(
     ZUPASS_SERVER_URL,
     pipelineID,
     userJWT

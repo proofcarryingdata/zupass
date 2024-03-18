@@ -5,7 +5,7 @@ import {
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 
-export interface ZuboxTicketAction {
+export interface PodboxTicketAction {
   checkin?: boolean;
   getContact?: boolean;
   giftBadge?: {
@@ -21,7 +21,7 @@ export interface TicketActionPayload {
   /**
    * The action a member of a pipeline wants to take.
    */
-  action: ZuboxTicketAction;
+  action: PodboxTicketAction;
 
   /**
    * The email pcd proving their membership in the pipeline.
@@ -47,7 +47,7 @@ export interface VerifiedTicketActionCredential {
  */
 export function createTicketActionCredentialPayload(
   emailPCD: SerializedPCD<EmailPCD>,
-  action: ZuboxTicketAction,
+  action: PodboxTicketAction,
   eventId: string,
   ticketId: string
 ): TicketActionPayload {
