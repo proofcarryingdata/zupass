@@ -90,6 +90,7 @@ import {
 import { traceLoadSummary, tracePipeline, traceUser } from "./honeycombQueries";
 import { instantiatePipeline } from "./pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "./pipelines/types";
+import { PipelineSlot } from "./types";
 import {
   getErrorLogs,
   getWarningLogs,
@@ -99,23 +100,6 @@ import {
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
-
-/**
- * It's not always possible to start a {@link Pipeline} given a {@link PipelineDefinition}
- * because a pipeline could be misconfigured.
- *
- * An {@link PipelineSlot} is used to represent a pair of {@link PipelineDefinition} and
- * its corresponding {@link Pipeline} if one was able to be started.
- */
-export interface PipelineSlot {
-  definition: PipelineDefinition;
-
-  // runtime information - intentionally ephemeral
-  instance?: Pipeline;
-  owner?: PipelineUser;
-  loadIncidentId?: string;
-  lastLoadDiscordMsgTimestamp?: Date;
-}
 
 export class GenericIssuanceService {
   private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
