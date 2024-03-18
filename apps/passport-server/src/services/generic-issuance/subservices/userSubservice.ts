@@ -1,0 +1,401 @@
+export class GenericIssuanceUserSubservice {
+  public constructor() {
+    this.pipelineSlots = [];
+  }
+
+  /**
+   * - loads all {@link PipelineDefinition}s from persistent storage
+   * - creates a {@link PipelineSlot} for each definition
+   * - attempts to instantiate the correct {@link Pipeline} for each definition,
+   *   according to that pipeline's {@link PipelineType}. Currently implemented
+   *   pipeline types include:
+   *     - {@link LemonadePipeline}
+   *     - {@link PretixPipeline}
+   *     - {@link CSVPipeline}
+   */
+  public async loadAndInstantiatePipelines(): Promise<void> {
+    return traced(SERVICE_NAME, "loadAndInstantiatePipelines", async (span) => {
+      const pipelinesFromDB = await this.definitionDB.loadPipelineDefinitions();
+      span?.setAttribute("pipeline_count", pipelinesFromDB.length);
+
+      await Promise.allSettled(
+        this.pipelineSlots.map(async (entry) => {
+          if (entry.instance) {
+            await entry.instance.stop();
+          }
+        })
+      );
+
+      this.pipelineSlots = await Promise.all(
+        pipelinesFromDB.map(async (pd: PipelineDefinition) => {
+          const slot: PipelineSlot = {
+            definition: pd,
+            owner: await this.userDB.getUserById(pd.ownerUserId)
+          };
+
+          // attempt to instantiate a {@link Pipeline}
+          // for this slot. no worries in case of error -
+          // log and continue
+          try {
+            slot.instance = await instantiatePipeline(
+              this.eddsaPrivateKey,
+              pd,
+              this.atomDB,
+              {
+                lemonadeAPI: this.lemonadeAPI,
+                genericPretixAPI: this.genericPretixAPI
+              },
+              this.zupassPublicKey,
+              this.rsaPrivateKey,
+              this.cacheService,
+              this.checkinDB,
+              this.contactDB,
+              this.badgeDB,
+              this.consumerDB,
+              this.semaphoreHistoryDB
+            );
+          } catch (e) {
+            this.rollbarService?.reportError(e);
+            logger(LOG_TAG, `failed to instantiate pipeline ${pd.id} `, e);
+          }
+
+          return slot;
+        })
+      );
+    });
+  }
+
+  /**
+   * All {@link Pipeline}s load data somehow. That's a 'first-class'
+   * capability.
+   */
+  private async performPipelineLoad(
+    pipelineSlot: PipelineSlot
+  ): Promise<PipelineLoadSummary> {
+    return traced<PipelineLoadSummary>(
+      SERVICE_NAME,
+      "performPipelineLoad",
+      async (span): Promise<PipelineLoadSummary> => {
+        const startTime = new Date();
+        const pipelineId = pipelineSlot.definition.id;
+        const pipeline: Pipeline | undefined = pipelineSlot.instance;
+        logger(
+          LOG_TAG,
+          `executing pipeline '${pipelineId}'` +
+            ` of type '${pipeline?.type}'` +
+            ` belonging to ${pipelineSlot.definition.ownerUserId}`
+        );
+        const owner = await this.userDB.getUserById(
+          pipelineSlot.definition.ownerUserId
+        );
+        traceUser(owner);
+        tracePipeline(pipelineSlot.definition);
+
+        if (pipelineSlot.definition.options?.paused) {
+          logger(
+            LOG_TAG,
+            `pipeline '${pipelineSlot.definition.id}' is paused, not loading`
+          );
+          const summary = {
+            atomsLoaded: 0,
+            lastRunEndTimestamp: new Date().toISOString(),
+            lastRunStartTimestamp: new Date().toISOString(),
+            latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
+            atomsExpected: 0,
+            success: true
+          };
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
+        }
+
+        if (!pipeline) {
+          logger(
+            LOG_TAG,
+            `pipeline '${pipelineId}' of type '${pipelineSlot.definition.type}'` +
+              ` is not running; skipping execution`
+          );
+          const summary: PipelineLoadSummary = {
+            lastRunStartTimestamp: startTime.toISOString(),
+            lastRunEndTimestamp: new Date().toISOString(),
+            latestLogs: [makePLogErr("failed to start pipeline")],
+            atomsExpected: 0,
+            atomsLoaded: 0,
+            success: false,
+            errorMessage: "failed to start pipeline"
+          };
+          this.definitionDB.saveLoadSummary(pipelineId, summary);
+          traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
+        }
+
+        try {
+          logger(
+            LOG_TAG,
+            `loading data for pipeline with id '${pipelineId}'` +
+              ` of type '${pipelineSlot.definition.type}'`
+          );
+          const summary = await pipeline.load();
+          logger(
+            LOG_TAG,
+            `successfully loaded data for pipeline with id '${pipelineId}'` +
+              ` of type '${pipelineSlot.definition.type}'`
+          );
+          this.definitionDB.saveLoadSummary(pipelineId, summary);
+          traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
+        } catch (e) {
+          this.rollbarService?.reportError(e);
+          logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
+          setError(e, span);
+          const summary = {
+            lastRunStartTimestamp: startTime.toISOString(),
+            lastRunEndTimestamp: new Date().toISOString(),
+            latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
+            atomsExpected: 0,
+            atomsLoaded: 0,
+            errorMessage: `failed to load pipeline\n${e}\n${
+              e instanceof Error ? e.stack : ""
+            }`,
+            success: false
+          } satisfies PipelineLoadSummary;
+          this.definitionDB.saveLoadSummary(pipelineId, summary);
+          traceLoadSummary(summary);
+          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          return summary;
+        }
+      }
+    );
+  }
+
+  /**
+   * Iterates over all instantiated {@link Pipeline}s and attempts to
+   * perform a load for each one. No individual pipeline load failure should
+   * prevent any other load from succeeding. Resolves when all pipelines complete
+   * loading. This means that a single pipeline whose load function takes
+   * a long time could stall the system.
+   *
+   * TODO: be robust to stalling. one way to do this could be to race the
+   * load promise with a `sleep(30_000)`, and killing pipelines that take
+   * longer than 30s.
+   */
+  public async performAllPipelineLoads(): Promise<void> {
+    return traced(SERVICE_NAME, "performAllPipelineLoads", async (span) => {
+      const pipelineIds = str(this.pipelineSlots.map((p) => p.definition.id));
+      logger(
+        LOG_TAG,
+        `loading data for ${this.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
+      );
+      span?.setAttribute("pipeline_ids", pipelineIds);
+
+      await Promise.allSettled(
+        this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
+          const runInfo = await this.performPipelineLoad(slot);
+          await this.definitionDB.saveLoadSummary(slot.definition.id, runInfo);
+        })
+      );
+    });
+  }
+
+  /**
+   * To be called after a pipeline finishes loading, either as part of the global
+   * pipeline loading schedule, or because the pipeline's definition was updated.
+   * Alerts the appropriate channels depending on the result of the pipeline load.
+   *
+   * Pipelines can be configured to opt in or out of alerts.
+   */
+  private async maybeAlertForPipelineRun(
+    slot: PipelineSlot,
+    runInfo: PipelineLoadSummary
+  ): Promise<void> {
+    const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
+    const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
+    const errorLogs = getErrorLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.errorLogIgnoreRegexes
+    );
+    const warningLogs = getWarningLogs(
+      runInfo.latestLogs,
+      slot.definition.options.alerts?.warningLogIgnoreRegexes
+    );
+    const discordTagList = slot.definition.options.alerts?.discordTags
+      ? " " +
+        slot.definition.options.alerts?.discordTags
+          .map((id) => `<@${id}>`)
+          .join(" ") +
+        " "
+      : "";
+
+    const pipelineUrl = urljoin(
+      podboxUrl,
+      `/#/`,
+      "pipelines",
+      slot.definition.id
+    );
+
+    let shouldAlert = false;
+    const alertReasons: string[] = [];
+
+    if (!runInfo.success) {
+      shouldAlert = true;
+      alertReasons.push("pipeline load error");
+    }
+
+    if (
+      errorLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogErrors
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has error logs\n: ${JSON.stringify(errorLogs, null, 2)}`
+      );
+    }
+
+    if (
+      warningLogs.length >= 1 &&
+      slot.definition.options.alerts?.alertOnLogWarnings
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline has warning logs\n ${JSON.stringify(warningLogs, null, 2)}`
+      );
+    }
+
+    if (
+      runInfo.atomsLoaded !== runInfo.atomsExpected &&
+      slot.definition.options.alerts?.alertOnAtomMismatch
+    ) {
+      shouldAlert = true;
+      alertReasons.push(
+        `pipeline atoms count ${runInfo.atomsLoaded} mismatches data count ${runInfo.atomsExpected}`
+      );
+    }
+
+    const alertReason = alertReasons.join("\n\n");
+
+    // in the if - send alert beginnings
+    if (shouldAlert) {
+      // pagerduty
+      if (
+        slot.definition.options.alerts?.loadIncidentPagePolicy &&
+        slot.definition.options.alerts?.pagerduty
+      ) {
+        const incident = await this.pagerdutyService?.triggerIncident(
+          `pipeline load error: '${pipelineDisplayName}'`,
+          `${pipelineUrl}\n${alertReason}`,
+          slot.definition.options.alerts?.loadIncidentPagePolicy,
+          `pipeline-load-error-` + slot.definition.id
+        );
+        if (incident) {
+          slot.loadIncidentId = incident.id;
+        }
+      }
+
+      // discord
+      if (slot.definition.options.alerts?.discordAlerts) {
+        let shouldMessageDiscord = false;
+        if (
+          // haven't messaged yet
+          !slot.lastLoadDiscordMsgTimestamp ||
+          // messaged too recently
+          (slot.lastLoadDiscordMsgTimestamp &&
+            Date.now() >
+              slot.lastLoadDiscordMsgTimestamp.getTime() +
+                GenericIssuanceService.DISCORD_ALERT_TIMEOUT_MS)
+        ) {
+          slot.lastLoadDiscordMsgTimestamp = new Date();
+          shouldMessageDiscord = true;
+        }
+
+        if (shouldMessageDiscord) {
+          this?.discordService?.sendAlert(
+            `🚨   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵\n` +
+              `\`\`\`\n${alertReason}\`\`\`\n` +
+              (runInfo.errorMessage
+                ? `\`\`\`\n${runInfo.errorMessage}\n\`\`\``
+                : ``)
+          );
+        }
+      }
+    }
+    // send alert resolutions
+    else {
+      if (slot.definition.options.alerts?.discordAlerts) {
+        if (slot.lastLoadDiscordMsgTimestamp) {
+          this?.discordService?.sendAlert(
+            `✅   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved`
+          );
+          slot.lastLoadDiscordMsgTimestamp = undefined;
+        }
+      }
+      if (slot.loadIncidentId) {
+        const incidentId = slot.loadIncidentId;
+        slot.loadIncidentId = undefined;
+        await this.pagerdutyService?.resolveIncident(incidentId);
+      }
+    }
+  }
+
+  /**
+   * Loads all data for all pipelines (that have been started). Waits 60s,
+   * then loads all data for all loaded pipelines again.
+   */
+  private async startPipelineLoadLoop(): Promise<void> {
+    // return traced(SERVICE_NAME, "startPipelineLoadLoop", async (span) => {
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    const span: any = undefined;
+
+    try {
+      await this.performAllPipelineLoads();
+    } catch (e) {
+      setError(e, span);
+      this.rollbarService?.reportError(e);
+      logger(LOG_TAG, "pipeline datas failed to refresh", e);
+    }
+
+    if (this.stopped) {
+      span?.setAttribute("stopped", true);
+      return;
+    }
+
+    logger(
+      LOG_TAG,
+      "scheduling next pipeline refresh for",
+      Math.floor(GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS / 1000),
+      "s from now"
+    );
+    span?.setAttribute(
+      "timeout_ms",
+      GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS
+    );
+
+    this.nextLoadTimeout = setTimeout(() => {
+      if (this.stopped) {
+        return;
+      }
+      this.startPipelineLoadLoop();
+    }, GenericIssuanceService.PIPELINE_REFRESH_INTERVAL_MS);
+    // });
+  }
+
+  private async getPipelineSlot(id: string): Promise<PipelineSlot | undefined> {
+    return this.pipelineSlots.find((p) => p.definition.id === id);
+  }
+
+  private async ensurePipelineSlotExists(id: string): Promise<PipelineSlot> {
+    const pipeline = await this.getPipelineSlot(id);
+    if (!pipeline) {
+      throw new Error(`no pipeline with id ${id} found`);
+    }
+    return pipeline;
+  }
+
+  private async ensurePipelineStarted(id: string): Promise<Pipeline> {
+    const pipeline = await this.ensurePipelineSlotExists(id);
+    if (!pipeline.instance) {
+      throw new Error(`no pipeline instance with id ${id} found`);
+    }
+    return pipeline.instance;
+  }
+}
