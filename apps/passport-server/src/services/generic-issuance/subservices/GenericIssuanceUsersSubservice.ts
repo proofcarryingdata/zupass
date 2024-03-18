@@ -12,7 +12,7 @@ import { PipelineUser } from "../pipelines/types";
 const SERVICE_NAME = "GENERIC_ISSUANCE_USER";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export class GenericIssuanceUserSubservice {
+export class GenericIssuanceUsersSubservice {
   private userDB: IPipelineUserDB;
   private stytchClient: Client | undefined;
   private genericIssuanceClientUrl: string;

@@ -72,8 +72,8 @@ import {
 } from "./capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "./honeycombQueries";
 import { Pipeline, PipelineUser } from "./pipelines/types";
-import { PipelineSubservice } from "./subservices/pipelineSubservice";
-import { GenericIssuanceUserSubservice } from "./subservices/userSubservice";
+import { GenericIssuancePipelineSubservice } from "./subservices/GenericIssuancePipelineSubservice";
+import { GenericIssuanceUsersSubservice } from "./subservices/GenericIssuanceUsersSubservice";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -92,8 +92,8 @@ export class GenericIssuanceService {
   private genericPretixAPI: IGenericPretixAPI;
 
   private rollbarService: RollbarService | null;
-  private pipelineSubservice: PipelineSubservice;
-  private usersSubservice: GenericIssuanceUserSubservice;
+  private pipelineSubservice: GenericIssuancePipelineSubservice;
+  private usersSubservice: GenericIssuanceUsersSubservice;
   private stopped: boolean;
 
   public constructor(
@@ -122,13 +122,13 @@ export class GenericIssuanceService {
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
     this.stopped = false;
 
-    this.usersSubservice = new GenericIssuanceUserSubservice(
+    this.usersSubservice = new GenericIssuanceUsersSubservice(
       this.userDB,
       stytchClient,
       genericIssuanceClientUrl
     );
 
-    this.pipelineSubservice = new PipelineSubservice(
+    this.pipelineSubservice = new GenericIssuancePipelineSubservice(
       context,
       eddsaPrivateKey,
       zupassPublicKey,
@@ -180,7 +180,7 @@ export class GenericIssuanceService {
     return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
   }
 
-  public getUserSubservice(): GenericIssuanceUserSubservice {
+  public getUserSubservice(): GenericIssuanceUsersSubservice {
     return this.usersSubservice;
   }
 

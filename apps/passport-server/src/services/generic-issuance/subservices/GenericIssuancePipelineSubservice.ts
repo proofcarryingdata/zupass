@@ -51,7 +51,7 @@ import {
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export class PipelineSubservice {
+export class GenericIssuancePipelineSubservice {
   private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
 
   /**
@@ -797,7 +797,7 @@ export class PipelineSubservice {
           (slot.lastLoadDiscordMsgTimestamp &&
             Date.now() >
               slot.lastLoadDiscordMsgTimestamp.getTime() +
-                PipelineSubservice.DISCORD_ALERT_TIMEOUT_MS)
+                GenericIssuancePipelineSubservice.DISCORD_ALERT_TIMEOUT_MS)
         ) {
           slot.lastLoadDiscordMsgTimestamp = new Date();
           shouldMessageDiscord = true;
@@ -857,12 +857,14 @@ export class PipelineSubservice {
     logger(
       LOG_TAG,
       "scheduling next pipeline refresh for",
-      Math.floor(PipelineSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000),
+      Math.floor(
+        GenericIssuancePipelineSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
+      ),
       "s from now"
     );
     span?.setAttribute(
       "timeout_ms",
-      PipelineSubservice.PIPELINE_REFRESH_INTERVAL_MS
+      GenericIssuancePipelineSubservice.PIPELINE_REFRESH_INTERVAL_MS
     );
 
     this.nextLoadTimeout = setTimeout(() => {
@@ -870,6 +872,6 @@ export class PipelineSubservice {
         return;
       }
       this.startPipelineLoadLoop();
-    }, PipelineSubservice.PIPELINE_REFRESH_INTERVAL_MS);
+    }, GenericIssuancePipelineSubservice.PIPELINE_REFRESH_INTERVAL_MS);
   }
 }
