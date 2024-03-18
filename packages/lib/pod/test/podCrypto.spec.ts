@@ -14,7 +14,7 @@ import { AltCryptCircomlibjs } from "./alternateCrypto";
 import { privateKey, sampleEntries1 } from "./common";
 
 describe("podCrypto helpers should work", async function () {
-  // TODO(artwyman): Test crypto helpers, removing this placeholder for manual examination.
+  // TODO(artwyman): Test crypto helpers, removing this placeholder.
   it("podCrypto should do something", function () {
     expect(true).to.eq(true);
   });

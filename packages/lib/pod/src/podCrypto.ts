@@ -92,7 +92,7 @@ export function decodeSignature(encodedSignature: string): Signature<bigint> {
  * is 32 bytes, represented as 64 hex digits.
  */
 export function encodePublicKey(rawPublicKey: Point<BigNumber>): string {
-  return toHexString(leBigIntToBuffer(packPublicKey(rawPublicKey)));
+  return toHexString(leBigIntToBuffer(packPublicKey(rawPublicKey), 32));
 }
 
 /**
