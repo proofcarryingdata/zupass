@@ -15,7 +15,7 @@ import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineChec
 import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
-import { GenericIssuanceService } from "../../../../src/services/generic-issuance/genericIssuanceService";
+import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService2";
 import {
   PRETIX_CHECKER,
   PretixPipeline
