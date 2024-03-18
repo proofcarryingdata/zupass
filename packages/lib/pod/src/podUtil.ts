@@ -9,10 +9,10 @@ import {
   POD_NAME_REGEX
 } from "./podTypes";
 
-// TODO(artwyman): Decide if these utils should all be published outside
+// TODO(POD-P3): Decide if these utils should all be published outside
 // of the package, or only a subset.
 
-// TODO(artwyman): Consider Base64 encoding rather than hex for the formats
+// TODO(POD-P2): Consider Base64 encoding rather than hex for the formats
 // below.  It would be smaller.
 
 /**
@@ -230,7 +230,7 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
  * will not affect the original.
  */
 export function clonePODValue(podValue: PODValue): PODValue {
-  // TODO(artwyman): When we support containers as values, this will have
+  // TODO(POD-P3): When we support containers as values, this will have
   // to become more complex.
   return { ...podValue };
 }

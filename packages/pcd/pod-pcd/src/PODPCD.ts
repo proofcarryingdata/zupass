@@ -38,9 +38,10 @@ export type PODPCDArgs = {
    * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
    */
   entries: ObjectArgument<PODEntries>;
-  // TODO(artwyman): Figure out if ObjectArgument works here.
-  // May be better to be a serialized string, or an array, or a custom type
-  // without bigints, depending on the needs of the prove screen.
+  // TODO(POD-P2): Figure out serializable format here.  ObjectArgument is
+  // intended to be directly JSON serializable, so can't contain bigints
+  // if used for network requests (e.g. ProveAndAdd).  The choice here should
+  // be driven by the needs of the Prove screen.
 
   /**
    * The signer's EdDSA private key.  This is a 32-byte value used to sign the
@@ -195,9 +196,9 @@ export async function deserialize(serialized: string): Promise<PODPCD> {
     alwaysParseAsBig: true
   }).parse(serialized);
 
-  // TODO(artwyman): More careful schema validation, likely with Zod, with
+  // TODO(POD-P2): More careful schema validation, likely with Zod, with
   // special handling of the PODEntries type and subtypes.
-  // TODO(artwyman): Backward-compatible schema versioning.
+  // TODO(POD-P3): Backward-compatible schema versioning.
   requireDefinedParameter(deserialized.id, "id");
   requireDefinedParameter(deserialized.claim, "claim");
   requireDefinedParameter(deserialized.claim.entries, "entries");
@@ -224,7 +225,9 @@ export async function deserialize(serialized: string): Promise<PODPCD> {
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(
-  // TODO(artwyman): Figure out why this is the only case where using PODPCD directly doesn't work
+  // TODO(ichub): Figure out why this is the only case where using PODPCD directly doesn't work.
+  // What's the right approach to PCD classes which want extra private or public
+  // data outside of claim + proof?
   pcd: PCD<PODPCDClaim, PODPCDProof>
 ): DisplayOptions {
   return {

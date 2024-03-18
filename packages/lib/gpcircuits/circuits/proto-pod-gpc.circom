@@ -58,7 +58,7 @@ template ProtoPODGPC (
         );
     }
 
-    // TODO(artwyman): Provide a way to (optionally?) ensure objects are unique
+    // TODO(POD-P3): Provide a way to (optionally?) ensure objects are unique
     // (comparing content IDs, or signers, or signatures).
 
     /*

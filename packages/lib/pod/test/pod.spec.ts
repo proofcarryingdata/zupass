@@ -61,6 +61,6 @@ describe("POD class should work", async function () {
     }
   });
 
-  // TODO(artwyman): Test malformed inputs
-  // TODO(artwyman): Test immutability - try to mutate returned values
+  // TODO(POD-P1): Test malformed inputs
+  // TODO(POD-P1): Test immutability - try to mutate returned values
 });

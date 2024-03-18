@@ -53,7 +53,7 @@ export type PODIntValue = {
   value: bigint;
 };
 
-// TODO(artwyman): Decide on default int bounds and sign for POD.
+// TODO(POD-P3): Decide on default int bounds and sign for POD.
 // These values limit ints to 63 bits unsigned, to leave room if we
 // decide on 64-bit signed later.
 

@@ -15,7 +15,7 @@ import { checkPublicKeyFormat, checkSignatureFormat } from "./podUtil";
  * to produce a root hash called the Content ID, which is then signed.  To
  * create a POD, use one of the static factory methods of this class.
  *
- * TODO(artwyman): Pointer to more detailed documention elsewhere.
+ * TODO(POD-P3): Pointer to more detailed documention elsewhere.
  *
  * Most features depending on the POD entries but not the signature are
  * provided by a PODContent instance available via `pod.content`.
@@ -153,9 +153,9 @@ export class POD {
       alwaysParseAsBig: true
     }).parse(serializedPOD);
 
-    // TODO(artwyman): More careful schema validation, likely with Zod, with
+    // TODO(POD-P2): More careful schema validation, likely with Zod, with
     // special handling of the PODEntries type and subtypes.
-    // TODO(artwyman): Backward-compatible schema versioning?
+    // TODO(POD-P3): Backward-compatible schema versioning?
     requireDefinedParameter(parsedPOD.entries, "entries");
     requireDefinedParameter(parsedPOD.signature, "signature");
     requireDefinedParameter(parsedPOD.signerPublicKey, "signerPublicKey");

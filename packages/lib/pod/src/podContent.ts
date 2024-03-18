@@ -51,7 +51,7 @@ export type PODEntryCircuitSignals = {
  * to produce a root hash called the Content ID, which is then signed.  To
  * create a POD, use one of the static factory methods of this class.
  *
- * TODO(artwyman): Pointer to more detailed documention elsewhere.
+ * TODO(POD-P3): Pointer to more detailed documention elsewhere.
  *
  * `PODContent` instances are usually contained in a signed `POD` instance.
  */
@@ -219,8 +219,8 @@ export class PODContent {
    * @returns `true` if the proof is valid.
    */
   public static verifyEntryProof(entryProof: PODEntryProof): boolean {
-    // TODO(artwyman): LeanIMT.verifyProof doesn't need the tree, just the hash.
-    // It could be made static in zk-kit via a PR submission.
+    // This doesn't need a tree since the root is in the proof.  It just
+    // needs a configured hash function.
     return new LeanIMT<bigint>(podMerkleTreeHash).verifyProof(entryProof);
   }
 

@@ -14,7 +14,7 @@ import { AltCryptCircomlibjs } from "./alternateCrypto";
 import { privateKey, sampleEntries1 } from "./common";
 
 describe("podCrypto helpers should work", async function () {
-  // TODO(artwyman): Test crypto helpers, removing this placeholder.
+  // TODO(POD-P1): Test crypto helpers, removing this placeholder.
   it("podCrypto should do something", function () {
     expect(true).to.eq(true);
   });
@@ -95,10 +95,10 @@ describe("podCrypto use of zk-kit should be compatible with circomlibjs", async 
     altCrypto = await AltCryptCircomlibjs.create();
   });
 
-  // TODO(artwyman): Compare hashing functions
-  // TODO(artwyman): Compare pack/unpack point
-  // TODO(artwyman): Compare pack/unpack public key
-  // TODO(artwyman): Compare pack/unpack signature
+  // TODO(POD-P1): Compare hashing functions
+  // TODO(POD-P1): Compare pack/unpack point
+  // TODO(POD-P1): Compare pack/unpack public key
+  // TODO(POD-P1): Compare pack/unpack signature
 
   it("signPODRoot should match", function () {
     const podContent = PODContent.fromEntries(sampleEntries1);

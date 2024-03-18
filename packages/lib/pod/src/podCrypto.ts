@@ -26,7 +26,7 @@ import {
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 function podStringHash(input: string): bigint {
-  // TODO(artwyman): Finalize choice of hash for POD names and string values.
+  // TODO(POD-P2): Finalize choice of hash for POD names and string values.
   return BigInt("0x" + sha256(input)) >> 8n;
 }
 
@@ -35,7 +35,7 @@ function podStringHash(input: string): bigint {
  * which could be one of multiple value types (see {@link podValueHash}).
  */
 function podIntHash(input: bigint): bigint {
-  // TODO(artwyman): Finalize choice of hash for POD integer values.
+  // TODO(POD-P2): Finalize choice of hash for POD integer values.
   return poseidon1([input]);
 }
 
@@ -55,7 +55,7 @@ export function podValueHash(podValue: PODValue): bigint {
       return podStringHash(podValue.value);
     case "int":
     case "cryptographic":
-      // TODO(artwyman): Finalize choice of hash for POD cryptographics.
+      // TODO(POD-P2): Finalize choice of hash for POD cryptographics.
       return podIntHash(podValue.value);
   }
 }

@@ -22,7 +22,7 @@ template EntryModule (
     // upper bound on the proofDepth input.
     MERKLE_MAX_DEPTH
 ) {
-    // TODO(artwyman): enable flag?  Or do we simply require prover to provide satisfying values (unrevealed)?
+    // TODO(POD-P2): enable flag?  Or do we simply require prover to provide satisfying values (unrevealed)?
 
     // Content ID is the root of the Merkle proof, while name hash is its leaf.
     signal input objectContentID, nameHash;
@@ -85,5 +85,5 @@ template EntryConstraintModule(
     signal otherValueHash <== InputSelector(MAX_ENTRIES)(entryValueHashes, equalToOtherEntryByIndex);
     valueHash === otherValueHash;
 
-    // TODO(artwyman): lowerbound, upperbound, more constraints.
+    // TODO(POD-P2): lowerbound, upperbound, more constraints.
 }

@@ -28,7 +28,7 @@ export class AltCryptCircomlibjs {
     return new AltCryptCircomlibjs(await buildEddsa());
   }
 
-  // TODO(artwyman): Fill in remaining helpers, notably hashes.
+  // TODO(POD-P1): Fill in remaining helpers, notably hashes.
 
   public signPODRoot(
     root: bigint,

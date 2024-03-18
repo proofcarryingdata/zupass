@@ -138,6 +138,6 @@ describe("PODContent class should work", async function () {
     expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
   });
 
-  // TODO(artwyman): Tests for mutability - i.e. mutating return values
-  // TODO(artwyman): Tests for illegal names & values in PODEntries
+  // TODO(POD-P1): Tests for mutability - i.e. mutating return values
+  // TODO(POD-P1): Tests for illegal names & values in PODEntries
 });

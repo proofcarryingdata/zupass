@@ -465,7 +465,7 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
     }
   });
 
-  // TODO(artwyman): Add more directed tests of individual features once
+  // TODO(POD-P2): Add more directed tests of individual features once
   // they are more stable. Should focus on cases not already handled in
   // utests of sub-modules.  Including:
   // - Different enable/disable config of various modules.
