@@ -71,7 +71,7 @@ import {
   isSemaphoreGroupCapability
 } from "./capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "./honeycombQueries";
-import { PipelineUser } from "./pipelines/types";
+import { Pipeline, PipelineUser } from "./pipelines/types";
 import { PipelineSubservice } from "./subservices/pipelineSubservice";
 import { GenericIssuanceUserSubservice } from "./subservices/userSubservice";
 
@@ -149,9 +149,9 @@ export class GenericIssuanceService {
     );
   }
 
-  public async start(): Promise<void> {
+  public async start(startLoadLoop?: boolean): Promise<void> {
     try {
-      await this.pipelineSubservice.start();
+      await this.pipelineSubservice.start(startLoadLoop);
       await this.usersSubservice.start();
     } catch (e) {
       this.rollbarService?.reportError(e);
@@ -291,6 +291,10 @@ export class GenericIssuanceService {
 
       return info;
     });
+  }
+
+  public getAllPipelineInstances(): Promise<Pipeline[]> {
+    return this.pipelineSubservice.getAllPipelineInstances();
   }
 
   /**

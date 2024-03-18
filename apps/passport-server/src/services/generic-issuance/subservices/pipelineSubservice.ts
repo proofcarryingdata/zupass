@@ -127,9 +127,13 @@ export class PipelineSubservice {
     this.userDB = userDB;
   }
 
-  public async start(): Promise<void> {
+  public async start(startLoadLoop?: boolean): Promise<void> {
     await this.loadAndInstantiatePipelines();
-    await this.startPipelineLoadLoop();
+    if (startLoadLoop !== false) {
+      await this.startPipelineLoadLoop();
+    } else {
+      await this.performAllPipelineLoads();
+    }
   }
 
   public async stop(): Promise<void> {

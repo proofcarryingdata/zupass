@@ -119,7 +119,7 @@ describe("Generic Issuance", function () {
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
-  let giService: GenericIssuanceService | null;
+  let giService: GenericIssuanceService;
 
   const lemonadeOAuthClientId = "edge-city-client-id";
 
@@ -598,15 +598,15 @@ t2,i1`,
     mockServer.listen({ onUnhandledRequest: "bypass" });
 
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
-    giService = giBackend.services.genericIssuanceService;
-    await giService?.stop();
+    giService = giBackend.services
+      .genericIssuanceService as GenericIssuanceService;
+    await giService.stop();
     const pipelineDefinitionDB = new PipelineDefinitionDB(
       giBackend.context.dbPool
     );
     await pipelineDefinitionDB.clearAllDefinitions();
     await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
-    await giService?.loadAndInstantiatePipelines();
-    await giService?.performAllPipelineLoads();
+    await giService.start(false);
   });
 
   this.beforeEach(async () => {
@@ -656,7 +656,7 @@ t2,i1`,
     "LemonadePipeline feed issuance and checkin for Edge City Denver",
     async () => {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -920,7 +920,7 @@ t2,i1`,
     "Lemonade pipeline Semaphore groups contain correct members",
     async function () {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -1002,7 +1002,7 @@ t2,i1`,
     "New users can sign up, get added to group, prove group membership",
     async function () {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
@@ -1252,7 +1252,7 @@ t2,i1`,
     "PretixPipeline issuance and checkin and PipelineInfo for Eth LatAm",
     async () => {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const pipeline = pipelines.find(PretixPipeline.is);
@@ -1497,7 +1497,7 @@ t2,i1`,
     "Pretix pipeline Semaphore groups contain correct members",
     async function () {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       expectToExist(pipelines);
       expectLength(pipelines, 3);
       const ethLatAmPipeline = pipelines.find(PretixPipeline.is);
@@ -1590,7 +1590,7 @@ t2,i1`,
     await restartPromise;
 
     // Find the running pipeline
-    const pipelines = await giService.getAllPipelines();
+    const pipelines = await giService.getAllPipelineInstances();
     expectToExist(pipelines);
     expectLength(pipelines, 3);
     const pipeline = pipelines.find(PretixPipeline.is);
@@ -1611,7 +1611,7 @@ t2,i1`,
 
   step("check-in and remote check-out works in Pretix", async function () {
     expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
+    const pipelines = await giService.getAllPipelineInstances();
     const pipeline = pipelines.find(PretixPipeline.is);
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -1787,7 +1787,7 @@ t2,i1`,
 
   step("check-in and remote check-out works in Lemonade", async function () {
     expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
+    const pipelines = await giService.getAllPipelineInstances();
     const pipeline = pipelines.find(LemonadePipeline.is);
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(edgeCityPipeline.id);
@@ -2091,7 +2091,7 @@ t2,i1`,
       );
 
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       const pipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
@@ -2107,7 +2107,7 @@ t2,i1`,
     "Mix of valid and invalid Lemonade tickets results in only valid ones being accepted",
     async function () {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       const pipeline = pipelines.find(LemonadePipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(edgeCityPipeline.id);
@@ -2166,7 +2166,7 @@ t2,i1`,
     "Pretix should not load tickets for an event with invalid settings",
     async function () {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -2197,7 +2197,7 @@ t2,i1`,
     "Pretix should not load tickets for events which have products with invalid settings",
     async function () {
       expectToExist(giService);
-      const pipelines = await giService.getAllPipelines();
+      const pipelines = await giService.getAllPipelineInstances();
       const pipeline = pipelines.find(PretixPipeline.is);
       expectToExist(pipeline);
       expect(pipeline.id).to.eq(ethLatAmPipeline.id);
@@ -2232,7 +2232,7 @@ t2,i1`,
 
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);
-    const pipelines = await giService.getAllPipelines();
+    const pipelines = await giService.getAllPipelineInstances();
     expectToExist(pipelines);
     expectLength(pipelines, 3);
     const edgeCityDenverPipeline = pipelines.find(LemonadePipeline.is);
