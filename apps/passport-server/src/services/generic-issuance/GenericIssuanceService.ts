@@ -80,7 +80,6 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuanceService {
   private context: ApplicationContext;
-
   private userDB: IPipelineUserDB;
   private atomDB: IPipelineAtomDB;
   private checkinDB: IPipelineCheckinDB;
@@ -88,13 +87,10 @@ export class GenericIssuanceService {
   private badgeDB: IBadgeGiftingDB;
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
-
   private genericPretixAPI: IGenericPretixAPI;
-
   private rollbarService: RollbarService | null;
   private pipelineSubservice: GenericIssuancePipelineSubservice;
   private usersSubservice: GenericIssuanceUsersSubservice;
-  private stopped: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -120,7 +116,6 @@ export class GenericIssuanceService {
     this.genericPretixAPI = pretixAPI;
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
-    this.stopped = false;
 
     this.usersSubservice = new GenericIssuanceUsersSubservice(
       this.userDB,
@@ -161,15 +156,6 @@ export class GenericIssuanceService {
   }
 
   public async stop(): Promise<void> {
-    if (this.stopped) {
-      logger(LOG_TAG, "already stopped - not stopping");
-      return;
-    }
-
-    logger(LOG_TAG, "stopping");
-
-    this.stopped = true;
-
     await this.pipelineSubservice.stop();
     await this.usersSubservice.stop();
   }

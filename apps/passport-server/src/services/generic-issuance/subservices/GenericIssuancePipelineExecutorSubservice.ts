@@ -58,7 +58,6 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
-  private pipelineSlots: PipelineSlot[];
   private eddsaPrivateKey: string;
   private definitionDB: IPipelineDefinitionDB;
   private userDB: IPipelineUserDB;
@@ -77,8 +76,8 @@ export class GenericIssuancePipelineExecutorSubservice {
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
-  private stopped = false;
   private pipelineSubservice: GenericIssuancePipelineSubservice;
+  private stopped = false;
 
   public constructor(
     context: ApplicationContext,
@@ -105,7 +104,6 @@ export class GenericIssuancePipelineExecutorSubservice {
     genericPretixAPI: IGenericPretixAPI
   ) {
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
-    this.pipelineSlots = [];
     this.atomDB = atomDB;
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.rsaPrivateKey = rsaPrivateKey;
@@ -168,7 +166,7 @@ export class GenericIssuancePipelineExecutorSubservice {
    *
    * Tl;dr syncs db <-> pipeline in memory
    */
-  private async restartPipeline(pipelineId: string): Promise<void> {
+  public async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
       span?.setAttribute("pipeline_id", pipelineId);
       const definition =
@@ -178,13 +176,14 @@ export class GenericIssuancePipelineExecutorSubservice {
           LOG_TAG,
           `can't restart pipeline with id ${pipelineId} - doesn't exist in database`
         );
-        this.pipelineSlots = this.pipelineSlots.filter(
-          (slot) => slot.definition.id !== pipelineId
-        );
+        this.pipelineSubservice.pipelineSlots =
+          this.pipelineSubservice.pipelineSlots.filter(
+            (slot) => slot.definition.id !== pipelineId
+          );
         return;
       }
 
-      let pipelineSlot = this.pipelineSlots.find(
+      let pipelineSlot = this.pipelineSubservice.pipelineSlots.find(
         (s) => s.definition.id === pipelineId
       );
       span?.setAttribute("slot_existed", !!pipelineSlot);
@@ -194,7 +193,7 @@ export class GenericIssuancePipelineExecutorSubservice {
           definition: definition,
           owner: await this.userDB.getUserById(definition.ownerUserId)
         };
-        this.pipelineSlots.push(pipelineSlot);
+        this.pipelineSubservice.pipelineSlots.push(pipelineSlot);
       } else {
         pipelineSlot.owner = await this.userDB.getUserById(
           definition.ownerUserId
@@ -259,14 +258,14 @@ export class GenericIssuancePipelineExecutorSubservice {
       span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
       await Promise.allSettled(
-        this.pipelineSlots.map(async (entry) => {
+        this.pipelineSubservice.pipelineSlots.map(async (entry) => {
           if (entry.instance) {
             await entry.instance.stop();
           }
         })
       );
 
-      this.pipelineSlots = await Promise.all(
+      this.pipelineSubservice.pipelineSlots = await Promise.all(
         pipelinesFromDB.map(async (pd: PipelineDefinition) => {
           const slot: PipelineSlot = {
             definition: pd,
@@ -422,18 +421,25 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private async performAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "performAllPipelineLoads", async (span) => {
-      const pipelineIds = str(this.pipelineSlots.map((p) => p.definition.id));
+      const pipelineIds = str(
+        this.pipelineSubservice.pipelineSlots.map((p) => p.definition.id)
+      );
       logger(
         LOG_TAG,
-        `loading data for ${this.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
+        `loading data for ${this.pipelineSubservice.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
       );
       span?.setAttribute("pipeline_ids", pipelineIds);
 
       await Promise.allSettled(
-        this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
-          const runInfo = await this.performPipelineLoad(slot);
-          await this.definitionDB.saveLoadSummary(slot.definition.id, runInfo);
-        })
+        this.pipelineSubservice.pipelineSlots.map(
+          async (slot: PipelineSlot): Promise<void> => {
+            const runInfo = await this.performPipelineLoad(slot);
+            await this.definitionDB.saveLoadSummary(
+              slot.definition.id,
+              runInfo
+            );
+          }
+        )
       );
     });
   }

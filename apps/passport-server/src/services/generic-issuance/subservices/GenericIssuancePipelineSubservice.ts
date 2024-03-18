@@ -33,7 +33,6 @@ import { PersistentCacheService } from "../../persistentCacheService";
 import { RollbarService } from "../../rollbarService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
-import { instantiatePipeline } from "../pipelines/instantiatePipeline";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import { GenericIssuancePipelineExecutorSubservice } from "./GenericIssuancePipelineExecutorSubservice";
@@ -42,18 +41,7 @@ const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuancePipelineSubservice {
-  private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
-
-  /**
-   * The pipeline data reload algorithm works as follows:
-   * 1. concurrently load all data for all pipelines
-   * 2. save that data
-   * 3. wait {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds
-   * 4. go back to step one
-   */
-  private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
-
-  private pipelineSlots: PipelineSlot[];
+  public pipelineSlots: PipelineSlot[];
   private eddsaPrivateKey: string;
   private definitionDB: IPipelineDefinitionDB;
   private userDB: IPipelineUserDB;
@@ -226,7 +214,7 @@ export class GenericIssuancePipelineSubservice {
       await this.definitionDB.clearDefinition(pipelineId);
       await this.definitionDB.saveLoadSummary(pipelineId, undefined);
       await this.atomDB.clear(pipelineId);
-      await this.restartPipeline(pipelineId);
+      await this.pipelineExecutorSubservice.restartPipeline(pipelineId);
     });
   }
 
@@ -316,7 +304,9 @@ export class GenericIssuancePipelineSubservice {
       await this.saveLoadSummary(validatedNewDefinition.id, undefined);
       await this.atomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
-      const restartPromise = this.restartPipeline(validatedNewDefinition.id);
+      const restartPromise = this.pipelineExecutorSubservice.restartPipeline(
+        validatedNewDefinition.id
+      );
       return { definition: validatedNewDefinition, restartPromise };
     });
   }
@@ -410,90 +400,6 @@ export class GenericIssuancePipelineSubservice {
       pipeline.ownerUserId === user.id ||
       pipeline.editorUserIds.includes(user.id)
     );
-  }
-
-  /**
-   * Makes sure that the pipeline that's running on the server
-   * for the given id is based off the latest pipeline configuration
-   * stored in the database.
-   *
-   * If a pipeline with the given definition does not exist in the database
-   * makes sure that no pipeline for it is running on the server.
-   *
-   * Tl;dr syncs db <-> pipeline in memory
-   */
-  private async restartPipeline(pipelineId: string): Promise<void> {
-    return traced(SERVICE_NAME, "restartPipeline", async (span) => {
-      span?.setAttribute("pipeline_id", pipelineId);
-      const definition = await this.loadPipelineDefinition(pipelineId);
-      if (!definition) {
-        logger(
-          LOG_TAG,
-          `can't restart pipeline with id ${pipelineId} - doesn't exist in database`
-        );
-        this.pipelineSlots = this.pipelineSlots.filter(
-          (slot) => slot.definition.id !== pipelineId
-        );
-        return;
-      }
-
-      let pipelineSlot = this.pipelineSlots.find(
-        (s) => s.definition.id === pipelineId
-      );
-      span?.setAttribute("slot_existed", !!pipelineSlot);
-
-      if (!pipelineSlot) {
-        pipelineSlot = {
-          definition: definition,
-          owner: await this.userDB.getUserById(definition.ownerUserId)
-        };
-        this.pipelineSlots.push(pipelineSlot);
-      } else {
-        pipelineSlot.owner = await this.userDB.getUserById(
-          definition.ownerUserId
-        );
-      }
-
-      tracePipeline(pipelineSlot.definition);
-      traceUser(pipelineSlot?.owner);
-
-      if (pipelineSlot.instance) {
-        logger(
-          LOG_TAG,
-          `killing already running pipeline instance '${pipelineId}'`
-        );
-        span?.setAttribute("stopping", true);
-        await pipelineSlot.instance.stop();
-      } else {
-        logger(
-          LOG_TAG,
-          `no need to kill existing pipeline - none exists '${pipelineId}'`
-        );
-      }
-
-      logger(LOG_TAG, `instantiating pipeline ${pipelineId}`);
-
-      pipelineSlot.definition = definition;
-      pipelineSlot.instance = await instantiatePipeline(
-        this.eddsaPrivateKey,
-        definition,
-        this.atomDB,
-        {
-          genericPretixAPI: this.genericPretixAPI,
-          lemonadeAPI: this.lemonadeAPI
-        },
-        this.zupassPublicKey,
-        this.rsaPrivateKey,
-        this.cacheService,
-        this.checkinDB,
-        this.contactDB,
-        this.badgeDB,
-        this.consumerDB,
-        this.semaphoreHistoryDB
-      );
-
-      await this.pipelineExecutorSubservice.performPipelineLoad(pipelineSlot);
-    });
   }
 
   public async saveLoadSummary(
