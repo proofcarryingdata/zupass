@@ -5,17 +5,14 @@ import {
   Feed,
   GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
-  GenericIssuancePipelineListEntry,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
-  GenericIssuanceSendEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
   ListFeedsResponseValue,
-  PipelineDefinition,
   PipelineInfoResponseValue,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -25,9 +22,8 @@ import {
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { normalizeEmail, str } from "@pcd/util";
-import { Request } from "express";
-import stytch, { Client, Session } from "stytch";
+import { str } from "@pcd/util";
+import stytch, { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { getBalances } from "../../database/queries/edgecity";
@@ -61,7 +57,7 @@ import { DiscordService } from "../discordService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
-import { setError, traceFlattenedObject, traced } from "../telemetryService";
+import { traceFlattenedObject, traced } from "../telemetryService";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -92,20 +88,9 @@ export class GenericIssuanceService {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
 
-  private lemonadeAPI: ILemonadeAPI;
   private genericPretixAPI: IGenericPretixAPI;
-  private stytchClient: Client | undefined;
-
-  private genericIssuanceClientUrl: string;
-  private eddsaPrivateKey: string;
-  private zupassPublicKey: EdDSAPublicKey;
-  private rsaPrivateKey: string;
-  private nextLoadTimeout: NodeJS.Timeout | undefined;
-  private stopped = false;
-  private cacheService: PersistentCacheService;
-  private pagerdutyService: PagerDutyService | null;
-  private discordService: DiscordService | null;
   private pipelineSubservice: PipelineSubservice;
+  private stopped: boolean;
   private usersSubservice: GenericIssuanceUserSubservice;
 
   public constructor(
@@ -122,8 +107,6 @@ export class GenericIssuanceService {
     discordService: DiscordService | null,
     cacheService: PersistentCacheService
   ) {
-    this.pagerdutyService = pagerdutyService;
-    this.discordService = discordService;
     this.context = context;
     this.rollbarService = rollbarService;
     this.userDB = new PipelineUserDB(context.dbPool);
@@ -131,23 +114,22 @@ export class GenericIssuanceService {
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
-    this.lemonadeAPI = lemonadeAPI;
     this.genericPretixAPI = pretixAPI;
-    this.eddsaPrivateKey = eddsaPrivateKey;
-    this.stytchClient = stytchClient;
-    this.genericIssuanceClientUrl = genericIssuanceClientUrl;
-    this.zupassPublicKey = zupassPublicKey;
-    this.rsaPrivateKey = newRSAPrivateKey();
-    this.cacheService = cacheService;
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
-    this.usersSubservice = new GenericIssuanceUserSubservice();
+    this.stopped = false;
+
+    this.usersSubservice = new GenericIssuanceUserSubservice(
+      this.userDB,
+      stytchClient,
+      genericIssuanceClientUrl
+    );
 
     this.pipelineSubservice = new PipelineSubservice(
       context,
       eddsaPrivateKey,
       zupassPublicKey,
-      this.rsaPrivateKey,
+      newRSAPrivateKey(),
       this.userDB,
       atomDB,
       this.checkinDB,
@@ -166,8 +148,8 @@ export class GenericIssuanceService {
 
   public async start(): Promise<void> {
     try {
-      await this.maybeSetupAdmins();
       await this.pipelineSubservice.start();
+      await this.usersSubservice.start();
     } catch (e) {
       this.rollbarService?.reportError(e);
       logger(LOG_TAG, "error starting GenericIssuanceService", e);
@@ -186,6 +168,7 @@ export class GenericIssuanceService {
     this.stopped = true;
 
     await this.pipelineSubservice.stop();
+    await this.usersSubservice.stop();
   }
 
   /**
@@ -230,7 +213,10 @@ export class GenericIssuanceService {
       tracePipeline(pipelineSlot.definition);
       const pipelineInstance =
         await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
-      this.ensureUserHasPipelineDefinitionAccess(user, pipelineSlot.definition);
+      this.pipelineSubservice.ensureUserHasPipelineDefinitionAccess(
+        user,
+        pipelineSlot.definition
+      );
 
       const pipelineFeeds: FeedIssuanceCapability[] =
         pipelineInstance.capabilities.filter(isFeedIssuanceCapability);
@@ -617,102 +603,6 @@ export class GenericIssuanceService {
     );
   }
 
-  /**
-   * Gets all piplines this user can see.
-   */
-  public async getAllUserPipelineDefinitions(
-    user: PipelineUser
-  ): Promise<GenericIssuancePipelineListEntry[]> {
-    return traced(
-      SERVICE_NAME,
-      "getAllUserPipelineDefinitions",
-      async (span) => {
-        logger(SERVICE_NAME, "getAllUserPipelineDefinitions", str(user));
-
-        const visiblePipelines = this.pipelineSubservice
-          .getAllPipelines()
-          .filter((slot) =>
-            this.userHasPipelineDefinitionAccess(user, slot.definition)
-          );
-        span?.setAttribute("pipeline_count", visiblePipelines.length);
-
-        return Promise.all(
-          visiblePipelines.map(async (slot) => {
-            const owner = slot.owner;
-            const summary = await this.pipelineSubservice.getLastLoadSummary(
-              slot.definition.id
-            );
-            return {
-              extraInfo: {
-                ownerEmail: owner?.email,
-                lastLoad: summary
-              },
-              pipeline: slot.definition
-            } satisfies GenericIssuancePipelineListEntry;
-          })
-        );
-      }
-    );
-  }
-
-  /**
-   * Returns whether or not the given {@link PipelineUser} has
-   * access to the given {@link Pipeline}.
-   */
-  private userHasPipelineDefinitionAccess(
-    user: PipelineUser | undefined,
-    pipeline: PipelineDefinition
-  ): boolean {
-    if (!user) {
-      return false;
-    }
-
-    return (
-      user.isAdmin ||
-      pipeline.ownerUserId === user.id ||
-      pipeline.editorUserIds.includes(user.id)
-    );
-  }
-
-  /**
-   * Throws an error if the given {@link PipelineUser} does not have
-   * access to the given {@link Pipeline}.
-   */
-  private ensureUserHasPipelineDefinitionAccess(
-    user: PipelineUser | undefined,
-    pipeline: PipelineDefinition | undefined
-  ): void {
-    if (!pipeline) {
-      throw new Error(`can't view undefined pipeline`);
-    }
-
-    const hasAccess = this.userHasPipelineDefinitionAccess(user, pipeline);
-    if (!hasAccess) {
-      throw new Error(`user ${user?.id} can not view pipeline ${pipeline?.id}`);
-    }
-  }
-
-  /**
-   * Loads a pipeline definition if the given {@link PipelineUser} has access.
-   */
-  public async loadPipelineDefinition(
-    user: PipelineUser,
-    pipelineId: string
-  ): Promise<PipelineDefinition> {
-    return traced(SERVICE_NAME, "loadPipelineDefinition", async (span) => {
-      logger(SERVICE_NAME, "loadPipelineDefinition", str(user), pipelineId);
-      traceUser(user);
-      const pipeline =
-        await this.pipelineSubservice.loadPipelineDefinition(pipelineId);
-      tracePipeline(pipeline);
-      if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline)) {
-        throw new PCDHTTPError(404, "Pipeline not found or not accessible");
-      }
-      span?.setAttribute("pipeline_type", pipeline.type);
-      return pipeline;
-    });
-  }
-
   public async fetchAllPretixEvents(
     orgUrl: string,
     token: string
@@ -728,120 +618,11 @@ export class GenericIssuanceService {
     return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
   }
 
-  public async getOrCreateUser(email: string): Promise<PipelineUser> {
-    return traced(SERVICE_NAME, "getOrCreateUser", async () => {
-      return this.userDB.getOrCreateUser(email);
-    });
-  }
-
   public async getAllPipelines(): Promise<Pipeline[]> {
     return this.pipelineSubservice
       .getAllPipelines()
       .map((p) => p.instance)
       .filter((p) => !!p) as Pipeline[];
-  }
-
-  private getEmailFromStytchSession(session: Session): string {
-    const email = session.authentication_factors.find(
-      (f) => !!f.email_factor?.email_address
-    )?.email_factor?.email_address;
-    if (!email) {
-      throw new PCDHTTPError(400, "Session did not use email authentication");
-    }
-    return email;
-  }
-
-  public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
-    return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
-      const reqBody = req?.body;
-      const jwt = reqBody?.jwt;
-
-      try {
-        span?.setAttribute("has_jwt", !!jwt);
-
-        // 1) make sure environment has been configured properly
-        //    i.e. if stytch is missing, we MUST be in development
-        if (!this.stytchClient && process.env.NODE_ENV === "production") {
-          throw new Error("expected to have stytch client in production ");
-        }
-
-        // 2) if we have a stytch client - check the user's JWT's session
-        if (this.stytchClient) {
-          const { session } = await this.stytchClient.sessions.authenticateJwt({
-            session_jwt: jwt
-          });
-          const email = this.getEmailFromStytchSession(session);
-          const user = await this.getOrCreateUser(email);
-          traceUser(user);
-          return user;
-        } else {
-          // 3) if we don't have a stytch client, and that's a valid state,
-          //    treats a jwt whose contents is some string with just an email
-          //    address in it as a valid JWT authenticate the requester to be
-          //    logged in as a new or existing user with the given email address
-          const user = await this.getOrCreateUser(jwt);
-          traceUser(user);
-          return user;
-        }
-      } catch (e) {
-        logger(LOG_TAG, "failed to authenticate stytch session", jwt, e);
-        throw new PCDHTTPError(401);
-      }
-    });
-  }
-
-  public async sendLoginEmail(
-    email: string
-  ): Promise<GenericIssuanceSendEmailResponseValue> {
-    return traced(SERVICE_NAME, "sendLoginEmail", async (span) => {
-      const normalizedEmail = normalizeEmail(email);
-      logger(LOG_TAG, "sendLoginEmail", normalizedEmail);
-      span?.setAttribute("email", normalizedEmail);
-
-      if (!this.stytchClient) {
-        span?.setAttribute("bypass", true);
-
-        if (process.env.NODE_ENV === "production") {
-          throw new Error(LOG_TAG + " missing stytch client");
-        }
-
-        if (process.env.STYTCH_BYPASS !== "true") {
-          throw new Error(LOG_TAG + " missing stytch client");
-        }
-
-        // sending email with STYTCH_BYPASS enabled is a no-op case
-        return undefined;
-      } else {
-        try {
-          await this.stytchClient.magicLinks.email.loginOrCreate({
-            email: normalizedEmail,
-            login_magic_link_url: this.genericIssuanceClientUrl,
-            login_expiration_minutes: 10,
-            signup_magic_link_url: this.genericIssuanceClientUrl,
-            signup_expiration_minutes: 10
-          });
-          logger(LOG_TAG, "sendLoginEmail success", normalizedEmail);
-        } catch (e) {
-          setError(e, span);
-          logger(LOG_TAG, `failed to send login email to ${normalizeEmail}`, e);
-          throw new PCDHTTPError(500, "Failed to send generic issuance email");
-        }
-
-        return undefined;
-      }
-    });
-  }
-
-  private async maybeSetupAdmins(): Promise<void> {
-    try {
-      const adminEmailsFromEnv = this.userDB.getEnvAdminEmails();
-      logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
-      for (const email of adminEmailsFromEnv) {
-        await this.userDB.setUserIsAdmin(email, true);
-      }
-    } catch (e) {
-      logger(LOG_TAG, `failed to set up generic issuance admins`, e);
-    }
   }
 
   public async getBalances(): Promise<EdgeCityBalance[]> {

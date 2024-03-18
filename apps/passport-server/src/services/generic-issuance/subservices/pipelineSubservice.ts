@@ -1,5 +1,6 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  GenericIssuancePipelineListEntry,
   PipelineDefinition,
   PipelineDefinitionSchema,
   PipelineLoadSummary,
@@ -298,6 +299,97 @@ export class PipelineSubservice {
       const restartPromise = this.restartPipeline(validatedNewDefinition.id);
       return { definition: validatedNewDefinition, restartPromise };
     });
+  }
+
+  /**
+   * Gets all piplines this user can see.
+   */
+  public async getAllUserPipelineDefinitions(
+    user: PipelineUser
+  ): Promise<GenericIssuancePipelineListEntry[]> {
+    return traced(
+      SERVICE_NAME,
+      "getAllUserPipelineDefinitions",
+      async (span) => {
+        logger(SERVICE_NAME, "getAllUserPipelineDefinitions", str(user));
+
+        const visiblePipelines = this.pipelineSlots.filter((slot) =>
+          this.userHasPipelineDefinitionAccess(user, slot.definition)
+        );
+        span?.setAttribute("pipeline_count", visiblePipelines.length);
+
+        return Promise.all(
+          visiblePipelines.map(async (slot) => {
+            const owner = slot.owner;
+            const summary = await this.getLastLoadSummary(slot.definition.id);
+            return {
+              extraInfo: {
+                ownerEmail: owner?.email,
+                lastLoad: summary
+              },
+              pipeline: slot.definition
+            } satisfies GenericIssuancePipelineListEntry;
+          })
+        );
+      }
+    );
+  }
+
+  /**
+   * Loads a pipeline definition if the given {@link PipelineUser} has access.
+   */
+  public async loadPipelineDefinitionForUser(
+    user: PipelineUser,
+    pipelineId: string
+  ): Promise<PipelineDefinition> {
+    return traced(SERVICE_NAME, "loadPipelineDefinition", async (span) => {
+      logger(SERVICE_NAME, "loadPipelineDefinition", str(user), pipelineId);
+      traceUser(user);
+      const pipeline = await this.loadPipelineDefinition(pipelineId);
+      tracePipeline(pipeline);
+      if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline)) {
+        throw new PCDHTTPError(404, "Pipeline not found or not accessible");
+      }
+      span?.setAttribute("pipeline_type", pipeline.type);
+      return pipeline;
+    });
+  }
+
+  /**
+   * Throws an error if the given {@link PipelineUser} does not have
+   * access to the given {@link Pipeline}.
+   */
+  public ensureUserHasPipelineDefinitionAccess(
+    user: PipelineUser | undefined,
+    pipeline: PipelineDefinition | undefined
+  ): void {
+    if (!pipeline) {
+      throw new Error(`can't view undefined pipeline`);
+    }
+
+    const hasAccess = this.userHasPipelineDefinitionAccess(user, pipeline);
+    if (!hasAccess) {
+      throw new Error(`user ${user?.id} can not view pipeline ${pipeline?.id}`);
+    }
+  }
+
+  /**
+   * Returns whether or not the given {@link PipelineUser} has
+   * access to the given {@link Pipeline}.
+   */
+  private userHasPipelineDefinitionAccess(
+    user: PipelineUser | undefined,
+    pipeline: PipelineDefinition
+  ): boolean {
+    if (!user) {
+      return false;
+    }
+
+    return (
+      user.isAdmin ||
+      pipeline.ownerUserId === user.id ||
+      pipeline.editorUserIds.includes(user.id)
+    );
   }
 
   /**
