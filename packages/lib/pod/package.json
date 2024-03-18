@@ -37,9 +37,9 @@
   },
   "devDependencies": {
     "@pcd/eddsa-pcd": "0.5.0",
-    "@pcd/eslint-config-custom": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
     "@pcd/pcd-types": "0.10.0",
-    "@pcd/tsconfig": "*",
+    "@pcd/tsconfig": "0.10.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
