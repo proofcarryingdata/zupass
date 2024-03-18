@@ -24,11 +24,11 @@ import {
 } from "../../helpers/util";
 import {
   PipelineAddManualTicketSection,
-  supportsManualTicketTable
+  supportsAddingManualTickets
 } from "./DetailsSections/PipelineAddManualTicketSection";
 import {
   PipelineDisplayManualTicketsSection,
-  supportsAddingManualTickets
+  supportsManualTicketTable
 } from "./DetailsSections/PipelineDisplayManualTicketsSection";
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
