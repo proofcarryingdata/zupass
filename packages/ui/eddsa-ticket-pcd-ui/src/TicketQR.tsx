@@ -7,7 +7,6 @@ import {
 import {
   QRDisplayWithRegenerateAndStorage,
   encodeQRPayload,
-  icons,
   styled
 } from "@pcd/passport-ui";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
@@ -20,6 +19,7 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback } from "react";
+import { VscLoading } from "react-icons/vsc";
 import urlJoin from "url-join";
 import { EdDSATicketPCDCardProps } from "./CardBody";
 
@@ -62,7 +62,7 @@ export function TicketQR({
         generateQRPayload={generate}
         loadingLogo={
           <LoadingIconContainer>
-            <LoadingIcon src={icons.qrCenterLoading} />
+            <LoadingSpinner />
           </LoadingIconContainer>
         }
         maxAgeMs={1000 * 60}
@@ -83,6 +83,14 @@ export function TicketQR({
       />
     );
   }
+}
+
+function LoadingSpinner(): JSX.Element {
+  return (
+    <Spin>
+      <VscLoading size={100} />
+    </Spin>
+  );
 }
 
 async function makeSerializedZKProof(
@@ -138,7 +146,20 @@ const LoadingIconContainer = styled.div`
   align-items: center;
 `;
 
-const LoadingIcon = styled.img`
-  height: 100px;
-  width: 100px;
+const Spin = styled.div`
+  animation: spin infinite 1s linear;
+
+  svg {
+    width: 100px;
+    height: 100px;
+  }
+
+  @keyframes spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
 `;

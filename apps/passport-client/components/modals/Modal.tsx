@@ -1,5 +1,5 @@
-import { icons } from "@pcd/passport-ui";
 import React, { ReactNode, useCallback, useEffect } from "react";
+import { GrClose } from "react-icons/gr";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
@@ -146,12 +146,7 @@ export function Modal(props: {
       <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
         {props.onClose && (
           <CircleButton diameter={20} padding={16} onClick={props.onClose}>
-            <img
-              draggable="false"
-              src={icons.closeWhite}
-              width={20}
-              height={20}
-            />
+            <GrClose style={{ height: "20px", width: "20px", color: "#fff" }} />
           </CircleButton>
         )}
         <Spacer h={32} />
