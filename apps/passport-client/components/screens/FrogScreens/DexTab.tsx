@@ -1,6 +1,7 @@
 import { EdDSAFrogPCD, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import { DexFrog } from "@pcd/passport-interface";
 import { Dispatch, SetStateAction, useMemo, useState } from "react";
+import { FaList } from "react-icons/fa6";
 import styled from "styled-components";
 import { useDispatch } from "../../../src/appHooks";
 import { RippleLoader } from "../../core/RippleLoader";
@@ -74,12 +75,7 @@ export function DexTab({
           onClick={(): void => setMode("list")}
           disabled={mode === "list"}
         >
-          <img
-            src={icons.inputObject}
-            draggable={false}
-            width={16}
-            height={16}
-          />
+          <FaList size={16} />
         </Button>
         <Button
           onClick={(): void => setMode("grid")}
