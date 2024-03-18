@@ -1,22 +1,15 @@
 import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import {
-  GenericPretixProduct,
   PipelineLogLevel,
-  PipelineType,
   PodboxTicketActionResponseValue,
-  PretixPipelineDefinition,
-  getI18nString,
   requestGenericIssuanceSemaphoreGroup
 } from "@pcd/passport-interface";
 import { ONE_SECOND_MS } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
-import { randomUUID } from "crypto";
 import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
-import { SetupServer, setupServer } from "msw/node";
 import { stopApplication } from "../../../../src/application";
 import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineCheckinDB";
 import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
@@ -29,11 +22,6 @@ import {
 } from "../../../../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineUser } from "../../../../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../../../../src/types";
-import {
-  GenericPretixDataMocker,
-  NAME_QUESTION_IDENTIFIER
-} from "../../../pretix/GenericPretixDataMocker";
-import { getMockGenericPretixHandlers } from "../../../pretix/MockGenericPretixServer";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
 import { expectLength, expectToExist, expectTrue } from "../../../util/util";
@@ -42,7 +30,8 @@ import {
   checkPipelineInfoEndpoint,
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline
-} from "../../utils";
+} from "../../util";
+import { setupPretixPipeline } from "./setupPretixPipeline";
 
 describe.only("Generic Issuance", function () {
   this.timeout(30_000);
@@ -53,164 +42,30 @@ describe.only("Generic Issuance", function () {
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
 
-  const adminGIUserId = randomUUID();
-  const adminGIUserEmail = "admin@test.com";
+  const {
+    adminGIUserId,
+    adminGIUserEmail,
 
-  /**
-   * Generic Issuance product user who has set up a {@link PretixPipeline}
-   * via the Generic Issuance UI.
-   */
-  const ethLatAmGIUserID = randomUUID();
-  const ethLatAmGIUserEmail = "eth-lat-am-gi-user@test.com";
-  const EthLatAmBouncerIdentity = new Identity();
-  const EthLatAmAttendeeIdentity = new Identity();
+    ethLatAmGIUserID,
+    ethLatAmGIUserEmail,
+    EthLatAmBouncerIdentity,
+    EthLatAmAttendeeIdentity,
 
-  const EthLatAmManualAttendeeIdentity = new Identity();
-  const EthLatAmManualAttendeeEmail = "manual_attendee@example.com";
+    EthLatAmManualAttendeeIdentity,
+    EthLatAmManualAttendeeEmail,
 
-  const EthLatAmManualBouncerIdentity = new Identity();
-  const EthLatAmManualBouncerEmail = "manual_bouncer@example.com";
+    EthLatAmManualBouncerIdentity,
+    EthLatAmManualBouncerEmail,
 
-  let mockServer: SetupServer;
-  const pretixBackend = new GenericPretixDataMocker();
-  const ethLatAmPretixOrganizer = pretixBackend.get().ethLatAmOrganizer;
-  const ethLatAmEvent = ethLatAmPretixOrganizer.ethLatAm;
-  const ethLatAmProducts = ethLatAmPretixOrganizer.productsByEventID.get(
-    ethLatAmEvent.slug
-  );
-  expectToExist(ethLatAmProducts);
-  /**
-   * We expect an Attendee, a Bouncer, and a Tshirt product
-   */
-  expectLength(ethLatAmProducts, 3);
-  const ethLatAmSuperuserProductIds: number[] = [
-    pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerProduct.id
-  ];
-  expectLength(ethLatAmSuperuserProductIds, 1);
-  expect([]);
+    mockServer,
+    pretixBackend,
+    ethLatAmPretixOrganizer,
 
-  const ethLatAmEventId = randomUUID();
-  const ethLatAmConfiguredEvents = [
-    {
-      genericIssuanceId: ethLatAmEventId,
-      externalId: ethLatAmEvent.slug,
-      name: "Eth LatAm",
-      products: ethLatAmProducts.map((product: GenericPretixProduct) => {
-        return {
-          externalId: product.id.toString(),
-          genericIssuanceId: randomUUID(),
-          name: getI18nString(product.name),
-          isSuperUser: ethLatAmSuperuserProductIds.includes(product.id),
-          nameQuestionPretixQuestionIdentitifier: NAME_QUESTION_IDENTIFIER
-        };
-      })
-    }
-  ];
+    ethLatAmEvent,
+    ethLatAmPipeline,
 
-  const ethLatAmAttendeeProduct = ethLatAmConfiguredEvents[0].products.find(
-    (product) => product.name == "eth-latam-attendee-product"
-  );
-  expectToExist(ethLatAmAttendeeProduct);
-  const ethLatAmBouncerProduct = ethLatAmConfiguredEvents[0].products.find(
-    (product) => product.name == "eth-lat-am-bouncer-product"
-  );
-  expectToExist(ethLatAmBouncerProduct);
-
-  const ethLatAmSemaphoreGroupIds = {
-    all: randomUUID(),
-    bouncers: randomUUID(),
-    attendees: randomUUID(),
-    attendeesAndBouncers: randomUUID()
-  };
-
-  const ethLatAmPipeline: PretixPipelineDefinition = {
-    ownerUserId: ethLatAmGIUserID,
-    timeCreated: new Date().toISOString(),
-    timeUpdated: new Date().toISOString(),
-    id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
-    editorUserIds: [],
-    options: {
-      // https://ethlatam.org/
-      feedOptions: {
-        feedDescription: "Eth Lat Am tickets! <copy>",
-        feedDisplayName: "Eth LatAm",
-        feedFolder: "Eth LatAm",
-        feedId: "eth-latam"
-      },
-      events: ethLatAmConfiguredEvents,
-      manualTickets: [
-        {
-          id: randomUUID(),
-          eventId: ethLatAmEventId,
-          productId: ethLatAmAttendeeProduct.genericIssuanceId,
-          attendeeEmail: EthLatAmManualAttendeeEmail,
-          attendeeName: "Manual Attendee"
-        },
-        {
-          id: randomUUID(),
-          eventId: ethLatAmEventId,
-          productId: ethLatAmBouncerProduct.genericIssuanceId,
-          attendeeEmail: EthLatAmManualBouncerEmail,
-          attendeeName: "Manual Bouncer"
-        }
-      ],
-      semaphoreGroups: [
-        {
-          // All attendees, irrespective of product type
-          name: "All EthLatAm Attendees",
-          groupId: ethLatAmSemaphoreGroupIds.all,
-          memberCriteria: [{ eventId: ethLatAmEventId }]
-        },
-        {
-          // Holders of bouncer-tier tickets
-          name: "EthLatAm Bouncers",
-          groupId: ethLatAmSemaphoreGroupIds.bouncers,
-          memberCriteria: [
-            {
-              eventId: ethLatAmEventId,
-              productId: ethLatAmBouncerProduct.genericIssuanceId
-            }
-          ]
-        },
-        {
-          // Holders of attendee-tier tickets
-          name: "EthLatAm Attendees",
-          groupId: ethLatAmSemaphoreGroupIds.attendees,
-          memberCriteria: [
-            {
-              eventId: ethLatAmEventId,
-              productId: ethLatAmAttendeeProduct.genericIssuanceId
-            }
-          ]
-        },
-        {
-          // Both holders of bouncer-tier tickets and attendee-tier tickets.
-          // In this case, this group will have the same membership as the
-          // "all" group, but if there were more tiers then this demonstrates
-          // how it would be possible to create arbitrary groupings.
-          name: "EthLatAm Bouncers and Attendees",
-          groupId: ethLatAmSemaphoreGroupIds.attendeesAndBouncers,
-          memberCriteria: [
-            {
-              eventId: ethLatAmEventId,
-              productId: ethLatAmBouncerProduct.genericIssuanceId
-            },
-            {
-              eventId: ethLatAmEventId,
-              productId: ethLatAmAttendeeProduct.genericIssuanceId
-            }
-          ]
-        }
-      ],
-      pretixAPIKey: ethLatAmPretixOrganizer.token,
-      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
-    },
-    type: PipelineType.Pretix
-  };
+    ethLatAmSemaphoreGroupIds
+  } = setupPretixPipeline();
 
   const pipelineDefinitions = [ethLatAmPipeline];
 
@@ -271,10 +126,6 @@ describe.only("Generic Issuance", function () {
       await userDB.getUserById(ethLatAmGIUser.id)
     );
 
-    const pretixOrgUrls = pretixBackend.get().organizersByOrgUrl.keys();
-    mockServer = setupServer(
-      ...getMockGenericPretixHandlers(pretixOrgUrls, pretixBackend)
-    );
     // The mock server will intercept any requests for URLs that are registered
     // with it. Unhandled requests will bypass the mock server.
     mockServer.listen({ onUnhandledRequest: "bypass" });

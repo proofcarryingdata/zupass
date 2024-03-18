@@ -52,7 +52,7 @@ import {
   checkPipelineInfoEndpoint,
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline
-} from "../../utils";
+} from "../../util";
 import { setupLemonadePipeline } from "./setupLemonadePipeline";
 
 describe.only("Generic Issuance Service LemonadePipeline", function () {

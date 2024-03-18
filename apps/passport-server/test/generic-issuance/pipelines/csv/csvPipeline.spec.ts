@@ -21,8 +21,8 @@ import { loadApolloErrorMessages } from "../../../lemonade/MockLemonadeServer";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
 import { expectLength, expectToExist, expectTrue } from "../../../util/util";
-import { assertUserMatches } from "../../utils";
-import { makeTestCSVPipelineDefinition } from "./testCsvPipelineDefinition";
+import { assertUserMatches } from "../../util";
+import { makeTestCSVPipelineDefinition } from "./makeTestCSVPipelineDefinition";
 
 describe.only("Generic Issuance", function () {
   this.timeout(30_000);
