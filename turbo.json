@@ -108,6 +108,8 @@
     "TEST_LEMONADE_BACKEND_URL",
     "PAGER_DUTY_API_KEY",
     "PAGER_DUTY_SERVICE_ID",
+    "NEXT_PUBLIC_PASSPORT_CLIENT_URL",
+    "NEXT_PUBLIC_PASSPORT_SERVER_URL",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
@@ -180,6 +182,8 @@
     "PAGER_DUTY_SERVICE_ID",
     "PODBOX_TITLE_TAG",
     "STYTCH_BYPASS",
+    "NEXT_PUBLIC_PASSPORT_CLIENT_URL",
+    "NEXT_PUBLIC_PASSPORT_SERVER_URL",
     "//// add env vars above this line ////"
   ]
 }
