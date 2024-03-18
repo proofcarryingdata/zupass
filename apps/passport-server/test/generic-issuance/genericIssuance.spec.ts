@@ -51,53 +51,59 @@ import * as MockDate from "mockdate";
 import { rest } from "msw";
 import { SetupServer, setupServer } from "msw/node";
 import urljoin from "url-join";
-import { LemonadeOAuthCredentials } from "../src/apis/lemonade/auth";
-import { ILemonadeAPI, getLemonadeAPI } from "../src/apis/lemonade/lemonadeAPI";
-import { LemonadeTicket, LemonadeTicketType } from "../src/apis/lemonade/types";
-import { stopApplication } from "../src/application";
-import { PipelineCheckinDB } from "../src/database/queries/pipelineCheckinDB";
-import { PipelineConsumerDB } from "../src/database/queries/pipelineConsumerDB";
-import { PipelineDefinitionDB } from "../src/database/queries/pipelineDefinitionDB";
-import { PipelineUserDB } from "../src/database/queries/pipelineUserDB";
-import { GenericIssuanceService } from "../src/services/generic-issuance/genericIssuanceService";
+import { LemonadeOAuthCredentials } from "../../src/apis/lemonade/auth";
+import {
+  ILemonadeAPI,
+  getLemonadeAPI
+} from "../../src/apis/lemonade/lemonadeAPI";
+import {
+  LemonadeTicket,
+  LemonadeTicketType
+} from "../../src/apis/lemonade/types";
+import { stopApplication } from "../../src/application";
+import { PipelineCheckinDB } from "../../src/database/queries/pipelineCheckinDB";
+import { PipelineConsumerDB } from "../../src/database/queries/pipelineConsumerDB";
+import { PipelineDefinitionDB } from "../../src/database/queries/pipelineDefinitionDB";
+import { PipelineUserDB } from "../../src/database/queries/pipelineUserDB";
+import { GenericIssuanceService } from "../../src/services/generic-issuance/genericIssuanceService";
 import {
   LEMONADE_CHECKER,
   LemonadePipeline
-} from "../src/services/generic-issuance/pipelines/LemonadePipeline";
+} from "../../src/services/generic-issuance/pipelines/LemonadePipeline";
 import {
   PRETIX_CHECKER,
   PretixPipeline
-} from "../src/services/generic-issuance/pipelines/PretixPipeline";
+} from "../../src/services/generic-issuance/pipelines/PretixPipeline";
 import {
   Pipeline,
   PipelineUser
-} from "../src/services/generic-issuance/pipelines/types";
-import { Zupass } from "../src/types";
-import { testCSVPipeline } from "./generic-issuance/testCSVPipeline";
+} from "../../src/services/generic-issuance/pipelines/types";
+import { Zupass } from "../../src/types";
 import {
   LemonadeDataMocker,
   LemonadeUser
-} from "./lemonade/LemonadeDataMocker";
+} from "../lemonade/LemonadeDataMocker";
 import {
   customLemonadeTicketHandler,
   getMockLemonadeHandlers,
   loadApolloErrorMessages,
   unregisteredLemonadeUserHandler
-} from "./lemonade/MockLemonadeServer";
-import { TestTokenSource } from "./lemonade/TestTokenSource";
+} from "../lemonade/MockLemonadeServer";
+import { TestTokenSource } from "../lemonade/TestTokenSource";
 import {
   GenericPretixDataMocker,
   NAME_QUESTION_IDENTIFIER
-} from "./pretix/GenericPretixDataMocker";
-import { getMockGenericPretixHandlers } from "./pretix/MockGenericPretixServer";
-import { overrideEnvironment, testingEnv } from "./util/env";
-import { startTestingApp } from "./util/startTestingApplication";
+} from "../pretix/GenericPretixDataMocker";
+import { getMockGenericPretixHandlers } from "../pretix/MockGenericPretixServer";
+import { overrideEnvironment, testingEnv } from "../util/env";
+import { startTestingApp } from "../util/startTestingApplication";
 import {
   expectFalse,
   expectLength,
   expectToExist,
   expectTrue
-} from "./util/util";
+} from "../util/util";
+import { testCSVPipeline } from "./testCSVPipeline";
 
 /**
  * {@link GenericIssuanceService}
