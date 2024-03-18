@@ -1,4 +1,3 @@
-import { icons } from "@pcd/passport-ui";
 import {
   ArgsDisplayOptions,
   ArgsOf,
@@ -33,6 +32,7 @@ import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
 import { Caption } from "../core";
 import { Chip, ChipsContainer } from "../core/Chip";
+import { icons } from "../icons";
 import Select from "./Select";
 
 /**
