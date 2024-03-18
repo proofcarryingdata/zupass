@@ -32,7 +32,6 @@ import {
   tracePipeline,
   traceUser
 } from "../honeycombQueries";
-import { instantiatePipeline } from "../pipelines/instantiatePipeline";
 import { Pipeline } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import {
@@ -42,6 +41,7 @@ import {
   makePLogInfo
 } from "../util";
 import { GenericIssuancePipelineSubservice } from "./GenericIssuancePipelineSubservice";
+import { instantiatePipeline } from "./utils/instantiatePipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;

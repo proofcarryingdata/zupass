@@ -5,23 +5,23 @@ import {
   isLemonadePipelineDefinition,
   isPretixPipelineDefinition
 } from "@pcd/passport-interface";
-import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
-import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
-import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
-import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
-import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
-import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
+import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";
+import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
+import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
+import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
+import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
   IContactSharingDB
-} from "../../../database/queries/ticketActionDBs";
-import { PersistentCacheService } from "../../persistentCacheService";
-import { traced } from "../../telemetryService";
-import { tracePipeline } from "../honeycombQueries";
-import { CSVPipeline } from "./CSVPipeline/CSVPipeline";
-import { LemonadePipeline } from "./LemonadePipeline";
-import { PretixPipeline } from "./PretixPipeline";
-import { Pipeline } from "./types";
+} from "../../../../database/queries/ticketActionDBs";
+import { PersistentCacheService } from "../../../persistentCacheService";
+import { traced } from "../../../telemetryService";
+import { tracePipeline } from "../../honeycombQueries";
+import { CSVPipeline } from "../../pipelines/CSVPipeline/CSVPipeline";
+import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
+import { PretixPipeline } from "../../pipelines/PretixPipeline";
+import { Pipeline } from "../../pipelines/types";
 
 /**
  * Given a {@link PipelineDefinition} (which is persisted to the database) instantiates
