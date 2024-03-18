@@ -1,5 +1,6 @@
 import { GenericIssuanceSendEmailResponseValue } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
+import { Request } from "express";
 import { Client, Session } from "stytch";
 import { IPipelineUserDB } from "../../../database/queries/pipelineUserDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
@@ -52,7 +53,7 @@ export class GenericIssuanceUserSubservice {
     return email;
   }
 
-  public async authenticateStytchSession(req: Request): Promise<PipelineUser> {
+  public async authSession(req: Request): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
       const reqBody = req?.body;
       const jwt = reqBody?.jwt;

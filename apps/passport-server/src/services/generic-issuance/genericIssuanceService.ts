@@ -5,6 +5,7 @@ import {
   Feed,
   GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
+  GenericIssuancePipelineListEntry,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
@@ -13,6 +14,7 @@ import {
   GenericPretixEvent,
   GenericPretixProduct,
   ListFeedsResponseValue,
+  PipelineDefinition,
   PipelineInfoResponseValue,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -69,7 +71,7 @@ import {
   isSemaphoreGroupCapability
 } from "./capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "./honeycombQueries";
-import { Pipeline, PipelineUser } from "./pipelines/types";
+import { PipelineUser } from "./pipelines/types";
 import { PipelineSubservice } from "./subservices/pipelineSubservice";
 import { GenericIssuanceUserSubservice } from "./subservices/userSubservice";
 
@@ -78,7 +80,6 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuanceService {
   private context: ApplicationContext;
-  private rollbarService: RollbarService | null;
 
   private userDB: IPipelineUserDB;
   private atomDB: IPipelineAtomDB;
@@ -89,9 +90,11 @@ export class GenericIssuanceService {
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
 
   private genericPretixAPI: IGenericPretixAPI;
+
+  private rollbarService: RollbarService | null;
   private pipelineSubservice: PipelineSubservice;
-  private stopped: boolean;
   private usersSubservice: GenericIssuanceUserSubservice;
+  private stopped: boolean;
 
   public constructor(
     context: ApplicationContext,
@@ -169,6 +172,16 @@ export class GenericIssuanceService {
 
     await this.pipelineSubservice.stop();
     await this.usersSubservice.stop();
+  }
+
+  public async getAllUserPipelineDefinitions(
+    user: PipelineUser
+  ): Promise<GenericIssuancePipelineListEntry[]> {
+    return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
+  }
+
+  public getUserSubservice(): GenericIssuanceUserSubservice {
+    return this.usersSubservice;
   }
 
   /**
@@ -338,8 +351,6 @@ export class GenericIssuanceService {
   /**
    * Handles incoming requests that hit a Pipeline which implements the checkin
    * capability for every pipeline this server manages.
-   *
-   * TODO: better logging and tracing.
    */
   public async handleCheckIn(
     req: GenericIssuanceCheckInRequest
@@ -550,6 +561,33 @@ export class GenericIssuanceService {
     );
   }
 
+  public async upsertPipelineDefinition(
+    user: PipelineUser,
+    pipelineDefinition: PipelineDefinition
+  ): Promise<{
+    definition: PipelineDefinition;
+    restartPromise: Promise<void>;
+  }> {
+    return this.pipelineSubservice.upsertPipelineDefinition(
+      user,
+      pipelineDefinition
+    );
+  }
+
+  public async deletePipelineDefinition(
+    user: PipelineUser,
+    pipelineId: string
+  ): Promise<void> {
+    return this.pipelineSubservice.deletePipelineDefinition(user, pipelineId);
+  }
+
+  public async loadPipelineDefinition(
+    user: PipelineUser,
+    id: string
+  ): Promise<PipelineDefinition | undefined> {
+    return this.pipelineSubservice.loadPipelineDefinitionForUser(user, id);
+  }
+
   public async handleGetValidSemaphoreGroup(
     pipelineId: string,
     groupId: string,
@@ -616,13 +654,6 @@ export class GenericIssuanceService {
     eventID: string
   ): Promise<GenericPretixProduct[]> {
     return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
-  }
-
-  public async getAllPipelines(): Promise<Pipeline[]> {
-    return this.pipelineSubservice
-      .getAllPipelines()
-      .map((p) => p.instance)
-      .filter((p) => !!p) as Pipeline[];
   }
 
   public async getBalances(): Promise<EdgeCityBalance[]> {

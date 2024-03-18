@@ -7,6 +7,7 @@ import {
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
+import _ from "lodash";
 import urljoin from "url-join";
 import { v4 as uuidv4 } from "uuid";
 import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
@@ -128,7 +129,7 @@ export class PipelineSubservice {
 
   public async start(): Promise<void> {
     await this.loadAndInstantiatePipelines();
-    this.startPipelineLoadLoop();
+    await this.startPipelineLoadLoop();
   }
 
   public async stop(): Promise<void> {
@@ -137,6 +138,12 @@ export class PipelineSubservice {
       clearTimeout(this.nextLoadTimeout);
       this.nextLoadTimeout = undefined;
     }
+  }
+
+  public async getAllPipelineInstances(): Promise<Pipeline[]> {
+    return this.pipelineSlots
+      .map((p) => p.instance)
+      .filter((p) => !!p) as Pipeline[];
   }
 
   public async getPipelineSlot(id: string): Promise<PipelineSlot | undefined> {
@@ -211,15 +218,15 @@ export class PipelineSubservice {
   }
 
   public async upsertPipelineDefinition(
-    newDefinition: PipelineDefinition,
-    user: PipelineUser
+    user: PipelineUser,
+    newDefinition: PipelineDefinition
   ): Promise<{
     definition: PipelineDefinition;
     restartPromise: Promise<void>;
   }> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
       logger(SERVICE_NAME, "upsertPipelineDefinition", str(newDefinition));
-      // traceUser(user);
+      traceUser(user);
 
       // TODO: do this in a transaction
       const existingPipelineDefinition = await this.loadPipelineDefinition(
@@ -231,27 +238,27 @@ export class PipelineSubservice {
 
       if (existingPipelineDefinition) {
         span?.setAttribute("is_new", false);
-        // this.ensureUserHasPipelineDefinitionAccess(
-        //   user,
-        //   existingPipelineDefinition
-        // );
-        // if (
-        //   existingPipelineDefinition.ownerUserId !==
-        //     newDefinition.ownerUserId &&
-        //   !user.isAdmin
-        // ) {
-        //   throw new PCDHTTPError(400, "Cannot change owner of pipeline");
-        // }
+        this.ensureUserHasPipelineDefinitionAccess(
+          user,
+          existingPipelineDefinition
+        );
+        if (
+          existingPipelineDefinition.ownerUserId !==
+            newDefinition.ownerUserId &&
+          !user.isAdmin
+        ) {
+          throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+        }
 
-        // if (
-        //   !user.isAdmin &&
-        //   !_.isEqual(
-        //     existingPipelineDefinition.options.alerts,
-        //     newDefinition.options.alerts
-        //   )
-        // ) {
-        //   throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
-        // }
+        if (
+          !user.isAdmin &&
+          !_.isEqual(
+            existingPipelineDefinition.options.alerts,
+            newDefinition.options.alerts
+          )
+        ) {
+          throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
+        }
       } else {
         // NEW PIPELINE!
         span?.setAttribute("is_new", true);
