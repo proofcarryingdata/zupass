@@ -25,9 +25,10 @@ export const PODPCDTypeName = "pod-pcd";
 /**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
- * It is empty because this package does not implement the `init` function.
+ *
+ * This package does not implement the `init` function.
  */
-export interface PODPCDInitArgs {}
+export type PODPCDInitArgs = unknown;
 
 /**
  * Defines the essential parameters required for creating a {@link PODPCD}.
