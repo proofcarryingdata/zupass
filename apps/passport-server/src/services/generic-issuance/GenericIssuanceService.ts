@@ -93,14 +93,14 @@ export class GenericIssuanceService {
 
   public constructor(
     context: ApplicationContext,
-    rollbarService: RollbarService | null,
+    zupassPublicKey: EdDSAPublicKey,
+    eddsaPrivateKey: string,
+    genericIssuanceClientUrl: string,
     pipelineAtomDB: IPipelineAtomDB,
+    pretixAPI: IGenericPretixAPI,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client | undefined,
-    genericIssuanceClientUrl: string,
-    pretixAPI: IGenericPretixAPI,
-    eddsaPrivateKey: string,
-    zupassPublicKey: EdDSAPublicKey,
+    rollbarService: RollbarService | null,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     cacheService: PersistentCacheService
@@ -748,14 +748,14 @@ export async function startGenericIssuanceService(
 
   const issuanceService = new GenericIssuanceService(
     context,
-    rollbarService,
+    zupassPublicKey,
+    pkeyEnv,
+    genericIssuanceClientUrl,
     context.pipelineAtomDB,
+    genericPretixAPI,
     lemonadeAPI,
     stytchClient,
-    genericIssuanceClientUrl,
-    genericPretixAPI,
-    pkeyEnv,
-    zupassPublicKey,
+    rollbarService,
     pagerDutyService,
     discordService,
     cacheService
