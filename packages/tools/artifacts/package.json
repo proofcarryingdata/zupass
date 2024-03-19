@@ -12,9 +12,6 @@
     "./README.md",
     "./LICENSE"
   ],
-  "engines": {
-    "node": ">=14.16"
-  },
   "scripts": {
     "start": "node src/index.js",
     "lint": "eslint **/*.js",
@@ -33,8 +30,8 @@
     "snarkjs": "^0.7.3"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "eslint": "^7.32.0"
+    "@pcd/eslint-config-custom": "0.10.0",
+    "eslint": "^8.57.0"
   },
   "publishConfig": {
     "access": "public"

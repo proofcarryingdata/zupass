@@ -133,6 +133,11 @@ export default function (plop) {
       },
       {
         type: "add",
+        templateFile: "templates/turbo.json.hbs",
+        path: `${packagesPath}/{{kebabCase group}}/{{kebabCase name}}/turbo.json`
+      },
+      {
+        type: "add",
         templateFile: "templates/tsconfig.esm.json.hbs",
         path: `${packagesPath}/{{kebabCase group}}/{{kebabCase name}}/tsconfig.esm.json`
       },

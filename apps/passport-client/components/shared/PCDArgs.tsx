@@ -1,4 +1,3 @@
-import { icons } from "@pcd/passport-ui";
 import {
   ArgsDisplayOptions,
   ArgsOf,
@@ -28,6 +27,10 @@ import {
 } from "@pcd/pcd-types";
 import _ from "lodash";
 import React, { useCallback, useEffect, useMemo, useState } from "react";
+import { FaCheck, FaHashtag, FaQuestion } from "react-icons/fa";
+import { FaInfo, FaList, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
+import { GrDocumentLocked } from "react-icons/gr";
+import { TbLetterT } from "react-icons/tb";
 import { Tooltip } from "react-tooltip";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
@@ -381,14 +384,7 @@ function ToggleListArgInput({
     (value: boolean) => {
       switch (type) {
         case "reveal":
-          return (
-            <img
-              draggable="false"
-              src={value ? icons.eyeOpen : icons.eyeClosed}
-              width={18}
-              height={18}
-            />
-          );
+          return value ? <FaRegEye size={18} /> : <FaRegEyeSlash size={18} />;
         default:
           return undefined;
       }
@@ -541,11 +537,12 @@ function ArgContainer({
     <ArgItemContainer hidden={hidden} error={!!error}>
       {!hideIcon && (
         <ArgItemIcon
-          src={argTypeIcons[argumentType]}
           draggable={false}
           aria-label={argumentType}
           title={argumentType}
-        />
+        >
+          {argTypeIcons[argumentType]}
+        </ArgItemIcon>
       )}
       <ArgItem>
         <ArgName>
@@ -559,12 +556,9 @@ function ArgContainer({
                   )}`}
                   data-tooltip-content={description}
                 >
-                  <TooltipIcon
-                    src={icons.info}
-                    width={14}
-                    height={14}
-                    draggable={false}
-                  />
+                  <TooltipIcon draggable={false}>
+                    <FaInfo />
+                  </TooltipIcon>
                 </a>
               )}
               <TooltipContainer
@@ -583,16 +577,16 @@ function ArgContainer({
   );
 }
 
-const argTypeIcons: Record<ArgumentTypeName, string> = {
-  String: icons.inputText,
-  Number: icons.inputNumber,
-  BigInt: icons.inputNumber,
-  Boolean: icons.checkmark,
-  StringArray: icons.inputObject,
-  Object: icons.inputObject,
-  ToggleList: icons.inputObject,
-  PCD: icons.inputPcd,
-  Unknown: icons.question
+const argTypeIcons: Record<ArgumentTypeName, JSX.Element> = {
+  PCD: <GrDocumentLocked />,
+  String: <TbLetterT />,
+  Number: <FaHashtag />,
+  BigInt: <FaHashtag />,
+  Object: <FaList />,
+  StringArray: <FaList />,
+  ToggleList: <FaList />,
+  Boolean: <FaCheck />,
+  Unknown: <FaQuestion />
 };
 
 const ArgName = styled.div`
@@ -623,15 +617,21 @@ const ArgItemContainer = styled.div<{ hidden: boolean; error: boolean }>`
   display: ${({ hidden }): string => (hidden ? "none" : "flex")};
 `;
 
-const ArgItemIcon = styled.img`
-  width: 18px;
-  height: 18px;
+const ArgItemIcon = styled.div`
+  svg {
+    fill: #fff;
+    width: 18px;
+    height: 18px;
+  }
   filter: opacity(0.8);
 `;
 
-const TooltipIcon = styled.img`
-  width: 12px;
-  height: 12px;
+const TooltipIcon = styled.div`
+  svg {
+    fill: #fff;
+    width: 12px;
+    height: 12px;
+  }
   filter: opacity(0.8);
 `;
 

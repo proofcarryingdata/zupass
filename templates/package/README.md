@@ -20,4 +20,4 @@ As a shortcut, you can also run `yarn generate-package [group] [package-name]`.
 
 ## Template package contents
 
-Template packages include all of the necessary `tsconfig`, `eslint` and `package.json` files. They also include a single `src` file and a test file containing one test that passes by default. Out of the box, `yarn build`, `yarn lint`, and `yarn test` all work.
+Template packages include all of the necessary `tsconfig`, `eslint`, `turbo.json` and `package.json` files. They also include a single `src` file and a test file containing one test that passes by default. Out of the box, `yarn build`, `yarn lint`, and `yarn test` all work.

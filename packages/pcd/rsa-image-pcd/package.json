@@ -34,13 +34,13 @@
     "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/node-rsa": "^1.1.1",
     "@types/uuid": "^9.0.0",
-    "eslint": "^7.32.0",
+    "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"

@@ -13,6 +13,7 @@
     "analyze-bundle": "yarn build && esbuild-visualizer --metadata ./public/js/bundle-size.json --filename public/bundle-stats.html && open public/bundle-stats.html"
   },
   "dependencies": {
+    "@babel/runtime": "^7.24.0",
     "@pcd/eddsa-frog-pcd": "0.2.0",
     "@pcd/eddsa-frog-pcd-ui": "0.1.0",
     "@pcd/eddsa-pcd": "0.5.0",
@@ -57,6 +58,7 @@
     "@semaphore-protocol/identity": "^3.15.2",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
+    "csstype": "^3.1.3",
     "dotenv": "^16.0.3",
     "email-validator": "^2.0.4",
     "fast-json-stable-stringify": "^2.1.0",
@@ -65,6 +67,7 @@
     "js-sha256": "^0.11.0",
     "lodash": "^4.17.21",
     "pretty-ms": "^8.0.0",
+    "prop-types": "^15.8.1",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",
     "react-hot-toast": "^2.4.1",
@@ -91,7 +94,7 @@
   "devDependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
     "@esbuild-plugins/node-modules-polyfill": "^0.2.2",
-    "@pcd/eslint-config-custom": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
     "@types/chai": "^4.3.11",
     "@types/email-validator": "^1.0.6",
     "@types/express": "^4.17.17",
@@ -105,7 +108,7 @@
     "@typescript-eslint/parser": "^5.56.0",
     "esbuild": "^0.17.10",
     "esbuild-visualizer": "^0.4.1",
-    "eslint": "7.32.0",
+    "eslint": "8.57.0",
     "eslint-plugin-react": "^7.32.2",
     "eslint-plugin-react-hooks": "^4.6.0",
     "express": "^4.18.2",

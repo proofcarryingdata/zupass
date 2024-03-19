@@ -1,0 +1,21 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "dotEnv": [".env"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "public/**",
+        "src/**",
+        "dev.ts",
+        "next-env.d.ts",
+        "next.config.json",
+        "postcss.config.js",
+        "tailwind.config.ts"
+      ],
+      "outputs": ["out/**"],
+      "cache": true
+    }
+  }
+}

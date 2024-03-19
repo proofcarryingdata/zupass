@@ -1,0 +1,20 @@
+{{! this file integrates your new package with turborepo }}
+{{! specifically, the task caching aspect of it. }}
+{{! you should modify each task's `inputs` and `outputs` }}
+{{! configuration to reflect the build/test configuration of your package }}
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$", "src/**", "test/**"],
+      "outputs": ["dist/**", "*.tsbuildinfo"],
+      "cache": true
+    },
+    "test": {
+      "cache": true,
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "test/**"]
+    }
+  }
+}
