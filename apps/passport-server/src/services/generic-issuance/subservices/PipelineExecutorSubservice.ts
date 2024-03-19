@@ -3,7 +3,6 @@ import {
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
-import urljoin from "url-join";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
@@ -16,25 +15,19 @@ import {
 } from "../honeycombQueries";
 import { Pipeline } from "../pipelines/types";
 import { PipelineSlot } from "../types";
-import {
-  getErrorLogs,
-  getWarningLogs,
-  makePLogErr,
-  makePLogInfo
-} from "../util";
+import { makePLogErr, makePLogInfo } from "../util";
 import { PipelineSubservice } from "./PipelineSubservice";
 import { UserSubservice } from "./UserSubservice";
 import {
   InstantiatePipelineArgs,
   instantiatePipeline
 } from "./utils/instantiatePipeline";
+import { maybeAlertForPipelineRun } from "./utils/maybeAlertForPipelineRun";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class PipelineExecutorSubservice {
-  private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
-
   /**
    * The pipeline data reload algorithm works as follows:
    * 1. concurrently load all data for all pipelines
@@ -275,7 +268,12 @@ export class PipelineExecutorSubservice {
             atomsExpected: 0,
             success: true
           };
-          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          maybeAlertForPipelineRun(
+            pipelineSlot,
+            summary,
+            this.pagerdutyService,
+            this.discordService
+          );
           return summary;
         }
 
@@ -296,7 +294,13 @@ export class PipelineExecutorSubservice {
           };
           this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
-          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          maybeAlertForPipelineRun(
+            pipelineSlot,
+            summary,
+
+            this.pagerdutyService,
+            this.discordService
+          );
           return summary;
         }
 
@@ -314,7 +318,12 @@ export class PipelineExecutorSubservice {
           );
           this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
-          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          maybeAlertForPipelineRun(
+            pipelineSlot,
+            summary,
+            this.pagerdutyService,
+            this.discordService
+          );
           return summary;
         } catch (e) {
           this.rollbarService?.reportError(e);
@@ -333,7 +342,12 @@ export class PipelineExecutorSubservice {
           } satisfies PipelineLoadSummary;
           this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
-          this.maybeAlertForPipelineRun(pipelineSlot, summary);
+          maybeAlertForPipelineRun(
+            pipelineSlot,
+            summary,
+            this.pagerdutyService,
+            this.discordService
+          );
           return summary;
         }
       }
@@ -370,145 +384,6 @@ export class PipelineExecutorSubservice {
         })
       );
     });
-  }
-
-  /**
-   * To be called after a pipeline finishes loading, either as part of the global
-   * pipeline loading schedule, or because the pipeline's definition was updated.
-   * Alerts the appropriate channels depending on the result of the pipeline load.
-   *
-   * Pipelines can be configured to opt in or out of alerts.
-   */
-  private async maybeAlertForPipelineRun(
-    slot: PipelineSlot,
-    runInfo: PipelineLoadSummary
-  ): Promise<void> {
-    const podboxUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL ?? "";
-    const pipelineDisplayName = slot?.definition.options?.name ?? "untitled";
-    const errorLogs = getErrorLogs(
-      runInfo.latestLogs,
-      slot.definition.options.alerts?.errorLogIgnoreRegexes
-    );
-    const warningLogs = getWarningLogs(
-      runInfo.latestLogs,
-      slot.definition.options.alerts?.warningLogIgnoreRegexes
-    );
-    const discordTagList = slot.definition.options.alerts?.discordTags
-      ? " " +
-        slot.definition.options.alerts?.discordTags
-          .map((id) => `<@${id}>`)
-          .join(" ") +
-        " "
-      : "";
-
-    const pipelineUrl = urljoin(
-      podboxUrl,
-      `/#/`,
-      "pipelines",
-      slot.definition.id
-    );
-
-    let shouldAlert = false;
-    const alertReasons: string[] = [];
-
-    if (!runInfo.success) {
-      shouldAlert = true;
-      alertReasons.push("pipeline load error");
-    }
-
-    if (
-      errorLogs.length >= 1 &&
-      slot.definition.options.alerts?.alertOnLogErrors
-    ) {
-      shouldAlert = true;
-      alertReasons.push(
-        `pipeline has error logs\n: ${JSON.stringify(errorLogs, null, 2)}`
-      );
-    }
-
-    if (
-      warningLogs.length >= 1 &&
-      slot.definition.options.alerts?.alertOnLogWarnings
-    ) {
-      shouldAlert = true;
-      alertReasons.push(
-        `pipeline has warning logs\n ${JSON.stringify(warningLogs, null, 2)}`
-      );
-    }
-
-    if (
-      runInfo.atomsLoaded !== runInfo.atomsExpected &&
-      slot.definition.options.alerts?.alertOnAtomMismatch
-    ) {
-      shouldAlert = true;
-      alertReasons.push(
-        `pipeline atoms count ${runInfo.atomsLoaded} mismatches data count ${runInfo.atomsExpected}`
-      );
-    }
-
-    const alertReason = alertReasons.join("\n\n");
-
-    // in the if - send alert beginnings
-    if (shouldAlert) {
-      // pagerduty
-      if (
-        slot.definition.options.alerts?.loadIncidentPagePolicy &&
-        slot.definition.options.alerts?.pagerduty
-      ) {
-        const incident = await this.pagerdutyService?.triggerIncident(
-          `pipeline load error: '${pipelineDisplayName}'`,
-          `${pipelineUrl}\n${alertReason}`,
-          slot.definition.options.alerts?.loadIncidentPagePolicy,
-          `pipeline-load-error-` + slot.definition.id
-        );
-        if (incident) {
-          slot.loadIncidentId = incident.id;
-        }
-      }
-
-      // discord
-      if (slot.definition.options.alerts?.discordAlerts) {
-        let shouldMessageDiscord = false;
-        if (
-          // haven't messaged yet
-          !slot.lastLoadDiscordMsgTimestamp ||
-          // messaged too recently
-          (slot.lastLoadDiscordMsgTimestamp &&
-            Date.now() >
-              slot.lastLoadDiscordMsgTimestamp.getTime() +
-                PipelineExecutorSubservice.DISCORD_ALERT_TIMEOUT_MS)
-        ) {
-          slot.lastLoadDiscordMsgTimestamp = new Date();
-          shouldMessageDiscord = true;
-        }
-
-        if (shouldMessageDiscord) {
-          this?.discordService?.sendAlert(
-            `🚨   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) failed to load 😵\n` +
-              `\`\`\`\n${alertReason}\`\`\`\n` +
-              (runInfo.errorMessage
-                ? `\`\`\`\n${runInfo.errorMessage}\n\`\`\``
-                : ``)
-          );
-        }
-      }
-    }
-    // send alert resolutions
-    else {
-      if (slot.definition.options.alerts?.discordAlerts) {
-        if (slot.lastLoadDiscordMsgTimestamp) {
-          this?.discordService?.sendAlert(
-            `✅   [Podbox](${podboxUrl}) Alert${discordTagList}- Pipeline [\`${pipelineDisplayName}\`](${pipelineUrl}) load error resolved`
-          );
-          slot.lastLoadDiscordMsgTimestamp = undefined;
-        }
-      }
-      if (slot.loadIncidentId) {
-        const incidentId = slot.loadIncidentId;
-        slot.loadIncidentId = undefined;
-        await this.pagerdutyService?.resolveIncident(incidentId);
-      }
-    }
   }
 
   /**
