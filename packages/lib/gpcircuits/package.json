@@ -25,10 +25,11 @@
     "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
-  "dependencies": {},
+  "dependencies": {
+    "@pcd/pod": "0.0.1"
+  },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.10.0",
-    "@pcd/pod": "0.0.1",
     "@pcd/tsconfig": "0.10.0",
     "@pcd/util": "^0.4.0",
     "@semaphore-protocol/identity": "^3.15.2",
