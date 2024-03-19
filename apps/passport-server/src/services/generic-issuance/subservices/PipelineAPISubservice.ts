@@ -69,14 +69,12 @@ export class PipelineAPISubservice {
         await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
       const feed = ensureFeedIssuanceCapability(pipeline, req.feedId);
       const feedResponse = await feed.issue(req);
-
       traceFlattenedObject(span, {
         result: {
           actionCount: feedResponse.actions.length,
           pcdCount: getPcdsFromActions(feedResponse.actions).length
         }
       });
-
       return feedResponse;
     });
   }

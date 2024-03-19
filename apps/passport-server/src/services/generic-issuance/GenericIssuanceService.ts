@@ -24,7 +24,7 @@ import { Request } from "express";
 import { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
-import { getBalances } from "../../database/queries/edgecity";
+import { getEdgeCityBalances } from "../../database/queries/getEdgeCityBalances";
 import { IPipelineAtomDB } from "../../database/queries/pipelineAtomDB";
 import {
   IPipelineCheckinDB,
@@ -99,7 +99,6 @@ export class GenericIssuanceService {
       stytchClient,
       genericIssuanceClientUrl
     );
-
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
@@ -201,8 +200,8 @@ export class GenericIssuanceService {
     return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
   }
 
-  public async getBalances(): Promise<EdgeCityBalance[]> {
-    return getBalances(this.context.dbPool);
+  public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
+    return getEdgeCityBalances(this.context.dbPool);
   }
 
   public async handlePollFeed(

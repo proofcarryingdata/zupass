@@ -377,7 +377,7 @@ export function initGenericIssuanceRoutes(
 
   app.post("/edgecity/balances", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    res.send(await genericIssuanceService.getBalances());
+    res.send(await genericIssuanceService.getEdgeCityBalances());
   });
 
   /**
