@@ -22,7 +22,7 @@ import {
 
 describe("proto-pod-gpc.ProtoPODGPC should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  this.timeout(15000);
+  this.timeout(30_000);
   let circuit: WitnessTester<
     ProtoPODGPCInputNamesType,
     ProtoPODGPCOutputNamesType
