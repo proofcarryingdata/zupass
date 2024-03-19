@@ -1,14 +1,27 @@
-import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
+  ActionConfigResponseValue,
   EdgeCityBalance,
+  GenericIssuanceCheckInRequest,
+  GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
+  GenericIssuancePipelineSemaphoreGroupsResponseValue,
+  GenericIssuancePreCheckRequest,
+  GenericIssuanceSemaphoreGroupResponseValue,
+  GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceSendEmailResponseValue,
+  GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
-  PipelineDefinition
+  ListFeedsResponseValue,
+  PipelineDefinition,
+  PipelineInfoResponseValue,
+  PodboxTicketActionResponseValue,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { Request } from "express";
-import stytch, { Client } from "stytch";
+import { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
 import { getBalances } from "../../database/queries/edgecity";
@@ -90,6 +103,7 @@ export class GenericIssuanceService {
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
+      this.consumerDB,
       this.userSubservice,
       pagerdutyService,
       discordService,
@@ -190,118 +204,84 @@ export class GenericIssuanceService {
   public async getBalances(): Promise<EdgeCityBalance[]> {
     return getBalances(this.context.dbPool);
   }
-}
 
-export async function startGenericIssuanceService(
-  context: ApplicationContext,
-  rollbarService: RollbarService | null,
-  lemonadeAPI: ILemonadeAPI | null,
-  genericPretixAPI: IGenericPretixAPI | null,
-  pagerDutyService: PagerDutyService | null,
-  discordService: DiscordService | null,
-  cacheService: PersistentCacheService | null
-): Promise<GenericIssuanceService | null> {
-  logger("[INIT] attempting to start Generic Issuance service");
+  public async handlePollFeed(
+    pipelineId: string,
+    req: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
+    return this.pipelineSubservice.handlePollFeed(pipelineId, req);
+  }
 
-  if (!cacheService) {
-    logger(
-      "[INIT] not starting generic issuance service - missing persistent cache service"
+  public async handleGetPipelineInfo(
+    user: PipelineUser,
+    pipelineId: string
+  ): Promise<PipelineInfoResponseValue> {
+    return this.pipelineSubservice.handleGetPipelineInfo(user, pipelineId);
+  }
+
+  public async handleListFeed(
+    pipelineId: string,
+    feedId: string
+  ): Promise<ListFeedsResponseValue> {
+    return this.pipelineSubservice.handleListFeed(pipelineId, feedId);
+  }
+
+  public async handleCheckIn(
+    req: GenericIssuanceCheckInRequest
+  ): Promise<PodboxTicketActionResponseValue> {
+    return this.pipelineSubservice.handleCheckIn(req);
+  }
+
+  public async handlePreCheck(
+    req: GenericIssuancePreCheckRequest
+  ): Promise<ActionConfigResponseValue> {
+    return this.pipelineSubservice.handlePreCheck(req);
+  }
+
+  public async handleGetSemaphoreGroup(
+    pipelineId: string,
+    groupId: string
+  ): Promise<GenericIssuanceSemaphoreGroupResponseValue> {
+    return this.pipelineSubservice.handleGetSemaphoreGroup(pipelineId, groupId);
+  }
+
+  public async handleGetLatestSemaphoreGroupRoot(
+    pipelineId: string,
+    groupId: string
+  ): Promise<GenericIssuanceSemaphoreGroupRootResponseValue> {
+    return this.pipelineSubservice.handleGetLatestSemaphoreGroupRoot(
+      pipelineId,
+      groupId
     );
-    return null;
   }
 
-  if (!lemonadeAPI) {
-    logger(
-      "[INIT] not starting generic issuance service - missing lemonade API"
-    );
-    return null;
-  }
-
-  if (!genericPretixAPI) {
-    logger("[INIT] not starting generic issuance service - missing pretix API");
-    return null;
-  }
-
-  const pkeyEnv = process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY;
-  if (pkeyEnv == null) {
-    logger(
-      "[INIT] missing environment variable GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
-    );
-    return null;
-  }
-
-  if (
-    process.env.NODE_ENV === "production" &&
-    process.env.STYTCH_BYPASS === "true"
-  ) {
-    throw new Error(
-      "cannot create generic issuance service without stytch in production "
+  public async handleGetHistoricalSemaphoreGroup(
+    pipelineId: string,
+    groupId: string,
+    rootHash: string
+  ): Promise<GenericIssuanceHistoricalSemaphoreGroupResponseValue> {
+    return this.pipelineSubservice.handleGetHistoricalSemaphoreGroup(
+      pipelineId,
+      groupId,
+      rootHash
     );
   }
 
-  const BYPASS_EMAIL =
-    process.env.NODE_ENV !== "production" &&
-    process.env.STYTCH_BYPASS === "true";
-
-  const projectIdEnv = process.env.STYTCH_PROJECT_ID;
-  const secretEnv = process.env.STYTCH_SECRET;
-  let stytchClient: Client | undefined = undefined;
-
-  if (!BYPASS_EMAIL) {
-    if (projectIdEnv == null) {
-      logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
-      return null;
-    }
-
-    if (secretEnv == null) {
-      logger("[INIT] missing environment variable STYTCH_SECRET");
-      return null;
-    }
-
-    stytchClient = new stytch.Client({
-      project_id: projectIdEnv,
-      secret: secretEnv
-    });
+  public async handleGetValidSemaphoreGroup(
+    pipelineId: string,
+    groupId: string,
+    rootHash: string
+  ): Promise<GenericIssuanceValidSemaphoreGroupResponseValue> {
+    return this.pipelineSubservice.handleGetValidSemaphoreGroup(
+      pipelineId,
+      groupId,
+      rootHash
+    );
   }
 
-  const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
-  if (genericIssuanceClientUrl == null) {
-    logger("[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
-    return null;
+  public async handleGetPipelineSemaphoreGroups(
+    pipelineId: string
+  ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
+    return this.pipelineSubservice.handleGetPipelineSemaphoreGroups(pipelineId);
   }
-
-  const zupassPublicKeyEnv = process.env.GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY;
-  if (!zupassPublicKeyEnv) {
-    logger("[INIT missing GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY");
-    return null;
-  }
-
-  let zupassPublicKey: EdDSAPublicKey;
-  try {
-    zupassPublicKey = JSON.parse(zupassPublicKeyEnv);
-    if (!isEdDSAPublicKey(zupassPublicKey)) {
-      throw new Error("Invalid public key");
-    }
-  } catch (e) {
-    logger("[INIT] invalid GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY");
-    return null;
-  }
-
-  const issuanceService = new GenericIssuanceService(
-    context,
-    zupassPublicKey,
-    pkeyEnv,
-    genericIssuanceClientUrl,
-    genericPretixAPI,
-    lemonadeAPI,
-    stytchClient,
-    rollbarService,
-    pagerDutyService,
-    discordService,
-    cacheService
-  );
-
-  issuanceService.start();
-
-  return issuanceService;
 }

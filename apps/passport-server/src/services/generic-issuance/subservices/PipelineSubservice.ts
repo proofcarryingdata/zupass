@@ -1,13 +1,27 @@
 import {
+  ActionConfigResponseValue,
+  GenericIssuanceCheckInRequest,
+  GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
+  GenericIssuancePipelineSemaphoreGroupsResponseValue,
+  GenericIssuancePreCheckRequest,
+  GenericIssuanceSemaphoreGroupResponseValue,
+  GenericIssuanceSemaphoreGroupRootResponseValue,
+  GenericIssuanceValidSemaphoreGroupResponseValue,
+  ListFeedsResponseValue,
   PipelineDefinition,
-  PipelineLoadSummary
+  PipelineInfoResponseValue,
+  PipelineLoadSummary,
+  PodboxTicketActionResponseValue,
+  PollFeedRequest,
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
 import {
   IPipelineAtomDB,
   PipelineAtom
 } from "../../../database/queries/pipelineAtomDB";
+import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
@@ -22,6 +36,7 @@ import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
+import { PipelineAPISubservice } from "./PipelineAPISubservice";
 import { PipelineExecutorSubservice } from "./PipelineExecutorSubservice";
 import { UserSubservice } from "./UserSubservice";
 import { InstantiatePipelineArgs } from "./utils/instantiatePipeline";
@@ -37,10 +52,12 @@ export class PipelineSubservice {
   private pipelineDB: IPipelineDefinitionDB;
   private userSubservice: UserSubservice;
   private executorSubservice: PipelineExecutorSubservice;
+  private pipelineAPISubservice: PipelineAPISubservice;
 
   public constructor(
     context: ApplicationContext,
     pipelineAtomDB: IPipelineAtomDB,
+    consumerDB: IPipelineConsumerDB,
     userSubservice: UserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
@@ -58,6 +75,7 @@ export class PipelineSubservice {
       instantiatePipelineArgs
     );
     this.userSubservice = userSubservice;
+    this.pipelineAPISubservice = new PipelineAPISubservice(consumerDB, this);
   }
 
   public async start(startLoadLoop?: boolean): Promise<void> {
@@ -275,5 +293,90 @@ export class PipelineSubservice {
 
   public getAllPipelines(): PipelineSlot[] {
     return this.executorSubservice.getAllPipelineSlots();
+  }
+
+  public async handlePollFeed(
+    pipelineId: string,
+    req: PollFeedRequest
+  ): Promise<PollFeedResponseValue> {
+    return this.pipelineAPISubservice.handlePollFeed(pipelineId, req);
+  }
+
+  public async handleGetPipelineInfo(
+    user: PipelineUser,
+    pipelineId: string
+  ): Promise<PipelineInfoResponseValue> {
+    return this.pipelineAPISubservice.handleGetPipelineInfo(user, pipelineId);
+  }
+
+  public async handleListFeed(
+    pipelineId: string,
+    feedId: string
+  ): Promise<ListFeedsResponseValue> {
+    return this.pipelineAPISubservice.handleListFeed(pipelineId, feedId);
+  }
+
+  public async handleCheckIn(
+    req: GenericIssuanceCheckInRequest
+  ): Promise<PodboxTicketActionResponseValue> {
+    return this.pipelineAPISubservice.handleCheckIn(req);
+  }
+
+  public async handlePreCheck(
+    req: GenericIssuancePreCheckRequest
+  ): Promise<ActionConfigResponseValue> {
+    return this.pipelineAPISubservice.handlePreCheck(req);
+  }
+
+  public async handleGetSemaphoreGroup(
+    pipelineId: string,
+    groupId: string
+  ): Promise<GenericIssuanceSemaphoreGroupResponseValue> {
+    return this.pipelineAPISubservice.handleGetSemaphoreGroup(
+      pipelineId,
+      groupId
+    );
+  }
+
+  public async handleGetLatestSemaphoreGroupRoot(
+    pipelineId: string,
+    groupId: string
+  ): Promise<GenericIssuanceSemaphoreGroupRootResponseValue> {
+    return this.pipelineAPISubservice.handleGetLatestSemaphoreGroupRoot(
+      pipelineId,
+      groupId
+    );
+  }
+
+  public async handleGetHistoricalSemaphoreGroup(
+    pipelineId: string,
+    groupId: string,
+    rootHash: string
+  ): Promise<GenericIssuanceHistoricalSemaphoreGroupResponseValue> {
+    return this.pipelineAPISubservice.handleGetHistoricalSemaphoreGroup(
+      pipelineId,
+      groupId,
+      rootHash
+    );
+  }
+
+  public async handleGetValidSemaphoreGroup(
+    pipelineId: string,
+    groupId: string,
+    rootHash: string
+  ): Promise<GenericIssuanceValidSemaphoreGroupResponseValue> {
+    return this.pipelineAPISubservice.handleGetValidSemaphoreGroup(
+      pipelineId,
+      groupId,
+      rootHash
+    );
+  }
+
+  public async handleGetPipelineSemaphoreGroups(
+    pipelineId: string
+  ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
+    return this.pipelineAPISubservice.handleGetPipelineSemaphoreGroups(
+      pipelineId
+    );
   }
 }
