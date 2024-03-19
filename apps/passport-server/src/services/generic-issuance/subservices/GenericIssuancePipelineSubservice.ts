@@ -51,12 +51,11 @@ export class GenericIssuancePipelineSubservice {
     this.pipelineAtomDB = pipelineAtomDB;
     this.pipelineExecutorSubservice =
       new GenericIssuancePipelineExecutorSubservice(
-        context,
+        this,
         userSubservice,
         pagerdutyService,
         discordService,
         rollbarService,
-        this,
         instantiatePipelineArgs
       );
 

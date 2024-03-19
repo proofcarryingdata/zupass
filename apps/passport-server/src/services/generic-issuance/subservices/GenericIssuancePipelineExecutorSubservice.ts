@@ -4,7 +4,6 @@ import {
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
 import urljoin from "url-join";
-import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
@@ -45,22 +44,21 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
+  private pipelineSubservice: GenericIssuancePipelineSubservice;
   private userSubservice: GenericIssuanceUserSubservice;
+
+  private instantiatePipelineArgs: InstantiatePipelineArgs;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
-  private pipelineSubservice: GenericIssuancePipelineSubservice;
-  private instantiatePipelineArgs: InstantiatePipelineArgs;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
-  private stopped = false;
 
   public constructor(
-    context: ApplicationContext,
+    pipelineSubservice: GenericIssuancePipelineSubservice,
     userSubservice: GenericIssuanceUserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
-    pipelineSubservice: GenericIssuancePipelineSubservice,
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
     this.pagerdutyService = pagerdutyService;
@@ -81,7 +79,6 @@ export class GenericIssuancePipelineExecutorSubservice {
   }
 
   public async stop(): Promise<void> {
-    this.stopped = true;
     if (this.nextLoadTimeout) {
       clearTimeout(this.nextLoadTimeout);
       this.nextLoadTimeout = undefined;
@@ -529,11 +526,6 @@ export class GenericIssuancePipelineExecutorSubservice {
       logger(LOG_TAG, "pipeline datas failed to refresh", e);
     }
 
-    if (this.stopped) {
-      span?.setAttribute("stopped", true);
-      return;
-    }
-
     logger(
       LOG_TAG,
       "scheduling next pipeline refresh for",
@@ -549,9 +541,6 @@ export class GenericIssuancePipelineExecutorSubservice {
     );
 
     this.nextLoadTimeout = setTimeout(() => {
-      if (this.stopped) {
-        return;
-      }
       this.startPipelineLoadLoop();
     }, GenericIssuancePipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS);
   }
