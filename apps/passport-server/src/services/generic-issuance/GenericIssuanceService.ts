@@ -10,6 +10,7 @@ import {
   GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
+  GenericIssuanceSendEmailResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   GenericPretixEvent,
   GenericPretixProduct,
@@ -24,6 +25,7 @@ import {
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { str } from "@pcd/util";
+import { Request } from "express";
 import stytch, { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../apis/pretix/genericPretixAPI";
@@ -166,8 +168,14 @@ export class GenericIssuanceService {
     return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
   }
 
-  public getUserSubservice(): GenericIssuanceUserSubservice {
-    return this.userSubservice;
+  public async authSession(req: Request): Promise<PipelineUser> {
+    return this.userSubservice.authSession(req);
+  }
+
+  public async sendLoginEmail(
+    email: string
+  ): Promise<GenericIssuanceSendEmailResponseValue> {
+    return this.userSubservice.sendLoginEmail(email);
   }
 
   /**

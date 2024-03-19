@@ -70,9 +70,7 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/self", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const user = await genericIssuanceService
-      .getUserSubservice()
-      .authSession(req);
+    const user = await genericIssuanceService.authSession(req);
     traceUser(user);
 
     const result: GenericIssuanceSelfResponseValue = {
@@ -122,9 +120,7 @@ export function initGenericIssuanceRoutes(
    */
   app.post("/generic-issuance/api/pipeline-info", async (req, res) => {
     checkGenericIssuanceServiceStarted(genericIssuanceService);
-    const user = await genericIssuanceService
-      .getUserSubservice()
-      .authSession(req);
+    const user = await genericIssuanceService.authSession(req);
     traceUser(user);
 
     const reqBody = req.body as PipelineInfoRequest;
@@ -197,9 +193,7 @@ export function initGenericIssuanceRoutes(
             )
           );
       } else {
-        const result = await genericIssuanceService
-          .getUserSubservice()
-          .sendLoginEmail(email);
+        const result = await genericIssuanceService.sendLoginEmail(email);
         res.json(result satisfies GenericIssuanceSendEmailResponseValue);
       }
     }
@@ -212,9 +206,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/get-all-user-pipelines",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService
-        .getUserSubservice()
-        .authSession(req);
+      const user = await genericIssuanceService.authSession(req);
       traceUser(user);
 
       const result =
@@ -233,9 +225,7 @@ export function initGenericIssuanceRoutes(
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
 
-      const user = await genericIssuanceService
-        .getUserSubservice()
-        .authSession(req);
+      const user = await genericIssuanceService.authSession(req);
 
       traceUser(user);
 
@@ -259,9 +249,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/upsert-pipeline",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService
-        .getUserSubservice()
-        .authSession(req);
+      const user = await genericIssuanceService.authSession(req);
       traceUser(user);
 
       const reqBody = req.body as GenericIssuanceUpsertPipelineRequest;
@@ -281,9 +269,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/delete-pipeline/:id",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService
-        .getUserSubservice()
-        .authSession(req);
+      const user = await genericIssuanceService.authSession(req);
       traceUser(user);
 
       const result = await genericIssuanceService.deletePipelineDefinition(
@@ -345,9 +331,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-events",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService
-        .getUserSubservice()
-        .authSession(req);
+      const user = await genericIssuanceService.authSession(req);
       traceUser(user);
 
       const events = await genericIssuanceService.fetchAllPretixEvents(
@@ -368,9 +352,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/fetch-pretix-products",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const user = await genericIssuanceService
-        .getUserSubservice()
-        .authSession(req);
+      const user = await genericIssuanceService.authSession(req);
       traceUser(user);
 
       const events = await genericIssuanceService.fetchPretixProducts(
