@@ -70,8 +70,8 @@ import {
 } from "./capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "./honeycombQueries";
 import { Pipeline, PipelineUser } from "./pipelines/types";
-import { GenericIssuancePipelineSubservice } from "./subservices/GenericIssuancePipelineSubservice";
-import { GenericIssuanceUserSubservice } from "./subservices/GenericIssuanceUserSubservice";
+import { PipelineSubservice } from "./subservices/PipelineSubservice";
+import { UserSubservice } from "./subservices/UserSubservice";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -86,8 +86,8 @@ export class GenericIssuanceService {
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private genericPretixAPI: IGenericPretixAPI;
   private rollbarService: RollbarService | null;
-  private pipelineSubservice: GenericIssuancePipelineSubservice;
-  private userSubservice: GenericIssuanceUserSubservice;
+  private pipelineSubservice: PipelineSubservice;
+  private userSubservice: UserSubservice;
 
   public constructor(
     context: ApplicationContext,
@@ -114,13 +114,13 @@ export class GenericIssuanceService {
 
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
 
-    this.userSubservice = new GenericIssuanceUserSubservice(
+    this.userSubservice = new UserSubservice(
       context,
       stytchClient,
       genericIssuanceClientUrl
     );
 
-    this.pipelineSubservice = new GenericIssuancePipelineSubservice(
+    this.pipelineSubservice = new PipelineSubservice(
       context,
       this.userSubservice,
       this.pipelineAtomDB,

@@ -22,8 +22,8 @@ import {
   makePLogErr,
   makePLogInfo
 } from "../util";
-import { GenericIssuancePipelineSubservice } from "./GenericIssuancePipelineSubservice";
-import { GenericIssuanceUserSubservice } from "./GenericIssuanceUserSubservice";
+import { PipelineSubservice } from "./PipelineSubservice";
+import { UserSubservice } from "./UserSubservice";
 import {
   InstantiatePipelineArgs,
   instantiatePipeline
@@ -32,7 +32,7 @@ import {
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export class GenericIssuancePipelineExecutorSubservice {
+export class PipelineExecutorSubservice {
   private static readonly DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
 
   /**
@@ -44,8 +44,8 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
-  private pipelineSubservice: GenericIssuancePipelineSubservice;
-  private userSubservice: GenericIssuanceUserSubservice;
+  private pipelineSubservice: PipelineSubservice;
+  private userSubservice: UserSubservice;
 
   private instantiatePipelineArgs: InstantiatePipelineArgs;
   private pagerdutyService: PagerDutyService | null;
@@ -54,8 +54,8 @@ export class GenericIssuancePipelineExecutorSubservice {
   private nextLoadTimeout: NodeJS.Timeout | undefined;
 
   public constructor(
-    pipelineSubservice: GenericIssuancePipelineSubservice,
-    userSubservice: GenericIssuanceUserSubservice,
+    pipelineSubservice: PipelineSubservice,
+    userSubservice: UserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
@@ -474,7 +474,7 @@ export class GenericIssuancePipelineExecutorSubservice {
           (slot.lastLoadDiscordMsgTimestamp &&
             Date.now() >
               slot.lastLoadDiscordMsgTimestamp.getTime() +
-                GenericIssuancePipelineExecutorSubservice.DISCORD_ALERT_TIMEOUT_MS)
+                PipelineExecutorSubservice.DISCORD_ALERT_TIMEOUT_MS)
         ) {
           slot.lastLoadDiscordMsgTimestamp = new Date();
           shouldMessageDiscord = true;
@@ -530,18 +530,17 @@ export class GenericIssuancePipelineExecutorSubservice {
       LOG_TAG,
       "scheduling next pipeline refresh for",
       Math.floor(
-        GenericIssuancePipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS /
-          1000
+        PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
       ),
       "s from now"
     );
     span?.setAttribute(
       "timeout_ms",
-      GenericIssuancePipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS
+      PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS
     );
 
     this.nextLoadTimeout = setTimeout(() => {
       this.startPipelineLoadLoop();
-    }, GenericIssuancePipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS);
+    }, PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS);
   }
 }

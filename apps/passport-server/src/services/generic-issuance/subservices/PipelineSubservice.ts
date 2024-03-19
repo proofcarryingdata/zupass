@@ -23,23 +23,23 @@ import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
-import { GenericIssuancePipelineExecutorSubservice } from "./GenericIssuancePipelineExecutorSubservice";
-import { GenericIssuanceUserSubservice } from "./GenericIssuanceUserSubservice";
+import { PipelineExecutorSubservice } from "./PipelineExecutorSubservice";
+import { UserSubservice } from "./UserSubservice";
 import { InstantiatePipelineArgs } from "./utils/instantiatePipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export class GenericIssuancePipelineSubservice {
+export class PipelineSubservice {
   public pipelineSlots: PipelineSlot[];
-  private userSubservice: GenericIssuanceUserSubservice;
+  private userSubservice: UserSubservice;
   private pipelineDB: IPipelineDefinitionDB;
   private pipelineAtomDB: IPipelineAtomDB;
-  private pipelineExecutorSubservice: GenericIssuancePipelineExecutorSubservice;
+  private pipelineExecutorSubservice: PipelineExecutorSubservice;
 
   public constructor(
     context: ApplicationContext,
-    userSubservice: GenericIssuanceUserSubservice,
+    userSubservice: UserSubservice,
     pipelineAtomDB: IPipelineAtomDB,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
@@ -49,15 +49,14 @@ export class GenericIssuancePipelineSubservice {
     this.pipelineDB = new PipelineDefinitionDB(context.dbPool);
     this.pipelineSlots = [];
     this.pipelineAtomDB = pipelineAtomDB;
-    this.pipelineExecutorSubservice =
-      new GenericIssuancePipelineExecutorSubservice(
-        this,
-        userSubservice,
-        pagerdutyService,
-        discordService,
-        rollbarService,
-        instantiatePipelineArgs
-      );
+    this.pipelineExecutorSubservice = new PipelineExecutorSubservice(
+      this,
+      userSubservice,
+      pagerdutyService,
+      discordService,
+      rollbarService,
+      instantiatePipelineArgs
+    );
 
     this.userSubservice = userSubservice;
   }
