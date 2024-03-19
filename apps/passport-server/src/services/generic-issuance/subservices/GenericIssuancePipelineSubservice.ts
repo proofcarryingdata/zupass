@@ -1,4 +1,3 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   GenericIssuancePipelineListEntry,
   PipelineDefinition,
@@ -9,68 +8,45 @@ import {
 import { str } from "@pcd/util";
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
-import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
-import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
-import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
-import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
-import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { IPipelineUserDB } from "../../../database/queries/pipelineUserDB";
-import {
-  IBadgeGiftingDB,
-  IContactSharingDB
-} from "../../../database/queries/ticketActionDBs";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
-import { PersistentCacheService } from "../../persistentCacheService";
 import { RollbarService } from "../../rollbarService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import { GenericIssuancePipelineExecutorSubservice } from "./GenericIssuancePipelineExecutorSubservice";
+import { InstantiatePipelineArgs } from "./utils/instantiatePipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuancePipelineSubservice {
   public pipelineSlots: PipelineSlot[];
-  private definitionDB: IPipelineDefinitionDB;
+  private pipelineDB: IPipelineDefinitionDB;
   private userDB: IPipelineUserDB;
   private atomDB: IPipelineAtomDB;
   private pipelineExecutorSubservice: GenericIssuancePipelineExecutorSubservice;
 
   public constructor(
     context: ApplicationContext,
-
-    eddsaPrivateKey: string,
-    zupassPublicKey: EdDSAPublicKey,
-    rsaPrivateKey: string,
-
     userDB: IPipelineUserDB,
     atomDB: IPipelineAtomDB,
-    checkinDB: IPipelineCheckinDB,
-    contactDB: IContactSharingDB,
-    badgeDB: IBadgeGiftingDB,
-    consumerDB: IPipelineConsumerDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
-
-    cacheService: PersistentCacheService,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
-
-    lemonadeAPI: ILemonadeAPI,
-    genericPretixAPI: IGenericPretixAPI
+    instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
-    this.definitionDB = new PipelineDefinitionDB(context.dbPool);
+    this.pipelineDB = new PipelineDefinitionDB(context.dbPool);
     this.pipelineSlots = [];
     this.atomDB = atomDB;
     this.pipelineExecutorSubservice =
@@ -81,22 +57,7 @@ export class GenericIssuancePipelineSubservice {
         discordService,
         rollbarService,
         this,
-        {
-          zupassPublicKey,
-          eddsaPrivateKey,
-          rsaPrivateKey,
-          cacheService,
-          apis: {
-            lemonadeAPI,
-            genericPretixAPI
-          },
-          atomDB,
-          checkinDB,
-          contactDB,
-          badgeDB,
-          consumerDB,
-          semaphoreHistoryDB
-        }
+        instantiatePipelineArgs
       );
 
     this.userDB = userDB;
@@ -139,17 +100,17 @@ export class GenericIssuancePipelineSubservice {
   public async getLastLoadSummary(
     id: string
   ): Promise<PipelineLoadSummary | undefined> {
-    return this.definitionDB.getLastLoadSummary(id);
+    return this.pipelineDB.getLastLoadSummary(id);
   }
 
   public async loadPipelineDefinition(
     id: string
   ): Promise<PipelineDefinition | undefined> {
-    return this.definitionDB.getDefinition(id);
+    return this.pipelineDB.getDefinition(id);
   }
 
   public async saveDefinition(definition: PipelineDefinition): Promise<void> {
-    await this.definitionDB.setDefinition(definition);
+    await this.pipelineDB.setDefinition(definition);
   }
 
   public async deletePipelineDefinition(
@@ -168,9 +129,6 @@ export class GenericIssuancePipelineSubservice {
 
       tracePipeline(pipeline);
 
-      // TODO: Finalize the "permissions model" for CRUD actions. Right now,
-      // create, read, update are permissable by owners and editors, while delete
-      // is only permissable by owners.
       if (pipeline.ownerUserId !== user.id && !user.isAdmin) {
         throw new PCDHTTPError(
           403,
@@ -180,8 +138,8 @@ export class GenericIssuancePipelineSubservice {
         );
       }
 
-      await this.definitionDB.clearDefinition(pipelineId);
-      await this.definitionDB.saveLoadSummary(pipelineId, undefined);
+      await this.pipelineDB.clearDefinition(pipelineId);
+      await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.atomDB.clear(pipelineId);
       await this.pipelineExecutorSubservice.restartPipeline(pipelineId);
     });
@@ -375,7 +333,7 @@ export class GenericIssuancePipelineSubservice {
     id: string,
     summary: PipelineLoadSummary | undefined
   ): Promise<void> {
-    await this.definitionDB.saveLoadSummary(id, summary);
+    await this.pipelineDB.saveLoadSummary(id, summary);
   }
 
   public getAllPipelines(): PipelineSlot[] {

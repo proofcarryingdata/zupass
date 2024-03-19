@@ -26,7 +26,6 @@ import { Pipeline } from "../../pipelines/types";
 export interface InstantiatePipelineArgs {
   zupassPublicKey: EdDSAPublicKey;
   eddsaPrivateKey: string;
-  rsaPrivateKey: string;
 
   cacheService: PersistentCacheService;
 
@@ -84,13 +83,7 @@ export function instantiatePipeline(
         args.semaphoreHistoryDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
-      pipeline = new CSVPipeline(
-        args.eddsaPrivateKey,
-        definition,
-        args.atomDB,
-        args.zupassPublicKey,
-        args.rsaPrivateKey
-      );
+      pipeline = new CSVPipeline(args.eddsaPrivateKey, definition, args.atomDB);
     }
 
     if (pipeline) {

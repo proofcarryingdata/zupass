@@ -22,7 +22,6 @@ import {
   TicketActionPayload
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
-import { newRSAPrivateKey } from "@pcd/rsa-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { str } from "@pcd/util";
 import stytch, { Client } from "stytch";
@@ -125,22 +124,26 @@ export class GenericIssuanceService {
 
     this.pipelineSubservice = new GenericIssuancePipelineSubservice(
       context,
-      eddsaPrivateKey,
-      zupassPublicKey,
-      newRSAPrivateKey(),
       this.userDB,
       atomDB,
-      this.checkinDB,
-      this.contactDB,
-      this.badgeDB,
-      this.consumerDB,
-      this.semaphoreHistoryDB,
-      cacheService,
       pagerdutyService,
       discordService,
       rollbarService,
-      lemonadeAPI,
-      this.genericPretixAPI
+      {
+        zupassPublicKey,
+        eddsaPrivateKey,
+        cacheService,
+        apis: {
+          lemonadeAPI,
+          genericPretixAPI: this.genericPretixAPI
+        },
+        atomDB,
+        checkinDB: this.checkinDB,
+        contactDB: this.contactDB,
+        badgeDB: this.badgeDB,
+        consumerDB: this.consumerDB,
+        semaphoreHistoryDB: this.semaphoreHistoryDB
+      }
     );
   }
 
