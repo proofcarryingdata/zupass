@@ -122,8 +122,8 @@ export class GenericIssuanceService {
 
     this.pipelineSubservice = new PipelineSubservice(
       context,
-      this.userSubservice,
       this.pipelineAtomDB,
+      this.userSubservice,
       pagerdutyService,
       discordService,
       rollbarService,

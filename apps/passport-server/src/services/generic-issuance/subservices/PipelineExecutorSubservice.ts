@@ -8,21 +8,16 @@ import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
 import { RollbarService } from "../../rollbarService";
 import { setError, traced } from "../../telemetryService";
-import {
-  traceLoadSummary,
-  tracePipeline,
-  traceUser
-} from "../honeycombQueries";
+import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline } from "../pipelines/types";
 import { PipelineSlot } from "../types";
-import { makePLogErr, makePLogInfo } from "../util";
 import { PipelineSubservice } from "./PipelineSubservice";
 import { UserSubservice } from "./UserSubservice";
 import {
   InstantiatePipelineArgs,
   instantiatePipeline
 } from "./utils/instantiatePipeline";
-import { maybeAlertForPipelineRun } from "./utils/maybeAlertForPipelineRun";
+import { performPipelineLoad } from "./utils/performPipelineLoad";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -239,117 +234,15 @@ export class PipelineExecutorSubservice {
     return traced<PipelineLoadSummary>(
       SERVICE_NAME,
       "performPipelineLoad",
-      async (span): Promise<PipelineLoadSummary> => {
-        const startTime = new Date();
-        const pipelineId = pipelineSlot.definition.id;
-        const pipeline: Pipeline | undefined = pipelineSlot.instance;
-        logger(
-          LOG_TAG,
-          `executing pipeline '${pipelineId}'` +
-            ` of type '${pipeline?.type}'` +
-            ` belonging to ${pipelineSlot.definition.ownerUserId}`
+      async (): Promise<PipelineLoadSummary> => {
+        return performPipelineLoad(
+          pipelineSlot,
+          this.pipelineSubservice,
+          this.userSubservice,
+          this.discordService,
+          this.pagerdutyService,
+          this.rollbarService
         );
-        const owner = await this.userSubservice.getUserById(
-          pipelineSlot.definition.ownerUserId
-        );
-        traceUser(owner);
-        tracePipeline(pipelineSlot.definition);
-
-        if (pipelineSlot.definition.options?.paused) {
-          logger(
-            LOG_TAG,
-            `pipeline '${pipelineSlot.definition.id}' is paused, not loading`
-          );
-          const summary = {
-            atomsLoaded: 0,
-            lastRunEndTimestamp: new Date().toISOString(),
-            lastRunStartTimestamp: new Date().toISOString(),
-            latestLogs: [makePLogInfo("this pipeline is paused - not loading")],
-            atomsExpected: 0,
-            success: true
-          };
-          maybeAlertForPipelineRun(
-            pipelineSlot,
-            summary,
-            this.pagerdutyService,
-            this.discordService
-          );
-          return summary;
-        }
-
-        if (!pipeline) {
-          logger(
-            LOG_TAG,
-            `pipeline '${pipelineId}' of type '${pipelineSlot.definition.type}'` +
-              ` is not running; skipping execution`
-          );
-          const summary: PipelineLoadSummary = {
-            lastRunStartTimestamp: startTime.toISOString(),
-            lastRunEndTimestamp: new Date().toISOString(),
-            latestLogs: [makePLogErr("failed to start pipeline")],
-            atomsExpected: 0,
-            atomsLoaded: 0,
-            success: false,
-            errorMessage: "failed to start pipeline"
-          };
-          this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
-          traceLoadSummary(summary);
-          maybeAlertForPipelineRun(
-            pipelineSlot,
-            summary,
-
-            this.pagerdutyService,
-            this.discordService
-          );
-          return summary;
-        }
-
-        try {
-          logger(
-            LOG_TAG,
-            `loading data for pipeline with id '${pipelineId}'` +
-              ` of type '${pipelineSlot.definition.type}'`
-          );
-          const summary = await pipeline.load();
-          logger(
-            LOG_TAG,
-            `successfully loaded data for pipeline with id '${pipelineId}'` +
-              ` of type '${pipelineSlot.definition.type}'`
-          );
-          this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
-          traceLoadSummary(summary);
-          maybeAlertForPipelineRun(
-            pipelineSlot,
-            summary,
-            this.pagerdutyService,
-            this.discordService
-          );
-          return summary;
-        } catch (e) {
-          this.rollbarService?.reportError(e);
-          logger(LOG_TAG, `failed to load pipeline '${pipelineId}'`, e);
-          setError(e, span);
-          const summary = {
-            lastRunStartTimestamp: startTime.toISOString(),
-            lastRunEndTimestamp: new Date().toISOString(),
-            latestLogs: [makePLogErr(`failed to load pipeline: ${e + ""}`)],
-            atomsExpected: 0,
-            atomsLoaded: 0,
-            errorMessage: `failed to load pipeline\n${e}\n${
-              e instanceof Error ? e.stack : ""
-            }`,
-            success: false
-          } satisfies PipelineLoadSummary;
-          this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
-          traceLoadSummary(summary);
-          maybeAlertForPipelineRun(
-            pipelineSlot,
-            summary,
-            this.pagerdutyService,
-            this.discordService
-          );
-          return summary;
-        }
       }
     );
   }
