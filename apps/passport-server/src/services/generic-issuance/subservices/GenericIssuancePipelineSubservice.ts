@@ -33,14 +33,14 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class GenericIssuancePipelineSubservice {
   public pipelineSlots: PipelineSlot[];
   private pipelineDB: IPipelineDefinitionDB;
-  private userDB: IPipelineUserDB;
-  private atomDB: IPipelineAtomDB;
+  private pipelineUserDB: IPipelineUserDB;
+  private pipelineAtomDB: IPipelineAtomDB;
   private pipelineExecutorSubservice: GenericIssuancePipelineExecutorSubservice;
 
   public constructor(
     context: ApplicationContext,
-    userDB: IPipelineUserDB,
-    atomDB: IPipelineAtomDB,
+    pipelineUserDB: IPipelineUserDB,
+    pipelineAtomDB: IPipelineAtomDB,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
@@ -48,11 +48,11 @@ export class GenericIssuancePipelineSubservice {
   ) {
     this.pipelineDB = new PipelineDefinitionDB(context.dbPool);
     this.pipelineSlots = [];
-    this.atomDB = atomDB;
+    this.pipelineAtomDB = pipelineAtomDB;
     this.pipelineExecutorSubservice =
       new GenericIssuancePipelineExecutorSubservice(
         context,
-        userDB,
+        pipelineUserDB,
         pagerdutyService,
         discordService,
         rollbarService,
@@ -60,7 +60,7 @@ export class GenericIssuancePipelineSubservice {
         instantiatePipelineArgs
       );
 
-    this.userDB = userDB;
+    this.pipelineUserDB = pipelineUserDB;
   }
 
   public async start(startLoadLoop?: boolean): Promise<void> {
@@ -140,7 +140,7 @@ export class GenericIssuancePipelineSubservice {
 
       await this.pipelineDB.clearDefinition(pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
-      await this.atomDB.clear(pipelineId);
+      await this.pipelineAtomDB.clear(pipelineId);
       await this.pipelineExecutorSubservice.restartPipeline(pipelineId);
     });
   }
@@ -224,12 +224,12 @@ export class GenericIssuancePipelineSubservice {
       tracePipeline(validatedNewDefinition);
       await this.saveDefinition(validatedNewDefinition);
       if (existingSlot) {
-        existingSlot.owner = await this.userDB.getUserById(
+        existingSlot.owner = await this.pipelineUserDB.getUserById(
           validatedNewDefinition.ownerUserId
         );
       }
       await this.saveLoadSummary(validatedNewDefinition.id, undefined);
-      await this.atomDB.clear(validatedNewDefinition.id);
+      await this.pipelineAtomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
       const restartPromise = this.pipelineExecutorSubservice.restartPipeline(
         validatedNewDefinition.id

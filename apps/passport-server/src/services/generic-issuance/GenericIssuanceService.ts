@@ -72,15 +72,15 @@ import {
 import { tracePipeline, traceUser } from "./honeycombQueries";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { GenericIssuancePipelineSubservice } from "./subservices/GenericIssuancePipelineSubservice";
-import { GenericIssuanceUsersSubservice } from "./subservices/GenericIssuanceUsersSubservice";
+import { GenericIssuanceUserSubservice } from "./subservices/GenericIssuanceUserSubservice";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuanceService {
   private context: ApplicationContext;
-  private userDB: IPipelineUserDB;
-  private atomDB: IPipelineAtomDB;
+  private pipelineUserDB: IPipelineUserDB;
+  private pipelineAtomDB: IPipelineAtomDB;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
@@ -89,12 +89,12 @@ export class GenericIssuanceService {
   private genericPretixAPI: IGenericPretixAPI;
   private rollbarService: RollbarService | null;
   private pipelineSubservice: GenericIssuancePipelineSubservice;
-  private usersSubservice: GenericIssuanceUsersSubservice;
+  private userSubservice: GenericIssuanceUserSubservice;
 
   public constructor(
     context: ApplicationContext,
     rollbarService: RollbarService | null,
-    atomDB: IPipelineAtomDB,
+    pipelineAtomDB: IPipelineAtomDB,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client | undefined,
     genericIssuanceClientUrl: string,
@@ -107,8 +107,8 @@ export class GenericIssuanceService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.userDB = new PipelineUserDB(context.dbPool);
-    this.atomDB = atomDB;
+    this.pipelineUserDB = new PipelineUserDB(context.dbPool);
+    this.pipelineAtomDB = pipelineAtomDB;
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
@@ -116,16 +116,16 @@ export class GenericIssuanceService {
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
 
-    this.usersSubservice = new GenericIssuanceUsersSubservice(
-      this.userDB,
+    this.userSubservice = new GenericIssuanceUserSubservice(
+      this.pipelineUserDB,
       stytchClient,
       genericIssuanceClientUrl
     );
 
     this.pipelineSubservice = new GenericIssuancePipelineSubservice(
       context,
-      this.userDB,
-      atomDB,
+      this.pipelineUserDB,
+      pipelineAtomDB,
       pagerdutyService,
       discordService,
       rollbarService,
@@ -133,11 +133,9 @@ export class GenericIssuanceService {
         zupassPublicKey,
         eddsaPrivateKey,
         cacheService,
-        apis: {
-          lemonadeAPI,
-          genericPretixAPI: this.genericPretixAPI
-        },
-        atomDB,
+        lemonadeAPI,
+        genericPretixAPI: this.genericPretixAPI,
+        atomDB: pipelineAtomDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
         badgeDB: this.badgeDB,
@@ -150,7 +148,7 @@ export class GenericIssuanceService {
   public async start(startLoadLoop?: boolean): Promise<void> {
     try {
       await this.pipelineSubservice.start(startLoadLoop);
-      await this.usersSubservice.start();
+      await this.userSubservice.start();
     } catch (e) {
       this.rollbarService?.reportError(e);
       logger(LOG_TAG, "error starting GenericIssuanceService", e);
@@ -168,8 +166,8 @@ export class GenericIssuanceService {
     return this.pipelineSubservice.getAllUserPipelineDefinitions(user);
   }
 
-  public getUserSubservice(): GenericIssuanceUsersSubservice {
-    return this.usersSubservice;
+  public getUserSubservice(): GenericIssuanceUserSubservice {
+    return this.userSubservice;
   }
 
   /**
@@ -225,7 +223,7 @@ export class GenericIssuanceService {
       const summary = await this.pipelineSubservice.getLastLoadSummary(
         pipelineInstance.id
       );
-      const latestAtoms = await this.atomDB.load(pipelineInstance.id);
+      const latestAtoms = await this.pipelineAtomDB.load(pipelineInstance.id);
 
       // If the pipeline has semaphore groups, we want to populate consumer
       // data. If there are no semaphore groups, we don't.

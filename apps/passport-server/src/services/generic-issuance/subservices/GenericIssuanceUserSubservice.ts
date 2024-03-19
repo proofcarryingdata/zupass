@@ -12,17 +12,17 @@ import { PipelineUser } from "../pipelines/types";
 const SERVICE_NAME = "GENERIC_ISSUANCE_USER";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
-export class GenericIssuanceUsersSubservice {
-  private userDB: IPipelineUserDB;
+export class GenericIssuanceUserSubservice {
+  private pipelineUserDB: IPipelineUserDB;
   private stytchClient: Client | undefined;
   private genericIssuanceClientUrl: string;
 
   public constructor(
-    userDB: IPipelineUserDB,
+    pipelineUserDB: IPipelineUserDB,
     stytchClient: Client | undefined,
     genericIssuanceClientUrl: string
   ) {
-    this.userDB = userDB;
+    this.pipelineUserDB = pipelineUserDB;
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
   }
@@ -33,7 +33,7 @@ export class GenericIssuanceUsersSubservice {
 
   public async getOrCreateUser(email: string): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "getOrCreateUser", async () => {
-      return this.userDB.getOrCreateUser(email);
+      return this.pipelineUserDB.getOrCreateUser(email);
     });
   }
 
@@ -130,10 +130,10 @@ export class GenericIssuanceUsersSubservice {
 
   private async maybeSetupAdmins(): Promise<void> {
     try {
-      const adminEmailsFromEnv = this.userDB.getEnvAdminEmails();
+      const adminEmailsFromEnv = this.pipelineUserDB.getEnvAdminEmails();
       logger(LOG_TAG, `setting up generic issuance admins`, adminEmailsFromEnv);
       for (const email of adminEmailsFromEnv) {
-        await this.userDB.setUserIsAdmin(email, true);
+        await this.pipelineUserDB.setUserIsAdmin(email, true);
       }
     } catch (e) {
       logger(LOG_TAG, `failed to set up generic issuance admins`, e);

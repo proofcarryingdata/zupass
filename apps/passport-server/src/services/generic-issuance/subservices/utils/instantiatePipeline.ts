@@ -29,10 +29,8 @@ export interface InstantiatePipelineArgs {
 
   cacheService: PersistentCacheService;
 
-  apis: {
-    lemonadeAPI: ILemonadeAPI;
-    genericPretixAPI: IGenericPretixAPI;
-  };
+  lemonadeAPI: ILemonadeAPI;
+  genericPretixAPI: IGenericPretixAPI;
 
   atomDB: IPipelineAtomDB;
   checkinDB: IPipelineCheckinDB;
@@ -61,7 +59,7 @@ export function instantiatePipeline(
         args.eddsaPrivateKey,
         definition,
         args.atomDB,
-        args.apis.lemonadeAPI,
+        args.lemonadeAPI,
         args.zupassPublicKey,
         args.cacheService,
         args.checkinDB,
@@ -75,7 +73,7 @@ export function instantiatePipeline(
         args.eddsaPrivateKey,
         definition,
         args.atomDB,
-        args.apis.genericPretixAPI,
+        args.genericPretixAPI,
         args.zupassPublicKey,
         args.cacheService,
         args.checkinDB,

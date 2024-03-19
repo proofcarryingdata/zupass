@@ -49,14 +49,14 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
-  private definitionDB: IPipelineDefinitionDB;
-  private userDB: IPipelineUserDB;
+  private pipelineDB: IPipelineDefinitionDB;
+  private pipelineUserDB: IPipelineUserDB;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
-  private nextLoadTimeout: NodeJS.Timeout | undefined;
   private pipelineSubservice: GenericIssuancePipelineSubservice;
   private instantiatePipelineArgs: InstantiatePipelineArgs;
+  private nextLoadTimeout: NodeJS.Timeout | undefined;
   private stopped = false;
 
   public constructor(
@@ -68,11 +68,11 @@ export class GenericIssuancePipelineExecutorSubservice {
     pipelineSubservice: GenericIssuancePipelineSubservice,
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
-    this.definitionDB = new PipelineDefinitionDB(context.dbPool);
+    this.pipelineDB = new PipelineDefinitionDB(context.dbPool);
     this.pagerdutyService = pagerdutyService;
     this.discordService = discordService;
     this.rollbarService = rollbarService;
-    this.userDB = userDB;
+    this.pipelineUserDB = userDB;
     this.pipelineSubservice = pipelineSubservice;
     this.instantiatePipelineArgs = instantiatePipelineArgs;
   }
@@ -145,11 +145,11 @@ export class GenericIssuancePipelineExecutorSubservice {
       if (!pipelineSlot) {
         pipelineSlot = {
           definition: definition,
-          owner: await this.userDB.getUserById(definition.ownerUserId)
+          owner: await this.pipelineUserDB.getUserById(definition.ownerUserId)
         };
         this.pipelineSubservice.pipelineSlots.push(pipelineSlot);
       } else {
-        pipelineSlot.owner = await this.userDB.getUserById(
+        pipelineSlot.owner = await this.pipelineUserDB.getUserById(
           definition.ownerUserId
         );
       }
@@ -195,7 +195,7 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private async loadAndInstantiatePipelines(): Promise<void> {
     return traced(SERVICE_NAME, "loadAndInstantiatePipelines", async (span) => {
-      const pipelinesFromDB = await this.definitionDB.loadPipelineDefinitions();
+      const pipelinesFromDB = await this.pipelineDB.loadPipelineDefinitions();
       span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
       await Promise.allSettled(
@@ -210,7 +210,9 @@ export class GenericIssuancePipelineExecutorSubservice {
         pipelinesFromDB.map(async (pipelineDefinition: PipelineDefinition) => {
           const slot: PipelineSlot = {
             definition: pipelineDefinition,
-            owner: await this.userDB.getUserById(pipelineDefinition.ownerUserId)
+            owner: await this.pipelineUserDB.getUserById(
+              pipelineDefinition.ownerUserId
+            )
           };
 
           // attempt to instantiate a {@link Pipeline}
@@ -256,7 +258,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             ` of type '${pipeline?.type}'` +
             ` belonging to ${pipelineSlot.definition.ownerUserId}`
         );
-        const owner = await this.userDB.getUserById(
+        const owner = await this.pipelineUserDB.getUserById(
           pipelineSlot.definition.ownerUserId
         );
         traceUser(owner);
@@ -294,7 +296,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             success: false,
             errorMessage: "failed to start pipeline"
           };
-          this.definitionDB.saveLoadSummary(pipelineId, summary);
+          this.pipelineDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
@@ -312,7 +314,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             `successfully loaded data for pipeline with id '${pipelineId}'` +
               ` of type '${pipelineSlot.definition.type}'`
           );
-          this.definitionDB.saveLoadSummary(pipelineId, summary);
+          this.pipelineDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
@@ -331,7 +333,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             }`,
             success: false
           } satisfies PipelineLoadSummary;
-          this.definitionDB.saveLoadSummary(pipelineId, summary);
+          this.pipelineDB.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
@@ -366,10 +368,7 @@ export class GenericIssuancePipelineExecutorSubservice {
         this.pipelineSubservice.pipelineSlots.map(
           async (slot: PipelineSlot): Promise<void> => {
             const runInfo = await this.performPipelineLoad(slot);
-            await this.definitionDB.saveLoadSummary(
-              slot.definition.id,
-              runInfo
-            );
+            await this.pipelineDB.saveLoadSummary(slot.definition.id, runInfo);
           }
         )
       );
