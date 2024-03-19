@@ -34,7 +34,7 @@
     "test-typedoc": "yarn typedoc --emit none"
   },
   "devDependencies": {
-    "@types/circomlibjs": "0.1.4",
+    "@types/circomlibjs": "0.1.6",
     "@types/node": "^20.11.28",
     "@types/snarkjs": "0.7.5",
     "plop": "^4.0.1",

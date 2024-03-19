@@ -12,6 +12,8 @@ import {
   useZupassPopupMessages
 } from "@pcd/passport-interface";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { POD, podEntriesFromSimplifiedJSON } from "@pcd/pod";
+import { PODPCD, PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
@@ -32,9 +34,29 @@ import { ExampleContainer } from "../../components/ExamplePage";
 import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
 import { sendZupassRequest } from "../../util";
 
+// Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
+const EXAMPLE_EDDSA_PRIVATE_KEY =
+  "0001020304050607080900010203040506070809000102030405060708090001";
+
+const EXAMPLE_POD_CONTENT = `{
+  "A": 123,
+  "B": 321,
+  "C": "hello",
+  "D": "foobar",
+  "E": 123,
+  "F": 4294967295,
+  "G": 7,
+  "H": 8,
+  "I": 9,
+  "J": 10,
+  "owner": 18711405342588116796533073928767088921854096266145046362753928030796553161041
+}`;
+
 export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
   const [folder, setFolder] = useState("");
+  const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
+  const [podFolder, setPodFolder] = useState("Test PODs");
 
   return (
     <div>
@@ -114,6 +136,38 @@ export default function Page(): JSX.Element {
         <br />
         <br />
         <button onClick={addEdDSAPCD}>add a new EdDSA signature proof</button>
+        <br />
+        <br />
+        POD content to sign:{" "}
+        <textarea
+          cols={40}
+          rows={15}
+          value={podContent}
+          onChange={(e): void => {
+            setPodContent(e.target.value);
+          }}
+        />
+        <br />
+        <label>
+          Folder to add PCD to:
+          <input
+            type="text"
+            value={podFolder}
+            placeholder="Enter folder name..."
+            style={{ marginLeft: "16px" }}
+            onChange={(e): void => {
+              setPodFolder(e.target.value);
+            }}
+          />
+        </label>
+        <br />
+        <button
+          onClick={(): Promise<void> =>
+            addPODPCD(podContent, podFolder.length > 0 ? podFolder : undefined)
+          }
+        >
+          add a new POD to Zupass
+        </button>
       </ExampleContainer>
     </div>
   );
@@ -353,9 +407,7 @@ async function addEdDSAPCD(): Promise<void> {
       privateKey: {
         argumentType: ArgumentTypeName.String,
         userProvided: false,
-        // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
-        value:
-          "0001020304050607080900010203040506070809000102030405060708090001"
+        value: EXAMPLE_EDDSA_PRIVATE_KEY
       },
       id: {
         argumentType: ArgumentTypeName.String,
@@ -470,6 +522,30 @@ async function addWebAuthnPCD(): Promise<void> {
     ZUPASS_URL,
     window.location.origin + "#/popup",
     serializedNewCredential
+  );
+
+  sendZupassRequest(url);
+}
+
+async function addPODPCD(
+  podContent: string,
+  podFolder: string | undefined
+): Promise<void> {
+  const newPOD = new PODPCD(
+    uuid(),
+    POD.sign(
+      podEntriesFromSimplifiedJSON(podContent),
+      EXAMPLE_EDDSA_PRIVATE_KEY
+    )
+  );
+
+  const serializedPODPCD = await PODPCDPackage.serialize(newPOD);
+
+  const url = constructZupassPcdAddRequestUrl(
+    ZUPASS_URL,
+    window.location.origin + "#/popup",
+    serializedPODPCD,
+    podFolder
   );
 
   sendZupassRequest(url);

@@ -7,6 +7,9 @@
       "path": "packages/lib/emitter/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/gpcircuits/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/passport-crypto/tsconfig.cjs.json"
     },
     {
@@ -20,6 +23,9 @@
     },
     {
       "path": "packages/lib/pcd-types/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/lib/pod/tsconfig.cjs.json"
     },
     {
       "path": "packages/lib/util/tsconfig.cjs.json"
@@ -50,6 +56,9 @@
     },
     {
       "path": "packages/pcd/message-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/pod-pcd/tsconfig.cjs.json"
     },
     {
       "path": "packages/pcd/rln-pcd/tsconfig.cjs.json"
@@ -104,6 +113,9 @@
     },
     {
       "path": "packages/ui/message-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/pod-pcd-ui/tsconfig.cjs.json"
     },
     {
       "path": "packages/ui/rsa-image-pcd-ui/tsconfig.cjs.json"

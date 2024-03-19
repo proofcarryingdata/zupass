@@ -1,0 +1,6 @@
+*.js
+*.ts.map
+!.eslintrc.js
+dist
+ptau
+circuits/test

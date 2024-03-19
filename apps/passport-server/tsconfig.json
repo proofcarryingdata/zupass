@@ -25,9 +25,6 @@
       "path": "../../packages/pcd/eddsa-frog-pcd"
     },
     {
-      "path": "../../packages/pcd/message-pcd"
-    },
-    {
       "path": "../../packages/pcd/eddsa-pcd"
     },
     {
@@ -35,6 +32,9 @@
     },
     {
       "path": "../../packages/pcd/email-pcd"
+    },
+    {
+      "path": "../../packages/pcd/message-pcd"
     },
     {
       "path": "../../packages/lib/passport-crypto"
