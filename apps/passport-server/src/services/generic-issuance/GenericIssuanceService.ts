@@ -157,7 +157,6 @@ export class GenericIssuanceService {
 
   public async stop(): Promise<void> {
     await this.pipelineSubservice.stop();
-    await this.usersSubservice.stop();
   }
 
   public async getAllUserPipelineDefinitions(

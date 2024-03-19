@@ -16,7 +16,6 @@ export class GenericIssuanceUsersSubservice {
   private userDB: IPipelineUserDB;
   private stytchClient: Client | undefined;
   private genericIssuanceClientUrl: string;
-  private stopped: boolean;
 
   public constructor(
     userDB: IPipelineUserDB,
@@ -26,15 +25,10 @@ export class GenericIssuanceUsersSubservice {
     this.userDB = userDB;
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
-    this.stopped = false;
   }
 
   public async start(): Promise<void> {
     await this.maybeSetupAdmins();
-  }
-
-  public async stop(): Promise<void> {
-    this.stopped = true;
   }
 
   public async getOrCreateUser(email: string): Promise<PipelineUser> {

@@ -1,30 +1,18 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   PipelineDefinition,
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
 import urljoin from "url-join";
-import { ILemonadeAPI } from "../../../apis/lemonade/lemonadeAPI";
-import { IGenericPretixAPI } from "../../../apis/pretix/genericPretixAPI";
-import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
-import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
-import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
-import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { IPipelineUserDB } from "../../../database/queries/pipelineUserDB";
-import {
-  IBadgeGiftingDB,
-  IContactSharingDB
-} from "../../../database/queries/ticketActionDBs";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
-import { PersistentCacheService } from "../../persistentCacheService";
 import { RollbarService } from "../../rollbarService";
 import { setError, traced } from "../../telemetryService";
 import {
@@ -41,7 +29,10 @@ import {
   makePLogInfo
 } from "../util";
 import { GenericIssuancePipelineSubservice } from "./GenericIssuancePipelineSubservice";
-import { instantiatePipeline } from "./utils/instantiatePipeline";
+import {
+  InstantiatePipelineArgs,
+  instantiatePipeline
+} from "./utils/instantiatePipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -58,69 +49,32 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
-  private eddsaPrivateKey: string;
   private definitionDB: IPipelineDefinitionDB;
   private userDB: IPipelineUserDB;
-  private atomDB: IPipelineAtomDB;
-  private rsaPrivateKey: string;
-  private zupassPublicKey: EdDSAPublicKey;
-  private cacheService: PersistentCacheService;
-  private checkinDB: IPipelineCheckinDB;
-  private contactDB: IContactSharingDB;
-  private lemonadeAPI: ILemonadeAPI;
-  private genericPretixAPI: IGenericPretixAPI;
-  private badgeDB: IBadgeGiftingDB;
-  private consumerDB: IPipelineConsumerDB;
-  private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
   private nextLoadTimeout: NodeJS.Timeout | undefined;
   private pipelineSubservice: GenericIssuancePipelineSubservice;
+  private instantiatePipelineArgs: InstantiatePipelineArgs;
   private stopped = false;
 
   public constructor(
     context: ApplicationContext,
-
-    eddsaPrivateKey: string,
-    zupassPublicKey: EdDSAPublicKey,
-    rsaPrivateKey: string,
-
     userDB: IPipelineUserDB,
-    atomDB: IPipelineAtomDB,
-    checkinDB: IPipelineCheckinDB,
-    contactDB: IContactSharingDB,
-    badgeDB: IBadgeGiftingDB,
-    consumerDB: IPipelineConsumerDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
-
-    cacheService: PersistentCacheService,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
     pipelineSubservice: GenericIssuancePipelineSubservice,
-
-    lemonadeAPI: ILemonadeAPI,
-    genericPretixAPI: IGenericPretixAPI
+    instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
-    this.atomDB = atomDB;
-    this.eddsaPrivateKey = eddsaPrivateKey;
-    this.rsaPrivateKey = rsaPrivateKey;
-    this.zupassPublicKey = zupassPublicKey;
-    this.cacheService = cacheService;
-    this.checkinDB = checkinDB;
-    this.contactDB = contactDB;
-    this.lemonadeAPI = lemonadeAPI;
-    this.genericPretixAPI = genericPretixAPI;
-    this.badgeDB = badgeDB;
-    this.consumerDB = consumerDB;
-    this.semaphoreHistoryDB = semaphoreHistoryDB;
     this.pagerdutyService = pagerdutyService;
     this.discordService = discordService;
     this.rollbarService = rollbarService;
     this.userDB = userDB;
     this.pipelineSubservice = pipelineSubservice;
+    this.instantiatePipelineArgs = instantiatePipelineArgs;
   }
 
   public async start(startLoadLoop?: boolean): Promise<void> {
@@ -221,21 +175,8 @@ export class GenericIssuancePipelineExecutorSubservice {
 
       pipelineSlot.definition = definition;
       pipelineSlot.instance = await instantiatePipeline(
-        this.eddsaPrivateKey,
         definition,
-        this.atomDB,
-        {
-          genericPretixAPI: this.genericPretixAPI,
-          lemonadeAPI: this.lemonadeAPI
-        },
-        this.zupassPublicKey,
-        this.rsaPrivateKey,
-        this.cacheService,
-        this.checkinDB,
-        this.contactDB,
-        this.badgeDB,
-        this.consumerDB,
-        this.semaphoreHistoryDB
+        this.instantiatePipelineArgs
       );
 
       await this.performPipelineLoad(pipelineSlot);
@@ -266,10 +207,10 @@ export class GenericIssuancePipelineExecutorSubservice {
       );
 
       this.pipelineSubservice.pipelineSlots = await Promise.all(
-        pipelinesFromDB.map(async (pd: PipelineDefinition) => {
+        pipelinesFromDB.map(async (pipelineDefinition: PipelineDefinition) => {
           const slot: PipelineSlot = {
-            definition: pd,
-            owner: await this.userDB.getUserById(pd.ownerUserId)
+            definition: pipelineDefinition,
+            owner: await this.userDB.getUserById(pipelineDefinition.ownerUserId)
           };
 
           // attempt to instantiate a {@link Pipeline}
@@ -277,25 +218,16 @@ export class GenericIssuancePipelineExecutorSubservice {
           // log and continue
           try {
             slot.instance = await instantiatePipeline(
-              this.eddsaPrivateKey,
-              pd,
-              this.atomDB,
-              {
-                lemonadeAPI: this.lemonadeAPI,
-                genericPretixAPI: this.genericPretixAPI
-              },
-              this.zupassPublicKey,
-              this.rsaPrivateKey,
-              this.cacheService,
-              this.checkinDB,
-              this.contactDB,
-              this.badgeDB,
-              this.consumerDB,
-              this.semaphoreHistoryDB
+              pipelineDefinition,
+              this.instantiatePipelineArgs
             );
           } catch (e) {
             this.rollbarService?.reportError(e);
-            logger(LOG_TAG, `failed to instantiate pipeline ${pd.id} `, e);
+            logger(
+              LOG_TAG,
+              `failed to instantiate pipeline ${pipelineDefinition.id} `,
+              e
+            );
           }
 
           return slot;

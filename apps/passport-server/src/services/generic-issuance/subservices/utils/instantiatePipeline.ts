@@ -23,27 +23,34 @@ import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
 import { Pipeline } from "../../pipelines/types";
 
+export interface InstantiatePipelineArgs {
+  zupassPublicKey: EdDSAPublicKey;
+  eddsaPrivateKey: string;
+  rsaPrivateKey: string;
+
+  cacheService: PersistentCacheService;
+
+  apis: {
+    lemonadeAPI: ILemonadeAPI;
+    genericPretixAPI: IGenericPretixAPI;
+  };
+
+  atomDB: IPipelineAtomDB;
+  checkinDB: IPipelineCheckinDB;
+  contactDB: IContactSharingDB;
+  badgeDB: IBadgeGiftingDB;
+  consumerDB: IPipelineConsumerDB;
+  semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
+}
+
 /**
  * Given a {@link PipelineDefinition} (which is persisted to the database) instantiates
  * a {@link Pipeline} so that it can be used for loading data from an external provider,
  * and expose its {@link Capability}s to the external world.
  */
 export function instantiatePipeline(
-  eddsaPrivateKey: string,
   definition: PipelineDefinition,
-  db: IPipelineAtomDB,
-  apis: {
-    lemonadeAPI: ILemonadeAPI;
-    genericPretixAPI: IGenericPretixAPI;
-  },
-  zupassPublicKey: EdDSAPublicKey,
-  rsaPrivateKey: string,
-  cacheService: PersistentCacheService,
-  checkinDB: IPipelineCheckinDB,
-  contactDB: IContactSharingDB,
-  badgeDB: IBadgeGiftingDB,
-  consumerDB: IPipelineConsumerDB,
-  semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+  args: InstantiatePipelineArgs
 ): Promise<Pipeline> {
   return traced("instantiatePipeline", "instantiatePipeline", async () => {
     tracePipeline(definition);
@@ -52,37 +59,37 @@ export function instantiatePipeline(
 
     if (isLemonadePipelineDefinition(definition)) {
       pipeline = new LemonadePipeline(
-        eddsaPrivateKey,
+        args.eddsaPrivateKey,
         definition,
-        db,
-        apis.lemonadeAPI,
-        zupassPublicKey,
-        cacheService,
-        checkinDB,
-        contactDB,
-        badgeDB,
-        consumerDB,
-        semaphoreHistoryDB
+        args.atomDB,
+        args.apis.lemonadeAPI,
+        args.zupassPublicKey,
+        args.cacheService,
+        args.checkinDB,
+        args.contactDB,
+        args.badgeDB,
+        args.consumerDB,
+        args.semaphoreHistoryDB
       );
     } else if (isPretixPipelineDefinition(definition)) {
       pipeline = new PretixPipeline(
-        eddsaPrivateKey,
+        args.eddsaPrivateKey,
         definition,
-        db,
-        apis.genericPretixAPI,
-        zupassPublicKey,
-        cacheService,
-        checkinDB,
-        consumerDB,
-        semaphoreHistoryDB
+        args.atomDB,
+        args.apis.genericPretixAPI,
+        args.zupassPublicKey,
+        args.cacheService,
+        args.checkinDB,
+        args.consumerDB,
+        args.semaphoreHistoryDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(
-        eddsaPrivateKey,
+        args.eddsaPrivateKey,
         definition,
-        db,
-        zupassPublicKey,
-        rsaPrivateKey
+        args.atomDB,
+        args.zupassPublicKey,
+        args.rsaPrivateKey
       );
     }
 

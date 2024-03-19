@@ -42,23 +42,9 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuancePipelineSubservice {
   public pipelineSlots: PipelineSlot[];
-  private eddsaPrivateKey: string;
   private definitionDB: IPipelineDefinitionDB;
   private userDB: IPipelineUserDB;
   private atomDB: IPipelineAtomDB;
-  private rsaPrivateKey: string;
-  private zupassPublicKey: EdDSAPublicKey;
-  private cacheService: PersistentCacheService;
-  private checkinDB: IPipelineCheckinDB;
-  private contactDB: IContactSharingDB;
-  private lemonadeAPI: ILemonadeAPI;
-  private genericPretixAPI: IGenericPretixAPI;
-  private badgeDB: IBadgeGiftingDB;
-  private consumerDB: IPipelineConsumerDB;
-  private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
-  private nextLoadTimeout: NodeJS.Timeout | undefined;
-  private stopped: boolean;
-
   private pipelineExecutorSubservice: GenericIssuancePipelineExecutorSubservice;
 
   public constructor(
@@ -87,43 +73,30 @@ export class GenericIssuancePipelineSubservice {
     this.definitionDB = new PipelineDefinitionDB(context.dbPool);
     this.pipelineSlots = [];
     this.atomDB = atomDB;
-    this.eddsaPrivateKey = eddsaPrivateKey;
-    this.rsaPrivateKey = rsaPrivateKey;
-    this.zupassPublicKey = zupassPublicKey;
-    this.cacheService = cacheService;
-    this.checkinDB = checkinDB;
-    this.contactDB = contactDB;
-    this.lemonadeAPI = lemonadeAPI;
-    this.genericPretixAPI = genericPretixAPI;
-    this.badgeDB = badgeDB;
-    this.consumerDB = consumerDB;
-    this.semaphoreHistoryDB = semaphoreHistoryDB;
-    this.stopped = false;
-
     this.pipelineExecutorSubservice =
       new GenericIssuancePipelineExecutorSubservice(
         context,
-        eddsaPrivateKey,
-        zupassPublicKey,
-        rsaPrivateKey,
-
         userDB,
-        atomDB,
-        checkinDB,
-        contactDB,
-        badgeDB,
-        consumerDB,
-        semaphoreHistoryDB,
-
-        cacheService,
         pagerdutyService,
         discordService,
         rollbarService,
-
         this,
-
-        lemonadeAPI,
-        genericPretixAPI
+        {
+          zupassPublicKey,
+          eddsaPrivateKey,
+          rsaPrivateKey,
+          cacheService,
+          apis: {
+            lemonadeAPI,
+            genericPretixAPI
+          },
+          atomDB,
+          checkinDB,
+          contactDB,
+          badgeDB,
+          consumerDB,
+          semaphoreHistoryDB
+        }
       );
 
     this.userDB = userDB;
@@ -134,11 +107,7 @@ export class GenericIssuancePipelineSubservice {
   }
 
   public async stop(): Promise<void> {
-    this.stopped = true;
-    if (this.nextLoadTimeout) {
-      clearTimeout(this.nextLoadTimeout);
-      this.nextLoadTimeout = undefined;
-    }
+    await this.pipelineExecutorSubservice.stop();
   }
 
   public async getAllPipelineInstances(): Promise<Pipeline[]> {
