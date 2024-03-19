@@ -13,7 +13,6 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
-import { IPipelineUserDB } from "../../../database/queries/pipelineUserDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
@@ -25,6 +24,7 @@ import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
 import { GenericIssuancePipelineExecutorSubservice } from "./GenericIssuancePipelineExecutorSubservice";
+import { GenericIssuanceUserSubservice } from "./GenericIssuanceUserSubservice";
 import { InstantiatePipelineArgs } from "./utils/instantiatePipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
@@ -32,14 +32,14 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuancePipelineSubservice {
   public pipelineSlots: PipelineSlot[];
+  private userSubservice: GenericIssuanceUserSubservice;
   private pipelineDB: IPipelineDefinitionDB;
-  private pipelineUserDB: IPipelineUserDB;
   private pipelineAtomDB: IPipelineAtomDB;
   private pipelineExecutorSubservice: GenericIssuancePipelineExecutorSubservice;
 
   public constructor(
     context: ApplicationContext,
-    pipelineUserDB: IPipelineUserDB,
+    userSubservice: GenericIssuanceUserSubservice,
     pipelineAtomDB: IPipelineAtomDB,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
@@ -52,7 +52,7 @@ export class GenericIssuancePipelineSubservice {
     this.pipelineExecutorSubservice =
       new GenericIssuancePipelineExecutorSubservice(
         context,
-        pipelineUserDB,
+        userSubservice,
         pagerdutyService,
         discordService,
         rollbarService,
@@ -60,7 +60,7 @@ export class GenericIssuancePipelineSubservice {
         instantiatePipelineArgs
       );
 
-    this.pipelineUserDB = pipelineUserDB;
+    this.userSubservice = userSubservice;
   }
 
   public async start(startLoadLoop?: boolean): Promise<void> {
@@ -224,7 +224,7 @@ export class GenericIssuancePipelineSubservice {
       tracePipeline(validatedNewDefinition);
       await this.saveDefinition(validatedNewDefinition);
       if (existingSlot) {
-        existingSlot.owner = await this.pipelineUserDB.getUserById(
+        existingSlot.owner = await this.userSubservice.getUserById(
           validatedNewDefinition.ownerUserId
         );
       }

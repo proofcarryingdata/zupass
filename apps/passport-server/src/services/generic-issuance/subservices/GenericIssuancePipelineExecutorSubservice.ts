@@ -8,7 +8,6 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
-import { IPipelineUserDB } from "../../../database/queries/pipelineUserDB";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
@@ -29,6 +28,7 @@ import {
   makePLogInfo
 } from "../util";
 import { GenericIssuancePipelineSubservice } from "./GenericIssuancePipelineSubservice";
+import { GenericIssuanceUserSubservice } from "./GenericIssuanceUserSubservice";
 import {
   InstantiatePipelineArgs,
   instantiatePipeline
@@ -50,7 +50,7 @@ export class GenericIssuancePipelineExecutorSubservice {
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
   private pipelineDB: IPipelineDefinitionDB;
-  private pipelineUserDB: IPipelineUserDB;
+  private userSubservice: GenericIssuanceUserSubservice;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
   private rollbarService: RollbarService | null;
@@ -61,7 +61,7 @@ export class GenericIssuancePipelineExecutorSubservice {
 
   public constructor(
     context: ApplicationContext,
-    userDB: IPipelineUserDB,
+    userSubservice: GenericIssuanceUserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
@@ -72,7 +72,7 @@ export class GenericIssuancePipelineExecutorSubservice {
     this.pagerdutyService = pagerdutyService;
     this.discordService = discordService;
     this.rollbarService = rollbarService;
-    this.pipelineUserDB = userDB;
+    this.userSubservice = userSubservice;
     this.pipelineSubservice = pipelineSubservice;
     this.instantiatePipelineArgs = instantiatePipelineArgs;
   }
@@ -145,11 +145,11 @@ export class GenericIssuancePipelineExecutorSubservice {
       if (!pipelineSlot) {
         pipelineSlot = {
           definition: definition,
-          owner: await this.pipelineUserDB.getUserById(definition.ownerUserId)
+          owner: await this.userSubservice.getUserById(definition.ownerUserId)
         };
         this.pipelineSubservice.pipelineSlots.push(pipelineSlot);
       } else {
-        pipelineSlot.owner = await this.pipelineUserDB.getUserById(
+        pipelineSlot.owner = await this.userSubservice.getUserById(
           definition.ownerUserId
         );
       }
@@ -210,7 +210,7 @@ export class GenericIssuancePipelineExecutorSubservice {
         pipelinesFromDB.map(async (pipelineDefinition: PipelineDefinition) => {
           const slot: PipelineSlot = {
             definition: pipelineDefinition,
-            owner: await this.pipelineUserDB.getUserById(
+            owner: await this.userSubservice.getUserById(
               pipelineDefinition.ownerUserId
             )
           };
@@ -258,7 +258,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             ` of type '${pipeline?.type}'` +
             ` belonging to ${pipelineSlot.definition.ownerUserId}`
         );
-        const owner = await this.pipelineUserDB.getUserById(
+        const owner = await this.userSubservice.getUserById(
           pipelineSlot.definition.ownerUserId
         );
         traceUser(owner);

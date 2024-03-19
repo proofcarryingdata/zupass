@@ -44,10 +44,6 @@ import {
   PipelineSemaphoreHistoryDB
 } from "../../database/queries/pipelineSemaphoreHistoryDB";
 import {
-  IPipelineUserDB,
-  PipelineUserDB
-} from "../../database/queries/pipelineUserDB";
-import {
   BadgeGiftingDB,
   ContactSharingDB,
   IBadgeGiftingDB,
@@ -82,7 +78,6 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class GenericIssuanceService {
   private context: ApplicationContext;
-  private pipelineUserDB: IPipelineUserDB;
   private pipelineAtomDB: IPipelineAtomDB;
   private checkinDB: IPipelineCheckinDB;
   private contactDB: IContactSharingDB;
@@ -109,8 +104,7 @@ export class GenericIssuanceService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-    this.pipelineUserDB = new PipelineUserDB(context.dbPool);
-    this.pipelineAtomDB = new InMemoryPipelineAtomDB();
+
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
@@ -118,15 +112,17 @@ export class GenericIssuanceService {
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
 
+    this.pipelineAtomDB = new InMemoryPipelineAtomDB();
+
     this.userSubservice = new GenericIssuanceUserSubservice(
-      this.pipelineUserDB,
+      context,
       stytchClient,
       genericIssuanceClientUrl
     );
 
     this.pipelineSubservice = new GenericIssuancePipelineSubservice(
       context,
-      this.pipelineUserDB,
+      this.userSubservice,
       this.pipelineAtomDB,
       pagerdutyService,
       discordService,

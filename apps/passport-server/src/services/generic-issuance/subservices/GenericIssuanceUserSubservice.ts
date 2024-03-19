@@ -2,8 +2,12 @@ import { GenericIssuanceSendEmailResponseValue } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
 import { Request } from "express";
 import { Client, Session } from "stytch";
-import { IPipelineUserDB } from "../../../database/queries/pipelineUserDB";
+import {
+  IPipelineUserDB,
+  PipelineUserDB
+} from "../../../database/queries/pipelineUserDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
+import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { setError, traced } from "../../telemetryService";
 import { traceUser } from "../honeycombQueries";
@@ -18,11 +22,11 @@ export class GenericIssuanceUserSubservice {
   private genericIssuanceClientUrl: string;
 
   public constructor(
-    pipelineUserDB: IPipelineUserDB,
+    context: ApplicationContext,
     stytchClient: Client | undefined,
     genericIssuanceClientUrl: string
   ) {
-    this.pipelineUserDB = pipelineUserDB;
+    this.pipelineUserDB = new PipelineUserDB(context.dbPool);
     this.stytchClient = stytchClient;
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
   }
@@ -35,6 +39,10 @@ export class GenericIssuanceUserSubservice {
     return traced(SERVICE_NAME, "getOrCreateUser", async () => {
       return this.pipelineUserDB.getOrCreateUser(email);
     });
+  }
+
+  public async getUserById(id: string): Promise<PipelineUser | undefined> {
+    return this.pipelineUserDB.getUserById(id);
   }
 
   private getEmailFromStytchSession(session: Session): string {
