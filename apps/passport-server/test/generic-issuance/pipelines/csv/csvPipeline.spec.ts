@@ -24,7 +24,7 @@ import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import { assertUserMatches } from "../../util";
 import { makeTestCSVPipelineDefinition } from "./makeTestCSVPipelineDefinition";
 
-describe.only("Generic Issuance", function () {
+describe("Generic Issuance", function () {
   this.timeout(30_000);
   const nowDate = new Date();
   const now = Date.now();

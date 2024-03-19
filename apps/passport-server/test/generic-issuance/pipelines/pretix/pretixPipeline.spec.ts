@@ -33,7 +33,7 @@ import {
 } from "../../util";
 import { setupPretixPipeline } from "./setupPretixPipeline";
 
-describe.only("Generic Issuance", function () {
+describe("Generic Issuance", function () {
   this.timeout(30_000);
   const nowDate = new Date();
   const now = Date.now();
