@@ -4,10 +4,6 @@ import {
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
 import urljoin from "url-join";
-import {
-  IPipelineDefinitionDB,
-  PipelineDefinitionDB
-} from "../../../database/queries/pipelineDefinitionDB";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
@@ -49,7 +45,6 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
-  private pipelineDB: IPipelineDefinitionDB;
   private userSubservice: GenericIssuanceUserSubservice;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
@@ -68,7 +63,6 @@ export class GenericIssuancePipelineExecutorSubservice {
     pipelineSubservice: GenericIssuancePipelineSubservice,
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
-    this.pipelineDB = new PipelineDefinitionDB(context.dbPool);
     this.pagerdutyService = pagerdutyService;
     this.discordService = discordService;
     this.rollbarService = rollbarService;
@@ -195,7 +189,8 @@ export class GenericIssuancePipelineExecutorSubservice {
    */
   private async loadAndInstantiatePipelines(): Promise<void> {
     return traced(SERVICE_NAME, "loadAndInstantiatePipelines", async (span) => {
-      const pipelinesFromDB = await this.pipelineDB.loadPipelineDefinitions();
+      const pipelinesFromDB =
+        await this.pipelineSubservice.loadPipelineDefinitions();
       span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
       await Promise.allSettled(
@@ -296,7 +291,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             success: false,
             errorMessage: "failed to start pipeline"
           };
-          this.pipelineDB.saveLoadSummary(pipelineId, summary);
+          this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
@@ -314,7 +309,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             `successfully loaded data for pipeline with id '${pipelineId}'` +
               ` of type '${pipelineSlot.definition.type}'`
           );
-          this.pipelineDB.saveLoadSummary(pipelineId, summary);
+          this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
@@ -333,7 +328,7 @@ export class GenericIssuancePipelineExecutorSubservice {
             }`,
             success: false
           } satisfies PipelineLoadSummary;
-          this.pipelineDB.saveLoadSummary(pipelineId, summary);
+          this.pipelineSubservice.saveLoadSummary(pipelineId, summary);
           traceLoadSummary(summary);
           this.maybeAlertForPipelineRun(pipelineSlot, summary);
           return summary;
@@ -368,7 +363,10 @@ export class GenericIssuancePipelineExecutorSubservice {
         this.pipelineSubservice.pipelineSlots.map(
           async (slot: PipelineSlot): Promise<void> => {
             const runInfo = await this.performPipelineLoad(slot);
-            await this.pipelineDB.saveLoadSummary(slot.definition.id, runInfo);
+            await this.pipelineSubservice.saveLoadSummary(
+              slot.definition.id,
+              runInfo
+            );
           }
         )
       );

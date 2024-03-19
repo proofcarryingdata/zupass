@@ -103,6 +103,10 @@ export class GenericIssuancePipelineSubservice {
     return this.pipelineDB.getLastLoadSummary(id);
   }
 
+  public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
+    return this.pipelineDB.loadPipelineDefinitions();
+  }
+
   public async loadPipelineDefinition(
     id: string
   ): Promise<PipelineDefinition | undefined> {
