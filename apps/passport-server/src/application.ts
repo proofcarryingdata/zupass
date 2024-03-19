@@ -3,7 +3,6 @@ import sendgrid from "@sendgrid/mail";
 import process from "node:process";
 import * as path from "path";
 import urljoin from "url-join";
-import { MockPipelineAtomDB } from "../test/generic-issuance/MockPipelineAtomDB";
 import { getDevconnectPretixAPI } from "./apis/devconnect/devconnectPretixAPI";
 import { IEmailAPI, sendgridSendEmail } from "./apis/emailAPI";
 import { getHoneycombAPI } from "./apis/honeycombAPI";
@@ -49,9 +48,7 @@ export async function startApplication(
     honeyClient,
     resourcesDir: path.join(process.cwd(), "resources"),
     publicResourcesDir: path.join(process.cwd(), "public"),
-    gitCommitHash: await getCommitHash(),
-    // TODO: remove these once we have settled on a db schema for these
-    pipelineAtomDB: new MockPipelineAtomDB()
+    gitCommitHash: await getCommitHash()
   };
 
   const apis = await getOverridenApis(context, apiOverrides);

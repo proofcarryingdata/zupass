@@ -7,7 +7,6 @@ import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
-import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -39,7 +38,6 @@ export interface ApplicationContext {
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
-  pipelineAtomDB: IPipelineAtomDB;
 }
 
 export interface GlobalServices {

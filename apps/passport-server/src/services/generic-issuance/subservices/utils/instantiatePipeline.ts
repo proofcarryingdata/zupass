@@ -26,13 +26,10 @@ import { Pipeline } from "../../pipelines/types";
 export interface InstantiatePipelineArgs {
   zupassPublicKey: EdDSAPublicKey;
   eddsaPrivateKey: string;
-
   cacheService: PersistentCacheService;
-
   lemonadeAPI: ILemonadeAPI;
   genericPretixAPI: IGenericPretixAPI;
-
-  atomDB: IPipelineAtomDB;
+  pipelineAtomDB: IPipelineAtomDB;
   checkinDB: IPipelineCheckinDB;
   contactDB: IContactSharingDB;
   badgeDB: IBadgeGiftingDB;
@@ -58,7 +55,7 @@ export function instantiatePipeline(
       pipeline = new LemonadePipeline(
         args.eddsaPrivateKey,
         definition,
-        args.atomDB,
+        args.pipelineAtomDB,
         args.lemonadeAPI,
         args.zupassPublicKey,
         args.cacheService,
@@ -72,7 +69,7 @@ export function instantiatePipeline(
       pipeline = new PretixPipeline(
         args.eddsaPrivateKey,
         definition,
-        args.atomDB,
+        args.pipelineAtomDB,
         args.genericPretixAPI,
         args.zupassPublicKey,
         args.cacheService,
@@ -81,7 +78,11 @@ export function instantiatePipeline(
         args.semaphoreHistoryDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
-      pipeline = new CSVPipeline(args.eddsaPrivateKey, definition, args.atomDB);
+      pipeline = new CSVPipeline(
+        args.eddsaPrivateKey,
+        definition,
+        args.pipelineAtomDB
+      );
     }
 
     if (pipeline) {

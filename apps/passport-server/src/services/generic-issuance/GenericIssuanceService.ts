@@ -59,6 +59,7 @@ import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
 import { traceFlattenedObject, traced } from "../telemetryService";
+import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
 import { isCheckinCapability } from "./capabilities/CheckinCapability";
 import {
   FeedIssuanceCapability,
@@ -96,7 +97,6 @@ export class GenericIssuanceService {
     zupassPublicKey: EdDSAPublicKey,
     eddsaPrivateKey: string,
     genericIssuanceClientUrl: string,
-    pipelineAtomDB: IPipelineAtomDB,
     pretixAPI: IGenericPretixAPI,
     lemonadeAPI: ILemonadeAPI,
     stytchClient: Client | undefined,
@@ -108,7 +108,7 @@ export class GenericIssuanceService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.pipelineUserDB = new PipelineUserDB(context.dbPool);
-    this.pipelineAtomDB = pipelineAtomDB;
+    this.pipelineAtomDB = new InMemoryPipelineAtomDB();
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
@@ -125,7 +125,7 @@ export class GenericIssuanceService {
     this.pipelineSubservice = new GenericIssuancePipelineSubservice(
       context,
       this.pipelineUserDB,
-      pipelineAtomDB,
+      this.pipelineAtomDB,
       pagerdutyService,
       discordService,
       rollbarService,
@@ -135,7 +135,7 @@ export class GenericIssuanceService {
         cacheService,
         lemonadeAPI,
         genericPretixAPI: this.genericPretixAPI,
-        atomDB: pipelineAtomDB,
+        pipelineAtomDB: this.pipelineAtomDB,
         checkinDB: this.checkinDB,
         contactDB: this.contactDB,
         badgeDB: this.badgeDB,
@@ -751,7 +751,6 @@ export async function startGenericIssuanceService(
     zupassPublicKey,
     pkeyEnv,
     genericIssuanceClientUrl,
-    context.pipelineAtomDB,
     genericPretixAPI,
     lemonadeAPI,
     stytchClient,
