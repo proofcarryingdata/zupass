@@ -2,6 +2,7 @@ import { expect } from "chai";
 import "mocha";
 import {
   PODContent,
+  PODValue,
   isPODNumericValue,
   podNameHash,
   podValueHash
@@ -54,10 +55,10 @@ describe("PODContent class should work", async function () {
   it("should allow access to entries by name", function () {
     for (const entryName of podContent1.listNames()) {
       expect(podContent1.getValue(entryName)).to.deep.eq(
-        sampleEntries1[entryName]
+        (sampleEntries1 as Record<string, PODValue>)[entryName]
       );
       expect(podContent1.getRawValue(entryName)).to.eq(
-        sampleEntries1[entryName].value
+        (sampleEntries1 as Record<string, PODValue>)[entryName].value
       );
     }
   });

@@ -57,6 +57,9 @@
       "path": "../../packages/pcd/semaphore-signature-pcd"
     },
     {
+      "path": "../../packages/lib/util"
+    },
+    {
       "path": "../../packages/pcd/webauthn-pcd"
     },
     {
@@ -64,9 +67,6 @@
     },
     {
       "path": "../../packages/pcd/zk-eddsa-frog-pcd"
-    },
-    {
-      "path": "../../packages/lib/util"
     }
   ]
 }

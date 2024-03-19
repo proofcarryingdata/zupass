@@ -23,4 +23,4 @@
 
 PCD representating an object in the Provable Object Data format.
 
-TODO(artwyman): Detailed description of POD concepts an design.
+TODO(POD-P3): Detailed description of POD concepts an design.
