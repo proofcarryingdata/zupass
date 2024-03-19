@@ -72,6 +72,7 @@ import { tracePipeline, traceUser } from "./honeycombQueries";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { PipelineSubservice } from "./subservices/PipelineSubservice";
 import { UserSubservice } from "./subservices/UserSubservice";
+import { InstantiatePipelineArgs } from "./subservices/utils/instantiatePipeline";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -104,16 +105,13 @@ export class GenericIssuanceService {
   ) {
     this.context = context;
     this.rollbarService = rollbarService;
-
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
     this.genericPretixAPI = pretixAPI;
     this.contactDB = new ContactSharingDB(this.context.dbPool);
     this.badgeDB = new BadgeGiftingDB(this.context.dbPool);
-
     this.pipelineAtomDB = new InMemoryPipelineAtomDB();
-
     this.userSubservice = new UserSubservice(
       context,
       stytchClient,
@@ -139,7 +137,7 @@ export class GenericIssuanceService {
         badgeDB: this.badgeDB,
         consumerDB: this.consumerDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB
-      }
+      } satisfies InstantiatePipelineArgs
     );
   }
 

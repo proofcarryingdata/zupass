@@ -1,13 +1,9 @@
 import {
   GenericIssuancePipelineListEntry,
   PipelineDefinition,
-  PipelineDefinitionSchema,
-  PipelineLoadSummary,
-  isCSVPipelineDefinition
+  PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
-import _ from "lodash";
-import { v4 as uuidv4 } from "uuid";
 import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
 import {
   IPipelineDefinitionDB,
@@ -26,20 +22,23 @@ import { PipelineSlot } from "../types";
 import { PipelineExecutorSubservice } from "./PipelineExecutorSubservice";
 import { UserSubservice } from "./UserSubservice";
 import { InstantiatePipelineArgs } from "./utils/instantiatePipeline";
+import {
+  UpsertPipelineResult,
+  upsertPipelineDefinition
+} from "./utils/upsertPipelineDefinition";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
-const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class PipelineSubservice {
-  private userSubservice: UserSubservice;
-  private pipelineDB: IPipelineDefinitionDB;
   private pipelineAtomDB: IPipelineAtomDB;
+  private pipelineDB: IPipelineDefinitionDB;
+  private userSubservice: UserSubservice;
   private executorSubservice: PipelineExecutorSubservice;
 
   public constructor(
     context: ApplicationContext,
-    userSubservice: UserSubservice,
     pipelineAtomDB: IPipelineAtomDB,
+    userSubservice: UserSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
@@ -55,7 +54,6 @@ export class PipelineSubservice {
       rollbarService,
       instantiatePipelineArgs
     );
-
     this.userSubservice = userSubservice;
   }
 
@@ -151,94 +149,21 @@ export class PipelineSubservice {
   public async upsertPipelineDefinition(
     user: PipelineUser,
     newDefinition: PipelineDefinition
-  ): Promise<{
-    definition: PipelineDefinition;
-    restartPromise: Promise<void>;
-  }> {
-    return traced(SERVICE_NAME, "upsertPipelineDefinition", async (span) => {
+  ): Promise<UpsertPipelineResult> {
+    return traced(SERVICE_NAME, "upsertPipelineDefinition", async () => {
       logger(SERVICE_NAME, "upsertPipelineDefinition", str(newDefinition));
-      traceUser(user);
-
-      // TODO: do this in a transaction
-      const existingPipelineDefinition = await this.loadPipelineDefinition(
-        newDefinition.id
+      return await upsertPipelineDefinition(
+        user,
+        newDefinition,
+        this.userSubservice,
+        this,
+        this.executorSubservice
       );
-      const existingSlot = this.executorSubservice
-        .getAllPipelineSlots()
-        .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
-
-      if (existingPipelineDefinition) {
-        span?.setAttribute("is_new", false);
-        this.ensureUserHasPipelineDefinitionAccess(
-          user,
-          existingPipelineDefinition
-        );
-        if (
-          existingPipelineDefinition.ownerUserId !==
-            newDefinition.ownerUserId &&
-          !user.isAdmin
-        ) {
-          throw new PCDHTTPError(400, "Cannot change owner of pipeline");
-        }
-
-        if (
-          !user.isAdmin &&
-          !_.isEqual(
-            existingPipelineDefinition.options.alerts,
-            newDefinition.options.alerts
-          )
-        ) {
-          throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
-        }
-      } else {
-        // NEW PIPELINE!
-        span?.setAttribute("is_new", true);
-        newDefinition.ownerUserId = user.id;
-        newDefinition.id = uuidv4();
-        newDefinition.timeCreated = new Date().toISOString();
-        newDefinition.timeUpdated = new Date().toISOString();
-
-        if (!user.isAdmin && !!newDefinition.options.alerts) {
-          throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
-        }
-      }
-
-      let validatedNewDefinition: PipelineDefinition = newDefinition;
-
-      try {
-        validatedNewDefinition = PipelineDefinitionSchema.parse(
-          newDefinition
-        ) as PipelineDefinition;
-      } catch (e) {
-        logger(LOG_TAG, "invalid pipeline definition", e);
-        throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
-      }
-
-      if (isCSVPipelineDefinition(validatedNewDefinition)) {
-        if (validatedNewDefinition.options.csv.length > 80_000) {
-          throw new Error("csv too large");
-        }
-      }
-
-      logger(
-        LOG_TAG,
-        `executing upsert of pipeline ${str(validatedNewDefinition)}`
-      );
-      tracePipeline(validatedNewDefinition);
-      await this.saveDefinition(validatedNewDefinition);
-      if (existingSlot) {
-        existingSlot.owner = await this.userSubservice.getUserById(
-          validatedNewDefinition.ownerUserId
-        );
-      }
-      await this.saveLoadSummary(validatedNewDefinition.id, undefined);
-      await this.pipelineAtomDB.clear(validatedNewDefinition.id);
-      // purposely not awaited
-      const restartPromise = this.executorSubservice.restartPipeline(
-        validatedNewDefinition.id
-      );
-      return { definition: validatedNewDefinition, restartPromise };
     });
+  }
+
+  public async clearAtomsForPipeline(pipelineId: string): Promise<void> {
+    await this.pipelineAtomDB.clear(pipelineId);
   }
 
   /**

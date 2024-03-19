@@ -1,0 +1,119 @@
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
+import {
+  PipelineDefinition,
+  PipelineDefinitionSchema,
+  isCSVPipelineDefinition
+} from "@pcd/passport-interface";
+import { str } from "@pcd/util";
+import _ from "lodash";
+import { v4 as uuidv4 } from "uuid";
+import { PCDHTTPError } from "../../../../routing/pcdHttpError";
+import { logger } from "../../../../util/logger";
+import { tracePipeline, traceUser } from "../../honeycombQueries";
+import { PipelineUser } from "../../pipelines/types";
+import { PipelineExecutorSubservice } from "../PipelineExecutorSubservice";
+import { PipelineSubservice } from "../PipelineSubservice";
+import { UserSubservice } from "../UserSubservice";
+
+const LOG_TAG = "upsertPipelineDefinition";
+
+export interface UpsertPipelineResult {
+  definition: PipelineDefinition;
+  restartPromise: Promise<void>;
+}
+
+export async function upsertPipelineDefinition(
+  user: PipelineUser,
+  newDefinition: PipelineDefinition,
+  userSubservice: UserSubservice,
+  pipelineSubservice: PipelineSubservice,
+  executorSubservice: PipelineExecutorSubservice
+): Promise<UpsertPipelineResult> {
+  traceUser(user);
+  // TODO: do this in a transaction
+  const existingPipelineDefinition =
+    await pipelineSubservice.loadPipelineDefinition(newDefinition.id);
+  const existingSlot = executorSubservice
+    .getAllPipelineSlots()
+    .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
+
+  if (existingPipelineDefinition) {
+    getActiveSpan()?.setAttribute("is_new", false);
+    pipelineSubservice.ensureUserHasPipelineDefinitionAccess(
+      user,
+      existingPipelineDefinition
+    );
+
+    if (
+      existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId &&
+      !user.isAdmin
+    ) {
+      throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+    }
+
+    if (
+      !user.isAdmin &&
+      !_.isEqual(
+        existingPipelineDefinition.options.alerts,
+        newDefinition.options.alerts
+      )
+    ) {
+      throw new PCDHTTPError(400, "Cannot change alerts of pipeline");
+    }
+  } else {
+    // NEW PIPELINE!
+    getActiveSpan()?.setAttribute("is_new", true);
+    newDefinition.ownerUserId = user.id;
+    newDefinition.id = uuidv4();
+    newDefinition.timeCreated = new Date().toISOString();
+    newDefinition.timeUpdated = new Date().toISOString();
+
+    if (!user.isAdmin && !!newDefinition.options.alerts) {
+      throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
+    }
+  }
+
+  let validatedNewDefinition: PipelineDefinition = newDefinition;
+
+  try {
+    validatedNewDefinition = PipelineDefinitionSchema.parse(
+      newDefinition
+    ) as PipelineDefinition;
+  } catch (e) {
+    logger(LOG_TAG, "invalid pipeline definition", e);
+    throw new PCDHTTPError(400, `Invalid Pipeline Definition: ${e}`);
+  }
+
+  if (isCSVPipelineDefinition(validatedNewDefinition)) {
+    if (validatedNewDefinition.options.csv.length > 80000) {
+      throw new Error("csv too large");
+    }
+  }
+
+  logger(
+    LOG_TAG,
+    `executing upsert of pipeline ${str(validatedNewDefinition)}`
+  );
+  tracePipeline(validatedNewDefinition);
+  await pipelineSubservice.saveDefinition(validatedNewDefinition);
+  if (existingSlot) {
+    existingSlot.owner = await userSubservice.getUserById(
+      validatedNewDefinition.ownerUserId
+    );
+  }
+  await pipelineSubservice.saveLoadSummary(
+    validatedNewDefinition.id,
+    undefined
+  );
+  await pipelineSubservice.clearAtomsForPipeline(validatedNewDefinition.id);
+
+  // purposely not awaited
+  const restartPromise = executorSubservice.restartPipeline(
+    validatedNewDefinition.id
+  );
+
+  return {
+    definition: validatedNewDefinition,
+    restartPromise
+  } satisfies UpsertPipelineResult;
+}
