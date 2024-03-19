@@ -4,7 +4,10 @@ import {
   PipelineLoadSummary
 } from "@pcd/passport-interface";
 import { str } from "@pcd/util";
-import { IPipelineAtomDB } from "../../../database/queries/pipelineAtomDB";
+import {
+  IPipelineAtomDB,
+  PipelineAtom
+} from "../../../database/queries/pipelineAtomDB";
 import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
@@ -63,6 +66,10 @@ export class PipelineSubservice {
 
   public async stop(): Promise<void> {
     await this.executorSubservice.stop();
+  }
+
+  public async getPipelineAtoms(pipelineId: string): Promise<PipelineAtom[]> {
+    return this.pipelineAtomDB.load(pipelineId);
   }
 
   public async getAllPipelineInstances(): Promise<Pipeline[]> {
