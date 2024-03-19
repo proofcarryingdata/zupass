@@ -31,11 +31,10 @@ const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
 export class PipelineSubservice {
-  public pipelineSlots: PipelineSlot[];
   private userSubservice: UserSubservice;
   private pipelineDB: IPipelineDefinitionDB;
   private pipelineAtomDB: IPipelineAtomDB;
-  private pipelineExecutorSubservice: PipelineExecutorSubservice;
+  private executorSubservice: PipelineExecutorSubservice;
 
   public constructor(
     context: ApplicationContext,
@@ -47,9 +46,8 @@ export class PipelineSubservice {
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
     this.pipelineDB = new PipelineDefinitionDB(context.dbPool);
-    this.pipelineSlots = [];
     this.pipelineAtomDB = pipelineAtomDB;
-    this.pipelineExecutorSubservice = new PipelineExecutorSubservice(
+    this.executorSubservice = new PipelineExecutorSubservice(
       this,
       userSubservice,
       pagerdutyService,
@@ -62,21 +60,24 @@ export class PipelineSubservice {
   }
 
   public async start(startLoadLoop?: boolean): Promise<void> {
-    await this.pipelineExecutorSubservice.start(startLoadLoop);
+    await this.executorSubservice.start(startLoadLoop);
   }
 
   public async stop(): Promise<void> {
-    await this.pipelineExecutorSubservice.stop();
+    await this.executorSubservice.stop();
   }
 
   public async getAllPipelineInstances(): Promise<Pipeline[]> {
-    return this.pipelineSlots
+    return this.executorSubservice
+      .getAllPipelineSlots()
       .map((p) => p.instance)
       .filter((p) => !!p) as Pipeline[];
   }
 
   public async getPipelineSlot(id: string): Promise<PipelineSlot | undefined> {
-    return this.pipelineSlots.find((p) => p.definition.id === id);
+    return this.executorSubservice
+      .getAllPipelineSlots()
+      .find((p) => p.definition.id === id);
   }
 
   public async ensurePipelineSlotExists(id: string): Promise<PipelineSlot> {
@@ -143,7 +144,7 @@ export class PipelineSubservice {
       await this.pipelineDB.clearDefinition(pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.pipelineAtomDB.clear(pipelineId);
-      await this.pipelineExecutorSubservice.restartPipeline(pipelineId);
+      await this.executorSubservice.restartPipeline(pipelineId);
     });
   }
 
@@ -162,9 +163,9 @@ export class PipelineSubservice {
       const existingPipelineDefinition = await this.loadPipelineDefinition(
         newDefinition.id
       );
-      const existingSlot = this.pipelineSlots.find(
-        (slot) => slot.definition.id === existingPipelineDefinition?.id
-      );
+      const existingSlot = this.executorSubservice
+        .getAllPipelineSlots()
+        .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
 
       if (existingPipelineDefinition) {
         span?.setAttribute("is_new", false);
@@ -233,7 +234,7 @@ export class PipelineSubservice {
       await this.saveLoadSummary(validatedNewDefinition.id, undefined);
       await this.pipelineAtomDB.clear(validatedNewDefinition.id);
       // purposely not awaited
-      const restartPromise = this.pipelineExecutorSubservice.restartPipeline(
+      const restartPromise = this.executorSubservice.restartPipeline(
         validatedNewDefinition.id
       );
       return { definition: validatedNewDefinition, restartPromise };
@@ -252,9 +253,11 @@ export class PipelineSubservice {
       async (span) => {
         logger(SERVICE_NAME, "getAllUserPipelineDefinitions", str(user));
 
-        const visiblePipelines = this.pipelineSlots.filter((slot) =>
-          this.userHasPipelineDefinitionAccess(user, slot.definition)
-        );
+        const visiblePipelines = this.executorSubservice
+          .getAllPipelineSlots()
+          .filter((slot) =>
+            this.userHasPipelineDefinitionAccess(user, slot.definition)
+          );
         span?.setAttribute("pipeline_count", visiblePipelines.length);
 
         return Promise.all(
@@ -339,6 +342,6 @@ export class PipelineSubservice {
   }
 
   public getAllPipelines(): PipelineSlot[] {
-    return this.pipelineSlots;
+    return this.executorSubservice.getAllPipelineSlots();
   }
 }

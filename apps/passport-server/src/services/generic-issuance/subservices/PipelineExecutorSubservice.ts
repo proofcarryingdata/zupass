@@ -44,6 +44,8 @@ export class PipelineExecutorSubservice {
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
+  private pipelineSlots: PipelineSlot[];
+
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
 
@@ -61,6 +63,7 @@ export class PipelineExecutorSubservice {
     rollbarService: RollbarService | null,
     instantiatePipelineArgs: InstantiatePipelineArgs
   ) {
+    this.pipelineSlots = [];
     this.pagerdutyService = pagerdutyService;
     this.discordService = discordService;
     this.rollbarService = rollbarService;
@@ -121,14 +124,13 @@ export class PipelineExecutorSubservice {
           LOG_TAG,
           `can't restart pipeline with id ${pipelineId} - doesn't exist in database`
         );
-        this.pipelineSubservice.pipelineSlots =
-          this.pipelineSubservice.pipelineSlots.filter(
-            (slot) => slot.definition.id !== pipelineId
-          );
+        this.pipelineSlots = this.pipelineSlots.filter(
+          (slot) => slot.definition.id !== pipelineId
+        );
         return;
       }
 
-      let pipelineSlot = this.pipelineSubservice.pipelineSlots.find(
+      let pipelineSlot = this.pipelineSlots.find(
         (s) => s.definition.id === pipelineId
       );
       span?.setAttribute("slot_existed", !!pipelineSlot);
@@ -138,7 +140,7 @@ export class PipelineExecutorSubservice {
           definition: definition,
           owner: await this.userSubservice.getUserById(definition.ownerUserId)
         };
-        this.pipelineSubservice.pipelineSlots.push(pipelineSlot);
+        this.pipelineSlots.push(pipelineSlot);
       } else {
         pipelineSlot.owner = await this.userSubservice.getUserById(
           definition.ownerUserId
@@ -174,6 +176,10 @@ export class PipelineExecutorSubservice {
     });
   }
 
+  public getAllPipelineSlots(): PipelineSlot[] {
+    return this.pipelineSlots;
+  }
+
   /**
    * - loads all {@link PipelineDefinition}s from persistent storage
    * - creates a {@link PipelineSlot} for each definition
@@ -191,14 +197,14 @@ export class PipelineExecutorSubservice {
       span?.setAttribute("pipeline_count", pipelinesFromDB.length);
 
       await Promise.allSettled(
-        this.pipelineSubservice.pipelineSlots.map(async (entry) => {
+        this.pipelineSlots.map(async (entry) => {
           if (entry.instance) {
             await entry.instance.stop();
           }
         })
       );
 
-      this.pipelineSubservice.pipelineSlots = await Promise.all(
+      this.pipelineSlots = await Promise.all(
         pipelinesFromDB.map(async (pipelineDefinition: PipelineDefinition) => {
           const slot: PipelineSlot = {
             definition: pipelineDefinition,
@@ -347,25 +353,21 @@ export class PipelineExecutorSubservice {
    */
   private async performAllPipelineLoads(): Promise<void> {
     return traced(SERVICE_NAME, "performAllPipelineLoads", async (span) => {
-      const pipelineIds = str(
-        this.pipelineSubservice.pipelineSlots.map((p) => p.definition.id)
-      );
+      const pipelineIds = str(this.pipelineSlots.map((p) => p.definition.id));
       logger(
         LOG_TAG,
-        `loading data for ${this.pipelineSubservice.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
+        `loading data for ${this.pipelineSlots.length} pipelines. ids are: ${pipelineIds}`
       );
       span?.setAttribute("pipeline_ids", pipelineIds);
 
       await Promise.allSettled(
-        this.pipelineSubservice.pipelineSlots.map(
-          async (slot: PipelineSlot): Promise<void> => {
-            const runInfo = await this.performPipelineLoad(slot);
-            await this.pipelineSubservice.saveLoadSummary(
-              slot.definition.id,
-              runInfo
-            );
-          }
-        )
+        this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
+          const runInfo = await this.performPipelineLoad(slot);
+          await this.pipelineSubservice.saveLoadSummary(
+            slot.definition.id,
+            runInfo
+          );
+        })
       );
     });
   }
