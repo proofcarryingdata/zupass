@@ -26,7 +26,7 @@ import { setupTestCSVPipelineDefinition } from "./setupTestCSVPipelineDefinition
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link CSVPipeline}.
  */
-describe("Generic Issuance - CSVPipeline", function () {
+describe("generic issuance - CSVPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 

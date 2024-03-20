@@ -56,7 +56,7 @@ import { setupLemonadePipeline } from "./setupLemonadePipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link LemonadePipeline}.
  */
-describe("Generic Issuance - LemonadePipeline", function () {
+describe("generic issuance - LemonadePipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
