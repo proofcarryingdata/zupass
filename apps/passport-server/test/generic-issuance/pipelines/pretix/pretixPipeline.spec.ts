@@ -31,7 +31,7 @@ import {
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline
 } from "../../util";
-import { setupPretixPipeline } from "./setupPretixPipeline";
+import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
@@ -62,13 +62,13 @@ describe("generic issuance - PretixPipeline", function () {
     ethLatAmPipeline,
 
     ethLatAmSemaphoreGroupIds
-  } = setupPretixPipeline();
+  } = setupTestPretixPipeline();
 
   const pipelineDefinitions = [ethLatAmPipeline];
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipeline:
-   * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
+   * - {@link PretixPipeline}, as defined by {@link setupTestPretixPipeline}
    */
   this.beforeAll(async () => {
     const zupassPublicKey = JSON.stringify(

@@ -51,7 +51,7 @@ import {
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline
 } from "../../util";
-import { setupLemonadePipeline } from "./setupLemonadePipeline";
+import { setupTestLemonadePipeline } from "./setupTestLemonadePipeline";
 
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link LemonadePipeline}.
@@ -98,13 +98,13 @@ describe("generic issuance - LemonadePipeline", function () {
     lemonadeBackend,
     lemonadeOAuthClientId,
     mockServer
-  } = setupLemonadePipeline();
+  } = setupTestLemonadePipeline();
 
   const pipelineDefinitions = [edgeCityPipeline];
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipeline:
-   * - {@link LemonadePipeline}, as defined by {@link edgeCityPipeline}
+   * - {@link LemonadePipeline}, as defined by {@link setupTestLemonadePipeline}
    */
   this.beforeAll(async () => {
     // This has to be done here as it requires an `await`

@@ -25,7 +25,7 @@ import { TestTokenSource } from "../../../lemonade/TestTokenSource";
 /**
  * Sets up test data required to test {@link LemonadePipeline}.
  */
-export function setupLemonadePipeline(): LemonadePipelineTestData {
+export function setupTestLemonadePipeline(): LemonadePipelineTestData {
   const lemonadeOAuthClientId = "edge-city-client-id";
   const lemonadeBackend = new LemonadeDataMocker();
 

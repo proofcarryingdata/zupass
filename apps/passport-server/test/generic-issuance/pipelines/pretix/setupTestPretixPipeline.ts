@@ -19,7 +19,7 @@ import { expectLength, expectToExist } from "../../../util/util";
 /**
  * Sets up test data required to test {@link PretixPipeline}
  */
-export function setupPretixPipeline(): PretixPipelineTestData {
+export function setupTestPretixPipeline(): PretixPipelineTestData {
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
 
