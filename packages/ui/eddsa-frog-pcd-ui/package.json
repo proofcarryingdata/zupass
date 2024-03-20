@@ -31,12 +31,12 @@
     "lodash": "^4.17.21"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/lodash": "^4.14.191",
     "@types/react": "^18.0.22",
     "@types/react-dom": "^18.0.7",
-    "eslint": "^7.32.0",
+    "eslint": "^8.57.0",
     "typescript": "^5.3.3"
   },
   "publishConfig": {

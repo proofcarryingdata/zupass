@@ -25,7 +25,7 @@ interface AnonymousProfileResponse {
   totalKarma: number;
 }
 
-export default function Page() {
+export default function Page(): JSX.Element {
   const [response, setResponse] = useState<
     AnonymousProfileResponse | undefined
   >(undefined);

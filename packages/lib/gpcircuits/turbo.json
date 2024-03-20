@@ -1,0 +1,18 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**",
+        "circuits/**",
+        "test/**",
+        "circomkit.json",
+        "circuits.json"
+      ],
+      "outputs": ["dist/**", "*.tsbuildinfo"],
+      "cache": true
+    }
+  }
+}

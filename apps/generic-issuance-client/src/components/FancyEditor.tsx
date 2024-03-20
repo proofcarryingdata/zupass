@@ -41,7 +41,7 @@ export function FancyEditor({
         onChange={onValueChange}
         loading={<Spinner />}
         options={{
-          readonly: readonly,
+          readOnly: readonly,
           minimap: {
             enabled: false
           }

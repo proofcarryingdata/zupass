@@ -46,5 +46,8 @@ logfile
 # vim
 *.swp
 
+# CI build artifacts
+cibuild
+
 # see scripts/testTemplatePackage.ts
 packages/tools/test-package/**

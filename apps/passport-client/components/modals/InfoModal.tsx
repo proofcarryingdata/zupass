@@ -1,5 +1,5 @@
-import { icons } from "@pcd/passport-ui";
 import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
+import { FaGithub } from "react-icons/fa";
 import { CenterColumn, Spacer, SupportLink, TextCenter } from "../core";
 
 export function InfoModal(): JSX.Element {
@@ -8,7 +8,7 @@ export function InfoModal(): JSX.Element {
       <Spacer h={32} />
       <TextCenter>
         <a target="_blank" href={ZUPASS_GITHUB_REPOSITORY_URL}>
-          <img draggable="false" src={icons.github} width={34} height={34} />
+          <FaGithub style={{ width: "34px", height: "34px", fill: "#fff" }} />
         </a>
       </TextCenter>
       <Spacer h={24} />

@@ -60,9 +60,9 @@ export class EdDSATicketProveCase extends TimerCase {
   }
 
   // eslint-disable-next-line @typescript-eslint/no-empty-function
-  async setup(): Promise<void> {}
+  async setup(_: number): Promise<void> {}
 
-  async op(): Promise<void> {
+  async op(_: number): Promise<void> {
     await EdDSATicketPCDPackage.prove(proveArgs);
   }
 }
@@ -78,11 +78,11 @@ export class EdDSATicketVerifyCase extends TimerCase {
     await EdDSATicketPCDPackage.init?.({});
   }
 
-  async setup(): Promise<void> {
+  async setup(_: number): Promise<void> {
     this.pcd = await EdDSATicketPCDPackage.prove(proveArgs);
   }
 
-  async op(): Promise<void> {
+  async op(_: number): Promise<void> {
     if (!this.pcd) {
       throw new Error("Missing PCD.  Skipped setup?");
     }

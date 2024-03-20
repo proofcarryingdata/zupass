@@ -1,4 +1,5 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { program } from "commander";
@@ -7,6 +8,7 @@ import {
   EdDSATicketProveCase,
   EdDSATicketVerifyCase
 } from "./cases/EdDSATicketTimer";
+import { PODProveCase, PODVerifyCase } from "./cases/PODTimer";
 import {
   SemaphoreSignatureProveCase,
   SemaphoreSignatureVerifyCase
@@ -15,16 +17,16 @@ import {
   ZKEdDSAEventTicketProveCase,
   ZKEdDSAEventTicketVerifyCase
 } from "./cases/ZKEdDSAEventTicketTimer";
-import { DemoCase, TimerCase } from "./types";
+import { TimerCase } from "./types";
 
 const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
-  demo: {
-    prove: () => new DemoCase(),
-    verify: () => new DemoCase()
-  },
   [EdDSATicketPCDPackage.name]: {
     prove: () => new EdDSATicketProveCase(),
     verify: () => new EdDSATicketVerifyCase()
+  },
+  [PODPCDPackage.name]: {
+    prove: () => new PODProveCase(),
+    verify: () => new PODVerifyCase()
   },
   [SemaphoreSignaturePCDPackage.name]: {
     prove: () => new SemaphoreSignatureProveCase(),
@@ -49,11 +51,11 @@ function makeHelpPackageList(): string {
 async function timeOp(
   opName: string,
   iterationCount: number,
-  op: () => Promise<void>
+  op: (iteration: number) => Promise<void>
 ): Promise<void> {
   const startMS = performance.now();
   for (let i = 0; i < iterationCount; i++) {
-    await op();
+    await op(i);
   }
   const endMS = performance.now();
   console.info(
@@ -68,13 +70,14 @@ async function timerDriver(
   caseMaker: () => TimerCase,
   iterationCount: number
 ): Promise<void> {
+  iterationCount = Math.max(iterationCount, 2);
   const timerCase = caseMaker();
   console.info(`Running timing test of ${timerCase.name}...`);
-  await timeOp("init", 1, () => timerCase.init());
-  await timeOp("setup", 1, () => timerCase.setup());
-  await timeOp("first op", 1, () => timerCase.op());
-  await timeOp("second op", 1, () => timerCase.op());
-  await timeOp("repeat op", iterationCount, () => timerCase.op());
+  await timeOp("init", 1, (_) => timerCase.init());
+  await timeOp("setup", 1, (_) => timerCase.setup(iterationCount));
+  await timeOp("first op", 1, (i) => timerCase.op(i));
+  await timeOp("second op", 1, (i) => timerCase.op(i));
+  await timeOp("repeat op", iterationCount - 2, (i) => timerCase.op(i + 2));
 }
 
 program

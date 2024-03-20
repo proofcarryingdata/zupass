@@ -30,6 +30,12 @@
       "path": "../../lib/pcd-types"
     },
     {
+      "path": "../../lib/pod"
+    },
+    {
+      "path": "../../pcd/pod-pcd"
+    },
+    {
       "path": "../../pcd/semaphore-identity-pcd"
     },
     {
