@@ -23,7 +23,6 @@ import "mocha";
 import { step } from "mocha-steps";
 import * as MockDate from "mockdate";
 import { rest } from "msw";
-import { SetupServer, setupServer } from "msw/node";
 import urljoin from "url-join";
 import { LemonadeOAuthCredentials } from "../../../../src/apis/lemonade/auth";
 import { LemonadeTicket } from "../../../../src/apis/lemonade/types";
@@ -40,7 +39,6 @@ import { PipelineUser } from "../../../../src/services/generic-issuance/pipeline
 import { Zupass } from "../../../../src/types";
 import {
   customLemonadeTicketHandler,
-  getMockLemonadeHandlers,
   loadApolloErrorMessages,
   unregisteredLemonadeUserHandler
 } from "../../../lemonade/MockLemonadeServer";
@@ -73,8 +71,6 @@ describe("Generic Issuance - LemonadePipeline", function () {
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
 
-  let mockServer: SetupServer;
-
   const {
     edgeCityPipeline,
     edgeCityGIUserID,
@@ -82,33 +78,26 @@ describe("Generic Issuance - LemonadePipeline", function () {
     EdgeCityLemonadeAccount,
     EdgeCityDenver,
     EdgeCityAttendeeTicketType,
-
     EdgeCityDenverAttendee,
     EdgeCityDenverAttendeeIdentity,
     EdgeCityAttendeeTicket,
-
     EdgeCityDenverBouncer,
     EdgeCityBouncerIdentity,
     EdgeCityDenverBouncerTicket,
-
     EdgeCityDenverBouncer2,
     EdgeCityBouncer2Identity,
     EdgeCityDenverBouncer2Ticket,
-
     EdgeCityManualAttendeeIdentity,
     EdgeCityManualAttendeeEmail,
-
     EdgeCityManualBouncerIdentity,
     EdgeCityManualBouncerEmail,
-
     lemonadeTokenSource,
-
     lemonadeAPI,
     edgeCitySemaphoreGroupIds,
-
     lemonadeBackendUrl,
     lemonadeBackend,
-    lemonadeOAuthClientId
+    lemonadeOAuthClientId,
+    mockServer
   } = setupLemonadePipeline();
 
   const pipelineDefinitions = [edgeCityPipeline];
@@ -133,13 +122,6 @@ describe("Generic Issuance - LemonadePipeline", function () {
     });
 
     const userDB = new PipelineUserDB(giBackend.context.dbPool);
-
-    mockServer = setupServer(
-      ...getMockLemonadeHandlers(lemonadeBackend, lemonadeBackendUrl)
-    );
-    // The mock server will intercept any requests for URLs that are registered
-    // with it. Unhandled requests will bypass the mock server.
-    mockServer.listen({ onUnhandledRequest: "bypass" });
 
     const adminUser: PipelineUser = {
       id: adminGIUserId,

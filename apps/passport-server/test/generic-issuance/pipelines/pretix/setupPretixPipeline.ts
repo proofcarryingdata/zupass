@@ -16,60 +16,9 @@ import {
 import { getMockGenericPretixHandlers } from "../../../pretix/MockGenericPretixServer";
 import { expectLength, expectToExist } from "../../../util/util";
 
-export interface PretixPipelineTestData {
-  adminGIUserId: string;
-  adminGIUserEmail: string;
-
-  ethLatAmGIUserID: string;
-  ethLatAmGIUserEmail: string;
-  EthLatAmBouncerIdentity: Identity;
-  EthLatAmAttendeeIdentity: Identity;
-
-  EthLatAmManualAttendeeIdentity: Identity;
-  EthLatAmManualAttendeeEmail: string;
-
-  EthLatAmManualBouncerIdentity: Identity;
-  EthLatAmManualBouncerEmail: string;
-
-  pretixBackend: GenericPretixDataMocker;
-  ethLatAmPretixOrganizer: IOrganizer;
-
-  ethLatAmEvent: GenericPretixEvent;
-  ethLatAmProducts: GenericPretixProduct[];
-  ethLatAmSuperuserProductIds: number[];
-  ethLatAmEventId: string;
-  ethLatAmConfiguredEvents: ConfiguredEvent[];
-
-  ethLatAmAttendeeProduct: IConfiguredProduct;
-  ethLatAmBouncerProduct: IConfiguredProduct;
-
-  mockServer: SetupServer;
-
-  ethLatAmPipeline: PretixPipelineDefinition;
-
-  ethLatAmSemaphoreGroupIds: {
-    all: string;
-    bouncers: string;
-    attendees: string;
-    attendeesAndBouncers: string;
-  };
-}
-
-export interface IConfiguredProduct {
-  externalId: string;
-  genericIssuanceId: string;
-  name: string;
-  isSuperUser: boolean;
-  nameQuestionPretixQuestionIdentitifier: string;
-}
-
-export interface ConfiguredEvent {
-  genericIssuanceId: string;
-  externalId: string;
-  name: string;
-  products: Array<IConfiguredProduct>;
-}
-
+/**
+ * Sets up test data required to test {@link PretixPipeline}
+ */
 export function setupPretixPipeline(): PretixPipelineTestData {
   const adminGIUserId = randomUUID();
   const adminGIUserEmail = "admin@test.com";
@@ -144,10 +93,6 @@ export function setupPretixPipeline(): PretixPipelineTestData {
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
     id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
     editorUserIds: [],
     options: {
       // https://ethlatam.org/
@@ -237,33 +182,70 @@ export function setupPretixPipeline(): PretixPipelineTestData {
   return {
     adminGIUserId,
     adminGIUserEmail,
-
     ethLatAmGIUserID,
     ethLatAmGIUserEmail,
     EthLatAmBouncerIdentity,
     EthLatAmAttendeeIdentity,
-
     EthLatAmManualAttendeeIdentity,
     EthLatAmManualAttendeeEmail,
-
     EthLatAmManualBouncerIdentity,
     EthLatAmManualBouncerEmail,
-
-    mockServer,
     pretixBackend,
     ethLatAmPretixOrganizer,
-
     ethLatAmEvent,
     ethLatAmProducts,
     ethLatAmSuperuserProductIds,
     ethLatAmEventId,
     ethLatAmConfiguredEvents,
-
     ethLatAmAttendeeProduct,
     ethLatAmBouncerProduct,
-
     ethLatAmPipeline,
-
-    ethLatAmSemaphoreGroupIds
+    ethLatAmSemaphoreGroupIds,
+    mockServer
   } satisfies PretixPipelineTestData;
+}
+
+export interface PretixPipelineTestData {
+  adminGIUserId: string;
+  adminGIUserEmail: string;
+  ethLatAmGIUserID: string;
+  ethLatAmGIUserEmail: string;
+  EthLatAmBouncerIdentity: Identity;
+  EthLatAmAttendeeIdentity: Identity;
+  EthLatAmManualAttendeeIdentity: Identity;
+  EthLatAmManualAttendeeEmail: string;
+  EthLatAmManualBouncerIdentity: Identity;
+  EthLatAmManualBouncerEmail: string;
+  pretixBackend: GenericPretixDataMocker;
+  ethLatAmPretixOrganizer: IOrganizer;
+  ethLatAmEvent: GenericPretixEvent;
+  ethLatAmProducts: GenericPretixProduct[];
+  ethLatAmSuperuserProductIds: number[];
+  ethLatAmEventId: string;
+  ethLatAmConfiguredEvents: ConfiguredEvent[];
+  ethLatAmAttendeeProduct: IConfiguredProduct;
+  ethLatAmBouncerProduct: IConfiguredProduct;
+  ethLatAmPipeline: PretixPipelineDefinition;
+  ethLatAmSemaphoreGroupIds: {
+    all: string;
+    bouncers: string;
+    attendees: string;
+    attendeesAndBouncers: string;
+  };
+  mockServer: SetupServer;
+}
+
+export interface IConfiguredProduct {
+  externalId: string;
+  genericIssuanceId: string;
+  name: string;
+  isSuperUser: boolean;
+  nameQuestionPretixQuestionIdentitifier: string;
+}
+
+export interface ConfiguredEvent {
+  genericIssuanceId: string;
+  externalId: string;
+  name: string;
+  products: Array<IConfiguredProduct>;
 }

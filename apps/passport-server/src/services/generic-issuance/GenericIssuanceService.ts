@@ -59,6 +59,11 @@ import { InstantiatePipelineArgs } from "./subservices/utils/instantiatePipeline
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
+/**
+ * Encasulates all Generic Issuance / Podbox backend logic, including
+ * - management of all {@link Pipeline}s and all their features
+ * - management of all {@link PipelineUser} and their authentication
+ */
 export class GenericIssuanceService {
   private context: ApplicationContext;
   private pipelineAtomDB: IPipelineAtomDB;
@@ -123,6 +128,11 @@ export class GenericIssuanceService {
     );
   }
 
+  /**
+   * To be called immediately after instantiating. Starts all Podbox background tasks.
+   * Unless @param startLoadLoop is false, starts a {@link Pipeline} loading loop
+   * which loads all pipeline data once per minute. See {@link PipelineExecutorService}.
+   */
   public async start(startLoadLoop?: boolean): Promise<void> {
     try {
       await this.pipelineSubservice.start(startLoadLoop);
@@ -183,25 +193,6 @@ export class GenericIssuanceService {
     id: string
   ): Promise<PipelineDefinition | undefined> {
     return this.pipelineSubservice.loadPipelineDefinitionForUser(user, id);
-  }
-
-  public async fetchAllPretixEvents(
-    orgUrl: string,
-    token: string
-  ): Promise<GenericPretixEvent[]> {
-    return this.genericPretixAPI.fetchAllEvents(orgUrl, token);
-  }
-
-  public async fetchPretixProducts(
-    orgUrl: string,
-    token: string,
-    eventID: string
-  ): Promise<GenericPretixProduct[]> {
-    return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
-  }
-
-  public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
-    return getEdgeCityBalances(this.context.dbPool);
   }
 
   public async handlePollFeed(
@@ -282,5 +273,33 @@ export class GenericIssuanceService {
     pipelineId: string
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {
     return this.pipelineSubservice.handleGetPipelineSemaphoreGroups(pipelineId);
+  }
+
+  /**
+   * Used by the Podbox client as part of the {@link PretixPipeline} creation flow.
+   */
+  public async fetchAllPretixEvents(
+    orgUrl: string,
+    token: string
+  ): Promise<GenericPretixEvent[]> {
+    return this.genericPretixAPI.fetchAllEvents(orgUrl, token);
+  }
+
+  /**
+   * Used by the Podbox client as part of the {@link PretixPipeline} creation flow.
+   */
+  public async fetchPretixProducts(
+    orgUrl: string,
+    token: string,
+    eventID: string
+  ): Promise<GenericPretixProduct[]> {
+    return this.genericPretixAPI.fetchProducts(orgUrl, token, eventID);
+  }
+
+  /**
+   * Used by the Edge City folder UI in Zupass.
+   */
+  public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
+    return getEdgeCityBalances(this.context.dbPool);
   }
 }

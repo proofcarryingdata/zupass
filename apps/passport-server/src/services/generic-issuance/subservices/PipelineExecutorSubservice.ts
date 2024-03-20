@@ -128,7 +128,7 @@ export class PipelineExecutorSubservice {
    * If a pipeline with the given definition does not exist in the database
    * makes sure that no pipeline for it is running on the server.
    *
-   * tl;dr syncs db <-> pipeline in memory
+   * tl;dr syncs db <-> pipeline in memory representation
    */
   public async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {

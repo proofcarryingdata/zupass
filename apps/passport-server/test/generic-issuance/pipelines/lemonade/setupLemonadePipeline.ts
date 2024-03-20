@@ -4,6 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { SetupServer, setupServer } from "msw/node";
 import {
   ILemonadeAPI,
   getLemonadeAPI
@@ -18,55 +19,12 @@ import {
   LemonadeDataMocker,
   LemonadeUser
 } from "../../../lemonade/LemonadeDataMocker";
+import { getMockLemonadeHandlers } from "../../../lemonade/MockLemonadeServer";
 import { TestTokenSource } from "../../../lemonade/TestTokenSource";
 
-export interface LemonadePipelineTestData {
-  edgeCityPipeline: LemonadePipelineDefinition;
-
-  edgeCityGIUserID: string;
-  edgeCityGIUserEmail: string;
-  EdgeCityLemonadeAccount: LemonadeAccount;
-  EdgeCityDenver: LemonadeEvent;
-  EdgeCityAttendeeTicketType: LemonadeTicketType;
-  EdgeCityBouncerTicketType: LemonadeTicketType;
-
-  EdgeCityDenverAttendee: LemonadeUser;
-  EdgeCityDenverAttendeeIdentity: Identity;
-  EdgeCityAttendeeTicket: LemonadeTicket;
-
-  EdgeCityDenverBouncer: LemonadeUser;
-  EdgeCityBouncerIdentity: Identity;
-  EdgeCityDenverBouncerTicket: LemonadeTicket;
-
-  EdgeCityDenverBouncer2: LemonadeUser;
-  EdgeCityBouncer2Identity: Identity;
-  EdgeCityDenverBouncer2Ticket: LemonadeTicket;
-
-  EdgeCityManualAttendeeIdentity: Identity;
-  EdgeCityManualAttendeeEmail: string;
-
-  EdgeCityManualBouncerIdentity: Identity;
-  EdgeCityManualBouncerEmail: string;
-
-  lemonadeTokenSource: TestTokenSource;
-
-  lemonadeAPI: ILemonadeAPI;
-  edgeCitySemaphoreGroupIds: {
-    all: string;
-    bouncers: string;
-    attendees: string;
-    attendeesAndBouncers: string;
-  };
-
-  lemonadeBackendUrl: string;
-  edgeCityDenverEventId: string;
-  edgeCityDenverAttendeeProductId: string;
-  edgeCityDenverBouncerProductId: string;
-
-  lemonadeBackend: LemonadeDataMocker;
-  lemonadeOAuthClientId: string;
-}
-
+/**
+ * Sets up test data required to test {@link LemonadePipeline}.
+ */
 export function setupLemonadePipeline(): LemonadePipelineTestData {
   const lemonadeOAuthClientId = "edge-city-client-id";
   const lemonadeBackend = new LemonadeDataMocker();
@@ -285,6 +243,13 @@ export function setupLemonadePipeline(): LemonadePipelineTestData {
     type: PipelineType.Lemonade
   };
 
+  const mockServer = setupServer(
+    ...getMockLemonadeHandlers(lemonadeBackend, lemonadeBackendUrl)
+  );
+  // The mock server will intercept any requests for URLs that are registered
+  // with it. Unhandled requests will bypass the mock server.
+  mockServer.listen({ onUnhandledRequest: "bypass" });
+
   return {
     edgeCityPipeline,
     edgeCityGIUserID,
@@ -293,35 +258,66 @@ export function setupLemonadePipeline(): LemonadePipelineTestData {
     EdgeCityDenver,
     EdgeCityAttendeeTicketType,
     EdgeCityBouncerTicketType,
-
     EdgeCityDenverAttendee,
     EdgeCityDenverAttendeeIdentity,
     EdgeCityAttendeeTicket,
-
     EdgeCityDenverBouncer,
     EdgeCityBouncerIdentity,
     EdgeCityDenverBouncerTicket,
-
     EdgeCityDenverBouncer2,
     EdgeCityBouncer2Identity,
     EdgeCityDenverBouncer2Ticket,
-
     EdgeCityManualAttendeeIdentity,
     EdgeCityManualAttendeeEmail,
-
     EdgeCityManualBouncerIdentity,
     EdgeCityManualBouncerEmail,
-
     lemonadeTokenSource,
-
     lemonadeAPI,
     edgeCitySemaphoreGroupIds,
-
     lemonadeBackendUrl,
     edgeCityDenverEventId,
     edgeCityDenverAttendeeProductId,
     edgeCityDenverBouncerProductId,
     lemonadeBackend,
-    lemonadeOAuthClientId
+    lemonadeOAuthClientId,
+    mockServer
   } satisfies LemonadePipelineTestData;
+}
+
+export interface LemonadePipelineTestData {
+  edgeCityPipeline: LemonadePipelineDefinition;
+  edgeCityGIUserID: string;
+  edgeCityGIUserEmail: string;
+  EdgeCityLemonadeAccount: LemonadeAccount;
+  EdgeCityDenver: LemonadeEvent;
+  EdgeCityAttendeeTicketType: LemonadeTicketType;
+  EdgeCityBouncerTicketType: LemonadeTicketType;
+  EdgeCityDenverAttendee: LemonadeUser;
+  EdgeCityDenverAttendeeIdentity: Identity;
+  EdgeCityAttendeeTicket: LemonadeTicket;
+  EdgeCityDenverBouncer: LemonadeUser;
+  EdgeCityBouncerIdentity: Identity;
+  EdgeCityDenverBouncerTicket: LemonadeTicket;
+  EdgeCityDenverBouncer2: LemonadeUser;
+  EdgeCityBouncer2Identity: Identity;
+  EdgeCityDenverBouncer2Ticket: LemonadeTicket;
+  EdgeCityManualAttendeeIdentity: Identity;
+  EdgeCityManualAttendeeEmail: string;
+  EdgeCityManualBouncerIdentity: Identity;
+  EdgeCityManualBouncerEmail: string;
+  lemonadeTokenSource: TestTokenSource;
+  lemonadeAPI: ILemonadeAPI;
+  edgeCitySemaphoreGroupIds: {
+    all: string;
+    bouncers: string;
+    attendees: string;
+    attendeesAndBouncers: string;
+  };
+  lemonadeBackendUrl: string;
+  edgeCityDenverEventId: string;
+  edgeCityDenverAttendeeProductId: string;
+  edgeCityDenverBouncerProductId: string;
+  lemonadeBackend: LemonadeDataMocker;
+  lemonadeOAuthClientId: string;
+  mockServer: SetupServer;
 }

@@ -21,12 +21,12 @@ import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
 import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import { assertUserMatches } from "../../util";
-import { makeTestCSVPipelineDefinition } from "./makeTestCSVPipelineDefinition";
+import { setupTestCSVPipelineDefinition } from "./setupTestCSVPipelineDefinition";
 
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link CSVPipeline}.
  */
-describe("Generic Issuance - CSVPipeline", function () {
+describe("Generic Issuance - CSVPipeline", async function () {
   const nowDate = new Date();
   const now = Date.now();
 
@@ -37,20 +37,19 @@ describe("Generic Issuance - CSVPipeline", function () {
   const adminGIUserEmail = "admin@test.com";
 
   const csvPipeline: CSVPipelineDefinition =
-    makeTestCSVPipelineDefinition(adminGIUserId);
+    setupTestCSVPipelineDefinition(adminGIUserId);
 
   const pipelineDefinitions = [csvPipeline];
 
+  const zupassPublicKey = JSON.stringify(
+    await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
+  );
+
   /**
    * Sets up a Zupass/Generic issuance backend with one pipelines:
-   * - {@link CSVPipeline}, as defined by {@link makeTestCSVPipelineDefinition}
+   * - {@link CSVPipeline}, as defined by {@link setupTestCSVPipelineDefinition}
    */
   this.beforeAll(async () => {
-    // This has to be done here as it requires an `await`
-    const zupassPublicKey = JSON.stringify(
-      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
-    );
-
     await overrideEnvironment({
       GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
       ...testingEnv

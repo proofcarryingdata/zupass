@@ -1,7 +1,10 @@
 import { CSVPipelineDefinition, PipelineType } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 
-export function makeTestCSVPipelineDefinition(
+/**
+ * Creates test info required to test {@link CSVPipeline}.
+ */
+export function setupTestCSVPipelineDefinition(
   ownerId: string
 ): CSVPipelineDefinition {
   return {
@@ -10,10 +13,6 @@ export function makeTestCSVPipelineDefinition(
     timeCreated: new Date().toISOString(),
     timeUpdated: new Date().toISOString(),
     id: randomUUID(),
-    /**
-     * TODO: test that the API that lets the frontend make changes to {@link Pipeline}s
-     * on the backend respects generic issuance user permissions. @richard
-     */
     editorUserIds: [],
     options: {
       csv: `title,image

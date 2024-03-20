@@ -36,7 +36,7 @@ import { setupPretixPipeline } from "./setupPretixPipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe("Generic Issuance - PretixPipeline", function () {
+describe("Generic Issuance - PretixPipeline", async function () {
   const nowDate = new Date();
   const now = Date.now();
 
@@ -44,25 +44,24 @@ describe("Generic Issuance - PretixPipeline", function () {
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
 
+  const zupassPublicKey = JSON.stringify(
+    await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
+  );
+
   const {
     adminGIUserId,
     adminGIUserEmail,
-
     ethLatAmGIUserID,
     ethLatAmGIUserEmail,
     EthLatAmBouncerIdentity,
     EthLatAmAttendeeIdentity,
-
     EthLatAmManualAttendeeIdentity,
     EthLatAmManualAttendeeEmail,
-
     EthLatAmManualBouncerIdentity,
     EthLatAmManualBouncerEmail,
-
     mockServer,
     pretixBackend,
     ethLatAmPretixOrganizer,
-
     ethLatAmEvent,
     ethLatAmPipeline,
 
@@ -76,11 +75,6 @@ describe("Generic Issuance - PretixPipeline", function () {
    * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
    */
   this.beforeAll(async () => {
-    // This has to be done here as it requires an `await`
-    const zupassPublicKey = JSON.stringify(
-      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
-    );
-
     await overrideEnvironment({
       GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
       ...testingEnv

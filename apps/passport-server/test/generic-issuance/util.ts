@@ -46,17 +46,7 @@ export async function checkPipelineInfoEndpoint(
     giBackend.expressContext.localEndpoint,
     pipeline.id
   );
-  expectFalse(pipelineInfoResult.success); // need to implement jwt spoofing
-  // expectTrue(pipelineInfoResult.success);
-  // expectLength(pipelineInfoResult.value.feeds, 1);
-  // const pretixFeedInfo: PipelineFeedInfo | undefined =
-  //   pipelineInfoResult.value.feeds?.[0];
-  // expectToExist(pretixFeedInfo);
-  // expect(pretixFeedInfo.name).to.eq(
-  //   pipeline.issuanceCapability.options.feedDisplayName
-  // );
-  // expect(pretixFeedInfo.url).to.eq(pipeline.issuanceCapability.feedUrl);
-  // TODO: more comprehensive pipeline info tests
+  expectFalse(pipelineInfoResult.success);
 }
 
 export function assertUserMatches(

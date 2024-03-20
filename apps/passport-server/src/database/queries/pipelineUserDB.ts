@@ -56,7 +56,6 @@ export class PipelineUserDB implements IPipelineUserDB {
         this.db,
         "createOrGetUser",
         async (client): Promise<PipelineUser> => {
-          email = normalizeEmail(email);
           span?.setAttribute("email", email);
           const existingUser = await this.getUserByEmail(email, client);
           if (existingUser != null) {

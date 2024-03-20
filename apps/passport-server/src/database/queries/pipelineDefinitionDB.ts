@@ -17,17 +17,17 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  */
 export interface IPipelineDefinitionDB {
   loadPipelineDefinitions(): Promise<PipelineDefinition[]>;
-  deleteDefinition(definitionID: string): Promise<void>;
+  deleteDefinition(pipelineId: string): Promise<void>;
   deleteAllDefinitions(): Promise<void>;
-  getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
+  getDefinition(pipelineId: string): Promise<PipelineDefinition | undefined>;
   upsertDefinition(definition: PipelineDefinition): Promise<void>;
   upsertDefinitions(definitions: PipelineDefinition[]): Promise<void>;
   saveLoadSummary(
-    definitionID: string,
+    pipelineId: string,
     lastRunInfo?: PipelineLoadSummary
   ): Promise<void>;
   getLastLoadSummary(
-    definitionID: string
+    pipelineId: string
   ): Promise<PipelineLoadSummary | undefined>;
 }
 
