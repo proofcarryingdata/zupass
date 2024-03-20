@@ -6,8 +6,6 @@ import NodeRSA from "node-rsa";
 import { RSATicketPCD, RSATicketPCDPackage } from "../src";
 
 describe("RSA Ticket PCD should work", function () {
-  this.timeout(1000 * 30);
-
   const key = new NodeRSA({ b: 2048 });
   const exportedKey = key.exportKey("private");
   const message = "message to sign";

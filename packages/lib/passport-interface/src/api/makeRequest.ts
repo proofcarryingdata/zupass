@@ -198,26 +198,19 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   }
 
   try {
-    // @todo - prevent logspam in the same way we prevent it
-    // on the server. otherwise, these show up in test logs.
-    console.log(`[FETCH]`, url, requestOptions.method);
-
     const res = await fetch(url, requestOptions);
     const resText = await res.text();
 
     if (!res.ok) {
-      console.error("error fetching", url, res.status, resText);
       return await opts.onError(resText, res.status);
     }
 
     return await opts.onValue(resText);
   } catch (e) {
-    console.error("error fetching", url, e);
-
+    // eslint-disable-next-line no-useless-catch
     try {
       return await opts.onError(getErrorMessage(e), undefined);
     } catch (e) {
-      console.error("[FETCH] error executing `opts.onError`", e);
       throw e;
     }
   }

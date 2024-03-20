@@ -12,13 +12,12 @@ import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist, randomEmail } from "./util/util";
 
 describe("attested email feed functionality", function () {
-  this.timeout(30_000);
   let application: Zupass;
   let identity: Identity;
   const testEmail = randomEmail();

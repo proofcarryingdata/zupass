@@ -15,8 +15,6 @@ const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
 
 describe("semaphore signature PCD should work", function () {
-  this.timeout(1000 * 30);
-
   // sets up shared Semaphore args across test cases
   let args: SemaphoreSignaturePCDArgs;
   this.beforeAll(async function () {

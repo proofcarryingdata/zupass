@@ -1,0 +1,128 @@
+import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import stytch, { Client } from "stytch";
+import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";
+import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
+import { ApplicationContext } from "../../../../types";
+import { logger } from "../../../../util/logger";
+import { DiscordService } from "../../../discordService";
+import { PagerDutyService } from "../../../pagerDutyService";
+import { PersistentCacheService } from "../../../persistentCacheService";
+import { RollbarService } from "../../../rollbarService";
+import { GenericIssuanceService } from "../../GenericIssuanceService";
+
+/**
+ * Instantiates and starts a {@link GenericIssuanceService}.
+ */
+export async function startGenericIssuanceService(
+  context: ApplicationContext,
+  rollbarService: RollbarService | null,
+  lemonadeAPI: ILemonadeAPI | null,
+  genericPretixAPI: IGenericPretixAPI | null,
+  pagerDutyService: PagerDutyService | null,
+  discordService: DiscordService | null,
+  cacheService: PersistentCacheService | null
+): Promise<GenericIssuanceService | null> {
+  logger("[INIT] attempting to start Generic Issuance service");
+
+  if (!cacheService) {
+    logger(
+      "[INIT] not starting generic issuance service - missing persistent cache service"
+    );
+    return null;
+  }
+
+  if (!lemonadeAPI) {
+    logger(
+      "[INIT] not starting generic issuance service - missing lemonade API"
+    );
+    return null;
+  }
+
+  if (!genericPretixAPI) {
+    logger("[INIT] not starting generic issuance service - missing pretix API");
+    return null;
+  }
+
+  const pkeyEnv = process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY;
+  if (pkeyEnv == null) {
+    logger(
+      "[INIT] missing environment variable GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
+    );
+    return null;
+  }
+
+  if (
+    process.env.NODE_ENV === "production" &&
+    process.env.STYTCH_BYPASS === "true"
+  ) {
+    throw new Error(
+      "cannot create generic issuance service without stytch in production "
+    );
+  }
+
+  const BYPASS_EMAIL =
+    process.env.NODE_ENV !== "production" &&
+    process.env.STYTCH_BYPASS === "true";
+
+  const projectIdEnv = process.env.STYTCH_PROJECT_ID;
+  const secretEnv = process.env.STYTCH_SECRET;
+  let stytchClient: Client | undefined = undefined;
+
+  if (!BYPASS_EMAIL) {
+    if (projectIdEnv == null) {
+      logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
+      return null;
+    }
+
+    if (secretEnv == null) {
+      logger("[INIT] missing environment variable STYTCH_SECRET");
+      return null;
+    }
+
+    stytchClient = new stytch.Client({
+      project_id: projectIdEnv,
+      secret: secretEnv
+    });
+  }
+
+  const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
+  if (genericIssuanceClientUrl == null) {
+    logger("[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
+    return null;
+  }
+
+  const zupassPublicKeyEnv = process.env.GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY;
+  if (!zupassPublicKeyEnv) {
+    logger("[INIT missing GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY");
+    return null;
+  }
+
+  let zupassPublicKey: EdDSAPublicKey;
+  try {
+    zupassPublicKey = JSON.parse(zupassPublicKeyEnv);
+    if (!isEdDSAPublicKey(zupassPublicKey)) {
+      throw new Error("Invalid public key");
+    }
+  } catch (e) {
+    logger("[INIT] invalid GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY");
+    return null;
+  }
+
+  const issuanceService = new GenericIssuanceService(
+    context,
+    zupassPublicKey,
+    pkeyEnv,
+    genericIssuanceClientUrl,
+    genericPretixAPI,
+    lemonadeAPI,
+    stytchClient,
+    rollbarService,
+    pagerDutyService,
+    discordService,
+    cacheService
+  );
+
+  issuanceService.start();
+
+  return issuanceService;
+}

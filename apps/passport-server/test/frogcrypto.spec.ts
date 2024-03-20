@@ -38,7 +38,7 @@ import {
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
 import { Zupass } from "../src/types";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import {
   testDexFrogs,
@@ -54,7 +54,6 @@ const DATE_EPOCH_1H1M = new Date(DATE_EPOCH_1H.getTime() + 60 * 1000);
 const DATE_EPOCH_1H1M59S = new Date(DATE_EPOCH_1H1M.getTime() + 59 * 1000);
 
 describe("frogcrypto functionality", function () {
-  this.timeout(30_000);
   let db: Pool;
   let application: Zupass;
   let identity: Identity;

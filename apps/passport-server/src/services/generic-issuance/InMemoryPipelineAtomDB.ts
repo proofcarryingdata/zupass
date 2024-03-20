@@ -1,15 +1,15 @@
 import {
   IPipelineAtomDB,
   PipelineAtom
-} from "../../src/database/queries/pipelineAtomDB";
-
-const LOG_NAME = "MockPipelineAtomDB";
-const _LOG_TAG = `[${LOG_NAME}]`;
+} from "../../database/queries/pipelineAtomDB";
 
 /**
- * A mock implementation of {@link IPipelineAtomDB} for testing purposes.
+ * An in-memory implementation of {@link IPipelineAtomDB}.
+ *
+ * @todo at some point it may be necessary to store these in a key-value
+ *   or postgres.
  */
-export class MockPipelineAtomDB implements IPipelineAtomDB {
+export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
   public data: {
     [pipelineId: string]: { [atomId: string]: PipelineAtom };
   } = {};

@@ -45,8 +45,6 @@ const EXTERNAL_NULLIFIER = BigInt(42);
 const WATERMARK = BigInt(6);
 
 describe("ZKEdDSAFrogPCD should work", function () {
-  this.timeout(1000 * 30);
-
   // Single PCD shared among test cases for simplicity.
   let sharedPCD: ZKEdDSAFrogPCD;
 

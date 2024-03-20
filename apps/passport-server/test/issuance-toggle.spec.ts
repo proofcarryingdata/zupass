@@ -13,14 +13,12 @@ import { stopApplication } from "../src/application";
 import { upsertUser } from "../src/database/queries/saveUser";
 import { fetchUserByEmail } from "../src/database/queries/users";
 import { Zupass } from "../src/types";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { randomEmail } from "./util/util";
 
 describe("ticket issuance cutoff date should work", function () {
-  this.timeout(30_000);
-
   let application: Zupass;
   let db: Pool;
   const userEmail = randomEmail();

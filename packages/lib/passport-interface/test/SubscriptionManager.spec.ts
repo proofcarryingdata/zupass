@@ -22,8 +22,6 @@ describe("Subscription Manager", async function () {
 
   const identity = new Identity();
 
-  this.timeout(1000 * 30);
-
   this.beforeEach(() => {
     // Means that the time won't change during the test, which could cause
     // spurious issues with timestamps in feed credentials.

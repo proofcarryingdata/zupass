@@ -38,7 +38,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { rest } from "msw";
-import { SetupServer } from "msw/lib/node";
+import { SetupServer } from "msw/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
@@ -118,7 +118,7 @@ import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
 } from "./semaphore/checkSemaphore";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import {
   testUserSyncKeyChangeNoRev,
   testUserSyncKeyChangeWithRev,
@@ -131,8 +131,6 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("devconnect functionality", function () {
-  this.timeout(30_000);
-
   let application: Zupass;
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;
@@ -1015,7 +1013,7 @@ describe("devconnect functionality", function () {
 
   /**
    * This test shows the case where a ticket has been checked in with
-   * Pretix, but not in PCDpass. The ticket will be marked as consumed
+   * Pretix, but not in Zupass. The ticket will be marked as consumed
    * on the basis of data received from Pretix.
    */
   step("should be able to sync a checked-in ticket", async function () {
@@ -1245,8 +1243,7 @@ describe("devconnect functionality", function () {
   });
 
   /**
-   * This shows end-to-end sync for a ticket that gets consumed in
-   * PCDpass.
+   * This shows end-to-end sync for a ticket that gets consumed in Zupass.
    */
   step(
     "should be able to check in a ticket and sync to Pretix",

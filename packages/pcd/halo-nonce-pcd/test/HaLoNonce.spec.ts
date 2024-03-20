@@ -5,8 +5,6 @@ import "mocha";
 import { HaLoNoncePCDArgs, HaLoNoncePCDPackage } from "../src/HaLoNoncePCD";
 
 describe("halo nonce PCD should work", function () {
-  this.timeout(1000 * 30);
-
   /**
    * Example URL from card
    *

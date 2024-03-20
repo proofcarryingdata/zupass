@@ -2,7 +2,9 @@ import { EdgeCityBalance } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
-export async function getBalances(pool: Pool): Promise<EdgeCityBalance[]> {
+export async function getEdgeCityBalances(
+  pool: Pool
+): Promise<EdgeCityBalance[]> {
   const { rows } = await sqlQuery(
     pool,
     `

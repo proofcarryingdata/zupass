@@ -7,7 +7,6 @@ import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
 import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
-import { IPipelineAtomDB } from "./database/queries/pipelineAtomDB";
 import {
   DevconnectPretixAPIFactory,
   DevconnectPretixSyncService
@@ -16,7 +15,7 @@ import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
-import { GenericIssuanceService } from "./services/generic-issuance/genericIssuanceService";
+import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
 import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
@@ -39,7 +38,6 @@ export interface ApplicationContext {
   resourcesDir: string;
   publicResourcesDir: string;
   gitCommitHash: string;
-  pipelineAtomDB: IPipelineAtomDB;
 }
 
 export interface GlobalServices {

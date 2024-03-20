@@ -46,13 +46,12 @@ import {
   goodResponse,
   makeHandler
 } from "./tripsha/mockTripshaAPI";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("zuconnect functionality", function () {
-  this.timeout(30_000);
   let db: Pool;
   let server: SetupServer;
   let zuconnectTripshaSyncService: ZuconnectTripshaSyncService;

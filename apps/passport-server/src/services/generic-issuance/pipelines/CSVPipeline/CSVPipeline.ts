@@ -1,4 +1,3 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
@@ -27,7 +26,7 @@ import {
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
 import { BasePipelineCapability } from "../../types";
-import { makePLogErr, makePLogInfo } from "../../util";
+import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
 import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
@@ -46,8 +45,6 @@ export class CSVPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
-  private rsaPrivateKey: string;
 
   public get id(): string {
     return this.definition.id;
@@ -60,15 +57,11 @@ export class CSVPipeline implements BasePipeline {
   public constructor(
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
-    db: IPipelineAtomDB,
-    zupassPublicKey: EdDSAPublicKey,
-    rsaPrivateKey: string
+    db: IPipelineAtomDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
-    this.zupassPublicKey = zupassPublicKey;
-    this.rsaPrivateKey = rsaPrivateKey;
     this.capabilities = [
       {
         type: PipelineCapability.FeedIssuance,
@@ -128,7 +121,6 @@ export class CSVPipeline implements BasePipeline {
               requesterEmail,
               requesterSemaphoreId,
               eddsaPrivateKey: this.eddsaPrivateKey,
-              rsaPrivateKey: this.rsaPrivateKey,
               pipelineId: this.id
             }
           )
@@ -284,7 +276,6 @@ export async function makeCSVPCD(
   opts: {
     requesterEmail?: string;
     requesterSemaphoreId?: string;
-    rsaPrivateKey: string;
     eddsaPrivateKey: string;
     pipelineId: string;
   }

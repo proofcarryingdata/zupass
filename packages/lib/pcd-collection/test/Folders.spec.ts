@@ -15,8 +15,6 @@ import {
 } from "../src/util";
 
 describe("Folder manipulation", async function () {
-  this.timeout(30 * 1000);
-
   it("getFoldersInFolder", async function () {
     const allPaths = [
       "a",

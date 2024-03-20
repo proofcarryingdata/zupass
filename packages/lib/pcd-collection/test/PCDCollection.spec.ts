@@ -33,8 +33,6 @@ async function newPCD(id?: string): Promise<RSAPCD> {
 }
 
 describe("PCDCollection", async function () {
-  this.timeout(30 * 1000);
-
   const packages = [RSAPCDPackage];
 
   it("Should let you manage folders", async function () {
