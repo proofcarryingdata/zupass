@@ -26,7 +26,6 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
-import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
@@ -195,21 +194,8 @@ export class PipelineSubservice {
 
       span?.setAttribute("pipeline_id", pipelineId);
       const pipeline = await this.loadPipelineDefinition(pipelineId);
-
-      if (!pipeline) {
-        throw new PCDHTTPError(404);
-      }
-
       tracePipeline(pipeline);
-
-      if (pipeline.ownerUserId !== user.id && !user.isAdmin) {
-        throw new PCDHTTPError(
-          403,
-          `user '${str(user)}' can't delete pipeline '${
-            pipeline.id
-          }' owned by other user ${pipeline.ownerUserId}`
-        );
-      }
+      this.ensureUserHasPipelineDefinitionAccess(user, pipeline);
 
       await this.pipelineDB.deleteDefinition(pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
