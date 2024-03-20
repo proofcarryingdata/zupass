@@ -198,10 +198,6 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
   }
 
   try {
-    // @todo - prevent logspam in the same way we prevent it
-    // on the server. otherwise, these show up in test logs.
-    // console.log(`[FETCH]`, url, requestOptions.method);
-
     const res = await fetch(url, requestOptions);
     const resText = await res.text();
 
