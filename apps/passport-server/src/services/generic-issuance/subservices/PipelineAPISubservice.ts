@@ -251,7 +251,7 @@ export class PipelineAPISubservice {
           continue;
         }
 
-        for (const capability of pipeline?.instance.capabilities) {
+        for (const capability of pipeline?.instance?.capabilities ?? []) {
           if (
             isCheckinCapability(capability) &&
             capability.canHandleCheckinForEvent(eventId)
