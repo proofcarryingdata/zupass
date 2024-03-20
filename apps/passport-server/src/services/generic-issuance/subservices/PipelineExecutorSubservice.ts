@@ -85,7 +85,7 @@ export class PipelineExecutorSubservice {
   }
 
   /**
-   * If there's a load loop scheduled, cancells it.
+   * If there's a load loop scheduled, cancels it.
    */
   public async stop(): Promise<void> {
     if (this.nextLoadTimeout) {

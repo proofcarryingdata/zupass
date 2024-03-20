@@ -247,7 +247,7 @@ export class PipelineSubservice {
   }
 
   /**
-   * Gets all {@link Pipeline}s and their medata that the given {@link PipelineUser}
+   * Gets all {@link Pipeline}s and their metadata that the given {@link PipelineUser}
    * can see given their user type and in the future sharing permissions.
    */
   public async getAllUserPipelineDefinitions(
