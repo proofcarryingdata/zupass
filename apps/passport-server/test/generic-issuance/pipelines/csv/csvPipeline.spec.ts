@@ -17,20 +17,18 @@ import { GenericIssuanceService } from "../../../../src/services/generic-issuanc
 import { CSVPipeline } from "../../../../src/services/generic-issuance/pipelines/CSVPipeline/CSVPipeline";
 import { PipelineUser } from "../../../../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../../../../src/types";
-import { loadApolloErrorMessages } from "../../../lemonade/MockLemonadeServer";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
 import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import { assertUserMatches } from "../../util";
 import { makeTestCSVPipelineDefinition } from "./makeTestCSVPipelineDefinition";
 
-describe("Generic Issuance", function () {
+/**
+ * Tests for {@link GenericIssuanceService}, in particular the {@link CSVPipeline}.
+ */
+describe("Generic Issuance - CSVPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
-
-  // The Apollo client used by Lemonade does not load error messages by
-  // default, so we have to call this.
-  loadApolloErrorMessages();
 
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
@@ -45,7 +43,7 @@ describe("Generic Issuance", function () {
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipelines:
-   * - {@link CSVPipeline}, as defined by {@link csvPipeline}
+   * - {@link CSVPipeline}, as defined by {@link makeTestCSVPipelineDefinition}
    */
   this.beforeAll(async () => {
     // This has to be done here as it requires an `await`

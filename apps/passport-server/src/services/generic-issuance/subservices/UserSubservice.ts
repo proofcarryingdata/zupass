@@ -66,7 +66,7 @@ export class UserSubservice {
    * Used to protect sensitive routes in the Podbox API (see `genericIssuanceRoutes.ts`).
    */
   public async authSession(req: Request): Promise<PipelineUser> {
-    return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
+    return traced(SERVICE_NAME, "authSession", async (span) => {
       const reqBody = req?.body;
       const jwt = reqBody?.jwt;
 

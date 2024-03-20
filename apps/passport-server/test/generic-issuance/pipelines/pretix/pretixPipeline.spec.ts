@@ -33,7 +33,10 @@ import {
 } from "../../util";
 import { setupPretixPipeline } from "./setupPretixPipeline";
 
-describe("Generic Issuance", function () {
+/**
+ * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
+ */
+describe("Generic Issuance - PretixPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
