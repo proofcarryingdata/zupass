@@ -5,8 +5,6 @@ import NodeRSA from "node-rsa";
 import { RSAImagePCD, RSAImagePCDPackage } from "../src";
 
 describe("RSA Image PCD should work", function () {
-  this.timeout(1000 * 30);
-
   const key = new NodeRSA({ b: 2048 });
   const exportedKey = key.exportKey("private");
   const url = "test url";

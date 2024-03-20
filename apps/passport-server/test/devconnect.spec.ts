@@ -131,8 +131,6 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("devconnect functionality", function () {
-  this.timeout(30_000);
-
   let application: Zupass;
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;

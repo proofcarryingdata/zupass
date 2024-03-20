@@ -4,8 +4,6 @@ import "mocha";
 import { EmailPCD, EmailPCDPackage } from "../src";
 
 describe("EdDSA attested email should work", function () {
-  this.timeout(1000 * 30);
-
   let emailPCD: EmailPCD;
   let stableEmailPCD: EmailPCD;
 

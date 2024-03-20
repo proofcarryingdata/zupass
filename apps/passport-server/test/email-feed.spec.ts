@@ -18,7 +18,6 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist, randomEmail } from "./util/util";
 
 describe("attested email feed functionality", function () {
-  this.timeout(30_000);
   let application: Zupass;
   let identity: Identity;
   const testEmail = randomEmail();

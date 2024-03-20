@@ -15,8 +15,6 @@ import {
 } from "../src";
 
 describe("EdDSA frog should work", function () {
-  this.timeout(1000 * 30);
-
   let frog: EdDSAFrogPCD;
   let pcdArgs: EdDSAFrogPCDArgs;
 

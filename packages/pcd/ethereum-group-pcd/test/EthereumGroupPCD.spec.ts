@@ -132,7 +132,6 @@ async function happyPathEthGroupPCD(
 
 describe("Ethereum Group PCD", function () {
   let ethGroupPCD: EthereumGroupPCD;
-  this.timeout(8 * 60 * 1000);
 
   this.beforeAll(async function () {
     const addrMembershipConfig = {

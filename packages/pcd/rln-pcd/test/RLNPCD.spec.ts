@@ -14,8 +14,6 @@ const zkeyFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.zkey`);
 const wasmFilePath = path.join(__dirname, `../artifacts/${TREE_DEPTH}.wasm`);
 
 describe("rln-pcd should work", function () {
-  this.timeout(1000 * 30);
-
   this.beforeAll(async function () {
     if (!RLNPCDPackage.init) return;
     await RLNPCDPackage.init({

@@ -34,7 +34,6 @@ import {
 import { setupPretixPipeline } from "./setupPretixPipeline";
 
 describe("Generic Issuance", function () {
-  this.timeout(30_000);
   const nowDate = new Date();
   const now = Date.now();
 

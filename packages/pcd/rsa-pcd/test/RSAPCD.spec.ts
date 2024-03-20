@@ -10,8 +10,6 @@ async function copyPcd(pcd: RSAPCD): Promise<RSAPCD> {
 }
 
 describe("RSA signature PCD should work", function () {
-  this.timeout(1000 * 30);
-
   const key = new NodeRSA({ b: 2048 });
   const exportedKey = key.exportKey("private");
   const message = "message to sign";

@@ -52,7 +52,6 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("zuconnect functionality", function () {
-  this.timeout(30_000);
   let db: Pool;
   let server: SetupServer;
   let zuconnectTripshaSyncService: ZuconnectTripshaSyncService;

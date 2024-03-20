@@ -56,7 +56,6 @@ import {
 import { setupLemonadePipeline } from "./setupLemonadePipeline";
 
 describe("Generic Issuance Service LemonadePipeline", function () {
-  this.timeout(30_000);
   const nowDate = new Date();
   const now = Date.now();
 
