@@ -23,7 +23,7 @@ import {
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import express from "express";
 import urljoin from "url-join";
-import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService2";
+import { GenericIssuanceService } from "../../services/generic-issuance/GenericIssuanceService";
 import {
   getAllGenericIssuanceHTTPQuery,
   getAllGenericIssuanceQuery,

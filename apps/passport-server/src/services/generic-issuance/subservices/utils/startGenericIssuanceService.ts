@@ -8,7 +8,7 @@ import { DiscordService } from "../../../discordService";
 import { PagerDutyService } from "../../../pagerDutyService";
 import { PersistentCacheService } from "../../../persistentCacheService";
 import { RollbarService } from "../../../rollbarService";
-import { GenericIssuanceService } from "../../GenericIssuanceService2";
+import { GenericIssuanceService } from "../../GenericIssuanceService";
 
 export async function startGenericIssuanceService(
   context: ApplicationContext,
