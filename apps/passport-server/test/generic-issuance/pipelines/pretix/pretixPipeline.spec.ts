@@ -147,6 +147,10 @@ describe("Generic Issuance - PretixPipeline", function () {
     MockDate.reset();
   });
 
+  this.afterAll(async () => {
+    mockServer.close();
+  });
+
   step("PipelineUserDB", async function () {
     const userDB = new PipelineUserDB(giBackend.context.dbPool);
 

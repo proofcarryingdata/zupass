@@ -246,9 +246,6 @@ export function setupLemonadePipeline(): LemonadePipelineTestData {
   const mockServer = setupServer(
     ...getMockLemonadeHandlers(lemonadeBackend, lemonadeBackendUrl)
   );
-  // The mock server will intercept any requests for URLs that are registered
-  // with it. Unhandled requests will bypass the mock server.
-  mockServer.listen({ onUnhandledRequest: "bypass" });
 
   return {
     edgeCityPipeline,

@@ -161,6 +161,10 @@ describe("Generic Issuance - LemonadePipeline", function () {
       await userDB.getUserById(edgeCityDenverUser.id)
     );
 
+    // The mock server will intercept any requests for URLs that are registered
+    // with it. Unhandled requests will bypass the mock server.
+    mockServer.listen({ onUnhandledRequest: "bypass" });
+
     ZUPASS_EDDSA_PRIVATE_KEY = process.env.SERVER_EDDSA_PRIVATE_KEY as string;
     giService = giBackend.services
       .genericIssuanceService as GenericIssuanceService;
@@ -180,6 +184,10 @@ describe("Generic Issuance - LemonadePipeline", function () {
   this.afterEach(async () => {
     mockServer.resetHandlers();
     MockDate.reset();
+  });
+
+  this.afterAll(async () => {
+    mockServer.close();
   });
 
   step("PipelineUserDB", async function () {
