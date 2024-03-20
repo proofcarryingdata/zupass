@@ -1634,6 +1634,10 @@ describe("devconnect functionality", function () {
   );
 
   step("semaphore service should reflect correct state", async function () {
+    // New user login schedules an asynchronous reload of the Semaphore
+    // service, which we can't rely on having completed by the time we run this
+    // test, so we must ensure that groups are reloaded here.
+    await application.services.semaphoreService.reload();
     expectCurrentSemaphoreToBe(application, {
       p: [],
       r: [],
