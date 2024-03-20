@@ -38,7 +38,7 @@ import {
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
 import { Zupass } from "../src/types";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import {
   testDexFrogs,

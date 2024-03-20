@@ -46,7 +46,7 @@ import {
   goodResponse,
   makeHandler
 } from "./tripsha/mockTripshaAPI";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";

@@ -495,8 +495,8 @@ describe("database reads and writes", function () {
     expect(rekeyResult3.revision).to.be.undefined;
   });
 
-  step("pcdpass user representation should work", async function () {
-    const email = "pcdpassuser@test.com";
+  step("zupass user representation should work", async function () {
+    const email = "zupassuser@test.com";
     const commitment = new Identity().commitment.toString();
     const uuid = await upsertUser(db, {
       commitment,

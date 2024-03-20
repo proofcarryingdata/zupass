@@ -20,12 +20,12 @@ import { Zupass } from "../src/types";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
-describe("zuzalu pcdpass functionality", function () {
+describe("zuzalu-specific zupass functionality", function () {
   let application: Zupass;
   let pretixMocker: ZuzaluPretixDataMocker;
   let identity: Identity;
