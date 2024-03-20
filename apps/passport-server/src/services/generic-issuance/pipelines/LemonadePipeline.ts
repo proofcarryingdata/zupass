@@ -74,7 +74,7 @@ import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapabili
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
 import { BasePipelineCapability } from "../types";
-import { makePLogErr, makePLogInfo, makePLogWarn } from "../util";
+import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "LemonadePipeline";

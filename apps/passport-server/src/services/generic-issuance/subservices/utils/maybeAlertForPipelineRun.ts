@@ -2,8 +2,8 @@ import { PipelineLoadSummary } from "@pcd/passport-interface";
 import urljoin from "url-join";
 import { DiscordService } from "../../../discordService";
 import { PagerDutyService } from "../../../pagerDutyService";
+import { getErrorLogs, getWarningLogs } from "../../pipelines/logging";
 import { PipelineSlot } from "../../types";
-import { getErrorLogs, getWarningLogs } from "../../util";
 
 const DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
 

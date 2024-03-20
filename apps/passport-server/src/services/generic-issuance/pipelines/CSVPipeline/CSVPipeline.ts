@@ -26,7 +26,7 @@ import {
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
 import { BasePipelineCapability } from "../../types";
-import { makePLogErr, makePLogInfo } from "../../util";
+import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
 import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";

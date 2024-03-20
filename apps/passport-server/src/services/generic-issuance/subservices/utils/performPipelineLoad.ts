@@ -10,9 +10,9 @@ import {
   tracePipeline,
   traceUser
 } from "../../honeycombQueries";
+import { makePLogErr, makePLogInfo } from "../../pipelines/logging";
 import { Pipeline } from "../../pipelines/types";
 import { PipelineSlot } from "../../types";
-import { makePLogErr, makePLogInfo } from "../../util";
 import { PipelineSubservice } from "../PipelineSubservice";
 import { UserSubservice } from "../UserSubservice";
 import { maybeAlertForPipelineRun } from "./maybeAlertForPipelineRun";
