@@ -95,7 +95,7 @@ export async function onNamedAPIError<TResult>(
   // If server gives us valid JSON, parse it for potential encoded error.
   let apiError: Partial<NamedAPIError> = {};
   let serverProvidedError = false;
-  console.log(resText);
+  // console.log(resText);
   try {
     const resJSON = JSON.parse(resText);
     // Server must at least specify error.name for us to take its other
