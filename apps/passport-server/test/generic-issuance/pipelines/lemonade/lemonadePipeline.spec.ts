@@ -31,7 +31,7 @@ import { stopApplication } from "../../../../src/application";
 import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
-import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
+import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService2";
 import {
   LEMONADE_CHECKER,
   LemonadePipeline

@@ -15,7 +15,7 @@ import { DiscordService } from "./services/discordService";
 import { E2EEService } from "./services/e2eeService";
 import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
-import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
+import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService2";
 import { IssuanceService } from "./services/issuanceService";
 import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
