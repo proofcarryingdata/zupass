@@ -36,17 +36,13 @@ import { setupPretixPipeline } from "./setupPretixPipeline";
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline}.
  */
-describe("Generic Issuance - PretixPipeline", async function () {
+describe("Generic Issuance - PretixPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
   let giService: GenericIssuanceService;
-
-  const zupassPublicKey = JSON.stringify(
-    await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
-  );
 
   const {
     adminGIUserId,
@@ -75,6 +71,10 @@ describe("Generic Issuance - PretixPipeline", async function () {
    * - {@link PretixPipeline}, as defined by {@link ethLatAmPipeline}
    */
   this.beforeAll(async () => {
+    const zupassPublicKey = JSON.stringify(
+      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
+    );
+
     await overrideEnvironment({
       GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
       ...testingEnv

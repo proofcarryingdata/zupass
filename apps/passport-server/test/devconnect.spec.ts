@@ -38,7 +38,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { rest } from "msw";
-import { SetupServer } from "msw/lib/node";
+import { SetupServer } from "msw/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";

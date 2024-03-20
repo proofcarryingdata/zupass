@@ -26,7 +26,7 @@ import { setupTestCSVPipelineDefinition } from "./setupTestCSVPipelineDefinition
 /**
  * Tests for {@link GenericIssuanceService}, in particular the {@link CSVPipeline}.
  */
-describe("Generic Issuance - CSVPipeline", async function () {
+describe("Generic Issuance - CSVPipeline", function () {
   const nowDate = new Date();
   const now = Date.now();
 
@@ -41,15 +41,15 @@ describe("Generic Issuance - CSVPipeline", async function () {
 
   const pipelineDefinitions = [csvPipeline];
 
-  const zupassPublicKey = JSON.stringify(
-    await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
-  );
-
   /**
    * Sets up a Zupass/Generic issuance backend with one pipelines:
    * - {@link CSVPipeline}, as defined by {@link setupTestCSVPipelineDefinition}
    */
   this.beforeAll(async () => {
+    const zupassPublicKey = JSON.stringify(
+      await getEdDSAPublicKey(testingEnv.SERVER_EDDSA_PRIVATE_KEY as string)
+    );
+
     await overrideEnvironment({
       GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
       ...testingEnv
