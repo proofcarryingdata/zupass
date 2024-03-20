@@ -22,14 +22,12 @@ import { startUserService } from "./services/userService";
 import { startZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { startZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
-import { instrumentPCDs } from "./util/instrumentPCDs";
 
 export async function startServices(
   context: ApplicationContext,
   apis: APIs
 ): Promise<GlobalServices> {
   await startTelemetry(context);
-  instrumentPCDs();
 
   const multiprocessService = startMultiProcessService();
   const pagerDutyService = startPagerDutyService();
