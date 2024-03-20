@@ -17,11 +17,11 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  */
 export interface IPipelineDefinitionDB {
   loadPipelineDefinitions(): Promise<PipelineDefinition[]>;
-  clearDefinition(definitionID: string): Promise<void>;
-  clearAllDefinitions(): Promise<void>;
+  deleteDefinition(definitionID: string): Promise<void>;
+  deleteAllDefinitions(): Promise<void>;
   getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
-  setDefinition(definition: PipelineDefinition): Promise<void>;
-  setDefinitions(definitions: PipelineDefinition[]): Promise<void>;
+  upsertDefinition(definition: PipelineDefinition): Promise<void>;
+  upsertDefinitions(definitions: PipelineDefinition[]): Promise<void>;
   saveLoadSummary(
     definitionID: string,
     lastRunInfo?: PipelineLoadSummary
@@ -33,14 +33,9 @@ export interface IPipelineDefinitionDB {
 
 /**
  * Implements the above interface with the Postgres DB as back-end.
- * In reality we are probably going to want more fine-grained APIs - rather
- * than updating the entire definition, we are going to want to do things like
- * "change owner", "add editor" or "remove editor". The approach below is
- * simply for the MVP.
  */
 export class PipelineDefinitionDB implements IPipelineDefinitionDB {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private runInfos: any = {};
+  private runInfos: Record<string, PipelineLoadSummary | undefined> = {};
 
   private db: Pool;
 
@@ -49,26 +44,31 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   }
 
   /**
-   * Intentionally saving these in-memory.
-   * TODO: save to db as an extra column in the PipelineDefinition table.
+   * Gets the last {@link PipelineLoadSummary} from an in-memory store for the
+   * {@link Pipeline} identified by the @param pipelineId.
    */
   public async getLastLoadSummary(
-    definitionID: string
+    pipelineId: string
   ): Promise<PipelineLoadSummary | undefined> {
-    return this.runInfos[definitionID];
+    return this.runInfos[pipelineId];
   }
 
   /**
-   * Intentionally saving these in-memory.
-   * TODO: save to db as an extra column in the PipelineDefinition table.
+   * Saves a {@link PipelineLoadSummary} to in-memory store for a {@link Pipeline}
+   * identified by the @param pipelineId.
    */
   public async saveLoadSummary(
-    definitionID: string,
+    pipelineId: string,
     lastRunInfo: PipelineLoadSummary | undefined
   ): Promise<void> {
-    this.runInfos[definitionID] = lastRunInfo;
+    this.runInfos[pipelineId] = lastRunInfo;
   }
 
+  /**
+   * Loads all {@link PipelineDefinition}s from the database.
+   *
+   * @todo use `zod` to ensure these are properly formatted.
+   */
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
     const result = await sqlQuery(
       this.db,
@@ -80,8 +80,6 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       GROUP BY p.id`
     );
 
-    // TODO: where should we check that the pipeline definitions
-    // we've loaded conform to the pipeline definition schema?
     return result.rows.map(
       (row: GenericIssuancePipelineRow): PipelineDefinition =>
         ({
@@ -98,28 +96,40 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     );
   }
 
-  public async clearAllDefinitions(): Promise<void> {
+  /**
+   * Deletes all {@link PipelineDefinition} from the database.
+   */
+  public async deleteAllDefinitions(): Promise<void> {
     await sqlQuery(this.db, "DELETE FROM generic_issuance_pipeline_editors");
     await sqlQuery(this.db, "DELETE FROM generic_issuance_pipelines");
   }
 
-  public async clearDefinition(definitionID: string): Promise<void> {
+  /**
+   * Deletes a particular {@link PipelineDefinition} from the database.
+   */
+  public async deleteDefinition(pipelineId: string): Promise<void> {
     await sqlTransaction(
       this.db,
       "Delete pipeline definition",
       async (client) => {
         await client.query(
           "DELETE FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1",
-          [definitionID]
+          [pipelineId]
         );
         await client.query(
           "DELETE FROM generic_issuance_pipelines WHERE id = $1",
-          [definitionID]
+          [pipelineId]
         );
       }
     );
   }
 
+  /**
+   * Loads a particular {@link PipelineDefinition} from the database, if one
+   * exists.
+   *
+   * @todo use `zod` to parse this.
+   */
   public async getDefinition(
     definitionID: string
   ): Promise<PipelineDefinition | undefined> {
@@ -158,7 +168,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * definition. If inserting, the caller is responsible for generating a UUID
    * as the pipeline ID.
    */
-  public async setDefinition(definition: PipelineDefinition): Promise<void> {
+  public async upsertDefinition(definition: PipelineDefinition): Promise<void> {
     await sqlTransaction(
       this.db,
       "Insert or update pipeline definition",
@@ -217,11 +227,14 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     );
   }
 
-  public async setDefinitions(
+  /**
+   * Bulk version of {@link upsertDefinition}.
+   */
+  public async upsertDefinitions(
     definitions: PipelineDefinition[]
   ): Promise<void> {
     for (const definition of definitions) {
-      await this.setDefinition(definition);
+      await this.upsertDefinition(definition);
     }
   }
 }

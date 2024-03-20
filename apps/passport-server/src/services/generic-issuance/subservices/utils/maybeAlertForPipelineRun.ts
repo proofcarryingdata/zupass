@@ -8,11 +8,14 @@ import { PipelineSlot } from "../../types";
 const DISCORD_ALERT_TIMEOUT_MS = 60_000 * 10;
 
 /**
- * To be called after a pipeline finishes loading, either as part of the global
- * pipeline loading schedule, or because the pipeline's definition was updated.
+ * To be called after a pipeline finishes loading (by {@link performPipelineLoad}),
+ * either as part of the global pipeline loading schedule as implemented by
+ * {@link PipelineExecutorSubservice}, or because the pipeline's definition was updated
+ * by a {@link PipelineUser}.
+ *
  * Alerts the appropriate channels depending on the result of the pipeline load.
  *
- * Pipelines can be configured to opt in or out of alerts.
+ * Pipelines can be configured to opt in or out of alerts via their {@link PipelineDefinition}.
  */
 export async function maybeAlertForPipelineRun(
   slot: PipelineSlot,

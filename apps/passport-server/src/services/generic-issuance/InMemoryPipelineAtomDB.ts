@@ -4,7 +4,10 @@ import {
 } from "../../database/queries/pipelineAtomDB";
 
 /**
- * An in-memory implementation of {@link IPipelineAtomDB} for testing purposes.
+ * An in-memory implementation of {@link IPipelineAtomDB}.
+ *
+ * @todo at some point it may be necessary to store these in a key-value
+ *   or postgres.
  */
 export class InMemoryPipelineAtomDB implements IPipelineAtomDB {
   public data: {

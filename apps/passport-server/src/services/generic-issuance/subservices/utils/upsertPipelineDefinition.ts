@@ -22,6 +22,13 @@ export interface UpsertPipelineResult {
   restartPromise: Promise<void>;
 }
 
+/**
+ * Extracted from {@link PipelineExecutorSubservice} for readability.
+ *
+ * Attempts to upsert the given {@link PipelineDefinition} on behalf of the given
+ * {@link PipelineUser}, and (re)starts the corresponding {@link Pipeline} as
+ * represented in {@link PipelineExecutorSubservice} by a {@link PipelineSlot}.
+ */
 export async function upsertPipelineDefinition(
   user: PipelineUser,
   newDefinition: PipelineDefinition,
@@ -107,7 +114,8 @@ export async function upsertPipelineDefinition(
   );
   await pipelineSubservice.clearAtomsForPipeline(validatedNewDefinition.id);
 
-  // purposely not awaited
+  // purposely not awaited as this also performs a Pipeline load,
+  // which can take an arbitrary amount of time.
   const restartPromise = executorSubservice.restartPipeline(
     validatedNewDefinition.id
   );

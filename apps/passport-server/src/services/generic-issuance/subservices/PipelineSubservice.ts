@@ -45,8 +45,11 @@ import {
   upsertPipelineDefinition
 } from "./utils/upsertPipelineDefinition";
 
-const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
+const SERVICE_NAME = "GI_PIPELINE_SUBSERVICE";
 
+/**
+ * Encapsulates Podbox' Pipeline functionality.
+ */
 export class PipelineSubservice {
   private pipelineAtomDB: IPipelineAtomDB;
   private pipelineDB: IPipelineDefinitionDB;
@@ -78,18 +81,36 @@ export class PipelineSubservice {
     this.pipelineAPISubservice = new PipelineAPISubservice(consumerDB, this);
   }
 
+  /**
+   * Call immediately after instantiating this service.
+   * @param startLoadLoop whether or not to start a loop that loads {@link Pipeline}
+   * data for each pipeline once per minute.
+   */
   public async start(startLoadLoop?: boolean): Promise<void> {
     await this.executorSubservice.start(startLoadLoop);
   }
 
+  /**
+   * If there's a {@link Pipeline} load loop scheduled via {@link PipelineExecutorSubservice},
+   * stops it.
+   */
   public async stop(): Promise<void> {
     await this.executorSubservice.stop();
   }
 
+  /**
+   * Gets the {@link PipelineAtom}s that this Pipeline last loaded.
+   * - these are stored in memory, so get wiped on every server restart
+   * - only the atoms from the last load are stored for each pipeline.
+   */
   public async getPipelineAtoms(pipelineId: string): Promise<PipelineAtom[]> {
     return this.pipelineAtomDB.load(pipelineId);
   }
 
+  /**
+   * Gets all instances of {@link Pipeline} that {@link PipelineExecutorSubservice} was
+   * able to successfully start via {@link instantiatePipeline}.
+   */
   public async getAllPipelineInstances(): Promise<Pipeline[]> {
     return this.executorSubservice
       .getAllPipelineSlots()
@@ -97,48 +118,74 @@ export class PipelineSubservice {
       .filter((p) => !!p) as Pipeline[];
   }
 
-  public async getPipelineSlot(id: string): Promise<PipelineSlot | undefined> {
+  /**
+   * Gets the {@link PipelineSlot} corresponding to the given @param pipelineId.
+   */
+  public async getPipelineSlot(
+    pipelineId: string
+  ): Promise<PipelineSlot | undefined> {
     return this.executorSubservice
       .getAllPipelineSlots()
-      .find((p) => p.definition.id === id);
+      .find((p) => p.definition.id === pipelineId);
   }
 
+  /**
+   * @throws if there's no instantiated {@link PipelineSlot} for the @param id.
+   * The server maintains one slot per pipeline in the definition DB. if a user
+   * deletes a pipeline, the corresponding slot is removed from the total set of
+   * slots.
+   */
   public async ensurePipelineSlotExists(id: string): Promise<PipelineSlot> {
-    const pipeline = await this.getPipelineSlot(id);
-    if (!pipeline) {
-      throw new Error(`no pipeline with id ${id} found`);
-    }
-    return pipeline;
+    return this.executorSubservice.ensurePipelineSlotExists(id);
   }
 
+  /**
+   * @throws if there's no {@link PipelineSlot} for the given @param id, or if
+   * the {@link Pipeline} could not be instantiated via {@link instantiatePipeline}.
+   */
   public async ensurePipelineStarted(id: string): Promise<Pipeline> {
-    const pipeline = await this.ensurePipelineSlotExists(id);
-    if (!pipeline.instance) {
-      throw new Error(`no pipeline instance with id ${id} found`);
-    }
-    return pipeline.instance;
+    return this.executorSubservice.ensurePipelineStarted(id);
   }
 
+  /**
+   * Gets the last {@link PipelineLoadSummary} for the given pipeline identified by @param id,
+   * which {@link PipelineExecutorSubservice} saves after each {@link Pipeline} load.
+   */
   public async getLastLoadSummary(
     id: string
   ): Promise<PipelineLoadSummary | undefined> {
     return this.pipelineDB.getLastLoadSummary(id);
   }
 
+  /**
+   * Loads all {@link PipelineDefinition}s from the persistent database.
+   */
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
     return this.pipelineDB.loadPipelineDefinitions();
   }
 
+  /**
+   * Loads a particular {@link PipelineDefinition} from the databse, identified
+   * by the @param id.
+   */
   public async loadPipelineDefinition(
     id: string
   ): Promise<PipelineDefinition | undefined> {
     return this.pipelineDB.getDefinition(id);
   }
 
+  /**
+   * Saves a particular {@link PipelineDefinition} to the database.
+   */
   public async saveDefinition(definition: PipelineDefinition): Promise<void> {
-    await this.pipelineDB.setDefinition(definition);
+    await this.pipelineDB.upsertDefinition(definition);
   }
 
+  /**
+   * Attempts to delete a given {@link PipelineDefinition}, {@link PipelineSlot},
+   * and stop the instantiated {@link Pipeline} on behalf of the given {@link PipelineUser},
+   * checking whether the user is permissioned to perform the given action.
+   */
   public async deletePipelineDefinition(
     user: PipelineUser,
     pipelineId: string
@@ -164,13 +211,18 @@ export class PipelineSubservice {
         );
       }
 
-      await this.pipelineDB.clearDefinition(pipelineId);
+      await this.pipelineDB.deleteDefinition(pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.pipelineAtomDB.clear(pipelineId);
       await this.executorSubservice.restartPipeline(pipelineId);
     });
   }
 
+  /**
+   * Attempts to upsert the given {@link PipelineDefinition} on behalf of the given
+   * {@link PipelineUser}, and (re)starts the corresponding {@link Pipeline} as
+   * represented in {@link PipelineExecutorSubservice} by a {@link PipelineSlot}.
+   */
   public async upsertPipelineDefinition(
     user: PipelineUser,
     newDefinition: PipelineDefinition
@@ -187,12 +239,16 @@ export class PipelineSubservice {
     });
   }
 
+  /**
+   * Deletes all the {@link PipelineAtom}s for a given {@link Pipeline}.
+   */
   public async clearAtomsForPipeline(pipelineId: string): Promise<void> {
     await this.pipelineAtomDB.clear(pipelineId);
   }
 
   /**
-   * Gets all piplines this user can see.
+   * Gets all {@link Pipeline}s and their medata that the given {@link PipelineUser}
+   * can see given their user type and in the future sharing permissions.
    */
   public async getAllUserPipelineDefinitions(
     user: PipelineUser
@@ -228,21 +284,23 @@ export class PipelineSubservice {
   }
 
   /**
-   * Loads a pipeline definition if the given {@link PipelineUser} has access.
+   * Loads a {@link PipelineDefinition} if the given {@link PipelineUser} has access.
    */
   public async loadPipelineDefinitionForUser(
     user: PipelineUser,
     pipelineId: string
   ): Promise<PipelineDefinition> {
-    return traced(SERVICE_NAME, "loadPipelineDefinition", async (span) => {
-      logger(SERVICE_NAME, "loadPipelineDefinition", str(user), pipelineId);
+    return traced(SERVICE_NAME, "loadPipelineDefinitionForUser", async () => {
+      logger(
+        SERVICE_NAME,
+        "loadPipelineDefinitionForUser",
+        str(user),
+        pipelineId
+      );
       traceUser(user);
       const pipeline = await this.loadPipelineDefinition(pipelineId);
       tracePipeline(pipeline);
-      if (!pipeline || !this.userHasPipelineDefinitionAccess(user, pipeline)) {
-        throw new PCDHTTPError(404, "Pipeline not found or not accessible");
-      }
-      span?.setAttribute("pipeline_type", pipeline.type);
+      this.ensureUserHasPipelineDefinitionAccess(user, pipeline);
       return pipeline;
     });
   }
@@ -254,7 +312,7 @@ export class PipelineSubservice {
   public ensureUserHasPipelineDefinitionAccess(
     user: PipelineUser | undefined,
     pipeline: PipelineDefinition | undefined
-  ): void {
+  ): asserts pipeline {
     if (!pipeline) {
       throw new Error(`can't view undefined pipeline`);
     }
@@ -266,8 +324,8 @@ export class PipelineSubservice {
   }
 
   /**
-   * Returns whether or not the given {@link PipelineUser} has
-   * access to the given {@link Pipeline}.
+   * Returns whether or not the given {@link PipelineUser} has access to
+   * the given {@link Pipeline}.
    */
   private userHasPipelineDefinitionAccess(
     user: PipelineUser | undefined,
@@ -284,6 +342,10 @@ export class PipelineSubservice {
     );
   }
 
+  /**
+   * Saves a {@link PipelineLoadSummary} to in-memory store for a {@link Pipeline}
+   * identified by the @param pipelineId.
+   */
   public async saveLoadSummary(
     id: string,
     summary: PipelineLoadSummary | undefined
@@ -291,6 +353,10 @@ export class PipelineSubservice {
     await this.pipelineDB.saveLoadSummary(id, summary);
   }
 
+  /**
+   * Gets all the {@link PipelineSlot}s {@link PipelineExecutorSubservice} has instantiated,
+   * one per {@link PipelineDefinition} in the database.
+   */
   public getAllPipelines(): PipelineSlot[] {
     return this.executorSubservice.getAllPipelineSlots();
   }

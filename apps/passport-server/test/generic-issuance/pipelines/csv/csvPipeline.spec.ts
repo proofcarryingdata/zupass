@@ -87,8 +87,8 @@ describe("Generic Issuance", function () {
     const pipelineDefinitionDB = new PipelineDefinitionDB(
       giBackend.context.dbPool
     );
-    await pipelineDefinitionDB.clearAllDefinitions();
-    await pipelineDefinitionDB.setDefinitions(pipelineDefinitions);
+    await pipelineDefinitionDB.deleteAllDefinitions();
+    await pipelineDefinitionDB.upsertDefinitions(pipelineDefinitions);
     await giService.start(false);
   });
 

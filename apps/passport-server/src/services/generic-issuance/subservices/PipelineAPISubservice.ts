@@ -39,6 +39,11 @@ import { PipelineSubservice } from "./PipelineSubservice";
 const SERVICE_NAME = "PIPELINE_API_SUBSERVICE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
+/**
+ * Encapsulates the publicly-accessible (via the internet) APIs that
+ * each {@link Pipeline} exposes. This includes things like feed-based
+ * {@link PCD} issuance.
+ */
 export class PipelineAPISubservice {
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
@@ -79,6 +84,14 @@ export class PipelineAPISubservice {
     });
   }
 
+  /**
+   * Gets the runtime-maintained metadata about a given {@link Pipeline} on
+   * behalf of a particular {@link PipelineUser}, if they have the appropriate
+   * permissions.
+   *
+   * @throws if the given user does not have permission, or if the pipeline
+   *   does not exist.
+   */
   public async handleGetPipelineInfo(
     user: PipelineUser,
     pipelineId: string
@@ -161,7 +174,8 @@ export class PipelineAPISubservice {
   }
 
   /**
-   * Accessible to public internet
+   * Accessible to public internet; returns the feeds exposed by this {@link Pipeline},
+   * which Zupass can use to get {@link PCD}s from the pipeline.
    */
   public async handleListFeed(
     pipelineId: string,
@@ -217,7 +231,9 @@ export class PipelineAPISubservice {
 
   /**
    * Handles incoming requests that hit a Pipeline which implements the checkin
-   * capability for every pipeline this server manages.
+   * capability for every pipeline this server manages. Ensures the given Zupass
+   * user is permissioned to perform the checkin/other ticket action given the
+   * {@link PipelineDefinition}'s superuser configuration.
    */
   public async handleCheckIn(
     req: GenericIssuanceCheckInRequest
@@ -272,7 +288,9 @@ export class PipelineAPISubservice {
   }
 
   /**
-   * Checks that a ticket could be checked in by the current user.
+   * Checks that a ticket could be checked in (or be the target of some other
+   * action, like 'getting contact' or 'award star') by the caller as identified
+   * by their credential.
    */
   public async handlePreCheck(
     req: GenericIssuancePreCheckRequest
@@ -324,6 +342,10 @@ export class PipelineAPISubservice {
     });
   }
 
+  /**
+   * Accessible to the public internet. Gets the members of the given Semaphore
+   * group, the members of which are identified by their Semaphore id.
+   */
   public async handleGetSemaphoreGroup(
     pipelineId: string,
     groupId: string
@@ -355,6 +377,10 @@ export class PipelineAPISubservice {
     });
   }
 
+  /**
+   * Gets the latest root hash of the merkle tree of the latest Semaphore group
+   * with the given id.
+   */
   public async handleGetLatestSemaphoreGroupRoot(
     pipelineId: string,
     groupId: string
@@ -391,6 +417,9 @@ export class PipelineAPISubservice {
     );
   }
 
+  /**
+   * Gets the semaphore group identified by the given pipeline id, group id, and group root hash.
+   */
   public async handleGetHistoricalSemaphoreGroup(
     pipelineId: string,
     groupId: string,
@@ -428,6 +457,10 @@ export class PipelineAPISubservice {
     );
   }
 
+  /**
+   * Returns whether the given @param rootHash is a valid root hash of the given
+   * Sempahore group at some point in time.
+   */
   public async handleGetValidSemaphoreGroup(
     pipelineId: string,
     groupId: string,
@@ -460,6 +493,10 @@ export class PipelineAPISubservice {
     );
   }
 
+  /**
+   * Gets a {@link PipelineSemaphoreGroupInfo} for each group served by the given
+   * {@link Pipeline}.
+   */
   public async handleGetPipelineSemaphoreGroups(
     pipelineId: string
   ): Promise<GenericIssuancePipelineSemaphoreGroupsResponseValue> {

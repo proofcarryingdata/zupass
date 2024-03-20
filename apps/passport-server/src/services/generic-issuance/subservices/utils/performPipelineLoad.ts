@@ -19,6 +19,11 @@ import { maybeAlertForPipelineRun } from "./maybeAlertForPipelineRun";
 
 const LOG_TAG = `[performPipelineLoad]`;
 
+/**
+ * Performs a {@link Pipeline#load} for the given {@link Pipeline}, and
+ * performs all appropriate follow-up actions, like saving {@link PipelineAtom}s,
+ * alerting, etc.
+ */
 export async function performPipelineLoad(
   pipelineSlot: PipelineSlot,
   pipelineSubservice: PipelineSubservice,

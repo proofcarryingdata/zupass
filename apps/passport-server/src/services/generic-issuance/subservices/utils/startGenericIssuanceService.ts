@@ -10,6 +10,9 @@ import { PersistentCacheService } from "../../../persistentCacheService";
 import { RollbarService } from "../../../rollbarService";
 import { GenericIssuanceService } from "../../GenericIssuanceService";
 
+/**
+ * Instantiates and starts a {@link GenericIssuanceService}.
+ */
 export async function startGenericIssuanceService(
   context: ApplicationContext,
   rollbarService: RollbarService | null,

@@ -19,24 +19,34 @@ import {
 } from "./utils/instantiatePipeline";
 import { performPipelineLoad } from "./utils/performPipelineLoad";
 
-const SERVICE_NAME = "GENERIC_ISSUANCE_PIPELINE";
+const SERVICE_NAME = "GI_PIPELINE_EXECUTOR_SUBSERVICE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
+/**
+ * Encapsulates Podbox' Pipeline functionality, specifically scheduling their
+ * execution, and representing the server's understanding of each Pipeline's
+ * state.
+ */
 export class PipelineExecutorSubservice {
   /**
    * The pipeline data reload algorithm works as follows:
    * 1. concurrently load all data for all pipelines
-   * 2. save that data
+   * 2. save that data, represented by {@link PipelineAtom}, and a corresponding
+   *    {@link PipelineLoadSummary}, which contains information about that particular
+   *    data load.
    * 3. wait {@link PIPELINE_REFRESH_INTERVAL_MS} milliseconds
    * 4. go back to step one
    */
   private static readonly PIPELINE_REFRESH_INTERVAL_MS = 60_000;
 
+  /**
+   * Podbox maintains an instance of a {@link PipelineSlot} for each pipeline
+   * definition stored in the database.
+   */
   private pipelineSlots: PipelineSlot[];
 
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
-
   private instantiatePipelineArgs: InstantiatePipelineArgs;
   private pagerdutyService: PagerDutyService | null;
   private discordService: DiscordService | null;
@@ -60,6 +70,11 @@ export class PipelineExecutorSubservice {
     this.instantiatePipelineArgs = instantiatePipelineArgs;
   }
 
+  /**
+   * Instantiates a {@link PipelineSlot} for each {@link PipelineDefinition} stored
+   * in the database. Loads each pipeline's data. Unless @param startLoadLoop is `false`,
+   * schedules a load loop which loads data for each {@link Pipeline} once per minute.
+   */
   public async start(startLoadLoop?: boolean): Promise<void> {
     await this.loadAndInstantiatePipelines();
     if (startLoadLoop !== false) {
@@ -69,6 +84,9 @@ export class PipelineExecutorSubservice {
     }
   }
 
+  /**
+   * If there's a load loop scheduled, cancells it.
+   */
   public async stop(): Promise<void> {
     if (this.nextLoadTimeout) {
       clearTimeout(this.nextLoadTimeout);
@@ -76,6 +94,12 @@ export class PipelineExecutorSubservice {
     }
   }
 
+  /**
+   * @throws if there's no instantiated {@link PipelineSlot} for the @param id.
+   * The server maintains one slot per pipeline in the definition DB. if a user
+   * deletes a pipeline, the corresponding slot is removed from the total set of
+   * slots.
+   */
   public async ensurePipelineSlotExists(id: string): Promise<PipelineSlot> {
     const pipeline = await this.pipelineSubservice.getPipelineSlot(id);
     if (!pipeline) {
@@ -84,6 +108,10 @@ export class PipelineExecutorSubservice {
     return pipeline;
   }
 
+  /**
+   * @throws if there's no {@link PipelineSlot} for the given @param id, or if
+   * the {@link Pipeline} could not be instantiated via {@link instantiatePipeline}.
+   */
   public async ensurePipelineStarted(id: string): Promise<Pipeline> {
     const pipeline = await this.ensurePipelineSlotExists(id);
     if (!pipeline.instance) {
@@ -100,7 +128,7 @@ export class PipelineExecutorSubservice {
    * If a pipeline with the given definition does not exist in the database
    * makes sure that no pipeline for it is running on the server.
    *
-   * Tl;dr syncs db <-> pipeline in memory
+   * tl;dr syncs db <-> pipeline in memory
    */
   public async restartPipeline(pipelineId: string): Promise<void> {
     return traced(SERVICE_NAME, "restartPipeline", async (span) => {
@@ -171,9 +199,9 @@ export class PipelineExecutorSubservice {
   /**
    * - loads all {@link PipelineDefinition}s from persistent storage
    * - creates a {@link PipelineSlot} for each definition
-   * - attempts to instantiate the correct {@link Pipeline} for each definition,
-   *   according to that pipeline's {@link PipelineType}. Currently implemented
-   *   pipeline types include:
+   * - attempts to instantiate the corresponding {@link Pipeline} for each definition,
+   *   according to that pipeline's {@link PipelineType}. Currently implemented pipeline
+   *   types include:
    *     - {@link LemonadePipeline}
    *     - {@link PretixPipeline}
    *     - {@link CSVPipeline}
@@ -225,8 +253,8 @@ export class PipelineExecutorSubservice {
   }
 
   /**
-   * All {@link Pipeline}s load data somehow. That's a 'first-class'
-   * capability.
+   * All {@link Pipeline}s load data from some data source. This function
+   * executes the load for the given {@link PipelineSlot}.
    */
   public async performPipelineLoad(
     pipelineSlot: PipelineSlot
@@ -248,13 +276,15 @@ export class PipelineExecutorSubservice {
   }
 
   /**
-   * Iterates over all instantiated {@link Pipeline}s and attempts to
-   * perform a load for each one. No individual pipeline load failure should
-   * prevent any other load from succeeding. Resolves when all pipelines complete
-   * loading. This means that a single pipeline whose load function takes
+   * Iterates over all instantiated {@link PipelineSlot}s and attempts to
+   * perform a load for each one. No individual pipeline load failure prevents
+   * any other load from succeeding. Resolves when all pipelines complete
+   * loading.
+   *
+   * @note This means that a single pipeline whose load function takes
    * a long time could stall the system.
    *
-   * TODO: be robust to stalling. one way to do this could be to race the
+   * @todo: be robust to stalling. one way to do this could be to race the
    * load promise with a `sleep(30_000)`, and killing pipelines that take
    * longer than 30s.
    */
@@ -284,14 +314,10 @@ export class PipelineExecutorSubservice {
    * then loads all data for all loaded pipelines again.
    */
   private async startPipelineLoadLoop(): Promise<void> {
-    // return traced(SERVICE_NAME, "startPipelineLoadLoop", async (span) => {
-    // eslint-disable-next-line @typescript-eslint/no-explicit-any
-    const span: any = undefined;
-
     try {
       await this.performAllPipelineLoads();
     } catch (e) {
-      setError(e, span);
+      setError(e);
       this.rollbarService?.reportError(e);
       logger(LOG_TAG, "pipeline datas failed to refresh", e);
     }
@@ -303,10 +329,6 @@ export class PipelineExecutorSubservice {
         PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS / 1000
       ),
       "s from now"
-    );
-    span?.setAttribute(
-      "timeout_ms",
-      PipelineExecutorSubservice.PIPELINE_REFRESH_INTERVAL_MS
     );
 
     this.nextLoadTimeout = setTimeout(() => {

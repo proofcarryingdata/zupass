@@ -23,8 +23,18 @@ import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
 import { Pipeline } from "../../pipelines/types";
 
+/**
+ * All the state necessary to instantiate any type of {@link Pipeline}.
+ * The current pipeline types are:
+ * - {@link LemonadePipeline}
+ * - {@link CSVPipeline}
+ * - {@link PretixPipeline}
+ */
 export interface InstantiatePipelineArgs {
   zupassPublicKey: EdDSAPublicKey;
+  /**
+   * Used to sign all PCDs created by all the {@link Pipeline}s.
+   */
   eddsaPrivateKey: string;
   cacheService: PersistentCacheService;
   lemonadeAPI: ILemonadeAPI;

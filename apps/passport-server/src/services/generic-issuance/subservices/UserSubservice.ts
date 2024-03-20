@@ -13,9 +13,12 @@ import { setError, traced } from "../../telemetryService";
 import { traceUser } from "../honeycombQueries";
 import { PipelineUser } from "../pipelines/types";
 
-const SERVICE_NAME = "GENERIC_ISSUANCE_USER";
+const SERVICE_NAME = "GI_USER_SUBSERVICE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
 
+/**
+ * Encapsulates functionality related to users of Podbox.
+ */
 export class UserSubservice {
   private pipelineUserDB: IPipelineUserDB;
   private stytchClient: Client | undefined;
@@ -31,30 +34,37 @@ export class UserSubservice {
     this.genericIssuanceClientUrl = genericIssuanceClientUrl;
   }
 
+  /**
+   * Should be called immediately after instantiation.
+   */
   public async start(): Promise<void> {
     await this.maybeSetupAdmins();
   }
 
+  /**
+   * Gets the user identified by the normalized version of the given @param email.
+   * If one doesn't exist, creates one.
+   */
   public async getOrCreateUser(email: string): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "getOrCreateUser", async () => {
       return this.pipelineUserDB.getOrCreateUser(email);
     });
   }
 
+  /**
+   * Gets the user identified by the given @param id.
+   */
   public async getUserById(id: string): Promise<PipelineUser | undefined> {
     return this.pipelineUserDB.getUserById(id);
   }
 
-  private getEmailFromStytchSession(session: Session): string {
-    const email = session.authentication_factors.find(
-      (f) => !!f.email_factor?.email_address
-    )?.email_factor?.email_address;
-    if (!email) {
-      throw new PCDHTTPError(400, "Session did not use email authentication");
-    }
-    return email;
-  }
-
+  /**
+   * Given an express.js {@link Request}, either gets/creates a {@link PipelineUser}
+   * corresponding to the email the user making the request has successfully logged into
+   * Podbox to via Stytch, or @throws if the user has not logged in.
+   *
+   * Used to protect sensitive routes in the Podbox API (see `genericIssuanceRoutes.ts`).
+   */
   public async authSession(req: Request): Promise<PipelineUser> {
     return traced(SERVICE_NAME, "authenticateStytchSession", async (span) => {
       const reqBody = req?.body;
@@ -74,7 +84,7 @@ export class UserSubservice {
           const { session } = await this.stytchClient.sessions.authenticateJwt({
             session_jwt: jwt
           });
-          const email = this.getEmailFromStytchSession(session);
+          const email = this.getEmailFromSession(session);
           const user = await this.getOrCreateUser(email);
           traceUser(user);
           return user;
@@ -94,6 +104,12 @@ export class UserSubservice {
     });
   }
 
+  /**
+   * A user can log into Podbox by clicking a confirmation link sent to them in
+   * an email by stytch, after inputting their email address and clicking 'login'
+   * on the Podbox login page, which is what is rendered to visitors of Podbox if
+   * they are not logged in.
+   */
   public async sendLoginEmail(
     email: string
   ): Promise<GenericIssuanceSendEmailResponseValue> {
@@ -136,6 +152,27 @@ export class UserSubservice {
     });
   }
 
+  /**
+   * Uses Stytch to parse an email address from the given Stytch {@link Session}.
+   * We know that if this function returns an email address, the user has successfully
+   * signed in via Stytch. (in development mode, Stytch can be bypassed).
+   *
+   * @throws if the {@link Session} does not represent a user that has logged in with Stytch.
+   */
+  private getEmailFromSession(session: Session): string {
+    const email = session.authentication_factors.find(
+      (f) => !!f.email_factor?.email_address
+    )?.email_factor?.email_address;
+    if (!email) {
+      throw new PCDHTTPError(400, "Session did not use email authentication");
+    }
+    return email;
+  }
+
+  /**
+   * Modifies user identified by emails in the environment variable `GENERIC_ISSUANCE_ADMINS`
+   * to be Podbox admins. This is an optional environment variable.
+   */
   private async maybeSetupAdmins(): Promise<void> {
     try {
       const adminEmailsFromEnv = this.pipelineUserDB.getEnvAdminEmails();
