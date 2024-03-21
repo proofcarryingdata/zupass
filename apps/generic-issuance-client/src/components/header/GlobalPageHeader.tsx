@@ -1,8 +1,8 @@
 import { Button, FormControl, FormLabel, Switch } from "@chakra-ui/react";
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
-import { ReactNode, useCallback, useContext } from "react";
+import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
-import { GIContext } from "../../helpers/Context";
+import { useGIContext } from "../../helpers/Context";
 import { PodboxButton } from "./PodboxButton";
 
 /**
@@ -19,7 +19,7 @@ export function GlobalPageHeader({
 }): ReactNode {
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
-  const ctx = useContext(GIContext);
+  const ctx = useGIContext();
   const onAdminToggleClick = useCallback(() => {
     ctx.setState({ isAdminMode: !ctx.isAdminMode });
   }, [ctx]);

@@ -1,6 +1,6 @@
 import { Badge, HStack, Heading, Spinner } from "@chakra-ui/react";
-import { getError } from "@pcd/passport-interface";
-import { ReactNode, useEffect } from "react";
+import { PipelineHistoryEntry, getError } from "@pcd/passport-interface";
+import { ReactNode, useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
@@ -30,6 +30,9 @@ export default function PipelinePage(): ReactNode {
   const pipelineInfoResult = useFetchPipelineInfo(pipelineId);
   const pipelineInfo = pipelineInfoResult?.value;
   const isAdminView = useIsAdminView(user?.value);
+  const [viewingHistory, setViewingHistory] = useState<
+    PipelineHistoryEntry | undefined
+  >();
 
   const maybeRequestError: string | undefined = getError(
     user,

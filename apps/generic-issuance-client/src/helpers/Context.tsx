@@ -1,4 +1,5 @@
-import { createContext } from "react";
+import { PipelineHistoryEntry } from "@pcd/passport-interface";
+import { createContext, useContext } from "react";
 
 // I am overall not sure about this file, so I didn't go too far.
 // I would really like to get set up with Redux asap.
@@ -15,6 +16,7 @@ export interface GIContextState {
   logout: () => Promise<void>;
   handleAuthToken: (token?: string) => Promise<void>;
   devModeAuthToken?: string;
+  viewingHistory?: PipelineHistoryEntry;
 }
 
 export const GIContext = createContext<GIContextState>({
@@ -26,3 +28,7 @@ export const GIContext = createContext<GIContextState>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   handleAuthToken: async (_token?: string): Promise<void> => {}
 });
+
+export function useGIContext(): GIContextState {
+  return useContext(GIContext);
+}
