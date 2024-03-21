@@ -10,6 +10,7 @@ import {
   GenericIssuanceValidSemaphoreGroupResponseValue,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
   PodboxTicketActionResponseValue,
@@ -205,6 +206,17 @@ export class PipelineSubservice {
       await this.pipelineAtomDB.clear(pipelineId);
       await this.executorSubservice.restartPipeline(pipelineId);
     });
+  }
+
+  public async getPipelineEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]> {
+    const DEFAULT_MAX_QUANTITY = 100;
+    return this.pipelineDB.getEditHistory(
+      pipelineId,
+      maxQuantity ?? DEFAULT_MAX_QUANTITY
+    );
   }
 
   /**

@@ -9,6 +9,7 @@ import {
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   ListFeedsResponseValue,
+  PipelineInfoConsumer,
   PipelineInfoResponseValue,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -155,15 +156,22 @@ export class PipelineAPISubservice {
         latestConsumers: !pipelineHasSemaphoreGroups
           ? undefined
           : latestConsumers
-              .map((consumer) => ({
-                email: consumer.email,
-                commitment: consumer.commitment,
-                timeCreated: consumer.timeCreated.toISOString(),
-                timeUpdated: consumer.timeUpdated.toISOString()
-              }))
+              .map(
+                (consumer) =>
+                  ({
+                    email: consumer.email,
+                    commitment: consumer.commitment,
+                    timeCreated: consumer.timeCreated.toISOString(),
+                    timeUpdated: consumer.timeUpdated.toISOString()
+                  }) satisfies PipelineInfoConsumer
+              )
               .sort((a, b) => b.timeUpdated.localeCompare(a.timeUpdated)),
         lastLoad: summary,
-        ownerEmail: pipelineSlot.owner.email
+        ownerEmail: pipelineSlot.owner.email,
+        editHistory: await this.pipelineSubservice.getPipelineEditHistory(
+          pipelineId,
+          100
+        )
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: summary });
