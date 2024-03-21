@@ -484,7 +484,7 @@ export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
 const PipelineHistoryEntrySchema = z.object({
   pipeline: PipelineDefinitionSchema,
   timeCreated: z.string(),
-  editorUserId: z.string()
+  editorUserId: z.string().optional()
 });
 
 export type PipelineHistoryEntry = z.infer<typeof PipelineHistoryEntrySchema>;

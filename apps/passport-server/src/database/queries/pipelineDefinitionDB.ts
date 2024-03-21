@@ -21,7 +21,10 @@ export interface IPipelineDefinitionDB {
   deleteDefinition(pipelineId: string): Promise<void>;
   deleteAllDefinitions(): Promise<void>;
   getDefinition(pipelineId: string): Promise<PipelineDefinition | undefined>;
-  upsertDefinition(definition: PipelineDefinition): Promise<void>;
+  upsertDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void>;
   upsertDefinitions(definitions: PipelineDefinition[]): Promise<void>;
   saveLoadSummary(
     pipelineId: string,
@@ -177,11 +180,16 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * definition. If inserting, the caller is responsible for generating a UUID
    * as the pipeline ID.
    */
-  public async upsertDefinition(definition: PipelineDefinition): Promise<void> {
+  public async upsertDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void> {
     await sqlTransaction(
       this.db,
       "Insert or update pipeline definition",
       async (client: PoolClient) => {
+        await this.appendToEditHistory(definition, editorUserId);
+
         const pipeline: GenericIssuancePipelineRow = (
           await client.query(
             `
@@ -243,7 +251,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     definitions: PipelineDefinition[]
   ): Promise<void> {
     for (const definition of definitions) {
-      await this.upsertDefinition(definition);
+      await this.upsertDefinition(definition, undefined);
     }
   }
 
@@ -251,7 +259,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   private historyEntries: Map<string, PipelineHistoryEntry[]> = new Map();
   public async appendToEditHistory(
     pipelineDefinition: PipelineDefinition,
-    editorUserId: string
+    editorUserId?: string
   ): Promise<void> {
     const list = this.historyEntries.get(pipelineDefinition.id) ?? [];
     this.historyEntries.set(pipelineDefinition.id, list);

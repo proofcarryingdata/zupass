@@ -30,13 +30,13 @@ export interface UpsertPipelineResult {
  * represented in {@link PipelineExecutorSubservice} by a {@link PipelineSlot}.
  */
 export async function upsertPipelineDefinition(
-  user: PipelineUser,
+  editor: PipelineUser,
   newDefinition: PipelineDefinition,
   userSubservice: UserSubservice,
   pipelineSubservice: PipelineSubservice,
   executorSubservice: PipelineExecutorSubservice
 ): Promise<UpsertPipelineResult> {
-  traceUser(user);
+  traceUser(editor);
   // TODO: do this in a transaction
   const existingPipelineDefinition =
     await pipelineSubservice.loadPipelineDefinition(newDefinition.id);
@@ -47,19 +47,19 @@ export async function upsertPipelineDefinition(
   if (existingPipelineDefinition) {
     getActiveSpan()?.setAttribute("is_new", false);
     pipelineSubservice.ensureUserHasPipelineDefinitionAccess(
-      user,
+      editor,
       existingPipelineDefinition
     );
 
     if (
       existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId &&
-      !user.isAdmin
+      !editor.isAdmin
     ) {
       throw new PCDHTTPError(400, "Cannot change owner of pipeline");
     }
 
     if (
-      !user.isAdmin &&
+      !editor.isAdmin &&
       !_.isEqual(
         existingPipelineDefinition.options.alerts,
         newDefinition.options.alerts
@@ -70,12 +70,12 @@ export async function upsertPipelineDefinition(
   } else {
     // NEW PIPELINE!
     getActiveSpan()?.setAttribute("is_new", true);
-    newDefinition.ownerUserId = user.id;
+    newDefinition.ownerUserId = editor.id;
     newDefinition.id = uuidv4();
     newDefinition.timeCreated = new Date().toISOString();
     newDefinition.timeUpdated = new Date().toISOString();
 
-    if (!user.isAdmin && !!newDefinition.options.alerts) {
+    if (!editor.isAdmin && !!newDefinition.options.alerts) {
       throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
     }
   }
@@ -102,7 +102,7 @@ export async function upsertPipelineDefinition(
     `executing upsert of pipeline ${str(validatedNewDefinition)}`
   );
   tracePipeline(validatedNewDefinition);
-  await pipelineSubservice.saveDefinition(validatedNewDefinition);
+  await pipelineSubservice.saveDefinition(validatedNewDefinition, editor.id);
   if (existingSlot) {
     existingSlot.owner = await userSubservice.getUserById(
       validatedNewDefinition.ownerUserId

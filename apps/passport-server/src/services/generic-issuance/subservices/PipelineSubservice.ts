@@ -176,8 +176,11 @@ export class PipelineSubservice {
   /**
    * Saves a particular {@link PipelineDefinition} to the database.
    */
-  public async saveDefinition(definition: PipelineDefinition): Promise<void> {
-    await this.pipelineDB.upsertDefinition(definition);
+  public async saveDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void> {
+    await this.pipelineDB.upsertDefinition(definition, editorUserId);
   }
 
   /**
