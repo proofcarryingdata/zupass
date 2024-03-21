@@ -30,6 +30,7 @@ import {
   PipelineDisplayManualTicketsSection,
   supportsAddingManualTickets
 } from "./DetailsSections/PipelineDisplayManualTicketsSection";
+import { PipelineEditHistorySection } from "./DetailsSections/PipelineEditHistorySection";
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
@@ -124,6 +125,13 @@ export function PipelineDetailSection({
           <AccordionButton>Semaphore Groups</AccordionButton>
           <AccordionPanel>
             <PipelineSemaphoreGroupsSection lastLoad={pipelineInfo.lastLoad} />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Pipeline Edit History</AccordionButton>
+          <AccordionPanel>
+            <PipelineEditHistorySection pipelineInfo={pipelineInfo} />
           </AccordionPanel>
         </AccordionItem>
 
