@@ -1,29 +1,38 @@
 import { Table, Tbody, Th, Thead, Tr } from "@chakra-ui/react";
 import {
   LemonadePipelineDefinition,
-  LemonadePipelineEventConfig,
-  LemonadePipelineTicketTypeConfig,
   ManualTicket,
   PipelineDefinition,
-  isLemonadePipelineDefinition
+  PipelineType,
+  PretixPipelineDefinition,
+  isLemonadePipelineDefinition,
+  isPretixPipelineDefinition
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import styled from "styled-components";
 
-export function supportsAddingManualTickets(
+export function supportsManualTicketTable(
   pipeline: PipelineDefinition
-): pipeline is LemonadePipelineDefinition {
-  return isLemonadePipelineDefinition(pipeline);
+): pipeline is SupportsManualTicketTablePipelineDefinition {
+  return (
+    isLemonadePipelineDefinition(pipeline) ||
+    isPretixPipelineDefinition(pipeline)
+  );
 }
 
+type SupportsManualTicketTablePipelineDefinition =
+  | LemonadePipelineDefinition
+  | PretixPipelineDefinition;
+
 /**
- * For {@link LemonadePipeline} only. Shows a table of all of
- * this pipeline's manual tickets
+ * Shows a table of all of this pipeline's manual tickets.
+ * Only supported by certain pipelines, see return type of
+ * {@link supportsManualTicketTable}
  */
 export function PipelineDisplayManualTicketsSection({
   pipeline
 }: {
-  pipeline: LemonadePipelineDefinition;
+  pipeline: SupportsManualTicketTablePipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
   const tix = pipeline.options.manualTickets;
@@ -32,8 +41,8 @@ export function PipelineDisplayManualTicketsSection({
 
   if (!tix || tix.length === 0) {
     content = <div>no manual tickets</div>;
-  } else if (isLemonadePipelineDefinition(pipeline)) {
-    content = <LemonadeManualTicketTable pipeline={pipeline} />;
+  } else if (supportsManualTicketTable(pipeline)) {
+    content = <ManualTicketTable pipeline={pipeline} />;
   } else {
     content = <div>unsupported pipeline type</div>;
   }
@@ -41,10 +50,10 @@ export function PipelineDisplayManualTicketsSection({
   return <Container>{content}</Container>;
 }
 
-function LemonadeManualTicketTable({
+function ManualTicketTable({
   pipeline
 }: {
-  pipeline: LemonadePipelineDefinition;
+  pipeline: SupportsManualTicketTablePipelineDefinition;
 }): ReactNode {
   return (
     <Table>
@@ -58,47 +67,63 @@ function LemonadeManualTicketTable({
       </Thead>
       <Tbody>
         {pipeline.options.manualTickets?.map((t) => (
-          <ManualLemonadeTicket ticket={t} pipeline={pipeline} />
+          <ManualTicket ticket={t} pipeline={pipeline} />
         ))}
       </Tbody>
     </Table>
   );
 }
 
-function ManualLemonadeTicket({
+function ManualTicket({
   ticket,
   pipeline
 }: {
   ticket: ManualTicket;
-  pipeline: LemonadePipelineDefinition;
+  pipeline: SupportsManualTicketTablePipelineDefinition;
 }): ReactNode {
-  const details = getLemonadeTicketDetails(ticket, pipeline);
+  const details = getManualTicketDetails(ticket, pipeline);
 
   return (
     <tr>
       <td>{ticket.attendeeName}</td>
       <td>{ticket.attendeeEmail}</td>
-      <td>{details?.event?.name}</td>
-      <td>{details?.product?.name}</td>
+      <td>{details.eventName}</td>
+      <td>{details.productName}</td>
     </tr>
   );
 }
 
-function getLemonadeTicketDetails(
-  ticket: ManualTicket,
-  pipeline: LemonadePipelineDefinition
-): {
-  event?: LemonadePipelineEventConfig;
-  product?: LemonadePipelineTicketTypeConfig;
-} {
-  const event = pipeline.options.events.find(
-    (e) => e.genericIssuanceEventId === ticket.eventId
-  );
-  const product = event?.ticketTypes.find(
-    (t) => t.genericIssuanceProductId === ticket.productId
-  );
+interface ManualTicketDetails {
+  eventName?: string;
+  productName?: string;
+}
 
-  return { event, product };
+function getManualTicketDetails(
+  ticket: ManualTicket,
+  pipeline: SupportsManualTicketTablePipelineDefinition
+): ManualTicketDetails {
+  switch (pipeline.type) {
+    case PipelineType.Lemonade: {
+      const event = pipeline.options.events.find(
+        (e) => e.genericIssuanceEventId === ticket.eventId
+      );
+      const product = event?.ticketTypes.find(
+        (t) => t.genericIssuanceProductId === ticket.productId
+      );
+
+      return { eventName: event?.name, productName: product?.name };
+    }
+    case PipelineType.Pretix: {
+      const event = pipeline.options.events.find(
+        (e) => e.genericIssuanceId === ticket.eventId
+      );
+      const product = event?.products.find(
+        (t) => t.genericIssuanceId === ticket.productId
+      );
+
+      return { eventName: event?.name, productName: product?.name };
+    }
+  }
 }
 
 const Container = styled.div`
