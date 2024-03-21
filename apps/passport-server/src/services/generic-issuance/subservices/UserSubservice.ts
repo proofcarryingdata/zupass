@@ -54,7 +54,13 @@ export class UserSubservice {
   /**
    * Gets the user identified by the given @param id.
    */
-  public async getUserById(id: string): Promise<PipelineUser | undefined> {
+  public async getUserById(
+    id: string | undefined
+  ): Promise<PipelineUser | undefined> {
+    if (id === undefined) {
+      return undefined;
+    }
+
     return this.pipelineUserDB.getUserById(id);
   }
 

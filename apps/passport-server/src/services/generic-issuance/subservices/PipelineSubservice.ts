@@ -8,6 +8,7 @@ import {
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
+  HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineHistoryEntry,
@@ -211,11 +212,31 @@ export class PipelineSubservice {
   public async getPipelineEditHistory(
     pipelineId: string,
     maxQuantity?: number
-  ): Promise<PipelineHistoryEntry[]> {
+  ): Promise<HydratedPipelineHistoryEntry[]> {
     const DEFAULT_MAX_QUANTITY = 100;
-    return this.pipelineDB.getEditHistory(
+    const rawHistory = await this.pipelineDB.getEditHistory(
       pipelineId,
       maxQuantity ?? DEFAULT_MAX_QUANTITY
+    );
+    const hydratedHistory = await this.hydrateHistory(rawHistory);
+    return hydratedHistory;
+  }
+
+  private async hydrateHistory(
+    history: PipelineHistoryEntry[]
+  ): Promise<HydratedPipelineHistoryEntry[]> {
+    return Promise.all(
+      history.map(
+        async (
+          h: PipelineHistoryEntry
+        ): Promise<HydratedPipelineHistoryEntry> => {
+          return {
+            ...h,
+            editorEmail: (await this.userSubservice.getUserById(h.editorUserId))
+              ?.email
+          } satisfies HydratedPipelineHistoryEntry;
+        }
+      )
     );
   }
 

@@ -13,7 +13,10 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
-import { PipelineEditSection } from "./PipelineEditSection/PipelineEditSection";
+import {
+  EDIT_SECTION_WIDTH,
+  PipelineEditSection
+} from "./PipelineEditSection/PipelineEditSection";
 
 /**
  * Page a user can navigate to to view and edit information regarding a
@@ -99,7 +102,7 @@ export default function PipelinePage(): ReactNode {
 
       <PageContent>
         <TwoColumns>
-          <div className="col2">
+          <div className="col2" style={{ maxWidth: EDIT_SECTION_WIDTH }}>
             {pipelineInfoResult.success &&
               pipelineDefinition.success &&
               user.success && (

@@ -21,7 +21,10 @@ export function GlobalPageHeader({
   const rightElements: ReactNode[] = [];
   const ctx = useGIContext();
   const onAdminToggleClick = useCallback(() => {
-    ctx.setState({ isAdminMode: !ctx.isAdminMode });
+    ctx.setState({
+      isAdminMode: !ctx.isAdminMode,
+      pipelineDetailsAccordionState: []
+    });
   }, [ctx]);
 
   const podbox = <PodboxButton key="title" />;

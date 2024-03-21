@@ -11,7 +11,7 @@ export function PipelineLatestConsumersSection({
   latestConsumers?: PipelineInfoConsumer[];
 }): ReactNode {
   if (!latestConsumers || latestConsumers.length === 0) {
-    return null;
+    return <div>no consumers.</div>;
   }
 
   return (

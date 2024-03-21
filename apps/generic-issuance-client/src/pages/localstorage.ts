@@ -5,7 +5,7 @@ import { SESSION_DURATION_MINUTES } from "../constants";
 import { GIContextState } from "../helpers/Context";
 import { DEV_JWT_KEY } from "../helpers/userHooks";
 
-const STATE_KEY = "setting-admin-mode";
+const STATE_KEY = "settings-8";
 
 export function useInitialState(
   stytch: StytchUIClient | undefined
@@ -69,7 +69,10 @@ export function saveState(state: GIContextState): void {
 
 function loadState(): LocalStorageState {
   try {
-    const saved = window.localStorage.getItem(STATE_KEY) as string;
+    const saved = window.localStorage.getItem(STATE_KEY);
+    if (!saved) {
+      throw new Error("no saved state");
+    }
     const parsed = JSON.parse(saved) as LocalStorageState;
     return parsed;
   } catch {
@@ -80,17 +83,17 @@ function loadState(): LocalStorageState {
 function defaultSavedState(): LocalStorageState {
   return {
     isAdminMode: false,
-    pipelineAccordionHistory: []
+    pipelineDetailsAccordionState: [0]
   };
 }
 
 function toLocalStorageState(state: GIContextState): LocalStorageState {
   return {
     isAdminMode: state.isAdminMode,
-    pipelineAccordionHistory: state.pipelineAccordionHistory
+    pipelineDetailsAccordionState: state.pipelineDetailsAccordionState
   };
 }
 export type LocalStorageState = Pick<
   GIContextState,
-  "pipelineAccordionHistory" | "isAdminMode"
+  "pipelineDetailsAccordionState" | "isAdminMode"
 >;

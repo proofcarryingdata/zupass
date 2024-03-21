@@ -489,6 +489,10 @@ const PipelineHistoryEntrySchema = z.object({
 
 export type PipelineHistoryEntry = z.infer<typeof PipelineHistoryEntrySchema>;
 
+export interface HydratedPipelineHistoryEntry extends PipelineHistoryEntry {
+  editorEmail?: string;
+}
+
 /**
  * {@link Pipeline}s offer PCDs to users via authenticated channels such as
  * feeds. When a user authenticates in order to receive a PCD, we record this

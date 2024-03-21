@@ -1,12 +1,11 @@
-import { Box, Button, HStack, Stack } from "@chakra-ui/react";
+import { Button, HStack, Stack } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import _ from "lodash";
-import { ReactNode, useCallback, useMemo, useState } from "react";
-import styled from "styled-components";
+import { ReactNode, useCallback, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import {
   useGIContext,
@@ -15,13 +14,14 @@ import {
 import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
-import { PipelineTable } from "../../dashboard/PipelineTable";
+import { SectionContainer } from "../PipelineDetailSection";
+
+export const EDIT_SECTION_WIDTH = "800px";
 
 export function PipelineEditSection({
   user,
   pipeline,
-  isAdminView,
-  pipelineInfo
+  isAdminView
 }: {
   user: GenericIssuanceSelfResponseValue;
   pipeline: PipelineDefinition;
@@ -111,15 +111,6 @@ export function PipelineEditSection({
     }
   }, [pipeline.id, editorValue, userJWT]);
 
-  const singleRow = useMemo(() => {
-    return [
-      {
-        extraInfo: pipelineInfo,
-        pipeline: pipeline
-      }
-    ];
-  }, [pipeline, pipelineInfo]);
-
   const ctx = useGIContext();
 
   const onEscapeHistoryViewClick = useCallback(() => {
@@ -128,25 +119,8 @@ export function PipelineEditSection({
 
   return (
     <Stack gap={4}>
-      <Box maxW={"800px"}>
-        <PipelineTable
-          entries={singleRow}
-          isAdminView={false}
-          singleRowMode={true}
-        />
-      </Box>
-
-      {isEditHistory && (
-        <ViewingHistoryContext>
-          YOU'RE VIEWING HISTORY notes:
-          <br />
-          {maybeHistoricPipeline?.options?.notes}
-          <Button onClick={onEscapeHistoryViewClick}>Cancel</Button>
-        </ViewingHistoryContext>
-      )}
-
       <FancyEditor
-        style={{ width: "800px", height: "450px" }}
+        style={{ width: EDIT_SECTION_WIDTH, height: "450px" }}
         language="json"
         value={editorValue}
         setValue={setEditorValue}
@@ -154,63 +128,70 @@ export function PipelineEditSection({
       />
 
       {isAdminView || !ownedBySomeoneElse ? (
-        <HStack minWidth="fit-content">
-          {hasEdits && (
-            <Button
-              variant="outline"
-              size="sm"
-              isDisabled={
-                !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
-              }
-              onClick={onSaveClick}
-            >
-              {actionInProgress ? "Saving..." : "Save Changes"}
-            </Button>
-          )}
-          {!hasEdits && (
-            <Button size="sm" isDisabled={true} variant="outline">
-              Save Changes
-            </Button>
-          )}
+        <SectionContainer>
+          <HStack minWidth="fit-content">
+            {!isEditHistory ? (
+              <>
+                {hasEdits && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    isDisabled={
+                      !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
+                    }
+                    onClick={onSaveClick}
+                  >
+                    {actionInProgress ? "Saving..." : "Save Changes"}
+                  </Button>
+                )}
 
-          <Button
-            variant="outline"
-            onClick={onUndoClick}
-            size="sm"
-            isDisabled={!hasEdits}
-          >
-            Reset Changes
-          </Button>
+                {!hasEdits && (
+                  <Button size="sm" isDisabled={true} variant="outline">
+                    Save Changes
+                  </Button>
+                )}
 
-          <Button
-            variant="outline"
-            size="sm"
-            colorScheme="red"
-            isDisabled={ownedBySomeoneElse && !isAdminView}
-            onClick={onDeleteClick}
-          >
-            Delete Pipeline
-          </Button>
+                <Button
+                  variant="outline"
+                  onClick={onUndoClick}
+                  size="sm"
+                  isDisabled={!hasEdits}
+                >
+                  Reset Changes
+                </Button>
 
-          {isAdminView && (
-            <Button
-              variant="outline"
-              size="sm"
-              isDisabled={ownedBySomeoneElse && !isAdminView}
-              onClick={onDuplicateClick}
-            >
-              Duplicate Pipeline
-            </Button>
-          )}
-        </HStack>
+                <Button
+                  size="sm"
+                  colorScheme="red"
+                  isDisabled={ownedBySomeoneElse && !isAdminView}
+                  onClick={onDeleteClick}
+                >
+                  Delete Pipeline
+                </Button>
+
+                {isAdminView && (
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    isDisabled={ownedBySomeoneElse && !isAdminView}
+                    onClick={onDuplicateClick}
+                  >
+                    Duplicate Pipeline
+                  </Button>
+                )}
+              </>
+            ) : (
+              <>
+                <Button size="sm" onClick={onEscapeHistoryViewClick}>
+                  Cancel
+                </Button>
+              </>
+            )}
+          </HStack>
+        </SectionContainer>
       ) : (
         <></>
       )}
     </Stack>
   );
 }
-
-const ViewingHistoryContext = styled.div`
-  background-color: rgba(255, 255, 255, 0.2);
-  padding: 32px;
-`;

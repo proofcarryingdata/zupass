@@ -85,12 +85,14 @@ export function PipelineTable({
   const columnHelper = createColumnHelper<PipelineRow>();
   const columns: Array<ColumnDef<PipelineRow> | undefined> = useMemo(
     () => [
-      columnHelper.accessor("displayName", {
-        header: "name",
-        cell: (table) => (
-          <PipelineDisplayNameText pipeline={table.row.original.pipeline} />
-        )
-      }),
+      singleRowMode
+        ? undefined
+        : columnHelper.accessor("displayName", {
+            header: "name",
+            cell: (table) => (
+              <PipelineDisplayNameText pipeline={table.row.original.pipeline} />
+            )
+          }),
 
       columnHelper.accessor("timeUpdated", {
         header: "edited",
@@ -150,7 +152,7 @@ export function PipelineTable({
           })
         : undefined
     ],
-    [columnHelper, isAdminView]
+    [columnHelper, isAdminView, singleRowMode]
   );
   const filteredColumns = useMemo(() => {
     return columns.filter((r) => !!r) as Array<ColumnDef<PipelineRow>>;
@@ -186,7 +188,11 @@ export function PipelineTable({
               {headerGroup.headers.map((header, i) => {
                 return (
                   <Th
-                    style={{ width: i === 0 ? "auto" : "1%" }}
+                    style={
+                      singleRowMode
+                        ? undefined
+                        : { width: i === 0 ? "auto" : "1%" }
+                    }
                     key={header.id + "" + i}
                     colSpan={header.colSpan}
                   >
