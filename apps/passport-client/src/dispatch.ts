@@ -869,12 +869,10 @@ async function doSync(
         console.log(
           "[SYNC] email PCD not found, attempting to poll Email PCD subscription"
         );
-        console.log(ZUPASS_FEED_URL);
         const emailPCDSubscription = state.subscriptions.findSubscription(
           ZUPASS_FEED_URL,
           ZupassFeedIds.Email
         );
-        console.log(emailPCDSubscription);
         if (emailPCDSubscription) {
           console.log("[SYNC] Email PCD subscription found, polling");
           const emailPCDActions =
