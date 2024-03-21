@@ -53,11 +53,11 @@ export class MessagePCD implements PCD<Message, MessageProof> {
 }
 
 export async function prove(args: Args): Promise<MessagePCD> {
-  if (args.message.value == null) {
+  if (args.message.value === undefined) {
     throw new Error("missing message");
   }
 
-  if (args.privateKey.value == null) {
+  if (args.privateKey.value === undefined || args.privateKey.value === "") {
     throw new Error("missing private key");
   }
 

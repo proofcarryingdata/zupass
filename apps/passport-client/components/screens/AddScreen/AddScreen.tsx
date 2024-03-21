@@ -47,11 +47,11 @@ export function AddScreen(): JSX.Element {
   }, [dispatch, screen]);
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingAddRequest(stringifiedRequest);
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;
@@ -59,11 +59,11 @@ export function AddScreen(): JSX.Element {
     }
   }, [request, self, userForcedToLogout]);
 
-  if (self == null) {
+  if (!self) {
     return null;
   }
 
-  if (screen == null) {
+  if (!screen) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }

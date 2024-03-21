@@ -62,7 +62,7 @@ export function initSemaphoreRoutes(
         checkUrlParam(req, "root")
       );
 
-      if (historicGroup == null) {
+      if (!historicGroup) {
         throw new PCDHTTPError(404, "Semaphore group not found");
       }
 
@@ -85,7 +85,7 @@ export function initSemaphoreRoutes(
     const latestGroups = await semaphoreService.getLatestSemaphoreGroups();
     const matchingGroup = latestGroups.find((g) => g.groupId.toString() === id);
 
-    if (matchingGroup == null) {
+    if (!matchingGroup) {
       throw new PCDHTTPError(404, "Semaphore group not found");
     }
 
@@ -104,7 +104,7 @@ export function initSemaphoreRoutes(
     const semaphoreId = checkUrlParam(req, "id");
     const namedGroup = semaphoreService.getNamedGroup(semaphoreId);
 
-    if (namedGroup == null) {
+    if (!namedGroup) {
       throw new PCDHTTPError(404, "Semaphore group not found");
     }
 

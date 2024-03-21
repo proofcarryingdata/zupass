@@ -468,7 +468,7 @@ async function setSelf(
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  if (state.self && self.salt != state.self.salt) {
+  if (state.self && self.salt !== state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     hasChangedPassword = true;
@@ -625,9 +625,9 @@ async function loadAfterLogin(
   let modal: AppState["modal"] = { modalType: "none" };
   if (
     // If on Zupass legacy login, ask user to set passwrod
-    self != null &&
-    encryptionKey == null &&
-    storage.storage.self.salt == null
+    self &&
+    !encryptionKey &&
+    !storage.storage.self.salt
   ) {
     console.log("Asking existing user to set a password");
     modal = { modalType: "upgrade-account-modal" };
@@ -785,7 +785,7 @@ async function doSync(
     console.log("[SYNC] no user available to sync");
     return undefined;
   }
-  if (loadEncryptionKey() == null) {
+  if (!loadEncryptionKey()) {
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
   }
@@ -814,7 +814,7 @@ async function doSync(
       state.pcds,
       state.subscriptions
     );
-    if (dlRes.success && dlRes.value != null) {
+    if (dlRes.success && dlRes.value) {
       const { pcds, subscriptions, serverRevision, serverHash } = dlRes.value;
       return {
         downloadedPCDs: true,

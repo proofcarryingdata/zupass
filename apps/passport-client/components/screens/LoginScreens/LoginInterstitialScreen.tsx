@@ -25,44 +25,44 @@ export function LoginInterstitialScreen(): JSX.Element {
 
   useLayoutEffect(() => {
     if (loadedIssuedPCDs) {
-      if (getPendingProofRequest() != null) {
+      if (getPendingProofRequest()) {
         console.log("Redirecting to prove screen");
         const encReq = encodeURIComponent(getPendingProofRequest());
         clearAllPendingRequests();
         navigate("/prove?request=" + encReq, { replace: true });
-      } else if (getPendingAddRequest() != null) {
+      } else if (getPendingAddRequest()) {
         console.log("Redirecting to add screen");
         const encReq = encodeURIComponent(getPendingAddRequest());
         clearAllPendingRequests();
         navigate("/add?request=" + encReq, { replace: true });
-      } else if (getPendingHaloRequest() != null) {
+      } else if (getPendingHaloRequest()) {
         console.log("Redirecting to halo screen");
         clearAllPendingRequests();
         navigate(`/halo${getPendingHaloRequest()}`, { replace: true });
-      } else if (getPendingGetWithoutProvingRequest() != null) {
+      } else if (getPendingGetWithoutProvingRequest()) {
         console.log("Redirecting to get without proving screen");
         const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
         clearAllPendingRequests();
         navigate(`/get-without-proving?request=${encReq}`, { replace: true });
-      } else if (getPendingViewSubscriptionsPageRequest() != null) {
+      } else if (getPendingViewSubscriptionsPageRequest()) {
         console.log("Redirecting to view subscription screen");
         clearAllPendingRequests();
         navigate(`/subscriptions`, { replace: true });
-      } else if (getPendingAddSubscriptionPageRequest() != null) {
+      } else if (getPendingAddSubscriptionPageRequest()) {
         console.log("Redirecting to add subscription screen");
         const encReq = encodeURIComponent(
           JSON.parse(getPendingAddSubscriptionPageRequest())
         );
         clearAllPendingRequests();
         navigate(`/add-subscription?url=${encReq}`, { replace: true });
-      } else if (getPendingViewFrogCryptoPageRequest() != null) {
+      } else if (getPendingViewFrogCryptoPageRequest()) {
         console.log("Redirecting to frog crypto screen");
         const encReq = encodeURIComponent(
           JSON.parse(getPendingViewFrogCryptoPageRequest())
         );
         clearAllPendingRequests();
         navigate(`/frogscriptions/${encReq}`, { replace: true });
-      } else if (getPendingGenericIssuanceCheckinRequest() != null) {
+      } else if (getPendingGenericIssuanceCheckinRequest()) {
         console.log("Redirecting to Generic Issuance checkin screen");
         const encReq = new URLSearchParams(
           JSON.parse(getPendingGenericIssuanceCheckinRequest())

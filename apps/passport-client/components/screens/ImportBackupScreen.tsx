@@ -271,7 +271,7 @@ export function ImportBackupScreen(): JSX.Element {
           )}
           {importState.state === "valid-file-selected" && (
             <>
-              {importState.mergeablePcdIds.size == 0 && (
+              {importState.mergeablePcdIds.size === 0 && (
                 <>
                   <p>
                     The selected file does not contain any PCDs you don't

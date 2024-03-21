@@ -58,7 +58,7 @@ export function QRDisplayWithRegenerateAndStorage({
     const { timestamp, payload } = savedState;
 
     if (
-      timestamp != null &&
+      timestamp &&
       Date.now() - timestamp < maxAgeMs &&
       payload !== undefined
     ) {

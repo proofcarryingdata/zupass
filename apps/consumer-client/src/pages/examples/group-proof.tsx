@@ -121,7 +121,7 @@ export default function Page(): JSX.Element {
             />
           </>
         )}
-        {proof != null && (
+        {proof && (
           <>
             <p>Got Group Membership Proof from Zupass</p>
             <CollapsableCode code={JSON.stringify(proof, null, 2)} />

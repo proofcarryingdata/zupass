@@ -74,14 +74,14 @@ export function HomeScreenImpl(): JSX.Element {
   const foldersInFolder = useFolders(browsingFolder);
 
   useEffect(() => {
-    if (self == null) {
+    if (!self) {
       console.log("Redirecting to login screen");
       navigate("/login", { replace: true });
     }
   });
 
   useEffect(() => {
-    if (sessionStorage.newAddedPCDID != null) {
+    if (sessionStorage.newAddedPCDID) {
       // scroll to element with id of newAddedPCDID
       const el = document.getElementById(sessionStorage.newAddedPCDID);
       if (el) {
@@ -135,7 +135,7 @@ export function HomeScreenImpl(): JSX.Element {
     }
   }, [browsingFolder, dispatch]);
 
-  if (self == null) return null;
+  if (!self) return null;
 
   return (
     <>

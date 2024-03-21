@@ -146,7 +146,7 @@ export function loadEncryptionKey(): string | undefined {
 
 export function loadSelf(): User | undefined {
   const self = window.localStorage["self"];
-  if (self != null && self !== "") {
+  if (self && self !== "") {
     return JSON.parse(self);
   }
 }

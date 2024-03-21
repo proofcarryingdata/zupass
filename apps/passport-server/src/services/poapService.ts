@@ -114,7 +114,7 @@ export class PoapService {
       `[POAP] checking that signer of ticket ${pcd.claim.partialTicket.ticketId} matches intended signer`
     );
 
-    if (signerPublicKey == null) {
+    if (!signerPublicKey) {
       if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
         throw new Error(`missing server eddsa private key .env value`);
 
@@ -174,7 +174,7 @@ export class PoapService {
         throw new Error("valid event IDs of PCD does not match Zuzalu 2023");
       }
 
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       span?.setAttribute("ticketId", ticketId);
@@ -188,7 +188,7 @@ export class PoapService {
         this.context.dbPool,
         { uuid: ticketId }
       );
-      if (zuzaluPretixTicket == null) {
+      if (zuzaluPretixTicket === null) {
         throw new Error("zuzalu ticket does not exist");
       }
 
@@ -230,18 +230,18 @@ export class PoapService {
         );
       }
 
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       span?.setAttribute("ticketId", ticketId);
 
       logger(`[POAP] fetching zuconnect ticket ${ticketId} from database`);
 
-      const zuconnectTicket = fetchZuconnectTicketById(
+      const zuconnectTicket = await fetchZuconnectTicketById(
         this.context.dbPool,
         ticketId
       );
-      if (zuconnectTicket == null) {
+      if (!zuconnectTicket) {
         throw new Error("zuconnect ticket does not exist");
       }
 
@@ -286,7 +286,7 @@ export class PoapService {
         throw new Error("valid event IDs of PCD does not match Vitalia 2024");
       }
 
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       span?.setAttribute("ticketId", ticketId);
@@ -337,7 +337,7 @@ export class PoapService {
       }
 
       logger(`[POAP] fetching devconnect ticket ${ticketId} from database`);
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       const devconnectPretixTicket =
@@ -345,7 +345,7 @@ export class PoapService {
           this.context.dbPool,
           ticketId
         );
-      if (devconnectPretixTicket == null) {
+      if (!devconnectPretixTicket) {
         throw new Error("ticket ID does not exist");
       }
       const { devconnect_pretix_items_info_id, is_consumed, email } =
@@ -398,7 +398,7 @@ export class PoapService {
         ticketId,
         "devconnect"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough Devconnect POAP links");
       }
       return poapLink;
@@ -432,7 +432,7 @@ export class PoapService {
         ticketId,
         "zuzalu23"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough Zuzalu 2023 POAP links");
       }
       return poapLink;
@@ -466,7 +466,7 @@ export class PoapService {
         ticketId,
         "zuconnect"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough ZuConnect POAP links");
       }
       return poapLink;
@@ -500,7 +500,7 @@ export class PoapService {
         ticketId,
         "vitalia"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough Vitalia POAP links");
       }
       return poapLink;
@@ -545,7 +545,7 @@ export class PoapService {
             this.context.dbPool,
             hashedTicketId
           );
-          if (existingPoapLink != null) {
+          if (existingPoapLink !== null) {
             span?.setAttribute("alreadyClaimed", true);
             span?.setAttribute("poapLink", existingPoapLink);
             return existingPoapLink;

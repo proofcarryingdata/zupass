@@ -44,7 +44,7 @@ export async function startGenericIssuanceService(
   }
 
   const pkeyEnv = process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY;
-  if (pkeyEnv == null) {
+  if (!pkeyEnv) {
     logger(
       "[INIT] missing environment variable GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY"
     );
@@ -69,12 +69,12 @@ export async function startGenericIssuanceService(
   let stytchClient: Client | undefined = undefined;
 
   if (!BYPASS_EMAIL) {
-    if (projectIdEnv == null) {
+    if (!projectIdEnv) {
       logger("[INIT] missing environment variable STYTCH_PROJECT_ID");
       return null;
     }
 
-    if (secretEnv == null) {
+    if (!secretEnv) {
       logger("[INIT] missing environment variable STYTCH_SECRET");
       return null;
     }
@@ -86,7 +86,7 @@ export async function startGenericIssuanceService(
   }
 
   const genericIssuanceClientUrl = process.env.GENERIC_ISSUANCE_CLIENT_URL;
-  if (genericIssuanceClientUrl == null) {
+  if (!genericIssuanceClientUrl) {
     logger("[INIT] missing GENERIC_ISSUANCE_CLIENT_URL");
     return null;
   }

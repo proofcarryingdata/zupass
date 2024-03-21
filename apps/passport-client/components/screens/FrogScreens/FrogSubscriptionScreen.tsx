@@ -62,11 +62,11 @@ export function FrogSubscriptionScreen(): JSX.Element {
   const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = feedCode ? JSON.stringify(feedCode) : "";
       setPendingViewFrogCryptoRequest(stringifiedRequest);
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingViewFrogCryptoRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;

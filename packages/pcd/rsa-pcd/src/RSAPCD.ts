@@ -54,11 +54,11 @@ export class RSAPCD implements PCD<RSAPCDClaim, RSAPCDProof> {
 }
 
 export async function prove(args: RSAPCDArgs): Promise<RSAPCD> {
-  if (args.privateKey.value == null) {
+  if (args.privateKey.value === undefined || args.privateKey.value === "") {
     throw new Error("missing private key value");
   }
 
-  if (args.signedMessage.value == null) {
+  if (args.signedMessage.value === undefined) {
     throw new Error("missing message to sign");
   }
 

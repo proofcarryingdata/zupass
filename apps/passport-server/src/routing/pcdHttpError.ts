@@ -28,7 +28,7 @@ export function respondWithError(
   res: Response
 ): void {
   if (e instanceof PCDHTTPError) {
-    if (e.message == null) {
+    if (!e.message) {
       res.sendStatus(e.code);
     } else {
       res.status(e.code).send(e.message);

@@ -715,7 +715,7 @@ export class PretixPipeline implements BasePipeline {
 
         const nameQuestionAnswer = answers?.find(
           (a) =>
-            product?.nameQuestionPretixQuestionIdentitifier != null &&
+            product?.nameQuestionPretixQuestionIdentitifier &&
             a?.question_identifier ===
               product?.nameQuestionPretixQuestionIdentitifier
         )?.answer;
@@ -736,7 +736,7 @@ export class PretixPipeline implements BasePipeline {
 
           let pretix_checkin_timestamp: Date | null = null;
 
-          if (pretix_checkin_timestamp_string != null) {
+          if (pretix_checkin_timestamp_string !== null) {
             try {
               const parsedDate = Date.parse(
                 pretix_checkin_timestamp_string ?? ""

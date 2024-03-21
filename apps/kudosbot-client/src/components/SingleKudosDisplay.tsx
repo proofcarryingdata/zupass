@@ -31,7 +31,7 @@ const SingleKudosDisplay = (props: {
 
   return (
     <>
-      {signatureProof != null && (
+      {signatureProof && (
         <>
           <p>Kudosbot Proof {props.id}</p>
           <p>{`Kudos giver: ${kudosData.giver}`}</p>
