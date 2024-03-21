@@ -37,9 +37,7 @@ export function GlobalPageHeader({
         </LeftHalf>
         <RightHalf>
           {/* to prevent page reflow on data load */}
-          <Button style={{ visibility: "hidden" }} variant="outline">
-            ...
-          </Button>
+          <Button style={{ visibility: "hidden" }}>...</Button>
         </RightHalf>
       </HeaderContainer>
     );
@@ -81,7 +79,6 @@ export function GlobalPageHeader({
   rightElements.push(
     <span key="logout">
       <Button
-        variant="outline"
         onClick={async (): Promise<void> => {
           if (confirm("Are you sure you want to log out?")) {
             try {

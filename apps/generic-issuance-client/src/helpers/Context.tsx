@@ -1,6 +1,6 @@
 import {
-  PipelineDefinition,
-  PipelineHistoryEntry
+  HydratedPipelineHistoryEntry,
+  PipelineDefinition
 } from "@pcd/passport-interface";
 import { createContext, useContext, useMemo } from "react";
 
@@ -19,7 +19,7 @@ export interface GIContextState {
   logout: () => Promise<void>;
   handleAuthToken: (token?: string) => Promise<void>;
   devModeAuthToken?: string;
-  viewingHistory?: PipelineHistoryEntry;
+  viewingHistory?: HydratedPipelineHistoryEntry;
   pipelineDetailsAccordionState?: number[];
 }
 
@@ -37,19 +37,26 @@ export function useGIContext(): GIContextState {
   return useContext(GIContext);
 }
 
+export interface HistoryState {
+  viewingHistory: boolean;
+  historyEntry?: HydratedPipelineHistoryEntry;
+  pipeline: PipelineDefinition | undefined;
+}
+
 export function useViewingPipelineDefinition(
   defaultDefinition?: PipelineDefinition
-): {
-  isEditHistory: boolean;
-  pipeline: PipelineDefinition | undefined;
-} {
+): HistoryState {
   const ctx = useGIContext();
-  const isEditHistory = ctx.viewingHistory !== undefined;
+  const viewingHistory = ctx.viewingHistory !== undefined;
   return useMemo(
-    () => ({
-      isEditHistory,
-      pipeline: isEditHistory ? ctx.viewingHistory?.pipeline : defaultDefinition
-    }),
-    [ctx.viewingHistory?.pipeline, defaultDefinition, isEditHistory]
+    () =>
+      ({
+        viewingHistory,
+        pipeline: viewingHistory
+          ? ctx.viewingHistory?.pipeline
+          : defaultDefinition,
+        historyEntry: ctx.viewingHistory
+      }) satisfies HistoryState,
+    [ctx.viewingHistory, defaultDefinition, viewingHistory]
   );
 }

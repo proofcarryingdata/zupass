@@ -66,3 +66,12 @@ const Container = styled.div`
     padding-left: 32px;
   }
 `;
+
+export function historyEntryDisplayName(
+  entry: HydratedPipelineHistoryEntry
+): string {
+  return (
+    new Date(entry.timeCreated).toLocaleString() +
+    (entry.editorEmail ? " by " + entry.editorEmail : " by system")
+  );
+}

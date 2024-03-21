@@ -1,11 +1,10 @@
-import { Badge, HStack, Heading, Spinner } from "@chakra-ui/react";
+import { Heading, Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { ReactNode, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
-import { PipelineDisplayNameText } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { useFetchPipeline } from "../../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
@@ -75,23 +74,7 @@ export default function PipelinePage(): ReactNode {
 
   return (
     <>
-      <GlobalPageHeader
-        user={user}
-        titleContent={(): ReactNode => (
-          <HStack>
-            <span>Pipeline</span>
-            <span
-              style={{
-                fontWeight: "bold"
-              }}
-            >
-              <PipelineDisplayNameText pipeline={pipelineDefinition.value} />{" "}
-            </span>
-            <Badge>{pipelineDefinition.value?.id}</Badge>
-            <div>by {pipelineInfo?.ownerEmail}</div>
-          </HStack>
-        )}
-      />
+      <GlobalPageHeader user={user} titleContent={(): ReactNode => null} />
 
       {ownedBySomeoneElse && (
         <WarningSection>

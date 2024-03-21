@@ -116,12 +116,7 @@ function LoginPage(): JSX.Element {
                   placeholder="email address"
                 />
 
-                <Button
-                  isDisabled={sendingEmail}
-                  type="submit"
-                  w="100%"
-                  variant="outline"
-                >
+                <Button isDisabled={sendingEmail} type="submit" w="100%">
                   Login
                 </Button>
                 {sendingEmail && <Spinner marginTop={4} />}

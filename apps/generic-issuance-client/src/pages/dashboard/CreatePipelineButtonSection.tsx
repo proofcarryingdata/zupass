@@ -5,13 +5,11 @@ import { PodLink } from "../../components/Core";
 export function CreatePipelineButtonSection(): ReactNode {
   return (
     <div>
-      <Stack overflow="hidden" padding={4} gap={4}>
+      <Stack overflow="hidden" gap={4}>
         <Box display="inline-block">
           <Box>
             <PodLink to="/create-pipeline">
-              <Button colorScheme="green" size="sm">
-                Create Pipeline
-              </Button>
+              <Button colorScheme="green">Create Pipeline</Button>
             </PodLink>
           </Box>
         </Box>

@@ -1,11 +1,11 @@
-import { Button, HStack, Stack } from "@chakra-ui/react";
+import { Box, Button, HStack, Stack } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import _ from "lodash";
-import { ReactNode, useCallback, useState } from "react";
+import { ReactNode, useCallback, useEffect, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import {
   useGIContext,
@@ -14,14 +14,17 @@ import {
 import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
+import { historyEntryDisplayName } from "../DetailsSections/PipelineHistorySection";
 import { SectionContainer } from "../PipelineDetailSection";
+import { PipelineRow } from "./PipelineRow";
 
 export const EDIT_SECTION_WIDTH = "800px";
 
 export function PipelineEditSection({
   user,
   pipeline,
-  isAdminView
+  isAdminView,
+  pipelineInfo
 }: {
   user: GenericIssuanceSelfResponseValue;
   pipeline: PipelineDefinition;
@@ -33,11 +36,16 @@ export function PipelineEditSection({
     string | undefined
   >();
   const ownedBySomeoneElse = pipeline.ownerUserId !== user.id;
-  const { isEditHistory, pipeline: maybeHistoricPipeline } =
+  const { historyEntry, pipeline: maybeHistoricPipeline } =
     useViewingPipelineDefinition(pipeline);
   const [editorValue, setEditorValue] = useState(
     stringifyAndFormat(maybeHistoricPipeline)
   );
+
+  useEffect(() => {
+    setEditorValue(stringifyAndFormat(maybeHistoricPipeline));
+  }, [maybeHistoricPipeline]);
+
   const hasEdits = stringifyAndFormat(maybeHistoricPipeline) !== editorValue;
 
   const onDeleteClick = useCallback(async () => {
@@ -54,6 +62,36 @@ export function PipelineEditSection({
       }
     }
   }, [pipeline.id, userJWT]);
+
+  const onRevertToThisVersionClick = useCallback(async () => {
+    if (!historyEntry || !maybeHistoricPipeline) {
+      return;
+    }
+
+    if (
+      !userJWT ||
+      !confirm(
+        `Are you sure you want to revert to version at time ${new Date(
+          historyEntry.timeCreated
+        ).toLocaleString()}? `
+      )
+    ) {
+      return;
+    }
+
+    setActionInProgress(`Reverting pipeline '${pipeline.id}'...`);
+    const historicVersion: Partial<PipelineDefinition> = _.cloneDeep(
+      maybeHistoricPipeline
+    );
+    const stringifiedDefinition = JSON.stringify(historicVersion);
+    const res = await savePipeline(userJWT, stringifiedDefinition);
+    if (res.success) {
+      window.location.reload();
+    } else {
+      alert(res.error);
+    }
+    setActionInProgress(undefined);
+  }, [historyEntry, maybeHistoricPipeline, pipeline.id, userJWT]);
 
   const onDuplicateClick = useCallback(async () => {
     if (
@@ -119,22 +157,25 @@ export function PipelineEditSection({
 
   return (
     <Stack gap={4}>
+      <Box padding={4} mb={0}>
+        <PipelineRow {...{ pipeline, pipelineInfo }} />
+      </Box>
+
       <FancyEditor
         style={{ width: EDIT_SECTION_WIDTH, height: "450px" }}
         language="json"
         value={editorValue}
         setValue={setEditorValue}
-        readonly={ownedBySomeoneElse && !isAdminView}
+        readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
       />
 
       {isAdminView || !ownedBySomeoneElse ? (
         <SectionContainer>
           <HStack minWidth="fit-content">
-            {!isEditHistory ? (
+            {!historyEntry ? (
               <>
                 {hasEdits && (
                   <Button
-                    variant="outline"
                     size="sm"
                     isDisabled={
                       !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
@@ -146,17 +187,12 @@ export function PipelineEditSection({
                 )}
 
                 {!hasEdits && (
-                  <Button size="sm" isDisabled={true} variant="outline">
+                  <Button size="sm" isDisabled={true}>
                     Save Changes
                   </Button>
                 )}
 
-                <Button
-                  variant="outline"
-                  onClick={onUndoClick}
-                  size="sm"
-                  isDisabled={!hasEdits}
-                >
+                <Button onClick={onUndoClick} size="sm" isDisabled={!hasEdits}>
                   Reset Changes
                 </Button>
 
@@ -171,7 +207,6 @@ export function PipelineEditSection({
 
                 {isAdminView && (
                   <Button
-                    variant="outline"
                     size="sm"
                     isDisabled={ownedBySomeoneElse && !isAdminView}
                     onClick={onDuplicateClick}
@@ -182,9 +217,23 @@ export function PipelineEditSection({
               </>
             ) : (
               <>
-                <Button size="sm" onClick={onEscapeHistoryViewClick}>
-                  Cancel
-                </Button>
+                <div>
+                  <Box mb={2}>
+                    edited {historyEntryDisplayName(historyEntry)}
+                  </Box>
+                  <HStack>
+                    <Button
+                      size="sm"
+                      onClick={onRevertToThisVersionClick}
+                      colorScheme="blue"
+                    >
+                      Revert to this Version
+                    </Button>
+                    <Button size="sm" onClick={onEscapeHistoryViewClick}>
+                      View Latest Version
+                    </Button>
+                  </HStack>
+                </div>
               </>
             )}
           </HStack>

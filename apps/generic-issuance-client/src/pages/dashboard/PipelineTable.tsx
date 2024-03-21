@@ -180,97 +180,111 @@ export function PipelineTable({
   });
 
   return (
-    <TableContainer>
-      <Table variant="simple" size="sm">
-        <Thead style={{ userSelect: "none" }}>
-          {table.getHeaderGroups().map((headerGroup) => (
-            <Tr key={headerGroup.id}>
-              {headerGroup.headers.map((header, i) => {
-                return (
-                  <Th
-                    style={
-                      singleRowMode
-                        ? undefined
-                        : { width: i === 0 ? "auto" : "1%" }
-                    }
-                    key={header.id + "" + i}
-                    colSpan={header.colSpan}
-                  >
-                    {header.isPlaceholder ? null : (
-                      <span
-                        {...{
-                          style:
-                            header.column.getCanSort() && !singleRowMode
-                              ? {
-                                  cursor: "pointer"
-                                }
-                              : undefined,
-
-                          onClick: header.column.getToggleSortingHandler()
-                        }}
-                      >
+    <Container singleRowMode={singleRowMode}>
+      <TableContainer>
+        <Table size="sm">
+          <Thead style={{ userSelect: "none" }}>
+            {table.getHeaderGroups().map((headerGroup) => (
+              <Tr key={headerGroup.id}>
+                {headerGroup.headers.map((header, i) => {
+                  return (
+                    <Th
+                      style={
+                        singleRowMode
+                          ? undefined
+                          : { width: i === 0 ? "auto" : "1%" }
+                      }
+                      key={header.id + "" + i}
+                      colSpan={header.colSpan}
+                    >
+                      {header.isPlaceholder ? null : (
                         <span
-                          style={{
-                            fontWeight: header.column.getIsSorted()
-                              ? "bold"
-                              : "normal"
+                          {...{
+                            style:
+                              header.column.getCanSort() && !singleRowMode
+                                ? {
+                                    cursor: "pointer"
+                                  }
+                                : undefined,
+
+                            onClick: header.column.getToggleSortingHandler()
                           }}
                         >
-                          {flexRender(
-                            header.column.columnDef.header,
-                            header.getContext()
-                          )}
+                          <span
+                            style={{
+                              fontWeight: header.column.getIsSorted()
+                                ? "bold"
+                                : "normal"
+                            }}
+                          >
+                            {flexRender(
+                              header.column.columnDef.header,
+                              header.getContext()
+                            )}
+                          </span>
                         </span>
-                      </span>
-                    )}
-                  </Th>
-                );
-              })}
-            </Tr>
-          ))}
-        </Thead>
-        <TBody singleRowMode={singleRowMode}>
-          {table.getRowModel().rows.map((row, i) => {
-            return (
-              <Tr
-                key={row.id + "" + i}
-                onClick={(): void => {
-                  if (!singleRowMode) {
-                    window.location.hash = `${pipelineDetailPagePath(
-                      row.original.id
-                    )}`;
-                  }
-                }}
-              >
-                {row.getVisibleCells().map((cell, j) => {
-                  return (
-                    <Td key={cell.id + "" + j}>
-                      {flexRender(
-                        cell.column.columnDef.cell,
-                        cell.getContext()
                       )}
-                    </Td>
+                    </Th>
                   );
                 })}
               </Tr>
-            );
-          })}
-        </TBody>
-      </Table>
-    </TableContainer>
+            ))}
+          </Thead>
+          <tbody>
+            {table.getRowModel().rows.map((row, i) => {
+              return (
+                <Tr
+                  key={row.id + "" + i}
+                  onClick={(): void => {
+                    if (!singleRowMode) {
+                      window.location.hash = `${pipelineDetailPagePath(
+                        row.original.id
+                      )}`;
+                    }
+                  }}
+                >
+                  {row.getVisibleCells().map((cell, j) => {
+                    return (
+                      <Td key={cell.id + "" + j}>
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext()
+                        )}
+                      </Td>
+                    );
+                  })}
+                </Tr>
+              );
+            })}
+          </tbody>
+        </Table>
+      </TableContainer>
+    </Container>
   );
 }
 
-const TBody = styled.tbody`
+const Container = styled.div`
   ${({
     singleRowMode
   }: {
     singleRowMode?: boolean;
   }): FlattenSimpleInterpolation => css`
+  table {
+    ${
+      singleRowMode
+        ? css`
+            * {
+              border: none;
+            }
+          `
+        : ""
+    }
+    tbody {
       user-select: none;
       ${
-        !singleRowMode &&
-        css`
+        singleRowMode
+          ? css``
+          : css`
           tr {
             transition: background-color 150ms;
             cursor: pointer;
@@ -282,6 +296,7 @@ const TBody = styled.tbody`
               }
             }`
       }
-    }
+    }}
+  }
   `}
 `;

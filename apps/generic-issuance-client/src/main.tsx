@@ -62,18 +62,18 @@ const router = createHashRouter([
     )
   },
   {
-    path: "/create-pipeline",
-    element: (
-      <PodboxErrorBoundary>
-        <CreatePipelinePage />
-      </PodboxErrorBoundary>
-    )
-  },
-  {
     path: "/pipelines/:id",
     element: (
       <PodboxErrorBoundary>
         <PipelinePage />
+      </PodboxErrorBoundary>
+    )
+  },
+  {
+    path: "/create-pipeline",
+    element: (
+      <PodboxErrorBoundary>
+        <CreatePipelinePage />
       </PodboxErrorBoundary>
     )
   },

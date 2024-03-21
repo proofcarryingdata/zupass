@@ -38,7 +38,6 @@ import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatest
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
-import { PipelineRow } from "./PipelineEditSection/PipelineRow";
 
 export function PipelineDetailSection({
   pipelineInfo,
@@ -53,14 +52,10 @@ export function PipelineDetailSection({
 
   return (
     <>
-      <Box ml={4} mr={4}>
+      <Box m={4}>
         <Heading>
           {pipelineDisplayNameStr(pipeline)} <CollapseAllButton />
         </Heading>
-      </Box>
-
-      <Box padding={4} mb={4}>
-        <PipelineRow {...{ pipeline, pipelineInfo }} />
       </Box>
 
       <Accordion
@@ -140,7 +135,7 @@ export function PipelineDetailSection({
         </AccordionItem>
 
         <AccordionItem>
-          <AccordionButton>Edit Log</AccordionButton>
+          <AccordionButton>Version History</AccordionButton>
           <AccordionPanel>
             <SectionContainer>
               <PipelineHistorySection pipelineInfo={pipelineInfo} />
@@ -234,14 +229,15 @@ function CollapseAllButton(): ReactNode {
         });
       }}
     >
-      Collapse
+      Collapse All
     </Button>
   );
 }
 
 export const SectionContainer = styled.div`
   border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.09);
+  background-color: rgba(255, 255, 255, 0.03);
+  border: 1px solid #4b4b4b;
   min-width: 8px;
   padding: 16px;
   display: block;
