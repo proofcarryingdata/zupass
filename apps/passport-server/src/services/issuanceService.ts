@@ -167,16 +167,6 @@ export class IssuanceService {
                 ([eventName]) => eventName !== "SBC SRW"
               );
 
-              const srwTickets = Object.entries(ticketsByEvent).filter(
-                ([eventName]) => eventName === "SBC SRW"
-              );
-
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "SBC SRW",
-                recursive: false
-              });
-
               actions.push({
                 type: PCDActionType.DeleteFolder,
                 folder: "Devconnect",
@@ -199,18 +189,6 @@ export class IssuanceService {
                     ])
                   )
                 ).flat()
-              );
-
-              actions.push(
-                ...(await Promise.all(
-                  srwTickets.map(async ([_, tickets]) => ({
-                    type: PCDActionType.ReplaceInFolder,
-                    folder: "SBC SRW",
-                    pcds: await Promise.all(
-                      tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                    )
-                  }))
-                ))
               );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
@@ -238,18 +216,6 @@ export class IssuanceService {
               },
               {
                 folder: "Devconnect",
-                type: PCDPermissionType.DeleteFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.AppendToFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.ReplaceInFolder
-              },
-              {
-                folder: "SBC SRW",
                 type: PCDPermissionType.DeleteFolder
               }
             ]
