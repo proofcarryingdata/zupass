@@ -132,8 +132,8 @@ export function AddSubscriptionScreen(): JSX.Element {
         console.log(`error fetching subscription infos ${e}`);
         setFetching(false);
         setInfos(undefined);
-        setFetchedProviderUrl(undefined);
-        setFetchedProviderName(undefined);
+        setFetchedProviderUrl(null);
+        setFetchedProviderName(null);
         setFetchError(
           "Unable to fetch subscriptions. Check that the URL is correct, or try again later."
         );

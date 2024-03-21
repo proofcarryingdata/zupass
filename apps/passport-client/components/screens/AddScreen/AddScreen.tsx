@@ -8,16 +8,12 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
   useDispatch,
+  useLoginIfNoSelf,
   useRequirePassword,
-  useSelf,
-  useUserForcedToLogout
+  useSelf
 } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
-import {
-  clearAllPendingRequests,
-  pendingAddRequestKey,
-  setPendingAddRequest
-} from "../../../src/sessionStorage";
+import { pendingAddRequestKey } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -38,7 +34,6 @@ export function AddScreen(): JSX.Element | null {
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
   const screen = getScreen(request);
-  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
     if (screen === null) {
@@ -46,18 +41,7 @@ export function AddScreen(): JSX.Element | null {
     }
   }, [dispatch, screen]);
 
-  useEffect(() => {
-    if (!self || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(request);
-      setPendingAddRequest(stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [request, self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingAddRequestKey, request);
 
   if (!self) {
     return null;

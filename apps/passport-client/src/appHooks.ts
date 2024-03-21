@@ -4,6 +4,7 @@ import {
   CredentialManager,
   FeedSubscriptionManager,
   LATEST_PRIVACY_NOTICE,
+  PCDRequest,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -19,6 +20,7 @@ import {
   ZuUpdate
 } from "./dispatch";
 import { loadUsingLaserScanner } from "./localstorage";
+import { clearAllPendingRequests } from "./sessionStorage";
 import { AppError, AppState } from "./state";
 import { useSelector } from "./subscribe";
 import { findUserIdentityPCD, hasSetupPassword } from "./user";
@@ -265,4 +267,26 @@ export function useLaserScannerKeystrokeInput(): string {
   }, [typedText, nav, usingLaserScanner]);
 
   return typedText;
+}
+
+export function useLoginIfNoSelf(
+  key: string,
+  request?: PCDRequest | string
+): void {
+  const self = useSelf();
+  const userForcedToLogout = useUserForcedToLogout();
+
+  useEffect(() => {
+    if (!self || userForcedToLogout) {
+      clearAllPendingRequests();
+      const stringifiedRequest = JSON.stringify(request ?? "");
+
+      sessionStorage.setItem(key, stringifiedRequest);
+      if (!self) {
+        window.location.href = `/#/login?redirectedFromAction=true&${key}=${encodeURIComponent(
+          stringifiedRequest
+        )}`;
+      }
+    }
+  }, [key, request, self, userForcedToLogout]);
 }

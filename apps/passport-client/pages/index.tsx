@@ -80,7 +80,9 @@ class App extends React.Component<object, AppState> {
   stateEmitter: StateEmitter = new Emitter();
   update = (diff: Pick<AppState, keyof AppState>): void => {
     this.setState(diff, () => {
-      this.stateEmitter.emit(this.state);
+      if (this.state) {
+        this.stateEmitter.emit(this.state);
+      }
     });
   };
 

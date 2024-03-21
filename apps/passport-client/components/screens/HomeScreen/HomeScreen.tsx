@@ -44,7 +44,7 @@ const FOLDER_QUERY_PARAM = "folder";
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
-export function HomeScreenImpl(): JSX.Element {
+export function HomeScreenImpl(): JSX.Element | null {
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();

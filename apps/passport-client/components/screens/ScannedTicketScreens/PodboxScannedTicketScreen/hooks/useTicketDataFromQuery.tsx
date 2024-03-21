@@ -3,12 +3,19 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { useQuery } from "../../../../../src/appHooks";
 
-export type TicketIdAndEventId = {
-  loading: boolean;
-  ticketId: string | null;
-  eventId: string | null;
-  error: string | null;
-};
+export type TicketIdAndEventId =
+  | {
+      loading: boolean;
+      ticketId: string;
+      eventId: string;
+      error: null;
+    }
+  | {
+      loading: boolean;
+      ticketId: null;
+      eventId: null;
+      error: string;
+    };
 
 /**
  * The {@link PodboxScannedTicketScreen} receives a ticket from the scanner

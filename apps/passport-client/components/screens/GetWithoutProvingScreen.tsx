@@ -3,22 +3,18 @@ import {
   PCDRequestType
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
   useDispatch,
   useIsSyncSettled,
+  useLoginIfNoSelf,
   usePCDCollection,
-  useSelf,
-  useUserForcedToLogout
+  useSelf
 } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
-import {
-  clearAllPendingRequests,
-  pendingGetWithoutProvingRequestKey,
-  setPendingGetWithoutProvingRequest
-} from "../../src/sessionStorage";
+import { pendingGetWithoutProvingRequestKey } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
@@ -32,7 +28,7 @@ import { SyncingPCDs } from "../shared/SyncingPCDs";
  * Screen that allows the user to respond to a request from a third
  * party website asking for a particular PCD.
  */
-export function GetWithoutProvingScreen(): JSX.Element {
+export function GetWithoutProvingScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -71,20 +67,7 @@ export function GetWithoutProvingScreen(): JSX.Element {
     safeRedirect(request.returnUrl, serializedPCD);
   }, [pcds, request.returnUrl, selectedPCDID]);
 
-  const userForcedToLogout = useUserForcedToLogout();
-
-  useEffect(() => {
-    if (!self || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(request);
-      setPendingGetWithoutProvingRequest(stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingGetWithoutProvingRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [request, self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingGetWithoutProvingRequestKey, request);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(

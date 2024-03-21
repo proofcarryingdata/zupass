@@ -1,17 +1,12 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useState } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import {
   useLaserScannerKeystrokeInput,
-  useQuery,
-  useSelf,
-  useUserForcedToLogout
+  useLoginIfNoSelf,
+  useQuery
 } from "../../../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  pendingGenericIssuanceCheckinRequestKey,
-  setPendingGenericIssuanceCheckinRequest
-} from "../../../../src/sessionStorage";
+import { pendingGenericIssuanceCheckinRequestKey } from "../../../../src/sessionStorage";
 import { Button, CenterColumn, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
@@ -41,9 +36,7 @@ import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection"
  */
 export function PodboxScannedTicketScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
-  const userForcedToLogout = useUserForcedToLogout();
   const query = useQuery();
-  const self = useSelf();
   const [inProgress, setInProgress] = useState(false);
 
   const {
@@ -57,20 +50,12 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     eventId
   );
 
-  useEffect(() => {
-    if (!self || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(
-        query.get("id") ? { id: query.get("id") } : { pcd: query.get("pcd") }
-      );
-      setPendingGenericIssuanceCheckinRequest(stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingGenericIssuanceCheckinRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [self, userForcedToLogout, query]);
+  useLoginIfNoSelf(
+    pendingGenericIssuanceCheckinRequestKey,
+    JSON.stringify(
+      query?.get("id") ? { id: query?.get("id") } : { pcd: query?.get("pcd") }
+    )
+  );
 
   if (parsingTicketData || checkingTicket) {
     return (

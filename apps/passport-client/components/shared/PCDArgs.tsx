@@ -112,7 +112,7 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   setArgs: React.Dispatch<React.SetStateAction<ArgsOf<T>>>;
   defaultArg?: DisplayArg<typeof arg>;
   hidden?: boolean;
-}): JSX.Element {
+}): JSX.Element | undefined {
   const setArg = React.useCallback(
     (value: (typeof arg)["value"]) => {
       setArgs((args) => ({
@@ -321,18 +321,18 @@ export function ObjectArgInput({
   const [_loading, setLoading] = useState(arg.remoteUrl !== undefined);
   const [loaded, setLoaded] = useState(false);
 
-  const load = useCallback(async () => {
-    console.log(`loading ${arg.remoteUrl}`);
-    const res = await fetch(arg.remoteUrl);
+  const load = useCallback(async (remoteUrl: string) => {
+    console.log(`loading ${remoteUrl}`);
+    const res = await fetch(remoteUrl);
     const result = await res.json();
-    console.log(`loaded ${arg.remoteUrl}:`, result);
+    console.log(`loaded ${remoteUrl}:`, result);
     return result;
-  }, [arg.remoteUrl]);
+  }, []);
 
   useEffect(() => {
     if (arg.remoteUrl && !loaded) {
       setLoading(true);
-      load()
+      load(arg.remoteUrl)
         .then((obj) => {
           setLoading(false);
           setLoaded(true);
@@ -502,9 +502,10 @@ export function PCDArgInput({
       arg={arg}
       {...rest}
       error={
-        !relevantPCDs.length &&
-        (arg.validatorParams?.notFoundMessage ||
-          "You do not have an eligible PCD.")
+        relevantPCDs.length === 0
+          ? arg.validatorParams?.notFoundMessage ??
+            "You do not have an eligible PCD."
+          : undefined
       }
     >
       {!!relevantPCDs.length && (
@@ -534,7 +535,7 @@ function ArgContainer({
   end?: React.ReactNode;
 }): JSX.Element {
   return (
-    <ArgItemContainer hidden={hidden} error={!!error}>
+    <ArgItemContainer hidden={hidden ?? false} error={!!error}>
       {!hideIcon && (
         <ArgItemIcon
           draggable={false}

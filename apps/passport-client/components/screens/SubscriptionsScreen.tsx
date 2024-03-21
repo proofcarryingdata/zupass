@@ -1,17 +1,9 @@
 import { Emitter } from "@pcd/emitter";
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import styled from "styled-components";
-import {
-  useSelf,
-  useSubscriptions,
-  useUserForcedToLogout
-} from "../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  pendingViewSubscriptionsRequestKey,
-  setPendingViewSubscriptionsRequest
-} from "../../src/sessionStorage";
+import { useLoginIfNoSelf, useSubscriptions } from "../../src/appHooks";
+import { pendingViewSubscriptionsRequestKey } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -23,25 +15,11 @@ import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 export function SubscriptionsScreen(): JSX.Element {
   useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
-  const self = useSelf();
-  const userForcedToLogout = useUserForcedToLogout();
-
   const closeEmitter = useMemo(() => {
     return new Emitter<never>();
   }, []);
 
-  useEffect(() => {
-    if (!self || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify("");
-      setPendingViewSubscriptionsRequest(stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingViewSubscriptionsRequestKey);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";
