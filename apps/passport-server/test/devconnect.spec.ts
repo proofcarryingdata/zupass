@@ -1961,10 +1961,10 @@ describe("devconnect functionality", function () {
         throw new Error("expected to be able to get a feed response");
       }
 
-      expect(response.value?.actions?.length).to.eq(3);
+      expect(response.value?.actions?.length).to.eq(2);
 
       // Now we have an action to populate the folder
-      const populateAction = response.value?.actions?.[2];
+      const populateAction = response.value?.actions?.[1];
       expectToExist(populateAction, isReplaceInFolderAction);
 
       expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
@@ -2006,9 +2006,9 @@ describe("devconnect functionality", function () {
     MockDate.reset();
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
-    const action1 = response1.actions[2];
+    const action1 = response1.actions[1];
     expectToExist(action1, isReplaceInFolderAction);
-    const action2 = response2.actions[2];
+    const action2 = response2.actions[1];
     expectToExist(action2, isReplaceInFolderAction);
 
     const pcds1 = await Promise.all(
@@ -2060,9 +2060,9 @@ describe("devconnect functionality", function () {
       );
       MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(3);
+      expect(responseBody.actions.length).to.eq(2);
 
-      const devconnectAction = responseBody.actions[2];
+      const devconnectAction = responseBody.actions[1];
       expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
       expect(devconnectAction.folder).to.eq("Devconnect/New name");
@@ -2111,8 +2111,8 @@ describe("devconnect functionality", function () {
       );
       MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(3);
-      const devconnectAction = responseBody.actions[2];
+      expect(responseBody.actions.length).to.eq(2);
+      const devconnectAction = responseBody.actions[1];
       expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
@@ -2164,7 +2164,7 @@ describe("devconnect functionality", function () {
       MockDate.reset();
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
 
-      const action = issueResponseBody.actions[2];
+      const action = issueResponseBody.actions[1];
       expectToExist(action, isReplaceInFolderAction);
       const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
       ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
@@ -2255,11 +2255,6 @@ describe("devconnect functionality", function () {
 
       const response = expressResponse.value as PollFeedResponseValue;
       expect(response.actions).to.deep.eq([
-        {
-          type: PCDActionType.DeleteFolder,
-          folder: "SBC SRW",
-          recursive: false
-        },
         {
           type: PCDActionType.DeleteFolder,
           folder: "Devconnect",
