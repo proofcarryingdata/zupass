@@ -6,7 +6,6 @@ import {
 } from "@chakra-ui/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
-import validator from "email-validator";
 import React, {
   ReactNode,
   useCallback,
@@ -21,12 +20,12 @@ import { GlobalStyle } from "./components/GlobalStyle";
 import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
 import { RollbarProvider } from "./components/RollbarProvider";
-import { IS_PROD, SESSION_DURATION_MINUTES } from "./constants";
+import { IS_PROD } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
-import { DEV_JWT_KEY } from "./helpers/userHooks";
 import { NotFound } from "./pages/404";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
+import { saveState, useInitialState } from "./pages/localstorage";
 import LoginPage from "./pages/pipeline/LoginPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
 
@@ -88,75 +87,6 @@ const router = createHashRouter([
   }
 ]);
 
-const ADMIN_MODE_KEY = "setting-admin-mode";
-
-function useInitialState(): GIContextState {
-  const [devModeAuthToken, setDevModeAuthToken] = useState<string | undefined>(
-    !stytch ? window.localStorage.getItem(DEV_JWT_KEY) ?? undefined : undefined
-  );
-
-  let isAdminMode = undefined;
-
-  try {
-    const adminSerializedValue = window.localStorage.getItem(ADMIN_MODE_KEY);
-
-    if (!adminSerializedValue) {
-      throw new Error();
-    }
-
-    isAdminMode = JSON.parse(adminSerializedValue);
-  } catch (e) {
-    //
-  }
-
-  const initialState: GIContextState = {
-    // eslint-disable-next-line @typescript-eslint/no-empty-function
-    setState: () => {},
-    isAdminMode,
-    devModeAuthToken,
-    logout: async () => {
-      if (stytch) {
-        await stytch.session.revoke();
-        window.location.reload();
-      } else {
-        window.localStorage.removeItem(DEV_JWT_KEY);
-        setDevModeAuthToken(undefined);
-        window.location.reload();
-      }
-    },
-    handleAuthToken: async (token?: string): Promise<void> => {
-      if (!token || token === devModeAuthToken) {
-        return;
-      }
-
-      if (!stytch) {
-        if (validator.validate(token)) {
-          window.localStorage.setItem(DEV_JWT_KEY, token);
-          setDevModeAuthToken(token);
-          window.location.reload();
-        } else {
-          alert("please use a valid email address");
-          window.location.href = "/#/";
-          return;
-        }
-      } else {
-        await stytch.magicLinks.authenticate(token, {
-          session_duration_minutes: SESSION_DURATION_MINUTES
-        });
-      }
-    }
-  };
-
-  return initialState;
-}
-
-function saveState(state: GIContextState): void {
-  window.localStorage.setItem(
-    ADMIN_MODE_KEY,
-    JSON.stringify(!!state.isAdminMode)
-  );
-}
-
 function InitScripts(): ReactNode {
   const hasSetColorMode = useRef(false);
   const hasSetTitle = useRef(false);
@@ -183,7 +113,7 @@ function InitScripts(): ReactNode {
 }
 
 function App(): ReactNode {
-  const initialState = useInitialState();
+  const initialState = useInitialState(stytch);
 
   const [state, setState] = useState<GIContextState>(initialState);
 

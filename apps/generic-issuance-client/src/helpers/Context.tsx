@@ -20,6 +20,7 @@ export interface GIContextState {
   handleAuthToken: (token?: string) => Promise<void>;
   devModeAuthToken?: string;
   viewingHistory?: PipelineHistoryEntry;
+  pipelineAccordionHistory?: number[];
 }
 
 export const GIContext = createContext<GIContextState>({

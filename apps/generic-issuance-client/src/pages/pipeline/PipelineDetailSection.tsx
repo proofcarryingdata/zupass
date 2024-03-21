@@ -17,6 +17,7 @@ import {
 import { ReactNode } from "react";
 import { PodLink } from "../../components/Core";
 import { LastLoaded } from "../../components/LastLoaded";
+import { useGIContext } from "../../helpers/Context";
 import {
   getAllHoneycombLinkForPipeline,
   getHoneycombQueryDurationStr,
@@ -45,6 +46,8 @@ export function PipelineDetailSection({
   pipeline: PipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
+  const ctx = useGIContext();
+
   return (
     <>
       <Box padding={4} mb={4}>
@@ -73,7 +76,15 @@ export function PipelineDetailSection({
           ))}
       </Box>
 
-      <Accordion defaultIndex={[]} allowMultiple={true}>
+      <Accordion
+        index={ctx.pipelineAccordionHistory ?? []}
+        onChange={(index: number[]): void => {
+          ctx.setState({
+            pipelineAccordionHistory: index
+          });
+        }}
+        allowMultiple={true}
+      >
         {supportsManualTicketTable(pipeline) && isAdminView && (
           <AccordionItem>
             <AccordionButton>Add Manual Ticket</AccordionButton>
