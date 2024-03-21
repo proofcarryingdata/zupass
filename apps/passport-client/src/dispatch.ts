@@ -853,6 +853,39 @@ async function doSync(
         state.pcds,
         state.credentialCache
       );
+
+      /**
+       * Because the Email PCD is used as a credential for other feeds, it is
+       * necessary to ensure that the Email PCD is present before polling other
+       * feeds.
+       * We already fetch the Email PCD in {@link finishAccountCreation()}, so
+       * it *should* be present in the PCD collection already. However, there
+       * may have been an intermittent failure (e.g. due to connectivity issues
+       * or the restart of the Zupass server during a deployment). In this
+       * case, we try again here, before continuing to fetch the other feeds.
+       * If there is already an Email PCD then we can skip this step.
+       */
+      if (state.pcds.getPCDsByType(EmailPCDTypeName).length === 0) {
+        console.log(
+          "[SYNC] email PCD not found, attempting to poll Email PCD subscription"
+        );
+        const emailPCDSubscription = state.subscriptions.findSubscription(
+          ZUPASS_FEED_URL,
+          ZupassFeedIds.Email
+        );
+        if (emailPCDSubscription) {
+          console.log("[SYNC] Email PCD subscription found, polling");
+          const emailPCDActions =
+            await state.subscriptions.pollSingleSubscription(
+              emailPCDSubscription,
+              credentialManager
+            );
+          console.log(
+            `[SYNC] Fetched ${emailPCDActions.length} actions from Email PCD feed`
+          );
+          await applyActions(state.pcds, emailPCDActions);
+        }
+      }
       console.log("[SYNC] initalized credentialManager", credentialManager);
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
