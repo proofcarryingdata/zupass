@@ -360,7 +360,7 @@ export class FeedSubscriptionManager {
     feedId: string
   ): Subscription | undefined {
     return this.activeSubscriptions.find((sub) => {
-      sub.providerUrl === providerUrl && sub.id === feedId;
+      return sub.providerUrl === providerUrl && sub.feed.id === feedId;
     });
   }
 
