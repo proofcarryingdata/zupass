@@ -1,5 +1,6 @@
 import {
   PipelineDefinition,
+  PipelineHistoryEntry,
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
@@ -29,6 +30,14 @@ export interface IPipelineDefinitionDB {
   getLastLoadSummary(
     pipelineId: string
   ): Promise<PipelineLoadSummary | undefined>;
+  appendToEditHistory(
+    pipelineDefinition: PipelineDefinition,
+    editorUserId: string
+  ): Promise<void>;
+  getEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]>;
 }
 
 /**
@@ -236,5 +245,27 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     for (const definition of definitions) {
       await this.upsertDefinition(definition);
     }
+  }
+
+  // TODO: impelement in postgres
+  private historyEntries: Map<string, PipelineHistoryEntry[]> = new Map();
+  public async appendToEditHistory(
+    pipelineDefinition: PipelineDefinition,
+    editorUserId: string
+  ): Promise<void> {
+    const list = this.historyEntries.get(pipelineDefinition.id) ?? [];
+    this.historyEntries.set(pipelineDefinition.id, list);
+    list.push({
+      pipeline: pipelineDefinition,
+      timeCreated: new Date().toISOString(),
+      editorUserId
+    } satisfies PipelineHistoryEntry);
+  }
+  public async getEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]> {
+    const list = this.historyEntries.get(pipelineId) ?? [];
+    return list.slice(Math.max(0, list.length - (maxQuantity ?? 0)));
   }
 }

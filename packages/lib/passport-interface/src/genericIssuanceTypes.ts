@@ -481,6 +481,14 @@ export const PipelineDefinitionSchema = z.union([
  */
 export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
 
+const PipelineHistoryEntrySchema = z.object({
+  pipeline: PipelineDefinitionSchema,
+  timeCreated: z.string(),
+  editorUserId: z.string()
+});
+
+export type PipelineHistoryEntry = z.infer<typeof PipelineHistoryEntrySchema>;
+
 /**
  * {@link Pipeline}s offer PCDs to users via authenticated channels such as
  * feeds. When a user authenticates in order to receive a PCD, we record this
