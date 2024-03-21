@@ -90,7 +90,7 @@ export function PCDCardList({
   const [selectedPCDID, setSelectedPCDID] = useState("");
   const selectedPCD = useMemo(() => {
     // if user just added a PCD, highlight that one
-    if (sessionStorage.newAddedPCDID != null) {
+    if (sessionStorage.newAddedPCDID) {
       const added = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
       if (added) {
         return added;

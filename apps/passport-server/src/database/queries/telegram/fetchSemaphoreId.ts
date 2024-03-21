@@ -13,7 +13,7 @@ export async function fetchSemaphoreIdFromTelegramUsername(
     `,
     [telegramUsername]
   );
-  if (result.rowCount == 0) {
+  if (result.rowCount === 0) {
     return null;
   }
   const semaphoreId: string = result.rows[0].semaphore_id;

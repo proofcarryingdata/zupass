@@ -40,7 +40,7 @@ export function useZupassPopupSetup(): string {
   const [error, setError] = useState("");
 
   useEffect(() => {
-    if (window.opener == null) {
+    if (!window.opener) {
       setError("Not a popup window");
       return;
     }
@@ -66,11 +66,11 @@ export function useZupassPopupSetup(): string {
     const finished = params.get("finished");
 
     // First, this page is window.open()-ed. Redirect to Zupass.
-    if (paramsProofUrl != null) {
+    if (paramsProofUrl) {
       window.location.href = paramsProofUrl;
     } else if (finished) {
       // Later, Zupass redirects back with a result. Send it to our parent.
-      if (paramsProof != null) {
+      if (paramsProof) {
         window.opener.postMessage({ encodedPCD: paramsProof }, "*");
       }
 
@@ -78,7 +78,7 @@ export function useZupassPopupSetup(): string {
       setTimeout(() => {
         setError("Finished. Please close this window.");
       }, 1000 * 3);
-    } else if (paramsEncodingPendingPCD != null) {
+    } else if (paramsEncodingPendingPCD) {
       // Later, Zupass redirects back with a encodedPendingPCD. Send it to our parent.
       window.opener.postMessage(
         { encodedPendingPCD: paramsEncodingPendingPCD },

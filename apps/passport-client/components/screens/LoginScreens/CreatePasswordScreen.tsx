@@ -78,7 +78,7 @@ export function CreatePasswordScreen(): JSX.Element {
 
   useEffect(() => {
     // Redirect to home if already logged in
-    if (self != null) {
+    if (self) {
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {

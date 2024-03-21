@@ -60,7 +60,7 @@ export class PersistentCacheService {
     return traced("Cache", "getValue", async (span) => {
       span?.setAttribute("cache_key", key);
       const value = getCacheValue(this.db, key);
-      span?.setAttribute("hit", value != null);
+      span?.setAttribute("hit", !!value);
       return value;
     });
   }

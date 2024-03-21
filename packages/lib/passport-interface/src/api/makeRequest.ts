@@ -185,7 +185,7 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
     };
   }
 
-  if (requestBody != null) {
+  if (requestBody) {
     requestOptions = {
       ...requestOptions,
       ...POST,
@@ -193,7 +193,7 @@ async function httpRequest<T extends APIResult<unknown, unknown>>(
     };
   }
 
-  if (method != null) {
+  if (method) {
     requestOptions = { ...requestOptions, method };
   }
 

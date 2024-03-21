@@ -280,7 +280,7 @@ export async function mergeStorage(
     final: remoteFields.pcds.size()
   };
   if (
-    (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
+    (await localFields.pcds.getHash()) !== (await remoteFields.pcds.getHash())
   ) {
     identicalPCDs = false;
     const pcdMergePredicate = (
@@ -326,7 +326,7 @@ export async function mergeStorage(
     final: remoteCount
   };
   if (
-    (await localFields.subscriptions.getHash()) !=
+    (await localFields.subscriptions.getHash()) !==
     (await remoteFields.subscriptions.getHash())
   ) {
     identicalSubs = false;

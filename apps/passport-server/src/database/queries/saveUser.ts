@@ -57,7 +57,7 @@ WHERE email = $1 AND commitment = $2`,
     [email, commitment]
   );
   const uuid = uuidResult.rows[0]?.uuid as string | undefined;
-  if (uuid == null) {
+  if (!uuid) {
     throw new Error(
       `Failed to save commitment. Wrong email? ${email} ${commitment} ${salt} ${encryptionKey}`
     );

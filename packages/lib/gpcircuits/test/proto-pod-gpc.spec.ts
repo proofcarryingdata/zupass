@@ -332,7 +332,7 @@ describe("proto-pod-gpc.ProtoPODGPC should work", function () {
 
       // Fill in entry value for supported types.  Value hash is arbitrarily
       // revealed for even-numbered entries.
-      const isValueHashRevealed = entryIndex % 2 == 0;
+      const isValueHashRevealed = entryIndex % 2 === 0;
       const entryValueHash = entrySignals.valueHash;
       if (!isEntryEnabled) {
         sigEntryValue.push(0n);

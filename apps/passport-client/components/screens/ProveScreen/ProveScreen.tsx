@@ -54,11 +54,11 @@ export function ProveScreen(): JSX.Element {
   }, [dispatch, screen]);
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingProofRequest(stringifiedRequest);
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingProofRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;
@@ -66,7 +66,7 @@ export function ProveScreen(): JSX.Element {
     }
   }, [request, self, userForcedToLogout]);
 
-  if (self == null) {
+  if (!self) {
     return null;
   }
 
@@ -78,7 +78,7 @@ export function ProveScreen(): JSX.Element {
     );
   }
 
-  if (screen == null) {
+  if (!screen) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }

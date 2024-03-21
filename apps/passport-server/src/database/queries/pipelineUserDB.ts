@@ -58,7 +58,7 @@ export class PipelineUserDB implements IPipelineUserDB {
         async (client): Promise<PipelineUser> => {
           span?.setAttribute("email", email);
           const existingUser = await this.getUserByEmail(email, client);
-          if (existingUser != null) {
+          if (existingUser) {
             span?.setAttribute("is_new", false);
             traceUser(existingUser);
             return existingUser;

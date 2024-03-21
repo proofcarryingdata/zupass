@@ -66,7 +66,7 @@ export function initKudosbotRoutes(
     if (!kudosData) {
       return res.status(400).send("Error: not a valid kudos proof.");
     }
-    if (kudosData.giver != kudosGiverSemaphoreId) {
+    if (kudosData.giver !== kudosGiverSemaphoreId) {
       return res
         .status(400)
         .send(

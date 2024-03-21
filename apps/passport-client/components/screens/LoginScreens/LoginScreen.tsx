@@ -63,32 +63,32 @@ export function LoginScreen(): JSX.Element {
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
-    if (pendingGetWithoutProvingRequest != null) {
+    if (pendingGetWithoutProvingRequest) {
       setPendingGetWithoutProvingRequest(pendingGetWithoutProvingRequest);
       pendingRequestForLogging = pendingGetWithoutProvingRequestKey;
-    } else if (pendingAddRequest != null) {
+    } else if (pendingAddRequest) {
       setPendingAddRequest(pendingAddRequest);
       pendingRequestForLogging = pendingAddRequestKey;
-    } else if (pendingProveRequest != null) {
+    } else if (pendingProveRequest) {
       setPendingProofRequest(pendingProveRequest);
       pendingRequestForLogging = pendingProofRequestKey;
-    } else if (pendingViewSubscriptionsRequest != null) {
+    } else if (pendingViewSubscriptionsRequest) {
       setPendingViewSubscriptionsRequest(pendingViewSubscriptionsRequest);
       pendingRequestForLogging = pendingViewSubscriptionsRequestKey;
-    } else if (pendingAddSubscriptionRequest != null) {
+    } else if (pendingAddSubscriptionRequest) {
       setPendingAddSubscriptionRequest(pendingAddSubscriptionRequest);
       pendingRequestForLogging = pendingAddSubscriptionRequestKey;
-    } else if (pendingViewFrogCryptoRequest != null) {
+    } else if (pendingViewFrogCryptoRequest) {
       setPendingViewFrogCryptoRequest(pendingViewFrogCryptoRequest);
       pendingRequestForLogging = pendingViewFrogCryptoRequestKey;
-    } else if (pendingGenericIssuanceCheckinRequest != null) {
+    } else if (pendingGenericIssuanceCheckinRequest) {
       setPendingGenericIssuanceCheckinRequest(
         pendingGenericIssuanceCheckinRequest
       );
       pendingRequestForLogging = pendingGenericIssuanceCheckinRequestKey;
     }
 
-    if (pendingRequestForLogging != null) {
+    if (pendingRequestForLogging) {
       requestLogToServer(appConfig.zupassServer, "login-with-pending", {
         pending: pendingRequestForLogging
       });
@@ -127,7 +127,7 @@ export function LoginScreen(): JSX.Element {
 
   useEffect(() => {
     // Redirect to home if already logged in
-    if (self != null) {
+    if (self) {
       window.location.hash = "#/";
     }
   }, [self]);

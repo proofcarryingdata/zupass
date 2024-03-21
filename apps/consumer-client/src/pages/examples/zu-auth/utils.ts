@@ -55,7 +55,7 @@ export function openZKEdDSAEventTicketPopup(
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value: validEventIds.length != 0 ? validEventIds : undefined,
+      value: validEventIds.length !== 0 ? validEventIds : undefined,
       userProvided: false
     },
     fieldsToReveal: {

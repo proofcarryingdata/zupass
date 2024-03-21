@@ -33,7 +33,7 @@ export function clearPendingGetWithoutProvingRequest(): void {
 
 export function getPendingGetWithoutProvingRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingGetWithoutProvingRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingAddRequestKey = "pendingAddRequest";
@@ -48,7 +48,7 @@ export function clearPendingAddRequest(): void {
 
 export function getPendingAddRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingAddRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingHaloRequestKey = "pendingHaloRequest";
@@ -63,7 +63,7 @@ export function clearPendingHaloRequest(): void {
 
 export function getPendingHaloRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingHaloRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingProofRequestKey = "pendingProofRequest";
@@ -78,7 +78,7 @@ export function clearPendingProofRequest(): void {
 
 export function getPendingProofRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingProofRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingViewSubscriptionsRequestKey = "pendingViewSubscriptions";
@@ -93,7 +93,7 @@ export function clearPendingViewSubscriptionsRequest(): void {
 
 export function getPendingViewSubscriptionsPageRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingViewSubscriptionsRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingAddSubscriptionRequestKey = "pendingAddSubscription";
@@ -108,7 +108,7 @@ export function clearPendingAddSubscriptionRequest(): void {
 
 export function getPendingAddSubscriptionPageRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingAddSubscriptionRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingViewFrogCryptoRequestKey = "pendingViewFrogCrypto";
@@ -123,7 +123,7 @@ export function clearPendingViewFrogCryptoRequest(): void {
 
 export function getPendingViewFrogCryptoPageRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingViewFrogCryptoRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }
 
 export const pendingGenericIssuanceCheckinRequestKey =
@@ -139,5 +139,5 @@ export function clearPendingGenericIssuanceCheckinRequest(): void {
 
 export function getPendingGenericIssuanceCheckinRequest(): string | undefined {
   const value = sessionStorage.getItem(pendingGenericIssuanceCheckinRequestKey);
-  return value == null ? undefined : value;
+  return value ?? undefined;
 }

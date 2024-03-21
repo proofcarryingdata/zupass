@@ -58,13 +58,13 @@ export function PodboxScannedTicketScreen(): JSX.Element {
   );
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(
         query.get("id") ? { id: query.get("id") } : { pcd: query.get("pcd") }
       );
       setPendingGenericIssuanceCheckinRequest(stringifiedRequest);
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingGenericIssuanceCheckinRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;

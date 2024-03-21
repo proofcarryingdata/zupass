@@ -84,14 +84,14 @@ export function AddSubscriptionScreen(): JSX.Element {
   const [mismatchedEmails, setMismatchedEmails] = useState<boolean>(false);
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(url ?? "");
       setPendingAddSubscriptionRequest(stringifiedRequest);
       const emailParameter = suggestedEmail
         ? `&email=${encodeURIComponent(suggestedEmail)}`
         : "";
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}${emailParameter}`;

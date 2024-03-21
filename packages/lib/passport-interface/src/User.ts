@@ -13,7 +13,7 @@ export function useFetchUser(
 
   useEffect(() => {
     const doLoad = async (): Promise<void> => {
-      if (uuid == undefined) {
+      if (uuid === undefined) {
         setUser(null);
         setError(null);
         setLoading(false);

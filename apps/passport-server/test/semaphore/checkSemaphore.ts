@@ -48,7 +48,7 @@ export async function testLatestHistoricSemaphoreGroups(
 
 function nonZeroGroupMembers(group: Group): BigNumberish[] {
   return group.members.filter(
-    (m) => m.toString() != group.zeroValue.toString()
+    (m) => m.toString() !== group.zeroValue.toString()
   );
 }
 
