@@ -1,8 +1,10 @@
+import { Button } from "@chakra-ui/react";
 import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import React, { useMemo } from "react";
+import { useGIContext } from "../../../helpers/Context";
 
 export function PipelineEditHistorySection({
   pipelineInfo
@@ -29,5 +31,17 @@ function Entry({
   pipelineInfo: PipelineInfoResponseValue;
   entry: PipelineHistoryEntry;
 }): React.ReactNode {
-  return <div>{new Date(entry.timeCreated).toLocaleDateString()}</div>;
+  const ctx = useGIContext();
+
+  return (
+    <Button
+      onClick={(): void => {
+        ctx.setState({
+          viewingHistory: entry
+        });
+      }}
+    >
+      {new Date(entry.timeCreated).toLocaleDateString()}
+    </Button>
+  );
 }

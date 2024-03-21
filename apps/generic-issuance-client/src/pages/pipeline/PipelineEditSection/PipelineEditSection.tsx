@@ -6,7 +6,12 @@ import {
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode, useCallback, useMemo, useState } from "react";
+import styled from "styled-components";
 import { FancyEditor } from "../../../components/FancyEditor";
+import {
+  useGIContext,
+  useViewingPipelineDefinition
+} from "../../../helpers/Context";
 import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
@@ -24,12 +29,16 @@ export function PipelineEditSection({
   isAdminView: boolean;
 }): ReactNode {
   const userJWT = useJWT();
-  const [editorValue, setEditorValue] = useState(stringifyAndFormat(pipeline));
   const [actionInProgress, setActionInProgress] = useState<
     string | undefined
   >();
-  const hasEdits = stringifyAndFormat(pipeline) !== editorValue;
   const ownedBySomeoneElse = pipeline.ownerUserId !== user.id;
+  const { isEditHistory, pipeline: maybeHistoricPipeline } =
+    useViewingPipelineDefinition(pipeline);
+  const [editorValue, setEditorValue] = useState(
+    stringifyAndFormat(maybeHistoricPipeline)
+  );
+  const hasEdits = stringifyAndFormat(maybeHistoricPipeline) !== editorValue;
 
   const onDeleteClick = useCallback(async () => {
     if (userJWT) {
@@ -111,6 +120,12 @@ export function PipelineEditSection({
     ];
   }, [pipeline, pipelineInfo]);
 
+  const ctx = useGIContext();
+
+  const onEscapeHistoryViewClick = useCallback(() => {
+    ctx.setState({ viewingHistory: undefined });
+  }, [ctx]);
+
   return (
     <Stack gap={4}>
       <Box maxW={"800px"}>
@@ -120,6 +135,15 @@ export function PipelineEditSection({
           singleRowMode={true}
         />
       </Box>
+
+      {isEditHistory && (
+        <ViewingHistoryContext>
+          YOU'RE VIEWING HISTORY notes:
+          <br />
+          {maybeHistoricPipeline?.options?.notes}
+          <Button onClick={onEscapeHistoryViewClick}>Cancel</Button>
+        </ViewingHistoryContext>
+      )}
 
       <FancyEditor
         style={{ width: "800px", height: "450px" }}
@@ -185,3 +209,8 @@ export function PipelineEditSection({
     </Stack>
   );
 }
+
+const ViewingHistoryContext = styled.div`
+  background-color: rgba(255, 255, 255, 0.2);
+  padding: 32px;
+`;
