@@ -1,4 +1,4 @@
-import { Box, Button, HStack } from "@chakra-ui/react";
+import { Button, HStack } from "@chakra-ui/react";
 import {
   BasePipelineOptions,
   GenericIssuanceSelfResponseValue,
@@ -15,7 +15,6 @@ import {
 import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
-import { historyEntryDisplayName } from "../DetailsSections/PipelineHistorySection";
 
 export function PipelineActions({
   user,
@@ -257,10 +256,7 @@ export function PipelineActions({
 
   return (
     <Container>
-      {historyEntry && (
-        <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
-      )}
-      <HStack minWidth="fit-content">
+      <HStack minWidth="fit-content" flexWrap={"wrap"}>
         <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
           Maximize
         </Button>

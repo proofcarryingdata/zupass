@@ -45,6 +45,18 @@ export async function upsertPipelineDefinition(
     .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
 
   if (existingPipelineDefinition) {
+    if (existingPipelineDefinition.timeUpdated !== newDefinition.timeUpdated) {
+      throw new PCDHTTPError(
+        400,
+        "this pipeline was updated by someone else while you were editing it.\n\n" +
+          "please refresh and try again.\n\n" +
+          "your edit timestamp: " +
+          newDefinition.timeUpdated +
+          "\n" +
+          "server edit timestamp: " +
+          existingPipelineDefinition.timeUpdated
+      );
+    }
     getActiveSpan()?.setAttribute("is_new", false);
     pipelineSubservice.ensureUserHasPipelineDefinitionAccess(
       editor,

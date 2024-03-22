@@ -103,8 +103,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           ),
           type: row.pipeline_type as PipelineType,
           options: row.config,
-          timeCreated: row.time_created,
-          timeUpdated: row.time_updated
+          timeCreated: row.time_created.toISOString(),
+          timeUpdated: row.time_updated.toISOString()
         }) satisfies PipelineDefinition
     );
   }
@@ -170,8 +170,8 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
         ),
         type: row.pipeline_type as PipelineType,
         options: row.config,
-        timeCreated: row.time_created,
-        timeUpdated: row.time_updated
+        timeCreated: row.time_created.toISOString(),
+        timeUpdated: row.time_updated.toISOString()
       };
     }
   }

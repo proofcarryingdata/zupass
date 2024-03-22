@@ -55,6 +55,7 @@ import { Pipeline, PipelineUser } from "./pipelines/types";
 import { PipelineSubservice } from "./subservices/PipelineSubservice";
 import { UserSubservice } from "./subservices/UserSubservice";
 import { InstantiatePipelineArgs } from "./subservices/utils/instantiatePipeline";
+import { UpsertPipelineResult } from "./subservices/utils/upsertPipelineDefinition";
 
 const SERVICE_NAME = "GENERIC_ISSUANCE";
 const LOG_TAG = `[${SERVICE_NAME}]`;
@@ -171,10 +172,7 @@ export class GenericIssuanceService {
   public async upsertPipelineDefinition(
     user: PipelineUser,
     pipelineDefinition: PipelineDefinition
-  ): Promise<{
-    definition: PipelineDefinition;
-    restartPromise: Promise<void>;
-  }> {
+  ): Promise<UpsertPipelineResult> {
     return this.pipelineSubservice.upsertPipelineDefinition(
       user,
       pipelineDefinition
