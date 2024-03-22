@@ -37,6 +37,15 @@ export function PipelineLatestLogsSection({
           }
           readonly={true}
           value={stringifiedValue}
+          editorOptions={
+            maximized
+              ? {
+                  minimap: {
+                    enabled: true
+                  }
+                }
+              : {}
+          }
         />
         {!maximized && (
           <Button mt={4} onClick={(): void => setMaximized(true)}>

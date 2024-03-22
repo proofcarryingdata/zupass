@@ -35,6 +35,15 @@ export function PipelineLatestDataSection({
           readonly={true}
           value={stringifiedValue}
           language="javascript"
+          editorOptions={
+            maximized
+              ? {
+                  minimap: {
+                    enabled: true
+                  }
+                }
+              : {}
+          }
         />
 
         {!maximized && (
