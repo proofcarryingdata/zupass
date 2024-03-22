@@ -23,10 +23,10 @@ import { RollbarProvider } from "./components/RollbarProvider";
 import { IS_PROD } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
 import { NotFound } from "./pages/404";
+import LoginPage from "./pages/LoginPage";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
 import DashboardPage from "./pages/dashboard/DashboardPage";
 import { saveState, useInitialState } from "./pages/localstorage";
-import LoginPage from "./pages/pipeline/LoginPage";
 import PipelinePage from "./pages/pipeline/PipelinePage";
 
 const THEME = extendTheme({

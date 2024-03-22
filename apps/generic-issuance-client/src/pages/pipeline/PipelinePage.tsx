@@ -12,10 +12,7 @@ import { useFetchSelf } from "../../helpers/useFetchSelf";
 import { useIsAdminView } from "../../helpers/useIsAdminView";
 import { useJWT } from "../../helpers/userHooks";
 import { PipelineDetailSection } from "./PipelineDetailSection";
-import {
-  EDIT_SECTION_WIDTH,
-  PipelineEditSection
-} from "./PipelineEditSection/PipelineEditSection";
+import { PipelineEditSection } from "./PipelineEditSection/PipelineEditSection";
 
 /**
  * Page a user can navigate to to view and edit information regarding a
@@ -85,36 +82,29 @@ export default function PipelinePage(): ReactNode {
         )}
       </HeaderContainer>
 
-      <PageContent>
-        <TwoColumns>
-          <div
-            className="col editor-col"
-            style={{ maxWidth: EDIT_SECTION_WIDTH }}
-          >
-            {pipelineInfoResult.success &&
-              pipelineDefinition.success &&
-              user.success && (
-                <PipelineEditSection
-                  user={user.value}
-                  pipelineInfo={pipelineInfo}
-                  pipeline={pipelineDefinition.value}
-                  isAdminView={isAdminView}
-                />
-              )}
-          </div>
-          <div className="col details-col">
-            {pipelineInfoResult &&
-              pipelineDefinition.success &&
-              user.success && (
-                <PipelineDetailSection
-                  pipelineInfo={pipelineInfo}
-                  pipeline={pipelineDefinition.value}
-                  isAdminView={isAdminView}
-                />
-              )}
-          </div>
-        </TwoColumns>
-      </PageContent>
+      <TwoColumns>
+        <div className="col editor-col">
+          {pipelineInfoResult.success &&
+            pipelineDefinition.success &&
+            user.success && (
+              <PipelineEditSection
+                user={user.value}
+                pipelineInfo={pipelineInfo}
+                pipeline={pipelineDefinition.value}
+                isAdminView={isAdminView}
+              />
+            )}
+        </div>
+        <div className="col details-col">
+          {pipelineInfoResult && pipelineDefinition.success && user.success && (
+            <PipelineDetailSection
+              pipelineInfo={pipelineInfo}
+              pipeline={pipelineDefinition.value}
+              isAdminView={isAdminView}
+            />
+          )}
+        </div>
+      </TwoColumns>
     </Container>
   );
 }
@@ -131,16 +121,17 @@ const Container = styled.div`
   width: 100vw;
   height: 100vh;
   overflow: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-direction: column;
 `;
 
-const HeaderContainer = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100vw;
-`;
+const HeaderContainer = styled.div``;
 
 export const TwoColumns = styled.div`
+  margin: 32px;
+  box-sizing: border-box;
   max-width: 100%;
   height: 100%;
   overflow: hidden;
@@ -157,9 +148,19 @@ export const TwoColumns = styled.div`
   .details-col {
     flex-grow: 1;
     overflow-y: scroll;
+    flex-basis: 500px;
   }
 
   .editor-col {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    gap: 16px;
+
+    display: flex;
+    justify-content: flex-start;
+    align-items: stretch;
+    flex-direction: column;
   }
 
   ol {

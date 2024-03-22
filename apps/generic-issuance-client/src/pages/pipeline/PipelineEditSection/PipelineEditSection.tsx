@@ -1,4 +1,4 @@
-import { Box, Button, HStack, Stack } from "@chakra-ui/react";
+import { Box, Button, HStack } from "@chakra-ui/react";
 import {
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
@@ -20,8 +20,6 @@ import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { historyEntryDisplayName } from "../DetailsSections/PipelineHistorySection";
 import { PipelineRow } from "./PipelineRow";
-
-export const EDIT_SECTION_WIDTH = "700px";
 
 export function PipelineEditSection({
   user,
@@ -168,105 +166,118 @@ export function PipelineEditSection({
   }, [ctx]);
 
   return (
-    <Stack gap={4}>
-      <Box padding={0} mb={0}>
+    <>
+      <Box padding={0} mb={0} flexShrink={0}>
         <PipelineRow {...{ pipeline, pipelineInfo }} />
       </Box>
 
-      <Maximizer maximized={editorMaximized} setMaximized={setEditorMaximized}>
-        <FancyEditor
-          dark
-          value={editorValue}
-          setValue={setEditorValue}
-          readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
-          ref={editorRef}
-          editorStyle={{
-            width: editorMaximized ? "100%" : EDIT_SECTION_WIDTH,
-            height: editorMaximized ? "100vh" : "500px"
-          }}
-          containerStyle={
-            editorMaximized ? { border: "none", borderRadius: 0 } : undefined
-          }
-          language="json"
-        />
-      </Maximizer>
+      <div style={{ flexGrow: 1, flexShrink: 1, overflow: "hidden" }}>
+        <Maximizer
+          maximized={editorMaximized}
+          setMaximized={setEditorMaximized}
+        >
+          <FancyEditor
+            dark
+            value={editorValue}
+            setValue={setEditorValue}
+            readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
+            ref={editorRef}
+            editorStyle={{
+              width: editorMaximized ? "100%" : "100%",
+              height: editorMaximized ? "100vh" : "100%"
+            }}
+            containerStyle={
+              editorMaximized ? { border: "none", borderRadius: 0 } : undefined
+            }
+            language="json"
+          />
+        </Maximizer>
+      </div>
 
-      {isAdminView || !ownedBySomeoneElse ? (
-        <div>
-          {historyEntry && (
-            <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
-          )}
-
-          <HStack minWidth="fit-content">
-            <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
-              Maximize
-            </Button>
-            {!historyEntry ? (
-              <>
-                {hasEdits && (
-                  <Button
-                    size="sm"
-                    isDisabled={
-                      !!actionInProgress || (ownedBySomeoneElse && !isAdminView)
-                    }
-                    onClick={onSaveClick}
-                  >
-                    {actionInProgress ? "Saving..." : "Save Changes"}
-                  </Button>
-                )}
-
-                {!hasEdits && (
-                  <Button size="sm" isDisabled={true}>
-                    Save Changes
-                  </Button>
-                )}
-
-                <Button onClick={onUndoClick} size="sm" isDisabled={!hasEdits}>
-                  Reset Changes
-                </Button>
-
-                <Button
-                  size="sm"
-                  colorScheme="red"
-                  isDisabled={ownedBySomeoneElse && !isAdminView}
-                  onClick={onDeleteClick}
-                >
-                  Delete Pipeline
-                </Button>
-
-                {isAdminView && (
-                  <Button
-                    size="sm"
-                    isDisabled={ownedBySomeoneElse && !isAdminView}
-                    onClick={onDuplicateClick}
-                  >
-                    Clone
-                  </Button>
-                )}
-              </>
-            ) : (
-              <>
-                <div>
-                  <HStack>
+      <div
+        style={{
+          flexShrink: undefined
+        }}
+      >
+        {(isAdminView || !ownedBySomeoneElse) && (
+          <>
+            {historyEntry && (
+              <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
+            )}
+            <HStack minWidth="fit-content">
+              <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
+                Maximize
+              </Button>
+              {!historyEntry ? (
+                <>
+                  {hasEdits && (
                     <Button
                       size="sm"
-                      onClick={onRevertToThisVersionClick}
-                      colorScheme="blue"
+                      isDisabled={
+                        !!actionInProgress ||
+                        (ownedBySomeoneElse && !isAdminView)
+                      }
+                      onClick={onSaveClick}
                     >
-                      Revert to this Version
+                      {actionInProgress ? "Saving..." : "Save Changes"}
                     </Button>
-                    <Button size="sm" onClick={onEscapeHistoryViewClick}>
-                      View Latest Version
+                  )}
+
+                  {!hasEdits && (
+                    <Button size="sm" isDisabled={true}>
+                      Save Changes
                     </Button>
-                  </HStack>
-                </div>
-              </>
-            )}
-          </HStack>
-        </div>
-      ) : (
-        <></>
-      )}
-    </Stack>
+                  )}
+
+                  <Button
+                    onClick={onUndoClick}
+                    size="sm"
+                    isDisabled={!hasEdits}
+                  >
+                    Reset Changes
+                  </Button>
+
+                  <Button
+                    size="sm"
+                    colorScheme="red"
+                    isDisabled={ownedBySomeoneElse && !isAdminView}
+                    onClick={onDeleteClick}
+                  >
+                    Delete Pipeline
+                  </Button>
+
+                  {isAdminView && (
+                    <Button
+                      size="sm"
+                      isDisabled={ownedBySomeoneElse && !isAdminView}
+                      onClick={onDuplicateClick}
+                    >
+                      Clone
+                    </Button>
+                  )}
+                </>
+              ) : (
+                <>
+                  <div>
+                    <HStack>
+                      <Button
+                        size="sm"
+                        onClick={onRevertToThisVersionClick}
+                        colorScheme="blue"
+                      >
+                        Revert to this Version
+                      </Button>
+                      <Button size="sm" onClick={onEscapeHistoryViewClick}>
+                        View Latest Version
+                      </Button>
+                    </HStack>
+                  </div>
+                </>
+              )}
+            </HStack>
+          </>
+        )}
+      </div>
+    </>
   );
 }

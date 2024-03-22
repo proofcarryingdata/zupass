@@ -7,7 +7,7 @@ export interface FancyEditorProps {
   value: string;
   defaultValue?: string;
   setValue?: (val: string) => void;
-  editorStyle?: { width: string; height: string };
+  editorStyle?: { width?: string; height?: string };
   containerStyle?: React.CSSProperties;
   dark?: boolean;
   language?: string;
@@ -55,6 +55,7 @@ export const FancyEditor = React.forwardRef(
         borderRadius="lg"
         overflow="hidden"
         width="100%"
+        height="100%"
         style={containerStyle}
       >
         <Editor

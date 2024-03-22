@@ -1,13 +1,13 @@
 import { Box, Button, Input, Spinner, VStack } from "@chakra-ui/react";
 import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { PageContent } from "../../components/Core";
-import { LoadingContent } from "../../components/LoadingContent";
-import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
-import { PodboxLogo } from "../../components/header/PodboxButton";
-import { ZUPASS_SERVER_URL } from "../../constants";
-import { useGIContext } from "../../helpers/Context";
-import { useJWT } from "../../helpers/userHooks";
+import { PageContent } from "../components/Core";
+import { LoadingContent } from "../components/LoadingContent";
+import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
+import { PodboxLogo } from "../components/header/PodboxButton";
+import { ZUPASS_SERVER_URL } from "../constants";
+import { useGIContext } from "../helpers/Context";
+import { useJWT } from "../helpers/userHooks";
 
 function LoginPage(): JSX.Element {
   const jwt = useJWT();

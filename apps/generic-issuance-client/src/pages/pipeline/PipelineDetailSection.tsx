@@ -15,6 +15,7 @@ import {
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
+import _ from "lodash";
 import { ReactNode } from "react";
 import { PodLink } from "../../components/Core";
 import { pipelineDisplayNameStr } from "../../components/PipelineDisplayUtils";
@@ -54,7 +55,8 @@ export function PipelineDetailSection({
     <>
       <Box m={4}>
         <Heading>
-          {pipelineDisplayNameStr(pipeline)} <CollapseAllButton />
+          {pipelineDisplayNameStr(pipeline)} <CollapseAllButton />{" "}
+          <ExpandAllButton />
         </Heading>
       </Box>
 
@@ -230,6 +232,29 @@ function CollapseAllButton(): ReactNode {
       }}
     >
       Collapse All
+    </Button>
+  );
+}
+
+const EXPANDED = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+function ExpandAllButton(): ReactNode {
+  const ctx = useGIContext();
+  const disabled =
+    !ctx.pipelineDetailsAccordionState ||
+    _.isEqual(ctx.pipelineDetailsAccordionState, EXPANDED);
+
+  return (
+    <Button
+      ml={2}
+      size={"sm"}
+      isDisabled={disabled}
+      onClick={(): void => {
+        ctx.setState({
+          pipelineDetailsAccordionState: EXPANDED
+        });
+      }}
+    >
+      Expand All
     </Button>
   );
 }
