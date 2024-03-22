@@ -6,6 +6,7 @@ import {
 } from "@pcd/passport-interface";
 import _ from "lodash";
 import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import {
   FancyEditor,
   FancyEditorHandle
@@ -166,7 +167,7 @@ export function PipelineEditSection({
   }, [ctx]);
 
   return (
-    <>
+    <Container>
       <Box padding={0} mb={0} flexShrink={0}>
         <PipelineRow {...{ pipeline, pipelineInfo }} />
       </Box>
@@ -287,6 +288,17 @@ export function PipelineEditSection({
           </>
         )}
       </div>
-    </>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  gap: 8px;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-direction: column;
+`;

@@ -131,6 +131,8 @@ const HeaderContainer = styled.div``;
 
 export const TwoColumns = styled.div`
   margin: 32px;
+  margin-bottom: 0;
+  margin-right: 0;
   box-sizing: border-box;
   max-width: 100%;
   height: 100%;
@@ -145,22 +147,18 @@ export const TwoColumns = styled.div`
     /* height: 100%; */
   }
 
-  .details-col {
-    flex-grow: 1;
-    overflow-y: scroll;
-    flex-basis: 500px;
-  }
-
   .editor-col {
     height: 100%;
     max-height: 100%;
     overflow: hidden;
-    gap: 32px;
+    padding-bottom: 32px;
+  }
 
-    display: flex;
-    justify-content: flex-start;
-    align-items: stretch;
-    flex-direction: column;
+  .details-col {
+    flex-grow: 1;
+    overflow-y: scroll;
+    flex-basis: 500px;
+    padding-bottom: 128px;
   }
 
   ol {
