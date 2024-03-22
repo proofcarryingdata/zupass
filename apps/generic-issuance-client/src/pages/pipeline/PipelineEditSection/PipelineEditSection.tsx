@@ -5,8 +5,11 @@ import {
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import _ from "lodash";
-import { ReactNode, useCallback, useEffect, useState } from "react";
-import { FancyEditor } from "../../../components/FancyEditor";
+import { ReactNode, useCallback, useEffect, useRef, useState } from "react";
+import {
+  FancyEditor,
+  FancyEditorHandle
+} from "../../../components/FancyEditor";
 import {
   useGIContext,
   useViewingPipelineDefinition
@@ -38,6 +41,7 @@ export function PipelineEditSection({
   const ownedBySomeoneElse = pipeline.ownerUserId !== user.id;
   const { historyEntry, pipeline: maybeHistoricPipeline } =
     useViewingPipelineDefinition(pipeline);
+  const editorRef = useRef<FancyEditorHandle>();
   const [editorValue, setEditorValue] = useState(
     stringifyAndFormat(maybeHistoricPipeline)
   );
@@ -45,6 +49,13 @@ export function PipelineEditSection({
   useEffect(() => {
     setEditorValue(stringifyAndFormat(maybeHistoricPipeline));
   }, [maybeHistoricPipeline]);
+
+  useEffect(() => {
+    editorRef.current?.editor?.setScrollPosition({
+      scrollLeft: 0,
+      scrollTop: 0
+    });
+  }, [historyEntry]);
 
   const hasEdits = stringifyAndFormat(maybeHistoricPipeline) !== editorValue;
 
@@ -162,6 +173,7 @@ export function PipelineEditSection({
       </Box>
 
       <FancyEditor
+        ref={editorRef}
         style={{ width: EDIT_SECTION_WIDTH, height: "450px" }}
         language="json"
         value={editorValue}
