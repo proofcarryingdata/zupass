@@ -187,6 +187,35 @@ export function PipelineActions({
     }
   }, [pipeline, setActionInProgress, userJWT]);
 
+  const onPauseToggleClick = useCallback(async () => {
+    const pipelinePaused = !!pipeline.options.paused;
+    if (
+      userJWT &&
+      confirm(
+        `Are you sure you want to ${
+          pipelinePaused ? "unpause" : "pause"
+        } this pipeline?\n\n` +
+          "Paused pipelines don't load data from the internet.\n\n"
+      )
+    ) {
+      setActionInProgress(`Protecting pipeline '${pipeline.id}'...`);
+      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      copyDefinition.options = {
+        ...copyDefinition.options,
+        paused: !pipelinePaused
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } satisfies BasePipelineOptions as any;
+      const stringifiedDefinition = JSON.stringify(copyDefinition);
+      const res = await savePipeline(userJWT, stringifiedDefinition);
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert(res.error);
+      }
+      setActionInProgress(undefined);
+    }
+  }, [pipeline, setActionInProgress, userJWT]);
+
   if (!(isAdminView || !ownedBySomeoneElse)) {
     return null;
   }
@@ -247,6 +276,9 @@ export function PipelineActions({
                 </Button>
                 <Button size="sm" onClick={onProtectToggleClick}>
                   {pipeline.options.protected ? "Unprotect" : "Protect"}
+                </Button>
+                <Button size="sm" onClick={onPauseToggleClick}>
+                  {pipeline.options.paused ? "Unpause" : "Pause"}
                 </Button>
               </>
             )}
