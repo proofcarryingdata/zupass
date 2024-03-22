@@ -18,10 +18,11 @@ import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { historyEntryDisplayName } from "../DetailsSections/PipelineHistorySection";
+import { Maximizer } from "../DetailsSections/PipelineLatestLogsSection";
 import { SectionContainer } from "../PipelineDetailSection";
 import { PipelineRow } from "./PipelineRow";
 
-export const EDIT_SECTION_WIDTH = "800px";
+export const EDIT_SECTION_WIDTH = "700px";
 
 export function PipelineEditSection({
   user,
@@ -41,6 +42,7 @@ export function PipelineEditSection({
   const ownedBySomeoneElse = pipeline.ownerUserId !== user.id;
   const { historyEntry, pipeline: maybeHistoricPipeline } =
     useViewingPipelineDefinition(pipeline);
+  const [editorMaximized, setEditorMaximized] = useState(false);
   const editorRef = useRef<FancyEditorHandle>();
   const [editorValue, setEditorValue] = useState(
     stringifyAndFormat(maybeHistoricPipeline)
@@ -172,18 +174,31 @@ export function PipelineEditSection({
         <PipelineRow {...{ pipeline, pipelineInfo }} />
       </Box>
 
-      <FancyEditor
-        ref={editorRef}
-        editorStyle={{ width: EDIT_SECTION_WIDTH, height: "450px" }}
-        language="json"
-        value={editorValue}
-        setValue={setEditorValue}
-        readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
-      />
+      <Maximizer maximized={editorMaximized} setMaximized={setEditorMaximized}>
+        <FancyEditor
+          dark
+          value={editorValue}
+          setValue={setEditorValue}
+          readonly={(ownedBySomeoneElse && !isAdminView) || !!historyEntry}
+          ref={editorRef}
+          editorStyle={{
+            width: editorMaximized ? "100%" : EDIT_SECTION_WIDTH,
+            height: editorMaximized ? "100vh" : "500px"
+          }}
+          containerStyle={
+            editorMaximized ? { border: "none", borderRadius: 0 } : undefined
+          }
+          language="json"
+        />
+      </Maximizer>
 
       {isAdminView || !ownedBySomeoneElse ? (
         <SectionContainer>
           <HStack minWidth="fit-content">
+            <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
+              Maximize
+            </Button>
+
             {!historyEntry ? (
               <>
                 {hasEdits && (

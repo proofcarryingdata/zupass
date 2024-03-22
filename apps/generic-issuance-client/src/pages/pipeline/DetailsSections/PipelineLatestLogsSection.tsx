@@ -62,8 +62,11 @@ export function Maximizer({
       <MaximizerContainer>
         {children}
         <MinimizeContainer>
-          <Button colorScheme="red" onClick={(): void => setMaximized?.(false)}>
-            minimize
+          <Button
+            colorScheme="blue"
+            onClick={(): void => setMaximized?.(false)}
+          >
+            Back
           </Button>
         </MinimizeContainer>
       </MaximizerContainer>
