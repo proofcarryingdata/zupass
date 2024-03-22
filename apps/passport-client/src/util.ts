@@ -74,7 +74,7 @@ function getVerifyUrlPrefixes(): string[] {
 
 // Given an input string, check if there exists a ticket verify URL within it.
 // If so, return the last occurance of a verify URL. If not, return null.
-export function getLastValidVerifyUrl(inputString: string): string {
+export function getLastValidVerifyUrl(inputString: string): string | null {
   const lastValidUrlStartIdx = _.chain(getVerifyUrlPrefixes())
     .map((verifyUrlPrefix) => inputString.lastIndexOf(verifyUrlPrefix))
     .max()

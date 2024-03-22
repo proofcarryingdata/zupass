@@ -88,7 +88,7 @@ export function EdgeCityHome(): JSX.Element {
 
   const edgeCityPCDs = usePCDsInFolder(EdgeCityFolderName);
   const [selectedExperience, setSelectedExperience] =
-    useState<EdDSATicketPCD>(null);
+    useState<EdDSATicketPCD | null>(null);
   const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
     useState(false);
   const [selectedExperienceIsStar, setSelectedExperienceIsStar] =

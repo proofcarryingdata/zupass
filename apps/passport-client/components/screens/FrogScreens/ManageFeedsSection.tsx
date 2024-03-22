@@ -41,7 +41,7 @@ export function ManageFeedsSection(): JSX.Element {
     } catch (error) {
       return {
         newFeeds: [],
-        newFeedsError: error.message
+        newFeedsError: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }, [newFeedsText]);
@@ -165,7 +165,7 @@ function useFeeds(): {
         if (abortController.signal.aborted) {
           return;
         }
-        setError(error.message);
+        setError(error instanceof Error ? error.message : "Unknown error");
       } finally {
         if (!abortController.signal.aborted) {
           setIsLoading(false);

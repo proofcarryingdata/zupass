@@ -49,7 +49,7 @@ export function BalancesTab({
           </Spread>
           <Spread>
             <span>my share</span>
-            <span>{((score.exp / totalExp) * 100).toFixed(3)}%</span>
+            <span>{(((score.exp ?? 0) / totalExp) * 100).toFixed(3)}%</span>
           </Spread>
         </Section>
       )}

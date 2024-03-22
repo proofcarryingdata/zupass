@@ -29,31 +29,31 @@ export async function getPackages(): Promise<PCDPackage[]> {
 }
 
 async function loadPackages(): Promise<PCDPackage[]> {
-  await SemaphoreGroupPCDPackage.init({
+  await SemaphoreGroupPCDPackage.init?.({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
     zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
-  await SemaphoreSignaturePCDPackage.init({
+  await SemaphoreSignaturePCDPackage.init?.({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
     zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
-  await EthereumOwnershipPCDPackage.init({
+  await EthereumOwnershipPCDPackage.init?.({
     wasmFilePath: "/semaphore-artifacts/16.wasm",
     zkeyFilePath: "/semaphore-artifacts/16.zkey"
   });
 
-  await RSATicketPCDPackage.init({
+  await RSATicketPCDPackage.init?.({
     makeEncodedVerifyLink
   });
 
-  await ZKEdDSAEventTicketPCDPackage.init({
+  await ZKEdDSAEventTicketPCDPackage.init?.({
     wasmFilePath: "/artifacts/zk-eddsa-event-ticket-pcd/circuit.wasm",
     zkeyFilePath: "/artifacts/zk-eddsa-event-ticket-pcd/circuit.zkey"
   });
 
-  await ZKEdDSAFrogPCDPackage.init({
+  await ZKEdDSAFrogPCDPackage.init?.({
     wasmFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.wasm",
     zkeyFilePath: "/artifacts/zk-eddsa-frog-pcd/circuit.zkey"
   });
