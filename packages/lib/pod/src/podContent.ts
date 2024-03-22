@@ -219,9 +219,7 @@ export class PODContent {
    * @returns `true` if the proof is valid.
    */
   public static verifyEntryProof(entryProof: PODEntryProof): boolean {
-    // This doesn't need a tree since the root is in the proof.  It just
-    // needs a configured hash function.
-    return new LeanIMT<bigint>(podMerkleTreeHash).verifyProof(entryProof);
+    return LeanIMT.verifyProof(entryProof, podMerkleTreeHash);
   }
 
   /**

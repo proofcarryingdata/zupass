@@ -27,10 +27,10 @@
   },
   "dependencies": {
     "@pcd/util": "0.4.0",
-    "@zk-kit/baby-jubjub": "0.3.0",
-    "@zk-kit/eddsa-poseidon": "0.10.0",
-    "@zk-kit/imt": "2.0.0-beta.2",
-    "@zk-kit/utils": "0.8.1",
+    "@zk-kit/baby-jubjub": "1.0.0-beta",
+    "@zk-kit/eddsa-poseidon": "0.11.0",
+    "@zk-kit/imt": "2.0.0-beta.4",
+    "@zk-kit/utils": "1.0.0-beta",
     "js-sha256": "^0.10.1",
     "json-bigint": "^1.0.0",
     "poseidon-lite": "^0.2.0"
