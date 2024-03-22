@@ -5,7 +5,6 @@ import {
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
-import { sleep } from "@pcd/util";
 import _ from "lodash";
 import React, { ReactNode, useCallback } from "react";
 import styled from "styled-components";
@@ -179,8 +178,6 @@ export function PipelineActions({
       } satisfies BasePipelineOptions as any;
       const stringifiedDefinition = JSON.stringify(copyDefinition);
       const res = await savePipeline(userJWT, stringifiedDefinition);
-      await sleep(2000);
-
       if (res.success) {
         window.location.reload();
       } else {
@@ -230,7 +227,10 @@ export function PipelineActions({
             <Button
               size="sm"
               colorScheme="red"
-              isDisabled={ownedBySomeoneElse && !isAdminView}
+              isDisabled={
+                (ownedBySomeoneElse && !isAdminView) ||
+                pipeline.options?.protected
+              }
               onClick={onDeleteClick}
             >
               Delete Pipeline
