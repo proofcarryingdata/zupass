@@ -4,7 +4,7 @@ import {
   PipelineDefinitionSchema,
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
-import { str } from "@pcd/util";
+import { onlyDefined, str } from "@pcd/util";
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { PCDHTTPError } from "../../../../routing/pcdHttpError";
@@ -86,6 +86,11 @@ export async function upsertPipelineDefinition(
     newDefinition.id = uuidv4();
     newDefinition.timeCreated = new Date().toISOString();
     newDefinition.timeUpdated = new Date().toISOString();
+    newDefinition.editorUserIds = (
+      await Promise.all(
+        newDefinition.editorUserIds.map((id) => userSubservice.getUserById(id))
+      ).then(onlyDefined)
+    ).map((u) => u.id);
 
     if (!editor.isAdmin && !!newDefinition.options.alerts) {
       throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
