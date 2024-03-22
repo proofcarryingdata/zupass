@@ -1,3 +1,4 @@
+import { Button } from "@chakra-ui/react";
 import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { ReactNode } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
@@ -16,13 +17,16 @@ export function PipelineLatestLogsSection({
   }
 
   return (
-    <FancyEditor
-      dark
-      style={{ width: "100%", height: "300px" }}
-      readonly={true}
-      value={lastLoad.latestLogs
-        .map((log) => `${log.timestampCreated} - ${log.level} - ${log.value}`)
-        .join("\n")}
-    />
+    <>
+      <FancyEditor
+        dark
+        style={{ width: "100%", height: "300px" }}
+        readonly={true}
+        value={lastLoad.latestLogs
+          .map((log) => `${log.timestampCreated} - ${log.level} - ${log.value}`)
+          .join("\n")}
+      />
+      <Button mt={4}>Maximize</Button>
+    </>
   );
 }
