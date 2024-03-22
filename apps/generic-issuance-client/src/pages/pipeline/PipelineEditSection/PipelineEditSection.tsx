@@ -174,7 +174,7 @@ export function PipelineEditSection({
 
       <FancyEditor
         ref={editorRef}
-        style={{ width: EDIT_SECTION_WIDTH, height: "450px" }}
+        editorStyle={{ width: EDIT_SECTION_WIDTH, height: "450px" }}
         language="json"
         value={editorValue}
         setValue={setEditorValue}

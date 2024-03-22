@@ -57,7 +57,7 @@ export default function CSVPipelineBuilder(
             <Box maxW="800px" minW="800px" height="500px">
               {previewType === undefined && (
                 <FancyEditor
-                  style={{ height: "500px", width: "800px" }}
+                  editorStyle={{ height: "500px", width: "800px" }}
                   dark
                   value={csv}
                   setValue={setCsv}

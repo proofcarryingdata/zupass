@@ -7,7 +7,8 @@ export interface FancyEditorProps {
   value: string;
   defaultValue?: string;
   setValue?: (val: string) => void;
-  style?: React.CSSProperties;
+  editorStyle?: { width: string; height: string };
+  containerStyle?: React.CSSProperties;
   dark?: boolean;
   language?: string;
   readonly?: boolean;
@@ -24,7 +25,15 @@ export interface FancyEditorHandle {
  */
 export const FancyEditor = React.forwardRef(
   (
-    { readonly, value, setValue, style, dark, language }: FancyEditorProps,
+    {
+      readonly,
+      value,
+      setValue,
+      editorStyle,
+      containerStyle,
+      dark,
+      language
+    }: FancyEditorProps,
     ref
   ) => {
     const [editorHandle, setEditorHandle] = useState<FancyEditorHandle>();
@@ -41,13 +50,19 @@ export const FancyEditor = React.forwardRef(
     // const [ref, setRef] = useState<{ editor; monaco }>();
 
     return (
-      <Box borderWidth="1px" borderRadius="lg" overflow="hidden" width="100%">
+      <Box
+        borderWidth="1px"
+        borderRadius="lg"
+        overflow="hidden"
+        width="100%"
+        style={containerStyle}
+      >
         <Editor
           onMount={(editor, monaco): void =>
             setEditorHandle({ editor, monaco })
           }
-          width={style?.width ?? "100%"}
-          height={style?.height ?? "600px"}
+          width={editorStyle?.width ?? "100%"}
+          height={editorStyle?.height ?? "600px"}
           language={language}
           theme={dark ? "vs-dark" : "vs-light"}
           value={value}
