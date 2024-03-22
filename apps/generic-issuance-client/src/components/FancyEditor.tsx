@@ -1,7 +1,13 @@
 import { Box, Spinner } from "@chakra-ui/react";
 import { Editor, Monaco } from "@monaco-editor/react";
+import _ from "lodash";
 import { editor } from "monaco-editor";
-import React, { useCallback, useImperativeHandle, useState } from "react";
+import React, {
+  useCallback,
+  useImperativeHandle,
+  useMemo,
+  useState
+} from "react";
 
 export interface FancyEditorProps {
   value: string;
@@ -12,6 +18,7 @@ export interface FancyEditorProps {
   dark?: boolean;
   language?: string;
   readonly?: boolean;
+  editorOptions?: editor.IStandaloneEditorConstructionOptions;
 }
 
 export interface FancyEditorHandle {
@@ -31,8 +38,8 @@ export const FancyEditor = React.forwardRef(
       setValue,
       editorStyle,
       containerStyle,
-      dark,
-      language
+      language,
+      editorOptions
     }: FancyEditorProps,
     ref
   ) => {
@@ -47,7 +54,17 @@ export const FancyEditor = React.forwardRef(
       [setValue]
     );
 
-    // const [ref, setRef] = useState<{ editor; monaco }>();
+    const mergedEditorOptions = useMemo(() => {
+      return _.merge(
+        {
+          readOnly: readonly,
+          minimap: {
+            enabled: false
+          }
+        },
+        editorOptions ?? {}
+      );
+    }, [editorOptions, readonly]);
 
     return (
       <Box
@@ -69,12 +86,7 @@ export const FancyEditor = React.forwardRef(
           value={value}
           onChange={onValueChange}
           loading={<Spinner />}
-          options={{
-            readOnly: readonly,
-            minimap: {
-              enabled: false
-            }
-          }}
+          options={mergedEditorOptions}
         />
       </Box>
     );
