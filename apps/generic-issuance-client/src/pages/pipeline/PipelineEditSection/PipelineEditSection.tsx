@@ -168,7 +168,7 @@ export function PipelineEditSection({
 
   return (
     <Stack gap={4}>
-      <Box padding={4} mb={0}>
+      <Box padding={0} mb={0}>
         <PipelineRow {...{ pipeline, pipelineInfo }} />
       </Box>
 
