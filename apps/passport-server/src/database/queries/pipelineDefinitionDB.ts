@@ -4,7 +4,6 @@ import {
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
-import { randomUUID } from "@pcd/util";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
 import { GenericIssuancePipelineRow } from "../models";
@@ -256,26 +255,47 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     }
   }
 
-  // TODO: impelement in postgres
-  private historyEntries: Map<string, PipelineHistoryEntry[]> = new Map();
   public async appendToEditHistory(
     pipelineDefinition: PipelineDefinition,
     editorUserId?: string
   ): Promise<void> {
-    const list = this.historyEntries.get(pipelineDefinition.id) ?? [];
-    this.historyEntries.set(pipelineDefinition.id, list);
-    list.push({
-      id: randomUUID(),
-      pipeline: pipelineDefinition,
-      timeCreated: new Date().toISOString(),
-      editorUserId
-    } satisfies PipelineHistoryEntry);
+    await this.db.query(
+      `
+    insert into podbox_edit_history
+    (pipeline, editor_user_id, time_created)
+    values
+    ($1, $2, $3);`,
+      [pipelineDefinition, editorUserId, new Date()]
+    );
   }
+
   public async getEditHistory(
     pipelineId: string,
     maxQuantity?: number
   ): Promise<PipelineHistoryEntry[]> {
-    const list = this.historyEntries.get(pipelineId) ?? [];
-    return list.slice(Math.max(0, list.length - (maxQuantity ?? 0)));
+    const res = await this.db.query(
+      `
+    select * from podbox_edit_history
+    where pipeline->>'id' = $1
+    order by time_created desc
+    limit $2`,
+      [pipelineId, maxQuantity ?? 20]
+    );
+    return res.rows.map(
+      (row: PipelineHistoryRow) =>
+        ({
+          id: row.id,
+          pipeline: row.pipeline,
+          timeCreated: row.time_created.toISOString(),
+          editorUserId: row.editor_user_id
+        }) satisfies PipelineHistoryEntry
+    );
   }
+}
+
+interface PipelineHistoryRow {
+  id: string;
+  pipeline: PipelineDefinition;
+  time_created: Date;
+  editor_user_id?: string;
 }
