@@ -155,7 +155,7 @@ export const TwoColumns = styled.div`
     height: 100%;
     max-height: 100%;
     overflow: hidden;
-    gap: 16px;
+    gap: 32px;
 
     display: flex;
     justify-content: flex-start;
