@@ -1,16 +1,20 @@
 import { Button } from "@chakra-ui/react";
+import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { ReactNode, useMemo, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import { Maximizer } from "../../../components/Maximizer";
+import { SectionContainer } from "../SectionContainer";
 
 /**
  * Used to display the latest data that a given pipeline loaded during
  * the last time that it was run.
  */
 export function PipelineLatestDataSection({
-  latestAtoms
+  latestAtoms,
+  lastLoad
 }: {
   latestAtoms?: unknown[];
+  lastLoad?: PipelineLoadSummary;
 }): ReactNode {
   const [maximized, setMaximized] = useState(false);
   const stringifiedValue = useMemo(() => {
@@ -19,8 +23,13 @@ export function PipelineLatestDataSection({
     );
   }, [latestAtoms]);
 
-  if (!latestAtoms) {
-    return null;
+  if (!latestAtoms || !lastLoad) {
+    return (
+      <SectionContainer>
+        Once this pipeline loads some data, the latest data will be displayed
+        here.
+      </SectionContainer>
+    );
   }
 
   return (

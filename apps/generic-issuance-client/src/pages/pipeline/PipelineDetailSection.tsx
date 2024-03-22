@@ -134,7 +134,10 @@ export function PipelineDetailSection({
         <AccordionItem>
           <AccordionButton>Data</AccordionButton>
           <AccordionPanel>
-            <PipelineLatestDataSection latestAtoms={pipelineInfo.latestAtoms} />
+            <PipelineLatestDataSection
+              lastLoad={pipelineInfo.lastLoad}
+              latestAtoms={pipelineInfo.latestAtoms}
+            />
           </AccordionPanel>
         </AccordionItem>
 

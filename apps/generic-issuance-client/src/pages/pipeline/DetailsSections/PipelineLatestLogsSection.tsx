@@ -3,6 +3,7 @@ import { PipelineLoadSummary } from "@pcd/passport-interface";
 import { ReactNode, useMemo, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
 import { Maximizer } from "../../../components/Maximizer";
+import { SectionContainer } from "../SectionContainer";
 
 /**
  * Renders information about the last time this pipeline was run by Podbox.
@@ -23,7 +24,12 @@ export function PipelineLatestLogsSection({
   }, [lastLoad?.latestLogs]);
 
   if (!lastLoad) {
-    return null;
+    return (
+      <SectionContainer>
+        Once this pipeline loads some data, the logs from that load will be
+        displayed here.
+      </SectionContainer>
+    );
   }
 
   return (
