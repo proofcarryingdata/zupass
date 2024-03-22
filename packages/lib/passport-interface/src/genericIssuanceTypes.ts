@@ -38,10 +38,18 @@ const AlertsOptionsSchema = z.object({
 export type AlertsOptions = z.infer<typeof AlertsOptionsSchema>;
 
 const BasePipelineOptionsSchema = z.object({
+  /**
+   * Paused pipelines don't load data, but their APIs are still
+   * accessible and enabled.
+   */
   paused: z.boolean().optional(),
   name: z.string().optional(),
   notes: z.string().optional(),
-  alerts: AlertsOptionsSchema.optional()
+  alerts: AlertsOptionsSchema.optional(),
+  /**
+   * Protected pipelines can't be deleted.
+   */
+  protected: z.boolean().optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;

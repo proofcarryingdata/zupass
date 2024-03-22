@@ -1,11 +1,14 @@
 import { Box, Button, HStack } from "@chakra-ui/react";
 import {
+  BasePipelineOptions,
   GenericIssuanceSelfResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
+import { sleep } from "@pcd/util";
 import _ from "lodash";
 import React, { ReactNode, useCallback } from "react";
+import styled from "styled-components";
 import {
   useGIContext,
   useViewingPipelineDefinition
@@ -155,12 +158,44 @@ export function PipelineActions({
     ctx.setState({ viewingHistory: undefined });
   }, [ctx]);
 
+  const onProtectToggleClick = useCallback(async () => {
+    const pipelineProtected = !!pipeline.options.protected;
+    if (
+      userJWT &&
+      confirm(
+        `Are you sure you want to ${
+          pipelineProtected ? "unprotect" : "protect"
+        } this pipeline?\n\n` +
+          "Protected pipelines can't be deleted.\n\n" +
+          "You can always turn the protection off later.\n\n"
+      )
+    ) {
+      setActionInProgress(`Protecting pipeline '${pipeline.id}'...`);
+      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      copyDefinition.options = {
+        ...copyDefinition.options,
+        protected: !pipelineProtected
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } satisfies BasePipelineOptions as any;
+      const stringifiedDefinition = JSON.stringify(copyDefinition);
+      const res = await savePipeline(userJWT, stringifiedDefinition);
+      await sleep(2000);
+
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert(res.error);
+      }
+      setActionInProgress(undefined);
+    }
+  }, [pipeline, setActionInProgress, userJWT]);
+
   if (!(isAdminView || !ownedBySomeoneElse)) {
     return null;
   }
 
   return (
-    <>
+    <Container>
       {historyEntry && (
         <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
       )}
@@ -202,13 +237,18 @@ export function PipelineActions({
             </Button>
 
             {isAdminView && (
-              <Button
-                size="sm"
-                isDisabled={ownedBySomeoneElse && !isAdminView}
-                onClick={onDuplicateClick}
-              >
-                Clone
-              </Button>
+              <>
+                <Button
+                  size="sm"
+                  isDisabled={ownedBySomeoneElse && !isAdminView}
+                  onClick={onDuplicateClick}
+                >
+                  Clone
+                </Button>
+                <Button size="sm" onClick={onProtectToggleClick}>
+                  {pipeline.options.protected ? "Unprotect" : "Protect"}
+                </Button>
+              </>
             )}
           </>
         ) : (
@@ -230,6 +270,10 @@ export function PipelineActions({
           </>
         )}
       </HStack>
-    </>
+    </Container>
   );
 }
+
+const Container = styled.div`
+  margin-top: 8px;
+`;

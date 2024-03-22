@@ -28,6 +28,7 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
@@ -196,12 +197,16 @@ export class PipelineSubservice {
   ): Promise<void> {
     return traced(SERVICE_NAME, "deletePipelineDefinition", async (span) => {
       traceUser(user);
-
       span?.setAttribute("pipeline_id", pipelineId);
       const pipeline = await this.loadPipelineDefinition(pipelineId);
       tracePipeline(pipeline);
       this.ensureUserHasPipelineDefinitionAccess(user, pipeline);
-
+      if (pipeline.options?.protected) {
+        throw new PCDHTTPError(
+          401,
+          "can't delete protected pipeline - turn off protection to delete"
+        );
+      }
       await this.pipelineDB.deleteDefinition(pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.pipelineAtomDB.clear(pipelineId);
