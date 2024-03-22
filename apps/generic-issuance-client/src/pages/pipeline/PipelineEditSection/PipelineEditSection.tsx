@@ -108,7 +108,7 @@ export function PipelineEditSection({
     if (
       !userJWT ||
       !confirm(
-        "Are you sure you would like to duplicate this pipeline? " +
+        "Are you sure you would like to clone this pipeline? " +
           "It'll be added to your account in a 'paused' state."
       )
     ) {
@@ -223,7 +223,7 @@ export function PipelineEditSection({
                     isDisabled={ownedBySomeoneElse && !isAdminView}
                     onClick={onDuplicateClick}
                   >
-                    Duplicate Pipeline
+                    Clone
                   </Button>
                 )}
               </>
