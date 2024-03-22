@@ -165,7 +165,7 @@ export function PipelineActions({
           pipelineProtected ? "unprotect" : "protect"
         } this pipeline?\n\n` +
           "Protected pipelines can't be deleted.\n\n" +
-          "You can always turn the protection off later.\n\n"
+          "You can always toggle protection later.\n\n"
       )
     ) {
       setActionInProgress(
