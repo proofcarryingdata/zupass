@@ -19,7 +19,6 @@ import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { historyEntryDisplayName } from "../DetailsSections/PipelineHistorySection";
 import { Maximizer } from "../DetailsSections/PipelineLatestLogsSection";
-import { SectionContainer } from "../PipelineDetailSection";
 import { PipelineRow } from "./PipelineRow";
 
 export const EDIT_SECTION_WIDTH = "700px";
@@ -193,12 +192,15 @@ export function PipelineEditSection({
       </Maximizer>
 
       {isAdminView || !ownedBySomeoneElse ? (
-        <SectionContainer>
+        <div>
+          {historyEntry && (
+            <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
+          )}
+
           <HStack minWidth="fit-content">
             <Button size="sm" onClick={(): void => setEditorMaximized(true)}>
               Maximize
             </Button>
-
             {!historyEntry ? (
               <>
                 {hasEdits && (
@@ -245,7 +247,6 @@ export function PipelineEditSection({
             ) : (
               <>
                 <div>
-                  <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
                   <HStack>
                     <Button
                       size="sm"
@@ -262,7 +263,7 @@ export function PipelineEditSection({
               </>
             )}
           </HStack>
-        </SectionContainer>
+        </div>
       ) : (
         <></>
       )}
