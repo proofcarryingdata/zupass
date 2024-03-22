@@ -73,19 +73,24 @@ export default function PipelinePage(): ReactNode {
     pipelineDefinition.value?.ownerUserId !== user?.value?.id;
 
   return (
-    <>
-      <GlobalPageHeader user={user} titleContent={(): ReactNode => null} />
+    <Container>
+      <HeaderContainer>
+        <GlobalPageHeader user={user} titleContent={(): ReactNode => null} />
 
-      {ownedBySomeoneElse && (
-        <WarningSection>
-          <b>WARNING!</b> You are not the owner of this pipeline, but you can
-          see it because you're an <b>admin</b>. Be <b>Careful</b>!
-        </WarningSection>
-      )}
+        {ownedBySomeoneElse && (
+          <WarningSection>
+            <b>WARNING!</b> You are not the owner of this pipeline, but you can
+            see it because you're an <b>admin</b>. Be <b>Careful</b>!
+          </WarningSection>
+        )}
+      </HeaderContainer>
 
       <PageContent>
         <TwoColumns>
-          <div className="col2" style={{ maxWidth: EDIT_SECTION_WIDTH }}>
+          <div
+            className="col editor-col"
+            style={{ maxWidth: EDIT_SECTION_WIDTH }}
+          >
             {pipelineInfoResult.success &&
               pipelineDefinition.success &&
               user.success && (
@@ -97,7 +102,7 @@ export default function PipelinePage(): ReactNode {
                 />
               )}
           </div>
-          <div className="col1">
+          <div className="col details-col">
             {pipelineInfoResult &&
               pipelineDefinition.success &&
               user.success && (
@@ -110,7 +115,7 @@ export default function PipelinePage(): ReactNode {
           </div>
         </TwoColumns>
       </PageContent>
-    </>
+    </Container>
   );
 }
 
@@ -119,20 +124,42 @@ const WarningSection = styled.div`
   background-color: rgba(238, 255, 0, 0.1);
 `;
 
+const Container = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+`;
+
+const HeaderContainer = styled.div`
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100vw;
+`;
+
 export const TwoColumns = styled.div`
   max-width: 100%;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
   display: flex;
   justify-content: space-between;
   align-items: stretch;
   flex-direction: row;
   gap: 32px;
 
-  .col1 {
-    flex-grow: 1;
+  .col {
+    /* height: 100%; */
   }
 
-  .col2 {
+  .details-col {
+    flex-grow: 1;
+    overflow-y: scroll;
+  }
+
+  .editor-col {
   }
 
   ol {

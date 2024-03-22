@@ -10,6 +10,7 @@ import {
   FancyEditor,
   FancyEditorHandle
 } from "../../../components/FancyEditor";
+import { Maximizer } from "../../../components/Maximizer";
 import {
   useGIContext,
   useViewingPipelineDefinition
@@ -18,7 +19,6 @@ import { deletePipeline, savePipeline } from "../../../helpers/Mutations";
 import { useJWT } from "../../../helpers/userHooks";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { historyEntryDisplayName } from "../DetailsSections/PipelineHistorySection";
-import { Maximizer } from "../DetailsSections/PipelineLatestLogsSection";
 import { PipelineRow } from "./PipelineRow";
 
 export const EDIT_SECTION_WIDTH = "700px";

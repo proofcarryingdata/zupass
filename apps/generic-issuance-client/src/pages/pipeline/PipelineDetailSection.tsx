@@ -16,7 +16,6 @@ import {
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
 import { ReactNode } from "react";
-import styled from "styled-components";
 import { PodLink } from "../../components/Core";
 import { pipelineDisplayNameStr } from "../../components/PipelineDisplayUtils";
 import { useGIContext } from "../../helpers/Context";
@@ -38,6 +37,7 @@ import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatest
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
+import { SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
   pipelineInfo,
@@ -233,12 +233,3 @@ function CollapseAllButton(): ReactNode {
     </Button>
   );
 }
-
-export const SectionContainer = styled.div`
-  border-radius: 8px;
-  background-color: rgba(255, 255, 255, 0.03);
-  border: 1px solid #4b4b4b;
-  min-width: 8px;
-  padding: 16px;
-  display: block;
-`;

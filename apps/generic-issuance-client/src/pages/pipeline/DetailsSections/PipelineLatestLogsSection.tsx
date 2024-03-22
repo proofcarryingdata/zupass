@@ -1,8 +1,8 @@
 import { Button } from "@chakra-ui/react";
 import { PipelineLoadSummary } from "@pcd/passport-interface";
-import React, { ReactNode, useMemo, useState } from "react";
-import styled from "styled-components";
+import { ReactNode, useMemo, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
+import { Maximizer } from "../../../components/Maximizer";
 
 /**
  * Renders information about the last time this pipeline was run by Podbox.
@@ -47,52 +47,3 @@ export function PipelineLatestLogsSection({
     </>
   );
 }
-
-export function Maximizer({
-  children,
-  maximized,
-  setMaximized
-}: {
-  children: ReactNode | ReactNode[] | undefined;
-  maximized?: boolean;
-  setMaximized?: React.Dispatch<React.SetStateAction<boolean>>;
-}): ReactNode {
-  if (maximized) {
-    return (
-      <MaximizerContainer>
-        {children}
-        <MinimizeContainer>
-          <Button
-            colorScheme="blue"
-            onClick={(): void => setMaximized?.(false)}
-          >
-            Back
-          </Button>
-        </MinimizeContainer>
-      </MaximizerContainer>
-    );
-  }
-
-  return <>{children}</>;
-}
-
-const MinimizeContainer = styled.div`
-  position: fixed;
-  bottom: 0;
-  right: 0;
-  padding: 16px;
-`;
-
-const MaximizerContainer = styled.div`
-  z-index: 9999;
-  position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-
-  min-width: 100vw;
-  min-height: 100vh;
-  overflow: hidden;
-  background-color: black;
-`;

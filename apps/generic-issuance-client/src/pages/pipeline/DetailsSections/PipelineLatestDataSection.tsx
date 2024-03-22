@@ -1,7 +1,7 @@
 import { Button } from "@chakra-ui/react";
 import { ReactNode, useMemo, useState } from "react";
 import { FancyEditor } from "../../../components/FancyEditor";
-import { Maximizer } from "./PipelineLatestLogsSection";
+import { Maximizer } from "../../../components/Maximizer";
 
 /**
  * Used to display the latest data that a given pipeline loaded during
@@ -34,6 +34,7 @@ export function PipelineLatestDataSection({
           }
           readonly={true}
           value={stringifiedValue}
+          language="javascript"
         />
 
         {!maximized && (
