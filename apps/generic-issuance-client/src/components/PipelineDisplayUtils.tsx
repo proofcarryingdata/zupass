@@ -184,14 +184,10 @@ export function pipelineDetailPagePath(pipelineId: string): string {
   return `/pipelines/${pipelineId}`;
 }
 
-export function pipelineCreatedAtStr(dateStr: string): string {
-  return timeAgo.format(new Date(dateStr), "twitter");
-}
-
-export function pipelineLastEditStr(dateStr: string): string {
-  return timeAgo.format(new Date(dateStr), "twitter");
-}
-
-export function pipelineLastLoadStr(dateStr: string | undefined): string {
+export function timeAgoStr(dateStr: string | undefined): string {
   return dateStr ? timeAgo.format(new Date(dateStr), "twitter") : "n/a";
+}
+
+export function timeAgoStrLong(dateStr: string | undefined): string {
+  return dateStr ? timeAgo.format(new Date(dateStr), "round") : "n/a";
 }

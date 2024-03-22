@@ -230,9 +230,7 @@ export function PipelineEditSection({
             ) : (
               <>
                 <div>
-                  <Box mb={2}>
-                    edited {historyEntryDisplayName(historyEntry)}
-                  </Box>
+                  <Box mb={2}>{historyEntryDisplayName(historyEntry)}</Box>
                   <HStack>
                     <Button
                       size="sm"

@@ -15,7 +15,7 @@ export function PipelineLatestConsumersSection({
   }
 
   return (
-    <ConsumerTable style={{ fontSize: "0.8rem" }}>
+    <ConsumerTable>
       <tr>
         <th>Email</th>
         <th>Created</th>
@@ -37,14 +37,18 @@ export function PipelineLatestConsumersSection({
 }
 
 const ConsumerTable = styled.table`
-  font-size: 0.8rem;
+  /* font-size: 0.8rem; */
   border-spacing: 5px 2px;
   border-collapse: separate;
 
   th {
-    font-size: 0.8rem !important;
+    /* font-size: 0.8rem !important; */
     font-family: var(--chakra-fonts-body) !important;
     font-weight: bold !important;
     text-align: left;
+  }
+
+  td {
+    padding-right: 32px;
   }
 `;

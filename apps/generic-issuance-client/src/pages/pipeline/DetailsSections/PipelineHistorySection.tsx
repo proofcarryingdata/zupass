@@ -5,6 +5,7 @@ import {
 import React, { useMemo } from "react";
 import { Link } from "react-router-dom";
 import styled from "styled-components";
+import { timeAgoStrLong } from "../../../components/PipelineDisplayUtils";
 import { useGIContext } from "../../../helpers/Context";
 
 export function PipelineHistorySection({
@@ -46,7 +47,8 @@ function Entry({
     return (
       <li>
         <b>{new Date(entry.timeCreated).toLocaleString()}</b>
-        &nbsp;by {entry.editorEmail ? entry.editorEmail : "system"}
+        &nbsp;({timeAgoStrLong(entry.timeCreated)})&nbsp;by&nbsp;
+        {entry.editorEmail ? entry.editorEmail : "system"}
         &nbsp;(viewing now)
       </li>
     );
@@ -64,7 +66,8 @@ function Entry({
       >
         {new Date(entry.timeCreated).toLocaleString()}
       </Link>
-      &nbsp;by {entry.editorEmail ? entry.editorEmail : "system"}
+      &nbsp;({timeAgoStrLong(entry.timeCreated)})&nbsp;by&nbsp;
+      {entry.editorEmail ? entry.editorEmail : "system"}
     </li>
   );
 }
@@ -84,6 +87,7 @@ export function historyEntryDisplayName(
 ): string {
   return (
     new Date(entry.timeCreated).toLocaleString() +
+    ` (${timeAgoStrLong(entry.timeCreated)}) ` +
     (entry.editorEmail ? " by " + entry.editorEmail : " by system")
   );
 }

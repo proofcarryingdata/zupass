@@ -20,12 +20,10 @@ import {
   PipelineDisplayNameText,
   PipelineStatusTag,
   PipelineTypeTag,
-  pipelineCreatedAtStr,
   pipelineDetailPagePath,
   pipelineDisplayNameStr,
-  pipelineLastEditStr,
-  pipelineLastLoadStr,
-  pipelineStatusStr
+  pipelineStatusStr,
+  timeAgoStr
 } from "../../components/PipelineDisplayUtils";
 import {
   getAllHoneycombLinkForPipeline,
@@ -96,12 +94,12 @@ export function PipelineTable({
 
       columnHelper.accessor("timeUpdated", {
         header: "edited",
-        cell: (props) => pipelineLastEditStr(props.row.original.timeUpdated)
+        cell: (props) => timeAgoStr(props.row.original.timeUpdated)
       }),
 
       columnHelper.accessor("timeCreated", {
         header: "created",
-        cell: (props) => pipelineCreatedAtStr(props.row.original.timeCreated)
+        cell: (props) => timeAgoStr(props.row.original.timeCreated)
       }),
 
       isAdminView
@@ -125,7 +123,7 @@ export function PipelineTable({
 
       columnHelper.accessor("lastLoad", {
         header: "Last Load",
-        cell: (props) => pipelineLastLoadStr(props.row.original.lastLoad)
+        cell: (props) => timeAgoStr(props.row.original.lastLoad)
       }),
 
       isAdminView
