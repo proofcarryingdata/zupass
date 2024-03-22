@@ -81,6 +81,7 @@ const MinimizeContainer = styled.div`
 `;
 
 const MaximizerContainer = styled.div`
+  z-index: 9999;
   position: fixed;
   top: 0;
   left: 0;
