@@ -16,22 +16,24 @@ export function PipelineLatestConsumersSection({
 
   return (
     <ConsumerTable>
-      <tr>
-        <th>Email</th>
-        <th>Created</th>
-        <th>Updated</th>
-      </tr>
-      <>
-        {latestConsumers.map((consumer) => {
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Created</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {latestConsumers.map((consumer, i) => {
           return (
-            <tr>
+            <tr key={i}>
               <td>{consumer.email}</td>
               <td>{new Date(consumer.timeCreated).toLocaleString()}</td>
               <td>{new Date(consumer.timeUpdated).toLocaleString()}</td>
             </tr>
           );
         })}
-      </>
+      </tbody>
     </ConsumerTable>
   );
 }

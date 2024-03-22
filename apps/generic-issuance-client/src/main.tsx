@@ -4,8 +4,10 @@ import {
   extendTheme,
   useColorMode
 } from "@chakra-ui/react";
+import { useMonaco } from "@monaco-editor/react";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
+import theme from "monaco-themes/themes/GitHub Dark.json";
 import React, {
   ReactNode,
   useCallback,
@@ -14,7 +16,6 @@ import React, {
   useState
 } from "react";
 import { createRoot } from "react-dom/client";
-
 import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
@@ -108,6 +109,19 @@ function InitScripts(): ReactNode {
       }
     }
   }, []);
+
+  const monaco = useMonaco();
+  useEffect(() => {
+    if (monaco) {
+      try {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        monaco.editor.defineTheme("theme", theme as any);
+        monaco.editor.setTheme("theme");
+      } catch (e) {
+        alert(e + "");
+      }
+    }
+  }, [monaco]);
 
   return <></>;
 }
