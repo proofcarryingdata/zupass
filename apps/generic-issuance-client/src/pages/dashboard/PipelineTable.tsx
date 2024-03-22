@@ -38,6 +38,7 @@ export type PipelineRow = {
   owner: string;
   timeCreated: string;
   timeUpdated: string;
+  important: boolean;
   id: string;
   loadTraceLink: string;
   allTraceLink: string;
@@ -64,6 +65,7 @@ export function PipelineTable({
         owner: entry.extraInfo.ownerEmail ?? "",
         timeCreated: entry.pipeline.timeCreated,
         timeUpdated: entry.pipeline.timeUpdated,
+        important: !!entry.pipeline.options?.important,
         id: entry.pipeline.id,
         loadTraceLink: getLoadTraceHoneycombLinkForPipeline(entry.pipeline.id),
         allTraceLink: getAllHoneycombLinkForPipeline(entry.pipeline.id),
@@ -83,6 +85,12 @@ export function PipelineTable({
   const columnHelper = createColumnHelper<PipelineRow>();
   const columns: Array<ColumnDef<PipelineRow> | undefined> = useMemo(
     () => [
+      columnHelper.accessor("important", {
+        header: "important",
+        cell: (props) => !!props.row.original.important + "",
+        enableHiding: true
+      }),
+
       singleRowMode
         ? undefined
         : columnHelper.accessor("displayName", {
@@ -160,6 +168,10 @@ export function PipelineTable({
       ? []
       : [
           {
+            id: "important",
+            desc: true
+          },
+          {
             id: "timeUpdated",
             desc: true
           }
@@ -172,7 +184,10 @@ export function PipelineTable({
     getCoreRowModel: getCoreRowModel(),
     getSortedRowModel: getSortedRowModel(),
     state: {
-      sorting
+      sorting,
+      columnVisibility: {
+        important: false
+      }
     },
     onSortingChange: singleRowMode ? undefined : setSorting
   });
