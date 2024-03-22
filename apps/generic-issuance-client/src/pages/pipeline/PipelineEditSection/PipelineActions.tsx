@@ -80,6 +80,7 @@ export function PipelineActions({
     const historicVersion: Partial<PipelineDefinition> = _.cloneDeep(
       maybeHistoricPipeline
     );
+    historicVersion.timeUpdated = pipeline.timeUpdated;
     const stringifiedDefinition = JSON.stringify(historicVersion);
     const res = await savePipeline(userJWT, stringifiedDefinition);
     if (res.success) {
@@ -92,6 +93,7 @@ export function PipelineActions({
     historyEntry,
     maybeHistoricPipeline,
     pipeline.id,
+    pipeline.timeUpdated,
     setActionInProgress,
     userJWT
   ]);
