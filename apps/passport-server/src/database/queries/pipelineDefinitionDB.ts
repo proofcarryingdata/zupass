@@ -4,6 +4,7 @@ import {
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
+import { randomUUID } from "@pcd/util";
 import _ from "lodash";
 import { Pool, PoolClient } from "postgres-pool";
 import { GenericIssuancePipelineRow } from "../models";
@@ -264,6 +265,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     const list = this.historyEntries.get(pipelineDefinition.id) ?? [];
     this.historyEntries.set(pipelineDefinition.id, list);
     list.push({
+      id: randomUUID(),
       pipeline: pipelineDefinition,
       timeCreated: new Date().toISOString(),
       editorUserId

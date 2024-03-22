@@ -482,6 +482,7 @@ export const PipelineDefinitionSchema = z.union([
 export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
 
 const PipelineHistoryEntrySchema = z.object({
+  id: z.string().uuid(),
   pipeline: PipelineDefinitionSchema,
   timeCreated: z.string(),
   editorUserId: z.string().optional()
