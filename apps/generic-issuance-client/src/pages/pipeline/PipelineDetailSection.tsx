@@ -9,6 +9,7 @@ import {
   Button,
   Heading,
   ListItem,
+  Text,
   UnorderedList
 } from "@chakra-ui/react";
 import {
@@ -58,7 +59,7 @@ export function PipelineDetailSection({
           {pipelineDisplayNameStr(pipeline)} <CollapseAllButton />{" "}
           <ExpandAllButton />
         </Heading>
-        <Heading size={"sm"}>by {pipelineInfo.ownerEmail}</Heading>
+        <Text>by {pipelineInfo.ownerEmail}</Text>
       </Box>
 
       <Accordion

@@ -58,7 +58,7 @@ function LemonadeManualTicketTable({
       </Thead>
       <Tbody>
         {pipeline.options.manualTickets?.map((t) => (
-          <ManualLemonadeTicket ticket={t} pipeline={pipeline} />
+          <ManualLemonadeTicket ticket={t} pipeline={pipeline} key={t.id} />
         ))}
       </Tbody>
     </Table>

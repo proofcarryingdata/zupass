@@ -42,7 +42,6 @@ export function PipelineEditSection({
   useEffect(() => {
     setEditorValue(stringifyAndFormat(maybeHistoricPipeline));
     setTimeout(() => {
-      editorRef.current?.editor?.getSupportedActions().forEach(console.log);
       editorRef.current?.editor?.trigger("fold", "editor.foldLevel3", {});
     }, 1000);
   }, [maybeHistoricPipeline, editorMaximized]);
