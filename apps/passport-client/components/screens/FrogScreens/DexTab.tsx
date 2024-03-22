@@ -46,7 +46,7 @@ export function DexTab({
   const [mode, setMode] = useState<"grid" | "list">("list");
   const groupedPCDs = useGroupedPCDs(pcds || []);
 
-  const [focusedFrogs, setFocusedFrogs] = useState<EdDSAFrogPCD[]>(null);
+  const [focusedFrogs, setFocusedFrogs] = useState<EdDSAFrogPCD[]>([]);
 
   if (!possibleFrogs) {
     return <RippleLoader />;
@@ -99,10 +99,10 @@ export function DexTab({
         />
       )}
 
-      {focusedFrogs && (
+      {focusedFrogs.length > 0 && (
         <FrogsModal
           pcds={focusedFrogs}
-          onClose={(): void => setFocusedFrogs(null)}
+          onClose={(): void => setFocusedFrogs([])}
           color={RARITIES[focusedFrogs[0].claim.data.rarity].color}
         />
       )}

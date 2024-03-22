@@ -194,7 +194,8 @@ function useFeeds(): {
  * @param data The data from the frog spreadsheet as a JSON array of Record<attr name, attr val>.
  */
 function feedParser(data: string): FrogCryptoDbFeedData[] {
-  return JSON.parse(data).map((rawFeed) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return JSON.parse(data).map((rawFeed: any) => {
     // e.g. biomesPutridswampDropweightscaler => biomes.PutridSwamp.dropWeightScaler
     const parseBiomes = (
       rawFeed: Record<string, string | undefined>
@@ -300,17 +301,23 @@ export function DataTable({
       actionTypes={["edit"]}
       noDataMessage="No Feeds"
       customRenderCell={{
-        ...keys.reduce((acc, key) => {
+        ...keys.reduce(
+          (acc, key) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            acc[key] = (row: any): any => {
+              return typeof row[key] === "undefined" ? "<undefined>" : row[key];
+            };
+            return acc;
+          },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          acc[key] = (row): any => {
-            return typeof row[key] === "undefined" ? "<undefined>" : row[key];
-          };
-          return acc;
-        }, {}),
-        private: (row): string => {
+          {} as Record<string, (row: any) => any>
+        ),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        private: (row: any): string => {
           return String(row["private"]);
         },
-        activeUntil: (row): JSX.Element | string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        activeUntil: (row: any): JSX.Element | string => {
           const activeUntil = row["activeUntil"];
           if (!activeUntil) {
             return "<undefined>";
@@ -346,14 +353,16 @@ export function DataTable({
             </div>
           );
         },
-        description: (row): JSX.Element => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        description: (row: any): JSX.Element => {
           return (
             <Description title={row["description"]}>
               {row["description"]}
             </Description>
           );
         },
-        biomes: (row): JSX.Element | string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        biomes: (row: any): JSX.Element | string => {
           const biomes = row["biomes"];
           if (!biomes) {
             return "<undefined>";
@@ -368,16 +377,20 @@ export function DataTable({
             </div>
           );
         },
-        codes: (row): JSX.Element | string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        codes: (row: any): JSX.Element | string => {
           const codes = row["codes"];
           if (!codes) {
             return "<undefined>";
           }
           return (
             <div>
-              {codes.map((code) => (
-                <p key={code}>{code}</p>
-              ))}
+              {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                codes.map((code: any) => (
+                  <p key={code}>{code}</p>
+                ))
+              }
             </div>
           );
         }
@@ -385,9 +398,12 @@ export function DataTable({
       containerStyle={{ maxHeight: "400px", overflow: "auto" }}
       cellStyle={{ padding: "8px" }}
       headerStyle={{ padding: "8px" }}
-      onRowEdit={(args, row): void => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onRowEdit={(args: any, row: any): void => {
         const feed = rawData.find((feed) => feed.uuid === row.uuid);
-        onEditFeed?.(feed);
+        if (feed) {
+          onEditFeed?.(feed);
+        }
       }}
     />
   );

@@ -14,7 +14,7 @@ import {
   useSelf
 } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
-import { pendingGetWithoutProvingRequestKey } from "../../src/sessionStorage";
+import { pendingRequestKeys } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
@@ -67,7 +67,7 @@ export function GetWithoutProvingScreen(): JSX.Element | null {
     safeRedirect(request.returnUrl, serializedPCD);
   }, [pcds, request.returnUrl, selectedPCDID]);
 
-  useLoginIfNoSelf(pendingGetWithoutProvingRequestKey, request);
+  useLoginIfNoSelf(pendingRequestKeys.getWithoutProving, request);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(

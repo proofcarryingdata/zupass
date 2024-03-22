@@ -13,7 +13,7 @@ import {
   useSelf
 } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
-import { pendingAddRequestKey } from "../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -41,7 +41,7 @@ export function AddScreen(): JSX.Element | null {
     }
   }, [dispatch, screen]);
 
-  useLoginIfNoSelf(pendingAddRequestKey, request);
+  useLoginIfNoSelf(pendingRequestKeys.add, request);
 
   if (!self) {
     return null;

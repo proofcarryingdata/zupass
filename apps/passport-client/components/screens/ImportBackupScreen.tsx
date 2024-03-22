@@ -16,7 +16,9 @@ import { MaybeModal } from "../modals/Modal";
 import { AppContainer } from "../shared/AppContainer";
 import { ScreenNavigation } from "../shared/ScreenNavigation";
 
-export function useImportScreenState(): { imported?: number; error?: string } {
+export function useImportScreenState():
+  | { imported?: number; error?: string }
+  | undefined {
   return useSelector<AppState["importScreen"]>((s) => s.importScreen, []);
 }
 
@@ -177,7 +179,7 @@ export function ImportBackupScreen(): JSX.Element {
               }
               return folders;
             },
-            {}
+            {} as Record<string, number>
           );
 
           // The set of folders that the user has chosen to import.

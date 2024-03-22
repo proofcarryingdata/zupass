@@ -3,7 +3,7 @@ import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
 import React, { useCallback, useMemo } from "react";
 import styled from "styled-components";
 import { useLoginIfNoSelf, useSubscriptions } from "../../src/appHooks";
-import { pendingViewSubscriptionsRequestKey } from "../../src/sessionStorage";
+import { pendingRequestKeys } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -19,7 +19,7 @@ export function SubscriptionsScreen(): JSX.Element {
     return new Emitter<never>();
   }, []);
 
-  useLoginIfNoSelf(pendingViewSubscriptionsRequestKey);
+  useLoginIfNoSelf(pendingRequestKeys.viewSubscriptions);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";

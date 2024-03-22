@@ -9,7 +9,7 @@ import {
   useLoginIfNoSelf,
   useSelf
 } from "../../../src/appHooks";
-import { pendingProofRequestKey } from "../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
@@ -48,7 +48,7 @@ export function ProveScreen(): JSX.Element | null {
     }
   }, [dispatch, screen]);
 
-  useLoginIfNoSelf(pendingProofRequestKey, request);
+  useLoginIfNoSelf(pendingRequestKeys.proof, request);
 
   if (!self) {
     return null;

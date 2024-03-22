@@ -26,7 +26,9 @@ export function ManageFrogsSection(): JSX.Element {
       setNewFrogs(parsedData);
       setNewFrogsError(undefined);
     } catch (error) {
-      setNewFrogsError(error.message);
+      setNewFrogsError(
+        error instanceof Error ? error.message : "Unknown error"
+      );
     }
   };
 
@@ -178,7 +180,7 @@ function useFrogs(): {
         if (abortController.signal.aborted) {
           return;
         }
-        setError(error.message);
+        setError(error instanceof Error ? error.message : "Unknown error");
       } finally {
         if (!abortController.signal.aborted) {
           setIsLoading(false);
@@ -210,7 +212,8 @@ function useFrogs(): {
  * Enum values can be empty or a string. They are matched to numeric enum at the time of issuance.
  */
 function frogParser(data: string): FrogCryptoFrogData[] {
-  return JSON.parse(data).map((rawFrog) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return JSON.parse(data).map((rawFrog: any) => {
     function parseAttribtue(
       attribute: string
     ): [number, number] | [undefined, undefined] {
@@ -289,14 +292,19 @@ export function DataTable({
       checkedKey="checked"
       showMultiSelect={!!setCheckedIds}
       customRenderCell={{
-        ...keys.reduce((acc, key) => {
+        ...keys.reduce(
+          (acc, key) => {
+            // eslint-disable-next-line @typescript-eslint/no-explicit-any
+            acc[key] = (row: any): any => {
+              return typeof row[key] === "undefined" ? "<undefined>" : row[key];
+            };
+            return acc;
+          },
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          acc[key] = (row): any => {
-            return typeof row[key] === "undefined" ? "<undefined>" : row[key];
-          };
-          return acc;
-        }, {}),
-        description: (row): JSX.Element => {
+          {} as Record<string, (row: any) => any>
+        ),
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        description: (row: any): JSX.Element => {
           return (
             <Description title={row["description"]}>
               {row["description"]}
@@ -304,16 +312,19 @@ export function DataTable({
           );
         }
       }}
-      onRowSelect={(args, row): void => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onRowSelect={(args: any, row: any): void => {
         setCheckedIds?.((rowIds) =>
           row.checked
             ? rowIds.filter((id) => id !== row.id)
             : [...rowIds, row.id]
         );
       }}
-      onAllRowSelect={(args, allrows): void => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onAllRowSelect={(args: any, allrows: any): void => {
         setCheckedIds?.((ids) =>
-          ids.length === allrows.length ? [] : allrows.map((row) => row.id)
+          // eslint-disable-next-line @typescript-eslint/no-explicit-any
+          ids.length === allrows.length ? [] : allrows.map((row: any) => row.id)
         );
       }}
       containerStyle={{ maxHeight: "400px", overflow: "auto" }}

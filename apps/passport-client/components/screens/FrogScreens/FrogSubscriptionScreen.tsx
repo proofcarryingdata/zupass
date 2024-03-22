@@ -9,7 +9,7 @@ import {
   useLoginIfNoSelf,
   useSubscriptions
 } from "../../../src/appHooks";
-import { pendingViewFrogCryptoRequestKey } from "../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
@@ -54,7 +54,7 @@ export function FrogSubscriptionScreen(): JSX.Element {
   }, [feedCode, hasFrogSubs, syncSettled]);
 
   useLoginIfNoSelf(
-    pendingViewFrogCryptoRequestKey,
+    pendingRequestKeys.viewFrogCrypto,
     feedCode ? JSON.stringify(feedCode) : ""
   );
 

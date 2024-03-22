@@ -6,7 +6,7 @@ import {
   useLoginIfNoSelf,
   useQuery
 } from "../../../../src/appHooks";
-import { pendingGenericIssuanceCheckinRequestKey } from "../../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../../src/sessionStorage";
 import { Button, CenterColumn, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
@@ -51,7 +51,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
   );
 
   useLoginIfNoSelf(
-    pendingGenericIssuanceCheckinRequestKey,
+    pendingRequestKeys.genericIssuanceCheckin,
     JSON.stringify(
       query?.get("id") ? { id: query?.get("id") } : { pcd: query?.get("pcd") }
     )
