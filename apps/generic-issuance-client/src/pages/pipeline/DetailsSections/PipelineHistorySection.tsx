@@ -40,6 +40,18 @@ function Entry({
 }): React.ReactNode {
   const ctx = useGIContext();
 
+  const isPreviewingThisEntry = ctx.viewingHistory?.id === entry.id;
+
+  if (isPreviewingThisEntry) {
+    return (
+      <li>
+        <b>{new Date(entry.timeCreated).toLocaleString()}</b>
+        &nbsp;by {entry.editorEmail ? entry.editorEmail : "system"}
+        &nbsp;(viewing now)
+      </li>
+    );
+  }
+
   return (
     <li>
       <Link
