@@ -47,7 +47,6 @@ export const HomeLink = (): JSX.Element => {
 
 export const PageContent = styled.div`
   box-sizing: border-box;
-  margin-top: 64px;
   padding: 32px;
   width: 100%;
   height: 100%;

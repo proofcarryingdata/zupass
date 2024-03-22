@@ -189,6 +189,15 @@ export function PipelineEditSection({
             containerStyle={
               editorMaximized ? { border: "none", borderRadius: 0 } : undefined
             }
+            editorOptions={
+              editorMaximized
+                ? {
+                    minimap: {
+                      enabled: true
+                    }
+                  }
+                : undefined
+            }
             language="json"
           />
         </Maximizer>

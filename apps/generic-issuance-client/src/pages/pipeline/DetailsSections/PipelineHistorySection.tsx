@@ -22,6 +22,15 @@ export function PipelineHistorySection({
     return entries;
   }, [pipelineInfo.editHistory]);
 
+  if (entries.length === 0) {
+    return (
+      <Container>
+        Once you make an edit, you'll be able to revert to previous versions
+        here.
+      </Container>
+    );
+  }
+
   return (
     <Container>
       <ul>

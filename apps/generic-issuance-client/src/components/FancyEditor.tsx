@@ -54,17 +54,19 @@ export const FancyEditor = React.forwardRef(
       [setValue]
     );
 
-    const mergedEditorOptions = useMemo(() => {
-      return _.merge(
-        {
-          readOnly: readonly,
-          minimap: {
-            enabled: false
-          }
-        },
-        editorOptions ?? {}
-      );
-    }, [editorOptions, readonly]);
+    const mergedEditorOptions =
+      useMemo<editor.IStandaloneEditorConstructionOptions>(() => {
+        return _.merge(
+          {
+            readOnly: readonly,
+            minimap: {
+              enabled: false
+            },
+            scrollbar: {}
+          } satisfies editor.IStandaloneEditorConstructionOptions,
+          editorOptions ?? {}
+        );
+      }, [editorOptions, readonly]);
 
     return (
       <Box

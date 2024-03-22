@@ -58,6 +58,7 @@ export function PipelineDetailSection({
           {pipelineDisplayNameStr(pipeline)} <CollapseAllButton />{" "}
           <ExpandAllButton />
         </Heading>
+        <Heading size={"sm"}>by {pipelineInfo.ownerEmail}</Heading>
       </Box>
 
       <Accordion
