@@ -169,7 +169,9 @@ export function PipelineActions({
           "You can always turn the protection off later.\n\n"
       )
     ) {
-      setActionInProgress(`Protecting pipeline '${pipeline.id}'...`);
+      setActionInProgress(
+        `Changing protection status of pipeline '${pipeline.id}'...`
+      );
       const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
       copyDefinition.options = {
         ...copyDefinition.options,
@@ -198,11 +200,44 @@ export function PipelineActions({
           "Paused pipelines don't load data from the internet.\n\n"
       )
     ) {
-      setActionInProgress(`Protecting pipeline '${pipeline.id}'...`);
+      setActionInProgress(
+        `Changing pause state of pipeline '${pipeline.id}'...`
+      );
       const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
       copyDefinition.options = {
         ...copyDefinition.options,
         paused: !pipelinePaused
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      } satisfies BasePipelineOptions as any;
+      const stringifiedDefinition = JSON.stringify(copyDefinition);
+      const res = await savePipeline(userJWT, stringifiedDefinition);
+      if (res.success) {
+        window.location.reload();
+      } else {
+        alert(res.error);
+      }
+      setActionInProgress(undefined);
+    }
+  }, [pipeline, setActionInProgress, userJWT]);
+
+  const onImportantToggleClick = useCallback(async () => {
+    const pipelineImportant = !!pipeline.options.important;
+    if (
+      userJWT &&
+      confirm(
+        `Are you sure you want to mark this pipeline as ${
+          pipelineImportant ? "unimportant" : "important"
+        }?\n\n` +
+          "Important pipelines are shown at the top of the dashboard to admin users.\n\n"
+      )
+    ) {
+      setActionInProgress(
+        `Changing importance of pipeline '${pipeline.id}'...`
+      );
+      const copyDefinition: Partial<PipelineDefinition> = _.cloneDeep(pipeline);
+      copyDefinition.options = {
+        ...copyDefinition.options,
+        important: !pipelineImportant
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } satisfies BasePipelineOptions as any;
       const stringifiedDefinition = JSON.stringify(copyDefinition);
@@ -279,6 +314,9 @@ export function PipelineActions({
                 </Button>
                 <Button size="sm" onClick={onPauseToggleClick}>
                   {pipeline.options.paused ? "Unpause" : "Pause"}
+                </Button>
+                <Button size="sm" onClick={onImportantToggleClick}>
+                  {pipeline.options.important ? "Unstar" : "Star"}
                 </Button>
               </>
             )}
