@@ -63,11 +63,19 @@ export async function upsertPipelineDefinition(
       existingPipelineDefinition
     );
 
-    if (
-      existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId &&
-      !editor.isAdmin
-    ) {
-      throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+    if (existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId) {
+      if (!editor.isAdmin) {
+        throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+      }
+      if (
+        (await userSubservice.getUserById(newDefinition.ownerUserId)) ===
+        undefined
+      ) {
+        throw new PCDHTTPError(
+          400,
+          "Cannot change owner of pipeline to user that doesn't exist"
+        );
+      }
     }
 
     if (
