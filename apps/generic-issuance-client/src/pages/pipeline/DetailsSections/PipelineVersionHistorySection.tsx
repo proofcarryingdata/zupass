@@ -43,6 +43,7 @@ export function PipelineVersionHistorySection({
 }
 
 function Entry({
+  pipelineInfo,
   entry
 }: {
   pipelineInfo: PipelineInfoResponseValue;
@@ -51,6 +52,7 @@ function Entry({
   const ctx = useGIContext();
 
   const isPreviewingThisEntry = ctx.viewingHistory?.id === entry.id;
+  const isLatestEntry = entry.id === pipelineInfo.editHistory?.[0]?.id;
 
   if (isPreviewingThisEntry) {
     return (
@@ -67,9 +69,15 @@ function Entry({
     <li>
       <Link
         onClick={(): void => {
-          ctx.setState({
-            viewingHistory: entry
-          });
+          if (isLatestEntry) {
+            ctx.setState({
+              viewingHistory: undefined
+            });
+          } else {
+            ctx.setState({
+              viewingHistory: entry
+            });
+          }
         }}
         to={""}
       >
@@ -77,6 +85,7 @@ function Entry({
       </Link>
       &nbsp;({timeAgoStrLong(entry.timeCreated)})&nbsp;by&nbsp;
       {entry.editorEmail ? entry.editorEmail : "system"}
+      &nbsp;{isLatestEntry ? "(latest)" : ""}
     </li>
   );
 }
