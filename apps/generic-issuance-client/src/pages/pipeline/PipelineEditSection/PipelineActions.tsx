@@ -321,15 +321,11 @@ export function PipelineActions({
           <>
             <div>
               <HStack>
-                <Button
-                  size="sm"
-                  onClick={onRevertToThisVersionClick}
-                  colorScheme="blue"
-                >
+                <Button size="sm" onClick={onRevertToThisVersionClick}>
                   Revert to this Version
                 </Button>
                 <Button size="sm" onClick={onEscapeHistoryViewClick}>
-                  View Latest Version
+                  Back to Latest
                 </Button>
               </HStack>
             </div>
