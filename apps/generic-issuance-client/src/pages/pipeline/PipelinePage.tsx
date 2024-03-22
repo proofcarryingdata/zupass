@@ -144,7 +144,6 @@ export const TwoColumns = styled.div`
   gap: 32px;
 
   .col {
-    /* height: 100%; */
   }
 
   .editor-col {

@@ -11,7 +11,12 @@ export function PipelineLatestConsumersSection({
   latestConsumers?: PipelineInfoConsumer[];
 }): ReactNode {
   if (!latestConsumers || latestConsumers.length === 0) {
-    return <div>no consumers.</div>;
+    return (
+      <div>
+        When someone subscribes to this Pipeline's feed, and gets a ticket, they
+        are recorded here.
+      </div>
+    );
   }
 
   return (
@@ -39,12 +44,10 @@ export function PipelineLatestConsumersSection({
 }
 
 const ConsumerTable = styled.table`
-  /* font-size: 0.8rem; */
   border-spacing: 5px 2px;
   border-collapse: separate;
 
   th {
-    /* font-size: 0.8rem !important; */
     font-family: var(--chakra-fonts-body) !important;
     font-weight: bold !important;
     text-align: left;

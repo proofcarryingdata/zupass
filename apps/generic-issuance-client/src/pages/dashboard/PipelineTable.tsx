@@ -85,12 +85,6 @@ export function PipelineTable({
   const columnHelper = createColumnHelper<PipelineRow>();
   const columns: Array<ColumnDef<PipelineRow> | undefined> = useMemo(
     () => [
-      columnHelper.accessor("important", {
-        header: "important",
-        cell: (props) => !!props.row.original.important + "",
-        enableHiding: true
-      }),
-
       singleRowMode
         ? undefined
         : columnHelper.accessor("displayName", {
@@ -99,6 +93,12 @@ export function PipelineTable({
               <PipelineDisplayNameText pipeline={table.row.original.pipeline} />
             )
           }),
+
+      columnHelper.accessor("important", {
+        header: "important",
+        cell: (props) => !!props.row.original.important + "",
+        enableHiding: true
+      }),
 
       columnHelper.accessor("timeUpdated", {
         header: "edited",

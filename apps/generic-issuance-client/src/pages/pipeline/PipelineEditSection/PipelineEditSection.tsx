@@ -14,7 +14,7 @@ import { Maximizer } from "../../../components/Maximizer";
 import { useViewingPipelineDefinition } from "../../../helpers/Context";
 import { stringifyAndFormat } from "../../../helpers/util";
 import { PipelineActions } from "./PipelineActions";
-import { PipelineRow } from "./PipelineRow";
+import { SinglePipelineTable } from "./SinglePipelineTable";
 
 export function PipelineEditSection({
   user,
@@ -56,7 +56,7 @@ export function PipelineEditSection({
   return (
     <Container>
       <Box padding={0} mb={0} flexShrink={0}>
-        <PipelineRow {...{ pipeline, pipelineInfo }} />
+        <SinglePipelineTable {...{ pipeline, pipelineInfo }} />
       </Box>
 
       <div style={{ flexGrow: 1, flexShrink: 1, overflow: "hidden" }}>

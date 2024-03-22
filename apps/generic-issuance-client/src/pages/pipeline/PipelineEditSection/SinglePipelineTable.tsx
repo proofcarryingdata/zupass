@@ -6,7 +6,7 @@ import {
 import { ReactNode, useMemo } from "react";
 import { PipelineTable } from "../../dashboard/PipelineTable";
 
-export function PipelineRow({
+export function SinglePipelineTable({
   pipeline,
   pipelineInfo
 }: {
