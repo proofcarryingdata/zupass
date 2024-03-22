@@ -150,10 +150,14 @@ export const NAME_CUTOFF_LENGTH = 36;
 export const PLACEHOLDER_NAME = "<untitled>";
 
 export function pipelineDisplayNameStr(pipeline?: PipelineDefinition): string {
-  const name = pipeline?.options.name;
+  let name = pipeline?.options.name;
 
   if (!pipeline || !name) {
     return PLACEHOLDER_NAME;
+  }
+
+  if (pipeline?.options?.important) {
+    name = "🌟 " + name;
   }
 
   if (name.length > NAME_CUTOFF_LENGTH) {
