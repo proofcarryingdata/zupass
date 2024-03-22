@@ -101,10 +101,10 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           editorUserIds: row.editor_user_ids.filter(
             (editorId: unknown) => typeof editorId === "string"
           ),
-          type: row.pipeline_type as PipelineType,
-          options: row.config,
           timeCreated: row.time_created.toISOString(),
-          timeUpdated: row.time_updated.toISOString()
+          timeUpdated: row.time_updated.toISOString(),
+          type: row.pipeline_type as PipelineType,
+          options: row.config
         }) satisfies PipelineDefinition
     );
   }
@@ -168,10 +168,10 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
         editorUserIds: row.editor_user_ids.filter(
           (editorId: unknown) => typeof editorId === "string"
         ),
-        type: row.pipeline_type as PipelineType,
-        options: row.config,
         timeCreated: row.time_created.toISOString(),
-        timeUpdated: row.time_updated.toISOString()
+        timeUpdated: row.time_updated.toISOString(),
+        type: row.pipeline_type as PipelineType,
+        options: row.config
       };
     }
   }
