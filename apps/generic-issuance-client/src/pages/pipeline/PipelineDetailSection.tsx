@@ -34,11 +34,11 @@ import {
   PipelineDisplayManualTicketsSection,
   supportsAddingManualTickets
 } from "./DetailsSections/PipelineDisplayManualTicketsSection";
-import { PipelineHistorySection } from "./DetailsSections/PipelineHistorySection";
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
+import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
@@ -145,7 +145,7 @@ export function PipelineDetailSection({
           <AccordionButton>Version History</AccordionButton>
           <AccordionPanel>
             <SectionContainer>
-              <PipelineHistorySection pipelineInfo={pipelineInfo} />
+              <PipelineVersionHistorySection pipelineInfo={pipelineInfo} />
             </SectionContainer>
           </AccordionPanel>
         </AccordionItem>

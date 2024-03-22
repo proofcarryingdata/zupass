@@ -8,7 +8,7 @@ import styled from "styled-components";
 import { timeAgoStrLong } from "../../../components/PipelineDisplayUtils";
 import { useGIContext } from "../../../helpers/Context";
 
-export function PipelineHistorySection({
+export function PipelineVersionHistorySection({
   pipelineInfo
 }: {
   pipelineInfo: PipelineInfoResponseValue;
