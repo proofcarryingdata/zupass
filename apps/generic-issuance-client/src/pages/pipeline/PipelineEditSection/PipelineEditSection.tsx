@@ -43,6 +43,12 @@ export function PipelineEditSection({
     setEditorValue(stringifyAndFormat(maybeHistoricPipeline));
     setTimeout(() => {
       editorRef.current?.editor?.trigger("fold", "editor.foldLevel3", {});
+      setTimeout(() => {
+        editorRef.current?.editor?.setScrollPosition({
+          scrollLeft: 0,
+          scrollTop: 0
+        });
+      }, 500);
     }, 100);
   }, [maybeHistoricPipeline, editorMaximized]);
 

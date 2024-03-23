@@ -277,7 +277,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       `
     select * from podbox_edit_history
     where pipeline->>'id' = $1
-    order by time_created desc
+    order by time_created asc
     limit $2`,
       [pipelineId, maxQuantity ?? 20]
     );
