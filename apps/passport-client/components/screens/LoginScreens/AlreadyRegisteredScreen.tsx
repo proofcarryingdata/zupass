@@ -32,7 +32,7 @@ import { InlineError } from "../../shared/InlineError";
 import { PasswordInput } from "../../shared/PasswordInput";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
-export function AlreadyRegisteredScreen(): JSX.Element {
+export function AlreadyRegisteredScreen(): JSX.Element | null {
   const dispatch = useDispatch();
   const self = useSelf();
   const query = useQuery();
@@ -129,7 +129,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
       setIsLoggingIn(true);
       await sleep();
       const crypto = await PCDCrypto.newInstance();
-      const encryptionKey = await crypto.argon2(password, salt, 32);
+      const encryptionKey = crypto.argon2(password, salt, 32);
       const storageResult = await requestDownloadAndDecryptStorage(
         appConfig.zupassServer,
         encryptionKey
@@ -157,7 +157,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
         });
       } catch (e) {
         setIsLoggingIn(false);
-        return setError(e.message);
+        return setError(e instanceof Error ? e.message : "Unknown error");
       }
     },
     [dispatch, password, salt]

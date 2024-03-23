@@ -81,7 +81,7 @@ export function NewPasswordForm({
         placeholder={passwordInputPlaceholder || "Password"}
         onEnter={(e): void => {
           e.preventDefault();
-          confirmPasswordRef.current.focus();
+          confirmPasswordRef?.current?.focus();
         }}
         showStrengthProgress
         autoFocus={autoFocus}

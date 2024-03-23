@@ -16,7 +16,7 @@ export function SubscriptionsScreen(): JSX.Element {
   useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
   const closeEmitter = useMemo(() => {
-    return new Emitter<never>();
+    return new Emitter<unknown>();
   }, []);
 
   useLoginIfNoSelf(pendingRequestKeys.viewSubscriptions);
@@ -99,7 +99,7 @@ function SingleProvider({
   subscriptionsList: Subscription[];
   closeEmitter?: Emitter<unknown>;
 }): JSX.Element {
-  const providerName = subscriptions.getProvider(providerUrl).providerName;
+  const providerName = subscriptions?.getProvider(providerUrl)?.providerName;
   return (
     <>
       {subscriptionsList.map((s) => (
@@ -107,7 +107,7 @@ function SingleProvider({
           <Spacer h={8} />
           <SubscriptionInfoRow
             providerUrl={providerUrl}
-            providerName={providerName}
+            providerName={providerName ?? ""}
             info={s.feed}
             subscriptions={subscriptions}
             showErrors={!s.ended}

@@ -7,8 +7,8 @@ import { PrivacyNotice } from "../../shared/PrivacyNotice";
 
 export function PrivacyNoticeScreen(): JSX.Element {
   const query = useQuery();
-  const email = query.get("email");
-  const token = query.get("token");
+  const email = query?.get("email");
+  const token = query?.get("token");
 
   const onClick = useCallback(() => {
     window.location.hash = `#/create-password?email=${encodeURIComponent(

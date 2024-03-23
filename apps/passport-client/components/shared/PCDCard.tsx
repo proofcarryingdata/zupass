@@ -79,7 +79,7 @@ function HeaderContent({
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
-}): JSX.Element {
+}): JSX.Element | null {
   const pcdPackage = usePackage(pcd);
 
   const displayOptions = useMemo(() => {
@@ -88,7 +88,7 @@ function HeaderContent({
     }
   }, [pcd, pcdPackage]);
 
-  const ui = getUI(pcdPackage.name);
+  const ui = pcdPackage ? getUI(pcdPackage.name) : undefined;
 
   let header = null;
   if (isMainIdentity) {
@@ -139,7 +139,9 @@ function CardFooterImpl({
 function getUI(
   pcdPackageName: string
 ): PCDUI<PCD<unknown, unknown>, unknown> | undefined {
-  return pcdRenderers[pcdPackageName];
+  return pcdPackageName in pcdRenderers
+    ? (pcdRenderers as Record<string, PCDUI<PCD>>)[pcdPackageName]
+    : undefined;
 }
 
 /**
@@ -148,7 +150,7 @@ function getUI(
  * of ZK proofs, and can be configured to include different URLs in their QR
  * codes based on the type of ticket provided.
  */
-function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
+function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
   const ticketCategory = pcd.claim.ticket.ticketCategory;
@@ -188,14 +190,14 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element {
       ? `${window.location.origin}/#/generic-checkin`
       : `${window.location.origin}/#/verify`;
 
-  return (
+  return identityPCD ? (
     <Card
       pcd={pcd}
       identityPCD={identityPCD}
       verifyURL={verifyURL}
       idBasedVerifyURL={idBasedVerifyURL}
     />
-  );
+  ) : null;
 }
 
 function CardBody({

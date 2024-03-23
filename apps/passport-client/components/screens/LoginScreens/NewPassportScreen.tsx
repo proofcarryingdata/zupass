@@ -23,9 +23,9 @@ import { ScreenLoader } from "../../shared/ScreenLoader";
  * Show the user that we're generating their Zupass. Direct them to the email
  * verification link.
  */
-export function NewPassportScreen(): JSX.Element {
+export function NewPassportScreen(): JSX.Element | null {
   const query = useQuery();
-  const email = query.get("email");
+  const email = query?.get("email");
 
   useEffect(() => {
     if (!email) {

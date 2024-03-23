@@ -54,7 +54,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
     const folderPathFromQuery = decodeURIComponent(
-      searchParams.get(FOLDER_QUERY_PARAM)
+      searchParams.get(FOLDER_QUERY_PARAM) ?? ""
     );
     if (!folderPathFromQuery) {
       return "";
