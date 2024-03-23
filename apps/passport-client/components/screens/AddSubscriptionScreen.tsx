@@ -55,14 +55,6 @@ import { FolderCard, FolderExplorerContainer } from "./HomeScreen/Folder";
 
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
-// setFetching(false);
-// setInfos(undefined);
-// setFetchedProviderUrl(null);
-// setFetchedProviderName(null);
-// setFetchError(
-//   "Unable to fetch subscriptions. Check that the URL is correct, or try again later."
-// );
-
 enum FeedFetchStates {
   Idle,
   Fetching,
@@ -89,7 +81,7 @@ type FeedFetch =
       error: string;
     };
 
-export function AddSubscriptionScreen(): JSX.Element {
+export function AddSubscriptionScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
@@ -187,6 +179,11 @@ export function AddSubscriptionScreen(): JSX.Element {
 
   const fetchError =
     feedFetch.state === FeedFetchStates.Fetched && feedFetch.success === false;
+
+  // If self is null, the earlier useEffect hook will take us to the login page
+  if (!self) {
+    return null;
+  }
 
   return (
     <>

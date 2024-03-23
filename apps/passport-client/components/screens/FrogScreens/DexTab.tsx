@@ -9,7 +9,7 @@ import { RippleLoader } from "../../core/RippleLoader";
 import { Button, ButtonGroup } from "./Button";
 import { FrogsModal } from "./FrogsModal";
 
-const RARITIES = {
+const RARITIES: Record<Rarity, { label: string; color: string }> = {
   [Rarity.Common]: {
     label: "NORM",
     color: "#2D9061"
@@ -29,6 +29,14 @@ const RARITIES = {
   [Rarity.Mythic]: {
     label: "MYTH",
     color: "linear-gradient(261deg, #D1FFD3 2.82%, #EAF 39.21%, #5BFFFF 99.02%)"
+  },
+  [Rarity.Unknown]: {
+    label: "UNKN",
+    color: "#2D9061"
+  },
+  [Rarity.Object]: {
+    label: "OBJT",
+    color: "#2D9061"
   }
 };
 

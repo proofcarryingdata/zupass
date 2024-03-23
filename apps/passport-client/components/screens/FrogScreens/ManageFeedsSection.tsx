@@ -254,17 +254,20 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
       private: feed.feed.private,
       activeUntil: new Date(feed.feed.activeUntil * 1000).toISOString(),
       cooldown: feed.feed.cooldown,
-      ...Object.keys(Biome).reduce((acc, biome) => {
-        const biomeConfig = feed.feed.biomes[biome];
-        if (biomeConfig) {
-          acc[
-            `biomes${_.upperFirst(
-              biome.replace(/\s/, "").toLowerCase()
-            )}Dropweightscaler`
-          ] = biomeConfig.dropWeightScaler;
-        }
-        return acc;
-      }, {}),
+      ...Object.keys(Biome).reduce(
+        (acc, biome) => {
+          const biomeConfig = feed.feed.biomes[biome];
+          if (biomeConfig) {
+            acc[
+              `biomes${_.upperFirst(
+                biome.replace(/\s/, "").toLowerCase()
+              )}Dropweightscaler`
+            ] = biomeConfig.dropWeightScaler;
+          }
+          return acc;
+        },
+        {} as Record<string, number>
+      ),
       codes: feed.feed.codes?.join(",")
     })),
     null,

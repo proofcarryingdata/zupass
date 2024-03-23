@@ -21,7 +21,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { PasswordInput } from "../shared/PasswordInput";
 
-export function ChangePasswordScreen(): JSX.Element {
+export function ChangePasswordScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
@@ -49,7 +49,7 @@ export function ChangePasswordScreen(): JSX.Element {
   }, [self, navigate]);
 
   const onChangePassword = useCallback(async () => {
-    if (loading) return;
+    if (loading || !self) return;
     setLoading(true);
     try {
       let currentEncryptionKey: HexString;
@@ -66,10 +66,7 @@ export function ChangePasswordScreen(): JSX.Element {
         }
 
         const crypto = await PCDCrypto.newInstance();
-        currentEncryptionKey = await crypto.argon2(
-          currentPassword,
-          saltResult.value
-        );
+        currentEncryptionKey = crypto.argon2(currentPassword, saltResult.value);
       }
       await setPassword(
         newPassword,
@@ -85,20 +82,24 @@ export function ChangePasswordScreen(): JSX.Element {
     } catch (e) {
       console.log("error changing password", e);
       setLoading(false);
-      setError(e.message);
+      setError(e instanceof Error ? e.message : "Unknown error");
     }
   }, [
-    currentPassword,
+    loading,
+    self,
+    isChangePassword,
     newPassword,
     serverStorageRevision,
     dispatch,
     update,
-    loading,
-    self.email,
-    isChangePassword
+    currentPassword
   ]);
 
   let content = null;
+
+  if (!self) {
+    return null;
+  }
 
   if (loading) {
     content = (
