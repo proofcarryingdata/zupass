@@ -168,7 +168,7 @@ export function useCheatCodeActivation(): void {
   }, [ref]);
 
   useEffect(() => {
-    const listener = (e): void => {
+    const listener = (e: KeyboardEvent): void => {
       checkProgress(e.key);
     };
     document.addEventListener("keydown", listener);

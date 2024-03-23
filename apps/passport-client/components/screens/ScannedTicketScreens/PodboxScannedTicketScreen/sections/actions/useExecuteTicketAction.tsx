@@ -35,7 +35,7 @@ export function useExecuteTicketAction({
   eventId,
   ticketId
 }: {
-  action?: PodboxTicketAction;
+  action: PodboxTicketAction;
   eventId: string;
   ticketId: string;
 }): TicketActionExecutor {

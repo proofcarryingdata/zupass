@@ -47,7 +47,7 @@ export function GetWithoutProvingScreen(): JSX.Element | null {
         const pcdPackage = pcds.getPackage(pcd.type);
         return {
           id: pcd.id,
-          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id
+          label: pcdPackage?.getDisplayOptions?.(pcd)?.displayName ?? pcd.id
         };
       }),
     [filteredPCDs, pcds]
@@ -61,6 +61,7 @@ export function GetWithoutProvingScreen(): JSX.Element | null {
   const onSendClick = useCallback(async () => {
     if (selectedPCDID === undefined) return;
     const pcd = pcds.getById(selectedPCDID);
+    if (pcd === undefined) return;
     const pcdPackage = pcds.getPackage(pcd.type);
     if (pcdPackage === undefined) return;
     const serializedPCD = await pcdPackage.serialize(pcd);

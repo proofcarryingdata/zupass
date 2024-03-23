@@ -16,7 +16,7 @@ const fpsLimit = 120;
 
 export function useFrogParticles(
   ref: React.RefObject<HTMLDivElement> | null
-): Container {
+): Container | null {
   const [container, setContainer] = useState<Container | null>(null);
 
   useEffect(() => {
@@ -106,7 +106,7 @@ export function useFrogParticles(
           detectRetina: true
         }
       })
-      .then(setContainer);
+      .then((container) => setContainer(container ?? null));
   }, [ref]);
 
   return container;
@@ -316,7 +316,7 @@ export function useFrogConfetti(): () => Promise<void> {
           }
         }
       })
-      .then(setContainer);
+      .then((container) => setContainer(container ?? null));
   }, [container]);
 
   return confetti;
@@ -416,7 +416,7 @@ export function useCelestialPondParticles(
           }
         }
       })
-      .then(setContainer);
+      .then((container) => setContainer(container ?? null));
   }, [ref]);
 
   return container;
