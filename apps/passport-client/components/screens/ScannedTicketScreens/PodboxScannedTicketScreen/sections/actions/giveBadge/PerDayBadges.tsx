@@ -34,7 +34,7 @@ export function PerDayBadges({
   const [giving, setGiving] = useState(false);
 
   const wrappedSetInProgress = useCallback(
-    (inProgress) => {
+    (inProgress: SetStateAction<boolean>) => {
       setGiving(inProgress);
       setInProgress(inProgress);
     },

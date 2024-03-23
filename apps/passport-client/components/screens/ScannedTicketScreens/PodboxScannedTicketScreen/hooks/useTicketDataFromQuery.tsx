@@ -4,16 +4,14 @@ import { useEffect, useState } from "react";
 import { useQuery } from "../../../../../src/appHooks";
 
 export type TicketIdAndEventId =
+  | { loading: true }
   | {
-      loading: boolean;
+      loading: false;
       ticketId: string;
       eventId: string;
-      error: null;
     }
   | {
-      loading: boolean;
-      ticketId: null;
-      eventId: null;
+      loading: false;
       error: string;
     };
 
@@ -28,17 +26,11 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
   const id = query?.get("id");
   const pcdStr = query?.get("pcd");
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [ticketId, setTicketId] = useState<string | null>(null);
-  const [eventId, setEventId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [ticketData, setTicketData] = useState<TicketIdAndEventId>({
+    loading: true
+  });
 
   useEffect(() => {
-    setLoading(true);
-    setTicketId(null);
-    setEventId(null);
-    setError(null);
-
     if (!id && pcdStr) {
       const decodedPCD = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
@@ -47,27 +39,32 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         );
         const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
         if (verified) {
-          setTicketId(pcd.claim.partialTicket.ticketId as string);
-          setEventId(pcd.claim.partialTicket.eventId as string);
-          setLoading(false);
+          setTicketData({
+            loading: false,
+            ticketId: pcd.claim.partialTicket.ticketId as string,
+            eventId: pcd.claim.partialTicket.eventId as string
+          });
         } else {
-          setLoading(false);
-          setError("Could not verify ticket. Please try scanning again.");
+          setTicketData({
+            loading: false,
+            error: "Could not verify ticket. Please try scanning again."
+          });
         }
       };
 
       verify();
-    } else {
+    } else if (id) {
       // TODO check the timestamp also included here
       const { ticketId, eventId } = JSON.parse(
         Buffer.from(id, "base64").toString()
       );
-      setLoading(false);
-      setTicketId(ticketId);
-      setEventId(eventId);
-      setError(null);
+      setTicketData({
+        loading: false,
+        ticketId,
+        eventId
+      });
     }
   }, [id, pcdStr]);
 
-  return { loading, ticketId, error, eventId };
+  return ticketData;
 }

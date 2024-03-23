@@ -55,7 +55,7 @@ interface GroupedEvent {
 
 const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
   const existingIndex = acc.findIndex(
-    (event) => event.eventName === item.eventName
+    (event: GroupedEvent) => event.eventName === item.eventName
   );
   if (existingIndex > -1) {
     acc[existingIndex].total += 1;
@@ -71,7 +71,7 @@ const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
     } satisfies GroupedEvent);
   }
   return acc;
-}, [] satisfies GroupedEvent[]);
+}, [] as GroupedEvent[]);
 
 /**
  * Renders EdgeCity UI.
@@ -159,19 +159,22 @@ export function EdgeCityHome(): JSX.Element {
   const pcdsByEventName: Record<string, EdDSATicketPCD[]> = folders
     .flatMap((folder) => pcds.getAllPCDsInFolder(folder))
     .filter((pcd): pcd is EdDSATicketPCD => pcd.type === EdDSATicketPCDTypeName)
-    .reduce((acc, pcd) => {
-      // Check if the accumulator already has the eventName key
-      if (!acc[pcd.claim.ticket.eventName]) {
-        // If not, create it and initialize with the current item in an array
-        acc[pcd.claim.ticket.eventName] = [pcd];
-      } else {
-        // If it exists, push the current item to the corresponding array
-        acc[pcd.claim.ticket.eventName].push(pcd);
-      }
-      return acc; // Return the accumulator for the next iteration
-    }, {}); // Initial value of the accumulator is an empty object
+    .reduce(
+      (acc, pcd) => {
+        // Check if the accumulator already has the eventName key
+        if (!acc[pcd.claim.ticket.eventName]) {
+          // If not, create it and initialize with the current item in an array
+          acc[pcd.claim.ticket.eventName] = [pcd];
+        } else {
+          // If it exists, push the current item to the corresponding array
+          acc[pcd.claim.ticket.eventName].push(pcd);
+        }
+        return acc; // Return the accumulator for the next iteration
+      },
+      {} as Record<string, EdDSATicketPCD[]>
+    ); // Initial value of the accumulator is an empty object
 
-  const [ref, setRef] = useState<HTMLElement>();
+  const [ref, setRef] = useState<HTMLElement | null>(null);
   const z_confetti = useZucashConfetti(ref);
 
   if (loading) {

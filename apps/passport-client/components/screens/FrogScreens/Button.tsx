@@ -290,8 +290,8 @@ export const DesertSearchButton = forwardRef(
     return (
       <TextureSearchButton
         ref={buttonRef}
-        backgroundImage="url(/images/frogs/desert.jpg)"
         {...props}
+        backgroundImage="url(/images/frogs/desert.jpg)"
       />
     );
   }
@@ -305,8 +305,8 @@ export const JungleSearchButton = forwardRef(
     return (
       <TextureSearchButton
         ref={buttonRef}
-        backgroundImage="url(/images/frogs/jungle.jpg)"
         {...props}
+        backgroundImage="url(/images/frogs/jungle.jpg)"
       />
     );
   }
@@ -326,11 +326,11 @@ export const CelestialPondSearchButton = forwardRef(
     return (
       <TextureSearchButton
         ref={buttonRef}
-        backgroundImage="url(/images/frogs/celestialpond.jpg)"
         buttonStyle={{
           padding: 0
         }}
         {...props}
+        backgroundImage="url(/images/frogs/celestialpond.jpg)"
       >
         <div style={{ position: "relative", width: "100%", height: "48px" }}>
           <div
@@ -396,7 +396,7 @@ export const WrithingVoidSearchButton = forwardRef(
 
             await new Promise((resolve) => setTimeout(resolve, 16 * 1000));
 
-            await onClick(e);
+            onClick?.(e);
 
             await new Promise((resolve) => setTimeout(resolve, 8 * 1000));
           } finally {
@@ -419,7 +419,6 @@ export const WrithingVoidSearchButton = forwardRef(
       <>
         <TextureSearchButton
           ref={buttonRef}
-          backgroundImage="url(/images/frogs/writhingvoid.png)"
           buttonStyle={{
             padding: 0,
             backgroundColor: "black",
@@ -430,6 +429,7 @@ export const WrithingVoidSearchButton = forwardRef(
           onClick={onClickAnimated}
           disabled={disabled || animating}
           {...props}
+          backgroundImage="url(/images/frogs/writhingvoid.png)"
         >
           <div style={{ position: "relative", width: "100%", height: "48px" }}>
             <div

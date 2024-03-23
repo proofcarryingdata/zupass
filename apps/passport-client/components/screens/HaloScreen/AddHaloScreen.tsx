@@ -32,7 +32,7 @@ export function AddHaloScreen({
   pk2: string;
   rnd: string;
   rndsig: string;
-}): JSX.Element {
+}): JSX.Element | null {
   const location = useLocation();
   const dispatch = useDispatch();
   const [added, setAdded] = useState(false);
@@ -61,15 +61,19 @@ export function AddHaloScreen({
       let producedPCD;
       try {
         producedPCD = await HaLoNoncePCDPackage.prove(args);
+        if (!(await HaLoNoncePCDPackage.verify(producedPCD))) {
+          err(dispatch, "Error Generating PCD", "PCD failed to verify");
+          setInvalidPCD(true);
+        }
+        setPCD(producedPCD);
       } catch (e) {
-        err(dispatch, "Error Generating PCD", e.message);
+        err(
+          dispatch,
+          "Error Generating PCD",
+          e instanceof Error ? e.message : "Unknown error"
+        );
         setInvalidPCD(true);
       }
-      if (!(await HaLoNoncePCDPackage.verify(producedPCD))) {
-        err(dispatch, "Error Generating PCD", "PCD failed to verify");
-        setInvalidPCD(true);
-      }
-      setPCD(producedPCD);
     };
 
     generatePCD();
@@ -77,11 +81,18 @@ export function AddHaloScreen({
 
   const onAddClick = useCallback(async () => {
     try {
+      if (!pcd) {
+        throw new Error("No valid PCD found");
+      }
       const serializedPCD = await HaLoNoncePCDPackage.serialize(pcd);
       dispatch({ type: "add-pcds", pcds: [serializedPCD] });
       setAdded(true);
     } catch (e) {
-      err(dispatch, "Error Adding PCD", e.message);
+      err(
+        dispatch,
+        "Error Adding PCD",
+        e instanceof Error ? e.message : "Unknown error"
+      );
     }
   }, [dispatch, pcd]);
 

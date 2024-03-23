@@ -112,7 +112,7 @@ export function GetWithoutProvingScreen(): JSX.Element | null {
           <Spacer h={16} />
           <Select
             value={options.find((o) => o.id === selectedPCDID)}
-            onChange={(o): void => setSelectedPCDID(o.id)}
+            onChange={(o): void => setSelectedPCDID(o?.id ?? defaultSelection)}
             options={options}
             noOptionsMessage={(): string => "No matching PCDs"}
           />

@@ -31,6 +31,7 @@ import { FaCheck, FaHashtag, FaQuestion } from "react-icons/fa";
 import { FaInfo, FaList, FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import { GrDocumentLocked } from "react-icons/gr";
 import { TbLetterT } from "react-icons/tb";
+import { SingleValue } from "react-select";
 import { Tooltip } from "react-tooltip";
 import styled from "styled-components";
 import { usePCDCollection } from "../../src/appHooks";
@@ -475,8 +476,10 @@ export function PCDArgInput({
     [relevantPCDs, pcdCollection]
   );
   const onChange = useCallback(
-    (option: Option) => {
-      setPCDById(option.id);
+    (option: SingleValue<Option>) => {
+      if (option) {
+        setPCDById(option.id);
+      }
     },
     [setPCDById]
   );

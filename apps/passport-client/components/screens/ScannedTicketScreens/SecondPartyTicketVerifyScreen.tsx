@@ -123,7 +123,7 @@ export function SecondPartyTicketVerifyScreen(): JSX.Element {
     (async (): Promise<void> => {
       if (pcd && isZKEdDSAEventTicketPCD(pcd) && isDevconnectTicket(pcd)) {
         const result = await devconnectCheckByIdWithOffline(
-          pcd.claim.partialTicket.ticketId,
+          pcd.claim.partialTicket.ticketId as string,
           stateContext
         );
         setCheckResult(result);

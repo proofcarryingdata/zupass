@@ -215,7 +215,7 @@ export function FrogCryptoHomeSection(): JSX.Element {
  * Fetch the user's frog crypto state as well as the ability to refetch.
  */
 export function useUserFeedState(subscriptions: Subscription[]): {
-  userState: FrogCryptoUserStateResponseValue;
+  userState: FrogCryptoUserStateResponseValue | null;
   refreshUserState: () => Promise<void>;
 } {
   const [userState, setUserState] =
@@ -240,7 +240,7 @@ export function useUserFeedState(subscriptions: Subscription[]): {
         }
       );
 
-      if (state.error) {
+      if (state.success === false) {
         console.error("Failed to get user state", state.error);
         return;
       }

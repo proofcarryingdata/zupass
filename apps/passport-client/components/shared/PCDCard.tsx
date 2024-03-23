@@ -36,8 +36,10 @@ function PCDCardImpl({
   hideHeader?: boolean;
 }): JSX.Element {
   const clickHandler = useCallback(() => {
-    onClick(pcd.id);
+    onClick?.(pcd.id);
   }, [onClick, pcd.id]);
+
+  isMainIdentity = isMainIdentity ?? false;
 
   if (expanded) {
     return (
@@ -108,7 +110,7 @@ function CardFooterImpl({
 }: {
   pcd: PCD;
   isMainIdentity: boolean;
-}): JSX.Element {
+}): JSX.Element | null {
   const { dispatch } = useContext(StateContext);
 
   const onRemoveClick = useCallback(() => {

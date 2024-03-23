@@ -145,7 +145,6 @@ export function GiveBadgeActionSection({
 
       {!isLoading && !selectedBadge && !disabled && (
         <BadgeSelect
-          value={selectedBadge?.id}
           onChange={(e): void =>
             setSelectedBadge(badgeOptions.find((b) => b.id === e.target.value))
           }

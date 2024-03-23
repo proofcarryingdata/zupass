@@ -195,7 +195,7 @@ const SearchButton = ({
     subManager
   ]);
   const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
-  const freerolls = FROG_FREEROLLS + 1 - score;
+  const freerolls = FROG_FREEROLLS + 1 - (score ?? 0);
   const ButtonComponent = useMemo(() => {
     switch (feed.name) {
       case "The Capital":
@@ -237,7 +237,7 @@ const SearchButton = ({
 /**
  * Returns the last issued frog PCD in the frog crypto folder.
  */
-const useGetLastFrog = (): (() => EdDSAFrogPCD) => {
+const useGetLastFrog = (): (() => EdDSAFrogPCD | undefined) => {
   const pcdCollection = usePCDCollection();
   const getLastFrog = useCallback(
     () =>

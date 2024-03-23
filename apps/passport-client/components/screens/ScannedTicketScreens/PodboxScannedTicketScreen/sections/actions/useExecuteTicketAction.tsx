@@ -44,7 +44,9 @@ export function useExecuteTicketAction({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PodboxTicketActionResult | null>(null);
 
-  const execute = useCallback(async (): Promise<PodboxTicketActionResult> => {
+  const execute = useCallback(async (): Promise<
+    PodboxTicketActionResult | undefined
+  > => {
     if (loading) return;
 
     const emailPCDs = pcdCollection.getPCDsByType(
@@ -86,7 +88,7 @@ export function useExecuteTicketAction({
 
   const reset = useCallback(() => {
     setLoading(false);
-    setResult(undefined);
+    setResult(null);
   }, []);
 
   return {

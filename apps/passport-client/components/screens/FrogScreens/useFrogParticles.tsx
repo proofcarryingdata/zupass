@@ -324,7 +324,7 @@ export function useFrogConfetti(): () => Promise<void> {
 
 export function useCelestialPondParticles(
   ref: React.RefObject<HTMLDivElement> | null
-): Container {
+): Container | null {
   const [container, setContainer] = useState<Container | null>(null);
 
   useEffect(() => {
@@ -424,7 +424,7 @@ export function useCelestialPondParticles(
 
 export function useWrithingVoidParticles(
   ref: React.RefObject<HTMLDivElement> | null
-): () => Promise<Container> {
+): () => Promise<Container | undefined> {
   const play = useCallback(async () => {
     if (!ref) {
       return;
