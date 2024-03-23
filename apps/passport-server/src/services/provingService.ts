@@ -85,7 +85,7 @@ export class ProvingService {
     // malicious DoS attacks on the proving queue
     if (!this.pendingPCDResponse.has(hash)) {
       this.queue.push(request);
-      if (this.queue.length == 1) {
+      if (this.queue.length === 1) {
         this.pendingPCDResponse.set(hash, {
           status: PendingPCDStatus.PROVING,
           serializedPCD: undefined,

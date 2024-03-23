@@ -31,11 +31,11 @@ export function SubscriptionsScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify("");
       setPendingViewSubscriptionsRequest(stringifiedRequest);
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;

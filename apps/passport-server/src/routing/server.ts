@@ -70,7 +70,7 @@ export async function startHttpServer(
         let corsOptions: CorsOptions;
         const methods = ["GET", "POST", "PUT", "DELETE"];
         if (
-          genericIssuanceClientUrl != null &&
+          genericIssuanceClientUrl &&
           req.header("Origin") === genericIssuanceClientUrl
         ) {
           corsOptions = {

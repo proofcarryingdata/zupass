@@ -135,7 +135,7 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
         } else {
           err(dispatch, "Email failed", saltResult.error);
         }
-      } else if (result.value?.devToken != null) {
+      } else if (result.value?.devToken) {
         verifyToken(result.value.devToken);
       } else {
         setEmailSent(true);

@@ -97,7 +97,7 @@ export function checkBody<T, U extends keyof T>(
 ): NonNullable<T[U]> {
   const value = req.body[name];
 
-  if (value == null) {
+  if (value === null || value === undefined) {
     throw new PCDHTTPError(
       400,
       `missing required request body field: '${String(name)}' - was ${value}`

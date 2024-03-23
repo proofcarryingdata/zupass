@@ -39,14 +39,14 @@ export class DiscordService {
 export async function startDiscordService(): Promise<DiscordService | null> {
   logger(`[INIT] initializing Discord`);
 
-  if (process.env.DISCORD_ALERTS_CHANNEL_ID == null) {
+  if (!process.env.DISCORD_ALERTS_CHANNEL_ID) {
     logger(
       `[INIT] missing DISCORD_ALERTS_CHANNEL_ID, not instantiating discord service`
     );
     return null;
   }
 
-  if (process.env.DISCORD_TOKEN == null) {
+  if (!process.env.DISCORD_TOKEN) {
     logger(`[INIT] missing DISCORD_TOKEN, not instantiating discord service`);
     return null;
   }

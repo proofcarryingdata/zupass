@@ -74,11 +74,11 @@ export function GetWithoutProvingScreen(): JSX.Element {
   const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
       const stringifiedRequest = JSON.stringify(request);
       setPendingGetWithoutProvingRequest(stringifiedRequest);
-      if (self == null) {
+      if (!self) {
         window.location.href = `/#/login?redirectedFromAction=true&${pendingGetWithoutProvingRequestKey}=${encodeURIComponent(
           stringifiedRequest
         )}`;
@@ -104,7 +104,7 @@ export function GetWithoutProvingScreen(): JSX.Element {
     return null;
   }
 
-  if (self == null) {
+  if (!self) {
     return null;
   }
 

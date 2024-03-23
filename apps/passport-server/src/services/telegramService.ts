@@ -1078,14 +1078,14 @@ export class TelegramService {
       span?.setAttribute("chatTitle", chat.title);
 
       const parsed = JSON.parse(serializedPCD) as SerializedPCD;
-      if (parsed.type == ZKEdDSAEventTicketPCDTypeName) {
+      if (parsed.type === ZKEdDSAEventTicketPCDTypeName) {
         await this.handleTicketVerification(
           serializedPCD,
           telegramUserId,
           chat.id,
           telegramUsername
         );
-      } else if (parsed.type == ZKEdDSAFrogPCDTypeName) {
+      } else if (parsed.type === ZKEdDSAFrogPCDTypeName) {
         await handleFrogVerification(
           this.context.dbPool,
           serializedPCD,
@@ -1158,7 +1158,7 @@ export class TelegramService {
         this.context.dbPool,
         telegramChatId
       );
-      if (eventsByChat.length == 0)
+      if (eventsByChat.length === 0)
         throw new Error(`No valid events found for given chat`);
       if (!verifyUserEventIds(eventsByChat, validEventIds)) {
         throw new Error(`User submitted event Ids are invalid `);
@@ -1250,7 +1250,7 @@ export class TelegramService {
         this.context.dbPool,
         telegramChatId
       );
-      if (eventsByChat.length == 0)
+      if (eventsByChat.length === 0)
         throw new Error(`No valid events found for given chat`);
       if (!verifyUserEventIds(eventsByChat, validEventIds)) {
         throw new Error(`User submitted event Ids are invalid `);
@@ -1392,7 +1392,7 @@ export class TelegramService {
         this.context.dbPool,
         telegramChatId
       );
-      if (eventsByChat.length == 0)
+      if (eventsByChat.length === 0)
         throw new Error(`No valid events found for given chat`);
       if (!verifyUserEventIds(eventsByChat, validEventIds)) {
         throw new Error(`User submitted event Ids are invalid `);

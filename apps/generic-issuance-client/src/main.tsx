@@ -104,7 +104,7 @@ function InitScripts(): ReactNode {
   useEffect(() => {
     if (!hasSetTitle.current) {
       hasSetTitle.current = true;
-      if (process.env.PODBOX_TITLE_TAG != null) {
+      if (process.env.PODBOX_TITLE_TAG) {
         document.title = `Podbox (${process.env.PODBOX_TITLE_TAG})`;
       }
     }

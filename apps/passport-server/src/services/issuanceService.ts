@@ -167,16 +167,6 @@ export class IssuanceService {
                 ([eventName]) => eventName !== "SBC SRW"
               );
 
-              const srwTickets = Object.entries(ticketsByEvent).filter(
-                ([eventName]) => eventName === "SBC SRW"
-              );
-
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "SBC SRW",
-                recursive: false
-              });
-
               actions.push({
                 type: PCDActionType.DeleteFolder,
                 folder: "Devconnect",
@@ -199,18 +189,6 @@ export class IssuanceService {
                     ])
                   )
                 ).flat()
-              );
-
-              actions.push(
-                ...(await Promise.all(
-                  srwTickets.map(async ([_, tickets]) => ({
-                    type: PCDActionType.ReplaceInFolder,
-                    folder: "SBC SRW",
-                    pcds: await Promise.all(
-                      tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                    )
-                  }))
-                ))
               );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
@@ -238,18 +216,6 @@ export class IssuanceService {
               },
               {
                 folder: "Devconnect",
-                type: PCDPermissionType.DeleteFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.AppendToFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.ReplaceInFolder
-              },
-              {
-                folder: "SBC SRW",
                 type: PCDPermissionType.DeleteFolder
               }
             ]
@@ -685,7 +651,7 @@ export class IssuanceService {
       signature.claim.identityCommitment
     );
 
-    if (user == null) {
+    if (user === null) {
       logger(
         `can't issue PCDs for ${signature.claim.identityCommitment} because ` +
           `we don't have a user with that commitment in the database`
@@ -718,7 +684,7 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (commitmentRow == null || email == null) {
+        if (!commitmentRow || !email) {
           return [];
         }
 
@@ -897,7 +863,7 @@ export class IssuanceService {
       eventId: t.pretix_events_config_id,
       productId: t.devconnect_pretix_items_info_id,
       timestampConsumed:
-        t.zupass_checkin_timestamp == null
+        t.zupass_checkin_timestamp === null
           ? 0
           : new Date(t.zupass_checkin_timestamp).getTime(),
       timestampSigned: Date.now(),
@@ -1009,7 +975,7 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (commitmentRow == null || email == null) {
+        if (!commitmentRow || !email) {
           return [];
         }
 
@@ -1067,7 +1033,7 @@ export class IssuanceService {
         span?.setAttribute("email", email);
       }
 
-      if (commitmentRow == null || email == null) {
+      if (!commitmentRow || !email) {
         return [];
       }
 
@@ -1125,7 +1091,7 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (user == null || email == null) {
+        if (!user || !email) {
           return [];
         }
 
@@ -1473,7 +1439,7 @@ export async function startIssuanceService(
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
 
-  if (zupassRsaKey == null || zupassEddsaKey == null) {
+  if (zupassRsaKey === null || zupassEddsaKey === null) {
     logger("[INIT] can't start issuance service, missing private key");
     return null;
   }
@@ -1571,7 +1537,7 @@ async function setupKnownTicketTypes(
 export function loadRSAPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
-  if (pkeyEnv == null) {
+  if (!pkeyEnv) {
     logger("[INIT] missing environment variable SERVER_RSA_PRIVATE_KEY_BASE64");
     return null;
   }
@@ -1592,7 +1558,7 @@ export function loadRSAPrivateKey(): NodeRSA | null {
 function loadEdDSAPrivateKey(): string | null {
   const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY;
 
-  if (pkeyEnv == null) {
+  if (!pkeyEnv) {
     logger("[INIT] missing environment variable SERVER_EDDSA_PRIVATE_KEY");
     return null;
   }

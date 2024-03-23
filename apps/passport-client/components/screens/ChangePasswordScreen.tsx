@@ -43,7 +43,7 @@ export function ChangePasswordScreen(): JSX.Element {
   const [finished, setFinished] = useState(false);
 
   useEffect(() => {
-    if (self == null) {
+    if (!self) {
       navigate("/login", { replace: true });
     }
   }, [self, navigate]);

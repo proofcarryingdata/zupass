@@ -48,15 +48,15 @@ export default function Page(): JSX.Element {
   const validEventIds = validEventIdsInput
     .split(",")
     .map((s) => s.trim())
-    .filter((s) => s != "");
+    .filter((s) => s !== "");
   const displayValidEventIds = validDisplayEventIdsInput
     .split(",")
     .map((s) => s.trim())
-    .filter((s) => s != "");
+    .filter((s) => s !== "");
   const displayValidProductIds = validDisplayProductIdsInput
     .split(",")
     .map((s) => s.trim())
-    .filter((s) => s != "");
+    .filter((s) => s !== "");
 
   const fieldsToReveal: EdDSATicketFieldsToReveal = useMemo(
     () => ({
@@ -425,7 +425,7 @@ export function openZKEdDSAEventTicketPopup(
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value: validEventIds.length != 0 ? validEventIds : undefined,
+      value: validEventIds.length !== 0 ? validEventIds : undefined,
       userProvided: false
     },
     fieldsToReveal: {

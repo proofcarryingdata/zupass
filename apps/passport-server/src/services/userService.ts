@@ -122,7 +122,7 @@ export class UserService {
     );
 
     if (
-      existingCommitment != null &&
+      existingCommitment !== null &&
       !force &&
       // Users with an `encryption_key` do not have a password,
       // so we will need to verify email ownership with code.

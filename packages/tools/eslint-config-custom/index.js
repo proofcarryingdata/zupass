@@ -47,7 +47,8 @@ module.exports = {
     "prettier/prettier": "error",
     "@typescript-eslint/explicit-function-return-type": "error",
     "@typescript-eslint/no-explicit-any": "error",
-    "import/default": "off"
+    "import/default": "off",
+    eqeqeq: ["error", "always"]
   },
   settings: {
     "import/resolver": {

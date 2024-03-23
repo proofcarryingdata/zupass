@@ -496,7 +496,7 @@ describe("database reads and writes for devconnect ticket features", function ()
         return (
           tickets.filter(
             (ticket: DevconnectPretixTicketDBWithEmailAndItem) =>
-              ticket.position_id == firstTicket.position_id
+              ticket.position_id === firstTicket.position_id
           ).length === 0
         );
       }
@@ -515,7 +515,7 @@ describe("database reads and writes for devconnect ticket features", function ()
         return (
           tickets.filter(
             (ticket: DevconnectPretixTicketDBWithEmailAndItem) =>
-              ticket.position_id == firstTicket.position_id
+              ticket.position_id === firstTicket.position_id
           ).length === 1
         );
       }

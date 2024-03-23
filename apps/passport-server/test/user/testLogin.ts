@@ -56,7 +56,7 @@ export async function testLogin(
   if (userService.bypassEmail) {
     expect(confirmationEmailResult.value).to.not.eq(undefined);
 
-    if (confirmationEmailResult.value?.devToken == null) {
+    if (!confirmationEmailResult.value?.devToken) {
       throw new Error(
         "expected to get the verification token in bypassEmail mode"
       );
@@ -64,7 +64,7 @@ export async function testLogin(
     token = confirmationEmailResult.value.devToken;
   } else {
     const serverToken = await emailTokenService.getTokenForEmail(email);
-    if (serverToken == null) {
+    if (serverToken === null) {
       throw new Error(
         "expected to be able to get the verification token from the internal server state"
       );

@@ -43,15 +43,15 @@ export class RSAImagePCD implements PCD<RSAImagePCDClaim, RSAImagePCDProof> {
 }
 
 export async function prove(args: RSAImagePCDArgs): Promise<RSAImagePCD> {
-  if (args.url.value == null) {
+  if (args.url.value === undefined || args.url.value === "") {
     throw new Error("missing url");
   }
 
-  if (args.title.value == null) {
+  if (args.title.value === undefined || args.title.value === "") {
     throw new Error("missing title");
   }
 
-  if (args.privateKey.value == null) {
+  if (args.privateKey.value === undefined || args.title.value === "") {
     throw new Error("missing private key");
   }
 

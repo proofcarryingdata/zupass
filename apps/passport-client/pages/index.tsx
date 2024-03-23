@@ -108,7 +108,7 @@ class App extends React.Component<object, AppState> {
       return null;
     }
 
-    const hasStack = state.error?.stack != null;
+    const hasStack = !!state.error?.stack;
     return (
       <StateContext.Provider value={this.stateContextState}>
         {!isWebAssemblySupported() ? (
@@ -405,7 +405,7 @@ function setupUsingLaserScanning(): void {
 async function loadInitialState(): Promise<AppState> {
   let identity = loadIdentity();
 
-  if (identity == null) {
+  if (!identity) {
     console.log("Generating a new Semaphore identity...");
     identity = new Identity();
     saveIdentity(identity);
@@ -423,9 +423,9 @@ async function loadInitialState(): Promise<AppState> {
 
   if (
     // If on Zupass legacy login, ask user to set password
-    self != null &&
-    encryptionKey == null &&
-    self.salt == null
+    self &&
+    !encryptionKey &&
+    !self.salt
   ) {
     console.log("Asking existing user to set a password");
     modal = { modalType: "upgrade-account-modal" };

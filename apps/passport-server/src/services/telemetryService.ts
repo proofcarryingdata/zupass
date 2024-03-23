@@ -184,9 +184,9 @@ export async function traced<T>(
     try {
       const result = await func(span);
       if (
-        options == null ||
-        options.autoEndSpan == null ||
-        options.autoEndSpan == true
+        !options ||
+        options.autoEndSpan === undefined ||
+        options.autoEndSpan === true
       ) {
         span.end();
       }

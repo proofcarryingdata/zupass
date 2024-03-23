@@ -73,11 +73,11 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
   ];
 
   const ethLatAmAttendeeProduct = ethLatAmConfiguredEvents[0].products.find(
-    (product) => product.name == "eth-latam-attendee-product"
+    (product) => product.name === "eth-latam-attendee-product"
   );
   expectToExist(ethLatAmAttendeeProduct);
   const ethLatAmBouncerProduct = ethLatAmConfiguredEvents[0].products.find(
-    (product) => product.name == "eth-lat-am-bouncer-product"
+    (product) => product.name === "eth-lat-am-bouncer-product"
   );
   expectToExist(ethLatAmBouncerProduct);
 

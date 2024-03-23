@@ -99,16 +99,16 @@ export async function onNamedAPIError<TResult>(
     const resJSON = JSON.parse(resText);
     // Server must at least specify error.name for us to take its other
     // fields.  If so, we take all fields, but delete any with the wrong type.
-    if (resJSON.error?.name && typeof resJSON.error.name == "string") {
+    if (resJSON.error?.name && typeof resJSON.error.name === "string") {
       serverProvidedError = true;
       apiError = resJSON.error;
       if (
         "detailedMessage" in apiError &&
-        typeof apiError.detailedMessage != "string"
+        typeof apiError.detailedMessage !== "string"
       ) {
         delete apiError.detailedMessage;
       }
-      if ("code" in apiError && typeof apiError.code != "number") {
+      if ("code" in apiError && typeof apiError.code !== "number") {
         delete apiError.code;
       }
     } else {

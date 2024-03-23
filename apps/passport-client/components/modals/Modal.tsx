@@ -50,7 +50,7 @@ export function MaybeModal({
 
   const body = getModalBody(modal, isProveOrAddScreen);
 
-  if (body == null)
+  if (!body)
     return (
       <>
         <Overscroll />

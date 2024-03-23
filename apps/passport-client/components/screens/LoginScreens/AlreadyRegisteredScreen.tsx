@@ -75,7 +75,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
       if (!result.success) {
         setError("Couldn't send pasword reset email. Try again later.");
         setSendingConfirmationEmail(false);
-      } else if (result.value?.devToken != null) {
+      } else if (result.value?.devToken) {
         setSendingConfirmationEmail(false);
         verifyToken(result.value?.devToken);
       } else {
@@ -122,7 +122,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
       e.preventDefault();
       setError(undefined);
 
-      if (password == "" || password == null) {
+      if (password === "" || password === null) {
         return setError("Enter a password");
       }
 

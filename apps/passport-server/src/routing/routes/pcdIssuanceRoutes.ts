@@ -50,7 +50,7 @@ export function initPCDIssuanceRoutes(
    * Zuconnect, Zuzalu, etc.
    */
   app.get("/issue/enabled", async (req: Request, res: Response) => {
-    const result = issuanceService != null;
+    const result = issuanceService !== null;
     res.json(result satisfies IssuanceEnabledResponseValue);
   });
 
