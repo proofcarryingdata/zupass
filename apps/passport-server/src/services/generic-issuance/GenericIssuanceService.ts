@@ -169,6 +169,12 @@ export class GenericIssuanceService {
     return this.pipelineSubservice.getAllPipelineInstances();
   }
 
+  public getPipeline(
+    pipelineId: string
+  ): Promise<PipelineDefinition | undefined> {
+    return this.pipelineSubservice.loadPipelineDefinition(pipelineId);
+  }
+
   public async upsertPipelineDefinition(
     user: PipelineUser,
     pipelineDefinition: PipelineDefinition

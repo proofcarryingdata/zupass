@@ -1,6 +1,7 @@
 import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import {
+  LemonadePipelineDefinition,
   PipelineLogLevel,
   PodboxTicketActionResponseValue,
   requestGenericIssuanceSemaphoreGroup
@@ -510,7 +511,10 @@ describe("generic issuance - PretixPipeline", function () {
     expectToExist(adminUser);
 
     // Delete the manual tickets from the definition
-    const newPipelineDefinition = structuredClone(ethLatAmPipeline);
+    const latestPipeline = (await giService.getPipeline(
+      ethLatAmPipeline.id
+    )) as LemonadePipelineDefinition;
+    const newPipelineDefinition = structuredClone(latestPipeline);
     newPipelineDefinition.options.manualTickets = [];
     // Update the definition
     const { restartPromise } = await giService.upsertPipelineDefinition(

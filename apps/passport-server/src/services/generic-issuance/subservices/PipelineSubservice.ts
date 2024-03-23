@@ -110,6 +110,15 @@ export class PipelineSubservice {
   }
 
   /**
+   * Gets a particular pipeline slot.
+   */
+  public getPipeline(
+    pipelineId: string
+  ): Promise<PipelineDefinition | undefined> {
+    return this.pipelineDB.getDefinition(pipelineId);
+  }
+
+  /**
    * Gets all instances of {@link Pipeline} that {@link PipelineExecutorSubservice} was
    * able to successfully start via {@link instantiatePipeline}.
    */
