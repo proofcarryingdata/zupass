@@ -25,7 +25,7 @@ import {
  * Calculates the appropriate hash for a POD value represented as a string,
  * which could be one of multiple value types (see {@link podValueHash}).
  */
-function podStringHash(input: string): bigint {
+export function podStringHash(input: string): bigint {
   // TODO(POD-P2): Finalize choice of hash for POD names and string values.
   return BigInt("0x" + sha256(input)) >> 8n;
 }
@@ -34,7 +34,7 @@ function podStringHash(input: string): bigint {
  * Calculates the appropriate hash for a POD value represented as an integer,
  * which could be one of multiple value types (see {@link podValueHash}).
  */
-function podIntHash(input: bigint): bigint {
+export function podIntHash(input: bigint): bigint {
   // TODO(POD-P2): Finalize choice of hash for POD integer values.
   return poseidon1([input]);
 }
@@ -70,21 +70,29 @@ export function podMerkleTreeHash(left: bigint, right: bigint): bigint {
 }
 
 /**
- * Encodes an EdDSA signature into a compact string representation.
- * The output is 64 bytes, represented as 128 hex digits.
+ * Encodes a private key to a string.  The input must be 32 bytes.  The output
+ * is represented as 64 hex digits.
+ *
+ * @throws TypeError if the size of the buffer is incorrect.
  */
-export function encodeSignature(rawSignature: Signature): string {
-  return toHexString(packSignature(rawSignature));
+export function encodePrivateKey(rawPrivateKey: Uint8Array): string {
+  if (!((rawPrivateKey as unknown) instanceof Uint8Array)) {
+    throw TypeError("Private key must be Buffer or Uint8Array.");
+  }
+  if (rawPrivateKey.length !== 32) {
+    throw TypeError("Private key must be a 32 bytes.");
+  }
+  return toHexString(rawPrivateKey);
 }
 
 /**
- * Decodes a signature produced by {@link encodeSignature}.  The input must be
- * 64 bytes, represented as 128 hex digits.
+ * Decodes a private key's bytes from a string.  The input must be 32 bytes,
+ * expressed as 64 hex digits.
  *
- * @throws TypeError if the signature format is incorrect
+ * @throws TypeError if the private key format is incorrect.
  */
-export function decodeSignature(encodedSignature: string): Signature<bigint> {
-  return unpackSignature(fromHexString(checkSignatureFormat(encodedSignature)));
+export function decodePrivateKey(privateKey: string): Buffer {
+  return fromHexString(checkPrivateKeyFormat(privateKey));
 }
 
 /**
@@ -112,26 +120,21 @@ export function decodePublicKey(publicKey: string): Point<bigint> {
 }
 
 /**
- * Encodes a private key to a string.  The input must be 32 bytes.  The output
- * is represented as 64 hex digits.
- *
- * @throws TypeError if the size of the buffer is incorrect.
+ * Encodes an EdDSA signature into a compact string representation.
+ * The output is 64 bytes, represented as 128 hex digits.
  */
-export function encodePrivateKey(rawPrivateKey: Buffer): string {
-  if (rawPrivateKey.length !== 32) {
-    throw TypeError("Private key must be 32 bytes.");
-  }
-  return toHexString(rawPrivateKey);
+export function encodeSignature(rawSignature: Signature): string {
+  return toHexString(packSignature(rawSignature));
 }
 
 /**
- * Decodes a private key's bytes from a string.  The input must be 32 bytes,
- * expressed as 64 hex digits.
+ * Decodes a signature produced by {@link encodeSignature}.  The input must be
+ * 64 bytes, represented as 128 hex digits.
  *
- * @throws TypeError if the private key format is incorrect.
+ * @throws TypeError if the signature format is incorrect
  */
-export function decodePrivateKey(privateKey: string): Buffer {
-  return fromHexString(checkPrivateKeyFormat(privateKey));
+export function decodeSignature(encodedSignature: string): Signature<bigint> {
+  return unpackSignature(fromHexString(checkSignatureFormat(encodedSignature)));
 }
 
 /**
@@ -149,6 +152,10 @@ export function signPODRoot(
   root: bigint,
   privateKey: string
 ): { signature: string; publicKey: string } {
+  if (typeof root !== "bigint") {
+    throw new TypeError("POD root must be a bigint not `${typeof root}`.");
+  }
+
   const privateKeyBytes = decodePrivateKey(privateKey);
 
   const unpackedSignature = signMessage(privateKeyBytes, root);

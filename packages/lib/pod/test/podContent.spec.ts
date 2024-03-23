@@ -2,12 +2,24 @@ import { expect } from "chai";
 import "mocha";
 import {
   PODContent,
+  PODName,
   PODValue,
+  POD_CRYPTOGRAPHIC_MAX,
+  POD_CRYPTOGRAPHIC_MIN,
+  POD_INT_MAX,
+  POD_INT_MIN,
+  clonePODEntries,
+  clonePODValue,
   isPODNumericValue,
   podNameHash,
   podValueHash
 } from "../src";
-import { sampleEntries1, sampleEntries2 } from "./common";
+import {
+  expectedContentID1,
+  expectedContentID2,
+  sampleEntries1,
+  sampleEntries2
+} from "./common";
 
 describe("PODContent class should work", async function () {
   const expectedCount1 = Object.entries(sampleEntries1).length;
@@ -52,6 +64,15 @@ describe("PODContent class should work", async function () {
     );
   });
 
+  it("content IDs should match saved expected values", function () {
+    // This test exists to detect breaking changes in future which could
+    // impact the compatibility of saved PODs.  If sample inputs changed, you
+    // can simply change the expected outputs.  Otherwise think about why
+    // these values changed.
+    expect(podContent1.contentID).to.eq(expectedContentID1);
+    expect(podContent2.contentID).to.eq(expectedContentID2);
+  });
+
   it("should allow access to entries by name", function () {
     for (const entryName of podContent1.listNames()) {
       expect(podContent1.getValue(entryName)).to.deep.eq(
@@ -61,6 +82,11 @@ describe("PODContent class should work", async function () {
         (sampleEntries1 as Record<string, PODValue>)[entryName].value
       );
     }
+  });
+
+  it("should return undefined for absent entries by name", function () {
+    expect(podContent1.getValue("no_such_entry")).to.be.undefined;
+    expect(podContent1.getRawValue("no_such_entry")).to.be.undefined;
   });
 
   it("should generate and verify an entry Merkle proof", function () {
@@ -139,6 +165,114 @@ describe("PODContent class should work", async function () {
     expect(transferredContent2.listNames()).to.deep.eq(expectedNameOrder2);
   });
 
-  // TODO(POD-P1): Tests for mutability - i.e. mutating return values
-  // TODO(POD-P1): Tests for illegal names & values in PODEntries
+  it("should not be mutable via getValue", function () {
+    const pc = PODContent.fromEntries(sampleEntries1);
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+
+    const gotValue = pc.getValue("A");
+    if (!gotValue) {
+      throw new Error("Missing value A");
+    }
+    gotValue.type = "string";
+    gotValue.value = "foo";
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+  });
+
+  it("should not be mutable via asEntries", function () {
+    const pc = PODContent.fromEntries(sampleEntries1);
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+
+    const gotEntries = pc.asEntries() as Record<PODName, PODValue>;
+    gotEntries["A"].value = 42n;
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+    gotEntries["A"] = { type: "string", value: "foo" };
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+  });
+
+  it("should not be mutable via listEntries", function () {
+    const pc = PODContent.fromEntries(sampleEntries1);
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+
+    for (const { name, value } of pc.listEntries()) {
+      if (name === "A") {
+        value.type = "string";
+        value.value = "foo";
+        break;
+      }
+    }
+    expect(pc.getValue("A")).to.deep.eq({ type: "int", value: 123n });
+    expect(pc.getRawValue("A")).to.eq(123n);
+  });
+
+  it("should reject invalid names at construction", function () {
+    const badNames = [
+      "",
+      "1",
+      "0x123",
+      "123abc",
+      "1_2_3",
+      "foo.bar.baz",
+      "foo:bar",
+      ":",
+      "!bang",
+      "no spaces",
+      "no\ttabs"
+    ];
+    for (const badName of badNames) {
+      const testEntries = clonePODEntries(sampleEntries1) as Record<
+        PODName,
+        PODValue
+      >;
+      testEntries[badName] = { type: "string", value: "bad" };
+
+      const fn = (): void => {
+        PODContent.fromEntries(testEntries);
+      };
+      expect(fn).to.throw(TypeError);
+    }
+  });
+
+  it("should reject invalid values at construction", function () {
+    const testCases = [
+      undefined,
+      {},
+      { type: "int" },
+      { value: 0n },
+      { type: undefined, value: 0n },
+      { type: "string", value: undefined },
+      { type: "something", value: 0n },
+      { type: "bigint", value: 0n },
+      { type: "something", value: "something" },
+      { type: "string", value: 0n },
+      { type: "string", value: 123 },
+      { type: "cryptographic", value: "hello" },
+      { type: "cryptographic", value: 123 },
+      { type: "cryptographic", value: -1n },
+      { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MIN - 1n },
+      { type: "cryptographic", value: POD_CRYPTOGRAPHIC_MAX + 1n },
+      { type: "int", value: "hello" },
+      { type: "int", value: 123 },
+      { type: "int", value: -1n },
+      { type: "int", value: POD_INT_MIN - 1n },
+      { type: "int", value: POD_INT_MAX + 1n }
+    ] as PODValue[];
+    for (const testInput of testCases) {
+      const testEntries = clonePODEntries(sampleEntries1) as Record<
+        PODName,
+        PODValue
+      >;
+      testEntries["badValueName"] = clonePODValue(testInput);
+
+      const fn = (): void => {
+        PODContent.fromEntries(testEntries);
+      };
+      expect(fn).to.throw(TypeError, "badValueName");
+    }
+  });
 });

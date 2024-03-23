@@ -33,8 +33,62 @@ export const sampleEntries1 = {
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;
 
+// If sample entries or private key change above, this value will need to
+// change.  Test failures will indicate the new value.
+export const expectedContentID1 =
+  21748523748810072846647845097417136490972606253431724953054174411568740252986n;
+
+// If sample entries or private key change above, this value will need to
+// change.  Test failures will indicate the new value.
+export const expectedSignature1 =
+  "e0031246c8657545c154f407006f6856de2f69acd00f23b637ec23620792f10c7bf70befe45c79acf2a8cbea0eb4ffe1beef30ff23f2623fd5acf51beaa0d905";
+
 export const sampleEntries2 = {
   attendee: { type: "cryptographic", value: ownerIdentity.commitment },
   eventID: { type: "cryptographic", value: 456n },
   ticketID: { type: "cryptographic", value: 999n }
 } satisfies PODEntries;
+
+// If sample entries or private key change above, this value will need to
+// change.  Test failures will indicate the new value.
+export const expectedContentID2 =
+  8121973595251725959527136190050016648811901981184487048534858036206640503232n;
+
+// If sample entries or private key change above, this value will need to
+// change.  Test failures will indicate the new value.
+export const expectedSignature2 =
+  "4febca252ff7e55c29bbada47b8b4b32f667e1270eb77f3a9b0f8ee73bebe689eb89d8ff85c4abd22bf32da15ad7f7fbf2c7e7b1d40ade685cb39c990f9f8b00";
+
+export const testStringsToHash = [
+  "",
+  "a",
+  "A",
+  "\0",
+  "valid_identifier",
+  "not a valid Identifier",
+  "😜"
+];
+
+export const testIntsToHash = [
+  0n,
+
+  1n,
+  -1n,
+
+  0xdeadbeefn,
+  -0xdeadbeefn,
+
+  // 128-bit large value
+  0xfeedface_deadbeef_feedface_deadbeefn,
+  -0xfeedface_deadbeef_feedface_deadbeefn,
+
+  // Max 256-bit 32-byte integer value (too large for a circuit, but hashable
+  // after being reduced mod R).
+  0xffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffff_ffffffffn
+];
+
+export const testPrivateKeys = [
+  privateKey,
+  "00112233445566778899AABBCCDDEEFF00112233445566778899aabbccddeeff",
+  "FFEEDDCCBBAA99887766554433221100ffeeddccbbaa99887766554433221100"
+];
