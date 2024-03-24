@@ -95,14 +95,14 @@ type TicketId = {
 
 function useTicketId(): TicketId {
   const query = useQuery();
-  const id = query.get("id");
+  const id = query?.get("id");
   const [ticketId, setTicketId] = useState<string | null>(null);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!id) {
-      const pcdStr = query.get("pcd");
+      const pcdStr = query?.get("pcd");
       const decodedPCD = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
         const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
@@ -111,7 +111,7 @@ function useTicketId(): TicketId {
 
         const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
         if (verified) {
-          setTicketId(pcd.claim.partialTicket.ticketId);
+          setTicketId(pcd.claim.partialTicket.ticketId as string);
           setLoading(false);
         } else {
           setLoading(false);
@@ -140,7 +140,9 @@ function TicketErrorContent({ error }: { error: TicketError }): JSX.Element {
           <Spacer h={8} />
           <Spread>
             <span>Checked in at</span>
-            <span>{new Date(error.checkinTimestamp).toLocaleString()}</span>
+            <span>
+              {new Date(error.checkinTimestamp ?? Date.now()).toLocaleString()}
+            </span>
           </Spread>
           <Spread>
             <span>Checked in by</span>
@@ -295,7 +297,7 @@ export function useCheckTicketById(ticketId: string | undefined):
     doCheckTicketById(ticketId);
   }, [doCheckTicketById, ticketId]);
 
-  if (inProgress) {
+  if (inProgress || !result) {
     return { loading: true, result: undefined };
   } else {
     return { loading: false, result };
@@ -354,7 +356,7 @@ function CheckInSection({ ticketId }: { ticketId: string }): JSX.Element {
             </>
           ) : (
             <>
-              <TicketErrorContent error={checkinError} />
+              {checkinError && <TicketErrorContent error={checkinError} />}
               <Spacer h={16} />
               <ScanAnotherTicket />
               {!usingLaserScanner && <Home />}
