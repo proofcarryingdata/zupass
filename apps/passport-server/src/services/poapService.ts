@@ -299,7 +299,7 @@ export class PoapService {
 
   /**
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
-   * Edge City Denver ticket and returns the ID of that ticket.
+   * Edge City Denver 7-day ticket and returns the ID of that ticket.
    *
    * This function throws an error in the case that the PCD is not
    * valid; for example, here are a few invalid cases
@@ -558,7 +558,6 @@ export class PoapService {
     serializedPCD: string
   ): Promise<string> {
     try {
-      // fix
       const ticketId = await this.validateEdgeCityDenverTicket(serializedPCD);
       const poapLink = await this.getPoapClaimUrlByTicketId(
         ticketId,
