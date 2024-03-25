@@ -10,7 +10,8 @@
     "esModuleInterop": true,
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": true
   },
   "include": [
     "**/*.ts",

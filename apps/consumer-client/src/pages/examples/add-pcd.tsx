@@ -109,10 +109,7 @@ export default function Page(): JSX.Element {
         <br />
         <button
           onClick={(): Promise<void> =>
-            addSignatureProofPCD(
-              signedMessage,
-              folder.length > 0 ? folder : undefined
-            )
+            addSignatureProofPCD(signedMessage, folder.length > 0 ? folder : "")
           }
         >
           prove and add a signature proof
@@ -186,11 +183,12 @@ function AddEthAddrPCDButton(): JSX.Element {
     if (!("ethereum" in window)) {
       alert("Please install MetaMask to use this dApp!");
     } else {
-      const ethereum: ethers.providers.ExternalProvider = window.ethereum;
+      const ethereum: ethers.providers.ExternalProvider =
+        window.ethereum as ethers.providers.ExternalProvider;
       const provider = new ethers.providers.Web3Provider(ethereum);
 
       (async function (): Promise<void> {
-        await ethereum.request({ method: "eth_requestAccounts" });
+        await ethereum.request?.({ method: "eth_requestAccounts" });
         const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
         const signature = await provider
           .getSigner()
@@ -259,11 +257,12 @@ function AddEthGroupPCDButton(): JSX.Element {
     if (!("ethereum" in window)) {
       alert("Please install MetaMask to use this dApp!");
     } else {
-      const ethereum: ethers.providers.ExternalProvider = window.ethereum;
+      const ethereum: ethers.providers.ExternalProvider =
+        window.ethereum as ethers.providers.ExternalProvider;
       const provider = new ethers.providers.Web3Provider(ethereum);
 
       (async function (): Promise<void> {
-        await ethereum.request({ method: "eth_requestAccounts" });
+        await ethereum.request?.({ method: "eth_requestAccounts" });
         const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
 
         const msgHash = Buffer.from(

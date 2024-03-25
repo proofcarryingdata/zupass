@@ -39,7 +39,9 @@ export default function ZuAuthExample(): JSX.Element {
     (async function (): Promise<void> {
       setAuthenticated(await isLoggedIn());
 
-      const savedFields = JSON.parse(localStorage.getItem("fieldsToReveal"));
+      const savedFields = JSON.parse(
+        localStorage.getItem("fieldsToReveal") ?? ""
+      );
 
       if (savedFields) {
         setFieldsToReveal(savedFields);
@@ -51,7 +53,9 @@ export default function ZuAuthExample(): JSX.Element {
     setFieldsToReveal((prevState: EdDSATicketFieldsToReveal) => {
       const revealedFields = {
         ...prevState,
-        [fieldName]: !prevState[fieldName]
+        [fieldName]: !(prevState as Record<string, boolean | undefined>)[
+          fieldName
+        ]
       };
 
       localStorage.setItem("fieldsToReveal", JSON.stringify(revealedFields));
@@ -87,7 +91,11 @@ export default function ZuAuthExample(): JSX.Element {
                 <input
                   type="checkbox"
                   disabled={!!authenticated}
-                  checked={fieldsToReveal[fieldName]}
+                  checked={
+                    (fieldsToReveal as Record<string, boolean | undefined>)[
+                      fieldName
+                    ]
+                  }
                   onChange={(): void => toggleFieldToReveal(fieldName)}
                 />
                 {fieldName}
@@ -104,9 +112,9 @@ export default function ZuAuthExample(): JSX.Element {
       {authenticated && (
         <ExampleContainer>
           <ul>
-            {Object.keys(authenticated).map((fieldName) => (
+            {Object.entries(authenticated).map(([fieldName, value]) => (
               <li key={fieldName}>
-                {fieldName}: {authenticated[fieldName]}
+                {fieldName}: {value}
               </li>
             ))}
           </ul>

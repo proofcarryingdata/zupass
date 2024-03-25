@@ -160,7 +160,7 @@ function useZKEdDSAFrogProof(
   onVerified: (valid: boolean) => void,
   externalNullifier: string,
   watermark: string
-): { pcd: ZKEdDSAFrogPCD | undefined; error: Error } {
+): { pcd: ZKEdDSAFrogPCD | undefined; error: Error | undefined } {
   const [error, _setError] = useState<Error | undefined>();
   const zkEdDSAFrogPCD = useSerializedPCD(ZKEdDSAFrogPCDPackage, pcdStr);
 
