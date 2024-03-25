@@ -51,21 +51,24 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
     async (token: string) => {
       if (verifyingCode) return;
 
-      setVerifyingCode(true);
-      const verifyTokenResult = await requestVerifyToken(
-        appConfig.zupassServer,
-        email,
-        token
-      );
-      setVerifyingCode(false);
-      if (verifyTokenResult.success) {
-        window.location.hash = `#/create-password?email=${encodeURIComponent(
-          email
-        )}&token=${encodeURIComponent(token)}`;
-        return;
-      } else {
-        setError("Invalid confirmation code");
+      if (email) {
+        setVerifyingCode(true);
+        const verifyTokenResult = await requestVerifyToken(
+          appConfig.zupassServer,
+          email,
+          token
+        );
+        setVerifyingCode(false);
+        if (verifyTokenResult.success) {
+          window.location.hash = `#/create-password?email=${encodeURIComponent(
+            email
+          )}&token=${encodeURIComponent(token)}`;
+          return;
+        }
       }
+
+      // If we did not succeed in verifying the token, show an error.
+      setError("Invalid confirmation code");
     },
     [email, verifyingCode]
   );
@@ -150,7 +153,7 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
       }
 
       try {
-        await dispatch({
+        dispatch({
           type: "load-after-login",
           storage: storageResult.value,
           encryptionKey: encryptionKey

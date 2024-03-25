@@ -29,7 +29,7 @@ import {
 
 export function DevconnectCheckinByIdScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
-  const { loading: verifyingTicketId, ticketId } = useTicketId();
+  const { loading: verifyingTicketId, ticketId, error } = useTicketId();
 
   let content = null;
 
@@ -40,8 +40,16 @@ export function DevconnectCheckinByIdScreen(): JSX.Element {
         <RippleLoader />
       </div>
     );
-  } else {
+  } else if (ticketId) {
     content = <CheckInById ticketId={ticketId} />;
+  } else {
+    content = (
+      <div>
+        {error ?? "Could not verify ticket. Please try scanning again."}
+        <Spacer h={32} />
+        <ScanAnotherTicket />
+      </div>
+    );
   }
 
   return (
@@ -103,6 +111,11 @@ function useTicketId(): TicketId {
   useEffect(() => {
     if (!id) {
       const pcdStr = query?.get("pcd");
+      if (!pcdStr) {
+        setLoading(false);
+        setError("Could not verify ticket. Please try scanning again.");
+        return;
+      }
       const decodedPCD = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
         const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
@@ -116,6 +129,7 @@ function useTicketId(): TicketId {
         } else {
           setLoading(false);
           setError("Could not verify ticket. Please try scanning again.");
+          return;
         }
       };
 

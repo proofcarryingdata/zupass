@@ -219,7 +219,7 @@ export function useZucashConfetti(
           }
         }
       })
-      .then(setContainer);
+      .then((container) => setContainer(container ?? null));
   }, [container, element]);
 
   return confetti;
