@@ -1,6 +1,18 @@
 import { BadgeConfig } from "./genericIssuanceTypes";
 
-export const EDGE_CITY_EVENT_ID = "31f76e79-09ed-59ee-aab0-befa73a56baf";
+export const EDGE_CITY_EVENT_ID = "7eb74440-1891-4cd5-a351-b24a5b03e669";
+export const EDGE_CITY_GA_PRODUCT_ID = "e1dc58c3-2089-4c17-b282-bc37ddbb30b0";
+export const EDGE_CITY_EARLY_BIRD_PRODUCT_ID =
+  "881ceef7-e38c-4611-9de2-1506d13b8f48";
+export const EDGE_CITY_ORGANIZER_PRODUCT_ID =
+  "2127ea78-4144-4850-8847-b1bec9e53bd1";
+
+export const EDGE_CITY_7_DAY_PRODUCT_IDS = [
+  EDGE_CITY_GA_PRODUCT_ID,
+  EDGE_CITY_EARLY_BIRD_PRODUCT_ID,
+  EDGE_CITY_ORGANIZER_PRODUCT_ID
+];
+
 export const LEMONADE_EDDSA_PUBKEY: [string, string] = [
   "08ea870be3a405ef554d2b1ab50c496f1277e0fee0b3b2516ef405158cd44a02",
   "1d854a02e0324e02ec43703f2657eca621adc6af64043db705b743554ed8be04"
