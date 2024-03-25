@@ -190,6 +190,7 @@ export async function dispatch(
     case "set-self":
       return setSelf(action.self, state, update);
     case "error":
+      console.log("got error");
       return update({ error: action.error });
     case "clear-error":
       return clearError(state, update);

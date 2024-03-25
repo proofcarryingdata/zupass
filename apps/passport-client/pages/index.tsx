@@ -6,7 +6,7 @@ import {
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
-import { useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "react-hot-toast";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -41,17 +41,13 @@ import { AppContainer } from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
+import { useStateContext } from "../src/appHooks";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
 import { getOrGenerateCheckinCredential } from "../src/checkin";
-import {
-  Action,
-  StateContext,
-  StateContextValue,
-  dispatch
-} from "../src/dispatch";
+import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import {
   loadCheckedInOfflineDevconnectTickets,
@@ -72,67 +68,19 @@ import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
 import { validateAndLogInitialAppState } from "../src/validateState";
 
-function useLoadAppState(): [
-  AppState | undefined,
-  React.Dispatch<React.SetStateAction<AppState | undefined>>
-] {
-  const [appState, setAppState] = useState<AppState | undefined>(undefined);
-  useEffect(() => {
-    loadInitialState().then((state) => setAppState(state));
-  });
+function useBackgroundJobs(): void {
+  const { update, getState, dispatch } = useStateContext();
 
-  return [appState, setAppState];
-}
-
-function App(): JSX.Element | null {
-  const [state, setAppState] = useLoadAppState();
-
-  if (!state) {
-    return null;
-  }
-
-  return <MainApp state={state} setAppState={setAppState} />;
-}
-
-function MainApp({
-  state,
-  setAppState
-}: {
-  state: AppState;
-  setAppState: React.Dispatch<React.SetStateAction<AppState | undefined>>;
-}): JSX.Element {
-  const stateEmitter: StateEmitter = useMemo(() => new Emitter(), []);
-
-  const update = useMemo(
-    () =>
-      (diff: Partial<AppState>): void => {
-        setAppState({ ...state, ...diff });
-      },
-    [setAppState, state]
-  );
+  // const [activePollTimeout, setActivePollTimeout] = useState<
+  //   NodeJS.Timeout | undefined
+  // >(undefined);
+  // const [lastBackgroundPoll, setLastBackgroundPoll] = useState(0);
 
   useEffect(() => {
-    stateEmitter.emit(state);
-  }, [state, stateEmitter]);
-
-  const actionDispatch = useMemo(
-    () =>
-      (action: Action): Promise<void> =>
-        dispatch(action, state, update),
-    [state, update]
-  );
-
-  const stateContextState: StateContextValue = {
-    getState: () => state,
-    stateEmitter: stateEmitter,
-    dispatch: actionDispatch,
-    update: update
-  };
-
-  const startBackgroundJobs = useMemo(() => {
     let activePollTimeout: NodeJS.Timeout | undefined = undefined;
-    const BG_POLL_INTERVAL_MS = 1000 * 60;
     let lastBackgroundPoll = 0;
+    const BG_POLL_INTERVAL_MS = 1000 * 60;
+
     /**
      * Idempotently enables or disables periodic polling of jobPollServerUpdates,
      * based on whether the window is visible or invisible.
@@ -163,24 +111,6 @@ function MainApp({
       }
     };
 
-    const generateCheckinCredential = async (): Promise<void> => {
-      // This ensures that the check-in credential is pre-cached before the
-      // first check-in attempt.
-      try {
-        if (!state?.identity) {
-          throw new Error("Missing identity");
-        }
-        await getOrGenerateCheckinCredential(state.identity);
-      } catch (e) {
-        console.log("Could not get or generate checkin credential:", e);
-      }
-    };
-
-    const jobCheckConnectivity = async (): Promise<void> => {
-      window.addEventListener("offline", () => setIsOffline(true));
-      window.addEventListener("online", () => setIsOffline(false));
-    };
-
     /**
      * Periodic job for polling the server.  Is scheduled by setupPolling, and
      * will reschedule itself in the same way.
@@ -199,7 +129,22 @@ function MainApp({
       }
     };
 
+    const generateCheckinCredential = async (): Promise<void> => {
+      // This ensures that the check-in credential is pre-cached before the
+      // first check-in attempt.
+      try {
+        const state = getState();
+        if (!state.identity) {
+          throw new Error("Missing identity");
+        }
+        await getOrGenerateCheckinCredential(state.identity);
+      } catch (e) {
+        console.log("Could not get or generate checkin credential:", e);
+      }
+    };
+
     const doPollServerUpdates = async (): Promise<void> => {
+      const state = getState();
       if (
         !state.self ||
         !!state.userInvalid ||
@@ -211,7 +156,7 @@ function MainApp({
 
       // Check for updates to User object.
       try {
-        await pollUser(state.self, actionDispatch);
+        await pollUser(state.self, dispatch);
       } catch (e) {
         console.log("[JOB] failed poll user", e);
       }
@@ -224,6 +169,11 @@ function MainApp({
           extraSubscriptionFetchRequested: true
         });
       }
+    };
+
+    const jobCheckConnectivity = async (): Promise<void> => {
+      window.addEventListener("offline", () => setIsOffline(true));
+      window.addEventListener("online", () => setIsOffline(false));
     };
 
     const setIsOffline = (offline: boolean): void => {
@@ -254,6 +204,7 @@ function MainApp({
     };
 
     const jobSyncOfflineCheckins = async (): Promise<void> => {
+      const state = getState();
       if (!state.self || state.offline) {
         return;
       }
@@ -291,7 +242,7 @@ function MainApp({
       }
     };
 
-    return (): void => {
+    const startBackgroundJobs = (): void => {
       console.log("[JOB] Starting background jobs...");
       document.addEventListener("visibilitychange", () => {
         setupPolling();
@@ -301,21 +252,24 @@ function MainApp({
       jobCheckConnectivity();
       generateCheckinCredential();
     };
-  }, [actionDispatch, state, update]);
 
-  useEffect(() => {
-    setupBroadcastChannel(actionDispatch);
+    setupBroadcastChannel(dispatch);
     setupUsingLaserScanning();
     startBackgroundJobs();
 
     return () => {
       closeBroadcastChannel();
     };
-  }, [actionDispatch, startBackgroundJobs]);
+  });
+}
+
+function App(): JSX.Element {
+  useBackgroundJobs();
+  const state = useStateContext().getState();
 
   const hasStack = !!state.error?.stack;
   return (
-    <StateContext.Provider value={stateContextState}>
+    <>
       {!isWebAssemblySupported() ? (
         <HashRouter>
           <Routes>
@@ -332,7 +286,7 @@ function MainApp({
           </Routes>
         </HashRouter>
       )}
-    </StateContext.Provider>
+    </>
   );
 }
 
@@ -480,9 +434,61 @@ async function loadInitialState(): Promise<AppState> {
 
 registerServiceWorker();
 
-const root = createRoot(document.querySelector("#root") as Element);
-root.render(
-  <RollbarProvider>
-    <App />
-  </RollbarProvider>
-);
+interface AppStateProviderProps {
+  children: React.ReactNode;
+  initialState: AppState;
+}
+
+const stateEmitter: StateEmitter = new Emitter();
+
+const AppStateProvider: React.FC<AppStateProviderProps> = ({
+  children,
+  initialState
+}) => {
+  const [state, setState] = useState<AppState>(initialState);
+  const [lastDiff, setLastDiff] = useState<Partial<AppState>>({});
+
+  const update = useCallback(
+    (diff: Partial<AppState>): void => {
+      setState(Object.assign(state, diff));
+      setLastDiff(diff);
+    },
+    [state]
+  );
+
+  useEffect(() => {
+    stateEmitter.emit(state);
+  }, [state, lastDiff]);
+
+  const actionDispatch = useCallback(
+    (action: Action): Promise<void> => {
+      return dispatch(action, state, update);
+    },
+    [state, update]
+  );
+
+  const context = useMemo(
+    () => ({
+      getState: () => state,
+      update,
+      dispatch: actionDispatch,
+      stateEmitter
+    }),
+    [actionDispatch, state, update]
+  );
+
+  return (
+    <StateContext.Provider value={context}>{children}</StateContext.Provider>
+  );
+};
+
+loadInitialState().then((initialState: AppState) => {
+  const root = createRoot(document.querySelector("#root") as Element);
+  root.render(
+    <RollbarProvider>
+      <AppStateProvider initialState={initialState}>
+        <App />
+      </AppStateProvider>
+    </RollbarProvider>
+  );
+});

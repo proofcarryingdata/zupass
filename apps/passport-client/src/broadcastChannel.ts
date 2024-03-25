@@ -42,7 +42,7 @@ export function notifyLogoutToOtherTabs(): void {
  * set up more onmessage handlers.
  */
 export function setupBroadcastChannel(
-  dispatch: (action: Action) => Promise<void>
+  dispatch: (action: Action) => void
 ): void {
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
