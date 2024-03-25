@@ -99,7 +99,7 @@ export function PipelineEditSection({
 
       <div
         style={{
-          flexShrink: undefined
+          flexShrink: "1"
         }}
       >
         <PipelineActions

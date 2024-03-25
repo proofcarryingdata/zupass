@@ -28,8 +28,8 @@ export function PipelineActions({
   setEditorValue,
   setEditorMaximized
 }: {
-  actionInProgress;
-  setActionInProgress;
+  actionInProgress: string | undefined;
+  setActionInProgress: React.Dispatch<React.SetStateAction<string | undefined>>;
   user: GenericIssuanceSelfResponseValue;
   pipeline: PipelineDefinition;
   pipelineInfo: PipelineInfoResponseValue;
@@ -56,6 +56,7 @@ export function PipelineActions({
         window.location.href = "/#/dashboard";
       } else {
         alert(res.error);
+        setActionInProgress(undefined);
       }
     }
   }, [pipeline.id, setActionInProgress, userJWT]);
@@ -87,8 +88,8 @@ export function PipelineActions({
       window.location.reload();
     } else {
       alert(res.error);
+      setActionInProgress(undefined);
     }
-    setActionInProgress(undefined);
   }, [
     historyEntry,
     maybeHistoricPipeline,
@@ -127,6 +128,7 @@ export function PipelineActions({
       window.location.href = "/#/pipelines/" + res.value.id;
     } else {
       alert(res.error);
+      setActionInProgress(undefined);
     }
     setActionInProgress(undefined);
   }, [pipeline, setActionInProgress, userJWT]);
@@ -150,6 +152,7 @@ export function PipelineActions({
         window.location.reload();
       } else {
         alert(res.error);
+        setActionInProgress(undefined);
       }
     }
   }, [userJWT, setActionInProgress, pipeline.id, editorValue]);
@@ -184,9 +187,9 @@ export function PipelineActions({
       if (res.success) {
         window.location.reload();
       } else {
+        setActionInProgress(undefined);
         alert(res.error);
       }
-      setActionInProgress(undefined);
     }
   }, [pipeline, setActionInProgress, userJWT]);
 
@@ -216,8 +219,8 @@ export function PipelineActions({
         window.location.reload();
       } else {
         alert(res.error);
+        setActionInProgress(undefined);
       }
-      setActionInProgress(undefined);
     }
   }, [pipeline, setActionInProgress, userJWT]);
 
@@ -247,8 +250,8 @@ export function PipelineActions({
         window.location.reload();
       } else {
         alert(res.error);
+        setActionInProgress(undefined);
       }
-      setActionInProgress(undefined);
     }
   }, [pipeline, setActionInProgress, userJWT]);
 

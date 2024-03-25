@@ -287,7 +287,7 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           id: row.id,
           pipeline: row.pipeline,
           timeCreated: row.time_created.toISOString(),
-          editorUserId: row.editor_user_id
+          editorUserId: row.editor_user_id ?? undefined
         }) satisfies PipelineHistoryEntry
     );
   }

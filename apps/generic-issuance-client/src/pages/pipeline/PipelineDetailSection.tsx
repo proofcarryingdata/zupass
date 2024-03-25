@@ -152,7 +152,7 @@ export function PipelineDetailSection({
 
         {isAdminView && (
           <>
-            {supportsManualTicketTable(pipeline) && isAdminView && (
+            {supportsAddingManualTickets(pipeline) && isAdminView && (
               <AccordionItem>
                 <AccordionButton>
                   Add Manual Ticket&nbsp;<Badge colorScheme="gray">Admin</Badge>
@@ -168,7 +168,7 @@ export function PipelineDetailSection({
               </AccordionItem>
             )}
 
-            {supportsAddingManualTickets(pipeline) && isAdminView && (
+            {supportsManualTicketTable(pipeline) && isAdminView && (
               <AccordionItem>
                 <AccordionButton>
                   Existing Manual Tickets&nbsp;
@@ -199,7 +199,7 @@ export function PipelineDetailSection({
                         data load traces {getHoneycombQueryDurationStr()}
                       </PodLink>
                     </ListItem>
-                    <li>
+                    <ListItem>
                       <PodLink
                         isExternal={true}
                         to={getAllHoneycombLinkForPipeline(pipeline.id)}
@@ -207,7 +207,7 @@ export function PipelineDetailSection({
                         all traces related to this pipeline{" "}
                         {getHoneycombQueryDurationStr()}
                       </PodLink>
-                    </li>
+                    </ListItem>
                   </UnorderedList>
                 </SectionContainer>
               </AccordionPanel>
