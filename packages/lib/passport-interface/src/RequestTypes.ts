@@ -16,6 +16,7 @@ import { NamedAPIError } from "./api/apiResult";
 import {
   ActionScreenConfig,
   BadgeConfig,
+  HydratedPipelineHistoryEntry,
   PipelineDefinition
 } from "./genericIssuanceTypes";
 import { GenericPretixEvent, GenericPretixProduct } from "./genericPretixTypes";
@@ -495,6 +496,7 @@ export interface PipelineInfoResponseValue {
   feeds?: PipelineFeedInfo[];
   latestAtoms?: object[];
   latestConsumers?: PipelineInfoConsumer[];
+  editHistory?: HydratedPipelineHistoryEntry[];
 }
 
 export interface ListSingleFeedRequest {

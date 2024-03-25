@@ -67,7 +67,7 @@ function ManualTicketTable({
       </Thead>
       <Tbody>
         {pipeline.options.manualTickets?.map((t) => (
-          <ManualTicket ticket={t} pipeline={pipeline} />
+          <ManualTicket ticket={t} pipeline={pipeline} key={t.id} />
         ))}
       </Tbody>
     </Table>

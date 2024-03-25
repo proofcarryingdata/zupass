@@ -362,8 +362,8 @@ export interface GenericIssuancePipelineRow {
   id: string;
   owner_user_id: string;
   editor_user_ids: string[];
-  time_created: string;
-  time_updated: string;
+  time_created: Date;
+  time_updated: Date;
   pipeline_type: string;
   // Config corresponds to the `options` property of PretixPipelineDefinition/
   // LemonadePipelineDefinition. There is no generic or base type for this, but

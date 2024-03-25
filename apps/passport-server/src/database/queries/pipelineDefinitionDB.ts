@@ -1,5 +1,6 @@
 import {
   PipelineDefinition,
+  PipelineHistoryEntry,
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
@@ -20,7 +21,10 @@ export interface IPipelineDefinitionDB {
   deleteDefinition(pipelineId: string): Promise<void>;
   deleteAllDefinitions(): Promise<void>;
   getDefinition(pipelineId: string): Promise<PipelineDefinition | undefined>;
-  upsertDefinition(definition: PipelineDefinition): Promise<void>;
+  upsertDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void>;
   upsertDefinitions(definitions: PipelineDefinition[]): Promise<void>;
   saveLoadSummary(
     pipelineId: string,
@@ -29,6 +33,14 @@ export interface IPipelineDefinitionDB {
   getLastLoadSummary(
     pipelineId: string
   ): Promise<PipelineLoadSummary | undefined>;
+  appendToEditHistory(
+    pipelineDefinition: PipelineDefinition,
+    editorUserId: string
+  ): Promise<void>;
+  getEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]>;
 }
 
 /**
@@ -88,10 +100,10 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           editorUserIds: row.editor_user_ids.filter(
             (editorId: unknown) => typeof editorId === "string"
           ),
+          timeCreated: row.time_created.toISOString(),
+          timeUpdated: row.time_updated.toISOString(),
           type: row.pipeline_type as PipelineType,
-          options: row.config,
-          timeCreated: row.time_created,
-          timeUpdated: row.time_updated
+          options: row.config
         }) satisfies PipelineDefinition
     );
   }
@@ -155,10 +167,10 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
         editorUserIds: row.editor_user_ids.filter(
           (editorId: unknown) => typeof editorId === "string"
         ),
+        timeCreated: row.time_created.toISOString(),
+        timeUpdated: row.time_updated.toISOString(),
         type: row.pipeline_type as PipelineType,
-        options: row.config,
-        timeCreated: row.time_created,
-        timeUpdated: row.time_updated
+        options: row.config
       };
     }
   }
@@ -168,11 +180,16 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * definition. If inserting, the caller is responsible for generating a UUID
    * as the pipeline ID.
    */
-  public async upsertDefinition(definition: PipelineDefinition): Promise<void> {
+  public async upsertDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void> {
     await sqlTransaction(
       this.db,
       "Insert or update pipeline definition",
       async (client: PoolClient) => {
+        await this.appendToEditHistory(definition, editorUserId);
+
         const pipeline: GenericIssuancePipelineRow = (
           await client.query(
             `
@@ -234,7 +251,51 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     definitions: PipelineDefinition[]
   ): Promise<void> {
     for (const definition of definitions) {
-      await this.upsertDefinition(definition);
+      await this.upsertDefinition(definition, undefined);
     }
   }
+
+  public async appendToEditHistory(
+    pipelineDefinition: PipelineDefinition,
+    editorUserId?: string
+  ): Promise<void> {
+    await this.db.query(
+      `
+    insert into podbox_edit_history
+    (pipeline, editor_user_id, time_created)
+    values
+    ($1, $2, $3);`,
+      [pipelineDefinition, editorUserId, new Date()]
+    );
+  }
+
+  public async getEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]> {
+    const res = await this.db.query(
+      `
+    select * from podbox_edit_history
+    where pipeline->>'id' = $1
+    order by time_created asc
+    limit $2`,
+      [pipelineId, maxQuantity ?? 20]
+    );
+    return res.rows.map(
+      (row: PipelineHistoryRow) =>
+        ({
+          id: row.id,
+          pipeline: row.pipeline,
+          timeCreated: row.time_created.toISOString(),
+          editorUserId: row.editor_user_id ?? undefined
+        }) satisfies PipelineHistoryEntry
+    );
+  }
+}
+
+interface PipelineHistoryRow {
+  id: string;
+  pipeline: PipelineDefinition;
+  time_created: Date;
+  editor_user_id?: string;
 }

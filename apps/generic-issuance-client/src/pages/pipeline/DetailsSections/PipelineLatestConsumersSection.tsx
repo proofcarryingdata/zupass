@@ -11,40 +11,49 @@ export function PipelineLatestConsumersSection({
   latestConsumers?: PipelineInfoConsumer[];
 }): ReactNode {
   if (!latestConsumers || latestConsumers.length === 0) {
-    return null;
+    return (
+      <div>
+        When someone subscribes to this Pipeline's feed, and gets a ticket, they
+        are recorded here.
+      </div>
+    );
   }
 
   return (
-    <ConsumerTable style={{ fontSize: "0.8rem" }}>
-      <tr>
-        <th>Email</th>
-        <th>Created</th>
-        <th>Updated</th>
-      </tr>
-      <>
-        {latestConsumers.map((consumer) => {
+    <ConsumerTable>
+      <thead>
+        <tr>
+          <th>Email</th>
+          <th>Created</th>
+          <th>Updated</th>
+        </tr>
+      </thead>
+      <tbody>
+        {latestConsumers.map((consumer, i) => {
           return (
-            <tr>
+            <tr key={i}>
               <td>{consumer.email}</td>
               <td>{new Date(consumer.timeCreated).toLocaleString()}</td>
               <td>{new Date(consumer.timeUpdated).toLocaleString()}</td>
             </tr>
           );
         })}
-      </>
+      </tbody>
     </ConsumerTable>
   );
 }
 
 const ConsumerTable = styled.table`
-  font-size: 0.8rem;
   border-spacing: 5px 2px;
   border-collapse: separate;
 
   th {
-    font-size: 0.8rem !important;
     font-family: var(--chakra-fonts-body) !important;
     font-weight: bold !important;
     text-align: left;
+  }
+
+  td {
+    padding-right: 32px;
   }
 `;

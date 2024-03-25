@@ -21,7 +21,7 @@ export const PodboxButton = (): ReactNode => {
         }
       }, [location.pathname])}
     >
-      <Button variant="outline">
+      <Button>
         <PodboxLogo />
       </Button>
     </PodLink>
@@ -31,7 +31,7 @@ export const PodboxButton = (): ReactNode => {
 export const PodboxLogo = (): ReactNode => {
   return (
     <HStack>
-      <span style={{ fontSize: "16pt" }}>
+      <span style={{ fontSize: "12pt" }}>
         <FaTruckRampBox />
       </span>
       &nbsp;&nbsp;

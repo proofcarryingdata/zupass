@@ -219,6 +219,7 @@ ticket: ${ticketTypeName}`
       <FormControl mb={2}>
         <FormLabel>Event</FormLabel>
         <Select
+          maxW={"100%"}
           w="sm"
           mt={2}
           value={eventId}
@@ -235,6 +236,7 @@ ticket: ${ticketTypeName}`
       <FormControl mb={2}>
         <FormLabel>Ticket Type</FormLabel>
         <Select
+          maxW={"100%"}
           w="sm"
           mt={2}
           value={ticketTypeId}
@@ -256,6 +258,7 @@ ticket: ${ticketTypeName}`
           placeholder="Bob Glob"
           type="text"
           width="sm"
+          maxW={"100%"}
         />
       </FormControl>
 
@@ -268,6 +271,7 @@ ticket: ${ticketTypeName}`
           placeholder="email@provider.tld"
           type="email"
           width="sm"
+          maxW={"100%"}
           autoComplete="off"
           data-1p-ignore
         />
@@ -277,6 +281,7 @@ ticket: ${ticketTypeName}`
         colorScheme="blue"
         mt={1}
         width="sm"
+        maxW={"100%"}
         onClick={onAddClick}
         isLoading={inProgress}
       >

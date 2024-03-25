@@ -68,8 +68,7 @@ export function SubscriptionsScreen(): JSX.Element {
             <a href="https://github.com/proofcarryingdata/zupass/tree/main/examples/zupass-feed-server">
               feed server
             </a>
-            , or use <a href={process.env.PODBOX_CLIENT_URL}>Podbox</a> as an
-            all-in-one feed hosting solution.
+            .
           </p>
           <Spacer h={8} />
           <p>Your subscriptions are:</p>

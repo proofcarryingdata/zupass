@@ -299,11 +299,19 @@ export class PipelineExecutorSubservice {
 
       await Promise.allSettled(
         this.pipelineSlots.map(async (slot: PipelineSlot): Promise<void> => {
-          const runInfo = await this.performPipelineLoad(slot);
-          await this.pipelineSubservice.saveLoadSummary(
-            slot.definition.id,
-            runInfo
-          );
+          try {
+            const runInfo = await this.performPipelineLoad(slot);
+            await this.pipelineSubservice.saveLoadSummary(
+              slot.definition.id,
+              runInfo
+            );
+          } catch (e) {
+            logger(
+              LOG_TAG,
+              `failed to perform pipeline load for pipeline ${slot.definition.id}`,
+              e
+            );
+          }
         })
       );
     });

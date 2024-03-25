@@ -4,7 +4,7 @@ import {
   PipelineDefinitionSchema,
   isCSVPipelineDefinition
 } from "@pcd/passport-interface";
-import { str } from "@pcd/util";
+import { onlyDefined, str } from "@pcd/util";
 import _ from "lodash";
 import { v4 as uuidv4 } from "uuid";
 import { PCDHTTPError } from "../../../../routing/pcdHttpError";
@@ -30,13 +30,13 @@ export interface UpsertPipelineResult {
  * represented in {@link PipelineExecutorSubservice} by a {@link PipelineSlot}.
  */
 export async function upsertPipelineDefinition(
-  user: PipelineUser,
+  editor: PipelineUser,
   newDefinition: PipelineDefinition,
   userSubservice: UserSubservice,
   pipelineSubservice: PipelineSubservice,
   executorSubservice: PipelineExecutorSubservice
 ): Promise<UpsertPipelineResult> {
-  traceUser(user);
+  traceUser(editor);
   // TODO: do this in a transaction
   const existingPipelineDefinition =
     await pipelineSubservice.loadPipelineDefinition(newDefinition.id);
@@ -45,21 +45,41 @@ export async function upsertPipelineDefinition(
     .find((slot) => slot.definition.id === existingPipelineDefinition?.id);
 
   if (existingPipelineDefinition) {
+    if (existingPipelineDefinition.timeUpdated !== newDefinition.timeUpdated) {
+      throw new PCDHTTPError(
+        400,
+        "this pipeline was updated by someone else while you were editing it.\n\n" +
+          "please refresh and try again.\n\n" +
+          "your edit timestamp: " +
+          newDefinition.timeUpdated +
+          "\n" +
+          "server edit timestamp: " +
+          existingPipelineDefinition.timeUpdated
+      );
+    }
     getActiveSpan()?.setAttribute("is_new", false);
     pipelineSubservice.ensureUserHasPipelineDefinitionAccess(
-      user,
+      editor,
       existingPipelineDefinition
     );
 
-    if (
-      existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId &&
-      !user.isAdmin
-    ) {
-      throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+    if (existingPipelineDefinition.ownerUserId !== newDefinition.ownerUserId) {
+      if (!editor.isAdmin) {
+        throw new PCDHTTPError(400, "Cannot change owner of pipeline");
+      }
+      if (
+        (await userSubservice.getUserById(newDefinition.ownerUserId)) ===
+        undefined
+      ) {
+        throw new PCDHTTPError(
+          400,
+          "Cannot change owner of pipeline to user that doesn't exist"
+        );
+      }
     }
 
     if (
-      !user.isAdmin &&
+      !editor.isAdmin &&
       !_.isEqual(
         existingPipelineDefinition.options.alerts,
         newDefinition.options.alerts
@@ -70,12 +90,17 @@ export async function upsertPipelineDefinition(
   } else {
     // NEW PIPELINE!
     getActiveSpan()?.setAttribute("is_new", true);
-    newDefinition.ownerUserId = user.id;
+    newDefinition.ownerUserId = editor.id;
     newDefinition.id = uuidv4();
     newDefinition.timeCreated = new Date().toISOString();
     newDefinition.timeUpdated = new Date().toISOString();
+    newDefinition.editorUserIds = (
+      await Promise.all(
+        newDefinition.editorUserIds.map((id) => userSubservice.getUserById(id))
+      ).then(onlyDefined)
+    ).map((u) => u.id);
 
-    if (!user.isAdmin && !!newDefinition.options.alerts) {
+    if (!editor.isAdmin && !!newDefinition.options.alerts) {
       throw new PCDHTTPError(400, "Cannot create pipeline with alerts");
     }
   }
@@ -102,7 +127,7 @@ export async function upsertPipelineDefinition(
     `executing upsert of pipeline ${str(validatedNewDefinition)}`
   );
   tracePipeline(validatedNewDefinition);
-  await pipelineSubservice.saveDefinition(validatedNewDefinition);
+  await pipelineSubservice.saveDefinition(validatedNewDefinition, editor.id);
   if (existingSlot) {
     existingSlot.owner = await userSubservice.getUserById(
       validatedNewDefinition.ownerUserId

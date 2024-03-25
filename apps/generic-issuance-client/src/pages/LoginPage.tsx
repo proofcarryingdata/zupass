@@ -1,17 +1,17 @@
 import { Box, Button, Input, Spinner, VStack } from "@chakra-ui/react";
-import { useContext, useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
-import { PageContent } from "../../components/Core";
-import { LoadingContent } from "../../components/LoadingContent";
-import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
-import { PodboxLogo } from "../../components/header/PodboxButton";
-import { ZUPASS_SERVER_URL } from "../../constants";
-import { GIContext } from "../../helpers/Context";
-import { useJWT } from "../../helpers/userHooks";
+import { PageContent } from "../components/Core";
+import { LoadingContent } from "../components/LoadingContent";
+import { GlobalPageHeader } from "../components/header/GlobalPageHeader";
+import { PodboxLogo } from "../components/header/PodboxButton";
+import { ZUPASS_SERVER_URL } from "../constants";
+import { useGIContext } from "../helpers/Context";
+import { useJWT } from "../helpers/userHooks";
 
 function LoginPage(): JSX.Element {
   const jwt = useJWT();
-  const context = useContext(GIContext);
+  const ctx = useGIContext();
   const [email, setEmail] = useState(
     process.env.STYTCH_PUBLIC_TOKEN ? "" : "admin@podbox.dev"
   );
@@ -27,7 +27,7 @@ function LoginPage(): JSX.Element {
   useEffect(() => {
     if (!recievedAuthToken.current && token) {
       recievedAuthToken.current = true;
-      context
+      ctx
         .handleAuthToken(token)
         .then(() => {
           window.location.href = "/#/dashboard";
@@ -36,7 +36,7 @@ function LoginPage(): JSX.Element {
           alert(e);
         });
     }
-  }, [context, token]);
+  }, [ctx, token]);
 
   const handleLoginClick = async (): Promise<void> => {
     if (!email || hasSentEmail) return;
@@ -116,12 +116,7 @@ function LoginPage(): JSX.Element {
                   placeholder="email address"
                 />
 
-                <Button
-                  isDisabled={sendingEmail}
-                  type="submit"
-                  w="100%"
-                  variant="outline"
-                >
+                <Button isDisabled={sendingEmail} type="submit" w="100%">
                   Login
                 </Button>
                 {sendingEmail && <Spinner marginTop={4} />}

@@ -8,8 +8,10 @@ import {
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
+  HydratedPipelineHistoryEntry,
   ListFeedsResponseValue,
   PipelineDefinition,
+  PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
   PodboxTicketActionResponseValue,
@@ -26,6 +28,7 @@ import {
   IPipelineDefinitionDB,
   PipelineDefinitionDB
 } from "../../../database/queries/pipelineDefinitionDB";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
@@ -107,6 +110,15 @@ export class PipelineSubservice {
   }
 
   /**
+   * Gets a particular pipeline slot.
+   */
+  public getPipeline(
+    pipelineId: string
+  ): Promise<PipelineDefinition | undefined> {
+    return this.pipelineDB.getDefinition(pipelineId);
+  }
+
+  /**
    * Gets all instances of {@link Pipeline} that {@link PipelineExecutorSubservice} was
    * able to successfully start via {@link instantiatePipeline}.
    */
@@ -176,8 +188,11 @@ export class PipelineSubservice {
   /**
    * Saves a particular {@link PipelineDefinition} to the database.
    */
-  public async saveDefinition(definition: PipelineDefinition): Promise<void> {
-    await this.pipelineDB.upsertDefinition(definition);
+  public async saveDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void> {
+    await this.pipelineDB.upsertDefinition(definition, editorUserId);
   }
 
   /**
@@ -191,17 +206,52 @@ export class PipelineSubservice {
   ): Promise<void> {
     return traced(SERVICE_NAME, "deletePipelineDefinition", async (span) => {
       traceUser(user);
-
       span?.setAttribute("pipeline_id", pipelineId);
       const pipeline = await this.loadPipelineDefinition(pipelineId);
       tracePipeline(pipeline);
       this.ensureUserHasPipelineDefinitionAccess(user, pipeline);
-
+      if (pipeline.options?.protected) {
+        throw new PCDHTTPError(
+          401,
+          "can't delete protected pipeline - turn off protection to delete"
+        );
+      }
       await this.pipelineDB.deleteDefinition(pipelineId);
       await this.pipelineDB.saveLoadSummary(pipelineId, undefined);
       await this.pipelineAtomDB.clear(pipelineId);
       await this.executorSubservice.restartPipeline(pipelineId);
     });
+  }
+
+  public async getPipelineEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<HydratedPipelineHistoryEntry[]> {
+    const DEFAULT_MAX_QUANTITY = 100;
+    const rawHistory = await this.pipelineDB.getEditHistory(
+      pipelineId,
+      maxQuantity ?? DEFAULT_MAX_QUANTITY
+    );
+    const hydratedHistory = await this.hydrateHistory(rawHistory);
+    return hydratedHistory;
+  }
+
+  private async hydrateHistory(
+    history: PipelineHistoryEntry[]
+  ): Promise<HydratedPipelineHistoryEntry[]> {
+    return Promise.all(
+      history.map(
+        async (
+          h: PipelineHistoryEntry
+        ): Promise<HydratedPipelineHistoryEntry> => {
+          return {
+            ...h,
+            editorEmail: (await this.userSubservice.getUserById(h.editorUserId))
+              ?.email
+          } satisfies HydratedPipelineHistoryEntry;
+        }
+      )
+    );
   }
 
   /**

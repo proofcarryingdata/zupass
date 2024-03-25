@@ -125,7 +125,7 @@ export default function PretixPipelineBuilder(
           />
         </FormControl>
 
-        <Button width="sm" type="submit" variant="outline" colorScheme="green">
+        <Button width="sm" type="submit" colorScheme="green">
           Search for events
         </Button>
       </form>
