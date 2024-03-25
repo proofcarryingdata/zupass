@@ -82,17 +82,22 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
         setSendingConfirmationEmail(false);
         verifyToken(result.value?.devToken);
       } else {
-        window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
-          email
-        )}&identityCommitment=${encodeURIComponent(
-          identityCommitment
-        )}&isReset=true`;
+        if (email && identityCommitment) {
+          window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
+            email
+          )}&identityCommitment=${encodeURIComponent(
+            identityCommitment
+          )}&isReset=true`;
+        }
       }
     },
     [email, identityCommitment, verifyToken]
   );
 
   const onOverwriteClick = useCallback(async () => {
+    if (!email || !identityCommitment) {
+      return;
+    }
     requestLogToServer(appConfig.zupassServer, "overwrite-account-click", {
       email,
       identityCommitment
@@ -123,6 +128,7 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
   const onSubmitPassword = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if (!salt) return;
       setError(undefined);
 
       if (password === "" || password === null) {
@@ -171,21 +177,21 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
   }, []);
 
   useEffect(() => {
-    if (self || !email) {
+    if (self || !email || !identityCommitment || !salt) {
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
         window.location.hash = "#/";
       }
     }
-  }, [self, email]);
+  }, [self, email, identityCommitment, salt]);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
-  if (self || !email) {
+  if (self || !email || !identityCommitment || !salt) {
     return null;
   }
 

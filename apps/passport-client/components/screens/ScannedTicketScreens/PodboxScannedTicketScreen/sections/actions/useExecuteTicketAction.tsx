@@ -19,7 +19,7 @@ import {
 export interface TicketActionExecutor {
   loading: boolean;
   result: PodboxTicketActionResult | null;
-  execute: () => Promise<PodboxTicketActionResult>;
+  execute: () => Promise<PodboxTicketActionResult | undefined>;
   reset: () => void;
 }
 
@@ -54,6 +54,10 @@ export function useExecuteTicketAction({
     ) as EmailPCD[];
 
     if (emailPCDs.length !== 1) {
+      return;
+    }
+
+    if (!identityPCD) {
       return;
     }
 

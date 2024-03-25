@@ -4,6 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
+  ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -11,7 +12,7 @@ import React, {
   useState
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import styled from "styled-components";
+import styled, { CSSProperties } from "styled-components";
 import {
   useDispatch,
   useFolders,
@@ -183,7 +184,7 @@ export function HomeScreenImpl(): JSX.Element | null {
                   })}
               {isRoot && (
                 <FrogFolder
-                  Container={FolderEntryContainer}
+                  Container={FrogFolderContainer}
                   onFolderClick={onFolderClick}
                 />
               )}
@@ -222,6 +223,22 @@ export function HomeScreenImpl(): JSX.Element | null {
         <Spacer h={24} />
       </AppContainer>
     </>
+  );
+}
+
+function FrogFolderContainer({
+  children,
+  onClick,
+  style
+}: {
+  children?: ReactNode;
+  style: CSSProperties;
+  onClick: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+}): JSX.Element {
+  return (
+    <FolderEntryContainer onClick={onClick} style={style}>
+      {children}
+    </FolderEntryContainer>
   );
 }
 

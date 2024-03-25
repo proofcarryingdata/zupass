@@ -79,10 +79,13 @@ function isDevconnectTicket(pcd: PCD): boolean {
 // product ID and signing key.
 export function SecondPartyTicketVerifyScreen(): JSX.Element {
   const query = useQuery();
-  const encodedQRPayload = query?.get("pcd");
+  const encodedQRPayload = query?.get("pcd") ?? undefined;
   const id = query?.get("id");
 
-  const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload);
+  const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload) ?? {
+    pcd: undefined,
+    serializedPCD: undefined
+  };
 
   // We always perform a 'verify' request on all tickets that reach this point
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
@@ -174,7 +177,7 @@ export function SecondPartyTicketVerifyScreen(): JSX.Element {
     return <WaitingForCheckAndVerify />;
   }
 
-  if (showCheckin) {
+  if (ticketId && showCheckin) {
     return (
       <AppContainer bg={"primary"}>
         <Container>
@@ -350,7 +353,7 @@ function VerifiedAndKnownTicket({
   );
 }
 
-function useDecodedPayload(encodedQRPayload: string):
+function useDecodedPayload(encodedQRPayload: string | undefined):
   | {
       pcd: PCD;
       serializedPCD: SerializedPCD<PCD>;
