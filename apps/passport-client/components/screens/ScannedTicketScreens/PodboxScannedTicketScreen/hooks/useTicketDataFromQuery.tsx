@@ -3,15 +3,21 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { useQuery } from "../../../../../src/appHooks";
 
+export enum TicketIdState {
+  Loading,
+  Success,
+  Error
+}
+
 export type TicketIdAndEventId =
-  | { loading: true }
+  | { state: TicketIdState.Loading }
   | {
-      loading: false;
+      state: TicketIdState.Success;
       ticketId: string;
       eventId: string;
     }
   | {
-      loading: false;
+      state: TicketIdState.Error;
       error: string;
     };
 
@@ -27,7 +33,7 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
   const pcdStr = query?.get("pcd");
 
   const [ticketData, setTicketData] = useState<TicketIdAndEventId>({
-    loading: true
+    state: TicketIdState.Loading
   });
 
   useEffect(() => {
@@ -40,13 +46,13 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
         if (verified) {
           setTicketData({
-            loading: false,
+            state: TicketIdState.Success,
             ticketId: pcd.claim.partialTicket.ticketId as string,
             eventId: pcd.claim.partialTicket.eventId as string
           });
         } else {
           setTicketData({
-            loading: false,
+            state: TicketIdState.Error,
             error: "Could not verify ticket. Please try scanning again."
           });
         }
@@ -59,7 +65,7 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         Buffer.from(id, "base64").toString()
       );
       setTicketData({
-        loading: false,
+        state: TicketIdState.Success,
         ticketId,
         eventId
       });

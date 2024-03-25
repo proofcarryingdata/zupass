@@ -1,5 +1,5 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useCallback, useState } from "react";
+import { useCallback } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import {
   useLaserScannerKeystrokeInput,
@@ -12,7 +12,10 @@ import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
 import { CardBodyContainer } from "../../../shared/PCDCard";
 import { usePreCheckTicket } from "./hooks/usePrecheckTicket";
-import { useTicketDataFromQuery } from "./hooks/useTicketDataFromQuery";
+import {
+  TicketIdState,
+  useTicketDataFromQuery
+} from "./hooks/useTicketDataFromQuery";
 import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection";
 
 /**
@@ -37,18 +40,6 @@ import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection"
 export function PodboxScannedTicketScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
   const query = useQuery();
-  const [inProgress, setInProgress] = useState(false);
-
-  const {
-    loading: parsingTicketData,
-    ticketId,
-    eventId
-  } = useTicketDataFromQuery();
-
-  const { loading: checkingTicket, result: precheck } = usePreCheckTicket(
-    ticketId,
-    eventId
-  );
 
   useLoginIfNoSelf(
     pendingRequestKeys.genericIssuanceCheckin,
@@ -57,7 +48,50 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     )
   );
 
-  if (parsingTicketData || checkingTicket) {
+  const ticketIds = useTicketDataFromQuery();
+
+  if (ticketIds.state === TicketIdState.Loading) {
+    return (
+      <AppContainer bg={"primary"}>
+        <CenterColumn w={400}>
+          <Spacer h={32} />
+          <RippleLoader />
+        </CenterColumn>
+      </AppContainer>
+    );
+  }
+
+  if (ticketIds.state === TicketIdState.Success) {
+    return (
+      <PrecheckTicket
+        ticketId={ticketIds.ticketId}
+        eventId={ticketIds.eventId}
+      />
+    );
+  }
+
+  return (
+    <AppContainer bg={"primary"}>
+      <CenterColumn w={400}>
+        <Spacer h={32} />
+        <div>Could not scan ticket.</div>
+        <Spacer h={32} />
+        <ScanAnotherTicket />
+      </CenterColumn>
+    </AppContainer>
+  );
+}
+
+function PrecheckTicket({
+  ticketId,
+  eventId
+}: {
+  ticketId: string;
+  eventId: string;
+}): JSX.Element {
+  const { loading, result } = usePreCheckTicket(ticketId, eventId);
+
+  if (loading) {
     return (
       <AppContainer bg={"primary"}>
         <CenterColumn w={400}>
@@ -72,9 +106,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     <AppContainer bg={"primary"}>
       <CenterColumn w={400}>
         <PodboxTicketActionSection
-          setIsLoading={setInProgress}
-          isLoading={inProgress}
-          precheck={precheck}
+          precheck={result}
           ticketId={ticketId}
           eventId={eventId}
         />
