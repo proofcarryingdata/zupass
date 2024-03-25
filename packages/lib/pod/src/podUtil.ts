@@ -119,7 +119,7 @@ export function checkPODName(name?: string): string {
  *   messages.
  * @param value the value to check
  * @param typeName the expected type
- * @returns he value unmodified, for easy chaining
+ * @returns the value unmodified, for easy chaining
  * @throws TypeError if the value does not have the expected type
  */
 export function requireType(
