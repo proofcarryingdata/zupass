@@ -155,7 +155,7 @@ export function PipelineActions({
   }, [userJWT, setActionInProgress, pipeline.id, editorValue]);
 
   const onEscapeHistoryViewClick = useCallback(() => {
-    ctx.setState({ viewingHistory: undefined });
+    ctx.setState({ viewingOlderPipelineVersion: undefined });
   }, [ctx]);
 
   const onProtectToggleClick = useCallback(async () => {

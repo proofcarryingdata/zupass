@@ -16,7 +16,7 @@ export interface GIContextState {
   logout: () => Promise<void>;
   handleAuthToken: (token?: string) => Promise<void>;
   devModeAuthToken?: string;
-  viewingHistory?: HydratedPipelineHistoryEntry;
+  viewingOlderPipelineVersion?: HydratedPipelineHistoryEntry;
   pipelineDetailsAccordionState?: number[];
 }
 
@@ -44,16 +44,16 @@ export function useViewingPipelineDefinition(
   defaultDefinition?: PipelineDefinition
 ): HistoryState {
   const ctx = useGIContext();
-  const viewingHistory = ctx.viewingHistory !== undefined;
+  const viewingHistory = ctx.viewingOlderPipelineVersion !== undefined;
   return useMemo(
     () =>
       ({
         viewingHistory,
         pipeline: viewingHistory
-          ? ctx.viewingHistory?.pipeline
+          ? ctx.viewingOlderPipelineVersion?.pipeline
           : defaultDefinition,
-        historyEntry: ctx.viewingHistory
+        historyEntry: ctx.viewingOlderPipelineVersion
       }) satisfies HistoryState,
-    [ctx.viewingHistory, defaultDefinition, viewingHistory]
+    [ctx.viewingOlderPipelineVersion, defaultDefinition, viewingHistory]
   );
 }

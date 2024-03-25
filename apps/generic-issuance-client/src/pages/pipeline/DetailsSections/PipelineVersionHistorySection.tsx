@@ -51,7 +51,8 @@ function Entry({
 }): React.ReactNode {
   const ctx = useGIContext();
 
-  const isPreviewingThisEntry = ctx.viewingHistory?.id === entry.id;
+  const isPreviewingThisEntry =
+    ctx.viewingOlderPipelineVersion?.id === entry.id;
   const isLatestEntry = entry.id === pipelineInfo.editHistory?.[0]?.id;
 
   if (isPreviewingThisEntry) {
@@ -71,11 +72,11 @@ function Entry({
         onClick={(): void => {
           if (isLatestEntry) {
             ctx.setState({
-              viewingHistory: undefined
+              viewingOlderPipelineVersion: undefined
             });
           } else {
             ctx.setState({
-              viewingHistory: entry
+              viewingOlderPipelineVersion: entry
             });
           }
         }}
