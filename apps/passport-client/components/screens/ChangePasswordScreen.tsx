@@ -54,7 +54,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
     try {
       let currentEncryptionKey: HexString;
       if (!isChangePassword) {
-        currentEncryptionKey = loadEncryptionKey();
+        currentEncryptionKey = loadEncryptionKey() as string;
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
@@ -66,7 +66,10 @@ export function ChangePasswordScreen(): JSX.Element | null {
         }
 
         const crypto = await PCDCrypto.newInstance();
-        currentEncryptionKey = crypto.argon2(currentPassword, saltResult.value);
+        currentEncryptionKey = crypto.argon2(
+          currentPassword,
+          saltResult.value as string
+        );
       }
       await setPassword(
         newPassword,

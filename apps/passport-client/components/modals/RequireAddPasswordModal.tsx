@@ -36,7 +36,7 @@ export function RequireAddPasswordModal(): JSX.Element {
     setLoading(true);
     await sleep();
     try {
-      const currentEncryptionKey = loadEncryptionKey();
+      const currentEncryptionKey = loadEncryptionKey() as string;
       await setPassword(
         newPassword,
         currentEncryptionKey,
@@ -77,7 +77,7 @@ export function RequireAddPasswordModal(): JSX.Element {
         error={error}
         setError={setError}
         passwordInputPlaceholder="New password"
-        email={self?.email}
+        email={self?.email as string}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
         submitButtonText="Confirm"

@@ -148,20 +148,36 @@ export function ArgInput<T extends PCDPackage, ArgName extends string>({
   );
 
   if (isStringArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <StringArgInput {...props} />;
   } else if (isNumberArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <NumberArgInput {...props} />;
   } else if (isBigIntArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <BigIntArgInput {...props} />;
   } else if (isBooleanArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <BooleanArgInput {...props} />;
   } else if (isToggleListArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <ToggleListArgInput {...props} />;
   } else if (isObjectArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <ObjectArgInput {...props} />;
   } else if (isPCDArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <PCDArgInput {...props} />;
   } else if (isStringArrayArgument(arg)) {
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
     return <ObjectArgInput {...props} />;
   } else {
     null;
@@ -396,8 +412,12 @@ function ToggleListArgInput({
   const entries = useMemo(
     () =>
       showAll
-        ? Object.entries(arg.value)
-        : Object.entries(arg.value).filter(([_, value]) => value),
+        ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          Object.entries(arg.value)
+        : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
+          Object.entries(arg.value).filter(([_, value]) => value),
     [arg.value, showAll]
   );
 
@@ -470,7 +490,7 @@ export function PCDArgInput({
         const pcdPackage = pcdCollection.getPackage(pcd.type);
         return {
           id: pcd.id,
-          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.type
+          label: pcdPackage?.getDisplayOptions?.(pcd)?.displayName ?? pcd.type
         };
       }),
     [relevantPCDs, pcdCollection]

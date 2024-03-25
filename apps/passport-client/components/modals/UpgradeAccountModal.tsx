@@ -36,7 +36,7 @@ export function UpgradeAccountModal(): JSX.Element | null {
     setLoading(true);
     await sleep();
     try {
-      const currentEncryptionKey = loadEncryptionKey();
+      const currentEncryptionKey = loadEncryptionKey() as string;
       await setPassword(
         newPassword,
         currentEncryptionKey,

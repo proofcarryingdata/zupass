@@ -8,6 +8,8 @@ import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import Table from "react-table-lite";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";

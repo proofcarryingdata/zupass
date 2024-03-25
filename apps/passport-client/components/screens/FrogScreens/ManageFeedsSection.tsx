@@ -10,6 +10,8 @@ import { SerializedPCD } from "@pcd/pcd-types";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useState } from "react";
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import Table from "react-table-lite";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -208,6 +210,8 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
             )}Dropweightscaler`
           ];
         if (typeof dropWeightScaler !== "undefined" && +dropWeightScaler > 0) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           acc[biome] = {
             dropWeightScaler: Number.parseFloat(dropWeightScaler)
           };
@@ -256,6 +260,8 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
       cooldown: feed.feed.cooldown,
       ...Object.keys(Biome).reduce(
         (acc, biome) => {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           const biomeConfig = feed.feed.biomes[biome];
           if (biomeConfig) {
             acc[

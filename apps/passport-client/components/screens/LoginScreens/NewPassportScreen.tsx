@@ -131,7 +131,7 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
             email
           )}&identityCommitment=${encodeURIComponent(
             identity.commitment.toString()
-          )}&salt=${encodeURIComponent(saltResult.value)}`;
+          )}&salt=${encodeURIComponent(saltResult.value as string)}`;
         } else {
           err(dispatch, "Email failed", saltResult.error);
         }
