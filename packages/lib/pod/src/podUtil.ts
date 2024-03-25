@@ -42,7 +42,11 @@ const SIGNATURE_REGEX = new RegExp(/^[0-9A-Fa-f]{128}$/);
  * @throws TypeError if the format doesn't match
  */
 export function checkPrivateKeyFormat(privateKey: string): string {
-  if (!privateKey || !privateKey.match(PRIVATE_KEY_REGEX)) {
+  if (
+    !privateKey ||
+    typeof privateKey !== "string" ||
+    !privateKey.match(PRIVATE_KEY_REGEX)
+  ) {
     throw new TypeError("Private key should be 32 bytes hex-encoded.");
   }
   return privateKey;
@@ -57,7 +61,11 @@ export function checkPrivateKeyFormat(privateKey: string): string {
  * @throws TypeError if the format doesn't match
  */
 export function checkPublicKeyFormat(publicKey: string): string {
-  if (!publicKey || !publicKey.match(PUBLIC_KEY_REGEX)) {
+  if (
+    !publicKey ||
+    typeof publicKey !== "string" ||
+    !publicKey.match(PUBLIC_KEY_REGEX)
+  ) {
     throw new TypeError("Public key should be 32 bytes hex-encoded.");
   }
   return publicKey;
@@ -72,7 +80,11 @@ export function checkPublicKeyFormat(publicKey: string): string {
  * @throws TypeError if the format doesn't match
  */
 export function checkSignatureFormat(signature: string): string {
-  if (!signature || !signature.match(SIGNATURE_REGEX)) {
+  if (
+    !signature ||
+    typeof signature !== "string" ||
+    !signature.match(SIGNATURE_REGEX)
+  ) {
     throw new TypeError("Signature should be 64 bytes hex-encoded.");
   }
   return signature;
@@ -90,6 +102,9 @@ export function checkPODName(name?: string): string {
   if (!name) {
     throw new TypeError("POD names cannot be undefined.");
   }
+  if (typeof name !== "string") {
+    throw new TypeError("POD names must be strings.");
+  }
   if (name.match(POD_NAME_REGEX) === null) {
     throw new TypeError(`Invalid POD name "${name}". \
       Only alphanumeric characters and underscores are allowed.`);
@@ -104,10 +119,10 @@ export function checkPODName(name?: string): string {
  *   messages.
  * @param value the value to check
  * @param typeName the expected type
- * @returns he value unmodified, for easy chaining
+ * @returns the value unmodified, for easy chaining
  * @throws TypeError if the value does not have the expected type
  */
-function requireType(
+export function requireType(
   nameForErrorMessages: string,
   value: string | bigint,
   typeName: string
@@ -132,7 +147,7 @@ function requireType(
  * @returns the value unmodified, for easy chaining
  * @throws TypeError if the value is outside of the bounds
  */
-function checkBigintBounds(
+export function checkBigintBounds(
   nameForErrorMessages: string,
   value: bigint,
   minValue: bigint,
@@ -161,10 +176,14 @@ export function checkPODValue(
   podValue?: PODValue
 ): PODValue {
   if (podValue === undefined || podValue.value === undefined) {
-    throw new TypeError("POD values cannot be undefined.");
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} cannot be undefined.`
+    );
   }
   if (podValue.type === undefined) {
-    throw new TypeError("POD values must have a type.");
+    throw new TypeError(
+      `POD value for ${nameForErrorMessages} must have a type.`
+    );
   }
   switch (podValue.type) {
     case "string":
@@ -190,7 +209,9 @@ export function checkPODValue(
       break;
     default:
       throw new TypeError(
-        `Unknown POD value type ${(podValue as PODValue).type}`
+        `POD value ${nameForErrorMessages} has unknown type ${
+          (podValue as PODValue).type
+        }`
       );
   }
   return podValue;
@@ -222,6 +243,8 @@ export function getPODValueForCircuit(podValue: PODValue): bigint | undefined {
     case "int":
     case "cryptographic":
       return podValue.value;
+    default:
+      return undefined;
   }
 }
 

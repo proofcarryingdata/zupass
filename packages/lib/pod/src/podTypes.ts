@@ -7,9 +7,10 @@ import { r as BabyJubjubR } from "@zk-kit/baby-jubjub";
 export type PODName = string;
 
 /**
- * Regex matching legal names for POD entries.
+ * Regex matching legal names for POD entries.  This is intended to make
+ * entry names usable as identifiers in TypeScript and other languages.
  */
-export const POD_NAME_REGEX = new RegExp(/^\w+$/);
+export const POD_NAME_REGEX = new RegExp(/^[A-Za-z_]\w*$/);
 
 /**
  * POD value for a user-specififed string.  String values can contain any
