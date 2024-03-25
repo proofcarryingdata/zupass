@@ -451,6 +451,28 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
   const update = useCallback(
     (diff: Partial<AppState>): void => {
       setState(Object.assign(state, diff));
+
+      // In a React class component, the `setState` method has a second
+      // parameter, which is a callback function that React will invoke when
+      // the state change has taken effect. `useState` does not offer the same
+      // functionality, and the recommended approach is to use a `useEffect`
+      // hook with the relevant piece of state as a dependency. The effect hook
+      // will then be invoked whenever the state changes.
+      //
+      // However, we specifically want to observe changes to the `state`
+      // variable, and the use of `Object.assign` above ensures that, from
+      // React's perspective, the object doesn't change, at least not in a way
+      // that would trigger a re-render or an effect hook to run. This is
+      // because we do not change the object's identity, only its content.
+      //
+      // So, we need to set up some other piece of state that changes whenever
+      // the state object does. Here, we track the receipt of diffs in the
+      // update method, and in the below `useEffect` hook we trigger the hook
+      // to fire whenever a new diff is received. This allows the hook to fire
+      // on state changes even though it can't track a change to the state
+      // object directly. It will then emit an event, which is what the rest of
+      // the app uses to work around the fact that it also can't track changes
+      // to the state object.
       setLastDiff(diff);
     },
     [state]
