@@ -6,6 +6,7 @@ import {
 import { isWebAssemblySupported } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import * as React from "react";
+import { useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "react-hot-toast";
 import { HashRouter, Route, Routes } from "react-router-dom";
@@ -71,253 +72,268 @@ import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
 import { validateAndLogInitialAppState } from "../src/validateState";
 
-class App extends React.Component<object, AppState> {
-  state = undefined as AppState | undefined;
-  readonly BG_POLL_INTERVAL_MS = 1000 * 60;
-  lastBackgroundPoll = 0;
-  activePollTimout: NodeJS.Timeout | undefined = undefined;
+function useLoadAppState(): [
+  AppState | undefined,
+  React.Dispatch<React.SetStateAction<AppState | undefined>>
+] {
+  const [appState, setAppState] = useState<AppState | undefined>(undefined);
+  useEffect(() => {
+    loadInitialState().then((state) => setAppState(state));
+  });
 
-  stateEmitter: StateEmitter = new Emitter();
-  update = (diff: Pick<AppState, keyof AppState>): void => {
-    this.setState(diff, () => {
-      if (this.state) {
-        this.stateEmitter.emit(this.state);
-      }
-    });
-  };
+  return [appState, setAppState];
+}
 
-  dispatch = (action: Action): Promise<void> =>
-    dispatch(action, this.state, this.update);
-  componentDidMount(): void {
-    loadInitialState().then((s) => this.setState(s, this.startBackgroundJobs));
-    setupBroadcastChannel(this.dispatch);
-    setupUsingLaserScanning();
-  }
-  componentWillUnmount(): void {
-    closeBroadcastChannel();
-  }
-  stateContextState: StateContextValue = {
-    getState: () => this.state,
-    stateEmitter: this.stateEmitter,
-    dispatch: this.dispatch,
-    update: this.update
-  };
+function App(): JSX.Element | null {
+  const [state, setAppState] = useLoadAppState();
 
-  render(): JSX.Element {
-    const { state } = this;
-
-    if (!state) {
-      return null;
-    }
-
-    const hasStack = !!state.error?.stack;
-    return (
-      <StateContext.Provider value={this.stateContextState}>
-        {!isWebAssemblySupported() ? (
-          <HashRouter>
-            <Routes>
-              <Route path="/terms" element={<TermsScreen />} />
-              <Route path="*" element={<NoWASMScreen />} />
-            </Routes>
-          </HashRouter>
-        ) : !hasStack ? (
-          <Router />
-        ) : (
-          <HashRouter>
-            <Routes>
-              <Route path="*" element={<AppContainer bg="gray" />} />
-            </Routes>
-          </HashRouter>
-        )}
-      </StateContext.Provider>
-    );
+  if (!state) {
+    return null;
   }
 
-  // Create a React error boundary
-  static getDerivedStateFromError(error: Error): Partial<AppState> {
-    console.log("App caught error", error);
-    const { message, stack } = error;
-    let shortStack = (stack ?? "").substring(0, 280);
-    if (shortStack.length < (stack ?? "").length) shortStack += "...";
-    return {
-      error: { title: "Error", message, stack: shortStack }
-    } as Partial<AppState>;
-  }
+  return <MainApp state={state} setAppState={setAppState} />;
+}
 
-  startBackgroundJobs = (): void => {
-    console.log("[JOB] Starting background jobs...");
-    document.addEventListener("visibilitychange", () => {
-      this.setupPolling();
-    });
-    this.setupPolling();
-    this.startJobSyncOfflineCheckins();
-    this.jobCheckConnectivity();
-    this.generateCheckinCredential();
+function MainApp({
+  state,
+  setAppState
+}: {
+  state: AppState;
+  setAppState: React.Dispatch<React.SetStateAction<AppState | undefined>>;
+}): JSX.Element {
+  const stateEmitter: StateEmitter = useMemo(() => new Emitter(), []);
+
+  const update = useMemo(
+    () =>
+      (diff: Partial<AppState>): void => {
+        setAppState({ ...state, ...diff });
+      },
+    [setAppState, state]
+  );
+
+  useEffect(() => {
+    stateEmitter.emit(state);
+  }, [state, stateEmitter]);
+
+  const actionDispatch = useMemo(
+    () =>
+      (action: Action): Promise<void> =>
+        dispatch(action, state, update),
+    [state, update]
+  );
+
+  const stateContextState: StateContextValue = {
+    getState: () => state,
+    stateEmitter: stateEmitter,
+    dispatch: actionDispatch,
+    update: update
   };
 
-  generateCheckinCredential = async (): Promise<void> => {
-    // This ensures that the check-in credential is pre-cached before the
-    // first check-in attempt.
-    try {
-      await getOrGenerateCheckinCredential(this.state.identity);
-    } catch (e) {
-      console.log("Could not get or generate checkin credential:", e);
-    }
-  };
-
-  jobCheckConnectivity = async (): Promise<void> => {
-    window.addEventListener("offline", () => this.setIsOffline(true));
-    window.addEventListener("online", () => this.setIsOffline(false));
-  };
-
-  setIsOffline(offline: boolean): void {
-    console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
-    this.update({
-      ...this.state,
-      offline: offline
-    });
-    if (offline) {
-      toast("Offline", {
-        icon: "❌",
-        style: {
-          width: "80vw"
+  const startBackgroundJobs = useMemo(() => {
+    let activePollTimeout: NodeJS.Timeout | undefined = undefined;
+    const BG_POLL_INTERVAL_MS = 1000 * 60;
+    let lastBackgroundPoll = 0;
+    /**
+     * Idempotently enables or disables periodic polling of jobPollServerUpdates,
+     * based on whether the window is visible or invisible.
+     *
+     * If there is an existing poll scheduled, it will not be rescheduled,
+     * but may be cancelled.  If there is no poll scheduled, a new one may be
+     * scheduled.  It may happen immediately after the window becomes visible,
+     * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
+     */
+    const setupPolling = async (): Promise<void> => {
+      if (!document.hidden) {
+        if (!activePollTimeout) {
+          const nextPollDelay = Math.max(
+            0,
+            lastBackgroundPoll + BG_POLL_INTERVAL_MS - Date.now()
+          );
+          activePollTimeout = setTimeout(jobPollServerUpdates, nextPollDelay);
+          console.log(
+            `[JOB] next poll for updates scheduled in ${nextPollDelay}ms`
+          );
         }
-      });
-    } else {
-      toast("Back Online", {
-        icon: "👍",
-        style: {
-          width: "80vw"
+      } else {
+        if (activePollTimeout) {
+          clearTimeout(activePollTimeout);
+          activePollTimeout = undefined;
+          console.log("[JOB] poll for updates disabled");
         }
-      });
-    }
-  }
-
-  /**
-   * Idempotently enables or disables periodic polling of jobPollServerUpdates,
-   * based on whether the window is visible or invisible.
-   *
-   * If there is an existing poll scheduled, it will not be rescheduled,
-   * but may be cancelled.  If there is no poll scheduled, a new one may be
-   * scheduled.  It may happen immediately after the window becomes visible,
-   * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
-   */
-  setupPolling = async (): Promise<void> => {
-    if (!document.hidden) {
-      if (!this.activePollTimout) {
-        const nextPollDelay = Math.max(
-          0,
-          this.lastBackgroundPoll + this.BG_POLL_INTERVAL_MS - Date.now()
-        );
-        this.activePollTimout = setTimeout(
-          this.jobPollServerUpdates,
-          nextPollDelay
-        );
-        console.log(
-          `[JOB] next poll for updates scheduled in ${nextPollDelay}ms`
-        );
       }
-    } else {
-      if (this.activePollTimout) {
-        clearTimeout(this.activePollTimout);
-        this.activePollTimout = undefined;
-        console.log("[JOB] poll for updates disabled");
+    };
+
+    const generateCheckinCredential = async (): Promise<void> => {
+      // This ensures that the check-in credential is pre-cached before the
+      // first check-in attempt.
+      try {
+        if (!state?.identity) {
+          throw new Error("Missing identity");
+        }
+        await getOrGenerateCheckinCredential(state.identity);
+      } catch (e) {
+        console.log("Could not get or generate checkin credential:", e);
       }
-    }
-  };
+    };
 
-  /**
-   * Periodic job for polling the server.  Is scheduled by setupPolling, and
-   * will reschedule itself in the same way.
-   */
-  jobPollServerUpdates = async (): Promise<void> => {
-    // Mark that poll has started.
-    console.log("[JOB] polling server for updates");
-    this.activePollTimout = undefined;
-    try {
-      // Do the real work of the poll.
-      this.doPollServerUpdates();
-    } finally {
-      // Reschedule next poll.
-      this.lastBackgroundPoll = Date.now();
-      this.setupPolling();
-    }
-  };
+    const jobCheckConnectivity = async (): Promise<void> => {
+      window.addEventListener("offline", () => setIsOffline(true));
+      window.addEventListener("online", () => setIsOffline(false));
+    };
 
-  doPollServerUpdates = async (): Promise<void> => {
-    if (
-      !this.state?.self ||
-      !!this.state.userInvalid ||
-      !!this.state.anotherDeviceChangedPassword
-    ) {
-      console.log("[JOB] skipping poll with invalid user");
-      return;
-    }
+    /**
+     * Periodic job for polling the server.  Is scheduled by setupPolling, and
+     * will reschedule itself in the same way.
+     */
+    const jobPollServerUpdates = async (): Promise<void> => {
+      // Mark that poll has started.
+      console.log("[JOB] polling server for updates");
+      activePollTimeout = undefined;
+      try {
+        // Do the real work of the poll.
+        doPollServerUpdates();
+      } finally {
+        // Reschedule next poll.
+        lastBackgroundPoll = Date.now();
+        setupPolling();
+      }
+    };
 
-    // Check for updates to User object.
-    try {
-      await pollUser(this.state.self, this.dispatch);
-    } catch (e) {
-      console.log("[JOB] failed poll user", e);
-    }
+    const doPollServerUpdates = async (): Promise<void> => {
+      if (
+        !state.self ||
+        !!state.userInvalid ||
+        !!state.anotherDeviceChangedPassword
+      ) {
+        console.log("[JOB] skipping poll with invalid user");
+        return;
+      }
 
-    // Trigger extra download from E2EE storage, and extra fetch of
-    // subscriptions, but only if the first-time sync had time to complete.
-    if (this.state.completedFirstSync) {
-      this.update({
-        ...this.state,
-        extraDownloadRequested: true,
-        extraSubscriptionFetchRequested: true
+      // Check for updates to User object.
+      try {
+        await pollUser(state.self, actionDispatch);
+      } catch (e) {
+        console.log("[JOB] failed poll user", e);
+      }
+
+      // Trigger extra download from E2EE storage, and extra fetch of
+      // subscriptions, but only if the first-time sync had time to complete.
+      if (state.completedFirstSync) {
+        update({
+          extraDownloadRequested: true,
+          extraSubscriptionFetchRequested: true
+        });
+      }
+    };
+
+    const setIsOffline = (offline: boolean): void => {
+      console.log(`[CONNECTIVITY] ${offline ? "offline" : "online"}`);
+      update({
+        offline: offline
       });
-    }
-  };
+      if (offline) {
+        toast("Offline", {
+          icon: "❌",
+          style: {
+            width: "80vw"
+          }
+        });
+      } else {
+        toast("Back Online", {
+          icon: "👍",
+          style: {
+            width: "80vw"
+          }
+        });
+      }
+    };
 
-  async startJobSyncOfflineCheckins(): Promise<void> {
-    await this.jobSyncOfflineCheckins();
-    setInterval(this.jobSyncOfflineCheckins, 1000 * 60);
-  }
+    const startJobSyncOfflineCheckins = async (): Promise<void> => {
+      await jobSyncOfflineCheckins();
+      setInterval(jobSyncOfflineCheckins, 1000 * 60);
+    };
 
-  jobSyncOfflineCheckins = async (): Promise<void> => {
-    if (!this.state.self || this.state.offline) {
-      return;
-    }
+    const jobSyncOfflineCheckins = async (): Promise<void> => {
+      if (!state.self || state.offline) {
+        return;
+      }
 
-    if (this.state.checkedinOfflineDevconnectTickets.length > 0) {
-      const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
+      if (state.checkedinOfflineDevconnectTickets.length > 0) {
+        const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
+          appConfig.zupassServer,
+          {
+            checkedOfflineInDevconnectTicketIDs:
+              state.checkedinOfflineDevconnectTickets.map((t) => t.id),
+            checkerProof: await getOrGenerateCheckinCredential(state.identity)
+          }
+        );
+
+        if (checkinOfflineTicketsResult.success) {
+          update({
+            checkedinOfflineDevconnectTickets: []
+          });
+          saveCheckedInOfflineTickets(undefined);
+        }
+      }
+
+      const offlineTicketsResult = await requestOfflineTickets(
         appConfig.zupassServer,
         {
-          checkedOfflineInDevconnectTicketIDs:
-            this.state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-          checkerProof: await getOrGenerateCheckinCredential(
-            this.state.identity
-          )
+          checkerProof: await getOrGenerateCheckinCredential(state.identity)
         }
       );
 
-      if (checkinOfflineTicketsResult.success) {
-        this.update({
-          ...this.state,
-          checkedinOfflineDevconnectTickets: []
+      if (offlineTicketsResult.success) {
+        update({
+          offlineTickets: offlineTicketsResult.value.offlineTickets
         });
-        saveCheckedInOfflineTickets(undefined);
+        saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
       }
-    }
+    };
 
-    const offlineTicketsResult = await requestOfflineTickets(
-      appConfig.zupassServer,
-      {
-        checkerProof: await getOrGenerateCheckinCredential(this.state.identity)
-      }
-    );
-
-    if (offlineTicketsResult.success) {
-      this.update({
-        ...this.state,
-        offlineTickets: offlineTicketsResult.value.offlineTickets
+    return (): void => {
+      console.log("[JOB] Starting background jobs...");
+      document.addEventListener("visibilitychange", () => {
+        setupPolling();
       });
-      saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
-    }
-  };
+      setupPolling();
+      startJobSyncOfflineCheckins();
+      jobCheckConnectivity();
+      generateCheckinCredential();
+    };
+  }, [actionDispatch, state, update]);
+
+  useEffect(() => {
+    setupBroadcastChannel(actionDispatch);
+    setupUsingLaserScanning();
+    startBackgroundJobs();
+
+    return () => {
+      closeBroadcastChannel();
+    };
+  }, [actionDispatch, startBackgroundJobs]);
+
+  const hasStack = !!state.error?.stack;
+  return (
+    <StateContext.Provider value={stateContextState}>
+      {!isWebAssemblySupported() ? (
+        <HashRouter>
+          <Routes>
+            <Route path="/terms" element={<TermsScreen />} />
+            <Route path="*" element={<NoWASMScreen />} />
+          </Routes>
+        </HashRouter>
+      ) : !hasStack ? (
+        <Router />
+      ) : (
+        <HashRouter>
+          <Routes>
+            <Route path="*" element={<AppContainer bg="gray" />} />
+          </Routes>
+        </HashRouter>
+      )}
+    </StateContext.Provider>
+  );
 }
 
 const Router = React.memo(RouterImpl);

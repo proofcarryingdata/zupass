@@ -109,7 +109,7 @@ export function loadOfflineTickets(): OfflineTickets {
 
 const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_devconnect_tickets";
 export function saveCheckedInOfflineTickets(
-  offlineTickets: OfflineDevconnectTicket[]
+  offlineTickets: OfflineDevconnectTicket[] | undefined
 ): void {
   if (!offlineTickets) {
     window.localStorage.removeItem(CHECKED_IN_OFFLINE_TICKETS_KEY);
