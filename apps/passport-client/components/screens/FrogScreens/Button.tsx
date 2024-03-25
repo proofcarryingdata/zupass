@@ -35,7 +35,7 @@ export function ActionButton({
   /**
    * The component to use for the button. Defaults to Button.
    */
-  ButtonComponent?: React.ComponentType<React.ComponentProps<typeof Button>>;
+  ButtonComponent?: FrogSearchButtonType;
 }): JSX.Element {
   const [loading, setLoading] = useState(false);
   // Every user click increment the trigger count, which will trigger the
@@ -173,6 +173,14 @@ export const FrogSearchButton = forwardRef(
   }
 );
 
+export type FrogSearchButtonType =
+  | typeof FrogSearchButton
+  | typeof WrithingVoidSearchButton
+  | typeof TheCapitalSearchButton
+  | typeof DesertSearchButton
+  | typeof JungleSearchButton
+  | typeof CelestialPondSearchButton;
+
 export const Button = styled.button<{ pending?: boolean }>`
   font-size: 16px;
   padding: 8px;
@@ -284,7 +292,10 @@ const TextureSearchButton = forwardRef(
 
 export const DesertSearchButton = forwardRef(
   (
-    props: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    props: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     return (
@@ -299,7 +310,10 @@ export const DesertSearchButton = forwardRef(
 
 export const JungleSearchButton = forwardRef(
   (
-    props: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    props: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     return (
@@ -317,7 +331,10 @@ export const CelestialPondSearchButton = forwardRef(
     {
       children,
       ...props
-    }: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    }: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     const ref = useRef<HTMLDivElement>(null);
@@ -367,7 +384,10 @@ export const WrithingVoidSearchButton = forwardRef(
       onClick,
       disabled,
       ...props
-    }: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    }: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     const ref = useRef<HTMLDivElement>(null);
