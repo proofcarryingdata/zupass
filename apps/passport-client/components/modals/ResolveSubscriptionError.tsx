@@ -55,7 +55,7 @@ export function ResolveSubscriptionErrorModal(): JSX.Element | null {
           error={error}
         />
       )}
-      {subscription && !error && (
+      {!error && (
         <>
           <div>
             Your subscription to <strong>{subscription.feed.name}</strong> is

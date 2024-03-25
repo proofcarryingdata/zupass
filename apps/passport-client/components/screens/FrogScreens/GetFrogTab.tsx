@@ -108,7 +108,7 @@ const SearchButton = ({
   active: boolean;
 }): JSX.Element => {
   const dispatch = useDispatch();
-  const countDown = useCountDown(nextFetchAt || 0);
+  const countDown = useCountDown(nextFetchAt ?? 0);
   const canFetch = active && (!nextFetchAt || nextFetchAt < Date.now());
   const confetti = useFrogConfetti();
 
@@ -129,7 +129,7 @@ const SearchButton = ({
                   // nb: sync-subscription swallows http errors and always resolve as success
                   const error = subManager.getError(id);
                   if (error?.type === SubscriptionErrorType.FetchError) {
-                    const fetchErrorMsg = error?.e?.message?.toLowerCase();
+                    const fetchErrorMsg = error.e?.message?.toLowerCase();
                     if (fetchErrorMsg?.includes("not active")) {
                       subManager.resetError(id);
                       return reject(

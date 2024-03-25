@@ -77,7 +77,7 @@ export function ProveAndAddScreen({
           <Spacer h={24} />
           <AppHeader isProveOrAddScreen={true}>
             <H2>
-              {request?.options?.title || `Add and Prove ${request.pcdType}`}
+              {request.options?.title ?? `Add and Prove ${request.pcdType}`}
             </H2>
           </AppHeader>
           <Spacer h={16} />

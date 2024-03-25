@@ -24,7 +24,7 @@ export function ScoreTab({
   const [scores, setScores] = useState<FrogCryptoScore[]>([]);
   const refreshScores = useCallback(async () => {
     requestFrogCryptoGetScoreboard(appConfig.zupassServer).then((res) => {
-      setScores(res.value || []);
+      setScores(res.value ?? []);
     });
   }, []);
   useEffect(() => {

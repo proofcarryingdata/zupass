@@ -107,7 +107,7 @@ export function AddSubscriptionScreen(): JSX.Element | null {
   useEffect(() => {
     if (!self || userForcedToLogout) {
       clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(url ?? "");
+      const stringifiedRequest = JSON.stringify(url);
       setPendingAddSubscriptionRequest(stringifiedRequest);
       const emailParameter = suggestedEmail
         ? `&email=${encodeURIComponent(suggestedEmail)}`
@@ -172,13 +172,13 @@ export function AddSubscriptionScreen(): JSX.Element | null {
 
   const alreadyFetched =
     feedFetch.state === FeedFetchStates.Fetched &&
-    feedFetch.success === true &&
+    feedFetch.success &&
     feedFetch.providerUrl === providerUrl;
 
   const isFetching = feedFetch.state === FeedFetchStates.Fetching;
 
   const fetchError =
-    feedFetch.state === FeedFetchStates.Fetched && feedFetch.success === false;
+    feedFetch.state === FeedFetchStates.Fetched && !feedFetch.success;
 
   // If self is null, the earlier useEffect hook will take us to the login page
   if (!self) {
@@ -233,7 +233,7 @@ export function AddSubscriptionScreen(): JSX.Element | null {
           }
           {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
           {feedFetch.state === FeedFetchStates.Fetched &&
-            feedFetch.success === true &&
+            feedFetch.success &&
             feedFetch.feeds.map((info, i) => (
               <React.Fragment key={i}>
                 <Spacer h={8} />
@@ -304,7 +304,7 @@ export function SubscriptionInfoRow({
       ref={(element): void => {
         ref.current = element ?? undefined;
       }}
-      expanded={moreInfo || (isExpanded ?? false)}
+      expanded={moreInfo ?? isExpanded ?? false}
       lockExpanded={isExpanded ?? false}
       onClick={async (e: MouseEvent): Promise<void> => {
         const targetTag = (e.target as HTMLElement).tagName.toLowerCase();
@@ -530,11 +530,9 @@ function AlreadySubscribed({
   };
 
   const navigate = useNavigate();
-  const folders = existingSubscription
-    ? _.uniq(existingSubscription.feed.permissions.map((p) => p.folder)).sort(
-        (a, b) => a.localeCompare(b)
-      )
-    : [];
+  const folders = _.uniq(
+    existingSubscription.feed.permissions.map((p) => p.folder)
+  ).sort((a, b) => a.localeCompare(b));
   const goToFolder = useCallback(
     (folder: string) => {
       navigate(`/?folder=${encodeURIComponent(folder)}`);

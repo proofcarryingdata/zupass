@@ -57,7 +57,7 @@ export function FrogsModal({
         <PCDCard pcd={focusedPCD} expanded hideRemoveButton />
         <ButtonContainer
           onClick={onSwipeLeft}
-          disabled={focused === pcds?.length - 1}
+          disabled={focused === pcds.length - 1}
         >
           <span>&rsaquo;</span>
         </ButtonContainer>

@@ -294,17 +294,14 @@ export function DataTable({
       checkedKey="checked"
       showMultiSelect={!!setCheckedIds}
       customRenderCell={{
-        ...keys.reduce(
-          (acc, key) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            acc[key] = (row: any): any => {
-              return typeof row[key] === "undefined" ? "<undefined>" : row[key];
-            };
-            return acc;
-          },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...keys.reduce<Record<string, (row: any) => any>>((acc, key) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          {} as Record<string, (row: any) => any>
-        ),
+          acc[key] = (row: any): any => {
+            return typeof row[key] === "undefined" ? "<undefined>" : row[key];
+          };
+          return acc;
+        }, {}),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         description: (row: any): JSX.Element => {
           return (

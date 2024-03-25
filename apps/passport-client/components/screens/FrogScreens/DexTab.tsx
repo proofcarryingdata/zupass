@@ -231,7 +231,7 @@ type FrogsById = {
 const useGroupedPCDs = (pcds: EdDSAFrogPCD[]): FrogsById => {
   return useMemo(
     () =>
-      pcds.reduce((acc, pcd) => {
+      pcds.reduce<FrogsById>((acc, pcd) => {
         if (!acc[pcd.claim.data.frogId]) {
           acc[pcd.claim.data.frogId] = {
             pcds: [],
@@ -240,7 +240,7 @@ const useGroupedPCDs = (pcds: EdDSAFrogPCD[]): FrogsById => {
         }
         acc[pcd.claim.data.frogId].pcds.push(pcd);
         return acc;
-      }, [] as FrogsById),
+      }, []),
     [pcds]
   );
 };

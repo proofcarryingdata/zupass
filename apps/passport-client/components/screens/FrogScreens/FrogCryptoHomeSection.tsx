@@ -240,7 +240,7 @@ export function useUserFeedState(subscriptions: Subscription[]): {
         }
       );
 
-      if (state.success === false) {
+      if (!state.success) {
         console.error("Failed to get user state", state.error);
         return;
       }

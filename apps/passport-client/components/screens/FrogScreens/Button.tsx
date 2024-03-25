@@ -447,7 +447,7 @@ export const WrithingVoidSearchButton = forwardRef(
             backgroundPosition: "center center"
           }}
           onClick={onClickAnimated}
-          disabled={disabled || animating}
+          disabled={disabled ?? animating}
           {...props}
           backgroundImage="url(/images/frogs/writhingvoid.png)"
         >

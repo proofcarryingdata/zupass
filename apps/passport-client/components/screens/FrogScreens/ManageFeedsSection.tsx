@@ -258,22 +258,19 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
       private: feed.feed.private,
       activeUntil: new Date(feed.feed.activeUntil * 1000).toISOString(),
       cooldown: feed.feed.cooldown,
-      ...Object.keys(Biome).reduce(
-        (acc, biome) => {
-          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          const biomeConfig = feed.feed.biomes[biome];
-          if (biomeConfig) {
-            acc[
-              `biomes${_.upperFirst(
-                biome.replace(/\s/, "").toLowerCase()
-              )}Dropweightscaler`
-            ] = biomeConfig.dropWeightScaler;
-          }
-          return acc;
-        },
-        {} as Record<string, number>
-      ),
+      ...Object.keys(Biome).reduce<Record<string, number>>((acc, biome) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
+        const biomeConfig = feed.feed.biomes[biome];
+        if (biomeConfig) {
+          acc[
+            `biomes${_.upperFirst(
+              biome.replace(/\s/, "").toLowerCase()
+            )}Dropweightscaler`
+          ] = biomeConfig.dropWeightScaler;
+        }
+        return acc;
+      }, {}),
       codes: feed.feed.codes?.join(",")
     })),
     null,
@@ -310,17 +307,14 @@ export function DataTable({
       actionTypes={["edit"]}
       noDataMessage="No Feeds"
       customRenderCell={{
-        ...keys.reduce(
-          (acc, key) => {
-            // eslint-disable-next-line @typescript-eslint/no-explicit-any
-            acc[key] = (row: any): any => {
-              return typeof row[key] === "undefined" ? "<undefined>" : row[key];
-            };
-            return acc;
-          },
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...keys.reduce<Record<string, (row: any) => any>>((acc, key) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          {} as Record<string, (row: any) => any>
-        ),
+          acc[key] = (row: any): any => {
+            return typeof row[key] === "undefined" ? "<undefined>" : row[key];
+          };
+          return acc;
+        }, {}),
         // eslint-disable-next-line @typescript-eslint/no-explicit-any
         private: (row: any): string => {
           return String(row["private"]);
