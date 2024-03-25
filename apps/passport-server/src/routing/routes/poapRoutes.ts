@@ -58,4 +58,19 @@ export function initPoapRoutes(
 
     res.redirect(await poapService.getVitaliaPoapRedirectUrl(proof));
   });
+
+  app.get(
+    "/poap/edgecitydenver/callback",
+    async (req: Request, res: Response) => {
+      const proof = checkQueryParam(req, "proof");
+      if (!proof || typeof proof !== "string") {
+        throw new PCDHTTPError(
+          400,
+          "proof field needs to be a string and be non-empty"
+        );
+      }
+
+      res.redirect(await poapService.getEdgeCityDenverPoapRedirectUrl(proof));
+    }
+  );
 }
