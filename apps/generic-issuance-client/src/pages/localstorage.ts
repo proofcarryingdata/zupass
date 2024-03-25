@@ -22,7 +22,9 @@ export function useInitialState(
     ...savedState,
     devModeAuthToken,
     setState: () => {
-      //
+      // this function is here to satisfy the type requirements of GIContextState
+      // it is replaced by the actual setState function when the context is created
+      // in the main.tsx file
     },
     logout: async () => {
       if (stytch) {
