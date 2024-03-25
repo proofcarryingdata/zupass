@@ -71,13 +71,13 @@ export function RequireAddPasswordModal(): JSX.Element {
       end-to-end-encrypted Zupass. To upgrade, please choose a password. Make
       sure to remember it, otherwise you will lose access to all your PCDs.
       <Spacer h={24} />
-      <BigInput value={self.email} disabled={true} />
+      <BigInput value={self?.email} disabled={true} />
       <Spacer h={8} />
       <NewPasswordForm
         error={error}
         setError={setError}
         passwordInputPlaceholder="New password"
-        email={self.email}
+        email={self?.email}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
         submitButtonText="Confirm"

@@ -15,6 +15,14 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
 }
 
+if (!process.env.PASSPORT_SERVER_URL) {
+  throw new Error("PASSPORT_SERVER_URL not defined");
+}
+
+if (!process.env.FROGCRYPTO_SERVER_URL) {
+  throw new Error("FROGCRYPTO_SERVER_URL not defined");
+}
+
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL,

@@ -101,7 +101,7 @@ export function EdgeCityHome(): JSX.Element {
   const [error, setError] = useState("");
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
-  const { email } = useSelf();
+  const self = useSelf();
 
   useEffect(() => {
     setLoading(true);
@@ -128,13 +128,13 @@ export function EdgeCityHome(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!scores.length || !email) {
+    if (!scores.length || !self?.email) {
       setScore(undefined);
       return;
     }
-    const emailHash = `0x${sha256(`edgecity${email}`)}`;
+    const emailHash = `0x${sha256(`edgecity${self.email}`)}`;
     setScore(scores.find((s) => s.email_hash === emailHash));
-  }, [scores, email]);
+  }, [scores, self]);
 
   useEffect(() => {
     // Set CSS variables on the html element to change into dark mode.
