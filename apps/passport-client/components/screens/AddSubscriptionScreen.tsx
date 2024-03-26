@@ -396,7 +396,7 @@ function SubscribeSection({
   });
 
   const onSubscribeClick = useCallback(() => {
-    (async (): Promise<void> => {
+    ((): void => {
       dispatch({
         type: "add-subscription",
         providerUrl,
@@ -495,7 +495,7 @@ function AlreadySubscribed({
   existingSubscription: Subscription;
 }): JSX.Element {
   const dispatch = useDispatch();
-  const onUnsubscribeClick = useCallback(async () => {
+  const onUnsubscribeClick = useCallback(() => {
     if (
       window.confirm(
         `Are you sure you want to unsubscribe from ${existingSubscription.feed.name}?`
@@ -512,7 +512,7 @@ function AlreadySubscribed({
         deleteContents = true;
       }
 
-      await dispatch({
+      dispatch({
         type: "remove-subscription",
         subscriptionId: existingSubscription.id,
         deleteContents

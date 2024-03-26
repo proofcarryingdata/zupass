@@ -74,7 +74,7 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
   );
 
   const handleConfirmationEmailResult = useCallback(
-    async (result: ConfirmEmailResult) => {
+    (result: ConfirmEmailResult) => {
       if (!result.success) {
         setError("Couldn't send pasword reset email. Try again later.");
         setSendingConfirmationEmail(false);

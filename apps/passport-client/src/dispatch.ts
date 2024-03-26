@@ -295,8 +295,8 @@ async function createNewUserSkipPassword(
     modal: { modalType: "none" }
   });
   const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
-  await saveEncryptionKey(encryptionKey);
+  const encryptionKey = crypto.generateRandomKey();
+  saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -333,9 +333,9 @@ async function createNewUserWithPassword(
 ): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
-    await crypto.generateSaltAndEncryptionKey(password);
+    crypto.generateSaltAndEncryptionKey(password);
 
-  await saveEncryptionKey(encryptionKey);
+  saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey

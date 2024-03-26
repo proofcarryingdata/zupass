@@ -33,7 +33,7 @@ export function GenericProveScreen({
   const dispatch = useDispatch();
 
   const onProve = useCallback(
-    async (
+    (
       _pcd: PCD,
       serialized: SerializedPCD | undefined,
       pendingPCD: PendingPCD | undefined

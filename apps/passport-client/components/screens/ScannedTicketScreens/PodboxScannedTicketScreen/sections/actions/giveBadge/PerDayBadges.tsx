@@ -93,7 +93,7 @@ function PerDayBadgeButton({
       }
     }
   });
-  const onClick = useCallback(async () => {
+  const onClick = useCallback(() => {
     setInProgress(true);
     giveBadge.execute().finally(() => {
       window.location.reload();

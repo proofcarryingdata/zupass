@@ -90,7 +90,7 @@ function useBackgroundJobs(): void {
      * scheduled.  It may happen immediately after the window becomes visible,
      * but never less than than BG_POLL_INTERVAL_MS after the previous poll.
      */
-    const setupPolling = async (): Promise<void> => {
+    const setupPolling = (): void => {
       if (!document.hidden) {
         if (!activePollTimeout) {
           const nextPollDelay = Math.max(
@@ -115,7 +115,7 @@ function useBackgroundJobs(): void {
      * Periodic job for polling the server.  Is scheduled by setupPolling, and
      * will reschedule itself in the same way.
      */
-    const jobPollServerUpdates = async (): Promise<void> => {
+    const jobPollServerUpdates = (): void => {
       // Mark that poll has started.
       console.log("[JOB] polling server for updates");
       activePollTimeout = undefined;

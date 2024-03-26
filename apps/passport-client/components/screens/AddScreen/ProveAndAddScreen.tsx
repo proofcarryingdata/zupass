@@ -28,7 +28,7 @@ export function ProveAndAddScreen({
   >();
 
   const onProve = useCallback(
-    async (_: PCD | undefined, serializedPCD: SerializedPCD | undefined) => {
+    (_: PCD | undefined, serializedPCD: SerializedPCD | undefined) => {
       if (serializedPCD) {
         dispatch({
           type: "add-pcds",

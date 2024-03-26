@@ -80,7 +80,7 @@ function SendEmailVerification({ email }: { email: string }): JSX.Element {
             );
 
             if (storageResult.success) {
-              await dispatch({
+              dispatch({
                 type: "load-after-login",
                 storage: storageResult.value,
                 encryptionKey
