@@ -282,11 +282,9 @@ export function useLoginIfNoSelf(
       const stringifiedRequest = JSON.stringify(request ?? "");
 
       sessionStorage.setItem(key, stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${key}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
+      window.location.href = `/#/login?redirectedFromAction=true&${key}=${encodeURIComponent(
+        stringifiedRequest
+      )}`;
     }
   }, [key, request, self, userForcedToLogout]);
 }
