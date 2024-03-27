@@ -180,6 +180,9 @@
     "STYTCH_BYPASS",
     "NEXT_PUBLIC_PASSPORT_CLIENT_URL",
     "NEXT_PUBLIC_PASSPORT_SERVER_URL",
+    "ZUPASS_CLIENT_URL_CONSUMER",
+    "ZUPASS_SERVER_URL_CONSUMER",
+    "CONSUMER_SERVER_URL",
     "//// add env vars above this line ////"
   ]
 }
