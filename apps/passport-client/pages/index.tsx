@@ -1,15 +1,20 @@
 import {
-  createStorageBackedCredentialCache,
   requestOfflineTickets,
   requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
-import { isWebAssemblySupported } from "@pcd/util";
-import { Identity } from "@semaphore-protocol/identity";
+import { getErrorMessage, isWebAssemblySupported } from "@pcd/util";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
 import { toast } from "react-hot-toast";
 import { HashRouter, Route, Routes } from "react-router-dom";
+import {
+  Button,
+  H1,
+  Spacer,
+  SupportLink,
+  TextCenter
+} from "../components/core";
 import { AddScreen } from "../components/screens/AddScreen/AddScreen";
 import { AddSubscriptionScreen } from "../components/screens/AddSubscriptionScreen";
 import { ChangePasswordScreen } from "../components/screens/ChangePasswordScreen";
@@ -37,7 +42,12 @@ import { SecondPartyTicketVerifyScreen } from "../components/screens/ScannedTick
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
-import { AppContainer } from "../components/shared/AppContainer";
+import {
+  AppContainer,
+  Background,
+  CenterColumn,
+  GlobalBackground
+} from "../components/shared/AppContainer";
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
@@ -49,32 +59,18 @@ import {
 import { getOrGenerateCheckinCredential } from "../src/checkin";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
+import { loadInitialState } from "../src/loadInitialState";
 import {
-  loadCheckedInOfflineDevconnectTickets,
-  loadEncryptionKey,
-  loadIdentity,
-  loadOfflineTickets,
-  loadPCDs,
-  loadPersistentSyncStatus,
-  loadSelf,
-  loadSubscriptions,
   saveCheckedInOfflineTickets,
-  saveIdentity,
   saveOfflineTickets,
   saveUsingLaserScanner
 } from "../src/localstorage";
 import { registerServiceWorker } from "../src/registerServiceWorker";
 import { AppState, StateEmitter } from "../src/state";
 import { pollUser } from "../src/user";
-import { validateAndLogInitialAppState } from "../src/validateState";
 
 function useBackgroundJobs(): void {
   const { update, getState, dispatch } = useStateContext();
-
-  // const [activePollTimeout, setActivePollTimeout] = useState<
-  //   NodeJS.Timeout | undefined
-  // >(undefined);
-  // const [lastBackgroundPoll, setLastBackgroundPoll] = useState(0);
 
   useEffect(() => {
     let activePollTimeout: NodeJS.Timeout | undefined = undefined;
@@ -282,6 +278,7 @@ function App(): JSX.Element {
       ) : (
         <HashRouter>
           <Routes>
+            <Route path="/terms" element={<TermsScreen />} />
             <Route path="*" element={<AppContainer bg="gray" />} />
           </Routes>
         </HashRouter>
@@ -373,67 +370,6 @@ function setupUsingLaserScanning(): void {
   }
 }
 
-// TODO: move to a separate file
-async function loadInitialState(): Promise<AppState> {
-  let identity = loadIdentity();
-
-  if (!identity) {
-    console.log("Generating a new Semaphore identity...");
-    identity = new Identity();
-    saveIdentity(identity);
-  }
-
-  const self = loadSelf();
-  const pcds = await loadPCDs(self);
-  const encryptionKey = loadEncryptionKey();
-  const subscriptions = await loadSubscriptions();
-  const offlineTickets = loadOfflineTickets();
-  const checkedInOfflineDevconnectTickets =
-    loadCheckedInOfflineDevconnectTickets();
-
-  let modal = { modalType: "none" } as AppState["modal"];
-
-  if (
-    // If on Zupass legacy login, ask user to set password
-    self &&
-    !encryptionKey &&
-    !self.salt
-  ) {
-    console.log("Asking existing user to set a password");
-    modal = { modalType: "upgrade-account-modal" };
-  }
-
-  const credentialCache = createStorageBackedCredentialCache();
-
-  const persistentSyncStatus = loadPersistentSyncStatus();
-
-  const state: AppState = {
-    self,
-    encryptionKey,
-    pcds,
-    identity,
-    modal,
-    subscriptions,
-    resolvingSubscriptionId: undefined,
-    credentialCache,
-    offlineTickets,
-    checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
-    offline: !window.navigator.onLine,
-    serverStorageRevision: persistentSyncStatus.serverStorageRevision,
-    serverStorageHash: persistentSyncStatus.serverStorageHash,
-    importScreen: undefined
-  };
-
-  if (!validateAndLogInitialAppState("loadInitialState", state)) {
-    state.userInvalid = true;
-    state.modal = { modalType: "invalid-participant" };
-  }
-
-  return state;
-}
-
-registerServiceWorker();
-
 interface AppStateProviderProps {
   children: React.ReactNode;
   initialState: AppState;
@@ -504,13 +440,42 @@ const AppStateProvider: React.FC<AppStateProviderProps> = ({
   );
 };
 
-loadInitialState().then((initialState: AppState) => {
-  const root = createRoot(document.querySelector("#root") as Element);
-  root.render(
-    <RollbarProvider>
-      <AppStateProvider initialState={initialState}>
-        <App />
-      </AppStateProvider>
-    </RollbarProvider>
-  );
-});
+registerServiceWorker();
+
+loadInitialState()
+  .then((initialState: AppState) => {
+    const root = createRoot(document.querySelector("#root") as Element);
+    root.render(
+      <RollbarProvider>
+        <AppStateProvider initialState={initialState}>
+          <App />
+        </AppStateProvider>
+      </RollbarProvider>
+    );
+  })
+  .catch((error: unknown) => {
+    const root = createRoot(document.querySelector("#root") as Element);
+    root.render(
+      <RollbarProvider>
+        <GlobalBackground color={"var(--bg-dark-primary)"} />
+        <Background>
+          <CenterColumn>
+            <TextCenter>
+              <Spacer h={64} />
+              <H1>An error occurred when loading Zupass</H1>
+              <Spacer h={24} />
+              Error: {getErrorMessage(error)}
+              <Spacer h={24} />
+              For support, please send a message to <SupportLink />.
+              <Spacer h={24} />
+              <Button onClick={() => window.location.reload()}>
+                Reload Zupass
+              </Button>
+              <Spacer h={24} />
+            </TextCenter>
+            <div></div>
+          </CenterColumn>
+        </Background>
+      </RollbarProvider>
+    );
+  });
