@@ -1,4 +1,5 @@
 import { PCDAddRequest } from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import { useDispatch, useIsSyncSettled } from "../../../src/appHooks";
@@ -35,7 +36,7 @@ export function JustAddScreen({
       });
       setAdded(true);
     } catch (e) {
-      err(dispatch, "Error Adding PCD", e instanceof Error ? e.message : "");
+      err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
   }, [dispatch, request.folder, request.pcd]);
 

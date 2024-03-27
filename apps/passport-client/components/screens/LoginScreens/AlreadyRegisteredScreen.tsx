@@ -6,7 +6,7 @@ import {
   requestLogToServer,
   requestVerifyToken
 } from "@pcd/passport-interface";
-import { sleep } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import {
   FormEvent,
   useCallback,
@@ -166,7 +166,7 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
         });
       } catch (e) {
         setIsLoggingIn(false);
-        return setError(e instanceof Error ? e.message : "Unknown error");
+        return setError(getErrorMessage(e));
       }
     },
     [dispatch, password, salt]

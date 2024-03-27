@@ -1,4 +1,4 @@
-import { sleep } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
@@ -36,7 +36,10 @@ export function RequireAddPasswordModal(): JSX.Element {
     setLoading(true);
     await sleep();
     try {
-      const currentEncryptionKey = loadEncryptionKey() as string;
+      const currentEncryptionKey = loadEncryptionKey();
+      if (!currentEncryptionKey) {
+        throw new Error("Could not load encryption key");
+      }
       await setPassword(
         newPassword,
         currentEncryptionKey,
@@ -51,9 +54,12 @@ export function RequireAddPasswordModal(): JSX.Element {
       });
     } catch (e) {
       console.log("error setting password", e);
-      if (e instanceof Error) {
-        setError(e.message);
-      }
+      alert(
+        `Error setting password
+        
+        ${getErrorMessage(e)}`
+      );
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }

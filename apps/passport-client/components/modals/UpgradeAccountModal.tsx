@@ -1,4 +1,4 @@
-import { sleep } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
@@ -36,7 +36,10 @@ export function UpgradeAccountModal(): JSX.Element | null {
     setLoading(true);
     await sleep();
     try {
-      const currentEncryptionKey = loadEncryptionKey() as string;
+      const currentEncryptionKey = loadEncryptionKey();
+      if (!currentEncryptionKey) {
+        throw new Error("Could not load encryption key");
+      }
       await setPassword(
         newPassword,
         currentEncryptionKey,
@@ -51,7 +54,12 @@ export function UpgradeAccountModal(): JSX.Element | null {
       });
     } catch (e) {
       console.log("error setting password", e);
-      setError(e instanceof Error ? e.message : "Unknown error");
+      alert(
+        `Error setting password
+        
+        ${getErrorMessage(e)}`
+      );
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }

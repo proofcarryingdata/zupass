@@ -6,8 +6,10 @@ import {
 } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
 import { Dispatch, SetStateAction, useEffect, useState } from "react";
+// react-table-lite does not have types
 // eslint-disable-next-line @typescript-eslint/ban-ts-comment
 // @ts-ignore
 import Table from "react-table-lite";
@@ -28,9 +30,7 @@ export function ManageFrogsSection(): JSX.Element {
       setNewFrogs(parsedData);
       setNewFrogsError(undefined);
     } catch (error) {
-      setNewFrogsError(
-        error instanceof Error ? error.message : "Unknown error"
-      );
+      setNewFrogsError(getErrorMessage(error));
     }
   };
 
@@ -182,7 +182,7 @@ function useFrogs(): {
         if (abortController.signal.aborted) {
           return;
         }
-        setError(error instanceof Error ? error.message : "Unknown error");
+        setError(getErrorMessage(error));
       } finally {
         if (!abortController.signal.aborted) {
           setIsLoading(false);

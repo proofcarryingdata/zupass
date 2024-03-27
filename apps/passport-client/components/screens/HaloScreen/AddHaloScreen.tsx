@@ -4,6 +4,7 @@ import {
   HaLoNoncePCDPackage
 } from "@pcd/halo-nonce-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useCallback, useEffect, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
@@ -67,11 +68,7 @@ export function AddHaloScreen({
         }
         setPCD(producedPCD);
       } catch (e) {
-        err(
-          dispatch,
-          "Error Generating PCD",
-          e instanceof Error ? e.message : "Unknown error"
-        );
+        err(dispatch, "Error Generating PCD", getErrorMessage(e));
         setInvalidPCD(true);
       }
     };

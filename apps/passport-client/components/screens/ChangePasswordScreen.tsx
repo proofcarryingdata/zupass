@@ -1,5 +1,6 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
@@ -85,7 +86,7 @@ export function ChangePasswordScreen(): JSX.Element | null {
     } catch (e) {
       console.log("error changing password", e);
       setLoading(false);
-      setError(e instanceof Error ? e.message : "Unknown error");
+      setError(getErrorMessage(e));
     }
   }, [
     loading,
