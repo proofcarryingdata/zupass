@@ -159,7 +159,7 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
       }
 
       try {
-        dispatch({
+        await dispatch({
           type: "load-after-login",
           storage: storageResult.value,
           encryptionKey: encryptionKey

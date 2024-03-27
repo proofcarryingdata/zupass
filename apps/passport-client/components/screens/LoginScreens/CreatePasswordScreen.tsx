@@ -56,7 +56,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
       if (email && token) {
         setSettingPassword(true);
         await sleep();
-        dispatch({
+        await dispatch({
           type: "create-user-skip-password",
           email,
           token
@@ -67,7 +67,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
     }
   }, [dispatch, email, token]);
 
-  const openSkipModal = (): void =>
+  const openSkipModal = (): Promise<void> =>
     dispatch({
       type: "set-modal",
       modal: {
@@ -98,7 +98,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
       if (email && token) {
         setSettingPassword(true);
         await sleep();
-        dispatch({
+        await dispatch({
           type: "login",
           email,
           token,

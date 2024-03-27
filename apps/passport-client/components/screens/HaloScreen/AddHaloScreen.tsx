@@ -82,14 +82,10 @@ export function AddHaloScreen({
         throw new Error("No valid PCD found");
       }
       const serializedPCD = await HaLoNoncePCDPackage.serialize(pcd);
-      dispatch({ type: "add-pcds", pcds: [serializedPCD] });
+      await dispatch({ type: "add-pcds", pcds: [serializedPCD] });
       setAdded(true);
     } catch (e) {
-      err(
-        dispatch,
-        "Error Adding PCD",
-        e instanceof Error ? e.message : "Unknown error"
-      );
+      err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
   }, [dispatch, pcd]);
 

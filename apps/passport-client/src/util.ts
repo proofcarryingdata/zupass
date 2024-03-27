@@ -30,8 +30,8 @@ export function err(
   dispatch: Dispatcher,
   title: string,
   message: string
-): void {
-  dispatch({
+): Promise<void> {
+  return dispatch({
     type: "error",
     error: { title, message }
   });

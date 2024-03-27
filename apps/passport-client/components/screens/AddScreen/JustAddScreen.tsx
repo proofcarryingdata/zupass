@@ -27,16 +27,16 @@ export function JustAddScreen({
   const { error, pcd } = useDeserialized(request.pcd);
   const syncSettled = useIsSyncSettled();
 
-  const onAddClick = useCallback(() => {
+  const onAddClick = useCallback(async () => {
     try {
-      dispatch({
+      await dispatch({
         type: "add-pcds",
         pcds: [request.pcd],
         folder: request.folder
       });
       setAdded(true);
     } catch (e) {
-      err(dispatch, "Error Adding PCD", getErrorMessage(e));
+      await err(dispatch, "Error Adding PCD", getErrorMessage(e));
     }
   }, [dispatch, request.folder, request.pcd]);
 

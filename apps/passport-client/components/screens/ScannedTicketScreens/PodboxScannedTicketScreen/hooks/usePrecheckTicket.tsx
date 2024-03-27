@@ -52,7 +52,7 @@ export function usePreCheckTicket(
       }
 
       if (!identityPCD) {
-        dispatch({ type: "participant-invalid" });
+        await dispatch({ type: "participant-invalid" });
         return;
       }
 

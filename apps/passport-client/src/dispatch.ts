@@ -63,7 +63,7 @@ import {
 import { assertUnreachable } from "./util";
 import { validateAndLogRunningAppState } from "./validateState";
 
-export type Dispatcher = (action: Action) => void;
+export type Dispatcher = (action: Action) => Promise<void>;
 
 export type Action =
   | {

@@ -63,7 +63,7 @@ export function DexTab({
   return (
     <>
       <Button
-        onClick={(): void =>
+        onClick={(): Promise<void> =>
           dispatch({
             type: "set-modal",
             modal: {
