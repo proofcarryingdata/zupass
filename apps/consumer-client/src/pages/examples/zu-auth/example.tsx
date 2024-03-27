@@ -40,7 +40,7 @@ export default function ZuAuthExample(): JSX.Element {
       setAuthenticated(await isLoggedIn());
 
       const savedFields = JSON.parse(
-        localStorage.getItem("fieldsToReveal") ?? ""
+        localStorage.getItem("fieldsToReveal") ?? "{}"
       );
 
       if (savedFields) {
