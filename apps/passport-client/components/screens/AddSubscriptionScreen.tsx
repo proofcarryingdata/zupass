@@ -112,11 +112,9 @@ export function AddSubscriptionScreen(): JSX.Element | null {
       const emailParameter = suggestedEmail
         ? `&email=${encodeURIComponent(suggestedEmail)}`
         : "";
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${
-          pendingRequestKeys.addSubscription
-        }=${encodeURIComponent(stringifiedRequest)}${emailParameter}`;
-      }
+      window.location.href = `/#/login?redirectedFromAction=true&${
+        pendingRequestKeys.addSubscription
+      }=${encodeURIComponent(stringifiedRequest)}${emailParameter}`;
     } else {
       if (
         suggestedEmail &&
