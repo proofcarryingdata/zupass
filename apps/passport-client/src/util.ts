@@ -85,13 +85,13 @@ export function getLastValidVerifyUrl(inputString: string): string | null {
   return null;
 }
 
-export function maybeRedirect(text: string): string | null {
+export function maybeRedirect(text: string): string | undefined {
   if (getVerifyUrlPrefixes().find((prefix) => text.startsWith(prefix))) {
     const hash = text.substring(text.indexOf("#") + 1);
     console.log(`Redirecting to ${hash}`);
     return hash;
   }
-  return null;
+  return undefined;
 }
 
 /**
