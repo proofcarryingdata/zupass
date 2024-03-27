@@ -412,12 +412,10 @@ function ToggleListArgInput({
   const entries = useMemo(
     () =>
       showAll
-        ? // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          Object.entries(arg.value)
-        : // eslint-disable-next-line @typescript-eslint/ban-ts-comment
-          // @ts-ignore
-          Object.entries(arg.value).filter(([_, value]) => value),
+        ? Object.entries(arg.value as unknown as ArrayLike<boolean>)
+        : Object.entries(arg.value as unknown as ArrayLike<boolean>).filter(
+            ([_, value]) => value
+          ),
     [arg.value, showAll]
   );
 

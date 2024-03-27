@@ -183,7 +183,7 @@ function AddEthAddrPCDButton(): JSX.Element {
     if (!("ethereum" in window)) {
       alert("Please install MetaMask to use this dApp!");
     } else {
-      const ethereum: ethers.providers.ExternalProvider =
+      const ethereum: ethers.providers.ExternalProvider | undefined =
         window.ethereum as ethers.providers.ExternalProvider;
       const provider = new ethers.providers.Web3Provider(ethereum);
 
@@ -257,7 +257,7 @@ function AddEthGroupPCDButton(): JSX.Element {
     if (!("ethereum" in window)) {
       alert("Please install MetaMask to use this dApp!");
     } else {
-      const ethereum: ethers.providers.ExternalProvider =
+      const ethereum: ethers.providers.ExternalProvider | undefined =
         window.ethereum as ethers.providers.ExternalProvider;
       const provider = new ethers.providers.Web3Provider(ethereum);
 
