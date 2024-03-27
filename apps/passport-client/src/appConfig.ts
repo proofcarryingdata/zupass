@@ -15,11 +15,19 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
 }
 
-if (!process.env.PASSPORT_SERVER_URL) {
+if (
+  !process.env.PASSPORT_SERVER_URL &&
+  global.window &&
+  !!global.window.alert
+) {
   alert("PASSPORT_SERVER_URL not set");
 }
 
-if (!process.env.FROGCRYPTO_SERVER_URL) {
+if (
+  !process.env.FROGCRYPTO_SERVER_URL &&
+  global.window &&
+  !!global.window.alert
+) {
   alert("FROGCRYPTO_SERVER_URL not set");
 }
 
