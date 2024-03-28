@@ -7,7 +7,10 @@ const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
-    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`
+    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
+    "process.env.CONSUMER_SERVER_URL": `'${process.env.CONSUMER_SERVER_URL}'`,
+    "process.env.ZUPASS_CLIENT_URL_CONSUMER": `'${process.env.ZUPASS_CLIENT_URL_CONSUMER}'`,
+    "process.env.ZUPASS_SERVER_URL_CONSUMER": `'${process.env.ZUPASS_SERVER_URL_CONSUMER}'`
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
