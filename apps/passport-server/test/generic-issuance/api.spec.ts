@@ -76,6 +76,8 @@ describe("generic issuance - external API", function () {
     const pipelineId = randomUUID();
     const eventId = randomUUID();
     const productId = randomUUID();
+    const semaphoreGroupId = randomUUID();
+    const manualTicketId = randomUUID();
 
     const pretixDefinition: PretixPipelineDefinition = {
       id: pipelineId,
@@ -105,16 +107,36 @@ describe("generic issuance - external API", function () {
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
-        }
+        },
+        semaphoreGroups: [
+          {
+            groupId: semaphoreGroupId,
+            name: "Test",
+            memberCriteria: []
+          }
+        ],
+        manualTickets: [
+          {
+            id: manualTicketId,
+            eventId: eventId,
+            productId: productId,
+            attendeeEmail: "test@example.com",
+            attendeeName: "Test"
+          }
+        ]
       },
       type: PipelineType.Pretix,
       timeCreated: "",
       timeUpdated: ""
     };
 
-    expect([pipelineId, eventId, productId]).to.deep.eq(
-      uniqueIdsForPipelineDefinition(pretixDefinition)
-    );
+    expect([
+      pipelineId,
+      eventId,
+      productId,
+      semaphoreGroupId,
+      manualTicketId
+    ]).to.deep.eq(uniqueIdsForPipelineDefinition(pretixDefinition));
 
     const lemonadeDefinition: LemonadePipelineDefinition = {
       id: pipelineId,
@@ -147,16 +169,36 @@ describe("generic issuance - external API", function () {
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
-        }
+        },
+        semaphoreGroups: [
+          {
+            groupId: semaphoreGroupId,
+            name: "Test",
+            memberCriteria: []
+          }
+        ],
+        manualTickets: [
+          {
+            id: manualTicketId,
+            eventId: eventId,
+            productId: productId,
+            attendeeEmail: "test@example.com",
+            attendeeName: "Test"
+          }
+        ]
       },
       type: PipelineType.Lemonade,
       timeCreated: "",
       timeUpdated: ""
     };
 
-    expect([pipelineId, eventId, productId]).to.deep.eq(
-      uniqueIdsForPipelineDefinition(lemonadeDefinition)
-    );
+    expect([
+      pipelineId,
+      eventId,
+      productId,
+      semaphoreGroupId,
+      manualTicketId
+    ]).to.deep.eq(uniqueIdsForPipelineDefinition(lemonadeDefinition));
 
     const csvDefinition: CSVPipelineDefinition = {
       id: pipelineId,
