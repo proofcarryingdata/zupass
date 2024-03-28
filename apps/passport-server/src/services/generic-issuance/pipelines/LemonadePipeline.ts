@@ -1852,8 +1852,6 @@ export class LemonadePipeline implements BasePipeline {
   public static uniqueIds(definition: LemonadePipelineDefinition): string[] {
     const ids = [definition.id];
 
-    ids.push(definition.options.feedOptions.feedId);
-
     for (const event of definition.options.events) {
       ids.push(event.genericIssuanceEventId);
 

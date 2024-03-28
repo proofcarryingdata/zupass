@@ -244,8 +244,6 @@ export class CSVPipeline implements BasePipeline {
    */
   public static uniqueIds(definition: CSVPipelineDefinition): string[] {
     const ids = [definition.id];
-    ids.push(definition.options.feedOptions.feedId);
-
     return ids;
   }
 }

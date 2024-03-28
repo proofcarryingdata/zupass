@@ -74,7 +74,6 @@ describe("generic issuance - external API", function () {
 
   step("verify that IDs are extracted from pipeline definitions", async () => {
     const pipelineId = randomUUID();
-    const feedId = randomUUID();
     const eventId = randomUUID();
     const productId = randomUUID();
 
@@ -102,7 +101,7 @@ describe("generic issuance - external API", function () {
           }
         ],
         feedOptions: {
-          feedId: feedId,
+          feedId: "0",
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
@@ -113,7 +112,7 @@ describe("generic issuance - external API", function () {
       timeUpdated: ""
     };
 
-    expect([pipelineId, feedId, eventId, productId]).to.deep.eq(
+    expect([pipelineId, eventId, productId]).to.deep.eq(
       uniqueIdsForPipelineDefinition(pretixDefinition)
     );
 
@@ -144,7 +143,7 @@ describe("generic issuance - external API", function () {
           }
         ],
         feedOptions: {
-          feedId: feedId,
+          feedId: "0",
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
@@ -155,7 +154,7 @@ describe("generic issuance - external API", function () {
       timeUpdated: ""
     };
 
-    expect([pipelineId, feedId, eventId, productId]).to.deep.eq(
+    expect([pipelineId, eventId, productId]).to.deep.eq(
       uniqueIdsForPipelineDefinition(lemonadeDefinition)
     );
 
@@ -165,7 +164,7 @@ describe("generic issuance - external API", function () {
       editorUserIds: [],
       options: {
         feedOptions: {
-          feedId: feedId,
+          feedId: "0",
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
@@ -177,7 +176,7 @@ describe("generic issuance - external API", function () {
       timeUpdated: ""
     };
 
-    expect([pipelineId, feedId]).to.deep.eq(
+    expect([pipelineId]).to.deep.eq(
       uniqueIdsForPipelineDefinition(csvDefinition)
     );
   });
@@ -193,7 +192,14 @@ describe("generic issuance - external API", function () {
         name: "Test pipeline",
         pretixAPIKey: "",
         pretixOrgUrl: "",
-        events: [],
+        events: [
+          {
+            name: "Test event",
+            externalId: "external-id",
+            genericIssuanceId: pipelineId, // Re-used ID
+            products: []
+          }
+        ],
         feedOptions: {
           feedId: pipelineId, // Already used!
           feedDescription: "",
@@ -220,7 +226,7 @@ describe("generic issuance - external API", function () {
 
     {
       // Replace the duplicate ID with a different one
-      definition.options.feedOptions.feedId = randomUUID();
+      definition.options.events[0].genericIssuanceId = randomUUID();
 
       const result = await requestGenericIssuanceUpsertPipeline(
         process.env.PASSPORT_SERVER_URL as string,
@@ -235,27 +241,6 @@ describe("generic issuance - external API", function () {
 
       // Pipeline ID can change when being saved for the first time!
       pipelineId = definition.id;
-    }
-
-    {
-      definition.options.events = [
-        {
-          name: "Test event",
-          externalId: "external-id",
-          genericIssuanceId: pipelineId, // Re-used ID
-          products: []
-        }
-      ];
-
-      const result = await requestGenericIssuanceUpsertPipeline(
-        process.env.PASSPORT_SERVER_URL as string,
-        { pipeline: definition, jwt: adminGIUserEmail }
-      );
-
-      expectFalse(result.success);
-      expect(result.error).to.eq(
-        `ID ${pipelineId} is used more than once in this pipeline`
-      );
     }
 
     {
@@ -325,7 +310,8 @@ describe("generic issuance - external API", function () {
 
     const firstPipelineId = randomUUID();
     const secondPipelineId = randomUUID();
-    const feedId = randomUUID();
+    const eventId = randomUUID();
+    const productId = randomUUID();
 
     let firstPipelineDefinition: PretixPipelineDefinition = {
       id: firstPipelineId,
@@ -335,9 +321,23 @@ describe("generic issuance - external API", function () {
         name: "Test pipeline",
         pretixAPIKey: "",
         pretixOrgUrl: "",
-        events: [],
+        events: [
+          {
+            name: "Test event",
+            externalId: "external-id",
+            genericIssuanceId: eventId,
+            products: [
+              {
+                name: "Test product",
+                externalId: "external-id",
+                genericIssuanceId: productId,
+                isSuperUser: false
+              }
+            ]
+          }
+        ],
         feedOptions: {
-          feedId: feedId,
+          feedId: "0",
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
@@ -367,9 +367,23 @@ describe("generic issuance - external API", function () {
         name: "Test pipeline",
         pretixAPIKey: "",
         pretixOrgUrl: "",
-        events: [],
+        events: [
+          {
+            name: "Test event",
+            externalId: "external-id",
+            genericIssuanceId: eventId,
+            products: [
+              {
+                name: "Test product",
+                externalId: "external-id",
+                genericIssuanceId: productId,
+                isSuperUser: false
+              }
+            ]
+          }
+        ],
         feedOptions: {
-          feedId: feedId, // Re-use from the first pipeline
+          feedId: "0",
           feedDescription: "",
           feedDisplayName: "Test",
           feedFolder: "Test"
@@ -381,9 +395,6 @@ describe("generic issuance - external API", function () {
     };
 
     {
-      expect(firstPipelineDefinition.options.feedOptions.feedId).to.eq(
-        secondPipelineDefinition.options.feedOptions.feedId
-      );
       const result = await requestGenericIssuanceUpsertPipeline(
         process.env.PASSPORT_SERVER_URL as string,
         { pipeline: secondPipelineDefinition, jwt: adminGIUserEmail }
@@ -392,7 +403,21 @@ describe("generic issuance - external API", function () {
     }
     {
       // Remove the conflict
-      secondPipelineDefinition.options.feedOptions.feedId = randomUUID();
+      secondPipelineDefinition.options.events = [
+        {
+          name: "Test event",
+          externalId: "external-id",
+          genericIssuanceId: randomUUID(),
+          products: [
+            {
+              name: "Test product",
+              externalId: "external-id",
+              genericIssuanceId: randomUUID(),
+              isSuperUser: false
+            }
+          ]
+        }
+      ];
       const result = await requestGenericIssuanceUpsertPipeline(
         process.env.PASSPORT_SERVER_URL as string,
         { pipeline: secondPipelineDefinition, jwt: adminGIUserEmail }
