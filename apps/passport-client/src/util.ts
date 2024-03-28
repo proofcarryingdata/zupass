@@ -8,10 +8,6 @@ import _ from "lodash";
 import { v4 as uuid } from "uuid";
 import { Dispatcher } from "./dispatch";
 
-export function assertUnreachable(_: never): never {
-  throw new Error("Unreachable");
-}
-
 export function getHost(returnURL: string): string {
   const url = new URL(returnURL);
   return url.host;

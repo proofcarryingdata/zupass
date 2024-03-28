@@ -1845,6 +1845,33 @@ export class LemonadePipeline implements BasePipeline {
   public static is(p: Pipeline): p is LemonadePipeline {
     return p.type === PipelineType.Lemonade;
   }
+
+  /**
+   * Returns all of the IDs associated with a Lemonade pipeline definition.
+   */
+  public static uniqueIds(definition: LemonadePipelineDefinition): string[] {
+    const ids = [definition.id];
+
+    ids.push(definition.options.feedOptions.feedId);
+
+    for (const event of definition.options.events) {
+      ids.push(event.genericIssuanceEventId);
+
+      for (const product of event.ticketTypes) {
+        ids.push(product.genericIssuanceProductId);
+      }
+    }
+
+    for (const semaphoreGroup of definition.options.semaphoreGroups ?? []) {
+      ids.push(semaphoreGroup.groupId);
+    }
+
+    for (const manualTicket of definition.options.manualTickets ?? []) {
+      ids.push(manualTicket.id);
+    }
+
+    return ids;
+  }
 }
 
 /**

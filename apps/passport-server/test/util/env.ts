@@ -48,7 +48,8 @@ export const testingEnv: EnvironmentVariables = Object.freeze({
   PRETIX_SYNC_DISABLED: undefined,
   ACCOUNT_RESET_RATE_LIMIT_DISABLED: undefined,
   TICKET_ISSUANCE_CUTOFF_DATE: undefined,
-  GENERIC_RATE_LIMIT_DISABLED: undefined
+  GENERIC_RATE_LIMIT_DISABLED: undefined,
+  STYTCH_BYPASS: undefined
 });
 
 export async function overrideEnvironment(

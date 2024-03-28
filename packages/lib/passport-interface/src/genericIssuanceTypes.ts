@@ -475,7 +475,7 @@ export function isCSVPipelineDefinition(
 /**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
-export const PipelineDefinitionSchema = z.union([
+export const PipelineDefinitionSchema = z.discriminatedUnion("type", [
   LemonadePipelineDefinitionSchema,
   PretixPipelineDefinitionSchema,
   CSVPipelineDefinitionSchema

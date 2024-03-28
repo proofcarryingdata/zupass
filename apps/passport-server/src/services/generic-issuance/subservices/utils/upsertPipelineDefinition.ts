@@ -92,8 +92,6 @@ export async function upsertPipelineDefinition(
     getActiveSpan()?.setAttribute("is_new", true);
     newDefinition.ownerUserId = editor.id;
     newDefinition.id = uuidv4();
-    newDefinition.timeCreated = new Date().toISOString();
-    newDefinition.timeUpdated = new Date().toISOString();
     newDefinition.editorUserIds = (
       await Promise.all(
         newDefinition.editorUserIds.map((id) => userSubservice.getUserById(id))
@@ -145,8 +143,19 @@ export async function upsertPipelineDefinition(
     validatedNewDefinition.id
   );
 
-  return {
-    definition: validatedNewDefinition,
-    restartPromise
-  } satisfies UpsertPipelineResult;
+  // To get accurate timestamps, we need to load the pipeline definition
+  const savedDefinition = await pipelineSubservice.getPipeline(
+    validatedNewDefinition.id
+  );
+  if (savedDefinition === undefined) {
+    throw new PCDHTTPError(
+      400,
+      `Unable to load pipeline ${validatedNewDefinition.id} from database`
+    );
+  } else {
+    return {
+      definition: savedDefinition,
+      restartPromise
+    } satisfies UpsertPipelineResult;
+  }
 }
