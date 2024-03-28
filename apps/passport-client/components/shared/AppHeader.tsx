@@ -51,25 +51,26 @@ function AppHeaderImpl({
       </CircleButton>
       {children}
       {!isProveOrAddScreen && (
-        <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
-          {subscriptions.value.getAllErrors().size > 0 && (
-            <ErrorDotContainer>
-              <ErrorDot />
-            </ErrorDotContainer>
-          )}
-          <MdRssFeed
-            size={34}
-            color={isEdgeCity ? "white" : "var(--accent-lite)"}
-          />
-        </CircleButton>
+        <>
+          <CircleButton diameter={34} padding={8} onClick={openSubscriptions}>
+            {subscriptions.value.getAllErrors().size > 0 && (
+              <ErrorDotContainer>
+                <ErrorDot />
+              </ErrorDotContainer>
+            )}
+            <MdRssFeed
+              size={34}
+              color={isEdgeCity ? "white" : "var(--accent-lite)"}
+            />
+          </CircleButton>
+          <CircleButton diameter={34} padding={8} onClick={openScanner}>
+            <MdOutlineQrCodeScanner
+              size={34}
+              color={isEdgeCity ? "white" : "var(--accent-lite)"}
+            />
+          </CircleButton>
+        </>
       )}
-
-      <CircleButton diameter={34} padding={8} onClick={openScanner}>
-        <MdOutlineQrCodeScanner
-          size={34}
-          color={isEdgeCity ? "white" : "var(--accent-lite)"}
-        />
-      </CircleButton>
 
       <CircleButton diameter={34} padding={8} onClick={openSettings}>
         <IoMdSettings
