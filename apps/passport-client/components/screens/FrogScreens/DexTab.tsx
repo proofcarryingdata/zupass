@@ -9,7 +9,7 @@ import { RippleLoader } from "../../core/RippleLoader";
 import { Button, ButtonGroup } from "./Button";
 import { FrogsModal } from "./FrogsModal";
 
-const RARITIES = {
+const RARITIES: Record<Rarity, { label: string; color: string }> = {
   [Rarity.Common]: {
     label: "NORM",
     color: "#2D9061"
@@ -29,6 +29,14 @@ const RARITIES = {
   [Rarity.Mythic]: {
     label: "MYTH",
     color: "linear-gradient(261deg, #D1FFD3 2.82%, #EAF 39.21%, #5BFFFF 99.02%)"
+  },
+  [Rarity.Unknown]: {
+    label: "UNKN",
+    color: "#2D9061"
+  },
+  [Rarity.Object]: {
+    label: "OBJT",
+    color: "#2D9061"
   }
 };
 
@@ -46,7 +54,7 @@ export function DexTab({
   const [mode, setMode] = useState<"grid" | "list">("list");
   const groupedPCDs = useGroupedPCDs(pcds || []);
 
-  const [focusedFrogs, setFocusedFrogs] = useState<EdDSAFrogPCD[]>(null);
+  const [focusedFrogs, setFocusedFrogs] = useState<EdDSAFrogPCD[]>([]);
 
   if (!possibleFrogs) {
     return <RippleLoader />;
@@ -55,7 +63,7 @@ export function DexTab({
   return (
     <>
       <Button
-        onClick={(): void =>
+        onClick={(): Promise<void> =>
           dispatch({
             type: "set-modal",
             modal: {
@@ -99,10 +107,10 @@ export function DexTab({
         />
       )}
 
-      {focusedFrogs && (
+      {focusedFrogs.length > 0 && (
         <FrogsModal
           pcds={focusedFrogs}
-          onClose={(): void => setFocusedFrogs(null)}
+          onClose={(): void => setFocusedFrogs([])}
           color={RARITIES[focusedFrogs[0].claim.data.rarity].color}
         />
       )}
@@ -223,7 +231,7 @@ type FrogsById = {
 const useGroupedPCDs = (pcds: EdDSAFrogPCD[]): FrogsById => {
   return useMemo(
     () =>
-      pcds.reduce((acc, pcd) => {
+      pcds.reduce<FrogsById>((acc, pcd) => {
         if (!acc[pcd.claim.data.frogId]) {
           acc[pcd.claim.data.frogId] = {
             pcds: [],
@@ -232,7 +240,7 @@ const useGroupedPCDs = (pcds: EdDSAFrogPCD[]): FrogsById => {
         }
         acc[pcd.claim.data.frogId].pcds.push(pcd);
         return acc;
-      }, [] as FrogsById),
+      }, []),
     [pcds]
   );
 };

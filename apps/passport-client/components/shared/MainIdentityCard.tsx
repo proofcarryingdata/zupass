@@ -15,7 +15,7 @@ export function MainIdentityCard({ user }: { user?: User }): JSX.Element {
         <Avatar
           size={300}
           variant="bauhaus"
-          name={actualUser.uuid}
+          name={actualUser?.uuid ?? "no name"}
           square={false}
           colors={["#FFAD08", "#EDD75A", "#b7ddb4", "#0C8F8F", "#445056"]}
         />

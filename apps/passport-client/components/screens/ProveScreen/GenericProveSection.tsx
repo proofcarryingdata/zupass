@@ -113,6 +113,9 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       onProve(undefined, undefined, pendingPCDResult.value);
     } else {
       try {
+        if (!pcdPackage) {
+          throw new Error(`PCD package not found for ${pcdType}`);
+        }
         const pcd = await pcdPackage.prove(args);
         const serializedPCD = await pcdPackage.serialize(pcd);
         onProve(pcd as PCDOf<T>, serializedPCD, undefined);
@@ -140,7 +143,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       <PCDArgs
         args={args}
         setArgs={setArgs}
-        options={pcdPackage.getProveDisplayOptions?.()?.defaultArgs}
+        options={pcdPackage?.getProveDisplayOptions?.()?.defaultArgs}
       />
 
       {folder && (

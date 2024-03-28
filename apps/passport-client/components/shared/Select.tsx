@@ -1,3 +1,4 @@
+import type StateManagedSelect from "react-select";
 import ReactSelect from "react-select";
 import styled from "styled-components";
 
@@ -7,7 +8,7 @@ export default function Select<Option = unknown>(
   return <StyledSelect classNamePrefix="Select" isSearchable {...props} />;
 }
 
-const StyledSelect = styled(ReactSelect)`
+const StyledSelect: StateManagedSelect = styled(ReactSelect)`
   .Select__control {
     width: 100%;
     background-color: var(--bg-dark-gray);

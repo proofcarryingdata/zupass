@@ -12,7 +12,7 @@ const END_ANIMATION_DISABLED = true;
 /**
  * A countdown timer towards the end of this season.
  */
-export function Countdown(): JSX.Element {
+export function Countdown(): JSX.Element | null {
   const [timeLeft, setTimeLeft] = useState(
     (THE_END.getTime() - Date.now()) / 1000
   );

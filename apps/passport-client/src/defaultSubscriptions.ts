@@ -43,10 +43,10 @@ export async function addDefaultSubscriptions(
 ): Promise<void> {
   addZupassProvider(subscriptions);
 
-  for (const id in zupassDefaultSubscriptions) {
+  for (const defaultSub of Object.values(zupassDefaultSubscriptions)) {
     subscriptions.subscribe(
       ZUPASS_FEED_URL,
-      zupassDefaultSubscriptions[id],
+      defaultSub,
       // Replace the existing subscription if it already exists
       true
     );

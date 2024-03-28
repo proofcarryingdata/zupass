@@ -69,7 +69,7 @@ export function FrogFolder({
       {(typeof fetchTimestamp === "number" || frogcryptoGrayscale) && (
         <NewFont $disabled={frogcryptoGrayscale}>
           <CountDown
-            timestamp={fetchTimestamp}
+            timestamp={fetchTimestamp ?? Date.now()}
             frogcryptoGrayscale={frogcryptoGrayscale}
           />
         </NewFont>
@@ -108,7 +108,7 @@ function useFetchTimestamp(): number | null {
         return null;
       }
 
-      return _.min(activeFeeds.map((feed) => feed.nextFetchAt));
+      return _.min(activeFeeds.map((feed) => feed.nextFetchAt)) ?? null;
     } catch (e) {
       console.error(e);
       return null;

@@ -1,6 +1,7 @@
 import {
   FeedSubscriptionManager,
   Subscription,
+  SubscriptionError,
   SubscriptionErrorType,
   SubscriptionFetchError,
   SubscriptionPermissionError
@@ -19,18 +20,28 @@ import { Button } from "../core";
 import { PermissionsView } from "../screens/AddSubscriptionScreen";
 import { Spinner } from "../shared/Spinner";
 
-export function ResolveSubscriptionErrorModal(): JSX.Element {
+export function ResolveSubscriptionErrorModal(): JSX.Element | null {
   const subscriptions = useSubscriptions().value;
   const id = useResolvingSubscriptionId();
-  const subscription = subscriptions.getSubscription(id);
-  const error = subscriptions.getError(id);
+  const [subscription, setSubscription] = useState<Subscription | undefined>();
+  const [error, setError] = useState<SubscriptionError | undefined>();
 
   const dispatch = useDispatch();
   const finish = useCallback(() => {
     dispatch({ type: "set-modal", modal: { modalType: "none" } });
   }, [dispatch]);
 
-  return (
+  useEffect(() => {
+    if (id) {
+      setSubscription(subscriptions.getSubscription(id));
+      setError(subscriptions.getError(id) ?? undefined);
+    } else {
+      // If there's no ID, close the modal
+      finish();
+    }
+  }, [finish, id, subscriptions]);
+
+  return subscription ? (
     <ErrorContainer>
       <div>{error ? "" : "Subscription updated"}</div>
       <Spacer h={8} />
@@ -55,7 +66,7 @@ export function ResolveSubscriptionErrorModal(): JSX.Element {
         </>
       )}
     </ErrorContainer>
-  );
+  ) : null;
 }
 
 function FetchError({

@@ -53,25 +53,28 @@ interface GroupedEvent {
   button?: { text: string; link: string };
 }
 
-const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
-  const existingIndex = acc.findIndex(
-    (event) => event.eventName === item.eventName
-  );
-  if (existingIndex > -1) {
-    acc[existingIndex].total += 1;
-  } else {
-    acc.push({
-      eventName: item.eventName,
-      total: item.infinite ? 0 : 1,
-      imageUrl: item.imageUrl,
-      hiddenWhenEmpty: !!item.hiddenWhenEmpty,
-      infinite: !!item.infinite,
-      description: item.description,
-      button: item.button
-    } satisfies GroupedEvent);
-  }
-  return acc;
-}, [] satisfies GroupedEvent[]);
+const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce<GroupedEvent[]>(
+  (acc, item) => {
+    const existingIndex = acc.findIndex(
+      (event: GroupedEvent) => event.eventName === item.eventName
+    );
+    if (existingIndex > -1) {
+      acc[existingIndex].total += 1;
+    } else {
+      acc.push({
+        eventName: item.eventName,
+        total: item.infinite ? 0 : 1,
+        imageUrl: item.imageUrl,
+        hiddenWhenEmpty: !!item.hiddenWhenEmpty,
+        infinite: !!item.infinite,
+        description: item.description,
+        button: item.button
+      } satisfies GroupedEvent);
+    }
+    return acc;
+  },
+  []
+);
 
 /**
  * Renders EdgeCity UI.
@@ -88,7 +91,7 @@ export function EdgeCityHome(): JSX.Element {
 
   const edgeCityPCDs = usePCDsInFolder(EdgeCityFolderName);
   const [selectedExperience, setSelectedExperience] =
-    useState<EdDSATicketPCD>(null);
+    useState<EdDSATicketPCD | null>(null);
   const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
     useState(false);
   const [selectedExperienceIsStar, setSelectedExperienceIsStar] =
@@ -101,7 +104,7 @@ export function EdgeCityHome(): JSX.Element {
   const [error, setError] = useState("");
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
-  const { email } = useSelf();
+  const self = useSelf();
 
   useEffect(() => {
     setLoading(true);
@@ -128,13 +131,13 @@ export function EdgeCityHome(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (!scores.length || !email) {
+    if (!scores.length || !self?.email) {
       setScore(undefined);
       return;
     }
-    const emailHash = `0x${sha256(`edgecity${email}`)}`;
+    const emailHash = `0x${sha256(`edgecity${self.email}`)}`;
     setScore(scores.find((s) => s.email_hash === emailHash));
-  }, [scores, email]);
+  }, [scores, self]);
 
   useEffect(() => {
     // Set CSS variables on the html element to change into dark mode.
@@ -159,7 +162,7 @@ export function EdgeCityHome(): JSX.Element {
   const pcdsByEventName: Record<string, EdDSATicketPCD[]> = folders
     .flatMap((folder) => pcds.getAllPCDsInFolder(folder))
     .filter((pcd): pcd is EdDSATicketPCD => pcd.type === EdDSATicketPCDTypeName)
-    .reduce((acc, pcd) => {
+    .reduce<Record<string, EdDSATicketPCD[]>>((acc, pcd) => {
       // Check if the accumulator already has the eventName key
       if (!acc[pcd.claim.ticket.eventName]) {
         // If not, create it and initialize with the current item in an array
@@ -171,7 +174,7 @@ export function EdgeCityHome(): JSX.Element {
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
-  const [ref, setRef] = useState<HTMLElement>();
+  const [ref, setRef] = useState<HTMLElement | null>(null);
   const z_confetti = useZucashConfetti(ref);
 
   if (loading) {

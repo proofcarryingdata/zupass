@@ -1,7 +1,7 @@
 // Note: refactoring to @pcd/passport-interface in the future, especially if
 // cross-browser interaction starts to exist outside of passport-client
 import { BroadcastChannel } from "broadcast-channel";
-import { Action } from "./dispatch";
+import { Dispatcher } from "./dispatch";
 
 const CHANNEL_NAME = "zupass_broadcast_channel";
 // The event message that prompts other tabs to refresh their local state
@@ -41,9 +41,7 @@ export function notifyLogoutToOtherTabs(): void {
  * for received events. In the future, we may add more broadcast channels and
  * set up more onmessage handlers.
  */
-export function setupBroadcastChannel(
-  dispatch: (action: Action) => Promise<void>
-): void {
+export function setupBroadcastChannel(dispatch: Dispatcher): void {
   if (channel === null) {
     channel = new BroadcastChannel(CHANNEL_NAME);
   }

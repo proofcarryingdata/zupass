@@ -234,19 +234,18 @@ describe("validateAppState", async function () {
 
   it("logged in ; self missing commitment ; errors", async function () {
     const self: ZupassUserJson = {
-      commitment: identity1.commitment.toString(),
+      // Missing commitment field
       email: randomEmail(),
       salt: saltAndEncryptionKey.salt,
       terms_agreed: 1,
       uuid: uuid()
-    };
+    } as ZupassUserJson; // Type assertion allows missing commitment
     const pcds = new PCDCollection(pcdPackages);
     pcds.add(
       await SemaphoreIdentityPCDPackage.prove({
         identity: identity1
       })
     );
-    delete self.commitment;
     expect(validateRunningAppState(TAG_STR, self, identity1, pcds)).to.deep.eq({
       userUUID: self.uuid,
       errors: ["'self' missing a commitment"],

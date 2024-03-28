@@ -4,6 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
+  ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -11,7 +12,7 @@ import React, {
   useState
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import styled from "styled-components";
+import styled, { CSSProperties } from "styled-components";
 import {
   useDispatch,
   useFolders,
@@ -44,7 +45,7 @@ const FOLDER_QUERY_PARAM = "folder";
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
-export function HomeScreenImpl(): JSX.Element {
+export function HomeScreenImpl(): JSX.Element | null {
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
@@ -54,7 +55,7 @@ export function HomeScreenImpl(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
     const folderPathFromQuery = decodeURIComponent(
-      searchParams.get(FOLDER_QUERY_PARAM)
+      searchParams.get(FOLDER_QUERY_PARAM) ?? ""
     );
     if (!folderPathFromQuery) {
       return "";
@@ -183,7 +184,7 @@ export function HomeScreenImpl(): JSX.Element {
                   })}
               {isRoot && (
                 <FrogFolder
-                  Container={FolderEntryContainer}
+                  Container={FrogFolderContainer}
                   onFolderClick={onFolderClick}
                 />
               )}
@@ -222,6 +223,22 @@ export function HomeScreenImpl(): JSX.Element {
         <Spacer h={24} />
       </AppContainer>
     </>
+  );
+}
+
+function FrogFolderContainer({
+  children,
+  onClick,
+  style
+}: {
+  children?: ReactNode;
+  style: CSSProperties;
+  onClick: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+}): JSX.Element {
+  return (
+    <FolderEntryContainer onClick={onClick} style={style}>
+      {children}
+    </FolderEntryContainer>
   );
 }
 

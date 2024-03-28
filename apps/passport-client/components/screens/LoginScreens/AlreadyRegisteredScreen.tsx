@@ -6,7 +6,7 @@ import {
   requestLogToServer,
   requestVerifyToken
 } from "@pcd/passport-interface";
-import { sleep } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import {
   FormEvent,
   useCallback,
@@ -32,7 +32,7 @@ import { InlineError } from "../../shared/InlineError";
 import { PasswordInput } from "../../shared/PasswordInput";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
-export function AlreadyRegisteredScreen(): JSX.Element {
+export function AlreadyRegisteredScreen(): JSX.Element | null {
   const dispatch = useDispatch();
   const self = useSelf();
   const query = useQuery();
@@ -51,27 +51,30 @@ export function AlreadyRegisteredScreen(): JSX.Element {
     async (token: string) => {
       if (verifyingCode) return;
 
-      setVerifyingCode(true);
-      const verifyTokenResult = await requestVerifyToken(
-        appConfig.zupassServer,
-        email,
-        token
-      );
-      setVerifyingCode(false);
-      if (verifyTokenResult.success) {
-        window.location.hash = `#/create-password?email=${encodeURIComponent(
-          email
-        )}&token=${encodeURIComponent(token)}`;
-        return;
-      } else {
-        setError("Invalid confirmation code");
+      if (email) {
+        setVerifyingCode(true);
+        const verifyTokenResult = await requestVerifyToken(
+          appConfig.zupassServer,
+          email,
+          token
+        );
+        setVerifyingCode(false);
+        if (verifyTokenResult.success) {
+          window.location.hash = `#/create-password?email=${encodeURIComponent(
+            email
+          )}&token=${encodeURIComponent(token)}`;
+          return;
+        }
       }
+
+      // If we did not succeed in verifying the token, show an error.
+      setError("Invalid confirmation code");
     },
     [email, verifyingCode]
   );
 
   const handleConfirmationEmailResult = useCallback(
-    async (result: ConfirmEmailResult) => {
+    (result: ConfirmEmailResult) => {
       if (!result.success) {
         setError("Couldn't send pasword reset email. Try again later.");
         setSendingConfirmationEmail(false);
@@ -79,17 +82,22 @@ export function AlreadyRegisteredScreen(): JSX.Element {
         setSendingConfirmationEmail(false);
         verifyToken(result.value?.devToken);
       } else {
-        window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
-          email
-        )}&identityCommitment=${encodeURIComponent(
-          identityCommitment
-        )}&isReset=true`;
+        if (email && identityCommitment) {
+          window.location.href = `#/enter-confirmation-code?email=${encodeURIComponent(
+            email
+          )}&identityCommitment=${encodeURIComponent(
+            identityCommitment
+          )}&isReset=true`;
+        }
       }
     },
     [email, identityCommitment, verifyToken]
   );
 
   const onOverwriteClick = useCallback(async () => {
+    if (!email || !identityCommitment) {
+      return;
+    }
     requestLogToServer(appConfig.zupassServer, "overwrite-account-click", {
       email,
       identityCommitment
@@ -120,6 +128,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
   const onSubmitPassword = useCallback(
     async (e: FormEvent<HTMLFormElement>) => {
       e.preventDefault();
+      if (!salt) return;
       setError(undefined);
 
       if (password === "" || password === null) {
@@ -129,7 +138,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
       setIsLoggingIn(true);
       await sleep();
       const crypto = await PCDCrypto.newInstance();
-      const encryptionKey = await crypto.argon2(password, salt, 32);
+      const encryptionKey = crypto.argon2(password, salt, 32);
       const storageResult = await requestDownloadAndDecryptStorage(
         appConfig.zupassServer,
         encryptionKey
@@ -157,7 +166,7 @@ export function AlreadyRegisteredScreen(): JSX.Element {
         });
       } catch (e) {
         setIsLoggingIn(false);
-        return setError(e.message);
+        return setError(getErrorMessage(e));
       }
     },
     [dispatch, password, salt]
@@ -168,21 +177,21 @@ export function AlreadyRegisteredScreen(): JSX.Element {
   }, []);
 
   useEffect(() => {
-    if (self || !email) {
+    if (self || !email || !identityCommitment || !salt) {
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
         window.location.hash = "#/";
       }
     }
-  }, [self, email]);
+  }, [self, email, identityCommitment, salt]);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
-  if (self || !email) {
+  if (self || !email || !identityCommitment || !salt) {
     return null;
   }
 

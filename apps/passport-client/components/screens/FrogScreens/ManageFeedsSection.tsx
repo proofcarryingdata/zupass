@@ -7,9 +7,13 @@ import {
 } from "@pcd/passport-interface";
 import { Separator } from "@pcd/passport-ui";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { getErrorMessage } from "@pcd/util";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { useEffect, useMemo, useState } from "react";
+// react-table-lite does not have types
+// eslint-disable-next-line @typescript-eslint/ban-ts-comment
+// @ts-ignore
 import Table from "react-table-lite";
 import styled from "styled-components";
 import { appConfig } from "../../../src/appConfig";
@@ -41,7 +45,7 @@ export function ManageFeedsSection(): JSX.Element {
     } catch (error) {
       return {
         newFeeds: [],
-        newFeedsError: error.message
+        newFeedsError: error instanceof Error ? error.message : "Unknown error"
       };
     }
   }, [newFeedsText]);
@@ -165,7 +169,7 @@ function useFeeds(): {
         if (abortController.signal.aborted) {
           return;
         }
-        setError(error.message);
+        setError(getErrorMessage(error));
       } finally {
         if (!abortController.signal.aborted) {
           setIsLoading(false);
@@ -194,7 +198,8 @@ function useFeeds(): {
  * @param data The data from the frog spreadsheet as a JSON array of Record<attr name, attr val>.
  */
 function feedParser(data: string): FrogCryptoDbFeedData[] {
-  return JSON.parse(data).map((rawFeed) => {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  return JSON.parse(data).map((rawFeed: any) => {
     // e.g. biomesPutridswampDropweightscaler => biomes.PutridSwamp.dropWeightScaler
     const parseBiomes = (
       rawFeed: Record<string, string | undefined>
@@ -207,6 +212,8 @@ function feedParser(data: string): FrogCryptoDbFeedData[] {
             )}Dropweightscaler`
           ];
         if (typeof dropWeightScaler !== "undefined" && +dropWeightScaler > 0) {
+          // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+          // @ts-ignore
           acc[biome] = {
             dropWeightScaler: Number.parseFloat(dropWeightScaler)
           };
@@ -253,7 +260,9 @@ function feedUnparser(feeds: FrogCryptoDbFeedData[]): string {
       private: feed.feed.private,
       activeUntil: new Date(feed.feed.activeUntil * 1000).toISOString(),
       cooldown: feed.feed.cooldown,
-      ...Object.keys(Biome).reduce((acc, biome) => {
+      ...Object.keys(Biome).reduce<Record<string, number>>((acc, biome) => {
+        // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+        // @ts-ignore
         const biomeConfig = feed.feed.biomes[biome];
         if (biomeConfig) {
           acc[
@@ -300,17 +309,20 @@ export function DataTable({
       actionTypes={["edit"]}
       noDataMessage="No Feeds"
       customRenderCell={{
-        ...keys.reduce((acc, key) => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        ...keys.reduce<Record<string, (row: any) => any>>((acc, key) => {
           // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          acc[key] = (row): any => {
+          acc[key] = (row: any): any => {
             return typeof row[key] === "undefined" ? "<undefined>" : row[key];
           };
           return acc;
         }, {}),
-        private: (row): string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        private: (row: any): string => {
           return String(row["private"]);
         },
-        activeUntil: (row): JSX.Element | string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        activeUntil: (row: any): JSX.Element | string => {
           const activeUntil = row["activeUntil"];
           if (!activeUntil) {
             return "<undefined>";
@@ -346,14 +358,16 @@ export function DataTable({
             </div>
           );
         },
-        description: (row): JSX.Element => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        description: (row: any): JSX.Element => {
           return (
             <Description title={row["description"]}>
               {row["description"]}
             </Description>
           );
         },
-        biomes: (row): JSX.Element | string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        biomes: (row: any): JSX.Element | string => {
           const biomes = row["biomes"];
           if (!biomes) {
             return "<undefined>";
@@ -368,16 +382,20 @@ export function DataTable({
             </div>
           );
         },
-        codes: (row): JSX.Element | string => {
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        codes: (row: any): JSX.Element | string => {
           const codes = row["codes"];
           if (!codes) {
             return "<undefined>";
           }
           return (
             <div>
-              {codes.map((code) => (
-                <p key={code}>{code}</p>
-              ))}
+              {
+                // eslint-disable-next-line @typescript-eslint/no-explicit-any
+                codes.map((code: any) => (
+                  <p key={code}>{code}</p>
+                ))
+              }
             </div>
           );
         }
@@ -385,9 +403,12 @@ export function DataTable({
       containerStyle={{ maxHeight: "400px", overflow: "auto" }}
       cellStyle={{ padding: "8px" }}
       headerStyle={{ padding: "8px" }}
-      onRowEdit={(args, row): void => {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      onRowEdit={(args: any, row: any): void => {
         const feed = rawData.find((feed) => feed.uuid === row.uuid);
-        onEditFeed?.(feed);
+        if (feed) {
+          onEditFeed?.(feed);
+        }
       }}
     />
   );

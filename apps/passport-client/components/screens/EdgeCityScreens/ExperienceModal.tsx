@@ -13,7 +13,7 @@ export function ExperienceModal({
   onClose
 }: {
   pcd: EdDSATicketPCD;
-  color;
+  color: string;
   isContact?: boolean;
   isStar?: boolean;
   onClose: () => void;

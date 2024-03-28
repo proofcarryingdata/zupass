@@ -1,5 +1,6 @@
 import { HexString, PCDCrypto } from "@pcd/passport-crypto";
 import { requestPasswordSalt } from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { appConfig } from "../../src/appConfig";
@@ -21,7 +22,7 @@ import { AppContainer } from "../shared/AppContainer";
 import { NewPasswordForm } from "../shared/NewPasswordForm";
 import { PasswordInput } from "../shared/PasswordInput";
 
-export function ChangePasswordScreen(): JSX.Element {
+export function ChangePasswordScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const self = useSelf();
   const hasSetupPassword = useHasSetupPassword();
@@ -49,12 +50,12 @@ export function ChangePasswordScreen(): JSX.Element {
   }, [self, navigate]);
 
   const onChangePassword = useCallback(async () => {
-    if (loading) return;
+    if (loading || !self) return;
     setLoading(true);
     try {
       let currentEncryptionKey: HexString;
       if (!isChangePassword) {
-        currentEncryptionKey = loadEncryptionKey();
+        currentEncryptionKey = loadEncryptionKey() as string;
       } else {
         const saltResult = await requestPasswordSalt(
           appConfig.zupassServer,
@@ -66,9 +67,9 @@ export function ChangePasswordScreen(): JSX.Element {
         }
 
         const crypto = await PCDCrypto.newInstance();
-        currentEncryptionKey = await crypto.argon2(
+        currentEncryptionKey = crypto.argon2(
           currentPassword,
-          saltResult.value
+          saltResult.value as string
         );
       }
       await setPassword(
@@ -85,20 +86,24 @@ export function ChangePasswordScreen(): JSX.Element {
     } catch (e) {
       console.log("error changing password", e);
       setLoading(false);
-      setError(e.message);
+      setError(getErrorMessage(e));
     }
   }, [
-    currentPassword,
+    loading,
+    self,
+    isChangePassword,
     newPassword,
     serverStorageRevision,
     dispatch,
     update,
-    loading,
-    self.email,
-    isChangePassword
+    currentPassword
   ]);
 
   let content = null;
+
+  if (!self) {
+    return null;
+  }
 
   if (loading) {
     content = (

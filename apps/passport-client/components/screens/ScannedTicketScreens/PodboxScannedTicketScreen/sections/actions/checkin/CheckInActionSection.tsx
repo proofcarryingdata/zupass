@@ -26,7 +26,7 @@ export function CheckInActionSection({
   setIsLoading: Dispatch<SetStateAction<boolean>>;
   precheck: PodboxActionPreCheckResult;
   isLoading: boolean;
-}): JSX.Element {
+}): JSX.Element | null {
   const executor = useExecuteTicketAction({
     eventId,
     ticketId,

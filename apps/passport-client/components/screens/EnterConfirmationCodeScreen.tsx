@@ -21,7 +21,7 @@ import { ResendCodeButton } from "../shared/ResendCodeButton";
 
 export function EnterConfirmationCodeScreen(): JSX.Element {
   const query = useQuery();
-  const email = query?.get("email");
+  const email = query?.get("email") ?? "";
   const isReset = query?.get("isReset");
   const [verifyingCode, setVerifyingCode] = useState(false);
   const [input, setInput] = useState("");

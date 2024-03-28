@@ -49,7 +49,7 @@ export interface AppState {
   error?: AppError;
 
   // If set, show the error resolution screen for this subscription
-  resolvingSubscriptionId: string;
+  resolvingSubscriptionId?: string;
 
   // If set, the user has been invalidated server-side
   userInvalid?: boolean;

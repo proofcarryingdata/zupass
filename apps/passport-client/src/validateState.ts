@@ -1,6 +1,9 @@
 import { User, requestLogToServer } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreIdentityPCD,
+  SemaphoreIdentityPCDPackage
+} from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { appConfig } from "./appConfig";
 import { loadSelf } from "./localstorage";
@@ -96,18 +99,20 @@ export function validateRunningAppState(
  * {@link getRunningAppStateValidationErrors}, and performs some extra checks
  * on top of it.
  */
-export function getInitialAppStateValidationErrors(state: AppState): string[] {
+export function getInitialAppStateValidationErrors(
+  state: AppState | undefined
+): string[] {
   const errors = [
     ...getRunningAppStateValidationErrors(
-      state.self,
-      state.identity,
-      state.pcds
+      state?.self,
+      state?.identity,
+      state?.pcds
     )
   ];
 
   // this case covers a logged in user. the only way the app can get a 'self'
   // is by requesting one from the server, to do which one has to be logged in.
-  if (state.self) {
+  if (state?.self) {
     // TODO: any extra checks that need to happen on immediate app startup should
     // be put here.
   }
@@ -145,7 +150,7 @@ export function getRunningAppStateValidationErrors(
   if (pcds && !identityPCDFromCollection) {
     identityPCDFromCollection = pcds.getPCDsByType(
       SemaphoreIdentityPCDPackage.name
-    )?.[0];
+    )?.[0] as SemaphoreIdentityPCD | undefined;
   }
 
   if (forceCheckPCDs || !loggedOut) {

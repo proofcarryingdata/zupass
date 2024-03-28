@@ -18,12 +18,15 @@ export function useDeserialized(pcd: SerializedPCD): {
       try {
         console.log("deserializing", pcd);
         const pcdPackage = pcds.getPackage(pcd.type);
+        if (!pcdPackage) {
+          throw new Error(`PCD Package type ${pcd.type} not found`);
+        }
         const deserialized = await pcdPackage.deserialize(pcd.pcd);
         console.log("deserialized pcd", deserialized);
         setDeserialized(deserialized);
       } catch (e) {
         console.log("error deserializing pcd", e);
-        setError(e);
+        setError(e instanceof Error ? e : new Error("Error deserializing PCD"));
       }
     }
 

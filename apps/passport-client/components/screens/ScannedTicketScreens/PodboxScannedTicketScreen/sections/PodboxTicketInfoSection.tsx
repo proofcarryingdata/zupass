@@ -13,7 +13,7 @@ export function PodboxTicketInfoSection({
 }: {
   precheck: ActionConfigResponseValue;
   isLoading: boolean;
-}): JSX.Element {
+}): JSX.Element | undefined {
   const ticket: TicketInfo | undefined =
     precheck?.checkinActionInfo?.ticket ??
     precheck?.giveBadgeActionInfo?.ticket ??

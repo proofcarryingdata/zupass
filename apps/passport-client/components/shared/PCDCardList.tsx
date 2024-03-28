@@ -55,8 +55,9 @@ export function PCDCardList({
     () =>
       pcds.map((pcd, i) => ({
         value: pcd,
-        name: pcdCollection.getPackage(pcd.type).getDisplayOptions?.(pcd)
-          ?.displayName,
+        name:
+          pcdCollection.getPackage(pcd.type)?.getDisplayOptions?.(pcd)
+            ?.displayName ?? "",
         index: i
       })),
     [pcdCollection, pcds]
@@ -141,7 +142,7 @@ function ToolBar({
   sortOptions: SortOption[];
   sortState: SortState;
   onSortStateChange: (sortState: SortState) => void;
-}): JSX.Element {
+}): JSX.Element | null {
   if (sortOptions.length === 0) return null;
 
   return (

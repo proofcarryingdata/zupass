@@ -11,6 +11,7 @@ import { useCallback, useEffect, useState } from "react";
 import urljoin from "url-join";
 import { appConfig } from "../../../../../src/appConfig";
 import {
+  useDispatch,
   usePCDCollection,
   useUserIdentityPCD
 } from "../../../../../src/appHooks";
@@ -37,16 +38,21 @@ export function usePreCheckTicket(
       loading: false;
       result: PodboxActionPreCheckResult;
     } {
-  const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<
     PodboxActionPreCheckResult | undefined
   >();
   const pcdCollection = usePCDCollection();
   const identityPCD = useUserIdentityPCD();
+  const dispatch = useDispatch();
 
   const doPreCheckTicket = useCallback(
     async (ticketId: string | undefined, eventId: string | undefined) => {
       if (!ticketId || !eventId) {
+        return;
+      }
+
+      if (!identityPCD) {
+        await dispatch({ type: "participant-invalid" });
         return;
       }
 
@@ -80,19 +86,18 @@ export function usePreCheckTicket(
         urljoin(appConfig.zupassServer, "generic-issuance/api/pre-check"),
         await SemaphoreSignaturePCDPackage.serialize(signedPayload)
       );
-      setInProgress(false);
       setResult(preCheckTicketResult);
     },
-    [identityPCD, pcdCollection]
+    [dispatch, identityPCD, pcdCollection]
   );
 
   useEffect(() => {
     doPreCheckTicket(ticketId, eventId);
   }, [doPreCheckTicket, eventId, ticketId]);
 
-  if (inProgress) {
-    return { loading: true, result: undefined };
-  } else {
+  if (result) {
     return { loading: false, result };
+  } else {
+    return { loading: true, result: undefined };
   }
 }

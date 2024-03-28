@@ -33,7 +33,7 @@ export function PrivacyNoticeModal(): JSX.Element {
       savePrivacyNoticeAgreed(LATEST_PRIVACY_NOTICE);
       dispatch({
         type: "handle-agreed-privacy-notice",
-        version: result.value.version
+        version: LATEST_PRIVACY_NOTICE
       });
     }
   }, [dispatch, identity]);

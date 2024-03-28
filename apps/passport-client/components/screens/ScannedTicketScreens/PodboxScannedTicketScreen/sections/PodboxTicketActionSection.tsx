@@ -1,6 +1,6 @@
 import { PodboxActionPreCheckResult } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
-import { Dispatch, SetStateAction } from "react";
+import { useState } from "react";
 import styled from "styled-components";
 import { FakeBack, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
@@ -18,16 +18,13 @@ import { ShareContactActionSection } from "./actions/shareContact/ShareContactAc
 export function PodboxTicketActionSection({
   ticketId,
   eventId,
-  isLoading,
-  setIsLoading,
   precheck
 }: {
   ticketId: string;
   eventId: string;
-  isLoading: boolean;
-  setIsLoading: Dispatch<SetStateAction<boolean>>;
   precheck: PodboxActionPreCheckResult;
 }): JSX.Element {
+  const [isLoading, setIsLoading] = useState(false);
   const shouldShowDivider =
     (precheck?.value?.giveBadgeActionInfo?.permissioned ||
       precheck?.value?.getContactActionInfo?.permissioned) &&

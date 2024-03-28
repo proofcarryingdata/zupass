@@ -880,7 +880,7 @@ export type PodboxTicketActionError = { detailedMessage?: string } & (
   | { name: "NoActionsAvailable" }
   | {
       name: "AlreadyCheckedIn";
-      checkinTimestamp: string | undefined;
+      checkinTimestamp: string;
       checker: string | undefined;
     }
   | { name: "InvalidSignature" }
