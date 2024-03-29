@@ -30,8 +30,8 @@ export function err(
   dispatch: Dispatcher,
   title: string,
   message: string
-): void {
-  dispatch({
+): Promise<void> {
+  return dispatch({
     type: "error",
     error: { title, message }
   });
@@ -74,7 +74,7 @@ function getVerifyUrlPrefixes(): string[] {
 
 // Given an input string, check if there exists a ticket verify URL within it.
 // If so, return the last occurance of a verify URL. If not, return null.
-export function getLastValidVerifyUrl(inputString: string): string {
+export function getLastValidVerifyUrl(inputString: string): string | null {
   const lastValidUrlStartIdx = _.chain(getVerifyUrlPrefixes())
     .map((verifyUrlPrefix) => inputString.lastIndexOf(verifyUrlPrefix))
     .max()
@@ -85,13 +85,13 @@ export function getLastValidVerifyUrl(inputString: string): string {
   return null;
 }
 
-export function maybeRedirect(text: string): string | null {
+export function maybeRedirect(text: string): string | undefined {
   if (getVerifyUrlPrefixes().find((prefix) => text.startsWith(prefix))) {
     const hash = text.substring(text.indexOf("#") + 1);
     console.log(`Redirecting to ${hash}`);
     return hash;
   }
-  return null;
+  return undefined;
 }
 
 /**

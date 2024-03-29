@@ -10,7 +10,7 @@ export function PodboxTicketActionErrorSection({
   error
 }: {
   error: PodboxTicketActionError;
-}): JSX.Element {
+}): JSX.Element | undefined {
   let errorContent = null;
 
   switch (error.name) {

@@ -1,4 +1,4 @@
-import { sleep } from "@pcd/util";
+import { getErrorMessage, sleep } from "@pcd/util";
 import { useCallback, useState } from "react";
 import styled from "styled-components";
 import {
@@ -37,6 +37,9 @@ export function RequireAddPasswordModal(): JSX.Element {
     await sleep();
     try {
       const currentEncryptionKey = loadEncryptionKey();
+      if (!currentEncryptionKey) {
+        throw new Error("Could not load encryption key");
+      }
       await setPassword(
         newPassword,
         currentEncryptionKey,
@@ -51,7 +54,12 @@ export function RequireAddPasswordModal(): JSX.Element {
       });
     } catch (e) {
       console.log("error setting password", e);
-      setError(e.message);
+      alert(
+        `Error setting password
+        
+        ${getErrorMessage(e)}`
+      );
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }
@@ -69,13 +77,13 @@ export function RequireAddPasswordModal(): JSX.Element {
       end-to-end-encrypted Zupass. To upgrade, please choose a password. Make
       sure to remember it, otherwise you will lose access to all your PCDs.
       <Spacer h={24} />
-      <BigInput value={self.email} disabled={true} />
+      <BigInput value={self?.email ?? ""} disabled={true} />
       <Spacer h={8} />
       <NewPasswordForm
         error={error}
         setError={setError}
         passwordInputPlaceholder="New password"
-        email={self.email}
+        email={self?.email ?? ""}
         revealPassword={revealPassword}
         setRevealPassword={setRevealPassword}
         submitButtonText="Confirm"

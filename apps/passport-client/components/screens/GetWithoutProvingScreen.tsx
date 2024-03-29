@@ -3,22 +3,18 @@ import {
   PCDRequestType
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useMemo, useState } from "react";
 import { useLocation } from "react-router-dom";
 import styled from "styled-components";
 import {
   useDispatch,
   useIsSyncSettled,
+  useLoginIfNoSelf,
   usePCDCollection,
-  useSelf,
-  useUserForcedToLogout
+  useSelf
 } from "../../src/appHooks";
 import { safeRedirect, validateRequest } from "../../src/passportRequest";
-import {
-  clearAllPendingRequests,
-  pendingGetWithoutProvingRequestKey,
-  setPendingGetWithoutProvingRequest
-} from "../../src/sessionStorage";
+import { pendingRequestKeys } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { err } from "../../src/util";
 import { Button, H1, Spacer } from "../core";
@@ -32,7 +28,7 @@ import { SyncingPCDs } from "../shared/SyncingPCDs";
  * Screen that allows the user to respond to a request from a third
  * party website asking for a particular PCD.
  */
-export function GetWithoutProvingScreen(): JSX.Element {
+export function GetWithoutProvingScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const location = useLocation();
   const dispatch = useDispatch();
@@ -51,7 +47,7 @@ export function GetWithoutProvingScreen(): JSX.Element {
         const pcdPackage = pcds.getPackage(pcd.type);
         return {
           id: pcd.id,
-          label: pcdPackage?.getDisplayOptions(pcd)?.displayName ?? pcd.id
+          label: pcdPackage?.getDisplayOptions?.(pcd)?.displayName ?? pcd.id
         };
       }),
     [filteredPCDs, pcds]
@@ -65,26 +61,14 @@ export function GetWithoutProvingScreen(): JSX.Element {
   const onSendClick = useCallback(async () => {
     if (selectedPCDID === undefined) return;
     const pcd = pcds.getById(selectedPCDID);
+    if (pcd === undefined) return;
     const pcdPackage = pcds.getPackage(pcd.type);
     if (pcdPackage === undefined) return;
     const serializedPCD = await pcdPackage.serialize(pcd);
     safeRedirect(request.returnUrl, serializedPCD);
   }, [pcds, request.returnUrl, selectedPCDID]);
 
-  const userForcedToLogout = useUserForcedToLogout();
-
-  useEffect(() => {
-    if (!self || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(request);
-      setPendingGetWithoutProvingRequest(stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingGetWithoutProvingRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [request, self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingRequestKeys.getWithoutProving, request);
 
   if (request.type !== PCDRequestType.GetWithoutProving) {
     err(
@@ -129,7 +113,7 @@ export function GetWithoutProvingScreen(): JSX.Element {
           <Spacer h={16} />
           <Select
             value={options.find((o) => o.id === selectedPCDID)}
-            onChange={(o): void => setSelectedPCDID(o.id)}
+            onChange={(o): void => setSelectedPCDID(o?.id ?? defaultSelection)}
             options={options}
             noOptionsMessage={(): string => "No matching PCDs"}
           />

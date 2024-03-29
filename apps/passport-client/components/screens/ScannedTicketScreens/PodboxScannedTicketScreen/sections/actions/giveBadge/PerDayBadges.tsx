@@ -34,7 +34,7 @@ export function PerDayBadges({
   const [giving, setGiving] = useState(false);
 
   const wrappedSetInProgress = useCallback(
-    (inProgress) => {
+    (inProgress: SetStateAction<boolean>) => {
       setGiving(inProgress);
       setInProgress(inProgress);
     },
@@ -93,7 +93,7 @@ function PerDayBadgeButton({
       }
     }
   });
-  const onClick = useCallback(async () => {
+  const onClick = useCallback(() => {
     setInProgress(true);
     giveBadge.execute().finally(() => {
       window.location.reload();

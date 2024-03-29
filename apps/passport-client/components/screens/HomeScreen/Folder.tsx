@@ -121,7 +121,7 @@ export function FolderDetails({
         <PiArrowBendLeftUpBold size={18} />
       </span>
 
-      <span className="name">{displayFolder || folder}</span>
+      <span className="name">{displayFolder ?? folder}</span>
     </FolderHeader>
   );
 }

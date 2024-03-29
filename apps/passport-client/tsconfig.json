@@ -6,23 +6,15 @@
     "downlevelIteration": true,
     "jsx": "react-jsx",
     "target": "ES2020",
-    "lib": [
-      "ES2020",
-      "DOM"
-    ],
+    "lib": ["ES2020", "DOM"],
     "esModuleInterop": true,
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/worker"
-  ],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "src/worker"],
   "references": [
     {
       "path": "../../packages/pcd/eddsa-frog-pcd"

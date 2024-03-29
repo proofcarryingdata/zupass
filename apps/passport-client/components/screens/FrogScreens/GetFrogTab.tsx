@@ -108,7 +108,7 @@ const SearchButton = ({
   active: boolean;
 }): JSX.Element => {
   const dispatch = useDispatch();
-  const countDown = useCountDown(nextFetchAt || 0);
+  const countDown = useCountDown(nextFetchAt ?? 0);
   const canFetch = active && (!nextFetchAt || nextFetchAt < Date.now());
   const confetti = useFrogConfetti();
 
@@ -129,7 +129,7 @@ const SearchButton = ({
                   // nb: sync-subscription swallows http errors and always resolve as success
                   const error = subManager.getError(id);
                   if (error?.type === SubscriptionErrorType.FetchError) {
-                    const fetchErrorMsg = error?.e?.message?.toLowerCase();
+                    const fetchErrorMsg = error.e?.message?.toLowerCase();
                     if (fetchErrorMsg?.includes("not active")) {
                       subManager.resetError(id);
                       return reject(
@@ -195,7 +195,7 @@ const SearchButton = ({
     subManager
   ]);
   const name = useMemo(() => `search ${_.upperCase(feed.name)}`, [feed.name]);
-  const freerolls = FROG_FREEROLLS + 1 - score;
+  const freerolls = FROG_FREEROLLS + 1 - (score ?? 0);
   const ButtonComponent = useMemo(() => {
     switch (feed.name) {
       case "The Capital":
@@ -237,7 +237,7 @@ const SearchButton = ({
 /**
  * Returns the last issued frog PCD in the frog crypto folder.
  */
-const useGetLastFrog = (): (() => EdDSAFrogPCD) => {
+const useGetLastFrog = (): (() => EdDSAFrogPCD | undefined) => {
   const pcdCollection = usePCDCollection();
   const getLastFrog = useCallback(
     () =>

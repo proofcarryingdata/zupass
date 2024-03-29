@@ -1583,13 +1583,13 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "checkInPretixTicket",
       async (span): Promise<PodboxTicketActionResponseValue> => {
-        if (ticketAtom.isConsumed) {
+        if (ticketAtom.isConsumed && ticketAtom.timestampConsumed) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
           return {
             success: false,
             error: {
               name: "AlreadyCheckedIn",
-              checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
+              checkinTimestamp: ticketAtom.timestampConsumed.toISOString(),
               checker: PRETIX_CHECKER // Pretix does not store a "checker"
             }
           };

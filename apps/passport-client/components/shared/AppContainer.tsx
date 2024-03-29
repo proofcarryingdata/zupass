@@ -51,18 +51,18 @@ export function AppContainer({
   );
 }
 
-const GlobalBackground = createGlobalStyle<{ color: string }>`
+export const GlobalBackground = createGlobalStyle<{ color: string }>`
   html {
     background-color: ${(p): string => p.color};
   }
 `;
 
-const Background = styled.div`
+export const Background = styled.div`
   width: 100%;
   min-height: 100%;
 `;
 
-const CenterColumn = styled.div`
+export const CenterColumn = styled.div`
   display: flex;
   justify-content: flex-start;
   align-items: center;

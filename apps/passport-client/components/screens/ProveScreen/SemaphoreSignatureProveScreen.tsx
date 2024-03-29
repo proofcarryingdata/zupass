@@ -50,6 +50,12 @@ export function SemaphoreSignatureProveScreen({
       return;
     }
 
+    if (!self) {
+      setError("User data is not available");
+      setProving(false);
+      return;
+    }
+
     const args = await fillArgs(
       identity,
       self.uuid,
@@ -81,7 +87,7 @@ export function SemaphoreSignatureProveScreen({
       setProving(false);
       safeRedirect(req.returnUrl, serializedPCD);
     }
-  }, [identity, req.args, req.options, req.returnUrl, self.uuid]);
+  }, [identity, req.args, req.options, req.returnUrl, self]);
 
   const lines: ReactNode[] = [];
 

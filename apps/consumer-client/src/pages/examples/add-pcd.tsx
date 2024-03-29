@@ -186,11 +186,12 @@ function AddEthAddrPCDButton(): JSX.Element {
     if (!("ethereum" in window)) {
       alert("Please install MetaMask to use this dApp!");
     } else {
-      const ethereum: ethers.providers.ExternalProvider = window.ethereum;
+      const ethereum: ethers.providers.ExternalProvider | undefined =
+        window.ethereum as ethers.providers.ExternalProvider;
       const provider = new ethers.providers.Web3Provider(ethereum);
 
       (async function (): Promise<void> {
-        await ethereum.request({ method: "eth_requestAccounts" });
+        await ethereum.request?.({ method: "eth_requestAccounts" });
         const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
         const signature = await provider
           .getSigner()
@@ -259,11 +260,12 @@ function AddEthGroupPCDButton(): JSX.Element {
     if (!("ethereum" in window)) {
       alert("Please install MetaMask to use this dApp!");
     } else {
-      const ethereum: ethers.providers.ExternalProvider = window.ethereum;
+      const ethereum: ethers.providers.ExternalProvider | undefined =
+        window.ethereum as ethers.providers.ExternalProvider;
       const provider = new ethers.providers.Web3Provider(ethereum);
 
       (async function (): Promise<void> {
-        await ethereum.request({ method: "eth_requestAccounts" });
+        await ethereum.request?.({ method: "eth_requestAccounts" });
         const pcd = await SemaphoreSignaturePCDPackage.deserialize(parsed.pcd);
 
         const msgHash = Buffer.from(
@@ -423,7 +425,7 @@ async function addEdDSAPCD(): Promise<void> {
 
 async function addSignatureProofPCD(
   messageToSign: string,
-  folder: string
+  folder: string | undefined
 ): Promise<void> {
   const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
