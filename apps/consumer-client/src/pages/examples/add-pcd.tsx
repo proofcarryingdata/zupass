@@ -109,7 +109,10 @@ export default function Page(): JSX.Element {
         <br />
         <button
           onClick={(): Promise<void> =>
-            addSignatureProofPCD(signedMessage, folder.length > 0 ? folder : "")
+            addSignatureProofPCD(
+              signedMessage,
+              folder.length > 0 ? folder : undefined
+            )
           }
         >
           prove and add a signature proof
@@ -422,7 +425,7 @@ async function addEdDSAPCD(): Promise<void> {
 
 async function addSignatureProofPCD(
   messageToSign: string,
-  folder: string
+  folder: string | undefined
 ): Promise<void> {
   const proofUrl = constructZupassPcdProveAndAddRequestUrl<
     typeof SemaphoreSignaturePCDPackage
