@@ -42,7 +42,6 @@ import { PipelineAPISubservice } from "./PipelineAPISubservice";
 import { PipelineExecutorSubservice } from "./PipelineExecutorSubservice";
 import { UserSubservice } from "./UserSubservice";
 import { InstantiatePipelineArgs } from "./utils/instantiatePipeline";
-import { uniqueIdsForPipelineDefinition } from "./utils/pipelineUniqueIds";
 import {
   UpsertPipelineResult,
   upsertPipelineDefinition
@@ -266,41 +265,6 @@ export class PipelineSubservice {
   ): Promise<UpsertPipelineResult> {
     return traced(SERVICE_NAME, "upsertPipelineDefinition", async () => {
       logger(SERVICE_NAME, "upsertPipelineDefinition", str(newDefinition));
-
-      const ids = uniqueIdsForPipelineDefinition(newDefinition);
-      const seen = new Set<string>();
-      for (const id of ids) {
-        if (seen.has(id)) {
-          throw new PCDHTTPError(
-            401,
-            `ID ${id} is used more than once in this pipeline`
-          );
-        }
-        seen.add(id);
-      }
-
-      const otherPipelines = (
-        await this.pipelineDB.loadPipelineDefinitions()
-      ).filter((definition) => definition.id !== newDefinition.id);
-
-      for (const definition of otherPipelines) {
-        const otherPipelineIds = new Set(
-          uniqueIdsForPipelineDefinition(definition).values()
-        );
-
-        for (const id of ids) {
-          if (otherPipelineIds.has(id)) {
-            const otherPipelineName = definition.options.name
-              ? `${definition.options.name} (${definition.id})`
-              : `pipeline ${definition.id}`;
-            throw new PCDHTTPError(
-              401,
-              `ID ${id} is already in use by ${otherPipelineName} and cannot be used by this pipeline`
-            );
-          }
-        }
-      }
-
       return await upsertPipelineDefinition(
         user,
         newDefinition,

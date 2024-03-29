@@ -14,6 +14,7 @@ import { PipelineUser } from "../../pipelines/types";
 import { PipelineExecutorSubservice } from "../PipelineExecutorSubservice";
 import { PipelineSubservice } from "../PipelineSubservice";
 import { UserSubservice } from "../UserSubservice";
+import { uniqueIdsForPipelineDefinition } from "./pipelineUniqueIds";
 
 const LOG_TAG = "upsertPipelineDefinition";
 
@@ -38,6 +39,41 @@ export async function upsertPipelineDefinition(
 ): Promise<UpsertPipelineResult> {
   traceUser(editor);
   // TODO: do this in a transaction
+
+  const ids = uniqueIdsForPipelineDefinition(newDefinition);
+  const seen = new Set<string>();
+  for (const id of ids) {
+    if (seen.has(id)) {
+      throw new PCDHTTPError(
+        401,
+        `ID ${id} is used more than once in this pipeline`
+      );
+    }
+    seen.add(id);
+  }
+
+  const otherPipelines = (
+    await pipelineSubservice.loadPipelineDefinitions()
+  ).filter((definition) => definition.id !== newDefinition.id);
+
+  for (const definition of otherPipelines) {
+    const otherPipelineIds = new Set(
+      uniqueIdsForPipelineDefinition(definition).values()
+    );
+
+    for (const id of ids) {
+      if (otherPipelineIds.has(id)) {
+        const otherPipelineName = definition.options.name
+          ? `${definition.options.name} (${definition.id})`
+          : `pipeline ${definition.id}`;
+        throw new PCDHTTPError(
+          401,
+          `ID ${id} is already in use by ${otherPipelineName} and cannot be used by this pipeline`
+        );
+      }
+    }
+  }
+
   const existingPipelineDefinition =
     await pipelineSubservice.loadPipelineDefinition(newDefinition.id);
   const existingSlot = executorSubservice
