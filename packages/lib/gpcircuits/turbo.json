@@ -11,6 +11,7 @@
         "circuits.json"
       ],
       "outputs": ["artifacts/**"],
+      "outputMode": "new-only",
       "cache": true
     },
     "build": {
