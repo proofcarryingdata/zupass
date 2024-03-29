@@ -72,7 +72,7 @@ jobs:
       - name: "Check that yarn install did not cause changes to yarn.lock"
         run: "git diff --quiet -- yarn.lock"
       - run: "yarn check-references"
-      - run: "yarn build --force"
+      - run: "yarn build"
       - run: "yarn lint"
       - run: "yarn test:ci"
       - name: "Test that template package works out-of-the-box"
