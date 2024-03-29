@@ -1,8 +1,20 @@
 {
   "extends": ["//"],
   "pipeline": {
+    "gen-test-artifacts": {
+      "dependsOn": [],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "scripts/gen-test-artifacts.ts",
+        "circuits/**",
+        "circomkit.json",
+        "circuits.json"
+      ],
+      "outputs": ["artifacts/**"],
+      "cache": true
+    },
     "build": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "gen-test-artifacts"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**",
