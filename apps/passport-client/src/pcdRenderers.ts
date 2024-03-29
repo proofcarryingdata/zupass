@@ -8,6 +8,8 @@ import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { EmailPCDUI } from "@pcd/email-pcd-ui";
 import { EthereumOwnershipPCDTypeName } from "@pcd/ethereum-ownership-pcd";
 import { EthereumOwnershipPCDUI } from "@pcd/ethereum-ownership-pcd-ui";
+import { GPCPCDTypeName } from "@pcd/gpc-pcd";
+import { GPCPCDUI } from "@pcd/gpc-pcd-ui";
 import { HaLoNoncePCDTypeName } from "@pcd/halo-nonce-pcd";
 import { HaLoNoncePCDUI } from "@pcd/halo-nonce-pcd-ui";
 import { MessagePCDTypeName } from "@pcd/message-pcd";
@@ -49,7 +51,8 @@ const renderablePCDs = [
   RSAImagePCDTypeName,
   MessagePCDTypeName,
   PODPCDTypeName,
-  PODTicketPCDTypeName
+  PODTicketPCDTypeName,
+  GPCPCDTypeName
 ] as const;
 
 export type RenderablePCDType = (typeof renderablePCDs)[number];
@@ -72,5 +75,6 @@ export const pcdRenderers: {
   [RSAImagePCDTypeName]: RSAImagePCDUI,
   [MessagePCDTypeName]: MessagePCDUI,
   [PODPCDTypeName]: PODPCDUI,
-  [PODTicketPCDTypeName]: PODTicketPCDUI
+  [PODTicketPCDTypeName]: PODTicketPCDUI,
+  [GPCPCDTypeName]: GPCPCDUI
 };

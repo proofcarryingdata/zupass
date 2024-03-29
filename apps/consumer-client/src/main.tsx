@@ -4,6 +4,7 @@ import { createHashRouter, RouterProvider } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import AddPCD from "./pages/examples/add-pcd";
 import GetWithoutProving from "./pages/examples/get-without-proving";
+import GPCProof from "./pages/examples/gpc-proof";
 import GroupProof from "./pages/examples/group-proof";
 import SignatureProof from "./pages/examples/signature-proof";
 import ZkEDdSAEventTicketProof from "./pages/examples/zk-eddsa-event-ticket-proof";
@@ -28,7 +29,8 @@ const router = createHashRouter([
     path: "examples/zuauth",
     element: <ZuAuth />
   },
-  { path: "examples/zk-eddsa-frog-proof", element: <ZkEDdSAFrogProof /> }
+  { path: "examples/zk-eddsa-frog-proof", element: <ZkEDdSAFrogProof /> },
+  { path: "examples/gpc-proof", element: <GPCProof /> }
 ]);
 
 createRoot(document.getElementById("root") as HTMLElement).render(

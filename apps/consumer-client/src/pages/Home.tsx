@@ -42,6 +42,11 @@ function Page(): JSX.Element {
               Prove and Get a ZKEdDSA Frog Proof from Zupass
             </Link>
           </li>
+          <li>
+            <Link to="/examples/gpc-proof">
+              Prove and Get a GPC Proof of PODs from Zupass
+            </Link>
+          </li>
         </ol>
       </div>
     </div>

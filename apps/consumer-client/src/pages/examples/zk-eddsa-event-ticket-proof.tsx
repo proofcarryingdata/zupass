@@ -106,7 +106,7 @@ export default function Page(): JSX.Element {
       <HomeLink />
       <h2>ZKEdDSA Event Ticket Proof</h2>
       <p>
-        This page shows a working example of an integration Zupass which
+        This page shows a working example of an integration with Zupass which
         requests and verifies that the user has an EdDSA-signed ticket to one of
         a list of valid events.
       </p>
@@ -114,7 +114,7 @@ export default function Page(): JSX.Element {
         The underlying PCD that this example uses is{" "}
         <code>ZKEdDSAEventTicketPCD</code>. You can find more documentation
         regarding this PCD{" "}
-        <CodeLink file="/tree/main/packages/zk-eddsa-event-ticket-pcd">
+        <CodeLink file="/tree/main/packages/pcd/zk-eddsa-event-ticket-pcd">
           here on GitHub
         </CodeLink>{" "}
         .

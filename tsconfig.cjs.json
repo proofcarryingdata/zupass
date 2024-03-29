@@ -10,6 +10,9 @@
       "path": "packages/lib/emitter/tsconfig.cjs.json"
     },
     {
+      "path": "packages/lib/gpc/tsconfig.cjs.json"
+    },
+    {
       "path": "packages/lib/gpcircuits/tsconfig.cjs.json"
     },
     {
@@ -59,6 +62,9 @@
     },
     {
       "path": "packages/pcd/ethereum-ownership-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/pcd/gpc-pcd/tsconfig.cjs.json"
     },
     {
       "path": "packages/pcd/halo-nonce-pcd/tsconfig.cjs.json"
@@ -122,6 +128,9 @@
     },
     {
       "path": "packages/ui/ethereum-ownership-pcd-ui/tsconfig.cjs.json"
+    },
+    {
+      "path": "packages/ui/gpc-pcd-ui/tsconfig.cjs.json"
     },
     {
       "path": "packages/ui/halo-nonce-pcd-ui/tsconfig.cjs.json"

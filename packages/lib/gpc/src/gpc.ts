@@ -1,0 +1,172 @@
+import {
+  ProtoPODGPC,
+  ProtoPODGPCCircuitDesc,
+  gpcArtifactPaths
+} from "@pcd/gpcircuits";
+import { Groth16Proof } from "snarkjs";
+import {
+  checkCircuitParameters,
+  checkProofArgs,
+  checkProofConfig,
+  checkVerifyArgs
+} from "./gpcChecks";
+import {
+  compileProofConfig,
+  compileVerifyConfig,
+  makeRevealedClaims
+} from "./gpcCompile";
+import {
+  GPCBoundConfig,
+  GPCIdentifier,
+  GPCProofConfig,
+  GPCProofInputs,
+  GPCRevealedClaims
+} from "./gpcTypes";
+import { canonicalizeConfig, makeCircuitIdentifier } from "./gpcUtil";
+
+// TODO(POD-P1): Consider whether all the separate checking and canonicalizaion
+// are valuable, or if some can be eliminated in favor of simply letting
+// compilation crash on bad inputs.
+
+/**
+ * Checks, binds, and canonicalizes a GPCProofConfig so it can be reused
+ * for multiple proofs.  See {@link GPCBoundConfig} for more details.
+ *
+ * Note that this function cannot verify anything about future inputs.  In
+ * particular the max POD size supported by an auto-selected circuit might
+ * not be sufficient for all inputs.  If you need a larger size, you should pick
+ * your circuit explicitly using the circuitIdentifier argument.
+ *
+ * @param proofConfig the raw proof config to bind.
+ * @param circuitIdentifier an optional identifier of the specific circuit
+ *   to choose.  If not specified, this function will pick the smallest
+ *   circuit which can handle the config.
+ * @returns a new configuration object bound and canonicalized as described
+ *   above.
+ * @throws TypeError if the input configuration is malformed
+ * @throws Error if the requirements of the given configuration are impossible
+ *   to meet with the given circuit
+ */
+export function gpcBindConfig(
+  proofConfig: GPCProofConfig,
+  circuitIdentifier?: GPCIdentifier
+): {
+  boundConfig: GPCBoundConfig;
+  circuitDesc: ProtoPODGPCCircuitDesc;
+} {
+  const requiredParams = checkProofConfig(proofConfig);
+  const circuitDesc = checkCircuitParameters(requiredParams, circuitIdentifier);
+  const boundConfig = canonicalizeConfig(
+    proofConfig,
+    makeCircuitIdentifier(circuitDesc)
+  );
+  return { boundConfig, circuitDesc };
+}
+
+/**
+ * Generates a GPC proof for the given configuration and inputs.  See the
+ * documentation of the input and output types for more details:
+ * {@link GPCProofConfig}, {@link GPCProofInputs}, {@link GPCBoundConfig}, and
+ * {@link GPCRevealedClaims}.
+ *
+ * The specific ZK circuit used will be determined to best fit the configuration
+ * and inputs.  If you need a specific circuit to be used, you can specify
+ * that in the `proofConfig`.
+ *
+ * @param proofConfig the configuration specifying the constraints to be proven.
+ * @param proofInputs the input data (PODs and other values) specific to this
+ *  proof.
+ * @param pathToArtifacts the path to the root foler where circuit artifacts
+ *   can be found.  This may be a URL (in browser) or a filesystem path (in Node).
+ * @returns The groth16 proof, a bound configuration usable for reliable
+ *   verification or future proofs (see {@link GPCBoundConfig}), and the revealed
+ *   claims of this proof (see {@link GPCRevealedClaims}).
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if it is impossible to create a valid proof
+ */
+export async function gpcProve(
+  proofConfig: GPCProofConfig,
+  proofInputs: GPCProofInputs,
+  pathToArtifacts: string
+): Promise<{
+  proof: Groth16Proof;
+  boundConfig: GPCBoundConfig;
+  revealedClaims: GPCRevealedClaims;
+}> {
+  const requiredParams = checkProofArgs(proofConfig, proofInputs);
+  const circuitDesc = checkCircuitParameters(
+    requiredParams,
+    proofConfig.circuitIdentifier
+  );
+  const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
+  const boundConfig = canonicalizeConfig(
+    proofConfig,
+    makeCircuitIdentifier(circuitDesc)
+  );
+
+  const circuitInputs = compileProofConfig(
+    boundConfig,
+    proofInputs,
+    circuitDesc
+  );
+
+  const { proof, outputs: circuitOutputs } = await ProtoPODGPC.prove(
+    circuitInputs,
+    artifactPaths.wasmPath,
+    artifactPaths.pkeyPath
+  );
+  const revealedClaims = makeRevealedClaims(
+    boundConfig,
+    proofInputs,
+    circuitOutputs
+  );
+  return { proof, boundConfig, revealedClaims };
+}
+
+/**
+ * Verifies a GPC proof produced by {@link gpcProve}.  See the
+ * documentation of the input and output types for more details:
+ * {@link GPCBoundConfig} and {@link GPCRevealedClaims}.
+ *
+ * Note that the bound config is guaranteed to be sized to accept the
+ * inputs to this proof, but cannot guarantee anything about future inputs if
+ * the same configuration is reused.  In particular the max POD size supported
+ * by an auto-selected circuit might not be sufficient for all inputs.  If you
+ * need a larger size, you can pick your circuit explicitly using the
+ * circuitIdentifier argument.
+ *
+ * @param proof the Groth16 proof generated by {@link gpcProve}.
+ * @param boundConfig the bound configuration specifying the constraints
+ *   proven, and the specific circuit which was used.
+ * @param revealedClaims the revealed parts of the proof inputs and outputs.
+ * @param pathToArtifacts the path to the root foler where circuit artifacts
+ *   can be found.  This may be a URL (in browser) or a filesystem path (in Node).
+ * @returns true if the proof is valid
+ * @throws TypeError if any of the arguments is malformed
+ * @throws Error if it is impossible to verify the proof
+ */
+export async function gpcVerify(
+  proof: Groth16Proof,
+  boundConfig: GPCBoundConfig,
+  revealedClaims: GPCRevealedClaims,
+  pathToArtifacts: string
+): Promise<boolean> {
+  const requiredParams = checkVerifyArgs(boundConfig, revealedClaims);
+  const circuitDesc = checkCircuitParameters(
+    requiredParams,
+    boundConfig.circuitIdentifier
+  );
+
+  const { circuitPublicInputs, circuitOutputs } = compileVerifyConfig(
+    boundConfig,
+    revealedClaims,
+    circuitDesc
+  );
+
+  return await ProtoPODGPC.verify(
+    gpcArtifactPaths(pathToArtifacts, circuitDesc).vkeyPath,
+    proof,
+    circuitPublicInputs,
+    circuitOutputs
+  );
+}
