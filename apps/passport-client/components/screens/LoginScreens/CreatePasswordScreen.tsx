@@ -11,7 +11,7 @@ import { AppContainer } from "../../shared/AppContainer";
 import { NewPasswordForm } from "../../shared/NewPasswordForm";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
-export function CreatePasswordScreen(): JSX.Element {
+export function CreatePasswordScreen(): JSX.Element | null {
   const dispatch = useDispatch();
   const self = useSelf();
   const query = useQuery();
@@ -51,19 +51,23 @@ export function CreatePasswordScreen(): JSX.Element {
 
   const onSkipPassword = useCallback(async () => {
     try {
-      setSettingPassword(true);
-      await sleep();
-      await dispatch({
-        type: "create-user-skip-password",
-        email,
-        token
-      });
+      // If email or token are undefined, we will already have redirected to
+      // login, so this is just for type-checking
+      if (email && token) {
+        setSettingPassword(true);
+        await sleep();
+        await dispatch({
+          type: "create-user-skip-password",
+          email,
+          token
+        });
+      }
     } finally {
       setSettingPassword(false);
     }
   }, [dispatch, email, token]);
 
-  const openSkipModal = (): void =>
+  const openSkipModal = (): Promise<void> =>
     dispatch({
       type: "set-modal",
       modal: {
@@ -89,14 +93,18 @@ export function CreatePasswordScreen(): JSX.Element {
 
   const onSetPassword = useCallback(async () => {
     try {
-      setSettingPassword(true);
-      await sleep();
-      await dispatch({
-        type: "login",
-        email,
-        token,
-        password
-      });
+      // If email or token are undefined, we will already have redirected to
+      // login, so this is just for type-checking
+      if (email && token) {
+        setSettingPassword(true);
+        await sleep();
+        await dispatch({
+          type: "login",
+          email,
+          token,
+          password
+        });
+      }
     } finally {
       setSettingPassword(false);
     }
@@ -107,6 +115,11 @@ export function CreatePasswordScreen(): JSX.Element {
   }, []);
 
   let content = null;
+
+  // If either email or token are undefined, we will already have redirected
+  if (!email || !token) {
+    return null;
+  }
 
   if (settingPassword) {
     content = <ScreenLoader text="Creating your account..." />;

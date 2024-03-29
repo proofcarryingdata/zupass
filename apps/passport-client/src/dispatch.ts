@@ -7,7 +7,6 @@ import {
   deserializeStorage,
   Feed,
   FeedSubscriptionManager,
-  KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
@@ -63,7 +62,7 @@ import {
 } from "./useSyncE2EEStorage";
 import { validateAndLogRunningAppState } from "./validateState";
 
-export type Dispatcher = (action: Action) => void;
+export type Dispatcher = (action: Action) => Promise<void>;
 
 export type Action =
   | {
@@ -132,10 +131,6 @@ export type Action =
       type: "update-subscription-permissions";
       subscriptionId: string;
       permissions: PCDPermission[];
-    }
-  | {
-      type: "set-known-ticket-types-and-keys";
-      knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     }
   | {
       type: "handle-agreed-privacy-notice";
@@ -248,12 +243,6 @@ export async function dispatch(
         action.subscriptionId,
         action.permissions
       );
-    case "set-known-ticket-types-and-keys":
-      return setKnownTicketTypesAndKeys(
-        state,
-        update,
-        action.knownTicketTypesAndKeys
-      );
     case "handle-agreed-privacy-notice":
       return handleAgreedPrivacyNotice(state, update, action.version);
     case "prompt-to-agree-privacy-notice":
@@ -304,8 +293,8 @@ async function createNewUserSkipPassword(
     modal: { modalType: "none" }
   });
   const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
-  await saveEncryptionKey(encryptionKey);
+  const encryptionKey = crypto.generateRandomKey();
+  saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -342,9 +331,9 @@ async function createNewUserWithPassword(
 ): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
-    await crypto.generateSaltAndEncryptionKey(password);
+    crypto.generateSaltAndEncryptionKey(password);
 
-  await saveEncryptionKey(encryptionKey);
+  saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -687,14 +676,16 @@ async function saveNewPasswordAndBroadcast(
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
-  const newSelf = { ...state.self, salt: newSalt };
-  saveSelf(newSelf);
-  saveEncryptionKey(newEncryptionKey);
-  notifyPasswordChangeToOtherTabs();
-  update({
-    encryptionKey: newEncryptionKey,
-    self: newSelf
-  });
+  if (state.self) {
+    const newSelf = { ...state.self, salt: newSalt };
+    saveSelf(newSelf);
+    saveEncryptionKey(newEncryptionKey);
+    notifyPasswordChangeToOtherTabs();
+    update({
+      encryptionKey: newEncryptionKey,
+      self: newSelf
+    });
+  }
 }
 
 function userInvalid(update: ZuUpdate): void {
@@ -984,6 +975,9 @@ async function syncSubscription(
   try {
     console.log("[SYNC] loading pcds from subscription", subscriptionId);
     const subscription = state.subscriptions.getSubscription(subscriptionId);
+    if (!subscription) {
+      throw new Error(`Subscription ${subscriptionId} not found`);
+    }
     const credentialManager = new CredentialManager(
       state.identity,
       state.pcds,
@@ -1005,7 +999,9 @@ async function syncSubscription(
     });
     onSuccess?.();
   } catch (e) {
-    onError?.(e);
+    if (e instanceof Error) {
+      onError?.(e);
+    }
     console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
   }
 }
@@ -1098,25 +1094,6 @@ async function updateSubscriptionPermissions(
   });
 }
 
-async function setKnownTicketTypesAndKeys(
-  _state: AppState,
-  update: ZuUpdate,
-  knownTicketTypesAndKeys: KnownTicketTypesAndKeys
-): Promise<void> {
-  const keyMap = {};
-  knownTicketTypesAndKeys.publicKeys.forEach((k) => {
-    if (!keyMap[k.publicKeyType]) {
-      keyMap[k.publicKeyType] = {};
-    }
-    keyMap[k.publicKeyType][k.publicKeyName] = k;
-  });
-
-  update({
-    knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
-    knownPublicKeys: keyMap
-  });
-}
-
 /**
  * After the user has agreed to the terms, save the updated user record, set
  * `loadedIssuedPCDs` to false in order to prompt a feed refresh, and dismiss
@@ -1127,12 +1104,14 @@ async function handleAgreedPrivacyNotice(
   update: ZuUpdate,
   version: number
 ): Promise<void> {
-  await saveSelf({ ...state.self, terms_agreed: version });
-  update({
-    self: { ...state.self, terms_agreed: version },
-    loadedIssuedPCDs: false,
-    modal: { modalType: "none" }
-  });
+  if (state.self) {
+    saveSelf({ ...state.self, terms_agreed: version });
+    update({
+      self: { ...state.self, terms_agreed: version },
+      loadedIssuedPCDs: false,
+      modal: { modalType: "none" }
+    });
+  }
 }
 
 /**
@@ -1187,7 +1166,7 @@ async function mergeImport(
       !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
       !(
         isSemaphoreIdentityPCD(pcd) &&
-        pcd.claim.identity.getCommitment().toString() !== state.self.commitment
+        pcd.claim.identity.getCommitment().toString() !== state.self?.commitment
       ) &&
       !target.hasPCDWithId(pcd.id)
     );

@@ -1,8 +1,8 @@
 import { useEffect } from "react";
 
-export function useAdminError(error: string): void {
+export function useAdminError(error: string | undefined): void {
   useEffect(() => {
-    if (error?.includes("not authorized")) {
+    if (error && error?.includes("not authorized")) {
       alert("you're not admin, bye bye");
       window.location.replace("/");
     }

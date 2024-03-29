@@ -19,7 +19,7 @@ import {
 export interface TicketActionExecutor {
   loading: boolean;
   result: PodboxTicketActionResult | null;
-  execute: () => Promise<PodboxTicketActionResult>;
+  execute: () => Promise<PodboxTicketActionResult | undefined>;
   reset: () => void;
 }
 
@@ -35,7 +35,7 @@ export function useExecuteTicketAction({
   eventId,
   ticketId
 }: {
-  action?: PodboxTicketAction;
+  action: PodboxTicketAction;
   eventId: string;
   ticketId: string;
 }): TicketActionExecutor {
@@ -44,7 +44,9 @@ export function useExecuteTicketAction({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PodboxTicketActionResult | null>(null);
 
-  const execute = useCallback(async (): Promise<PodboxTicketActionResult> => {
+  const execute = useCallback(async (): Promise<
+    PodboxTicketActionResult | undefined
+  > => {
     if (loading) return;
 
     const emailPCDs = pcdCollection.getPCDsByType(
@@ -52,6 +54,10 @@ export function useExecuteTicketAction({
     ) as EmailPCD[];
 
     if (emailPCDs.length !== 1) {
+      return;
+    }
+
+    if (!identityPCD) {
       return;
     }
 
@@ -86,7 +92,7 @@ export function useExecuteTicketAction({
 
   const reset = useCallback(() => {
     setLoading(false);
-    setResult(undefined);
+    setResult(null);
   }, []);
 
   return {

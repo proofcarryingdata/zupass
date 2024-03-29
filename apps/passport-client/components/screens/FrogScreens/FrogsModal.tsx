@@ -12,17 +12,17 @@ export function FrogsModal({
   onClose
 }: {
   pcds: EdDSAFrogPCD[];
-  color;
+  color: string;
   onClose: () => void;
 }): JSX.Element {
   const [focused, setFocused] = useState<number | null>(0);
   const focusedPCD = pcds[focused ?? 0];
 
   const onSwipeLeft = useCallback(() => {
-    setFocused((prev) => Math.min(pcds?.length - 1 ?? 0, prev + 1));
+    setFocused((prev) => Math.min(pcds?.length - 1 ?? 0, (prev ?? 0) + 1));
   }, [pcds]);
   const onSwipeRight = useCallback(() => {
-    setFocused((prev) => Math.max(0, prev - 1));
+    setFocused((prev) => Math.max(0, (prev ?? 0) - 1));
   }, []);
   const handlers = useSwipeable({
     onSwiped: (eventData) => {
@@ -46,7 +46,7 @@ export function FrogsModal({
       }}
     >
       <Container
-        index={focused}
+        index={focused ?? 0}
         count={pcds.length}
         color={color}
         {...handlers}
@@ -57,7 +57,7 @@ export function FrogsModal({
         <PCDCard pcd={focusedPCD} expanded hideRemoveButton />
         <ButtonContainer
           onClick={onSwipeLeft}
-          disabled={focused === pcds?.length - 1}
+          disabled={focused === pcds.length - 1}
         >
           <span>&rsaquo;</span>
         </ButtonContainer>

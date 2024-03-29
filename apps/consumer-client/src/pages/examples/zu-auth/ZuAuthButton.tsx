@@ -84,10 +84,10 @@ export default function ZuAuthButton({
         !authenticated
           ? async (): Promise<void> => {
               openZKEdDSAEventTicketPopup(
-                ticketFieldsToReveal,
+                ticketFieldsToReveal ?? {},
                 BigInt(await generateNonce()),
-                validEventIds,
-                validProductIds
+                validEventIds ?? [],
+                validProductIds ?? []
               );
             }
           : async (): Promise<void> => {

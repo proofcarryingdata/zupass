@@ -155,7 +155,7 @@ export async function devconnectCheckByIdWithOffline(
             name: "AlreadyCheckedIn",
             detailedMessage: "This attendee has already been checked in",
             checkinTimestamp: ticket.checkinTimestamp,
-            checker: ticket.checker
+            checker: ticket.checker ?? "Unknown"
           }
         };
       }

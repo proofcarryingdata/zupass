@@ -1,4 +1,4 @@
-import { EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { EdDSAFrogPCDPackage, isEdDSAFrogPCD } from "@pcd/eddsa-frog-pcd";
 import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import stringify from "fast-json-stable-stringify";
 import { toast } from "react-hot-toast";
@@ -35,7 +35,9 @@ export function FrogCryptoExportPCDsModal(): JSX.Element {
         onClick={async (): Promise<void> => {
           try {
             const serialized = stringify(
-              await Promise.all(pcds.map(EdDSAFrogPCDPackage.serialize))
+              await Promise.all(
+                pcds.filter(isEdDSAFrogPCD).map(EdDSAFrogPCDPackage.serialize)
+              )
             );
             const blob = new Blob([serialized], { type: "text/plaintext" });
 

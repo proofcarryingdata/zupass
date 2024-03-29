@@ -3,12 +3,23 @@ import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
 import { useQuery } from "../../../../../src/appHooks";
 
-export type TicketIdAndEventId = {
-  loading: boolean;
-  ticketId: string | null;
-  eventId: string | null;
-  error: string | null;
-};
+export enum TicketIdState {
+  Loading,
+  Success,
+  Error
+}
+
+export type TicketIdAndEventId =
+  | { state: TicketIdState.Loading }
+  | {
+      state: TicketIdState.Success;
+      ticketId: string;
+      eventId: string;
+    }
+  | {
+      state: TicketIdState.Error;
+      error: string;
+    };
 
 /**
  * The {@link PodboxScannedTicketScreen} receives a ticket from the scanner
@@ -18,21 +29,15 @@ export type TicketIdAndEventId = {
  */
 export function useTicketDataFromQuery(): TicketIdAndEventId {
   const query = useQuery();
-  const id = query.get("id");
-  const pcdStr = query.get("pcd");
+  const id = query?.get("id");
+  const pcdStr = query?.get("pcd");
 
-  const [loading, setLoading] = useState<boolean>(true);
-  const [ticketId, setTicketId] = useState<string | null>(null);
-  const [eventId, setEventId] = useState<string | null>(null);
-  const [error, setError] = useState<string | null>(null);
+  const [ticketData, setTicketData] = useState<TicketIdAndEventId>({
+    state: TicketIdState.Loading
+  });
 
   useEffect(() => {
-    setLoading(true);
-    setTicketId(null);
-    setEventId(null);
-    setError(null);
-
-    if (!id) {
+    if (!id && pcdStr) {
       const decodedPCD = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
         const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
@@ -40,27 +45,32 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         );
         const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
         if (verified) {
-          setTicketId(pcd.claim.partialTicket.ticketId);
-          setEventId(pcd.claim.partialTicket.eventId);
-          setLoading(false);
+          setTicketData({
+            state: TicketIdState.Success,
+            ticketId: pcd.claim.partialTicket.ticketId as string,
+            eventId: pcd.claim.partialTicket.eventId as string
+          });
         } else {
-          setLoading(false);
-          setError("Could not verify ticket. Please try scanning again.");
+          setTicketData({
+            state: TicketIdState.Error,
+            error: "Could not verify ticket. Please try scanning again."
+          });
         }
       };
 
       verify();
-    } else {
+    } else if (id) {
       // TODO check the timestamp also included here
       const { ticketId, eventId } = JSON.parse(
         Buffer.from(id, "base64").toString()
       );
-      setLoading(false);
-      setTicketId(ticketId);
-      setEventId(eventId);
-      setError(null);
+      setTicketData({
+        state: TicketIdState.Success,
+        ticketId,
+        eventId
+      });
     }
   }, [id, pcdStr]);
 
-  return { loading, ticketId, error, eventId };
+  return ticketData;
 }

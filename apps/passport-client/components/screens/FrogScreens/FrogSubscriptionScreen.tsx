@@ -6,15 +6,10 @@ import styled from "styled-components";
 import { TypewriterClass } from "typewriter-effect";
 import {
   useIsSyncSettled,
-  useSelf,
-  useSubscriptions,
-  useUserForcedToLogout
+  useLoginIfNoSelf,
+  useSubscriptions
 } from "../../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  pendingViewFrogCryptoRequestKey,
-  setPendingViewFrogCryptoRequest
-} from "../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { RippleLoader } from "../../core/RippleLoader";
 import { AppContainer } from "../../shared/AppContainer";
@@ -58,21 +53,10 @@ export function FrogSubscriptionScreen(): JSX.Element {
     }
   }, [feedCode, hasFrogSubs, syncSettled]);
 
-  const self = useSelf();
-  const userForcedToLogout = useUserForcedToLogout();
-
-  useEffect(() => {
-    if (!self || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = feedCode ? JSON.stringify(feedCode) : "";
-      setPendingViewFrogCryptoRequest(stringifiedRequest);
-      if (!self) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingViewFrogCryptoRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [feedCode, self, userForcedToLogout]);
+  useLoginIfNoSelf(
+    pendingRequestKeys.viewFrogCrypto,
+    feedCode ? JSON.stringify(feedCode) : ""
+  );
 
   if (!syncSettled) {
     return <RippleLoader />;
@@ -91,7 +75,10 @@ export function FrogSubscriptionScreen(): JSX.Element {
           <Form
             onSubmit={(e): void => {
               e.preventDefault();
-              window.location.href = `/#/frogscriptions/${e.target["feedCode"]?.value}`;
+              // eslint-disable-next-line @typescript-eslint/no-explicit-any
+              window.location.href = `/#/frogscriptions/${(e.target as any)[
+                "feedCode"
+              ]?.value}`;
             }}
           >
             <input type="text" id="feedCode" name="feedCode" />
@@ -184,7 +171,7 @@ export function useCheatCodeActivation(): void {
   }, [ref]);
 
   useEffect(() => {
-    const listener = (e): void => {
+    const listener = (e: KeyboardEvent): void => {
       checkProgress(e.key);
     };
     document.addEventListener("keydown", listener);

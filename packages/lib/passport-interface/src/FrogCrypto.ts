@@ -1,4 +1,4 @@
-import { Biome, EdDSAFrogPCDPackage } from "@pcd/eddsa-frog-pcd";
+import { Biome, EdDSAFrogPCDPackage, Rarity } from "@pcd/eddsa-frog-pcd";
 import _ from "lodash";
 import { z } from "zod";
 import { Feed } from "./SubscriptionManager";
@@ -186,5 +186,5 @@ export interface FrogCryptoScore {
  */
 export interface DexFrog {
   id: number;
-  rarity: number;
+  rarity: Rarity;
 }

@@ -50,7 +50,7 @@ const Container = styled.div<{
     p.checked ? "rgba(var(--white-rgb), 0.05)" : "transparent"};
   color: ${(p): string =>
     p.checked ? "var(--white)" : "rgba(var(--white-rgb), 0.5)"};
-  cursor: ${(p): string => !p.disabled && p.onClick && "pointer"};
+  cursor: ${(p): string => (!p.disabled && p.onClick ? "pointer" : "inherit")};
   pointer-events: ${(p): string => (p.disabled ? "none" : "auto")};
 `;
 

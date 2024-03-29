@@ -12,7 +12,9 @@ import type { EmitterContainer } from "tsparticles-plugin-emitters";
 
 const fpsLimit = 120;
 
-export function useZucashConfetti(element?: HTMLElement): () => Promise<void> {
+export function useZucashConfetti(
+  element?: HTMLElement | null
+): () => Promise<void> {
   const [container, setContainer] = useState<Container | null>(null);
   // destroy confetti when component unmounts. this stops the confetti but if we
   // don't do this, confetii plays again when we switch back to GetFrog
@@ -217,7 +219,7 @@ export function useZucashConfetti(element?: HTMLElement): () => Promise<void> {
           }
         }
       })
-      .then(setContainer);
+      .then((container) => setContainer(container ?? null));
   }, [container, element]);
 
   return confetti;
