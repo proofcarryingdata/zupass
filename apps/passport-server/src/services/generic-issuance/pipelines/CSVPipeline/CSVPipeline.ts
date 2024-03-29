@@ -237,6 +237,15 @@ export class CSVPipeline implements BasePipeline {
   public static is(pipeline: Pipeline): pipeline is CSVPipeline {
     return pipeline.type === PipelineType.CSV;
   }
+
+  /**
+   * Returns all of the unique IDs associated with a CSV pipeline
+   * definition.
+   */
+  public static uniqueIds(definition: CSVPipelineDefinition): string[] {
+    const ids = [definition.id];
+    return ids;
+  }
 }
 
 export function parseCSV(csv: string): Promise<string[][]> {

@@ -25,7 +25,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import { sleep } from "@pcd/util";
+import { assertUnreachable, sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -60,7 +60,6 @@ import {
   uploadSerializedStorage,
   uploadStorage
 } from "./useSyncE2EEStorage";
-import { assertUnreachable } from "./util";
 import { validateAndLogRunningAppState } from "./validateState";
 
 export type Dispatcher = (action: Action) => Promise<void>;
@@ -265,7 +264,7 @@ export async function dispatch(
       );
     default:
       // We can ensure that we never get here using the type system
-      assertUnreachable(action);
+      return assertUnreachable(action);
   }
 }
 

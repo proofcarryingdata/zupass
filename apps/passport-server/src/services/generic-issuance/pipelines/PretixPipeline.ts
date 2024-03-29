@@ -1693,6 +1693,31 @@ export class PretixPipeline implements BasePipeline {
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
   }
+
+  /**
+   * Returns all of the IDs associated with a Pretix pipeline definition.
+   */
+  public static uniqueIds(definition: PretixPipelineDefinition): string[] {
+    const ids = [definition.id];
+
+    for (const event of definition.options.events) {
+      ids.push(event.genericIssuanceId);
+
+      for (const product of event.products) {
+        ids.push(product.genericIssuanceId);
+      }
+    }
+
+    for (const semaphoreGroup of definition.options.semaphoreGroups ?? []) {
+      ids.push(semaphoreGroup.groupId);
+    }
+
+    for (const manualTicket of definition.options.manualTickets ?? []) {
+      ids.push(manualTicket.id);
+    }
+
+    return ids;
+  }
 }
 
 // Collection of API data for a single event
