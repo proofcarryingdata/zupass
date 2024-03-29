@@ -106,7 +106,7 @@ export function EdgeCityHome(): JSX.Element {
   useEffect(() => {
     setLoading(true);
     requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
-      if (res.success) {
+      if (res.success && res.value.length > 0) {
         const totalExp = Math.max(
           res.value.map((x) => x.balance).reduce((x, y) => x + y),
           0.1
@@ -120,7 +120,7 @@ export function EdgeCityHome(): JSX.Element {
             balance: (s.balance / totalExp) * TOTAL_SUPPLY
           }))
         );
-      } else {
+      } else if (res.error) {
         setError(res.error);
       }
       setLoading(false);
