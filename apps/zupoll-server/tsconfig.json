@@ -1,0 +1,53 @@
+{
+  "$schema": "https://json.schemastore.org/tsconfig",
+  "display": "Next.js",
+  "extends": "@pcd/tsconfig/server.json",
+  "compilerOptions": {
+    "target": "es6",
+    "lib": [
+      "esnext",
+      "DOM",
+      "DOM.Iterable"
+    ],
+    "skipLibCheck": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noEmit": true,
+    "incremental": true,
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "moduleResolution": "node",
+    "isolatedModules": false,
+    "jsx": "react-jsx",
+    "types": [
+      "mocha"
+    ],
+    "typeRoots": [
+      "src/util/declarations/",
+      "./node_modules/@types/",
+      "../../node_modules/@types/"
+    ],
+    "baseUrl": "./"
+  },
+  "include": [
+    "**/*.ts",
+    "**/*.d.ts"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
+  "references": [
+    {
+      "path": "../../packages/lib/pcd-types"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-group-pcd"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-signature-pcd"
+    },
+    {
+      "path": "../../packages/lib/util"
+    }
+  ]
+}

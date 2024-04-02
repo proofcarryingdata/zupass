@@ -45,5 +45,8 @@
   "javascript.preferences.quoteStyle": "double",
   "typescript.format.semicolons": "insert",
   "typescript.preferences.quoteStyle": "double",
-  "typescript.enablePromptUseWorkspaceTsdk": true
+  "typescript.enablePromptUseWorkspaceTsdk": true,
+  "[properties]": {
+    "editor.defaultFormatter": "foxundermoon.shell-format"
+  }
 }

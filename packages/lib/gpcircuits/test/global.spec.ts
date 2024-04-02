@@ -8,7 +8,6 @@ import { circomkit } from "./common";
 
 describe("global.GlobalModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  this.timeout(10000);
   let circuit: WitnessTester<
     GlobalModuleInputNamesType,
     GlobalModuleOutputNamesType
