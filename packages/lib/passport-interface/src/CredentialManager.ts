@@ -10,7 +10,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import { CredentialPayload, createCredentialPayload } from "./Credential";
 import { CredentialRequest } from "./SubscriptionManager";
 import { StorageBackedMap } from "./util/StorageBackedMap";
-import { PerformanceMeasurement } from "./util/util";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
@@ -74,8 +73,6 @@ export class CredentialManager implements CredentialManagerAPI {
    * prepare the credentials to avoid race conditions.
    */
   public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
-    const measurement = new PerformanceMeasurement("prepareCredentials");
-
     for (const req of reqs) {
       if (!this.getCachedCredential(req.pcdType)) {
         try {
@@ -88,7 +85,6 @@ export class CredentialManager implements CredentialManagerAPI {
         }
       }
     }
-    console.log(measurement.measure());
   }
 
   // Get a credential from the local cache, if it exists
