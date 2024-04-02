@@ -352,6 +352,7 @@ describe("zuconnect functionality", function () {
     expect(ticketPCD.claim.ticket.attendeeEmail).to.eq(
       goodResponse.tickets[0].email
     );
+    expectToExist(ticketPCD.claim.ticket.imageUrl);
   });
 
   it("should recognize issued ticket as known ticket", async () => {
