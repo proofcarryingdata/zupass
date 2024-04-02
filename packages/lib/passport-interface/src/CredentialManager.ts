@@ -13,6 +13,7 @@ import {
 } from "./FeedCredential";
 import { CredentialRequest } from "./SubscriptionManager";
 import { StorageBackedMap } from "./util/StorageBackedMap";
+import { PerformanceMeasurement } from "./util/util";
 
 export interface CredentialManagerAPI {
   canGenerateCredential(req: CredentialRequest): boolean;
@@ -25,6 +26,7 @@ export type CredentialCache = Map<string, CacheEntry>;
 interface CacheEntry {
   timestamp: number;
   value: SerializedPCD;
+  request: CredentialRequest;
 }
 
 const CACHE_TTL = ONE_HOUR_MS;
@@ -75,13 +77,12 @@ export class CredentialManager implements CredentialManagerAPI {
    * prepare the credentials to avoid race conditions.
    */
   public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
+    const measurement = new PerformanceMeasurement("prepareCredentials");
+
     for (const req of reqs) {
       if (!this.getCachedCredential(req.pcdType)) {
         try {
-          this.setCachedCredential(
-            req.pcdType,
-            await this.generateCredential(req)
-          );
+          this.setCachedCredential(req, await this.generateCredential(req));
         } catch (e) {
           // It can be possible for credential generation to fail if the user
           // does not have the right kind of PCD. Because we are only
@@ -90,6 +91,7 @@ export class CredentialManager implements CredentialManagerAPI {
         }
       }
     }
+    console.log(measurement.measure());
   }
 
   // Get a credential from the local cache, if it exists
@@ -108,11 +110,11 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Adds a credential to the cache
   private setCachedCredential(
-    type: string | undefined,
+    request: CredentialRequest,
     value: SerializedPCD
   ): void {
-    const cacheKey = type ?? "none";
-    this.cache.set(cacheKey, { value, timestamp: Date.now() });
+    const cacheKey = request.pcdType ?? "none";
+    this.cache.set(cacheKey, { value, timestamp: Date.now(), request });
     // This can happen asynchronously, so don't await on the promise
     this.purgeExpiredCredentials();
   }
@@ -141,7 +143,7 @@ export class CredentialManager implements CredentialManagerAPI {
     }
 
     const credential = await this.generateCredential(req);
-    this.setCachedCredential(req.pcdType, credential);
+    this.setCachedCredential(req, credential);
 
     return credential;
   }

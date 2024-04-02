@@ -892,9 +892,9 @@ export type PodboxTicketActionError = { detailedMessage?: string } & (
 );
 
 /**
- * Request body for hitting the Generic Issuance checkin API on the backend.
+ * Request body for hitting the Podbox action API on the backend.
  */
-export type GenericIssuanceCheckInRequest = {
+export type PodboxTicketActionRequest = {
   /**
    * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket

@@ -12,6 +12,7 @@ import { useCallback, useState } from "react";
 import urljoin from "url-join";
 import { appConfig } from "../../../../../../src/appConfig";
 import {
+  useCredentialManager,
   usePCDCollection,
   useUserIdentityPCD
 } from "../../../../../../src/appHooks";
@@ -43,6 +44,7 @@ export function useExecuteTicketAction({
   const identityPCD = useUserIdentityPCD();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PodboxTicketActionResult | null>(null);
+  const credentialManager = useCredentialManager();
 
   const execute = useCallback(async (): Promise<
     PodboxTicketActionResult | undefined

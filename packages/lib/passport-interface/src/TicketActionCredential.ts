@@ -26,7 +26,7 @@ export interface TicketActionPayload {
   /**
    * The email pcd proving their membership in the pipeline.
    */
-  emailPCD: SerializedPCD<EmailPCD>;
+  credential: SerializedPCD<SemaphoreSignaturePCD>;
 
   ticketId: string;
   eventId: string;
@@ -40,24 +40,6 @@ export interface VerifiedTicketActionCredential {
   emailPCD: EmailPCD;
   ticketIdToCheckIn: string;
   eventId: string;
-}
-
-/**
- * Creates a credential payload for use in the Generic Issuance checkin API.
- */
-export function createTicketActionCredentialPayload(
-  emailPCD: SerializedPCD<EmailPCD>,
-  action: PodboxTicketAction,
-  eventId: string,
-  ticketId: string
-): TicketActionPayload {
-  return {
-    emailPCD,
-    action,
-    eventId,
-    ticketId,
-    timestamp: Date.now()
-  };
 }
 
 /**
