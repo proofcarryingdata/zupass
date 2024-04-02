@@ -1,7 +1,7 @@
 import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
   ZupassFeedIds,
-  createFeedCredentialPayload,
+  createCredentialPayload,
   pollFeed
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
@@ -56,7 +56,7 @@ describe("attested email feed functionality", function () {
   step(
     "user should be able to be issued an attested email PCD from the server",
     async function () {
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const pollFeedResult = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,

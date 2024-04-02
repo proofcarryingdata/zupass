@@ -1,5 +1,5 @@
 import {
-  createFeedCredentialPayload,
+  createCredentialPayload,
   pollFeed,
   ZupassFeedIds
 } from "@pcd/passport-interface";
@@ -57,7 +57,7 @@ describe("ticket issuance cutoff date should work", function () {
       "before the cutoff date",
     async function () {
       MockDate.set(beforeCutoffDate);
-      const feedCredential = JSON.stringify(createFeedCredentialPayload());
+      const feedCredential = JSON.stringify(createCredentialPayload());
       const feedResult = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         userIdentity,
@@ -76,7 +76,7 @@ describe("ticket issuance cutoff date should work", function () {
       "after the cutoff date",
     async function () {
       MockDate.set(afterCutoffDate);
-      const feedCredential = JSON.stringify(createFeedCredentialPayload());
+      const feedCredential = JSON.stringify(createCredentialPayload());
       const feedResult = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         userIdentity,
@@ -110,7 +110,7 @@ describe("ticket issuance cutoff date should work", function () {
         extra_issuance: true
       });
 
-      const feedCredential = JSON.stringify(createFeedCredentialPayload());
+      const feedCredential = JSON.stringify(createCredentialPayload());
       const firstFeedResult = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         userIdentity,

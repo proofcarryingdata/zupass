@@ -2,7 +2,6 @@ import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   ActionConfigResponseValue,
   EdgeCityBalance,
-  GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
@@ -16,6 +15,7 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -221,7 +221,7 @@ export class GenericIssuanceService {
   }
 
   public async handleCheckIn(
-    req: GenericIssuanceCheckInRequest
+    req: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return this.pipelineSubservice.handleCheckIn(req);
   }

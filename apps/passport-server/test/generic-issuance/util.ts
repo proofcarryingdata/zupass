@@ -1,12 +1,11 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
-  FeedCredentialPayload,
+  CredentialPayload,
   InfoResult,
   PodboxTicketActionResult,
   PollFeedResult,
-  createFeedCredentialPayload,
-  createTicketActionCredentialPayload,
+  createCredentialPayload,
   requestPipelineInfo,
   requestPodboxTicketAction,
   requestPollFeed
@@ -95,13 +94,8 @@ export async function requestCheckInPipelineTicket(
   const serializedTicketCheckerEmailPCD =
     await EmailPCDPackage.serialize(checkerEmailPCD);
 
-  const ticketCheckerPayload = createTicketActionCredentialPayload(
-    serializedTicketCheckerEmailPCD,
-    {
-      checkin: true
-    },
-    ticket.claim.ticket.eventId,
-    ticket.claim.ticket.ticketId
+  const ticketCheckerPayload = createCredentialPayload(
+    serializedTicketCheckerEmailPCD
   );
 
   const ticketCheckerFeedCredential = await signFeedCredentialPayload(
@@ -109,7 +103,15 @@ export async function requestCheckInPipelineTicket(
     ticketCheckerPayload
   );
 
-  return requestPodboxTicketAction(checkinRoute, ticketCheckerFeedCredential);
+  return requestPodboxTicketAction(
+    checkinRoute,
+    ticketCheckerFeedCredential,
+    {
+      checkin: true
+    },
+    ticket.claim.ticket.ticketId,
+    ticket.claim.ticket.eventId
+  );
 }
 
 /**
@@ -159,7 +161,7 @@ export async function requestTicketsFromPipeline(
     feedId: feedId,
     pcd: await signFeedCredentialPayload(
       identity,
-      createFeedCredentialPayload(
+      createCredentialPayload(
         await EmailPCDPackage.serialize(
           await EmailPCDPackage.prove({
             privateKey: {
@@ -192,7 +194,7 @@ export async function requestTicketsFromPipeline(
  */
 export async function signFeedCredentialPayload(
   identity: Identity,
-  payload: FeedCredentialPayload
+  payload: CredentialPayload
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {

@@ -7,7 +7,7 @@ import {
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue,
-  verifyFeedCredential
+  verifyCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -91,9 +91,7 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { pcd: credential, payload } = await verifyFeedCredential(
-            req.pcd
-          );
+          const { pcd: credential, payload } = await verifyCredential(req.pcd);
           if (!payload.pcd) {
             throw new Error("missing email pcd");
           }

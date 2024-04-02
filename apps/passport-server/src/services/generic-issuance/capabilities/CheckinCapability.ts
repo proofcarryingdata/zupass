@@ -1,7 +1,7 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
   GenericIssuancePreCheckRequest,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue
 } from "@pcd/passport-interface";
 import urljoin from "url-join";
@@ -20,7 +20,7 @@ export enum CheckinStatus {
 export interface CheckinCapability extends BasePipelineCapability {
   type: PipelineCapability.Checkin;
   checkin(
-    request: GenericIssuanceCheckInRequest
+    request: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue>;
   getCheckinUrl(): string;
   // Check-ins are based off ticket data, and tickets do not identify the

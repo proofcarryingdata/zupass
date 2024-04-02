@@ -10,7 +10,7 @@ import {
   FrogCryptoShareTelegramHandleResult,
   FrogCryptoUserStateResult,
   PollFeedResult,
-  createFeedCredentialPayload,
+  createCredentialPayload,
   frogCryptoGetUserState,
   frogCryptoUpdateTelegramHandleSharing,
   pollFeed,
@@ -530,7 +530,7 @@ describe("frogcrypto functionality", function () {
     now: Date
   ): Promise<PollFeedResult> {
     MockDate.set(now);
-    const payload = JSON.stringify(createFeedCredentialPayload());
+    const payload = JSON.stringify(createCredentialPayload());
     const response = await pollFeed(
       `${application.expressContext.localEndpoint}/frogcrypto/feeds`,
       identity,
@@ -545,7 +545,7 @@ describe("frogcrypto functionality", function () {
   async function getUserState(
     feedIds: string[]
   ): Promise<FrogCryptoUserStateResult> {
-    const payload = JSON.stringify(createFeedCredentialPayload());
+    const payload = JSON.stringify(createCredentialPayload());
     return frogCryptoGetUserState(
       application.expressContext.localEndpoint,
       identity,
@@ -557,7 +557,7 @@ describe("frogcrypto functionality", function () {
   async function updateTelegramHandleSharing(
     shareTelegramHandle: boolean
   ): Promise<FrogCryptoShareTelegramHandleResult> {
-    const payload = JSON.stringify(createFeedCredentialPayload());
+    const payload = JSON.stringify(createCredentialPayload());
     return frogCryptoUpdateTelegramHandleSharing(
       application.expressContext.localEndpoint,
       identity,

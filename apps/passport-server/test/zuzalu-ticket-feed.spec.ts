@@ -1,6 +1,6 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  createFeedCredentialPayload,
+  createCredentialPayload,
   pollFeed,
   ZupassFeedIds,
   ZUZALU_23_EVENT_ID
@@ -87,7 +87,7 @@ describe("zuzalu-specific zupass functionality", function () {
   step(
     "user should be able to be issued Zuzalu ticket PCDs from the server",
     async function () {
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const response = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,

@@ -1,6 +1,5 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
   GenericIssuanceDeletePipelineResponseValue,
   GenericIssuanceFetchPretixEventsRequest,
   GenericIssuanceFetchPretixEventsResponseValue,
@@ -16,6 +15,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -155,7 +155,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/check-in",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const request = req.body as GenericIssuanceCheckInRequest;
+      const request = req.body as PodboxTicketActionRequest;
       const result = await genericIssuanceService.handleCheckIn(request);
       res.json(result satisfies PodboxTicketActionResponseValue);
     }

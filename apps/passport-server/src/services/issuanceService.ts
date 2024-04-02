@@ -43,7 +43,7 @@ import {
   ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
-  verifyFeedCredential,
+  verifyCredential,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
@@ -153,7 +153,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyFeedCredential(
+              const { pcd } = await verifyCredential(
                 req.pcd,
                 this.cachedVerifySignaturePCD
               );
@@ -229,10 +229,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              await verifyFeedCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
+              await verifyCredential(req.pcd, this.cachedVerifySignaturePCD);
               return {
                 actions: [
                   {
@@ -275,7 +272,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyFeedCredential(
+              const { pcd } = await verifyCredential(
                 req.pcd,
                 this.cachedVerifySignaturePCD
               );
@@ -313,7 +310,7 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyFeedCredential(
+              const { pcd } = await verifyCredential(
                 req.pcd,
                 this.cachedVerifySignaturePCD
               );
@@ -351,7 +348,7 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyFeedCredential(
+              const { pcd } = await verifyCredential(
                 req.pcd,
                 this.cachedVerifySignaturePCD
               );

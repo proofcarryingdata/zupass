@@ -7,10 +7,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import {
-  FeedCredentialPayload,
-  createFeedCredentialPayload
-} from "./FeedCredential";
+import { CredentialPayload, createCredentialPayload } from "./Credential";
 import { CredentialRequest } from "./SubscriptionManager";
 import { StorageBackedMap } from "./util/StorageBackedMap";
 import { PerformanceMeasurement } from "./util/util";
@@ -170,11 +167,9 @@ export class CredentialManager implements CredentialManagerAPI {
       // works for now
       const pcd = pcds[0];
       const serializedPCD = await this.pcds.serialize(pcd);
-      return this.semaphoreSignPayload(
-        createFeedCredentialPayload(serializedPCD)
-      );
+      return this.semaphoreSignPayload(createCredentialPayload(serializedPCD));
     } else if (req.pcdType === undefined) {
-      return this.semaphoreSignPayload(createFeedCredentialPayload());
+      return this.semaphoreSignPayload(createCredentialPayload());
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`
@@ -184,7 +179,7 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Takes a payload and wraps it in a signature PCD.
   private async semaphoreSignPayload(
-    payload: FeedCredentialPayload
+    payload: CredentialPayload
   ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
     // In future we might support other types of signature here
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({

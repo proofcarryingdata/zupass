@@ -12,6 +12,7 @@ import {
 } from "./FrogCrypto";
 import { PendingPCDStatus } from "./PendingPCDUtils";
 import { Feed } from "./SubscriptionManager";
+import { PodboxTicketAction } from "./TicketAction";
 import { NamedAPIError } from "./api/apiResult";
 import {
   ActionScreenConfig,
@@ -896,12 +897,23 @@ export type PodboxTicketActionError = { detailedMessage?: string } & (
  */
 export type PodboxTicketActionRequest = {
   /**
-   * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
+   * This is a semaphore signature of a {@link CredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket
    * that the user claims grants them the permission to check tickets issued
    * by the generic issuance service in.
    */
   credential: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * The action a member of a pipeline wants to take.
+   */
+  action: PodboxTicketAction;
+
+  /*
+   * The ticket and event that are the targets of the action.
+   */
+  ticketId: string;
+  eventId: string;
 };
 
 /**
@@ -923,12 +935,27 @@ export type PodboxTicketActionResponseValue =
  */
 export type GenericIssuancePreCheckRequest = {
   /**
-   * This is a semaphore signature of a {@link GenericCheckinCredentialPayload},
+   * This is a semaphore signature of a {@link CredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket
    * that the user claims grants them the permission to check tickets issued
    * by the generic issuance service in.
    */
   credential: SerializedPCD<SemaphoreSignaturePCD>;
+
+  /**
+   * The action a member of a pipeline wants to take.
+   */
+  action: PodboxTicketAction;
+
+  /*
+   * The ID of the ticket to be checked in.
+   */
+  ticketId: string;
+
+  /**
+   * The ID of the event that the ticket belongs to.
+   */
+  eventId: string;
 };
 
 export type Badge = {

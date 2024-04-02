@@ -1,6 +1,5 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
@@ -14,6 +13,7 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
@@ -419,7 +419,7 @@ export class PipelineSubservice {
   }
 
   public async handleCheckIn(
-    req: GenericIssuanceCheckInRequest
+    req: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return this.pipelineAPISubservice.handleCheckIn(req);
   }

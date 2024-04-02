@@ -22,7 +22,7 @@ import {
   ListSingleFeedRequest,
   PollFeedRequest,
   PollFeedResponseValue,
-  verifyFeedCredential
+  verifyCredential
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -86,7 +86,7 @@ export class FrogcryptoService {
             if (req.pcd === undefined) {
               throw new PCDHTTPError(400, `Missing credential`);
             }
-            await verifyFeedCredential(
+            await verifyCredential(
               req.pcd,
               this.issuanceService.cachedVerifySignaturePCD
             );
@@ -394,7 +394,7 @@ export class FrogcryptoService {
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<string> {
     try {
-      const { pcd } = await verifyFeedCredential(
+      const { pcd } = await verifyCredential(
         serializedPCD,
         this.issuanceService.cachedVerifySignaturePCD
       );

@@ -18,7 +18,7 @@ import {
   ZuzaluUserRole,
   agreeTerms,
   checkinTicketById,
-  createFeedCredentialPayload,
+  createCredentialPayload,
   pollFeed,
   requestConfirmationEmail,
   requestKnownTicketTypes,
@@ -1948,7 +1948,7 @@ describe("devconnect functionality", function () {
     "user should be able to be issued some PCDs from the server",
     async function () {
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const response = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,
@@ -1990,7 +1990,7 @@ describe("devconnect functionality", function () {
 
   step("issued pcds should have stable ids", async function () {
     MockDate.set(new Date());
-    const payload = JSON.stringify(createFeedCredentialPayload());
+    const payload = JSON.stringify(createCredentialPayload());
     const expressResponse1 = await pollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       identity,
@@ -2051,7 +2051,7 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const response = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,
@@ -2102,7 +2102,7 @@ describe("devconnect functionality", function () {
       await devconnectPretixSyncService.trySync();
 
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const response = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,
@@ -2154,7 +2154,7 @@ describe("devconnect functionality", function () {
     "event 'superuser' should be able to checkin a valid ticket by ID",
     async function () {
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const issueResponse = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         identity,
@@ -2224,7 +2224,7 @@ describe("devconnect functionality", function () {
     async function () {
       // Generate credential payload at given time
       MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
 
       // Attempt to use credential payload one hour and twenty minutes later
       MockDate.set(new Date(2023, 10, 5, 15, 50, 0));
@@ -2244,7 +2244,7 @@ describe("devconnect functionality", function () {
     "shouldn't be able to issue pcds for a user that doesn't exist",
     async function () {
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
+      const payload = JSON.stringify(createCredentialPayload());
       const expressResponse = await pollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         new Identity(),

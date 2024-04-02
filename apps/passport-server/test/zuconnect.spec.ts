@@ -4,7 +4,7 @@ import {
   User,
   ZupassFeedIds,
   ZuzaluUserRole,
-  createFeedCredentialPayload,
+  createCredentialPayload,
   pollFeed,
   requestVerifyTicket,
   requestVerifyTicketById
@@ -328,7 +328,7 @@ describe("zuconnect functionality", function () {
 
   it("should be able to be issued tickets", async () => {
     MockDate.set(new Date());
-    const payload = JSON.stringify(createFeedCredentialPayload());
+    const payload = JSON.stringify(createCredentialPayload());
     const response = await pollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       identity,
@@ -468,7 +468,7 @@ describe("zuconnect functionality", function () {
     expect(tickets.length).to.eq(numberOfValidTickets + 1);
 
     MockDate.set(new Date());
-    const payload = JSON.stringify(createFeedCredentialPayload());
+    const payload = JSON.stringify(createCredentialPayload());
     const response = await pollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       userWithTwoTicketsRow.identity,

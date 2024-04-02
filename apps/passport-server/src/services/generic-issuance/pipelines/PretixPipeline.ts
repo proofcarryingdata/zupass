@@ -9,7 +9,6 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
   GenericIssuancePreCheckRequest,
   GenericPretixCheckinList,
   GenericPretixEvent,
@@ -23,14 +22,14 @@ import {
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixEventConfig,
   PretixPipelineDefinition,
   PretixProductConfig,
-  verifyFeedCredential,
-  verifyTicketActionCredential
+  verifyCredential
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -872,7 +871,7 @@ export class PretixPipeline implements BasePipeline {
       }
 
       // TODO: cache the verification
-      const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
+      const { pcd: credential, payload } = await verifyCredential(req.pcd);
 
       const serializedEmailPCD = payload.pcd;
       if (!serializedEmailPCD) {
@@ -1236,22 +1235,20 @@ export class PretixPipeline implements BasePipeline {
         let eventId: string;
 
         try {
-          const payload = await verifyTicketActionCredential(
-            request.credential
-          );
+          const { payload } = await verifyCredential(request.credential);
           if (
-            !payload.action?.checkin ||
-            !payload?.ticketId ||
-            !payload.eventId ||
-            !payload.emailPCD
+            !request.action?.checkin ||
+            !request?.ticketId ||
+            !request.eventId ||
+            !payload.pcd
           ) {
             throw new Error("not implemented");
           }
 
-          ticketId = payload.ticketId;
-          eventId = payload.eventId;
+          ticketId = request.ticketId;
+          eventId = request.eventId;
           const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.emailPCD.pcd
+            payload.pcd.pcd
           );
 
           if (
@@ -1424,7 +1421,7 @@ export class PretixPipeline implements BasePipeline {
    * a check-in API request to Pretix.
    */
   private async checkinPretixTicketPCDs(
-    request: GenericIssuanceCheckInRequest
+    request: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
       tracePipeline(this.definition);
@@ -1441,15 +1438,15 @@ export class PretixPipeline implements BasePipeline {
       let eventId: string;
 
       try {
-        const payload = await verifyTicketActionCredential(request.credential);
-        if (!payload.ticketId || !payload.eventId || !payload.emailPCD) {
+        const { payload } = await verifyCredential(request.credential);
+        if (!request.ticketId || !request.eventId || !payload.pcd) {
           throw new Error("not implemented");
         }
 
-        ticketId = payload.ticketId;
-        eventId = payload.eventId;
+        ticketId = request.ticketId;
+        eventId = request.eventId;
         const checkerEmailPCD = await EmailPCDPackage.deserialize(
-          payload.emailPCD.pcd
+          payload.pcd.pcd
         );
 
         if (

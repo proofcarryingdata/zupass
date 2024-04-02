@@ -1,7 +1,7 @@
+export * from "./Credential";
 export * from "./CredentialManager";
 export * from "./EncryptedStorage";
 export * from "./FeedAPI";
-export * from "./FeedCredential";
 export * from "./FeedHost";
 export * from "./FrogCrypto";
 export * from "./PassportInterface";
@@ -14,7 +14,7 @@ export * from "./SemaphoreSignatureIntegration";
 export * from "./SerializedPCDIntegration";
 export * from "./SubscriptionManager";
 export * from "./Terms";
-export * from "./TicketActionCredential";
+export * from "./TicketAction";
 export * from "./User";
 export * from "./ZupassDefaultSubscriptions";
 export * from "./api/apiResult";

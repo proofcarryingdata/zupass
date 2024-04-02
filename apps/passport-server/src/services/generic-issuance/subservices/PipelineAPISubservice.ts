@@ -1,7 +1,6 @@
 import {
   ActionConfigResponseValue,
   Feed,
-  GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
   GenericIssuancePreCheckRequest,
@@ -11,14 +10,14 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
-  TicketActionPayload
+  verifyCredential
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { str } from "@pcd/util";
+import { getErrorMessage, str } from "@pcd/util";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
@@ -247,29 +246,21 @@ export class PipelineAPISubservice {
    * {@link PipelineDefinition}'s superuser configuration.
    */
   public async handleCheckIn(
-    req: GenericIssuanceCheckInRequest
+    req: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
-      // This is sub-optimal, but since tickets do not identify the pipelines
-      // they come from, we have to match the ticket to the pipeline this way.
-      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        req.credential.pcd
-      );
-      const signaturePCDValid =
-        await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-      if (!signaturePCDValid) {
-        throw new Error("credential signature invalid");
+      try {
+        await verifyCredential(req.credential);
+      } catch (e) {
+        throw new PCDHTTPError(
+          401,
+          `could not verify credential: ${getErrorMessage(e)}`
+        );
       }
 
-      const payload: TicketActionPayload = JSON.parse(
-        signaturePCD.claim.signedMessage
-      );
-
-      const eventId = payload.eventId;
-      // TODO detect mismatch between eventId and ticketId?
+      const eventId = req.eventId;
 
       span?.setAttribute("event_id", eventId);
 
@@ -309,23 +300,16 @@ export class PipelineAPISubservice {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
-      // This is sub-optimal, but since tickets do not identify the pipelines
-      // they come from, we have to match the ticket to the pipeline this way.
-      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        req.credential.pcd
-      );
-      const signaturePCDValid =
-        await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-      if (!signaturePCDValid) {
-        throw new Error("credential signature invalid");
+      try {
+        await verifyCredential(req.credential);
+      } catch (e) {
+        throw new PCDHTTPError(
+          401,
+          `could not verify credential: ${getErrorMessage(e)}`
+        );
       }
 
-      const payload: TicketActionPayload = JSON.parse(
-        signaturePCD.claim.signedMessage
-      );
-
-      const eventId = payload.eventId;
+      const eventId = req.eventId;
       span?.setAttribute("event_id", eventId);
 
       for (const pipeline of this.pipelineSubservice.getAllPipelines()) {

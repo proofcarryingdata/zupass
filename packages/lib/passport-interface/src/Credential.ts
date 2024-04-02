@@ -15,7 +15,7 @@ const TIMESTAMP_MAX_AGE = ONE_HOUR_MS + 20 * ONE_MINUTE_MS;
  * The payload encoded in the message of the SemaphoreSignaturePCD passed
  * as a credential to feeds.
  */
-export interface FeedCredentialPayload {
+export interface CredentialPayload {
   // The only type of PCD that can appear here is EmailPCD.
   pcd?: SerializedPCD<EmailPCD>;
   timestamp: number;
@@ -24,9 +24,9 @@ export interface FeedCredentialPayload {
 /**
  * Creates a feed credential payload with timestamp.
  */
-export function createFeedCredentialPayload(
+export function createCredentialPayload(
   pcd?: SerializedPCD
-): FeedCredentialPayload {
+): CredentialPayload {
   return {
     pcd: pcd,
     timestamp: Date.now()
@@ -53,22 +53,20 @@ async function deserializeAndVerify(
  * For use on the server-side, verifies a PCD and checks that the timestamp
  * is within bounds.
  */
-export async function verifyFeedCredential(
+export async function verifyCredential(
   serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-  pcdVerifier?: (pcd: SerializedPCD<SemaphoreSignaturePCD>) => Promise<boolean>
-): Promise<{ pcd: SemaphoreSignaturePCD; payload: FeedCredentialPayload }> {
-  if (pcdVerifier === undefined) {
-    pcdVerifier = deserializeAndVerify;
-  }
-
+  pcdVerifier: (
+    pcd: SerializedPCD<SemaphoreSignaturePCD>
+  ) => Promise<boolean> = deserializeAndVerify
+): Promise<{ pcd: SemaphoreSignaturePCD; payload: CredentialPayload }> {
   if (!(await pcdVerifier(serializedPCD))) {
-    throw new Error(`Could not verify SemaphoreSignaturePCD`);
+    throw new Error(`Could not verify credential PCD`);
   }
 
   // pcdVerifier doesn't actually give us the deserialized PCD back
   const pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
 
-  const payload: FeedCredentialPayload = JSON.parse(pcd.claim.signedMessage);
+  const payload: CredentialPayload = JSON.parse(pcd.claim.signedMessage);
 
   if (!validateFeedCredentialTimestamp(payload.timestamp)) {
     throw new Error("Credential timestamp out of bounds");
