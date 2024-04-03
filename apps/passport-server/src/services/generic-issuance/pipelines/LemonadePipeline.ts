@@ -6,7 +6,7 @@ import {
   TicketCategory,
   linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
@@ -33,6 +33,7 @@ import {
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import PQueue from "p-queue";
@@ -669,6 +670,44 @@ export class LemonadePipeline implements BasePipeline {
     return badgePCDs.filter((pcd) => !!pcd) as SerializedPCD<EdDSATicketPCD>[];
   }
 
+  /**
+   * Extracts and verifies the Email PCD from a credential.
+   */
+  private async getVerifiedEmailPCDFromCredential(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EmailPCD> {
+    // TODO benchmark how long this takes, and consider caching
+
+    const { pcd: signaturePCD, payload } = await verifyCredential(credential);
+
+    const serializedEmailPCD = payload.pcd;
+    if (!serializedEmailPCD) {
+      throw new Error("Missing email PCD");
+    }
+    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
+
+    // Email PCD never changes, so we could cache this verification separately
+    // on a much longer expiry.
+    if (!(await EmailPCDPackage.verify(emailPCD))) {
+      throw new Error("Invalid Email PCD");
+    }
+
+    if (emailPCD.claim.semaphoreId !== signaturePCD.claim.identityCommitment) {
+      throw new Error(`Semaphore signature does not match email PCD`);
+    }
+
+    if (
+      !isEqualEdDSAPublicKey(
+        emailPCD.proof.eddsaPCD.claim.publicKey,
+        this.zupassPublicKey
+      )
+    ) {
+      throw new Error(`Email PCD is not signed by Zupass`);
+    }
+
+    return emailPCD;
+  }
+
   private async getReceivedContactsForEmail(
     email: string
   ): Promise<SerializedPCD<EdDSATicketPCD>[]> {
@@ -771,30 +810,7 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      // TODO: cache the verification
-      const { pcd: credential, payload } = await verifyCredential(req.pcd);
-
-      const serializedEmailPCD = payload.pcd;
-      if (!serializedEmailPCD) {
-        throw new Error("missing email pcd");
-      }
-
-      const emailPCD = await EmailPCDPackage.deserialize(
-        serializedEmailPCD.pcd
-      );
-
-      if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
-        throw new Error(`Semaphore signature does not match email PCD`);
-      }
-
-      if (
-        !isEqualEdDSAPublicKey(
-          emailPCD.proof.eddsaPCD.claim.publicKey,
-          this.zupassPublicKey
-        )
-      ) {
-        throw new Error(`Email PCD is not signed by Zupass`);
-      }
+      const emailPCD = await this.getVerifiedEmailPCDFromCredential(req.pcd);
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         // Consumer is validated, so save them in the consumer list
@@ -819,7 +835,7 @@ export class LemonadePipeline implements BasePipeline {
 
       const tickets = await this.getTicketsForEmail(
         email,
-        credential.claim.identityCommitment
+        emailPCD.claim.semaphoreId
       );
 
       const ticketActions: PCDAction[] = [];
@@ -1281,29 +1297,10 @@ export class LemonadePipeline implements BasePipeline {
 
         // 1) verify that the requester is who they say they are
         try {
-          const { payload } = await verifyCredential(request.credential);
           span?.setAttribute("ticket_id", request.ticketId);
-
-          if (!payload.pcd) {
-            return { success: false, error: { name: "InvalidSignature" } };
-          }
-
-          const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.pcd.pcd
+          const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
+            request.credential
           );
-
-          if (
-            !isEqualEdDSAPublicKey(
-              checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-              this.zupassPublicKey
-            )
-          ) {
-            logger(
-              `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
-            );
-
-            return { success: false, error: { name: "InvalidSignature" } };
-          }
 
           span?.setAttribute(
             "checker_email",
@@ -1489,12 +1486,18 @@ export class LemonadePipeline implements BasePipeline {
       async (span): Promise<PodboxTicketActionResponseValue> => {
         tracePipeline(this.definition);
 
-        const { payload } = await verifyCredential(request.credential);
-        if (!payload.pcd) {
+        let emailPCD: EmailPCD;
+        try {
+          emailPCD = await this.getVerifiedEmailPCDFromCredential(
+            request.credential
+          );
+        } catch (e) {
+          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
+          setError(e, span);
+          span?.setAttribute("checkin_error", "InvalidSignature");
           return { success: false, error: { name: "InvalidSignature" } };
         }
 
-        const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
         const precheck = await this.precheckTicketAction(request);
         logger(
           LOG_TAG,
