@@ -1082,6 +1082,14 @@ export class IssuanceService {
       "IssuanceService",
       "issueZuconnectTicketPCDs",
       async (span) => {
+        const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
+
+        if (!imageServerUrl) {
+          logger(
+            "[ISSUE] can't issue ZuConnect tickets - unaware of the image server location"
+          );
+          return [];
+        }
         const user = await this.checkUserExists(credential);
         const email = user?.email;
         if (user) {
@@ -1122,7 +1130,13 @@ export class IssuanceService {
               timestampConsumed: 0,
               isConsumed: false,
               isRevoked: false,
-              ticketCategory: TicketCategory.ZuConnect
+              ticketCategory: TicketCategory.ZuConnect,
+              imageUrl: urljoin(
+                imageServerUrl,
+                "images/zuzalu",
+                "zuconnect.png"
+              ),
+              imageAltText: "ZuConnect"
             })
           );
         }
