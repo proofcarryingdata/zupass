@@ -1,6 +1,6 @@
 import {
-  PodboxActionPreCheckResult,
-  requestGenericIssuancePreCheck
+  PodboxTicketActionPreCheckResult,
+  requestPodboxTicketActionPreCheck
 } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
 import urljoin from "url-join";
@@ -31,10 +31,10 @@ export function usePreCheckTicket(
     }
   | {
       loading: false;
-      result: PodboxActionPreCheckResult;
+      result: PodboxTicketActionPreCheckResult;
     } {
   const [result, setResult] = useState<
-    PodboxActionPreCheckResult | undefined
+    PodboxTicketActionPreCheckResult | undefined
   >();
   const identityPCD = useUserIdentityPCD();
   const dispatch = useDispatch();
@@ -51,7 +51,7 @@ export function usePreCheckTicket(
         return;
       }
 
-      const preCheckTicketResult = await requestGenericIssuancePreCheck(
+      const preCheckTicketResult = await requestPodboxTicketActionPreCheck(
         urljoin(appConfig.zupassServer, "generic-issuance/api/pre-check"),
         await credentialManager.requestCredential({
           pcdType: "email-pcd",

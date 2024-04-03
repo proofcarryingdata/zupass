@@ -1,6 +1,6 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuancePreCheckRequest,
+  PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue
 } from "@pcd/passport-interface";
@@ -37,7 +37,7 @@ export interface CheckinCapability extends BasePipelineCapability {
   // response indicating that the ticket is recognized (or not, if the ticket
   // is invalid).
   preCheck(
-    request: GenericIssuancePreCheckRequest
+    request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue>;
 }
 

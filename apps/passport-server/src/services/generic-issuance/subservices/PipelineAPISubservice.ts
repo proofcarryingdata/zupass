@@ -3,13 +3,13 @@ import {
   Feed,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
-  GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -295,7 +295,7 @@ export class PipelineAPISubservice {
    * by their credential.
    */
   public async handlePreCheck(
-    req: GenericIssuancePreCheckRequest
+    req: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));

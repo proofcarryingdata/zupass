@@ -933,7 +933,7 @@ export type PodboxTicketActionResponseValue =
  * This is a "pre-checkin" step, which verifies that the user is able to check
  * the ticket in, before allowing them to attempt to do so.
  */
-export type GenericIssuancePreCheckRequest = {
+export type PodboxTicketActionPreCheckRequest = {
   /**
    * This is a semaphore signature of a {@link CredentialPayload},
    * signed using the Zupass Semaphore identity of the user who has a ticket

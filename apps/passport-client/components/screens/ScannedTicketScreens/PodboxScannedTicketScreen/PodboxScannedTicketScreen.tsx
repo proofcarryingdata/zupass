@@ -177,18 +177,6 @@ export const TicketInfoContainer = styled.div`
   padding: 16px;
 `;
 
-export const Container = styled.div`
-  margin-top: 64px;
-  color: var(--bg-dark-primary);
-  width: 400px;
-  padding: 0px 32px;
-`;
-
-export const CheckinSuccess = styled.span`
-  color: green;
-  font-size: 1.5em;
-`;
-
 export const Spread = styled.div`
   display: flex;
   justify-content: space-between;

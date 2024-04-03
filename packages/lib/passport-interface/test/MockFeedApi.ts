@@ -11,11 +11,8 @@ import {
   PollFeedResponseValue,
   PollFeedResult
 } from "../src";
+import { CredentialPayload, verifyCredential } from "../src/Credential";
 import { IFeedApi } from "../src/FeedAPI";
-import {
-  FeedCredentialPayload,
-  verifyFeedCredential
-} from "../src/FeedCredential";
 
 class MockFeedError extends Error {
   public code: number;
@@ -28,7 +25,7 @@ class MockFeedError extends Error {
 export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
-  public receivedPayload: FeedCredentialPayload | undefined;
+  public receivedPayload: CredentialPayload | undefined;
 
   public issuanceDisabled = false;
 
@@ -66,7 +63,7 @@ export class MockFeedApi implements IFeedApi {
                 if (this.issuanceDisabled) {
                   throw new MockFeedError("Issuance disabled", 410);
                 }
-                const { payload } = await verifyFeedCredential(
+                const { payload } = await verifyCredential(
                   req.pcd as SerializedPCD
                 );
                 this.receivedPayload = payload;
@@ -114,7 +111,7 @@ export class MockFeedApi implements IFeedApi {
                 if (this.issuanceDisabled) {
                   throw new MockFeedError("Issuance disabled", 410);
                 }
-                const { payload } = await verifyFeedCredential(
+                const { payload } = await verifyCredential(
                   req.pcd as SerializedPCD
                 );
                 this.receivedPayload = payload;
@@ -159,7 +156,7 @@ export class MockFeedApi implements IFeedApi {
                 if (this.issuanceDisabled) {
                   throw new MockFeedError("Issuance disabled", 410);
                 }
-                const { payload } = await verifyFeedCredential(
+                const { payload } = await verifyCredential(
                   req.pcd as SerializedPCD
                 );
                 this.receivedPayload = payload;

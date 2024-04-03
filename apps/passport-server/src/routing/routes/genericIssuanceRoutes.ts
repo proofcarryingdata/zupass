@@ -7,7 +7,6 @@ import {
   GenericIssuanceFetchPretixProductsResponseValue,
   GenericIssuanceGetAllUserPipelinesResponseValue,
   GenericIssuanceGetPipelineResponseValue,
-  GenericIssuancePreCheckRequest,
   GenericIssuanceSelfResponseValue,
   GenericIssuanceSendEmailResponseValue,
   GenericIssuanceUpsertPipelineRequest,
@@ -15,6 +14,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
+  PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -168,7 +168,7 @@ export function initGenericIssuanceRoutes(
     "/generic-issuance/api/pre-check",
     async (req: express.Request, res: express.Response) => {
       checkGenericIssuanceServiceStarted(genericIssuanceService);
-      const request = req.body as GenericIssuancePreCheckRequest;
+      const request = req.body as PodboxTicketActionPreCheckRequest;
       const result = await genericIssuanceService.handlePreCheck(request);
       res.json(result satisfies ActionConfigResponseValue);
     }

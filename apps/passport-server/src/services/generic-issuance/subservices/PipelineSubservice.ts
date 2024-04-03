@@ -3,7 +3,6 @@ import {
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
-  GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
@@ -13,6 +12,7 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -425,7 +425,7 @@ export class PipelineSubservice {
   }
 
   public async handlePreCheck(
-    req: GenericIssuancePreCheckRequest
+    req: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return this.pipelineAPISubservice.handlePreCheck(req);
   }

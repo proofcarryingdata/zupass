@@ -9,7 +9,6 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  GenericIssuancePreCheckRequest,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -22,6 +21,7 @@ import {
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
+  PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -1222,7 +1222,7 @@ export class PretixPipeline implements BasePipeline {
    * ticket data is returned.
    */
   private async checkPretixTicketPCDCanBeCheckedIn(
-    request: GenericIssuancePreCheckRequest
+    request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced<ActionConfigResponseValue>(
       LOG_NAME,

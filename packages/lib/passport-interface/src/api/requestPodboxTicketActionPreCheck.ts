@@ -3,26 +3,26 @@ import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   ActionConfigResponseValue,
-  GenericIssuancePreCheckRequest
+  PodboxTicketActionPreCheckRequest
 } from "../RequestTypes";
 import { PodboxTicketAction } from "../TicketAction";
 import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Performs a pre-checkin "check" on a ticket issued by the Generic Issuance
- * Service. {@link credential} is a Semaphore Signature of a payload
- * that is a `JSON.stringify`-ed {@link GenericCheckinCredentialPayload}.
+ * Performs a pre-checkin "check" on a ticket issued by Podbox.
+ * @link credential} is a Semaphore Signature of a payload that is a
+ * `JSON.stringify`-ed {@link CredentialPayload}.
  *
  * Never rejects. All information encoded in the resolved response.
  */
-export async function requestGenericIssuancePreCheck(
+export async function requestPodboxTicketActionPreCheck(
   preCheckUrl: string,
   credential: SerializedPCD<SemaphoreSignaturePCD>,
   action: PodboxTicketAction,
   ticketId: string,
   eventId: string
-): Promise<PodboxActionPreCheckResult> {
+): Promise<PodboxTicketActionPreCheckResult> {
   return httpPostSimple(
     urlJoin(preCheckUrl),
     async (resText) => {
@@ -36,8 +36,9 @@ export async function requestGenericIssuancePreCheck(
       action,
       ticketId,
       eventId
-    } satisfies GenericIssuancePreCheckRequest
+    } satisfies PodboxTicketActionPreCheckRequest
   );
 }
 
-export type PodboxActionPreCheckResult = APIResult<ActionConfigResponseValue>;
+export type PodboxTicketActionPreCheckResult =
+  APIResult<ActionConfigResponseValue>;

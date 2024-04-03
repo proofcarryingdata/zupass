@@ -132,8 +132,8 @@ function PerDayBadgeButton({
   );
 }
 
-export const Container = styled.div``;
+const Container = styled.div``;
 
-export const Row = styled.div`
+const Row = styled.div`
   margin-bottom: 8px;
 `;

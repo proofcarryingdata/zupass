@@ -12,7 +12,6 @@ import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
-  GenericIssuancePreCheckRequest,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -22,6 +21,7 @@ import {
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
+  PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
@@ -1262,7 +1262,7 @@ export class LemonadePipeline implements BasePipeline {
    * ticket data is returned.
    */
   private async precheckTicketAction(
-    request: GenericIssuancePreCheckRequest
+    request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced<ActionConfigResponseValue>(
       LOG_NAME,
