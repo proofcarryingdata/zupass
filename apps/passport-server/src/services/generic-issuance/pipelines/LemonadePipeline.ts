@@ -54,6 +54,7 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../../database/queries/ticketActionDBs";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
@@ -1287,6 +1288,12 @@ export class LemonadePipeline implements BasePipeline {
         tracePipeline(this.definition);
 
         let actorEmail: string;
+
+        // This method can only be used to pre-check for check-ins.
+        // There is no pre-check for any other kind of action at this time.
+        if (request.action.checkin !== true) {
+          throw new PCDHTTPError(400, "Not supported");
+        }
 
         const result: ActionConfigResponseValue = {
           success: true,

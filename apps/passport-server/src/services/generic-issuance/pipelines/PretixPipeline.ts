@@ -5,7 +5,7 @@ import {
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
@@ -32,8 +32,9 @@ import {
   verifyCredential
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
@@ -46,6 +47,7 @@ import {
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -870,30 +872,7 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      // TODO: cache the verification
-      const { pcd: credential, payload } = await verifyCredential(req.pcd);
-
-      const serializedEmailPCD = payload.pcd;
-      if (!serializedEmailPCD) {
-        throw new Error("missing email pcd");
-      }
-
-      const emailPCD = await EmailPCDPackage.deserialize(
-        serializedEmailPCD.pcd
-      );
-
-      if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
-        throw new Error(`Semaphore signature does not match email PCD`);
-      }
-
-      if (
-        !isEqualEdDSAPublicKey(
-          emailPCD.proof.eddsaPCD.claim.publicKey,
-          this.zupassPublicKey
-        )
-      ) {
-        throw new Error(`Email PCD is not signed by Zupass`);
-      }
+      const emailPCD = await this.getVerifiedEmailPCDFromCredential(req.pcd);
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         const didUpdate = await this.consumerDB.save(
@@ -917,7 +896,7 @@ export class PretixPipeline implements BasePipeline {
 
       const tickets = await this.getTicketsForEmail(
         email,
-        credential.claim.identityCommitment
+        emailPCD.claim.semaphoreId
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -944,6 +923,44 @@ export class PretixPipeline implements BasePipeline {
 
       return result;
     });
+  }
+
+  /**
+   * Extracts and verifies the Email PCD from a credential.
+   */
+  private async getVerifiedEmailPCDFromCredential(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EmailPCD> {
+    // TODO benchmark how long this takes, and consider caching
+
+    const { pcd: signaturePCD, payload } = await verifyCredential(credential);
+
+    const serializedEmailPCD = payload.pcd;
+    if (!serializedEmailPCD) {
+      throw new Error("Missing email PCD");
+    }
+    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
+
+    // Email PCD never changes, so we could cache this verification separately
+    // on a much longer expiry.
+    if (!(await EmailPCDPackage.verify(emailPCD))) {
+      throw new Error("Invalid Email PCD");
+    }
+
+    if (emailPCD.claim.semaphoreId !== signaturePCD.claim.identityCommitment) {
+      throw new Error(`Semaphore signature does not match email PCD`);
+    }
+
+    if (
+      !isEqualEdDSAPublicKey(
+        emailPCD.proof.eddsaPCD.claim.publicKey,
+        this.zupassPublicKey
+      )
+    ) {
+      throw new Error(`Email PCD is not signed by Zupass`);
+    }
+
+    return emailPCD;
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
@@ -1231,46 +1248,21 @@ export class PretixPipeline implements BasePipeline {
         tracePipeline(this.definition);
 
         let checkerEmail: string;
-        let ticketId: string;
-        let eventId: string;
+        const { eventId, ticketId } = request;
+
+        // This method can only be used to pre-check for check-ins.
+        // There is no pre-check for any other kind of action at this time.
+        if (request.action.checkin !== true) {
+          throw new PCDHTTPError(400, "Not supported");
+        }
 
         try {
-          const { payload } = await verifyCredential(request.credential);
-          if (
-            !request.action?.checkin ||
-            !request?.ticketId ||
-            !request.eventId ||
-            !payload.pcd
-          ) {
-            throw new Error("not implemented");
-          }
+          span?.setAttribute("ticket_id", ticketId);
 
-          ticketId = request.ticketId;
-          eventId = request.eventId;
-          const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.pcd.pcd
+          const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
+            request.credential
           );
 
-          if (
-            !isEqualEdDSAPublicKey(
-              checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-              this.zupassPublicKey
-            )
-          ) {
-            logger(
-              `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
-            );
-            return {
-              success: true,
-              checkinActionInfo: {
-                permissioned: false,
-                canCheckIn: false,
-                reason: { name: "InvalidSignature" }
-              }
-            };
-          }
-
-          span?.setAttribute("ticket_id", ticketId);
           span?.setAttribute(
             "checker_email",
             checkerEmailPCD.claim.emailAddress
@@ -1434,34 +1426,14 @@ export class PretixPipeline implements BasePipeline {
       );
 
       let checkerEmail: string;
-      let ticketId: string;
-      let eventId: string;
+      const { ticketId, eventId } = request;
 
       try {
-        const { payload } = await verifyCredential(request.credential);
-        if (!request.ticketId || !request.eventId || !payload.pcd) {
-          throw new Error("not implemented");
-        }
-
-        ticketId = request.ticketId;
-        eventId = request.eventId;
-        const checkerEmailPCD = await EmailPCDPackage.deserialize(
-          payload.pcd.pcd
+        span?.setAttribute("ticket_id", ticketId);
+        const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
+          request.credential
         );
 
-        if (
-          !isEqualEdDSAPublicKey(
-            checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-            this.zupassPublicKey
-          )
-        ) {
-          logger(
-            `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
-          );
-          return { success: false, error: { name: "InvalidSignature" } };
-        }
-
-        span?.setAttribute("ticket_id", ticketId);
         span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
         span?.setAttribute(
           "checked_semaphore_id",
