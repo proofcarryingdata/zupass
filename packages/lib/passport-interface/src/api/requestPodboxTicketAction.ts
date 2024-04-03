@@ -10,8 +10,9 @@ import { APIResult } from "./apiResult";
 import { httpPostSimple } from "./makeRequest";
 
 /**
- * Asks the server to checkIn in a ticket issued by the Generic Issuance
- * Service. {@link credential} is a Semaphore Signature of a payload
+ * Asks the server to perform an action in relation to a ticket issued by
+ * Podbox, such as check-in or badge gifting.
+ * {@link credential} is a Semaphore Signature of a payload
  * that is a `JSON.stringify`-ed {@link CredentialPayload}.
  *
  * Never rejects. All information encoded in the resolved response.
