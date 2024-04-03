@@ -27,6 +27,11 @@ interface CacheEntry {
 
 const CACHE_TTL = ONE_HOUR_MS;
 
+export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
+  pcdType: "email-pcd",
+  signatureType: "sempahore-signature-pcd"
+};
+
 // Creates an in-memory cache with a TTL of one hour.
 // Use this where local storage is not available, e.g. in tests
 export function createCredentialCache(): CredentialCache {

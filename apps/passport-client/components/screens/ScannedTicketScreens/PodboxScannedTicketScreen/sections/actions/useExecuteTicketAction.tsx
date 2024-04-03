@@ -1,4 +1,5 @@
 import {
+  PODBOX_CREDENTIAL_REQUEST,
   PodboxTicketAction,
   PodboxTicketActionResult,
   requestPodboxTicketAction
@@ -44,10 +45,7 @@ export function useExecuteTicketAction({
 
     const checkinResult = await requestPodboxTicketAction(
       urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
-      await credentialManager.requestCredential({
-        pcdType: "email-pcd",
-        signatureType: "sempahore-signature-pcd"
-      }),
+      await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
       action,
       ticketId,
       eventId
