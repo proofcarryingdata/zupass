@@ -1,22 +1,21 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
-  CredentialPayload,
+  CredentialManager,
   InfoResult,
+  PODBOX_CREDENTIAL_REQUEST,
   PodboxTicketActionResult,
   PollFeedResult,
-  createCredentialPayload,
   requestPipelineInfo,
   requestPodboxTicketAction,
   requestPollFeed
 } from "@pcd/passport-interface";
-import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+  PCDCollection,
+  expectIsReplaceInFolderAction
+} from "@pcd/pcd-collection";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import {
@@ -73,34 +72,10 @@ export async function requestCheckInPipelineTicket(
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
 ): Promise<PodboxTicketActionResult> {
-  const checkerEmailPCD = await EmailPCDPackage.prove({
-    privateKey: {
-      value: zupassEddsaPrivateKey,
-      argumentType: ArgumentTypeName.String
-    },
-    id: {
-      value: "email-id",
-      argumentType: ArgumentTypeName.String
-    },
-    emailAddress: {
-      value: checkerEmail,
-      argumentType: ArgumentTypeName.String
-    },
-    semaphoreId: {
-      value: checkerIdentity.commitment.toString(),
-      argumentType: ArgumentTypeName.String
-    }
-  });
-  const serializedTicketCheckerEmailPCD =
-    await EmailPCDPackage.serialize(checkerEmailPCD);
-
-  const ticketCheckerPayload = createCredentialPayload(
-    serializedTicketCheckerEmailPCD
-  );
-
-  const ticketCheckerFeedCredential = await signFeedCredentialPayload(
-    checkerIdentity,
-    ticketCheckerPayload
+  const ticketCheckerFeedCredential = await makeCredential(
+    zupassEddsaPrivateKey,
+    checkerEmail,
+    checkerIdentity
   );
 
   return requestPodboxTicketAction(
@@ -159,57 +134,43 @@ export async function requestTicketsFromPipeline(
 ): Promise<EdDSATicketPCD[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
-    pcd: await signFeedCredentialPayload(
-      identity,
-      createCredentialPayload(
-        await EmailPCDPackage.serialize(
-          await EmailPCDPackage.prove({
-            privateKey: {
-              value: zupassEddsaPrivateKey,
-              argumentType: ArgumentTypeName.String
-            },
-            id: {
-              value: "email-id",
-              argumentType: ArgumentTypeName.String
-            },
-            emailAddress: {
-              value: email,
-              argumentType: ArgumentTypeName.String
-            },
-            semaphoreId: {
-              value: identity.commitment.toString(),
-              argumentType: ArgumentTypeName.String
-            }
-          })
-        )
-      )
-    )
+    pcd: await makeCredential(zupassEddsaPrivateKey, email, identity)
   });
 
   return getTicketsFromFeedResponse(expectedFolder, ticketPCDResponse);
 }
 
 /**
- * TODO: extract this to the `@pcd/passport-interface` package.
+ * Makes a credential for a given email address and Semaphore identity, by
+ * generating a new Email PCD using the provided private key.
  */
-export async function signFeedCredentialPayload(
-  identity: Identity,
-  payload: CredentialPayload
+async function makeCredential(
+  zupassEddsaPrivateKey: string,
+  email: string,
+  identity: Identity
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
-  const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
-    identity: {
-      argumentType: ArgumentTypeName.PCD,
-      value: await SemaphoreIdentityPCDPackage.serialize(
-        await SemaphoreIdentityPCDPackage.prove({
-          identity: identity
-        })
-      )
+  const emailPCD = await EmailPCDPackage.prove({
+    privateKey: {
+      value: zupassEddsaPrivateKey,
+      argumentType: ArgumentTypeName.String
     },
-    signedMessage: {
-      argumentType: ArgumentTypeName.String,
-      value: JSON.stringify(payload)
+    id: {
+      value: "email-id",
+      argumentType: ArgumentTypeName.String
+    },
+    emailAddress: {
+      value: email,
+      argumentType: ArgumentTypeName.String
+    },
+    semaphoreId: {
+      value: identity.commitment.toString(),
+      argumentType: ArgumentTypeName.String
     }
   });
-
-  return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+  const credentialManager = new CredentialManager(
+    identity,
+    new PCDCollection([EmailPCDPackage], [emailPCD]),
+    new Map()
+  );
+  return credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST);
 }
