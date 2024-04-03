@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
