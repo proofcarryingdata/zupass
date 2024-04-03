@@ -8,7 +8,7 @@
     "build": "tsc --noEmit && ts-node build.ts build",
     "start": "exit 0",
     "lint": "tsc --noEmit && eslint \"**/*.ts{,x}\"",
-    "test": "ts-mocha --config ../../.mocharc.js --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf node_modules public/js public/index.html public/service-worker.js public/favicon.ico tsconfig.tsbuildinfo",
     "analyze-bundle": "yarn build && esbuild-visualizer --metadata ./public/js/bundle-size.json --filename public/bundle-stats.html && open public/bundle-stats.html"
   },
