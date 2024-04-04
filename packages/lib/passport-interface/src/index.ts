@@ -69,6 +69,7 @@ export * from "./api/requestVerifyTicket";
 export * from "./api/requestVerifyTicketById";
 export * from "./api/requestVerifyToken";
 export * from "./edgecity";
+export * from "./ethlatam";
 export * from "./genericIssuanceTypes";
 export * from "./genericPretixTypes";
 export * from "./util/util";
