@@ -84,12 +84,9 @@ function EdDSATicketPCDCardBody({
           <RedactedText redacted={redact}>
             {ticketData?.attendeeEmail}
           </RedactedText>
-          {/* TODO: Turn on ZK mode when we have an end-to-end story for it. */}
-          {false && (
-            <ZKMode>
-              <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
-            </ZKMode>
-          )}
+          <ZKMode>
+            <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
+          </ZKMode>
         </TicketInfo>
       )}
     </Container>

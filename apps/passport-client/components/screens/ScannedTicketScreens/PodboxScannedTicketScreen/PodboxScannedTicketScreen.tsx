@@ -66,6 +66,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
       <PrecheckTicket
         ticketId={ticketIds.ticketId}
         eventId={ticketIds.eventId}
+        zkMode={ticketIds.zkMode}
       />
     );
   }
@@ -84,10 +85,12 @@ export function PodboxScannedTicketScreen(): JSX.Element {
 
 function PrecheckTicket({
   ticketId,
-  eventId
+  eventId,
+  zkMode
 }: {
   ticketId: string;
   eventId: string;
+  zkMode: boolean;
 }): JSX.Element {
   const { loading, result } = usePreCheckTicket(ticketId, eventId);
 
@@ -109,6 +112,7 @@ function PrecheckTicket({
           precheck={result}
           ticketId={ticketId}
           eventId={eventId}
+          zkMode={zkMode}
         />
       </CenterColumn>
     </AppContainer>

@@ -4,6 +4,7 @@ import { useState } from "react";
 import styled from "styled-components";
 import { FakeBack, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
+import { PodboxZKModeTicketInfoSection } from "./PodboxZKModeTicketInfoSection";
 import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
 import { CheckInActionSection } from "./actions/checkin/CheckInActionSection";
 import { GiveBadgeActionSection } from "./actions/giveBadge/GiveBadgeActionSection";
@@ -18,11 +19,13 @@ import { ShareContactActionSection } from "./actions/shareContact/ShareContactAc
 export function PodboxTicketActionSection({
   ticketId,
   eventId,
-  precheck
+  precheck,
+  zkMode
 }: {
   ticketId: string;
   eventId: string;
   precheck: PodboxActionPreCheckResult;
+  zkMode: boolean;
 }): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const shouldShowDivider =
@@ -83,10 +86,17 @@ export function PodboxTicketActionSection({
 
       <Spacer h={16} />
 
-      <PodboxTicketInfoSection
-        precheck={precheck.value}
-        isLoading={isLoading}
-      />
+      {zkMode ? (
+        <PodboxZKModeTicketInfoSection
+          precheck={precheck.value}
+          isLoading={isLoading}
+        />
+      ) : (
+        <PodboxTicketInfoSection
+          precheck={precheck.value}
+          isLoading={isLoading}
+        />
+      )}
 
       <CheckInActionSection
         setIsLoading={setIsLoading}

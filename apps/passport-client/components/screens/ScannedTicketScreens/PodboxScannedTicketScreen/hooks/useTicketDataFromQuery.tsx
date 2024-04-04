@@ -15,6 +15,7 @@ export type TicketIdAndEventId =
       state: TicketIdState.Success;
       ticketId: string;
       eventId: string;
+      zkMode: boolean;
     }
   | {
       state: TicketIdState.Error;
@@ -48,7 +49,8 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
           setTicketData({
             state: TicketIdState.Success,
             ticketId: pcd.claim.partialTicket.ticketId as string,
-            eventId: pcd.claim.partialTicket.eventId as string
+            eventId: pcd.claim.partialTicket.eventId as string,
+            zkMode: true
           });
         } else {
           setTicketData({
@@ -67,7 +69,8 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
       setTicketData({
         state: TicketIdState.Success,
         ticketId,
-        eventId
+        eventId,
+        zkMode: false
       });
     }
   }, [id, pcdStr]);

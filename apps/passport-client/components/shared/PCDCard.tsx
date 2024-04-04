@@ -249,6 +249,7 @@ const CardContainerCollapsed = styled(CardContainerExpanded)`
 export const CardOutlineExpanded = styled.div`
   ${({ disabled }: { disabled?: boolean }): FlattenSimpleInterpolation => css`
     width: 100%;
+    margin-bottom: 24px;
     border-radius: 12px;
     border: 1px solid var(--accent-dark);
     background: var(--primary-dark);
