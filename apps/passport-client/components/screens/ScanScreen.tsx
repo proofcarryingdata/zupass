@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -25,11 +26,65 @@ const ButtonsContainer = styled.div`
   }
 `;
 
+type CameraConstraints =
+  | {
+      loading: true;
+    }
+  | {
+      loading: false;
+      options: Record<string, MediaTrackConstraintSet>;
+    };
+
+function useConstraints(): CameraConstraints {
+  const [options, setOptions] = useState<
+    Record<string, MediaTrackConstraintSet> | undefined
+  >(undefined);
+
+  useEffect(() => {
+    (async (): Promise<void> => {
+      const devices = await navigator.mediaDevices.enumerateDevices();
+      console.log(devices);
+      const supportedDevices = devices.filter(
+        (device) =>
+          device.kind === "videoinput" && !device.label.includes("front")
+      );
+
+      const constraints: Record<string, MediaTrackConstraintSet> = {};
+      let n = 1;
+      for (const device of supportedDevices) {
+        const label = device.label.length > 0 ? device.label : `camera ${n}`;
+        constraints[label] = {
+          deviceId: device.deviceId,
+          facingMode: "environment",
+          aspectRatio: 1
+        };
+        constraints[`${label} (high-res)`] = {
+          deviceId: device.deviceId,
+          facingMode: "environment",
+          aspectRatio: 1,
+
+          height: {
+            min: 1080
+          }
+        };
+        n++;
+      }
+
+      setOptions(constraints);
+    })();
+  }, []);
+
+  return options ? { loading: false, options } : { loading: true };
+}
+
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen(): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
+
+  const constraints = useConstraints();
+  const [selectedConstraint, setSelectedConstraint] = useState<string>("");
 
   return (
     <AppContainer bg="gray">
@@ -40,24 +95,39 @@ export function ScanScreen(): JSX.Element {
             <Back />
             <Home />
           </ButtonsContainer>
-          <QrReader
-            className="qr"
-            onResult={(result, error): void => {
-              if (result) {
-                console.log(
-                  `Got result, considering redirect`,
-                  result.getText()
-                );
-                const newLoc = maybeRedirect(result.getText());
-                if (newLoc) nav(newLoc);
-              } else if (error) {
-                //    console.info(error);
-              }
-            }}
-            constraints={{ facingMode: "environment", aspectRatio: 1 }}
-            ViewFinder={ViewFinder}
-            containerStyle={{ width: "100%" }}
-          />
+          {!constraints.loading && (
+            <>
+              <select
+                value={selectedConstraint}
+                onChange={(ev) => setSelectedConstraint(ev.currentTarget.value)}
+              >
+                {Object.entries(constraints.options).map(([label, _opt]) => (
+                  <option key={label} value={label}>
+                    {label}
+                  </option>
+                ))}
+              </select>
+              <QrReader
+                key={selectedConstraint}
+                className="qr"
+                onResult={(result, error): void => {
+                  if (result) {
+                    console.log(
+                      `Got result, considering redirect`,
+                      result.getText()
+                    );
+                    const newLoc = maybeRedirect(result.getText());
+                    if (newLoc) nav(newLoc);
+                  } else if (error) {
+                    //    console.info(error);
+                  }
+                }}
+                constraints={constraints.options[selectedConstraint]}
+                ViewFinder={ViewFinder}
+                containerStyle={{ width: "100%" }}
+              />
+            </>
+          )}
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>
