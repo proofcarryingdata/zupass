@@ -17,6 +17,7 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
+  CredentialPayload,
   FeedHost,
   GetOfflineTicketsRequest,
   GetOfflineTicketsResponseValue,
@@ -43,7 +44,7 @@ import {
   ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
-  verifyCredential,
+  validateCredentialTimestamp,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
@@ -139,7 +140,6 @@ export class IssuanceService {
     this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
       max: 1000
     });
-    this.cachedVerifySignaturePCD = this.cachedVerifySignaturePCD.bind(this);
 
     this.feedHost = new FeedHost(
       [
@@ -153,10 +153,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
+              const { pcd } = await this.verifyCredential(req.pcd, "payload");
               const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
               const ticketsByEvent = _.groupBy(
                 pcds,
@@ -229,7 +226,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              await verifyCredential(req.pcd, this.cachedVerifySignaturePCD);
+              await this.verifyCredential(req.pcd, "payload");
               return {
                 actions: [
                   {
@@ -272,10 +269,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
+              const { pcd } = await this.verifyCredential(req.pcd, "payload");
               const pcds = await this.issueEmailPCDs(pcd);
 
               // Clear out the folder
@@ -310,10 +304,7 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
+              const { pcd } = await this.verifyCredential(req.pcd, "payload");
               const pcds = await this.issueZuzaluTicketPCDs(pcd);
 
               // Clear out the folder
@@ -348,10 +339,7 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
+              const { pcd } = await this.verifyCredential(req.pcd, "payload");
 
               const pcds = await this.issueZuconnectTicketPCDs(pcd);
 
@@ -524,10 +512,12 @@ export class IssuanceService {
         };
       }
 
-      if (
-        !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
-        signature.claim.signedMessage !== ISSUANCE_STRING
-      ) {
+      try {
+        await this.verifyCredential(
+          await SemaphoreSignaturePCDPackage.serialize(signature),
+          "string"
+        );
+      } catch (_e) {
         return {
           error: {
             name: "NotSuperuser",
@@ -615,6 +605,49 @@ export class IssuanceService {
         success: false
       };
     }
+  }
+
+  /**
+   * Verifies the credentials that IssuanceService can receive.
+   * IssuanceService supports two kinds of credentials, one with a JSON string
+   * of a {@link CredentialPayload}, and the other legacy credential type,
+   * where the signed message equals {@link ISSUANCE_STRING}.
+   *
+   * This is why we have a custom credential verification mechanism here, and
+   * do not use the {@link verifyCredential} function from passport-interface.
+   */
+  public async verifyCredential(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+    payloadType: "payload" | "string"
+  ): Promise<{ pcd: SemaphoreSignaturePCD }> {
+    const signatureVerified =
+      await this.cachedVerifySignaturePCD(serializedPCD);
+    if (!signatureVerified) {
+      throw new Error("Invalid signature");
+    }
+
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+      serializedPCD.pcd
+    );
+
+    if (payloadType === "payload") {
+      try {
+        const payload: CredentialPayload = JSON.parse(pcd.claim.signedMessage);
+        if (!validateCredentialTimestamp(payload.timestamp)) {
+          throw new Error("Credential expired");
+        }
+      } catch (e) {
+        throw new Error(
+          `Error while handling credential payload: ${getErrorMessage(e)}`
+        );
+      }
+    } else {
+      if (pcd.claim.signedMessage !== ISSUANCE_STRING) {
+        throw new Error("Invalid credential content");
+      }
+    }
+
+    return { pcd };
   }
 
   /**
@@ -1400,11 +1433,11 @@ export class IssuanceService {
     req: GetOfflineTicketsRequest,
     res: Response
   ): Promise<void> {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.checkerProof.pcd
-    );
-    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
+    let signaturePCD;
+    try {
+      const { pcd } = await this.verifyCredential(req.checkerProof, "string");
+      signaturePCD = pcd;
+    } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
@@ -1422,12 +1455,11 @@ export class IssuanceService {
     req: UploadOfflineCheckinsRequest,
     res: Response
   ): Promise<void> {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.checkerProof.pcd
-    );
-    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-
-    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
+    let signaturePCD;
+    try {
+      const { pcd } = await this.verifyCredential(req.checkerProof, "string");
+      signaturePCD = pcd;
+    } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 

@@ -1,4 +1,5 @@
-import { EmailPCD } from "@pcd/email-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
@@ -21,6 +22,11 @@ export interface CredentialPayload {
   timestamp: number;
 }
 
+export interface VerifiedCredentialPayload {
+  pcd: SemaphoreSignaturePCD;
+  payload: CredentialPayload;
+}
+
 /**
  * Creates a feed credential payload with timestamp.
  */
@@ -34,42 +40,70 @@ export function createCredentialPayload(
 }
 
 /**
- * Validates a feed credential timestamp.
+ * Validates a credential timestamp.
  */
-function validateFeedCredentialTimestamp(timestamp: number): boolean {
+export function validateCredentialTimestamp(timestamp: number): boolean {
   const now = Date.now();
   return now - timestamp < TIMESTAMP_MAX_AGE;
 }
 
-async function deserializeAndVerify(
-  serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-): Promise<boolean> {
-  const pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
-
-  return await SemaphoreSignaturePCDPackage.verify(pcd);
-}
+type CredentialVerificationOptions =
+  | {
+      requireEmailPCD: false;
+    }
+  | {
+      requireEmailPCD: true;
+      eddsaPrivateKey: string;
+    };
 
 /**
- * For use on the server-side, verifies a PCD and checks that the timestamp
- * is within bounds.
+ * Verifies that a credential has a valid Semaphore signature and a non-expired
+ * timestamp.
+ *
+ * Optionally requires a verifiable Email PCD that shares a Semaphore identity
+ * with the signature wrapper, and was signed by a given EdDSA private key.
  */
 export async function verifyCredential(
   serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-  pcdVerifier: (
-    pcd: SerializedPCD<SemaphoreSignaturePCD>
-  ) => Promise<boolean> = deserializeAndVerify
-): Promise<{ pcd: SemaphoreSignaturePCD; payload: CredentialPayload }> {
-  if (!(await pcdVerifier(serializedPCD))) {
-    throw new Error(`Could not verify credential PCD`);
+  options: CredentialVerificationOptions
+): Promise<VerifiedCredentialPayload> {
+  if (serializedPCD.type !== SemaphoreSignaturePCDPackage.name) {
+    throw new Error(`Credential is not a Semaphore Signature PCD`);
   }
-
-  // pcdVerifier doesn't actually give us the deserialized PCD back
   const pcd = await SemaphoreSignaturePCDPackage.deserialize(serializedPCD.pcd);
+  if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
+    throw new Error(`Could not verify signature PCD`);
+  }
 
   const payload: CredentialPayload = JSON.parse(pcd.claim.signedMessage);
 
-  if (!validateFeedCredentialTimestamp(payload.timestamp)) {
+  if (!validateCredentialTimestamp(payload.timestamp)) {
     throw new Error("Credential timestamp out of bounds");
+  }
+
+  if (options.requireEmailPCD) {
+    if (!payload.pcd || payload.pcd.type !== EmailPCDPackage.name) {
+      throw new Error(`Required Email PCD is missing`);
+    }
+
+    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+
+    if (!(await EmailPCDPackage.verify(emailPCD))) {
+      throw new Error(`Could not verify email PCD`);
+    }
+
+    if (emailPCD.claim.semaphoreId !== pcd.claim.identityCommitment) {
+      throw new Error(
+        `Email PCD and Signature PCD do not have matching identities`
+      );
+    }
+
+    if (
+      emailPCD.proof.eddsaPCD.claim.publicKey !==
+      (await getEdDSAPublicKey(options.eddsaPrivateKey))
+    ) {
+      throw new Error(`Email PCD was not signed by expected private key`);
+    }
   }
 
   return { pcd, payload };
