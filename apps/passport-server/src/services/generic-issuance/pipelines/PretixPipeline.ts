@@ -9,6 +9,7 @@ import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
+  CredentialPayload,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -28,13 +29,15 @@ import {
   PollFeedResponseValue,
   PretixEventConfig,
   PretixPipelineDefinition,
-  PretixProductConfig,
-  verifyCredential
+  PretixProductConfig
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
@@ -50,7 +53,6 @@ import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineS
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
-import { ensureDefined } from "../../../util/util";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
 import {
@@ -928,20 +930,19 @@ export class PretixPipeline implements BasePipeline {
 
   /**
    * Extracts and verifies the Email PCD from a credential.
+   *
+   * Credential is verified by {@link PipelineAPISubservice} in methods such as
+   * `handleCheckin` or `handlePollFeed`, so we can assume that the credential
+   * contents are valid here.
    */
   private async getVerifiedEmailPCDFromCredential(
     credential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<EmailPCD> {
-    // TODO benchmark how long this takes, and consider caching
-    const { payload } = await verifyCredential(credential, {
-      requireEmailPCD: true,
-      zupassPublicKey: this.zupassPublicKey
-    });
-
-    // This will always be defined, given that email PCD is required above, but
-    // TypeScript doesn't know that
-    const serializedPCD = ensureDefined(payload.pcd);
-    const emailPCD = await EmailPCDPackage.deserialize(serializedPCD.pcd);
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
+    const payload: CredentialPayload<SerializedPCD<EmailPCD>> = JSON.parse(
+      pcd.claim.signedMessage
+    );
+    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
 
     return emailPCD;
   }

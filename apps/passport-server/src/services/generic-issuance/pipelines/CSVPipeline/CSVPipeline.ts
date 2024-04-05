@@ -7,8 +7,7 @@ import {
   PipelineLog,
   PipelineType,
   PollFeedRequest,
-  PollFeedResponseValue,
-  verifyCredential
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -95,16 +94,9 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { payload } = await verifyCredential<SerializedPCD<EmailPCD>>(
-            req.pcd,
-            {
-              requireEmailPCD: true,
-              zupassPublicKey: this.zupassPublicKey
-            }
+          const emailPCD = await this.getVerifiedEmailPCDFromCredential(
+            req.pcd
           );
-
-          const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
-
           requesterEmail = emailPCD.claim.emailAddress;
           requesterSemaphoreId = emailPCD.claim.semaphoreId;
         } catch (e) {
@@ -152,6 +144,25 @@ export class CSVPipeline implements BasePipeline {
         ]
       };
     });
+  }
+
+  /**
+   * Extracts and verifies the Email PCD from a credential.
+   *
+   * Credential is verified by {@link PipelineAPISubservice} in methods such as
+   * `handleCheckin` or `handlePollFeed`, so we can assume that the credential
+   * contents are valid here.
+   */
+  private async getVerifiedEmailPCDFromCredential(
+    credential: SerializedPCD<SemaphoreSignaturePCD>
+  ): Promise<EmailPCD> {
+    const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
+    const payload: CredentialPayload<SerializedPCD<EmailPCD>> = JSON.parse(
+      pcd.claim.signedMessage
+    );
+    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+
+    return emailPCD;
   }
 
   public async load(): Promise<PipelineLoadSummary> {

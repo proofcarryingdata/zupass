@@ -12,6 +12,8 @@ import { ONE_HOUR_MS, ONE_MINUTE_MS } from "@pcd/util";
 // that client-side cached credentials will be refreshed before they expire
 const TIMESTAMP_MAX_AGE = ONE_HOUR_MS + 20 * ONE_MINUTE_MS;
 
+export type Credential = SerializedPCD<SemaphoreSignaturePCD>;
+
 /*
  * The payload encoded in the message of the SemaphoreSignaturePCD passed
  * as a credential to feeds.
