@@ -1,7 +1,9 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CredentialManager,
+  CredentialPayload,
+  CredentialRequest,
   InfoResult,
   PODBOX_CREDENTIAL_REQUEST,
   PodboxTicketActionResult,
@@ -15,7 +17,11 @@ import {
   expectIsReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import {
+  SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDPackage
+} from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import {
@@ -140,16 +146,81 @@ export async function requestTicketsFromPipeline(
   return getTicketsFromFeedResponse(expectedFolder, ticketPCDResponse);
 }
 
+const testCredentialCache = new Map<
+  string,
+  SerializedPCD<SemaphoreSignaturePCD>
+>();
+
 /**
  * Makes a credential for a given email address and Semaphore identity, by
  * generating a new Email PCD using the provided private key.
+ *
+ * Uses {@link testCredentialCache} to avoid regenerating the same credential
+ * repeately.
  */
 async function makeCredential(
   zupassEddsaPrivateKey: string,
   email: string,
-  identity: Identity
+  identity: Identity,
+  request: CredentialRequest = PODBOX_CREDENTIAL_REQUEST
 ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
-  const emailPCD = await EmailPCDPackage.prove({
+  const key = JSON.stringify({
+    zupassEddsaPrivateKey,
+    email,
+    identity: identity.commitment.toString(),
+    request
+  });
+  const cached = testCredentialCache.get(key);
+  if (cached) {
+    return cached;
+  }
+  const emailPCD = await proveEmailPCD(email, zupassEddsaPrivateKey, identity);
+  // Credential Manager will need to be able to look up the Email PCD, and use
+  // an identity. We instantiate a PCDCollection here, mirroring the usage on
+  // the client.
+  const credentialManager = new CredentialManager(
+    identity,
+    new PCDCollection([EmailPCDPackage], [emailPCD]),
+    new Map()
+  );
+  const credential = await credentialManager.requestCredential(request);
+  testCredentialCache.set(key, credential);
+  return credential;
+}
+
+/**
+ * Sign a credential payload.
+ * Only use this to generate potentially incorrect credentials, otherwise use
+ * {@link makeCredential} above.
+ */
+export async function semaphoreSignPayload(
+  identity: Identity,
+  payload: CredentialPayload
+): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+  const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
+    identity: {
+      argumentType: ArgumentTypeName.PCD,
+      value: await SemaphoreIdentityPCDPackage.serialize(
+        await SemaphoreIdentityPCDPackage.prove({
+          identity
+        })
+      )
+    },
+    signedMessage: {
+      argumentType: ArgumentTypeName.String,
+      value: JSON.stringify(payload)
+    }
+  });
+
+  return SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+}
+
+export async function proveEmailPCD(
+  email: string,
+  zupassEddsaPrivateKey: string,
+  identity: Identity
+): Promise<EmailPCD> {
+  return EmailPCDPackage.prove({
     privateKey: {
       value: zupassEddsaPrivateKey,
       argumentType: ArgumentTypeName.String
@@ -167,10 +238,4 @@ async function makeCredential(
       argumentType: ArgumentTypeName.String
     }
   });
-  const credentialManager = new CredentialManager(
-    identity,
-    new PCDCollection([EmailPCDPackage], [emailPCD]),
-    new Map()
-  );
-  return credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST);
 }
