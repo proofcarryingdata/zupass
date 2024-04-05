@@ -80,7 +80,11 @@ export class PipelineSubservice {
       instantiatePipelineArgs
     );
     this.userSubservice = userSubservice;
-    this.pipelineAPISubservice = new PipelineAPISubservice(consumerDB, this);
+    this.pipelineAPISubservice = new PipelineAPISubservice(
+      consumerDB,
+      this,
+      instantiatePipelineArgs.zupassPublicKey
+    );
   }
 
   /**

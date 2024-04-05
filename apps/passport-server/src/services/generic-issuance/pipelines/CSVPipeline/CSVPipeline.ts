@@ -1,4 +1,5 @@
-import { EmailPCDPackage } from "@pcd/email-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
@@ -45,6 +46,7 @@ export class CSVPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
+  private zupassPublicKey: EdDSAPublicKey;
 
   public get id(): string {
     return this.definition.id;
@@ -57,7 +59,8 @@ export class CSVPipeline implements BasePipeline {
   public constructor(
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
-    db: IPipelineAtomDB
+    db: IPipelineAtomDB,
+    zupassPublicKey: EdDSAPublicKey
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -73,6 +76,7 @@ export class CSVPipeline implements BasePipeline {
         options: this.definition.options.feedOptions
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
+    this.zupassPublicKey = zupassPublicKey;
   }
 
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
@@ -91,16 +95,15 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { pcd: credential, payload } = await verifyCredential(req.pcd);
-          if (!payload.pcd) {
-            throw new Error("missing email pcd");
-          }
+          const { payload } = await verifyCredential<SerializedPCD<EmailPCD>>(
+            req.pcd,
+            {
+              requireEmailPCD: true,
+              zupassPublicKey: this.zupassPublicKey
+            }
+          );
+
           const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
-          if (
-            emailPCD.claim.semaphoreId !== credential.claim.identityCommitment
-          ) {
-            throw new Error(`Semaphore signature does not match email PCD`);
-          }
 
           requesterEmail = emailPCD.claim.emailAddress;
           requesterSemaphoreId = emailPCD.claim.semaphoreId;

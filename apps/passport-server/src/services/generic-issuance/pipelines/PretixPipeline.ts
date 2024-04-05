@@ -1,4 +1,4 @@
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -50,6 +50,7 @@ import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineS
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
+import { ensureDefined } from "../../../util/util";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
 import {
@@ -932,33 +933,15 @@ export class PretixPipeline implements BasePipeline {
     credential: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<EmailPCD> {
     // TODO benchmark how long this takes, and consider caching
+    const { payload } = await verifyCredential(credential, {
+      requireEmailPCD: true,
+      zupassPublicKey: this.zupassPublicKey
+    });
 
-    const { pcd: signaturePCD, payload } = await verifyCredential(credential);
-
-    const serializedEmailPCD = payload.pcd;
-    if (!serializedEmailPCD) {
-      throw new Error("Missing email PCD");
-    }
-    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
-
-    // Email PCD never changes, so we could cache this verification separately
-    // on a much longer expiry.
-    if (!(await EmailPCDPackage.verify(emailPCD))) {
-      throw new Error("Invalid Email PCD");
-    }
-
-    if (emailPCD.claim.semaphoreId !== signaturePCD.claim.identityCommitment) {
-      throw new Error(`Semaphore signature does not match email PCD`);
-    }
-
-    if (
-      !isEqualEdDSAPublicKey(
-        emailPCD.proof.eddsaPCD.claim.publicKey,
-        this.zupassPublicKey
-      )
-    ) {
-      throw new Error(`Email PCD is not signed by Zupass`);
-    }
+    // This will always be defined, given that email PCD is required above, but
+    // TypeScript doesn't know that
+    const serializedPCD = ensureDefined(payload.pcd);
+    const emailPCD = await EmailPCDPackage.deserialize(serializedPCD.pcd);
 
     return emailPCD;
   }

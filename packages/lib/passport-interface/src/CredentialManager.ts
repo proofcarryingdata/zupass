@@ -1,3 +1,4 @@
+import { EmailPCD } from "@pcd/email-pcd";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
@@ -180,7 +181,7 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Takes a payload and wraps it in a signature PCD.
   private async semaphoreSignPayload(
-    payload: CredentialPayload
+    payload: CredentialPayload<SerializedPCD<EmailPCD> | undefined>
   ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
     // In future we might support other types of signature here
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({

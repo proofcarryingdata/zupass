@@ -1,3 +1,4 @@
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   ActionConfigResponseValue,
   Feed,
@@ -47,13 +48,16 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class PipelineAPISubservice {
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
+  private zupassPublicKey: EdDSAPublicKey;
 
   public constructor(
     consumerDB: IPipelineConsumerDB,
-    pipelineSubservice: PipelineSubservice
+    pipelineSubservice: PipelineSubservice,
+    zupassPublicKey: EdDSAPublicKey
   ) {
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
+    this.zupassPublicKey = zupassPublicKey;
   }
 
   /**
@@ -252,7 +256,10 @@ export class PipelineAPISubservice {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
       try {
-        await verifyCredential(req.credential);
+        await verifyCredential(req.credential, {
+          requireEmailPCD: true,
+          zupassPublicKey: this.zupassPublicKey
+        });
       } catch (e) {
         throw new PCDHTTPError(
           401,
@@ -301,7 +308,10 @@ export class PipelineAPISubservice {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
       try {
-        await verifyCredential(req.credential);
+        await verifyCredential(req.credential, {
+          requireEmailPCD: true,
+          zupassPublicKey: this.zupassPublicKey
+        });
       } catch (e) {
         throw new PCDHTTPError(
           401,

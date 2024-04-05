@@ -91,7 +91,8 @@ export function instantiatePipeline(
       pipeline = new CSVPipeline(
         args.eddsaPrivateKey,
         definition,
-        args.pipelineAtomDB
+        args.pipelineAtomDB,
+        args.zupassPublicKey
       );
     }
 
