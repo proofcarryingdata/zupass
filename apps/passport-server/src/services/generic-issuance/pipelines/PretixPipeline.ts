@@ -1323,6 +1323,22 @@ export class PretixPipeline implements BasePipeline {
             const canCheckInTicketResult =
               await this.canCheckInPretixTicket(ticketAtom);
             if (canCheckInTicketResult !== true) {
+              if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                return {
+                  success: true,
+                  checkinActionInfo: {
+                    permissioned: true,
+                    canCheckIn: false,
+                    reason: canCheckInTicketResult,
+                    ticket: {
+                      eventName: this.atomToEventName(ticketAtom),
+                      ticketName: this.atomToTicketName(ticketAtom),
+                      attendeeEmail: ticketAtom.email as string,
+                      attendeeName: ticketAtom.name
+                    }
+                  }
+                };
+              }
               return {
                 success: true,
                 checkinActionInfo: {
@@ -1354,6 +1370,27 @@ export class PretixPipeline implements BasePipeline {
               const canCheckInTicketResult =
                 await this.canCheckInManualTicket(manualTicket);
               if (canCheckInTicketResult !== true) {
+                if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                  const eventConfig = this.getEventById(manualTicket.eventId);
+                  const ticketType = this.getProductById(
+                    eventConfig,
+                    manualTicket.productId
+                  );
+                  return {
+                    success: true,
+                    checkinActionInfo: {
+                      permissioned: true,
+                      canCheckIn: false,
+                      reason: canCheckInTicketResult,
+                      ticket: {
+                        eventName: eventConfig.name,
+                        ticketName: ticketType.name,
+                        attendeeEmail: manualTicket.attendeeEmail,
+                        attendeeName: manualTicket.attendeeName
+                      }
+                    }
+                  };
+                }
                 return {
                   success: true,
                   checkinActionInfo: {
