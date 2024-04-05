@@ -20,6 +20,7 @@ import {
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useCallback } from "react";
 import { VscLoading } from "react-icons/vsc";
+import { Groth16Proof } from "snarkjs";
 import urlJoin from "url-join";
 import { EdDSATicketPCDCardProps } from "./CardBody";
 
@@ -47,10 +48,37 @@ export function TicketQR({
     } else {
       // If we're not doing ID-based verification, then we need a ZK proof
       const serializedZKPCD = await makeSerializedZKProof(pcd, identityPCD);
-      return makeVerifyLink(
-        verifyURL,
-        encodeQRPayload(JSON.stringify(serializedZKPCD))
-      );
+      console.log("ZKPCD");
+      console.log(serializedZKPCD);
+      const proof = JSON.parse(serializedZKPCD.pcd).proof as Groth16Proof;
+
+      // const packedA = packPoint([
+      //   BigInt(proof.pi_a[0]),
+      //   BigInt(proof.pi_a[1])
+      // ]).toString();
+      // const packedC = packPoint([
+      //   BigInt(proof.pi_c[0]),
+      //   BigInt(proof.pi_c[1])
+      // ]).toString();
+      // const unencoded = JSON.stringify({
+      //   p: { a: packedA, b: proof.pi_b, c: packedC },
+      //   t: pcd.claim.ticket.ticketId,
+      //   e: pcd.claim.ticket.eventId
+      // });
+      const unencoded = JSON.stringify({
+        p: { a: proof.pi_a, b: proof.pi_b, c: proof.pi_c },
+        t: pcd.claim.ticket.ticketId,
+        e: pcd.claim.ticket.eventId
+      });
+      const payload = encodeQRPayload(unencoded);
+      const verifyLink = makeVerifyLink(verifyURL, payload);
+      console.log({ verifyLink, unencoded, payload });
+      console.log({
+        fullLinkLength: verifyLink.length,
+        unencodedLength: unencoded.length,
+        payloadLength: payload.length
+      });
+      return verifyLink;
     }
   }, [idBasedVerifyURL, zk, pcd, identityPCD, verifyURL]);
   if (zk) {
@@ -111,10 +139,7 @@ async function makeSerializedZKProof(
     },
     fieldsToReveal: {
       value: {
-        revealEventId: true,
-        revealProductId: true,
-        revealTicketId: true,
-        revealTicketCategory: true
+        revealTicketId: true
       },
       argumentType: ArgumentTypeName.ToggleList
     },
@@ -127,11 +152,12 @@ async function makeSerializedZKProof(
       argumentType: ArgumentTypeName.BigInt
     },
     watermark: {
-      value: Date.now().toString(),
+      value: "123",
       argumentType: ArgumentTypeName.BigInt
     }
   });
 
+  // edit here
   return await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
 }
 

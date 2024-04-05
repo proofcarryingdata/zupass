@@ -56,6 +56,7 @@
     "@pcd/zk-eddsa-frog-pcd-ui": "0.1.0",
     "@rollbar/react": "^0.11.1",
     "@semaphore-protocol/identity": "^3.15.2",
+    "@zk-kit/baby-jubjub": "^1.0.0-beta",
     "boring-avatars": "^1.10.1",
     "broadcast-channel": "^5.3.0",
     "csstype": "^3.1.3",

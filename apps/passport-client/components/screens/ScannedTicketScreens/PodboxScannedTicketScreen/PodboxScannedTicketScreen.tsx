@@ -75,7 +75,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     <AppContainer bg={"primary"}>
       <CenterColumn w={400}>
         <Spacer h={32} />
-        <div>Could not scan ticket.</div>
+        <div>Could not scan ticket. {ticketIds.error}</div>
         <Spacer h={32} />
         <ScanAnotherTicket />
       </CenterColumn>
