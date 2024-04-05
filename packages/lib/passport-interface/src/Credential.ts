@@ -34,9 +34,9 @@ export function createCredentialPayload(
 }
 
 /**
- * Validates a feed credential timestamp.
+ * Validates a credential timestamp.
  */
-function validateFeedCredentialTimestamp(timestamp: number): boolean {
+function validateCredentialTimestamp(timestamp: number): boolean {
   const now = Date.now();
   return now - timestamp < TIMESTAMP_MAX_AGE;
 }
@@ -68,7 +68,7 @@ export async function verifyCredential(
 
   const payload: CredentialPayload = JSON.parse(pcd.claim.signedMessage);
 
-  if (!validateFeedCredentialTimestamp(payload.timestamp)) {
+  if (!validateCredentialTimestamp(payload.timestamp)) {
     throw new Error("Credential timestamp out of bounds");
   }
 
