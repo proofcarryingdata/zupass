@@ -28,7 +28,7 @@ export function CreateBallotPage() {
         <LoadingPlaceholder />
       ) : (
         <Center>
-          <AppHeader title="" actions={<SubpageActions />} />
+          <AppHeader title=" " actions={<SubpageActions />} />
           <ContentContainer>
             <CreateBallot loginState={loginState} onError={setError} />
             {error && (

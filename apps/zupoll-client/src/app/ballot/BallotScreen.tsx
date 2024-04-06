@@ -12,7 +12,6 @@ import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
-import { GuaranteesElement } from "../main/Guarantees";
 import { BallotPoll } from "./BallotPoll";
 import { getBallotVotes, useBallotVoting, votedOn } from "./useBallotVoting";
 
@@ -214,9 +213,8 @@ export function BallotScreen({
 
   return (
     <Center>
-      <AppHeader title={"Ballot Details"} actions={<SubpageActions />} />
+      <AppHeader title={" "} actions={<SubpageActions />} />
       <ContentContainer>
-        <GuaranteesElement />
         <div>
           <Title className="mb-0">{ballot.ballotTitle} </Title>
           <span className="font-normal text-sm text-gray-500">

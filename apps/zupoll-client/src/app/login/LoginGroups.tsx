@@ -72,25 +72,26 @@ export function LoginGroup({
   const organizerConfig = configs[1];
 
   return (
-    <div className="flex row w-full m-1 gap-2">
+    <div className="flex row w-full m-1 gap-2 items-center justify-center">
+      <div className="mr-3">Log in as</div>
       <LoginButton
         onLogin={onLogin}
         onError={setError}
         setServerLoading={setServerLoading}
         config={attendeeConfig}
-        variant={"outline"}
+        variant={"creative"}
         className="grow"
       >
-        Log in as {attendeeConfig.prompt}
+        Resident
       </LoginButton>
       <LoginButton
-        variant={"ghost"}
+        variant={"outline"}
         onLogin={onLogin}
         onError={setError}
         setServerLoading={setServerLoading}
         config={organizerConfig}
       >
-        Log in as Organizer
+        Organizer
       </LoginButton>
     </div>
   );
