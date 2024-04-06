@@ -48,6 +48,13 @@ const define = {
           process.env.PODBOX_CLIENT_URL
         )
       }
+    : {}),
+  ...(process.env.STRICH_LICENSE_KEY !== undefined
+    ? {
+        "process.env.STRICH_LICENSE_KEY": JSON.stringify(
+          process.env.STRICH_LICENSE_KEY
+        )
+      }
     : {})
 };
 

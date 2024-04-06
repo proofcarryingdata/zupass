@@ -1,10 +1,10 @@
-import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
+import Scanner from "../core/Scanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import {
@@ -40,6 +40,7 @@ export function ScanScreen(): JSX.Element {
             <Back />
             <Home />
           </ButtonsContainer>
+          {/*
           <QrReader
             className="qr"
             onResult={(result, error): void => {
@@ -57,6 +58,13 @@ export function ScanScreen(): JSX.Element {
             constraints={{ facingMode: "environment", aspectRatio: 1 }}
             ViewFinder={ViewFinder}
             containerStyle={{ width: "100%" }}
+          />*/}
+          <Scanner
+            onResult={(result: string): void => {
+              console.log(`Got result, considering redirect`, result);
+              const newLoc = maybeRedirect(result);
+              if (newLoc) nav(newLoc);
+            }}
           />
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
