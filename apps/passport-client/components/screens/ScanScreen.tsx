@@ -1,6 +1,6 @@
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
+import { useDispatch, useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
@@ -30,6 +30,7 @@ export function ScanScreen(): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
+  const dispatch = useDispatch();
 
   return (
     <AppContainer bg="gray">
@@ -63,7 +64,19 @@ export function ScanScreen(): JSX.Element {
             onResult={(result: string): void => {
               console.log(`Got result, considering redirect`, result);
               const newLoc = maybeRedirect(result);
-              if (newLoc) nav(newLoc);
+              if (newLoc) {
+                nav(newLoc);
+              } else {
+                dispatch({
+                  type: "error",
+                  error: {
+                    title: "Not a Zupass QR code",
+                    message:
+                      "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
+                    dismissToCurrentPage: true
+                  }
+                });
+              }
             }}
           />
           <Spacer h={16} />

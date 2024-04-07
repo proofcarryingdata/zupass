@@ -5,6 +5,7 @@ import {
   StrichSDK
 } from "@pixelverse/strichjs-sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
+import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 
 /**
@@ -112,9 +113,13 @@ function ScannerHost({
     }
   }, [addDetection, sdkState]);
 
+  const innerHeight = window.innerHeight;
   // the component acts as the STRICH BarcodeReader host element
   return (
-    <div ref={hostElemRef} style={{ position: "relative", height: "500px" }} />
+    <div
+      ref={hostElemRef}
+      style={{ position: "relative", height: `${innerHeight - 200}px` }}
+    />
   );
 }
 
@@ -133,10 +138,12 @@ export function Scanner({
     [onResult]
   );
   return (
-    <div>
+    <ScannerContainer>
       <ScannerHost addDetection={addDetection} />
-    </div>
+    </ScannerContainer>
   );
 }
 
 export default Scanner;
+
+const ScannerContainer = styled.div``;
