@@ -161,7 +161,4 @@ const Corner = styled.div<{ top?: boolean; left?: boolean }>`
 
 const QRContainer = styled.div`
   width: 100%;
-
-  .qr {
-  }
 `;

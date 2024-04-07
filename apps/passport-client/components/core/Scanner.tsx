@@ -114,7 +114,7 @@ function ScannerHost({
 
   // the component acts as the STRICH BarcodeReader host element
   return (
-    <div ref={hostElemRef} style={{ position: "relative", height: "400px" }} />
+    <div ref={hostElemRef} style={{ position: "relative", height: "500px" }} />
   );
 }
 
@@ -133,9 +133,9 @@ export function Scanner({
     [onResult]
   );
   return (
-    <main>
+    <div>
       <ScannerHost addDetection={addDetection} />
-    </main>
+    </div>
   );
 }
 
