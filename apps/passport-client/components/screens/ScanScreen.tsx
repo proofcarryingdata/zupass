@@ -1,9 +1,11 @@
+import { useState } from "react";
+import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import { useDispatch, useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
-import { H5, Spacer, TextCenter } from "../core";
+import { Button, H5, Spacer, TextCenter } from "../core";
 import Scanner from "../core/Scanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
@@ -31,6 +33,9 @@ export function ScanScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
   const dispatch = useDispatch();
+  const [scanner, setScanner] = useState<"strich" | "react-qr-reader">(
+    "strich"
+  );
 
   return (
     <AppContainer bg="gray">
@@ -41,44 +46,67 @@ export function ScanScreen(): JSX.Element {
             <Back />
             <Home />
           </ButtonsContainer>
-          {/*
-          <QrReader
-            className="qr"
-            onResult={(result, error): void => {
-              if (result) {
-                console.log(
-                  `Got result, considering redirect`,
-                  result.getText()
-                );
-                const newLoc = maybeRedirect(result.getText());
-                if (newLoc) nav(newLoc);
-              } else if (error) {
-                //    console.info(error);
-              }
-            }}
-            constraints={{ facingMode: "environment", aspectRatio: 1 }}
-            ViewFinder={ViewFinder}
-            containerStyle={{ width: "100%" }}
-          />*/}
-          <Scanner
-            onResult={(result: string): void => {
-              console.log(`Got result, considering redirect`, result);
-              const newLoc = maybeRedirect(result);
-              if (newLoc) {
-                nav(newLoc);
-              } else {
-                dispatch({
-                  type: "error",
-                  error: {
-                    title: "Not a Zupass QR code",
-                    message:
-                      "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
-                    dismissToCurrentPage: true
+          <Button
+            onClick={() =>
+              setScanner(scanner === "strich" ? "react-qr-reader" : "strich")
+            }
+          >
+            Use {scanner === "strich" ? "React QR Reader" : "Strich"}
+          </Button>
+          <Spacer h={8} />
+          {scanner === "react-qr-reader" && (
+            <QrReader
+              className="qr"
+              onResult={(result, error): void => {
+                if (result) {
+                  console.log(
+                    `Got result, considering redirect`,
+                    result.getText()
+                  );
+                  const newLoc = maybeRedirect(result.getText());
+                  if (newLoc) {
+                    nav(newLoc);
+                  } else {
+                    dispatch({
+                      type: "error",
+                      error: {
+                        title: "Not a Zupass QR code",
+                        message:
+                          "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
+                        dismissToCurrentPage: true
+                      }
+                    });
                   }
-                });
-              }
-            }}
-          />
+                } else if (error) {
+                  //    console.info(error);
+                }
+              }}
+              constraints={{ facingMode: "environment", aspectRatio: 1 }}
+              ViewFinder={ViewFinder}
+              containerStyle={{ width: "100%" }}
+            />
+          )}
+          {scanner === "strich" && (
+            <Scanner
+              onResult={(result: string): void => {
+                console.log(`Got result, considering redirect`, result);
+                const newLoc = maybeRedirect(result);
+                if (newLoc) {
+                  nav(newLoc);
+                } else {
+                  dispatch({
+                    type: "error",
+                    error: {
+                      title: "Not a Zupass QR code",
+                      message:
+                        "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
+                      dismissToCurrentPage: true
+                    }
+                  });
+                }
+              }}
+            />
+          )}
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>
