@@ -1,10 +1,11 @@
 import {
   BarcodeReader,
   CodeDetection,
-  Configuration
+  Configuration,
+  StrichSDK
 } from "@pixelverse/strichjs-sdk";
-import { useCallback, useEffect, useRef } from "react";
-import { useDispatch, useStrichSDK } from "../../src/appHooks";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { appConfig } from "../../src/appConfig";
 
 /**
  * Create BarcodeReader configuration
@@ -48,22 +49,41 @@ function ScannerHost({
   // a reference to the BarcodeReader host element
   const hostElemRef = useRef<HTMLDivElement | null>(null);
 
+  // the SDK initialization state
+  const [sdkState, setSdkState] = useState(
+    StrichSDK.isInitialized() ? "initialized" : undefined
+  );
+
   // a reference to a BarcodeReader
   const barcodeReaderRef = useRef<BarcodeReader | null>(null);
 
-  const strichSDKState = useStrichSDK();
-  const dispatch = useDispatch();
-
   // this effect has no dependencies, so it should run only once (except if React StrictMode is on)
   useEffect(() => {
-    if (!strichSDKState || strichSDKState === "error") {
-      dispatch({ type: "initialize-strich-sdk" });
+    const initializeSDK = async (): Promise<void> => {
+      if (StrichSDK.isInitialized()) {
+        setSdkState("initialized");
+      } else {
+        try {
+          await StrichSDK.initialize(appConfig.strichLicenseKey);
+          console.log(`STRICH SDK initialized successfully`);
+          setSdkState("initialized");
+        } catch (e) {
+          console.error(`Failed to initialize STRICH SDK: ${e}`);
+          setSdkState("initialization-error");
+        }
+      }
+    };
+
+    // run async initialization
+    if (sdkState === undefined) {
+      setSdkState("initializing");
+      initializeSDK();
     }
-  }, [dispatch, strichSDKState]);
+  }, [sdkState]);
 
   // BarcodeReader creation, once SDK is initialized
   useEffect(() => {
-    if (strichSDKState === "initialized" && barcodeReaderRef.current === null) {
+    if (sdkState === "initialized" && barcodeReaderRef.current === null) {
       const barcodeReaderInitialization = async (): Promise<void> => {
         console.log(`Initializing BarcodeReader...`);
 
@@ -90,7 +110,7 @@ function ScannerHost({
         }
       };
     }
-  }, [addDetection, strichSDKState]);
+  }, [addDetection, sdkState]);
 
   // the component acts as the STRICH BarcodeReader host element
   return (

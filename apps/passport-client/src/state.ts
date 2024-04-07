@@ -125,9 +125,6 @@ export interface AppState {
     imported?: number;
     error?: string;
   };
-
-  // Strich SDK should be initialized on first use
-  strichSDK?: "initialized" | "initializing" | "error";
 }
 
 export interface AppError {

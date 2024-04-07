@@ -25,8 +25,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import { assertUnreachable, getErrorMessage, sleep } from "@pcd/util";
-import { StrichSDK } from "@pixelverse/strichjs-sdk";
+import { assertUnreachable, sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -150,9 +149,6 @@ export type Action =
       type: "merge-import";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
-    }
-  | {
-      type: "initialize-strich-sdk";
     };
 
 export type StateContextValue = {
@@ -266,8 +262,6 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
-    case "initialize-strich-sdk":
-      return initializeStrichSDK(state, update);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -1226,20 +1220,4 @@ async function removeAllPCDsInFolder(
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
   window.scrollTo({ top: 0 });
-}
-
-async function initializeStrichSDK(
-  state: AppState,
-  update: ZuUpdate
-): Promise<void> {
-  if (!state.strichSDK || state.strichSDK === "error") {
-    update({ strichSDK: "initializing" });
-    try {
-      await StrichSDK.initialize(appConfig.strichLicenseKey);
-      update({ strichSDK: "initialized" });
-    } catch (e) {
-      update({ strichSDK: "error" });
-      console.log(`Error while initializing Strich SDK: ${getErrorMessage(e)}`);
-    }
-  }
 }
