@@ -1253,16 +1253,9 @@ describe("generic issuance - LemonadePipeline", function () {
           bouncerTicket.claim.ticket.eventId
         );
 
-        /**
-         * Expired credentials are handled slightly differently. Because expiry
-         * can be checked via a timestamp, it is detected in the routing layer
-         * and results in a 401 HTTP error.
-         */
-        expectFalse(result.success);
-        expect(result.code).to.eq(401);
-        expect(result.error).to.eq(
-          "could not verify credential: Credential timestamp out of bounds"
-        );
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
       }
     }
   );
