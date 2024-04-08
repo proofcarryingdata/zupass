@@ -1160,7 +1160,6 @@ describe("generic issuance - LemonadePipeline", function () {
 
       lemonadeBackend.checkOutAll();
 
-      MockDate.set(Date.now() + ONE_SECOND_MS);
       // Verify that bouncer is checked out in backend
       await pipeline.load();
       const bouncerTickets = await requestTicketsFromPipeline(

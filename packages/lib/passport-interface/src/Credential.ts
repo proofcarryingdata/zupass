@@ -105,14 +105,15 @@ export async function verifyCredential(
       );
     }
 
-    // Everything passes, return the payload
+    // Everything passes, return the verified credential with email claims
     return {
       signatureClaim: pcd.claim,
       emailClaim: emailPCD.claim,
       emailSignatureClaim: emailPCD.proof.eddsaPCD.claim
     };
   } else {
-    // Return the payload, without an EmailPCD as none was present
+    // Return a verified credential, without email claims since no EmailPCD
+    // was present
     return { signatureClaim: pcd.claim };
   }
 }
