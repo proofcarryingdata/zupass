@@ -1,11 +1,9 @@
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
@@ -28,13 +26,11 @@ import {
   PollFeedResponseValue,
   PretixEventConfig,
   PretixPipelineDefinition,
-  PretixProductConfig,
-  verifyCredential
+  PretixProductConfig
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
@@ -68,6 +64,7 @@ import {
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
+import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
@@ -90,8 +87,8 @@ export class PretixPipeline implements BasePipeline {
    */
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
   private cacheService: PersistentCacheService;
+  private credentialSubservice: CredentialSubservice;
   private loaded: boolean;
 
   // Pending check-ins are check-ins which have either completed (and have
@@ -136,7 +133,7 @@ export class PretixPipeline implements BasePipeline {
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB,
     api: IGenericPretixAPI,
-    zupassPublicKey: EdDSAPublicKey,
+    credentialSubservice: CredentialSubservice,
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
@@ -146,7 +143,6 @@ export class PretixPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
-    this.zupassPublicKey = zupassPublicKey;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -209,6 +205,7 @@ export class PretixPipeline implements BasePipeline {
     this.loaded = false;
     this.checkinDB = checkinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
+    this.credentialSubservice = credentialSubservice;
   }
 
   public async start(): Promise<void> {
@@ -872,13 +869,14 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const emailPCD = await this.getVerifiedEmailPCDFromCredential(req.pcd);
+      const { emailClaim } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         const didUpdate = await this.consumerDB.save(
           this.id,
-          emailPCD.claim.emailAddress,
-          emailPCD.claim.semaphoreId,
+          emailClaim.emailAddress,
+          emailClaim.semaphoreId,
           new Date()
         );
 
@@ -890,13 +888,13 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const email = emailPCD.claim.emailAddress;
+      const email = emailClaim.emailAddress;
       span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
+      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
 
       const tickets = await this.getTicketsForEmail(
         email,
-        emailPCD.claim.semaphoreId
+        emailClaim.semaphoreId
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -923,44 +921,6 @@ export class PretixPipeline implements BasePipeline {
 
       return result;
     });
-  }
-
-  /**
-   * Extracts and verifies the Email PCD from a credential.
-   */
-  private async getVerifiedEmailPCDFromCredential(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<EmailPCD> {
-    // TODO benchmark how long this takes, and consider caching
-
-    const { pcd: signaturePCD, payload } = await verifyCredential(credential);
-
-    const serializedEmailPCD = payload.pcd;
-    if (!serializedEmailPCD) {
-      throw new Error("Missing email PCD");
-    }
-    const emailPCD = await EmailPCDPackage.deserialize(serializedEmailPCD.pcd);
-
-    // Email PCD never changes, so we could cache this verification separately
-    // on a much longer expiry.
-    if (!(await EmailPCDPackage.verify(emailPCD))) {
-      throw new Error("Invalid Email PCD");
-    }
-
-    if (emailPCD.claim.semaphoreId !== signaturePCD.claim.identityCommitment) {
-      throw new Error(`Semaphore signature does not match email PCD`);
-    }
-
-    if (
-      !isEqualEdDSAPublicKey(
-        emailPCD.proof.eddsaPCD.claim.publicKey,
-        this.zupassPublicKey
-      )
-    ) {
-      throw new Error(`Email PCD is not signed by Zupass`);
-    }
-
-    return emailPCD;
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
@@ -1259,20 +1219,18 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
-            request.credential
-          );
+          const { emailClaim: checkerEmailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
+              request.credential
+            );
 
-          span?.setAttribute(
-            "checker_email",
-            checkerEmailPCD.claim.emailAddress
-          );
+          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
           span?.setAttribute(
             "checked_semaphore_id",
-            checkerEmailPCD.claim.semaphoreId
+            checkerEmailClaim.semaphoreId
           );
 
-          checkerEmail = checkerEmailPCD.claim.emailAddress;
+          checkerEmail = checkerEmailClaim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1430,16 +1388,17 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
-          request.credential
-        );
+        const { emailClaim: checkerEmailClaim } =
+          await this.credentialSubservice.verifyAndExpectZupassEmail(
+            request.credential
+          );
 
-        span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
+        span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
         span?.setAttribute(
           "checked_semaphore_id",
-          checkerEmailPCD.claim.semaphoreId
+          checkerEmailClaim.semaphoreId
         );
-        checkerEmail = checkerEmailPCD.claim.emailAddress;
+        checkerEmail = checkerEmailClaim.emailAddress;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);

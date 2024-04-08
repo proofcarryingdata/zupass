@@ -52,6 +52,7 @@ import { PersistentCacheService } from "../persistentCacheService";
 import { RollbarService } from "../rollbarService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
 import { Pipeline, PipelineUser } from "./pipelines/types";
+import { CredentialSubservice } from "./subservices/CredentialSubservice";
 import { PipelineSubservice } from "./subservices/PipelineSubservice";
 import { UserSubservice } from "./subservices/UserSubservice";
 import { InstantiatePipelineArgs } from "./subservices/utils/instantiatePipeline";
@@ -77,6 +78,7 @@ export class GenericIssuanceService {
   private rollbarService: RollbarService | null;
   private pipelineSubservice: PipelineSubservice;
   private userSubservice: UserSubservice;
+  private credentialSubservice: CredentialSubservice;
 
   public constructor(
     context: ApplicationContext,
@@ -105,16 +107,17 @@ export class GenericIssuanceService {
       stytchClient,
       genericIssuanceClientUrl
     );
+    this.credentialSubservice = new CredentialSubservice(zupassPublicKey);
     this.pipelineSubservice = new PipelineSubservice(
       context,
       this.pipelineAtomDB,
       this.consumerDB,
       this.userSubservice,
+      this.credentialSubservice,
       pagerdutyService,
       discordService,
       rollbarService,
       {
-        zupassPublicKey,
         eddsaPrivateKey,
         cacheService,
         lemonadeAPI,
@@ -124,7 +127,8 @@ export class GenericIssuanceService {
         contactDB: this.contactDB,
         badgeDB: this.badgeDB,
         consumerDB: this.consumerDB,
-        semaphoreHistoryDB: this.semaphoreHistoryDB
+        semaphoreHistoryDB: this.semaphoreHistoryDB,
+        credentialSubservice: this.credentialSubservice
       } satisfies InstantiatePipelineArgs
     );
   }
