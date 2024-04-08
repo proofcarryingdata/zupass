@@ -869,10 +869,8 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const emailClaim =
-        await this.credentialSubservice.getZupassEmailClaimFromCredential(
-          req.pcd
-        );
+      const { emailClaim } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         const didUpdate = await this.consumerDB.save(
@@ -1221,8 +1219,8 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const checkerEmailClaim =
-            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          const { emailClaim: checkerEmailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
@@ -1390,8 +1388,8 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const checkerEmailClaim =
-          await this.credentialSubservice.getZupassEmailClaimFromCredential(
+        const { emailClaim: checkerEmailClaim } =
+          await this.credentialSubservice.verifyAndExpectZupassEmail(
             request.credential
           );
 

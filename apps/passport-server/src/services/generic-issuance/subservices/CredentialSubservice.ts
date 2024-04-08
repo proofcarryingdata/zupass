@@ -1,5 +1,4 @@
 import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EmailPCDClaim } from "@pcd/email-pcd";
 import {
   Credential,
   VerifiedCredential,
@@ -40,10 +39,20 @@ export class CredentialSubservice {
     return promise;
   }
 
-  public async getZupassEmailClaimFromCredential(
+  /**
+   * Performs normal verification, but also checks to ensure that the EmailPCD
+   * exists, and that it was signed by Zupass. Returns a modified
+   * {@link VerifiedCredential} type, indicating that `emailClaim` and
+   * `emailSignatureClaim` cannot be undefined.
+   */
+  public async verifyAndExpectZupassEmail(
     credential: Credential
-  ): Promise<EmailPCDClaim> {
-    const { emailClaim, emailSignatureClaim } = await this.verify(credential);
+  ): Promise<
+    VerifiedCredential &
+      Required<Pick<VerifiedCredential, "emailClaim" | "emailSignatureClaim">>
+  > {
+    const verifiedCredential = await this.verify(credential),
+      { emailClaim, emailSignatureClaim } = verifiedCredential;
 
     if (!emailClaim || !emailSignatureClaim) {
       throw new Error("Missing email PCD in credential");
@@ -52,7 +61,7 @@ export class CredentialSubservice {
       throw new Error("Email PCD not signed by Zupass");
     }
 
-    return emailClaim;
+    return { emailClaim, emailSignatureClaim, ...verifiedCredential };
   }
 
   /**

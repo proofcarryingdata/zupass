@@ -255,7 +255,7 @@ export class PipelineAPISubservice {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
       try {
-        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+        await this.credentialSubservice.verifyAndCheckEmailForZupass(
           req.credential
         );
       } catch (_e) {
@@ -306,7 +306,7 @@ export class PipelineAPISubservice {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
       try {
-        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+        await this.credentialSubservice.verifyAndCheckEmailForZupass(
           req.credential
         );
       } catch (e) {

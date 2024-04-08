@@ -771,10 +771,8 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const emailClaim =
-        await this.credentialSubservice.getZupassEmailClaimFromCredential(
-          req.pcd
-        );
+      const { emailClaim } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         // Consumer is validated, so save them in the consumer list
@@ -1268,8 +1266,8 @@ export class LemonadePipeline implements BasePipeline {
         // 1) verify that the requester is who they say they are
         try {
           span?.setAttribute("ticket_id", request.ticketId);
-          const checkerEmailClaim =
-            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          const { emailClaim: checkerEmailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
             );
 
@@ -1456,10 +1454,11 @@ export class LemonadePipeline implements BasePipeline {
 
         let emailClaim: EmailPCDClaim;
         try {
-          emailClaim =
-            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          emailClaim = (
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
               request.credential
-            );
+            )
+          ).emailClaim;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);

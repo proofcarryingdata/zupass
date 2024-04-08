@@ -93,10 +93,8 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const emailClaim =
-            await this.credentialSubservice.getZupassEmailClaimFromCredential(
-              req.pcd
-            );
+          const { emailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
           requesterEmail = emailClaim.emailAddress;
           requesterSemaphoreId = emailClaim.semaphoreId;
         } catch (e) {
