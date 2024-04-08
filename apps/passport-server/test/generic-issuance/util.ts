@@ -158,7 +158,7 @@ const testCredentialCache = new Map<
  * Uses {@link testCredentialCache} to avoid regenerating the same credential
  * repeately.
  */
-async function makeCredential(
+export async function makeCredential(
   zupassEddsaPrivateKey: string,
   email: string,
   identity: Identity,
