@@ -1,0 +1,112 @@
+generator client {
+  provider   = "prisma-client-js"
+  engineType = "binary"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Ballot {
+  ballotId                  String             @unique @default(uuid())
+  ballotURL                 Int                @id @default(autoincrement())
+  ballotTitle               String
+  ballotDescription         String
+  createdAt                 DateTime           @default(now())
+  expiry                    DateTime
+  proof                     Json
+  pollsterType              UserType
+  pollsterNullifier         String             @unique
+  pollsterSemaphoreGroupUrl String?
+  pollsterName              String?
+  pollsterUuid              String?
+  pollsterCommitment        String?
+  voterSemaphoreGroupUrls   String[]
+  voterSemaphoreGroupRoots  String[]
+  ballotType                BallotType
+  expiryNotif               ExpiryNotifStatus? @default(NONE)
+  polls                     Poll[]
+  messages                  TGMessage[]
+}
+
+model Poll {
+  id        String   @id @default(uuid())
+  createdAt DateTime @default(now())
+  body      String
+  options   String[]
+  expiry    DateTime
+  ballotURL Int?
+  ballot    Ballot?  @relation(fields: [ballotURL], references: [ballotURL])
+  votes     Vote[]
+}
+
+model Vote {
+  id                     String   @id @default(uuid())
+  pollId                 String
+  voterType              UserType
+  voterNullifier         String
+  voterSemaphoreGroupUrl String?
+  voterName              String?
+  voterUuid              String?
+  voterCommitment        String?
+  voteIdx                Int
+  proof                  Json
+  poll                   Poll     @relation(fields: [pollId], references: [id])
+}
+
+model TGMessage {
+  id          String      @id @default(uuid())
+  ballotId    String
+  chatId      BigInt
+  topicId     BigInt?
+  messageId   BigInt
+  messageType MessageType
+  Ballot      Ballot      @relation(fields: [ballotId], references: [ballotId])
+}
+
+model TGTopic {
+  id          String        @id
+  chatId      BigInt
+  topicId     BigInt?
+  topicName   String
+  pollReceive PollReceiver?
+
+  @@unique([topicId, chatId])
+}
+
+model PollReceiver {
+  tgTopicId   String       @unique
+  ballotTypes BallotType[]
+  TGTopic     TGTopic      @relation(fields: [tgTopicId], references: [id])
+}
+
+enum MessageType {
+  CREATE
+  RESULTS
+}
+
+enum UserType {
+  ANON
+  NONANON
+}
+
+enum BallotType {
+  ADVISORYVOTE
+  STRAWPOLL
+  PCDPASSUSER
+  ORGANIZERONLY
+  DEVCONNECT_STRAWPOLL
+  DEVCONNECT_FEEDBACK
+  EDGE_CITY_STRAWPOLL
+  EDGE_CITY_FEEDBACK
+  ETH_LATAM_STRAWPOLL
+  ETH_LATAM_FEEDBACK
+}
+
+enum ExpiryNotifStatus {
+  NONE
+  WEEK
+  DAY
+  HOUR
+}

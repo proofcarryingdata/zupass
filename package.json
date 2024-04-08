@@ -31,7 +31,10 @@
     "fix-references": "scripts/fix-references.sh",
     "generate-package": "plop --no-progress --plopfile 'templates/package/plopfile.mjs'",
     "test-generated-package": "tsx scripts/testTemplatePackage.ts",
-    "test-typedoc": "yarn typedoc --emit none"
+    "test-typedoc": "yarn typedoc --emit none",
+    "db:generate": "turbo run db:generate",
+    "db:push": "turbo run db:push",
+    "pre-deploy": "turbo run pre-deploy"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.6",
