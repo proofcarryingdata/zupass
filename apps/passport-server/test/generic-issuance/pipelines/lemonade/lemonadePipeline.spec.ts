@@ -44,7 +44,12 @@ import {
 } from "../../../lemonade/MockLemonadeServer";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import { expectLength, expectToExist, expectTrue } from "../../../util/util";
+import {
+  expectFalse,
+  expectLength,
+  expectToExist,
+  expectTrue
+} from "../../../util/util";
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
@@ -311,10 +316,10 @@ describe("generic issuance - LemonadePipeline", function () {
           EdgeCityDenverAttendeeIdentity,
           BouncerTicket
         );
-      expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
-        success: false,
-        error: { name: "InvalidSignature" }
-      } satisfies PodboxTicketActionResponseValue);
+      expectFalse(fakeBouncerCheckInBouncerResult.success);
+      expect(fakeBouncerCheckInBouncerResult.error).to.eq(
+        "Missing or invalid credential"
+      );
 
       const Bouncer2Tickets = await requestTicketsFromPipeline(
         edgeCityDenverPipeline.issuanceCapability.options.feedFolder,

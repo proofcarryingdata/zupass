@@ -1,15 +1,14 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  CredentialPayload,
+  Credential,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -32,12 +31,8 @@ import {
   PretixProductConfig
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
 import { normalizeEmail, str } from "@pcd/util";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
@@ -71,6 +66,7 @@ import {
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
+import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
@@ -93,8 +89,8 @@ export class PretixPipeline implements BasePipeline {
    */
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
   private cacheService: PersistentCacheService;
+  private credentialSubservice: CredentialSubservice;
   private loaded: boolean;
 
   // Pending check-ins are check-ins which have either completed (and have
@@ -139,7 +135,7 @@ export class PretixPipeline implements BasePipeline {
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB,
     api: IGenericPretixAPI,
-    zupassPublicKey: EdDSAPublicKey,
+    credentialSubservice: CredentialSubservice,
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
@@ -149,7 +145,6 @@ export class PretixPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
-    this.zupassPublicKey = zupassPublicKey;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -212,6 +207,7 @@ export class PretixPipeline implements BasePipeline {
     this.loaded = false;
     this.checkinDB = checkinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
+    this.credentialSubservice = credentialSubservice;
   }
 
   public async start(): Promise<void> {
@@ -930,21 +926,20 @@ export class PretixPipeline implements BasePipeline {
 
   /**
    * Extracts and verifies the Email PCD from a credential.
-   *
-   * Credential is verified by {@link PipelineAPISubservice} in methods such as
-   * `handleCheckin` or `handlePollFeed`, so we can assume that the credential
-   * contents are valid here.
    */
   private async getVerifiedEmailPCDFromCredential(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: Credential
   ): Promise<EmailPCD> {
-    const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
-    const payload: CredentialPayload<SerializedPCD<EmailPCD>> = JSON.parse(
-      pcd.claim.signedMessage
-    );
-    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+    const payload = await this.credentialSubservice.verify(credential);
 
-    return emailPCD;
+    if (!payload.pcd) {
+      throw new Error("Missing email PCD in credential");
+    }
+    if (!this.credentialSubservice.isZupassEmailPCD(payload.pcd)) {
+      throw new Error("Email PCD not signed by Zupass");
+    }
+
+    return payload.pcd;
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {

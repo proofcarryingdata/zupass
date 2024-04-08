@@ -1,8 +1,8 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
+  Credential,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -25,6 +25,7 @@ import {
 } from "../../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
+import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
@@ -45,7 +46,7 @@ export class CSVPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
+  private credentialSubservice: CredentialSubservice;
 
   public get id(): string {
     return this.definition.id;
@@ -59,7 +60,7 @@ export class CSVPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
     db: IPipelineAtomDB,
-    zupassPublicKey: EdDSAPublicKey
+    credentialSubservice: CredentialSubservice
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -75,7 +76,7 @@ export class CSVPipeline implements BasePipeline {
         options: this.definition.options.feedOptions
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
-    this.zupassPublicKey = zupassPublicKey;
+    this.credentialSubservice = credentialSubservice;
   }
 
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
@@ -148,21 +149,20 @@ export class CSVPipeline implements BasePipeline {
 
   /**
    * Extracts and verifies the Email PCD from a credential.
-   *
-   * Credential is verified by {@link PipelineAPISubservice} in methods such as
-   * `handleCheckin` or `handlePollFeed`, so we can assume that the credential
-   * contents are valid here.
    */
   private async getVerifiedEmailPCDFromCredential(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: Credential
   ): Promise<EmailPCD> {
-    const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
-    const payload: CredentialPayload<SerializedPCD<EmailPCD>> = JSON.parse(
-      pcd.claim.signedMessage
-    );
-    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+    const payload = await this.credentialSubservice.verify(credential);
 
-    return emailPCD;
+    if (!payload.pcd) {
+      throw new Error("Missing email PCD in credential");
+    }
+    if (!this.credentialSubservice.isZupassEmailPCD(payload.pcd)) {
+      throw new Error("Email PCD not signed by Zupass");
+    }
+
+    return payload.pcd;
   }
 
   public async load(): Promise<PipelineLoadSummary> {

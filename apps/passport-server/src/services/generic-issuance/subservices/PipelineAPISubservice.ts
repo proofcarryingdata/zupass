@@ -1,7 +1,5 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   ActionConfigResponseValue,
-  Credential,
   Feed,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
@@ -15,12 +13,10 @@ import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue,
-  verifyCredential
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
 import { str } from "@pcd/util";
-import { LRUCache } from "lru-cache";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
@@ -37,6 +33,7 @@ import {
 } from "../capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { PipelineUser } from "../pipelines/types";
+import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineSubservice } from "./PipelineSubservice";
 
 const SERVICE_NAME = "PIPELINE_API_SUBSERVICE";
@@ -50,45 +47,16 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class PipelineAPISubservice {
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
-  private zupassPublicKey: EdDSAPublicKey;
-  private credentialVerificationPromiseCache: LRUCache<
-    string,
-    Promise<boolean>
-  >;
+  private credentialSubservice: CredentialSubservice;
 
   public constructor(
     consumerDB: IPipelineConsumerDB,
     pipelineSubservice: PipelineSubservice,
-    zupassPublicKey: EdDSAPublicKey
+    credentailSubservice: CredentialSubservice
   ) {
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
-    this.zupassPublicKey = zupassPublicKey;
-    this.credentialVerificationPromiseCache = new LRUCache({ max: 1000 });
-  }
-
-  private async cachedCredentialVerification(
-    credential: Credential
-  ): Promise<boolean> {
-    const key = JSON.stringify(credential);
-    const cached = this.credentialVerificationPromiseCache.get(key);
-    if (cached) {
-      return cached;
-    }
-    const promise = (async (): Promise<boolean> => {
-      try {
-        await verifyCredential(credential, {
-          requireEmailPCD: true,
-          zupassPublicKey: this.zupassPublicKey
-        });
-        return true;
-      } catch (e) {
-        return false;
-      }
-    })();
-
-    this.credentialVerificationPromiseCache.set(key, promise);
-    return promise;
+    this.credentialSubservice = credentailSubservice;
   }
 
   /**
@@ -102,9 +70,6 @@ export class PipelineAPISubservice {
     return traced(SERVICE_NAME, "handlePollFeed", async (span) => {
       logger(LOG_TAG, `handlePollFeed`, pipelineId, str(req));
       span?.setAttribute("feed_id", req.feedId);
-      if (!req.pcd || !(await this.cachedCredentialVerification(req.pcd))) {
-        throw new PCDHTTPError(401, "Missing or invalid credential");
-      }
       const pipelineSlot =
         await this.pipelineSubservice.ensurePipelineSlotExists(pipelineId);
       tracePipeline(pipelineSlot.definition);
@@ -289,10 +254,19 @@ export class PipelineAPISubservice {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
-      if (
-        !req.credential ||
-        !(await this.cachedCredentialVerification(req.credential))
-      ) {
+      if (!req.credential) {
+        throw new PCDHTTPError(401, "Missing credential");
+      }
+
+      try {
+        const payload = await this.credentialSubservice.verify(req.credential);
+        if (
+          !payload.pcd ||
+          !this.credentialSubservice.isZupassEmailPCD(payload.pcd)
+        ) {
+          throw new Error("Missing or invalid Email PCD");
+        }
+      } catch (e) {
         throw new PCDHTTPError(401, "Missing or invalid credential");
       }
 
@@ -336,10 +310,19 @@ export class PipelineAPISubservice {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
-      if (
-        !req.credential ||
-        !(await this.cachedCredentialVerification(req.credential))
-      ) {
+      if (!req.credential) {
+        throw new PCDHTTPError(401, "Missing credential");
+      }
+
+      try {
+        const payload = await this.credentialSubservice.verify(req.credential);
+        if (
+          !payload.pcd ||
+          !this.credentialSubservice.isZupassEmailPCD(payload.pcd)
+        ) {
+          throw new Error("Missing or invalid Email PCD");
+        }
+      } catch (e) {
         throw new PCDHTTPError(401, "Missing or invalid credential");
       }
 

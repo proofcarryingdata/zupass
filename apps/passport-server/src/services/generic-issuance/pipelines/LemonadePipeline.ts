@@ -1,4 +1,3 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -6,13 +5,13 @@ import {
   TicketCategory,
   linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCD } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
-  CredentialPayload,
+  Credential,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -33,10 +32,6 @@ import {
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
 import PQueue from "p-queue";
@@ -77,6 +72,7 @@ import {
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
+import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
@@ -99,7 +95,6 @@ export class LemonadePipeline implements BasePipeline {
    */
   private eddsaPrivateKey: string;
   private definition: LemonadePipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
@@ -125,6 +120,7 @@ export class LemonadePipeline implements BasePipeline {
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
+  private credentialSubservice: CredentialSubservice;
 
   public get id(): string {
     return this.definition.id;
@@ -143,13 +139,13 @@ export class LemonadePipeline implements BasePipeline {
     definition: LemonadePipelineDefinition,
     db: IPipelineAtomDB,
     api: ILemonadeAPI,
-    zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     contactDB: IContactSharingDB,
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
+    credentialSubservice: CredentialSubservice
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -157,7 +153,7 @@ export class LemonadePipeline implements BasePipeline {
     this.contactDB = contactDB;
     this.badgeDB = badgeDB;
     this.api = api;
-    this.zupassPublicKey = zupassPublicKey;
+    this.credentialSubservice = credentialSubservice;
     this.loaded = false;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -676,21 +672,20 @@ export class LemonadePipeline implements BasePipeline {
 
   /**
    * Extracts and verifies the Email PCD from a credential.
-   *
-   * Credential is verified by {@link PipelineAPISubservice} in methods such as
-   * `handleCheckin` or `handlePollFeed`, so we can assume that the credential
-   * contents are valid here.
    */
   private async getVerifiedEmailPCDFromCredential(
-    credential: SerializedPCD<SemaphoreSignaturePCD>
+    credential: Credential
   ): Promise<EmailPCD> {
-    const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
-    const payload: CredentialPayload<SerializedPCD<EmailPCD>> = JSON.parse(
-      pcd.claim.signedMessage
-    );
-    const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
+    const payload = await this.credentialSubservice.verify(credential);
 
-    return emailPCD;
+    if (!payload.pcd) {
+      throw new Error("Missing email PCD in credential");
+    }
+    if (!this.credentialSubservice.isZupassEmailPCD(payload.pcd)) {
+      throw new Error("Email PCD not signed by Zupass");
+    }
+
+    return payload.pcd;
   }
 
   private async getReceivedContactsForEmail(
