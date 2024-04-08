@@ -1,7 +1,8 @@
 // @ts-check
 
+const webpack = require("webpack");
+
 /** @type {import('next').NextConfig} */
-// eslint-disable-next-line no-undef
 module.exports = {
   output: "export",
   reactStrictMode: false,
@@ -12,8 +13,20 @@ module.exports = {
   productionBrowserSourceMaps: true,
   webpack: (config) => {
     config.resolve.fallback = {
-      fs: false
+      fs: false,
+      buffer: require.resolve("buffer/")
     };
+    config.plugins = [
+      ...config.plugins,
+      new webpack.ProvidePlugin({
+        // process: "process/browser",
+        Buffer: ["buffer", "Buffer"]
+      })
+      // NodeGlobalsPolyfillPlugin({
+      //   process: true,
+      //   buffer: true
+      // })
+    ];
     return config;
   }
 };
