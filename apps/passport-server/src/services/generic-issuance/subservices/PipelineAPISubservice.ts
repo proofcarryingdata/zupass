@@ -254,10 +254,6 @@ export class PipelineAPISubservice {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
-      if (!req.credential) {
-        throw new PCDHTTPError(401, "Missing credential");
-      }
-
       try {
         const payload = await this.credentialSubservice.verify(req.credential);
         if (
@@ -266,8 +262,11 @@ export class PipelineAPISubservice {
         ) {
           throw new Error("Missing or invalid Email PCD");
         }
-      } catch (e) {
-        throw new PCDHTTPError(401, "Missing or invalid credential");
+      } catch (_e) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
       }
 
       const eventId = req.eventId;
@@ -310,10 +309,6 @@ export class PipelineAPISubservice {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
-      if (!req.credential) {
-        throw new PCDHTTPError(401, "Missing credential");
-      }
-
       try {
         const payload = await this.credentialSubservice.verify(req.credential);
         if (
@@ -323,7 +318,10 @@ export class PipelineAPISubservice {
           throw new Error("Missing or invalid Email PCD");
         }
       } catch (e) {
-        throw new PCDHTTPError(401, "Missing or invalid credential");
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
       }
 
       const eventId = req.eventId;

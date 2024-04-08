@@ -399,8 +399,6 @@ describe("Subscription Manager", async function () {
       }
     });
 
-    const serializedPCD = await EmailPCDPackage.serialize(emailPCD);
-
     const collection = new PCDCollection([EmailPCDPackage], [emailPCD]);
     const credentialCache = createCredentialCache();
     const credentialManager = new CredentialManager(

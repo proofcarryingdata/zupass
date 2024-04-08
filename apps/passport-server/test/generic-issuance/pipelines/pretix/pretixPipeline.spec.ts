@@ -25,12 +25,7 @@ import { PipelineUser } from "../../../../src/services/generic-issuance/pipeline
 import { Zupass } from "../../../../src/types";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import {
-  expectFalse,
-  expectLength,
-  expectToExist,
-  expectTrue
-} from "../../../util/util";
+import { expectLength, expectToExist, expectTrue } from "../../../util/util";
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
@@ -284,10 +279,10 @@ describe("generic issuance - PretixPipeline", function () {
           EthLatAmAttendeeIdentity,
           bouncerTicket
         );
-      expectFalse(fakeBouncerCheckInBouncerResult.success);
-      expect(fakeBouncerCheckInBouncerResult.error).to.eq(
-        "Missing or invalid credential"
-      );
+      expect(fakeBouncerCheckInBouncerResult.value).to.deep.eq({
+        success: false,
+        error: { name: "InvalidSignature" }
+      } satisfies PodboxTicketActionResponseValue);
 
       const ManualAttendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
