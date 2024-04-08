@@ -16,22 +16,6 @@
       "@/*": ["./src/@/*"]
     }
   },
-  "ts-node": {
-    "compilerOptions": {
-      "jsx": "preserve",
-      "target": "es6",
-      "inlineSourceMap": true,
-      "plugins": [
-        {
-          "name": "next"
-        }
-      ],
-      "strictNullChecks": true,
-      "paths": {
-        "@/*": ["./src/@/*"]
-      }
-    }
-  },
   "references": [
     {
       "path": "../../packages/lib/passport-interface"
