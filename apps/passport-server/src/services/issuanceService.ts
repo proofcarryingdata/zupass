@@ -1418,17 +1418,17 @@ export class IssuanceService {
     req: GetOfflineTicketsRequest,
     res: Response
   ): Promise<void> {
-    if (!(await this.verifyCredential(req.checkerProof, true))) {
+    let signatureClaim;
+    try {
+      signatureClaim = (await this.verifyCredential(req.checkerProof, true))
+        .signatureClaim;
+    } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.checkerProof.pcd
-    );
-
     const offlineTickets = await fetchOfflineTicketsForChecker(
       this.context.dbPool,
-      signaturePCD.claim.identityCommitment
+      signatureClaim.identityCommitment
     );
 
     res.json({
@@ -1440,17 +1440,17 @@ export class IssuanceService {
     req: UploadOfflineCheckinsRequest,
     res: Response
   ): Promise<void> {
-    if (!(await this.verifyCredential(req.checkerProof, true))) {
+    let signatureClaim;
+    try {
+      signatureClaim = (await this.verifyCredential(req.checkerProof, true))
+        .signatureClaim;
+    } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.checkerProof.pcd
-    );
-
     await checkInOfflineTickets(
       this.context.dbPool,
-      signaturePCD.claim.identityCommitment,
+      signatureClaim.identityCommitment,
       req.checkedOfflineInDevconnectTicketIDs
     );
 
