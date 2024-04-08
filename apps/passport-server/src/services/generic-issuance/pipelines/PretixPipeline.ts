@@ -4,11 +4,9 @@ import {
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  Credential,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -871,13 +869,16 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const emailPCD = await this.getVerifiedEmailPCDFromCredential(req.pcd);
+      const emailClaim =
+        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          req.pcd
+        );
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         const didUpdate = await this.consumerDB.save(
           this.id,
-          emailPCD.claim.emailAddress,
-          emailPCD.claim.semaphoreId,
+          emailClaim.emailAddress,
+          emailClaim.semaphoreId,
           new Date()
         );
 
@@ -889,13 +890,13 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const email = emailPCD.claim.emailAddress;
+      const email = emailClaim.emailAddress;
       span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
+      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
 
       const tickets = await this.getTicketsForEmail(
         email,
-        emailPCD.claim.semaphoreId
+        emailClaim.semaphoreId
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -922,24 +923,6 @@ export class PretixPipeline implements BasePipeline {
 
       return result;
     });
-  }
-
-  /**
-   * Extracts and verifies the Email PCD from a credential.
-   */
-  private async getVerifiedEmailPCDFromCredential(
-    credential: Credential
-  ): Promise<EmailPCD> {
-    const payload = await this.credentialSubservice.verify(credential);
-
-    if (!payload.pcd) {
-      throw new Error("Missing email PCD in credential");
-    }
-    if (!this.credentialSubservice.isZupassEmailPCD(payload.pcd)) {
-      throw new Error("Email PCD not signed by Zupass");
-    }
-
-    return payload.pcd;
   }
 
   private atomToTicketData(atom: PretixAtom, semaphoreId: string): ITicketData {
@@ -1238,20 +1221,18 @@ export class PretixPipeline implements BasePipeline {
         try {
           span?.setAttribute("ticket_id", ticketId);
 
-          const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
-            request.credential
-          );
+          const checkerEmailClaim =
+            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+              request.credential
+            );
 
-          span?.setAttribute(
-            "checker_email",
-            checkerEmailPCD.claim.emailAddress
-          );
+          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
           span?.setAttribute(
             "checked_semaphore_id",
-            checkerEmailPCD.claim.semaphoreId
+            checkerEmailClaim.semaphoreId
           );
 
-          checkerEmail = checkerEmailPCD.claim.emailAddress;
+          checkerEmail = checkerEmailClaim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1409,16 +1390,17 @@ export class PretixPipeline implements BasePipeline {
 
       try {
         span?.setAttribute("ticket_id", ticketId);
-        const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
-          request.credential
-        );
+        const checkerEmailClaim =
+          await this.credentialSubservice.getZupassEmailClaimFromCredential(
+            request.credential
+          );
 
-        span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
+        span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
         span?.setAttribute(
           "checked_semaphore_id",
-          checkerEmailPCD.claim.semaphoreId
+          checkerEmailClaim.semaphoreId
         );
-        checkerEmail = checkerEmailPCD.claim.emailAddress;
+        checkerEmail = checkerEmailClaim.emailAddress;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);

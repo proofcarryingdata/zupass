@@ -255,13 +255,9 @@ export class PipelineAPISubservice {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
       try {
-        const payload = await this.credentialSubservice.verify(req.credential);
-        if (
-          !payload.pcd ||
-          !this.credentialSubservice.isZupassEmailPCD(payload.pcd)
-        ) {
-          throw new Error("Missing or invalid Email PCD");
-        }
+        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          req.credential
+        );
       } catch (_e) {
         return {
           success: false,
@@ -310,13 +306,9 @@ export class PipelineAPISubservice {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
       try {
-        const payload = await this.credentialSubservice.verify(req.credential);
-        if (
-          !payload.pcd ||
-          !this.credentialSubservice.isZupassEmailPCD(payload.pcd)
-        ) {
-          throw new Error("Missing or invalid Email PCD");
-        }
+        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          req.credential
+        );
       } catch (e) {
         return {
           success: false,

@@ -1,8 +1,6 @@
-import { EmailPCD } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
-  Credential,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
@@ -95,11 +93,12 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const emailPCD = await this.getVerifiedEmailPCDFromCredential(
-            req.pcd
-          );
-          requesterEmail = emailPCD.claim.emailAddress;
-          requesterSemaphoreId = emailPCD.claim.semaphoreId;
+          const emailClaim =
+            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+              req.pcd
+            );
+          requesterEmail = emailClaim.emailAddress;
+          requesterSemaphoreId = emailClaim.semaphoreId;
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
@@ -145,24 +144,6 @@ export class CSVPipeline implements BasePipeline {
         ]
       };
     });
-  }
-
-  /**
-   * Extracts and verifies the Email PCD from a credential.
-   */
-  private async getVerifiedEmailPCDFromCredential(
-    credential: Credential
-  ): Promise<EmailPCD> {
-    const payload = await this.credentialSubservice.verify(credential);
-
-    if (!payload.pcd) {
-      throw new Error("Missing email PCD in credential");
-    }
-    if (!this.credentialSubservice.isZupassEmailPCD(payload.pcd)) {
-      throw new Error("Email PCD not signed by Zupass");
-    }
-
-    return payload.pcd;
   }
 
   public async load(): Promise<PipelineLoadSummary> {

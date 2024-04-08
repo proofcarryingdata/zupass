@@ -5,13 +5,12 @@ import {
   TicketCategory,
   linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCD } from "@pcd/email-pcd";
+import { EmailPCDClaim } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
-  Credential,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
@@ -670,24 +669,6 @@ export class LemonadePipeline implements BasePipeline {
     return badgePCDs.filter((pcd) => !!pcd) as SerializedPCD<EdDSATicketPCD>[];
   }
 
-  /**
-   * Extracts and verifies the Email PCD from a credential.
-   */
-  private async getVerifiedEmailPCDFromCredential(
-    credential: Credential
-  ): Promise<EmailPCD> {
-    const payload = await this.credentialSubservice.verify(credential);
-
-    if (!payload.pcd) {
-      throw new Error("Missing email PCD in credential");
-    }
-    if (!this.credentialSubservice.isZupassEmailPCD(payload.pcd)) {
-      throw new Error("Email PCD not signed by Zupass");
-    }
-
-    return payload.pcd;
-  }
-
   private async getReceivedContactsForEmail(
     email: string
   ): Promise<SerializedPCD<EdDSATicketPCD>[]> {
@@ -790,14 +771,17 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      const emailPCD = await this.getVerifiedEmailPCDFromCredential(req.pcd);
+      const emailClaim =
+        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          req.pcd
+        );
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         // Consumer is validated, so save them in the consumer list
         const didUpdate = await this.consumerDB.save(
           this.id,
-          emailPCD.claim.emailAddress,
-          emailPCD.claim.semaphoreId,
+          emailClaim.emailAddress,
+          emailClaim.semaphoreId,
           new Date()
         );
 
@@ -809,13 +793,13 @@ export class LemonadePipeline implements BasePipeline {
         }
       }
 
-      const email = emailPCD.claim.emailAddress.toLowerCase();
+      const email = emailClaim.emailAddress.toLowerCase();
       span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
+      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
 
       const tickets = await this.getTicketsForEmail(
         email,
-        emailPCD.claim.semaphoreId
+        emailClaim.semaphoreId
       );
 
       const ticketActions: PCDAction[] = [];
@@ -1284,20 +1268,18 @@ export class LemonadePipeline implements BasePipeline {
         // 1) verify that the requester is who they say they are
         try {
           span?.setAttribute("ticket_id", request.ticketId);
-          const checkerEmailPCD = await this.getVerifiedEmailPCDFromCredential(
-            request.credential
-          );
+          const checkerEmailClaim =
+            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+              request.credential
+            );
 
-          span?.setAttribute(
-            "checker_email",
-            checkerEmailPCD.claim.emailAddress
-          );
+          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
           span?.setAttribute(
             "checked_semaphore_id",
-            checkerEmailPCD.claim.semaphoreId
+            checkerEmailClaim.semaphoreId
           );
 
-          actorEmail = checkerEmailPCD.claim.emailAddress;
+          actorEmail = checkerEmailClaim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1472,11 +1454,12 @@ export class LemonadePipeline implements BasePipeline {
       async (span): Promise<PodboxTicketActionResponseValue> => {
         tracePipeline(this.definition);
 
-        let emailPCD: EmailPCD;
+        let emailClaim: EmailPCDClaim;
         try {
-          emailPCD = await this.getVerifiedEmailPCDFromCredential(
-            request.credential
-          );
+          emailClaim =
+            await this.credentialSubservice.getZupassEmailClaimFromCredential(
+              request.credential
+            );
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1514,7 +1497,7 @@ export class LemonadePipeline implements BasePipeline {
           const ticketId = request.ticketId;
           const ticket = await this.db.loadById(this.id, ticketId);
           const manualTicket = this.getManualTicketById(ticketId);
-          const scannerEmail = emailPCD.claim.emailAddress;
+          const scannerEmail = emailClaim.emailAddress;
           const scaneeEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
           if (scaneeEmail) {
@@ -1567,7 +1550,7 @@ export class LemonadePipeline implements BasePipeline {
             // prevent wrong ppl from issuing wrong badges
             if (
               !b.givers?.includes("*") &&
-              !b.givers?.includes(emailPCD.claim.emailAddress)
+              !b.givers?.includes(emailClaim.emailAddress)
             ) {
               return false;
             }
@@ -1578,7 +1561,7 @@ export class LemonadePipeline implements BasePipeline {
           if (recipientEmail) {
             await this.badgeDB.giveBadges(
               this.id,
-              emailPCD.claim.emailAddress,
+              emailClaim.emailAddress,
               recipientEmail,
               allowedBadges
             );
@@ -1614,24 +1597,21 @@ export class LemonadePipeline implements BasePipeline {
             if (ticketAtom.email) {
               await this.badgeDB.giveBadges(
                 this.id,
-                emailPCD.claim.emailAddress,
+                emailClaim.emailAddress,
                 ticketAtom.email,
                 autoGrantBadges
               );
             }
 
             // We found a Lemonade atom, so check in with the Lemonade backend
-            return this.lemonadeCheckin(
-              ticketAtom,
-              emailPCD.claim.emailAddress
-            );
+            return this.lemonadeCheckin(ticketAtom, emailClaim.emailAddress);
           } else {
             // No Lemonade atom found, try looking for a manual ticket
             const manualTicket = this.getManualTicketById(request.ticketId);
             if (manualTicket && manualTicket.eventId === request.eventId) {
               await this.badgeDB.giveBadges(
                 this.id,
-                emailPCD.claim.emailAddress,
+                emailClaim.emailAddress,
                 manualTicket.attendeeEmail,
                 autoGrantBadges
               );
@@ -1639,13 +1619,13 @@ export class LemonadePipeline implements BasePipeline {
               // Manual ticket found, check in with the DB
               return this.checkInManualTicket(
                 manualTicket,
-                emailPCD.claim.emailAddress
+                emailClaim.emailAddress
               );
             } else {
               // Didn't find any matching ticket
               logger(
                 `${LOG_TAG} Could not find ticket ${request.ticketId} ` +
-                  `for event ${request.eventId} for checkin requested by ${emailPCD.claim.emailAddress} ` +
+                  `for event ${request.eventId} for checkin requested by ${emailClaim.emailAddress} ` +
                   `on pipeline ${this.id}`
               );
               span?.setAttribute("checkin_error", "InvalidTicket");

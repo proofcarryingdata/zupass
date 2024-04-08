@@ -1,6 +1,7 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
+  Credential,
   CredentialManager,
   InfoResult,
   PODBOX_CREDENTIAL_REQUEST,
@@ -14,8 +15,7 @@ import {
   PCDCollection,
   expectIsReplaceInFolderAction
 } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import {
@@ -148,7 +148,7 @@ async function makeCredential(
   zupassEddsaPrivateKey: string,
   email: string,
   identity: Identity
-): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+): Promise<Credential> {
   const emailPCD = await EmailPCDPackage.prove({
     privateKey: {
       value: zupassEddsaPrivateKey,

@@ -418,8 +418,10 @@ describe("Subscription Manager", async function () {
       credentialManager
     );
     expect(actions.length).to.eq(1);
+
+    const serializedEmailPCD = await EmailPCDPackage.serialize(emailPCD);
     // Make sure that the feed was able to decode the EmailPCD
-    expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(emailPCD);
+    expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(serializedEmailPCD);
     expect(mockFeedApi.receivedPayload?.timestamp).to.not.be.undefined;
   });
 

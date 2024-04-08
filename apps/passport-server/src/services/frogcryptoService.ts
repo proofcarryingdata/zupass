@@ -85,7 +85,7 @@ export class FrogcryptoService {
             if (req.pcd === undefined) {
               throw new PCDHTTPError(400, `Missing credential`);
             }
-            await this.issuanceService.verifyCredential(req.pcd, "payload");
+            await this.issuanceService.verifyCredential(req.pcd);
 
             return {
               actions: [
@@ -390,11 +390,9 @@ export class FrogcryptoService {
     serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
   ): Promise<string> {
     try {
-      const { pcd } = await this.issuanceService.verifyCredential(
-        serializedPCD,
-        "payload"
-      );
-      return pcd.claim.identityCommitment;
+      const { signatureClaim } =
+        await this.issuanceService.verifyCredential(serializedPCD);
+      return signatureClaim.identityCommitment;
     } catch (e) {
       throw new PCDHTTPError(400, "invalid PCD");
     }
