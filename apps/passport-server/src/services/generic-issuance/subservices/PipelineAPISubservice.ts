@@ -13,11 +13,10 @@ import {
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue,
-  verifyCredential
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
-import { getErrorMessage, str } from "@pcd/util";
+import { str } from "@pcd/util";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
@@ -34,6 +33,7 @@ import {
 } from "../capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { PipelineUser } from "../pipelines/types";
+import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineSubservice } from "./PipelineSubservice";
 
 const SERVICE_NAME = "PIPELINE_API_SUBSERVICE";
@@ -47,13 +47,16 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class PipelineAPISubservice {
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
+  private credentialSubservice: CredentialSubservice;
 
   public constructor(
     consumerDB: IPipelineConsumerDB,
-    pipelineSubservice: PipelineSubservice
+    pipelineSubservice: PipelineSubservice,
+    credentailSubservice: CredentialSubservice
   ) {
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
+    this.credentialSubservice = credentailSubservice;
   }
 
   /**
@@ -252,12 +255,14 @@ export class PipelineAPISubservice {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
       try {
-        await verifyCredential(req.credential);
-      } catch (e) {
-        throw new PCDHTTPError(
-          401,
-          `could not verify credential: ${getErrorMessage(e)}`
+        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          req.credential
         );
+      } catch (_e) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
       }
 
       const eventId = req.eventId;
@@ -301,12 +306,14 @@ export class PipelineAPISubservice {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
       try {
-        await verifyCredential(req.credential);
-      } catch (e) {
-        throw new PCDHTTPError(
-          401,
-          `could not verify credential: ${getErrorMessage(e)}`
+        await this.credentialSubservice.getZupassEmailClaimFromCredential(
+          req.credential
         );
+      } catch (e) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
       }
 
       const eventId = req.eventId;

@@ -31,6 +31,7 @@ import {
   PollFeedResponseValue,
   UploadOfflineCheckinsRequest,
   UploadOfflineCheckinsResponseValue,
+  VerifiedCredential,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -118,7 +119,10 @@ export class IssuanceService {
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
-  private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
+  private readonly verificationPromiseCache: LRUCache<
+    string,
+    Promise<VerifiedCredential>
+  >;
 
   public constructor(
     context: ApplicationContext,
@@ -136,10 +140,12 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
+    this.verificationPromiseCache = new LRUCache<
+      string,
+      Promise<VerifiedCredential>
+    >({
       max: 1000
     });
-    this.cachedVerifySignaturePCD = this.cachedVerifySignaturePCD.bind(this);
 
     this.feedHost = new FeedHost(
       [
@@ -153,11 +159,9 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-              const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds =
+                await this.issueDevconnectPretixTicketPCDs(verifiedCredential);
               const ticketsByEvent = _.groupBy(
                 pcds,
                 (pcd) => pcd.claim.ticket.eventName
@@ -229,7 +233,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              await verifyCredential(req.pcd, this.cachedVerifySignaturePCD);
+              await this.verifyCredential(req.pcd);
               return {
                 actions: [
                   {
@@ -272,11 +276,8 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-              const pcds = await this.issueEmailPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds = await this.issueEmailPCDs(verifiedCredential);
 
               // Clear out the folder
               actions.push({
@@ -310,11 +311,8 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-              const pcds = await this.issueZuzaluTicketPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds = await this.issueZuzaluTicketPCDs(verifiedCredential);
 
               // Clear out the folder
               actions.push({
@@ -348,12 +346,9 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-
-              const pcds = await this.issueZuconnectTicketPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds =
+                await this.issueZuconnectTicketPCDs(verifiedCredential);
 
               // Clear out the old folder
               actions.push({
@@ -524,10 +519,17 @@ export class IssuanceService {
         };
       }
 
-      if (
-        !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
-        signature.claim.signedMessage !== ISSUANCE_STRING
-      ) {
+      let checker;
+      try {
+        const verifiedCredential = await this.verifyCredential(
+          await SemaphoreSignaturePCDPackage.serialize(signature),
+          true
+        );
+        checker = await this.checkUserExists(verifiedCredential);
+        if (!checker) {
+          throw new Error();
+        }
+      } catch (e) {
         return {
           error: {
             name: "NotSuperuser",
@@ -535,19 +537,6 @@ export class IssuanceService {
               "You do not have permission to check this ticket in. Please check with the event host."
           },
 
-          success: false
-        };
-      }
-
-      const checker = await this.checkUserExists(signature);
-
-      if (!checker) {
-        return {
-          error: {
-            name: "NotSuperuser",
-            detailedMessage:
-              "You do not have permission to check this ticket in. Please check with the event host."
-          },
           success: false
         };
       }
@@ -618,39 +607,68 @@ export class IssuanceService {
   }
 
   /**
-   * Returns a promised verification of a PCD, either from the cache or,
-   * if there is no cache entry, from the multiprocess service.
+   * Verifies the credentials that IssuanceService can receive.
+   * IssuanceService supports two kinds of credentials, one with a JSON string
+   * of a {@link CredentialPayload}, and the other legacy credential type,
+   * where the signed message equals {@link ISSUANCE_STRING}.
+   *
+   * If we have a payload, then we use {@link verifyCredential} from
+   * passport-interface; otherwise, we check to see if the signed message is
+   * equal to {@link ISSUANCE_STRING}. This latter type of credential is only
+   * supported for legacy purposes, as it forms part of Devconnect check-in and
+   * offline check-in. If those features are deprecated then we can simplify
+   * this code by only using {@link verifyCredential}.
    */
-  public async cachedVerifySignaturePCD(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<boolean> {
+  public async verifyCredential(
+    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
+    legacyCredential: boolean = false
+  ): Promise<VerifiedCredential> {
     const key = JSON.stringify(serializedPCD);
     const cached = this.verificationPromiseCache.get(key);
     if (cached) {
       return cached;
     } else {
-      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
-        serializedPCD.pcd
-      );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
+      const promise = (async (): Promise<VerifiedCredential> => {
+        // If the credential has a payload, use verifyCredential()
+        // This will be true for all feed credentials.
+        if (!legacyCredential) {
+          return await verifyCredential(serializedPCD);
+        } else {
+          // Otherwise just check that the signature verifies and that the
+          // signed message is equal to ISSUANCE_STRING
+          const pcd = await SemaphoreSignaturePCDPackage.deserialize(
+            serializedPCD.pcd
+          );
+          if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
+            throw new Error("Could not verify signature PCD");
+          }
+          if (pcd.claim.signedMessage !== ISSUANCE_STRING) {
+            throw new Error("Invalid signed message");
+          }
+          return { signatureClaim: pcd.claim };
+        }
+      })();
       this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache
-      promise.catch(() => this.verificationPromiseCache.delete(key));
+      // If the promise rejects, delete it from the cache and return false
+      promise.catch(() => {
+        this.verificationPromiseCache.delete(key);
+        return false;
+      });
       return promise;
     }
   }
 
-  private async checkUserExists(
-    signature: SemaphoreSignaturePCD
-  ): Promise<UserRow | null> {
+  private async checkUserExists({
+    signatureClaim
+  }: VerifiedCredential): Promise<UserRow | null> {
     const user = await fetchUserByCommitment(
       this.context.dbPool,
-      signature.claim.identityCommitment
+      signatureClaim.identityCommitment
     );
 
     if (user === null) {
       logger(
-        `can't issue PCDs for ${signature.claim.identityCommitment} because ` +
+        `can't issue PCDs for ${signatureClaim.identityCommitment} because ` +
           `we don't have a user with that commitment in the database`
       );
       return null;
@@ -663,7 +681,7 @@ export class IssuanceService {
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
   private async issueDevconnectPretixTicketPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
@@ -954,7 +972,7 @@ export class IssuanceService {
    * multiple PCDs if it were possible to verify secondary emails.
    */
   private async issueEmailPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
     return traced(
       "IssuanceService",
@@ -1003,7 +1021,7 @@ export class IssuanceService {
   }
 
   private async issueZuzaluTicketPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
       // The image we use for Zuzalu tickets is served from the same place
@@ -1073,7 +1091,7 @@ export class IssuanceService {
    * a day pass ticket-holder might upgrade to a full ticket.
    */
   private async issueZuconnectTicketPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
@@ -1400,13 +1418,13 @@ export class IssuanceService {
     req: GetOfflineTicketsRequest,
     res: Response
   ): Promise<void> {
+    if (!(await this.verifyCredential(req.checkerProof, true))) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
     const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
       req.checkerProof.pcd
     );
-    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
-      throw new PCDHTTPError(403, "invalid proof");
-    }
 
     const offlineTickets = await fetchOfflineTicketsForChecker(
       this.context.dbPool,
@@ -1422,14 +1440,13 @@ export class IssuanceService {
     req: UploadOfflineCheckinsRequest,
     res: Response
   ): Promise<void> {
+    if (!(await this.verifyCredential(req.checkerProof, true))) {
+      throw new PCDHTTPError(403, "invalid proof");
+    }
+
     const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
       req.checkerProof.pcd
     );
-    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-
-    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
-      throw new PCDHTTPError(403, "invalid proof");
-    }
 
     await checkInOfflineTickets(
       this.context.dbPool,

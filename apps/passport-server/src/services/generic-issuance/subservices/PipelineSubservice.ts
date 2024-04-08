@@ -38,6 +38,7 @@ import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
+import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineAPISubservice } from "./PipelineAPISubservice";
 import { PipelineExecutorSubservice } from "./PipelineExecutorSubservice";
 import { UserSubservice } from "./UserSubservice";
@@ -64,6 +65,7 @@ export class PipelineSubservice {
     pipelineAtomDB: IPipelineAtomDB,
     consumerDB: IPipelineConsumerDB,
     userSubservice: UserSubservice,
+    credentialSubservice: CredentialSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
@@ -80,7 +82,11 @@ export class PipelineSubservice {
       instantiatePipelineArgs
     );
     this.userSubservice = userSubservice;
-    this.pipelineAPISubservice = new PipelineAPISubservice(consumerDB, this);
+    this.pipelineAPISubservice = new PipelineAPISubservice(
+      consumerDB,
+      this,
+      credentialSubservice
+    );
   }
 
   /**
