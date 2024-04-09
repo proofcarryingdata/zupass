@@ -1,0 +1,51 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "src/**",
+        "public/**",
+        ".env",
+        "components.json",
+        "next-env.d.ts",
+        "next.config.js",
+        "postcss.config.js",
+        "server.ts",
+        "tailwind.config.js",
+        "tsconfig.json"
+      ],
+      "outputs": ["out/**"],
+      "cache": true
+    },
+    "pre-deploy": {
+      "dependsOn": ["build"],
+      "cache": false
+    },
+    "dev:https": {
+      "cache": false
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "ZUPOLL_CLIENT_PORT",
+    "NEXT_PUBLIC_IS_LOCAL_HTTPS",
+    "NEXT_PUBLIC_EDGE_CITY_PIPELINE_URL",
+    "NEXT_PUBLIC_EDGE_CITY_RESIDENTS_GROUP_ID",
+    "NEXT_PUBLIC_EDGE_CITY_ORGANIZERS_GROUP_ID",
+    "NEXT_PUBLIC_ZUPASS_URL",
+    "NEXT_PUBLIC_ZUPASS_SERVER_URL",
+    "NEXT_PUBLIC_ZUPOLL_SERVER_URL",
+    "NEXT_PUBLIC_ETH_LATAM_PIPELINE_URL",
+    "NEXT_PUBLIC_ETH_LATAM_ATTENDEES_GROUP_ID",
+    "NEXT_PUBLIC_ETH_LATAM_ORGANIZERS_GROUP_ID"
+  ]
+}

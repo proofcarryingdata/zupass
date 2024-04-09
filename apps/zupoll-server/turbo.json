@@ -1,0 +1,61 @@
+{
+  "$schema": "https://turbo.build/schema.json",
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "cache": true,
+      "dependsOn": ["^build"],
+      "inputs": ["$TURBO_DEFAULT$"],
+      "outputs": ["dist/**"]
+    },
+    "db:generate": {
+      "cache": false
+    },
+    "db:push": {
+      "cache": false
+    },
+    "pre-deploy": {
+      "cache": false
+    },
+    "lint": {
+      "cache": false
+    },
+    "dev": {
+      "cache": false
+    },
+    "dev:https": {
+      "cache": false
+    },
+    "test": {
+      "cache": false
+    }
+  },
+  "globalEnv": [
+    "NODE_ENV",
+    "PORT",
+    "ACCESS_TOKEN_SECRET",
+    "BOT_TOKEN",
+    "BOT_SUPERGROUP_ID",
+    "BOT_CHANNEL_ID",
+    "ZUPASS_CLIENT_URL",
+    "ZUPASS_SERVER_URL",
+    "ZUPOLL_CLIENT_URL",
+    "ZUPOLL_SERVER_URL",
+    "ZUZALU_PARTICIPANTS_GROUP_URL",
+    "ZUZALU_ORGANIZERS_GROUP_URL",
+    "IS_LOCAL_HTTPS",
+    "BOT_ZUPOLL_LINK",
+    "ALLOW_REPEAT_VOTES",
+    "DEVCONNECT_ORGANIZERS_GROUP_URL",
+    "DEVCONNECT_PARTICIPANTS_GROUP_URL",
+    "EDGE_CITY_PIPELINE_URL",
+    "EDGE_CITY_RESIDENTS_GROUP_ID",
+    "EDGE_CITY_ORGANIZERS_GROUP_ID",
+    "ETH_LATAM_RESIDENTS_GROUP_ID",
+    "ETH_LATAM_ORGANIZERS_GROUP_ID",
+    "ETH_LATAM_PIPELINE_URL",
+    "ETH_LATAM_ATTENDEES_GROUP_ID",
+    "ETH_LATAM_ORGANIZERS_GROUP_ID",
+    "MIN_LOG_LEVEL"
+  ]
+}

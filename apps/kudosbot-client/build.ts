@@ -7,6 +7,8 @@ import fs from "fs";
 import https from "https";
 import { IS_LOCAL_HTTPS } from "./src/constants";
 
+console.log("building kudosbot-client");
+
 dotenv.config();
 
 const consumerClientAppOpts: BuildOptions = {

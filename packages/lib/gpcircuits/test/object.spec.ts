@@ -12,7 +12,6 @@ import { circomkit, privateKey, sampleEntries } from "./common";
 
 describe("object.ObjectModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  this.timeout(10000);
   let circuit: WitnessTester<
     ObjectModuleInputNamesType,
     ObjectModuleOutputNamesType

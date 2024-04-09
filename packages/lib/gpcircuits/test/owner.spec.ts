@@ -13,7 +13,6 @@ import { circomkit, ownerIdentity } from "./common";
 
 describe("owner.OwnerModuleSemaphoreV3 should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  this.timeout(10000);
   let circuit: WitnessTester<
     OwnerModuleSemaphoreV3nputNamesType,
     OwnerModuleSemaphoreV3OutputNamesType
