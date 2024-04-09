@@ -1,18 +1,26 @@
 import {
   EdDSAPublicKey,
   getEdDSAPublicKey,
-  isEqualEdDSAPublicKey
+  isEqualEdDSAPublicKey,
+  newEdDSAPrivateKey
 } from "@pcd/eddsa-pcd";
-import { PODBOX_CREDENTIAL_REQUEST } from "@pcd/passport-interface";
+import { EmailPCDPackage } from "@pcd/email-pcd";
+import {
+  PODBOX_CREDENTIAL_REQUEST,
+  VerificationError,
+  createCredentialPayload
+} from "@pcd/passport-interface";
+import { ONE_DAY_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
+import MockDate from "mockdate";
 import { CredentialSubservice } from "../../src/services/generic-issuance/subservices/CredentialSubservice";
 import { overrideEnvironment, testingEnv } from "../util/env";
 import { startTestingApp } from "../util/startTestingApplication";
 import { expectToExist } from "../util/util";
-import { makeCredential } from "./util";
+import { makeCredential, proveEmailPCD, semaphoreSignPayload } from "./util";
 
 /**
  * Tests for {@link CredentialSubservice}
@@ -38,6 +46,10 @@ describe("generic issuance - credential subservice", function () {
 
     await startTestingApp({});
     credentialSubservice = new CredentialSubservice(zupassPublicKey);
+  });
+
+  this.afterAll(() => {
+    MockDate.reset();
   });
 
   step("credential subservice can verify credentials", async () => {
@@ -108,8 +120,59 @@ describe("generic issuance - credential subservice", function () {
         expect(
           await credentialSubservice.verifyAndExpectZupassEmail(credential)
         ).to.throw;
-      } catch (_e) {
-        // Do nothing
+      } catch (e) {
+        expect(e instanceof VerificationError).to.be.true;
+      }
+    }
+  });
+
+  /**
+   * Very similar tests are carried out in Lemonade/Pretix pipelines, but these
+   * tests focus specifically on the fact that CredentialSubservice should
+   * throw an exception.
+   */
+  step("credential subservice won't verify invalid credentials", async () => {
+    const emailAddress = "test@example.com";
+    const identity = new Identity();
+    const badEmailPCD = await proveEmailPCD(
+      emailAddress,
+      // Not the Zupass private key!
+      newEdDSAPrivateKey(),
+      identity
+    );
+    const goodEmailPCD = await proveEmailPCD(
+      emailAddress,
+      ZUPASS_EDDSA_PRIVATE_KEY,
+      identity
+    );
+    // Credential containing an invalid EmailPCD
+    const badEmailCredential = await semaphoreSignPayload(
+      identity,
+      createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
+    );
+    const mismatchedIdentityCredential = await semaphoreSignPayload(
+      // Semaphore identity is different from that used by the Email PCD
+      new Identity(),
+      createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
+    );
+    MockDate.set(Date.now() - ONE_DAY_MS);
+    const expiredCredential = await semaphoreSignPayload(
+      identity,
+      createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
+    );
+    MockDate.set(Date.now() + ONE_DAY_MS);
+
+    const badCredentials = [
+      badEmailCredential,
+      mismatchedIdentityCredential,
+      expiredCredential
+    ];
+
+    for (const credential of badCredentials) {
+      try {
+        expect(await credentialSubservice.verify(credential)).to.throw;
+      } catch (e) {
+        expect(e instanceof VerificationError).to.be.true;
       }
     }
   });

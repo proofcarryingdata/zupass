@@ -1,13 +1,12 @@
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   Credential,
+  VerificationError,
   VerifiedCredential,
   verifyCredential
 } from "@pcd/passport-interface";
 import { LRUCache } from "lru-cache";
-import { traced } from "../../telemetryService";
-
-export const SERVICE_NAME = "CREDENTIAL_SUBSERVICE";
 
 /**
  * Manages server-side verification of credential PCDs.
@@ -29,20 +28,19 @@ export class CredentialSubservice {
    * Verify a credential, ideally using a cached verification.
    */
   public verify(credential: Credential): Promise<VerifiedCredential> {
-    return traced(SERVICE_NAME, "verify", async (span) => {
-      const key = JSON.stringify(credential);
-      const cached = this.verificationCache.get(key);
-      span?.setAttribute("cache_hit", !!cached);
-      if (cached) {
-        return cached;
-      }
-      const promise = verifyCredential(credential).catch((err) => {
-        this.verificationCache.delete(key);
-        throw err;
-      });
-      this.verificationCache.set(key, promise);
-      return promise;
+    const key = JSON.stringify(credential);
+    const cached = this.verificationCache.get(key);
+    const span = getActiveSpan();
+    span?.setAttribute("credential_verification_cache_hit", !!cached);
+    if (cached) {
+      return cached;
+    }
+    const promise = verifyCredential(credential).catch((err) => {
+      this.verificationCache.delete(key);
+      throw err;
     });
+    this.verificationCache.set(key, promise);
+    return promise;
   }
 
   /**
@@ -61,10 +59,10 @@ export class CredentialSubservice {
       { emailClaim, emailSignatureClaim } = verifiedCredential;
 
     if (!emailClaim || !emailSignatureClaim) {
-      throw new Error("Missing email PCD in credential");
+      throw new VerificationError("Missing email PCD in credential");
     }
     if (!this.isZupassPublicKey(emailSignatureClaim.publicKey)) {
-      throw new Error("Email PCD not signed by Zupass");
+      throw new VerificationError("Email PCD not signed by Zupass");
     }
 
     return { emailClaim, emailSignatureClaim, ...verifiedCredential };

@@ -1,3 +1,4 @@
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
@@ -613,27 +614,26 @@ export class IssuanceService {
   public async verifyCredential(
     credential: Credential
   ): Promise<VerifiedCredential> {
-    return traced("IssuanceService", "verifyCredential", async (span) => {
-      const key = JSON.stringify(credential);
-      const cached = this.verificationPromiseCache.get(key);
-      span?.setAttribute("cache_hit", !!cached);
-      if (cached) {
-        return cached;
-      } else {
-        const promise = verifyCredential(credential).catch((err) => {
-          // If we received an unexpected kind of exception, remove the promise
-          // from the cache. Instances of VerificationError indicate that the
-          // credential failed to verify, so we want to keep those in the cache
-          // to avoid re-verifying a failed credential.
-          if (!(err instanceof VerificationError)) {
-            this.verificationPromiseCache.delete(key);
-          }
-          throw err;
-        });
-        this.verificationPromiseCache.set(key, promise);
-        return promise;
-      }
-    });
+    const key = JSON.stringify(credential);
+    const cached = this.verificationPromiseCache.get(key);
+    const span = getActiveSpan();
+    span?.setAttribute("credential_verification_cache_hit", !!cached);
+    if (cached) {
+      return cached;
+    } else {
+      const promise = verifyCredential(credential).catch((err) => {
+        // If we received an unexpected kind of exception, remove the promise
+        // from the cache. Instances of VerificationError indicate that the
+        // credential failed to verify, so we want to keep those in the cache
+        // to avoid re-verifying a failed credential.
+        if (!(err instanceof VerificationError)) {
+          this.verificationPromiseCache.delete(key);
+        }
+        throw err;
+      });
+      this.verificationPromiseCache.set(key, promise);
+      return promise;
+    }
   }
 
   private async checkUserExists({
