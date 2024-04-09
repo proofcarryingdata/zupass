@@ -20,7 +20,7 @@ import { CredentialSubservice } from "../../src/services/generic-issuance/subser
 import { overrideEnvironment, testingEnv } from "../util/env";
 import { startTestingApp } from "../util/startTestingApplication";
 import { expectToExist } from "../util/util";
-import { makeCredential, proveEmailPCD, semaphoreSignPayload } from "./util";
+import { makeCredential, proveEmailPCD, signCredentialPayload } from "./util";
 
 /**
  * Tests for {@link CredentialSubservice}
@@ -146,17 +146,17 @@ describe("generic issuance - credential subservice", function () {
       identity
     );
     // Credential containing an invalid EmailPCD
-    const badEmailCredential = await semaphoreSignPayload(
+    const badEmailCredential = await signCredentialPayload(
       identity,
       createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
     );
-    const mismatchedIdentityCredential = await semaphoreSignPayload(
+    const mismatchedIdentityCredential = await signCredentialPayload(
       // Semaphore identity is different from that used by the Email PCD
       new Identity(),
       createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
     );
     MockDate.set(Date.now() - ONE_DAY_MS);
-    const expiredCredential = await semaphoreSignPayload(
+    const expiredCredential = await signCredentialPayload(
       identity,
       createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
     );

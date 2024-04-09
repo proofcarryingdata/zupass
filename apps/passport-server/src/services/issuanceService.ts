@@ -918,7 +918,7 @@ export class IssuanceService {
    * Issue an EdDSAFrogPCD from IFrogData signed with IssuanceService's private key.
    */
   public async issueEdDSAFrogPCDs(
-    credential: SerializedPCD<SemaphoreSignaturePCD>,
+    credential: Credential,
     frogData: IFrogData
   ): Promise<SerializedPCD[]> {
     const frogPCD = await EdDSAFrogPCDPackage.serialize(

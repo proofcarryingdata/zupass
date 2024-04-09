@@ -1,6 +1,7 @@
 import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import {
+  Credential,
   CredentialManager,
   CredentialPayload,
   CredentialRequest,
@@ -16,12 +17,9 @@ import {
   PCDCollection,
   expectIsReplaceInFolderAction
 } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import {
@@ -146,10 +144,7 @@ export async function requestTicketsFromPipeline(
   return getTicketsFromFeedResponse(expectedFolder, ticketPCDResponse);
 }
 
-const testCredentialCache = new Map<
-  string,
-  SerializedPCD<SemaphoreSignaturePCD>
->();
+const testCredentialCache = new Map<string, Credential>();
 
 /**
  * Makes a credential for a given email address and Semaphore identity, by
@@ -163,7 +158,7 @@ export async function makeCredential(
   email: string,
   identity: Identity,
   request: CredentialRequest = PODBOX_CREDENTIAL_REQUEST
-): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+): Promise<Credential> {
   const key = JSON.stringify({
     zupassEddsaPrivateKey,
     email,
@@ -193,10 +188,10 @@ export async function makeCredential(
  * Only use this to generate potentially incorrect credentials, otherwise use
  * {@link makeCredential} above.
  */
-export async function semaphoreSignPayload(
+export async function signCredentialPayload(
   identity: Identity,
   payload: CredentialPayload
-): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+): Promise<Credential> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {
       argumentType: ArgumentTypeName.PCD,

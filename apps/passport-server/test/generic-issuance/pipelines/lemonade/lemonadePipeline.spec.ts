@@ -59,7 +59,7 @@ import {
   proveEmailPCD,
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline,
-  semaphoreSignPayload
+  signCredentialPayload
 } from "../../util";
 import { setupTestLemonadePipeline } from "./setupTestLemonadePipeline";
 
@@ -1193,17 +1193,17 @@ describe("generic issuance - LemonadePipeline", function () {
         ZUPASS_EDDSA_PRIVATE_KEY,
         EdgeCityBouncerIdentity
       );
-      const badEmailCredential = await semaphoreSignPayload(
+      const badEmailCredential = await signCredentialPayload(
         EdgeCityBouncerIdentity,
         createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
       );
-      const mismatchedIdentityCredential = await semaphoreSignPayload(
+      const mismatchedIdentityCredential = await signCredentialPayload(
         // Semaphore identity is different from that used by the Email PCD
         new Identity(),
         createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
       );
       MockDate.set(Date.now() - ONE_DAY_MS);
-      const expiredCredential = await semaphoreSignPayload(
+      const expiredCredential = await signCredentialPayload(
         EdgeCityBouncerIdentity,
         createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
       );

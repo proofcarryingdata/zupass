@@ -1,7 +1,9 @@
-import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import { EdDSAPCDClaim } from "@pcd/eddsa-pcd";
+import { EmailPCD, EmailPCDClaim, EmailPCDPackage } from "@pcd/email-pcd";
 import { SerializedPCD } from "@pcd/pcd-types";
 import {
   SemaphoreSignaturePCD,
+  SemaphoreSignaturePCDClaim,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS, ONE_MINUTE_MS } from "@pcd/util";
@@ -11,6 +13,9 @@ import { ONE_HOUR_MS, ONE_MINUTE_MS } from "@pcd/util";
 // that client-side cached credentials will be refreshed before they expire
 const TIMESTAMP_MAX_AGE = ONE_HOUR_MS + 20 * ONE_MINUTE_MS;
 
+// To avoid writing `SerializedPCD<SemaphoreSignaturePCD>`, and also to make
+// the `Credential` type a bit less tightly-bound to the implementation details
+// of serialiazation and Semaphore signatures, we use this type.
 export type Credential = SerializedPCD<SemaphoreSignaturePCD>;
 
 /*
@@ -25,11 +30,17 @@ export interface CredentialPayload {
 
 /**
  * The result of successfully verifying a credential.
+ *
+ * We do not need to return whole PCDs here, because the proofs have been
+ * verified, and since we expect to cache these in memory, we can avoid wasting
+ * memory on caching large PCD objects.
  */
 export interface VerifiedCredential {
-  signatureClaim: SemaphoreSignaturePCD["claim"];
-  emailClaim?: EmailPCD["claim"];
-  emailSignatureClaim?: EmailPCD["proof"]["eddsaPCD"]["claim"];
+  // Every credential has a signature
+  signatureClaim: SemaphoreSignaturePCDClaim;
+  // Not all credentials have Email PCDs, so these claims are optional:
+  emailClaim?: EmailPCDClaim;
+  emailSignatureClaim?: EdDSAPCDClaim;
 }
 
 /**
