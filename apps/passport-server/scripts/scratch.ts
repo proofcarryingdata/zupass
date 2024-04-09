@@ -344,7 +344,8 @@ yargs
         } ms`
       );
     }
-  );
+  )
+  .help().argv;
 
 if (process.argv.slice(2).length === 0) {
   yargs.showHelp();

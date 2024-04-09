@@ -7,6 +7,7 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  CredentialPayload,
   KnownTicketGroup,
   KnownTicketTypesResult,
   LATEST_PRIVACY_NOTICE,
@@ -2222,7 +2223,12 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await signCredentialPayload(identity, "asdf" as any),
+          pcd: await signCredentialPayload(
+            identity,
+            // Obviously nonsensical type-cast, but `signCredentialPayload`
+            // will JSON.stringify() this
+            "asdf" as unknown as CredentialPayload
+          ),
           feedId: ZupassFeedIds.Devconnect
         }
       );
