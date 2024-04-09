@@ -15,7 +15,7 @@ export enum PCDState {
   RECEIVED_PCDSTR
 }
 
-export enum LoginConfigurationName {
+export enum LoginConfigName {
   ZUZALU_PARTICIPANT = "ZUZALU_PARTICIPANT",
   ZUZALU_ORGANIZER = "ZUZALU_ORGANIZER",
   DEVCONNECT_PARTICIPANT = "DEVCONNECT_PARTICIPANT",
@@ -38,7 +38,7 @@ export interface BallotConfig {
   makeHistoricalGroupUrl?: (hash: string) => string;
 }
 
-export enum ConfigGroupName {
+export enum LoginCategory {
   EthLatAm = "ETH LATAM",
   Zuzalu = "Zuzalu",
   Zuconnect = "Zuconnect",
@@ -47,32 +47,32 @@ export enum ConfigGroupName {
   Pipeline = "Pipeline"
 }
 
-export interface ConfigGroup {
-  id: ConfigGroupName;
+export interface LoginCategoryGroups {
+  category: LoginCategory;
 }
 
-export const CONFIG_GROUPS: ConfigGroup[] = [
-  { id: ConfigGroupName.EthLatAm },
-  { id: ConfigGroupName.Zuzalu },
-  { id: ConfigGroupName.Zuconnect },
-  { id: ConfigGroupName.Devconnect },
-  { id: ConfigGroupName.EdgeCityDenver },
-  { id: ConfigGroupName.Pipeline }
+export const CONFIG_GROUPS: LoginCategoryGroups[] = [
+  { category: LoginCategory.EthLatAm },
+  { category: LoginCategory.Zuzalu },
+  { category: LoginCategory.Zuconnect },
+  { category: LoginCategory.Devconnect },
+  { category: LoginCategory.EdgeCityDenver },
+  { category: LoginCategory.Pipeline }
 ];
 
 export function getConfigGroup(
-  name: ConfigGroupName | undefined
-): ConfigGroup | undefined {
-  return CONFIG_GROUPS.find((c) => c.id === name);
+  name: LoginCategory | undefined
+): LoginCategoryGroups | undefined {
+  return CONFIG_GROUPS.find((c) => c.category === name);
 }
 
 export interface LoginConfig {
-  configGroupId: ConfigGroupName;
+  configCategoryId: LoginCategory;
   groupId: string;
   groupUrl: string;
   passportServerUrl: string;
   passportAppUrl: string;
-  name: LoginConfigurationName;
+  name: LoginConfigName;
   prompt: string;
 }
 

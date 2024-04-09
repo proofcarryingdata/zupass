@@ -1,5 +1,5 @@
 import { Ballot, BallotType } from "../../api/prismaTypes";
-import { LoginConfigurationName, LoginState } from "../../types";
+import { LoginConfigName, LoginState } from "../../types";
 import { BallotTypeSection } from "./BallotTypeSection";
 
 export function BallotListsForUser({
@@ -14,9 +14,7 @@ export function BallotListsForUser({
   return (
     <>
       <BallotTypeSection
-        visible={
-          loginState.config.name === LoginConfigurationName.ZUZALU_ORGANIZER
-        }
+        visible={loginState.config.name === LoginConfigName.ZUZALU_ORGANIZER}
         title={"Eth LatAm Feedback"}
         description={"Ballots visible and voteable only by Zuzalu organizers"}
         ballots={ballots}
@@ -25,8 +23,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name === LoginConfigurationName.ZUZALU_ORGANIZER ||
-          loginState.config.name === LoginConfigurationName.ZUZALU_PARTICIPANT
+          loginState.config.name === LoginConfigName.ZUZALU_ORGANIZER ||
+          loginState.config.name === LoginConfigName.ZUZALU_PARTICIPANT
         }
         title={"Organizer Polls"}
         description={"Official ballots from Zuconnect organizers"}
@@ -36,8 +34,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name === LoginConfigurationName.ZUZALU_ORGANIZER ||
-          loginState.config.name === LoginConfigurationName.ZUZALU_PARTICIPANT
+          loginState.config.name === LoginConfigName.ZUZALU_ORGANIZER ||
+          loginState.config.name === LoginConfigName.ZUZALU_PARTICIPANT
         }
         title={"Straw Polls"}
         description={"Unofficial ballots from event participants"}
@@ -47,9 +45,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name ===
-            LoginConfigurationName.DEVCONNECT_PARTICIPANT ||
-          loginState.config.name === LoginConfigurationName.DEVCONNECT_ORGANIZER
+          loginState.config.name === LoginConfigName.DEVCONNECT_PARTICIPANT ||
+          loginState.config.name === LoginConfigName.DEVCONNECT_ORGANIZER
         }
         title={"Organizer Polls"}
         description={"Ballots created by Devconnect organizers"}
@@ -59,9 +56,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name ===
-            LoginConfigurationName.DEVCONNECT_PARTICIPANT ||
-          loginState.config.name === LoginConfigurationName.DEVCONNECT_ORGANIZER
+          loginState.config.name === LoginConfigName.DEVCONNECT_PARTICIPANT ||
+          loginState.config.name === LoginConfigName.DEVCONNECT_ORGANIZER
         }
         title={"Community Polls"}
         description={"Ballots created by Devconnect attendees"}
@@ -71,9 +67,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name ===
-            LoginConfigurationName.EDGE_CITY_ORGANIZER ||
-          loginState.config.name === LoginConfigurationName.EDGE_CITY_RESIDENT
+          loginState.config.name === LoginConfigName.EDGE_CITY_ORGANIZER ||
+          loginState.config.name === LoginConfigName.EDGE_CITY_RESIDENT
         }
         title={"Community Polls"}
         description={"Ballots created by Edge City attendees"}
@@ -83,9 +78,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name ===
-            LoginConfigurationName.EDGE_CITY_ORGANIZER ||
-          loginState.config.name === LoginConfigurationName.EDGE_CITY_RESIDENT
+          loginState.config.name === LoginConfigName.EDGE_CITY_ORGANIZER ||
+          loginState.config.name === LoginConfigName.EDGE_CITY_RESIDENT
         }
         title={"Organizer Feedback"}
         description={"Ballots created by Edge City organizers"}
@@ -95,9 +89,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name ===
-            LoginConfigurationName.ETH_LATAM_ORGANIZER ||
-          loginState.config.name === LoginConfigurationName.ETH_LATAM_ATTENDEE
+          loginState.config.name === LoginConfigName.ETH_LATAM_ORGANIZER ||
+          loginState.config.name === LoginConfigName.ETH_LATAM_ATTENDEE
         }
         title={"Community Polls"}
         description={"Ballots created by ETH LatAm attendees"}
@@ -107,9 +100,8 @@ export function BallotListsForUser({
 
       <BallotTypeSection
         visible={
-          loginState.config.name ===
-            LoginConfigurationName.ETH_LATAM_ORGANIZER ||
-          loginState.config.name === LoginConfigurationName.ETH_LATAM_ATTENDEE
+          loginState.config.name === LoginConfigName.ETH_LATAM_ORGANIZER ||
+          loginState.config.name === LoginConfigName.ETH_LATAM_ATTENDEE
         }
         title={"Eth LatAm Feedback"}
         description={"Feedback polls for Eth Latam"}

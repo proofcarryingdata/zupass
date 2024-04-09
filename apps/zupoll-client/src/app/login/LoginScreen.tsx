@@ -16,16 +16,11 @@ import {
   ZUZALU_ORGANIZER_LOGIN_CONFIG,
   ZUZALU_PARTICIPANT_LOGIN_CONFIG
 } from "../../api/loginConfig";
-import {
-  LoginConfig,
-  LoginConfigurationName,
-  LoginState,
-  ZupollError
-} from "../../types";
+import { LoginConfig, LoginState, ZupollError } from "../../types";
 import { removeQueryParameters } from "../../util";
 import { fetchLoginToken } from "../../zupoll-server-api";
 import { GuaranteesElement } from "../main/Guarantees";
-import { LoginGroups } from "./LoginGroups";
+import { LoginWidget } from "./LoginWidget";
 
 const allLoginConfigs: LoginConfig[] = [
   ETH_LATAM_ATTENDEE_CONFIG,
@@ -39,41 +34,20 @@ const allLoginConfigs: LoginConfig[] = [
 ];
 
 export function LoginScreen({
-  onLogin,
-  title = "This app lets Zupass users vote anonymously.",
-  // visibleLoginOptions is a set of login config names to show here
-  // this supports creating login pages for specific events which only show
-  // some login options.
-  // if the array is empty, all options are shown.
-  visibleLoginOptions
+  onLogin
 }: {
   onLogin: (loginState: LoginState) => void;
   title: string;
-  visibleLoginOptions: LoginConfigurationName[] | undefined;
 }) {
+  const params = useParams();
   const [serverLoading, setServerLoading] = useState<boolean>(false);
   const [error, setError] = useState<ZupollError>();
-  const loginConfigSet = new Set(visibleLoginOptions);
-  const visibleLoginRows =
-    visibleLoginOptions === undefined
-      ? allLoginConfigs
-      : allLoginConfigs.filter(
-          // If loginConfigSet is zero include everything, otherwise check for
-          // inclusion
-          (config) =>
-            loginConfigSet.size === 0 || loginConfigSet.has(config.name)
-        );
-
   const [loggingIn, setLoggingIn] = useState(false);
   const [pcdStr] = useZupassPopupMessages();
   const [pcdFromUrl, setMyPcdStr] = useState("");
   const [configFromUrl, setMyConfig] = useState<LoginConfig>();
 
-  const params = useParams();
-
   useEffect(() => {
-    console.log("params", params);
-
     const url = new URL(window.location.href);
     // Use URLSearchParams to get the proof query parameter
     const proofString = url.searchParams.get("proof");
@@ -138,8 +112,8 @@ export function LoginScreen({
           <Card className="my-8">
             <CardContent>
               <p className="mt-6">Login with Event Ticket</p>
-              <LoginGroups
-                configs={visibleLoginRows}
+              <LoginWidget
+                configs={allLoginConfigs}
                 onLogin={onLogin}
                 setError={setError}
                 setServerLoading={setServerLoading}

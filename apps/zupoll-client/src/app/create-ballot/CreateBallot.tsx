@@ -18,7 +18,7 @@ import { Subtitle, Title } from "../../@/components/ui/text";
 import { BallotType, Poll } from "../../api/prismaTypes";
 import { BallotSignal } from "../../api/requestTypes";
 import { BALLOT_TYPE_FROM_LOGIN_CONFIG } from "../../env";
-import { LoginConfigurationName, LoginState, ZupollError } from "../../types";
+import { LoginConfigName, LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
 import { PollsBelowDivider } from "./PollsBelowDivider";
@@ -229,7 +229,7 @@ export function CreateBallot({
             <SelectContent>
               <SelectGroup>
                 {loginState.config.name ===
-                  LoginConfigurationName.ZUZALU_PARTICIPANT && (
+                  LoginConfigName.ZUZALU_PARTICIPANT && (
                   <>
                     <SelectItem value={BallotType.STRAWPOLL}>
                       Straw Poll
@@ -237,7 +237,7 @@ export function CreateBallot({
                   </>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.ZUZALU_ORGANIZER && (
+                  LoginConfigName.ZUZALU_ORGANIZER && (
                   <>
                     <SelectItem value={BallotType.STRAWPOLL}>
                       Straw Poll
@@ -251,13 +251,13 @@ export function CreateBallot({
                   </>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.DEVCONNECT_PARTICIPANT && (
+                  LoginConfigName.DEVCONNECT_PARTICIPANT && (
                   <SelectItem value={BallotType.DEVCONNECT_STRAW}>
                     Devconnect Community Poll
                   </SelectItem>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.DEVCONNECT_ORGANIZER && (
+                  LoginConfigName.DEVCONNECT_ORGANIZER && (
                   <>
                     <SelectItem value={BallotType.DEVCONNECT_STRAW}>
                       Community Poll
@@ -268,7 +268,7 @@ export function CreateBallot({
                   </>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.EDGE_CITY_RESIDENT && (
+                  LoginConfigName.EDGE_CITY_RESIDENT && (
                   <>
                     <SelectItem value={BallotType.EDGE_CITY_RESIDENT}>
                       Edge City Community Poll
@@ -276,7 +276,7 @@ export function CreateBallot({
                   </>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.EDGE_CITY_ORGANIZER && (
+                  LoginConfigName.EDGE_CITY_ORGANIZER && (
                   <>
                     <SelectItem value={BallotType.EDGE_CITY_RESIDENT}>
                       Edge City Community Poll
@@ -287,7 +287,7 @@ export function CreateBallot({
                   </>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.ETH_LATAM_ATTENDEE && (
+                  LoginConfigName.ETH_LATAM_ATTENDEE && (
                   <>
                     <SelectItem value={BallotType.ETH_LATAM_STRAWPOLL}>
                       ETH LatAm Straw Poll
@@ -295,7 +295,7 @@ export function CreateBallot({
                   </>
                 )}
                 {loginState.config.name ===
-                  LoginConfigurationName.ETH_LATAM_ORGANIZER && (
+                  LoginConfigName.ETH_LATAM_ORGANIZER && (
                   <>
                     <SelectItem value={BallotType.ETH_LATAM_STRAWPOLL}>
                       ETH LatAm Straw Poll

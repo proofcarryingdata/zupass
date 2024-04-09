@@ -42,7 +42,6 @@ export function HomePage() {
     content = (
       <LoginScreen
         title="This app lets Zupass users vote anonymously."
-        visibleLoginOptions={undefined}
         onLogin={(state: LoginState) => {
           replaceLoginState(state);
           removeQueryParameters();

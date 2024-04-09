@@ -1,6 +1,6 @@
 import urljoin from "url-join";
 import { BallotType } from "./api/prismaTypes";
-import { LoginConfigurationName } from "./types";
+import { LoginConfigName } from "./types";
 
 export const enum SemaphoreGroups {
   ZuzaluParticipants = "1",
@@ -13,18 +13,17 @@ export const enum SemaphoreGroups {
 }
 
 export const BALLOT_TYPE_FROM_LOGIN_CONFIG: Record<
-  LoginConfigurationName,
+  LoginConfigName,
   BallotType
 > = {
-  [LoginConfigurationName.ZUZALU_PARTICIPANT]: BallotType.STRAWPOLL,
-  [LoginConfigurationName.ZUZALU_ORGANIZER]: BallotType.ADVISORYVOTE,
-  [LoginConfigurationName.DEVCONNECT_ORGANIZER]:
-    BallotType.DEVCONNECT_ORGANIZER,
-  [LoginConfigurationName.DEVCONNECT_PARTICIPANT]: BallotType.DEVCONNECT_STRAW,
-  [LoginConfigurationName.EDGE_CITY_RESIDENT]: BallotType.EDGE_CITY_RESIDENT,
-  [LoginConfigurationName.EDGE_CITY_ORGANIZER]: BallotType.EDGE_CITY_ORGANIZER,
-  [LoginConfigurationName.ETH_LATAM_ATTENDEE]: BallotType.ETH_LATAM_STRAWPOLL,
-  [LoginConfigurationName.ETH_LATAM_ORGANIZER]: BallotType.ETH_LATAM_FEEDBACK
+  [LoginConfigName.ZUZALU_PARTICIPANT]: BallotType.STRAWPOLL,
+  [LoginConfigName.ZUZALU_ORGANIZER]: BallotType.ADVISORYVOTE,
+  [LoginConfigName.DEVCONNECT_ORGANIZER]: BallotType.DEVCONNECT_ORGANIZER,
+  [LoginConfigName.DEVCONNECT_PARTICIPANT]: BallotType.DEVCONNECT_STRAW,
+  [LoginConfigName.EDGE_CITY_RESIDENT]: BallotType.EDGE_CITY_RESIDENT,
+  [LoginConfigName.EDGE_CITY_ORGANIZER]: BallotType.EDGE_CITY_ORGANIZER,
+  [LoginConfigName.ETH_LATAM_ATTENDEE]: BallotType.ETH_LATAM_STRAWPOLL,
+  [LoginConfigName.ETH_LATAM_ORGANIZER]: BallotType.ETH_LATAM_FEEDBACK
 };
 
 export const ZUPASS_URL = process.env.NEXT_PUBLIC_ZUPASS_URL ?? "";
