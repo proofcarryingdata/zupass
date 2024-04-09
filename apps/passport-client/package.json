@@ -84,6 +84,8 @@
     "react-table-lite": "^3.0.2",
     "react-tooltip": "^5.21.4",
     "rollbar": "^2.26.1",
+    "scandit-web-datacapture-barcode": "^6.23.0",
+    "scandit-web-datacapture-core": "^6.23.0",
     "styled-components": "^5.3.6",
     "tsparticles": "^2.12.0",
     "tsparticles-engine": "^2.12.0",

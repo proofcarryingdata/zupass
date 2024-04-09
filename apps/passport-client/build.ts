@@ -55,6 +55,13 @@ const define = {
           process.env.STRICH_LICENSE_KEY
         )
       }
+    : {}),
+  ...(process.env.SCANDIT_LICENSE_KEY !== undefined
+    ? {
+        "process.env.SCANDIT_LICENSE_KEY": JSON.stringify(
+          process.env.SCANDIT_LICENSE_KEY
+        )
+      }
     : {})
 };
 
@@ -109,6 +116,7 @@ run(process.argv[2])
 
 async function run(command: string): Promise<void> {
   compileHtml();
+  copyScanditEngine();
 
   switch (command) {
     case "build":
@@ -162,6 +170,16 @@ async function run(command: string): Promise<void> {
     default:
       throw new Error(`Unknown command ${command}`);
   }
+}
+
+function copyScanditEngine(): void {
+  fs.cpSync(
+    path.join(
+      "../../node_modules/scandit-web-datacapture-barcode/build/engine"
+    ),
+    path.join("public/engine"),
+    { recursive: true }
+  );
 }
 
 function compileHtml(): void {

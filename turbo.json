@@ -203,6 +203,7 @@
     "ACCESS_TOKEN_SECRET",
     "NEXT_PUBLIC_DEBUG_TOOLS_ENABLED",
     "STRICH_LICENSE_KEY",
+    "SCANDIT_LICENSE_KEY",
     "//// add env vars above this line ////"
   ]
 }

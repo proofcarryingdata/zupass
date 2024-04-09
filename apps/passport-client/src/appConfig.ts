@@ -15,6 +15,8 @@ interface AppConfig {
   rollbarEnvName: string | undefined;
   // license key for Strich scanner
   strichLicenseKey: string;
+  // license key for Scandit scanner
+  scanditLicenseKey: string;
 }
 
 if (
@@ -37,6 +39,14 @@ if (!process.env.STRICH_LICENSE_KEY && global.window && !!global.window.alert) {
   alert("STRICH_LICENSE_KEY not set");
 }
 
+if (
+  !process.env.SCANDIT_LICENSE_KEY &&
+  global.window &&
+  !!global.window.alert
+) {
+  alert("SCANDIT_LICENSE_KEY not set");
+}
+
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL as string,
@@ -44,7 +54,8 @@ export const appConfig: AppConfig = {
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
-  strichLicenseKey: process.env.STRICH_LICENSE_KEY as string
+  strichLicenseKey: process.env.STRICH_LICENSE_KEY as string,
+  scanditLicenseKey: process.env.SCANDIT_LICENSE_KEY as string
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));
