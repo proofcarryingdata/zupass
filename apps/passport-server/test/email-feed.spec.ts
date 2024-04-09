@@ -1,8 +1,8 @@
 import { EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
+  ZUPASS_CREDENTIAL_REQUEST,
   ZupassFeedIds,
-  createCredentialPayload,
-  pollFeed
+  requestPollFeed
 } from "@pcd/passport-interface";
 import { PCDActionType, isReplaceInFolderAction } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -12,6 +12,7 @@ import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
+import { makeCredential } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -56,12 +57,12 @@ describe("attested email feed functionality", function () {
   step(
     "user should be able to be issued an attested email PCD from the server",
     async function () {
-      const payload = JSON.stringify(createCredentialPayload());
-      const pollFeedResult = await pollFeed(
+      const pollFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Email
+        {
+          pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Email
+        }
       );
 
       if (!pollFeedResult.success) {

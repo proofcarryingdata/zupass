@@ -1,12 +1,7 @@
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
   CheckTicketByIdRequest,
   CheckTicketByIdResponseValue,
-  ISSUANCE_STRING,
   TicketError
 } from "../RequestTypes";
 import { APIResult } from "./apiResult";
@@ -38,36 +33,6 @@ export async function requestCheckTicketById(
     },
     postBody
   );
-}
-
-/**
- * Generates a credential based on a semaphore identity and calls {@link requestCheckInById}
- * to try to pre-check a ticket for check-in.
- */
-export async function checkTicketById(
-  passportServer: string,
-  ticketId: string,
-  checkerIdentity: Identity
-): Promise<CheckTicketByIdResult> {
-  return requestCheckTicketById(passportServer, {
-    ticketId,
-    signature: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: checkerIdentity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING
-        }
-      })
-    )
-  });
 }
 
 export type CheckTicketByIdResult = APIResult<

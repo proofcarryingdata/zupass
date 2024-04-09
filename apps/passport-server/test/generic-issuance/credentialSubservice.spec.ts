@@ -8,6 +8,7 @@ import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   PODBOX_CREDENTIAL_REQUEST,
   VerificationError,
+  ZUPASS_CREDENTIAL_REQUEST,
   createCredentialPayload
 } from "@pcd/passport-interface";
 import { ONE_DAY_MS } from "@pcd/util";
@@ -57,10 +58,10 @@ describe("generic issuance - credential subservice", function () {
     const emailAddress = "test@example.com";
     {
       const credential = await makeCredential(
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        emailAddress,
         identity,
-        PODBOX_CREDENTIAL_REQUEST
+        PODBOX_CREDENTIAL_REQUEST,
+        emailAddress,
+        ZUPASS_EDDSA_PRIVATE_KEY
       );
 
       // Same promise will be returned for the same input
@@ -93,12 +94,9 @@ describe("generic issuance - credential subservice", function () {
     }
     {
       const credential = await makeCredential(
-        ZUPASS_EDDSA_PRIVATE_KEY,
-        emailAddress,
         identity,
-        // No Email PCD requested, so even though we include an email
-        // address above, no EmailPCD will exist in the payload
-        { signatureType: "sempahore-signature-pcd" }
+        // Credentials for Zupass feeds do not include Email PCDs
+        ZUPASS_CREDENTIAL_REQUEST
       );
 
       // Same promise will be returned for the same input

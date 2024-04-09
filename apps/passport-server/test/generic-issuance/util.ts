@@ -77,9 +77,10 @@ export async function requestCheckInPipelineTicket(
   ticket: EdDSATicketPCD
 ): Promise<PodboxTicketActionResult> {
   const ticketCheckerFeedCredential = await makeCredential(
-    zupassEddsaPrivateKey,
+    checkerIdentity,
+    PODBOX_CREDENTIAL_REQUEST,
     checkerEmail,
-    checkerIdentity
+    zupassEddsaPrivateKey
   );
 
   return requestPodboxTicketAction(
@@ -138,13 +139,16 @@ export async function requestTicketsFromPipeline(
 ): Promise<EdDSATicketPCD[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
-    pcd: await makeCredential(zupassEddsaPrivateKey, email, identity)
+    pcd: await makeCredential(
+      identity,
+      PODBOX_CREDENTIAL_REQUEST,
+      email,
+      zupassEddsaPrivateKey
+    )
   });
 
   return getTicketsFromFeedResponse(expectedFolder, ticketPCDResponse);
 }
-
-const testCredentialCache = new Map<string, Credential>();
 
 /**
  * Makes a credential for a given email address and Semaphore identity, by
@@ -154,33 +158,40 @@ const testCredentialCache = new Map<string, Credential>();
  * repeately.
  */
 export async function makeCredential(
-  zupassEddsaPrivateKey: string,
-  email: string,
   identity: Identity,
-  request: CredentialRequest = PODBOX_CREDENTIAL_REQUEST
+  request: CredentialRequest,
+  email?: string,
+  zupassEddsaPrivateKey?: string
 ): Promise<Credential> {
-  const key = JSON.stringify({
-    zupassEddsaPrivateKey,
-    email,
-    identity: identity.commitment.toString(),
-    request
-  });
-  const cached = testCredentialCache.get(key);
-  if (cached) {
-    return cached;
+  if (request.pcdType === "email-pcd") {
+    if (!email || !zupassEddsaPrivateKey) {
+      throw new Error(
+        "Can't create a credential containing an EmailPCD without email address and private key"
+      );
+    }
+    const emailPCD = await proveEmailPCD(
+      email,
+      zupassEddsaPrivateKey,
+      identity
+    );
+    // Credential Manager will need to be able to look up the Email PCD, and use
+    // an identity. We instantiate a PCDCollection here, mirroring the usage on
+    // the client.
+    const credentialManager = new CredentialManager(
+      identity,
+      new PCDCollection([EmailPCDPackage], [emailPCD]),
+      new Map()
+    );
+    return credentialManager.requestCredential(request);
+  } else {
+    // No Email PCD required here
+    const credentialManager = new CredentialManager(
+      identity,
+      new PCDCollection([], []),
+      new Map()
+    );
+    return credentialManager.requestCredential(request);
   }
-  const emailPCD = await proveEmailPCD(email, zupassEddsaPrivateKey, identity);
-  // Credential Manager will need to be able to look up the Email PCD, and use
-  // an identity. We instantiate a PCDCollection here, mirroring the usage on
-  // the client.
-  const credentialManager = new CredentialManager(
-    identity,
-    new PCDCollection([EmailPCDPackage], [emailPCD]),
-    new Map()
-  );
-  const credential = await credentialManager.requestCredential(request);
-  testCredentialCache.set(key, credential);
-  return credential;
 }
 
 /**

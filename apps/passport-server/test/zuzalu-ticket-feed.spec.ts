@@ -1,7 +1,7 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  createCredentialPayload,
-  pollFeed,
+  requestPollFeed,
+  ZUPASS_CREDENTIAL_REQUEST,
   ZupassFeedIds,
   ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
@@ -17,6 +17,7 @@ import {
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
+import { makeCredential } from "./generic-issuance/util";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
@@ -87,12 +88,12 @@ describe("zuzalu-specific zupass functionality", function () {
   step(
     "user should be able to be issued Zuzalu ticket PCDs from the server",
     async function () {
-      const payload = JSON.stringify(createCredentialPayload());
-      const response = await pollFeed(
+      const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Zuzalu_23
+        {
+          pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Zuzalu_23
+        }
       );
 
       if (!response.success) {
