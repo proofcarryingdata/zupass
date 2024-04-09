@@ -27,8 +27,19 @@ interface CacheEntry {
 
 const CACHE_TTL = ONE_HOUR_MS;
 
+/**
+ * These constants are convenient values for credential requests.
+ * PODBOX_CREDENTIAL_REQUEST requires an EmailPCD, since this is commonly
+ * required for Podbox requests.
+ * ZUPASS_CREDENTIAL_REQUEST does not, as Zupass can identify users by their
+ * Semaphore ID alone.
+ */
 export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
   pcdType: "email-pcd",
+  signatureType: "sempahore-signature-pcd"
+};
+
+export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
   signatureType: "sempahore-signature-pcd"
 };
 

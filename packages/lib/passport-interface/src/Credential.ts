@@ -52,6 +52,8 @@ function validateCredentialTimestamp(timestamp: number): boolean {
   return now - timestamp < TIMESTAMP_MAX_AGE;
 }
 
+export class VerificationError extends Error {}
+
 /*
  * Verifies that a credential has a valid Semaphore signature and a non-expired
  * timestamp.
@@ -66,12 +68,12 @@ export async function verifyCredential(
   credential: Credential
 ): Promise<VerifiedCredential> {
   if (credential.type !== SemaphoreSignaturePCDPackage.name) {
-    throw new Error(`Credential is not a Semaphore Signature PCD`);
+    throw new VerificationError(`Credential is not a Semaphore Signature PCD`);
   }
   // Ensure that the signature part of the credential verifies.
   const pcd = await SemaphoreSignaturePCDPackage.deserialize(credential.pcd);
   if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
-    throw new Error(`Could not verify signature PCD`);
+    throw new VerificationError(`Could not verify signature PCD`);
   }
 
   // Parse data from the Semaphore Signature claim. Will throw if the message
@@ -81,26 +83,26 @@ export async function verifyCredential(
   // The payload should have a timestamp, which should also be a number within
   // certain bounds.
   if (!validateCredentialTimestamp(payload.timestamp)) {
-    throw new Error("Credential timestamp out of bounds");
+    throw new VerificationError("Credential timestamp out of bounds");
   }
 
   // If the payload contains a PCD, verify it
   if (payload.pcd) {
     // Only EmailPCD is supported here
     if (payload.pcd.type !== EmailPCDPackage.name) {
-      throw new Error(`Payload PCD is not an EmailPCD`);
+      throw new VerificationError(`Payload PCD is not an EmailPCD`);
     }
 
     // EmailPCD must verify
     const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
     if (!(await EmailPCDPackage.verify(emailPCD))) {
-      throw new Error(`Could not verify email PCD`);
+      throw new VerificationError(`Could not verify email PCD`);
     }
 
     // EmailPCD contains a Semaphore ID in its claim, which must match that of
     // the signature.
     if (emailPCD.claim.semaphoreId !== pcd.claim.identityCommitment) {
-      throw new Error(
+      throw new VerificationError(
         `Email PCD and Signature PCD do not have matching identities`
       );
     }

@@ -17,10 +17,10 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
+  Credential,
   FeedHost,
   GetOfflineTicketsRequest,
   GetOfflineTicketsResponseValue,
-  ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
   KnownTicketTypesResult,
@@ -31,6 +31,7 @@ import {
   PollFeedResponseValue,
   UploadOfflineCheckinsRequest,
   UploadOfflineCheckinsResponseValue,
+  VerificationError,
   VerifiedCredential,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
@@ -522,8 +523,7 @@ export class IssuanceService {
       let checker;
       try {
         const verifiedCredential = await this.verifyCredential(
-          await SemaphoreSignaturePCDPackage.serialize(signature),
-          true
+          await SemaphoreSignaturePCDPackage.serialize(signature)
         );
         checker = await this.checkUserExists(verifiedCredential);
         if (!checker) {
@@ -607,55 +607,33 @@ export class IssuanceService {
   }
 
   /**
-   * Verifies the credentials that IssuanceService can receive.
-   * IssuanceService supports two kinds of credentials, one with a JSON string
-   * of a {@link CredentialPayload}, and the other legacy credential type,
-   * where the signed message equals {@link ISSUANCE_STRING}.
-   *
-   * If we have a payload, then we use {@link verifyCredential} from
-   * passport-interface; otherwise, we check to see if the signed message is
-   * equal to {@link ISSUANCE_STRING}. This latter type of credential is only
-   * supported for legacy purposes, as it forms part of Devconnect check-in and
-   * offline check-in. If those features are deprecated then we can simplify
-   * this code by only using {@link verifyCredential}.
+   * Verifies credentials for feeds and check-in. Provides a simple caching
+   * layer over {@link verifyCredential}.
    */
   public async verifyCredential(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>,
-    legacyCredential: boolean = false
+    credential: Credential
   ): Promise<VerifiedCredential> {
-    const key = JSON.stringify(serializedPCD);
-    const cached = this.verificationPromiseCache.get(key);
-    if (cached) {
-      return cached;
-    } else {
-      const promise = (async (): Promise<VerifiedCredential> => {
-        // If the credential has a payload, use verifyCredential()
-        // This will be true for all feed credentials.
-        if (!legacyCredential) {
-          return await verifyCredential(serializedPCD);
-        } else {
-          // Otherwise just check that the signature verifies and that the
-          // signed message is equal to ISSUANCE_STRING
-          const pcd = await SemaphoreSignaturePCDPackage.deserialize(
-            serializedPCD.pcd
-          );
-          if (!(await SemaphoreSignaturePCDPackage.verify(pcd))) {
-            throw new Error("Could not verify signature PCD");
+    return traced("IssuanceService", "verifyCredential", async (span) => {
+      const key = JSON.stringify(credential);
+      const cached = this.verificationPromiseCache.get(key);
+      span?.setAttribute("cache_hit", !!cached);
+      if (cached) {
+        return cached;
+      } else {
+        const promise = verifyCredential(credential).catch((err) => {
+          // If we received an unexpected kind of exception, remove the promise
+          // from the cache. Instances of VerificationError indicate that the
+          // credential failed to verify, so we want to keep those in the cache
+          // to avoid re-verifying a failed credential.
+          if (!(err instanceof VerificationError)) {
+            this.verificationPromiseCache.delete(key);
           }
-          if (pcd.claim.signedMessage !== ISSUANCE_STRING) {
-            throw new Error("Invalid signed message");
-          }
-          return { signatureClaim: pcd.claim };
-        }
-      })();
-      this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache and return false
-      promise.catch(() => {
-        this.verificationPromiseCache.delete(key);
-        return false;
-      });
-      return promise;
-    }
+          throw err;
+        });
+        this.verificationPromiseCache.set(key, promise);
+        return promise;
+      }
+    });
   }
 
   private async checkUserExists({
@@ -1420,7 +1398,7 @@ export class IssuanceService {
   ): Promise<void> {
     let signatureClaim;
     try {
-      signatureClaim = (await this.verifyCredential(req.checkerProof, true))
+      signatureClaim = (await this.verifyCredential(req.checkerProof))
         .signatureClaim;
     } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
@@ -1442,7 +1420,7 @@ export class IssuanceService {
   ): Promise<void> {
     let signatureClaim;
     try {
-      signatureClaim = (await this.verifyCredential(req.checkerProof, true))
+      signatureClaim = (await this.verifyCredential(req.checkerProof))
         .signatureClaim;
     } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");

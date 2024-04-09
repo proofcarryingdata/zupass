@@ -5,6 +5,9 @@ import {
   verifyCredential
 } from "@pcd/passport-interface";
 import { LRUCache } from "lru-cache";
+import { traced } from "../../telemetryService";
+
+export const SERVICE_NAME = "CREDENTIAL_SUBSERVICE";
 
 /**
  * Manages server-side verification of credential PCDs.
@@ -26,17 +29,20 @@ export class CredentialSubservice {
    * Verify a credential, ideally using a cached verification.
    */
   public verify(credential: Credential): Promise<VerifiedCredential> {
-    const key = JSON.stringify(credential);
-    const cached = this.verificationCache.get(key);
-    if (cached) {
-      return cached;
-    }
-    const promise = verifyCredential(credential).catch((err) => {
-      this.verificationCache.delete(key);
-      throw err;
+    return traced(SERVICE_NAME, "verify", async (span) => {
+      const key = JSON.stringify(credential);
+      const cached = this.verificationCache.get(key);
+      span?.setAttribute("cache_hit", !!cached);
+      if (cached) {
+        return cached;
+      }
+      const promise = verifyCredential(credential).catch((err) => {
+        this.verificationCache.delete(key);
+        throw err;
+      });
+      this.verificationCache.set(key, promise);
+      return promise;
     });
-    this.verificationCache.set(key, promise);
-    return promise;
   }
 
   /**
