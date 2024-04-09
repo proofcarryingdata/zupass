@@ -5,11 +5,6 @@ import * as dotenv from "dotenv";
 import * as path from "path";
 import yargs from "yargs";
 
-import { newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
@@ -349,94 +344,7 @@ yargs
         } ms`
       );
     }
-  )
-  .command(
-    "verify-benchmark <type> <iterations>",
-    "benchmark PCD verification",
-    (yargs) =>
-      yargs
-        .positional("type", {
-          type: "string",
-          demandOption: true,
-          describe: "type of PCD (email-pcd or semaphore-signature-pcd)"
-        })
-        .positional("iterations", {
-          type: "string",
-          demandOption: true,
-          describe: "number of iterations"
-        }),
-    async (argv) => {
-      const identity = new Identity();
-      const privKey = newEdDSAPrivateKey();
-
-      const zkeyFilePath = path.join(
-        __dirname,
-        `../public/semaphore-artifacts/16.zkey`
-      );
-      const wasmFilePath = path.join(
-        __dirname,
-        `../public/semaphore-artifacts/16.wasm`
-      );
-      await SemaphoreSignaturePCDPackage.init?.({
-        zkeyFilePath,
-        wasmFilePath
-      });
-
-      const emailPCD = await EmailPCDPackage.prove({
-        privateKey: {
-          value: privKey,
-          argumentType: ArgumentTypeName.String
-        },
-        id: {
-          value: "email-id",
-          argumentType: ArgumentTypeName.String
-        },
-        emailAddress: {
-          value: "test@example.com",
-          argumentType: ArgumentTypeName.String
-        },
-        semaphoreId: {
-          value: identity.commitment.toString(),
-          argumentType: ArgumentTypeName.String
-        }
-      });
-
-      const semaphoreSignaturePCD = await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: "test"
-        }
-      });
-
-      const iterations = parseInt(argv.iterations);
-      const start = performance.now();
-      if (argv.type === "email-pcd") {
-        for (let i = 0; i < iterations; i++) {
-          await EmailPCDPackage.verify(emailPCD);
-        }
-      } else if (argv.type === "semaphore-signature-pcd") {
-        for (let i = 0; i < iterations; i++) {
-          await SemaphoreSignaturePCDPackage.verify(semaphoreSignaturePCD);
-        }
-      }
-      const end = performance.now();
-
-      console.log(
-        `Average time to verify a ${
-          argv.type
-        } PCD across ${iterations} iterations: ${(end - start) / iterations}ms`
-      );
-    }
-  )
-  .help().argv;
+  );
 
 if (process.argv.slice(2).length === 0) {
   yargs.showHelp();
