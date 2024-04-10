@@ -30,18 +30,6 @@ module.exports = {
     "import/no-named-as-default-member": "off",
     "import/no-extraneous-dependencies": "error",
     "prettier/prettier": "error",
-    "no-restricted-imports": [
-      "error",
-      {
-        patterns: [
-          {
-            group: ["@pcd/*/**"],
-            message:
-              "Internal files from other packages should not be imported. Within-package imports should use relative file paths."
-          }
-        ]
-      }
-    ],
     "@typescript-eslint/no-require-imports": "error",
     "import/no-unresolved": "off",
     "prettier/prettier": "error",
