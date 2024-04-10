@@ -345,6 +345,14 @@ yargs
       );
     }
   )
+  .command(
+    "parse-edge-esmerelda-events",
+    "",
+    async function (yargs) {},
+    async function (argv) {
+      console.log("parsing edge esmerelda events");
+    }
+  )
   .help().argv;
 
 if (process.argv.slice(2).length === 0) {

@@ -13,7 +13,8 @@
     "test:single-threaded": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "test": "ts-mocha --parallel --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "scratch": "ts-node-dev -T scripts/scratch.ts",
-    "clean": "rm -rf node_modules ./build"
+    "clean": "rm -rf node_modules ./build",
+    "parse-edge-esmerelda-events": "yarn scratch parse-edge-esmerelda-events"
   },
   "dependencies": {
     "@apollo/client": "^3.9.7",
