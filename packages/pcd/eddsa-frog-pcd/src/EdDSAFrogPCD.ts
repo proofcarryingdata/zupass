@@ -1,9 +1,5 @@
 import { EdDSAPCD } from "@pcd/eddsa-pcd";
-import {
-  ObjectArgument,
-  PCD,
-  StringArgument
-} from "@pcd/pcd-types";
+import { ObjectArgument, PCD, StringArgument } from "@pcd/pcd-types";
 
 /**
  * The globally unique type name of the {@link EdDSAFrogPCD}.
@@ -156,8 +152,6 @@ export class EdDSAFrogPCD implements PCD<EdDSAFrogPCDClaim, EdDSAFrogPCDProof> {
     this.proof = proof;
   }
 }
-
-
 
 /**
  * Returns true if a PCD is an EdDSA Ticket PCD, or false otherwise.
