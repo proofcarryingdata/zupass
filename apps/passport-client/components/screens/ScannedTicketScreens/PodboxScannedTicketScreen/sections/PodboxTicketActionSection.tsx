@@ -2,7 +2,7 @@ import { PodboxTicketActionPreCheckResult } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { useState } from "react";
 import styled from "styled-components";
-import { FakeBack, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
+import { Back, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
 import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
 import { CheckInActionSection } from "./actions/checkin/CheckInActionSection";
@@ -43,7 +43,7 @@ export function PodboxTicketActionSection({
       <>
         <Spacer h={32} />
         <TopRow>
-          <FakeBack />
+          <Back />
           <ScanAnotherTicket disabled={isLoading} />
         </TopRow>
         <Spacer h={16} />
@@ -61,7 +61,7 @@ export function PodboxTicketActionSection({
       <>
         <Spacer h={32} />
         <TopRow>
-          <FakeBack />
+          <Back />
           <ScanAnotherTicket disabled={isLoading} />
         </TopRow>
         <Spacer h={16} />
@@ -77,7 +77,7 @@ export function PodboxTicketActionSection({
       <Spacer h={32} />
 
       <TopRow>
-        <FakeBack />
+        <Back />
         <ScanAnotherTicket disabled={isLoading} />
       </TopRow>
 
