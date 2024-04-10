@@ -1,10 +1,18 @@
-import { useEffect, useState } from 'react'
-import './App.css'
-import { constructZupassPcdGetRequestUrl, openZupassPopup, useZupassPopupMessages } from '@pcd/passport-interface';
-import { EdDSATicketFieldsToReveal, ZKEdDSAEventTicketPCDArgs, ZKEdDSAEventTicketPCDPackage } from '@pcd/zk-eddsa-event-ticket-pcd';
-import { ArgumentTypeName } from '@pcd/pcd-types';
-import { EdDSATicketPCDPackage } from '@pcd/eddsa-ticket-pcd';
-import { SemaphoreIdentityPCDPackage } from '@pcd/semaphore-identity-pcd';
+import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/meta";
+import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
+import {
+  openZupassPopup,
+  useZupassPopupMessages
+} from "@pcd/passport-interface/PassportPopup";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/meta";
+import {
+  EdDSATicketFieldsToReveal,
+  ZKEdDSAEventTicketPCDArgs,
+  ZKEdDSAEventTicketPCDTypeName
+} from "@pcd/zk-eddsa-event-ticket-pcd/meta";
+import { useEffect, useState } from "react";
+import "./App.css";
 
 /**
  * Opens a Zupass popup to make a proof of a ZK EdDSA event ticket PCD.
@@ -25,7 +33,7 @@ function openZKEdDSAEventTicketPopup(
     // This allows the user to choose a ticket to make a proof about.
     ticket: {
       argumentType: ArgumentTypeName.PCD,
-      pcdType: EdDSATicketPCDPackage.name,
+      pcdType: EdDSATicketPCDTypeName,
       value: undefined,
       userProvided: true,
       validatorParams: {
@@ -42,7 +50,7 @@ function openZKEdDSAEventTicketPopup(
     // for.
     identity: {
       argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDPackage.name,
+      pcdType: SemaphoreIdentityPCDTypeName,
       value: undefined,
       userProvided: true
     },
@@ -88,7 +96,7 @@ function openZKEdDSAEventTicketPopup(
   const proofUrl = constructZupassPcdGetRequestUrl(
     import.meta.env.ZUPASS_SERVER_URL ?? ZUPASS_PRODUCTION_URL,
     popupUrl,
-    ZKEdDSAEventTicketPCDPackage.name,
+    ZKEdDSAEventTicketPCDTypeName,
     args,
     {
       genericProveScreen: true,
@@ -119,26 +127,25 @@ function App() {
   useEffect(() => {
     (async () => {
       if (pcdStr) {
-        console.log(pcdStr);
-        const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
-          JSON.parse(pcdStr).pcd
-        );
+        setResult(pcdStr);
+        // console.log(pcdStr);
+        // const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
+        //   JSON.parse(pcdStr).pcd
+        // );
 
-        if (pcd && (await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
-          setResult(
-            `Your email address is ${pcd.claim.partialTicket.attendeeEmail}`
-          );
-        } else {
-          setResult("Could not verify PCD");
-        }
+        // if (pcd && (await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
+        //   setResult(
+        //     `Your email address is ${pcd.claim.partialTicket.attendeeEmail}`
+        //   );
+        // } else {
+        //   setResult("Could not verify PCD");
+        // }
       }
     })();
   }, [pcdStr]);
 
   return (
-    <main
-      className="root"
-    >
+    <main className="root">
       <div className="">
         <button onClick={openPopup}>Click me</button>
         <div>{result}</div>
@@ -147,5 +154,4 @@ function App() {
   );
 }
 
-
-export default App
+export default App;

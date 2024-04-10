@@ -1,4 +1,4 @@
-import { useZupassPopupSetup } from "@pcd/passport-interface";
+import { useZupassPopupSetup } from "@pcd/passport-interface/PassportPopup";
 
 /**  This popup sends requests and receives PCDs from the passport. */
 export default function PassportPopupRedirect() {
