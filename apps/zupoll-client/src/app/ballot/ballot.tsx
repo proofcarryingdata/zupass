@@ -34,7 +34,7 @@ export function BallotPage() {
   }, [loginState, definitelyNotLoggedIn, query, pathname]);
 
   return (
-    <>
+    <div className="min-h-screen ">
       {ballotURL === null || !loginState ? (
         <LoadingPlaceholder />
       ) : (
@@ -44,6 +44,6 @@ export function BallotPage() {
           ballotURL={ballotURL.toString()}
         />
       )}
-    </>
+    </div>
   );
 }

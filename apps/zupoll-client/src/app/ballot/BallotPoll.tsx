@@ -1,5 +1,6 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
 import { PollWithCounts } from "../../api/requestTypes";
 
@@ -16,6 +17,17 @@ export function BallotPoll({
   finalVoteIdx: number | undefined;
   onVoted: (pollId: string, voteIdx: number) => void;
 }) {
+  const [searchTerm, setSearchTerm] = useState("");
+  const matchingOptions = useMemo(() => {
+    if (searchTerm === "") {
+      return poll.options;
+    }
+
+    return poll.options.filter((opt) =>
+      opt.toLowerCase().includes(searchTerm.toLowerCase())
+    );
+  }, [poll.options, searchTerm]);
+
   const totalVotes = poll.votes.reduce((a, b) => a + b, 0);
 
   const getVoteDisplay = (a: number, b: number) => {
@@ -30,9 +42,14 @@ export function BallotPoll({
     <Card className="pt-6">
       <CardContent>
         <PollHeader>{poll.body}</PollHeader>
-        <Input className="mb-4" type="text" />
+        <Input
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-4"
+          type="text"
+        />
         <PollOptions>
-          {poll.options.map((opt, idx) => (
+          {matchingOptions.map((opt, idx) => (
             <PollOption
               key={idx}
               canVote={canVote}
