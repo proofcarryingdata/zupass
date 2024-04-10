@@ -1,5 +1,5 @@
 import { ObjectArgument, StringArgument } from "@pcd/pcd-types";
-import { Message } from "../Message";
+import { Message } from "./Message";
 
 export const MessagePCDTypeName = "message-pcd";
 

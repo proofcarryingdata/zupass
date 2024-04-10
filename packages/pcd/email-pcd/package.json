@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./args": {
-      "types": "./dist/types/src/args/index.d.ts",
-      "import": "./dist/esm/src/args/index.js",
-      "require": "./dist/cjs/src/args/index.js"
+    "./meta": {
+      "types": "./dist/types/src/meta.d.ts",
+      "import": "./dist/esm/src/meta.js",
+      "require": "./dist/cjs/src/meta.js"
     }
   },
   "files": [

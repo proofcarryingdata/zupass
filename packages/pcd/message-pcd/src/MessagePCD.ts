@@ -2,7 +2,7 @@ import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { Message } from "./Message";
-import { Args, MessagePCDTypeName } from "./args";
+import { Args, MessagePCDTypeName } from "./meta";
 import { eddsaSign } from "./utils/eddsaSign";
 import {
   MsgAsInt,

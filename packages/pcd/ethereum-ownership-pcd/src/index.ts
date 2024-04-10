@@ -1,2 +1,2 @@
 export * from "./EthereumOwnershipPCD";
-export * from "./args";
+export * from "./meta";

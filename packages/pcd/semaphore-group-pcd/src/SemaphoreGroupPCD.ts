@@ -11,7 +11,7 @@ import {
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
 import { deserializeSemaphoreGroup } from "./SerializedSemaphoreGroup";
-import { SemaphoreGroupPCDArgs, SemaphoreGroupPCDTypeName } from "./args";
+import { SemaphoreGroupPCDArgs, SemaphoreGroupPCDTypeName } from "./meta";
 
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
 

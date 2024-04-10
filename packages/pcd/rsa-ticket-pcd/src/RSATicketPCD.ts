@@ -2,7 +2,7 @@ import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { RSATicketPCDArgs, RSATicketPCDTypeName } from "./args";
+import { RSATicketPCDArgs, RSATicketPCDTypeName } from "./meta";
 import { getTicketData } from "./utils";
 
 export interface RSATicketPCDInitArgs {

@@ -9,7 +9,7 @@ import {
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { EdDSAFrogPCDArgs, EdDSAFrogPCDTypeName, IFrogData } from "./args";
+import { EdDSAFrogPCDArgs, EdDSAFrogPCDTypeName, IFrogData } from "./meta";
 import { frogDataToBigInts, getEdDSAFrogData } from "./utils";
 
 /**

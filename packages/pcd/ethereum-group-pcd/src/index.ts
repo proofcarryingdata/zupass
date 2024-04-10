@@ -1,2 +1,2 @@
 export * from "./EthereumGroupPCD";
-export * from "./args";
+export * from "./meta";

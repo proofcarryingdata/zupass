@@ -1,2 +1,2 @@
 export * from "./SemaphoreIdentityPCD";
-export * from "./args";
+export * from "./meta";

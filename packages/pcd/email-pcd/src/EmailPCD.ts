@@ -10,7 +10,7 @@ import { generateSnarkMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-import { EmailPCDArgs, EmailPCDTypeName } from "./args";
+import { EmailPCDArgs, EmailPCDTypeName } from "./meta";
 
 export interface EmailPCDClaim {
   emailAddress: string;

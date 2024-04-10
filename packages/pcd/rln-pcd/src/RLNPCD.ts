@@ -7,7 +7,7 @@ import JSONBig from "json-bigint";
 import { Proof, RLN, RLNFullProof } from "rlnjs";
 import { v4 as uuid } from "uuid";
 import verificationKeyJSON from "../artifacts/16.json";
-import { RLNPCDArgs, RLNPCDTypeName } from "./args";
+import { RLNPCDArgs, RLNPCDTypeName } from "./meta";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;
 

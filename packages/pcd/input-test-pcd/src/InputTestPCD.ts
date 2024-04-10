@@ -1,7 +1,7 @@
 import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { InputTestPCDArgs, InputTestPCDTypeName } from "./args";
+import { InputTestPCDArgs, InputTestPCDTypeName } from "./meta";
 
 export interface InputTestPCDClaim {}
 

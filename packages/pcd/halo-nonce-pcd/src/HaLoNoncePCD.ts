@@ -3,7 +3,7 @@ import { requireDefinedParameter } from "@pcd/util";
 import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
 import { v4 as uuid } from "uuid";
-import { HaLoNoncePCDArgs, HaLoNoncePCDTypeName } from "./args";
+import { HaLoNoncePCDArgs, HaLoNoncePCDTypeName } from "./meta";
 
 const secp256k1 = new ec("secp256k1");
 

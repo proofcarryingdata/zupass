@@ -12,7 +12,7 @@ import {
 } from "@simplewebauthn/typescript-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { WebAuthnPCDArgs, WebAuthnPCDTypeName } from "./args";
+import { WebAuthnPCDArgs, WebAuthnPCDTypeName } from "./meta";
 
 type Base64String = string;
 

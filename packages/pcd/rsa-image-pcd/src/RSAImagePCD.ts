@@ -8,7 +8,7 @@ import {
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { RSAImagePCDArgs, RSAImagePCDTypeName } from "./args";
+import { RSAImagePCDArgs, RSAImagePCDTypeName } from "./meta";
 
 export interface RSAImagePCDClaim {}
 

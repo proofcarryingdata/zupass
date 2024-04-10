@@ -30,7 +30,7 @@ import JSONBig from "json-bigint";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
-import { ZKEdDSAFrogPCDArgs, ZKEdDSAFrogPCDTypeName } from "./args";
+import { ZKEdDSAFrogPCDArgs, ZKEdDSAFrogPCDTypeName } from "./meta";
 
 /*
  * This external nullifier will be used if one is not provided.

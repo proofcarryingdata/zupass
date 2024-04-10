@@ -1,2 +1,2 @@
 export * from "./ZKEdDSAFrogPCD";
-export * from "./args";
+export * from "./meta";

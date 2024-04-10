@@ -1,3 +1,3 @@
 export * from "./EdDSAFrogPCD";
-export * from "./args";
+export * from "./meta";
 export * from "./utils";

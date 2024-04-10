@@ -1,5 +1,5 @@
 import { PCDArgument, StringArgument } from "@pcd/pcd-types";
-import { RSATicketPCD } from "../RSATicketPCD";
+import { RSAPCD } from "@pcd/rsa-pcd";
 
 export const RSATicketPCDTypeName = "rsa-ticket-pcd";
 
@@ -17,5 +17,5 @@ export interface IRSATicketData {
 
 export type RSATicketPCDArgs = {
   id: StringArgument;
-  rsaPCD: PCDArgument<RSATicketPCD>;
+  rsaPCD: PCDArgument<RSAPCD>;
 };

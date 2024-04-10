@@ -1,3 +1,3 @@
 export * from "./EdDSAPCD";
-export * from "./args";
+export * from "./meta";
 export * from "./util/util";

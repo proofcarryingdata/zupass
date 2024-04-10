@@ -13,7 +13,7 @@ import {
   EdDSATicketPCDArgs,
   EdDSATicketPCDTypeName,
   ITicketData
-} from "./args";
+} from "./meta";
 import { getEdDSATicketData, ticketDataToBigInts } from "./utils";
 
 /**

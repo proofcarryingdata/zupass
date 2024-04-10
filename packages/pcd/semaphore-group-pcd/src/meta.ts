@@ -1,6 +1,6 @@
 import { BigIntArgument, ObjectArgument, PCDArgument } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
-import { SerializedSemaphoreGroup } from "../SerializedSemaphoreGroup";
+import { SerializedSemaphoreGroup } from "./SerializedSemaphoreGroup";
 
 export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 

@@ -17,7 +17,7 @@ import { requireDefinedParameter } from "@pcd/util";
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { EthereumOwnershipPCDArgs, EthereumOwnershipPCDTypeName } from "./args";
+import { EthereumOwnershipPCDArgs, EthereumOwnershipPCDTypeName } from "./meta";
 
 export interface EthereumOwnershipPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers

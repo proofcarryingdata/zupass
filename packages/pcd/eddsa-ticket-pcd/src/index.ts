@@ -1,3 +1,3 @@
 export * from "./EdDSATicketPCD";
-export * from "./args";
+export * from "./meta";
 export * from "./utils";

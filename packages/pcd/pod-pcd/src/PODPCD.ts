@@ -3,7 +3,7 @@ import { POD, PODEntries } from "@pcd/pod";
 import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { PODPCDArgs, PODPCDTypeName } from "./args";
+import { PODPCDArgs, PODPCDTypeName } from "./meta";
 
 /**
  * A set of entries defining a POD, represented in an object.  See `@pcd/pod`

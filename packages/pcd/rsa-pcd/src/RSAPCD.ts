@@ -3,7 +3,7 @@ import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
-import { RSAPCDArgs, RSAPCDTypeName } from "./args";
+import { RSAPCDArgs, RSAPCDTypeName } from "./meta";
 
 export interface RSAPCDClaim {
   /**

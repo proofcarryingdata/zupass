@@ -24,7 +24,7 @@ import {
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import { EthereumGroupPCDArgs, EthereumGroupPCDTypeName } from "./args";
+import { EthereumGroupPCDArgs, EthereumGroupPCDTypeName } from "./meta";
 
 export interface EthereumGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers

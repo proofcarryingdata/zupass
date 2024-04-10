@@ -2,7 +2,7 @@ import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
 import { Eddsa, Point, buildEddsa } from "circomlibjs";
 import { v4 as uuid } from "uuid";
-import { EdDSAPCDArgs, EdDSAPCDTypeName } from "./args";
+import { EdDSAPCDArgs, EdDSAPCDTypeName } from "./meta";
 
 /**
  * An EdDSA public key is represented as a point on the elliptic curve, with each point being

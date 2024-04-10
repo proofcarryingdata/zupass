@@ -13,7 +13,7 @@ import { v4 as uuid } from "uuid";
 import {
   SemaphoreSignaturePCDArgs,
   SemaphoreSignaturePCDTypeName
-} from "./args";
+} from "./meta";
 
 /**
  * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
