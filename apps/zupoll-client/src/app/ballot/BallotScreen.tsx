@@ -1,5 +1,6 @@
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -217,6 +218,7 @@ export function BallotScreen({
       <ContentContainer>
         <div>
           <Title className="mb-0">{ballot.ballotTitle} </Title>
+
           <span className="font-normal text-sm text-gray-500">
             posted {fmtTimeAgo(new Date(ballot.createdAt))}
             {" · "}
@@ -230,6 +232,7 @@ export function BallotScreen({
           <p className="mt-2">{ballot.ballotDescription}</p>
 
           <div className="flex flex-col gap-4 mb-4">
+            <Input type="text" />
             {polls.map((poll) => (
               <BallotPoll
                 key={poll.id}

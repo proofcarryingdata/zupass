@@ -1,4 +1,5 @@
 import { Card, CardContent } from "@/components/ui/card";
+import { Input } from "@/components/ui/input";
 import styled, { css } from "styled-components";
 import { PollWithCounts } from "../../api/requestTypes";
 
@@ -29,6 +30,7 @@ export function BallotPoll({
     <Card className="pt-6">
       <CardContent>
         <PollHeader>{poll.body}</PollHeader>
+        <Input className="mb-4" type="text" />
         <PollOptions>
           {poll.options.map((opt, idx) => (
             <PollOption
