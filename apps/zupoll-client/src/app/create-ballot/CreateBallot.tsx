@@ -145,11 +145,17 @@ export function CreateBallot({
             variant="outline"
             className=""
             onClick={() => {
+              const options = [];
+
+              for (let i = 0; i < 20; i++) {
+                options.push("option " + i);
+              }
+
               setPolls([
                 {
                   id: polls.length.toString(),
                   body: "",
-                  options: ["", ""],
+                  options: options,
                   ballotURL: 0,
                   createdAt: new Date(),
                   expiry: new Date()
