@@ -1,4 +1,5 @@
 import {
+  ZUPASS_CREDENTIAL_REQUEST,
   requestOfflineTickets,
   requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
@@ -51,12 +52,11 @@ import {
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
-import { useStateContext } from "../src/appHooks";
+import { useCredentialManager, useStateContext } from "../src/appHooks";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
-import { getOrGenerateCheckinCredential } from "../src/checkin";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import { loadInitialState } from "../src/loadInitialState";
@@ -71,6 +71,7 @@ import { pollUser } from "../src/user";
 
 function useBackgroundJobs(): void {
   const { update, getState, dispatch } = useStateContext();
+  const credentialManager = useCredentialManager();
 
   useEffect(() => {
     let activePollTimeout: NodeJS.Timeout | undefined = undefined;
@@ -122,20 +123,6 @@ function useBackgroundJobs(): void {
         // Reschedule next poll.
         lastBackgroundPoll = Date.now();
         setupPolling();
-      }
-    };
-
-    const generateCheckinCredential = async (): Promise<void> => {
-      // This ensures that the check-in credential is pre-cached before the
-      // first check-in attempt.
-      try {
-        const state = getState();
-        if (!state.identity) {
-          throw new Error("Missing identity");
-        }
-        await getOrGenerateCheckinCredential(state.identity);
-      } catch (e) {
-        console.log("Could not get or generate checkin credential:", e);
       }
     };
 
@@ -211,7 +198,9 @@ function useBackgroundJobs(): void {
           {
             checkedOfflineInDevconnectTicketIDs:
               state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-            checkerProof: await getOrGenerateCheckinCredential(state.identity)
+            checkerProof: await credentialManager.requestCredential(
+              ZUPASS_CREDENTIAL_REQUEST
+            )
           }
         );
 
@@ -226,7 +215,9 @@ function useBackgroundJobs(): void {
       const offlineTicketsResult = await requestOfflineTickets(
         appConfig.zupassServer,
         {
-          checkerProof: await getOrGenerateCheckinCredential(state.identity)
+          checkerProof: await credentialManager.requestCredential(
+            ZUPASS_CREDENTIAL_REQUEST
+          )
         }
       );
 
@@ -246,7 +237,6 @@ function useBackgroundJobs(): void {
       setupPolling();
       startJobSyncOfflineCheckins();
       jobCheckConnectivity();
-      generateCheckinCredential();
     };
 
     setupBroadcastChannel(dispatch);

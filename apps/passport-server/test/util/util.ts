@@ -44,7 +44,7 @@ export function expectTrue(value: boolean): asserts value is true {
 /**
  * Use in place of `expect(value).to.eq(false)`
  */
-export function expectFalse(value: boolean): asserts value is true {
+export function expectFalse(value: boolean): asserts value is false {
   if (value !== false) {
     throw new Error("Expected value to be false");
   }

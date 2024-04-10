@@ -1,12 +1,15 @@
 import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   PipelineLogLevel,
   PodboxTicketActionResponseValue,
+  createCredentialPayload,
   requestGenericIssuanceHistoricalSemaphoreGroup,
   requestGenericIssuanceSemaphoreGroup,
   requestGenericIssuanceSemaphoreGroupRoot,
-  requestGenericIssuanceValidSemaphoreGroup
+  requestGenericIssuanceValidSemaphoreGroup,
+  requestPodboxTicketAction
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import {
@@ -44,12 +47,19 @@ import {
 } from "../../../lemonade/MockLemonadeServer";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import { expectLength, expectToExist, expectTrue } from "../../../util/util";
+import {
+  expectFalse,
+  expectLength,
+  expectToExist,
+  expectTrue
+} from "../../../util/util";
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
+  proveEmailPCD,
   requestCheckInPipelineTicket,
-  requestTicketsFromPipeline
+  requestTicketsFromPipeline,
+  signCredentialPayload
 } from "../../util";
 import { setupTestLemonadePipeline } from "./setupTestLemonadePipeline";
 
@@ -1134,6 +1144,117 @@ describe("generic issuance - LemonadePipeline", function () {
           ),
           1
         );
+      }
+    }
+  );
+
+  step(
+    "invalid or expired credentials cannot be used for actions or feeds",
+    async () => {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelineInstances();
+      const pipeline = pipelines.find(LemonadePipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(edgeCityPipeline.id);
+      const edgeCityTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+
+      lemonadeBackend.checkOutAll();
+
+      // Verify that bouncer is checked out in backend
+      await pipeline.load();
+      const bouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        edgeCityTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityDenverBouncer.email,
+        EdgeCityBouncerIdentity
+      );
+      expectLength(bouncerTickets, 1);
+      const bouncerTicket = bouncerTickets[0];
+      expectToExist(bouncerTicket);
+      expectIsEdDSATicketPCD(bouncerTicket);
+      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        EdgeCityDenverBouncer.email
+      );
+      // Bouncer ticket is checked out
+      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+
+      const edgeCityCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+
+      const badEmailPCD = await proveEmailPCD(
+        EdgeCityDenverBouncer.email,
+        // Not the Zupass private key!
+        newEdDSAPrivateKey(),
+        EdgeCityBouncerIdentity
+      );
+      const goodEmailPCD = await proveEmailPCD(
+        EdgeCityDenverBouncer.email,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EdgeCityBouncerIdentity
+      );
+      const badEmailCredential = await signCredentialPayload(
+        EdgeCityBouncerIdentity,
+        createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
+      );
+      const mismatchedIdentityCredential = await signCredentialPayload(
+        // Semaphore identity is different from that used by the Email PCD
+        new Identity(),
+        createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
+      );
+      MockDate.set(Date.now() - ONE_DAY_MS);
+      const expiredCredential = await signCredentialPayload(
+        EdgeCityBouncerIdentity,
+        createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
+      );
+      MockDate.set(Date.now() + ONE_DAY_MS);
+
+      {
+        const result = await requestPodboxTicketAction(
+          edgeCityCheckinRoute,
+          badEmailCredential,
+          {
+            checkin: true
+          },
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
+        );
+
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
+      }
+
+      {
+        const result = await requestPodboxTicketAction(
+          edgeCityCheckinRoute,
+          mismatchedIdentityCredential,
+          {
+            checkin: true
+          },
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
+        );
+
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
+      }
+
+      {
+        const result = await requestPodboxTicketAction(
+          edgeCityCheckinRoute,
+          expiredCredential,
+          {
+            checkin: true
+          },
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
+        );
+
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
       }
     }
   );

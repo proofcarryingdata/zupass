@@ -34,9 +34,6 @@
       "path": "../pcd-types"
     },
     {
-      "path": "../../pcd/rsa-ticket-pcd"
-    },
-    {
       "path": "../../pcd/semaphore-group-pcd"
     },
     {
