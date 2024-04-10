@@ -1,4 +1,4 @@
-import { BallotType } from "@pcd/zupoll-shared";
+import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import {
   EDGE_CITY_ORGANIZER_CONFIG,
   EDGE_CITY_RESIDENT_CONFIG,
@@ -14,7 +14,6 @@ import {
   ZUZALU_ADMINS_GROUP_URL,
   ZUZALU_PARTICIPANTS_GROUP_URL
 } from "../../env";
-import { BallotConfig } from "../../types";
 
 export const STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   voterGroupId: SemaphoreGroups.ZuzaluParticipants,

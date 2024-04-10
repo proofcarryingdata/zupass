@@ -76,4 +76,17 @@ export interface LoginConfig {
   name: LoginConfigName;
   buttonName: string;
   canCreateBallotTypes: BallotType[];
+  ballotConfigs?: BallotConfig[];
+}
+
+export interface BallotConfig {
+  voterGroupId: string;
+  voterGroupUrl: string;
+  creatorGroupId: string;
+  creatorGroupUrl: string;
+  passportServerUrl: string;
+  passportAppUrl: string;
+  ballotType: BallotType;
+  latestGroupHashUrl?: string;
+  makeHistoricalGroupUrl?: (hash: string) => string;
 }

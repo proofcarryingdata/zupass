@@ -1,6 +1,7 @@
+import { BallotConfig } from "@pcd/zupoll-shared";
 import { useEffect, useState } from "react";
 import urljoin from "url-join";
-import { BallotConfig, ZupollError } from "../../types";
+import { ZupollError } from "../../types";
 import {
   getHistoricGroupUrl,
   getLatestSemaphoreGroupHash

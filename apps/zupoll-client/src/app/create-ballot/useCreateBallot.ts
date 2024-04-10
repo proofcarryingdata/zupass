@@ -1,6 +1,6 @@
 import { useZupassPopupMessages } from "@pcd/passport-interface";
 import { generateSnarkMessageHash } from "@pcd/util";
-import { BallotType } from "@pcd/zupoll-shared";
+import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";
 import { useRouter } from "next/navigation";
@@ -11,7 +11,7 @@ import {
   CreateBallotRequest,
   PollSignal
 } from "../../api/requestTypes";
-import { BallotConfig, LoginState, PCDState, ZupollError } from "../../types";
+import { LoginState, PCDState, ZupollError } from "../../types";
 import {
   USE_CREATE_BALLOT_REDIRECT,
   openGroupMembershipPopup,
