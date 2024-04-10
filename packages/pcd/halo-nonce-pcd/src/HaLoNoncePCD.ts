@@ -1,37 +1,11 @@
-import {
-  DisplayOptions,
-  PCD,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
 import { ec } from "elliptic";
 import { sha256 } from "js-sha256";
 import { v4 as uuid } from "uuid";
+import { HaLoNoncePCDArgs, HaLoNoncePCDTypeName } from "./args";
 
 const secp256k1 = new ec("secp256k1");
-
-export const HaLoNoncePCDTypeName = "halo-nonce-pcd";
-
-// Arguments taken from the URL produced by the HaLo tags, the definition is at
-// https://github.com/arx-research/libhalo/blob/master/docs/halo-command-set.md#command-sign_random
-export type HaLoNoncePCDArgs = {
-  /**
-   * The uncompressed hex string of the signing public key
-   */
-  pk2: StringArgument;
-
-  /**
-   * The digest of the nonce + random string
-   */
-  rnd: StringArgument;
-
-  /**
-   * The signature of the nonce + random string
-   */
-  rndsig: StringArgument;
-};
 
 export interface HaLoNoncePCDClaim {
   /**

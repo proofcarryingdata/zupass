@@ -1,16 +1,5 @@
-import {
-  BigIntArgument,
-  DisplayOptions,
-  ObjectArgument,
-  PCD,
-  PCDArgument,
-  PCDPackage,
-  SerializedPCD
-} from "@pcd/pcd-types";
-import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import {
@@ -21,14 +10,10 @@ import {
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-import {
-  SerializedSemaphoreGroup,
-  deserializeSemaphoreGroup
-} from "./SerializedSemaphoreGroup";
+import { deserializeSemaphoreGroup } from "./SerializedSemaphoreGroup";
+import { SemaphoreGroupPCDArgs, SemaphoreGroupPCDTypeName } from "./args";
 
 let initArgs: SempahoreGroupPCDInitArgs | undefined = undefined;
-
-export const SemaphoreGroupPCDTypeName = "semaphore-group-signal";
 
 export interface SempahoreGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
@@ -40,13 +25,6 @@ export interface SempahoreGroupPCDInitArgs {
   zkeyFilePath: string;
   wasmFilePath: string;
 }
-
-export type SemaphoreGroupPCDArgs = {
-  group: ObjectArgument<SerializedSemaphoreGroup>;
-  identity: PCDArgument<SemaphoreIdentityPCD>;
-  externalNullifier: BigIntArgument;
-  signal: BigIntArgument;
-};
 
 export interface SemaphoreGroupPCDClaim {
   /**

@@ -3,21 +3,12 @@ import {
   DisplayOptions,
   PCD,
   PCDPackage,
-  SerializedPCD,
-  StringArgument
+  SerializedPCD
 } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-
-export const RSAImagePCDTypeName = "rsa-image-pcd";
-
-export type RSAImagePCDArgs = {
-  privateKey: StringArgument;
-  id: StringArgument;
-  url: StringArgument;
-  title: StringArgument;
-};
+import { RSAImagePCDArgs, RSAImagePCDTypeName } from "./args";
 
 export interface RSAImagePCDClaim {}
 

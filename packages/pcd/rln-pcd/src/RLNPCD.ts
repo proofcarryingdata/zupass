@@ -1,49 +1,20 @@
-import {
-  BigIntArgument,
-  ObjectArgument,
-  PCD,
-  PCDArgument,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
-import {
-  SerializedSemaphoreGroup,
-  deserializeSemaphoreGroup
-} from "@pcd/semaphore-group-pcd";
-import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
+import { PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { deserializeSemaphoreGroup } from "@pcd/semaphore-group-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { Proof, RLN, RLNFullProof } from "rlnjs";
 import { v4 as uuid } from "uuid";
 import verificationKeyJSON from "../artifacts/16.json";
+import { RLNPCDArgs, RLNPCDTypeName } from "./args";
 
 let initArgs: RLNPCDInitArgs | undefined = undefined;
-
-export const RLNPCDTypeName = "rln-pcd";
 
 export interface RLNPCDInitArgs {
   zkeyFilePath: string;
   wasmFilePath: string;
 }
-
-// Ref: https://github.com/Rate-Limiting-Nullifier/rlnjs/blob/97fe15e04428c6adf81dbc856859e07527a063c9/src/types.ts#L59-L66
-export type RLNPCDArgs = {
-  // Identifier of the app. Every app using RLN should use a unique identifier.
-  rlnIdentifier: BigIntArgument;
-  // The semaphore keypair for a user
-  identity: PCDArgument<SemaphoreIdentityPCD>;
-  // The semaphore group
-  group: ObjectArgument<SerializedSemaphoreGroup>;
-  // The message that the user is sending
-  signal: StringArgument;
-  // The timestamp the message is sent
-  epoch: BigIntArgument;
-};
 
 // https://rate-limiting-nullifier.github.io/rln-docs/protocol_spec.html#technical-side-of-rln
 export interface RLNPCDClaim {

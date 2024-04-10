@@ -1,28 +1,14 @@
 import { EdDSAPCD, EdDSAPCDPackage } from "@pcd/eddsa-pcd";
-import {
-  DisplayOptions,
-  ObjectArgument,
-  PCD,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import JSONBig from "json-bigint";
 import { Message } from "./Message";
+import { Args, MessagePCDTypeName } from "./args";
 import { eddsaSign } from "./utils/eddsaSign";
 import {
   MsgAsInt,
   bigintifyMsg,
   parseBigintifiedMsg
 } from "./utils/serialization";
-
-export const MessagePCDTypeName = "message-pcd";
-
-export type Args = {
-  privateKey: StringArgument;
-  id: StringArgument;
-  message: ObjectArgument<Message>;
-};
 
 export interface MessageProof {
   /**

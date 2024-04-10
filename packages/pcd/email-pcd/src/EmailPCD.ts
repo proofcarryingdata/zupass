@@ -4,26 +4,13 @@ import {
   DisplayOptions,
   PCD,
   PCDPackage,
-  SerializedPCD,
-  StringArgument
+  SerializedPCD
 } from "@pcd/pcd-types";
 import { generateSnarkMessageHash } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
-
-export const EmailPCDTypeName = "email-pcd";
-
-export type EmailPCDArgs = {
-  // The EdDSA private key to sign the message with, as a hex string
-  privateKey: StringArgument;
-  // the verified email address
-  emailAddress: StringArgument;
-  // semaphore ID
-  semaphoreId: StringArgument;
-  // A unique string identifying the PCD
-  id: StringArgument;
-};
+import { EmailPCDArgs, EmailPCDTypeName } from "./args";
 
 export interface EmailPCDClaim {
   emailAddress: string;

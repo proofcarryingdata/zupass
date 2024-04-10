@@ -1,22 +1,9 @@
-import {
-  DisplayOptions,
-  PCD,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import NodeRSA from "node-rsa";
 import { v4 as uuid } from "uuid";
-
-export const RSAPCDTypeName = "rsa-pcd";
-
-export type RSAPCDArgs = {
-  privateKey: StringArgument;
-  signedMessage: StringArgument;
-  id: StringArgument;
-};
+import { RSAPCDArgs, RSAPCDTypeName } from "./args";
 
 export interface RSAPCDClaim {
   /**

@@ -2,13 +2,10 @@ import {
   ArgumentTypeName,
   DisplayOptions,
   PCD,
-  PCDArgument,
   PCDPackage,
-  SerializedPCD,
-  StringArgument
+  SerializedPCD
 } from "@pcd/pcd-types";
 import {
-  SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
@@ -27,8 +24,7 @@ import {
 import { ethers } from "ethers";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-
-export const EthereumGroupPCDTypeName = "ethereum-group-pcd";
+import { EthereumGroupPCDArgs, EthereumGroupPCDTypeName } from "./args";
 
 export interface EthereumGroupPCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
@@ -43,13 +39,6 @@ export interface EthereumGroupPCDInitArgs {
   addrMembershipConfig: ProverConfig;
   pubkeyMembershipConfig: ProverConfig;
 }
-
-export type EthereumGroupPCDArgs = {
-  identity: PCDArgument<SemaphoreIdentityPCD>;
-  signatureOfIdentityCommitment: StringArgument;
-  merkleProof: StringArgument;
-  groupType: StringArgument;
-};
 
 export interface EthereumGroupPCDClaim {
   publicInput: PublicInput;

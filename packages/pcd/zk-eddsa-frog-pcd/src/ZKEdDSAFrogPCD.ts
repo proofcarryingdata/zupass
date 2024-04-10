@@ -8,10 +8,8 @@ import {
 import type { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
-  BigIntArgument,
   DisplayOptions,
   PCD,
-  PCDArgument,
   PCDPackage,
   ProveDisplayOptions,
   SerializedPCD
@@ -32,6 +30,7 @@ import JSONBig from "json-bigint";
 import { Groth16Proof, groth16 } from "snarkjs";
 import { v4 as uuid } from "uuid";
 import vkey from "../artifacts/circuit.json";
+import { ZKEdDSAFrogPCDArgs, ZKEdDSAFrogPCDTypeName } from "./args";
 
 /*
  * This external nullifier will be used if one is not provided.
@@ -39,11 +38,6 @@ import vkey from "../artifacts/circuit.json";
 export const STATIC_ZK_EDDSA_FROG_PCD_NULLIFIER = generateSnarkMessageHash(
   "hard-coded-zk-eddsa-frog-pcd-nullifier"
 );
-
-/**
- * The global unique type name of the {@link ZKEdDSAFrogPCD}.
- */
-export const ZKEdDSAFrogPCDTypeName = "zk-eddsa-frog-pcd";
 
 /**
  * Interface containing the arguments that 3rd parties use to
@@ -56,19 +50,6 @@ export interface ZKEdDSAFrogPCDInitArgs {
 }
 
 let initArgs: ZKEdDSAFrogPCDInitArgs | undefined = undefined;
-
-/**
- * Defines the essential paratmeters required for creating an {@link ZKEdDSAFrogPCD}.
- */
-export type ZKEdDSAFrogPCDArgs = {
-  frog: PCDArgument<EdDSAFrogPCD>;
-
-  identity: PCDArgument<SemaphoreIdentityPCD>;
-
-  externalNullifier: BigIntArgument;
-
-  watermark: BigIntArgument;
-};
 
 /**
  * Defines the ZKEdDSAEventTicketPCD claim.
@@ -115,7 +96,7 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAFrogPCDArgs
       frog: {
         argumentType: ArgumentTypeName.PCD,
         description: "Generate a proof for the selected frog",
-        validate(value, _): boolean {
+        validate(value: PCD, _: unknown): boolean {
           if (value.type !== EdDSAFrogPCDTypeName || !value.claim) {
             return false;
           }

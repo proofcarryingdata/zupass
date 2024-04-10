@@ -1,19 +1,8 @@
-import {
-  DisplayOptions,
-  PCD,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument,
-  StringArrayArgument
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
 import { Eddsa, Point, buildEddsa } from "circomlibjs";
 import { v4 as uuid } from "uuid";
-
-/**
- * The globally unique type name of the {@link EdDSAPCD}.
- */
-export const EdDSAPCDTypeName = "eddsa-pcd";
+import { EdDSAPCDArgs, EdDSAPCDTypeName } from "./args";
 
 /**
  * An EdDSA public key is represented as a point on the elliptic curve, with each point being
@@ -28,29 +17,6 @@ export type EdDSAPublicKey = [string, string];
  * It is empty because this package does not implement the `init` function.
  */
 export interface EdDSAInitArgs {}
-
-/**
- * Defines the essential parameters required for creating an {@link EdDSAPCD}.
- */
-export type EdDSAPCDArgs = {
-  /**
-   * The EdDSA private key is a 32-byte value used to sign the message.
-   * {@link newEdDSAPrivateKey} is recommended for generating highly secure private keys.
-   */
-  privateKey: StringArgument;
-
-  /**
-   * The message is composed of a list of stringified big integers so that both `proof` and `claim`
-   * can also be used within SNARK circuits, which operate on fields that are themselves big integers.
-   */
-  message: StringArrayArgument;
-
-  /**
-   * A string that uniquely identifies an {@link EdDSAPCD}. If this argument is not specified a random
-   * id will be generated.
-   */
-  id: StringArgument;
-};
 
 /**
  * Defines the EdDSA PCD claim. The claim contains a message signed

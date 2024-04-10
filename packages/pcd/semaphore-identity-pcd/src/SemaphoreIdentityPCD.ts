@@ -3,12 +3,7 @@ import { requireDefinedParameter } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-
-export const SemaphoreIdentityPCDTypeName = "semaphore-identity-pcd";
-
-export type SemaphoreIdentityPCDArgs = {
-  identity: Identity;
-};
+import { SemaphoreIdentityPCDArgs, SemaphoreIdentityPCDTypeName } from "./args";
 
 export interface SemaphoreIdentityPCDClaim {
   identity: Identity;

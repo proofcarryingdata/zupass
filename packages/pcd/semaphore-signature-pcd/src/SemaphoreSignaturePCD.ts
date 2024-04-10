@@ -1,15 +1,5 @@
-import {
-  DisplayOptions,
-  PCD,
-  PCDArgument,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
-import {
-  SemaphoreIdentityPCD,
-  SemaphoreIdentityPCDPackage
-} from "@pcd/semaphore-identity-pcd";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { generateSnarkMessageHash, requireDefinedParameter } from "@pcd/util";
 import { Group } from "@semaphore-protocol/group";
 import {
@@ -20,6 +10,10 @@ import {
 } from "@semaphore-protocol/proof";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import {
+  SemaphoreSignaturePCDArgs,
+  SemaphoreSignaturePCDTypeName
+} from "./args";
 
 /**
  * All signature PCDs are 'namespaced' to this pseudo-random nullifier,
@@ -29,8 +23,6 @@ import { v4 as uuid } from "uuid";
 export const STATIC_SIGNATURE_PCD_NULLIFIER = generateSnarkMessageHash(
   "hardcoded-nullifier"
 );
-
-export const SemaphoreSignaturePCDTypeName = "semaphore-signature-pcd";
 
 export interface SemaphoreSignaturePCDInitArgs {
   // TODO: how do we distribute these in-package, so that consumers
@@ -44,14 +36,6 @@ export interface SemaphoreSignaturePCDInitArgs {
 }
 
 let initArgs: SemaphoreSignaturePCDInitArgs | undefined = undefined;
-
-// We hardcode the externalNullifer to also be your identityCommitment
-// so that your nullifier for specific groups is not revealed when
-// a SemaphoreSignaturePCD is requested from a consumer application.
-export type SemaphoreSignaturePCDArgs = {
-  identity: PCDArgument<SemaphoreIdentityPCD>;
-  signedMessage: StringArgument;
-};
 
 export interface SemaphoreSignaturePCDClaim {
   /**

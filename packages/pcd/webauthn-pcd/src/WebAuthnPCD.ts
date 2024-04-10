@@ -8,20 +8,11 @@ import {
 } from "@simplewebauthn/server";
 import {
   AuthenticationResponseJSON,
-  AuthenticatorDevice,
   AuthenticatorTransportFuture
 } from "@simplewebauthn/typescript-types";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
-
-export const WebAuthnPCDTypeName = "webauthn-pcd";
-
-export interface WebAuthnPCDArgs {
-  rpID: string;
-  origin: string;
-  challenge: string;
-  authenticator: AuthenticatorDevice;
-}
+import { WebAuthnPCDArgs, WebAuthnPCDTypeName } from "./args";
 
 type Base64String = string;
 

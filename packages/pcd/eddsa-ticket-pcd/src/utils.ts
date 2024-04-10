@@ -6,7 +6,8 @@ import {
   uuidToBigInt
 } from "@pcd/util";
 import urlJoin from "url-join";
-import { EdDSATicketPCD, ITicketData } from "./EdDSATicketPCD";
+import { EdDSATicketPCD } from "./EdDSATicketPCD";
+import { ITicketData } from "./args";
 
 /**
  * A serialized ticket is a list of big integers, where each one is a field in {@link ITicketData}. It needs to be a list of big integers so that it can be passed into {@link EdDSAPCD} to be signed.

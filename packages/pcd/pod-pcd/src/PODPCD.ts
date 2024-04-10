@@ -1,15 +1,9 @@
-import {
-  DisplayOptions,
-  ObjectArgument,
-  PCD,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { POD, PODEntries } from "@pcd/pod";
 import { requireDefinedParameter } from "@pcd/util";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { PODPCDArgs, PODPCDTypeName } from "./args";
 
 /**
  * A set of entries defining a POD, represented in an object.  See `@pcd/pod`
@@ -18,48 +12,12 @@ import { v4 as uuid } from "uuid";
 export type { PODEntries } from "@pcd/pod";
 
 /**
- * The globally unique type name of the {@link PODPCD}.
- */
-export const PODPCDTypeName = "pod-pcd";
-
-/**
  * Interface containing the arguments that 3rd parties use to
  * initialize this PCD package.
  *
  * This package does not implement the `init` function.
  */
 export type PODPCDInitArgs = unknown;
-
-/**
- * Defines the essential parameters required for creating a {@link PODPCD}.
- */
-export type PODPCDArgs = {
-  /**
-   * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
-   */
-  entries: ObjectArgument<PODEntries>;
-  // TODO(POD-P2): Figure out serializable format here.  ObjectArgument is
-  // intended to be directly JSON serializable, so can't contain bigints
-  // if used for network requests (e.g. ProveAndAdd).  The choice here should
-  // be driven by the needs of the Prove screen.
-
-  /**
-   * The signer's EdDSA private key.  This is a 32-byte value used to sign the
-   * message.  {@link newEdDSAPrivateKey} is recommended for generating highly
-   * secure private keys.
-   */
-  privateKey: StringArgument;
-
-  /**
-   * A string that uniquely identifies an {@link PODPCD}. If this argument is
-   * not specified a random id will be generated.
-   *
-   * This ID is not cryptographically verified by the POD.  An issuer can choose
-   * to include the ID in an entry of the POD to do so, but this PCD type
-   * doesn't link its ID to any such entry.
-   */
-  id: StringArgument;
-};
 
 /**
  * Defines the POD PCD's claim.  A POD claims its entries an signature.

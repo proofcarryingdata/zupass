@@ -1,5 +1,6 @@
 import NodeRSA from "node-rsa";
-import { IRSATicketData, RSATicketPCD } from "./RSATicketPCD";
+import { RSATicketPCD } from "./RSATicketPCD";
+import { IRSATicketData } from "./args";
 
 export function getTicketData(pcd?: RSATicketPCD): IRSATicketData {
   let ticketData: IRSATicketData = {};

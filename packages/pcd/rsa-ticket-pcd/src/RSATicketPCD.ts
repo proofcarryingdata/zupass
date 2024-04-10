@@ -1,29 +1,9 @@
-import {
-  DisplayOptions,
-  PCD,
-  PCDArgument,
-  PCDPackage,
-  SerializedPCD,
-  StringArgument
-} from "@pcd/pcd-types";
+import { DisplayOptions, PCD, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { RSAPCD, RSAPCDPackage } from "@pcd/rsa-pcd";
 import JSONBig from "json-bigint";
 import { v4 as uuid } from "uuid";
+import { RSATicketPCDArgs, RSATicketPCDTypeName } from "./args";
 import { getTicketData } from "./utils";
-
-export const RSATicketPCDTypeName = "rsa-ticket-pcd";
-
-export interface IRSATicketData {
-  timestamp?: number;
-  eventName?: string;
-  eventConfigId?: string;
-  ticketName?: string;
-  attendeeName?: string;
-  attendeeEmail?: string;
-  ticketId?: string;
-  isConsumed?: boolean;
-  isRevoked?: boolean;
-}
 
 export interface RSATicketPCDInitArgs {
   makeEncodedVerifyLink?: (encodedPCD: string) => string;
@@ -33,11 +13,6 @@ export let initArgs: RSATicketPCDInitArgs;
 async function init(args: RSATicketPCDInitArgs): Promise<void> {
   initArgs = args;
 }
-
-export type RSATicketPCDArgs = {
-  id: StringArgument;
-  rsaPCD: PCDArgument<RSATicketPCD>;
-};
 
 export interface RSATicketPCDClaim {}
 
