@@ -9,7 +9,7 @@ export enum AuthType {
   EDGE_CITY_ORGANIZER = "EDGE_CITY_ORGANIZER",
   ETH_LATAM_ATTENDEE = "ETH_LATAM_ATTENDEE",
   ETH_LATAM_ORGANIZER = "ETH_LATAM_ORGANIZER",
-  GENERIC_PODBOX = "GENERIC_PODBOX"
+  PODBOX = "PODBOX"
 }
 
 declare global {
@@ -31,5 +31,6 @@ export const BallotTypeNames = {
   EDGE_CITY_STRAWPOLL: "Community Poll",
   EDGE_CITY_FEEDBACK: "Organizer Poll",
   ETH_LATAM_STRAWPOLL: "Community Poll",
-  ETH_LATAM_FEEDBACK: "Organizer Poll"
+  ETH_LATAM_FEEDBACK: "Organizer Poll",
+  PODBOX: "Podbox"
 };

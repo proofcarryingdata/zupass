@@ -181,7 +181,7 @@ export const authenticateJWT = (
       (c) => c.groupUrl === payload.groupUrl
     );
     if (matchingPodboxLoginConfig) {
-      req.authUserType = AuthType.GENERIC_PODBOX;
+      req.authUserType = AuthType.PODBOX;
       next();
       return;
     }

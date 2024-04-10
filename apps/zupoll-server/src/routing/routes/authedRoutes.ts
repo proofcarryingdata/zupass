@@ -56,7 +56,7 @@ export function initAuthedRoutes(
       AuthType.EDGE_CITY_ORGANIZER,
       AuthType.ETH_LATAM_ATTENDEE,
       AuthType.ETH_LATAM_ORGANIZER,
-      AuthType.GENERIC_PODBOX
+      AuthType.PODBOX
     ];
 
     if (!allowedUserTypes.includes(req.authUserType as any)) {
@@ -86,7 +86,7 @@ export function initAuthedRoutes(
           AuthType.EDGE_CITY_ORGANIZER,
           AuthType.ETH_LATAM_ATTENDEE,
           AuthType.ETH_LATAM_ORGANIZER,
-          AuthType.GENERIC_PODBOX // TODO
+          AuthType.PODBOX // TODO
         ].includes(req.authUserType as any)
       ) {
         res.sendStatus(403);
