@@ -38,6 +38,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/lib/zupoll-shared"
+    },
+    {
       "path": "../../packages/lib/pcd-types"
     },
     {

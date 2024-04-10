@@ -18,6 +18,7 @@
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
+    "@pcd/zupoll-shared": "0.0.1",
     "@pcd/pcd-types": "0.10.0",
     "@pcd/semaphore-group-pcd": "0.10.0",
     "@pcd/semaphore-signature-pcd": "0.10.0",
