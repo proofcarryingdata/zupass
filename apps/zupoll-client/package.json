@@ -13,6 +13,7 @@
   },
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
+    "@headlessui/react": "^1.7.18",
     "@hookform/resolvers": "^3.3.4",
     "@pcd/passport-interface": "0.10.0",
     "@pcd/pcd-types": "0.10.0",

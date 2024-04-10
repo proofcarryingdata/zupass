@@ -36,13 +36,13 @@
       "path": "../../packages/pcd/semaphore-group-pcd"
     },
     {
-      "path": "../../packages/lib/zupoll-shared"
-    },
-    {
       "path": "../../packages/pcd/semaphore-identity-pcd"
     },
     {
       "path": "../../packages/lib/util"
+    },
+    {
+      "path": "../../packages/lib/zupoll-shared"
     }
   ]
 }

@@ -1,12 +1,11 @@
-import { Dialog } from "@/components/ui/Dialog";
+import VoteDialog from "@/components/ui/VoteDialog";
 
-export function BallotOptionModal({ close }: { close: () => void }) {
-  return (
-    <div
-      onClick={close}
-      className="absolute top-0 left-0 w-full h-full bg-black/50 m-auto z-50 bg-red-90"
-    >
-      <Dialog>test</Dialog>
-    </div>
-  );
+export function BallotOptionModal({
+  close,
+  onVoted
+}: {
+  close: () => void;
+  onVoted: () => void;
+}) {
+  return <VoteDialog close={close} onVoted={onVoted}></VoteDialog>;
 }

@@ -15,13 +15,15 @@ export function BallotPoll({
   poll,
   voteIdx,
   finalVoteIdx,
-  onVoted
+  onVoted,
+  submitVotes
 }: {
   canVote: boolean;
   poll: PollWithCounts;
   voteIdx: number | undefined;
   finalVoteIdx: number | undefined;
   onVoted: (pollId: string, voteIdx: number) => void;
+  submitVotes: () => void;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
   const searcher = useMemo(() => {
@@ -53,7 +55,7 @@ export function BallotPoll({
     return `${percentVal}%`;
   };
 
-  const [showingOption, setShowingOption] = useState<string | undefined>(
+  const [showingOptionIdx, setShowingOptionIdx] = useState<number | undefined>(
     undefined
   );
 
@@ -61,14 +63,22 @@ export function BallotPoll({
 
   return (
     <>
-      {showingOption && (
-        <BallotOptionModal close={() => setShowingOption(undefined)} />
+      {canVote && showingOptionIdx !== undefined && (
+        <BallotOptionModal
+          close={() => setShowingOptionIdx(undefined)}
+          onVoted={() => {
+            onVoted(poll.id, showingOptionIdx);
+            setShowingOptionIdx(undefined);
+            submitVotes();
+          }}
+        />
       )}
       <Card className="pt-6">
         <CardContent>
           <PollHeader>{poll.body}</PollHeader>
           {isHackathonView && (
             <Input
+              placeholder="Search Options"
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
               className="mb-4"
@@ -83,8 +93,8 @@ export function BallotPoll({
                 canVote={canVote}
                 selected={voteIdx === idx}
                 onClick={() => {
-                  if (isHackathonView) {
-                    setShowingOption(opt);
+                  if (isHackathonView && canVote) {
+                    setShowingOptionIdx(idx);
                   } else if (canVote) {
                     onVoted(poll.id, idx);
                   }
@@ -99,7 +109,7 @@ export function BallotPoll({
                   isHighlighted={finalVoteIdx === idx}
                 />
                 {canVote ? (
-                  <PollPreResult />
+                  <PollPreResult>asdf</PollPreResult>
                 ) : (
                   <PollResult>
                     {getVoteDisplay(poll.votes[idx], totalVotes)}
@@ -197,6 +207,7 @@ const PollProgressBar = styled.span<{
   isHighlighted: boolean;
 }>`
   ${({ percent, isHighlighted }) => css`
+    z-index: 1;
     position: absolute;
     top: 0;
     left: 0;
@@ -207,10 +218,12 @@ const PollProgressBar = styled.span<{
 `;
 
 const PollPreResult = styled.span`
+  z-index: 2;
   width: 0.5rem;
 `;
 
 const PollResult = styled.span`
+  z-index: 2;
   display: inline-flex;
   justify-content: flex-end;
   align-items: center;
@@ -219,7 +232,9 @@ const PollResult = styled.span`
   font-size: 0.9em;
 `;
 
-const OptionString = styled.span``;
+const OptionString = styled.span`
+  z-index: 2;
+`;
 
 const TotalVotesContainer = styled.div`
   margin-top: 0.75rem;

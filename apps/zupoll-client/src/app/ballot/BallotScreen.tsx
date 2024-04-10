@@ -239,6 +239,11 @@ export function BallotScreen({
                 voteIdx={pollToVote.get(poll.id)}
                 finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
                 onVoted={onVoted}
+                submitVotes={() => {
+                  if (polls.length < 2) {
+                    createBallotVotePCD();
+                  }
+                }}
               />
             ))}
           </div>
