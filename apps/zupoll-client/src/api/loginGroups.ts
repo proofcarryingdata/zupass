@@ -1,7 +1,5 @@
 import _ from "lodash";
-import { LoginCategory } from "../../types";
-import { LoginGroup } from "../app/login/LoginWidget";
-import { LoginConfig } from "../types";
+import { LoginCategory, LoginConfig } from "../types";
 import {
   DEVCONNECT_ORGANIZER_CONFIG,
   DEVCONNECT_USER_CONFIG,
@@ -12,6 +10,7 @@ import {
   ZUZALU_ORGANIZER_LOGIN_CONFIG,
   ZUZALU_PARTICIPANT_LOGIN_CONFIG
 } from "./legacyLoginConfigs";
+import { PARC_HQ_CONFIG } from "./podboxLoginConfigs";
 
 export const LEGACY_LOGIN_CONFIGS: LoginConfig[] = [
   ETH_LATAM_ATTENDEE_CONFIG,
@@ -24,14 +23,30 @@ export const LEGACY_LOGIN_CONFIGS: LoginConfig[] = [
   DEVCONNECT_ORGANIZER_CONFIG
 ];
 
+export const PODBOX_LOGIN_CONFIGS: LoginConfig[] = [PARC_HQ_CONFIG];
+
+export const LOGIN_GROUPS: LoginGroup[] = groupLoginConfigs([
+  ...LEGACY_LOGIN_CONFIGS,
+  ...PODBOX_LOGIN_CONFIGS
+]);
+
 function groupLoginConfigs(configs: LoginConfig[]): LoginGroup[] {
   const rawGroups = Object.entries(
     _.groupBy(configs, (r) => r.configCategoryId)
   ) as [LoginCategory, LoginConfig[]][];
 
   return rawGroups.map(
-    ([groupId, configs]) => ({ groupId, configs }) satisfies LoginGroup
+    ([groupId, configs]) =>
+      ({ category: groupId, configs }) satisfies LoginGroup
   );
 }
 
-export const LOGIN_GROUPS = groupLoginConfigs(LEGACY_LOGIN_CONFIGS);
+export function getConfigGroup(
+  name: LoginCategory | undefined
+): LoginGroup | undefined {
+  return LOGIN_GROUPS.find((c) => c.category === name);
+}
+export interface LoginGroup {
+  category: LoginCategory;
+  configs: LoginConfig[];
+}

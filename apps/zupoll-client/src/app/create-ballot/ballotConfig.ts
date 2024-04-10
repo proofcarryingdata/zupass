@@ -9,8 +9,8 @@ import {
   DEVCONNECT_ADMINS_GROUP_URL,
   DEVCONNECT_ATTENDEES_GROUP_URL,
   SemaphoreGroups,
+  ZUPASS_CLIENT_URL,
   ZUPASS_SERVER_URL,
-  ZUPASS_URL,
   ZUZALU_ADMINS_GROUP_URL,
   ZUZALU_PARTICIPANTS_GROUP_URL
 } from "../../env";
@@ -22,7 +22,7 @@ export const STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: SemaphoreGroups.ZuzaluParticipants,
   creatorGroupUrl: ZUZALU_PARTICIPANTS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.STRAWPOLL
 };
 
@@ -32,7 +32,7 @@ export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: SemaphoreGroups.ZuzaluOrganizers,
   creatorGroupUrl: ZUZALU_ADMINS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ADVISORYVOTE
 };
 
@@ -42,7 +42,7 @@ export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: SemaphoreGroups.ZuzaluOrganizers,
   creatorGroupUrl: ZUZALU_ADMINS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ORGANIZERONLY
 };
 
@@ -52,7 +52,7 @@ export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: SemaphoreGroups.DevconnectAttendees,
   creatorGroupUrl: DEVCONNECT_ATTENDEES_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.DEVCONNECT_STRAW
 };
 
@@ -62,7 +62,7 @@ export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: SemaphoreGroups.DevconnectOrganizers,
   creatorGroupUrl: DEVCONNECT_ADMINS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.DEVCONNECT_ORGANIZER
 };
 
@@ -72,7 +72,7 @@ export const EDGE_CITY_RESIDENT_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: EDGE_CITY_RESIDENT_CONFIG.groupId,
   creatorGroupUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.EDGE_CITY_RESIDENT,
   latestGroupHashUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
@@ -85,7 +85,7 @@ export const EDGE_CITY_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: EDGE_CITY_ORGANIZER_CONFIG.groupId,
   creatorGroupUrl: EDGE_CITY_ORGANIZER_CONFIG.groupUrl,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.EDGE_CITY_ORGANIZER,
   latestGroupHashUrl: EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
@@ -98,7 +98,7 @@ export const ETH_LATAM_STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: ETH_LATAM_ATTENDEE_CONFIG.groupId,
   creatorGroupUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ETH_LATAM_STRAWPOLL,
   latestGroupHashUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
@@ -111,7 +111,7 @@ export const ETH_LATAM_FEEDBACK_BALLOT_CONFIG: BallotConfig = {
   creatorGroupId: ETH_LATAM_ORGANIZER_CONFIG.groupId,
   creatorGroupUrl: ETH_LATAM_ORGANIZER_CONFIG.groupUrl,
   passportServerUrl: ZUPASS_SERVER_URL,
-  passportAppUrl: ZUPASS_URL,
+  passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ETH_LATAM_FEEDBACK,
   latestGroupHashUrl: ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>

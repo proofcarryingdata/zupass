@@ -140,7 +140,13 @@ const SemaphoreGroupConfigSchema = z.object({
   name: z.string().min(1),
   memberCriteria: z.array(
     z.object({
+      /**
+       * generic issuance event id
+       */
       eventId: z.string().uuid(),
+      /**
+       * generic issuance product id
+       */
       productId: z.string().uuid().optional()
     })
   )

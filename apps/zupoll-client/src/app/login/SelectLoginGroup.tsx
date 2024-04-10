@@ -7,8 +7,8 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { Dispatch, SetStateAction } from "react";
+import { LoginGroup } from "../../api/loginGroups";
 import { LoginCategory } from "../../types";
-import { LoginGroup } from "./LoginWidget";
 
 /**
  * Allows a user that is logging in to choose:
@@ -37,8 +37,8 @@ export function SelectLoginGroup({
         <SelectGroup>
           {groups.map((g) => {
             return (
-              <SelectItem key={g.groupId} value={g.groupId}>
-                {g.groupId}
+              <SelectItem key={g.category} value={g.category}>
+                {g.category}
               </SelectItem>
             );
           })}

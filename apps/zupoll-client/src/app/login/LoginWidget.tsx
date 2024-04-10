@@ -18,7 +18,7 @@ export function LoginWidget(props: LoginWidgetProps) {
     LoginCategory | undefined
   >();
   const selectedGroup = useMemo(() => {
-    return LOGIN_GROUPS.find((g) => g.groupId === selectedGroupId);
+    return LOGIN_GROUPS.find((g) => g.category === selectedGroupId);
   }, [selectedGroupId]);
 
   return (
@@ -26,9 +26,9 @@ export function LoginWidget(props: LoginWidgetProps) {
       {!!selectedGroup && (
         <LoginAsSubgroup
           {...props}
-          groupId={selectedGroup.groupId}
+          groupId={selectedGroup.category}
           configs={selectedGroup.configs}
-          key={selectedGroup.groupId}
+          key={selectedGroup.category}
         />
       )}
 
@@ -50,9 +50,4 @@ export interface LoginWidgetProps {
   setError: (error?: ZupollError) => void;
   setServerLoading: (loading: boolean) => void;
   serverLoading: boolean;
-}
-
-export interface LoginGroup {
-  groupId: LoginCategory;
-  configs: LoginConfig[];
 }
