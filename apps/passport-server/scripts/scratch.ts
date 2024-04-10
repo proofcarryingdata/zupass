@@ -7,6 +7,7 @@ import yargs from "yargs";
 
 import { Group } from "@semaphore-protocol/group";
 import { Identity } from "@semaphore-protocol/identity";
+import { randomUUID } from "crypto";
 import { DevconnectPretixAPI } from "../src/apis/devconnect/devconnectPretixAPI";
 import { getDB } from "../src/database/postgresPool";
 import {
@@ -19,6 +20,10 @@ import {
 } from "../src/database/queries/pretix_config/insertConfiguration";
 import { logger } from "../src/util/logger";
 import { FROG_SLUG } from "../src/util/telegramHelpers";
+import {
+  ESMERALDA_TICKET_TYPES,
+  parseTicketTypeEntry
+} from "./esmerelda-events";
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
@@ -350,7 +355,15 @@ yargs
     "",
     async function (yargs) {},
     async function (argv) {
-      console.log("parsing edge esmerelda events");
+      const parsed = ESMERALDA_TICKET_TYPES.map(parseTicketTypeEntry);
+      console.log(
+        parsed.map((parsed) => ({
+          genericIssuanceProductId: randomUUID(),
+          externalId: parsed?.id,
+          isSuperUser: false,
+          name: parsed?.name
+        }))
+      );
     }
   )
   .help().argv;
