@@ -8,7 +8,8 @@
     "dev:https": "NEXT_PUBLIC_IS_LOCAL_HTTPS=true NODE_ENV=development nodemon server.ts",
     "export": "next export",
     "lint": "next lint",
-    "start": "next start -p 3012"
+    "start": "next start -p 3012",
+    "clean": "rm -rf out node_modules *.tsbuildinfo"
   },
   "dependencies": {
     "@esbuild-plugins/node-globals-polyfill": "^0.2.3",
