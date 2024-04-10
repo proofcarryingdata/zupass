@@ -1,10 +1,10 @@
+import VoteDialog from "@/components/ui/VoteDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
 import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
 import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
 import { PollWithCounts } from "../../api/requestTypes";
-import { BallotOptionModal } from "./BallotOptionModal";
 
 type SearchItem = {
   value: string;
@@ -64,7 +64,8 @@ export function BallotPoll({
   return (
     <>
       {canVote && showingOptionIdx !== undefined && (
-        <BallotOptionModal
+        <VoteDialog
+          text={poll.options[showingOptionIdx]}
           close={() => setShowingOptionIdx(undefined)}
           onVoted={() => {
             onVoted(poll.id, showingOptionIdx);
@@ -109,7 +110,7 @@ export function BallotPoll({
                   isHighlighted={finalVoteIdx === idx}
                 />
                 {canVote ? (
-                  <PollPreResult>asdf</PollPreResult>
+                  <PollPreResult></PollPreResult>
                 ) : (
                   <PollResult>
                     {getVoteDisplay(poll.votes[idx], totalVotes)}

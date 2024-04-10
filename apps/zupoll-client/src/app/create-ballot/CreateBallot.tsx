@@ -147,14 +147,73 @@ export function CreateBallot({
             onClick={() => {
               const options = [];
 
-              for (let i = 0; i < 20; i++) {
-                options.push("option " + i);
-              }
+              options.push(
+                "EcoCommute: A smart carpooling app for reducing carbon footprint"
+              );
+              options.push("MindMate: An AI-powered mental health companion");
+              options.push(
+                "FoodShare: A platform for reducing food waste by connecting restaurants with charities"
+              );
+              options.push(
+                "VirtualVenue: An immersive virtual event platform for conferences and exhibitions"
+              );
+              options.push(
+                "SmartCity Navigator: A real-time city guide with personalized recommendations"
+              );
+              options.push(
+                "HealthHub: A centralized platform for managing personal health records"
+              );
+              options.push(
+                "AgroTech: An IoT-based solution for precision farming and crop management"
+              );
+              options.push(
+                "BlockVote: A secure, blockchain-based voting system for elections"
+              );
+              options.push(
+                "EduQuest: A gamified learning platform for interactive online education"
+              );
+              options.push(
+                "EmergencyAlert: A real-time disaster management and communication system"
+              );
+              options.push(
+                "FinancialFit: An AI-driven personal finance coach and budgeting tool"
+              );
+              options.push(
+                "SocialGood: A crowdfunding platform for supporting community projects"
+              );
+              options.push(
+                "TalentMatch: An AI-powered job matching platform for connecting employers and job seekers"
+              );
+              options.push(
+                "EnergyOptimizer: A smart energy management system for homes and businesses"
+              );
+              options.push(
+                "VirtualFit: An AR-based fitness app with personalized workout plans"
+              );
+              options.push(
+                "SafeCity: A crime reporting and prevention platform using crowd-sourced data"
+              );
+              options.push(
+                "WasteWise: An IoT-based waste management solution for smart cities"
+              );
+              options.push(
+                "LanguageBridge: A real-time language translation app for breaking communication barriers"
+              );
+              options.push(
+                "MemoryLane: An AI-powered storytelling app for preserving family histories"
+              );
+              options.push(
+                "AccessibleWorld: An assistive technology platform for people with disabilities"
+              );
 
+              setBallotTitle("Hackathon Voting");
+              setBallotDescription(
+                "Anonymously vote on your favorite project!"
+              );
               setPolls([
                 {
                   id: polls.length.toString(),
-                  body: "",
+                  body: "Choose your favorite project.",
                   options: options,
                   ballotURL: 0,
                   createdAt: new Date(),

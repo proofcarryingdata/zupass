@@ -3,9 +3,11 @@ import { Fragment } from "react";
 import { Button } from "./button";
 
 export default function VoteDialog({
+  text,
   close,
   onVoted
 }: {
+  text: string;
   close: () => void;
   onVoted: () => void;
 }) {
@@ -51,10 +53,7 @@ export default function VoteDialog({
                       Vote
                     </HeadlessDialog.Title>
                     <div className="mt-2">
-                      <p className="text-sm text-gray-500">
-                        Lorem ipsum dolor sit amet consectetur adipisicing elit.
-                        Consequatur amet labore.
-                      </p>
+                      <p className="text-sm text-gray-500">{text}</p>
                     </div>
                   </div>
                 </div>
