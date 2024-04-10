@@ -1,8 +1,13 @@
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
 import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
 import { PollWithCounts } from "../../api/requestTypes";
+
+type SearchItem = {
+  value: string;
+};
 
 export function BallotPoll({
   canVote,
@@ -18,15 +23,24 @@ export function BallotPoll({
   onVoted: (pollId: string, voteIdx: number) => void;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
+  const searcher = useMemo(() => {
+    const values = poll.options.map((opt) => ({ value: opt }));
+    const searcher = new FuzzySearch<SearchItem>(values, ["value"], {
+      caseSensitive: false,
+      sort: true
+    });
+    return searcher;
+  }, [poll.options]);
+
   const matchingOptions = useMemo(() => {
     if (searchTerm === "") {
       return poll.options;
     }
 
-    return poll.options.filter((opt) =>
-      opt.toLowerCase().includes(searchTerm.toLowerCase())
-    );
-  }, [poll.options, searchTerm]);
+    const result = searcher.search(searchTerm);
+
+    return result.map((r) => r.value);
+  }, [poll.options, searchTerm, searcher]);
 
   const totalVotes = poll.votes.reduce((a, b) => a + b, 0);
 
