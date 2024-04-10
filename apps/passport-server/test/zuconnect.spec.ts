@@ -35,7 +35,7 @@ import {
   zuconnectTicketsDifferent
 } from "../src/services/zuconnectTripshaSyncService";
 import { Zupass } from "../src/types";
-import { makeCredential } from "./generic-issuance/util";
+import { makeTestCredential } from "./generic-issuance/util";
 import { expectCurrentSemaphoreToBe } from "./semaphore/checkSemaphore";
 import {
   MOCK_ZUCONNECT_TRIPSHA_KEY,
@@ -332,7 +332,7 @@ describe("zuconnect functionality", function () {
     const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       {
-        pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedId: ZupassFeedIds.Zuconnect_23
       }
     );
@@ -472,7 +472,7 @@ describe("zuconnect functionality", function () {
     const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       {
-        pcd: await makeCredential(
+        pcd: await makeTestCredential(
           userWithTwoTicketsRow.identity,
           ZUPASS_CREDENTIAL_REQUEST
         ),

@@ -21,7 +21,11 @@ import { CredentialSubservice } from "../../src/services/generic-issuance/subser
 import { overrideEnvironment, testingEnv } from "../util/env";
 import { startTestingApp } from "../util/startTestingApplication";
 import { expectToExist } from "../util/util";
-import { makeCredential, proveEmailPCD, signCredentialPayload } from "./util";
+import {
+  makeTestCredential,
+  proveEmailPCD,
+  signCredentialPayload
+} from "./util";
 
 /**
  * Tests for {@link CredentialSubservice}
@@ -57,7 +61,7 @@ describe("generic issuance - credential subservice", function () {
     const identity = new Identity();
     const emailAddress = "test@example.com";
     {
-      const credential = await makeCredential(
+      const credential = await makeTestCredential(
         identity,
         PODBOX_CREDENTIAL_REQUEST,
         emailAddress,
@@ -93,7 +97,7 @@ describe("generic issuance - credential subservice", function () {
       expect(verifiedCredentialWithEmail).to.deep.eq(verifiedCredential);
     }
     {
-      const credential = await makeCredential(
+      const credential = await makeTestCredential(
         identity,
         // Credentials for Zupass feeds do not include Email PCDs
         ZUPASS_CREDENTIAL_REQUEST

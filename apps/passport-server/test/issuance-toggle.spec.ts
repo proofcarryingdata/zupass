@@ -13,7 +13,7 @@ import { stopApplication } from "../src/application";
 import { upsertUser } from "../src/database/queries/saveUser";
 import { fetchUserByEmail } from "../src/database/queries/users";
 import { Zupass } from "../src/types";
-import { makeCredential } from "./generic-issuance/util";
+import { makeTestCredential } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -61,7 +61,10 @@ describe("ticket issuance cutoff date should work", function () {
       const feedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(userIdentity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -80,7 +83,10 @@ describe("ticket issuance cutoff date should work", function () {
       const feedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(userIdentity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -114,7 +120,10 @@ describe("ticket issuance cutoff date should work", function () {
       const firstFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(userIdentity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -126,7 +135,10 @@ describe("ticket issuance cutoff date should work", function () {
       const secondFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(userIdentity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
           feedId: ZupassFeedIds.Devconnect
         }
       );

@@ -15,7 +15,7 @@ const TIMESTAMP_MAX_AGE = ONE_HOUR_MS + 20 * ONE_MINUTE_MS;
 
 // To avoid writing `SerializedPCD<SemaphoreSignaturePCD>`, and also to make
 // the `Credential` type a bit less tightly-bound to the implementation details
-// of serialiazation and Semaphore signatures, we use this type.
+// of serialization and Semaphore signatures, we use this type.
 export type Credential = SerializedPCD<SemaphoreSignaturePCD>;
 
 /*
@@ -29,7 +29,17 @@ export interface CredentialPayload {
 }
 
 /**
- * The result of successfully verifying a credential.
+ * The result of successfully verifying a credential, as determined by
+ * verifyCredential() below. To be verified, the credential must be wrapped in
+ * a verifiable signature PCD, and must contain a payload that includes a
+ * timestamp and an optional additional PCD (currently only EmailPCD is
+ * supported for this purpose). The timestamp must be within certain bounds,
+ * and the embedded PCD must be tied to the same identity that signed the
+ * wrapper PCD.
+ *
+ * If the credential is verified, then this data is extracted from the claims
+ * contained within it, and can be implicitly trusted without need for further
+ * verification.
  *
  * We do not need to return whole PCDs here, because the proofs have been
  * verified, and since we expect to cache these in memory, we can avoid wasting
@@ -73,7 +83,12 @@ export class VerificationError extends Error {}
  * and checks that the Semaphore identity in the EmailPCD's claim matches that
  * of the signature.
  *
- * Does *not* check if the EmailPCD was signed by Zupass.
+ * This function only proves that the credential is formally valid. It does
+ * *not* check if the EmailPCD was signed by Zupass. In both IssuanceService
+ * and in CredentialSubservice (part of Podbox), this additional check is
+ * performed, because those servies have higher context on what might be a
+ * valid signing key (e.g. one specified in an environment variable, which
+ * application code has access to but library code such as this does not).
  */
 export async function verifyCredential(
   credential: Credential

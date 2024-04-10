@@ -4,6 +4,7 @@ import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { Credential } from "./Credential";
 import {
   DexFrog,
   FrogCryptoDbFeedData,

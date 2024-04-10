@@ -38,7 +38,7 @@ import {
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
 import { Zupass } from "../src/types";
-import { makeCredential } from "./generic-issuance/util";
+import { makeTestCredential } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import {
@@ -534,7 +534,7 @@ describe("frogcrypto functionality", function () {
     const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/frogcrypto/feeds`,
       {
-        pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedId: feed.id
       }
     );
@@ -549,7 +549,7 @@ describe("frogcrypto functionality", function () {
     return requestFrogCryptoGetUserState(
       application.expressContext.localEndpoint,
       {
-        pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedIds
       }
     );
@@ -561,7 +561,7 @@ describe("frogcrypto functionality", function () {
     return requestFrogCryptoUpdateTelegramHandleSharing(
       application.expressContext.localEndpoint,
       {
-        pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
         reveal: shareTelegramHandle
       }
     );

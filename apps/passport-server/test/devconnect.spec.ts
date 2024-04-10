@@ -98,7 +98,10 @@ import { PoapService } from "../src/services/poapService";
 import { PretixSyncStatus } from "../src/services/types";
 import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
-import { makeCredential, signCredentialPayload } from "./generic-issuance/util";
+import {
+  makeTestCredential,
+  signCredentialPayload
+} from "./generic-issuance/util";
 import {
   DevconnectPretixDataMocker,
   IMockDevconnectPretixData,
@@ -1953,7 +1956,7 @@ describe("devconnect functionality", function () {
       const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -1995,14 +1998,14 @@ describe("devconnect functionality", function () {
     const expressResponse1 = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       {
-        pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedId: ZupassFeedIds.Devconnect
       }
     );
     const expressResponse2 = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
       {
-        pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
         feedId: ZupassFeedIds.Devconnect
       }
     );
@@ -2057,7 +2060,7 @@ describe("devconnect functionality", function () {
       const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -2108,7 +2111,7 @@ describe("devconnect functionality", function () {
       const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -2160,7 +2163,7 @@ describe("devconnect functionality", function () {
       const issueResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
           feedId: ZupassFeedIds.Devconnect
         }
       );
@@ -2176,7 +2179,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         {
           ticketId: ticketPCD.claim.ticket.ticketId,
-          checkerProof: await makeCredential(
+          checkerProof: await makeTestCredential(
             checkerIdentity,
             ZUPASS_CREDENTIAL_REQUEST
           )
@@ -2196,7 +2199,7 @@ describe("devconnect functionality", function () {
         application.expressContext.localEndpoint,
         {
           ticketId: ticketPCD.claim.ticket.ticketId,
-          checkerProof: await makeCredential(
+          checkerProof: await makeTestCredential(
             checkerIdentity,
             ZUPASS_CREDENTIAL_REQUEST
           )
@@ -2243,7 +2246,7 @@ describe("devconnect functionality", function () {
     async function () {
       // Generate credential payload at given time
       MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
-      const credential = await makeCredential(
+      const credential = await makeTestCredential(
         identity,
         ZUPASS_CREDENTIAL_REQUEST
       );
@@ -2265,7 +2268,10 @@ describe("devconnect functionality", function () {
       const expressResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
         {
-          pcd: await makeCredential(new Identity(), ZUPASS_CREDENTIAL_REQUEST),
+          pcd: await makeTestCredential(
+            new Identity(),
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
           feedId: ZupassFeedIds.Devconnect
         }
       );

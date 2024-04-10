@@ -76,7 +76,7 @@ export async function requestCheckInPipelineTicket(
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
 ): Promise<PodboxTicketActionResult> {
-  const ticketCheckerFeedCredential = await makeCredential(
+  const ticketCheckerFeedCredential = await makeTestCredential(
     checkerIdentity,
     PODBOX_CREDENTIAL_REQUEST,
     checkerEmail,
@@ -139,7 +139,7 @@ export async function requestTicketsFromPipeline(
 ): Promise<EdDSATicketPCD[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
-    pcd: await makeCredential(
+    pcd: await makeTestCredential(
       identity,
       PODBOX_CREDENTIAL_REQUEST,
       email,
@@ -157,7 +157,7 @@ export async function requestTicketsFromPipeline(
  * Uses {@link testCredentialCache} to avoid regenerating the same credential
  * repeately.
  */
-export async function makeCredential(
+export async function makeTestCredential(
   identity: Identity,
   request: CredentialRequest,
   email?: string,
@@ -196,8 +196,9 @@ export async function makeCredential(
 
 /**
  * Sign a credential payload.
- * Only use this to generate potentially incorrect credentials, otherwise use
- * {@link makeCredential} above.
+ * Only use this to generate "incorrect" credentials, such as those containing
+ * invalid PCDs, expired timestamps, and so on, otherwise use
+ * {@link makeTestCredential} above.
  */
 export async function signCredentialPayload(
   identity: Identity,
