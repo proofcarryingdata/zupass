@@ -141,6 +141,24 @@ export function CreateBallot({
           <Title className="mb-0">New Ballot</Title>
         </CardHeader>
         <CardContent>
+          <Button
+            variant="outline"
+            className=""
+            onClick={() => {
+              setPolls([
+                {
+                  id: polls.length.toString(),
+                  body: "",
+                  options: ["", ""],
+                  ballotURL: 0,
+                  createdAt: new Date(),
+                  expiry: new Date()
+                }
+              ]);
+            }}
+          >
+            test
+          </Button>
           <Subtitle>Title</Subtitle>
           <Input
             type="text"
