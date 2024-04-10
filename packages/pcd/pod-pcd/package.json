@@ -12,10 +12,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./PODPCD": {
+      "types": "./dist/types/src/PODPCD.d.ts",
+      "import": "./dist/esm/src/PODPCD.js",
+      "require": "./dist/cjs/src/PODPCD.js"
     }
   },
   "files": [

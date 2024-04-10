@@ -1,2 +1,2 @@
 export * from "./RLNPCD";
-export * from "./meta";
+export * from "./RLNPCDPackage";

@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./RLNPCD": {
+      "types": "./dist/types/src/RLNPCD.d.ts",
+      "import": "./dist/esm/src/RLNPCD.js",
+      "require": "./dist/cjs/src/RLNPCD.js"
     }
   },
   "files": [

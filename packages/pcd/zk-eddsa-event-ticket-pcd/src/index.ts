@@ -1,2 +1,2 @@
 export * from "./ZKEdDSAEventTicketPCD";
-export * from "./meta";
+export * from "./ZKEdDSAEventTicketPCDPackage";

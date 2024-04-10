@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./InputTestPCD": {
+      "types": "./dist/types/src/InputTestPCD.d.ts",
+      "import": "./dist/esm/src/InputTestPCD.js",
+      "require": "./dist/cjs/src/InputTestPCD.js"
     }
   },
   "files": [

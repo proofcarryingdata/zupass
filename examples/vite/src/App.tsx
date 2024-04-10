@@ -1,16 +1,16 @@
-import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/meta";
+import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
 import {
   openZupassPopup,
   useZupassPopupMessages
 } from "@pcd/passport-interface/PassportPopup";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/meta";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import {
   EdDSATicketFieldsToReveal,
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDTypeName
-} from "@pcd/zk-eddsa-event-ticket-pcd/meta";
+} from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 import { useEffect, useState } from "react";
 import "./App.css";
 

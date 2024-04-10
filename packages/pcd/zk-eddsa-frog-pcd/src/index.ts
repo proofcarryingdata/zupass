@@ -1,2 +1,2 @@
 export * from "./ZKEdDSAFrogPCD";
-export * from "./meta";
+export * from "./ZKEdDSAFrogPCDPackage";

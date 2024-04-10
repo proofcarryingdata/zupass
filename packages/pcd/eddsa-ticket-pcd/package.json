@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./EdDSATicketPCD": {
+      "types": "./dist/types/src/EdDSATicketPCD.d.ts",
+      "import": "./dist/esm/src/EdDSATicketPCD.js",
+      "require": "./dist/cjs/src/EdDSATicketPCD.js"
     }
   },
   "files": [

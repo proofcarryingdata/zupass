@@ -2,8 +2,8 @@ import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/Passpor
 import { openZupassPopup } from "@pcd/passport-interface/PassportPopup";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd/meta";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/meta";
+import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd/SemaphoreGroupPCD";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import { generateSnarkMessageHash } from "@pcd/util";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";

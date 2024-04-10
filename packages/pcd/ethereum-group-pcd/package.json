@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./EthereumGroupPCD": {
+      "types": "./dist/types/src/EthereumGroupPCD.d.ts",
+      "import": "./dist/esm/src/EthereumGroupPCD.js",
+      "require": "./dist/cjs/src/EthereumGroupPCD.js"
     }
   },
   "files": [

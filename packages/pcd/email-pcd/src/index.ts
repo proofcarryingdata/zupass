@@ -1,3 +1,3 @@
 export * from "./EmailPCD";
-export * from "./meta";
+export * from "./EmailPCDPackage";
 export * from "./utils";

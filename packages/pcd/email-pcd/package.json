@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./EmailPCD": {
+      "types": "./dist/types/src/EmailPCD.d.ts",
+      "import": "./dist/esm/src/EmailPCD.js",
+      "require": "./dist/cjs/src/EmailPCD.js"
     }
   },
   "files": [

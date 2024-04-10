@@ -1,7 +1,6 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { numberToBigInt } from "@pcd/util";
-import { EdDSAFrogPCD } from "./EdDSAFrogPCD";
-import { IFrogData, Rarity } from "./meta";
+import { EdDSAFrogPCD, IFrogData, Rarity } from "./EdDSAFrogPCD";
 
 /**
  * A serialized frog data is a list of big integers, where each one is a field in {@link IFrogData}. It needs to be a list of big integers so that it can be passed into {@link EdDSAPCD} to be signed.

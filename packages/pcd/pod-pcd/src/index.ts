@@ -1,2 +1,2 @@
 export * from "./PODPCD";
-export * from "./meta";
+export * from "./PODPCDPackage";

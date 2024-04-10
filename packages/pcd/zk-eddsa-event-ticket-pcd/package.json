@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./ZKEdDSAEventTicketPCD": {
+      "types": "./dist/types/src/ZKEdDSAEventTicketPCD.d.ts",
+      "import": "./dist/esm/src/ZKEdDSAEventTicketPCD.js",
+      "require": "./dist/cjs/src/ZKEdDSAEventTicketPCD.js"
     }
   },
   "files": [

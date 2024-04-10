@@ -1,2 +1,2 @@
 export * from "./WebAuthnPCD";
-export * from "./meta";
+export * from "./WebAuthnPCDPackage";

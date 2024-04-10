@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./RSAImagePCD": {
+      "types": "./dist/types/src/RSAImagePCD.d.ts",
+      "import": "./dist/esm/src/RSAImagePCD.js",
+      "require": "./dist/cjs/src/RSAImagePCD.js"
     }
   },
   "files": [

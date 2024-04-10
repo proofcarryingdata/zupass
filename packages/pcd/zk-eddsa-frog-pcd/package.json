@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./ZKEdDSAFrogPCD": {
+      "types": "./dist/types/src/ZKEdDSAFrogPCD.d.ts",
+      "import": "./dist/esm/src/ZKEdDSAFrogPCD.js",
+      "require": "./dist/cjs/src/ZKEdDSAFrogPCD.js"
     }
   },
   "files": [

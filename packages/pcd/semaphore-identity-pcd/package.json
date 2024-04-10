@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./SemaphoreIdentityPCD": {
+      "types": "./dist/types/src/SemaphoreIdentityPCD.d.ts",
+      "import": "./dist/esm/src/SemaphoreIdentityPCD.js",
+      "require": "./dist/cjs/src/SemaphoreIdentityPCD.js"
     }
   },
   "files": [

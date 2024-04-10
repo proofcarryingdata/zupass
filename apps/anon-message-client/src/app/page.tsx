@@ -1,7 +1,7 @@
 "use client";
 
 import CopyButton from "@/components/CopyButton";
-import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/meta";
+import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import {
   AnonTopicDataPayload,
   AnonWebAppPayload,
@@ -9,13 +9,13 @@ import {
   constructZupassPcdGetRequestUrl
 } from "@pcd/passport-interface/PassportInterface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/meta";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import { getAnonTopicNullifier, getMessageWatermark } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import {
   ZKEdDSAEventTicketPCDArgs,
   ZKEdDSAEventTicketPCDTypeName
-} from "@pcd/zk-eddsa-event-ticket-pcd/meta";
+} from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";

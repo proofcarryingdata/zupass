@@ -1,2 +1,2 @@
 export * from "./InputTestPCD";
-export * from "./meta";
+export * from "./InputTestPCDPackage";

@@ -1,2 +1,2 @@
 export * from "./SemaphoreSignaturePCD";
-export * from "./meta";
+export * from "./SemaphoreSignaturePCDPackage";

@@ -11,10 +11,10 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./meta": {
-      "types": "./dist/types/src/meta.d.ts",
-      "import": "./dist/esm/src/meta.js",
-      "require": "./dist/cjs/src/meta.js"
+    "./HaLoNoncePCD": {
+      "types": "./dist/types/src/HaLoNoncePCD.d.ts",
+      "import": "./dist/esm/src/HaLoNoncePCD.js",
+      "require": "./dist/cjs/src/HaLoNoncePCD.js"
     }
   },
   "files": [
