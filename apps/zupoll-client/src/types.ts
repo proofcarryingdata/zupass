@@ -1,5 +1,4 @@
-import { LoginConfig } from "@pcd/zupoll-shared";
-import { BallotType } from "./api/prismaTypes";
+import { BallotType, LoginConfig } from "@pcd/zupoll-shared";
 
 export type ZupollError = {
   /** Big title, should be under 40 chars */

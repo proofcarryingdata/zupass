@@ -1,5 +1,5 @@
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
-import { LegacyLoginConfigName } from "@pcd/zupoll-shared";
+import { BallotType, LegacyLoginConfigName } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
@@ -16,7 +16,7 @@ import {
   SelectValue
 } from "../../@/components/ui/select";
 import { Subtitle, Title } from "../../@/components/ui/text";
-import { BallotType, Poll } from "../../api/prismaTypes";
+import { Poll } from "../../api/prismaTypes";
 import { BallotSignal } from "../../api/requestTypes";
 import { BALLOT_TYPE_FROM_LOGIN_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";

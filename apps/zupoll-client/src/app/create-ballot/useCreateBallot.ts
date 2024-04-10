@@ -1,10 +1,11 @@
 import { useZupassPopupMessages } from "@pcd/passport-interface";
 import { generateSnarkMessageHash } from "@pcd/util";
+import { BallotType } from "@pcd/zupoll-shared";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { BallotType, Poll, UserType } from "../../api/prismaTypes";
+import { Poll, UserType } from "../../api/prismaTypes";
 import {
   BallotSignal,
   CreateBallotRequest,

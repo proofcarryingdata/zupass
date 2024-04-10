@@ -1,6 +1,5 @@
-import { LegacyLoginConfigName } from "@pcd/zupoll-shared";
+import { BallotType, LegacyLoginConfigName } from "@pcd/zupoll-shared";
 import urljoin from "url-join";
-import { BallotType } from "./api/prismaTypes";
 
 export const enum SemaphoreGroups {
   ZuzaluParticipants = "1",

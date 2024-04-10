@@ -1,10 +1,10 @@
+import { BallotType } from "@pcd/zupoll-shared";
 import {
   EDGE_CITY_ORGANIZER_CONFIG,
   EDGE_CITY_RESIDENT_CONFIG,
   ETH_LATAM_ATTENDEE_CONFIG,
   ETH_LATAM_ORGANIZER_CONFIG
 } from "../../api/legacyLoginConfigs";
-import { BallotType } from "../../api/prismaTypes";
 import {
   DEVCONNECT_ADMINS_GROUP_URL,
   DEVCONNECT_ATTENDEES_GROUP_URL,

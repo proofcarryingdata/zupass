@@ -1,5 +1,5 @@
-import { LegacyLoginConfigName } from "@pcd/zupoll-shared";
-import { Ballot, BallotType } from "../../api/prismaTypes";
+import { BallotType, LegacyLoginConfigName } from "@pcd/zupoll-shared";
+import { Ballot } from "../../api/prismaTypes";
 import { LoginState } from "../../types";
 import { BallotTypeSection } from "./BallotTypeSection";
 
