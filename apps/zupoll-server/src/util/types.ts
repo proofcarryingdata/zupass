@@ -16,6 +16,7 @@ declare global {
   namespace Express {
     export interface Request {
       authUserType?: AuthType;
+      authGroupUrl?: string;
     }
   }
 }

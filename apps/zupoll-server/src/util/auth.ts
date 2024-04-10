@@ -113,6 +113,8 @@ export const authenticateJWT = (
     const payload = group as GroupJwtPayload;
     logger.debug("authenticating jwt with payload", payload);
 
+    req.authGroupUrl = payload.authGroupUrl;
+
     if (
       ZUZALU_PARTICIPANTS_GROUP_URL &&
       payload.groupUrl.includes(ZUZALU_PARTICIPANTS_GROUP_URL)
