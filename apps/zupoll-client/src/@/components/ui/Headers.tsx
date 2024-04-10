@@ -83,7 +83,6 @@ export function CancelPollHeader() {
 }
 
 const StickyHeader = styled.div`
-  z-index: 900;
   top: 0;
   margin-top: 2em;
   padding-top: 1em;

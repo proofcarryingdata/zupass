@@ -4,6 +4,7 @@ import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-
 import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
 import { PollWithCounts } from "../../api/requestTypes";
+import { BallotOptionModal } from "./BallotOptionModal";
 
 type SearchItem = {
   value: string;
@@ -52,50 +53,68 @@ export function BallotPoll({
     return `${percentVal}%`;
   };
 
+  const [showingOption, setShowingOption] = useState<string | undefined>(
+    undefined
+  );
+
+  const isHackathonView = poll.options.length > 6;
+
   return (
-    <Card className="pt-6">
-      <CardContent>
-        <PollHeader>{poll.body}</PollHeader>
-        <Input
-          value={searchTerm}
-          onChange={(e) => setSearchTerm(e.target.value)}
-          className="mb-4"
-          type="text"
-        />
-        <PollOptions>
-          {matchingOptions.map((opt, idx) => (
-            <PollOption
-              key={idx}
-              canVote={canVote}
-              selected={voteIdx === idx}
-              onClick={() => {
-                if (canVote) {
-                  onVoted(poll.id, idx);
-                }
-              }}
-            >
-              <PollProgressBar
-                percent={
-                  totalVotes === 0 || canVote ? 0 : poll.votes[idx] / totalVotes
-                }
-                isHighlighted={finalVoteIdx === idx}
-              />
-              {canVote ? (
-                <PollPreResult />
-              ) : (
-                <PollResult>
-                  {getVoteDisplay(poll.votes[idx], totalVotes)}
-                </PollResult>
-              )}
-              <OptionString>{opt}</OptionString>
-            </PollOption>
-          ))}
-        </PollOptions>
-        <TotalVotesContainer>
-          {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
-        </TotalVotesContainer>
-      </CardContent>
-    </Card>
+    <>
+      {showingOption && (
+        <BallotOptionModal close={() => setShowingOption(undefined)} />
+      )}
+      <Card className="pt-6">
+        <CardContent>
+          <PollHeader>{poll.body}</PollHeader>
+          {isHackathonView && (
+            <Input
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+              className="mb-4"
+              type="text"
+            />
+          )}
+
+          <PollOptions>
+            {matchingOptions.map((opt, idx) => (
+              <PollOption
+                key={idx}
+                canVote={canVote}
+                selected={voteIdx === idx}
+                onClick={() => {
+                  if (isHackathonView) {
+                    setShowingOption(opt);
+                  } else if (canVote) {
+                    onVoted(poll.id, idx);
+                  }
+                }}
+              >
+                <PollProgressBar
+                  percent={
+                    totalVotes === 0 || canVote
+                      ? 0
+                      : poll.votes[idx] / totalVotes
+                  }
+                  isHighlighted={finalVoteIdx === idx}
+                />
+                {canVote ? (
+                  <PollPreResult />
+                ) : (
+                  <PollResult>
+                    {getVoteDisplay(poll.votes[idx], totalVotes)}
+                  </PollResult>
+                )}
+                <OptionString>{opt}</OptionString>
+              </PollOption>
+            ))}
+          </PollOptions>
+          <TotalVotesContainer>
+            {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
+          </TotalVotesContainer>
+        </CardContent>
+      </Card>
+    </>
   );
 }
 
