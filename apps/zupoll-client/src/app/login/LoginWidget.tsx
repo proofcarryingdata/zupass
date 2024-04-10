@@ -6,7 +6,7 @@ import {
   LoginState,
   ZupollError
 } from "../../types";
-import { LoginAsSubgroup } from "./ChooseGroup";
+import { LoginActionsForLoginGroup } from "./LoginActionsForLoginGroup";
 import { SelectLoginGroup } from "./SelectLoginGroup";
 
 /**
@@ -24,10 +24,9 @@ export function LoginWidget(props: LoginWidgetProps) {
   return (
     <>
       {!!selectedGroup && (
-        <LoginAsSubgroup
+        <LoginActionsForLoginGroup
           {...props}
-          groupId={selectedGroup.category}
-          configs={selectedGroup.configs}
+          group={selectedGroup}
           key={selectedGroup.category}
         />
       )}

@@ -28,7 +28,7 @@ export const ETH_LATAM_ATTENDEE_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ETH_LATAM_ATTENDEE,
-  prompt: "ETH LatAm Attendee"
+  buttonName: "ETH LatAm Attendee"
 };
 
 export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
@@ -38,7 +38,7 @@ export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ETH_LATAM_ORGANIZER,
-  prompt: "ETH LatAm Organizer"
+  buttonName: "ETH LatAm Organizer"
 };
 
 export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
@@ -48,7 +48,7 @@ export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.EDGE_CITY_RESIDENT,
-  prompt: "Edge City Resident"
+  buttonName: "Edge City Resident"
 };
 
 export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
@@ -58,7 +58,7 @@ export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.EDGE_CITY_ORGANIZER,
-  prompt: "Edge City Organizer"
+  buttonName: "Edge City Organizer"
 };
 
 export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
@@ -68,7 +68,7 @@ export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ZUZALU_ORGANIZER,
-  prompt: "Zuzalu Organizer"
+  buttonName: "Zuzalu Organizer"
 };
 
 export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
@@ -78,7 +78,7 @@ export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ZUZALU_PARTICIPANT,
-  prompt: "ZuConnect Resident"
+  buttonName: "ZuConnect Resident"
 };
 
 export const DEVCONNECT_USER_CONFIG: LoginConfig = {
@@ -88,7 +88,7 @@ export const DEVCONNECT_USER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.DEVCONNECT_PARTICIPANT,
-  prompt: "Devconnect Resident"
+  buttonName: "Devconnect Resident"
 };
 
 export const DEVCONNECT_ORGANIZER_CONFIG: LoginConfig = {
@@ -98,5 +98,5 @@ export const DEVCONNECT_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.DEVCONNECT_ORGANIZER,
-  prompt: "Devconnect Organizer"
+  buttonName: "Devconnect Organizer"
 };

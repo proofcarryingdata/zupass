@@ -70,7 +70,7 @@ export interface LoginConfig {
   passportServerUrl: string;
   passportAppUrl: string;
   name: LoginConfigName;
-  prompt: string;
+  buttonName: string;
 }
 
 export interface LoginState {

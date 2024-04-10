@@ -2,7 +2,7 @@ import urljoin from "url-join";
 import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../env";
 import { LoginConfig } from "../types";
 
-export const PARC_HQ_CONFIG_ID = "PARC_HQ_CONFIG";
+export const PARC_HQ_CONFIG_ID = "0xPARC HQ";
 export const PARC_HQ_CONFIG_NAME = "0xPARC HQ";
 export const PARC_HQ_CONFIG_PIPELINE_ID =
   "a8e4dc18-570b-4094-808b-6e699ed08254";
@@ -19,7 +19,7 @@ export const PARC_HQ_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: PARC_HQ_CONFIG_NAME,
-  prompt: PARC_HQ_CONFIG_NAME
+  buttonName: PARC_HQ_CONFIG_NAME
 };
 
 export function makePodboxGroupUrl(
