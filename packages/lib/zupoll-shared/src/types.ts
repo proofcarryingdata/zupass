@@ -11,7 +11,8 @@ export const BallotType = {
   EDGE_CITY_RESIDENT: "EDGE_CITY_STRAWPOLL",
   EDGE_CITY_ORGANIZER: "EDGE_CITY_FEEDBACK",
   ETH_LATAM_STRAWPOLL: "ETH_LATAM_STRAWPOLL",
-  ETH_LATAM_FEEDBACK: "ETH_LATAM_FEEDBACK"
+  ETH_LATAM_FEEDBACK: "ETH_LATAM_FEEDBACK",
+  PODBOX: "PODBOX"
 };
 export type BallotType = (typeof BallotType)[keyof typeof BallotType];
 
@@ -73,4 +74,5 @@ export interface LoginConfig {
   passportAppUrl: string;
   name: LoginConfigName;
   buttonName: string;
+  canCreateBallotTypes: BallotType[];
 }

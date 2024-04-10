@@ -172,7 +172,7 @@ export function useCreateBallot({
 
   // process ballot
   useEffect(() => {
-    if (ballotFromUrl && pcdFromUrl) {
+    if (ballotConfig && ballotFromUrl && pcdFromUrl) {
       const parsedPcd = JSON.parse(decodeURIComponent(pcdFromUrl));
       const { ballotSignal, ballotConfig, polls } = ballotFromUrl;
       const request = generateBallotRequest({
@@ -218,12 +218,13 @@ export function useCreateBallot({
     router,
     voterGroupRootHash,
     voterGroupUrl,
-    ballotConfig.creatorGroupUrl,
+    ballotConfig?.creatorGroupUrl,
     pcdFromUrl,
     ballotFromUrl,
     setBallotFromUrl,
     setPcdFromUrl,
-    submitBallot
+    submitBallot,
+    ballotConfig
   ]);
 
   // ran after ballot is submitted by user

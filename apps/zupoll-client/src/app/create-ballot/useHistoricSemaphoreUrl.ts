@@ -7,16 +7,20 @@ import {
 } from "../../zupoll-server-api";
 
 export function useHistoricSemaphoreUrl(
-  ballotConfig: BallotConfig,
+  ballotConfig: BallotConfig | undefined,
   onError: (error: ZupollError) => void
-) {
+): HistoricSemaphoreUrl {
   const [loading, setLoading] = useState(true);
   const [rootHash, setRootHash] = useState<string | null>(null);
-  const semaphoreGroupId = ballotConfig.voterGroupId;
-  const semaphoreGroupServer = ballotConfig.passportServerUrl;
+  const semaphoreGroupId = ballotConfig?.voterGroupId ?? "";
+  const semaphoreGroupServer = ballotConfig?.passportServerUrl ?? "";
   useEffect(() => {
-    if (!ballotConfig.passportServerUrl || !ballotConfig.voterGroupId) {
-      setLoading(true);
+    if (
+      !ballotConfig ||
+      !ballotConfig.passportServerUrl ||
+      !ballotConfig.voterGroupId
+    ) {
+      setLoading(false);
       return;
     }
     const semaphoreGroupId = ballotConfig.voterGroupId;
@@ -40,11 +44,12 @@ export function useHistoricSemaphoreUrl(
         setLoading(false);
       });
   }, [onError, ballotConfig]);
+
   return {
     loading,
     rootHash,
     groupUrl:
-      ballotConfig.passportServerUrl && ballotConfig.voterGroupId
+      ballotConfig?.passportServerUrl && ballotConfig.voterGroupId
         ? rootHash &&
           (ballotConfig.makeHistoricalGroupUrl
             ? ballotConfig.makeHistoricalGroupUrl(rootHash)
@@ -53,6 +58,12 @@ export function useHistoricSemaphoreUrl(
                 rootHash,
                 semaphoreGroupServer
               ))
-        : undefined
+        : null
   };
+}
+
+export interface HistoricSemaphoreUrl {
+  loading: boolean;
+  rootHash: string | null;
+  groupUrl: string | null;
 }

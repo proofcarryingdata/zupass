@@ -1,5 +1,5 @@
 import urljoin from "url-join";
-import { LoginConfig } from "./types";
+import { BallotType, LoginConfig } from "./types";
 
 export function getPodboxConfigs(
   ZUPASS_CLIENT_URL: string,
@@ -20,7 +20,8 @@ export function getPodboxConfigs(
     passportServerUrl: ZUPASS_SERVER_URL,
     passportAppUrl: ZUPASS_CLIENT_URL,
     name: PARC_HQ_CONFIG_NAME,
-    buttonName: PARC_HQ_CONFIG_NAME
+    buttonName: PARC_HQ_CONFIG_NAME,
+    canCreateBallotTypes: [BallotType.PODBOX]
   };
 
   return [PARC_HQ_CONFIG];

@@ -1,5 +1,5 @@
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
-import { BallotType, LegacyLoginConfigName } from "@pcd/zupoll-shared";
+import { BallotType } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
@@ -18,7 +18,6 @@ import {
 import { Subtitle, Title } from "../../@/components/ui/text";
 import { Poll } from "../../api/prismaTypes";
 import { BallotSignal } from "../../api/requestTypes";
-import { BALLOT_TYPE_FROM_LOGIN_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
@@ -41,7 +40,7 @@ export function CreateBallot({
   const [ballotFromUrl, setBallotFromUrl] = useState<BallotFromUrl>();
   const [pcdFromUrl, setPcdFromUrl] = useState("");
   const [ballotType, setBallotType] = useState<BallotType>(
-    BALLOT_TYPE_FROM_LOGIN_CONFIG[loginState.config.name]
+    loginState.config.canCreateBallotTypes[0]
   );
   const [useLastBallot, setUseLastBallot] = useState(false);
   const getDateString = (date: Date) => {
@@ -218,97 +217,34 @@ export function CreateBallot({
             </Button>
           </div>
 
-          <Subtitle>Ballot Type</Subtitle>
-          <Select
-            value={ballotType}
-            onValueChange={(value: string) => setBallotType(value)}
+          <div
+            style={{
+              display:
+                loginState?.config?.canCreateBallotTypes?.length > 1
+                  ? undefined
+                  : "none"
+            }}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a fruit" />
-            </SelectTrigger>
+            <Subtitle>Ballot Type</Subtitle>
+            <Select
+              value={ballotType}
+              onValueChange={(value: string) => setBallotType(value)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a Ballot Type" />
+              </SelectTrigger>
 
-            <SelectContent>
-              <SelectGroup>
-                {loginState.config.name ===
-                  LegacyLoginConfigName.ZUZALU_PARTICIPANT && (
-                  <>
-                    <SelectItem value={BallotType.STRAWPOLL}>
-                      Straw Poll
+              <SelectContent>
+                <SelectGroup>
+                  {loginState?.config?.canCreateBallotTypes?.map((type) => (
+                    <SelectItem key={type} value={type}>
+                      {type}
                     </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.ZUZALU_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.STRAWPOLL}>
-                      Straw Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.ADVISORYVOTE}>
-                      Advisory Vote
-                    </SelectItem>
-                    <SelectItem value={BallotType.ORGANIZERONLY}>
-                      Organizer Only
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.DEVCONNECT_PARTICIPANT && (
-                  <SelectItem value={BallotType.DEVCONNECT_STRAW}>
-                    Devconnect Community Poll
-                  </SelectItem>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.DEVCONNECT_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.DEVCONNECT_STRAW}>
-                      Community Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.DEVCONNECT_ORGANIZER}>
-                      Organizer Feedback
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.EDGE_CITY_RESIDENT && (
-                  <>
-                    <SelectItem value={BallotType.EDGE_CITY_RESIDENT}>
-                      Edge City Community Poll
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.EDGE_CITY_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.EDGE_CITY_RESIDENT}>
-                      Edge City Community Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.EDGE_CITY_ORGANIZER}>
-                      Edge City Organizer Feedback
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.ETH_LATAM_ATTENDEE && (
-                  <>
-                    <SelectItem value={BallotType.ETH_LATAM_STRAWPOLL}>
-                      ETH LatAm Straw Poll
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LegacyLoginConfigName.ETH_LATAM_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.ETH_LATAM_STRAWPOLL}>
-                      ETH LatAm Straw Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.ETH_LATAM_FEEDBACK}>
-                      ETH LatAm Feedback
-                    </SelectItem>
-                  </>
-                )}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 

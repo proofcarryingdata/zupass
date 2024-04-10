@@ -1,4 +1,5 @@
 import {
+  BallotType,
   LegacyLoginCategoryName,
   LegacyLoginConfigName,
   LoginConfig
@@ -28,7 +29,8 @@ export const ETH_LATAM_ATTENDEE_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ETH_LATAM_ATTENDEE,
-  buttonName: "ETH LatAm Attendee"
+  buttonName: "ETH LatAm Attendee",
+  canCreateBallotTypes: [BallotType.ETH_LATAM_STRAWPOLL]
 };
 
 export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
@@ -38,7 +40,11 @@ export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ETH_LATAM_ORGANIZER,
-  buttonName: "ETH LatAm Organizer"
+  buttonName: "ETH LatAm Organizer",
+  canCreateBallotTypes: [
+    BallotType.ETH_LATAM_FEEDBACK,
+    BallotType.ETH_LATAM_STRAWPOLL
+  ]
 };
 
 export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
@@ -48,7 +54,8 @@ export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.EDGE_CITY_RESIDENT,
-  buttonName: "Edge City Resident"
+  buttonName: "Edge City Resident",
+  canCreateBallotTypes: [BallotType.EDGE_CITY_RESIDENT]
 };
 
 export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
@@ -58,7 +65,11 @@ export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.EDGE_CITY_ORGANIZER,
-  buttonName: "Edge City Organizer"
+  buttonName: "Edge City Organizer",
+  canCreateBallotTypes: [
+    BallotType.EDGE_CITY_RESIDENT,
+    BallotType.EDGE_CITY_ORGANIZER
+  ]
 };
 
 export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
@@ -68,7 +79,12 @@ export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ZUZALU_ORGANIZER,
-  buttonName: "Zuzalu Organizer"
+  buttonName: "Zuzalu Organizer",
+  canCreateBallotTypes: [
+    BallotType.STRAWPOLL,
+    BallotType.ADVISORYVOTE,
+    BallotType.ORGANIZERONLY
+  ]
 };
 
 export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
@@ -78,7 +94,8 @@ export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ZUZALU_PARTICIPANT,
-  buttonName: "ZuConnect Resident"
+  buttonName: "ZuConnect Resident",
+  canCreateBallotTypes: [BallotType.STRAWPOLL]
 };
 
 export const DEVCONNECT_USER_CONFIG: LoginConfig = {
@@ -88,7 +105,8 @@ export const DEVCONNECT_USER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.DEVCONNECT_PARTICIPANT,
-  buttonName: "Devconnect Resident"
+  buttonName: "Devconnect Resident",
+  canCreateBallotTypes: [BallotType.DEVCONNECT_STRAW]
 };
 
 export const DEVCONNECT_ORGANIZER_CONFIG: LoginConfig = {
@@ -98,5 +116,9 @@ export const DEVCONNECT_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.DEVCONNECT_ORGANIZER,
-  buttonName: "Devconnect Organizer"
+  buttonName: "Devconnect Organizer",
+  canCreateBallotTypes: [
+    BallotType.DEVCONNECT_STRAW,
+    BallotType.DEVCONNECT_ORGANIZER
+  ]
 };
