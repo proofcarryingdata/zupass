@@ -207,7 +207,7 @@ export type ChangeBlobKeyError = NamedAPIError;
  */
 export interface CheckTicketRequest {
   ticket: SerializedPCD<EdDSATicketPCD>;
-  signature: SerializedPCD<SemaphoreSignaturePCD>;
+  signature: Credential;
 }
 
 /**
@@ -221,7 +221,7 @@ export type CheckTicketReponseValue = undefined;
  */
 export interface CheckTicketByIdRequest {
   ticketId: string;
-  signature: SerializedPCD<SemaphoreSignaturePCD>;
+  signature: Credential;
 }
 
 /**
@@ -264,7 +264,7 @@ export interface CheckTicketInRequest {
    * determine whether the checker has the required permissions
    * to check this ticket in.
    */
-  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+  checkerProof: Credential;
 
   /**
    * The ticket to attempt to check in.
@@ -294,7 +294,7 @@ export interface CheckTicketInByIdRequest {
    * determine whether the checker has the required permissions
    * to check this ticket in.
    */
-  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+  checkerProof: Credential;
 
   /**
    * The ticket ID to attempt to check in.
@@ -311,7 +311,7 @@ export interface GetOfflineTicketsRequest {
    * A semaphore signature from the checker, used by the server to
    * determine which tickets should be returned.
    */
-  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+  checkerProof: Credential;
 }
 
 /**
@@ -335,7 +335,7 @@ export interface UploadOfflineCheckinsRequest {
    * A semaphore signature from the checker, used by the server to
    * determine which tickets can actually be checked in.
    */
-  checkerProof: SerializedPCD<SemaphoreSignaturePCD>;
+  checkerProof: Credential;
 
   /**
    * List of ticket ids to attempt to check in.
@@ -779,7 +779,7 @@ export interface OfflineDevconnectTicket {
  * of possible frogs will be user specific.
  */
 export interface FrogCryptoUserStateRequest {
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  pcd: Credential;
   feedIds: string[];
 }
 
@@ -809,7 +809,7 @@ export interface FrogCryptoUserStateResponseValue {
  * Request to reveal or redact telegram handle of a user on the leaderboard.
  */
 export interface FrogCryptoShareTelegramHandleRequest {
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  pcd: Credential;
   reveal: boolean;
 }
 
@@ -824,7 +824,7 @@ export interface FrogCryptoShareTelegramHandleResponseValue {
  * Admin request to manage frogs in the databse.
  */
 export type FrogCryptoUpdateFrogsRequest = {
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  pcd: Credential;
   /**
    * Pass empty array for no-op and return all frogs.
    */
@@ -842,7 +842,7 @@ export interface FrogCryptoUpdateFrogsResponseValue {
  * Admin request to delete frogs in the databse.
  */
 export type FrogCryptoDeleteFrogsRequest = {
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  pcd: Credential;
   frogIds: number[];
 };
 
@@ -857,7 +857,7 @@ export interface FrogCryptoDeleteFrogsResponseValue {
  * Admin request to manage feeds in the databse.
  */
 export type FrogCryptoUpdateFeedsRequest = {
-  pcd: SerializedPCD<SemaphoreSignaturePCD>;
+  pcd: Credential;
   /**
    * Pass empty array for no-op and return all feeds.
    */
@@ -902,7 +902,7 @@ export type PodboxTicketActionRequest = {
    * that the user claims grants them the permission to check tickets issued
    * by the generic issuance service in.
    */
-  credential: SerializedPCD<SemaphoreSignaturePCD>;
+  credential: Credential;
 
   /**
    * The action a member of a pipeline wants to take.
@@ -940,7 +940,7 @@ export type PodboxTicketActionPreCheckRequest = {
    * that the user claims grants them the permission to check tickets issued
    * by the generic issuance service in.
    */
-  credential: SerializedPCD<SemaphoreSignaturePCD>;
+  credential: Credential;
 
   /**
    * The action a member of a pipeline wants to take.

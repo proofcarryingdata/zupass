@@ -1,10 +1,7 @@
 import { PCDActionType, PCDPermissionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import MockDate from "mockdate";
@@ -27,7 +24,7 @@ class MockFeedError extends Error {
 }
 
 async function extractPayload(
-  credential: SerializedPCD<SemaphoreSignaturePCD>
+  credential: Credential
 ): Promise<CredentialPayload> {
   return JSON.parse(
     (await SemaphoreSignaturePCDPackage.deserialize(credential.pcd)).claim

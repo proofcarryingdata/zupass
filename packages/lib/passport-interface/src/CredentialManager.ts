@@ -1,13 +1,14 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import { CredentialPayload, createCredentialPayload } from "./Credential";
+import {
+  Credential,
+  CredentialPayload,
+  createCredentialPayload
+} from "./Credential";
 import { CredentialRequest } from "./SubscriptionManager";
 import { StorageBackedMap } from "./util/StorageBackedMap";
 
@@ -192,7 +193,7 @@ export class CredentialManager implements CredentialManagerAPI {
   // Takes a payload and wraps it in a signature PCD.
   private async semaphoreSignPayload(
     payload: CredentialPayload
-  ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+  ): Promise<Credential> {
     // In future we might support other types of signature here
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
       identity: {

@@ -1,5 +1,3 @@
-import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import urlJoin from "url-join";
 import {
   PodboxTicketActionRequest,
@@ -19,7 +17,7 @@ import { httpPostSimple } from "./makeRequest";
  */
 export async function requestPodboxTicketAction(
   checkInUrl: string,
-  credential: SerializedPCD<SemaphoreSignaturePCD>,
+  credential: Credential,
   action: PodboxTicketAction,
   ticketId: string,
   eventId: string
