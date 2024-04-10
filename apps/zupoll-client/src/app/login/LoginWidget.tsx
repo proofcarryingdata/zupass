@@ -1,11 +1,7 @@
+import { LoginCategory, LoginConfig } from "@pcd/zupoll-shared";
 import { useMemo, useState } from "react";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
-import {
-  LoginCategory,
-  LoginConfig,
-  LoginState,
-  ZupollError
-} from "../../types";
+import { LoginState, ZupollError } from "../../types";
 import { LoginActionsForLoginGroup } from "./LoginActionsForLoginGroup";
 import { SelectLoginGroup } from "./SelectLoginGroup";
 

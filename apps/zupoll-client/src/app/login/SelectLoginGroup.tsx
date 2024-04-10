@@ -6,9 +6,9 @@ import {
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
+import { LoginCategory } from "@pcd/zupoll-shared";
 import { Dispatch, SetStateAction } from "react";
 import { LoginGroup } from "../../api/loginGroups";
-import { LoginCategory } from "../../types";
 
 /**
  * Allows a user that is logging in to choose:

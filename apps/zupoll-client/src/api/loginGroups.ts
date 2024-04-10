@@ -1,5 +1,10 @@
+import {
+  LoginCategory,
+  LoginConfig,
+  getPodboxConfigs
+} from "@pcd/zupoll-shared";
 import _ from "lodash";
-import { LoginCategory, LoginConfig } from "../types";
+import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../env";
 import {
   DEVCONNECT_ORGANIZER_CONFIG,
   DEVCONNECT_USER_CONFIG,
@@ -10,7 +15,6 @@ import {
   ZUZALU_ORGANIZER_LOGIN_CONFIG,
   ZUZALU_PARTICIPANT_LOGIN_CONFIG
 } from "./legacyLoginConfigs";
-import { PARC_HQ_CONFIG } from "./podboxLoginConfigs";
 
 export const LEGACY_LOGIN_CONFIGS: LoginConfig[] = [
   ETH_LATAM_ATTENDEE_CONFIG,
@@ -23,7 +27,10 @@ export const LEGACY_LOGIN_CONFIGS: LoginConfig[] = [
   DEVCONNECT_ORGANIZER_CONFIG
 ];
 
-export const PODBOX_LOGIN_CONFIGS: LoginConfig[] = [PARC_HQ_CONFIG];
+export const PODBOX_LOGIN_CONFIGS: LoginConfig[] = getPodboxConfigs(
+  ZUPASS_CLIENT_URL,
+  ZUPASS_SERVER_URL
+);
 
 export const LOGIN_GROUPS: LoginGroup[] = groupLoginConfigs([
   ...LEGACY_LOGIN_CONFIGS,

@@ -1,4 +1,9 @@
 import {
+  LegacyLoginCategoryName,
+  LegacyLoginConfigName,
+  LoginConfig
+} from "@pcd/zupoll-shared";
+import {
   DEVCONNECT_ADMINS_GROUP_URL,
   DEVCONNECT_ATTENDEES_GROUP_URL,
   EDGE_CITY_ORGANIZERS_GROUP_ID,
@@ -15,11 +20,6 @@ import {
   ZUZALU_ADMINS_GROUP_URL,
   ZUZALU_PARTICIPANTS_GROUP_URL
 } from "../env";
-import {
-  LegacyLoginCategoryName,
-  LegacyLoginConfigName,
-  LoginConfig
-} from "../types";
 
 export const ETH_LATAM_ATTENDEE_CONFIG: LoginConfig = {
   configCategoryId: LegacyLoginCategoryName.EthLatAm,

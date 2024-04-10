@@ -1,3 +1,4 @@
+import { LoginConfig } from "@pcd/zupoll-shared";
 import urljoin from "url-join";
 import {
   BotPostRequest,
@@ -5,7 +6,6 @@ import {
   MultiVoteRequest
 } from "./api/requestTypes";
 import { ZUPOLL_SERVER_URL } from "./env";
-import { LoginConfig } from "./types";
 
 export async function createBallot(
   request: CreateBallotRequest,

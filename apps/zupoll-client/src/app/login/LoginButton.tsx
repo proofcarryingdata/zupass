@@ -1,8 +1,9 @@
 import { cn } from "@/lib/utils";
+import { LoginConfig } from "@pcd/zupoll-shared";
 import stableStringify from "json-stable-stringify";
 import React from "react";
 import { Button, ButtonProps } from "../../@/components/ui/button";
-import { LoginConfig, LoginState, ZupollError } from "../../types";
+import { LoginState, ZupollError } from "../../types";
 import { openGroupMembershipPopup } from "../../util";
 
 export interface LoginButtonProps {

@@ -1,7 +1,7 @@
 {
   "name": "@pcd/zupoll-shared",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,12 +26,15 @@
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
-  "dependencies": {},
+  "dependencies": {
+    "url-join": "^4.0.1"
+  },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.10.0",
     "@pcd/tsconfig": "0.10.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
+    "@types/url-join": "^4.0.3",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",

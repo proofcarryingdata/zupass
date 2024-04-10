@@ -1,6 +1,6 @@
+import { LegacyLoginConfigName } from "@pcd/zupoll-shared";
 import urljoin from "url-join";
 import { BallotType } from "./api/prismaTypes";
-import { LegacyLoginConfigName } from "./types";
 
 export const enum SemaphoreGroups {
   ZuzaluParticipants = "1",
@@ -13,7 +13,7 @@ export const enum SemaphoreGroups {
 }
 
 export const BALLOT_TYPE_FROM_LOGIN_CONFIG: Record<
-  LegacyLoginConfigName,
+  LegacyLoginConfigName | string, // todo
   BallotType
 > = {
   [LegacyLoginConfigName.ZUZALU_PARTICIPANT]: BallotType.STRAWPOLL,
