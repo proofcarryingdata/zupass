@@ -13,7 +13,7 @@ import {
 } from "@pcd/passport-interface";
 import { ONE_DAY_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
@@ -119,9 +119,8 @@ describe("generic issuance - credential subservice", function () {
       // Verifying this with the expectation of a valid email should throw,
       // since the credential does not have an EmailPCD.
       try {
-        expect(
-          await credentialSubservice.verifyAndExpectZupassEmail(credential)
-        ).to.throw;
+        await credentialSubservice.verifyAndExpectZupassEmail(credential);
+        assert(false); // Should not reach here due to thrown exception
       } catch (e) {
         expect(e instanceof VerificationError).to.be.true;
       }
@@ -136,7 +135,7 @@ describe("generic issuance - credential subservice", function () {
   step("credential subservice won't verify invalid credentials", async () => {
     const emailAddress = "test@example.com";
     const identity = new Identity();
-    const badEmailPCD = await proveEmailPCD(
+    const notZupassEmailPCD = await proveEmailPCD(
       emailAddress,
       // Not the Zupass private key!
       newEdDSAPrivateKey(),
@@ -147,10 +146,12 @@ describe("generic issuance - credential subservice", function () {
       ZUPASS_EDDSA_PRIVATE_KEY,
       identity
     );
-    // Credential containing an invalid EmailPCD
-    const badEmailCredential = await signCredentialPayload(
+    // Credential containing an EmailPCD not from Zupass
+    const notZupassEmailCredential = await signCredentialPayload(
       identity,
-      createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
+      createCredentialPayload(
+        await EmailPCDPackage.serialize(notZupassEmailPCD)
+      )
     );
     const mismatchedIdentityCredential = await signCredentialPayload(
       // Semaphore identity is different from that used by the Email PCD
@@ -164,18 +165,34 @@ describe("generic issuance - credential subservice", function () {
     );
     MockDate.set(Date.now() + ONE_DAY_MS);
 
-    const badCredentials = [
-      badEmailCredential,
+    const badCredentials = {
+      badEmailCredential: notZupassEmailCredential,
       mismatchedIdentityCredential,
       expiredCredential
-    ];
+    };
 
-    for (const credential of badCredentials) {
+    for (const [key, credential] of Object.entries(badCredentials)) {
       try {
-        expect(await credentialSubservice.verify(credential)).to.throw;
+        await credentialSubservice.verifyAndExpectZupassEmail(credential);
+        assert(false, `${key} did not throw exception during verification`);
       } catch (e) {
         expect(e instanceof VerificationError).to.be.true;
       }
     }
+
+    // Calling `verify` on a credential containing an Email PCD not from
+    // Zupass will succeed (assuming credential is otherwise valid).
+    // To check if the Email PCD is from Zupass, call
+    // verifyAndExpectZupassEmail() as shown above
+    expect(
+      isEqualEdDSAPublicKey(
+        // Verify will return a VerifiedCredential containing an
+        // emailSignatureClaim
+        (await credentialSubservice.verify(notZupassEmailCredential))
+          .emailSignatureClaim?.publicKey as EdDSAPublicKey,
+        zupassPublicKey
+      )
+      // But this is not the Zupass public key!
+    ).to.be.false;
   });
 });

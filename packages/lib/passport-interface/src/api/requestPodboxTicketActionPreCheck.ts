@@ -1,4 +1,5 @@
 import urlJoin from "url-join";
+import { Credential } from "../Credential";
 import {
   ActionConfigResponseValue,
   PodboxTicketActionPreCheckRequest
