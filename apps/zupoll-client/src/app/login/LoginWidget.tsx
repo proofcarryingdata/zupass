@@ -1,5 +1,5 @@
-import _ from "lodash";
-import React, { useMemo, useState } from "react";
+import { useMemo, useState } from "react";
+import { LOGIN_GROUPS } from "../../api/loginGroups";
 import {
   LoginCategory,
   LoginConfig,
@@ -14,40 +14,28 @@ import { SelectLoginGroup } from "./SelectLoginGroup";
  * that event.
  */
 export function LoginWidget(props: LoginWidgetProps) {
-  const groups = useMemo<LoginGroup[]>((): LoginGroup[] => {
-    const rawGroups = Object.entries(
-      _.groupBy(props.configs, (r) => r.configCategoryId)
-    ) as [LoginCategory, LoginConfig[]][];
-
-    return rawGroups.map(
-      ([groupId, configs]) => ({ groupId, configs }) satisfies LoginGroup
-    );
-  }, [props.configs]);
-  const [curGroupCategory, setCurGroupCategory] = useState<
+  const [selectedGroupId, setCurGroupCategory] = useState<
     LoginCategory | undefined
   >();
-  const curGroup = useMemo(() => {
-    return groups.find((g) => g.groupId === curGroupCategory);
-  }, [groups, curGroupCategory]);
+  const selectedGroup = useMemo(() => {
+    return LOGIN_GROUPS.find((g) => g.groupId === selectedGroupId);
+  }, [selectedGroupId]);
 
   return (
     <>
-      {!!curGroup && (
-        <div className="my-4">
-          <React.Fragment key={curGroup.groupId}>
-            <LoginAsSubgroup
-              {...props}
-              groupId={curGroup.groupId}
-              configs={curGroup.configs}
-            />
-          </React.Fragment>
-        </div>
+      {!!selectedGroup && (
+        <LoginAsSubgroup
+          {...props}
+          groupId={selectedGroup.groupId}
+          configs={selectedGroup.configs}
+          key={selectedGroup.groupId}
+        />
       )}
 
       <SelectLoginGroup
-        selectedGroup={curGroupCategory}
+        selectedGroup={selectedGroupId}
         setSelectedGroup={setCurGroupCategory}
-        groups={groups}
+        groups={LOGIN_GROUPS}
       />
     </>
   );
@@ -61,6 +49,7 @@ export interface LoginWidgetProps {
   onLogin: (loginState: LoginState) => void;
   setError: (error?: ZupollError) => void;
   setServerLoading: (loading: boolean) => void;
+  serverLoading: boolean;
 }
 
 export interface LoginGroup {

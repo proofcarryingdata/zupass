@@ -11,18 +11,20 @@ export function LoginAsSubgroup({
   groupId,
   onLogin,
   setError,
-  setServerLoading
+  setServerLoading,
+  serverLoading
 }: LoginGroupProps) {
   const attendeeConfig = configs[0];
   const organizerConfig = configs[1];
 
   return (
-    <div className="flex row w-full m-1 gap-2 items-center justify-center">
+    <div className="flex row w-full m-4 gap-2 items-center justify-center">
       <div className="mr-3">Log in as</div>
       <LoginButton
         onLogin={onLogin}
         onError={setError}
         setServerLoading={setServerLoading}
+        serverLoading={serverLoading}
         config={attendeeConfig}
         variant={"creative"}
         className="grow"
@@ -34,6 +36,7 @@ export function LoginAsSubgroup({
         onLogin={onLogin}
         onError={setError}
         setServerLoading={setServerLoading}
+        serverLoading={serverLoading}
         config={organizerConfig}
       >
         Organizer

@@ -3,7 +3,7 @@ import {
   EDGE_CITY_RESIDENT_CONFIG,
   ETH_LATAM_ATTENDEE_CONFIG,
   ETH_LATAM_ORGANIZER_CONFIG
-} from "../../api/loginConfig";
+} from "../../api/legacyLoginConfigs";
 import { BallotType } from "../../api/prismaTypes";
 import {
   DEVCONNECT_ADMINS_GROUP_URL,

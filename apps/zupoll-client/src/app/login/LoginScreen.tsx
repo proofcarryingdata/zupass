@@ -6,32 +6,12 @@ import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
 import { ErrorOverlay } from "../../@/components/ui/ErrorOverlay";
-import {
-  DEVCONNECT_ORGANIZER_CONFIG,
-  DEVCONNECT_USER_CONFIG,
-  EDGE_CITY_ORGANIZER_CONFIG,
-  EDGE_CITY_RESIDENT_CONFIG,
-  ETH_LATAM_ATTENDEE_CONFIG,
-  ETH_LATAM_ORGANIZER_CONFIG,
-  ZUZALU_ORGANIZER_LOGIN_CONFIG,
-  ZUZALU_PARTICIPANT_LOGIN_CONFIG
-} from "../../api/loginConfig";
+import { LEGACY_LOGIN_CONFIGS } from "../../api/loginGroups";
 import { LoginConfig, LoginState, ZupollError } from "../../types";
 import { removeQueryParameters } from "../../util";
 import { fetchLoginToken } from "../../zupoll-server-api";
 import { GuaranteesElement } from "../main/Guarantees";
 import { LoginWidget } from "./LoginWidget";
-
-const allLoginConfigs: LoginConfig[] = [
-  ETH_LATAM_ATTENDEE_CONFIG,
-  ETH_LATAM_ORGANIZER_CONFIG,
-  EDGE_CITY_RESIDENT_CONFIG,
-  EDGE_CITY_ORGANIZER_CONFIG,
-  ZUZALU_PARTICIPANT_LOGIN_CONFIG,
-  ZUZALU_ORGANIZER_LOGIN_CONFIG,
-  DEVCONNECT_USER_CONFIG,
-  DEVCONNECT_ORGANIZER_CONFIG
-];
 
 export function LoginScreen({
   onLogin
@@ -113,10 +93,11 @@ export function LoginScreen({
             <CardContent>
               <p className="mt-6">Login with Event Ticket</p>
               <LoginWidget
-                configs={allLoginConfigs}
+                configs={LEGACY_LOGIN_CONFIGS}
                 onLogin={onLogin}
                 setError={setError}
                 setServerLoading={setServerLoading}
+                serverLoading={serverLoading}
               />
             </CardContent>
           </Card>
