@@ -207,12 +207,10 @@ const PollProgressBar = styled.span<{
 `;
 
 const PollPreResult = styled.span`
-  z-index: 500;
   width: 0.5rem;
 `;
 
 const PollResult = styled.span`
-  z-index: 500;
   display: inline-flex;
   justify-content: flex-end;
   align-items: center;
@@ -221,9 +219,7 @@ const PollResult = styled.span`
   font-size: 0.9em;
 `;
 
-const OptionString = styled.span`
-  z-index: 500;
-`;
+const OptionString = styled.span``;
 
 const TotalVotesContainer = styled.div`
   margin-top: 0.75rem;
