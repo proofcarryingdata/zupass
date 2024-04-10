@@ -14,7 +14,7 @@
     }
   ],
   "compilerOptions": {
-    "outDir": "foo",
+    "outDir": "dist",
     "declarationDir": "dist/types",
     "rootDir": "."
   }
