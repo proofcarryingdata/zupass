@@ -1,6 +1,5 @@
 "use client";
 
-import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import { usePathname, useRouter, useSearchParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { useSavedLoginState } from "../../useLoginState";
@@ -10,7 +9,7 @@ export function BallotPage() {
   const router = useRouter();
   const query = useSearchParams();
   const pathname = usePathname();
-  const [ballotURL, setBallotURL] = useState<string | null>(null);
+  const [ballotURL, setBallotURL] = useState<string | undefined>(undefined);
   const { loginState, logout, definitelyNotLoggedIn } =
     useSavedLoginState(router);
 
@@ -23,7 +22,7 @@ export function BallotPage() {
   useEffect(() => {
     const id = query?.get("id");
     if (id == null) {
-      // window.location.href = "/";
+      window.location.href = "/";
     } else {
       if (!loginState || definitelyNotLoggedIn) {
         console.log(`[STORING BALLOT URL]`, pathname);
@@ -33,17 +32,15 @@ export function BallotPage() {
     }
   }, [loginState, definitelyNotLoggedIn, query, pathname]);
 
+  if (!loginState || !ballotURL) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen ">
-      {ballotURL === null || !loginState ? (
-        <LoadingPlaceholder />
-      ) : (
-        <BallotScreen
-          logout={logout}
-          loginState={loginState}
-          ballotURL={ballotURL.toString()}
-        />
-      )}
-    </div>
+    <BallotScreen
+      logout={logout}
+      loginState={loginState}
+      ballotURL={ballotURL}
+    />
   );
 }

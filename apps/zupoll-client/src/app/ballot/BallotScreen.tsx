@@ -1,4 +1,3 @@
-import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import { Button } from "@/components/ui/button";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
@@ -129,7 +128,9 @@ export function BallotScreen({
       setExpired(new Date(ballotPollResponse.ballot.expiry) < new Date());
     }
 
-    getBallotPolls();
+    setTimeout(() => {
+      getBallotPolls();
+    }, 5000);
   }, [ballotURL, refresh, loginState, router, logout]);
 
   /**
@@ -202,69 +203,70 @@ export function BallotScreen({
     setVoteFromUrl
   });
 
-  if (
-    loadingPolls ||
-    ballot === undefined ||
-    polls === undefined ||
-    serverLoading
-  ) {
-    return <LoadingPlaceholder />;
-  }
+  // if (
+  //   loadingPolls ||
+  //   ballot === undefined ||
+  //   polls === undefined ||
+  //   serverLoading
+  // ) {
+  //   return <LoadingPlaceholder />;
+  // }
 
   return (
     <Center>
       <AppHeader title={" "} actions={<SubpageActions />} />
       <ContentContainer>
-        <div>
-          <Title className="mb-0">{ballot.ballotTitle} </Title>
+        {ballot && polls && (
+          <div>
+            <Title className="mb-0">{ballot.ballotTitle} </Title>
+            <span className="font-normal text-sm text-gray-500">
+              posted {fmtTimeAgo(new Date(ballot.createdAt))}
+              {" · "}
+              {new Date(ballot.expiry) < new Date() ? (
+                <span style={{ color: "red" }}>expired</span>
+              ) : (
+                <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
+              )}
+            </span>
+            <p className="mt-2">{ballot.ballotDescription}</p>
+            <div className="flex flex-col gap-4 mb-4">
+              {polls.map((poll) => (
+                <BallotPoll
+                  key={poll.id}
+                  canVote={canVote}
+                  poll={poll}
+                  voteIdx={pollToVote.get(poll.id)}
+                  finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
+                  onVoted={onVoted}
+                  submitVotes={() => {
+                    if (polls.length < 2) {
+                      createBallotVotePCD();
+                    }
+                  }}
+                />
+              ))}
+            </div>
 
-          <span className="font-normal text-sm text-gray-500">
-            posted {fmtTimeAgo(new Date(ballot.createdAt))}
-            {" · "}
-            {new Date(ballot.expiry) < new Date() ? (
-              <span style={{ color: "red" }}>expired</span>
-            ) : (
-              <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
+            {canVote && (
+              <>
+                <Button
+                  variant={"creative"}
+                  onClick={createBallotVotePCD}
+                  className="w-full"
+                >
+                  Submit Votes
+                </Button>
+                <TextContainer className="text-gray-500 mt-2">
+                  If you created or reset your Zupass after this ballot was
+                  created you will not be able to vote. This is a security
+                  measure designed to prevent double-voting.
+                </TextContainer>
+              </>
             )}
-          </span>
-
-          <p className="mt-2">{ballot.ballotDescription}</p>
-
-          <div className="flex flex-col gap-4 mb-4">
-            {polls.map((poll) => (
-              <BallotPoll
-                key={poll.id}
-                canVote={canVote}
-                poll={poll}
-                voteIdx={pollToVote.get(poll.id)}
-                finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
-                onVoted={onVoted}
-                submitVotes={() => {
-                  if (polls.length < 2) {
-                    createBallotVotePCD();
-                  }
-                }}
-              />
-            ))}
           </div>
+        )}
 
-          {canVote && (
-            <>
-              <Button
-                variant={"creative"}
-                onClick={createBallotVotePCD}
-                className="w-full"
-              >
-                Submit Votes
-              </Button>
-              <TextContainer className="text-gray-500 mt-2">
-                If you created or reset your Zupass after this ballot was
-                created you will not be able to vote. This is a security measure
-                designed to prevent double-voting.
-              </TextContainer>
-            </>
-          )}
-        </div>
+        {!ballot || (!polls && <PlaceholderBallot />)}
 
         {error && (
           <ErrorOverlay
@@ -290,3 +292,7 @@ const TextContainer = styled.div`
   font-size: 1rem;
   margin-bottom: 1.5rem;
 `;
+
+function PlaceholderBallot() {
+  return <div className="bg-red-700">placeholder</div>;
+}
