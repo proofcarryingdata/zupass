@@ -40,7 +40,7 @@ export function MainActions({
   return (
     <>
       <Button variant="outline" onClick={confirmLogout}>
-        Logout
+        Log Out
       </Button>
       <Button variant="creative" onClick={createBallot}>
         Create Ballot
