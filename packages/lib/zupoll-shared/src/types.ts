@@ -90,4 +90,5 @@ export interface BallotConfig {
   ballotType: BallotType;
   latestGroupHashUrl?: string;
   makeHistoricalGroupUrl?: (hash: string) => string;
+  historicGroupPrefix?: string;
 }

@@ -1,11 +1,8 @@
-import { BallotConfig } from "@pcd/zupoll-shared";
+import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import { useEffect, useState } from "react";
 import urljoin from "url-join";
 import { ZupollError } from "../../types";
-import {
-  getHistoricGroupUrl,
-  getLatestSemaphoreGroupHash
-} from "../../zupoll-server-api";
+import { getLatestSemaphoreGroupHash } from "../../zupoll-server-api";
 
 export function useHistoricSemaphoreUrl(
   ballotConfig: BallotConfig | undefined,
@@ -46,20 +43,22 @@ export function useHistoricSemaphoreUrl(
       });
   }, [onError, ballotConfig]);
 
+  let groupUrl: string | null = null;
+  if (
+    ballotConfig?.passportServerUrl &&
+    ballotConfig.voterGroupId &&
+    rootHash &&
+    ballotConfig.makeHistoricalGroupUrl
+  ) {
+    groupUrl = ballotConfig.makeHistoricalGroupUrl(rootHash);
+  } else if (ballotConfig?.ballotType === BallotType.PODBOX && rootHash) {
+    groupUrl = urljoin(ballotConfig.voterGroupUrl, rootHash);
+  }
+
   return {
     loading,
     rootHash,
-    groupUrl:
-      ballotConfig?.passportServerUrl && ballotConfig.voterGroupId
-        ? rootHash &&
-          (ballotConfig.makeHistoricalGroupUrl
-            ? ballotConfig.makeHistoricalGroupUrl(rootHash)
-            : getHistoricGroupUrl(
-                semaphoreGroupId,
-                rootHash,
-                semaphoreGroupServer
-              ))
-        : null
+    groupUrl
   };
 }
 
