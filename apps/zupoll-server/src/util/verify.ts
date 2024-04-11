@@ -35,7 +35,13 @@ export async function verifyGroupProof(
     options.allowedGroups &&
     !options.allowedGroups.includes(semaphoreGroupUrl)
   ) {
-    throw new Error(`Not in Semaphore groups allowed to perform action.`);
+    throw new Error(
+      `Not in Semaphore groups allowed to perform action. got ${semaphoreGroupUrl}, expected one of ${JSON.stringify(
+        options.allowedGroups,
+        null,
+        2
+      )}`
+    );
   }
 
   const pcd = await SemaphoreGroupPCDPackage.deserialize(proof);
