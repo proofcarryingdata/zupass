@@ -233,6 +233,8 @@ export function getVisibleBallotTypesForUser(
       BallotType.ETH_LATAM_STRAWPOLL,
       BallotType.ETH_LATAM_FEEDBACK
     ];
+  } else if (userAuth === AuthType.PODBOX) {
+    relevantBallots = [BallotType.PODBOX];
   }
 
   return relevantBallots;

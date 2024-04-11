@@ -15,6 +15,14 @@ export function BallotListsForUser({
   return (
     <>
       <BallotTypeSection
+        visible={true}
+        title={"0xPARC HQ"}
+        description={"Ballots visible to 0xPARC HQ"}
+        ballots={ballots}
+        filter={(b) => b.ballotType === BallotType.PODBOX}
+      />
+
+      <BallotTypeSection
         visible={
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER
         }
