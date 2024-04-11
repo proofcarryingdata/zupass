@@ -154,13 +154,13 @@ export function initAuthedRoutes(
         ballot?.ballotType === BallotType.EDGE_CITY_FEEDBACK ||
         ballot?.ballotType === BallotType.EDGE_CITY_STRAWPOLL
       ) {
-        res.json({ url: "/denver" });
+        res.json({ url: "/" });
         return;
       } else if (
         ballot?.ballotType === BallotType.ETH_LATAM_FEEDBACK ||
         ballot?.ballotType === BallotType.ETH_LATAM_STRAWPOLL
       ) {
-        res.json({ url: "/eth-latam" });
+        res.json({ url: "/" });
         return;
       }
     }
