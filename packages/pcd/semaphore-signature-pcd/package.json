@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./SemaphoreSignaturePCD": {
+      "types": "./dist/types/src/SemaphoreSignaturePCD.d.ts",
+      "import": "./dist/esm/src/SemaphoreSignaturePCD.js",
+      "require": "./dist/cjs/src/SemaphoreSignaturePCD.js"
     }
   },
   "files": [

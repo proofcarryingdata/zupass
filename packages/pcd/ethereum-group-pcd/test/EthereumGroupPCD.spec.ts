@@ -17,7 +17,7 @@ import {
   EthereumGroupPCDPackage,
   GroupType,
   getRawPubKeyBuffer
-} from "../src/EthereumGroupPCD";
+} from "../src";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");

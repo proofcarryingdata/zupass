@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./RSAImagePCD": {
+      "types": "./dist/types/src/RSAImagePCD.d.ts",
+      "import": "./dist/esm/src/RSAImagePCD.js",
+      "require": "./dist/cjs/src/RSAImagePCD.js"
     }
   },
   "files": [

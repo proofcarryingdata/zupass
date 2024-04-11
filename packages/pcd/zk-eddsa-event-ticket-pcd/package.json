@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./ZKEdDSAEventTicketPCD": {
+      "types": "./dist/types/src/ZKEdDSAEventTicketPCD.d.ts",
+      "import": "./dist/esm/src/ZKEdDSAEventTicketPCD.js",
+      "require": "./dist/cjs/src/ZKEdDSAEventTicketPCD.js"
     }
   },
   "files": [

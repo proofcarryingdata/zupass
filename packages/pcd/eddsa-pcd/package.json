@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./PCD": {
+      "types": "./dist/types/src/EdDSAPCD.d.ts",
+      "import": "./dist/esm/src/EdDSAPCD.js",
+      "require": "./dist/cjs/src/EdDSAPCD.js"
     }
   },
   "files": [

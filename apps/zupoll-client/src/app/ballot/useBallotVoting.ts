@@ -1,4 +1,4 @@
-import { useZupassPopupMessages } from "@pcd/passport-interface";
+import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup";
 import { generateSnarkMessageHash } from "@pcd/util";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";

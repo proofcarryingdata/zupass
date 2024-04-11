@@ -4,6 +4,7 @@
   "exclude": ["node_modules"],
   "compilerOptions": {
     "jsx": "preserve",
+    "moduleResolution": "Bundler",
     "target": "es6",
     "inlineSourceMap": true,
     "plugins": [

@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./PCD": {
+      "types": "./dist/types/src/EdDSAFrogPCD.d.ts",
+      "import": "./dist/esm/src/EdDSAFrogPCD.js",
+      "require": "./dist/cjs/src/EdDSAFrogPCD.js"
     }
   },
   "files": [

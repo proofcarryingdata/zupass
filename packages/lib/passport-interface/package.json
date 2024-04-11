@@ -10,6 +10,16 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./PassportPopup": {
+      "types": "./dist/types/src/PassportPopup.d.ts",
+      "import": "./dist/esm/src/PassportPopup.js",
+      "require": "./dist/cjs/src/PassportPopup.js"
+    },
+    "./PassportInterface": {
+      "types": "./dist/types/src/PassportInterface.d.ts",
+      "import": "./dist/esm/src/PassportInterface.js",
+      "require": "./dist/cjs/src/PassportInterface.js"
     }
   },
   "files": [
