@@ -18,7 +18,6 @@ import {
   removeQueryParameters
 } from "../../util";
 import { createBallot } from "../../zupoll-server-api";
-import { BALLOT_CONFIGS } from "./ballotConfig";
 import { useHistoricSemaphoreUrl } from "./useHistoricSemaphoreUrl";
 
 export interface BallotFromUrl {
@@ -83,7 +82,7 @@ const generateBallotRequest = (
 export function useCreateBallot({
   ballotTitle,
   ballotDescription,
-  ballotType,
+  ballotConfig,
   expiry,
   polls,
   onError,
@@ -97,7 +96,7 @@ export function useCreateBallot({
 }: {
   ballotTitle: string;
   ballotDescription: string;
-  ballotType: BallotType;
+  ballotConfig?: BallotConfig;
   expiry: Date;
   polls: Poll[];
   onError: (err: ZupollError) => void;
@@ -112,7 +111,6 @@ export function useCreateBallot({
   const router = useRouter();
   const pcdState = useRef<PCDState>(PCDState.DEFAULT);
   const [pcdStr, _passportPendingPCDStr] = useZupassPopupMessages();
-  const ballotConfig = BALLOT_CONFIGS[ballotType];
 
   const {
     loading: loadingVoterGroupUrl,
@@ -190,7 +188,12 @@ export function useCreateBallot({
       setPcdFromUrl("");
     } else {
       if (pcdState.current !== PCDState.RECEIVED_PCDSTR) return;
-      if (voterGroupUrl == null || voterGroupRootHash == null) return;
+      if (
+        voterGroupUrl == null ||
+        voterGroupRootHash == null ||
+        ballotConfig == null
+      )
+        return;
       pcdState.current = PCDState.DEFAULT;
 
       const parsedPcd = JSON.parse(decodeURIComponent(pcdStr));
@@ -199,7 +202,7 @@ export function useCreateBallot({
         ballotDescription,
         proof: parsedPcd.pcd,
         polls,
-        ballotType,
+        ballotType: ballotConfig.ballotType,
         voterGroupRoots: [voterGroupRootHash],
         voterGroupUrls: [voterGroupUrl],
         expiry,
@@ -211,7 +214,7 @@ export function useCreateBallot({
   }, [
     ballotDescription,
     ballotTitle,
-    ballotType,
+    ballotConfig,
     expiry,
     pcdStr,
     polls,
@@ -223,13 +226,16 @@ export function useCreateBallot({
     ballotFromUrl,
     setBallotFromUrl,
     setPcdFromUrl,
-    submitBallot,
-    ballotConfig
+    submitBallot
   ]);
 
   // ran after ballot is submitted by user
   const createBallotPCD = useCallback(async () => {
-    if (voterGroupUrl == null || voterGroupRootHash == null) {
+    if (
+      ballotConfig == null ||
+      voterGroupUrl == null ||
+      voterGroupRootHash == null
+    ) {
       return onError({
         title: "Error Creating Poll",
         message: "Voter group not loaded yet."
@@ -242,11 +248,12 @@ export function useCreateBallot({
       pollSignals: [],
       ballotTitle: ballotTitle,
       ballotDescription: ballotDescription,
-      ballotType: ballotType,
+      ballotType: ballotConfig.ballotType,
       expiry: expiry,
       voterSemaphoreGroupUrls: [voterGroupUrl],
       voterSemaphoreGroupRoots: [voterGroupRootHash]
     };
+
     polls.forEach((poll: Poll) => {
       const pollSignal: PollSignal = {
         body: poll.body,
@@ -289,12 +296,11 @@ export function useCreateBallot({
     voterGroupRootHash,
     ballotTitle,
     ballotDescription,
-    ballotType,
+    ballotConfig,
     expiry,
     polls,
     onError,
-    url,
-    ballotConfig
+    url
   ]);
 
   return { loadingVoterGroupUrl, createBallotPCD };

@@ -1,7 +1,7 @@
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
-import { BallotType } from "@pcd/zupoll-shared";
+import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { Button } from "../../@/components/ui/button";
@@ -22,6 +22,7 @@ import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
 import { PollsBelowDivider } from "./PollsBelowDivider";
+import { BALLOT_CONFIGS } from "./ballotConfig";
 import { BallotFromUrl, useCreateBallot } from "./useCreateBallot";
 
 export function CreateBallot({
@@ -39,9 +40,7 @@ export function CreateBallot({
   );
   const [ballotFromUrl, setBallotFromUrl] = useState<BallotFromUrl>();
   const [pcdFromUrl, setPcdFromUrl] = useState("");
-  const [ballotType, setBallotType] = useState<BallotType>(
-    loginState.config.canCreateBallotTypes[0]
-  );
+
   const [useLastBallot, setUseLastBallot] = useState(false);
   const getDateString = (date: Date) => {
     const newDate = new Date(date);
@@ -87,10 +86,29 @@ export function CreateBallot({
     }
   }, [query]);
 
+  const possibleBallotConfigs = useMemo(
+    () =>
+      [
+        ...(loginState.config.ballotConfigs ?? []),
+        ...loginState.config.canCreateBallotTypes.map((t) => BALLOT_CONFIGS[t])
+      ].filter((c) => c != null),
+    [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
+  );
+
+  console.log("ballotConfigs", loginState.config.ballotConfigs);
+  console.log(
+    "loginState.config.canCreateBallotTypes",
+    loginState.config.canCreateBallotTypes
+  );
+
+  const [selectedBallotConfig, setSelectedBallotConfig] = useState<
+    BallotConfig | undefined
+  >(possibleBallotConfigs[0]);
+
   const { loadingVoterGroupUrl, createBallotPCD } = useCreateBallot({
     ballotTitle,
     ballotDescription,
-    ballotType,
+    ballotConfig: selectedBallotConfig,
     expiry: ballotExpiry,
     polls,
     onError,
@@ -301,17 +319,23 @@ export function CreateBallot({
           </div>
 
           <div
-            style={{
-              display:
-                loginState?.config?.canCreateBallotTypes?.length > 1
-                  ? undefined
-                  : "none"
-            }}
+          // style={{
+          //   display:
+          //     loginState?.config?.canCreateBallotTypes?.length > 1
+          //       ? undefined
+          //       : "none"
+          // }}
           >
             <Subtitle>Ballot Type</Subtitle>
             <Select
-              value={ballotType}
-              onValueChange={(value: string) => setBallotType(value)}
+              value={selectedBallotConfig?.ballotType}
+              onValueChange={(value: string) =>
+                setSelectedBallotConfig(
+                  possibleBallotConfigs.find(
+                    (c) => c.ballotType === value
+                  ) as any
+                )
+              }
             >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Select a Ballot Type" />
@@ -319,9 +343,9 @@ export function CreateBallot({
 
               <SelectContent>
                 <SelectGroup>
-                  {loginState?.config?.canCreateBallotTypes?.map((type) => (
-                    <SelectItem key={type} value={type}>
-                      {type}
+                  {possibleBallotConfigs.map((type) => (
+                    <SelectItem key={type.ballotType} value={type.ballotType}>
+                      {type.ballotType}
                     </SelectItem>
                   ))}
                 </SelectGroup>

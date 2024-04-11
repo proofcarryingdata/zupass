@@ -80,6 +80,7 @@ export interface LoginConfig {
 }
 
 export interface BallotConfig {
+  name?: string;
   voterGroupId: string;
   voterGroupUrl: string;
   creatorGroupId: string;
