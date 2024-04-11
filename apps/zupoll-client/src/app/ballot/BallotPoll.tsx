@@ -129,23 +129,6 @@ export function BallotPoll({
   );
 }
 
-const PollWrapper = styled.div`
-  box-sizing: border-box;
-  font-family: OpenSans;
-  border: 1px solid #bbb;
-  background-color: #eee;
-  width: 100%;
-  border-radius: 1rem;
-  padding: 2rem;
-  margin-bottom: 1.5rem;
-  position: relative;
-  transition: 200ms;
-
-  &:hover {
-    background-color: #f8f8f8;
-  }
-`;
-
 const PollHeader = styled.div`
   padding: 0px;
   margin: 0;
