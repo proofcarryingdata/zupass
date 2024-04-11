@@ -15,7 +15,7 @@ export const metadata = {
   description: "Anonymous Voting Powered by Zupass"
 };
 
-const DEFAULT_THEME: "light" | "dark" = "dark";
+const DEFAULT_THEME: "light" | "dark" = "light";
 
 export default function RootLayout({
   children

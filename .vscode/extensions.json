@@ -5,6 +5,7 @@
     "dbaeumer.vscode-eslint",
     "pomdtr.excalidraw-editor",
     "dbaeumer.vscode-eslint",
-    "prisma.prisma"
+    "prisma.prisma",
+    "csstools.postcss"
   ]
 }
