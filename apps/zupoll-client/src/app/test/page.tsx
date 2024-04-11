@@ -1,6 +1,7 @@
 "use client";
 
 import { Center } from "@/components/ui/Elements";
+import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
@@ -8,6 +9,7 @@ export default function TestPage() {
   return (
     <Center>
       <div className="m-8 flex flex-col gap-2 w-[500px]">
+        <ThemeSwitcher />
         <div className="flex justify-center items-center">
           <Spinner className="w-10 h-10 m-2" />
         </div>

@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import styled from "styled-components";
 import { DEFAULT_CONTENT_WIDTH } from "./Elements";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 import { Button } from "./button";
 
 export interface HeaderProps {
@@ -13,11 +14,14 @@ export function AppHeader({ actions, title }: HeaderProps) {
   return (
     <StickyHeader>
       <MainScreenContainer>
-        {title ? (
-          <div className="text-2xl">{title}</div>
-        ) : (
-          <div className="text-2xl">Zupoll</div>
-        )}
+        <div className="flex flex-row gap-4 items-center justify-center">
+          <ThemeSwitcher />
+          {title ? (
+            <div className="text-2xl">{title}</div>
+          ) : (
+            <div className="text-2xl">Zupoll</div>
+          )}
+        </div>
         <div className="flex row gap-2">{actions}</div>
       </MainScreenContainer>
     </StickyHeader>

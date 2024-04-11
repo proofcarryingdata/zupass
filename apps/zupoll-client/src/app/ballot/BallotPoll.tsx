@@ -4,7 +4,7 @@ import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
 import { useMemo, useState } from "react";
-import styled, { css } from "styled-components";
+import styled from "styled-components";
 import { PollWithCounts } from "../../api/requestTypes";
 
 type SearchItem = {
@@ -92,11 +92,13 @@ export function BallotPoll({
             {matchingOptions.map((opt, idx) => (
               <div
                 className={cn(
-                  "relative overflow-hidden bg-background px-4 py-2 rounded-md select-none flex flex-row",
-                  voteIdx === idx ? "" : undefined,
+                  "relative overflow-hidden bg-background px-4 py-2 rounded-xl flex flex-row border-2 dark:border-",
                   canVote
-                    ? "cursor-pointer hover:bg-accent ring-foreground active:ring-offset-2 active:ring-2 active:ring-offset-background"
-                    : ""
+                    ? "select-none cursor-pointer hover:bg-accent ring-foreground active:ring-offset-2 active:ring-2 active:ring-offset-background"
+                    : "",
+                  voteIdx === idx
+                    ? "bg-green-200 hover:bg-green-300 border-green-500 dark:text-background"
+                    : "border-gray-200 dark:border-gray-700"
                 )}
                 key={idx}
                 onClick={() => {
@@ -107,13 +109,18 @@ export function BallotPoll({
                   }
                 }}
               >
-                <PollProgressBar
-                  percent={
-                    totalVotes === 0 || canVote
-                      ? 0
-                      : poll.votes[idx] / totalVotes
-                  }
-                  isHighlighted={finalVoteIdx === idx}
+                <div
+                  className={cn(
+                    "z-[1] absolute top-0 left-0 h-full",
+                    finalVoteIdx === idx ? "bg-green-300" : "bg-green-400"
+                  )}
+                  style={{
+                    width: `${
+                      totalVotes === 0 || canVote
+                        ? 0
+                        : (poll.votes[idx] / totalVotes) * 100
+                    }%`
+                  }}
                 />
                 {canVote ? (
                   <PollPreResult></PollPreResult>
@@ -142,59 +149,6 @@ const PollHeader = styled.div`
   justify-content: space-between;
   align-items: center;
   margin-bottom: 1rem;
-`;
-
-const PollOption = styled.span<{ canVote: boolean; selected: boolean }>`
-  ${({ canVote, selected }) => css`
-    overflow: hidden;
-    position: relative;
-    padding: 0.5rem 0.5rem;
-    /* background-color: rgba(0, 0, 0, 0.05); */
-    background-color: hsl(var(--foreground));
-    border-radius: 0.5rem;
-    width: 100%;
-    box-sizing: border-box;
-    display: flex;
-    justify-content: flex-start;
-    align-items: center;
-    flex-direction: row;
-    gap: 0.5rem;
-    border: 1px solid transparent;
-
-    ${canVote &&
-    css`
-      &:hover {
-        cursor: pointer;
-        border: 1px solid #888;
-        background-color: #ddd;
-      }
-
-      &:hover:active {
-        background-color: #ccc;
-      }
-    `}
-
-    ${selected &&
-    css`
-      border: 1px solid #888;
-      background-color: #aaa;
-    `}
-  `}
-`;
-
-const PollProgressBar = styled.span<{
-  percent: number;
-  isHighlighted: boolean;
-}>`
-  ${({ percent, isHighlighted }) => css`
-    z-index: 1;
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: ${100 * percent}%;
-    height: 100%;
-    background-color: ${isHighlighted ? "#90ccf1" : "#cce5f3"};
-  `}
 `;
 
 const PollPreResult = styled.span`

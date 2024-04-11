@@ -255,7 +255,7 @@ export function BallotScreen({
                 >
                   Submit Votes
                 </Button>
-                <TextContainer className="text-foreground/80 mt-2">
+                <TextContainer className="text-foreground/70 mt-2 text-center">
                   If you created or reset your Zupass after this ballot was
                   created you will not be able to vote. This is a security
                   measure designed to prevent double-voting.

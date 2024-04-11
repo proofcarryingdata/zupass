@@ -25,7 +25,7 @@ export function LoginActionsForLoginGroup({
             setServerLoading={setServerLoading}
             serverLoading={serverLoading}
             config={loginConfig}
-            variant={shouldEmphasize ? "outline" : "ghost"}
+            variant={shouldEmphasize ? "default" : "ghost"}
             className={shouldEmphasize ? "grow" : undefined}
           >
             {loginConfig.buttonName}

@@ -136,12 +136,15 @@ export function SemaphoreGroupProveScreen({
     lines.push(<RippleLoader />);
   }
 
+  if (!proving) {
+    lines.push(<BackButton />);
+  }
+
   return (
     <div>
       {lines.map((line, i) => (
         <LineWrap key={i}>{line}</LineWrap>
       ))}
-      <BackButton />
     </div>
   );
 }
