@@ -99,11 +99,9 @@ export function receiveZupassPopupMessage(): Promise<PopupResultMessage> {
   return new Promise((resolve) => {
     const receiveMessage = (ev: MessageEvent): void => {
       if (ev.data.encodedPCD) {
-        console.log("Received PCD", ev.data.encodedPCD);
         resolve({ type: "pcd", pcdStr: ev.data.encodedPCD });
         window.removeEventListener("message", receiveMessage);
       } else if (ev.data.encodedPendingPCD) {
-        console.log(ev.data);
         resolve({
           type: "pendingPcd",
           pendingPcdStr: ev.data.encodedPendingPCD
