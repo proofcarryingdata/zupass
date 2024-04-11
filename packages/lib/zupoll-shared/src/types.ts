@@ -74,6 +74,7 @@ export interface LoginConfig {
   passportServerUrl: string;
   passportAppUrl: string;
   name: LoginConfigName;
+  description?: string;
   buttonName: string;
   canCreateBallotTypes: BallotType[];
   ballotConfigs?: BallotConfig[];

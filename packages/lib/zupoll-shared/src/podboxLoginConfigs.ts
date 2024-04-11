@@ -6,6 +6,7 @@ export function getPodboxConfigs(
   ZUPASS_SERVER_URL: string
 ): LoginConfig[] {
   const PARC_HQ_CONFIG_ID = "0xPARC HQ";
+  const PARC_HQ_DESCRIPTION = "Ballots visible to 0xPARC Employees";
   const PARC_HQ_CONFIG_NAME = "0xPARC HQ";
   const PARC_HQ_CONFIG_PIPELINE_ID = "a8e4dc18-570b-4094-808b-6e699ed08254";
   const PARC_HQ_CONFIG_SEMA_GROUP_ID = "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
@@ -21,6 +22,7 @@ export function getPodboxConfigs(
     passportServerUrl: ZUPASS_SERVER_URL,
     passportAppUrl: ZUPASS_CLIENT_URL,
     name: PARC_HQ_CONFIG_NAME,
+    description: PARC_HQ_DESCRIPTION,
     buttonName: PARC_HQ_CONFIG_NAME,
     canCreateBallotTypes: [BallotType.PODBOX],
     ballotConfigs: [

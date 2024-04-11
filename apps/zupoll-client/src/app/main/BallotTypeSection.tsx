@@ -5,7 +5,7 @@ import { BallotList } from "./BallotList";
 
 export interface BallotTypeSectionProps {
   title: string;
-  description: string;
+  description?: string;
   ballots: Ballot[];
   filter: (b: Ballot) => boolean;
   visible?: boolean;
@@ -29,7 +29,7 @@ export function BallotTypeSection({
   return (
     <div className="mb-4">
       <Title>{title}</Title>
-      <p>{description}</p>
+      {description && <p>{description}</p>}
       <BallotList ballots={filtered} />
     </div>
   );

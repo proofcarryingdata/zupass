@@ -1,5 +1,10 @@
-import { BallotType, LegacyLoginConfigName } from "@pcd/zupoll-shared";
+import {
+  BallotType,
+  LegacyLoginConfigName,
+  getPodboxConfigs
+} from "@pcd/zupoll-shared";
 import { Ballot } from "../../api/prismaTypes";
+import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
 import { LoginState } from "../../types";
 import { BallotTypeSection } from "./BallotTypeSection";
 
@@ -12,15 +17,22 @@ export function BallotListsForUser({
   logout: () => void;
   ballots: Ballot[];
 }) {
+  const matchingPodboxLoginConfig = getPodboxConfigs(
+    ZUPASS_CLIENT_URL,
+    ZUPASS_SERVER_URL
+  ).find((c) => c.name === loginState.config.name);
+
   return (
     <>
-      <BallotTypeSection
-        visible={true}
-        title={"0xPARC HQ"}
-        description={"Ballots visible to 0xPARC HQ"}
-        ballots={ballots}
-        filter={(b) => b.ballotType === BallotType.PODBOX}
-      />
+      {matchingPodboxLoginConfig && (
+        <BallotTypeSection
+          visible={true}
+          title={matchingPodboxLoginConfig.name}
+          description={matchingPodboxLoginConfig.description}
+          ballots={ballots}
+          filter={(b) => b.ballotType === BallotType.PODBOX}
+        />
+      )}
 
       <BallotTypeSection
         visible={
