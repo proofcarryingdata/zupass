@@ -13,26 +13,25 @@ export function LoginActionsForLoginGroup({
   setServerLoading,
   serverLoading
 }: LoginGroupProps) {
-  const attendeeConfig = group.configs[0];
-  const organizerConfig = group.configs[1];
-
   return (
-    <div className="flex row w-full m-4 gap-2 items-center justify-center">
-      <div className="mr-3">Log in as</div>
-      {group.configs.map((loginConfig, i) => (
-        <LoginButton
-          key={i}
-          onLogin={onLogin}
-          onError={setError}
-          setServerLoading={setServerLoading}
-          serverLoading={serverLoading}
-          config={loginConfig}
-          variant={"creative"}
-          className="grow"
-        >
-          {loginConfig.buttonName}
-        </LoginButton>
-      ))}
+    <div className="flex-grow flex row w-full gap-2 items-center justify-center box-border">
+      {group.configs.map((loginConfig, i) => {
+        const shouldEmphasize = i === group.configs.length - 1;
+        return (
+          <LoginButton
+            key={i}
+            onLogin={onLogin}
+            onError={setError}
+            setServerLoading={setServerLoading}
+            serverLoading={serverLoading}
+            config={loginConfig}
+            variant={shouldEmphasize ? "outline" : "ghost"}
+            className={shouldEmphasize ? "grow" : undefined}
+          >
+            {loginConfig.buttonName}
+          </LoginButton>
+        );
+      })}
     </div>
   );
 }

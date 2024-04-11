@@ -19,19 +19,25 @@ export function LoginWidget(props: LoginWidgetProps) {
 
   return (
     <>
-      {!!selectedGroup && (
-        <LoginActionsForLoginGroup
-          {...props}
-          group={selectedGroup}
-          key={selectedGroup.category}
-        />
-      )}
+      <div className="flex flex-row gap-2 justify-between grow">
+        <div className="flex-shrink-0 min-w-52 grow">
+          {selectedGroup ? (
+            <LoginActionsForLoginGroup {...props} group={selectedGroup} />
+          ) : (
+            <div className="text-center h-full flex items-center justify-end pr-4">
+              Choose a group to log in
+            </div>
+          )}
+        </div>
 
-      <SelectLoginGroup
-        selectedGroup={selectedGroupId}
-        setSelectedGroup={setCurGroupCategory}
-        groups={LOGIN_GROUPS}
-      />
+        <div>
+          <SelectLoginGroup
+            selectedGroup={selectedGroupId}
+            setSelectedGroup={setCurGroupCategory}
+            groups={LOGIN_GROUPS}
+          />
+        </div>
+      </div>
     </>
   );
 }

@@ -31,7 +31,7 @@ export function SelectLoginGroup({
       onValueChange={(v) => setSelectedGroup(v as LoginCategory)}
     >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select your Event" />
+        <SelectValue placeholder="Select Group" />
       </SelectTrigger>
       <SelectContent>
         <SelectGroup>

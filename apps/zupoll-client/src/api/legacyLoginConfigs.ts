@@ -29,7 +29,7 @@ export const ETH_LATAM_ATTENDEE_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ETH_LATAM_ATTENDEE,
-  buttonName: "ETH LatAm Attendee",
+  buttonName: "Attendee",
   canCreateBallotTypes: [BallotType.ETH_LATAM_STRAWPOLL]
 };
 
@@ -40,7 +40,7 @@ export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ETH_LATAM_ORGANIZER,
-  buttonName: "ETH LatAm Organizer",
+  buttonName: "Staff",
   canCreateBallotTypes: [
     BallotType.ETH_LATAM_FEEDBACK,
     BallotType.ETH_LATAM_STRAWPOLL
@@ -54,7 +54,7 @@ export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.EDGE_CITY_RESIDENT,
-  buttonName: "Edge City Resident",
+  buttonName: "Resident/Visitor",
   canCreateBallotTypes: [BallotType.EDGE_CITY_RESIDENT]
 };
 
@@ -65,7 +65,7 @@ export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.EDGE_CITY_ORGANIZER,
-  buttonName: "Edge City Organizer",
+  buttonName: "Staff",
   canCreateBallotTypes: [
     BallotType.EDGE_CITY_RESIDENT,
     BallotType.EDGE_CITY_ORGANIZER
@@ -79,7 +79,7 @@ export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ZUZALU_ORGANIZER,
-  buttonName: "Zuzalu Organizer",
+  buttonName: "Staff",
   canCreateBallotTypes: [
     BallotType.STRAWPOLL,
     BallotType.ADVISORYVOTE,
@@ -94,7 +94,7 @@ export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.ZUZALU_PARTICIPANT,
-  buttonName: "ZuConnect Resident",
+  buttonName: "Resident",
   canCreateBallotTypes: [BallotType.STRAWPOLL]
 };
 
@@ -105,7 +105,7 @@ export const DEVCONNECT_USER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.DEVCONNECT_PARTICIPANT,
-  buttonName: "Devconnect Resident",
+  buttonName: "Attendee",
   canCreateBallotTypes: [BallotType.DEVCONNECT_STRAW]
 };
 
@@ -116,7 +116,7 @@ export const DEVCONNECT_ORGANIZER_CONFIG: LoginConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   name: LegacyLoginConfigName.DEVCONNECT_ORGANIZER,
-  buttonName: "Devconnect Organizer",
+  buttonName: "Staff",
   canCreateBallotTypes: [
     BallotType.DEVCONNECT_STRAW,
     BallotType.DEVCONNECT_ORGANIZER

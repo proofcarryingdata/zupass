@@ -91,8 +91,7 @@ export function LoginScreen({
           <GuaranteesElement />
 
           <Card className="my-8">
-            <CardContent>
-              <p className="mt-6">Login with Event Ticket</p>
+            <CardContent className="mt-6">
               <LoginWidget
                 configs={LEGACY_LOGIN_CONFIGS}
                 onLogin={onLogin}
