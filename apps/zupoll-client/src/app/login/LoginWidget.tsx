@@ -1,4 +1,6 @@
+import { Spinner } from "@/components/ui/spinner";
 import { LoginCategory, LoginConfig } from "@pcd/zupoll-shared";
+import _ from "lodash";
 import { useMemo, useState } from "react";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
@@ -16,6 +18,10 @@ export function LoginWidget(props: LoginWidgetProps) {
   const selectedGroup = useMemo(() => {
     return LOGIN_GROUPS.find((g) => g.category === selectedGroupId);
   }, [selectedGroupId]);
+
+  if (props.loggingIn) {
+    return <LoggingIn />;
+  }
 
   return (
     <>
@@ -42,12 +48,32 @@ export function LoginWidget(props: LoginWidgetProps) {
   );
 }
 
+const tips = [
+  "Zupoll lets you vote on ballots anonymously",
+  "Your votes are un-linkable across ballots."
+];
+
+export function LoggingIn() {
+  const randomTip = useMemo(() => {
+    return _.sample(tips);
+  }, []);
+
+  return (
+    <div className="flex flex-col gap-4 items-center justify-center w-full min-h-12">
+      Logging In
+      <Spinner className="w-8 h-8" />
+      <div className="text-sm text-gray-500">Tip: {randomTip}</div>
+    </div>
+  );
+}
+
 /**
  * Props for {@link LoginWidget}.
  */
 export interface LoginWidgetProps {
   configs: LoginConfig[];
   onLogin: (loginState: LoginState) => void;
+  loggingIn: boolean;
   setError: (error?: ZupollError) => void;
   setServerLoading: (loading: boolean) => void;
   serverLoading: boolean;

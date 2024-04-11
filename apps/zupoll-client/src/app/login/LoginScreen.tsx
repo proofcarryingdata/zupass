@@ -60,14 +60,18 @@ export function LoginScreen({
     (async () => {
       try {
         setServerLoading(true);
+        setLoggingIn(true);
         const token = await fetchLoginToken(
           configFromUrl,
           pcdFromUrl || pcdStr
         );
-        onLogin({
-          token,
-          config: configFromUrl
-        });
+        setTimeout(() => {
+          onLogin({
+            token,
+            config: configFromUrl
+          });
+          // setLoggingIn(false);
+        }, 1000 * 1);
       } catch (err: any) {
         const loginError: ZupollError = {
           title: "Login failed",
@@ -76,7 +80,6 @@ export function LoginScreen({
         setError(loginError);
         removeQueryParameters();
       }
-      setLoggingIn(false);
       setServerLoading(false);
     })();
   }, [configFromUrl, loggingIn, onLogin, pcdFromUrl, pcdStr]);
@@ -95,6 +98,7 @@ export function LoginScreen({
               <LoginWidget
                 configs={LEGACY_LOGIN_CONFIGS}
                 onLogin={onLogin}
+                loggingIn={loggingIn}
                 setError={setError}
                 setServerLoading={setServerLoading}
                 serverLoading={serverLoading}
