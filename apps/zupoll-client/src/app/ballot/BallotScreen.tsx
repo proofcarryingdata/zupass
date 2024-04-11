@@ -1,4 +1,5 @@
 import { Button } from "@/components/ui/button";
+import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -128,9 +129,7 @@ export function BallotScreen({
       setExpired(new Date(ballotPollResponse.ballot.expiry) < new Date());
     }
 
-    setTimeout(() => {
-      getBallotPolls();
-    }, 5000);
+    getBallotPolls();
   }, [ballotURL, refresh, loginState, router, logout]);
 
   /**
@@ -266,7 +265,7 @@ export function BallotScreen({
           </div>
         )}
 
-        {!ballot || (!polls && <PlaceholderBallot />)}
+        {(!ballot || !polls) && <PlaceholderBallot />}
 
         {error && (
           <ErrorOverlay
@@ -294,5 +293,19 @@ const TextContainer = styled.div`
 `;
 
 function PlaceholderBallot() {
-  return <div className="bg-red-700">placeholder</div>;
+  return (
+    <div className="flex flex-col space-y-3">
+      <Skeleton className="h-8 w-[60%]" />
+      <div className="flex flex-row gap-2">
+        <Skeleton className="h-5 w-[100px]" />
+        <Skeleton className="h-5 w-[100px]" />
+      </div>
+      <Skeleton className="h-5 w-[200px]" />
+      <div className="space-y-2">
+        <Skeleton className="h-10 w-full" />
+        <Skeleton className="h-10 w-full" />
+      </div>
+      <Skeleton className="h-7 w-full" />
+    </div>
+  );
 }
