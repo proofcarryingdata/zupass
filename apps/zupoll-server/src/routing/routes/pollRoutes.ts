@@ -11,8 +11,8 @@ import express, { NextFunction, Request, Response } from "express";
 import { InlineKeyboard } from "grammy";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";
-import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "src/env";
 import { ApplicationContext } from "../../application";
+import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
 import {
   createBallot,
   createPoll,
