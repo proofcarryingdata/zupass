@@ -1,4 +1,4 @@
-import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
+import { LoadingButton } from "@/components/ui/LoadingPlaceholder";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -536,7 +536,7 @@ export function CreateBallot({
       )}
 
       {loadingVoterGroupUrl || serverLoading ? (
-        <LoadingPlaceholder />
+        <LoadingButton />
       ) : (
         <Button
           className="w-full"
