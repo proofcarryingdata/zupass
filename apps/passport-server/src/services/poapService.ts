@@ -388,7 +388,7 @@ export class PoapService {
       } = pcd.claim;
 
       logger(
-        `[POAP] checking that validEventds ${validEventIds} matches ETH LATAM 2024`
+        `[POAP] checking that validEventIds ${validEventIds} matches ETH LATAM 2024`
       );
 
       if (
