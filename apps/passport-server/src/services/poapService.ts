@@ -369,7 +369,7 @@ export class PoapService {
    *  2. Wrong EdDSA public key
    *  3. PCD proof is invalid
    *  4. Event of ticket is not ETH LATAM 2024
-   *  5. Type of ticket is not 7-day pass
+   *  5. Ticket was not checked in
    */
   private async validateETHLatamTicket(serializedPCD: string): Promise<string> {
     return traced("poap", "validateETHLatamDenverTicket", async (span) => {
