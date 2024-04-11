@@ -1,6 +1,7 @@
 import VoteDialog from "@/components/ui/VoteDialog";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
+import { cn } from "@/lib/utils";
 import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
 import { useMemo, useState } from "react";
 import styled, { css } from "styled-components";
@@ -87,12 +88,17 @@ export function BallotPoll({
             />
           )}
 
-          <PollOptions>
+          <div className="flex flex-col gap-2">
             {matchingOptions.map((opt, idx) => (
-              <PollOption
+              <div
+                className={cn(
+                  "relative overflow-hidden bg-background px-4 py-2 rounded-md select-none flex flex-row",
+                  voteIdx === idx ? "" : undefined,
+                  canVote
+                    ? "cursor-pointer hover:bg-accent ring-foreground active:ring-offset-2 active:ring-2 active:ring-offset-background"
+                    : ""
+                )}
                 key={idx}
-                canVote={canVote}
-                selected={voteIdx === idx}
                 onClick={() => {
                   if (isHackathonView && canVote) {
                     setShowingOptionIdx(idx);
@@ -117,12 +123,12 @@ export function BallotPoll({
                   </PollResult>
                 )}
                 <OptionString>{opt}</OptionString>
-              </PollOption>
+              </div>
             ))}
-          </PollOptions>
-          <TotalVotesContainer>
+          </div>
+          <div className="mt-2">
             {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
-          </TotalVotesContainer>
+          </div>
         </CardContent>
       </Card>
     </>
@@ -138,23 +144,13 @@ const PollHeader = styled.div`
   margin-bottom: 1rem;
 `;
 
-const PollOptions = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: column;
-  list-style-type: none;
-  gap: 0.75rem;
-  width: 100%;
-  box-sizing: border-box;
-`;
-
 const PollOption = styled.span<{ canVote: boolean; selected: boolean }>`
   ${({ canVote, selected }) => css`
     overflow: hidden;
     position: relative;
     padding: 0.5rem 0.5rem;
-    background-color: rgba(0, 0, 0, 0.05);
+    /* background-color: rgba(0, 0, 0, 0.05); */
+    background-color: hsl(var(--foreground));
     border-radius: 0.5rem;
     width: 100%;
     box-sizing: border-box;
@@ -204,20 +200,26 @@ const PollProgressBar = styled.span<{
 const PollPreResult = styled.span`
   z-index: 2;
   width: 0.5rem;
+  position: relative;
 `;
 
 const PollResult = styled.span`
+  flex-shrink: 0;
+  position: relative;
   z-index: 2;
   display: inline-flex;
   justify-content: flex-end;
+  padding-right: 0.5rem;
   align-items: center;
   font-weight: bold;
-  width: 4rem;
+  width: 3.5rem;
   font-size: 0.9em;
 `;
 
 const OptionString = styled.span`
+  position: relative;
   z-index: 2;
+  padding-left: 1rem;
 `;
 
 const TotalVotesContainer = styled.div`

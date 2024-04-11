@@ -420,7 +420,7 @@ export function CreateBallot({
                   newPolls.splice(i, 1);
                   setPolls(newPolls);
                 }}
-                variant={"outline"}
+                variant={"ghost"}
                 style={{
                   position: "absolute",
                   top: "0",

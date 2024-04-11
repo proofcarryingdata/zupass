@@ -23,6 +23,7 @@ import {
 import { getHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { BackButton } from "../../shared/ScreenNavigation";
 
 export function SemaphoreGroupProveScreen({
   req
@@ -140,6 +141,7 @@ export function SemaphoreGroupProveScreen({
       {lines.map((line, i) => (
         <LineWrap key={i}>{line}</LineWrap>
       ))}
+      <BackButton />
     </div>
   );
 }
