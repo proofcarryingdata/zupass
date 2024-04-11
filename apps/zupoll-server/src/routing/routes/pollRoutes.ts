@@ -105,7 +105,7 @@ export function initPCDRoutes(
 
       try {
         if (request.ballot.pollsterType === UserType.ANON) {
-          const groupUrls = [ZUZALU_PARTICIPANTS_GROUP_URL];
+          let groupUrls = [ZUZALU_PARTICIPANTS_GROUP_URL];
 
           switch (request.ballot.ballotType) {
             case BallotType.ADVISORYVOTE:
@@ -138,16 +138,12 @@ export function initPCDRoutes(
                 ZUPASS_CLIENT_URL,
                 ZUPASS_SERVER_URL
               );
-              const urls = configs
-                .flatMap((c) => c.ballotConfigs ?? [])
-                .map((c) => c.creatorGroupUrl);
-              groupUrls.push(...urls);
+              const urls = configs.map((c) => c.groupUrl);
+              groupUrls = urls;
               console.log(`URLS: `, urls);
               break;
           }
 
-          // pollsterSemaphoreGroupUrl is always either SEMAPHORE_GROUP_URL or
-          // SEMAPHORE_ADMIN_GROUP_URL
           const nullifier = await verifyGroupProof(
             request.ballot.pollsterSemaphoreGroupUrl!,
             request.proof,
