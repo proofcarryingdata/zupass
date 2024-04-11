@@ -127,19 +127,11 @@ function App() {
   useEffect(() => {
     (async () => {
       if (pcdStr) {
+        // In a real-world application, you might send this serialized PCD to
+        // a back-end service for verification. It can also be verified in the
+        // browser, though this would require importing the relevant PCDPackage
+        // and its dependencies, which can be large (>2MB of JavaScript/Wasm).
         setResult(pcdStr);
-        // console.log(pcdStr);
-        // const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
-        //   JSON.parse(pcdStr).pcd
-        // );
-
-        // if (pcd && (await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
-        //   setResult(
-        //     `Your email address is ${pcd.claim.partialTicket.attendeeEmail}`
-        //   );
-        // } else {
-        //   setResult("Could not verify PCD");
-        // }
       }
     })();
   }, [pcdStr]);
