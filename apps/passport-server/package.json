@@ -54,7 +54,7 @@
     "email-validator": "^2.0.4",
     "express": "^5.0.0-beta.1",
     "fast-json-stable-stringify": "^2.1.0",
-    "flat": "5",
+    "flat": "^5.0.1",
     "grammy": "^1.18.1",
     "graphql": "^16.8.1",
     "js-sha256": "^0.10.1",

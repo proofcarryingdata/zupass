@@ -1,6 +1,6 @@
 import {
-  createFeedCredentialPayload,
-  pollFeed,
+  requestPollFeed,
+  ZUPASS_CREDENTIAL_REQUEST,
   ZupassFeedIds
 } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
@@ -13,6 +13,7 @@ import { stopApplication } from "../src/application";
 import { upsertUser } from "../src/database/queries/saveUser";
 import { fetchUserByEmail } from "../src/database/queries/users";
 import { Zupass } from "../src/types";
+import { makeTestCredential } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
@@ -57,12 +58,15 @@ describe("ticket issuance cutoff date should work", function () {
       "before the cutoff date",
     async function () {
       MockDate.set(beforeCutoffDate);
-      const feedCredential = JSON.stringify(createFeedCredentialPayload());
-      const feedResult = await pollFeed(
+      const feedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        userIdentity,
-        feedCredential,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
 
       if (!feedResult.success) {
@@ -76,12 +80,15 @@ describe("ticket issuance cutoff date should work", function () {
       "after the cutoff date",
     async function () {
       MockDate.set(afterCutoffDate);
-      const feedCredential = JSON.stringify(createFeedCredentialPayload());
-      const feedResult = await pollFeed(
+      const feedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        userIdentity,
-        feedCredential,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       expect(feedResult.success).to.eq(
         false,
@@ -110,23 +117,30 @@ describe("ticket issuance cutoff date should work", function () {
         extra_issuance: true
       });
 
-      const feedCredential = JSON.stringify(createFeedCredentialPayload());
-      const firstFeedResult = await pollFeed(
+      const firstFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        userIdentity,
-        feedCredential,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       expect(firstFeedResult.success).to.eq(
         true,
         "first poll of devconnect tickets with extra_issuance flag should succeed"
       );
 
-      const secondFeedResult = await pollFeed(
+      const secondFeedResult = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        userIdentity,
-        feedCredential,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(
+            userIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       expect(secondFeedResult.success).to.eq(
         false,

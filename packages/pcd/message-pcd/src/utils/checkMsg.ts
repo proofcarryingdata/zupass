@@ -1,5 +1,6 @@
 import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { MessagePCD, MessagePCDPackage } from "../MessagePCD";
+import { MessagePCD } from "../MessagePCD";
+import { MessagePCDPackage } from "../MessagePCDPackage";
 
 export async function checkMsg(
   msg: MessagePCD,

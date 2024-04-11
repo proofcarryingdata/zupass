@@ -3,6 +3,8 @@ import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfil
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
 
+console.log("building consumer-client");
+
 const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,

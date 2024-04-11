@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./SemaphoreGroupPCD": {
+      "types": "./dist/types/src/SemaphoreGroupPCD.d.ts",
+      "import": "./dist/esm/src/SemaphoreGroupPCD.js",
+      "require": "./dist/cjs/src/SemaphoreGroupPCD.js"
     }
   },
   "files": [

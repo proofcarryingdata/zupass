@@ -10,12 +10,12 @@ import {
   FrogCryptoShareTelegramHandleResult,
   FrogCryptoUserStateResult,
   PollFeedResult,
-  createFeedCredentialPayload,
-  frogCryptoGetUserState,
-  frogCryptoUpdateTelegramHandleSharing,
-  pollFeed,
+  ZUPASS_CREDENTIAL_REQUEST,
   requestFrogCryptoGetScoreboard,
-  requestListFeeds
+  requestFrogCryptoGetUserState,
+  requestFrogCryptoUpdateTelegramHandleSharing,
+  requestListFeeds,
+  requestPollFeed
 } from "@pcd/passport-interface";
 import { AppendToFolderAction, PCDActionType } from "@pcd/pcd-collection";
 import { Identity } from "@semaphore-protocol/identity";
@@ -38,6 +38,7 @@ import {
   insertTelegramVerification
 } from "../src/database/queries/telegram/insertTelegramConversation";
 import { Zupass } from "../src/types";
+import { makeTestCredential } from "./generic-issuance/util";
 import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import {
@@ -530,12 +531,12 @@ describe("frogcrypto functionality", function () {
     now: Date
   ): Promise<PollFeedResult> {
     MockDate.set(now);
-    const payload = JSON.stringify(createFeedCredentialPayload());
-    const response = await pollFeed(
+    const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/frogcrypto/feeds`,
-      identity,
-      payload,
-      feed.id
+      {
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        feedId: feed.id
+      }
     );
     MockDate.reset();
 
@@ -545,24 +546,24 @@ describe("frogcrypto functionality", function () {
   async function getUserState(
     feedIds: string[]
   ): Promise<FrogCryptoUserStateResult> {
-    const payload = JSON.stringify(createFeedCredentialPayload());
-    return frogCryptoGetUserState(
+    return requestFrogCryptoGetUserState(
       application.expressContext.localEndpoint,
-      identity,
-      payload,
-      feedIds
+      {
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        feedIds
+      }
     );
   }
 
   async function updateTelegramHandleSharing(
     shareTelegramHandle: boolean
   ): Promise<FrogCryptoShareTelegramHandleResult> {
-    const payload = JSON.stringify(createFeedCredentialPayload());
-    return frogCryptoUpdateTelegramHandleSharing(
+    return requestFrogCryptoUpdateTelegramHandleSharing(
       application.expressContext.localEndpoint,
-      identity,
-      payload,
-      shareTelegramHandle
+      {
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        reveal: shareTelegramHandle
+      }
     );
   }
 

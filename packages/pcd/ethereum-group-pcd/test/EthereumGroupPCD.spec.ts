@@ -17,7 +17,7 @@ import {
   EthereumGroupPCDPackage,
   GroupType,
   getRawPubKeyBuffer
-} from "../src/EthereumGroupPCD";
+} from "../src";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
@@ -131,6 +131,7 @@ async function happyPathEthGroupPCD(
 }
 
 describe("Ethereum Group PCD", function () {
+  this.timeout(60 * 1000 * 10);
   let ethGroupPCD: EthereumGroupPCD;
 
   this.beforeAll(async function () {

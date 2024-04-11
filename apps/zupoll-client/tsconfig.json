@@ -1,0 +1,37 @@
+{
+  "extends": "@pcd/tsconfig/nextjs.json",
+  "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
+  "exclude": ["node_modules"],
+  "compilerOptions": {
+    "jsx": "preserve",
+    "moduleResolution": "Bundler",
+    "target": "es6",
+    "inlineSourceMap": true,
+    "plugins": [
+      {
+        "name": "next"
+      }
+    ],
+    "strictNullChecks": true,
+    "paths": {
+      "@/*": ["./src/@/*"]
+    }
+  },
+  "references": [
+    {
+      "path": "../../packages/lib/passport-interface"
+    },
+    {
+      "path": "../../packages/lib/pcd-types"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-group-pcd"
+    },
+    {
+      "path": "../../packages/pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../packages/lib/util"
+    }
+  ]
+}

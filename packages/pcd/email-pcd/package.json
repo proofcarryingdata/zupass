@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./EmailPCD": {
+      "types": "./dist/types/src/EmailPCD.d.ts",
+      "import": "./dist/esm/src/EmailPCD.js",
+      "require": "./dist/cjs/src/EmailPCD.js"
     }
   },
   "files": [

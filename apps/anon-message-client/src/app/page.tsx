@@ -1,20 +1,21 @@
 "use client";
 
 import CopyButton from "@/components/CopyButton";
-import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import {
   AnonTopicDataPayload,
   AnonWebAppPayload,
   PayloadType,
   constructZupassPcdGetRequestUrl
-} from "@pcd/passport-interface";
+} from "@pcd/passport-interface/PassportInterface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import { getAnonTopicNullifier, getMessageWatermark } from "@pcd/util";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import {
   ZKEdDSAEventTicketPCDArgs,
-  ZKEdDSAEventTicketPCDPackage
-} from "@pcd/zk-eddsa-event-ticket-pcd";
+  ZKEdDSAEventTicketPCDTypeName
+} from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -38,7 +39,7 @@ async function requestProof(
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
-      pcdType: EdDSATicketPCDPackage.name,
+      pcdType: EdDSATicketPCDTypeName,
       value: undefined,
       userProvided: true,
       displayName: "Ticket",
@@ -53,7 +54,7 @@ async function requestProof(
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDPackage.name,
+      pcdType: SemaphoreIdentityPCDTypeName,
       value: undefined,
       userProvided: true
     },
@@ -91,7 +92,7 @@ async function requestProof(
 
   const proofUrl = await constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
-  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDTypeName, args, {
     genericProveScreen: true,
     title: "",
     description:
