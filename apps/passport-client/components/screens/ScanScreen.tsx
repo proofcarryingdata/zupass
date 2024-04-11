@@ -39,7 +39,8 @@ export function ScanScreen(): JSX.Element {
 
   const [scanner, setScanner] = useState<
     "strich" | "react-qr-reader" | "scandit"
-  >("scandit");
+    // @ts-expect-error this is temporary code so doesn't need to type-check
+  >(localStorage.getItem("preferred-scanner") ?? "scandit");
 
   type Option = {
     id: "strich" | "react-qr-reader" | "scandit";
@@ -50,6 +51,7 @@ export function ScanScreen(): JSX.Element {
     (option: SingleValue<Option>) => {
       if (option) {
         setScanner(option.id);
+        localStorage.setItem("preferred-scanner", option.id);
       }
     },
     [setScanner]

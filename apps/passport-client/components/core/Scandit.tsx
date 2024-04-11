@@ -39,6 +39,10 @@ export const ScanditScanner = ({
         settings
       );
       await barcodeCapture.setEnabled(false);
+      barcodeCapture.feedback.success = new SDCCore.Feedback(
+        SDCCore.Vibration.defaultVibration,
+        null
+      );
 
       barcodeCapture.addListener({
         didScan: async (barcodeCapture, session) => {

@@ -36,7 +36,7 @@ function createBarcodeReaderConfig(hostElem: HTMLElement): Configuration {
       rememberCameraDeviceId: true
     },
     feedback: {
-      audio: true,
+      audio: false,
       vibration: true
     }
   };
