@@ -1,6 +1,5 @@
 import { ZupollError } from "../../../types";
-import { Overlay } from "./Overlay";
-import { Button } from "./button";
+import ErrorDialog from "./ErrorDialog";
 
 export function ErrorOverlay({
   error,
@@ -12,22 +11,8 @@ export function ErrorOverlay({
   onLogout?: () => void;
 }) {
   return (
-    <Overlay onClose={onClose}>
-      <br />
-      <h1>{error.title}</h1>
-      <br />
-      <p>{error.message}</p>
-      {error.stack && (
-        <>
-          <br />
-          <pre>{error.stack}</pre>
-        </>
-      )}
-      <br />
-      <Button onClick={onClose}>Close</Button>
-      <br />
-      <br />
-      {onLogout && <Button onClick={onLogout}>Logout</Button>}
-    </Overlay>
+    <>
+      <ErrorDialog error={error} close={onClose}></ErrorDialog>
+    </>
   );
 }
