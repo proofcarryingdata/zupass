@@ -8,7 +8,7 @@ export function getPodboxConfigs(
   const PARC_HQ_CONFIG_ID = "0xPARC HQ";
   const PARC_HQ_DESCRIPTION = "Ballots visible to 0xPARC Employees";
   const PARC_HQ_CONFIG_NAME = "0xPARC HQ";
-  const PARC_HQ_CONFIG_PIPELINE_ID = "a8e4dc18-570b-4094-808b-6e699ed08254";
+  const PARC_HQ_CONFIG_PIPELINE_ID = "432a2e29-b884-4fd8-886b-04b42ad3242f";
   const PARC_HQ_CONFIG_SEMA_GROUP_ID = "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
   const PARC_GROUP_URL = makePodboxGroupUrl(
     ZUPASS_SERVER_URL,
