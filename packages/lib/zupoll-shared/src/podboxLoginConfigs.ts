@@ -11,6 +11,7 @@ export function getPodboxConfigs(
   const PARC_HQ_CONFIG_PIPELINE_ID = "a8e4dc18-570b-4094-808b-6e699ed08254";
   const PARC_HQ_CONFIG_SEMA_GROUP_ID = "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
   const PARC_GROUP_URL = makePodboxGroupUrl(
+    ZUPASS_SERVER_URL,
     PARC_HQ_CONFIG_PIPELINE_ID,
     PARC_HQ_CONFIG_SEMA_GROUP_ID
   );
@@ -44,11 +45,13 @@ export function getPodboxConfigs(
 }
 
 export function makePodboxGroupUrl(
+  ZUPASS_SERVER_URL: string,
   pipelineId: string,
   groupId: string
 ): string {
   return urljoin(
-    "http://localhost:3002/generic-issuance/api/semaphore/",
+    ZUPASS_SERVER_URL,
+    "generic-issuance/api/semaphore/",
     pipelineId,
     groupId
   );
