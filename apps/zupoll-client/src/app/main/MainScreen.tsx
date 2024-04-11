@@ -1,4 +1,3 @@
-import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -76,15 +75,12 @@ export function MainScreen({
       <ContentContainer>
         <GuaranteesElement />
 
-        {loadingBallots ? (
-          <LoadingPlaceholder />
-        ) : (
-          <BallotListsForUser
-            logout={logout}
-            loginState={loginState}
-            ballots={ballots}
-          />
-        )}
+        <BallotListsForUser
+          loading={loadingBallots}
+          logout={logout}
+          loginState={loginState}
+          ballots={ballots}
+        />
 
         {error && (
           <ErrorOverlay

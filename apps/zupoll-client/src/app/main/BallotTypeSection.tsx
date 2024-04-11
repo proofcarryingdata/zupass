@@ -9,6 +9,7 @@ export interface BallotTypeSectionProps {
   ballots: Ballot[];
   filter: (b: Ballot) => boolean;
   visible?: boolean;
+  loading: boolean;
 }
 
 export function BallotTypeSection({
@@ -16,7 +17,8 @@ export function BallotTypeSection({
   description,
   ballots,
   filter,
-  visible
+  visible,
+  loading
 }: BallotTypeSectionProps) {
   const filtered = useMemo(() => {
     return ballots.filter(filter);
@@ -30,7 +32,7 @@ export function BallotTypeSection({
     <div className="mb-4">
       <Title>{title}</Title>
       {description && <p>{description}</p>}
-      <BallotList ballots={filtered} />
+      <BallotList loading={loading} ballots={filtered} />
     </div>
   );
 }

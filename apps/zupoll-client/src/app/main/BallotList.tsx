@@ -1,3 +1,4 @@
+import { Spinner } from "@/components/ui/spinner";
 import { CellContext, ColumnDef } from "@tanstack/react-table";
 import { useRouter } from "next/navigation";
 import { useCallback, useMemo } from "react";
@@ -26,7 +27,13 @@ export const columns: ColumnDef<Ballot>[] = [
   }
 ];
 
-export function BallotList({ ballots }: { ballots: Ballot[] }) {
+export function BallotList({
+  ballots,
+  loading
+}: {
+  ballots: Ballot[];
+  loading: boolean;
+}) {
   const filteredBallots: Ballot[] = useMemo<Ballot[]>(() => {
     return ballots
       .map((ballot) => {
@@ -57,7 +64,13 @@ export function BallotList({ ballots }: { ballots: Ballot[] }) {
       onRowClick={onRowClick}
       columns={columns}
       data={filteredBallots}
-      placeholderText="No Ballots"
+      placeholder={
+        loading ? (
+          <div className="w-full h-10 flex items-center justify-center">
+            <Spinner />
+          </div>
+        ) : undefined
+      }
     />
   );
 }

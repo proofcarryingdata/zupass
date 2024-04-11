@@ -20,14 +20,14 @@ interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[];
   data: TData[];
   onRowClick?: (row: TData) => void;
-  placeholderText?: string;
+  placeholder?: React.ReactNode;
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
   onRowClick,
-  placeholderText
+  placeholder
 }: DataTableProps<TData, TValue>) {
   const table = useReactTable({
     data,
@@ -77,7 +77,9 @@ export function DataTable<TData, TValue>({
           ) : (
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
-                {placeholderText ?? "No results."}
+                {placeholder ?? (
+                  <div className="text-gray-500">Nothing Yet</div>
+                )}
               </TableCell>
             </TableRow>
           )}
