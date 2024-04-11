@@ -1,3 +1,4 @@
+import { getPodboxConfigs } from "@pcd/zupoll-shared";
 import {
   Ballot,
   BallotType,
@@ -10,6 +11,7 @@ import express, { NextFunction, Request, Response } from "express";
 import { InlineKeyboard } from "grammy";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";
+import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "src/env";
 import { ApplicationContext } from "../../application";
 import {
   createBallot,
@@ -103,33 +105,44 @@ export function initPCDRoutes(
 
       try {
         if (request.ballot.pollsterType === UserType.ANON) {
-          let groupUrl = ZUZALU_PARTICIPANTS_GROUP_URL;
+          const groupUrls = [ZUZALU_PARTICIPANTS_GROUP_URL];
 
           switch (request.ballot.ballotType) {
             case BallotType.ADVISORYVOTE:
             case BallotType.ORGANIZERONLY:
-              groupUrl = ZUZALU_ORGANIZERS_GROUP_URL;
+              groupUrls.push(ZUZALU_ORGANIZERS_GROUP_URL);
               break;
             case BallotType.STRAWPOLL:
-              groupUrl = ZUZALU_PARTICIPANTS_GROUP_URL;
+              groupUrls.push(ZUZALU_PARTICIPANTS_GROUP_URL);
               break;
             case BallotType.DEVCONNECT_STRAWPOLL:
-              groupUrl = DEVCONNECT_PARTICIPANTS_GROUP_URL;
+              groupUrls.push(DEVCONNECT_PARTICIPANTS_GROUP_URL);
               break;
             case BallotType.DEVCONNECT_FEEDBACK:
-              groupUrl = DEVCONNECT_ORGANIZERS_GROUP_URL;
+              groupUrls.push(DEVCONNECT_ORGANIZERS_GROUP_URL);
               break;
             case BallotType.EDGE_CITY_STRAWPOLL:
-              groupUrl = EDGE_CITY_RESIDENTS_GROUP_URL;
+              groupUrls.push(EDGE_CITY_RESIDENTS_GROUP_URL);
               break;
             case BallotType.EDGE_CITY_FEEDBACK:
-              groupUrl = EDGE_CITY_ORGANIZERS_GROUP_URL;
+              groupUrls.push(EDGE_CITY_ORGANIZERS_GROUP_URL);
               break;
             case BallotType.ETH_LATAM_STRAWPOLL:
-              groupUrl = ETH_LATAM_ATTENDEES_GROUP_URL;
+              groupUrls.push(ETH_LATAM_ATTENDEES_GROUP_URL);
               break;
             case BallotType.ETH_LATAM_FEEDBACK:
-              groupUrl = ETH_LATAM_ORGANIZERS_GROUP_URL;
+              groupUrls.push(ETH_LATAM_ORGANIZERS_GROUP_URL);
+              break;
+            case BallotType.PODBOX:
+              const configs = getPodboxConfigs(
+                ZUPASS_CLIENT_URL,
+                ZUPASS_SERVER_URL
+              );
+              const urls = configs
+                .flatMap((c) => c.ballotConfigs ?? [])
+                .map((c) => c.creatorGroupUrl);
+              groupUrls.push(...urls);
+              console.log(`URLS: `, urls);
               break;
           }
 
@@ -140,7 +153,7 @@ export function initPCDRoutes(
             request.proof,
             {
               signal: signalHash,
-              allowedGroups: [groupUrl!],
+              allowedGroups: groupUrls,
               claimedExtNullifier: signalHash
             }
           );

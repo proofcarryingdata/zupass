@@ -25,13 +25,15 @@ export function getPodboxConfigs(
     canCreateBallotTypes: [BallotType.PODBOX],
     ballotConfigs: [
       {
-        voterGroupId: "asdf",
+        voterGroupId: PARC_HQ_CONFIG_SEMA_GROUP_ID,
         voterGroupUrl: PARC_GROUP_URL,
-        creatorGroupId: "asdf",
+        creatorGroupId: PARC_HQ_CONFIG_SEMA_GROUP_ID,
         creatorGroupUrl: PARC_GROUP_URL,
         passportServerUrl: ZUPASS_SERVER_URL,
         passportAppUrl: ZUPASS_CLIENT_URL,
-        ballotType: BallotType.PODBOX
+        ballotType: BallotType.PODBOX,
+        latestGroupHashUrl: urljoin(PARC_GROUP_URL, "latest-root"),
+        makeHistoricalGroupUrl: (hash) => urljoin(PARC_GROUP_URL, hash)
       }
     ]
   };
