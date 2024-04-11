@@ -71,3 +71,7 @@ export const ETH_LATAM_ORGANIZERS_GROUP_URL = urljoin(
   ETH_LATAM_PIPELINE_URL,
   ETH_LATAM_ORGANIZERS_GROUP_ID
 );
+
+export const APP_CONFIG = {
+  debugToolsEnabled: process.env.NEXT_PUBLIC_DEBUG_TOOLS_ENABLED === "true"
+};

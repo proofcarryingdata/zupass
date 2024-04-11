@@ -18,6 +18,7 @@ import {
 import { Subtitle, Title } from "../../@/components/ui/text";
 import { Poll } from "../../api/prismaTypes";
 import { BallotSignal } from "../../api/requestTypes";
+import { APP_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
@@ -160,6 +161,7 @@ export function CreateBallot({
         </CardHeader>
         <CardContent>
           <Button
+            style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}
             variant="outline"
             className=""
             onClick={() => {

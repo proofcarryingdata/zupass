@@ -201,6 +201,7 @@
     "BOT_CHANNEL_ID",
     "MIN_LOG_LEVEL",
     "ACCESS_TOKEN_SECRET",
+    "NEXT_PUBLIC_DEBUG_TOOLS_ENABLED",
     "//// add env vars above this line ////"
   ]
 }
