@@ -78,7 +78,7 @@ export function DataTable<TData, TValue>({
             <TableRow>
               <TableCell colSpan={columns.length} className="h-24 text-center">
                 {placeholder ?? (
-                  <div className="text-gray-500">Nothing Yet</div>
+                  <div className="text-foreground/90">Nothing Yet</div>
                 )}
               </TableCell>
             </TableRow>

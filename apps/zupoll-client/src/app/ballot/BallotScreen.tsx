@@ -218,7 +218,7 @@ export function BallotScreen({
         {ballot && polls && (
           <div>
             <Title className="mb-0">{ballot.ballotTitle} </Title>
-            <span className="font-normal text-sm text-gray-500">
+            <span className="font-normal text-sm text-foreground/90">
               posted {fmtTimeAgo(new Date(ballot.createdAt))}
               {" · "}
               {new Date(ballot.expiry) < new Date() ? (
@@ -255,7 +255,7 @@ export function BallotScreen({
                 >
                   Submit Votes
                 </Button>
-                <TextContainer className="text-gray-500 mt-2">
+                <TextContainer className="text-foreground/80 mt-2">
                   If you created or reset your Zupass after this ballot was
                   created you will not be able to vote. This is a security
                   measure designed to prevent double-voting.

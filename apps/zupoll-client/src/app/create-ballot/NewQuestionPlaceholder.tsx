@@ -16,10 +16,10 @@ export const NewQuestionPlaceholder = React.forwardRef<
       )}
       {...props}
     >
-      <div className="mx-auto h-12 w-12 text-gray-400">
+      <div className="mx-auto h-12 w-12 text-foreground/80">
         <TbMessageQuestion className="stroke-custom" size={48} />
       </div>
-      <span className="mt-2 block text-sm font-semibold text-gray-500">
+      <span className="mt-2 block text-sm font-semibold text-foreground/80">
         Add Poll
       </span>
     </button>

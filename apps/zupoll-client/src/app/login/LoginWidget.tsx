@@ -62,7 +62,7 @@ export function LoggingIn() {
     <div className="flex flex-col gap-4 items-center justify-center w-full min-h-12">
       Logging In
       <Spinner className="w-8 h-8" />
-      <div className="text-sm text-gray-500">Tip: {randomTip}</div>
+      <div className="text-sm text-foreground/90">Tip: {randomTip}</div>
     </div>
   );
 }
