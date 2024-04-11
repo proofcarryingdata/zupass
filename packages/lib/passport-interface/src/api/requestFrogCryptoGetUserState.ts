@@ -1,7 +1,3 @@
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
   FrogCryptoUserStateRequest,
@@ -27,33 +23,6 @@ export async function requestFrogCryptoGetUserState(
     }),
     req
   );
-}
-
-export async function frogCryptoGetUserState(
-  zupassServerUrl: string,
-  identity: Identity,
-  signedMessage: string,
-  feedIds: string[]
-): Promise<FrogCryptoUserStateResult> {
-  return requestFrogCryptoGetUserState(zupassServerUrl, {
-    pcd: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: signedMessage
-        }
-      })
-    ),
-    feedIds
-  });
 }
 
 export type FrogCryptoUserStateResult =

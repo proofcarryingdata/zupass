@@ -1,11 +1,5 @@
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
-  ISSUANCE_STRING,
-  OfflineDevconnectTicket,
   UploadOfflineCheckinsRequest,
   UploadOfflineCheckinsResponseValue
 } from "../RequestTypes";
@@ -27,34 +21,6 @@ export async function requestOfflineTicketsCheckin(
     }),
     postBody
   );
-}
-
-export async function offlineTicketsCheckin(
-  passportServer: string,
-  checkerIdentity: Identity,
-  checkedOfflineInDevconnectTickets: OfflineDevconnectTicket[]
-): Promise<OfflineTicketsCheckinResult> {
-  return requestOfflineTicketsCheckin(passportServer, {
-    checkedOfflineInDevconnectTicketIDs: checkedOfflineInDevconnectTickets.map(
-      (t) => t.id
-    ),
-    checkerProof: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity: checkerIdentity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING
-        }
-      })
-    )
-  });
 }
 
 export type OfflineTicketsCheckinResult =

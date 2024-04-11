@@ -1,4 +1,4 @@
-import { PodboxActionPreCheckResult } from "@pcd/passport-interface";
+import { PodboxTicketActionPreCheckResult } from "@pcd/passport-interface";
 import { Dispatch, ReactNode, SetStateAction, useEffect } from "react";
 import { Button, Spacer } from "../../../../../../core";
 import { RippleLoader } from "../../../../../../core/RippleLoader";
@@ -18,7 +18,7 @@ export function ShareContactActionSection({
   ticketId: string;
   eventId: string;
   setIsLoading: Dispatch<SetStateAction<boolean>>;
-  precheck: PodboxActionPreCheckResult;
+  precheck: PodboxTicketActionPreCheckResult;
   isLoading: boolean;
 }): ReactNode {
   const executor = useExecuteTicketAction({

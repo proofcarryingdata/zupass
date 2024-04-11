@@ -1,16 +1,14 @@
 import { PCDCollection } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import {
-  FeedCredentialPayload,
-  createFeedCredentialPayload
-} from "./FeedCredential";
+  Credential,
+  CredentialPayload,
+  createCredentialPayload
+} from "./Credential";
 import { CredentialRequest } from "./SubscriptionManager";
 import { StorageBackedMap } from "./util/StorageBackedMap";
 
@@ -25,9 +23,26 @@ export type CredentialCache = Map<string, CacheEntry>;
 interface CacheEntry {
   timestamp: number;
   value: SerializedPCD;
+  request: CredentialRequest;
 }
 
 const CACHE_TTL = ONE_HOUR_MS;
+
+/**
+ * These constants are convenient values for credential requests.
+ * PODBOX_CREDENTIAL_REQUEST requires an EmailPCD, since this is commonly
+ * required for Podbox requests.
+ * ZUPASS_CREDENTIAL_REQUEST does not, as Zupass can identify users by their
+ * Semaphore ID alone.
+ */
+export const PODBOX_CREDENTIAL_REQUEST: CredentialRequest = {
+  pcdType: "email-pcd",
+  signatureType: "sempahore-signature-pcd"
+};
+
+export const ZUPASS_CREDENTIAL_REQUEST: CredentialRequest = {
+  signatureType: "sempahore-signature-pcd"
+};
 
 // Creates an in-memory cache with a TTL of one hour.
 // Use this where local storage is not available, e.g. in tests
@@ -78,10 +93,7 @@ export class CredentialManager implements CredentialManagerAPI {
     for (const req of reqs) {
       if (!this.getCachedCredential(req.pcdType)) {
         try {
-          this.setCachedCredential(
-            req.pcdType,
-            await this.generateCredential(req)
-          );
+          this.setCachedCredential(req, await this.generateCredential(req));
         } catch (e) {
           // It can be possible for credential generation to fail if the user
           // does not have the right kind of PCD. Because we are only
@@ -108,11 +120,11 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Adds a credential to the cache
   private setCachedCredential(
-    type: string | undefined,
+    request: CredentialRequest,
     value: SerializedPCD
   ): void {
-    const cacheKey = type ?? "none";
-    this.cache.set(cacheKey, { value, timestamp: Date.now() });
+    const cacheKey = request.pcdType ?? "none";
+    this.cache.set(cacheKey, { value, timestamp: Date.now(), request });
     // This can happen asynchronously, so don't await on the promise
     this.purgeExpiredCredentials();
   }
@@ -141,7 +153,7 @@ export class CredentialManager implements CredentialManagerAPI {
     }
 
     const credential = await this.generateCredential(req);
-    this.setCachedCredential(req.pcdType, credential);
+    this.setCachedCredential(req, credential);
 
     return credential;
   }
@@ -168,11 +180,9 @@ export class CredentialManager implements CredentialManagerAPI {
       // works for now
       const pcd = pcds[0];
       const serializedPCD = await this.pcds.serialize(pcd);
-      return this.semaphoreSignPayload(
-        createFeedCredentialPayload(serializedPCD)
-      );
+      return this.semaphoreSignPayload(createCredentialPayload(serializedPCD));
     } else if (req.pcdType === undefined) {
-      return this.semaphoreSignPayload(createFeedCredentialPayload());
+      return this.semaphoreSignPayload(createCredentialPayload());
     } else {
       throw new Error(
         `Cannot issue credential containing a PCD of type ${req.pcdType}`
@@ -182,8 +192,8 @@ export class CredentialManager implements CredentialManagerAPI {
 
   // Takes a payload and wraps it in a signature PCD.
   private async semaphoreSignPayload(
-    payload: FeedCredentialPayload
-  ): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+    payload: CredentialPayload
+  ): Promise<Credential> {
     // In future we might support other types of signature here
     const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
       identity: {

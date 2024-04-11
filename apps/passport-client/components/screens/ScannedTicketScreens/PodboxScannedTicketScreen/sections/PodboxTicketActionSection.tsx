@@ -1,4 +1,4 @@
-import { PodboxActionPreCheckResult } from "@pcd/passport-interface";
+import { PodboxTicketActionPreCheckResult } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { useState } from "react";
 import styled from "styled-components";
@@ -22,7 +22,7 @@ export function PodboxTicketActionSection({
 }: {
   ticketId: string;
   eventId: string;
-  precheck: PodboxActionPreCheckResult;
+  precheck: PodboxTicketActionPreCheckResult;
 }): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
   const shouldShowDivider =
