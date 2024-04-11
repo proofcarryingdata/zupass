@@ -321,15 +321,13 @@ export function CreateBallot({
           </div>
 
           <div
-          // style={{
-          //   display:
-          //     loginState?.config?.canCreateBallotTypes?.length > 1
-          //       ? undefined
-          //       : "none"
-          // }}
+            style={{
+              display: possibleBallotConfigs.length > 1 ? undefined : "none"
+            }}
           >
             <Subtitle>Ballot Type</Subtitle>
             <Select
+              // TODO: make this based on ballot config name, not type
               value={selectedBallotConfig?.ballotType}
               onValueChange={(value: string) =>
                 setSelectedBallotConfig(
