@@ -4,20 +4,21 @@ import { Switch } from "./switch";
 
 export function ThemeSwitcher() {
   const [theme, setTheme] = useLocalStorage("theme", "light");
+  const isLight = theme === "light";
 
   useEffect(() => {
     document.body.classList.remove("light", "dark");
-    document.body.classList.add(theme);
-  }, [theme]);
+    document.body.classList.add(isLight ? "light" : "dark");
+  }, [isLight, theme]);
 
   return (
-    <div
-      className="text-xs h-full flex items-center justify-center gap-2"
-      onClick={() => {
-        setTheme(theme === "light" ? "dark" : "light");
-      }}
-    >
-      <Switch></Switch>
+    <div className="text-xs h-full flex items-center justify-center gap-2">
+      <Switch
+        checked={isLight}
+        onCheckedChange={(newIsLight) => {
+          setTheme(newIsLight ? "light" : "dark");
+        }}
+      ></Switch>
     </div>
   );
 }
