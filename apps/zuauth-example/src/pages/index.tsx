@@ -1,63 +1,127 @@
-import { PopupClosedError, zuAuth } from "@pcd/zuauth";
+import { eventMetadata } from "@/metadata";
+import { zuAuth } from "@pcd/zuauth";
 import { Inter } from "next/font/google";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useReducer, useState } from "react";
 
 const inter = Inter({ subsets: ["latin"] });
 
+type AuthState =
+  | "logged out"
+  | "auth-start"
+  | "authenticating"
+  | "authenticated"
+  | "error";
+
 export default function Home() {
   const [pcdStr, setPcdStr] = useState<string>("");
-  const [authState, setAuthState] = useState<
-    "idle" | "auth-start" | "authed" | "error"
-  >("idle");
+  const [authState, setAuthState] = useState<AuthState>("logged out");
+  const [log, addLog] = useReducer((state: string, toAdd: string) => {
+    return `${state}${state === "" ? "" : "\n"}${toAdd}`;
+  }, "");
+  const [user, setUser] = useState<Record<string, string> | undefined>();
 
   useEffect(() => {
     (async () => {
       if (authState === "auth-start") {
-        try {
-          const result = await zuAuth({
-            zupassUrl: process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL as string,
-            popupRoute: "/popup",
-            fieldsToReveal: {
-              revealAttendeeEmail: true,
-              revealAttendeeName: true
-            },
-            watermark: "1234",
-            eventMetadata: {
-              publicKey: [
-                "1d47687549cb273b6fed3493de5a954920dd0403f8c7eb67c2ff72a26fa4ab62",
-                "1144ef5d44e2d8972d7ade8138629ebefb094025ebb4df00ed02e22d9b68e665"
-              ],
-              eventId: "536c96f5-feb8-4938-bcac-47d4e13847c6",
-              productIds: ["9e39949c-b468-4c7e-a6a2-7735521f0bda"]
-            }
+        addLog("Fetching watermark");
+        const watermark = (await (await fetch("/api/watermark")).json())
+          .watermark;
+        addLog("Got watermark");
+        addLog("Opening popup window");
+        setAuthState("authenticating");
+        const result = await zuAuth({
+          zupassUrl: process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL as string,
+          popupRoute: window.origin + "/popup",
+          fieldsToReveal: {
+            revealAttendeeEmail: true,
+            revealAttendeeName: true
+          },
+          watermark,
+          eventMetadata
+        });
+
+        if (result.type === "pcd") {
+          addLog("Received PCD");
+          setPcdStr(result.pcdStr);
+
+          const loginResult = await fetch("/api/login", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ pcd: result.pcdStr })
           });
-          setPcdStr(result);
-          setAuthState("authed");
-        } catch (error) {
-          if (error instanceof PopupClosedError) {
-            setAuthState("idle");
-          } else {
-            setAuthState("error");
-          }
+
+          setUser((await loginResult.json()).user);
+          addLog("Authenticated successfully");
+          setAuthState("authenticated");
+        }
+        if (result.type === "popupBlocked") {
+          addLog("The popup was blocked by your browser");
+          setAuthState("error");
+        }
+        if (result.type === "popupClosed") {
+          addLog("The popup was closed before a result was received");
+          setAuthState("error");
         }
       }
     })();
-  }, [authState]);
+  }, [addLog, authState]);
 
   const auth = useCallback(() => {
-    if (authState === "idle" || authState === "error") {
+    if (authState === "logged out" || authState === "error") {
+      addLog("Beginning authentication");
       setAuthState("auth-start");
     }
-  }, [authState]);
+  }, [addLog, authState]);
+
+  const logout = useCallback(() => {
+    setUser(undefined);
+    setPcdStr("");
+    setAuthState("logged out");
+    addLog("Logged out");
+  }, []);
+
+  const stateClasses: Record<AuthState, string> = {
+    "logged out": "",
+    "auth-start": "text-blue-300",
+    authenticated: "text-green-300",
+    error: "text-red-300",
+    authenticating: "text-blue-300"
+  };
 
   return (
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
     >
       <div className="z-10 max-w-5xl w-full text-sm">
-        <button onClick={auth}>Click me</button>
-        <div>{authState}</div>
-        <div>{pcdStr}</div>
+        <button
+          onClick={authState === "authenticated" ? logout : auth}
+          className="border rounded border-gray-400 px-4 py-2 font-medium text-md"
+          disabled={
+            authState === "auth-start" || authState === "authenticating"
+          }
+        >
+          {authState === "authenticated" ? `Log out` : `Authenticate`}
+        </button>
+        <div className="my-4">
+          Current authentication state is{" "}
+          <span className={`font-semibold ${stateClasses[authState]}`}>
+            {authState}
+          </span>{" "}
+          {user && (
+            <>
+              as{" "}
+              <span className="font-medium text-yellow-200">{`${user.attendeeName} (${user.attendeeEmail})`}</span>
+            </>
+          )}
+        </div>
+        <h3 className="text-lg font-semibold my-2">Log</h3>
+        <pre className="whitespace-pre-line border rounded-md border-gray-500 px-2 py-1">
+          {log}
+        </pre>
+        <h3 className="text-lg font-semibold mt-2">PCD</h3>
+        <pre className="whitespace-pre-line border rounded-md border-gray-500 px-2 py-1">
+          {pcdStr}
+        </pre>
       </div>
     </main>
   );

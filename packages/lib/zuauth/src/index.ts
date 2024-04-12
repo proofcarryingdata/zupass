@@ -1,9 +1,10 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd/EdDSAPCD";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
+import { PipelineEventTicketMetadata } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
 import {
-  openZupassPopup,
-  receiveZupassPopupMessage
+  PopupActionResult,
+  zupassPopupAction
 } from "@pcd/passport-interface/PassportPopup/core";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
@@ -14,26 +15,18 @@ import {
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 
-interface EventMetadata {
-  publicKey: EdDSAPublicKey;
-  eventId: string;
-  productIds: string[];
-}
-
-export class PopupClosedError extends Error {}
-
-interface ZuAuthArgs {
+export interface ZuAuthArgs {
   zupassUrl: string;
   popupRoute: string;
   fieldsToReveal: EdDSATicketFieldsToReveal;
   watermark: string | bigint;
-  eventMetadata: EventMetadata;
+  eventMetadata: PipelineEventTicketMetadata;
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
 }
 
-export async function zuAuth(args: ZuAuthArgs): Promise<string> {
+export async function zuAuth(args: ZuAuthArgs): Promise<PopupActionResult> {
   const {
     zupassUrl,
     popupRoute,
@@ -51,7 +44,7 @@ export async function zuAuth(args: ZuAuthArgs): Promise<string> {
     eventMetadata.productIds.length
   );
 
-  const popup = openZKEdDSAEventTicketPopup(
+  const proofUrl = constructZkTicketProofUrl(
     zupassUrl,
     popupRoute,
     fieldsToReveal,
@@ -64,33 +57,15 @@ export async function zuAuth(args: ZuAuthArgs): Promise<string> {
     proofDescription
   );
 
-  return new Promise((resolve, reject) => {
-    console.log(popup);
-    const closeCheckInterval = window.setInterval(() => {
-      if (popup && popup.closed) {
-        console.log("popup closed!");
-        clearInterval(closeCheckInterval);
-        reject(new PopupClosedError());
-      }
-    }, 100);
-    receiveZupassPopupMessage().then((result) => {
-      window.clearInterval(closeCheckInterval);
-      if (result.type === "pcd") {
-        resolve(result.pcdStr);
-      } else {
-        // Any other result would be invalid
-        reject();
-      }
-    });
-  });
+  return zupassPopupAction(popupRoute, proofUrl);
 }
 
 /**
  * Opens a Zupass popup to make a proof of a ZK EdDSA event ticket PCD.
  */
-export function openZKEdDSAEventTicketPopup(
+export function constructZkTicketProofUrl(
   zupassUrl: string,
-  popupRoute: string = "popup",
+  popupUrl: string,
   fieldsToReveal: EdDSATicketFieldsToReveal,
   validEventIds: string[],
   validProductIds: string[],
@@ -99,7 +74,7 @@ export function openZKEdDSAEventTicketPopup(
   externalNullifier?: string | bigint,
   proofTitle: string = "ZKEdDSA Ticket Proof",
   proofDescription: string = "ZKEdDSA Ticket PCD Request"
-): Window | null {
+): string {
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
@@ -142,16 +117,15 @@ export function openZKEdDSAEventTicketPopup(
       userProvided: false
     }
   };
-
-  const popupUrl = window.location.origin + "/" + popupRoute;
-
-  const proofUrl = constructZupassPcdGetRequestUrl<
-    typeof ZKEdDSAEventTicketPCDPackage
-  >(zupassUrl, popupUrl, ZKEdDSAEventTicketPCDTypeName, args, {
-    genericProveScreen: true,
-    title: proofTitle,
-    description: proofDescription
-  });
-
-  return openZupassPopup(popupUrl, proofUrl);
+  return constructZupassPcdGetRequestUrl<typeof ZKEdDSAEventTicketPCDPackage>(
+    zupassUrl,
+    popupUrl,
+    ZKEdDSAEventTicketPCDTypeName,
+    args,
+    {
+      genericProveScreen: true,
+      title: proofTitle,
+      description: proofDescription
+    }
+  );
 }

@@ -104,7 +104,7 @@ export function openZupassPopup(
 /**
  * The popup message can contain either an encoded PCD or encoded pending PCD.
  */
-type PopupMessageResult =
+export type PopupMessageResult =
   | {
       type: "pcd";
       pcdStr: string;
@@ -147,7 +147,7 @@ export function receiveZupassPopupMessage(
   });
 }
 
-type PopupActionResult =
+export type PopupActionResult =
   | PopupMessageResult
   | { type: "popupClosed" }
   | { type: "popupBlocked" };
