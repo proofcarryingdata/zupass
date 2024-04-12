@@ -127,7 +127,9 @@ export async function upsertPipelineDefinition(
     // NEW PIPELINE!
     getActiveSpan()?.setAttribute("is_new", true);
     newDefinition.ownerUserId = editor.id;
-    newDefinition.id = uuidv4();
+    if (!newDefinition.id) {
+      newDefinition.id = uuidv4();
+    }
     newDefinition.editorUserIds = (
       await Promise.all(
         newDefinition.editorUserIds.map((id) => userSubservice.getUserById(id))
