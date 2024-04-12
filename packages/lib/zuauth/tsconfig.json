@@ -4,6 +4,8 @@
     "lib": ["dom"],
     "outDir": "dist",
     "declarationDir": "dist/types",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
     // Include all source files, including tests
     "rootDir": "."
   },
