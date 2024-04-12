@@ -162,7 +162,7 @@ type PopupActionResult =
  * {@link receiveZupassPopupMessage} separately. It is added as a new API to
  * avoid breaking backwards-compatibility for existing code.
  */
-export async function zupassPopupAction(
+export async function zupassPopupExecute(
   popupUrl: string,
   proofUrl: string
 ): Promise<PopupActionResult> {
