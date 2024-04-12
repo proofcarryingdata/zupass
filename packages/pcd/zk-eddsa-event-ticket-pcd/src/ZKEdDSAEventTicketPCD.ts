@@ -62,6 +62,7 @@ export type ZKEdDSAEventTicketPCDArgs = {
        */
       eventIds: string[];
       productIds: string[];
+      publicKey?: EdDSAPublicKey;
       // user friendly message when no valid ticket is found
       notFoundMessage: string;
     }

@@ -492,6 +492,14 @@ export interface PipelineInfoConsumer {
   timeUpdated: string;
 }
 
+export interface PipelineEventTicketMetadata {
+  publicKey: EdDSAPublicKey;
+  eventId: string; // UUID
+  productIds: string[]; // UUID[]
+}
+// could be |'ed with other types of metadata
+export type PipelinePCDMetadata = PipelineEventTicketMetadata;
+
 export interface PipelineInfoResponseValue {
   ownerEmail: string;
   lastLoad?: PipelineLoadSummary;
@@ -499,6 +507,7 @@ export interface PipelineInfoResponseValue {
   latestAtoms?: object[];
   latestConsumers?: PipelineInfoConsumer[];
   editHistory?: HydratedPipelineHistoryEntry[];
+  eventMetadata?: PipelinePCDMetadata[];
 }
 
 export interface ListSingleFeedRequest {

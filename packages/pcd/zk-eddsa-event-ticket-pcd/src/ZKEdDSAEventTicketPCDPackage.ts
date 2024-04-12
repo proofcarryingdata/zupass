@@ -1,3 +1,4 @@
+import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -359,6 +360,13 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
 
           if (params?.productIds?.length) {
             return params.productIds.includes(value.claim.ticket.productId);
+          }
+
+          if (params?.publicKey) {
+            return isEqualEdDSAPublicKey(
+              params.publicKey,
+              value.proof.eddsaPCD.claim.publicKey
+            );
           }
 
           return true;
