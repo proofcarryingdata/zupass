@@ -11,13 +11,19 @@ export function useZupassPopupMessages(): [string, string] {
 
   // Listen for PCDs coming back from the Zupass popup
   useEffect(() => {
-    receiveZupassPopupMessage().then((result) => {
+    const abortReceiveMessage = new AbortController();
+    receiveZupassPopupMessage(abortReceiveMessage.signal).then((result) => {
       if (result.type === "pcd") {
         setPCDStr(result.pcdStr);
-      } else {
+      } else if (result.type === "pendingPcd") {
         setPendingPCDStr(result.pendingPcdStr);
       }
     });
+    return () => {
+      // If the hook is unmounted, signal that the message handlers can detach
+      // by aborting.
+      abortReceiveMessage.abort();
+    };
   }, []);
 
   return [pcdStr, pendingPCDStr];
