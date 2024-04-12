@@ -1,5 +1,3 @@
-import { sleep } from "@pcd/util";
-
 /*
  * A function that should be called from within a popup window opened by
  * {@link openZupassPopup}.
@@ -54,7 +52,13 @@ export async function zupassPopupSetup(): Promise<string | undefined> {
     }
 
     window.close();
-    await sleep(1000 * 3);
+    // Almost certainly the window will close. But if, for some reason, it
+    // does not then we should return a string that will be shown as an error
+    // message. Wait a few seconds, so the error message doesn't "flash" up as
+    // the screen is closing.
+    await new Promise<void>((resolve) =>
+      window.setTimeout(() => resolve(), 1000 * 3)
+    );
     return "Finished. Please close this window.";
   } else if (paramsEncodingPendingPCD) {
     // Later, Zupass redirects back with a encodedPendingPCD. Send it to our parent.
@@ -63,7 +67,9 @@ export async function zupassPopupSetup(): Promise<string | undefined> {
       "*"
     );
     window.close();
-    await sleep(1000 * 3);
+    await new Promise<void>((resolve) =>
+      window.setTimeout(() => resolve(), 1000 * 3)
+    );
     return "Finished. Please close this window.";
   }
 }
