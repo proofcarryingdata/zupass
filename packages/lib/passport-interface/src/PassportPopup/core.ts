@@ -82,9 +82,20 @@ export async function zupassPopupSetup(): Promise<string | undefined> {
 export function openZupassPopup(
   popupUrl: string,
   proofUrl: string
-): Window | null {
+): Promise<Window | null> {
   const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
-  return window.open(url, "_blank", "width=450,height=600,top=100,popup");
+  // Calling window.open from within a React hook can cause problems.
+  // The workaround is to do it asynchronously, as per:
+  // https://stackoverflow.com/questions/76944918/should-not-already-be-working-on-window-open-in-simple-react-app
+  return new Promise((resolve) =>
+    window.setTimeout(
+      () =>
+        resolve(
+          window.open(url, "_blank", "width=450,height=600,top=100,popup")
+        ),
+      0
+    )
+  );
 }
 
 /**
@@ -155,7 +166,7 @@ export async function zupassPopupAction(
   popupUrl: string,
   proofUrl: string
 ): Promise<PopupActionResult> {
-  const popup = openZupassPopup(popupUrl, proofUrl);
+  const popup = await openZupassPopup(popupUrl, proofUrl);
   // If we did not get a window from `openZupassPopup`, it was blocked
   // See https://developer.mozilla.org/en-US/docs/Web/API/Window/open#return_value
   // This allows the caller to gracefully handle this, e.g. by notifying the
