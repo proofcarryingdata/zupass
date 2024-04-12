@@ -15,17 +15,27 @@ import {
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 
+/**
+ * Arguments required for making ZK proofs about tickets.
+ */
 export interface ZuAuthArgs {
   zupassUrl: string;
   popupRoute: string;
   fieldsToReveal: EdDSATicketFieldsToReveal;
   watermark: string | bigint;
+  // Event metadata comes from Podbox, and identifies the public key, event ID,
+  // and product IDs that are issued by a given pipeline.
+  // TODO what about multiples of these?
   eventMetadata: PipelineEventTicketMetadata;
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
 }
 
+/**
+ * Simple wrapper function to make it easy to build authentication flows for
+ * EdDSAPCD tickets.
+ */
 export async function zuAuth(args: ZuAuthArgs): Promise<PopupActionResult> {
   const {
     zupassUrl,
