@@ -159,6 +159,8 @@ export class PipelineAPISubservice {
           url: f.feedUrl
         })),
 
+        eventMetadata: pipelineFeeds[0].getMetadata(),
+
         latestConsumers: !pipelineHasSemaphoreGroups
           ? undefined
           : latestConsumers

@@ -3,6 +3,7 @@ import {
   CSVPipelineOutputType,
   PipelineLoadSummary,
   PipelineLog,
+  PipelinePCDMetadata,
   PipelineType,
   PollFeedRequest,
   PollFeedResponseValue
@@ -71,7 +72,8 @@ export class CSVPipeline implements BasePipeline {
           this.id,
           this.definition.options.feedOptions.feedId
         ),
-        options: this.definition.options.feedOptions
+        options: this.definition.options.feedOptions,
+        getMetadata: (): PipelinePCDMetadata[] => []
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
     this.credentialSubservice = credentialSubservice;

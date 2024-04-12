@@ -16,6 +16,7 @@ import {
   ManualTicket,
   PipelineLoadSummary,
   PipelineLog,
+  PipelinePCDMetadata,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
@@ -161,7 +162,8 @@ export class PretixPipeline implements BasePipeline {
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
-        )
+        ),
+        getMetadata: (): PipelinePCDMetadata[] => []
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.checkinPretixTicketPCDs.bind(this),

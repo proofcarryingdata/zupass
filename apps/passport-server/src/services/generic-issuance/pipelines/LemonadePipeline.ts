@@ -1,3 +1,4 @@
+import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -17,6 +18,7 @@ import {
   ManualTicket,
   PipelineLoadSummary,
   PipelineLog,
+  PipelinePCDMetadata,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
@@ -93,6 +95,7 @@ export class LemonadePipeline implements BasePipeline {
    * Used to sign {@link EdDSATicketPCD}
    */
   private eddsaPrivateKey: string;
+  private eddsaPublicKey: EdDSAPublicKey | undefined;
   private definition: LemonadePipelineDefinition;
 
   // Pending check-ins are check-ins which have either completed (and have
@@ -172,7 +175,8 @@ export class LemonadePipeline implements BasePipeline {
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
-        )
+        ),
+        getMetadata: this.getMetadata.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.executeTicketAction.bind(this),
@@ -226,6 +230,8 @@ export class LemonadePipeline implements BasePipeline {
     // Initialize the Semaphore Group provider by loading groups from the DB,
     // if one exists.
     await this.semaphoreGroupProvider?.start();
+    // We can't set this up in the constructor as it requires an async call.
+    this.eddsaPublicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
   public async stop(): Promise<void> {
@@ -1816,6 +1822,27 @@ export class LemonadePipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is LemonadePipeline {
     return p.type === PipelineType.Lemonade;
+  }
+
+  private getMetadata(): PipelinePCDMetadata[] {
+    if (!this.eddsaPublicKey) {
+      // log?
+      return [];
+    }
+    const publicKey = this.eddsaPublicKey;
+    const metadata: PipelinePCDMetadata[] = this.definition.options.events.map(
+      (ev): PipelinePCDMetadata => {
+        return {
+          publicKey,
+          eventId: ev.genericIssuanceEventId,
+          productIds: ev.ticketTypes.map(
+            (ticketType) => ticketType.genericIssuanceProductId
+          )
+        };
+      }
+    );
+
+    return metadata;
   }
 
   /**

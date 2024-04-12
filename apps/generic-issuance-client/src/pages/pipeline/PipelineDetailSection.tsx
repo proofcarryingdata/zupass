@@ -37,6 +37,7 @@ import {
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
+import { PipelinePCDMetadataSection } from "./DetailsSections/PipelinePCDMetadata";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { SectionContainer } from "./SectionContainer";
@@ -119,6 +120,17 @@ export function PipelineDetailSection({
             <SectionContainer>
               <PipelineSemaphoreGroupsSection
                 lastLoad={pipelineInfo.lastLoad}
+              />
+            </SectionContainer>
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>PCD Metadata</AccordionButton>
+          <AccordionPanel>
+            <SectionContainer>
+              <PipelinePCDMetadataSection
+                pipelinePCDMetadata={pipelineInfo.eventMetadata}
               />
             </SectionContainer>
           </AccordionPanel>
