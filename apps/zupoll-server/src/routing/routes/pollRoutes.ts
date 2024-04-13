@@ -134,13 +134,10 @@ export function initPCDRoutes(
               groupUrls.push(ETH_LATAM_ORGANIZERS_GROUP_URL);
               break;
             case BallotType.PODBOX:
-              const configs = getPodboxConfigs(
+              groupUrls = getPodboxConfigs(
                 ZUPASS_CLIENT_URL,
                 ZUPASS_SERVER_URL
-              );
-              const urls = configs.map((c) => c.groupUrl);
-              groupUrls = urls;
-              console.log(`URLS: `, urls);
+              ).map((c) => c.groupUrl);
               break;
           }
 
