@@ -3,6 +3,7 @@ import { readFileSync } from "fs";
 import { ServerOptions, createServer } from "https";
 import next from "next";
 import { parse } from "url";
+import { warnIfEnvMissing } from "./src/env";
 
 /**
  * For use in https mode, which is needed to test the telegram integration.
@@ -10,7 +11,14 @@ import { parse } from "url";
 
 dotenv.config();
 
-const port = parseInt(process.env.ZUPOLL_CLIENT_PORT ?? "3012", 10);
+const port = parseInt(
+  warnIfEnvMissing(
+    process.env.ZUPOLL_CLIENT_PORT,
+    "ZUPOLL_CLIENT_PORT",
+    "3012"
+  ),
+  10
+);
 const dev = process.env.NODE_ENV !== "production";
 const app = next({ dev });
 const handle = app.getRequestHandler();
