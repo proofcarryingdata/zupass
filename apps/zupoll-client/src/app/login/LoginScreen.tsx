@@ -70,7 +70,6 @@ export function LoginScreen({
             token,
             config: configFromUrl
           });
-          // setLoggingIn(false);
         }, 1000 * 1);
       } catch (err: any) {
         const loginError: ZupollError = {
