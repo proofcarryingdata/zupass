@@ -351,7 +351,7 @@ yargs
     }
   )
   .command(
-    "parse-edge-esmerelda-events",
+    "parse-edge-esmeralda-events",
     "",
     async function (yargs) {},
     async function (argv) {

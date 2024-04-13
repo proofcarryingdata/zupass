@@ -1,4 +1,5 @@
 import { Button } from "./button";
+import { Card, CardContent } from "./card";
 import { Spinner } from "./spinner";
 
 export function LoadingPlaceholder() {
@@ -18,5 +19,22 @@ export function LoadingButton() {
     >
       <Spinner className="w-4 h-4" />
     </Button>
+  );
+}
+
+export function LoadingPlaceholderCard({
+  children
+}: {
+  children?: React.ReactNode | React.ReactNode[] | null;
+}) {
+  return (
+    <Card>
+      <CardContent>
+        <div className="w-full h-full flex items-center justify-center my-8">
+          <Spinner className="w-8 h-8" />
+        </div>
+        {children}
+      </CardContent>
+    </Card>
   );
 }

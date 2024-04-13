@@ -1,5 +1,5 @@
 import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup";
-import { generateSnarkMessageHash } from "@pcd/util";
+import { generateSnarkMessageHash, getErrorMessage } from "@pcd/util";
 import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";
@@ -17,7 +17,7 @@ import {
   openGroupMembershipPopup,
   removeQueryParameters
 } from "../../util";
-import { createBallot } from "../../zupoll-server-api";
+import { CreateBallotResponse, createBallot } from "../../zupoll-server-api";
 import { useHistoricSemaphoreUrl } from "./useHistoricSemaphoreUrl";
 
 export interface BallotFromUrl {
@@ -147,18 +147,20 @@ export function useCreateBallot({
         return;
       }
 
-      router.push("/");
-      setBallotFromUrl(undefined);
-      setPcdFromUrl("");
+      res
+        .json()
+        .then((res: CreateBallotResponse) => {
+          router.push(`/ballot?id=${encodeURIComponent(res.url)}`);
+        })
+        .catch((e) => {
+          setServerLoading(false);
+          onError({
+            title: "Creating ballot failed",
+            message: getErrorMessage(e)
+          } satisfies ZupollError);
+        });
     },
-    [
-      loginState.token,
-      onError,
-      router,
-      setServerLoading,
-      setBallotFromUrl,
-      setPcdFromUrl
-    ]
+    [loginState.token, onError, router, setServerLoading]
   );
 
   // only accept pcdStr if we were expecting one

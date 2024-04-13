@@ -7,6 +7,10 @@ import {
 } from "./api/requestTypes";
 import { ZUPOLL_SERVER_URL } from "./env";
 
+export interface CreateBallotResponse {
+  url: string; // ballotURL - a stringified integer
+}
+
 export async function createBallot(
   request: CreateBallotRequest,
   accessToken: string
@@ -16,7 +20,7 @@ export async function createBallot(
   const url = urljoin(ZUPOLL_SERVER_URL, `create-ballot`);
 
   try {
-    const res = fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       body: JSON.stringify(request),
       headers: {
@@ -25,7 +29,8 @@ export async function createBallot(
         Authorization: `Bearer ${accessToken}`
       }
     });
-    return await res;
+
+    return res;
   } catch (e) {
     console.log(e);
     return undefined;

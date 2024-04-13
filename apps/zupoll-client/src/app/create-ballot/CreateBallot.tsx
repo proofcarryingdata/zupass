@@ -1,4 +1,7 @@
-import { LoadingButton } from "@/components/ui/LoadingPlaceholder";
+import {
+  LoadingButton,
+  LoadingPlaceholderCard
+} from "@/components/ui/LoadingPlaceholder";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -149,6 +152,14 @@ export function CreateBallot({
   const setExpiry = useCallback((ms: number) => {
     setBallotExpiry(new Date(getDateString(new Date(Date.now() + ms))));
   }, []);
+
+  if (serverLoading) {
+    return (
+      <LoadingPlaceholderCard>
+        <div className="text-center m-4">Creating Ballot</div>
+      </LoadingPlaceholderCard>
+    );
+  }
 
   return (
     <div>
