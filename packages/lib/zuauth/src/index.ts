@@ -4,7 +4,7 @@ import { PipelineEventTicketMetadata } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
 import {
   PopupActionResult,
-  zupassPopupAction
+  zupassPopupExecute
 } from "@pcd/passport-interface/PassportPopup/core";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
@@ -67,7 +67,7 @@ export async function zuAuth(args: ZuAuthArgs): Promise<PopupActionResult> {
     proofDescription
   );
 
-  return zupassPopupAction(popupRoute, proofUrl);
+  return zupassPopupExecute(popupRoute, proofUrl);
 }
 
 /**
