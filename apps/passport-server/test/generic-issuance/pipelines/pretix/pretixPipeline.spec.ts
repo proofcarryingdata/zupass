@@ -1,12 +1,16 @@
 import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   PipelineLogLevel,
   PodboxTicketActionResponseValue,
   PretixPipelineDefinition,
-  requestGenericIssuanceSemaphoreGroup
+  createCredentialPayload,
+  requestGenericIssuanceSemaphoreGroup,
+  requestPodboxTicketAction
 } from "@pcd/passport-interface";
-import { ONE_SECOND_MS } from "@pcd/util";
+import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
+import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import "mocha";
 import { step } from "mocha-steps";
@@ -25,12 +29,19 @@ import { PipelineUser } from "../../../../src/services/generic-issuance/pipeline
 import { Zupass } from "../../../../src/types";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
-import { expectLength, expectToExist, expectTrue } from "../../../util/util";
+import {
+  expectFalse,
+  expectLength,
+  expectToExist,
+  expectTrue
+} from "../../../util/util";
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
+  proveEmailPCD,
   requestCheckInPipelineTicket,
-  requestTicketsFromPipeline
+  requestTicketsFromPipeline,
+  signCredentialPayload
 } from "../../util";
 import { setupTestPretixPipeline } from "./setupTestPretixPipeline";
 
@@ -780,6 +791,121 @@ describe("generic issuance - PretixPipeline", function () {
       );
 
       pretixBackend.restore(backup);
+    }
+  );
+
+  step(
+    "invalid or expired credentials cannot be used for actions or feeds",
+    async () => {
+      expectToExist(giService);
+      const pipelines = await giService.getAllPipelineInstances();
+      const pipeline = pipelines.find(PretixPipeline.is);
+      expectToExist(pipeline);
+      expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+      const ethLatAmTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
+
+      pretixBackend.checkOut(
+        ethLatAmPretixOrganizer.orgUrl,
+        ethLatAmEvent.slug,
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail
+      );
+
+      // Verify that bouncer is checked out in backend
+      await pipeline.load();
+      const bouncerTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        ethLatAmTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
+        EthLatAmBouncerIdentity
+      );
+      expectLength(bouncerTickets, 1);
+      const bouncerTicket = bouncerTickets[0];
+      expectToExist(bouncerTicket);
+      expectIsEdDSATicketPCD(bouncerTicket);
+      expect(bouncerTicket.claim.ticket.attendeeEmail).to.eq(
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail
+      );
+      // Bouncer ticket is checked out
+      expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+
+      const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
+
+      const badEmailPCD = await proveEmailPCD(
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
+        // Not the Zupass private key!
+        newEdDSAPrivateKey(),
+        EthLatAmBouncerIdentity
+      );
+      const goodEmailPCD = await proveEmailPCD(
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        EthLatAmBouncerIdentity
+      );
+      const badEmailCredential = await signCredentialPayload(
+        EthLatAmBouncerIdentity,
+        createCredentialPayload(await EmailPCDPackage.serialize(badEmailPCD))
+      );
+      const mismatchedIdentityCredential = await signCredentialPayload(
+        // Semaphore identity is different from that used by the Email PCD
+        new Identity(),
+        createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
+      );
+      MockDate.set(Date.now() - ONE_DAY_MS);
+      const expiredCredential = await signCredentialPayload(
+        EthLatAmBouncerIdentity,
+        createCredentialPayload(await EmailPCDPackage.serialize(goodEmailPCD))
+      );
+      MockDate.set(Date.now() + ONE_DAY_MS);
+
+      {
+        const result = await requestPodboxTicketAction(
+          ethLatAmCheckinRoute,
+          badEmailCredential,
+          {
+            checkin: true
+          },
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
+        );
+
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
+      }
+
+      {
+        const result = await requestPodboxTicketAction(
+          ethLatAmCheckinRoute,
+          mismatchedIdentityCredential,
+          {
+            checkin: true
+          },
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
+        );
+
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
+      }
+
+      {
+        const result = await requestPodboxTicketAction(
+          ethLatAmCheckinRoute,
+          expiredCredential,
+          {
+            checkin: true
+          },
+          bouncerTicket.claim.ticket.ticketId,
+          bouncerTicket.claim.ticket.eventId
+        );
+
+        expectTrue(result.success);
+        expectFalse(result.value.success);
+        expect(result.value.error.name).to.eq("InvalidSignature");
+      }
     }
   );
 

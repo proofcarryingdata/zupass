@@ -1,6 +1,6 @@
 "use client";
 
-import { useZupassPopupSetup } from "@pcd/passport-interface";
+import { useZupassPopupSetup } from "@pcd/passport-interface/PassportPopup";
 
 /**
  * This page is necessary to receive PCDs from the passport after requesting

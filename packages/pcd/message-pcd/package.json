@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./MessagePCD": {
+      "types": "./dist/types/src/MessagePCD.d.ts",
+      "import": "./dist/esm/src/MessagePCD.js",
+      "require": "./dist/cjs/src/MessagePCD.js"
     }
   },
   "files": [

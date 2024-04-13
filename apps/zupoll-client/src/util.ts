@@ -1,10 +1,9 @@
-import {
-  constructZupassPcdGetRequestUrl,
-  openZupassPopup
-} from "@pcd/passport-interface";
+import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
+import { openZupassPopup } from "@pcd/passport-interface/PassportPopup";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd/SemaphoreGroupPCD";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import { generateSnarkMessageHash } from "@pcd/util";
 import TimeAgo from "javascript-time-ago";
 import en from "javascript-time-ago/locale/en";
@@ -25,7 +24,7 @@ export function openGroupMembershipPopup(
   >(
     urlToZupassClient,
     returnUrl || popupUrl,
-    SemaphoreGroupPCDPackage.name,
+    SemaphoreGroupPCDTypeName,
     {
       externalNullifier: {
         argumentType: ArgumentTypeName.BigInt,
@@ -41,7 +40,7 @@ export function openGroupMembershipPopup(
       },
       identity: {
         argumentType: ArgumentTypeName.PCD,
-        pcdType: SemaphoreIdentityPCDPackage.name,
+        pcdType: SemaphoreIdentityPCDTypeName,
         value: undefined,
         userProvided: true
       },

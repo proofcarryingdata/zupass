@@ -1,20 +1,13 @@
-import { EmailPCD, EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
+  PODBOX_CREDENTIAL_REQUEST,
   PodboxTicketAction,
   PodboxTicketActionResult,
-  createTicketActionCredentialPayload,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useState } from "react";
 import urljoin from "url-join";
 import { appConfig } from "../../../../../../src/appConfig";
-import {
-  usePCDCollection,
-  useUserIdentityPCD
-} from "../../../../../../src/appHooks";
+import { useCredentialManager } from "../../../../../../src/appHooks";
 
 export interface TicketActionExecutor {
   loading: boolean;
@@ -39,56 +32,28 @@ export function useExecuteTicketAction({
   eventId: string;
   ticketId: string;
 }): TicketActionExecutor {
-  const pcdCollection = usePCDCollection();
-  const identityPCD = useUserIdentityPCD();
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PodboxTicketActionResult | null>(null);
+  const credentialManager = useCredentialManager();
 
   const execute = useCallback(async (): Promise<
     PodboxTicketActionResult | undefined
   > => {
     if (loading) return;
 
-    const emailPCDs = pcdCollection.getPCDsByType(
-      EmailPCDTypeName
-    ) as EmailPCD[];
-
-    if (emailPCDs.length !== 1) {
-      return;
-    }
-
-    if (!identityPCD) {
-      return;
-    }
-
     setLoading(true);
 
     const checkinResult = await requestPodboxTicketAction(
       urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
-      await SemaphoreSignaturePCDPackage.serialize(
-        await SemaphoreSignaturePCDPackage.prove({
-          identity: {
-            argumentType: ArgumentTypeName.PCD,
-            value: await SemaphoreIdentityPCDPackage.serialize(identityPCD)
-          },
-          signedMessage: {
-            argumentType: ArgumentTypeName.String,
-            value: JSON.stringify(
-              createTicketActionCredentialPayload(
-                await EmailPCDPackage.serialize(emailPCDs[0]),
-                action,
-                eventId,
-                ticketId
-              )
-            )
-          }
-        })
-      )
+      await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
+      action,
+      ticketId,
+      eventId
     );
     setLoading(false);
     setResult(checkinResult);
     return checkinResult;
-  }, [loading, pcdCollection, identityPCD, action, eventId, ticketId]);
+  }, [loading, credentialManager, action, ticketId, eventId]);
 
   const reset = useCallback(() => {
     setLoading(false);

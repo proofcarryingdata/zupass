@@ -1,7 +1,7 @@
 import { ticketDisplayName } from "@pcd/eddsa-ticket-pcd";
 import {
   BadgeConfig,
-  PodboxActionPreCheckResult
+  PodboxTicketActionPreCheckResult
 } from "@pcd/passport-interface";
 import {
   Dispatch,
@@ -32,7 +32,7 @@ export function GiveBadgeActionSection({
   setInProgress,
   isLoading
 }: {
-  precheck: PodboxActionPreCheckResult;
+  precheck: PodboxTicketActionPreCheckResult;
   ticketId: string;
   eventId: string;
   setInProgress: Dispatch<SetStateAction<boolean>>;

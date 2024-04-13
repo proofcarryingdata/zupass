@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./EthereumGroupPCD": {
+      "types": "./dist/types/src/EthereumGroupPCD.d.ts",
+      "import": "./dist/esm/src/EthereumGroupPCD.js",
+      "require": "./dist/cjs/src/EthereumGroupPCD.js"
     }
   },
   "files": [

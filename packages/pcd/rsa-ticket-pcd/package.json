@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./RSATicketPCD": {
+      "types": "./dist/types/src/RSATicketPCD.d.ts",
+      "import": "./dist/esm/src/RSATicketPCD.js",
+      "require": "./dist/cjs/src/RSATicketPCD.js"
     }
   },
   "files": [
