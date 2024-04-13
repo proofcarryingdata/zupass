@@ -56,7 +56,7 @@ export function BallotScreen({
       if (res === undefined) {
         const serverDownError: ZupollError = {
           title: "Retrieving polls failed",
-          message: "Server is down. Contact passport@0xparc.org."
+          message: "Server is down. Contact support@zupass.org."
         };
         setError(serverDownError);
         return;

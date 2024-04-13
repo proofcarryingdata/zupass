@@ -199,7 +199,7 @@ export async function fetchLoginToken(
 ) {
   const res = await login(configuration, pcdStr);
   if (res === undefined) {
-    throw new Error("Server is down. Contact passport@0xparc.org.");
+    throw new Error("Server is down. Contact support@zupass.org.");
   }
   if (!res.ok) {
     const resErr = await res.text();

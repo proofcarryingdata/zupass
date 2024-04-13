@@ -37,7 +37,7 @@ export function CreatePost({
     if (res === undefined) {
       const serverDownError: ZupollError = {
         title: "Post failed",
-        message: "Server is down. Contact passport@0xparc.org."
+        message: "Server is down. Contact support@zupass.org."
       };
       onError(serverDownError);
       return;
