@@ -1,3 +1,5 @@
+import { BallotType } from "@pcd/zupoll-shared";
+
 /**
  * Model Ballot
  */
@@ -48,24 +50,6 @@ export type Vote = {
   voteIdx: number;
   proof: string;
 };
-
-/**
- * Enums, based on
- * https://github.com/microsoft/TypeScript/issues/3192#issuecomment-261720275
- */
-export const BallotType = {
-  ADVISORYVOTE: "ADVISORYVOTE",
-  STRAWPOLL: "STRAWPOLL",
-  ORGANIZERONLY: "ORGANIZERONLY",
-  DEVCONNECT_STRAW: "DEVCONNECT_STRAWPOLL",
-  DEVCONNECT_ORGANIZER: "DEVCONNECT_FEEDBACK",
-  EDGE_CITY_RESIDENT: "EDGE_CITY_STRAWPOLL",
-  EDGE_CITY_ORGANIZER: "EDGE_CITY_FEEDBACK",
-  ETH_LATAM_STRAWPOLL: "ETH_LATAM_STRAWPOLL",
-  ETH_LATAM_FEEDBACK: "ETH_LATAM_FEEDBACK"
-};
-
-export type BallotType = (typeof BallotType)[keyof typeof BallotType];
 
 export const UserType = {
   ANON: "ANON",

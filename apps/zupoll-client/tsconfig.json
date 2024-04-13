@@ -13,6 +13,7 @@
       }
     ],
     "strictNullChecks": true,
+    "strict": true,
     "paths": {
       "@/*": ["./src/@/*"]
     }
@@ -32,6 +33,9 @@
     },
     {
       "path": "../../packages/lib/util"
+    },
+    {
+      "path": "../../packages/lib/zupoll-shared"
     }
   ]
 }

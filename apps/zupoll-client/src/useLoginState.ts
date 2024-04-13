@@ -1,6 +1,7 @@
+import { LoginConfig } from "@pcd/zupoll-shared";
 import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 import { useCallback, useEffect, useMemo, useState } from "react";
-import { LoginConfig, LoginState } from "./types";
+import { LoginState } from "./types";
 import { getLoginRedirectUrl } from "./zupoll-server-api";
 
 const ACCESS_TOKEN_KEY = "access_token";

@@ -11,12 +11,14 @@
     "lint": "eslint \"**/*.ts{,x}\"",
     "pre-deploy": "./scripts/pre-deploy.sh",
     "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 ts-node src/main.ts",
-    "test": "ts-mocha --exit test/**/*.spec.ts"
+    "test": "ts-mocha --exit test/**/*.spec.ts",
+    "clean": "rm -rf out node_modules *.tsbuildinfo"
   },
   "dependencies": {
     "@honeycombio/opentelemetry-node": "^0.3.2",
     "@octokit/rest": "^19.0.7",
     "@opentelemetry/auto-instrumentations-node": "^0.36.0",
+    "@pcd/zupoll-shared": "0.0.1",
     "@pcd/pcd-types": "0.10.0",
     "@pcd/semaphore-group-pcd": "0.10.0",
     "@pcd/semaphore-signature-pcd": "0.10.0",

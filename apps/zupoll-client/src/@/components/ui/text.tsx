@@ -8,7 +8,7 @@ export const Title = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "font-semibold leading-7 text-gray-900 text-xl mb-1",
+      "font-semibold leading-7 text-foreground text-xl mb-1",
       className
     )}
     {...props}
@@ -23,7 +23,7 @@ export const Subtitle = React.forwardRef<
   <div
     ref={ref}
     className={cn(
-      "block text-sm font-medium leading-6 text-gray-900 mt-3 mb-1",
+      "block text-sm font-medium leading-6 text-foreground mt-3 mb-1",
       className
     )}
     {...props}
@@ -37,7 +37,7 @@ export const Description = React.forwardRef<
 >(({ className, ...props }, ref) => (
   <div
     ref={ref}
-    className={cn("mt-1 mb-1 text-sm leading-6 text-gray-600", className)}
+    className={cn("mt-1 mb-1 text-sm leading-6 text-foreground", className)}
     {...props}
   />
 ));

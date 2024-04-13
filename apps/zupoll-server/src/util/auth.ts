@@ -1,5 +1,6 @@
 // eslint-disable-next-line import/no-extraneous-dependencies
 import { BallotType } from ".prisma/client";
+import { getPodboxConfigs } from "@pcd/zupoll-shared";
 import { NextFunction, Request, Response } from "express";
 import { JwtPayload, sign, verify } from "jsonwebtoken";
 import urljoin from "url-join";
@@ -11,6 +12,7 @@ import {
   ETH_LATAM_PIPELINE_URL,
   ETH_LATAM_RESIDENTS_GROUP_ID,
   IS_PROD,
+  ZUPASS_CLIENT_URL,
   ZUPASS_SERVER_URL
 } from "../../src/env";
 import { logger } from "./logger";
@@ -111,6 +113,8 @@ export const authenticateJWT = (
     const payload = group as GroupJwtPayload;
     logger.debug("authenticating jwt with payload", payload);
 
+    req.authGroupUrl = payload.authGroupUrl;
+
     if (
       ZUZALU_PARTICIPANTS_GROUP_URL &&
       payload.groupUrl.includes(ZUZALU_PARTICIPANTS_GROUP_URL)
@@ -169,14 +173,18 @@ export const authenticateJWT = (
       return;
     }
 
-    logger.error(
-      "jwt groupUrl did not match any known groupUrl",
-      "\n\njwt url: " + payload.groupUrl,
-      "\n\nexpected edge city residents url: " + EDGE_CITY_RESIDENTS_GROUP_URL,
-      "\n\nexpected edge city organizers url: " +
-        EDGE_CITY_ORGANIZERS_GROUP_URL +
-        "\n\n"
+    const podboxLoginConfigs = getPodboxConfigs(
+      ZUPASS_CLIENT_URL,
+      ZUPASS_SERVER_URL
     );
+    const matchingPodboxLoginConfig = podboxLoginConfigs.find(
+      (c) => c.groupUrl === payload.groupUrl
+    );
+    if (matchingPodboxLoginConfig) {
+      req.authUserType = AuthType.PODBOX;
+      next();
+      return;
+    }
 
     return res.sendStatus(403);
   });
@@ -225,6 +233,8 @@ export function getVisibleBallotTypesForUser(
       BallotType.ETH_LATAM_STRAWPOLL,
       BallotType.ETH_LATAM_FEEDBACK
     ];
+  } else if (userAuth === AuthType.PODBOX) {
+    relevantBallots = [BallotType.PODBOX];
   }
 
   return relevantBallots;

@@ -1,3 +1,4 @@
+import { LoginConfig } from "@pcd/zupoll-shared";
 import urljoin from "url-join";
 import {
   BotPostRequest,
@@ -5,7 +6,10 @@ import {
   MultiVoteRequest
 } from "./api/requestTypes";
 import { ZUPOLL_SERVER_URL } from "./env";
-import { LoginConfig } from "./types";
+
+export interface CreateBallotResponse {
+  url: string; // ballotURL - a stringified integer
+}
 
 export async function createBallot(
   request: CreateBallotRequest,
@@ -16,7 +20,7 @@ export async function createBallot(
   const url = urljoin(ZUPOLL_SERVER_URL, `create-ballot`);
 
   try {
-    const res = fetch(url, {
+    const res = await fetch(url, {
       method: "POST",
       body: JSON.stringify(request),
       headers: {
@@ -25,7 +29,8 @@ export async function createBallot(
         Authorization: `Bearer ${accessToken}`
       }
     });
-    return await res;
+
+    return res;
   } catch (e) {
     console.log(e);
     return undefined;
@@ -199,7 +204,7 @@ export async function fetchLoginToken(
 ) {
   const res = await login(configuration, pcdStr);
   if (res === undefined) {
-    throw new Error("Server is down. Contact passport@0xparc.org.");
+    throw new Error("Server is down. Contact support@zupass.org.");
   }
   if (!res.ok) {
     const resErr = await res.text();

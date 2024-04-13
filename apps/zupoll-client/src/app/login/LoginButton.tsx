@@ -1,13 +1,15 @@
 import { cn } from "@/lib/utils";
+import { LoginConfig } from "@pcd/zupoll-shared";
 import stableStringify from "json-stable-stringify";
-import React, { useState } from "react";
+import React from "react";
 import { Button, ButtonProps } from "../../@/components/ui/button";
-import { LoginConfig, LoginState, ZupollError } from "../../types";
+import { LoginState, ZupollError } from "../../types";
 import { openGroupMembershipPopup } from "../../util";
 
 export interface LoginButtonProps {
   onLogin: (loginState: LoginState) => void;
   onError: (error: ZupollError) => void;
+  serverLoading: boolean;
   setServerLoading: (loading: boolean) => void;
   config: LoginConfig;
   variant?: ButtonProps["variant"];
@@ -29,6 +31,7 @@ export const LoginButton = React.forwardRef<
   {
     onLogin,
     onError,
+    serverLoading,
     setServerLoading,
     children,
     config,
@@ -37,14 +40,12 @@ export const LoginButton = React.forwardRef<
   }: LoginButtonProps,
   ref
 ) {
-  const [loggingIn, setLoggingIn] = useState(false);
-
   return (
     <Button
       ref={ref}
       variant={variant}
       onClick={() => {
-        setLoggingIn(true);
+        setServerLoading(true);
         openGroupMembershipPopup(
           config.passportAppUrl,
           window.location.origin + "/popup",
@@ -56,7 +57,7 @@ export const LoginButton = React.forwardRef<
             `?config=${encodeURIComponent(stableStringify(config))}`
         );
       }}
-      disabled={loggingIn}
+      disabled={serverLoading}
       className={cn(className)}
     >
       {children}

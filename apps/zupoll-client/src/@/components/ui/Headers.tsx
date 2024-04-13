@@ -2,6 +2,7 @@ import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import styled from "styled-components";
 import { DEFAULT_CONTENT_WIDTH } from "./Elements";
+import { ThemeSwitcher } from "./ThemeSwitcher";
 import { Button } from "./button";
 
 export interface HeaderProps {
@@ -13,11 +14,14 @@ export function AppHeader({ actions, title }: HeaderProps) {
   return (
     <StickyHeader>
       <MainScreenContainer>
-        {title ? (
-          <div className="text-2xl">{title}</div>
-        ) : (
-          <div className="text-2xl">Zupoll</div>
-        )}
+        <div className="flex flex-row gap-4 items-center justify-center">
+          <ThemeSwitcher />
+          {title ? (
+            <div className="text-2xl">{title}</div>
+          ) : (
+            <div className="text-2xl">Zupoll</div>
+          )}
+        </div>
         <div className="flex row gap-2">{actions}</div>
       </MainScreenContainer>
     </StickyHeader>
@@ -40,7 +44,7 @@ export function MainActions({
   return (
     <>
       <Button variant="outline" onClick={confirmLogout}>
-        Logout
+        Log Out
       </Button>
       <Button variant="creative" onClick={createBallot}>
         Create Ballot
@@ -83,7 +87,6 @@ export function CancelPollHeader() {
 }
 
 const StickyHeader = styled.div`
-  z-index: 900;
   top: 0;
   margin-top: 2em;
   padding-top: 1em;

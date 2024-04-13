@@ -21,7 +21,7 @@ import { voteBallot } from "../../zupoll-server-api";
  * @param ballot Ballot that is being voted on
  * @param polls Polls in this ballot
  * @param pollToVote Map of pollId to voteIdx
- * @param onError Error handler to display in ErrorOverlay
+ * @param onError Error handler to display in ErrorDialog
  * @param setServerLoading Passing server loading status to frontend
  * @param refresh Refresh ballot page after voting
  */
@@ -78,7 +78,7 @@ export function useBallotVoting({
       if (res === undefined) {
         const serverDownError: ZupollError = {
           title: "Voting failed",
-          message: "Server is down. Contact passport@0xparc.org."
+          message: "Server is down. Contact support@zupass.org."
         };
         onError(serverDownError);
         return;

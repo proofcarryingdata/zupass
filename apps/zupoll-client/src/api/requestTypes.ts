@@ -1,4 +1,5 @@
-import { Ballot, BallotType, Poll, Vote } from "./prismaTypes";
+import { BallotType } from "@pcd/zupoll-shared";
+import { Ballot, Poll, Vote } from "./prismaTypes";
 
 export type BotPostRequest = {
   message: string;

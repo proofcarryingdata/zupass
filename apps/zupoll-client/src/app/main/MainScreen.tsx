@@ -1,9 +1,8 @@
-import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
+import ErrorDialog from "@/components/ui/ErrorDialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { ErrorOverlay } from "../../@/components/ui/ErrorOverlay";
 import { AppHeader, MainActions } from "../../@/components/ui/Headers";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotResponse } from "../../api/requestTypes";
@@ -31,7 +30,7 @@ export function MainScreen({
       if (res === undefined) {
         const serverDownError: ZupollError = {
           title: "Retrieving polls failed",
-          message: "Server is down. Contact passport@0xparc.org."
+          message: "Server is down. Contact support@zupass.org."
         };
         setError(serverDownError);
         return;
@@ -76,25 +75,20 @@ export function MainScreen({
       <ContentContainer>
         <GuaranteesElement />
 
-        {loadingBallots ? (
-          <LoadingPlaceholder />
-        ) : (
-          <BallotListsForUser
-            logout={logout}
-            loginState={loginState}
-            ballots={ballots}
-          />
-        )}
+        <BallotListsForUser
+          loading={loadingBallots}
+          logout={logout}
+          loginState={loginState}
+          ballots={ballots}
+        />
 
-        {error && (
-          <ErrorOverlay
-            error={error}
-            onClose={() => {
-              setError(undefined);
-              router.push("/");
-            }}
-          />
-        )}
+        <ErrorDialog
+          error={error}
+          close={() => {
+            setError(undefined);
+            router.push("/");
+          }}
+        />
       </ContentContainer>
     </Center>
   );

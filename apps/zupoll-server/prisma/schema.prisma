@@ -102,6 +102,7 @@ enum BallotType {
   EDGE_CITY_FEEDBACK
   ETH_LATAM_STRAWPOLL
   ETH_LATAM_FEEDBACK
+  PODBOX
 }
 
 enum ExpiryNotifStatus {

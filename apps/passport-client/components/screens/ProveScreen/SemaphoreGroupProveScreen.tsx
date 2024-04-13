@@ -23,6 +23,7 @@ import {
 import { getHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { BackButton } from "../../shared/ScreenNavigation";
 
 export function SemaphoreGroupProveScreen({
   req
@@ -133,6 +134,10 @@ export function SemaphoreGroupProveScreen({
     lines.push(<ErrorContainer>{error}</ErrorContainer>);
   } else {
     lines.push(<RippleLoader />);
+  }
+
+  if (!proving) {
+    lines.push(<BackButton />);
   }
 
   return (

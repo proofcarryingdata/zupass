@@ -1,23 +1,23 @@
 import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup";
-import { generateSnarkMessageHash } from "@pcd/util";
+import { generateSnarkMessageHash, getErrorMessage } from "@pcd/util";
+import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import { sha256 } from "js-sha256";
 import stableStringify from "json-stable-stringify";
 import { useRouter } from "next/navigation";
 import { useCallback, useEffect, useRef } from "react";
-import { BallotType, Poll, UserType } from "../../api/prismaTypes";
+import { Poll, UserType } from "../../api/prismaTypes";
 import {
   BallotSignal,
   CreateBallotRequest,
   PollSignal
 } from "../../api/requestTypes";
-import { BallotConfig, LoginState, PCDState, ZupollError } from "../../types";
+import { LoginState, PCDState, ZupollError } from "../../types";
 import {
   USE_CREATE_BALLOT_REDIRECT,
   openGroupMembershipPopup,
   removeQueryParameters
 } from "../../util";
-import { createBallot } from "../../zupoll-server-api";
-import { BALLOT_CONFIGS } from "./ballotConfig";
+import { CreateBallotResponse, createBallot } from "../../zupoll-server-api";
 import { useHistoricSemaphoreUrl } from "./useHistoricSemaphoreUrl";
 
 export interface BallotFromUrl {
@@ -76,13 +76,13 @@ const generateBallotRequest = (
  * @param ballotType type of ballot
  * @param expiry expiry date of ballot
  * @param polls polls in this ballot
- * @param onError Error handler to display in ErrorOverlay
+ * @param onError Error handler to display in ErrorDialog
  * @param setServerLoading Passing server loading status to frontend
  */
 export function useCreateBallot({
   ballotTitle,
   ballotDescription,
-  ballotType,
+  ballotConfig,
   expiry,
   polls,
   onError,
@@ -96,7 +96,7 @@ export function useCreateBallot({
 }: {
   ballotTitle: string;
   ballotDescription: string;
-  ballotType: BallotType;
+  ballotConfig?: BallotConfig;
   expiry: Date;
   polls: Poll[];
   onError: (err: ZupollError) => void;
@@ -111,7 +111,6 @@ export function useCreateBallot({
   const router = useRouter();
   const pcdState = useRef<PCDState>(PCDState.DEFAULT);
   const [pcdStr, _passportPendingPCDStr] = useZupassPopupMessages();
-  const ballotConfig = BALLOT_CONFIGS[ballotType];
 
   const {
     loading: loadingVoterGroupUrl,
@@ -129,7 +128,7 @@ export function useCreateBallot({
       if (res === undefined) {
         const serverDownError: ZupollError = {
           title: "Creating ballot failed",
-          message: "Server is down. Contact passport@0xparc.org."
+          message: "Server is down. Contact support@zupass.org."
         };
         onError(serverDownError);
         removeQueryParameters(["ballot", "proof", "finished"]);
@@ -148,18 +147,20 @@ export function useCreateBallot({
         return;
       }
 
-      router.push("/");
-      setBallotFromUrl(undefined);
-      setPcdFromUrl("");
+      res
+        .json()
+        .then((res: CreateBallotResponse) => {
+          router.push(`/ballot?id=${encodeURIComponent(res.url)}`);
+        })
+        .catch((e) => {
+          setServerLoading(false);
+          onError({
+            title: "Creating ballot failed",
+            message: getErrorMessage(e)
+          } satisfies ZupollError);
+        });
     },
-    [
-      loginState.token,
-      onError,
-      router,
-      setServerLoading,
-      setBallotFromUrl,
-      setPcdFromUrl
-    ]
+    [loginState.token, onError, router, setServerLoading]
   );
 
   // only accept pcdStr if we were expecting one
@@ -171,7 +172,7 @@ export function useCreateBallot({
 
   // process ballot
   useEffect(() => {
-    if (ballotFromUrl && pcdFromUrl) {
+    if (ballotConfig && ballotFromUrl && pcdFromUrl) {
       const parsedPcd = JSON.parse(decodeURIComponent(pcdFromUrl));
       const { ballotSignal, ballotConfig, polls } = ballotFromUrl;
       const request = generateBallotRequest({
@@ -189,7 +190,12 @@ export function useCreateBallot({
       setPcdFromUrl("");
     } else {
       if (pcdState.current !== PCDState.RECEIVED_PCDSTR) return;
-      if (voterGroupUrl == null || voterGroupRootHash == null) return;
+      if (
+        voterGroupUrl == null ||
+        voterGroupRootHash == null ||
+        ballotConfig == null
+      )
+        return;
       pcdState.current = PCDState.DEFAULT;
 
       const parsedPcd = JSON.parse(decodeURIComponent(pcdStr));
@@ -198,7 +204,7 @@ export function useCreateBallot({
         ballotDescription,
         proof: parsedPcd.pcd,
         polls,
-        ballotType,
+        ballotType: ballotConfig.ballotType,
         voterGroupRoots: [voterGroupRootHash],
         voterGroupUrls: [voterGroupUrl],
         expiry,
@@ -210,14 +216,14 @@ export function useCreateBallot({
   }, [
     ballotDescription,
     ballotTitle,
-    ballotType,
+    ballotConfig,
     expiry,
     pcdStr,
     polls,
     router,
     voterGroupRootHash,
     voterGroupUrl,
-    ballotConfig.creatorGroupUrl,
+    ballotConfig?.creatorGroupUrl,
     pcdFromUrl,
     ballotFromUrl,
     setBallotFromUrl,
@@ -227,7 +233,11 @@ export function useCreateBallot({
 
   // ran after ballot is submitted by user
   const createBallotPCD = useCallback(async () => {
-    if (voterGroupUrl == null || voterGroupRootHash == null) {
+    if (
+      ballotConfig == null ||
+      voterGroupUrl == null ||
+      voterGroupRootHash == null
+    ) {
       return onError({
         title: "Error Creating Poll",
         message: "Voter group not loaded yet."
@@ -240,11 +250,12 @@ export function useCreateBallot({
       pollSignals: [],
       ballotTitle: ballotTitle,
       ballotDescription: ballotDescription,
-      ballotType: ballotType,
+      ballotType: ballotConfig.ballotType,
       expiry: expiry,
       voterSemaphoreGroupUrls: [voterGroupUrl],
       voterSemaphoreGroupRoots: [voterGroupRootHash]
     };
+
     polls.forEach((poll: Poll) => {
       const pollSignal: PollSignal = {
         body: poll.body,
@@ -287,12 +298,11 @@ export function useCreateBallot({
     voterGroupRootHash,
     ballotTitle,
     ballotDescription,
-    ballotType,
+    ballotConfig,
     expiry,
     polls,
     onError,
-    url,
-    ballotConfig
+    url
   ]);
 
   return { loadingVoterGroupUrl, createBallotPCD };

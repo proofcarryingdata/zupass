@@ -1,6 +1,10 @@
-import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
+import {
+  LoadingButton,
+  LoadingPlaceholderCard
+} from "@/components/ui/LoadingPlaceholder";
+import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
 import { Button } from "../../@/components/ui/button";
@@ -15,13 +19,14 @@ import {
   SelectValue
 } from "../../@/components/ui/select";
 import { Subtitle, Title } from "../../@/components/ui/text";
-import { BallotType, Poll } from "../../api/prismaTypes";
+import { Poll } from "../../api/prismaTypes";
 import { BallotSignal } from "../../api/requestTypes";
-import { BALLOT_TYPE_FROM_LOGIN_CONFIG } from "../../env";
-import { LoginConfigurationName, LoginState, ZupollError } from "../../types";
+import { APP_CONFIG } from "../../env";
+import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
 import { PollsBelowDivider } from "./PollsBelowDivider";
+import { BALLOT_CONFIGS } from "./ballotConfig";
 import { BallotFromUrl, useCreateBallot } from "./useCreateBallot";
 
 export function CreateBallot({
@@ -39,9 +44,7 @@ export function CreateBallot({
   );
   const [ballotFromUrl, setBallotFromUrl] = useState<BallotFromUrl>();
   const [pcdFromUrl, setPcdFromUrl] = useState("");
-  const [ballotType, setBallotType] = useState<BallotType>(
-    BALLOT_TYPE_FROM_LOGIN_CONFIG[loginState.config.name]
-  );
+
   const [useLastBallot, setUseLastBallot] = useState(false);
   const getDateString = (date: Date) => {
     const newDate = new Date(date);
@@ -87,10 +90,23 @@ export function CreateBallot({
     }
   }, [query]);
 
+  const possibleBallotConfigs = useMemo(
+    () =>
+      [
+        ...(loginState.config.ballotConfigs ?? []),
+        ...loginState.config.canCreateBallotTypes.map((t) => BALLOT_CONFIGS[t])
+      ].filter((c) => c != null),
+    [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
+  );
+
+  const [selectedBallotConfig, setSelectedBallotConfig] = useState<
+    BallotConfig | undefined
+  >(possibleBallotConfigs[0]);
+
   const { loadingVoterGroupUrl, createBallotPCD } = useCreateBallot({
     ballotTitle,
     ballotDescription,
-    ballotType,
+    ballotConfig: selectedBallotConfig,
     expiry: ballotExpiry,
     polls,
     onError,
@@ -102,6 +118,11 @@ export function CreateBallot({
     setPcdFromUrl,
     url: window.location.href // If exists, will use redirect instead of pop up
   });
+
+  const stableCreateRef = useRef(createBallotPCD);
+  useEffect(() => {
+    stableCreateRef.current = createBallotPCD;
+  }, [createBallotPCD]);
 
   useEffect(() => {
     if (useLastBallot) {
@@ -126,6 +147,14 @@ export function CreateBallot({
     setBallotExpiry(new Date(getDateString(new Date(Date.now() + ms))));
   }, []);
 
+  if (serverLoading) {
+    return (
+      <LoadingPlaceholderCard>
+        <div className="text-center m-4">Creating Ballot</div>
+      </LoadingPlaceholderCard>
+    );
+  }
+
   return (
     <div>
       {USE_CREATE_BALLOT_REDIRECT ? (
@@ -141,6 +170,138 @@ export function CreateBallot({
           <Title className="mb-0">New Ballot</Title>
         </CardHeader>
         <CardContent>
+          <div style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}>
+            <Subtitle>Debug Tools</Subtitle>
+            <div className="flex flex-row gap-2">
+              <Button
+                variant="outline"
+                className=""
+                onClick={() => {
+                  const options = [];
+
+                  options.push(
+                    "EcoCommute: A smart carpooling app for reducing carbon footprint"
+                  );
+                  options.push(
+                    "MindMate: An AI-powered mental health companion"
+                  );
+                  options.push(
+                    "FoodShare: A platform for reducing food waste by connecting restaurants with charities"
+                  );
+                  options.push(
+                    "VirtualVenue: An immersive virtual event platform for conferences and exhibitions"
+                  );
+                  options.push(
+                    "SmartCity Navigator: A real-time city guide with personalized recommendations"
+                  );
+                  options.push(
+                    "HealthHub: A centralized platform for managing personal health records"
+                  );
+                  options.push(
+                    "AgroTech: An IoT-based solution for precision farming and crop management"
+                  );
+                  options.push(
+                    "BlockVote: A secure, blockchain-based voting system for elections"
+                  );
+                  options.push(
+                    "EduQuest: A gamified learning platform for interactive online education"
+                  );
+                  options.push(
+                    "EmergencyAlert: A real-time disaster management and communication system"
+                  );
+                  options.push(
+                    "FinancialFit: An AI-driven personal finance coach and budgeting tool"
+                  );
+                  options.push(
+                    "SocialGood: A crowdfunding platform for supporting community projects"
+                  );
+                  options.push(
+                    "TalentMatch: An AI-powered job matching platform for connecting employers and job seekers"
+                  );
+                  options.push(
+                    "EnergyOptimizer: A smart energy management system for homes and businesses"
+                  );
+                  options.push(
+                    "VirtualFit: An AR-based fitness app with personalized workout plans"
+                  );
+                  options.push(
+                    "SafeCity: A crime reporting and prevention platform using crowd-sourced data"
+                  );
+                  options.push(
+                    "WasteWise: An IoT-based waste management solution for smart cities"
+                  );
+                  options.push(
+                    "LanguageBridge: A real-time language translation app for breaking communication barriers"
+                  );
+                  options.push(
+                    "MemoryLane: An AI-powered storytelling app for preserving family histories"
+                  );
+                  options.push(
+                    "AccessibleWorld: An assistive technology platform for people with disabilities"
+                  );
+
+                  setBallotTitle("Hackathon Voting");
+                  setBallotDescription(
+                    "Anonymously vote on your favorite project!"
+                  );
+                  setPolls([
+                    {
+                      id: polls.length.toString(),
+                      body: "Choose your favorite project.",
+                      options: options,
+                      ballotURL: 0,
+                      createdAt: new Date(),
+                      expiry: new Date(Date.now() + 1000 * 60 * 60 * 24)
+                    }
+                  ]);
+                  setTimeout(() => {
+                    stableCreateRef.current();
+                  }, 1);
+                }}
+              >
+                Create Long Ballot
+              </Button>
+              <Button
+                style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}
+                variant="outline"
+                className=""
+                onClick={() => {
+                  const options = [];
+
+                  options.push(
+                    "EcoCommute: A smart carpooling app for reducing carbon footprint"
+                  );
+                  options.push(
+                    "MindMate: An AI-powered mental health companion"
+                  );
+                  options.push(
+                    "FoodShare: A platform for reducing food waste by connecting restaurants with charities"
+                  );
+
+                  setBallotTitle("Hackathon Voting");
+                  setBallotDescription(
+                    "Anonymously vote on your favorite project!"
+                  );
+                  setPolls([
+                    {
+                      id: polls.length.toString(),
+                      body: "Choose your favorite project.",
+                      options: options,
+                      ballotURL: 0,
+                      createdAt: new Date(),
+                      expiry: new Date(Date.now() + 1000 * 60 * 60 * 24)
+                    }
+                  ]);
+                  setTimeout(() => {
+                    stableCreateRef.current();
+                  }, 1);
+                }}
+              >
+                Create Regular Ballot
+              </Button>
+            </div>
+          </div>
+
           <Subtitle>Title</Subtitle>
           <Input
             type="text"
@@ -217,97 +378,38 @@ export function CreateBallot({
             </Button>
           </div>
 
-          <Subtitle>Ballot Type</Subtitle>
-          <Select
-            value={ballotType}
-            onValueChange={(value: string) => setBallotType(value)}
+          <div
+            style={{
+              display: possibleBallotConfigs.length > 1 ? undefined : "none"
+            }}
           >
-            <SelectTrigger className="w-full">
-              <SelectValue placeholder="Select a fruit" />
-            </SelectTrigger>
+            <Subtitle>Ballot Type</Subtitle>
+            <Select
+              // TODO: make this based on ballot config name, not type
+              value={selectedBallotConfig?.ballotType}
+              onValueChange={(value: string) =>
+                setSelectedBallotConfig(
+                  possibleBallotConfigs.find(
+                    (c) => c.ballotType === value
+                  ) as any
+                )
+              }
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue placeholder="Select a Ballot Type" />
+              </SelectTrigger>
 
-            <SelectContent>
-              <SelectGroup>
-                {loginState.config.name ===
-                  LoginConfigurationName.ZUZALU_PARTICIPANT && (
-                  <>
-                    <SelectItem value={BallotType.STRAWPOLL}>
-                      Straw Poll
+              <SelectContent>
+                <SelectGroup>
+                  {possibleBallotConfigs.map((type) => (
+                    <SelectItem key={type.ballotType} value={type.ballotType}>
+                      {type.ballotType}
                     </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.ZUZALU_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.STRAWPOLL}>
-                      Straw Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.ADVISORYVOTE}>
-                      Advisory Vote
-                    </SelectItem>
-                    <SelectItem value={BallotType.ORGANIZERONLY}>
-                      Organizer Only
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.DEVCONNECT_PARTICIPANT && (
-                  <SelectItem value={BallotType.DEVCONNECT_STRAW}>
-                    Devconnect Community Poll
-                  </SelectItem>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.DEVCONNECT_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.DEVCONNECT_STRAW}>
-                      Community Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.DEVCONNECT_ORGANIZER}>
-                      Organizer Feedback
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.EDGE_CITY_RESIDENT && (
-                  <>
-                    <SelectItem value={BallotType.EDGE_CITY_RESIDENT}>
-                      Edge City Community Poll
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.EDGE_CITY_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.EDGE_CITY_RESIDENT}>
-                      Edge City Community Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.EDGE_CITY_ORGANIZER}>
-                      Edge City Organizer Feedback
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.ETH_LATAM_ATTENDEE && (
-                  <>
-                    <SelectItem value={BallotType.ETH_LATAM_STRAWPOLL}>
-                      ETH LatAm Straw Poll
-                    </SelectItem>
-                  </>
-                )}
-                {loginState.config.name ===
-                  LoginConfigurationName.ETH_LATAM_ORGANIZER && (
-                  <>
-                    <SelectItem value={BallotType.ETH_LATAM_STRAWPOLL}>
-                      ETH LatAm Straw Poll
-                    </SelectItem>
-                    <SelectItem value={BallotType.ETH_LATAM_FEEDBACK}>
-                      ETH LatAm Feedback
-                    </SelectItem>
-                  </>
-                )}
-              </SelectGroup>
-            </SelectContent>
-          </Select>
+                  ))}
+                </SelectGroup>
+              </SelectContent>
+            </Select>
+          </div>
         </CardContent>
       </Card>
 
@@ -323,15 +425,11 @@ export function CreateBallot({
                   newPolls.splice(i, 1);
                   setPolls(newPolls);
                 }}
-                variant={"outline"}
+                variant={"ghost"}
                 style={{
                   position: "absolute",
-                  top: "0",
-                  right: "0",
-                  borderTopLeftRadius: "0",
-                  borderBottomRightRadius: "0",
-                  borderTop: "none",
-                  borderRight: "none"
+                  top: "4px",
+                  right: "4px"
                 }}
               >
                 <FaRegTrashAlt />
@@ -439,7 +537,7 @@ export function CreateBallot({
       )}
 
       {loadingVoterGroupUrl || serverLoading ? (
-        <LoadingPlaceholder />
+        <LoadingButton />
       ) : (
         <Button
           className="w-full"
