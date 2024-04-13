@@ -1,11 +1,11 @@
 "use client";
 
+import ErrorDialog from "@/components/ui/ErrorDialog";
 import { AppHeader, SubpageActions } from "@/components/ui/Headers";
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { ErrorOverlay } from "../../@/components/ui/ErrorOverlay";
 import { ZupollError } from "../../types";
 import { useSavedLoginState } from "../../useLoginState";
 import { CreateBallot } from "./CreateBallot";
@@ -31,9 +31,7 @@ export function CreateBallotPage() {
           <AppHeader title=" " actions={<SubpageActions />} />
           <ContentContainer>
             <CreateBallot loginState={loginState} onError={setError} />
-            {error && (
-              <ErrorOverlay error={error} onClose={() => setError(undefined)} />
-            )}
+            <ErrorDialog error={error} close={() => setError(undefined)} />
           </ContentContainer>
         </Center>
       )}

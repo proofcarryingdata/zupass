@@ -9,9 +9,13 @@ export default function ErrorDialog({
   error
 }: {
   close: () => void;
-  error: ZupollError;
+  error?: ZupollError;
 }) {
   const cancelButtonRef = useRef(null);
+
+  if (!error) {
+    return null;
+  }
 
   return (
     <Transition.Root show={true} as={Fragment}>

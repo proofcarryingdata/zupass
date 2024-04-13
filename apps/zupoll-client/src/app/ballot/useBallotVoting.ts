@@ -21,7 +21,7 @@ import { voteBallot } from "../../zupoll-server-api";
  * @param ballot Ballot that is being voted on
  * @param polls Polls in this ballot
  * @param pollToVote Map of pollId to voteIdx
- * @param onError Error handler to display in ErrorOverlay
+ * @param onError Error handler to display in ErrorDialog
  * @param setServerLoading Passing server loading status to frontend
  * @param refresh Refresh ballot page after voting
  */

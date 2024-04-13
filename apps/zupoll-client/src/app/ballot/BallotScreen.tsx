@@ -1,10 +1,10 @@
+import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { ErrorOverlay } from "../../@/components/ui/ErrorOverlay";
 import { AppHeader, SubpageActions } from "../../@/components/ui/Headers";
 import { Title } from "../../@/components/ui/text";
 import { Ballot } from "../../api/prismaTypes";
@@ -267,19 +267,12 @@ export function BallotScreen({
 
         {(!ballot || !polls) && <PlaceholderBallot />}
 
-        {error && (
-          <ErrorOverlay
-            error={error}
-            onClose={() => {
-              setError(undefined);
-            }}
-            onLogout={() => {
-              localStorage.setItem("preLoginRoute", pathname ?? "");
-              console.log(`Saved ballot id`, pathname);
-              logout();
-            }}
-          />
-        )}
+        <ErrorDialog
+          error={error}
+          close={() => {
+            setError(undefined);
+          }}
+        />
       </ContentContainer>
     </Center>
   );

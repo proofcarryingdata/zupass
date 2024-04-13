@@ -1,3 +1,4 @@
+import ErrorDialog from "@/components/ui/ErrorDialog";
 import { AppHeader } from "@/components/ui/Headers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
@@ -6,7 +7,6 @@ import { LoginConfig } from "@pcd/zupoll-shared";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { ErrorOverlay } from "../../@/components/ui/ErrorOverlay";
 import { LEGACY_LOGIN_CONFIGS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
 import { removeQueryParameters } from "../../util";
@@ -106,9 +106,7 @@ export function LoginScreen({
             </CardContent>
           </Card>
 
-          {error && (
-            <ErrorOverlay error={error} onClose={() => setError(undefined)} />
-          )}
+          <ErrorDialog error={error} close={() => setError(undefined)} />
         </ContentContainer>
       </Center>
     </>

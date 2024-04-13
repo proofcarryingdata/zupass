@@ -76,7 +76,7 @@ const generateBallotRequest = (
  * @param ballotType type of ballot
  * @param expiry expiry date of ballot
  * @param polls polls in this ballot
- * @param onError Error handler to display in ErrorOverlay
+ * @param onError Error handler to display in ErrorDialog
  * @param setServerLoading Passing server loading status to frontend
  */
 export function useCreateBallot({

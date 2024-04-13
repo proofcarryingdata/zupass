@@ -1,8 +1,8 @@
+import ErrorDialog from "@/components/ui/ErrorDialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { ErrorOverlay } from "../../@/components/ui/ErrorOverlay";
 import { AppHeader, MainActions } from "../../@/components/ui/Headers";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotResponse } from "../../api/requestTypes";
@@ -82,15 +82,13 @@ export function MainScreen({
           ballots={ballots}
         />
 
-        {error && (
-          <ErrorOverlay
-            error={error}
-            onClose={() => {
-              setError(undefined);
-              router.push("/");
-            }}
-          />
-        )}
+        <ErrorDialog
+          error={error}
+          close={() => {
+            setError(undefined);
+            router.push("/");
+          }}
+        />
       </ContentContainer>
     </Center>
   );
