@@ -202,15 +202,6 @@ export function BallotScreen({
     setVoteFromUrl
   });
 
-  // if (
-  //   loadingPolls ||
-  //   ballot === undefined ||
-  //   polls === undefined ||
-  //   serverLoading
-  // ) {
-  //   return <LoadingPlaceholder />;
-  // }
-
   return (
     <Center>
       <AppHeader title={" "} actions={<SubpageActions />} />
