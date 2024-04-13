@@ -99,12 +99,6 @@ export function CreateBallot({
     [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
   );
 
-  console.log("ballotConfigs", loginState.config.ballotConfigs);
-  console.log(
-    "loginState.config.canCreateBallotTypes",
-    loginState.config.canCreateBallotTypes
-  );
-
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
     BallotConfig | undefined
   >(possibleBallotConfigs[0]);
