@@ -26,7 +26,7 @@ export interface ZuAuthArgs {
   // Event metadata comes from Podbox, and identifies the public key, event ID,
   // and product IDs that are issued by a given pipeline.
   // TODO what about multiples of these?
-  eventMetadata: PipelineEventTicketMetadata;
+  eventTicketMetadata: PipelineEventTicketMetadata;
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
@@ -42,7 +42,7 @@ export async function zuAuth(args: ZuAuthArgs): Promise<PopupActionResult> {
     popupRoute,
     fieldsToReveal,
     watermark,
-    eventMetadata,
+    eventTicketMetadata: eventMetadata,
     externalNullifier,
     proofTitle = "ZKEdDSA Ticket Proof",
     proofDescription = "ZKEdDSA Ticket PCD Request"

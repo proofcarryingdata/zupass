@@ -1,6 +1,6 @@
 import { ZuAuthArgs } from "@pcd/zuauth";
 
-export const eventMetadata: ZuAuthArgs["eventMetadata"] = {
+export const eventTicketMetadata: ZuAuthArgs["eventTicketMetadata"] = {
   publicKey: [
     "1d47687549cb273b6fed3493de5a954920dd0403f8c7eb67c2ff72a26fa4ab62",
     "1144ef5d44e2d8972d7ade8138629ebefb094025ebb4df00ed02e22d9b68e665"

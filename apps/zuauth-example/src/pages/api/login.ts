@@ -1,7 +1,8 @@
-import { eventMetadata } from "@/metadata";
-import { withSessionRoute } from "@/utils/withSession";
+import { SessionData, ironOptions } from "@/config/iron";
+import { eventTicketMetadata } from "@/metadata";
 import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { getIronSession } from "iron-session";
 import { NextApiRequest, NextApiResponse } from "next";
 
 const nullifiers = new Set<string>();
@@ -12,11 +13,9 @@ const nullifiers = new Set<string>();
  * the watermark of the current session.
  * The PCD nullifier is saved to prevent the same PCD from being used for another login.
  */
-export default withSessionRoute(async function (
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
-  const { publicKey, eventId } = eventMetadata;
+export default async function Login(req: NextApiRequest, res: NextApiResponse) {
+  const session = await getIronSession<SessionData>(req, res, ironOptions);
+  const { publicKey, eventId } = eventTicketMetadata;
   try {
     if (!req.body.pcd) {
       console.error(`[ERROR] No PCD specified`);
@@ -44,7 +43,7 @@ export default withSessionRoute(async function (
       return;
     }
 
-    if (pcd.claim.watermark.toString() !== req.session.watermark) {
+    if (pcd.claim.watermark.toString() !== session.watermark) {
       console.error(`[ERROR] PCD watermark doesn't match`);
 
       res.status(401).send("PCD watermark doesn't match");
@@ -65,8 +64,6 @@ export default withSessionRoute(async function (
       return;
     }
 
-    const eventId = pcd.claim.partialTicket.eventId;
-
     if (pcd.claim.partialTicket.eventId !== eventId) {
       console.error(
         `[ERROR] PCD ticket has an unsupported event ID: ${eventId}`
@@ -81,16 +78,16 @@ export default withSessionRoute(async function (
     nullifiers.add(pcd.claim.nullifierHash);
 
     // Save the ticket's data.
-    req.session.user = pcd.claim.partialTicket;
+    session.user = pcd.claim.partialTicket;
 
-    await req.session.save();
+    await session.save();
 
     res
       .status(200)
-      .send({ user: req.session.user, nullifier: pcd.claim.nullifierHash });
+      .send({ user: session.user, nullifier: pcd.claim.nullifierHash });
   } catch (error: any) {
     console.error(`[ERROR] ${error}`);
 
     res.status(500).send(`Unknown error: ${error.message}`);
   }
-});
+}

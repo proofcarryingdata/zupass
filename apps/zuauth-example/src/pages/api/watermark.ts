@@ -1,5 +1,6 @@
-import { withSessionRoute } from "@/utils/withSession";
+import { SessionData, ironOptions } from "@/config/iron";
 import { getRandomValues, hexToBigInt, toHexString } from "@pcd/util";
+import { getIronSession } from "iron-session";
 import { NextApiRequest, NextApiResponse } from "next";
 
 /**
@@ -8,23 +9,25 @@ import { NextApiRequest, NextApiResponse } from "next";
  * included in the proof, which means that we can ensure that the proof was
  * created for our use, and is not being re-used.
  */
-export default withSessionRoute(async function (
+export default async function Watermark(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   try {
-    req.session.watermark = hexToBigInt(
+    const session = await getIronSession<SessionData>(req, res, ironOptions);
+
+    session.watermark = hexToBigInt(
       toHexString(getRandomValues(30))
     ).toString();
 
-    await req.session.save();
+    await session.save();
 
     res.status(200).send({
-      watermark: req.session.watermark
+      watermark: session.watermark
     });
   } catch (error: any) {
     console.error(`[ERROR] ${error}`);
 
     res.status(500).send(`Unknown error: ${error.message}`);
   }
-});
+}

@@ -1,7 +1,7 @@
-import { eventMetadata } from "@/metadata";
 import { zuAuth } from "@pcd/zuauth";
 import { Inter } from "next/font/google";
 import { useCallback, useEffect, useReducer, useState } from "react";
+import { eventTicketMetadata } from "../metadata";
 
 const inter = Inter({ subsets: ["latin"] });
 
@@ -37,7 +37,7 @@ export default function Home() {
             revealAttendeeName: true
           },
           watermark,
-          eventMetadata
+          eventTicketMetadata
         });
 
         if (result.type === "pcd") {

@@ -1,10 +1,6 @@
-import "iron-session";
-
-declare module "iron-session" {
-  interface IronSessionData {
-    watermark?: string;
-    user?: Record<string, any>;
-  }
+export interface SessionData {
+  watermark?: string;
+  user?: Record<string, any>;
 }
 
 export const ironOptions = {

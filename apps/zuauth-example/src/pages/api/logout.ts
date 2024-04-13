@@ -1,12 +1,14 @@
-import { withSessionRoute } from "@/utils/withSession";
+import { SessionData, ironOptions } from "@/config/iron";
+import { getIronSession } from "iron-session";
 import { NextApiRequest, NextApiResponse } from "next";
 
-export default withSessionRoute(function (
+export default async function Logout(
   req: NextApiRequest,
   res: NextApiResponse
 ) {
   try {
-    req.session.destroy();
+    const session = await getIronSession<SessionData>(req, res, ironOptions);
+    session.destroy();
 
     res.status(200).send({
       ok: true
@@ -16,4 +18,4 @@ export default withSessionRoute(function (
 
     res.status(500).send(`Unknown error: ${error.message}`);
   }
-});
+}
