@@ -15,11 +15,11 @@ import urlJoin from "url-join";
 import { CONSUMER_SERVER_URL, ZUPASS_URL } from "../../../constants";
 
 /**
- * Requests a one-time challenge (nonce) for authentication with an EdDSA ticket PCD
- * from the `consumer-server`.
+ * Requests a nonce (single-use) value to use as a watermark during the
+ * generation of the ZK proof.
  */
-export async function generateNonce(): Promise<string> {
-  const response = await fetch(urlJoin(CONSUMER_SERVER_URL, "auth/nonce"), {
+export async function generateWatermark(): Promise<string> {
+  const response = await fetch(urlJoin(CONSUMER_SERVER_URL, "auth/watermark"), {
     credentials: "include"
   });
 

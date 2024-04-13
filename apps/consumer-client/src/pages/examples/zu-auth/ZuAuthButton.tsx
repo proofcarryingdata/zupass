@@ -4,7 +4,7 @@ import { EdDSATicketFieldsToReveal } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect } from "react";
 import {
   authenticate,
-  generateNonce,
+  generateWatermark,
   logout,
   openZKEdDSAEventTicketPopup
 } from "./utils";
@@ -85,7 +85,7 @@ export default function ZuAuthButton({
           ? async (): Promise<void> => {
               openZKEdDSAEventTicketPopup(
                 ticketFieldsToReveal ?? {},
-                BigInt(await generateNonce()),
+                BigInt(await generateWatermark()),
                 validEventIds ?? [],
                 validProductIds ?? []
               );

@@ -1,7 +1,9 @@
 import { requestKnownTicketTypes } from "@pcd/passport-interface";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import express, { Request, Response } from "express";
+import { getIronSession } from "iron-session";
 import { ApplicationContext } from "../../../types";
+import { SessionData } from "../../types";
 
 const nullifiers = new Set<string>();
 
@@ -15,9 +17,10 @@ const nullifiers = new Set<string>();
  */
 export function login(
   app: express.Application,
-  _context: ApplicationContext
+  { ironOptions }: ApplicationContext
 ): void {
   app.post("/auth/login", async (req: Request, res: Response) => {
+    const session = await getIronSession<SessionData>(req, res, ironOptions);
     try {
       if (!req.body.pcd) {
         console.error(`[ERROR] No PCD specified`);
@@ -35,7 +38,7 @@ export function login(
         return;
       }
 
-      if (pcd.claim.watermark.toString() !== req.session.nonce) {
+      if (pcd.claim.watermark.toString() !== session.watermark) {
         console.error(`[ERROR] PCD watermark doesn't match`);
 
         res.status(401).send();
@@ -94,11 +97,11 @@ export function login(
 
       // Save the data related to the fields revealed during the generation
       // of the zero-knowledge proof.
-      req.session.ticket = pcd.claim.partialTicket;
+      session.ticket = pcd.claim.partialTicket;
 
-      await req.session.save();
+      await session.save();
 
-      res.status(200).send(req.session.ticket);
+      res.status(200).send(session.ticket);
     } catch (error) {
       if (error instanceof Error) {
         console.error(`[ERROR] ${error.message}`);
