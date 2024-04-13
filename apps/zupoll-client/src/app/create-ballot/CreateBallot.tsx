@@ -428,12 +428,8 @@ export function CreateBallot({
                 variant={"ghost"}
                 style={{
                   position: "absolute",
-                  top: "0",
-                  right: "0",
-                  borderTopLeftRadius: "0",
-                  borderBottomRightRadius: "0",
-                  borderTop: "none",
-                  borderRight: "none"
+                  top: "4px",
+                  right: "4px"
                 }}
               >
                 <FaRegTrashAlt />
