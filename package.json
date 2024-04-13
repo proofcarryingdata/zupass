@@ -35,7 +35,7 @@
     "db:generate": "turbo run db:generate",
     "db:push": "turbo run db:push",
     "pre-deploy": "turbo run pre-deploy",
-    "esmerelda": "yarn workspace passport-server run parse-edge-esmerelda-events"
+    "esmeralda": "yarn workspace passport-server run parse-edge-esmeralda-events"
   },
   "devDependencies": {
     "@types/circomlibjs": "0.1.6",

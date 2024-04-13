@@ -23,7 +23,7 @@ import { FROG_SLUG } from "../src/util/telegramHelpers";
 import {
   ESMERALDA_TICKET_TYPES,
   parseTicketTypeEntry
-} from "./esmerelda-events";
+} from "./esmeralda-events";
 
 dotenv.config({ path: path.join(__dirname, "..", ".env") });
 
