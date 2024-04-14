@@ -1,4 +1,5 @@
 import {
+  CredentialManager,
   ZUPASS_CREDENTIAL_REQUEST,
   requestOfflineTickets,
   requestOfflineTicketsCheckin
@@ -52,7 +53,7 @@ import {
 import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
-import { useCredentialManager, useStateContext } from "../src/appHooks";
+import { useStateContext } from "../src/appHooks";
 import {
   closeBroadcastChannel,
   setupBroadcastChannel
@@ -71,7 +72,6 @@ import { pollUser } from "../src/user";
 
 function useBackgroundJobs(): void {
   const { update, getState, dispatch } = useStateContext();
-  const credentialManager = useCredentialManager();
 
   useEffect(() => {
     let activePollTimeout: NodeJS.Timeout | undefined = undefined;
@@ -191,6 +191,12 @@ function useBackgroundJobs(): void {
       if (!state.self || state.offline) {
         return;
       }
+
+      const credentialManager = new CredentialManager(
+        getState().identity,
+        getState().pcds,
+        getState().credentialCache
+      );
 
       if (state.checkedinOfflineDevconnectTickets.length > 0) {
         const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
