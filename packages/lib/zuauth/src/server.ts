@@ -5,12 +5,28 @@ import {
   ZKEdDSAEventTicketPCDPackage
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 
+/**
+ * Authenticates a ticket PCD.
+ *
+ * Receives a JSON-encoded serialized PCD string, where the PCD must be a
+ * ZKEdDSAEventTicketPCD. This is deserialized and verified, throwing an
+ * exception if either fails.
+ *
+ * The watermark in the PCD is compared against the value provided, and an
+ * exception is thrown if they do not match.
+ *
+ * Finally, the PCD is compared against the metadata provided
+ */
 export async function authenticate(
   pcdStr: string,
   watermark: string,
   eventTicketMetadata: PipelineEdDSATicketPCDMetadata[]
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
+  if (serializedPCD.type !== ZKEdDSAEventTicketPCDPackage) {
+    throw new Error("PCD is malformed or of the incorrect type");
+  }
+
   const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(serializedPCD.pcd);
 
   if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
@@ -22,7 +38,7 @@ export async function authenticate(
   }
 
   if (!pcd.claim.nullifierHash) {
-    throw new Error("PCD ticket nullifer has not been defined");
+    throw new Error("PCD ticket nullifier has not been defined");
   }
 
   const publicKeys = eventTicketMetadata.map((em) => em.publicKey);
