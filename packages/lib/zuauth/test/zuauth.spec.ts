@@ -6,7 +6,7 @@ import {
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { ArgumentTypeName } from "@pcd/pcd-types";
+import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
   ZKEdDSAEventTicketPCD,
@@ -14,7 +14,7 @@ import {
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
+import { assert, expect } from "chai";
 import "mocha";
 import * as path from "path";
 import { v4 as uuid } from "uuid";
@@ -113,19 +113,26 @@ describe("zuauth should work", async function () {
     `../../../pcd/zk-eddsa-event-ticket-pcd/artifacts/circuit.wasm`
   );
 
+  const privKey = newEdDSAPrivateKey();
+
+  const watermark = generateSnarkMessageHash("watermark").toString();
+  let zkPCD: ZKEdDSAEventTicketPCD;
+  let serializedZKPCD: SerializedPCD<ZKEdDSAEventTicketPCD>;
+
   this.beforeAll(async () => {
     await EdDSATicketPCDPackage.init?.({});
     await ZKEdDSAEventTicketPCDPackage.init?.({
       zkeyFilePath,
       wasmFilePath
     });
-  });
-  it("zuauth should authenticate PCDs", async function () {
-    const privKey = newEdDSAPrivateKey();
+
     const ticketPCD = await makeTestTicket(privKey, testTicket);
-    const watermark = generateSnarkMessageHash("watermark").toString();
-    const zkPCD = await makeZKTicketPCD(ticketPCD, identity, watermark);
-    const serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
+
+    zkPCD = await makeZKTicketPCD(ticketPCD, identity, watermark);
+    serializedZKPCD = await ZKEdDSAEventTicketPCDPackage.serialize(zkPCD);
+  });
+
+  it("should authenticate PCDs with correct settings", async function () {
     const publicKey = await getEdDSAPublicKey(privKey);
 
     const resultPCD = await authenticate(
@@ -146,6 +153,88 @@ describe("zuauth should work", async function () {
     expect(resultPCD.type).to.eq(ZKEdDSAEventTicketPCDTypeName);
     expect(resultPCD.claim.partialTicket.eventId).to.eq(testTicket.eventId);
     expect(resultPCD.claim.partialTicket.productId).to.eq(testTicket.productId);
+  });
+
+  it("should not authenticate PCDs with the wrong public key", async function () {
+    const newPrivKey = newEdDSAPrivateKey();
+    const publicKey = await getEdDSAPublicKey(newPrivKey);
+
+    try {
+      await authenticate(JSON.stringify(serializedZKPCD), watermark, [
+        {
+          eventId: testTicket.eventId,
+          eventName: testTicket.eventName,
+          productId: testTicket.productId,
+          productName: testTicket.ticketName,
+          pcdType: EdDSATicketPCDTypeName,
+          publicKey
+        }
+      ]);
+      assert(false, "Should not reach this point due to exception");
+    } catch (e) {
+      expect(e).to.exist;
+    }
+  });
+
+  it("should not authenticate PCDs with the wrong watermark", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+    const newWatermark = generateSnarkMessageHash("new watermark").toString();
+
+    try {
+      await authenticate(JSON.stringify(serializedZKPCD), newWatermark, [
+        {
+          eventId: testTicket.eventId,
+          eventName: testTicket.eventName,
+          productId: testTicket.productId,
+          productName: testTicket.ticketName,
+          pcdType: EdDSATicketPCDTypeName,
+          publicKey
+        }
+      ]);
+      assert(false, "Should not reach this point due to exception");
+    } catch (e) {
+      expect(e).to.exist;
+    }
+  });
+
+  it("should not authenticate PCDs with the wrong event ID", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    try {
+      await authenticate(JSON.stringify(serializedZKPCD), watermark, [
+        {
+          eventId: uuid(),
+          eventName: testTicket.eventName,
+          productId: testTicket.productId,
+          productName: testTicket.ticketName,
+          pcdType: EdDSATicketPCDTypeName,
+          publicKey
+        }
+      ]);
+      assert(false, "Should not reach this point due to exception");
+    } catch (e) {
+      expect(e).to.exist;
+    }
+  });
+
+  it("should not authenticate PCDs with the wrong product ID", async function () {
+    const publicKey = await getEdDSAPublicKey(privKey);
+
+    try {
+      await authenticate(JSON.stringify(serializedZKPCD), watermark, [
+        {
+          eventId: testTicket.eventId,
+          eventName: testTicket.eventName,
+          productId: uuid(),
+          productName: testTicket.ticketName,
+          pcdType: EdDSATicketPCDTypeName,
+          publicKey
+        }
+      ]);
+      assert(false, "Should not reach this point due to exception");
+    } catch (e) {
+      expect(e).to.exist;
+    }
   });
 });
 
