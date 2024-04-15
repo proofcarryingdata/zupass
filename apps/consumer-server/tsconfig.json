@@ -30,6 +30,9 @@
     },
     {
       "path": "../../packages/pcd/zk-eddsa-event-ticket-pcd"
+    },
+    {
+      "path": "../../packages/lib/zuauth"
     }
   ]
 }
