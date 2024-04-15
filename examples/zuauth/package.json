@@ -9,9 +9,7 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@pcd/eddsa-ticket-pcd": "^0.5.0",
     "@pcd/passport-interface": "^0.10.0",
-    "@pcd/zk-eddsa-event-ticket-pcd": "^0.4.0",
     "@pcd/zuauth": "0.0.1",
     "iron-session": "^8.0.1",
     "next": "14.0.3",

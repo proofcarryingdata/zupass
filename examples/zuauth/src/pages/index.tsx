@@ -1,5 +1,6 @@
-import { zuAuth } from "@pcd/zuauth";
+import { zuAuthPopup } from "@pcd/zuauth";
 import { Inter } from "next/font/google";
+import Head from "next/head";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { eventTicketMetadata } from "../metadata";
 
@@ -29,9 +30,9 @@ export default function Home() {
         addLog("Got watermark");
         addLog("Opening popup window");
         setAuthState("authenticating");
-        const result = await zuAuth({
+        const result = await zuAuthPopup({
           zupassUrl: process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL as string,
-          popupRoute: window.origin + "/popup",
+          returnUrl: window.origin + "/popup",
           fieldsToReveal: {
             revealAttendeeEmail: true,
             revealAttendeeName: true
@@ -92,6 +93,9 @@ export default function Home() {
     <main
       className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
     >
+      <Head>
+        <title>ZuAuth Example</title>
+      </Head>
       <div className="z-10 max-w-5xl w-full text-sm">
         <button
           onClick={authState === "authenticated" ? logout : auth}

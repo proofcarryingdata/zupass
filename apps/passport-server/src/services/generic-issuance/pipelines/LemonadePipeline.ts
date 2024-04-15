@@ -1835,9 +1835,13 @@ export class LemonadePipeline implements BasePipeline {
         return {
           publicKey,
           eventId: ev.genericIssuanceEventId,
-          productIds: ev.ticketTypes.map(
-            (ticketType) => ticketType.genericIssuanceProductId
-          )
+          eventName: ev.name,
+          products: ev.ticketTypes.map((ticketType) => {
+            return {
+              productName: ticketType.name,
+              productId: ticketType.genericIssuanceProductId
+            };
+          })
         };
       }
     );

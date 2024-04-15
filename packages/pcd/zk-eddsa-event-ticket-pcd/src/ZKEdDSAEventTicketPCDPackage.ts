@@ -347,28 +347,41 @@ export function getProveDisplayOptions(): ProveDisplayOptions<ZKEdDSAEventTicket
               return false;
             }
 
-            return !!params.eventIds.find(
-              (eventId, i) =>
-                eventId === value.claim.ticket.eventId &&
-                params.productIds?.[i] === value.claim.ticket.productId
-            );
+            if (
+              !params.eventIds.find(
+                (eventId, i) =>
+                  eventId === value.claim.ticket.eventId &&
+                  params.productIds?.[i] === value.claim.ticket.productId
+              )
+            ) {
+              return false;
+            }
           }
 
           if (params?.eventIds?.length) {
-            return params.eventIds.includes(value.claim.ticket.eventId);
+            if (!params.eventIds.includes(value.claim.ticket.eventId)) {
+              return false;
+            }
           }
 
           if (params?.productIds?.length) {
-            return params.productIds.includes(value.claim.ticket.productId);
+            if (!params.productIds.includes(value.claim.ticket.productId)) {
+              return false;
+            }
           }
 
-          if (params?.publicKey) {
-            return isEqualEdDSAPublicKey(
-              params.publicKey,
-              value.proof.eddsaPCD.claim.publicKey
-            );
+          if (params?.publicKeys?.length) {
+            if (
+              !params.publicKeys.find((publicKey) =>
+                isEqualEdDSAPublicKey(
+                  publicKey,
+                  value.proof.eddsaPCD.claim.publicKey
+                )
+              )
+            ) {
+              return false;
+            }
           }
-
           return true;
         },
         validatorParams: {

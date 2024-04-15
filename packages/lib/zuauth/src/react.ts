@@ -1,14 +1,16 @@
 import { PopupActionResult } from "@pcd/passport-interface/PassportPopup/core";
 import { useEffect, useState } from "react";
-import { ZuAuthArgs, zuAuth } from "./index";
+import { ZuAuthArgs, zuAuthPopup } from "./index";
+
+type ZuAuthReactResult = PopupActionResult | { type: "loading" };
 
 /**
  * Simple React effect hook for using ZuAuth for authentication.
  */
-export function useZuAuth(args: ZuAuthArgs): PopupActionResult | undefined {
-  const [result, setResult] = useState<PopupActionResult | undefined>();
+export function useZuAuthPopup(args: ZuAuthArgs): ZuAuthReactResult {
+  const [result, setResult] = useState<ZuAuthReactResult>({ type: "loading" });
   useEffect(() => {
-    zuAuth(args).then(setResult);
+    zuAuthPopup(args).then(setResult);
   }, [args]);
 
   return result;

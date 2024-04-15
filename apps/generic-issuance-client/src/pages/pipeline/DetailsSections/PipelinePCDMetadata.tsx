@@ -43,35 +43,29 @@ export function PipelinePCDMetadataSection({
     return <div>No PCD metadata available for this pipeline.</div>;
   }
 
+  const json = JSON.stringify(pipelinePCDMetadata, null, 2);
+
   return (
     <div>
-      {pipelinePCDMetadata.map((metadata: PipelinePCDMetadata) => {
-        const json = JSON.stringify(metadata, null, 2);
-        return (
-          <pre
-            style={{
-              whiteSpace: "pre-wrap",
-              fontSize: "12px",
-              position: "relative"
-            }}
-            key={metadata.eventId}
+      <pre
+        style={{
+          whiteSpace: "pre-wrap",
+          fontSize: "12px",
+          position: "relative"
+        }}
+      >
+        <div style={{ position: "absolute", right: 0, top: 0 }}>
+          <Button
+            size="sm"
+            onClick={() => copyToClipboard(json)}
+            colorScheme={copied ? "green" : "gray"}
           >
-            <div style={{ position: "absolute", right: 0, top: 0 }}>
-              <Button
-                size="sm"
-                onClick={() => copyToClipboard(json)}
-                colorScheme={copied ? "green" : "gray"}
-              >
-                {copied && <CheckIcon w="4" h="4" />}
-                {!copied && <CopyIcon w="4" h="4" />}
-              </Button>
-            </div>
-            <code style={{ paddingTop: "0.5rem", display: "block" }}>
-              {json}
-            </code>
-          </pre>
-        );
-      })}
+            {copied && <CheckIcon w="4" h="4" />}
+            {!copied && <CopyIcon w="4" h="4" />}
+          </Button>
+        </div>
+        <code style={{ paddingTop: "0.5rem", display: "block" }}>{json}</code>
+      </pre>
     </div>
   );
 }

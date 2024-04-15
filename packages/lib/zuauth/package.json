@@ -11,6 +11,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./server": {
+      "types": "./dist/types/src/server.d.ts",
+      "import": "./dist/esm/src/server.js",
+      "require": "./dist/cjs/src/server.js"
     }
   },
   "files": [

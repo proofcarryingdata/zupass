@@ -1,10 +1,10 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd/EdDSAPCD";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
-import { PipelineEventTicketMetadata } from "@pcd/passport-interface";
+import type { PipelineEventTicketMetadata } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
 import {
   PopupActionResult,
-  zupassPopupExecute
+  zupassPopupExecute,
+  zupassPopupSetup
 } from "@pcd/passport-interface/PassportPopup/core";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
@@ -15,76 +15,72 @@ import {
   ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 
+// For convenience, re-export this here so that consumers don't need to install
+// and import from `@pcd/passport-interface` directly.
+export { zupassPopupSetup };
+
 /**
  * Arguments required for making ZK proofs about tickets.
  */
 export interface ZuAuthArgs {
-  zupassUrl: string;
-  popupRoute: string;
+  zupassUrl?: string;
+  returnUrl: string;
   fieldsToReveal: EdDSATicketFieldsToReveal;
   watermark: string | bigint;
   // Event metadata comes from Podbox, and identifies the public key, event ID,
-  // and product IDs that are issued by a given pipeline.
-  // TODO what about multiples of these?
-  eventTicketMetadata: PipelineEventTicketMetadata;
+  // and product IDs that are used for issuance by a given pipeline.
+  eventTicketMetadata: PipelineEventTicketMetadata[];
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
 }
 
 /**
- * Simple wrapper function to make it easy to build authentication flows for
- * EdDSAPCD tickets.
+ * Opens a popup window to the Zupass prove screen.
  */
-export async function zuAuth(args: ZuAuthArgs): Promise<PopupActionResult> {
-  const {
-    zupassUrl,
-    popupRoute,
-    fieldsToReveal,
-    watermark,
-    eventTicketMetadata: eventMetadata,
-    externalNullifier,
-    proofTitle = "ZKEdDSA Ticket Proof",
-    proofDescription = "ZKEdDSA Ticket PCD Request"
-  } = args;
-
-  const eventIds: string[] = ([] as string[]).fill(
-    eventMetadata.eventId,
-    0,
-    eventMetadata.productIds.length
-  );
-
-  const proofUrl = constructZkTicketProofUrl(
-    zupassUrl,
-    popupRoute,
-    fieldsToReveal,
-    eventIds,
-    eventMetadata.productIds,
-    eventMetadata.publicKey,
-    watermark,
-    externalNullifier,
-    proofTitle,
-    proofDescription
-  );
-
-  return zupassPopupExecute(popupRoute, proofUrl);
+export async function zuAuthPopup(
+  args: ZuAuthArgs
+): Promise<PopupActionResult> {
+  const proofUrl = constructZkTicketProofUrl(args);
+  return zupassPopupExecute(args.returnUrl, proofUrl);
 }
 
 /**
- * Opens a Zupass popup to make a proof of a ZK EdDSA event ticket PCD.
+ * Navigates to the Zupass prove screen.
  */
-export function constructZkTicketProofUrl(
-  zupassUrl: string,
-  popupUrl: string,
-  fieldsToReveal: EdDSATicketFieldsToReveal,
-  validEventIds: string[],
-  validProductIds: string[],
-  publicKey: EdDSAPublicKey,
-  watermark: string | bigint,
-  externalNullifier?: string | bigint,
-  proofTitle: string = "ZKEdDSA Ticket Proof",
-  proofDescription: string = "ZKEdDSA Ticket PCD Request"
-): string {
+export function zuAuthRedirect(args: ZuAuthArgs): void {
+  const proofUrl = constructZkTicketProofUrl(args);
+  window.location.href = proofUrl;
+}
+
+/**
+ * Constructs a URL to the Zupass prove screen for a ZKEdDSAEventTicketPCD
+ * zero-knowlege proof.
+ */
+export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
+  const {
+    zupassUrl = "https://zupass.org",
+    returnUrl,
+    fieldsToReveal,
+    watermark,
+    eventTicketMetadata,
+    externalNullifier,
+    proofTitle = "ZKEdDSA Ticket Proof",
+    proofDescription = "ZKEdDSA Ticket PCD Request"
+  } = zuAuthArgs;
+
+  const eventIds = [],
+    productIds = [],
+    publicKeys = [];
+
+  for (const em of eventTicketMetadata) {
+    for (const product of em.products) {
+      eventIds.push(em.eventId);
+      productIds.push(product.productId);
+      publicKeys.push(em.publicKey);
+    }
+  }
+
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
@@ -92,9 +88,9 @@ export function constructZkTicketProofUrl(
       value: undefined,
       userProvided: true,
       validatorParams: {
-        eventIds: validEventIds,
-        productIds: validProductIds,
-        publicKey,
+        eventIds,
+        productIds,
+        publicKeys,
         notFoundMessage: "No eligible PCDs found"
       }
     },
@@ -106,7 +102,8 @@ export function constructZkTicketProofUrl(
     },
     validEventIds: {
       argumentType: ArgumentTypeName.StringArray,
-      value: validEventIds.length !== 0 ? validEventIds : undefined,
+      value:
+        eventIds.length !== 0 && eventIds.length <= 20 ? eventIds : undefined,
       userProvided: false
     },
     fieldsToReveal: {
@@ -129,7 +126,7 @@ export function constructZkTicketProofUrl(
   };
   return constructZupassPcdGetRequestUrl<typeof ZKEdDSAEventTicketPCDPackage>(
     zupassUrl,
-    popupUrl,
+    returnUrl,
     ZKEdDSAEventTicketPCDTypeName,
     args,
     {

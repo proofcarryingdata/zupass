@@ -33,13 +33,7 @@
   ],
   "references": [
     {
-      "path": "../../packages/pcd/eddsa-ticket-pcd"
-    },
-    {
       "path": "../../packages/lib/passport-interface"
-    },
-    {
-      "path": "../../packages/pcd/zk-eddsa-event-ticket-pcd"
     },
     {
       "path": "../../packages/lib/zuauth"

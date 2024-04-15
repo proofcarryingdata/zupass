@@ -495,8 +495,13 @@ export interface PipelineInfoConsumer {
 export interface PipelineEventTicketMetadata {
   publicKey: EdDSAPublicKey;
   eventId: string; // UUID
-  productIds: string[]; // UUID[]
+  eventName: string;
+  products: {
+    productName: string;
+    productId: string; // UUID
+  }[];
 }
+
 // could be |'ed with other types of metadata
 export type PipelinePCDMetadata = PipelineEventTicketMetadata;
 
