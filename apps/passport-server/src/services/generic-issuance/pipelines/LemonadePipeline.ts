@@ -1,4 +1,4 @@
-import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -19,7 +19,6 @@ import {
   PipelineEdDSATicketPCDMetadata,
   PipelineLoadSummary,
   PipelineLog,
-  PipelinePCDMetadata,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
@@ -96,7 +95,6 @@ export class LemonadePipeline implements BasePipeline {
    * Used to sign {@link EdDSATicketPCD}
    */
   private eddsaPrivateKey: string;
-  private eddsaPublicKey: EdDSAPublicKey | undefined;
   private definition: LemonadePipelineDefinition;
 
   // Pending check-ins are check-ins which have either completed (and have
@@ -231,8 +229,6 @@ export class LemonadePipeline implements BasePipeline {
     // Initialize the Semaphore Group provider by loading groups from the DB,
     // if one exists.
     await this.semaphoreGroupProvider?.start();
-    // We can't set this up in the constructor as it requires an async call.
-    this.eddsaPublicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
   }
 
   public async stop(): Promise<void> {
@@ -1828,13 +1824,8 @@ export class LemonadePipeline implements BasePipeline {
   /**
    * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
    */
-  private getMetadata(): PipelinePCDMetadata[] {
-    if (!this.eddsaPublicKey) {
-      throw new Error(
-        `getMetadata() was called before pipeline ${this.id} has started`
-      );
-    }
-    const publicKey = this.eddsaPublicKey;
+  private async getMetadata(): Promise<PipelineEdDSATicketPCDMetadata[]> {
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
     const metadata = this.definition.options.events.flatMap((ev) =>
       ev.ticketTypes.map(
         (ticketType) =>

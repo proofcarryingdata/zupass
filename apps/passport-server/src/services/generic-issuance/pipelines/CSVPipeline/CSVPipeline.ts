@@ -1,6 +1,8 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
+  PipelineEdDSATicketPCDMetadata,
   PipelineLoadSummary,
   PipelineLog,
   PipelinePCDMetadata,
@@ -29,7 +31,11 @@ import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
-import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
+import {
+  makeTicketPCD,
+  rowToTicket,
+  summarizeEventAndProductIds
+} from "./makeTicketPCD";
 
 const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -73,7 +79,7 @@ export class CSVPipeline implements BasePipeline {
           this.definition.options.feedOptions.feedId
         ),
         options: this.definition.options.feedOptions,
-        getMetadata: (): PipelinePCDMetadata[] => []
+        getMetadata: this.getMetadata.bind(this)
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
     this.credentialSubservice = credentialSubservice;
@@ -229,6 +235,37 @@ export class CSVPipeline implements BasePipeline {
 
   public static is(pipeline: Pipeline): pipeline is CSVPipeline {
     return pipeline.type === PipelineType.CSV;
+  }
+
+  /**
+   * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
+   */
+  private async getMetadata(): Promise<PipelinePCDMetadata[]> {
+    if (this.definition.options.outputType !== CSVPipelineOutputType.Ticket) {
+      // We don't have a metadata format for anything that isn't a ticket
+      return [];
+    }
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const uniqueProductMetadata: Record<
+      string,
+      PipelineEdDSATicketPCDMetadata
+    > = {};
+    // Find all of the unique products and create a metadata entry
+    for (const atom of await this.db.load(this.id)) {
+      // Passing "" as the Semaphore ID here is a bit of a hack
+      const ticket = rowToTicket(atom.row, "", this.id);
+      if (ticket) {
+        uniqueProductMetadata[ticket.productId] = {
+          pcdType: "eddsa-ticket-pcd",
+          publicKey,
+          productId: ticket.productId,
+          eventId: ticket.eventId,
+          eventName: ticket.eventName,
+          productName: ticket.ticketName
+        };
+      }
+    }
+    return Object.values(uniqueProductMetadata);
   }
 
   /**

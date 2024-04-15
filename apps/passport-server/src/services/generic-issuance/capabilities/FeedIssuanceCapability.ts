@@ -32,7 +32,7 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
   issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
   feedUrl: string;
   options: FeedIssuanceOptions;
-  getMetadata(): PipelinePCDMetadata[];
+  getMetadata(): Promise<PipelinePCDMetadata[]>;
 }
 
 export function isFeedIssuanceCapability(

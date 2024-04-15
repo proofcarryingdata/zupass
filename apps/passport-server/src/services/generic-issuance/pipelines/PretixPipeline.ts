@@ -1,3 +1,4 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -14,6 +15,7 @@ import {
   GenericPretixProduct,
   GenericPretixProductCategory,
   ManualTicket,
+  PipelineEdDSATicketPCDMetadata,
   PipelineLoadSummary,
   PipelineLog,
   PipelinePCDMetadata,
@@ -163,7 +165,7 @@ export class PretixPipeline implements BasePipeline {
           this.id,
           this.definition.options.feedOptions.feedId
         ),
-        getMetadata: (): PipelinePCDMetadata[] => []
+        getMetadata: this.getMetadata.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.checkinPretixTicketPCDs.bind(this),
@@ -1659,6 +1661,27 @@ export class PretixPipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
+  }
+
+  /**
+   * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
+   */
+  private async getMetadata(): Promise<PipelinePCDMetadata[]> {
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const metadata = this.definition.options.events.flatMap((ev) =>
+      ev.products.map(
+        (product) =>
+          ({
+            pcdType: "eddsa-ticket-pcd",
+            publicKey,
+            eventId: ev.genericIssuanceId,
+            eventName: ev.name,
+            productId: product.genericIssuanceId,
+            productName: product.name
+          }) satisfies PipelineEdDSATicketPCDMetadata
+      )
+    );
+    return metadata;
   }
 
   /**
