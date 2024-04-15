@@ -1,7 +1,9 @@
 import { SessionData, ironOptions } from "@/config/iron";
 import { getRandomValues, hexToBigInt, toHexString } from "@pcd/util";
 import { getIronSession } from "iron-session";
-import { NextApiRequest, NextApiResponse } from "next";
+import { cookies } from "next/headers";
+
+export const dynamic = "force-dynamic";
 
 /**
  * The watermark is a unique single-use number, which is provided to the
@@ -9,23 +11,21 @@ import { NextApiRequest, NextApiResponse } from "next";
  * included in the proof, which means that we can ensure that the proof was
  * created for our use, and is not being re-used.
  */
-export default async function Watermark(
-  req: NextApiRequest,
-  res: NextApiResponse
-) {
+export async function GET() {
   try {
-    const session = await getIronSession<SessionData>(req, res, ironOptions);
+    const session = await getIronSession<SessionData>(
+      cookies() as any,
+      ironOptions
+    );
     session.watermark = hexToBigInt(
       toHexString(getRandomValues(30))
     ).toString();
 
     await session.save();
 
-    res.status(200).send({
-      watermark: session.watermark
-    });
+    return Response.json({ watermark: session.watermark });
   } catch (error: any) {
     console.error(`[ERROR] ${error}`);
-    res.status(500).send(`Unknown error: ${error.message}`);
+    return new Response(`Unknown error: ${error.message}`, { status: 500 });
   }
 }
