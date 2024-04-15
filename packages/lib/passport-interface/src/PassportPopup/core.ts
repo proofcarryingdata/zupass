@@ -115,14 +115,17 @@ export function openZupassPopupUrl(url: string): Promise<Window | null> {
  */
 export type PopupMessageResult =
   | {
+      // We got a PCD back
       type: "pcd";
       pcdStr: string;
     }
   | {
+      // We got a pending PCD back
       type: "pendingPcd";
       pendingPcdStr: string;
     }
   | {
+      // Something went wrong
       type: "aborted";
     };
 
@@ -158,7 +161,9 @@ export function receiveZupassPopupMessage(
 
 export type PopupActionResult =
   | PopupMessageResult
+  // The popup was closed before getting/adding a PCD
   | { type: "popupClosed" }
+  // The popup was blocked before opening
   | { type: "popupBlocked" };
 
 /**
