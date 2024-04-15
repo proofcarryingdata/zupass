@@ -15,7 +15,6 @@ export default async function Logout(
     });
   } catch (error: any) {
     console.error(`[ERROR] ${error}`);
-
     res.status(500).send(`Unknown error: ${error.message}`);
   }
 }

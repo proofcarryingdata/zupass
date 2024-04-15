@@ -15,7 +15,6 @@ export default async function Watermark(
 ) {
   try {
     const session = await getIronSession<SessionData>(req, res, ironOptions);
-
     session.watermark = hexToBigInt(
       toHexString(getRandomValues(30))
     ).toString();
@@ -27,7 +26,6 @@ export default async function Watermark(
     });
   } catch (error: any) {
     console.error(`[ERROR] ${error}`);
-
     res.status(500).send(`Unknown error: ${error.message}`);
   }
 }

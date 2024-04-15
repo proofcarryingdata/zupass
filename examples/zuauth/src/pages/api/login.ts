@@ -5,21 +5,22 @@ import { getIronSession } from "iron-session";
 import { NextApiRequest, NextApiResponse } from "next";
 
 /**
- * The login checks the validity of the PCD and ensures that the ticket
- * has been issued by Zupass. The watermark used to create the PCD must equal
- * the watermark of the current session.
- * The PCD nullifier is saved to prevent the same PCD from being used for another login.
+ * Once the front-end has received a PCD from the popup window, it sends it to
+ * the back-end for verification.
+ *
+ * Calling {@link authenticate} will check that the PCD is cryptographically
+ * valid, has the correct watermark, and that its contents match the expected
+ * event metadata (public key, event ID, product ID).
  */
 export default async function Login(req: NextApiRequest, res: NextApiResponse) {
-  const session = await getIronSession<SessionData>(req, res, ironOptions);
+  if (!req.body.pcd) {
+    console.error(`[ERROR] No PCD specified`);
+    res.status(400).send("No PCD specified");
+    return;
+  }
+
   try {
-    if (!req.body.pcd) {
-      console.error(`[ERROR] No PCD specified`);
-
-      res.status(400).send("No PCD specified");
-      return;
-    }
-
+    const session = await getIronSession<SessionData>(req, res, ironOptions);
     const pcd = await authenticate(
       req.body.pcd,
       session.watermark ?? "",
@@ -27,15 +28,14 @@ export default async function Login(req: NextApiRequest, res: NextApiResponse) {
     );
 
     session.user = pcd.claim.partialTicket;
-
     await session.save();
-
     res
       .status(200)
       .send({ user: session.user, nullifier: pcd.claim.nullifierHash });
-  } catch (error: any) {
-    console.error(`[ERROR] ${error}`);
-
-    res.status(500).send(`Unknown error: ${error.message}`);
+  } catch (e) {
+    console.error(`[ERROR] ${e}`);
+    res
+      .status(400)
+      .send(e instanceof Error ? e.message : "An unexpected error occurred");
   }
 }
