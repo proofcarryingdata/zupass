@@ -1,5 +1,7 @@
 pragma circom 2.1.8;
 
+include "circomlib/circuits/comparators.circom";
+
 /**
  * Module for checking whether a value is a member of a given list.
  * A value may be either a POD entry value hash or a combination
@@ -25,5 +27,5 @@ template MembershipModule(
 	}
     }
 
-    isMember <== partialProduct[MAX_ELEMENTS - 1];
+    isMember <== IsZero()(partialProduct[MAX_ELEMENTS - 1]);
 }
