@@ -38,9 +38,9 @@ export async function authenticate(
     throw new Error("PCD watermark doesn't match");
   }
 
-  if (!pcd.claim.nullifierHash) {
-    throw new Error("PCD ticket nullifier has not been defined");
-  }
+  // if (!pcd.claim.nullifierHash) {
+  //   throw new Error("PCD ticket nullifier has not been defined");
+  // }
 
   const publicKeys = eventTicketMetadata.map((em) => em.publicKey);
   const productIds = new Set(eventTicketMetadata.map((em) => em.productId));

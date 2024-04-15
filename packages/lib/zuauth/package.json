@@ -42,13 +42,15 @@
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.10.0",
     "@pcd/tsconfig": "0.10.0",
+    "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.2.0",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0",
-    "typescript": "^5.3.3"
+    "typescript": "^5.3.3",
+    "uuid": "^9.0.1"
   },
   "publishConfig": {
     "access": "public"
