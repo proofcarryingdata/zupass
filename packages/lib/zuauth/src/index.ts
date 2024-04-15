@@ -1,5 +1,5 @@
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
-import type { PipelineEventTicketMetadata } from "@pcd/passport-interface";
+import type { PipelineEdDSATicketPCDMetadata } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
 import {
   PopupActionResult,
@@ -29,7 +29,7 @@ export interface ZuAuthArgs {
   watermark: string | bigint;
   // Event metadata comes from Podbox, and identifies the public key, event ID,
   // and product IDs that are used for issuance by a given pipeline.
-  eventTicketMetadata: PipelineEventTicketMetadata[];
+  eventTicketMetadata: PipelineEdDSATicketPCDMetadata[];
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
@@ -74,11 +74,9 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     publicKeys = [];
 
   for (const em of eventTicketMetadata) {
-    for (const product of em.products) {
-      eventIds.push(em.eventId);
-      productIds.push(product.productId);
-      publicKeys.push(em.publicKey);
-    }
+    eventIds.push(em.eventId);
+    productIds.push(em.productId);
+    publicKeys.push(em.publicKey);
   }
 
   const args: ZKEdDSAEventTicketPCDArgs = {

@@ -16,6 +16,7 @@ import {
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
+  PipelineEdDSATicketPCDMetadata,
   PipelineLoadSummary,
   PipelineLog,
   PipelinePCDMetadata,
@@ -1824,28 +1825,29 @@ export class LemonadePipeline implements BasePipeline {
     return p.type === PipelineType.Lemonade;
   }
 
+  /**
+   * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
+   */
   private getMetadata(): PipelinePCDMetadata[] {
     if (!this.eddsaPublicKey) {
-      // log?
-      return [];
+      throw new Error(
+        `getMetadata() was called before pipeline ${this.id} has started`
+      );
     }
     const publicKey = this.eddsaPublicKey;
-    const metadata: PipelinePCDMetadata[] = this.definition.options.events.map(
-      (ev): PipelinePCDMetadata => {
-        return {
-          publicKey,
-          eventId: ev.genericIssuanceEventId,
-          eventName: ev.name,
-          products: ev.ticketTypes.map((ticketType) => {
-            return {
-              productName: ticketType.name,
-              productId: ticketType.genericIssuanceProductId
-            };
-          })
-        };
-      }
+    const metadata = this.definition.options.events.flatMap((ev) =>
+      ev.ticketTypes.map(
+        (ticketType) =>
+          ({
+            pcdType: "eddsa-ticket-pcd",
+            publicKey,
+            eventId: ev.genericIssuanceEventId,
+            eventName: ev.name,
+            productId: ticketType.genericIssuanceProductId,
+            productName: ticketType.name
+          }) satisfies PipelineEdDSATicketPCDMetadata
+      )
     );
-
     return metadata;
   }
 

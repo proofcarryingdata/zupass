@@ -1,5 +1,5 @@
 import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { PipelineEventTicketMetadata } from "@pcd/passport-interface";
+import { PipelineEdDSATicketPCDMetadata } from "@pcd/passport-interface";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -8,7 +8,7 @@ import {
 export async function authenticate(
   pcdStr: string,
   watermark: string,
-  eventTicketMetadata: PipelineEventTicketMetadata[]
+  eventTicketMetadata: PipelineEdDSATicketPCDMetadata[]
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
   const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(serializedPCD.pcd);
@@ -26,11 +26,7 @@ export async function authenticate(
   }
 
   const publicKeys = eventTicketMetadata.map((em) => em.publicKey);
-  const productIds = new Set(
-    eventTicketMetadata.flatMap((em) =>
-      em.products.map((product) => product.productId)
-    )
-  );
+  const productIds = new Set(eventTicketMetadata.map((em) => em.productId));
 
   if (
     publicKeys.length > 0 &&
