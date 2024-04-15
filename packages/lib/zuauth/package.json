@@ -16,6 +16,11 @@
       "types": "./dist/types/src/server.d.ts",
       "import": "./dist/esm/src/server.js",
       "require": "./dist/cjs/src/server.js"
+    },
+    "./client": {
+      "types": "./dist/types/src/zuauth.d.ts",
+      "import": "./dist/esm/src/zuauth.js",
+      "require": "./dist/cjs/src/zuauth.js"
     }
   },
   "files": [

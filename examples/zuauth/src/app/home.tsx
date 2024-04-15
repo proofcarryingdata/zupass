@@ -1,6 +1,6 @@
 "use client";
 
-import { zuAuthPopup } from "@pcd/zuauth";
+import { zuAuthPopup } from "@pcd/zuauth/client";
 import { Inter } from "next/font/google";
 import { useCallback, useEffect, useReducer, useState } from "react";
 import { eventTicketMetadata } from "../metadata";

@@ -1,11 +1,9 @@
-import { requestKnownTicketTypes } from "@pcd/passport-interface";
-import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
+import { generateSnarkMessageHash } from "@pcd/util";
+import { authenticate } from "@pcd/zuauth";
 import express, { Request, Response } from "express";
 import { getIronSession } from "iron-session";
 import { ApplicationContext } from "../../../types";
 import { SessionData } from "../../types";
-
-const nullifiers = new Set<string>();
 
 /**
  * The login checks the validity of the PCD, ensures that the ticket
@@ -22,14 +20,20 @@ export function login(
   app.post("/auth/login", async (req: Request, res: Response) => {
     const session = await getIronSession<SessionData>(req, res, ironOptions);
     try {
-      if (!req.body.pcd) {
-        console.error(`[ERROR] No PCD specified`);
+      if (!req.body.pcd || !req.body.eventMetadata) {
+        console.error(`[ERROR] Missing PCD or event metadata`);
 
         res.status(400).send();
         return;
       }
 
-      const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(req.body.pcd);
+      const pcd = await authenticate(
+        req.body.pcd,
+        session.watermark ?? generateSnarkMessageHash("").toString(),
+        req.body.eventMetadata
+      );
+
+      /*  const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(req.body.pcd);
 
       if (!(await ZKEdDSAEventTicketPCDPackage.verify(pcd))) {
         console.error(`[ERROR] ZK ticket PCD is not valid`);
@@ -59,41 +63,9 @@ export function login(
         return;
       }
 
-      // It fetches the ticket types from Zupass to verify whether the PCD ticket
-      // is indeed among the supported tickets and has been signed with the key from the Zupass server.
-      const { value } = await requestKnownTicketTypes(
-        // eslint-disable-next-line turbo/no-undeclared-env-vars
-        process.env.ZUPASS_API as string
-      );
-
-      if (!value) {
-        console.error(`[ERROR] Request to Zupass server was not successful`);
-
-        res.status(500).send();
-        return;
-      }
-
-      const isValidTicket = value.knownTicketTypes.some((ticketType) => {
-        return (
-          (!pcd.claim.partialTicket.eventId ||
-            ticketType.eventId === pcd.claim.partialTicket.eventId) &&
-          (!pcd.claim.partialTicket.productId ||
-            ticketType.productId === pcd.claim.partialTicket.productId) &&
-          ticketType.publicKey[0] === pcd.claim.signer[0] &&
-          ticketType.publicKey[1] === pcd.claim.signer[1]
-        );
-      });
-
-      if (!isValidTicket) {
-        console.error(`[ERROR] PCD ticket doesn't exist on Zupass`);
-
-        res.status(401).send();
-        return;
-      }
-
       // The PCD's nullifier is saved so that it prevents the
       // same PCD from being reused for another login.
-      nullifiers.add(pcd.claim.nullifierHash);
+      nullifiers.add(pcd.claim.nullifierHash);*/
 
       // Save the data related to the fields revealed during the generation
       // of the zero-knowledge proof.
@@ -103,9 +75,8 @@ export function login(
 
       res.status(200).send(session.ticket);
     } catch (error) {
-      if (error instanceof Error) {
-        console.error(`[ERROR] ${error.message}`);
-      }
+      console.log(JSON.stringify(error, null, 2));
+      console.error(`[ERROR] ${error}`);
 
       res.sendStatus(500);
     }

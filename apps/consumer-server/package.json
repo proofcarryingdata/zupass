@@ -21,6 +21,7 @@
     "@pcd/semaphore-signature-pcd": "^0.10.0",
     "@pcd/util": "^0.4.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "^0.4.0",
+    "@pcd/zuauth": "0.0.1",
     "cors": "^2.8.5",
     "express": "^4.18.2",
     "iron-session": "^8.0.1",

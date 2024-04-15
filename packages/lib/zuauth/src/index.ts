@@ -1,3 +1,4 @@
+import { authenticate } from "./server";
 import {
   ZuAuthArgs,
   zuAuthPopup,
@@ -5,5 +6,5 @@ import {
   zupassPopupSetup
 } from "./zuauth";
 
-export { zuAuthPopup, zuAuthRedirect, zupassPopupSetup };
+export { authenticate, zuAuthPopup, zuAuthRedirect, zupassPopupSetup };
 export type { ZuAuthArgs };

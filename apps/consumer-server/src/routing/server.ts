@@ -3,10 +3,10 @@ import express from "express";
 import morgan from "morgan";
 import { ApplicationContext } from "../types";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
-import { generateWatermark } from "./routes/zu-auth/generateWatermark";
-import { isLoggedIn } from "./routes/zu-auth/isLoggedIn";
-import { login } from "./routes/zu-auth/login";
-import { logout } from "./routes/zu-auth/logout";
+import { generateWatermark } from "./routes/zuauth/generateWatermark";
+import { isLoggedIn } from "./routes/zuauth/isLoggedIn";
+import { login } from "./routes/zuauth/login";
+import { logout } from "./routes/zuauth/logout";
 import { RouteInitializer } from "./types";
 
 const routes: RouteInitializer[] = [

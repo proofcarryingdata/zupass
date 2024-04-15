@@ -18,6 +18,6 @@ export async function startApplication(): Promise<void> {
   };
 
   for (const service of services) {
-    await service(context);
+    service(context);
   }
 }
