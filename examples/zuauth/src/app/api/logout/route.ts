@@ -2,8 +2,6 @@ import { SessionData, ironOptions } from "@/config/iron";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic";
-
 export async function POST() {
   try {
     const session = await getIronSession<SessionData>(

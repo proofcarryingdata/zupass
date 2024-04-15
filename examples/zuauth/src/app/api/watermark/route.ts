@@ -3,8 +3,6 @@ import { getRandomValues, hexToBigInt, toHexString } from "@pcd/util";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
 
-export const dynamic = "force-dynamic";
-
 /**
  * The watermark is a unique single-use number, which is provided to the
  * front-end before requesting a ZK proof for authentication. The watermark is
