@@ -17,6 +17,8 @@ interface AppConfig {
   strichLicenseKey: string;
   // license key for Scandit scanner
   scanditLicenseKey: string;
+  // is a choice of multiple scanning engines enabled?
+  multiChoiceScanEnabled: boolean;
 }
 
 if (
@@ -55,7 +57,8 @@ export const appConfig: AppConfig = {
   rollbarToken: process.env.ROLLBAR_TOKEN,
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
   strichLicenseKey: process.env.STRICH_LICENSE_KEY as string,
-  scanditLicenseKey: process.env.SCANDIT_LICENSE_KEY as string
+  scanditLicenseKey: process.env.SCANDIT_LICENSE_KEY as string,
+  multiChoiceScanEnabled: process.env.MULTI_CHOICE_SCAN_ENABLED === "true"
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

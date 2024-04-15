@@ -1,12 +1,17 @@
+import { useCallback, useState } from "react";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
+import { SingleValue } from "react-select";
 import styled from "styled-components";
-import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
+import { useDispatch, useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
+import { ScanditScanner } from "../core/Scandit";
+import Scanner from "../core/Scanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
+import Select from "../shared/Select";
 import {
   Back,
   Home
@@ -26,10 +31,69 @@ const ButtonsContainer = styled.div`
 `;
 
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
-export function ScanScreen(): JSX.Element {
+export function MultiChoiceScanScreen(): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
+  const dispatch = useDispatch();
+
+  const [scanner, setScanner] = useState<
+    "strich" | "react-qr-reader" | "scandit"
+    // @ts-expect-error this is temporary code so doesn't need to type-check
+  >(localStorage.getItem("preferred-scanner") ?? "scandit");
+
+  type Option = {
+    id: "strich" | "react-qr-reader" | "scandit";
+    label: string;
+  };
+
+  const onChange = useCallback(
+    (option: SingleValue<Option>) => {
+      if (option) {
+        setScanner(option.id);
+        localStorage.setItem("preferred-scanner", option.id);
+      }
+    },
+    [setScanner]
+  );
+
+  const options: Option[] = [
+    { id: "scandit", label: "Scandit" },
+    { id: "strich", label: "Strich" },
+    { id: "react-qr-reader", label: "React-QR-Reader" }
+  ];
+
+  const onResult = useCallback(
+    (result: string): void => {
+      console.log(`Got result, considering redirect`, result);
+      const newLoc = maybeRedirect(result);
+      if (newLoc) {
+        nav(newLoc);
+      } else {
+        dispatch({
+          type: "error",
+          error: {
+            title: "Not a Zupass QR code",
+            message:
+              "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
+            dismissToCurrentPage: true
+          }
+        });
+      }
+    },
+    [dispatch, nav]
+  );
+
+  const onQrReaderResult = useCallback(
+    // eslint-disable-next-line @typescript-eslint/ban-ts-comment
+    // @ts-ignore
+    (result) => {
+      if (result) {
+        onResult(result.getText());
+      }
+    },
+    [onResult]
+  );
 
   return (
     <AppContainer bg="gray">
@@ -40,24 +104,23 @@ export function ScanScreen(): JSX.Element {
             <Back />
             <Home />
           </ButtonsContainer>
-          <QrReader
-            className="qr"
-            onResult={(result, error): void => {
-              if (result) {
-                console.log(
-                  `Got result, considering redirect`,
-                  result.getText()
-                );
-                const newLoc = maybeRedirect(result.getText());
-                if (newLoc) nav(newLoc);
-              } else if (error) {
-                //    console.info(error);
-              }
-            }}
-            constraints={{ facingMode: "environment", aspectRatio: 1 }}
-            ViewFinder={ViewFinder}
-            containerStyle={{ width: "100%" }}
-          />
+          <Select
+            value={options.find((option) => option.id === scanner)}
+            onChange={onChange}
+            options={options}
+          ></Select>
+          <Spacer h={16} />
+          {scanner === "react-qr-reader" && (
+            <QrReader
+              className="qr"
+              onResult={onQrReaderResult}
+              constraints={{ facingMode: "environment", aspectRatio: 1 }}
+              ViewFinder={ViewFinder}
+              containerStyle={{ width: "100%" }}
+            />
+          )}
+          {scanner === "scandit" && <ScanditScanner onScan={onResult} />}
+          {scanner === "strich" && <Scanner onResult={onResult} />}
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>
@@ -153,7 +216,4 @@ const Corner = styled.div<{ top?: boolean; left?: boolean }>`
 
 const QRContainer = styled.div`
   width: 100%;
-
-  .qr {
-  }
 `;

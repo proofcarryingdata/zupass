@@ -62,6 +62,13 @@ const define = {
           process.env.SCANDIT_LICENSE_KEY
         )
       }
+    : {}),
+  ...(process.env.MULTI_CHOICE_SCAN_ENABLED !== undefined
+    ? {
+        "process.env.MULTI_CHOICE_SCAN_ENABLED": JSON.stringify(
+          process.env.MULTI_CHOICE_SCAN_ENABLED
+        )
+      }
     : {})
 };
 

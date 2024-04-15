@@ -204,6 +204,7 @@
     "NEXT_PUBLIC_DEBUG_TOOLS_ENABLED",
     "STRICH_LICENSE_KEY",
     "SCANDIT_LICENSE_KEY",
+    "MULTI_CHOICE_SCAN_ENABLED",
     "//// add env vars above this line ////"
   ]
 }
