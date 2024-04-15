@@ -2,7 +2,8 @@ import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { PipelineEdDSATicketPCDMetadata } from "@pcd/passport-interface";
 import {
   ZKEdDSAEventTicketPCD,
-  ZKEdDSAEventTicketPCDPackage
+  ZKEdDSAEventTicketPCDPackage,
+  ZKEdDSAEventTicketPCDTypeName
 } from "@pcd/zk-eddsa-event-ticket-pcd";
 
 /**
@@ -23,7 +24,7 @@ export async function authenticate(
   eventTicketMetadata: PipelineEdDSATicketPCDMetadata[]
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
-  if (serializedPCD.type !== ZKEdDSAEventTicketPCDPackage) {
+  if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
     throw new Error("PCD is malformed or of the incorrect type");
   }
 

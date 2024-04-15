@@ -24,7 +24,7 @@ export { zupassPopupSetup };
  */
 export interface ZuAuthArgs {
   zupassUrl?: string;
-  returnUrl: string;
+  returnUrl?: string;
   fieldsToReveal: EdDSATicketFieldsToReveal;
   watermark: string | bigint;
   // Event metadata comes from Podbox, and identifies the public key, event ID,
@@ -35,6 +35,10 @@ export interface ZuAuthArgs {
   proofDescription?: string;
 }
 
+export interface ZuAuthRedirectArgs extends ZuAuthArgs {
+  returnUrl: string;
+}
+
 /**
  * Opens a popup window to the Zupass prove screen.
  */
@@ -42,13 +46,13 @@ export async function zuAuthPopup(
   args: ZuAuthArgs
 ): Promise<PopupActionResult> {
   const proofUrl = constructZkTicketProofUrl(args);
-  return zupassPopupExecute(args.returnUrl, proofUrl);
+  return zupassPopupExecute(proofUrl);
 }
 
 /**
  * Navigates to the Zupass prove screen.
  */
-export function zuAuthRedirect(args: ZuAuthArgs): void {
+export function zuAuthRedirect(args: ZuAuthRedirectArgs): void {
   const proofUrl = constructZkTicketProofUrl(args);
   window.location.href = proofUrl;
 }
@@ -124,13 +128,14 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
   };
   return constructZupassPcdGetRequestUrl<typeof ZKEdDSAEventTicketPCDPackage>(
     zupassUrl,
-    returnUrl,
+    returnUrl ?? "",
     ZKEdDSAEventTicketPCDTypeName,
     args,
     {
       genericProveScreen: true,
       title: proofTitle,
       description: proofDescription
-    }
+    },
+    true
   );
 }

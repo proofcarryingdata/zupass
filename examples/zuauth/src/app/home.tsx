@@ -17,8 +17,8 @@ type AuthState =
 export default function Home() {
   const [pcdStr, setPcdStr] = useState<string>("");
   const [authState, setAuthState] = useState<AuthState>("logged out");
-  const [log, addLog] = useReducer((state: string, toAdd: string) => {
-    return `${state}${state === "" ? "" : "\n"}${toAdd}`;
+  const [log, addLog] = useReducer((currentLog: string, toAdd: string) => {
+    return `${currentLog}${currentLog === "" ? "" : "\n"}${toAdd}`;
   }, "");
   const [user, setUser] = useState<Record<string, string> | undefined>();
 
@@ -33,7 +33,6 @@ export default function Home() {
         setAuthState("authenticating");
         const result = await zuAuthPopup({
           zupassUrl: process.env.NEXT_PUBLIC_ZUPASS_SERVER_URL as string,
-          returnUrl: window.origin + "/popup",
           fieldsToReveal: {
             revealAttendeeEmail: true,
             revealAttendeeName: true

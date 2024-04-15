@@ -1,6 +1,7 @@
 import {
   PCDGetWithoutProvingRequest,
-  PCDRequestType
+  PCDRequestType,
+  postSerializedPCDMessage
 } from "@pcd/passport-interface";
 import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd";
 import { useCallback, useMemo, useState } from "react";
@@ -65,8 +66,12 @@ export function GetWithoutProvingScreen(): JSX.Element | null {
     const pcdPackage = pcds.getPackage(pcd.type);
     if (pcdPackage === undefined) return;
     const serializedPCD = await pcdPackage.serialize(pcd);
+    if (window.opener && request.postMessage) {
+      postSerializedPCDMessage(window.opener, serializedPCD);
+      window.close();
+    }
     safeRedirect(request.returnUrl, serializedPCD);
-  }, [pcds, request.returnUrl, selectedPCDID]);
+  }, [pcds, request.postMessage, request.returnUrl, selectedPCDID]);
 
   useLoginIfNoSelf(pendingRequestKeys.getWithoutProving, request);
 

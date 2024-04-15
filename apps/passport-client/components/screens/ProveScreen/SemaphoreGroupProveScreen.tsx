@@ -1,5 +1,7 @@
 import {
   PCDGetRequest,
+  postPendingPCDMessage,
+  postSerializedPCDMessage,
   requestProveOnServer,
   requestSemaphoreGroup
 } from "@pcd/passport-interface";
@@ -92,11 +94,20 @@ export function SemaphoreGroupProveScreen({
           );
         }
 
+        if (window.opener && req.postMessage) {
+          postPendingPCDMessage(window.opener, pendingPCDResult.value);
+          window.close();
+        }
+
         safeRedirectPending(req.returnUrl, pendingPCDResult.value);
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;
         const pcd = await prove(args);
         const serializedPCD = await serialize(pcd);
+        if (window.opener && req.postMessage) {
+          postSerializedPCDMessage(window.opener, serializedPCD);
+          window.close();
+        }
         safeRedirect(req.returnUrl, serializedPCD);
       }
     } catch (e) {
@@ -107,7 +118,14 @@ export function SemaphoreGroupProveScreen({
         setError(errorMessage);
       }
     }
-  }, [identity, group, req.args, req.options?.proveOnServer, req.returnUrl]);
+  }, [
+    identity,
+    group,
+    req.args,
+    req.options?.proveOnServer,
+    req.postMessage,
+    req.returnUrl
+  ]);
 
   const lines: ReactNode[] = [];
   if (group === null) {
