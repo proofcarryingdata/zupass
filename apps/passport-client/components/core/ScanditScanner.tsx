@@ -13,9 +13,12 @@ export const ScanditScanner = ({
 }): JSX.Element => {
   useEffect(() => {
     async function runScanner(): Promise<void> {
+      if (!licenseKey) {
+        throw new Error("Scandit license key is not defined");
+      }
       await SDCCore.configure({
         licenseKey: licenseKey,
-        libraryLocation: "/engine",
+        libraryLocation: "/scandit-engine",
         moduleLoaders: [SDCBarcode.barcodeCaptureLoader()]
       });
 

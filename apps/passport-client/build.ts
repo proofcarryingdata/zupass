@@ -184,7 +184,7 @@ function copyScanditEngine(): void {
     path.join(
       "../../node_modules/scandit-web-datacapture-barcode/build/engine"
     ),
-    path.join("public/engine"),
+    path.join("public/scandit-engine"),
     { recursive: true }
   );
 }

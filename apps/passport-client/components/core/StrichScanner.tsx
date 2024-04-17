@@ -5,7 +5,6 @@ import {
   StrichSDK
 } from "@pixelverse/strichjs-sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
-import styled from "styled-components";
 import { appConfig } from "../../src/appConfig";
 
 /**
@@ -65,6 +64,9 @@ function ScannerHost({
         setSdkState("initialized");
       } else {
         try {
+          if (!appConfig.strichLicenseKey) {
+            throw new Error("Strich license key is not defined");
+          }
           await StrichSDK.initialize(appConfig.strichLicenseKey);
           console.log(`STRICH SDK initialized successfully`);
           setSdkState("initialized");
@@ -126,7 +128,7 @@ function ScannerHost({
 /**
  * Component hosting the scanner
  */
-export function Scanner({
+export function StrichScanner({
   onResult
 }: {
   onResult: (result: string) => void;
@@ -137,13 +139,5 @@ export function Scanner({
     },
     [onResult]
   );
-  return (
-    <ScannerContainer>
-      <ScannerHost addDetection={addDetection} />
-    </ScannerContainer>
-  );
+  return <ScannerHost addDetection={addDetection} />;
 }
-
-export default Scanner;
-
-const ScannerContainer = styled.div``;

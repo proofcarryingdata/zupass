@@ -5,4 +5,4 @@ public/js
 public/service-worker.js
 public/index.html
 public/bundle-stats.html
-public/engine
+public/scandit-engine

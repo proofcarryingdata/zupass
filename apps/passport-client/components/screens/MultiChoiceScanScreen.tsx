@@ -7,8 +7,8 @@ import { useDispatch, useLaserScannerKeystrokeInput } from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
-import { ScanditScanner } from "../core/Scandit";
-import Scanner from "../core/Scanner";
+import { ScanditScanner } from "../core/ScanditScanner";
+import { StrichScanner } from "../core/StrichScanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import Select from "../shared/Select";
@@ -120,7 +120,7 @@ export function MultiChoiceScanScreen(): JSX.Element {
             />
           )}
           {scanner === "scandit" && <ScanditScanner onScan={onResult} />}
-          {scanner === "strich" && <Scanner onResult={onResult} />}
+          {scanner === "strich" && <StrichScanner onResult={onResult} />}
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>
