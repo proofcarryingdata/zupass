@@ -1,6 +1,6 @@
 import { LogoutButton } from "@/components/ui/Headers";
+import { FaUserAstronaut } from "react-icons/fa";
 import { LoginState } from "../../types";
-
 export function LoggedInAs({
   loginState,
   logout
@@ -10,7 +10,10 @@ export function LoggedInAs({
 }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="mr-2">{loginState.config.name}</span>
+      <span className="mr-2 flex flex-row gap-2 justify-center items-center">
+        <FaUserAstronaut />
+        {loginState.config.name}
+      </span>
       <LogoutButton logout={logout} />
     </div>
   );

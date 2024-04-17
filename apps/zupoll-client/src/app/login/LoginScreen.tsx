@@ -95,7 +95,7 @@ export function LoginScreen({
         <ContentContainer>
           <GuaranteesElement />
 
-          <Card className="my-8">
+          <Card>
             <CardContent className="mt-6">
               <LoginWidget
                 configs={LEGACY_LOGIN_CONFIGS}

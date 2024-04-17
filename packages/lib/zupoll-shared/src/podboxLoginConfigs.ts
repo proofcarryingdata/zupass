@@ -6,8 +6,9 @@ export function getPodboxConfigs(
   ZUPASS_SERVER_URL: string
 ): LoginConfig[] {
   const PARC_HQ_CONFIG_ID = "0xPARC HQ";
+  const PARC_HQ_CONFIG_NAME = "0xPARC HQ Member";
+  const PARC_HQ_RESIDENTS_NAME = "Employee Ballots";
   const PARC_HQ_DESCRIPTION = "Ballots visible to 0xPARC Employees";
-  const PARC_HQ_CONFIG_NAME = "0xPARC HQ";
   const PARC_HQ_CONFIG_PIPELINE_ID = "432a2e29-b884-4fd8-886b-04b42ad3242f";
   const PARC_HQ_CONFIG_SEMA_GROUP_ID = "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
   const PARC_HQ_CONFIG = makePodboxLoginConfig(
@@ -16,14 +17,16 @@ export function getPodboxConfigs(
     PARC_HQ_CONFIG_ID,
     PARC_HQ_DESCRIPTION,
     PARC_HQ_CONFIG_NAME,
+    PARC_HQ_RESIDENTS_NAME,
     PARC_HQ_CONFIG_PIPELINE_ID,
     PARC_HQ_CONFIG_SEMA_GROUP_ID
   );
 
-  const ESMERALDA_HQ_CONFIG_ID = "Edge Esmeralda";
-  const ESMERALDA_HQ_DESCRIPTION =
-    "Ballots visible to Edge Esmaralda Residents";
+  const ESMERALDA_HQ_CONFIG_ID = "Edge Esmeralda Resident";
   const ESMERALDA_HQ_CONFIG_NAME = "Edge Esmeralda Resident";
+  const ESMERALDA_RESIDENTS_NAME = "Resident Ballots";
+  const ESMERALDA_HQ_DESCRIPTION =
+    "Ballots created by Edge Esmeralda residents. Add to the discussion by creating a new Ballot!";
   const ESMERALDA_HQ_CONFIG_PIPELINE_ID =
     "c00d3470-7ff8-4060-adc1-e9487d607d42";
   const ESMERALDA_HQ_CONFIG_SEMA_GROUP_ID =
@@ -34,6 +37,7 @@ export function getPodboxConfigs(
     ESMERALDA_HQ_CONFIG_ID,
     ESMERALDA_HQ_DESCRIPTION,
     ESMERALDA_HQ_CONFIG_NAME,
+    ESMERALDA_RESIDENTS_NAME,
     ESMERALDA_HQ_CONFIG_PIPELINE_ID,
     ESMERALDA_HQ_CONFIG_SEMA_GROUP_ID
   );
@@ -47,6 +51,7 @@ export function makePodboxLoginConfig(
   id: string,
   description: string,
   name: string,
+  residentName: string,
   pipelineId: string,
   semaphoreGroupId: string
 ): LoginConfig {
@@ -68,6 +73,7 @@ export function makePodboxLoginConfig(
     canCreateBallotTypes: [BallotType.PODBOX],
     ballotConfigs: [
       {
+        name: residentName,
         voterGroupId: semaphoreGroupId,
         voterGroupUrl: PARC_GROUP_URL,
         creatorGroupId: semaphoreGroupId,

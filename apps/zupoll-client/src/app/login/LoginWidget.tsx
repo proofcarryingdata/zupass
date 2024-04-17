@@ -2,6 +2,7 @@ import { Spinner } from "@/components/ui/spinner";
 import { LoginCategory, LoginConfig } from "@pcd/zupoll-shared";
 import _ from "lodash";
 import { useMemo, useState } from "react";
+import styled from "styled-components";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
 import { LoginActionsForLoginGroup } from "./LoginActionsForLoginGroup";
@@ -25,7 +26,7 @@ export function LoginWidget(props: LoginWidgetProps) {
 
   return (
     <>
-      <div className="flex flex-row gap-2 justify-between grow">
+      <LoginWidgetContentContainer className="flex flex-row gap-2 justify-between grow">
         <div className="flex-shrink-0 min-w-52 grow">
           {selectedGroup ? (
             <LoginActionsForLoginGroup {...props} group={selectedGroup} />
@@ -43,7 +44,7 @@ export function LoginWidget(props: LoginWidgetProps) {
             groups={LOGIN_GROUPS}
           />
         </div>
-      </div>
+      </LoginWidgetContentContainer>
     </>
   );
 }
@@ -78,3 +79,12 @@ export interface LoginWidgetProps {
   setServerLoading: (loading: boolean) => void;
   serverLoading: boolean;
 }
+
+const LoginWidgetContentContainer = styled.div`
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    flex-direction: column;
+  }
+`;
