@@ -10,6 +10,7 @@ import { LoginState, ZupollError } from "../../types";
 import { listBallots } from "../../zupoll-server-api";
 import { BallotListsForUser } from "./BallotListsForUser";
 import { GuaranteesElement } from "./Guarantees";
+import { LoggedInAs } from "./LoggedInAs";
 
 export function MainScreen({
   loginState,
@@ -73,6 +74,8 @@ export function MainScreen({
       />
 
       <ContentContainer>
+        <LoggedInAs loginState={loginState} logout={logout} />
+
         <GuaranteesElement />
 
         <BallotListsForUser

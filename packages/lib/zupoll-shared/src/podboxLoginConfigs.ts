@@ -23,7 +23,7 @@ export function getPodboxConfigs(
   const ESMERALDA_HQ_CONFIG_ID = "Edge Esmeralda";
   const ESMERALDA_HQ_DESCRIPTION =
     "Ballots visible to Edge Esmaralda Residents";
-  const ESMERALDA_HQ_CONFIG_NAME = "Edge Esmeralda";
+  const ESMERALDA_HQ_CONFIG_NAME = "Edge Esmeralda Resident";
   const ESMERALDA_HQ_CONFIG_PIPELINE_ID =
     "c00d3470-7ff8-4060-adc1-e9487d607d42";
   const ESMERALDA_HQ_CONFIG_SEMA_GROUP_ID =

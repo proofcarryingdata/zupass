@@ -35,6 +35,16 @@ export function MainActions({
   logout: () => void;
   createBallot: () => void;
 }) {
+  return (
+    <>
+      <Button variant="creative" onClick={createBallot}>
+        Create Ballot
+      </Button>
+    </>
+  );
+}
+
+export function LogoutButton({ logout }: { logout: () => void }) {
   const confirmLogout = useCallback(() => {
     if (window.confirm("Are you sure you want to log out?")) {
       logout();
@@ -42,14 +52,9 @@ export function MainActions({
   }, [logout]);
 
   return (
-    <>
-      <Button variant="outline" onClick={confirmLogout}>
-        Log Out
-      </Button>
-      <Button variant="creative" onClick={createBallot}>
-        Create Ballot
-      </Button>
-    </>
+    <Button variant="outline" onClick={confirmLogout}>
+      Log Out
+    </Button>
   );
 }
 
