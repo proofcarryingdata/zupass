@@ -33,7 +33,7 @@ model Ballot {
   allowedViewerGroupIds String[]
   allowedVoterRealmIds  String[]
   allowedVoterGroupIds  String[]
-  public                Boolean  @default(false)
+  isPublic              Boolean  @default(false)
 }
 
 model Poll {

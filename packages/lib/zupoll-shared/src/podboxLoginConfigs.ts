@@ -76,7 +76,12 @@ export function makePodboxLoginConfig(
         passportAppUrl: ZUPASS_CLIENT_URL,
         ballotType: BallotType.PODBOX,
         latestGroupHashUrl: urljoin(PARC_GROUP_URL, "latest-root"),
-        makeHistoricalGroupUrl: (hash) => urljoin(PARC_GROUP_URL, hash)
+        makeHistoricalGroupUrl: (hash) => urljoin(PARC_GROUP_URL, hash),
+        allowedViewerGroupIds: [semaphoreGroupId],
+        allowedVoterGroupIds: [semaphoreGroupId],
+        allowedVoterRealmIds: [pipelineId],
+        allowedViewerRealmIds: [pipelineId],
+        isPublic: false
       }
     ]
   };

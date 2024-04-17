@@ -22,7 +22,12 @@ export const STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   creatorGroupUrl: ZUZALU_PARTICIPANTS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
-  ballotType: BallotType.STRAWPOLL
+  ballotType: BallotType.STRAWPOLL,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
@@ -32,7 +37,12 @@ export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
   creatorGroupUrl: ZUZALU_ADMINS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
-  ballotType: BallotType.ADVISORYVOTE
+  ballotType: BallotType.ADVISORYVOTE,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
@@ -42,7 +52,12 @@ export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
   creatorGroupUrl: ZUZALU_ADMINS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
-  ballotType: BallotType.ORGANIZERONLY
+  ballotType: BallotType.ORGANIZERONLY,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
@@ -52,7 +67,12 @@ export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
   creatorGroupUrl: DEVCONNECT_ATTENDEES_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
-  ballotType: BallotType.DEVCONNECT_STRAW
+  ballotType: BallotType.DEVCONNECT_STRAW,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
@@ -62,7 +82,12 @@ export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   creatorGroupUrl: DEVCONNECT_ADMINS_GROUP_URL,
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
-  ballotType: BallotType.DEVCONNECT_ORGANIZER
+  ballotType: BallotType.DEVCONNECT_ORGANIZER,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const EDGE_CITY_RESIDENT_BALLOT_CONFIG: BallotConfig = {
@@ -75,7 +100,12 @@ export const EDGE_CITY_RESIDENT_BALLOT_CONFIG: BallotConfig = {
   ballotType: BallotType.EDGE_CITY_RESIDENT,
   latestGroupHashUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
-    EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/" + hash
+    EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/" + hash,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const EDGE_CITY_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
@@ -88,7 +118,12 @@ export const EDGE_CITY_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   ballotType: BallotType.EDGE_CITY_ORGANIZER,
   latestGroupHashUrl: EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
-    EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/" + hash
+    EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/" + hash,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const ETH_LATAM_STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
@@ -101,7 +136,12 @@ export const ETH_LATAM_STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   ballotType: BallotType.ETH_LATAM_STRAWPOLL,
   latestGroupHashUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
-    ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/" + hash
+    ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/" + hash,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const ETH_LATAM_FEEDBACK_BALLOT_CONFIG: BallotConfig = {
@@ -114,7 +154,12 @@ export const ETH_LATAM_FEEDBACK_BALLOT_CONFIG: BallotConfig = {
   ballotType: BallotType.ETH_LATAM_FEEDBACK,
   latestGroupHashUrl: ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/latest-root",
   makeHistoricalGroupUrl: (hash) =>
-    ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/" + hash
+    ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/" + hash,
+  allowedViewerGroupIds: [],
+  allowedVoterGroupIds: [],
+  allowedViewerRealmIds: [],
+  allowedVoterRealmIds: [],
+  isPublic: false
 };
 
 export const BALLOT_CONFIGS = {

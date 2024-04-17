@@ -29,20 +29,6 @@ export enum LegacyLoginConfigName {
   ETH_LATAM_ORGANIZER = "ETH_LATAM_ORGANIZER"
 }
 
-// @todo
-// export interface BallotConfig {
-//   voterGroupId: string;
-//   voterGroupUrl: string;
-//   creatorGroupId: string;
-//   creatorGroupUrl: string;
-//   passportServerUrl: string;
-//   passportAppUrl: string;
-//   // ballotType: BallotType; todo
-//   ballotType: string;
-//   latestGroupHashUrl?: string;
-//   makeHistoricalGroupUrl?: (hash: string) => string;
-// }
-
 export enum LegacyLoginCategoryName {
   EthLatAm = "ETH LATAM",
   Zuzalu = "Zuzalu",
@@ -92,4 +78,10 @@ export interface BallotConfig {
   latestGroupHashUrl?: string;
   makeHistoricalGroupUrl?: (hash: string) => string;
   historicGroupPrefix?: string;
+
+  allowedViewerRealmIds: string[];
+  allowedViewerGroupIds: string[];
+  allowedVoterRealmIds: string[];
+  allowedVoterGroupIds: string[];
+  isPublic: boolean;
 }

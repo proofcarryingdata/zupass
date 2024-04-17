@@ -37,6 +37,12 @@ interface GenerateBallotArgs {
   ballotType: BallotType;
   polls: Poll[];
   creatorGroupUrl: string;
+
+  allowedViewerRealmIds: string[];
+  allowedViewerGroupIds: string[];
+  allowedVoterRealmIds: string[];
+  allowedVoterGroupIds: string[];
+  isPublic: boolean;
 }
 
 const generateBallotRequest = (
@@ -60,7 +66,13 @@ const generateBallotRequest = (
       pollsterSemaphoreGroupUrl: args.creatorGroupUrl,
       voterSemaphoreGroupUrls: args.voterGroupUrls,
       voterSemaphoreGroupRoots: args.voterGroupRoots,
-      ballotType: args.ballotType
+      ballotType: args.ballotType,
+
+      allowedViewerRealmIds: args.allowedViewerRealmIds,
+      allowedViewerGroupIds: args.allowedViewerGroupIds,
+      allowedVoterRealmIds: args.allowedVoterRealmIds,
+      allowedVoterGroupIds: args.allowedVoterGroupIds,
+      isPublic: args.isPublic
     },
     polls: args.polls,
     proof: args.proof
@@ -182,7 +194,13 @@ export function useCreateBallot({
         voterGroupRoots: ballotSignal.voterSemaphoreGroupRoots,
         voterGroupUrls: ballotSignal.voterSemaphoreGroupUrls,
         proof: parsedPcd.pcd,
-        creatorGroupUrl: ballotConfig.creatorGroupUrl
+        creatorGroupUrl: ballotConfig.creatorGroupUrl,
+
+        allowedViewerRealmIds: ballotConfig.allowedViewerRealmIds,
+        allowedViewerGroupIds: ballotConfig.allowedViewerGroupIds,
+        allowedVoterRealmIds: ballotConfig.allowedVoterRealmIds,
+        allowedVoterGroupIds: ballotConfig.allowedVoterGroupIds,
+        isPublic: ballotConfig.isPublic
       });
       // Do request
       submitBallot(request);
@@ -208,7 +226,13 @@ export function useCreateBallot({
         voterGroupRoots: [voterGroupRootHash],
         voterGroupUrls: [voterGroupUrl],
         expiry,
-        creatorGroupUrl: ballotConfig.creatorGroupUrl
+        creatorGroupUrl: ballotConfig.creatorGroupUrl,
+
+        allowedViewerRealmIds: ballotConfig.allowedViewerRealmIds,
+        allowedViewerGroupIds: ballotConfig.allowedViewerGroupIds,
+        allowedVoterRealmIds: ballotConfig.allowedVoterRealmIds,
+        allowedVoterGroupIds: ballotConfig.allowedVoterGroupIds,
+        isPublic: ballotConfig.isPublic
       });
 
       submitBallot(finalRequest);
