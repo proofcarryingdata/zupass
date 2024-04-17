@@ -287,17 +287,10 @@ const TextContainer = styled.div`
 function PlaceholderBallot() {
   return (
     <div className="flex flex-col space-y-3">
-      <Skeleton className="h-8 w-[60%]" />
-      <div className="flex flex-row gap-2">
-        <Skeleton className="h-5 w-[100px]" />
-        <Skeleton className="h-5 w-[100px]" />
-      </div>
-      <Skeleton className="h-5 w-[200px]" />
-      <div className="space-y-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-      <Skeleton className="h-7 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
     </div>
   );
 }

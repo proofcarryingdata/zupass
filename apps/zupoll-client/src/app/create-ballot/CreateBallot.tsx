@@ -169,7 +169,7 @@ export function CreateBallot({
         <CardHeader>
           <Title className="mb-0">New Ballot</Title>
         </CardHeader>
-        <CardContent>
+        <CardContent style={{ marginTop: "-20px" }}>
           <div style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}>
             <Subtitle>Debug Tools</Subtitle>
             <div className="flex flex-row gap-2">
