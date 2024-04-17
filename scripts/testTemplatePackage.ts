@@ -43,7 +43,7 @@ async function main() {
   await $`yarn generate-package tools test-package`;
   // Run build, lint, and test commands
   // If any of these return non-zero exit codes, an exception will be thrown
-  await $`cd ${testPackagePath} && yarn build && yarn lint && yarn test`;
+  await $`cd ${testPackagePath} && yarn && yarn build && yarn lint && yarn test`;
   // If an exception occurred, files will not be removed. This will make it
   // possible to investigate the errors quickly. Once errors are fixed in the
   // template files, manually delete the generated package before running it
