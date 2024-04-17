@@ -348,7 +348,8 @@ export type PoapEvent =
   | "zuzalu23"
   | "zuconnect"
   | "vitalia"
-  | "edgecitydenver";
+  | "edgecitydenver"
+  | "ethlatam";
 
 export interface RateLimitBucket {
   action_type: string;
