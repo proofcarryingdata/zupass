@@ -28,6 +28,12 @@ model Ballot {
   expiryNotif               ExpiryNotifStatus? @default(NONE)
   polls                     Poll[]
   messages                  TGMessage[]
+
+  allowedViewerRealmIds String[]
+  allowedViewerGroupIds String[]
+  allowedVoterRealmIds  String[]
+  allowedVoterGroupIds  String[]
+  public                Boolean  @default(false)
 }
 
 model Poll {
