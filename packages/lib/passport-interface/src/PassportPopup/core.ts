@@ -1,21 +1,18 @@
 /*
- * A function that should be called from within a popup window opened by
- * {@link openZupassPopup}.
+ * Call this function on a dedicated /popup page in your app to integrate your
+ * app with the Zupass proving/auth popup flow. The popup flow is optional,
+ * as you could also just redirect to Zupass in the same page, but the popup
+ * gives authentication a more oauth feel, which users are already familiar
+ * with.
  *
- * The caller should set up a page/route on your site at /popup, which then
- * calls this function. The URL to that page is the `popupUrl` passed to
- * {@link openZupassPopup}. When the popup window is opened, it will first to a
- * page on Zupass, which will perform some computation and return the result
- * to the calling site via URL parameters to the popup page.
+ * Navigates the current window to a `proofUrl` provided in the query
+ * parameters (if any), or posts a message to the window's opener if the query
+ * parameters contain a valid result (either an encoded PCD or an encoded
+ * pending PCD). If a message is sent, the current window is also closed
+ * immediately. This functionality is only valid in a popup window.
  *
- * The function parses the result from those URL parameters, then uses the
- * `postMessage` browser API to inform the original window of the result.
- *
- * A popup page must be hosted on the website that integrates with Zupass, as data can't
- * be passed between a website and a popup on a different origin like zupass.org.
- * This hook sends messages with a full client-side PCD or a server-side PendingPCD
- * that can be processed by the `useZupassPopupMessages` hook. PendingPCD requests
- * can further be processed by `usePendingPCD` and `usePCDMultiplexer`.
+ * The /popup page's URL is provided to {@link openZupassPopup} as the popupUrl
+ * parameter.
  */
 export async function zupassPopupSetup(): Promise<string | undefined> {
   if (!window.opener) {
@@ -42,7 +39,7 @@ export async function zupassPopupSetup(): Promise<string | undefined> {
   const paramsEncodingPendingPCD = params.get("encodedPendingPCD");
   const finished = params.get("finished");
 
-  // First, this page is window.open()-ed. Redirect to Zupass.
+  // If we have a proof URL, we should direct the user to that URL first.
   if (paramsProofUrl) {
     window.location.href = paramsProofUrl;
   } else if (finished) {
@@ -75,9 +72,15 @@ export async function zupassPopupSetup(): Promise<string | undefined> {
 }
 
 /**
- * Open up a Zupass popup window using proofUrl from specific PCD integrations
- * and popupUrl, which is the route where the useZupassPopupSetup hook is being
- * served from.
+ * Open up a Zupass popup window on a local popup page, which will redirect to
+ * Zupass. Once the action is complete, Zupass will redirect back, and the
+ * local page will send a message to its opener and close itself. See
+ * {@link zupassPopupSetup} and {@link receiveZupassPopupMessage}.
+ *
+ * @param {string} popupUrl is a URL to the local page that hosts some
+ * JavaScript calling {@link zupassPopupSetup}
+ * @param {string} proofUrl is a URL pointing to Zupass, and should be
+ * generated using the construct*url() functions in ../PassportInterface.ts
  */
 export function openZupassPopup(
   popupUrl: string,

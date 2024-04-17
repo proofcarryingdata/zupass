@@ -2,8 +2,8 @@ import { useEffect, useState } from "react";
 import { receiveZupassPopupMessage, zupassPopupSetup } from "./core";
 
 /**
- * React hook that listens for PCDs and PendingPCDs from a Zupass popup window
- * using message passing and event listeners.
+ * React hook that listens for PCDs and PendingPCDs from a Zupass popup window.
+ * A thin wrapper around {@link receiveZupassPopupMessage}.
  */
 export function useZupassPopupMessages(): [string, string] {
   const [pcdStr, setPCDStr] = useState("");
@@ -30,12 +30,10 @@ export function useZupassPopupMessages(): [string, string] {
 }
 
 /**
- * A react hook that sets up necessary Zupass popup logic on a specific route.
- * A popup page must be hosted on the website that integrates with Zupass, as data can't
- * be passed between a website and a popup on a different origin like zupass.org.
- * This hook sends messages with a full client-side PCD or a server-side PendingPCD
- * that can be processed by the `useZupassPopupMessages` hook. PendingPCD requests
- * can further be processed by `usePendingPCD` and `usePCDMultiplexer`.
+ * Call this hook on a dedicated /popup page in your app to integrate your
+ * app with the Zupass proving/auth popup flow.
+ *
+ * See {@link zupassPopupSetup} for further details.
  */
 export function useZupassPopupSetup(): string {
   // Usually this page redirects immediately. If not, show an error.
