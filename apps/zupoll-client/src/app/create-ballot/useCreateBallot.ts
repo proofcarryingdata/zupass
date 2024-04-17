@@ -1,4 +1,4 @@
-import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup";
+import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup/react";
 import { generateSnarkMessageHash, getErrorMessage } from "@pcd/util";
 import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import { sha256 } from "js-sha256";

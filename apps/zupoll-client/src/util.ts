@@ -1,5 +1,5 @@
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
-import { openZupassPopup } from "@pcd/passport-interface/PassportPopup";
+import { openZupassPopup } from "@pcd/passport-interface/PassportPopup/core";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreGroupPCDTypeName } from "@pcd/semaphore-group-pcd/SemaphoreGroupPCD";

@@ -6,7 +6,7 @@ import {
 } from "@pcd/semaphore-signature-pcd";
 import { useEffect } from "react";
 import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
-import { openZupassPopup } from "./PassportPopup";
+import { openZupassPopup } from "./PassportPopup/core";
 import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**
