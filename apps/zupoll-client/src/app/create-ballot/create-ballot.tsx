@@ -3,6 +3,7 @@
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { AppHeader, SubpageActions } from "@/components/ui/Headers";
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
+import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import { Center, ContentContainer } from "../../@/components/ui/Elements";
@@ -23,7 +24,7 @@ export function CreateBallotPage() {
   }, [definitelyNotLoggedIn, logout]);
 
   return (
-    <>
+    <ScreenContainer>
       {!loginState ? (
         <LoadingPlaceholder />
       ) : (
@@ -35,6 +36,6 @@ export function CreateBallotPage() {
           </ContentContainer>
         </Center>
       )}
-    </>
+    </ScreenContainer>
   );
 }
