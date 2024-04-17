@@ -6,7 +6,10 @@ import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup/re
 import { LoginConfig } from "@pcd/zupoll-shared";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
+import {
+  ContentContainer,
+  ScreenContent
+} from "../../@/components/ui/Elements";
 import { LEGACY_LOGIN_CONFIGS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
 import { removeQueryParameters } from "../../util";
@@ -87,8 +90,8 @@ export function LoginScreen({
 
   return (
     <>
-      <AppHeader actions={<Button className="invisible">test</Button>} />
-      <Center>
+      <ScreenContent>
+        <AppHeader actions={<Button className="invisible">test</Button>} />
         <ContentContainer>
           <GuaranteesElement />
 
@@ -107,7 +110,7 @@ export function LoginScreen({
 
           <ErrorDialog error={error} close={() => setError(undefined)} />
         </ContentContainer>
-      </Center>
+      </ScreenContent>
     </>
   );
 }

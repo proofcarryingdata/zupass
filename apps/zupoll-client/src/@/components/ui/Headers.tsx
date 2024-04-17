@@ -12,7 +12,7 @@ export interface HeaderProps {
 
 export function AppHeader({ actions, title }: HeaderProps) {
   return (
-    <StickyHeader>
+    <HeaderContainer>
       <MainScreenContainer>
         <div className="flex flex-row gap-4 items-center justify-center">
           <ThemeSwitcher />
@@ -22,9 +22,9 @@ export function AppHeader({ actions, title }: HeaderProps) {
             <div className="text-2xl">Zupoll</div>
           )}
         </div>
-        <div className="flex row gap-2">{actions}</div>
+        <div className="flex row gap-2 ml-2">{actions}</div>
       </MainScreenContainer>
-    </StickyHeader>
+    </HeaderContainer>
   );
 }
 
@@ -67,34 +67,7 @@ export function SubpageActions() {
   );
 }
 
-export function CancelPollHeader() {
-  const router = useRouter();
-
-  const confirmExit = useCallback(() => {
-    if (
-      window.confirm(
-        "Are you sure you want to cancel? You will lose any questions you have written."
-      )
-    ) {
-      router.push("/");
-    }
-  }, [router]);
-
-  return (
-    <StickyHeader>
-      <MainScreenContainer>
-        <Button onClick={confirmExit} variant="outline">
-          Home
-        </Button>
-      </MainScreenContainer>
-    </StickyHeader>
-  );
-}
-
-const StickyHeader = styled.div`
-  top: 0;
-  margin-top: 2em;
-  padding-top: 1em;
+const HeaderContainer = styled.div`
   padding-bottom: 1em;
   margin-bottom: 1em;
   background-color: hsl(var(--background));

@@ -114,13 +114,15 @@ export function SemaphoreGroupProveScreen({
     lines.push(<p>Loading the group...</p>);
   } else {
     lines.push(
-      <p>
+      <p style={{ textAlign: "center" }}>
         <b>{getHost(req.returnUrl)}</b> will receive a proof that you're one of{" "}
         {group.members.length} members of {group.name}.
       </p>
     );
     lines.push(
-      <p>This zero-knowledge proof won't reveal anything else about you.</p>
+      <p style={{ textAlign: "center" }}>
+        This zero-knowledge proof won't reveal anything else about you.
+      </p>
     );
   }
 

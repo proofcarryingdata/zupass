@@ -6,7 +6,10 @@ import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
+import {
+  ContentContainer,
+  ScreenContent
+} from "../../@/components/ui/Elements";
 import { ZupollError } from "../../types";
 import { useSavedLoginState } from "../../useLoginState";
 import { CreateBallot } from "./CreateBallot";
@@ -28,13 +31,13 @@ export function CreateBallotPage() {
       {!loginState ? (
         <LoadingPlaceholder />
       ) : (
-        <Center>
+        <ScreenContent>
           <AppHeader title=" " actions={<SubpageActions />} />
           <ContentContainer>
             <CreateBallot loginState={loginState} onError={setError} />
             <ErrorDialog error={error} close={() => setError(undefined)} />
           </ContentContainer>
-        </Center>
+        </ScreenContent>
       )}
     </ScreenContainer>
   );

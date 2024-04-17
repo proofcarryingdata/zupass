@@ -5,7 +5,10 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
+import {
+  ContentContainer,
+  ScreenContent
+} from "../../@/components/ui/Elements";
 import { AppHeader, SubpageActions } from "../../@/components/ui/Headers";
 import { Title } from "../../@/components/ui/text";
 import { Ballot } from "../../api/prismaTypes";
@@ -205,7 +208,7 @@ export function BallotScreen({
 
   return (
     <ScreenContainer>
-      <Center>
+      <ScreenContent>
         <AppHeader title={" "} actions={<SubpageActions />} />
         <ContentContainer>
           {ballot && polls && (
@@ -269,7 +272,7 @@ export function BallotScreen({
             }}
           />
         </ContentContainer>
-      </Center>
+      </ScreenContent>
     </ScreenContainer>
   );
 }

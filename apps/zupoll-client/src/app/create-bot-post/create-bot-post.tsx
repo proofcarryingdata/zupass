@@ -6,7 +6,7 @@ import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Center } from "../../@/components/ui/Elements";
+import { ScreenContent } from "../../@/components/ui/Elements";
 import { ZUZALU_ADMINS_GROUP_URL } from "../../env";
 import { ZupollError } from "../../types";
 import { useSavedLoginState } from "../../useLoginState";
@@ -36,11 +36,11 @@ export function CreateBotPostPage() {
       {!loginState ? (
         <LoadingPlaceholder />
       ) : (
-        <Center>
+        <ScreenContent>
           <AppHeader actions={<SubpageActions />} />
           <CreatePost onError={setError} loginState={loginState} />
           <ErrorDialog error={error} close={() => setError(undefined)} />
-        </Center>
+        </ScreenContent>
       )}
     </>
   );

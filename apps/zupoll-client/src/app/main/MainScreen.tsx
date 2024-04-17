@@ -2,7 +2,10 @@ import ErrorDialog from "@/components/ui/ErrorDialog";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
+import {
+  ContentContainer,
+  ScreenContent
+} from "../../@/components/ui/Elements";
 import { AppHeader, MainActions } from "../../@/components/ui/Headers";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotResponse } from "../../api/requestTypes";
@@ -63,7 +66,7 @@ export function MainScreen({
   }, [loginState.token, logout]);
 
   return (
-    <Center>
+    <ScreenContent>
       <AppHeader
         actions={
           <MainActions
@@ -93,7 +96,7 @@ export function MainScreen({
           }}
         />
       </ContentContainer>
-    </Center>
+    </ScreenContent>
   );
 }
 
