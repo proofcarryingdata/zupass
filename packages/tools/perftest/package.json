@@ -9,10 +9,6 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
-    "commander": "^11.0.0",
-    "conf": "^11.0.2",
-    "log-symbols": "^4.1.0",
-    "uuid": "^9.0.0",
     "@pcd/eddsa-ticket-pcd": "^0.5.0",
     "@pcd/pcd-types": "^0.10.0",
     "@pcd/pod": "^0.0.1",
@@ -21,13 +17,17 @@
     "@pcd/semaphore-signature-pcd": "^0.10.0",
     "@pcd/util": "^0.4.0",
     "@pcd/zk-eddsa-event-ticket-pcd": "^0.4.0",
-    "@semaphore-protocol/identity": "^3.15.2"
+    "@semaphore-protocol/identity": "^3.15.2",
+    "commander": "^11.0.0",
+    "conf": "^11.0.2",
+    "log-symbols": "^4.1.0",
+    "uuid": "^9.0.0"
   },
   "devDependencies": {
-    "ts-node": "*",
     "@pcd/eslint-config-custom": "0.10.0",
     "@pcd/tsconfig": "0.10.0",
     "eslint": "^8.57.0",
+    "ts-node": "*",
     "typescript": "^5.3.3"
   },
   "publishConfig": {
