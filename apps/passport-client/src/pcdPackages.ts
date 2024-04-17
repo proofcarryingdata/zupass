@@ -7,6 +7,7 @@ import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
+import { PODTicketPCDPackage } from "@pcd/pod-ticket-pcd";
 import { RSAImagePCDPackage } from "@pcd/rsa-image-pcd";
 import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
@@ -78,6 +79,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     RSAImagePCDPackage,
     EmailPCDPackage,
     MessagePCDPackage,
-    PODPCDPackage
+    PODPCDPackage,
+    PODTicketPCDPackage
   ];
 }

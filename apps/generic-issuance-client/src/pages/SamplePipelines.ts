@@ -84,6 +84,7 @@ export function getSampleCSVData(
     case CSVPipelineOutputType.Message:
       return SAMPLE_CSV_EDDSA_MESSAGE;
     case CSVPipelineOutputType.Ticket:
+    case CSVPipelineOutputType.PODTicket:
       return SAMPLE_CSV_EDDSA_TICKET;
     default:
       return "not implemented";
@@ -97,6 +98,7 @@ export function getSampleFeedOptions(
     case CSVPipelineOutputType.Message:
       return MESSAGE_CSV_FEED_OPTS;
     case CSVPipelineOutputType.Ticket:
+    case CSVPipelineOutputType.PODTicket:
       return TICKET_FEED_OPTS;
     default:
       throw new Error("not implemented");

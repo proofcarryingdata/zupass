@@ -5,6 +5,8 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { EdDSATicketPCDUI } from "@pcd/eddsa-ticket-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
+import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
 import { memo, useCallback, useContext, useMemo } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
@@ -213,11 +215,20 @@ function CardBody({
     return <MainIdentityCard />;
   }
   if (pcdCollection.hasPackage(pcd.type)) {
+    if (isEdDSATicketPCD(pcd)) {
+      return <TicketWrapper pcd={pcd} />;
+    }
+    if (isPODTicketPCD(pcd)) {
+      const Component = PODTicketPCDUI.renderCardBody;
+      return (
+        <Component
+          pcd={pcd}
+          idBasedVerifyURL={`${window.location.origin}/#/generic-checkin`}
+        />
+      );
+    }
     const ui = getUI(pcd.type);
     if (ui) {
-      if (isEdDSATicketPCD(pcd)) {
-        return <TicketWrapper pcd={pcd} />;
-      }
       const Component = ui.renderCardBody;
       return <Component pcd={pcd} />;
     } else {

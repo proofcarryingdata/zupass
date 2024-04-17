@@ -31,6 +31,7 @@ import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
+import { makePODTicketPCD } from "./makePODTicketPCD";
 import {
   makeTicketPCD,
   rowToTicket,
@@ -183,7 +184,8 @@ export class CSVPipeline implements BasePipeline {
         );
 
         if (
-          this.definition.options.outputType === CSVPipelineOutputType.Ticket
+          this.definition.options.outputType === CSVPipelineOutputType.Ticket ||
+          this.definition.options.outputType === CSVPipelineOutputType.PODTicket
         ) {
           logs.push(
             makePLogInfo(
@@ -327,6 +329,14 @@ export async function makeCSVPCD(
         return makeMessagePCD(inputRow, opts.eddsaPrivateKey);
       case CSVPipelineOutputType.Ticket:
         return makeTicketPCD(
+          inputRow,
+          opts.eddsaPrivateKey,
+          opts.requesterEmail,
+          opts.requesterSemaphoreId,
+          opts.pipelineId
+        );
+      case CSVPipelineOutputType.PODTicket:
+        return makePODTicketPCD(
           inputRow,
           opts.eddsaPrivateKey,
           opts.requesterEmail,
