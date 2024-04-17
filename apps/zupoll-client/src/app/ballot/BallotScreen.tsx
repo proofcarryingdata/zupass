@@ -213,7 +213,7 @@ export function BallotScreen({
               posted {fmtTimeAgo(new Date(ballot.createdAt))}
               {" · "}
               {new Date(ballot.expiry) < new Date() ? (
-                <span style={{ color: "red" }}>expired</span>
+                <span className="text-red-600 dark:text-red-300">expired</span>
               ) : (
                 <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
               )}
