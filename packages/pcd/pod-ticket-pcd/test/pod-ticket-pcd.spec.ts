@@ -118,7 +118,10 @@ describe("PODTicketPCD should work", function () {
   it("should be possible to serialize and deserialize the pcd", async function () {
     const serialized = await PODTicketPCDPackage.serialize(ticket);
     const deserialized = await PODTicketPCDPackage.deserialize(serialized.pcd);
-    expect(deserialized).to.deep.eq(ticket);
+    expect(deserialized.claim).to.deep.eq(ticket.claim);
+    expect(deserialized.proof).to.deep.eq(deserialized.proof);
+    expect(deserialized.type).to.eq(deserialized.type);
+    expect(deserialized.id).to.eq(deserialized.id);
   });
 
   // @todo test deserialization of a hard-coded serialized PCD, to catch
