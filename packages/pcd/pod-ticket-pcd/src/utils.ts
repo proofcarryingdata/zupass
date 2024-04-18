@@ -12,7 +12,7 @@ type PotentialBigInt = string | number | bigint | boolean;
  * A no-op "transform" which we can use to flag that a data type ought to be
  * treated as a POD "cryptographic" value.
  */
-export function cryptographic(a: PotentialBigInt): PotentialBigInt {
+export function cryptographic<T extends PotentialBigInt>(a: T): T {
   return a;
 }
 
@@ -53,7 +53,7 @@ export function dataToPodEntries<T>(
 ): PODEntries {
   // First, make sure that the schema can parse the data.
   // Will throw an exception if not.
-  const { data } = schema.parse(rawData);
+  const data = schema.parse(rawData);
   const entries: PODEntries = {};
 
   // Iterate over the schema-described fields. We can be confident that the
