@@ -467,7 +467,7 @@ export enum CSVPipelineOutputType {
    */
   Message = "EdDSAMessage",
   Ticket = "EdDSATicket",
-  PODTicket = "PODPCD"
+  PODTicket = "PODTicketPCD"
 }
 
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
