@@ -177,7 +177,8 @@ export function BallotScreen({
     const currentVote = pollToVote.get(pollId);
     if (currentVote !== undefined) {
       if (currentVote === voteIdx) {
-        setPollToVote(new Map(pollToVote.set(pollId, undefined)));
+        pollToVote.delete(pollId);
+        setPollToVote(new Map(pollToVote));
         return;
       }
     }
@@ -253,6 +254,7 @@ export function BallotScreen({
                     variant={"creative"}
                     onClick={createBallotVotePCD}
                     className="w-full"
+                    disabled={pollToVote.size === 0}
                   >
                     Submit Votes
                   </Button>
