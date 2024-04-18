@@ -1,6 +1,7 @@
 import { LogoutButton } from "@/components/ui/Headers";
 import { FaUserAstronaut } from "react-icons/fa";
 import { LoginState } from "../../types";
+import { SettingsDrawer } from "./SettingsDrawer";
 export function LoggedInAs({
   loginState,
   logout
@@ -16,7 +17,10 @@ export function LoggedInAs({
           {loginState.config.name}
         </span>
       </span>
-      <LogoutButton logout={logout} />
+      <span className="flex flex-row gap-2">
+        <LogoutButton logout={logout} />
+        <SettingsDrawer />
+      </span>
     </div>
   );
 }

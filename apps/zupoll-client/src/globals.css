@@ -88,6 +88,8 @@
   body {
     @apply bg-background text-foreground;
     margin: 0;
+    overflow-x: hidden;
+    overflow-y: scroll;
   }
 
   html {
@@ -105,7 +107,7 @@
   @media screen and (max-width: 640px) {
     html {
       font-size: 1.1rem;
-      --screen-padding: 2rem;
+      --screen-padding: 1rem;
     }
 
     input {

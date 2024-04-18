@@ -6,7 +6,6 @@ export const ScreenStyle = styled.div`
   top: 0;
   left: 0;
   width: 100vw;
-  height: 100vh;
+  min-height: 100vh;
   overflow-x: hidden;
-  overflow-y: scroll;
 `;

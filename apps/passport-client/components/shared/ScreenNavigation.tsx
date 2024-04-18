@@ -25,7 +25,12 @@ export function ScreenNavigation({
 
 export function BackButton({ label }: { label?: string }): JSX.Element {
   return (
-    <Button size="large" style="outline" onClick={() => window.history.back()}>
+    <Button
+      styles={{ marginTop: "-8px" }}
+      size="large"
+      style="outline"
+      onClick={() => window.history.back()}
+    >
       <ContentsWrapper>
         <IoIosArrowBack size={18} />
         <span>{label ?? "Back"}</span>

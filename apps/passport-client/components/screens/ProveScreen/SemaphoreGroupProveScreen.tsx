@@ -102,7 +102,7 @@ export function SemaphoreGroupProveScreen({
     } catch (e) {
       const errorMessage = getErrorMessage(e);
       if (errorMessage.indexOf("The identity is not part of the group") >= 0) {
-        setError("You are not part of this group.");
+        setError("You are not part of this group");
       } else {
         setError(errorMessage);
       }
@@ -139,7 +139,7 @@ export function SemaphoreGroupProveScreen({
     lines.push(<RippleLoader />);
   }
 
-  if (!proving) {
+  if (!proving || error) {
     lines.push(<BackButton />);
   }
 

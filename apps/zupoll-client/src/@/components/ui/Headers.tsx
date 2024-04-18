@@ -1,7 +1,6 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import styled from "styled-components";
-import { SettingsDrawer } from "../../../app/main/SettingsDrawer";
 import { DEFAULT_CONTENT_WIDTH } from "./Elements";
 import { Button } from "./button";
 
@@ -13,17 +12,14 @@ export interface HeaderProps {
 export function AppHeader({ actions, title }: HeaderProps) {
   return (
     <HeaderContainer>
-      <MainScreenContainer>
-        <SettingsDrawer />
-        <div className="flex flex-row gap-4 items-center justify-center">
-          {title ? (
-            <div className="text-2xl">{title}</div>
-          ) : (
-            <div className="text-2xl">Zupoll</div>
-          )}
-        </div>
-        <div className="flex row gap-2 ml-2">{actions}</div>
-      </MainScreenContainer>
+      <div className="flex flex-row gap-4 items-center justify-center">
+        {title ? (
+          <div className="text-3xl">{title}</div>
+        ) : (
+          <div className="text-3xl">Zupoll</div>
+        )}
+      </div>
+      <div className="flex row gap-2 ml-2">{actions}</div>
     </HeaderContainer>
   );
 }
@@ -68,26 +64,13 @@ export function SubpageActions() {
 }
 
 const HeaderContainer = styled.div`
-  padding-bottom: 1em;
-  margin-bottom: 1em;
   width: 100%;
+  margin-bottom: 1em;
   display: flex;
   justify-content: center;
   align-items: center;
-`;
-
-const MainScreenContainer = styled.div`
   width: ${DEFAULT_CONTENT_WIDTH};
   max-width: 100%;
-  font-size: 2em;
   display: flex;
-  justify-content: space-between;
-  align-items: center;
   font-weight: bold;
-  box-sizing: border-box;
-`;
-
-const ActionsContainer = styled.div`
-  display: flex;
-  gap: 6px;
 `;
