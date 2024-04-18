@@ -2,7 +2,7 @@ import ErrorDialog from "@/components/ui/ErrorDialog";
 import { AppHeader } from "@/components/ui/Headers";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
-import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup";
+import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup/react";
 import { LoginConfig } from "@pcd/zupoll-shared";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
