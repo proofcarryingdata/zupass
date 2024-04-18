@@ -9,13 +9,13 @@ export function StartupHooks({ children }: React.PropsWithChildren) {
   useEffect(() => {
     document.addEventListener("gesturestart", function (e) {
       e.preventDefault();
-      (document.body.style as any).zoom = 0.99;
+      (document.body.style as any).zoom = 1;
     });
 
     document.addEventListener("gesturechange", function (e) {
       e.preventDefault();
 
-      (document.body.style as any).zoom = 0.99;
+      (document.body.style as any).zoom = 1;
     });
     document.addEventListener("gestureend", function (e) {
       e.preventDefault();

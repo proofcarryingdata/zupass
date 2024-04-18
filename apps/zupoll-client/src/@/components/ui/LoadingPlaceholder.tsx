@@ -30,7 +30,7 @@ export function LoadingPlaceholderCard({
   return (
     <Card>
       <CardContent>
-        <div className="w-full h-full flex items-center justify-center my-8">
+        <div className="w-full h-full flex items-center justify-center pt-12">
           <Spinner className="w-8 h-8" />
         </div>
         {children}

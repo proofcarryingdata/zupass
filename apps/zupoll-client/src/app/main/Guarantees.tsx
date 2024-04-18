@@ -50,8 +50,6 @@ const GuaranteeContainer = styled.div`
 `;
 
 const Guarantee = styled.div`
-  /* width: 100%; */
-  /* height: 100%; */
   border-radius: 8px;
   box-sizing: border-box;
   margin-bottom: 0.5rem;

@@ -111,8 +111,7 @@ export function BallotPoll({
             <div
               className={cn(
                 "z-[1] absolute top-0 left-0 h-full",
-                finalVoteIdx === idx ? "bg-green-500" : "bg-green-400",
-                "text-foreground"
+                finalVoteIdx === idx ? "bg-green-500" : "bg-green-400"
               )}
               style={{
                 width: `${
@@ -125,7 +124,7 @@ export function BallotPoll({
             {canVote ? (
               <PollPreResult></PollPreResult>
             ) : (
-              <PollResult>
+              <PollResult className="">
                 {getVoteDisplay(poll.votes[idx], totalVotes)}
               </PollResult>
             )}

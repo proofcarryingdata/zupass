@@ -134,8 +134,6 @@ export function useCreateBallot({
     async (finalRequest: CreateBallotRequest) => {
       setServerLoading(true);
       const res = await createBallot(finalRequest, loginState.token);
-      console.log(`[CREATE BALLOT res]`, res);
-      setServerLoading(false);
 
       if (res === undefined) {
         const serverDownError: ZupollError = {
@@ -144,6 +142,7 @@ export function useCreateBallot({
         };
         onError(serverDownError);
         removeQueryParameters(["ballot", "proof", "finished"]);
+        setServerLoading(false);
         return;
       }
 
@@ -156,6 +155,7 @@ export function useCreateBallot({
         };
         onError(err);
         removeQueryParameters(["ballot", "proof", "finished"]);
+        setServerLoading(false);
         return;
       }
 
@@ -185,6 +185,7 @@ export function useCreateBallot({
   // process ballot
   useEffect(() => {
     if (ballotConfig && ballotFromUrl && pcdFromUrl) {
+      setServerLoading(true);
       const parsedPcd = JSON.parse(decodeURIComponent(pcdFromUrl));
       const { ballotSignal, ballotConfig, polls } = ballotFromUrl;
       const request = generateBallotRequest({

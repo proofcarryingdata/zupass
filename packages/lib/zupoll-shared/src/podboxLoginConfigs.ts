@@ -23,7 +23,7 @@ export function getPodboxConfigs(
   );
 
   const ESMERALDA_HQ_CONFIG_ID = "Edge Esmeralda Resident";
-  const ESMERALDA_HQ_CONFIG_NAME = "Edge Esmeralda Resident";
+  const ESMERALDA_HQ_CONFIG_NAME = "Edge Esmeralda";
   const ESMERALDA_RESIDENTS_NAME = "Resident Ballots";
   const ESMERALDA_HQ_DESCRIPTION =
     "Ballots created by Edge Esmeralda residents. Add to the discussion by creating a new Ballot!";

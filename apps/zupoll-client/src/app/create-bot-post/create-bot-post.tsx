@@ -1,12 +1,12 @@
 "use client";
 
+import { ContentContainer } from "@/components/ui/Elements";
 import ErrorDialog from "@/components/ui/ErrorDialog";
-import { AppHeader, SubpageActions } from "@/components/ui/Headers";
+import { AppHeader } from "@/components/ui/Headers";
 import { LoadingPlaceholder } from "@/components/ui/LoadingPlaceholder";
 import Head from "next/head";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Screen } from "../../@/components/ui/Elements";
 import { ZUZALU_ADMINS_GROUP_URL } from "../../env";
 import { ZupollError } from "../../types";
 import { useSavedLoginState } from "../../useLoginState";
@@ -36,11 +36,11 @@ export function CreateBotPostPage() {
       {!loginState ? (
         <LoadingPlaceholder />
       ) : (
-        <Screen>
-          <AppHeader actions={<SubpageActions />} />
+        <ContentContainer>
+          <AppHeader />
           <CreatePost onError={setError} loginState={loginState} />
           <ErrorDialog error={error} close={() => setError(undefined)} />
-        </Screen>
+        </ContentContainer>
       )}
     </>
   );
