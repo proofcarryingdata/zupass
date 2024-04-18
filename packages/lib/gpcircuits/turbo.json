@@ -18,17 +18,22 @@
       "cache": true
     },
     "build": {
-      "dependsOn": ["^build", "gen-test-artifacts"],
+      "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**",
         "circuits/**",
         "artifacts/**",
-        "test/**",
         "circomkit.json",
         "circuits.json"
       ],
       "outputs": ["dist/**", "*.tsbuildinfo"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["build", "^gen-test-artifacts", "gen-test-artifacts"],
+      "inputs": ["$TURBO_DEFAULT$", "test/**"],
+      "outputs": [],
       "cache": true
     }
   }
