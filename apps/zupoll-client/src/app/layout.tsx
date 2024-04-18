@@ -1,3 +1,4 @@
+import { StartupHooks } from "@/lib/StartupHooks";
 import { ThemeProvider } from "next-themes";
 import { Inter as FontSans } from "next/font/google";
 import { GlobalStyle } from "../@/lib/GlobalStyle";
@@ -24,6 +25,12 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" suppressHydrationWarning>
+      <head>
+        <meta
+          name="viewport"
+          content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no"
+        />
+      </head>
       <body
         className={cn(
           "min-h-screen bg-background font-sans antialiased",
@@ -38,7 +45,7 @@ export default function RootLayout({
         >
           <StyledComponentsRegistry>
             <GlobalStyle />
-            {children}
+            <StartupHooks>{children}</StartupHooks>
             <script
               async
               defer

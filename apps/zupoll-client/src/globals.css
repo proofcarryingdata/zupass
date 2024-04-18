@@ -107,6 +107,10 @@
       font-size: 1.1rem;
       --screen-padding: 0.5rem;
     }
+
+    input {
+      font-size: 16px !important;
+    }
   }
 
   @font-face {
