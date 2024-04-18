@@ -21,7 +21,7 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
     throw new Error("missing private key");
   }
 
-  if (!args.data.value) {
+  if (!args.ticket.value) {
     throw new Error("missing ticket value");
   }
 
@@ -141,7 +141,7 @@ export function ticketDisplayName(
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: PODTicketPCD): DisplayOptions {
-  const ticketData = pcd.claim.data;
+  const ticketData = pcd.claim.ticket;
   if (!ticketData) {
     return {
       header: "Ticket",

@@ -34,7 +34,7 @@ export async function makePODTicketPCD(
         value: ticket.ticketId,
         argumentType: ArgumentTypeName.String
       },
-      data: {
+      ticket: {
         value: ticket,
         argumentType: ArgumentTypeName.Object
       }
