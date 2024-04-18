@@ -7,6 +7,7 @@ import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
+import styled from "styled-components";
 import { Button } from "../../@/components/ui/button";
 import { Card, CardContent, CardHeader } from "../../@/components/ui/card";
 import { Input } from "../../@/components/ui/input";
@@ -336,7 +337,7 @@ export function CreateBallot({
             }}
           />
 
-          <div className="flex flex-row gap-2 m-2 w-full justify-evenly">
+          <DateQuickActions className="flex flex-row gap-2 m-2 w-full justify-evenly">
             <Button variant="ghost" onClick={() => setExpiry(1000 * 60 * 60)}>
               1hr
             </Button>
@@ -376,7 +377,7 @@ export function CreateBallot({
             >
               1yr
             </Button>
-          </div>
+          </DateQuickActions>
 
           <div
             style={{
@@ -555,3 +556,16 @@ export function CreateBallot({
     </div>
   );
 }
+
+const DateQuickActions = styled.div`
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    flex-wrap: wrap;
+
+    button {
+      flex-grow: 1;
+    }
+  }
+`;
