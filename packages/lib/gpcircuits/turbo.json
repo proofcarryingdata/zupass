@@ -4,7 +4,10 @@
     "gen-test-artifacts": {
       "dependsOn": [],
       "inputs": [
-        "$TURBO_DEFAULT$",
+        "../../../node_modules/circom/**",
+        "../../../node_modules/circomkit/**",
+        "../../../node_modules/circomlib/**",
+        "../../../node_modules/@zk-kit/circuits/**",
         "scripts/gen-test-artifacts.ts",
         "circuits/**",
         "circomkit.json",
