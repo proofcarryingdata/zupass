@@ -8,7 +8,6 @@ export const Logo = styled.img`
 
 export const ScreenContent = styled.div`
   box-sizing: border-box;
-  width: 100%;
   display: flex;
   justify-content: flex-start;
   align-items: center;

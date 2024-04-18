@@ -1,3 +1,4 @@
+import { ScreenStyle } from "@/components/ui/ScreenContainer";
 import { StartupHooks } from "@/lib/StartupHooks";
 import { ThemeProvider } from "next-themes";
 import { Inter as FontSans } from "next/font/google";
@@ -45,7 +46,11 @@ export default function RootLayout({
         >
           <StyledComponentsRegistry>
             <GlobalStyle />
-            <StartupHooks>{children}</StartupHooks>
+            <StartupHooks>
+              <ScreenStyle>
+                <>{children}</>
+              </ScreenStyle>
+            </StartupHooks>
             <script
               async
               defer

@@ -1,6 +1,5 @@
 "use client";
 
-import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { useRouter, useSearchParams } from "next/navigation";
 import { useEffect } from "react";
 import { LoginState } from "../types";
@@ -54,5 +53,5 @@ export function HomePage() {
     content = <MainScreen loginState={loginState} logout={logout} />;
   }
 
-  return <ScreenContainer>{content}</ScreenContainer>;
+  return <>{content}</>;
 }

@@ -1,14 +1,13 @@
 "use client";
 
 import { ScreenContent } from "@/components/ui/Elements";
-import { ScreenContainer } from "@/components/ui/ScreenContainer";
 import { ThemeSwitcher } from "@/components/ui/ThemeSwitcher";
 import { Button } from "@/components/ui/button";
 import { Spinner } from "@/components/ui/spinner";
 
 export default function TestPage() {
   return (
-    <ScreenContainer>
+    <>
       <ScreenContent>
         <div className="m-8 flex flex-col gap-2 w-[500px]">
           <ThemeSwitcher />
@@ -25,6 +24,6 @@ export default function TestPage() {
           <Button variant="link">link</Button>
         </div>
       </ScreenContent>
-    </ScreenContainer>
+    </>
   );
 }

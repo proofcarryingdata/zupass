@@ -1,10 +1,7 @@
+"use client";
+
 import styled from "styled-components";
-
-export function ScreenContainer({ children }: React.PropsWithChildren) {
-  return <ScreenStyle>{children}</ScreenStyle>;
-}
-
-const ScreenStyle = styled.div`
+export const ScreenStyle = styled.div`
   position: absolute;
   top: 0;
   left: 0;
