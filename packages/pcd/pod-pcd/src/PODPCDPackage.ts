@@ -111,17 +111,17 @@ export function getDisplayOptions(
   };
 }
 
-export interface PODPCDPackage
-  extends PCDPackage<PODPCDClaim, PODPCDProof, PODPCDArgs, PODPCDInitArgs> {
-  deserialize: (serialized: string) => Promise<PODPCD>;
-  prove: (args: PODPCDArgs) => Promise<PODPCD>;
-}
-
 /**
  * The PCD package of the POD PCD. It exports an object containing
  * the code necessary to operate on this PCD data.
  */
-export const PODPCDPackage: PODPCDPackage = {
+export const PODPCDPackage: PCDPackage<
+  PODPCDClaim,
+  PODPCDProof,
+  PODPCDArgs,
+  PODPCDInitArgs,
+  PODPCD
+> = {
   name: PODPCDTypeName,
   getDisplayOptions,
   prove,

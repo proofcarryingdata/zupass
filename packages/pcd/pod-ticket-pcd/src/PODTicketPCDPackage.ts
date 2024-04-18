@@ -21,7 +21,7 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
     throw new Error("missing private key");
   }
 
-  if (!args.ticket.value) {
+  if (!args.data.value) {
     throw new Error("missing ticket value");
   }
 
@@ -70,7 +70,6 @@ export async function verify(pcd: PODTicketPCD): Promise<boolean> {
     return false;
   }
 }
-
 /**
  * Serializes a {@link PODTicketPCD}.
  * @param pcd The POD Ticket PCD to be serialized.
@@ -142,7 +141,7 @@ export function ticketDisplayName(
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: PODTicketPCD): DisplayOptions {
-  const ticketData = pcd.claim.ticket;
+  const ticketData = pcd.claim.data;
   if (!ticketData) {
     return {
       header: "Ticket",

@@ -31,7 +31,7 @@ export type PODTicketPCDArgs = {
   /**
    * A {@link IPODTicketData} object containing ticket information that is encoded into this PCD.
    */
-  ticket: ObjectArgument<IPODTicketData>;
+  data: ObjectArgument<IPODTicketData>;
 
   /**
    * A string that uniquely identifies an {@link PODTicketPCD}. If this argument is not specified a random
