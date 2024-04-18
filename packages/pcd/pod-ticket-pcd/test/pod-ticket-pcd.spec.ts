@@ -34,7 +34,7 @@ describe("PODTicketPCD should work", function () {
     };
 
     ticket = await PODTicketPCDPackage.prove({
-      data: {
+      ticket: {
         value: ticketData,
         argumentType: ArgumentTypeName.Object
       },
@@ -54,60 +54,60 @@ describe("PODTicketPCD should work", function () {
   });
 
   it("should not be possible to verify a ticket that has been tampered with", async function () {
-    const originalTicketData = ticket.claim.data;
-    ticket.claim.data = {
+    const originalTicketData = ticket.claim.ticket;
+    ticket.claim.ticket = {
       ...originalTicketData,
       attendeeEmail: "hacker@example.com"
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = {
+    ticket.claim.ticket = {
       ...originalTicketData,
       attendeeName: "Not The Ticket Holder"
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = { ...originalTicketData, eventId: uuid() };
+    ticket.claim.ticket = { ...originalTicketData, eventId: uuid() };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = { ...originalTicketData, productId: uuid() };
+    ticket.claim.ticket = { ...originalTicketData, productId: uuid() };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = { ...originalTicketData, ticketId: uuid() };
+    ticket.claim.ticket = { ...originalTicketData, ticketId: uuid() };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = {
+    ticket.claim.ticket = {
       ...originalTicketData,
       attendeeSemaphoreId: "54321"
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = { ...originalTicketData, isConsumed: true };
+    ticket.claim.ticket = { ...originalTicketData, isConsumed: true };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = { ...originalTicketData, isRevoked: true };
+    ticket.claim.ticket = { ...originalTicketData, isRevoked: true };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = {
+    ticket.claim.ticket = {
       ...originalTicketData,
       timestampConsumed: 0
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = {
+    ticket.claim.ticket = {
       ...originalTicketData,
       timestampSigned: 0
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
-    ticket.claim.data = {
+    ticket.claim.ticket = {
       ...originalTicketData,
       ticketCategory: TicketCategory.PcdWorkingGroup
     };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.false;
 
     // Just to show that the original data definitely still works
-    ticket.claim.data = { ...originalTicketData };
+    ticket.claim.ticket = { ...originalTicketData };
     expect(await PODTicketPCDPackage.verify(ticket)).to.be.true;
   });
 

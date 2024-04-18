@@ -21,13 +21,13 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
     throw new Error("missing private key");
   }
 
-  if (!args.data.value) {
+  if (!args.ticket.value) {
     throw new Error("missing ticket value");
   }
 
   const pod = POD.sign(
-    dataToPodEntries<PODTicketPCDClaim["data"]>(
-      args.data.value,
+    dataToPodEntries<PODTicketPCDClaim["ticket"]>(
+      args.ticket.value,
       TicketDataSchema,
       TicketDataSchema.shape
     ),
@@ -38,7 +38,7 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
 
   return new PODTicketPCD(
     id,
-    { data: args.data.value, signerPublicKey: pod.signerPublicKey },
+    { ticket: args.ticket.value, signerPublicKey: pod.signerPublicKey },
     { signature: pod.signature }
   );
 }
@@ -55,7 +55,7 @@ export async function verify(pcd: PODTicketPCD): Promise<boolean> {
   try {
     const loadedPOD = POD.load(
       dataToPodEntries<IPODTicketData>(
-        pcd.claim.data,
+        pcd.claim.ticket,
         TicketDataSchema,
         TicketDataSchema.shape
       ),
@@ -94,18 +94,18 @@ export async function serialize(
  * @returns The deserialized version of the POD Ticket PCD.
  */
 export async function deserialize(serialized: string): Promise<PODTicketPCD> {
-  const deserialized = JSON.parse(serialized);
+  const deserialized = JSON.parse(serialized) as PODTicketPCD;
 
   requireDefinedParameter(deserialized.id, "id");
   requireDefinedParameter(deserialized.claim, "claim");
-  requireDefinedParameter(deserialized.claim.data, "data");
+  requireDefinedParameter(deserialized.claim.ticket, "ticket");
   requireDefinedParameter(
     deserialized.claim.signerPublicKey,
     "signerPublicKey"
   );
   requireDefinedParameter(deserialized.proof, "proof");
   requireDefinedParameter(deserialized.proof.signature, "signature");
-  TicketDataSchema.parse(deserialized.claim.data);
+  TicketDataSchema.parse(deserialized.claim.ticket);
 
   return new PODTicketPCD(
     deserialized.id,
@@ -141,7 +141,7 @@ export function ticketDisplayName(
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: PODTicketPCD): DisplayOptions {
-  const ticketData = pcd.claim.data;
+  const ticketData = pcd.claim.ticket;
   if (!ticketData) {
     return {
       header: "Ticket",
