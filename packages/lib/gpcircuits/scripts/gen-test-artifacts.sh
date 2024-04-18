@@ -1,6 +1,5 @@
 #!/usr/bin/env bash
 
-# TODO(POD-P0): Figure out how to build/distribute artifacts for dev + testing
 # TODO(POD-P1): Figure out how to build/distribute artifacts to server for prod
 # TODO(POD-P2): Create and distribute real artifacts after trusted setup
 

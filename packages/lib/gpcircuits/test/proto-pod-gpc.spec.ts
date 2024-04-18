@@ -5,6 +5,7 @@ import { WitnessTester } from "circomkit";
 import { readFileSync } from "fs";
 import "mocha";
 import path from "path";
+import { poseidon2 } from "poseidon-lite/poseidon2";
 import {
   CircuitArtifactPaths,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
@@ -29,6 +30,24 @@ const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
 
+/**
+ * This is a hard-coded version of the values produced by makeTestSignals
+ * with the parameters above, and isNullifierHashRevealed=true.  It is
+ * included as a compatibility check, to ensure any code changes still produce
+ * the same cryptographic output and can consume the output of older code.
+ *
+ * There are separate tests below which ensure the ability to consume this
+ * sample input, as well as to ensure that newly generated input is the same as
+ * this sample input.
+ * - If you see a failure to consume this input, indicates an incompatible
+ * change.  Think hard about whether that's intended, and update the
+ * constants only if it is.
+ * - If you see a failure indicating newly-generated input differs from this
+ * sample, it's more likely that it's because the sample entries have changed.
+ * If that's the case, then you can simply update these values based on
+ * the comparison values you see in the tests.  Just be sure to think about
+ * whether there's a potential incompatibility before doing so.
+ */
 const sampleInput: ProtoPODGPCInputs = {
   // Object modules [MAX_OBJECTS].
   objectContentID: [
@@ -222,6 +241,9 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ globalWatermark: 1337n
 };
 
+/**
+ * Sample of output produced by a proof with the sample inputs above.
+ */
 const sampleOutput: ProtoPODGPCOutputs = {
   entryRevealedValueHash: [
     9904028930859697121695025471312564917337032846528014134060777877259199866166n,
@@ -239,6 +261,16 @@ const sampleOutput: ProtoPODGPCOutputs = {
     1517081033071132720435657432021139876572843496027662548196342287861804968602n
 };
 
+/**
+ * Creates a set of test inputs and outputs for a circuit which the given
+ * size parameters.  The input data is based on a max of 2 PODs defined
+ * by the `sampleEntries` and `sampleEntries2` variables, with specific entries
+ * and proof configuration based on the `testEntries` variable below.  The
+ * result should lead to a valid proof for any circuit size.  If the
+ * circuit is smaller than `testEntries` the config will be truncated to
+ * prove about fewer entries.  If the circuit is larger than `testEntries`,
+ * inputs will be padded appropriately.
+ */
 function makeTestSignals(
   paramMaxObjects: number,
   paramMaxEntries: number,
@@ -398,7 +430,7 @@ function makeTestSignals(
       entryRevealedValueHash: sigEntryRevealedValueHash,
       ownerRevealedNulifierHash:
         isNullifierHashRevealed && paramMaxEntries > sigOwnerEntryIndex
-          ? 1517081033071132720435657432021139876572843496027662548196342287861804968602n
+          ? poseidon2([42n, ownerIdentity.nullifier])
           : BABY_JUB_NEGATIVE_ONE
     }
   };

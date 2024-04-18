@@ -240,8 +240,10 @@ export class ProtoPODGPC {
 
   /**
    * Extract named outputs from the public circuit signals.
-   * Because of the flattened array, the circuit's maxEntries parameter must
-   * be known to reconstruct input arrays.
+   *
+   * Because of the flattened array representation of the public signals, the
+   * circuit's maxEntries parameter must be known to properly reconstruct
+   * output arrays.
    */
   public static outputsFromPublicSignals(
     publicSignals: bigint[],
