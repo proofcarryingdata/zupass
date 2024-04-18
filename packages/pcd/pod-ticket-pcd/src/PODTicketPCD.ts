@@ -82,3 +82,12 @@ export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
 export function isPODTicketPCD(pcd: PCD): pcd is PODTicketPCD {
   return pcd.type === PODTicketPCDTypeName;
 }
+
+/**
+ * Throws if {@link pcd} is not a {@link PODTicketPCD}
+ */
+export function expectIsPODTicketPCD(pcd: PCD): asserts pcd is PODTicketPCD {
+  if (!isPODTicketPCD(pcd)) {
+    throw new Error("Expected PODTicketPCD");
+  }
+}
