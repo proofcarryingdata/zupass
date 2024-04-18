@@ -1,6 +1,6 @@
-import { canBeBigInt, cryptographic } from "@pcd/pod-pcd";
 import { z } from "zod";
 import { TicketCategory } from "./PODTicketPCD";
+import { canBeBigInt, cryptographic } from "./utils";
 
 export const TicketDataSchema = z.object({
   eventName: z.string(),

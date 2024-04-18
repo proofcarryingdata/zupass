@@ -1,6 +1,5 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { POD } from "@pcd/pod";
-import { dataToPodEntries } from "@pcd/pod-pcd";
 import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
 import {
@@ -11,6 +10,7 @@ import {
   PODTicketPCDTypeName
 } from "./PODTicketPCD";
 import { IPODTicketData, TicketDataSchema } from "./schema";
+import { dataToPodEntries } from "./utils";
 
 /**
  * Creates a new {@link PODTicketPCD} by generating an {@link PODTicketPCDProof}
