@@ -16,7 +16,7 @@ export function SettingsDrawer() {
     <>
       <Drawer>
         <DrawerTrigger asChild>
-          <Button variant={"ghost"}>
+          <Button variant={"outline"}>
             <IoMdSettings />
           </Button>
         </DrawerTrigger>

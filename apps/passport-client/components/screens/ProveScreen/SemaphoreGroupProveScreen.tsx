@@ -211,8 +211,8 @@ const ErrorContainer = styled.div`
 
 const GroupNameLabel = styled.div`
   display: inline-block;
-  padding: 2px 4px;
-  border: 1px solid rgba(255, 255, 255, 0.8);
+  padding: 2px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
   border-radius: 4px;
   margin: 4px;
   background-color: rgba(255, 255, 255, 0.1);

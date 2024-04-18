@@ -93,10 +93,10 @@ export function BallotPoll({
               BUTTON_CLASSES,
               "select-none relative overflow-hidden bg-background p-2 flex flex-row border-2 justify-start",
               canVote
-                ? "hover:bg-white/5"
+                ? "hover:bg-white/5 hover:border-foreground/50"
                 : "ring-0 ring-offset-0 ring-transparent cursor-default",
               voteIdx === idx
-                ? "bg-green-100 hover:bg-green-200 border-green-500 dark:text-background"
+                ? "bg-green-100 hover:bg-green-200 border-green-500 dark:text-background hover:border-green-600"
                 : ""
             )}
             key={idx}

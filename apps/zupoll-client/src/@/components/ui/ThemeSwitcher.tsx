@@ -31,7 +31,7 @@ export function ThemeSwitcher() {
           setTheme(newIsLight ? "light" : "dark");
         }}
       ></Switch>{" "}
-      <span>{isLight ? "light" : "dark"} mode</span>
+      <span>theme - {isLight ? "light" : "dark"}</span>
     </div>
   );
 }
