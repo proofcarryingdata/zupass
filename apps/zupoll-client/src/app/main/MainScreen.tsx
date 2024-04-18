@@ -3,10 +3,7 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import {
-  ContentContainer,
-  ScreenContent
-} from "../../@/components/ui/Elements";
+import { ContentContainer } from "../../@/components/ui/Elements";
 import { AppHeader } from "../../@/components/ui/Headers";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotResponse } from "../../api/requestTypes";
@@ -66,15 +63,17 @@ export function MainScreen({
   }, [loginState.token, logout]);
 
   return (
-    <ScreenContent>
+    <ContentContainer>
       <AppHeader />
-
       <ContentContainer>
-        <LoggedInAs loginState={loginState} logout={logout} />
-
         <div>
+          <LoggedInAs
+            loginState={loginState}
+            logout={logout}
+            showHomeButton={false}
+          />
           <Button
-            className="w-full"
+            className="w-full mt-2"
             variant={"creative"}
             onClick={() => {
               router.push("/create-ballot");
@@ -99,7 +98,7 @@ export function MainScreen({
           }}
         />
       </ContentContainer>
-    </ScreenContent>
+    </ContentContainer>
   );
 }
 

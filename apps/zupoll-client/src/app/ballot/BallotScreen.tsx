@@ -4,11 +4,8 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import {
-  ContentContainer,
-  ScreenContent
-} from "../../@/components/ui/Elements";
-import { AppHeader, SubpageActions } from "../../@/components/ui/Headers";
+import { ContentContainer } from "../../@/components/ui/Elements";
+import { AppHeader } from "../../@/components/ui/Headers";
 import { Title } from "../../@/components/ui/text";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
@@ -16,6 +13,7 @@ import { LoginState, ZupollError } from "../../types";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
 import { DividerWithText } from "../create-ballot/DividerWithText";
+import { LoggedInAs } from "../main/LoggedInAs";
 import { BallotPoll } from "./BallotPoll";
 import { getBallotVotes, useBallotVoting, votedOn } from "./useBallotVoting";
 
@@ -208,72 +206,75 @@ export function BallotScreen({
   });
 
   return (
-    <ScreenContent>
-      <AppHeader title={" "} actions={<SubpageActions />} />
-      <ContentContainer>
-        {ballot && polls && (
-          <div>
-            <Title className="mb-0">{ballot.ballotTitle} </Title>
-            <div className="">{ballot.ballotDescription}</div>
-            <div className="font-normal text-sm text-foreground/80">
-              posted anonymously {fmtTimeAgo(new Date(ballot.createdAt))}
-              {" · "}
-              {new Date(ballot.expiry) < new Date() ? (
-                <span className="text-red-600 dark:text-red-300">expired</span>
-              ) : (
-                <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
-              )}
-            </div>
-            <DividerWithText></DividerWithText>
-            <div className="flex flex-col gap-4 mb-4">
-              {polls.map((poll) => (
-                <BallotPoll
-                  key={poll.id}
-                  canVote={canVote}
-                  poll={poll}
-                  voteIdx={pollToVote.get(poll.id)}
-                  finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
-                  onVoted={onVoted}
-                  submitVotes={() => {
-                    if (polls.length < 2) {
-                      createBallotVotePCD();
-                    }
-                  }}
-                />
-              ))}
-            </div>
-
-            {canVote && (
-              <>
-                <DividerWithText></DividerWithText>
-                <Button
-                  variant={"creative"}
-                  onClick={createBallotVotePCD}
-                  className="w-full"
-                  disabled={pollToVote.size === 0}
-                >
-                  Submit Votes
-                </Button>
-                <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
-                  If you created or reset your Zupass after this ballot was
-                  created you will not be able to vote. This is a security
-                  measure designed to prevent double-voting.
-                </TextContainer>
-              </>
+    <ContentContainer>
+      <AppHeader />
+      <LoggedInAs
+        loginState={loginState}
+        logout={logout}
+        showHomeButton={true}
+      />
+      {ballot && polls && (
+        <div>
+          <Title className="mb-0">{ballot.ballotTitle} </Title>
+          <div className="">{ballot.ballotDescription}</div>
+          <div className="font-normal text-sm text-foreground/80">
+            posted anonymously {fmtTimeAgo(new Date(ballot.createdAt))}
+            {" · "}
+            {new Date(ballot.expiry) < new Date() ? (
+              <span className="text-red-600 dark:text-red-300">expired</span>
+            ) : (
+              <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
             )}
           </div>
-        )}
+          <DividerWithText></DividerWithText>
+          <div className="flex flex-col gap-4 mb-4">
+            {polls.map((poll) => (
+              <BallotPoll
+                key={poll.id}
+                canVote={canVote}
+                poll={poll}
+                voteIdx={pollToVote.get(poll.id)}
+                finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
+                onVoted={onVoted}
+                submitVotes={() => {
+                  if (polls.length < 2) {
+                    createBallotVotePCD();
+                  }
+                }}
+              />
+            ))}
+          </div>
 
-        {(!ballot || !polls) && <PlaceholderBallot />}
+          {canVote && (
+            <>
+              <DividerWithText></DividerWithText>
+              <Button
+                variant={"creative"}
+                onClick={createBallotVotePCD}
+                className="w-full"
+                disabled={pollToVote.size === 0}
+              >
+                Submit Votes
+              </Button>
+              <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
+                If you created or reset your Zupass after this ballot was
+                created you will not be able to vote. This is a security measure
+                designed to prevent double-voting.
+              </TextContainer>
+            </>
+          )}
+        </div>
+      )}
 
-        <ErrorDialog
-          error={error}
-          close={() => {
-            setError(undefined);
-          }}
-        />
-      </ContentContainer>
-    </ScreenContent>
+      {(!ballot || !polls) && <PlaceholderBallot />}
+
+      <ErrorDialog
+        error={error}
+        close={() => {
+          setError(undefined);
+        }}
+      />
+    </ContentContainer>
   );
 }
 

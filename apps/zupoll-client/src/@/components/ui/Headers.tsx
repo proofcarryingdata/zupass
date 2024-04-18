@@ -5,11 +5,10 @@ import { DEFAULT_CONTENT_WIDTH } from "./Elements";
 import { Button } from "./button";
 
 export interface HeaderProps {
-  actions?: any;
   title?: string;
 }
 
-export function AppHeader({ actions, title }: HeaderProps) {
+export function AppHeader({ title }: HeaderProps) {
   return (
     <HeaderContainer>
       <div className="flex flex-row gap-4 items-center justify-center">
@@ -19,7 +18,6 @@ export function AppHeader({ actions, title }: HeaderProps) {
           <div className="text-3xl">Zupoll</div>
         )}
       </div>
-      <div className="flex row gap-2 ml-2">{actions}</div>
     </HeaderContainer>
   );
 }
