@@ -119,7 +119,8 @@ export const PODPCDPackage: PCDPackage<
   PODPCDClaim,
   PODPCDProof,
   PODPCDArgs,
-  PODPCDInitArgs
+  PODPCDInitArgs,
+  PODPCD
 > = {
   name: PODPCDTypeName,
   getDisplayOptions,

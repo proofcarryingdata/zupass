@@ -70,6 +70,7 @@ export async function verify(pcd: PODTicketPCD): Promise<boolean> {
     return false;
   }
 }
+
 /**
  * Serializes a {@link PODTicketPCD}.
  * @param pcd The POD Ticket PCD to be serialized.
@@ -174,7 +175,9 @@ export function getDisplayOptions(pcd: PODTicketPCD): DisplayOptions {
 export const PODTicketPCDPackage: PCDPackage<
   PODTicketPCDClaim,
   PODTicketPCDProof,
-  PODTicketPCDArgs
+  PODTicketPCDArgs,
+  unknown,
+  PODTicketPCD
 > = {
   name: PODTicketPCDTypeName,
   getDisplayOptions,
