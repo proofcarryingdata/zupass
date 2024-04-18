@@ -1,4 +1,5 @@
 import ErrorDialog from "@/components/ui/ErrorDialog";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
@@ -77,6 +78,18 @@ export function MainScreen({
 
       <ContentContainer>
         <LoggedInAs loginState={loginState} logout={logout} />
+
+        <div>
+          <Button
+            className="w-full"
+            variant={"creative"}
+            onClick={() => {
+              router.push("/create-ballot");
+            }}
+          >
+            Create a Ballot
+          </Button>
+        </div>
 
         <BallotListsForUser
           loading={loadingBallots}
