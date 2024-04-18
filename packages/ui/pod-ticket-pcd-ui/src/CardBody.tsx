@@ -19,7 +19,7 @@ function PODTicketCardBody({
   pcd: PODTicketPCD;
   idBasedVerifyURL: string;
 }): JSX.Element {
-  const ticketData = pcd.claim.ticket;
+  const ticketData = pcd.claim.data;
 
   return (
     <Container>
@@ -44,16 +44,16 @@ function TicketQR({
     console.log(
       linkToTicket(
         idBasedVerifyURL,
-        pcd.claim.ticket.ticketId,
-        pcd.claim.ticket.eventId
+        pcd.claim.data.ticketId,
+        pcd.claim.data.eventId
       )
     );
     return linkToTicket(
       idBasedVerifyURL,
-      pcd.claim.ticket.ticketId,
-      pcd.claim.ticket.eventId
+      pcd.claim.data.ticketId,
+      pcd.claim.data.eventId
     );
-  }, [idBasedVerifyURL, pcd.claim.ticket.eventId, pcd.claim.ticket.ticketId]);
+  }, [idBasedVerifyURL, pcd.claim.data.eventId, pcd.claim.data.ticketId]);
 
   return (
     <QRDisplayWithRegenerateAndStorage

@@ -1,5 +1,6 @@
 import { ObjectArgument, PCD, StringArgument } from "@pcd/pcd-types";
-import { PODPCD } from "@pcd/pod-pcd";
+import type { PODPCDProof } from "@pcd/pod-pcd";
+import type { IPODTicketData } from "./schema";
 
 /**
  * The globally unique type name of the {@link PODTicketPCD}.
@@ -18,29 +19,6 @@ export enum TicketCategory {
 }
 
 /**
- * Copied from {@link ITicketData} in {@link EdDSATicketPCD}.
- * @todo how much do we want these to diverge?
- */
-export interface IPODTicketData {
-  eventName: string;
-  ticketName: string;
-  checkerEmail: string | undefined;
-  imageUrl?: string | undefined;
-  imageAltText?: string | undefined;
-  ticketId: string; // The ticket ID is a unique identifier of the ticket.
-  eventId: string; // The event ID uniquely identifies an event.
-  productId: string; // The product ID uniquely identifies the type of ticket (e.g. General Admission, Volunteer etc.).
-  timestampConsumed: number;
-  timestampSigned: number;
-  attendeeSemaphoreId: string;
-  isConsumed: boolean;
-  isRevoked: boolean;
-  ticketCategory: TicketCategory;
-  attendeeName: string;
-  attendeeEmail: string;
-}
-
-/**
  * Defines the essential parameters required for creating an {@link PODTicketPCD}.
  */
 export type PODTicketPCDArgs = {
@@ -53,7 +31,7 @@ export type PODTicketPCDArgs = {
   /**
    * A {@link IPODTicketData} object containing ticket information that is encoded into this PCD.
    */
-  ticket: ObjectArgument<IPODTicketData>;
+  data: ObjectArgument<IPODTicketData>;
 
   /**
    * A string that uniquely identifies an {@link PODTicketPCD}. If this argument is not specified a random
@@ -63,12 +41,11 @@ export type PODTicketPCDArgs = {
 };
 
 export interface PODTicketPCDClaim {
-  ticket: IPODTicketData;
+  data: IPODTicketData;
+  signerPublicKey: string;
 }
 
-export interface PODTicketPCDProof {
-  podPCD: PODPCD;
-}
+export type PODTicketPCDProof = PODPCDProof;
 
 export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
   type = PODTicketPCDTypeName;

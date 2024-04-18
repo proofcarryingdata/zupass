@@ -1,90 +1,16 @@
-import {
-  ArgumentTypeName,
-  DisplayOptions,
-  PCDPackage,
-  SerializedPCD
-} from "@pcd/pcd-types";
-import { PODContent } from "@pcd/pod";
-import { PODEntries, PODPCDPackage } from "@pcd/pod-pcd";
-import JSONBig from "json-bigint";
+import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { POD } from "@pcd/pod";
+import { dataToPodEntries } from "@pcd/pod-pcd";
+import { requireDefinedParameter } from "@pcd/util";
 import { v4 as uuid } from "uuid";
 import {
-  IPODTicketData,
   PODTicketPCD,
   PODTicketPCDArgs,
   PODTicketPCDClaim,
   PODTicketPCDProof,
   PODTicketPCDTypeName
 } from "./PODTicketPCD";
-
-function ticketDataToEntries(ticket: IPODTicketData): PODEntries {
-  return {
-    attendeeEmail: {
-      type: "string",
-      value: ticket.attendeeEmail
-    },
-    attendeeName: {
-      type: "string",
-      value: ticket.attendeeName
-    },
-    ticketId: {
-      type: "string", // should we convert UUIDs to bigints here?
-      value: ticket.ticketId
-    },
-    eventId: {
-      type: "string",
-      value: ticket.eventId
-    },
-    productId: {
-      type: "string",
-      value: ticket.productId
-    },
-    attendeeSemaphoreId: {
-      type: "cryptographic",
-      value: BigInt(ticket.attendeeSemaphoreId)
-    },
-    eventName: {
-      type: "string",
-      value: ticket.eventName
-    },
-    ticketName: {
-      type: "string",
-      value: ticket.ticketName
-    },
-    isConsumed: {
-      type: "int",
-      value: ticket.isConsumed ? 1n : 0n
-    },
-    isRevoked: {
-      type: "int",
-      value: ticket.isRevoked ? 1n : 0n
-    },
-    checkerEmail: {
-      type: "string",
-      value: ticket.checkerEmail ?? ""
-    },
-    timestampConsumed: {
-      type: "int",
-      value: BigInt(ticket.timestampConsumed)
-    },
-    timestampSigned: {
-      type: "int",
-      value: BigInt(ticket.timestampSigned)
-    },
-    imageUrl: {
-      type: "string",
-      value: ticket.imageUrl ?? ""
-    },
-    imageAltText: {
-      type: "string",
-      value: ticket.imageAltText ?? ""
-    },
-    ticketCategory: {
-      type: "int",
-      value: BigInt(ticket.ticketCategory)
-    }
-  };
-}
+import { IPODTicketData, TicketDataSchema } from "./schema";
 
 /**
  * Creates a new {@link PODTicketPCD} by generating an {@link PODTicketPCDProof}
@@ -95,27 +21,26 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
     throw new Error("missing private key");
   }
 
-  if (!args.ticket.value) {
+  if (!args.data.value) {
     throw new Error("missing ticket value");
   }
 
-  const ticket = args.ticket.value;
-
-  const podPCD = await PODPCDPackage.prove({
-    privateKey: args.privateKey,
-    id: {
-      value: undefined,
-      argumentType: ArgumentTypeName.String
-    },
-    entries: {
-      value: ticketDataToEntries(ticket),
-      argumentType: ArgumentTypeName.Object
-    }
-  });
+  const pod = POD.sign(
+    dataToPodEntries<PODTicketPCDClaim["data"]>(
+      args.data.value,
+      TicketDataSchema,
+      TicketDataSchema.shape
+    ),
+    args.privateKey.value
+  );
 
   const id = args.id.value ?? uuid();
 
-  return new PODTicketPCD(id, { ticket }, { podPCD });
+  return new PODTicketPCD(
+    id,
+    { data: args.data.value, signerPublicKey: pod.signerPublicKey },
+    { signature: pod.signature }
+  );
 }
 
 /**
@@ -127,15 +52,24 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
  * entity that signed the ticket is indeed the authority for that event.
  */
 export async function verify(pcd: PODTicketPCD): Promise<boolean> {
-  const content = PODContent.fromEntries(ticketDataToEntries(pcd.claim.ticket));
-
-  if (content.contentID !== pcd.proof.podPCD.pod.contentID) {
+  try {
+    const loadedPOD = POD.load(
+      dataToPodEntries<IPODTicketData>(
+        pcd.claim.data,
+        TicketDataSchema,
+        TicketDataSchema.shape
+      ),
+      pcd.proof.signature,
+      pcd.claim.signerPublicKey
+    );
+    return (
+      loadedPOD.signature === pcd.proof.signature && loadedPOD.verifySignature()
+    );
+  } catch (e) {
+    console.error("Verifying invalid POD data:", e);
     return false;
   }
-
-  return PODPCDPackage.verify(pcd.proof.podPCD);
 }
-
 /**
  * Serializes a {@link PODTicketPCD}.
  * @param pcd The POD Ticket PCD to be serialized.
@@ -144,14 +78,12 @@ export async function verify(pcd: PODTicketPCD): Promise<boolean> {
 export async function serialize(
   pcd: PODTicketPCD
 ): Promise<SerializedPCD<PODTicketPCD>> {
-  const serializedPODPCD = await PODPCDPackage.serialize(pcd.proof.podPCD);
-
   return {
     type: PODTicketPCDTypeName,
-    pcd: JSONBig().stringify({
+    pcd: JSON.stringify({
       id: pcd.id,
-      podPCD: serializedPODPCD,
-      ticket: pcd.claim.ticket
+      claim: pcd.claim,
+      proof: pcd.proof
     })
   } as SerializedPCD<PODTicketPCD>;
 }
@@ -162,14 +94,23 @@ export async function serialize(
  * @returns The deserialized version of the POD Ticket PCD.
  */
 export async function deserialize(serialized: string): Promise<PODTicketPCD> {
-  const deserializedWrapper = JSONBig().parse(serialized);
-  const deserializedPODPCD = await PODPCDPackage.deserialize(
-    deserializedWrapper.podPCD.pcd
+  const deserialized = JSON.parse(serialized);
+
+  requireDefinedParameter(deserialized.id, "id");
+  requireDefinedParameter(deserialized.claim, "claim");
+  requireDefinedParameter(deserialized.claim.data, "data");
+  requireDefinedParameter(
+    deserialized.claim.signerPublicKey,
+    "signerPublicKey"
   );
+  requireDefinedParameter(deserialized.proof, "proof");
+  requireDefinedParameter(deserialized.proof.signature, "signature");
+  TicketDataSchema.parse(deserialized.claim.data);
+
   return new PODTicketPCD(
-    deserializedWrapper.id,
-    { ticket: deserializedWrapper.ticket },
-    { podPCD: deserializedPODPCD }
+    deserialized.id,
+    deserialized.claim,
+    deserialized.proof
   );
 }
 
@@ -200,7 +141,7 @@ export function ticketDisplayName(
  * @returns The information to be displayed, specifically `header` and `displayName`.
  */
 export function getDisplayOptions(pcd: PODTicketPCD): DisplayOptions {
-  const ticketData = pcd.claim.ticket;
+  const ticketData = pcd.claim.data;
   if (!ticketData) {
     return {
       header: "Ticket",
