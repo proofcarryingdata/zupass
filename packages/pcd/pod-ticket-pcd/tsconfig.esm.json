@@ -18,6 +18,9 @@
     },
     {
       "path": "../pod-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.esm.json"
     }
   ]
 }

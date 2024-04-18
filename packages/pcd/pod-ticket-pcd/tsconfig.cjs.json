@@ -18,6 +18,9 @@
     },
     {
       "path": "../pod-pcd/tsconfig.cjs.json"
+    },
+    {
+      "path": "../../lib/util/tsconfig.cjs.json"
     }
   ]
 }
