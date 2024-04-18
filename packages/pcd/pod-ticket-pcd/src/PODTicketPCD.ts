@@ -40,11 +40,19 @@ export type PODTicketPCDArgs = {
   id: StringArgument;
 };
 
+/**
+ * Defines the claim, consisting of ticket data and the public key of the
+ * signer.
+ */
 export interface PODTicketPCDClaim {
   ticket: IPODTicketData;
   signerPublicKey: string;
 }
 
+/**
+ * Proofs for POD ticket PCDs are identical to POD PCDs, consisting solely of
+ * a string representation of a signature.
+ */
 export type PODTicketPCDProof = PODPCDProof;
 
 export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
@@ -54,7 +62,8 @@ export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
   id: string;
 
   /**
-   * Create a PCD to encapsulate the given ID and POD object.
+   * The PODTicketPCD consists of a claim about {@link IPODTicketData}, and a
+   * standard {@link PODPCDProof}.
    */
   public constructor(
     id: string,
@@ -67,6 +76,9 @@ export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
   }
 }
 
+/**
+ * Returns true if {@link pcd} is an {@link EdDSATicketPCD} or false otherwise.
+ */
 export function isPODTicketPCD(pcd: PCD): pcd is PODTicketPCD {
   return pcd.type === PODTicketPCDTypeName;
 }
