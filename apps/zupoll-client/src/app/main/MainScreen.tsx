@@ -6,13 +6,12 @@ import {
   ContentContainer,
   ScreenContent
 } from "../../@/components/ui/Elements";
-import { AppHeader, MainActions } from "../../@/components/ui/Headers";
+import { AppHeader } from "../../@/components/ui/Headers";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotResponse } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
 import { listBallots } from "../../zupoll-server-api";
 import { BallotListsForUser } from "./BallotListsForUser";
-import { GuaranteesElement } from "./Guarantees";
 import { LoggedInAs } from "./LoggedInAs";
 
 export function MainScreen({
@@ -68,18 +67,16 @@ export function MainScreen({
   return (
     <ScreenContent>
       <AppHeader
-        actions={
-          <MainActions
-            logout={logout}
-            createBallot={() => router.push("/create-ballot")}
-          />
-        }
+      // actions={
+      //   <MainActions
+      //     logout={logout}
+      //     createBallot={() => router.push("/create-ballot")}
+      //   />
+      // }
       />
 
       <ContentContainer>
         <LoggedInAs loginState={loginState} logout={logout} />
-
-        <GuaranteesElement />
 
         <BallotListsForUser
           loading={loadingBallots}
