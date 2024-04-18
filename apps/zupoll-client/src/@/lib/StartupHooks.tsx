@@ -1,8 +1,11 @@
 "use client";
 
+import { useTheme } from "@/components/ui/ThemeSwitcher";
 import { useEffect } from "react";
 
 export function StartupHooks({ children }: React.PropsWithChildren) {
+  useTheme();
+
   useEffect(() => {
     document.addEventListener("gesturestart", function (e) {
       e.preventDefault();

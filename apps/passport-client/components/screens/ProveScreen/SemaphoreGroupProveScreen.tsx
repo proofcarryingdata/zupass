@@ -116,12 +116,13 @@ export function SemaphoreGroupProveScreen({
     lines.push(
       <p style={{ textAlign: "center" }}>
         <b>{getHost(req.returnUrl)}</b> will receive a proof that you're one of{" "}
-        {group.members.length} members of {group.name}.
+        {group.members.length} members of <br />
+        <GroupNameLabel>{group.name}</GroupNameLabel>
       </p>
     );
     lines.push(
       <p style={{ textAlign: "center" }}>
-        This zero-knowledge proof won't reveal anything else about you.
+        This zero-knowledge proof won't reveal anything else about you
       </p>
     );
   }
@@ -206,4 +207,13 @@ const ErrorContainer = styled.div`
   justify-content: center;
   align-items: center;
   background-color: var(--danger);
+`;
+
+const GroupNameLabel = styled.div`
+  display: inline-block;
+  padding: 2px 4px;
+  border: 1px solid rgba(255, 255, 255, 0.8);
+  border-radius: 4px;
+  margin: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
 `;

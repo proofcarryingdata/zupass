@@ -1,9 +1,21 @@
-import { useEffect } from "react";
+import { Dispatch, SetStateAction, useEffect } from "react";
 import { useLocalStorage } from "usehooks-ts";
 import { Switch } from "./switch";
 
-export function ThemeSwitcher() {
+export function useTheme(): [string, Dispatch<SetStateAction<string>>] {
   const [theme, setTheme] = useLocalStorage("theme", "light");
+  const isLight = theme === "light";
+
+  useEffect(() => {
+    document.body.classList.remove("light", "dark");
+    document.body.classList.add(isLight ? "light" : "dark");
+  }, [isLight, theme]);
+
+  return [theme, setTheme];
+}
+
+export function ThemeSwitcher() {
+  const [theme, setTheme] = useTheme();
   const isLight = theme === "light";
 
   useEffect(() => {

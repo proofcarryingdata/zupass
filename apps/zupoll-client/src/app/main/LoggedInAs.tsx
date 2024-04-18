@@ -10,9 +10,11 @@ export function LoggedInAs({
 }) {
   return (
     <div className="flex justify-between items-center">
-      <span className="mr-2 flex flex-row gap-2 justify-center items-center">
-        <FaUserAstronaut />
-        {loginState.config.name}
+      <span className="mr-2 flex flex-row gap-2 justify-center items-center shrink overflow-hidden">
+        <FaUserAstronaut className="shrink-0" />
+        <span className="shrink text-nowrap overflow-hidden text-ellipsis">
+          {loginState.config.name}
+        </span>
       </span>
       <LogoutButton logout={logout} />
     </div>
