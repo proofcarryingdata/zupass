@@ -12,13 +12,14 @@ export function ThemeSwitcher() {
   }, [isLight, theme]);
 
   return (
-    <div className="text-xs h-full flex items-center justify-center gap-2">
+    <div className="flex flex-row items-center justify-start gap-2">
       <Switch
         checked={isLight}
         onCheckedChange={(newIsLight) => {
           setTheme(newIsLight ? "light" : "dark");
         }}
-      ></Switch>
+      ></Switch>{" "}
+      <span>{isLight ? "light" : "dark"} mode</span>
     </div>
   );
 }

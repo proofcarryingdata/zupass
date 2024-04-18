@@ -1,8 +1,8 @@
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import styled from "styled-components";
+import { SettingsDrawer } from "../../../app/main/SettingsDrawer";
 import { DEFAULT_CONTENT_WIDTH } from "./Elements";
-import { ThemeSwitcher } from "./ThemeSwitcher";
 import { Button } from "./button";
 
 export interface HeaderProps {
@@ -14,8 +14,8 @@ export function AppHeader({ actions, title }: HeaderProps) {
   return (
     <HeaderContainer>
       <MainScreenContainer>
+        <SettingsDrawer />
         <div className="flex flex-row gap-4 items-center justify-center">
-          <ThemeSwitcher />
           {title ? (
             <div className="text-2xl">{title}</div>
           ) : (
@@ -70,7 +70,6 @@ export function SubpageActions() {
 const HeaderContainer = styled.div`
   padding-bottom: 1em;
   margin-bottom: 1em;
-  background-color: hsl(var(--background));
   width: 100%;
   display: flex;
   justify-content: center;

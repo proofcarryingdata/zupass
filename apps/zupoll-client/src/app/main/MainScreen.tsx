@@ -67,14 +67,7 @@ export function MainScreen({
 
   return (
     <ScreenContent>
-      <AppHeader
-      // actions={
-      //   <MainActions
-      //     logout={logout}
-      //     createBallot={() => router.push("/create-ballot")}
-      //   />
-      // }
-      />
+      <AppHeader />
 
       <ContentContainer>
         <LoggedInAs loginState={loginState} logout={logout} />

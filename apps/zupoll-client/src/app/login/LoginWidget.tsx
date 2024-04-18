@@ -31,9 +31,10 @@ export function LoginWidget(props: LoginWidgetProps) {
           {selectedGroup ? (
             <LoginActionsForLoginGroup {...props} group={selectedGroup} />
           ) : (
-            <div className="text-center h-full flex items-center justify-end pr-4">
-              Choose a group to log in
-            </div>
+            <></>
+            // <div className="text-center h-full flex items-center justify-end pr-4">
+            //   Choose a group to log in
+            // </div>
           )}
         </div>
 
