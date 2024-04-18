@@ -16,6 +16,7 @@ import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
+import { DividerWithText } from "../create-ballot/DividerWithText";
 import { BallotPoll } from "./BallotPoll";
 import { getBallotVotes, useBallotVoting, votedOn } from "./useBallotVoting";
 
@@ -214,8 +215,9 @@ export function BallotScreen({
           {ballot && polls && (
             <div>
               <Title className="mb-0">{ballot.ballotTitle} </Title>
-              <span className="font-normal text-sm text-foreground/90">
-                posted {fmtTimeAgo(new Date(ballot.createdAt))}
+              <div className="">{ballot.ballotDescription}</div>
+              <div className="font-normal text-sm text-foreground/80">
+                posted anonymously {fmtTimeAgo(new Date(ballot.createdAt))}
                 {" · "}
                 {new Date(ballot.expiry) < new Date() ? (
                   <span className="text-red-600 dark:text-red-300">
@@ -224,8 +226,8 @@ export function BallotScreen({
                 ) : (
                   <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
                 )}
-              </span>
-              <p className="mt-2">{ballot.ballotDescription}</p>
+              </div>
+              <DividerWithText></DividerWithText>
               <div className="flex flex-col gap-4 mb-4">
                 {polls.map((poll) => (
                   <BallotPoll
@@ -246,6 +248,7 @@ export function BallotScreen({
 
               {canVote && (
                 <>
+                  <DividerWithText></DividerWithText>
                   <Button
                     variant={"creative"}
                     onClick={createBallotVotePCD}
@@ -253,7 +256,7 @@ export function BallotScreen({
                   >
                     Submit Votes
                   </Button>
-                  <TextContainer className="text-foreground/70 mt-2 text-center">
+                  <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
                     If you created or reset your Zupass after this ballot was
                     created you will not be able to vote. This is a security
                     measure designed to prevent double-voting.

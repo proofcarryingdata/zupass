@@ -1,5 +1,5 @@
 import VoteDialog from "@/components/ui/VoteDialog";
-import { Card, CardContent } from "@/components/ui/card";
+import { BUTTON_CLASSES } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { cn } from "@/lib/utils";
 import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
@@ -63,7 +63,7 @@ export function BallotPoll({
   const isHackathonView = poll.options.length > 6;
 
   return (
-    <>
+    <div>
       {canVote && showingOptionIdx !== undefined && (
         <VoteDialog
           text={poll.options[showingOptionIdx]}
@@ -75,70 +75,68 @@ export function BallotPoll({
           }}
         />
       )}
-      <Card className="pt-6">
-        <CardContent>
-          <PollHeader>{poll.body}</PollHeader>
-          {isHackathonView && (
-            <Input
-              placeholder="Search Options"
-              value={searchTerm}
-              onChange={(e) => setSearchTerm(e.target.value)}
-              className="mb-4"
-              type="text"
-            />
-          )}
+      <PollHeader>{poll.body}</PollHeader>
+      {isHackathonView && (
+        <Input
+          placeholder="Search Options"
+          value={searchTerm}
+          onChange={(e) => setSearchTerm(e.target.value)}
+          className="mb-4"
+          type="text"
+        />
+      )}
 
-          <div className="flex flex-col gap-2">
-            {matchingOptions.map((opt, idx) => (
-              <div
-                className={cn(
-                  "relative overflow-hidden bg-background px-4 py-2 rounded-xl flex flex-row border-2 dark:border-",
-                  canVote
-                    ? "select-none cursor-pointer hover:bg-accent ring-foreground active:ring-offset-2 active:ring-2 active:ring-offset-background"
-                    : "",
-                  voteIdx === idx
-                    ? "bg-green-200 hover:bg-green-300 border-green-500 dark:text-background"
-                    : "border-gray-200 dark:border-gray-700"
-                )}
-                key={idx}
-                onClick={() => {
-                  if (isHackathonView && canVote) {
-                    setShowingOptionIdx(idx);
-                  } else if (canVote) {
-                    onVoted(poll.id, idx);
-                  }
-                }}
-              >
-                <div
-                  className={cn(
-                    "z-[1] absolute top-0 left-0 h-full",
-                    finalVoteIdx === idx ? "bg-green-300" : "bg-green-400"
-                  )}
-                  style={{
-                    width: `${
-                      totalVotes === 0 || canVote
-                        ? 0
-                        : (poll.votes[idx] / totalVotes) * 100
-                    }%`
-                  }}
-                />
-                {canVote ? (
-                  <PollPreResult></PollPreResult>
-                ) : (
-                  <PollResult>
-                    {getVoteDisplay(poll.votes[idx], totalVotes)}
-                  </PollResult>
-                )}
-                <OptionString>{opt}</OptionString>
-              </div>
-            ))}
+      <div className="flex flex-col gap-2">
+        {matchingOptions.map((opt, idx) => (
+          <div
+            className={cn(
+              BUTTON_CLASSES,
+              "select-none relative overflow-hidden bg-background p-2 flex flex-row border-2 justify-start",
+              canVote
+                ? "hover:bg-white/5"
+                : "ring-0 ring-offset-0 ring-transparent cursor-default",
+              voteIdx === idx
+                ? "bg-green-100 hover:bg-green-200 border-green-500 dark:text-background"
+                : ""
+            )}
+            key={idx}
+            onClick={() => {
+              if (isHackathonView && canVote) {
+                setShowingOptionIdx(idx);
+              } else if (canVote) {
+                onVoted(poll.id, idx);
+              }
+            }}
+          >
+            <div
+              className={cn(
+                "z-[1] absolute top-0 left-0 h-full",
+                finalVoteIdx === idx ? "bg-green-500" : "bg-green-400",
+                "text-foreground"
+              )}
+              style={{
+                width: `${
+                  totalVotes === 0 || canVote
+                    ? 0
+                    : (poll.votes[idx] / totalVotes) * 100
+                }%`
+              }}
+            />
+            {canVote ? (
+              <PollPreResult></PollPreResult>
+            ) : (
+              <PollResult>
+                {getVoteDisplay(poll.votes[idx], totalVotes)}
+              </PollResult>
+            )}
+            <OptionString>{opt}</OptionString>
           </div>
-          <div className="mt-2">
-            {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
-          </div>
-        </CardContent>
-      </Card>
-    </>
+        ))}
+      </div>
+      <div className="mt-2">
+        {totalVotes} vote{totalVotes !== 1 ? "s" : ""}
+      </div>
+    </div>
   );
 }
 
@@ -174,10 +172,6 @@ const OptionString = styled.span`
   position: relative;
   z-index: 2;
   padding-left: 1rem;
-`;
-
-const TotalVotesContainer = styled.div`
-  margin-top: 0.75rem;
-  color: #666;
-  font-size: 0.9em;
+  overflow: hidden;
+  white-space: normal;
 `;

@@ -24,8 +24,8 @@ import { BallotSignal } from "../../api/requestTypes";
 import { APP_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
+import { DividerWithText } from "./DividerWithText";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
-import { PollsBelowDivider } from "./PollsBelowDivider";
 import { BALLOT_CONFIGS } from "./ballotConfig";
 import { BallotFromUrl, useCreateBallot } from "./useCreateBallot";
 
@@ -413,7 +413,7 @@ export function CreateBallot({
         </CardContent>
       </Card>
 
-      <PollsBelowDivider />
+      <DividerWithText>Polls</DividerWithText>
 
       <div className="flex flex-col gap-4 mb-2">
         {polls.map((poll, i) => {

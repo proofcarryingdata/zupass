@@ -104,7 +104,7 @@
    */
   @media screen and (max-width: 640px) {
     html {
-      font-size: 1.3rem;
+      font-size: 1.1rem;
       --screen-padding: 0.5rem;
     }
   }
