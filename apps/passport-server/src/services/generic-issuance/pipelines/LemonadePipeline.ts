@@ -955,7 +955,7 @@ export class LemonadePipeline implements BasePipeline {
   ): Promise<void> {
     const key = await LemonadePipeline.getTicketCacheKey(
       ticket.type,
-      isEdDSATicketPCD(ticket) ? ticket.claim.ticket : ticket.claim.data,
+      ticket.claim.ticket,
       this.eddsaPrivateKey,
       this.id
     );
@@ -1038,7 +1038,7 @@ export class LemonadePipeline implements BasePipeline {
     );
 
     const ticketPCD = await PODTicketPCDPackage.prove({
-      data: {
+      ticket: {
         value: ticketData,
         argumentType: ArgumentTypeName.Object
       },
