@@ -7,17 +7,20 @@ export function GuaranteesElement() {
     <GuaranteeContainer className="text-sm">
       <Card>
         <Guarantee>
-          <FaEyeSlash size={"14px"} /> The server never learns your identity.
+          <FaEyeSlash size={"14px"} className="shrink-0" /> The server never
+          learns your identity.
         </Guarantee>
       </Card>
       <Card>
         <Guarantee>
-          <FaVoteYea size={"14px"} /> One vote per participant.
+          <FaVoteYea size={"14px"} className="shrink-0" /> One vote per
+          participant.
         </Guarantee>
       </Card>
       <Card>
         <Guarantee>
-          <FaUnlink size={"12px"} /> Unlinkable votes across ballots/devices.
+          <FaUnlink size={"12px"} className="shrink-0" /> Unlinkable votes
+          across ballots/devices.
         </Guarantee>
       </Card>
     </GuaranteeContainer>
@@ -40,9 +43,9 @@ const GuaranteeContainer = styled.div`
   @media screen and (max-width: 640px) {
     margin-left: 0%;
     width: 100%;
-    gap: 4px;
+    gap: 6px;
     font-size: 0.8rem;
-    line-height: 95%;
+    flex-direction: column;
   }
 `;
 
@@ -60,4 +63,13 @@ const Guarantee = styled.div`
   flex-direction: column;
   flex-grow: 1;
   flex-shrink: 1;
+
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    flex-direction: row;
+    margin-bottom: 0;
+    align-items: center;
+  }
 `;

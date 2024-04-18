@@ -87,6 +87,7 @@ export function LoginScreen({
   return (
     <ContentContainer>
       <AppHeader />
+
       <GuaranteesElement />
 
       <Card>

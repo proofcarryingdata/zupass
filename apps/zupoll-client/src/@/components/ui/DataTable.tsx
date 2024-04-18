@@ -60,7 +60,7 @@ export function DataTable<TData, TValue>({
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
-                className="hover:cursor-pointer"
+                className="hover:cursor-pointer max-w-full overflow-hidden"
                 key={row.id}
                 data-state={row.getIsSelected() && "selected"}
                 onClick={() => {
@@ -68,7 +68,10 @@ export function DataTable<TData, TValue>({
                 }}
               >
                 {row.getVisibleCells().map((cell) => (
-                  <TableCell key={cell.id}>
+                  <TableCell
+                    key={cell.id}
+                    className="overflow-hidden text-nowrap text-ellipsis"
+                  >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>
                 ))}
@@ -76,7 +79,10 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell
+                colSpan={columns.length}
+                className="h-24 text-center overflow-hidden text-nowrap text-ellipsis"
+              >
                 {placeholder ?? (
                   <div className="text-foreground/90">Nothing Yet</div>
                 )}

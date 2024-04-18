@@ -71,4 +71,11 @@ const HeaderContainer = styled.div`
   max-width: 100%;
   display: flex;
   font-weight: bold;
+
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    padding-top: 32px;
+  }
 `;
