@@ -56,7 +56,7 @@ export function getPodboxConfigs(
     "Ballots created by Edge Esemeralda Staff";
   const ESMERALDA_DESCRIPTION =
     "Ballots created by Edge Esmeralda Residents. Add to the discussion by creating a new Ballot!";
-  const ESMERALDA_CONFIG_PIPELINE_ID = "c00d3470-7ff8-4060-adc1-e9487d607d42";
+  const ESMERALDA_CONFIG_PIPELINE_ID = "f343cfdd-965b-4f0a-a429-7371576b323b";
   const ESMERALDA_CONFIG_SEMA_GROUP_ID = "02b5e490-0084-43b0-92d7-7ab74c5b0055";
   const ESMERALDA_CONFIG_ORGANIZER_SEMA_GROUP_ID =
     "02b5e490-0084-43b0-92d7-7ab74c5b0055";
