@@ -1,9 +1,7 @@
 import { PCD } from "@pcd/pcd-types";
-import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
 import _ from "lodash";
 import { useCallback, useMemo, useState } from "react";
 import styled from "styled-components";
-import { appConfig } from "../../src/appConfig";
 import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
 import { PCDCard } from "./PCDCard";
 
@@ -86,13 +84,7 @@ export function PCDCardList({
       (sortState.sortBy && sortState.sortOrder
         ? _.orderBy(sortablePCDs, [sortState.sortBy], [sortState.sortOrder])
         : sortablePCDs
-      )
-        .map((o) => o.value)
-        .filter(
-          (pcd) =>
-            // Filter out PODTicketPCDs unless showPODTicketPCDs is true
-            pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
-        ),
+      ).map((o) => o.value),
     [sortState, sortablePCDs]
   );
 

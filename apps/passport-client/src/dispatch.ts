@@ -1,3 +1,4 @@
+import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
@@ -20,6 +21,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { isPODTicketPCD, PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
@@ -562,6 +564,30 @@ async function removePCD(
   update: ZuUpdate,
   pcdId: string
 ): Promise<void> {
+  const pcd = state.pcds.getById(pcdId);
+  if (!appConfig.showPODTicketPCDs && pcd && isEdDSATicketPCD(pcd)) {
+    // EdDSATicketPCDs are currently duplicated as PODTicketPCDs. Since
+    // PODTicketPCDs are hidden, they cannot be removed via the UI. IF an
+    // EdDSATicketPCD is remove but its counterpart PODTicketPCD is not, then
+    // the folder containing them both will remain but will appear to be empty,
+    // as it only contains the PODTicketPCD.
+    // Therefore, when removing the EdDSATicketPCD, we should check to see if
+    // there is a matching PODTicketPCD, and remove that too.
+    const podTickets = state.pcds.getPCDsByType(PODTicketPCDTypeName);
+    for (const podTicket of podTickets) {
+      if (
+        isPODTicketPCD(podTicket) &&
+        // Check for the same ticket ID
+        podTicket.claim.ticket.ticketId === pcd.claim.ticket.ticketId &&
+        // Check they're in the same folder
+        state.pcds.getFolderOfPCD(pcd.id) ===
+          state.pcds.getFolderOfPCD(podTicket.id)
+      ) {
+        // Remove the PODTicketPCD
+        state.pcds.remove(podTicket.id);
+      }
+    }
+  }
   state.pcds.remove(pcdId);
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });

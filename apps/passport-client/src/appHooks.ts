@@ -9,10 +9,12 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
 import { PCD } from "@pcd/pcd-types";
+import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { useContext, useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
+import { appConfig } from "./appConfig";
 import {
   Dispatcher,
   StateContext,
@@ -64,7 +66,13 @@ export function usePCDs(): PCD[] {
 
 export function usePCDsInFolder(folder: string): PCD[] {
   const pcds = usePCDCollection();
-  return [...pcds.getAllPCDsInFolder(folder)];
+  return [
+    ...pcds.getAllPCDsInFolder(folder).filter(
+      (pcd) =>
+        // Filter out PODTicketPCDs unless showPODTicketPCDs is true
+        pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
+    )
+  ];
 }
 
 export function useFolders(path: string): string[] {
