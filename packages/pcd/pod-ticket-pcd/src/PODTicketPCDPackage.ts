@@ -176,8 +176,7 @@ export const PODTicketPCDPackage: PCDPackage<
   PODTicketPCDClaim,
   PODTicketPCDProof,
   PODTicketPCDArgs,
-  unknown,
-  PODTicketPCD
+  unknown
 > = {
   name: PODTicketPCDTypeName,
   getDisplayOptions,

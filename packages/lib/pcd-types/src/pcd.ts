@@ -67,16 +67,12 @@ export interface PCD<C = unknown, P = unknown> {
  *
  * @typeparam {@link I} the type of the arguments passed into {@link PCDPackage#init}, if the
  *   init function is present to instantiate a new {@link PCD}
- *
- * @typeparam {@link K} the concrete {@link PCD} class that package functions take as an
- *   argument or return. Must extend PCD<C, P>.
  */
 export interface PCDPackage<
   C = any,
   P = any,
   A extends Record<string, Argument<any>> = any,
-  I = any,
-  K extends PCD<C, P> = PCD<C, P>
+  I = any
 > {
   /**
    * The unique name identifying the type of {@link PCD} this package encapsulates.
@@ -87,7 +83,7 @@ export interface PCDPackage<
    * Intended for use by Zupass. Given a {@link PCD}, returns some information about
    * how this {@link PCD} should be displayed to the user within Zupass app.
    */
-  getDisplayOptions?: (pcd: K) => DisplayOptions;
+  getDisplayOptions?: (pcd: PCD<C, P>) => DisplayOptions;
 
   /**
    * Initializes this {@link PCDPackage} so that it can be used in the current context.
@@ -106,14 +102,14 @@ export interface PCDPackage<
    * encapsulates. It generates a proof and derives a claim from the args, and returns a
    * new PCD instance.
    */
-  prove(args: A): Promise<K>;
+  prove(args: A): Promise<PCD<C, P>>;
 
   /**
    * This function lets consumers of the {@link PCD} encapsulated by this {@link PCDPackage}
    * verify whether the {@link PCD}'s {@link PCD#claim} corresponds correctly to its
    * {@link PCD#proof}.
    */
-  verify(pcd: K): Promise<boolean>;
+  verify(pcd: PCD<C, P>): Promise<boolean>;
 
   /**
    * Serializes an instance of this package's {@link PCD} so that it can be stored on disk
@@ -123,13 +119,13 @@ export interface PCDPackage<
    * and {@link PCDPackage.deserialize} takes `SerializedPCD<PCD<C, P>>.pcd` as a parameter
    * and returns an instance of PCD<C, P>.
    */
-  serialize(pcd: K): Promise<SerializedPCD<K>>;
+  serialize(pcd: PCD<C, P>): Promise<SerializedPCD<PCD<C, P>>>;
 
   /**
    * Sibling method to {@link PCDPackage.serialize} - converts {@link SerializedPCD.pcd} back
    * into an instance of this package's {@link PCD} type.
    */
-  deserialize(seralized: string): Promise<K>;
+  deserialize(seralized: string): Promise<PCD<C, P>>;
 }
 
 /**

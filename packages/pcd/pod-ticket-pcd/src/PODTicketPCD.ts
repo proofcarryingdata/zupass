@@ -56,10 +56,10 @@ export interface PODTicketPCDClaim {
 export type PODTicketPCDProof = PODPCDProof;
 
 export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
-  public readonly type = PODTicketPCDTypeName;
-  public readonly claim: PODTicketPCDClaim;
-  public readonly proof: PODTicketPCDProof;
-  public readonly id: string;
+  public type = PODTicketPCDTypeName;
+  public claim: PODTicketPCDClaim;
+  public proof: PODTicketPCDProof;
+  public id: string;
 
   /**
    * The PODTicketPCD consists of a claim about {@link IPODTicketData}, and a
@@ -77,7 +77,7 @@ export class PODTicketPCD implements PCD<PODTicketPCDClaim, PODTicketPCDProof> {
 }
 
 /**
- * Returns true if {@link pcd} is an {@link EdDSATicketPCD} or false otherwise.
+ * Returns true if {@link pcd} is an {@link PODTicketPCD} or false otherwise.
  */
 export function isPODTicketPCD(pcd: PCD): pcd is PODTicketPCD {
   return pcd.type === PODTicketPCDTypeName;
