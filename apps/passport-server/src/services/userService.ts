@@ -201,14 +201,16 @@ export class UserService {
       );
     }
 
+    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+
     if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
       throw new PCDHTTPError(
         403,
-        `Wrong token. If you got more than one email, use the latest one.`
+        existingUser
+          ? `This email ${email} has already been registered. Please login instead.`
+          : `Wrong token. If you got more than one email, use the latest one.`
       );
     }
-
-    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
 
     if (existingUser) {
       await this.checkAccountResetRateLimit(existingUser);
