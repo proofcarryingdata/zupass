@@ -75,6 +75,11 @@ const LOG_TAG = `[${LOG_NAME}]`;
 
 export const PRETIX_CHECKER = "Pretix";
 
+const VALID_PRETIX_EVENT_SETTINGS: GenericPretixEventSettings = {
+  attendee_emails_asked: true,
+  attendee_emails_required: true
+};
+
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
  * loads data from Pretix is capable of.
@@ -463,11 +468,14 @@ export class PretixPipeline implements BasePipeline {
       const orgUrl = this.definition.options.pretixOrgUrl;
       const token = this.definition.options.pretixAPIKey;
       const eventId = event.externalId;
-      const settings = await this.api.fetchEventSettings(
-        orgUrl,
-        token,
-        eventId
-      );
+      let settings: GenericPretixEventSettings;
+      // When settings validation is skipped, return a valid configuration
+      // rather than calling the API
+      if (event.skipSettingsValidation) {
+        settings = VALID_PRETIX_EVENT_SETTINGS;
+      } else {
+        settings = await this.api.fetchEventSettings(orgUrl, token, eventId);
+      }
       const categories = await this.api.fetchProductCategories(
         orgUrl,
         token,

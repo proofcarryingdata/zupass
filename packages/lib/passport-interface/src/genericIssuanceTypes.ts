@@ -394,7 +394,11 @@ const PretixEventConfigSchema = z.object({
    * Options to configure displaying an image instead of the QR code
    */
   imageOptions: ImageOptionsSchema.optional(),
-  products: z.array(PretixProductConfigSchema)
+  products: z.array(PretixProductConfigSchema),
+  /**
+   * Skip validation of event settings - use with caution!
+   */
+  skipSettingsValidation: z.boolean().optional()
 });
 
 /**
