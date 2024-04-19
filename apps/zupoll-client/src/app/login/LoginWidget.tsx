@@ -1,4 +1,5 @@
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import { LoginCategory, LoginConfig } from "@pcd/zupoll-shared";
 import _ from "lodash";
 import { useMemo, useState } from "react";
@@ -27,15 +28,19 @@ export function LoginWidget(props: LoginWidgetProps) {
   return (
     <>
       <LoginWidgetContentContainer className="flex flex-row gap-2 justify-between grow">
-        <div className="flex-shrink-0 min-w-52 grow">
-          {selectedGroup ? (
+        {selectedGroup && (
+          <div className="min-w-52 grow">
             <LoginActionsForLoginGroup {...props} group={selectedGroup} />
-          ) : (
-            <></>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div>
+        <div
+          className={cn(
+            selectedGroup === undefined
+              ? "w-full"
+              : "shrink-0 w-[45%] min-w-[45%]"
+          )}
+        >
           <SelectLoginGroup
             selectedGroup={selectedGroupId}
             setSelectedGroup={setCurGroupCategory}

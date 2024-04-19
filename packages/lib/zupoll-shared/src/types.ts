@@ -30,7 +30,7 @@ export enum LegacyLoginConfigName {
 }
 
 export enum LegacyLoginCategoryName {
-  EthLatAm = "ETH LATAM",
+  EthLatAm = "ETH Latam",
   Zuzalu = "Zuzalu / Zuconnect",
   Zuconnect = "Zuconnect",
   Devconnect = "Devconnect",

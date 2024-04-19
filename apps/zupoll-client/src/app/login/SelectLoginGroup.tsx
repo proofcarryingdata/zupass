@@ -54,7 +54,9 @@ export function SelectLoginGroup({
           .map(([year, group]: [string, LoginGroup[]]) => {
             return (
               <SelectGroup key={year}>
-                <SelectLabel>{year}</SelectLabel>
+                <SelectLabel className="font-bold underline">
+                  {year}
+                </SelectLabel>
                 {group
                   .sort((lhs, rhs) => {
                     return (
@@ -72,7 +74,11 @@ export function SelectLoginGroup({
                   })
                   .map((g) => {
                     return (
-                      <SelectItem key={g.category} value={g.category}>
+                      <SelectItem
+                        key={g.category}
+                        value={g.category}
+                        className="child cursor-pointer"
+                      >
                         {g.category}
                       </SelectItem>
                     );

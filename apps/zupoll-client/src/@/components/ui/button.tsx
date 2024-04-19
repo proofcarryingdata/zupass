@@ -12,15 +12,15 @@ const buttonVariants = cva(BUTTON_CLASSES, {
   variants: {
     variant: {
       default:
-        "bg-blue-500 text-white shadow hover:bg-blue-400 hover:text-blue-900",
+        "bg-blue-500 shadow hover:bg-blue-400 hover:text-blue-900 text-white",
       secondary:
-        "bg-gray-500 text-white shadow-sm hover:bg-gray-400 hover:text-gray-900",
+        "bg-gray-500 shadow-sm hover:bg-gray-400 hover:text-gray-900 text-white",
       destructive:
-        "bg-red-500 text-white shadow-sm hover:bg-red-400 hover:text-red-900",
+        "bg-red-500 shadow-sm hover:bg-red-400 hover:text-red-900 text-white",
       warning:
-        "bg-yellow-500 text-white shadow-sm hover:bg-yellow-400 hover:text-yellow-900",
+        "bg-yellow-500 shadow-sm hover:bg-yellow-400 hover:text-yellow-900 text-white",
       creative:
-        "bg-green-500 text-white shadow-sm hover:bg-green-400 hover:text-green-900",
+        "bg-green-500 shadow-sm hover:bg-green-400 hover:text-green-900 text-white",
       outline:
         "border border-input bg-background shadow-sm hover:bg-accent border-2",
       ghost: "hover:bg-accent",
