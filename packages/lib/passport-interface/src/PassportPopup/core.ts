@@ -87,6 +87,15 @@ export function openZupassPopup(
   proofUrl: string
 ): Promise<Window | null> {
   const url = `${popupUrl}?proofUrl=${encodeURIComponent(proofUrl)}`;
+  return openZupassPopupUrl(url);
+}
+
+/**
+ * Opens a Zupass popup window to a given URL. Can be used to open Zupass
+ * directly, allowing Zupass to send a message back and bypassing the need for
+ * a special page to redirect.
+ */
+export function openZupassPopupUrl(url: string): Promise<Window | null> {
   // Calling window.open from within a React hook can cause problems.
   // The workaround is to do it asynchronously, as per:
   // https://stackoverflow.com/questions/76944918/should-not-already-be-working-on-window-open-in-simple-react-app
@@ -104,16 +113,19 @@ export function openZupassPopup(
 /**
  * The popup message can contain either an encoded PCD or encoded pending PCD.
  */
-type PopupMessageResult =
+export type PopupMessageResult =
   | {
+      // We got a PCD back
       type: "pcd";
       pcdStr: string;
     }
   | {
+      // We got a pending PCD back
       type: "pendingPcd";
       pendingPcdStr: string;
     }
   | {
+      // Something went wrong
       type: "aborted";
     };
 
@@ -147,9 +159,11 @@ export function receiveZupassPopupMessage(
   });
 }
 
-type PopupActionResult =
+export type PopupActionResult =
   | PopupMessageResult
+  // The popup was closed before getting/adding a PCD
   | { type: "popupClosed" }
+  // The popup was blocked before opening
   | { type: "popupBlocked" };
 
 /**
@@ -161,15 +175,17 @@ type PopupActionResult =
  * - An indication that the popup was blocked from opening
  *
  * By detecting popup blockers and the popup being closed without result, this
- * offers broader functionality than calling {@link openZupassPopup} and
+ * offers broader functionality than calling {@link openZupassPopupWithLocalRedirect} and
  * {@link receiveZupassPopupMessage} separately. It is added as a new API to
  * avoid breaking backwards-compatibility for existing code.
  */
 export async function zupassPopupExecute(
-  popupUrl: string,
-  proofUrl: string
+  proofUrl: string,
+  popupUrl?: string
 ): Promise<PopupActionResult> {
-  const popup = await openZupassPopup(popupUrl, proofUrl);
+  const popup = await (popupUrl
+    ? openZupassPopup(proofUrl, popupUrl)
+    : openZupassPopupUrl(proofUrl));
   // If we did not get a window from `openZupassPopup`, it was blocked
   // See https://developer.mozilla.org/en-US/docs/Web/API/Window/open#return_value
   // This allows the caller to gracefully handle this, e.g. by notifying the

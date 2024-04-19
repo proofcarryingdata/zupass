@@ -1,6 +1,7 @@
 import {
   ISSUANCE_STRING,
   PCDGetRequest,
+  postPendingPCDMessage,
   ProveOptions,
   requestProveOnServer,
   SignInMessagePayload
@@ -76,6 +77,10 @@ export function SemaphoreSignatureProveScreen({
       setProving(false);
 
       if (pendingPCDResult.success) {
+        if (window.opener && req.postMessage) {
+          postPendingPCDMessage(window.opener, pendingPCDResult.value);
+          window.close();
+        }
         safeRedirectPending(req.returnUrl, pendingPCDResult.value);
       } else {
         setError(pendingPCDResult.error);
@@ -85,9 +90,13 @@ export function SemaphoreSignatureProveScreen({
       const pcd = await prove(args);
       const serializedPCD = await serialize(pcd);
       setProving(false);
+      if (window.opener && req.postMessage) {
+        window.opener.postMessage({ encodedPCD: serializedPCD }, "*");
+        window.close();
+      }
       safeRedirect(req.returnUrl, serializedPCD);
     }
-  }, [identity, req.args, req.options, req.returnUrl, self]);
+  }, [identity, req.args, req.options, req.postMessage, req.returnUrl, self]);
 
   const lines: ReactNode[] = [];
 

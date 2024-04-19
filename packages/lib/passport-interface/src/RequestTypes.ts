@@ -1,5 +1,5 @@
 import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
+import { EdDSATicketPCD, EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd";
 import { PCDAction } from "@pcd/pcd-collection";
 import { ArgsOf, PCDOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
@@ -492,6 +492,18 @@ export interface PipelineInfoConsumer {
   timeUpdated: string;
 }
 
+export interface PipelineEdDSATicketZuAuthConfig {
+  pcdType: typeof EdDSATicketPCDTypeName;
+  publicKey: EdDSAPublicKey;
+  eventId: string; // UUID
+  eventName: string;
+  productId: string; // UUID
+  productName: string;
+}
+
+// could be |'ed with other types of metadata
+export type PipelineZuAuthConfig = PipelineEdDSATicketZuAuthConfig;
+
 export interface PipelineInfoResponseValue {
   ownerEmail: string;
   lastLoad?: PipelineLoadSummary;
@@ -499,6 +511,7 @@ export interface PipelineInfoResponseValue {
   latestAtoms?: object[];
   latestConsumers?: PipelineInfoConsumer[];
   editHistory?: HydratedPipelineHistoryEntry[];
+  zuAuthConfig?: PipelineZuAuthConfig[];
 }
 
 export interface ListSingleFeedRequest {

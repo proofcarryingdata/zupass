@@ -1,0 +1,37 @@
+{
+  "extends": "@pcd/tsconfig/ts-library.json",
+  "compilerOptions": {
+    "lib": ["dom"],
+    "outDir": "dist",
+    "declarationDir": "dist/types",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    // Include all source files, including tests
+    "rootDir": "."
+  },
+  // Some artifact-including packages need to import a JSON file
+  "include": ["src", "test", "artifacts/*.json"],
+  "exclude": ["dist", "build", "node_modules"],
+  // DO NOT MODIFY MANUALLY BEYOND THIS POINT
+  // References are automatically maintained by `yarn fix-references`
+  "references": [
+    {
+      "path": "../../pcd/eddsa-pcd"
+    },
+    {
+      "path": "../../pcd/eddsa-ticket-pcd"
+    },
+    {
+      "path": "../passport-interface"
+    },
+    {
+      "path": "../pcd-types"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd"
+    }
+  ]
+}

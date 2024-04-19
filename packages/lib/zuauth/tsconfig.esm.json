@@ -1,0 +1,33 @@
+{
+  "extends": "./tsconfig.json",
+  "compilerOptions": {
+    "outDir": "dist/esm",
+    "module": "ESNext",
+    "moduleResolution": "Bundler",
+    "tsBuildInfoFile": "./tsconfig.esm.tsbuildinfo"
+  },
+  // For CJS/ESM builds, do not include test files
+  "include": ["src", "artifacts/*.json"],
+  // DO NOT MODIFY MANUALLY BEYOND THIS POINT
+  // References are automatically maintained by `yarn fix-references`
+  "references": [
+    {
+      "path": "../../pcd/eddsa-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/eddsa-ticket-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../passport-interface/tsconfig.esm.json"
+    },
+    {
+      "path": "../pcd-types/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/semaphore-identity-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "../../pcd/zk-eddsa-event-ticket-pcd/tsconfig.esm.json"
+    }
+  ]
+}

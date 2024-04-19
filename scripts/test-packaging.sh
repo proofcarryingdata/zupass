@@ -24,19 +24,19 @@ while ! nc -zw 1 localhost 4873; do sleep 1; done
 # Publish all of the @pcd packages to Verdaccio
 for dir in ./packages/*/*; do (cd $dir && echo $dir && yarn publish --registry=http://localhost:4873/ --non-interactive); done
 
-# Fully reinstall each example app, pulling @pcd packages from Verdaccio
+# Fully reinstall each test app, pulling @pcd packages from Verdaccio
 # All other packages will be proxied from yarnpkg as per verdaccio.yml config.
 # Remove the --registry flag to use the npm versions instead. 
-for dir in ./examples/*; do (cd $dir && yarn install --no-lockfile --non-interactive --registry=http://localhost:4873/); done
+for dir in ./test-packaging/*; do (cd $dir && yarn install --no-lockfile --non-interactive --registry=http://localhost:4873/); done
 
 # Build create-react-app example
-yarn --cwd=./examples/cra build
+yarn --cwd=./test-packaging/cra build
 # Build nextjs example
-yarn --cwd=./examples/nextjs build
+yarn --cwd=./test-packaging/nextjs build
 # Build vite example
-yarn --cwd=./examples/vite build
+yarn --cwd=./test-packaging/vite build
 # Build express example
-yarn --cwd=./examples/zupass-feed-server build
+yarn --cwd=./test-packaging/zupass-feed-server build
 
 # Shut down Verdaccio
 kill $pid

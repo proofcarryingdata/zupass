@@ -11,7 +11,7 @@
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
     },
-    "./PCD": {
+    "./EdDSAPCD": {
       "types": "./dist/types/src/EdDSAPCD.d.ts",
       "import": "./dist/esm/src/EdDSAPCD.js",
       "require": "./dist/cjs/src/EdDSAPCD.js"

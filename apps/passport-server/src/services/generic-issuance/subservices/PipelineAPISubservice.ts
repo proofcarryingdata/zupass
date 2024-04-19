@@ -159,6 +159,8 @@ export class PipelineAPISubservice {
           url: f.feedUrl
         })),
 
+        zuAuthConfig: await pipelineFeeds[0].getZuAuthConfig(),
+
         latestConsumers: !pipelineHasSemaphoreGroups
           ? undefined
           : latestConsumers

@@ -1,7 +1,9 @@
 import {
   PCDGetRequest,
   PCDRequestType,
-  PendingPCD
+  PendingPCD,
+  postPendingPCDMessage,
+  postSerializedPCDMessage
 } from "@pcd/passport-interface";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { useCallback } from "react";
@@ -31,7 +33,6 @@ export function GenericProveScreen({
   req: PCDGetRequest;
 }): JSX.Element | null {
   const dispatch = useDispatch();
-
   const onProve = useCallback(
     (
       _pcd: PCD,
@@ -39,12 +40,22 @@ export function GenericProveScreen({
       pendingPCD: PendingPCD | undefined
     ) => {
       if (pendingPCD) {
+        if (window.opener && req.postMessage) {
+          postPendingPCDMessage(window.opener, pendingPCD);
+          window.close();
+        }
         safeRedirectPending(req.returnUrl, pendingPCD);
       } else {
+        if (window.opener && req.postMessage) {
+          if (serialized) {
+            postSerializedPCDMessage(window.opener, serialized);
+          }
+          window.close();
+        }
         safeRedirect(req.returnUrl, serialized);
       }
     },
-    [req.returnUrl]
+    [req.postMessage, req.returnUrl]
   );
 
   if (req.type !== PCDRequestType.Get) {
