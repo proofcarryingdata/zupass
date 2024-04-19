@@ -7,7 +7,9 @@ module.exports = {
   compiler: {
     styledComponents: true
   },
-  productionBrowserSourceMaps: true,
+  images: {
+    unoptimized: true
+  },
   webpack: (config) => {
     return config;
   }

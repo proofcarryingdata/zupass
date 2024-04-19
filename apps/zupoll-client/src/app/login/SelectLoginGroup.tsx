@@ -7,6 +7,7 @@ import {
   SelectValue
 } from "@/components/ui/select";
 import { LoginCategory } from "@pcd/zupoll-shared";
+import _ from "lodash";
 import { Dispatch, SetStateAction } from "react";
 import { LoginGroup } from "../../api/loginGroups";
 
@@ -31,18 +32,56 @@ export function SelectLoginGroup({
       onValueChange={(v) => setSelectedGroup(v as LoginCategory)}
     >
       <SelectTrigger className="w-full">
-        <SelectValue placeholder="Select Group" />
+        <SelectValue placeholder="Select a Group to Log In" />
       </SelectTrigger>
       <SelectContent>
-        <SelectGroup>
-          {groups.map((g) => {
+        {Object.entries(_.groupBy(groups, (g: LoginGroup) => g.configs[0].year))
+          .sort((lhs, rhs) => {
             return (
-              <SelectItem key={g.category} value={g.category}>
-                {g.category}
-              </SelectItem>
+              new Date(
+                rhs[1][0].configs[0].year,
+                rhs[1][0].configs[0].month,
+                rhs[1][0].configs[0].day
+              ).getTime() -
+              new Date(
+                lhs[1][0].configs[0].year,
+                lhs[1][0].configs[0].month,
+                lhs[1][0].configs[0].day
+              ).getTime()
+            );
+          })
+          .map(([year, group]: [string, LoginGroup[]]) => {
+            return (
+              <SelectGroup key={year}>
+                {group
+                  .sort((lhs, rhs) => {
+                    return (
+                      new Date(
+                        rhs.configs[0].year,
+                        rhs.configs[0].month,
+                        rhs.configs[0].day
+                      ).getTime() -
+                      new Date(
+                        lhs.configs[0].year,
+                        lhs.configs[0].month,
+                        lhs.configs[0].day
+                      ).getTime()
+                    );
+                  })
+                  .map((g) => {
+                    return (
+                      <SelectItem
+                        key={g.category}
+                        value={g.category}
+                        className="child cursor-pointer"
+                      >
+                        {g.category}
+                      </SelectItem>
+                    );
+                  })}
+              </SelectGroup>
             );
           })}
-        </SelectGroup>
       </SelectContent>
     </Select>
   );

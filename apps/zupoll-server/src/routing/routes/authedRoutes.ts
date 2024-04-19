@@ -1,9 +1,12 @@
+import { getPodboxConfigs } from "@pcd/zupoll-shared";
 import { BallotType } from "@prisma/client";
 import express, { NextFunction, Request, Response } from "express";
 import { ApplicationContext } from "../../application";
+import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
 import {
   getBallotById,
   getBallotPolls,
+  getBallotsForPipelineId,
   getBallotsVisibleToUserType
 } from "../../persistence";
 import {
@@ -32,9 +35,27 @@ export function initAuthedRoutes(
         logger.debug(`proof:`, JSON.parse(request.proof));
         await verifyGroupProof(request.semaphoreGroupUrl, request.proof, {});
         logger.info("group membership verified");
+
+        const podboxConfigs = getPodboxConfigs(
+          ZUPASS_CLIENT_URL,
+          ZUPASS_SERVER_URL
+        );
+
+        const pipelineId = podboxConfigs.find(
+          (c) =>
+            c.groupUrl === request.semaphoreGroupUrl ||
+            c.ballotConfigs?.find(
+              (b) =>
+                b.voterGroupUrl === request.semaphoreGroupUrl ||
+                b.creatorGroupUrl === request.semaphoreGroupUrl
+            )
+        )?.pipelineId;
+
         const accessToken = makeAccessToken({
-          groupUrl: request.semaphoreGroupUrl
+          groupUrl: request.semaphoreGroupUrl,
+          pipelineId
         });
+
         logger.debug("made access token", accessToken);
         res.status(200).json({ accessToken });
       } catch (e) {
@@ -66,8 +87,17 @@ export function initAuthedRoutes(
       return;
     }
 
-    const ballots = await getBallotsVisibleToUserType(req.authUserType);
-    res.json({ ballots });
+    if (req.authUserType !== AuthType.PODBOX) {
+      const ballots = await getBallotsVisibleToUserType(req.authUserType);
+      return res.json({ ballots });
+    }
+
+    if (!req.pipelineId) {
+      return res.sendStatus(403);
+    }
+
+    const ballots = await getBallotsForPipelineId(req.pipelineId ?? "");
+    return res.json({ ballots: ballots });
   });
 
   app.get(
@@ -86,7 +116,7 @@ export function initAuthedRoutes(
           AuthType.EDGE_CITY_ORGANIZER,
           AuthType.ETH_LATAM_ATTENDEE,
           AuthType.ETH_LATAM_ORGANIZER,
-          AuthType.PODBOX // TODO
+          AuthType.PODBOX
         ].includes(req.authUserType as any)
       ) {
         res.sendStatus(403);
@@ -111,6 +141,12 @@ export function initAuthedRoutes(
             `Your role of '${req.authUserType}' is not authorized to ` +
               `view ${ballot.ballotType}. Logout and try again!`
           );
+        }
+
+        if (ballot.pipelineId) {
+          if (req.pipelineId !== ballot.pipelineId) {
+            return res.sendStatus(403);
+          }
         }
 
         const polls = await getBallotPolls(ballotURL);

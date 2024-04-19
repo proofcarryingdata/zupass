@@ -1,15 +1,16 @@
 import ErrorDialog from "@/components/ui/ErrorDialog";
+import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { AppHeader, MainActions } from "../../@/components/ui/Headers";
+import { ContentContainer } from "../../@/components/ui/Elements";
+import { AppHeader } from "../../@/components/ui/Headers";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotResponse } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
 import { listBallots } from "../../zupoll-server-api";
 import { BallotListsForUser } from "./BallotListsForUser";
-import { GuaranteesElement } from "./Guarantees";
+import { LoggedInAs } from "./LoggedInAs";
 
 export function MainScreen({
   loginState,
@@ -54,7 +55,6 @@ export function MainScreen({
 
       const ballotResponse: BallotResponse = await res.json();
       setBallots(ballotResponse.ballots);
-      console.log("loaded ballots:", ballotResponse.ballots);
       setLoadingBallots(false);
     }
 
@@ -62,18 +62,25 @@ export function MainScreen({
   }, [loginState.token, logout]);
 
   return (
-    <Center>
-      <AppHeader
-        actions={
-          <MainActions
-            logout={logout}
-            createBallot={() => router.push("/create-ballot")}
-          />
-        }
-      />
-
+    <ContentContainer>
+      <AppHeader />
       <ContentContainer>
-        <GuaranteesElement />
+        <div>
+          <LoggedInAs
+            loginState={loginState}
+            logout={logout}
+            showHomeButton={false}
+          />
+          <Button
+            className="w-full mt-2"
+            variant={"creative"}
+            onClick={() => {
+              router.push("/create-ballot");
+            }}
+          >
+            Create a Ballot
+          </Button>
+        </div>
 
         <BallotListsForUser
           loading={loadingBallots}
@@ -90,7 +97,7 @@ export function MainScreen({
           }}
         />
       </ContentContainer>
-    </Center>
+    </ContentContainer>
   );
 }
 

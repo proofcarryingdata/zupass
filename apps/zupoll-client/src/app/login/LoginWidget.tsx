@@ -1,7 +1,9 @@
 import { Spinner } from "@/components/ui/spinner";
+import { cn } from "@/lib/utils";
 import { LoginCategory, LoginConfig } from "@pcd/zupoll-shared";
 import _ from "lodash";
 import { useMemo, useState } from "react";
+import styled from "styled-components";
 import { LOGIN_GROUPS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
 import { LoginActionsForLoginGroup } from "./LoginActionsForLoginGroup";
@@ -25,25 +27,27 @@ export function LoginWidget(props: LoginWidgetProps) {
 
   return (
     <>
-      <div className="flex flex-row gap-2 justify-between grow">
-        <div className="flex-shrink-0 min-w-52 grow">
-          {selectedGroup ? (
+      <LoginWidgetContentContainer className="flex flex-row gap-2 justify-between grow">
+        {selectedGroup && (
+          <div className="min-w-52 grow">
             <LoginActionsForLoginGroup {...props} group={selectedGroup} />
-          ) : (
-            <div className="text-center h-full flex items-center justify-end pr-4">
-              Choose a group to log in
-            </div>
-          )}
-        </div>
+          </div>
+        )}
 
-        <div>
+        <div
+          className={cn(
+            selectedGroup === undefined
+              ? "w-full"
+              : "shrink-0 w-[45%] min-w-[45%]"
+          )}
+        >
           <SelectLoginGroup
             selectedGroup={selectedGroupId}
             setSelectedGroup={setCurGroupCategory}
             groups={LOGIN_GROUPS}
           />
         </div>
-      </div>
+      </LoginWidgetContentContainer>
     </>
   );
 }
@@ -78,3 +82,17 @@ export interface LoginWidgetProps {
   setServerLoading: (loading: boolean) => void;
   serverLoading: boolean;
 }
+
+const LoginWidgetContentContainer = styled.div`
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    flex-direction: column;
+    align-items: stretch;
+
+    div {
+      width: 100%;
+    }
+  }
+`;

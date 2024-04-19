@@ -28,6 +28,8 @@ model Ballot {
   expiryNotif               ExpiryNotifStatus? @default(NONE)
   polls                     Poll[]
   messages                  TGMessage[]
+  pipelineId                String?
+  isPublic                  Boolean            @default(false)
 }
 
 model Poll {

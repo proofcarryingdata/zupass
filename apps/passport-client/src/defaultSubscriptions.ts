@@ -14,12 +14,21 @@ const LEMONADE_LEGACY_FEED_URL_PREFIX =
   "https://zupass.lemonade.social/tickets";
 
 function getDefaultFeedURLs(): string[] {
-  const res = JSON.parse(process.env.DEFAULT_FEED_URLS || "[]");
-  if (!Array.isArray(res) || res.some((e) => typeof e !== "string")) {
-    console.error("DEFAULT_FEED_URLS must be an array of strings");
+  try {
+    const res = JSON.parse(process.env.DEFAULT_FEED_URLS || "[]");
+    if (!Array.isArray(res) || res.some((e) => typeof e !== "string")) {
+      console.error("DEFAULT_FEED_URLS must be an array of strings");
+      return [];
+    }
+    return res;
+  } catch (e) {
+    console.error(
+      "failed to parse default feed urls",
+      process.env.DEFAULT_FEED_URLS,
+      e
+    );
     return [];
   }
-  return res;
 }
 
 export function addZupassProvider(

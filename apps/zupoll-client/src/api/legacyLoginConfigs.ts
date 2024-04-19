@@ -23,6 +23,9 @@ import {
 } from "../env";
 
 export const ETH_LATAM_ATTENDEE_CONFIG: LoginConfig = {
+  year: 2024,
+  month: 3,
+  day: 13,
   configCategoryId: LegacyLoginCategoryName.EthLatAm,
   groupId: ETH_LATAM_ATTENDEES_GROUP_ID,
   groupUrl: ETH_LATAM_ATTENDEES_GROUP_URL,
@@ -34,6 +37,9 @@ export const ETH_LATAM_ATTENDEE_CONFIG: LoginConfig = {
 };
 
 export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
+  year: 2024,
+  month: 3,
+  day: 13,
   configCategoryId: LegacyLoginCategoryName.EthLatAm,
   groupId: ETH_LATAM_ORGANIZERS_GROUP_ID,
   groupUrl: ETH_LATAM_ORGANIZERS_GROUP_URL,
@@ -48,6 +54,9 @@ export const ETH_LATAM_ORGANIZER_CONFIG: LoginConfig = {
 };
 
 export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
+  year: 2024,
+  month: 2,
+  day: 26,
   configCategoryId: LegacyLoginCategoryName.EdgeCityDenver,
   groupId: EDGE_CITY_RESIDENTS_GROUP_ID,
   groupUrl: EDGE_CITY_RESIDENTS_GROUP_URL,
@@ -59,6 +68,9 @@ export const EDGE_CITY_RESIDENT_CONFIG: LoginConfig = {
 };
 
 export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
+  year: 2024,
+  month: 2,
+  day: 26,
   configCategoryId: LegacyLoginCategoryName.EdgeCityDenver,
   groupId: EDGE_CITY_ORGANIZERS_GROUP_ID,
   groupUrl: EDGE_CITY_ORGANIZERS_GROUP_URL,
@@ -73,6 +85,9 @@ export const EDGE_CITY_ORGANIZER_CONFIG: LoginConfig = {
 };
 
 export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
+  year: 2023,
+  month: 3,
+  day: 1,
   configCategoryId: LegacyLoginCategoryName.Zuzalu,
   groupId: SemaphoreGroups.ZuzaluOrganizers,
   groupUrl: ZUZALU_ADMINS_GROUP_URL,
@@ -88,6 +103,9 @@ export const ZUZALU_ORGANIZER_LOGIN_CONFIG: LoginConfig = {
 };
 
 export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
+  year: 2023,
+  month: 3,
+  day: 1,
   configCategoryId: LegacyLoginCategoryName.Zuzalu,
   groupId: SemaphoreGroups.ZuzaluParticipants,
   groupUrl: ZUZALU_PARTICIPANTS_GROUP_URL,
@@ -99,6 +117,9 @@ export const ZUZALU_PARTICIPANT_LOGIN_CONFIG: LoginConfig = {
 };
 
 export const DEVCONNECT_USER_CONFIG: LoginConfig = {
+  year: 2023,
+  month: 11,
+  day: 13,
   configCategoryId: LegacyLoginCategoryName.Devconnect,
   groupId: SemaphoreGroups.DevconnectAttendees,
   groupUrl: DEVCONNECT_ATTENDEES_GROUP_URL,
@@ -110,6 +131,9 @@ export const DEVCONNECT_USER_CONFIG: LoginConfig = {
 };
 
 export const DEVCONNECT_ORGANIZER_CONFIG: LoginConfig = {
+  year: 2023,
+  month: 11,
+  day: 13,
   configCategoryId: LegacyLoginCategoryName.Devconnect,
   groupId: SemaphoreGroups.DevconnectOrganizers,
   groupUrl: DEVCONNECT_ADMINS_GROUP_URL,

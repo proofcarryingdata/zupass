@@ -38,7 +38,7 @@ export default function ErrorDialog({
         </Transition.Child>
 
         <div className="fixed inset-0 z-10 w-screen overflow-y-auto">
-          <div className="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+          <div className="flex min-h-full items-center justify-center p-4 text-center sm:items-center sm:p-0">
             <Transition.Child
               as={Fragment}
               enter="ease-out duration-300"
@@ -70,7 +70,7 @@ export default function ErrorDialog({
                     </div>
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-4 sm:flex sm:flex-row-reverse">
+                <div className="mt-5 sm:mt-4 flex flex-row-reverse gap-2">
                   <Button
                     variant={"outline"}
                     type="button"
@@ -80,6 +80,16 @@ export default function ErrorDialog({
                     ref={cancelButtonRef}
                   >
                     Reload
+                  </Button>
+                  <Button
+                    variant={"outline"}
+                    type="button"
+                    onClick={() => {
+                      window.location.href = "/";
+                    }}
+                    ref={cancelButtonRef}
+                  >
+                    Home
                   </Button>
                 </div>
               </Dialog.Panel>
