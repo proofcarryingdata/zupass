@@ -1,5 +1,7 @@
+import { requestVerifyToken } from "@pcd/passport-interface";
 import { sleep, validateEmail } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
+import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import { hasPendingRequest } from "../../../src/sessionStorage";
 import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
@@ -15,7 +17,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
-  const autoRegister = query?.get("autoRegister");
+  const autoRegister = query?.get("autoRegister") === "true";
   const targetFolder = query?.get("targetFolder");
   const [error, setError] = useState<string | undefined>();
   const [password, setPassword] = useState("");
@@ -47,8 +49,11 @@ export function CreatePasswordScreen(): JSX.Element | null {
       }
     } finally {
       setSettingPassword(false);
+      if (autoRegister) {
+        window.location.href = "#/";
+      }
     }
-  }, [dispatch, email, token, targetFolder]);
+  }, [dispatch, email, token, targetFolder, autoRegister]);
 
   const checkIfShouldRedirect = useCallback(async () => {
     if (!email || !validateEmail(email) || !token) {
@@ -57,22 +62,20 @@ export function CreatePasswordScreen(): JSX.Element | null {
       );
     }
 
-    // const verifyTokenResult = await requestVerifyToken(
-    //   appConfig.zupassServer,
-    //   email,
-    //   token
-    // );
-
-    // if (!verifyTokenResult.success) {
-    //   console.error("weird");
-    //   // return redirectToLoginPageWithError(
-    //   //   "Invalid email or token, redirecting to login"
-    //   // );
-    // }
-
-    console.log({ autoRegister });
-    if (autoRegister === "true") {
+    if (autoRegister) {
       await onSkipPassword();
+    } else {
+      const verifyTokenResult = await requestVerifyToken(
+        appConfig.zupassServer,
+        email,
+        token
+      );
+
+      if (!verifyTokenResult.success) {
+        return redirectToLoginPageWithError(
+          "Invalid email or token, redirecting to login"
+        );
+      }
     }
   }, [
     email,
@@ -136,7 +139,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
     return null;
   }
 
-  if (settingPassword || autoRegister) {
+  if (settingPassword) {
     content = <ScreenLoader text="Creating your account..." />;
   } else {
     content = (

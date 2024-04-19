@@ -20,8 +20,10 @@ export class EmailTokenService {
     email: string,
     token: string
   ): Promise<boolean> {
-    return true;
     const savedToken = await this.getTokenForEmail(email);
+    if (!savedToken) {
+      return false;
+    }
     return token === savedToken;
   }
 
