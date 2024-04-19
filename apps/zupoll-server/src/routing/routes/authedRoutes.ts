@@ -92,10 +92,7 @@ export function initAuthedRoutes(
       return res.json({ ballots });
     }
 
-    logger.log("pipeline id", req.pipelineId ?? "");
-
     if (!req.pipelineId) {
-      logger.log("NO PIPELINE ID", req.pipelineId ?? "");
       return res.sendStatus(403);
     }
 
@@ -119,7 +116,7 @@ export function initAuthedRoutes(
           AuthType.EDGE_CITY_ORGANIZER,
           AuthType.ETH_LATAM_ATTENDEE,
           AuthType.ETH_LATAM_ORGANIZER,
-          AuthType.PODBOX // TODO
+          AuthType.PODBOX
         ].includes(req.authUserType as any)
       ) {
         res.sendStatus(403);
@@ -144,6 +141,12 @@ export function initAuthedRoutes(
             `Your role of '${req.authUserType}' is not authorized to ` +
               `view ${ballot.ballotType}. Logout and try again!`
           );
+        }
+
+        if (ballot.pipelineId) {
+          if (req.pipelineId !== ballot.pipelineId) {
+            return res.sendStatus(403);
+          }
         }
 
         const polls = await getBallotPolls(ballotURL);
