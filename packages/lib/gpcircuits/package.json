@@ -14,6 +14,10 @@
   },
   "files": [
     "dist",
+    "scripts",
+    "circuits",
+    "!circuits/test",
+    "./CHANGELOG.md",
     "./README.md",
     "./LICENSE"
   ],
@@ -23,10 +27,12 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
-    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau",
+    "gen-test-artifacts": "scripts/gen-test-artifacts.sh"
   },
   "dependencies": {
-    "@pcd/pod": "0.0.1"
+    "@pcd/pod": "0.0.1",
+    "snarkjs": "^0.7.3"
   },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.10.0",
@@ -40,6 +46,7 @@
     "circomlib": "^2.0.5",
     "eslint": "^8.57.0",
     "mocha": "^10.2.0",
+    "poseidon-lite": "^0.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },
