@@ -5,19 +5,19 @@ import styled from "styled-components";
 export function GuaranteesElement() {
   return (
     <GuaranteeContainer className="text-sm">
-      <Card>
+      <Card className="w-1/3">
         <Guarantee>
           <FaEyeSlash size={"14px"} className="shrink-0" /> The server never
           learns your identity.
         </Guarantee>
       </Card>
-      <Card>
+      <Card className="w-1/3">
         <Guarantee>
           <FaVoteYea size={"14px"} className="shrink-0" /> One vote per
           participant.
         </Guarantee>
       </Card>
-      <Card>
+      <Card className="w-1/3">
         <Guarantee>
           <FaUnlink size={"12px"} className="shrink-0" /> Unlinkable votes
           across ballots/devices.
@@ -28,8 +28,6 @@ export function GuaranteesElement() {
 }
 
 const GuaranteeContainer = styled.div`
-  width: 110%;
-  margin-left: -5%;
   display: flex;
   align-items: stretch;
   justify-content: center;

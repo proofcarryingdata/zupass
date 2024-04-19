@@ -36,8 +36,8 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border bg-card">
-      <Table>
+    <div className="rounded-md border bg-card overflow-hidden">
+      <Table className="max-w-full overflow-hidden">
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
@@ -56,7 +56,7 @@ export function DataTable<TData, TValue>({
             </TableRow>
           ))}
         </TableHeader>
-        <TableBody>
+        <TableBody className="max-w-full overflow-hidden">
           {table.getRowModel().rows?.length ? (
             table.getRowModel().rows.map((row) => (
               <TableRow
@@ -70,7 +70,7 @@ export function DataTable<TData, TValue>({
                 {row.getVisibleCells().map((cell) => (
                   <TableCell
                     key={cell.id}
-                    className="overflow-hidden text-nowrap text-ellipsis"
+                    className="overflow-hidden text-nowrap text-ellipsis w-1/3"
                   >
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}
                   </TableCell>

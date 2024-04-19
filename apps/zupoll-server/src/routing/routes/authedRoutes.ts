@@ -96,7 +96,7 @@ export function initAuthedRoutes(
 
     if (!req.pipelineId) {
       logger.log("NO PIPELINE ID", req.pipelineId ?? "");
-      // return res.sendStatus(403);
+      return res.sendStatus(403);
     }
 
     const ballots = await getBallotsForPipelineId(req.pipelineId ?? "");

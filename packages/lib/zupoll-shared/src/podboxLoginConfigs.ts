@@ -189,6 +189,7 @@ export function makePodboxLoginConfig(
     residentSemaphoreGroupId
   );
 
+  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const ORGANIZER_GROUP_URL = makePodboxGroupUrl(
     ZUPASS_SERVER_URL,
     pipelineId,
