@@ -1,3 +1,4 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -13,11 +14,14 @@ import {
   GenericPretixOrder,
   GenericPretixProduct,
   GenericPretixProductCategory,
+  ImageOptions,
   ManualTicket,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
   PipelineType,
+  PipelineZuAuthConfig,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -166,7 +170,8 @@ export class PretixPipeline implements BasePipeline {
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
-        )
+        ),
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.checkinPretixTicketPCDs.bind(this),
@@ -808,6 +813,7 @@ export class PretixPipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
+      imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
@@ -951,6 +957,7 @@ export class PretixPipeline implements BasePipeline {
       timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
+      imageUrl: this.atomToImageUrl(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
@@ -1634,8 +1641,24 @@ export class PretixPipeline implements BasePipeline {
     return product.name;
   }
 
+  private imageOptionsToImageUrl(
+    imageOptions: ImageOptions | undefined,
+    isCheckedIn: boolean
+  ): string | undefined {
+    if (!imageOptions) return undefined;
+    if (imageOptions.requireCheckedIn && !isCheckedIn) return undefined;
+    return imageOptions.imageUrl;
+  }
+
   private atomToPretixEventId(ticketAtom: PretixAtom): string {
     return this.getEventById(ticketAtom.eventId).externalId;
+  }
+
+  private atomToImageUrl(ticketAtom: PretixAtom): string | undefined {
+    return this.imageOptionsToImageUrl(
+      this.getEventById(ticketAtom.eventId).imageOptions,
+      ticketAtom.isConsumed
+    );
   }
 
   private getEventById(eventId: string): PretixEventConfig {
@@ -1665,6 +1688,27 @@ export class PretixPipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
+  }
+
+  /**
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
+   */
+  private async getZuAuthConfig(): Promise<PipelineZuAuthConfig[]> {
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const metadata = this.definition.options.events.flatMap((ev) =>
+      ev.products.map(
+        (product) =>
+          ({
+            pcdType: "eddsa-ticket-pcd",
+            publicKey,
+            eventId: ev.genericIssuanceId,
+            eventName: ev.name,
+            productId: product.genericIssuanceId,
+            productName: product.name
+          }) satisfies PipelineEdDSATicketZuAuthConfig
+      )
+    );
+    return metadata;
   }
 
   /**

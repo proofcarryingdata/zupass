@@ -1,3 +1,4 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -15,6 +16,7 @@ import {
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
@@ -172,7 +174,8 @@ export class LemonadePipeline implements BasePipeline {
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
-        )
+        ),
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.executeTicketAction.bind(this),
@@ -1816,6 +1819,27 @@ export class LemonadePipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is LemonadePipeline {
     return p.type === PipelineType.Lemonade;
+  }
+
+  /**
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
+   */
+  private async getZuAuthConfig(): Promise<PipelineEdDSATicketZuAuthConfig[]> {
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const metadata = this.definition.options.events.flatMap((ev) =>
+      ev.ticketTypes.map(
+        (ticketType) =>
+          ({
+            pcdType: "eddsa-ticket-pcd",
+            publicKey,
+            eventId: ev.genericIssuanceEventId,
+            eventName: ev.name,
+            productId: ticketType.genericIssuanceProductId,
+            productName: ticketType.name
+          }) satisfies PipelineEdDSATicketZuAuthConfig
+      )
+    );
+    return metadata;
   }
 
   /**

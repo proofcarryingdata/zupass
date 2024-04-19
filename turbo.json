@@ -3,7 +3,7 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": [".nvmrc"],
+      "inputs": ["$TURBO_DEFAULT$", ".nvmrc"],
       "outputs": [],
       "cache": true,
       "dotEnv": [".env"]
@@ -208,6 +208,7 @@
     "STRICH_LICENSE_KEY",
     "SCANDIT_LICENSE_KEY",
     "MULTI_CHOICE_SCAN_ENABLED",
+    "IRON_SESSION_PASSWORD",
     "//// add env vars above this line ////"
   ]
 }

@@ -1,4 +1,5 @@
 import { ArgsOf, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
+import { PendingPCD } from "./PendingPCDUtils";
 
 export enum PCDRequestType {
   Get = "Get",
@@ -8,7 +9,12 @@ export enum PCDRequestType {
 }
 
 export interface PCDRequest {
+  // The URL to return to after completing the request
   returnUrl: string;
+  // Whether or not to post a message to the parent window after completing the
+  // request. This allows a non-redirect-based flow for popup windows, and is
+  // off by default in the URL construction functions.
+  postMessage: boolean;
   type: PCDRequestType;
 }
 
@@ -61,12 +67,14 @@ export interface PCDProveAndAddRequest<T extends PCDPackage = PCDPackage>
 export function getWithoutProvingUrl(
   zupassClientUrl: string,
   returnUrl: string,
-  pcdType: string
+  pcdType: string,
+  postMessage: boolean = false
 ): string {
   const req: PCDGetWithoutProvingRequest = {
     type: PCDRequestType.GetWithoutProving,
     pcdType,
-    returnUrl
+    returnUrl,
+    postMessage
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/get-without-proving?request=${encReq}`;
@@ -77,14 +85,16 @@ export function constructZupassPcdGetRequestUrl<T extends PCDPackage>(
   returnUrl: string,
   pcdType: T["name"],
   args: ArgsOf<T>,
-  options?: ProveOptions
+  options?: ProveOptions,
+  postMessage: boolean = false
 ): string {
   const req: PCDGetRequest<T> = {
     type: PCDRequestType.Get,
     returnUrl: returnUrl,
     args: args,
     pcdType,
-    options
+    options,
+    postMessage
   };
   const encReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/prove?request=${encReq}`;
@@ -94,13 +104,15 @@ export function constructZupassPcdAddRequestUrl(
   zupassClientUrl: string,
   returnUrl: string,
   pcd: SerializedPCD,
-  folder?: string
+  folder?: string,
+  postMessage: boolean = false
 ): string {
   const req: PCDAddRequest = {
     type: PCDRequestType.Add,
     returnUrl: returnUrl,
     pcd,
-    folder
+    folder,
+    postMessage
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/add?request=${eqReq}`;
@@ -115,7 +127,8 @@ export function constructZupassPcdProveAndAddRequestUrl<
   args: ArgsOf<T>,
   options?: ProveOptions,
   returnPCD?: boolean,
-  folder?: string
+  folder?: string,
+  postMessage: boolean = false
 ): string {
   const req: PCDProveAndAddRequest = {
     type: PCDRequestType.ProveAndAdd,
@@ -124,10 +137,25 @@ export function constructZupassPcdProveAndAddRequestUrl<
     args,
     options,
     returnPCD,
-    folder
+    folder,
+    postMessage
   };
   const eqReq = encodeURIComponent(JSON.stringify(req));
   return `${zupassClientUrl}#/add?request=${eqReq}`;
+}
+
+export function postSerializedPCDMessage(
+  window: Window,
+  serialized: SerializedPCD
+): void {
+  window.postMessage({ encodedPCD: JSON.stringify(serialized) }, "*");
+}
+
+export function postPendingPCDMessage(
+  window: Window,
+  pending: PendingPCD
+): void {
+  window.postMessage({ encodedPendingPCD: JSON.stringify(pending) }, "*");
 }
 
 export enum PayloadType {

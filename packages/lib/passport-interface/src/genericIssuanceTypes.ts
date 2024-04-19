@@ -269,6 +269,13 @@ const FeedIssuanceOptionsSchema = z.object({
 
 export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
 
+const ImageOptionsSchema = z.object({
+  imageUrl: z.string(),
+  requireCheckedIn: z.boolean()
+});
+
+export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
+
 const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * Configured by the user when setting up Lemonade as a data source.
@@ -383,6 +390,10 @@ const PretixEventConfigSchema = z.object({
    * Display name for the event
    */
   name: z.string(),
+  /**
+   * Options to configure displaying an image instead of the QR code
+   */
+  imageOptions: ImageOptionsSchema.optional(),
   products: z.array(PretixProductConfigSchema),
   /**
    * Skip validation of event settings - use with caution!

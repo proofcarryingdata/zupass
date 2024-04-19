@@ -64,7 +64,8 @@ export class KudosbotService {
         type: PCDRequestType.Get,
         returnUrl,
         args,
-        pcdType: SemaphoreSignaturePCDPackage.name
+        pcdType: SemaphoreSignaturePCDPackage.name,
+        postMessage: false
       };
       const encReq = encodeURIComponent(JSON.stringify(req));
       const proofUrl = `${zupassClientUrl}/#prove?request=${encReq}`;
