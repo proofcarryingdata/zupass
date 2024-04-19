@@ -82,6 +82,7 @@ export interface BallotConfig {
   makeHistoricalGroupUrl?: (hash: string) => string;
   historicGroupPrefix?: string;
 
+  description?: string;
   allowedViewerRealmIds: string[];
   allowedViewerGroupIds: string[];
   allowedVoterRealmIds: string[];
