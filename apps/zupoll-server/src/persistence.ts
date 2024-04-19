@@ -158,7 +158,8 @@ export async function createBallot(
       pollsterSemaphoreGroupUrl: request.ballot.pollsterSemaphoreGroupUrl,
       voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots,
       voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
-      ballotType: request.ballot.ballotType
+      ballotType: request.ballot.ballotType,
+      pipelineId: request.ballot.pipelineId
     }
   });
 }

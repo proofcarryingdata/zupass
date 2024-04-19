@@ -195,6 +195,7 @@ export function makePodboxLoginConfig(
   );
 
   const PARC_HQ_CONFIG: LoginConfig = {
+    pipelineId,
     year,
     month,
     day,
@@ -225,25 +226,25 @@ export function makePodboxLoginConfig(
         allowedVoterRealmIds: [pipelineId],
         allowedViewerRealmIds: [pipelineId],
         isPublic: false
-      },
-      {
-        name: organizerName,
-        description: organizerDescription,
-        voterGroupId: organizerSemaphoreGroupId,
-        voterGroupUrl: ORGANIZER_GROUP_URL,
-        creatorGroupId: residentSemaphoreGroupId,
-        creatorGroupUrl: ORGANIZER_GROUP_URL,
-        passportServerUrl: ZUPASS_SERVER_URL,
-        passportAppUrl: ZUPASS_CLIENT_URL,
-        ballotType: BallotType.PODBOX,
-        latestGroupHashUrl: urljoin(ORGANIZER_GROUP_URL, "latest-root"),
-        makeHistoricalGroupUrl: (hash) => urljoin(ORGANIZER_GROUP_URL, hash),
-        allowedViewerGroupIds: [residentSemaphoreGroupId],
-        allowedVoterGroupIds: [residentSemaphoreGroupId],
-        allowedVoterRealmIds: [pipelineId],
-        allowedViewerRealmIds: [pipelineId],
-        isPublic: false
       }
+      // {
+      //   name: organizerName,
+      //   description: organizerDescription,
+      //   voterGroupId: organizerSemaphoreGroupId,
+      //   voterGroupUrl: ORGANIZER_GROUP_URL,
+      //   creatorGroupId: residentSemaphoreGroupId,
+      //   creatorGroupUrl: ORGANIZER_GROUP_URL,
+      //   passportServerUrl: ZUPASS_SERVER_URL,
+      //   passportAppUrl: ZUPASS_CLIENT_URL,
+      //   ballotType: BallotType.PODBOX,
+      //   latestGroupHashUrl: urljoin(ORGANIZER_GROUP_URL, "latest-root"),
+      //   makeHistoricalGroupUrl: (hash) => urljoin(ORGANIZER_GROUP_URL, hash),
+      //   allowedViewerGroupIds: [residentSemaphoreGroupId],
+      //   allowedVoterGroupIds: [residentSemaphoreGroupId],
+      //   allowedVoterRealmIds: [pipelineId],
+      //   allowedViewerRealmIds: [pipelineId],
+      //   isPublic: false
+      // }
     ]
   };
 

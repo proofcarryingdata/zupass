@@ -89,7 +89,8 @@ export function initPCDRoutes(
         ballotType: request.ballot.ballotType,
         expiry: request.ballot.expiry,
         voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
-        voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots
+        voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots,
+        pipelineId: request.ballot.pipelineId ?? undefined
       };
 
       request.polls.forEach((poll: Poll) => {
@@ -387,6 +388,7 @@ export type BallotSignal = {
   expiry: Date;
   voterSemaphoreGroupUrls: string[];
   voterSemaphoreGroupRoots: string[];
+  pipelineId?: string;
 };
 
 export type PollSignal = {

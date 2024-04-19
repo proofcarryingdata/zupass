@@ -37,11 +37,7 @@ interface GenerateBallotArgs {
   ballotType: BallotType;
   polls: Poll[];
   creatorGroupUrl: string;
-
-  allowedViewerRealmIds: string[];
-  allowedViewerGroupIds: string[];
-  allowedVoterRealmIds: string[];
-  allowedVoterGroupIds: string[];
+  pipelineId?: string;
   isPublic: boolean;
 }
 
@@ -67,11 +63,7 @@ const generateBallotRequest = (
       voterSemaphoreGroupUrls: args.voterGroupUrls,
       voterSemaphoreGroupRoots: args.voterGroupRoots,
       ballotType: args.ballotType,
-
-      allowedViewerRealmIds: args.allowedViewerRealmIds,
-      allowedViewerGroupIds: args.allowedViewerGroupIds,
-      allowedVoterRealmIds: args.allowedVoterRealmIds,
-      allowedVoterGroupIds: args.allowedVoterGroupIds,
+      pipelineId: args.pipelineId,
       isPublic: args.isPublic
     },
     polls: args.polls,
@@ -196,11 +188,7 @@ export function useCreateBallot({
         voterGroupUrls: ballotSignal.voterSemaphoreGroupUrls,
         proof: parsedPcd.pcd,
         creatorGroupUrl: ballotConfig.creatorGroupUrl,
-
-        allowedViewerRealmIds: ballotConfig.allowedViewerRealmIds,
-        allowedViewerGroupIds: ballotConfig.allowedViewerGroupIds,
-        allowedVoterRealmIds: ballotConfig.allowedVoterRealmIds,
-        allowedVoterGroupIds: ballotConfig.allowedVoterGroupIds,
+        pipelineId: ballotSignal.pipelineId,
         isPublic: ballotConfig.isPublic
       });
       // Do request
@@ -216,7 +204,6 @@ export function useCreateBallot({
       )
         return;
       pcdState.current = PCDState.DEFAULT;
-
       const parsedPcd = JSON.parse(decodeURIComponent(pcdStr));
       const finalRequest = generateBallotRequest({
         ballotTitle,
@@ -228,11 +215,7 @@ export function useCreateBallot({
         voterGroupUrls: [voterGroupUrl],
         expiry,
         creatorGroupUrl: ballotConfig.creatorGroupUrl,
-
-        allowedViewerRealmIds: ballotConfig.allowedViewerRealmIds,
-        allowedViewerGroupIds: ballotConfig.allowedViewerGroupIds,
-        allowedVoterRealmIds: ballotConfig.allowedVoterRealmIds,
-        allowedVoterGroupIds: ballotConfig.allowedVoterGroupIds,
+        pipelineId: loginState.config.pipelineId,
         isPublic: ballotConfig.isPublic
       });
 
@@ -254,7 +237,8 @@ export function useCreateBallot({
     setBallotFromUrl,
     setPcdFromUrl,
     submitBallot,
-    setServerLoading
+    setServerLoading,
+    loginState.config.pipelineId
   ]);
 
   // ran after ballot is submitted by user
@@ -279,7 +263,8 @@ export function useCreateBallot({
       ballotType: ballotConfig.ballotType,
       expiry: expiry,
       voterSemaphoreGroupUrls: [voterGroupUrl],
-      voterSemaphoreGroupRoots: [voterGroupRootHash]
+      voterSemaphoreGroupRoots: [voterGroupRootHash],
+      pipelineId: loginState.config.pipelineId
     };
 
     polls.forEach((poll: Poll) => {

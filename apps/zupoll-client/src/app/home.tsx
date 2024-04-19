@@ -29,6 +29,10 @@ export function HomePage() {
   } = useSavedLoginState(router);
 
   useEffect(() => {
+    console.log(loginState);
+  }, [loginState]);
+
+  useEffect(() => {
     if (definitelyNotLoggedIn) {
       replaceLoginState(undefined);
     }

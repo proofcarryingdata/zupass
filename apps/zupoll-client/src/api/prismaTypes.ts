@@ -21,11 +21,7 @@ export type Ballot = {
   voterSemaphoreGroupRoots: string[];
   ballotType: BallotType;
   expiryNotif: ExpiryNotifStatus | null;
-
-  allowedViewerRealmIds: string[];
-  allowedViewerGroupIds: string[];
-  allowedVoterRealmIds: string[];
-  allowedVoterGroupIds: string[];
+  pipelineId?: string;
   isPublic: boolean;
 };
 

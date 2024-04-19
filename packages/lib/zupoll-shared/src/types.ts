@@ -67,6 +67,7 @@ export interface LoginConfig {
   buttonName: string;
   canCreateBallotTypes: BallotType[];
   ballotConfigs?: BallotConfig[];
+  pipelineId?: string;
 }
 
 export interface BallotConfig {
