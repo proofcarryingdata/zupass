@@ -205,6 +205,7 @@
     "STRICH_LICENSE_KEY",
     "SCANDIT_LICENSE_KEY",
     "MULTI_CHOICE_SCAN_ENABLED",
+    "IRON_SESSION_PASSWORD",
     "//// add env vars above this line ////"
   ]
 }

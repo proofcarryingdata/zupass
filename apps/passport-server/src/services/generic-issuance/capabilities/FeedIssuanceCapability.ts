@@ -1,5 +1,5 @@
 import {
-  PipelinePCDMetadata,
+  PipelineZuAuthConfig,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -32,7 +32,7 @@ export interface FeedIssuanceCapability extends BasePipelineCapability {
   issue(request: PollFeedRequest): Promise<PollFeedResponseValue>;
   feedUrl: string;
   options: FeedIssuanceOptions;
-  getMetadata(): Promise<PipelinePCDMetadata[]>;
+  getZuAuthConfig(): Promise<PipelineZuAuthConfig[]>;
 }
 
 export function isFeedIssuanceCapability(

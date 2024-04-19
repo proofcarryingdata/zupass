@@ -159,7 +159,7 @@ export class PipelineAPISubservice {
           url: f.feedUrl
         })),
 
-        eventMetadata: await pipelineFeeds[0].getMetadata(),
+        zuAuthConfig: await pipelineFeeds[0].getZuAuthConfig(),
 
         latestConsumers: !pipelineHasSemaphoreGroups
           ? undefined

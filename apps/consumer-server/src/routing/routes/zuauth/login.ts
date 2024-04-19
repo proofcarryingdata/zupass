@@ -1,4 +1,3 @@
-import { generateSnarkMessageHash } from "@pcd/util";
 import { authenticate } from "@pcd/zuauth";
 import express, { Request, Response } from "express";
 import { getIronSession } from "iron-session";
@@ -16,17 +15,22 @@ export function login(
   app.post("/auth/login", async (req: Request, res: Response) => {
     const session = await getIronSession<SessionData>(req, res, ironOptions);
     try {
-      if (!req.body.pcd || !req.body.eventMetadata) {
-        console.error(`[ERROR] Missing PCD or event metadata`);
+      if (!req.body.pcd || !req.body.config) {
+        console.error(`[ERROR] Missing PCD or config`);
 
-        res.status(400).send();
+        res.sendStatus(400);
+        return;
+      }
+
+      if (!session.watermark) {
+        res.send("Missing watermark in session").sendStatus(400);
         return;
       }
 
       const pcd = await authenticate(
         req.body.pcd,
-        session.watermark ?? generateSnarkMessageHash("").toString(),
-        req.body.eventMetadata
+        session.watermark,
+        req.body.config
       );
 
       session.ticket = pcd.claim.partialTicket;
@@ -35,7 +39,6 @@ export function login(
 
       res.status(200).send(session.ticket);
     } catch (error) {
-      console.log(JSON.stringify(error, null, 2));
       console.error(`[ERROR] ${error}`);
 
       res.sendStatus(500);

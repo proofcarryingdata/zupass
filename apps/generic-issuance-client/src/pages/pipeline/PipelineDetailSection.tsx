@@ -37,9 +37,9 @@ import {
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
-import { PipelinePCDMetadataSection } from "./DetailsSections/PipelinePCDMetadata";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
+import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
 import { SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
@@ -126,11 +126,11 @@ export function PipelineDetailSection({
         </AccordionItem>
 
         <AccordionItem>
-          <AccordionButton>PCD Metadata</AccordionButton>
+          <AccordionButton>ZuAuth Config</AccordionButton>
           <AccordionPanel>
             <SectionContainer>
-              <PipelinePCDMetadataSection
-                pipelinePCDMetadata={pipelineInfo.eventMetadata}
+              <PipelineZuAuthConfigSection
+                pipelineZuAuthConfig={pipelineInfo.zuAuthConfig}
               />
             </SectionContainer>
           </AccordionPanel>

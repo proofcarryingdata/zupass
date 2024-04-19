@@ -1,11 +1,8 @@
 "use client";
 
+import { config } from "@/config/zuauth";
 import { zuAuthPopup } from "@pcd/zuauth/client";
-import { Inter } from "next/font/google";
 import { useCallback, useEffect, useReducer, useState } from "react";
-import { eventTicketMetadata } from "../metadata";
-
-const inter = Inter({ subsets: ["latin"] });
 
 type AuthState =
   | "logged out"
@@ -38,7 +35,7 @@ export default function Home() {
             revealAttendeeName: true
           },
           watermark,
-          eventTicketMetadata
+          config: config
         });
 
         if (result.type === "pcd") {
@@ -54,13 +51,14 @@ export default function Home() {
           setUser((await loginResult.json()).user);
           addLog("Authenticated successfully");
           setAuthState("authenticated");
-        }
-        if (result.type === "popupBlocked") {
+        } else if (result.type === "popupBlocked") {
           addLog("The popup was blocked by your browser");
           setAuthState("error");
-        }
-        if (result.type === "popupClosed") {
+        } else if (result.type === "popupClosed") {
           addLog("The popup was closed before a result was received");
+          setAuthState("error");
+        } else {
+          addLog(`Unexpected result type from zuAuth: ${result.type}`);
           setAuthState("error");
         }
       }
@@ -91,7 +89,7 @@ export default function Home() {
 
   return (
     <main
-      className={`flex min-h-screen flex-col items-center justify-between p-24 ${inter.className}`}
+      className={`flex min-h-screen flex-col items-center justify-between p-24`}
     >
       <div className="z-10 max-w-5xl w-full text-sm">
         <button

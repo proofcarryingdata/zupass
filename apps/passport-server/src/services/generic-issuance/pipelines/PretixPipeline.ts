@@ -15,12 +15,12 @@ import {
   GenericPretixProduct,
   GenericPretixProductCategory,
   ManualTicket,
-  PipelineEdDSATicketPCDMetadata,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
-  PipelinePCDMetadata,
   PipelineSemaphoreGroupInfo,
   PipelineType,
+  PipelineZuAuthConfig,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -165,7 +165,7 @@ export class PretixPipeline implements BasePipeline {
           this.id,
           this.definition.options.feedOptions.feedId
         ),
-        getMetadata: this.getMetadata.bind(this)
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.checkinPretixTicketPCDs.bind(this),
@@ -1664,9 +1664,9 @@ export class PretixPipeline implements BasePipeline {
   }
 
   /**
-   * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
    */
-  private async getMetadata(): Promise<PipelinePCDMetadata[]> {
+  private async getZuAuthConfig(): Promise<PipelineZuAuthConfig[]> {
     const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
     const metadata = this.definition.options.events.flatMap((ev) =>
       ev.products.map(
@@ -1678,7 +1678,7 @@ export class PretixPipeline implements BasePipeline {
             eventName: ev.name,
             productId: product.genericIssuanceId,
             productName: product.name
-          }) satisfies PipelineEdDSATicketPCDMetadata
+          }) satisfies PipelineEdDSATicketZuAuthConfig
       )
     );
     return metadata;

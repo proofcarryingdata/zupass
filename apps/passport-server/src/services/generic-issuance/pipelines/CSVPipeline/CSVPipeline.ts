@@ -2,11 +2,11 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
-  PipelineEdDSATicketPCDMetadata,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
-  PipelinePCDMetadata,
   PipelineType,
+  PipelineZuAuthConfig,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
@@ -79,7 +79,7 @@ export class CSVPipeline implements BasePipeline {
           this.definition.options.feedOptions.feedId
         ),
         options: this.definition.options.feedOptions,
-        getMetadata: this.getMetadata.bind(this)
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
     this.credentialSubservice = credentialSubservice;
@@ -238,9 +238,9 @@ export class CSVPipeline implements BasePipeline {
   }
 
   /**
-   * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
    */
-  private async getMetadata(): Promise<PipelinePCDMetadata[]> {
+  private async getZuAuthConfig(): Promise<PipelineZuAuthConfig[]> {
     if (this.definition.options.outputType !== CSVPipelineOutputType.Ticket) {
       // We don't have a metadata format for anything that isn't a ticket
       return [];
@@ -248,7 +248,7 @@ export class CSVPipeline implements BasePipeline {
     const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
     const uniqueProductMetadata: Record<
       string,
-      PipelineEdDSATicketPCDMetadata
+      PipelineEdDSATicketZuAuthConfig
     > = {};
     // Find all of the unique products and create a metadata entry
     for (const atom of await this.db.load(this.id)) {

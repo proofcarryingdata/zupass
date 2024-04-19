@@ -16,7 +16,7 @@ import {
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
-  PipelineEdDSATicketPCDMetadata,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
@@ -175,7 +175,7 @@ export class LemonadePipeline implements BasePipeline {
           this.id,
           this.definition.options.feedOptions.feedId
         ),
-        getMetadata: this.getMetadata.bind(this)
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.executeTicketAction.bind(this),
@@ -1822,9 +1822,9 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   /**
-   * Retrieves metadata about the kinds of PCDs that this pipeline can issue.
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
    */
-  private async getMetadata(): Promise<PipelineEdDSATicketPCDMetadata[]> {
+  private async getZuAuthConfig(): Promise<PipelineEdDSATicketZuAuthConfig[]> {
     const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
     const metadata = this.definition.options.events.flatMap((ev) =>
       ev.ticketTypes.map(
@@ -1836,7 +1836,7 @@ export class LemonadePipeline implements BasePipeline {
             eventName: ev.name,
             productId: ticketType.genericIssuanceProductId,
             productName: ticketType.name
-          }) satisfies PipelineEdDSATicketPCDMetadata
+          }) satisfies PipelineEdDSATicketZuAuthConfig
       )
     );
     return metadata;

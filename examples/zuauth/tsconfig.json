@@ -24,6 +24,8 @@
   },
   "include": ["next-env.d.ts", "**/*.ts", "**/*.tsx", ".next/types/**/*.ts"],
   "exclude": ["node_modules"],
+  // DO NOT MODIFY MANUALLY BEYOND THIS POINT
+  // References are automatically maintained by `yarn fix-references`
   "references": [
     {
       "path": "../../packages/lib/passport-interface"

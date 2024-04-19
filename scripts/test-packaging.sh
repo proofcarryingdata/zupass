@@ -24,7 +24,7 @@ while ! nc -zw 1 localhost 4873; do sleep 1; done
 # Publish all of the @pcd packages to Verdaccio
 for dir in ./packages/*/*; do (cd $dir && echo $dir && yarn publish --registry=http://localhost:4873/ --non-interactive); done
 
-# Fully reinstall each example app, pulling @pcd packages from Verdaccio
+# Fully reinstall each test app, pulling @pcd packages from Verdaccio
 # All other packages will be proxied from yarnpkg as per verdaccio.yml config.
 # Remove the --registry flag to use the npm versions instead. 
 for dir in ./test-packaging/*; do (cd $dir && yarn install --no-lockfile --non-interactive --registry=http://localhost:4873/); done

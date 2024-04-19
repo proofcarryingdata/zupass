@@ -1,5 +1,5 @@
 import { SessionData, ironOptions } from "@/config/iron";
-import { eventTicketMetadata } from "@/metadata";
+import { config } from "@/config/zuauth";
 import { authenticate } from "@pcd/zuauth/server";
 import { getIronSession } from "iron-session";
 import { cookies } from "next/headers";
@@ -11,7 +11,7 @@ import { NextRequest } from "next/server";
  *
  * Calling {@link authenticate} will check that the PCD is cryptographically
  * valid, has the correct watermark, and that its contents match the expected
- * event metadata (public key, event ID, product ID).
+ * event config (public key, event ID, product ID).
  */
 export async function POST(req: NextRequest) {
   const body = await req.json();
@@ -25,11 +25,7 @@ export async function POST(req: NextRequest) {
       cookies() as any,
       ironOptions
     );
-    const pcd = await authenticate(
-      body.pcd,
-      session.watermark ?? "",
-      eventTicketMetadata
-    );
+    const pcd = await authenticate(body.pcd, session.watermark ?? "", config);
 
     session.user = pcd.claim.partialTicket;
     await session.save();

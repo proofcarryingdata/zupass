@@ -4,8 +4,9 @@ export interface SessionData {
 }
 
 export const ironOptions = {
-  cookieName: "myapp_cookiename",
-  password: "complex_password_at_least_32_characters_long",
+  cookieName: "zuauth_example",
+  password:
+    "set from environment variable in production, do not include in source code esp. for public repository etc. etc.",
   // secure: true should be used in production (HTTPS) but can't be used in development (HTTP)
   cookieOptions: {
     secure: process.env.NODE_ENV === "production"

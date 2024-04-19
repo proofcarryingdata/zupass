@@ -1,15 +1,15 @@
 import { CheckIcon, CopyIcon } from "@chakra-ui/icons";
 import { Button, useToast } from "@chakra-ui/react";
-import { PipelinePCDMetadata } from "@pcd/passport-interface";
+import { PipelineZuAuthConfig } from "@pcd/passport-interface";
 import { ReactNode, useCallback, useState } from "react";
 
 /**
- * Used to display metadata about the PCDs produced by the pipeline.
+ * Used to display data for configuring ZuAuth.
  */
-export function PipelinePCDMetadataSection({
-  pipelinePCDMetadata
+export function PipelineZuAuthConfigSection({
+  pipelineZuAuthConfig
 }: {
-  pipelinePCDMetadata?: PipelinePCDMetadata[];
+  pipelineZuAuthConfig?: PipelineZuAuthConfig[];
 }): ReactNode {
   const toast = useToast();
   const [copied, setCopied] = useState<boolean>(false);
@@ -39,11 +39,11 @@ export function PipelinePCDMetadataSection({
     [toast]
   );
 
-  if (!pipelinePCDMetadata || pipelinePCDMetadata.length === 0) {
-    return <div>No PCD metadata available for this pipeline.</div>;
+  if (!pipelineZuAuthConfig || pipelineZuAuthConfig.length === 0) {
+    return <div>No ZuAuth configuration available for this pipeline.</div>;
   }
 
-  const json = JSON.stringify(pipelinePCDMetadata, null, 2);
+  const json = JSON.stringify(pipelineZuAuthConfig, null, 2);
 
   return (
     <div>

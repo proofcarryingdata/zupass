@@ -1,5 +1,5 @@
 import { ITicketData } from "@pcd/eddsa-ticket-pcd";
-import { PipelineEdDSATicketPCDMetadata } from "@pcd/passport-interface";
+import { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import urlJoin from "url-join";
 import { CONSUMER_SERVER_URL } from "../../../constants";
 
@@ -33,7 +33,7 @@ export async function logout(): Promise<void> {
  */
 export async function serverLogin(
   serialized: string,
-  eventMetadata: PipelineEdDSATicketPCDMetadata[]
+  config: PipelineEdDSATicketZuAuthConfig[]
 ): Promise<Partial<ITicketData>> {
   const response = await fetch(urlJoin(CONSUMER_SERVER_URL, `auth/login`), {
     method: "POST",
@@ -43,7 +43,7 @@ export async function serverLogin(
       "Access-Control-Allow-Origin": "*",
       "Content-Type": "application/json"
     },
-    body: JSON.stringify({ pcd: serialized, eventMetadata })
+    body: JSON.stringify({ pcd: serialized, config })
   });
 
   return await response.json();

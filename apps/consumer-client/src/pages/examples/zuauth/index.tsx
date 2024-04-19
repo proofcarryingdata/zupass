@@ -56,24 +56,24 @@ export default function ZuAuth(): JSX.Element {
     })();
   }, []);
 
-  const [metadataString, setMetadataString] = useState("");
+  const [configString, setConfigString] = useState("");
 
   const startAuth = useCallback(() => {
     (async (): Promise<void> => {
       const watermark = await generateWatermark();
-      const eventTicketMetadata = JSON.parse(metadataString);
+      const config = JSON.parse(configString);
       const result = await zuAuthPopup({
         zupassUrl: ZUPASS_CLIENT_URL_ENV,
         fieldsToReveal,
         watermark,
-        eventTicketMetadata
+        config: config
       });
 
       if (result.type === "pcd") {
-        setAuthenticated(await serverLogin(result.pcdStr, eventTicketMetadata));
+        setAuthenticated(await serverLogin(result.pcdStr, config));
       }
     })();
-  }, [fieldsToReveal, metadataString]);
+  }, [fieldsToReveal, configString]);
 
   const logout = useCallback(() => {
     setAuthenticated(false);
@@ -122,17 +122,17 @@ export default function ZuAuth(): JSX.Element {
           ))}
           <br />
           <label>
-            Event ticket metadata (find this in Podbox in the "PCD Metadata"
-            pipeline dashboard section).
+            ZuAuth configuration (find this in Podbox in the "ZuAuth
+            Configuration" pipeline dashboard section).
           </label>
           <br />
           <textarea
             disabled={!!authenticated}
             cols={72}
             rows={8}
-            value={metadataString}
+            value={configString}
             onChange={(e): void => {
-              setMetadataString(e.target.value);
+              setConfigString(e.target.value);
             }}
           />
           <br />

@@ -9,7 +9,11 @@ export enum PCDRequestType {
 }
 
 export interface PCDRequest {
+  // The URL to return to after completing the request
   returnUrl: string;
+  // Whether or not to post a message to the parent window after completing the
+  // request. This allows a non-redirect-based flow for popup windows, and is
+  // off by default in the URL construction functions.
   postMessage: boolean;
   type: PCDRequestType;
 }

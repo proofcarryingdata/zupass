@@ -9,7 +9,6 @@ export async function startApplication(): Promise<void> {
     ironOptions: {
       ttl: 1209600, // Expiry: 14 days.
       cookieName: "consumer_app_cookie",
-      // eslint-disable-next-line turbo/no-undeclared-env-vars
       password: process.env.IRON_SESSION_PASSWORD as string,
       cookieOptions: {
         secure: process.env.NODE_ENV === "production"

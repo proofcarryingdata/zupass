@@ -5,11 +5,11 @@ import { ApplicationContext } from "../../../types";
 import { SessionData } from "../../types";
 
 /**
- * The watermark is used in the ZK ticket authentication mechanism.
- * This API allows you to generate a random value and save it in the current
- * session. The same value will be used by the user for generating the ZK proof
- * of ticket-holding on the client side and must correspond to the one stored
- * in the session in the subsequent API call for the login process.
+ * ZK proofs can include a "watermark" value, which can be used to ensure that
+ * a proof was created for a specific purpose. In our case, we're generating a
+ * random value tied to the user's session, and will only accept proofs that
+ * include that value as the watermark. This endpoint generates the random
+ * value and returns it.
  */
 export function generateWatermark(
   app: express.Application,

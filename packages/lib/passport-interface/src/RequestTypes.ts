@@ -492,7 +492,7 @@ export interface PipelineInfoConsumer {
   timeUpdated: string;
 }
 
-export interface PipelineEdDSATicketPCDMetadata {
+export interface PipelineEdDSATicketZuAuthConfig {
   pcdType: typeof EdDSATicketPCDTypeName;
   publicKey: EdDSAPublicKey;
   eventId: string; // UUID
@@ -502,7 +502,7 @@ export interface PipelineEdDSATicketPCDMetadata {
 }
 
 // could be |'ed with other types of metadata
-export type PipelinePCDMetadata = PipelineEdDSATicketPCDMetadata;
+export type PipelineZuAuthConfig = PipelineEdDSATicketZuAuthConfig;
 
 export interface PipelineInfoResponseValue {
   ownerEmail: string;
@@ -511,7 +511,7 @@ export interface PipelineInfoResponseValue {
   latestAtoms?: object[];
   latestConsumers?: PipelineInfoConsumer[];
   editHistory?: HydratedPipelineHistoryEntry[];
-  eventMetadata?: PipelinePCDMetadata[];
+  zuAuthConfig?: PipelineZuAuthConfig[];
 }
 
 export interface ListSingleFeedRequest {

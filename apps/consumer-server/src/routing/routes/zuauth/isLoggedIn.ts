@@ -9,6 +9,6 @@ export function isLoggedIn(
 ): void {
   app.get("/auth/logged-in", async (req: Request, res: Response) => {
     const session = await getIronSession<SessionData>(req, res, ironOptions);
-    res.status(200).send(session.ticket || false);
+    res.status(200).send(session.ticket ?? false);
   });
 }

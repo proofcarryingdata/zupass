@@ -1,5 +1,5 @@
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
-import type { PipelineEdDSATicketPCDMetadata } from "@pcd/passport-interface";
+import type { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
 import {
   PopupActionResult,
@@ -27,9 +27,9 @@ export interface ZuAuthArgs {
   returnUrl?: string;
   fieldsToReveal: EdDSATicketFieldsToReveal;
   watermark: string | bigint;
-  // Event metadata comes from Podbox, and identifies the public key, event ID,
+  // Config comes from Podbox, and identifies the public key, event ID,
   // and product IDs that are used for issuance by a given pipeline.
-  eventTicketMetadata: PipelineEdDSATicketPCDMetadata[];
+  config: PipelineEdDSATicketZuAuthConfig[];
   externalNullifier?: string | bigint;
   proofTitle?: string;
   proofDescription?: string;
@@ -67,17 +67,17 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     returnUrl,
     fieldsToReveal,
     watermark,
-    eventTicketMetadata,
+    config,
     externalNullifier,
-    proofTitle = "ZKEdDSA Ticket Proof",
-    proofDescription = "ZKEdDSA Ticket PCD Request"
+    proofTitle,
+    proofDescription
   } = zuAuthArgs;
 
   const eventIds = [],
     productIds = [],
     publicKeys = [];
 
-  for (const em of eventTicketMetadata) {
+  for (const em of config) {
     eventIds.push(em.eventId);
     productIds.push(em.productId);
     publicKeys.push(em.publicKey);
@@ -115,14 +115,14 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     },
     watermark: {
       argumentType: ArgumentTypeName.BigInt,
-      value: watermark.toString(),
+      value: BigInt(watermark).toString(),
       userProvided: false
     },
     externalNullifier: {
       argumentType: ArgumentTypeName.BigInt,
       value: externalNullifier
         ? externalNullifier.toString()
-        : watermark.toString(),
+        : BigInt(watermark).toString(),
       userProvided: false
     }
   };

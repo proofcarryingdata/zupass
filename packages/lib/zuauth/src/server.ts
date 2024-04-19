@@ -1,5 +1,5 @@
 import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { PipelineEdDSATicketPCDMetadata } from "@pcd/passport-interface";
+import { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage,
@@ -21,7 +21,7 @@ import {
 export async function authenticate(
   pcdStr: string,
   watermark: string,
-  eventTicketMetadata: PipelineEdDSATicketPCDMetadata[]
+  config: PipelineEdDSATicketZuAuthConfig[]
 ): Promise<ZKEdDSAEventTicketPCD> {
   const serializedPCD = JSON.parse(pcdStr);
   if (serializedPCD.type !== ZKEdDSAEventTicketPCDTypeName) {
@@ -38,12 +38,8 @@ export async function authenticate(
     throw new Error("PCD watermark doesn't match");
   }
 
-  // if (!pcd.claim.nullifierHash) {
-  //   throw new Error("PCD ticket nullifier has not been defined");
-  // }
-
-  const publicKeys = eventTicketMetadata.map((em) => em.publicKey);
-  const productIds = new Set(eventTicketMetadata.map((em) => em.productId));
+  const publicKeys = config.map((em) => em.publicKey);
+  const productIds = new Set(config.map((em) => em.productId));
 
   if (
     publicKeys.length > 0 &&
