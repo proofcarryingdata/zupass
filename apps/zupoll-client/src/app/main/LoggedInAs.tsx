@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { useRouter } from "next/navigation";
 import { FaUserAstronaut } from "react-icons/fa";
 import { LoginState } from "../../types";
-import { SettingsDrawer } from "./SettingsDrawer";
 
 export function LoggedInAs({
   loginState,
@@ -36,7 +35,7 @@ export function LoggedInAs({
           </Button>
         )}
         <LogoutButton logout={logout} />
-        <SettingsDrawer />
+        {/* <SettingsDrawer /> */}
       </span>
     </div>
   );

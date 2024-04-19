@@ -3,7 +3,7 @@ import { useLocalStorage } from "usehooks-ts";
 import { Switch } from "./switch";
 
 export function useTheme(): [string, Dispatch<SetStateAction<string>>] {
-  const [theme, setTheme] = useLocalStorage("theme", "light");
+  const [theme, setTheme] = useLocalStorage("theme", "dark");
   const isLight = theme === "light";
 
   useEffect(() => {

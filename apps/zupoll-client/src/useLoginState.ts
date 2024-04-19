@@ -36,9 +36,7 @@ export function loadLoginStateFromLocalStorage(): LoginState | undefined {
 }
 
 export function clearLoginStateFromLocalStorage(): void {
-  localStorage.removeItem(ACCESS_TOKEN_KEY);
-  localStorage.removeItem(CONFIGURATION_KEY);
-  localStorage.removeItem(STATE_VERSION_KEY);
+  localStorage.clear();
 }
 
 export function saveLoginStateToLocalStorage(
