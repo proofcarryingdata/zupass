@@ -89,5 +89,10 @@ const LoginWidgetContentContainer = styled.div`
    */
   @media screen and (max-width: 640px) {
     flex-direction: column;
+    align-items: stretch;
+
+    div {
+      width: 100%;
+    }
   }
 `;

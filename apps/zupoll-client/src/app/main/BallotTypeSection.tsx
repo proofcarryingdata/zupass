@@ -33,7 +33,7 @@ export function BallotTypeSection({
   return (
     <div className="mb-4">
       {title && <Title>{title}</Title>}
-      {description && <p>{description}</p>}
+      {description && <p className="text-sm">{description}</p>}
       <BallotList loading={loading} ballots={filtered} />
     </div>
   );

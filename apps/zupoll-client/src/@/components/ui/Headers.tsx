@@ -70,6 +70,6 @@ const HeaderContainer = styled.div`
    * mobile styling
    */
   @media screen and (max-width: 640px) {
-    padding-top: 32px;
+    padding-top: 8px;
   }
 `;
