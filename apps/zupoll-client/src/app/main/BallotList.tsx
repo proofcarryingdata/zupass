@@ -10,9 +10,10 @@ export const columns: ColumnDef<Ballot>[] = [
   {
     accessorKey: "ballotTitle",
     header: "Title",
+    maxSize: 1,
     cell: (cell: CellContext<Ballot, unknown>) => {
       return (
-        <div className="max-w-full overflow-hidden text-ellipsis px-4">
+        <div className="px-2" style={{}}>
           {cell.row.original.ballotTitle}
         </div>
       );
@@ -21,13 +22,11 @@ export const columns: ColumnDef<Ballot>[] = [
   {
     id: "expiry",
     header: "Expiry",
+    maxSize: 1,
     cell: (cell: CellContext<Ballot, unknown>) => {
       const isExpired = new Date(cell.row.original.expiry) < new Date();
       return (
-        <div
-          style={{ fontStyle: isExpired ? "italic " : "initial" }}
-          className="px-4"
-        >
+        <div>
           {isExpired
             ? "Expired"
             : getTimeBeforeExpiry(cell.row.original.expiry)}
