@@ -1,22 +1,16 @@
+import Image from "next/image";
 import { useRouter } from "next/navigation";
 import { useCallback } from "react";
 import styled from "styled-components";
+import logo from "../../../../public/zupoll-logo.png";
 import { DEFAULT_CONTENT_WIDTH } from "./Elements";
 import { Button } from "./button";
 
-export interface HeaderProps {
-  title?: string;
-}
-
-export function AppHeader({ title }: HeaderProps) {
+export function AppHeader() {
   return (
     <HeaderContainer>
       <div className="flex flex-row gap-4 items-center justify-center">
-        {title ? (
-          <div className="text-3xl">{title}</div>
-        ) : (
-          <div className="text-3xl">Zupoll</div>
-        )}
+        <Image src={logo} alt="" height={50} />
       </div>
     </HeaderContainer>
   );
