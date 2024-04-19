@@ -8,7 +8,6 @@ import {
   DevconnectPretixOrder,
   DevconnectPretixPosition
 } from "../../src/apis/devconnect/devconnectPretixAPI";
-import { logger } from "../../src/util/logger";
 
 export interface IMockDevconnectPretixData {
   // aggregate data for simpler querying
@@ -69,7 +68,6 @@ export class DevconnectPretixDataMocker {
   }
 
   public get(): IMockDevconnectPretixData {
-    logger("[MOCK]", JSON.stringify(this.mockData, null, 2));
     return this.mockData;
   }
 

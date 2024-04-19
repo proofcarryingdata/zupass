@@ -61,7 +61,7 @@ const genericIssuanceClientAppOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built Podbox client"))
+  .then(() => console.log("Built Podbox client artifacts"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
@@ -71,7 +71,7 @@ async function run(command: string): Promise<void> {
         ...genericIssuanceClientAppOpts,
         minify: true
       });
-      console.error("Built", clientRes);
+      console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(

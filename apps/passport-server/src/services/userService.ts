@@ -4,6 +4,7 @@ import {
   ConfirmEmailResponseValue,
   LATEST_PRIVACY_NOTICE,
   UNREDACT_TICKETS_TERMS_VERSION,
+  VerifyTokenResponseValue,
   ZupassUserJson
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -121,7 +122,7 @@ export class UserService {
     );
 
     if (
-      existingCommitment != null &&
+      existingCommitment !== null &&
       !force &&
       // Users with an `encryption_key` do not have a password,
       // so we will need to verify email ownership with code.
@@ -371,6 +372,41 @@ export class UserService {
       success: true,
       value: { version: payload.version }
     };
+  }
+
+  public async handleVerifyToken(
+    token: string,
+    email: string
+  ): Promise<VerifyTokenResponseValue> {
+    if (
+      !(await this.rateLimitService.requestRateLimitedAction(
+        "CHECK_EMAIL_TOKEN",
+        email
+      ))
+    ) {
+      throw new PCDHTTPError(401, "Too many attempts. Come back later.");
+    }
+
+    const tokenCorrect = await this.emailTokenService.checkTokenCorrect(
+      email,
+      token
+    );
+
+    if (!tokenCorrect) {
+      throw new PCDHTTPError(
+        403,
+        "Wrong token. If you got more than one email, use the latest one."
+      );
+    }
+
+    const encryptionKey = await this.getEncryptionKeyForUser(email);
+    // If we return the user's encryption key, change the token so this request
+    // can't be replayed.
+    if (encryptionKey) {
+      await this.emailTokenService.saveNewTokenForEmail(email);
+    }
+
+    return { encryptionKey };
   }
 }
 

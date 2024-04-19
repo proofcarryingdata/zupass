@@ -23,6 +23,7 @@ import {
 import { getHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { BackButton } from "../../shared/ScreenNavigation";
 
 export function SemaphoreGroupProveScreen({
   req
@@ -39,7 +40,9 @@ export function SemaphoreGroupProveScreen({
     const fetchGroup = async (): Promise<void> => {
       console.log("fetching semaphore group", req.args.group.remoteUrl);
       const semaphoreGroupResult = await requestSemaphoreGroup(
-        req.args.group.remoteUrl
+        // This string should always be defined if the PCDGetRequest template
+        // type is SemaphoreGroupPCDPackage
+        req.args.group.remoteUrl as string
       );
 
       if (!semaphoreGroupResult.success) {
@@ -66,7 +69,13 @@ export function SemaphoreGroupProveScreen({
       // potentially blocking proving operation kicks off
       await nextFrame();
 
-      const args = await fillArgs(identity, group, req.args);
+      const args = await fillArgs(
+        identity,
+        // Group is definitely not null here, as `onProveClick` would not be
+        // in use as an event handler if the group had not been fetched.
+        group as SerializedSemaphoreGroup,
+        req.args
+      );
 
       if (req.options?.proveOnServer === true) {
         const pendingPCDResult = await requestProveOnServer(
@@ -125,6 +134,10 @@ export function SemaphoreGroupProveScreen({
     lines.push(<ErrorContainer>{error}</ErrorContainer>);
   } else {
     lines.push(<RippleLoader />);
+  }
+
+  if (!proving) {
+    lines.push(<BackButton />);
   }
 
   return (

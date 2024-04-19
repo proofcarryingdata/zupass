@@ -15,7 +15,7 @@ function reactionsToReactionCount(reactions: string[]): Record<string, number> {
 }
 
 // from: https://github.com/dcposch/zucast/blob/master/src/components/PostBox.tsx
-function formatTime(timeMs: number) {
+function formatTime(timeMs: number): string {
   const secsAgo = Math.floor((Date.now() - timeMs) / 1000);
   if (secsAgo < 60) return "Now";
   if (secsAgo < 60 * 60) return `${Math.floor(secsAgo / 60)}m`;

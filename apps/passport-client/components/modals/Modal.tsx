@@ -1,9 +1,9 @@
-import { icons } from "@pcd/passport-ui";
+import { assertUnreachable } from "@pcd/util";
 import React, { ReactNode, useCallback, useEffect } from "react";
+import { GrClose } from "react-icons/gr";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import { useDispatch, useModal } from "../../src/appHooks";
 import { AppState } from "../../src/state";
-import { assertUnreachable } from "../../src/util";
 import { Spacer } from "../core";
 import { CircleButton } from "../core/Button";
 import { Overscroll } from "../shared/Overscroll";
@@ -48,9 +48,9 @@ export function MaybeModal({
       window.removeEventListener("keydown", listener, { capture: true });
   }, [close, dismissable]);
 
-  const body = getModalBody(modal, isProveOrAddScreen);
+  const body = getModalBody(modal, !!isProveOrAddScreen);
 
-  if (body == null)
+  if (!body)
     return (
       <>
         <Overscroll />
@@ -146,12 +146,7 @@ export function Modal(props: {
       <ModalWrap fullScreen={props.fullScreen} onClick={ignore}>
         {props.onClose && (
           <CircleButton diameter={20} padding={16} onClick={props.onClose}>
-            <img
-              draggable="false"
-              src={icons.closeWhite}
-              width={20}
-              height={20}
-            />
+            <GrClose style={{ height: "20px", width: "20px", color: "#fff" }} />
           </CircleButton>
         )}
         <Spacer h={32} />
@@ -195,12 +190,13 @@ const ModalWrap = styled.div<{ fullScreen?: boolean }>`
   border-radius: 12px;
 
   ${({ fullScreen }): FlattenSimpleInterpolation =>
-    fullScreen &&
-    css`
-      width: 100vw;
-      max-width: 100vw;
-      height: 100vh;
-      margin: 0;
-      border-radius: 0;
-    `}
+    fullScreen
+      ? css`
+          width: 100vw;
+          max-width: 100vw;
+          height: 100vh;
+          margin: 0;
+          border-radius: 0;
+        `
+      : css``}
 `;

@@ -1,20 +1,21 @@
 "use client";
 
 import CopyButton from "@/components/CopyButton";
-import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import {
   AnonTopicDataPayload,
   AnonWebAppPayload,
   PayloadType,
   constructZupassPcdGetRequestUrl
-} from "@pcd/passport-interface";
+} from "@pcd/passport-interface/PassportInterface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreIdentityPCDTypeName } from "@pcd/semaphore-identity-pcd/SemaphoreIdentityPCD";
 import { getAnonTopicNullifier, getMessageWatermark } from "@pcd/util";
+import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import {
   ZKEdDSAEventTicketPCDArgs,
-  ZKEdDSAEventTicketPCDPackage
-} from "@pcd/zk-eddsa-event-ticket-pcd";
+  ZKEdDSAEventTicketPCDTypeName
+} from "@pcd/zk-eddsa-event-ticket-pcd/ZKEdDSAEventTicketPCD";
 import { AnimatePresence, motion } from "framer-motion";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useState } from "react";
@@ -30,7 +31,7 @@ async function requestProof(
   chatId: number,
   topicId: number,
   validEventIds: string[]
-) {
+): Promise<void> {
   const watermark = getMessageWatermark(message).toString();
   console.log("WATERMARK", watermark);
   const revealedFields = {};
@@ -38,7 +39,7 @@ async function requestProof(
   const args: ZKEdDSAEventTicketPCDArgs = {
     ticket: {
       argumentType: ArgumentTypeName.PCD,
-      pcdType: EdDSATicketPCDPackage.name,
+      pcdType: EdDSATicketPCDTypeName,
       value: undefined,
       userProvided: true,
       displayName: "Ticket",
@@ -53,7 +54,7 @@ async function requestProof(
     },
     identity: {
       argumentType: ArgumentTypeName.PCD,
-      pcdType: SemaphoreIdentityPCDPackage.name,
+      pcdType: SemaphoreIdentityPCDTypeName,
       value: undefined,
       userProvided: true
     },
@@ -82,7 +83,7 @@ async function requestProof(
     }
   };
 
-  let passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
+  const passportOrigin = `${process.env.NEXT_PUBLIC_PASSPORT_CLIENT_URL}/`;
   const returnUrl = `${
     process.env.NEXT_PUBLIC_PASSPORT_SERVER_URL
   }/telegram/message/?message=${encodeURIComponent(
@@ -91,7 +92,7 @@ async function requestProof(
 
   const proofUrl = await constructZupassPcdGetRequestUrl<
     typeof ZKEdDSAEventTicketPCDPackage
-  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDPackage.name, args, {
+  >(passportOrigin, returnUrl, ZKEdDSAEventTicketPCDTypeName, args, {
     genericProveScreen: true,
     title: "",
     description:
@@ -101,7 +102,7 @@ async function requestProof(
   window.location.href = proofUrl;
 }
 
-export default function () {
+export default function (): JSX.Element {
   const [message, setMessage] = useState("");
   const [invalidMessage, setInvalidMessage] = useState<
     InvalidMessage | undefined
@@ -142,7 +143,7 @@ export default function () {
     } else if (invalidMessage) {
       setInvalidMessage(undefined);
     }
-  }, [message]);
+  }, [message, invalidMessage]);
 
   const onClick = useCallback(async () => {
     setLoadingProofUrl(true);
@@ -160,7 +161,7 @@ export default function () {
       topicData.value.validEventIds
     );
     setLoadingProofUrl(false);
-  }, [message]);
+  }, [message, topicData]);
 
   if (!topicData) {
     return (
@@ -185,7 +186,7 @@ export default function () {
           <textarea
             placeholder="Type your anonymous message here"
             value={message}
-            onChange={(e) => setMessage(e.target.value)}
+            onChange={(e): void => setMessage(e.target.value)}
             className={`border-2 text-2xl rounded-lg text-black resize-none p-2 h-[25vh] select-text`}
             autoFocus
           />
@@ -224,7 +225,7 @@ export default function () {
                 <div className="flex justify-between items-center mb-3">
                   {expanded ? (
                     <div
-                      onClick={() => setExpanded(false)}
+                      onClick={(): void => setExpanded(false)}
                       className="cursor-pointer"
                     >
                       <svg
@@ -244,7 +245,7 @@ export default function () {
                     </div>
                   ) : (
                     <div
-                      onClick={() => setExpanded(true)}
+                      onClick={(): void => setExpanded(true)}
                       className="cursor-pointer"
                     >
                       <svg
@@ -269,7 +270,7 @@ export default function () {
                   </span>
                   <div
                     className="cursor-pointer"
-                    onClick={() => setShowInfo(false)}
+                    onClick={(): void => setShowInfo(false)}
                   >
                     <svg
                       width="15"
@@ -297,7 +298,7 @@ export default function () {
                     <div className="flex item-center gap-4 mx-auto mt-4 w-full">
                       <button
                         className="w-full flex justify-center items-center rounded-lg bg-white text-[#50acf9] px-6 py-2 cursor-pointer mx-auto font-medium shadow-sm"
-                        onClick={() => setExpanded(true)}
+                        onClick={(): void => setExpanded(true)}
                       >
                         Learn More
                       </button>

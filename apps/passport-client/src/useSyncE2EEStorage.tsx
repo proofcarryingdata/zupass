@@ -6,6 +6,7 @@ import {
   NamedAPIError,
   SyncedEncryptedStorage,
   User,
+  ZupassUserJson,
   deserializeStorage,
   requestChangeBlobKey,
   requestDownloadAndDecryptUpdatedStorage,
@@ -49,7 +50,7 @@ export async function updateBlobKeyForEncryptedStorage(
   knownServerStorageRevision?: string
 ): Promise<UpdateBlobKeyResult> {
   const oldUser = loadSelf();
-  const newUser = { ...oldUser, salt: newSalt };
+  const newUser = { ...oldUser, salt: newSalt } as ZupassUserJson;
   const pcds = await loadPCDs(oldUser);
   const subscriptions = await loadSubscriptions();
 
@@ -169,7 +170,7 @@ export async function uploadSerializedStorage(
     };
   }
 
-  const encryptionKey = loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey() as string;
   const blobKey = await getHash(encryptionKey);
 
   const encryptedStorage = await passportEncrypt(
@@ -280,7 +281,7 @@ export async function mergeStorage(
     final: remoteFields.pcds.size()
   };
   if (
-    (await localFields.pcds.getHash()) != (await remoteFields.pcds.getHash())
+    (await localFields.pcds.getHash()) !== (await remoteFields.pcds.getHash())
   ) {
     identicalPCDs = false;
     const pcdMergePredicate = (
@@ -326,7 +327,7 @@ export async function mergeStorage(
     final: remoteCount
   };
   if (
-    (await localFields.subscriptions.getHash()) !=
+    (await localFields.subscriptions.getHash()) !==
     (await remoteFields.subscriptions.getHash())
   ) {
     identicalSubs = false;
@@ -398,7 +399,7 @@ export async function downloadAndMergeStorage(
   console.log("[SYNC] downloading e2ee storage");
 
   // Download latest revision from server, if it's newer than what's known.
-  const encryptionKey = loadEncryptionKey();
+  const encryptionKey = loadEncryptionKey() as string;
   const storageResult = await requestDownloadAndDecryptUpdatedStorage(
     appConfig.zupassServer,
     encryptionKey,

@@ -14,12 +14,16 @@ describe("util", async function () {
         location: {
           origin: mockOrigin
         }
-      }
+      },
+      configurable: true,
+      writable: true
     });
   });
 
   afterEach(() => {
-    delete global.window.location;
+    Object.defineProperty(global, "window", {
+      value: { location: undefined }
+    });
   });
 
   it("getLastValidVerifyUrl: function works as intended", function () {

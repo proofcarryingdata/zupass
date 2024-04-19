@@ -29,11 +29,15 @@ export function GenericProveScreen({
   req
 }: {
   req: PCDGetRequest;
-}): JSX.Element {
+}): JSX.Element | null {
   const dispatch = useDispatch();
 
   const onProve = useCallback(
-    async (_pcd: PCD, serialized: SerializedPCD, pendingPCD: PendingPCD) => {
+    (
+      _pcd: PCD,
+      serialized: SerializedPCD | undefined,
+      pendingPCD: PendingPCD | undefined
+    ) => {
       if (pendingPCD) {
         safeRedirectPending(req.returnUrl, pendingPCD);
       } else {

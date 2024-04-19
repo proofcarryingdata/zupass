@@ -31,7 +31,7 @@ export interface LemonadeUser {
  * "account" here models the different sets of results that are available when
  * authenticating with different credentials.
  */
-class LemonadeAccount {
+export class LemonadeAccount {
   private events: Map<string, LemonadeEvent>;
   private ticketTypes: Map<string, Map<string, LemonadeTicketType>>;
   private tickets: Map<string, Map<string, LemonadeTicket>>;

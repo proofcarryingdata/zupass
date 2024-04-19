@@ -1,13 +1,21 @@
 import { NodeGlobalsPolyfillPlugin } from "@esbuild-plugins/node-globals-polyfill";
 import { NodeModulesPolyfillPlugin } from "@esbuild-plugins/node-modules-polyfill";
+import * as dotenv from "dotenv";
 import { build, BuildOptions, context } from "esbuild";
 import fs from "fs";
+
+dotenv.config();
+
+console.log("building consumer-client");
 
 const consumerClientAppOpts: BuildOptions = {
   sourcemap: true,
   bundle: true,
   define: {
-    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`
+    "process.env.NODE_ENV": `'${process.env.NODE_ENV}'`,
+    "process.env.CONSUMER_SERVER_URL": `'${process.env.CONSUMER_SERVER_URL}'`,
+    "process.env.ZUPASS_CLIENT_URL_CONSUMER": `'${process.env.ZUPASS_CLIENT_URL_CONSUMER}'`,
+    "process.env.ZUPASS_SERVER_URL_CONSUMER": `'${process.env.ZUPASS_SERVER_URL_CONSUMER}'`
   },
   entryPoints: ["src/main.tsx"],
   plugins: [
@@ -25,14 +33,14 @@ const consumerClientAppOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built consumer client"))
+  .then(() => console.log("Built consumer client artifacts"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
       const clientRes = await build({ ...consumerClientAppOpts, minify: true });
-      console.error("Built", clientRes);
+      console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(

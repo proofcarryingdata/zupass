@@ -9,14 +9,12 @@ import assert from "assert";
 import { ethers } from "ethers";
 import "mocha";
 import * as path from "path";
-import { EthereumOwnershipPCDPackage } from "../src/EthereumOwnershipPCD";
+import { EthereumOwnershipPCDPackage } from "../src";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
 
 describe("Ethereum ownership PCD", function () {
-  this.timeout(30 * 1000);
-
   this.beforeAll(async function () {
     await EthereumOwnershipPCDPackage.init!({
       zkeyFilePath,

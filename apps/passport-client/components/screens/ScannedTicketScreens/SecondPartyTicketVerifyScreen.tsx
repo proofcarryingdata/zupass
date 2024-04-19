@@ -5,7 +5,7 @@ import {
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
-import { decodeQRPayload, icons } from "@pcd/passport-ui";
+import { decodeQRPayload } from "@pcd/passport-ui";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
 import { isZKEdDSAEventTicketPCD } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { useEffect, useState } from "react";
@@ -19,6 +19,7 @@ import {
 import { devconnectCheckByIdWithOffline } from "../../../src/checkin";
 import { CenterColumn, H4, Placeholder, Spacer, TextCenter } from "../../core";
 import { LinkButton } from "../../core/Button";
+import { icons } from "../../icons";
 import { AppContainer } from "../../shared/AppContainer";
 import {
   CardContainerExpanded,
@@ -78,10 +79,13 @@ function isDevconnectTicket(pcd: PCD): boolean {
 // product ID and signing key.
 export function SecondPartyTicketVerifyScreen(): JSX.Element {
   const query = useQuery();
-  const encodedQRPayload = query.get("pcd");
-  const id = query.get("id");
+  const encodedQRPayload = query?.get("pcd") ?? undefined;
+  const id = query?.get("id");
 
-  const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload);
+  const { pcd, serializedPCD } = useDecodedPayload(encodedQRPayload) ?? {
+    pcd: undefined,
+    serializedPCD: undefined
+  };
 
   // We always perform a 'verify' request on all tickets that reach this point
   const [verifyResult, setVerifyResult] = useState<VerifyResult | undefined>();
@@ -122,7 +126,7 @@ export function SecondPartyTicketVerifyScreen(): JSX.Element {
     (async (): Promise<void> => {
       if (pcd && isZKEdDSAEventTicketPCD(pcd) && isDevconnectTicket(pcd)) {
         const result = await devconnectCheckByIdWithOffline(
-          pcd.claim.partialTicket.ticketId,
+          pcd.claim.partialTicket.ticketId as string,
           stateContext
         );
         setCheckResult(result);
@@ -173,7 +177,7 @@ export function SecondPartyTicketVerifyScreen(): JSX.Element {
     return <WaitingForCheckAndVerify />;
   }
 
-  if (showCheckin) {
+  if (ticketId && showCheckin) {
     return (
       <AppContainer bg={"primary"}>
         <Container>
@@ -349,12 +353,16 @@ function VerifiedAndKnownTicket({
   );
 }
 
-function useDecodedPayload(encodedQRPayload: string): {
-  pcd: PCD;
-  serializedPCD: SerializedPCD<PCD>;
-} {
-  const [pcd, setPcd] = useState<PCD>(null);
-  const [serializedPCD, setSerializedPCD] = useState<SerializedPCD>(null);
+function useDecodedPayload(encodedQRPayload: string | undefined):
+  | {
+      pcd: PCD;
+      serializedPCD: SerializedPCD<PCD>;
+    }
+  | undefined {
+  const [pcd, setPcd] = useState<PCD | null>(null);
+  const [serializedPCD, setSerializedPCD] = useState<SerializedPCD | null>(
+    null
+  );
   const pcds = usePCDCollection();
 
   useEffect(() => {
@@ -374,7 +382,7 @@ function useDecodedPayload(encodedQRPayload: string): {
     })();
   }, [encodedQRPayload, pcds]);
 
-  return { pcd, serializedPCD };
+  return pcd && serializedPCD ? { pcd, serializedPCD } : undefined;
 }
 
 /**
@@ -403,12 +411,12 @@ async function verify(
           outcome: VerifyOutcome.KnownTicketType,
           productId: isEdDSATicketPCD(pcd)
             ? pcd.claim.ticket.productId
-            : pcd.claim.partialTicket.productId,
+            : (pcd.claim.partialTicket.productId as string),
           publicKeyName: result.value.publicKeyName,
           group: result.value.group,
           ticketId: isEdDSATicketPCD(pcd)
             ? pcd.claim.ticket.ticketId
-            : pcd.claim.partialTicket.ticketId,
+            : (pcd.claim.partialTicket.ticketId as string),
           eventName: result.value.eventName
         };
       }

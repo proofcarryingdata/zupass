@@ -1,17 +1,9 @@
 import { Emitter } from "@pcd/emitter";
 import { FeedSubscriptionManager, Subscription } from "@pcd/passport-interface";
-import React, { useCallback, useEffect, useMemo } from "react";
+import React, { useCallback, useMemo } from "react";
 import styled from "styled-components";
-import {
-  useSelf,
-  useSubscriptions,
-  useUserForcedToLogout
-} from "../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  pendingViewSubscriptionsRequestKey,
-  setPendingViewSubscriptionsRequest
-} from "../../src/sessionStorage";
+import { useLoginIfNoSelf, useSubscriptions } from "../../src/appHooks";
+import { pendingRequestKeys } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
 import { Button, Spacer } from "../core";
 import { MaybeModal } from "../modals/Modal";
@@ -23,25 +15,11 @@ import { SubscriptionInfoRow } from "./AddSubscriptionScreen";
 export function SubscriptionsScreen(): JSX.Element {
   useSyncE2EEStorage();
   const { value: subs } = useSubscriptions();
-  const self = useSelf();
-  const userForcedToLogout = useUserForcedToLogout();
-
   const closeEmitter = useMemo(() => {
-    return new Emitter<never>();
+    return new Emitter<unknown>();
   }, []);
 
-  useEffect(() => {
-    if (self == null || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify("");
-      setPendingViewSubscriptionsRequest(stringifiedRequest);
-      if (self == null) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingViewSubscriptionsRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingRequestKeys.viewSubscriptions);
 
   const onAddNewClicked = useCallback(() => {
     window.location.href = "/#/add-subscription";
@@ -68,8 +46,7 @@ export function SubscriptionsScreen(): JSX.Element {
             <a href="https://github.com/proofcarryingdata/zupass/tree/main/examples/zupass-feed-server">
               feed server
             </a>
-            , or use <a href={process.env.PODBOX_CLIENT_URL}>Podbox</a> as an
-            all-in-one feed hosting solution.
+            .
           </p>
           <Spacer h={8} />
           <p>Your subscriptions are:</p>
@@ -122,7 +99,7 @@ function SingleProvider({
   subscriptionsList: Subscription[];
   closeEmitter?: Emitter<unknown>;
 }): JSX.Element {
-  const providerName = subscriptions.getProvider(providerUrl).providerName;
+  const providerName = subscriptions?.getProvider(providerUrl)?.providerName;
   return (
     <>
       {subscriptionsList.map((s) => (
@@ -130,7 +107,7 @@ function SingleProvider({
           <Spacer h={8} />
           <SubscriptionInfoRow
             providerUrl={providerUrl}
-            providerName={providerName}
+            providerName={providerName ?? ""}
             info={s.feed}
             subscriptions={subscriptions}
             showErrors={!s.ended}

@@ -40,7 +40,7 @@ export function NewPasswordForm({
 }: NewPasswordForm): JSX.Element {
   const confirmPasswordRef = useRef<HTMLInputElement>(null);
 
-  const checkPasswordAndSubmit = async (e: UIEvent): Promise<void> => {
+  const checkPasswordAndSubmit = (e: UIEvent): void => {
     e.preventDefault();
     if (password === "") {
       setError("Enter a password");
@@ -81,7 +81,7 @@ export function NewPasswordForm({
         placeholder={passwordInputPlaceholder || "Password"}
         onEnter={(e): void => {
           e.preventDefault();
-          confirmPasswordRef.current.focus();
+          confirmPasswordRef?.current?.focus();
         }}
         showStrengthProgress
         autoFocus={autoFocus}

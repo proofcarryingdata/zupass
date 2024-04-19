@@ -150,10 +150,14 @@ export const NAME_CUTOFF_LENGTH = 36;
 export const PLACEHOLDER_NAME = "<untitled>";
 
 export function pipelineDisplayNameStr(pipeline?: PipelineDefinition): string {
-  const name = pipeline?.options.name;
+  let name = pipeline?.options.name;
 
   if (!pipeline || !name) {
     return PLACEHOLDER_NAME;
+  }
+
+  if (pipeline?.options?.important) {
+    name = "🌟 " + name;
   }
 
   if (name.length > NAME_CUTOFF_LENGTH) {
@@ -184,14 +188,10 @@ export function pipelineDetailPagePath(pipelineId: string): string {
   return `/pipelines/${pipelineId}`;
 }
 
-export function pipelineCreatedAtStr(dateStr: string): string {
-  return timeAgo.format(new Date(dateStr), "twitter");
-}
-
-export function pipelineLastEditStr(dateStr: string): string {
-  return timeAgo.format(new Date(dateStr), "twitter");
-}
-
-export function pipelineLastLoadStr(dateStr: string | undefined): string {
+export function timeAgoStr(dateStr: string | undefined): string {
   return dateStr ? timeAgo.format(new Date(dateStr), "twitter") : "n/a";
+}
+
+export function timeAgoStrLong(dateStr: string | undefined): string {
+  return dateStr ? timeAgo.format(new Date(dateStr), "round") : "n/a";
 }

@@ -33,7 +33,7 @@ export function HaloScreen(): JSX.Element {
     );
   }
 
-  if (screen == null) {
+  if (!screen) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }
@@ -46,7 +46,7 @@ function getScreen(params: URLSearchParams): JSX.Element | null {
   const rnd = params.get("rnd");
   const rndsig = params.get("rndsig");
 
-  if (pk2 == null || rnd == null || rndsig == null) {
+  if (!pk2 || !rnd || !rndsig) {
     return null;
   } else {
     return <AddHaloScreen pk2={pk2} rnd={rnd} rndsig={rndsig} />;

@@ -4,14 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { useLoadedIssuedPCDs } from "../../../src/appHooks";
 import {
   clearAllPendingRequests,
-  getPendingAddRequest,
-  getPendingAddSubscriptionPageRequest,
-  getPendingGenericIssuanceCheckinRequest,
-  getPendingGetWithoutProvingRequest,
-  getPendingHaloRequest,
-  getPendingProofRequest,
-  getPendingViewFrogCryptoPageRequest,
-  getPendingViewSubscriptionsPageRequest
+  getPendingRequest
 } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { CenterColumn } from "../../core";
@@ -25,54 +18,72 @@ export function LoginInterstitialScreen(): JSX.Element {
 
   useLayoutEffect(() => {
     if (loadedIssuedPCDs) {
-      if (getPendingProofRequest() != null) {
-        console.log("Redirecting to prove screen");
-        const encReq = encodeURIComponent(getPendingProofRequest());
-        clearAllPendingRequests();
-        navigate("/prove?request=" + encReq, { replace: true });
-      } else if (getPendingAddRequest() != null) {
-        console.log("Redirecting to add screen");
-        const encReq = encodeURIComponent(getPendingAddRequest());
-        clearAllPendingRequests();
-        navigate("/add?request=" + encReq, { replace: true });
-      } else if (getPendingHaloRequest() != null) {
-        console.log("Redirecting to halo screen");
-        clearAllPendingRequests();
-        navigate(`/halo${getPendingHaloRequest()}`, { replace: true });
-      } else if (getPendingGetWithoutProvingRequest() != null) {
-        console.log("Redirecting to get without proving screen");
-        const encReq = encodeURIComponent(getPendingGetWithoutProvingRequest());
-        clearAllPendingRequests();
-        navigate(`/get-without-proving?request=${encReq}`, { replace: true });
-      } else if (getPendingViewSubscriptionsPageRequest() != null) {
-        console.log("Redirecting to view subscription screen");
-        clearAllPendingRequests();
-        navigate(`/subscriptions`, { replace: true });
-      } else if (getPendingAddSubscriptionPageRequest() != null) {
-        console.log("Redirecting to add subscription screen");
-        const encReq = encodeURIComponent(
-          JSON.parse(getPendingAddSubscriptionPageRequest())
-        );
-        clearAllPendingRequests();
-        navigate(`/add-subscription?url=${encReq}`, { replace: true });
-      } else if (getPendingViewFrogCryptoPageRequest() != null) {
-        console.log("Redirecting to frog crypto screen");
-        const encReq = encodeURIComponent(
-          JSON.parse(getPendingViewFrogCryptoPageRequest())
-        );
-        clearAllPendingRequests();
-        navigate(`/frogscriptions/${encReq}`, { replace: true });
-      } else if (getPendingGenericIssuanceCheckinRequest() != null) {
-        console.log("Redirecting to Generic Issuance checkin screen");
-        const encReq = new URLSearchParams(
-          JSON.parse(getPendingGenericIssuanceCheckinRequest())
-        ).toString();
-        clearAllPendingRequests();
-        navigate(`/generic-checkin?${encReq}`, {
-          replace: true
-        });
-      } else {
-        window.location.hash = "#/";
+      const pendingRequest = getPendingRequest();
+      if (pendingRequest) {
+        switch (pendingRequest.key) {
+          case "proof": {
+            console.log("Redirecting to prove screen");
+            const encReq = encodeURIComponent(pendingRequest.value);
+            clearAllPendingRequests();
+            navigate("/prove?request=" + encReq, { replace: true });
+            break;
+          }
+          case "add": {
+            console.log("Redirecting to add screen");
+            const encReq = encodeURIComponent(pendingRequest.value);
+            clearAllPendingRequests();
+            navigate("/add?request=" + encReq, { replace: true });
+            break;
+          }
+          case "halo": {
+            console.log("Redirecting to halo screen");
+            clearAllPendingRequests();
+            navigate(`/halo${pendingRequest.value}`, { replace: true });
+            break;
+          }
+          case "getWithoutProving": {
+            console.log("Redirecting to get without proving screen");
+            const encReq = encodeURIComponent(pendingRequest.value);
+            clearAllPendingRequests();
+            navigate(`/get-without-proving?request=${encReq}`, {
+              replace: true
+            });
+            break;
+          }
+          case "viewSubscriptions": {
+            console.log("Redirecting to view subscription screen");
+            clearAllPendingRequests();
+            navigate(`/subscriptions`, { replace: true });
+            break;
+          }
+          case "addSubscription": {
+            console.log("Redirecting to add subscription screen");
+            const encReq = encodeURIComponent(JSON.parse(pendingRequest.value));
+            clearAllPendingRequests();
+            navigate(`/add-subscription?url=${encReq}`, { replace: true });
+            break;
+          }
+          case "viewFrogCrypto": {
+            console.log("Redirecting to frog crypto screen");
+            const encReq = encodeURIComponent(JSON.parse(pendingRequest.value));
+            clearAllPendingRequests();
+            navigate(`/frogscriptions/${encReq}`, { replace: true });
+            break;
+          }
+          case "genericIssuanceCheckin": {
+            console.log("Redirecting to Generic Issuance checkin screen");
+            const encReq = new URLSearchParams(
+              JSON.parse(pendingRequest.value)
+            ).toString();
+            clearAllPendingRequests();
+            navigate(`/generic-checkin?${encReq}`, {
+              replace: true
+            });
+            break;
+          }
+          default:
+            window.location.hash = "#/";
+        }
       }
     }
   }, [loadedIssuedPCDs, navigate]);

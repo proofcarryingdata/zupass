@@ -2,7 +2,11 @@
   "recommendations": [
     "esbenp.prettier-vscode",
     "styled-components.vscode-styled-components",
+    "dbaeumer.vscode-eslint",
     "pomdtr.excalidraw-editor",
-    "dbaeumer.vscode-eslint"
+    "dbaeumer.vscode-eslint",
+    "prisma.prisma",
+    "csstools.postcss",
+    "bradlc.vscode-tailwindcss"
   ]
 }

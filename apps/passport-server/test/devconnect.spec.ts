@@ -7,21 +7,22 @@ import {
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  CredentialPayload,
   KnownTicketGroup,
   KnownTicketTypesResult,
   LATEST_PRIVACY_NOTICE,
   PollFeedResponseValue,
   User,
+  ZUPASS_CREDENTIAL_REQUEST,
   ZUZALU_23_EVENT_ID,
   ZUZALU_23_RESIDENT_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
   agreeTerms,
-  checkinTicketById,
-  createFeedCredentialPayload,
-  pollFeed,
+  requestCheckInById,
   requestConfirmationEmail,
   requestKnownTicketTypes,
+  requestPollFeed,
   requestSemaphoreGroup,
   requestServerEdDSAPublicKey,
   requestServerRSAPublicKey,
@@ -38,7 +39,7 @@ import "mocha";
 import { step } from "mocha-steps";
 import MockDate from "mockdate";
 import { rest } from "msw";
-import { SetupServer } from "msw/lib/node";
+import { SetupServer } from "msw/node";
 import NodeRSA from "node-rsa";
 import { Pool } from "postgres-pool";
 import { v4 as uuid } from "uuid";
@@ -98,6 +99,10 @@ import { PretixSyncStatus } from "../src/services/types";
 import { Zupass } from "../src/types";
 import { mostRecentCheckinEvent } from "../src/util/devconnectTicket";
 import {
+  makeTestCredential,
+  signCredentialPayload
+} from "./generic-issuance/util";
+import {
   DevconnectPretixDataMocker,
   IMockDevconnectPretixData,
   IOrganizer
@@ -118,7 +123,7 @@ import {
   expectCurrentSemaphoreToBe,
   testLatestHistoricSemaphoreGroups
 } from "./semaphore/checkSemaphore";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import {
   testUserSyncKeyChangeNoRev,
   testUserSyncKeyChangeWithRev,
@@ -131,8 +136,6 @@ import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("devconnect functionality", function () {
-  this.timeout(30_000);
-
   let application: Zupass;
   let mocker: DevconnectPretixDataMocker;
   let pretixMocker: ZuzaluPretixDataMocker;
@@ -1015,7 +1018,7 @@ describe("devconnect functionality", function () {
 
   /**
    * This test shows the case where a ticket has been checked in with
-   * Pretix, but not in PCDpass. The ticket will be marked as consumed
+   * Pretix, but not in Zupass. The ticket will be marked as consumed
    * on the basis of data received from Pretix.
    */
   step("should be able to sync a checked-in ticket", async function () {
@@ -1245,8 +1248,7 @@ describe("devconnect functionality", function () {
   });
 
   /**
-   * This shows end-to-end sync for a ticket that gets consumed in
-   * PCDpass.
+   * This shows end-to-end sync for a ticket that gets consumed in Zupass.
    */
   step(
     "should be able to check in a ticket and sync to Pretix",
@@ -1636,6 +1638,10 @@ describe("devconnect functionality", function () {
   );
 
   step("semaphore service should reflect correct state", async function () {
+    // New user login schedules an asynchronous reload of the Semaphore
+    // service, which we can't rely on having completed by the time we run this
+    // test, so we must ensure that groups are reloaded here.
+    await application.services.semaphoreService.reload();
     expectCurrentSemaphoreToBe(application, {
       p: [],
       r: [],
@@ -1947,12 +1953,12 @@ describe("devconnect functionality", function () {
     "user should be able to be issued some PCDs from the server",
     async function () {
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const response = await pollFeed(
+      const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       MockDate.reset();
 
@@ -1960,10 +1966,10 @@ describe("devconnect functionality", function () {
         throw new Error("expected to be able to get a feed response");
       }
 
-      expect(response.value?.actions?.length).to.eq(3);
+      expect(response.value?.actions?.length).to.eq(2);
 
       // Now we have an action to populate the folder
-      const populateAction = response.value?.actions?.[2];
+      const populateAction = response.value?.actions?.[1];
       expectToExist(populateAction, isReplaceInFolderAction);
 
       expect(populateAction.type).to.eq(PCDActionType.ReplaceInFolder);
@@ -1989,25 +1995,26 @@ describe("devconnect functionality", function () {
 
   step("issued pcds should have stable ids", async function () {
     MockDate.set(new Date());
-    const payload = JSON.stringify(createFeedCredentialPayload());
-    const expressResponse1 = await pollFeed(
+    const expressResponse1 = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
-      identity,
-      payload,
-      ZupassFeedIds.Devconnect
+      {
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        feedId: ZupassFeedIds.Devconnect
+      }
     );
-    const expressResponse2 = await pollFeed(
+    const expressResponse2 = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
-      identity,
-      payload,
-      ZupassFeedIds.Devconnect
+      {
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        feedId: ZupassFeedIds.Devconnect
+      }
     );
     MockDate.reset();
     const response1 = expressResponse1.value as PollFeedResponseValue;
     const response2 = expressResponse2.value as PollFeedResponseValue;
-    const action1 = response1.actions[2];
+    const action1 = response1.actions[1];
     expectToExist(action1, isReplaceInFolderAction);
-    const action2 = response2.actions[2];
+    const action2 = response2.actions[1];
     expectToExist(action2, isReplaceInFolderAction);
 
     const pcds1 = await Promise.all(
@@ -2050,18 +2057,18 @@ describe("devconnect functionality", function () {
 
       await devconnectPretixSyncService.trySync();
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const response = await pollFeed(
+      const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(3);
+      expect(responseBody.actions.length).to.eq(2);
 
-      const devconnectAction = responseBody.actions[2];
+      const devconnectAction = responseBody.actions[1];
       expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(isReplaceInFolderAction(devconnectAction)).to.be.true;
       expect(devconnectAction.folder).to.eq("Devconnect/New name");
@@ -2101,17 +2108,17 @@ describe("devconnect functionality", function () {
       await devconnectPretixSyncService.trySync();
 
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const response = await pollFeed(
+      const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       MockDate.reset();
       const responseBody = response.value as PollFeedResponseValue;
-      expect(responseBody.actions.length).to.eq(3);
-      const devconnectAction = responseBody.actions[2];
+      expect(responseBody.actions.length).to.eq(2);
+      const devconnectAction = responseBody.actions[1];
       expectToExist(devconnectAction, isReplaceInFolderAction);
       expect(devconnectAction.folder).to.eq("Devconnect/Event A");
 
@@ -2153,25 +2160,30 @@ describe("devconnect functionality", function () {
     "event 'superuser' should be able to checkin a valid ticket by ID",
     async function () {
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const issueResponse = await pollFeed(
+      const issueResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       MockDate.reset();
       const issueResponseBody = issueResponse.value as PollFeedResponseValue;
 
-      const action = issueResponseBody.actions[2];
+      const action = issueResponseBody.actions[1];
       expectToExist(action, isReplaceInFolderAction);
       const serializedTicket = action.pcds[2] as SerializedPCD<EdDSATicketPCD>;
       ticketPCD = await EdDSATicketPCDPackage.deserialize(serializedTicket.pcd);
 
-      const checkinResult = await checkinTicketById(
+      const checkinResult = await requestCheckInById(
         application.expressContext.localEndpoint,
-        ticketPCD.claim.ticket.ticketId,
-        checkerIdentity
+        {
+          ticketId: ticketPCD.claim.ticket.ticketId,
+          checkerProof: await makeTestCredential(
+            checkerIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          )
+        }
       );
 
       expect(checkinResult.success).to.eq(true);
@@ -2183,10 +2195,15 @@ describe("devconnect functionality", function () {
   step(
     "a 'superuser' should not be able to check in a ticket that has already been used to check in",
     async function () {
-      const checkinResult = await checkinTicketById(
+      const checkinResult = await requestCheckInById(
         application.expressContext.localEndpoint,
-        ticketPCD.claim.ticket.ticketId,
-        checkerIdentity
+        {
+          ticketId: ticketPCD.claim.ticket.ticketId,
+          checkerProof: await makeTestCredential(
+            checkerIdentity,
+            ZUPASS_CREDENTIAL_REQUEST
+          )
+        }
       );
 
       expect(checkinResult.value).to.eq(undefined);
@@ -2206,11 +2223,17 @@ describe("devconnect functionality", function () {
     "shouldn't be able to issue pcds for the incorrect feed credential payload",
     async function () {
       MockDate.set(new Date());
-      const expressResponse = await pollFeed(
+      const expressResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        "asdf",
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await signCredentialPayload(
+            identity,
+            // Obviously nonsensical type-cast, but `signCredentialPayload`
+            // will JSON.stringify() this
+            "asdf" as unknown as CredentialPayload
+          ),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       MockDate.reset();
 
@@ -2223,18 +2246,17 @@ describe("devconnect functionality", function () {
     async function () {
       // Generate credential payload at given time
       MockDate.set(new Date(2023, 10, 5, 14, 30, 0));
-      const payload = JSON.stringify(createFeedCredentialPayload());
-
+      const credential = await makeTestCredential(
+        identity,
+        ZUPASS_CREDENTIAL_REQUEST
+      );
       // Attempt to use credential payload one hour and twenty minutes later
       MockDate.set(new Date(2023, 10, 5, 15, 50, 0));
-      const expressResponse = await pollFeed(
+      const expressResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Devconnect
+        { pcd: credential, feedId: ZupassFeedIds.Devconnect }
       );
       MockDate.reset();
-
       expect(expressResponse.success).to.eq(false);
     }
   );
@@ -2243,22 +2265,20 @@ describe("devconnect functionality", function () {
     "shouldn't be able to issue pcds for a user that doesn't exist",
     async function () {
       MockDate.set(new Date());
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const expressResponse = await pollFeed(
+      const expressResponse = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        new Identity(),
-        payload,
-        ZupassFeedIds.Devconnect
+        {
+          pcd: await makeTestCredential(
+            new Identity(),
+            ZUPASS_CREDENTIAL_REQUEST
+          ),
+          feedId: ZupassFeedIds.Devconnect
+        }
       );
       MockDate.reset();
 
       const response = expressResponse.value as PollFeedResponseValue;
       expect(response.actions).to.deep.eq([
-        {
-          type: PCDActionType.DeleteFolder,
-          folder: "SBC SRW",
-          recursive: false
-        },
         {
           type: PCDActionType.DeleteFolder,
           folder: "Devconnect",

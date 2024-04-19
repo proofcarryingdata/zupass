@@ -17,8 +17,6 @@ import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 
 describe("server-side proving functionality", function () {
-  this.timeout(30_000);
-
   let application: Zupass;
 
   this.beforeAll(async () => {

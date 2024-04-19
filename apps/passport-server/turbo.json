@@ -1,0 +1,20 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "dotEnv": [".env"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "migrations/**",
+        "public/**",
+        "resources/**",
+        "scripts/**",
+        "src/**",
+        "test/**"
+      ],
+      "outputs": ["*.tsbuildinfo", "build/**"],
+      "cache": true
+    }
+  }
+}

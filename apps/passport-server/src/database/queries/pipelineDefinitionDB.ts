@@ -1,5 +1,6 @@
 import {
   PipelineDefinition,
+  PipelineHistoryEntry,
   PipelineLoadSummary,
   PipelineType
 } from "@pcd/passport-interface";
@@ -17,30 +18,36 @@ import { sqlQuery, sqlTransaction } from "../sqlQuery";
  */
 export interface IPipelineDefinitionDB {
   loadPipelineDefinitions(): Promise<PipelineDefinition[]>;
-  clearDefinition(definitionID: string): Promise<void>;
-  clearAllDefinitions(): Promise<void>;
-  getDefinition(definitionID: string): Promise<PipelineDefinition | undefined>;
-  setDefinition(definition: PipelineDefinition): Promise<void>;
-  setDefinitions(definitions: PipelineDefinition[]): Promise<void>;
+  deleteDefinition(pipelineId: string): Promise<void>;
+  deleteAllDefinitions(): Promise<void>;
+  getDefinition(pipelineId: string): Promise<PipelineDefinition | undefined>;
+  upsertDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void>;
+  upsertDefinitions(definitions: PipelineDefinition[]): Promise<void>;
   saveLoadSummary(
-    definitionID: string,
+    pipelineId: string,
     lastRunInfo?: PipelineLoadSummary
   ): Promise<void>;
   getLastLoadSummary(
-    definitionID: string
+    pipelineId: string
   ): Promise<PipelineLoadSummary | undefined>;
+  appendToEditHistory(
+    pipelineDefinition: PipelineDefinition,
+    editorUserId: string
+  ): Promise<void>;
+  getEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]>;
 }
 
 /**
  * Implements the above interface with the Postgres DB as back-end.
- * In reality we are probably going to want more fine-grained APIs - rather
- * than updating the entire definition, we are going to want to do things like
- * "change owner", "add editor" or "remove editor". The approach below is
- * simply for the MVP.
  */
 export class PipelineDefinitionDB implements IPipelineDefinitionDB {
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  private runInfos: any = {};
+  private runInfos: Record<string, PipelineLoadSummary | undefined> = {};
 
   private db: Pool;
 
@@ -49,26 +56,31 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
   }
 
   /**
-   * Intentionally saving these in-memory.
-   * TODO: save to db as an extra column in the PipelineDefinition table.
+   * Gets the last {@link PipelineLoadSummary} from an in-memory store for the
+   * {@link Pipeline} identified by the @param pipelineId.
    */
   public async getLastLoadSummary(
-    definitionID: string
+    pipelineId: string
   ): Promise<PipelineLoadSummary | undefined> {
-    return this.runInfos[definitionID];
+    return this.runInfos[pipelineId];
   }
 
   /**
-   * Intentionally saving these in-memory.
-   * TODO: save to db as an extra column in the PipelineDefinition table.
+   * Saves a {@link PipelineLoadSummary} to in-memory store for a {@link Pipeline}
+   * identified by the @param pipelineId.
    */
   public async saveLoadSummary(
-    definitionID: string,
+    pipelineId: string,
     lastRunInfo: PipelineLoadSummary | undefined
   ): Promise<void> {
-    this.runInfos[definitionID] = lastRunInfo;
+    this.runInfos[pipelineId] = lastRunInfo;
   }
 
+  /**
+   * Loads all {@link PipelineDefinition}s from the database.
+   *
+   * @todo use `zod` to ensure these are properly formatted.
+   */
   public async loadPipelineDefinitions(): Promise<PipelineDefinition[]> {
     const result = await sqlQuery(
       this.db,
@@ -80,8 +92,6 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
       GROUP BY p.id`
     );
 
-    // TODO: where should we check that the pipeline definitions
-    // we've loaded conform to the pipeline definition schema?
     return result.rows.map(
       (row: GenericIssuancePipelineRow): PipelineDefinition =>
         ({
@@ -90,36 +100,48 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
           editorUserIds: row.editor_user_ids.filter(
             (editorId: unknown) => typeof editorId === "string"
           ),
+          timeCreated: row.time_created.toISOString(),
+          timeUpdated: row.time_updated.toISOString(),
           type: row.pipeline_type as PipelineType,
-          options: row.config,
-          timeCreated: row.time_created,
-          timeUpdated: row.time_updated
+          options: row.config
         }) satisfies PipelineDefinition
     );
   }
 
-  public async clearAllDefinitions(): Promise<void> {
+  /**
+   * Deletes all {@link PipelineDefinition} from the database.
+   */
+  public async deleteAllDefinitions(): Promise<void> {
     await sqlQuery(this.db, "DELETE FROM generic_issuance_pipeline_editors");
     await sqlQuery(this.db, "DELETE FROM generic_issuance_pipelines");
   }
 
-  public async clearDefinition(definitionID: string): Promise<void> {
+  /**
+   * Deletes a particular {@link PipelineDefinition} from the database.
+   */
+  public async deleteDefinition(pipelineId: string): Promise<void> {
     await sqlTransaction(
       this.db,
       "Delete pipeline definition",
       async (client) => {
         await client.query(
           "DELETE FROM generic_issuance_pipeline_editors WHERE pipeline_id = $1",
-          [definitionID]
+          [pipelineId]
         );
         await client.query(
           "DELETE FROM generic_issuance_pipelines WHERE id = $1",
-          [definitionID]
+          [pipelineId]
         );
       }
     );
   }
 
+  /**
+   * Loads a particular {@link PipelineDefinition} from the database, if one
+   * exists.
+   *
+   * @todo use `zod` to parse this.
+   */
   public async getDefinition(
     definitionID: string
   ): Promise<PipelineDefinition | undefined> {
@@ -145,10 +167,10 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
         editorUserIds: row.editor_user_ids.filter(
           (editorId: unknown) => typeof editorId === "string"
         ),
+        timeCreated: row.time_created.toISOString(),
+        timeUpdated: row.time_updated.toISOString(),
         type: row.pipeline_type as PipelineType,
-        options: row.config,
-        timeCreated: row.time_created,
-        timeUpdated: row.time_updated
+        options: row.config
       };
     }
   }
@@ -158,11 +180,16 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
    * definition. If inserting, the caller is responsible for generating a UUID
    * as the pipeline ID.
    */
-  public async setDefinition(definition: PipelineDefinition): Promise<void> {
+  public async upsertDefinition(
+    definition: PipelineDefinition,
+    editorUserId: string | undefined
+  ): Promise<void> {
     await sqlTransaction(
       this.db,
       "Insert or update pipeline definition",
       async (client: PoolClient) => {
+        await this.appendToEditHistory(definition, editorUserId);
+
         const pipeline: GenericIssuancePipelineRow = (
           await client.query(
             `
@@ -217,11 +244,58 @@ export class PipelineDefinitionDB implements IPipelineDefinitionDB {
     );
   }
 
-  public async setDefinitions(
+  /**
+   * Bulk version of {@link upsertDefinition}.
+   */
+  public async upsertDefinitions(
     definitions: PipelineDefinition[]
   ): Promise<void> {
     for (const definition of definitions) {
-      await this.setDefinition(definition);
+      await this.upsertDefinition(definition, undefined);
     }
   }
+
+  public async appendToEditHistory(
+    pipelineDefinition: PipelineDefinition,
+    editorUserId?: string
+  ): Promise<void> {
+    await this.db.query(
+      `
+    insert into podbox_edit_history
+    (pipeline, editor_user_id, time_created)
+    values
+    ($1, $2, $3);`,
+      [pipelineDefinition, editorUserId, new Date()]
+    );
+  }
+
+  public async getEditHistory(
+    pipelineId: string,
+    maxQuantity?: number
+  ): Promise<PipelineHistoryEntry[]> {
+    const res = await this.db.query(
+      `
+    select * from podbox_edit_history
+    where pipeline->>'id' = $1
+    order by time_created asc
+    limit $2`,
+      [pipelineId, maxQuantity ?? 20]
+    );
+    return res.rows.map(
+      (row: PipelineHistoryRow) =>
+        ({
+          id: row.id,
+          pipeline: row.pipeline,
+          timeCreated: row.time_created.toISOString(),
+          editorUserId: row.editor_user_id ?? undefined
+        }) satisfies PipelineHistoryEntry
+    );
+  }
+}
+
+interface PipelineHistoryRow {
+  id: string;
+  pipeline: PipelineDefinition;
+  time_created: Date;
+  editor_user_id?: string;
 }

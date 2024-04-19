@@ -343,7 +343,13 @@ export interface AnonMessageWithDetails extends AnonMessage {
   reactions: string[];
 }
 
-export type PoapEvent = "devconnect" | "zuzalu23" | "zuconnect" | "vitalia";
+export type PoapEvent =
+  | "devconnect"
+  | "zuzalu23"
+  | "zuconnect"
+  | "vitalia"
+  | "edgecitydenver"
+  | "ethlatam";
 
 export interface RateLimitBucket {
   action_type: string;
@@ -357,8 +363,8 @@ export interface GenericIssuancePipelineRow {
   id: string;
   owner_user_id: string;
   editor_user_ids: string[];
-  time_created: string;
-  time_updated: string;
+  time_created: Date;
+  time_updated: Date;
   pipeline_type: string;
   // Config corresponds to the `options` property of PretixPipelineDefinition/
   // LemonadePipelineDefinition. There is no generic or base type for this, but

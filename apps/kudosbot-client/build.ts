@@ -7,6 +7,8 @@ import fs from "fs";
 import https from "https";
 import { IS_LOCAL_HTTPS } from "./src/constants";
 
+console.log("building kudosbot-client");
+
 dotenv.config();
 
 const consumerClientAppOpts: BuildOptions = {
@@ -31,14 +33,14 @@ const consumerClientAppOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built kudosbot client"))
+  .then(() => console.log("Built kudosbot artifacts"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
   switch (command) {
     case "build":
       const clientRes = await build({ ...consumerClientAppOpts, minify: true });
-      console.error("Built", clientRes);
+      console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(

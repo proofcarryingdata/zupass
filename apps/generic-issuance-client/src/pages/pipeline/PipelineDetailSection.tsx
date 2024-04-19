@@ -7,16 +7,20 @@ import {
   Badge,
   Box,
   Button,
+  Heading,
   ListItem,
+  Text,
   UnorderedList
 } from "@chakra-ui/react";
 import {
   PipelineDefinition,
   PipelineInfoResponseValue
 } from "@pcd/passport-interface";
+import _ from "lodash";
 import { ReactNode } from "react";
 import { PodLink } from "../../components/Core";
-import { LastLoaded } from "../../components/LastLoaded";
+import { pipelineDisplayNameStr } from "../../components/PipelineDisplayUtils";
+import { useGIContext } from "../../helpers/Context";
 import {
   getAllHoneycombLinkForPipeline,
   getHoneycombQueryDurationStr,
@@ -24,16 +28,18 @@ import {
 } from "../../helpers/util";
 import {
   PipelineAddManualTicketSection,
-  supportsManualTicketTable
+  supportsAddingManualTickets
 } from "./DetailsSections/PipelineAddManualTicketSection";
 import {
   PipelineDisplayManualTicketsSection,
-  supportsAddingManualTickets
+  supportsManualTicketTable
 } from "./DetailsSections/PipelineDisplayManualTicketsSection";
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
+import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
+import { SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
   pipelineInfo,
@@ -44,120 +50,216 @@ export function PipelineDetailSection({
   pipeline: PipelineDefinition;
   isAdminView: boolean;
 }): ReactNode {
+  const ctx = useGIContext();
+
   return (
     <>
-      <Box padding={4} mb={4}>
-        {pipelineInfo.feeds &&
-          pipelineInfo.feeds.map((feed, i) => (
-            <Box key={feed.url} mb={i === 0 ? 0 : 2}>
-              <PodLink
-                hideIcon
-                isExternal
-                to={`${
-                  process.env.PASSPORT_CLIENT_URL
-                }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
-              >
-                <Button colorScheme="green">
-                  <Box mr={2}>{feed.name} Feed for Zupass</Box>{" "}
-                  <ExternalLinkIcon mx="2px" />
-                </Button>
-              </PodLink>
-              <Box ml={4} display="inline-block"></Box>
-              {isAdminView && (
-                <PodLink to={feed.url} isExternal={true}>
-                  Feed Link
-                </PodLink>
-              )}
-            </Box>
-          ))}
+      <Box m={4}>
+        <Heading>
+          {pipelineDisplayNameStr(pipeline)} <CollapseAllButton />{" "}
+          <ExpandAllButton />
+        </Heading>
+        <Text>by {pipelineInfo.ownerEmail}</Text>
       </Box>
 
-      <Accordion defaultIndex={[]} allowMultiple={true}>
-        {supportsManualTicketTable(pipeline) && isAdminView && (
-          <AccordionItem>
-            <AccordionButton>Add Manual Ticket</AccordionButton>
-            <AccordionPanel>
-              <PipelineAddManualTicketSection
-                pipeline={pipeline}
-                isAdminView={isAdminView}
-              />
-            </AccordionPanel>
-          </AccordionItem>
-        )}
-
-        {supportsAddingManualTickets(pipeline) && isAdminView && (
-          <AccordionItem>
-            <AccordionButton>Existing Manual Tickets</AccordionButton>
-            <AccordionPanel>
-              <PipelineDisplayManualTicketsSection
-                pipeline={pipeline}
-                isAdminView={isAdminView}
-              />
-            </AccordionPanel>
-          </AccordionItem>
-        )}
-
+      <Accordion
+        index={ctx.pipelineDetailsAccordionState ?? []}
+        onChange={(index: number[]): void => {
+          ctx.setState({
+            pipelineDetailsAccordionState: index
+          });
+        }}
+        allowMultiple={true}
+      >
         <AccordionItem>
-          <AccordionButton>Latest Logs</AccordionButton>
+          <AccordionButton>Zupass Feed</AccordionButton>
           <AccordionPanel>
-            <PipelineLatestLogsSection lastLoad={pipelineInfo.lastLoad} />
+            <SectionContainer>
+              {pipelineInfo.feeds &&
+                pipelineInfo.feeds.map((feed, i) => (
+                  <Box key={feed.url} mb={i === 0 ? 0 : 2}>
+                    <PodLink
+                      hideIcon
+                      isExternal
+                      to={`${
+                        process.env.PASSPORT_CLIENT_URL
+                      }/#/add-subscription?url=${encodeURIComponent(feed.url)}`}
+                    >
+                      <Button colorScheme="green">
+                        <Box mr={2}>{feed.name} Feed for Zupass</Box>{" "}
+                        <ExternalLinkIcon mx="2px" />
+                      </Button>
+                    </PodLink>
+                    <Box ml={4} display="inline-block"></Box>
+                    {isAdminView && (
+                      <PodLink to={feed.url} isExternal={true}>
+                        Feed Link
+                      </PodLink>
+                    )}
+                  </Box>
+                ))}
+            </SectionContainer>
           </AccordionPanel>
         </AccordionItem>
 
         <AccordionItem>
-          <AccordionButton>Latest Data</AccordionButton>
+          <AccordionButton>Feed Subscribers</AccordionButton>
           <AccordionPanel>
-            <PipelineLatestDataSection latestAtoms={pipelineInfo.latestAtoms} />
-          </AccordionPanel>
-        </AccordionItem>
-
-        <AccordionItem>
-          <AccordionButton>Consumers</AccordionButton>
-          <AccordionPanel>
-            <PipelineLatestConsumersSection
-              latestConsumers={pipelineInfo.latestConsumers}
-            />
+            <SectionContainer>
+              <PipelineLatestConsumersSection
+                latestConsumers={pipelineInfo.latestConsumers}
+              />
+            </SectionContainer>
           </AccordionPanel>
         </AccordionItem>
 
         <AccordionItem>
           <AccordionButton>Semaphore Groups</AccordionButton>
           <AccordionPanel>
-            <PipelineSemaphoreGroupsSection lastLoad={pipelineInfo.lastLoad} />
+            <SectionContainer>
+              <PipelineSemaphoreGroupsSection
+                lastLoad={pipelineInfo.lastLoad}
+              />
+            </SectionContainer>
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Logs</AccordionButton>
+          <AccordionPanel>
+            <PipelineLatestLogsSection lastLoad={pipelineInfo.lastLoad} />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Data</AccordionButton>
+          <AccordionPanel>
+            <PipelineLatestDataSection
+              lastLoad={pipelineInfo.lastLoad}
+              latestAtoms={pipelineInfo.latestAtoms}
+            />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Version History</AccordionButton>
+          <AccordionPanel>
+            <SectionContainer>
+              <PipelineVersionHistorySection pipelineInfo={pipelineInfo} />
+            </SectionContainer>
           </AccordionPanel>
         </AccordionItem>
 
         {isAdminView && (
-          <AccordionItem>
-            <AccordionButton>
-              Tracing Links&nbsp;<Badge colorScheme="gray">Admin</Badge>
-            </AccordionButton>
-            <AccordionPanel>
-              <UnorderedList>
-                <ListItem>
-                  <PodLink
-                    isExternal={true}
-                    to={getLoadTraceHoneycombLinkForPipeline(pipeline.id)}
-                  >
-                    data load traces {getHoneycombQueryDurationStr()}
-                  </PodLink>
-                </ListItem>
-                <li>
-                  <PodLink
-                    isExternal={true}
-                    to={getAllHoneycombLinkForPipeline(pipeline.id)}
-                  >
-                    all traces related to this pipeline{" "}
-                    {getHoneycombQueryDurationStr()}
-                  </PodLink>
-                </li>
-              </UnorderedList>
-            </AccordionPanel>
-          </AccordionItem>
+          <>
+            {supportsAddingManualTickets(pipeline) && isAdminView && (
+              <AccordionItem>
+                <AccordionButton>
+                  Add Manual Ticket&nbsp;<Badge colorScheme="gray">Admin</Badge>
+                </AccordionButton>
+                <AccordionPanel>
+                  <SectionContainer>
+                    <PipelineAddManualTicketSection
+                      pipeline={pipeline}
+                      isAdminView={isAdminView}
+                    />
+                  </SectionContainer>
+                </AccordionPanel>
+              </AccordionItem>
+            )}
+
+            {supportsManualTicketTable(pipeline) && isAdminView && (
+              <AccordionItem>
+                <AccordionButton>
+                  Existing Manual Tickets&nbsp;
+                  <Badge colorScheme="gray">Admin</Badge>
+                </AccordionButton>
+                <AccordionPanel>
+                  <SectionContainer>
+                    <PipelineDisplayManualTicketsSection
+                      pipeline={pipeline}
+                      isAdminView={isAdminView}
+                    />
+                  </SectionContainer>
+                </AccordionPanel>
+              </AccordionItem>
+            )}
+            <AccordionItem>
+              <AccordionButton>
+                Tracing Links&nbsp;<Badge colorScheme="gray">Admin</Badge>
+              </AccordionButton>
+              <AccordionPanel>
+                <SectionContainer>
+                  <UnorderedList>
+                    <ListItem>
+                      <PodLink
+                        isExternal={true}
+                        to={getLoadTraceHoneycombLinkForPipeline(pipeline.id)}
+                      >
+                        data load traces {getHoneycombQueryDurationStr()}
+                      </PodLink>
+                    </ListItem>
+                    <ListItem>
+                      <PodLink
+                        isExternal={true}
+                        to={getAllHoneycombLinkForPipeline(pipeline.id)}
+                      >
+                        all traces related to this pipeline{" "}
+                        {getHoneycombQueryDurationStr()}
+                      </PodLink>
+                    </ListItem>
+                  </UnorderedList>
+                </SectionContainer>
+              </AccordionPanel>
+            </AccordionItem>
+          </>
         )}
       </Accordion>
-
-      <LastLoaded />
     </>
+  );
+}
+
+function CollapseAllButton(): ReactNode {
+  const ctx = useGIContext();
+  const disabled =
+    !ctx.pipelineDetailsAccordionState ||
+    ctx.pipelineDetailsAccordionState.length === 0;
+
+  return (
+    <Button
+      ml={2}
+      size={"sm"}
+      isDisabled={disabled}
+      onClick={(): void => {
+        ctx.setState({
+          pipelineDetailsAccordionState: []
+        });
+      }}
+    >
+      Collapse All
+    </Button>
+  );
+}
+
+const EXPANDED = [0, 1, 2, 3, 4, 5, 6, 7, 8, 9];
+function ExpandAllButton(): ReactNode {
+  const ctx = useGIContext();
+  const disabled =
+    !ctx.pipelineDetailsAccordionState ||
+    _.isEqual(ctx.pipelineDetailsAccordionState, EXPANDED);
+
+  return (
+    <Button
+      ml={2}
+      size={"sm"}
+      isDisabled={disabled}
+      onClick={(): void => {
+        ctx.setState({
+          pipelineDetailsAccordionState: EXPANDED
+        });
+      }}
+    >
+      Expand All
+    </Button>
   );
 }

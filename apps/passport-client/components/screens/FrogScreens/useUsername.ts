@@ -22,6 +22,9 @@ export function useUsernameGenerator():
           32,
           bigintToUint8Array(BigInt(sempahoreId))
         );
+        if (randomBytes === null) {
+          throw new Error("Could not generate random data");
+        }
         const randomBigInt = uint8arrayToBigint(randomBytes);
 
         const randomAdjective: string =

@@ -2,10 +2,10 @@ import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
   KnownTicketGroup,
   User,
+  ZUPASS_CREDENTIAL_REQUEST,
   ZupassFeedIds,
   ZuzaluUserRole,
-  createFeedCredentialPayload,
-  pollFeed,
+  requestPollFeed,
   requestVerifyTicket,
   requestVerifyTicketById
 } from "@pcd/passport-interface";
@@ -35,6 +35,7 @@ import {
   zuconnectTicketsDifferent
 } from "../src/services/zuconnectTripshaSyncService";
 import { Zupass } from "../src/types";
+import { makeTestCredential } from "./generic-issuance/util";
 import { expectCurrentSemaphoreToBe } from "./semaphore/checkSemaphore";
 import {
   MOCK_ZUCONNECT_TRIPSHA_KEY,
@@ -46,13 +47,12 @@ import {
   goodResponse,
   makeHandler
 } from "./tripsha/mockTripshaAPI";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
 describe("zuconnect functionality", function () {
-  this.timeout(30_000);
   let db: Pool;
   let server: SetupServer;
   let zuconnectTripshaSyncService: ZuconnectTripshaSyncService;
@@ -329,12 +329,12 @@ describe("zuconnect functionality", function () {
 
   it("should be able to be issued tickets", async () => {
     MockDate.set(new Date());
-    const payload = JSON.stringify(createFeedCredentialPayload());
-    const response = await pollFeed(
+    const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
-      identity,
-      payload,
-      ZupassFeedIds.Zuconnect_23
+      {
+        pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+        feedId: ZupassFeedIds.Zuconnect_23
+      }
     );
     MockDate.reset();
 
@@ -353,6 +353,7 @@ describe("zuconnect functionality", function () {
     expect(ticketPCD.claim.ticket.attendeeEmail).to.eq(
       goodResponse.tickets[0].email
     );
+    expectToExist(ticketPCD.claim.ticket.imageUrl);
   });
 
   it("should recognize issued ticket as known ticket", async () => {
@@ -417,7 +418,7 @@ describe("zuconnect functionality", function () {
     expect(response?.value?.verified).to.be.true;
   });
 
-  step("should verify zuconnect tickets by ID", async () => {
+  it("should verify zuconnect tickets by ID", async () => {
     const response = await requestVerifyTicketById(
       application.expressContext.localEndpoint,
       {
@@ -468,12 +469,16 @@ describe("zuconnect functionality", function () {
     expect(tickets.length).to.eq(numberOfValidTickets + 1);
 
     MockDate.set(new Date());
-    const payload = JSON.stringify(createFeedCredentialPayload());
-    const response = await pollFeed(
+    const response = await requestPollFeed(
       `${application.expressContext.localEndpoint}/feeds`,
-      userWithTwoTicketsRow.identity,
-      payload,
-      ZupassFeedIds.Zuconnect_23
+      {
+        pcd: await makeTestCredential(
+          userWithTwoTicketsRow.identity,
+          ZUPASS_CREDENTIAL_REQUEST
+        ),
+
+        feedId: ZupassFeedIds.Zuconnect_23
+      }
     );
     MockDate.reset();
 

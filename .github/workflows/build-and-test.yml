@@ -1,16 +1,28 @@
 name: Build and Test
 run-name: Build and Test
+
 on:
   push:
     branches:
       - main
   pull_request:
     branches:
-      - main
+      - "**"
   merge_group:
+
+# https://docs.github.com/en/actions/using-jobs/using-concurrency#example-using-concurrency-and-the-default-behavior
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
 jobs:
   Build-and-Test:
-    runs-on: ubuntu-latest
+    env:
+      CIRCOM_VERSION: v2.1.8
+      TURBO_TEAM: ${{ secrets.TURBO_TEAM }}
+      TURBO_TOKEN: ${{ secrets.TURBO_TOKEN }}
+    runs-on:
+      labels: ubuntu-latest-l
     services:
       postgres:
         image: postgres:15
@@ -20,31 +32,48 @@ jobs:
           POSTGRES_DB: postgres
         options: >-
           --health-cmd pg_isready
-          --health-interval 10s
-          --health-timeout 5s
-          --health-retries 5
+          --health-interval 200ms
+          --health-timeout 200ms
+          --health-retries 10
         ports:
           # Maps tcp port 5432 on service container to the host
           - 5432:5432
+
     steps:
       - name: Check out repository code
-        uses: actions/checkout@v3
+        uses: actions/checkout@v4
       - name: Install Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
-          node-version: 18.x
+          node-version: 20.x
           cache: "yarn"
 
-      - name: Configure Turbo cache
-        uses: dtinth/setup-github-actions-caching-for-turbo@v1
+      - name: Cache circom and cargo
+        uses: actions/cache@v3
+        id: cache-circom
+        with:
+          path: |
+            ~/.cargo/bin/
+            ~/.cargo/registry/index/
+            ~/.cargo/registry/cache/
+            ~/.cargo/git/db/
+            cibuild/circom/
+          key: ${{ runner.os }}-circom-${{ env.CIRCOM_VERSION }}
+
+      - name: "Install circom (if not cached)"
+        if: ${{ steps.cache-circom.outputs.cache-hit != 'true' }}
+        run: "scripts/ci/install_circom.sh $CIRCOM_VERSION"
+
+      - name: "Add cached circom to PATH (if cached)"
+        if: ${{ steps.cache-circom.outputs.cache-hit == 'true' }}
+        run: "echo '~/.cargo/bin' >> $GITHUB_PATH"
 
       - run: "yarn install"
       - name: "Check that yarn install did not cause changes to yarn.lock"
         run: "git diff --quiet -- yarn.lock"
       - run: "yarn check-references"
       - run: "yarn build"
-      - run: "yarn typedoc --emit none"
       - run: "yarn lint"
-      - run: "yarn test"
+      - run: "yarn test:ci"
       - name: "Test that template package works out-of-the-box"
-        run: "yarn test-generated-package"
+        run: "yarn turbo run test-generated-package --filter='//'"

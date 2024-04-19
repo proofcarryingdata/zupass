@@ -260,14 +260,14 @@ export function PrivacyNotice(): JSX.Element {
       <Wrapper>
         {expanded ? (
           <ExpandedNotice>
-            <ExpandedTermsTextContainer>
-              <PrivacyNoticeText />
-            </ExpandedTermsTextContainer>
             <CloseButtonContainer>
               <Button size="large" onClick={toggleExpand}>
                 Minimize
               </Button>
             </CloseButtonContainer>
+            <ExpandedTermsTextContainer>
+              <PrivacyNoticeText />
+            </ExpandedTermsTextContainer>
           </ExpandedNotice>
         ) : (
           <MinimizedNotice onClick={!expanded && toggleExpand}>
@@ -318,12 +318,12 @@ const ExpandedNotice = styled.div`
   border-top-left-radius: 4px;
   border-top-right-radius: 4px;
   position: fixed;
-  top: 5vh;
-  left: 5vw;
+  top: 10vh;
+  left: 2.5vw;
 
-  width: 90vw;
-  height: 90vh;
-  max-width: 90vw;
+  width: 95vw;
+  height: 75vh;
+  max-width: 95vw;
   max-height: 90vh;
 
   overflow: hidden;

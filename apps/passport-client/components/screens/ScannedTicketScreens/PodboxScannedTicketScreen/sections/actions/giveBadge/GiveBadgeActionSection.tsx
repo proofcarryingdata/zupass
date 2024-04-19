@@ -1,7 +1,7 @@
 import { ticketDisplayName } from "@pcd/eddsa-ticket-pcd";
 import {
   BadgeConfig,
-  PodboxActionPreCheckResult
+  PodboxTicketActionPreCheckResult
 } from "@pcd/passport-interface";
 import {
   Dispatch,
@@ -32,7 +32,7 @@ export function GiveBadgeActionSection({
   setInProgress,
   isLoading
 }: {
-  precheck: PodboxActionPreCheckResult;
+  precheck: PodboxTicketActionPreCheckResult;
   ticketId: string;
   eventId: string;
   setInProgress: Dispatch<SetStateAction<boolean>>;
@@ -60,9 +60,8 @@ export function GiveBadgeActionSection({
   useEffect(() => {
     if (executor?.result?.success) {
       setGivenBadgesThisSession((set) => {
-        set.add(selectedBadge.id ?? "");
+        set.add(selectedBadge?.id ?? "");
         return new Set(Array.from(set));
-        return set;
       });
     }
   }, [executor.result?.success, selectedBadge?.id]);
@@ -102,7 +101,7 @@ export function GiveBadgeActionSection({
     return (
       <>
         <StatusContainer size="small" disabled={isLoading}>
-          Gave {badgeDisplayName(selectedBadge)}
+          Gave {badgeDisplayName(selectedBadge as BadgeConfig)}
         </StatusContainer>
         <Spacer h={8} />
         <Button
@@ -146,7 +145,6 @@ export function GiveBadgeActionSection({
 
       {!isLoading && !selectedBadge && !disabled && (
         <BadgeSelect
-          value={selectedBadge?.id}
           onChange={(e): void =>
             setSelectedBadge(badgeOptions.find((b) => b.id === e.target.value))
           }

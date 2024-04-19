@@ -1,23 +1,21 @@
 import { Spacer } from "@pcd/passport-ui";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
 import {
   useLaserScannerKeystrokeInput,
-  useQuery,
-  useSelf,
-  useUserForcedToLogout
+  useLoginIfNoSelf,
+  useQuery
 } from "../../../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  pendingGenericIssuanceCheckinRequestKey,
-  setPendingGenericIssuanceCheckinRequest
-} from "../../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../../src/sessionStorage";
 import { Button, CenterColumn, H5 } from "../../../core";
 import { RippleLoader } from "../../../core/RippleLoader";
 import { AppContainer } from "../../../shared/AppContainer";
 import { CardBodyContainer } from "../../../shared/PCDCard";
 import { usePreCheckTicket } from "./hooks/usePrecheckTicket";
-import { useTicketDataFromQuery } from "./hooks/useTicketDataFromQuery";
+import {
+  TicketIdState,
+  useTicketDataFromQuery
+} from "./hooks/useTicketDataFromQuery";
 import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection";
 
 /**
@@ -41,38 +39,59 @@ import { PodboxTicketActionSection } from "./sections/PodboxTicketActionSection"
  */
 export function PodboxScannedTicketScreen(): JSX.Element {
   useLaserScannerKeystrokeInput();
-  const userForcedToLogout = useUserForcedToLogout();
   const query = useQuery();
-  const self = useSelf();
-  const [inProgress, setInProgress] = useState(false);
 
-  const {
-    loading: parsingTicketData,
-    ticketId,
-    eventId
-  } = useTicketDataFromQuery();
-
-  const { loading: checkingTicket, result: precheck } = usePreCheckTicket(
-    ticketId,
-    eventId
+  useLoginIfNoSelf(
+    pendingRequestKeys.genericIssuanceCheckin,
+    JSON.stringify(
+      query?.get("id") ? { id: query?.get("id") } : { pcd: query?.get("pcd") }
+    )
   );
 
-  useEffect(() => {
-    if (self == null || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(
-        query.get("id") ? { id: query.get("id") } : { pcd: query.get("pcd") }
-      );
-      setPendingGenericIssuanceCheckinRequest(stringifiedRequest);
-      if (self == null) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingGenericIssuanceCheckinRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [self, userForcedToLogout, query]);
+  const ticketIds = useTicketDataFromQuery();
 
-  if (parsingTicketData || checkingTicket) {
+  if (ticketIds.state === TicketIdState.Loading) {
+    return (
+      <AppContainer bg={"primary"}>
+        <CenterColumn w={400}>
+          <Spacer h={32} />
+          <RippleLoader />
+        </CenterColumn>
+      </AppContainer>
+    );
+  }
+
+  if (ticketIds.state === TicketIdState.Success) {
+    return (
+      <PrecheckTicket
+        ticketId={ticketIds.ticketId}
+        eventId={ticketIds.eventId}
+      />
+    );
+  }
+
+  return (
+    <AppContainer bg={"primary"}>
+      <CenterColumn w={400}>
+        <Spacer h={32} />
+        <div>Could not scan ticket.</div>
+        <Spacer h={32} />
+        <ScanAnotherTicket />
+      </CenterColumn>
+    </AppContainer>
+  );
+}
+
+function PrecheckTicket({
+  ticketId,
+  eventId
+}: {
+  ticketId: string;
+  eventId: string;
+}): JSX.Element {
+  const { loading, result } = usePreCheckTicket(ticketId, eventId);
+
+  if (loading) {
     return (
       <AppContainer bg={"primary"}>
         <CenterColumn w={400}>
@@ -87,9 +106,7 @@ export function PodboxScannedTicketScreen(): JSX.Element {
     <AppContainer bg={"primary"}>
       <CenterColumn w={400}>
         <PodboxTicketActionSection
-          setIsLoading={setInProgress}
-          isLoading={inProgress}
-          precheck={precheck}
+          precheck={result}
           ticketId={ticketId}
           eventId={eventId}
         />
@@ -158,18 +175,6 @@ export function Back({ disabled }: { disabled?: boolean }): JSX.Element {
 
 export const TicketInfoContainer = styled.div`
   padding: 16px;
-`;
-
-export const Container = styled.div`
-  margin-top: 64px;
-  color: var(--bg-dark-primary);
-  width: 400px;
-  padding: 0px 32px;
-`;
-
-export const CheckinSuccess = styled.span`
-  color: green;
-  font-size: 1.5em;
 `;
 
 export const Spread = styled.div`

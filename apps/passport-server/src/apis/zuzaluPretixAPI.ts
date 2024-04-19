@@ -25,7 +25,7 @@ export class ZuzaluPretixAPI implements IZuzaluPretixAPI {
 
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/orders/`;
-      while (url != null) {
+      while (url) {
         logger(`[PRETIX] Fetching ${url}`);
         const res = await instrumentedFetch(url, {
           headers: { Authorization: `Token ${this.config.token}` }
@@ -53,7 +53,7 @@ export class ZuzaluPretixAPI implements IZuzaluPretixAPI {
 
       // Fetch orders from paginated API
       let url = `${this.config.orgUrl}/events/${eventID}/subevents/`;
-      while (url != null) {
+      while (url) {
         logger(`[PRETIX] Fetching ${url}`);
         const res = await instrumentedFetch(url, {
           headers: { Authorization: `Token ${this.config.token}` }

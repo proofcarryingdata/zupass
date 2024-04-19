@@ -8,16 +8,12 @@ import { useEffect } from "react";
 import { useLocation } from "react-router-dom";
 import {
   useDispatch,
+  useLoginIfNoSelf,
   useRequirePassword,
-  useSelf,
-  useUserForcedToLogout
+  useSelf
 } from "../../../src/appHooks";
 import { validateRequest } from "../../../src/passportRequest";
-import {
-  clearAllPendingRequests,
-  pendingAddRequestKey,
-  setPendingAddRequest
-} from "../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { AppContainer } from "../../shared/AppContainer";
@@ -29,7 +25,7 @@ import { ProveAndAddScreen } from "./ProveAndAddScreen";
  * PCD can either be a `SerializedPCD` passed in via a url, or one that
  * is freshly generated in Zupass via a proving screen.
  */
-export function AddScreen(): JSX.Element {
+export function AddScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   useRequirePassword();
   const dispatch = useDispatch();
@@ -38,7 +34,6 @@ export function AddScreen(): JSX.Element {
   const params = new URLSearchParams(location.search);
   const request = validateRequest(params);
   const screen = getScreen(request);
-  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
     if (screen === null) {
@@ -46,24 +41,13 @@ export function AddScreen(): JSX.Element {
     }
   }, [dispatch, screen]);
 
-  useEffect(() => {
-    if (self == null || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(request);
-      setPendingAddRequest(stringifiedRequest);
-      if (self == null) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingAddRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [request, self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingRequestKeys.add, request);
 
-  if (self == null) {
+  if (!self) {
     return null;
   }
 
-  if (screen == null) {
+  if (!screen) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }

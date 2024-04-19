@@ -1,16 +1,12 @@
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
   ITicketData,
   TicketCategory
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
-  GenericIssuancePreCheckRequest,
   GenericPretixCheckinList,
   GenericPretixEvent,
   GenericPretixEventSettings,
@@ -23,14 +19,14 @@ import {
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
+  PodboxTicketActionPreCheckRequest,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
   PretixEventConfig,
   PretixPipelineDefinition,
-  PretixProductConfig,
-  verifyFeedCredential,
-  verifyTicketActionCredential
+  PretixProductConfig
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -47,6 +43,7 @@ import {
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
@@ -67,8 +64,9 @@ import {
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
+import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
-import { makePLogErr, makePLogInfo, makePLogWarn } from "../util";
+import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
 
 const LOG_NAME = "PretixPipeline";
@@ -89,8 +87,8 @@ export class PretixPipeline implements BasePipeline {
    */
   private eddsaPrivateKey: string;
   private definition: PretixPipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
   private cacheService: PersistentCacheService;
+  private credentialSubservice: CredentialSubservice;
   private loaded: boolean;
 
   // Pending check-ins are check-ins which have either completed (and have
@@ -135,7 +133,7 @@ export class PretixPipeline implements BasePipeline {
     definition: PretixPipelineDefinition,
     db: IPipelineAtomDB,
     api: IGenericPretixAPI,
-    zupassPublicKey: EdDSAPublicKey,
+    credentialSubservice: CredentialSubservice,
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
@@ -145,7 +143,6 @@ export class PretixPipeline implements BasePipeline {
     this.definition = definition;
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
-    this.zupassPublicKey = zupassPublicKey;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -208,6 +205,7 @@ export class PretixPipeline implements BasePipeline {
     this.loaded = false;
     this.checkinDB = checkinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
+    this.credentialSubservice = credentialSubservice;
   }
 
   public async start(): Promise<void> {
@@ -368,6 +366,7 @@ export class PretixPipeline implements BasePipeline {
           atomsLoaded: atomsToSave.length,
           atomsExpected: atomsToSave.length,
           errorMessage: undefined,
+          semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
           success: true
         } satisfies PipelineLoadSummary;
       }
@@ -406,9 +405,7 @@ export class PretixPipeline implements BasePipeline {
   }
 
   public async triggerSemaphoreGroupUpdate(): Promise<void> {
-    const data = await this.semaphoreGroupData();
     return traced(LOG_NAME, "triggerSemaphoreGroupUpdate", async (_span) => {
-      await this.semaphoreGroupProvider?.update(data);
       tracePipeline(this.definition);
       // Whenever an update is triggered, we want to make sure that the
       // fetching of data and the actual update are atomic.
@@ -716,7 +713,7 @@ export class PretixPipeline implements BasePipeline {
 
         const nameQuestionAnswer = answers?.find(
           (a) =>
-            product?.nameQuestionPretixQuestionIdentitifier != null &&
+            product?.nameQuestionPretixQuestionIdentitifier &&
             a?.question_identifier ===
               product?.nameQuestionPretixQuestionIdentitifier
         )?.answer;
@@ -737,7 +734,7 @@ export class PretixPipeline implements BasePipeline {
 
           let pretix_checkin_timestamp: Date | null = null;
 
-          if (pretix_checkin_timestamp_string != null) {
+          if (pretix_checkin_timestamp_string !== null) {
             try {
               const parsedDate = Date.parse(
                 pretix_checkin_timestamp_string ?? ""
@@ -872,36 +869,14 @@ export class PretixPipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      // TODO: cache the verification
-      const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
-
-      const serializedEmailPCD = payload.pcd;
-      if (!serializedEmailPCD) {
-        throw new Error("missing email pcd");
-      }
-
-      const emailPCD = await EmailPCDPackage.deserialize(
-        serializedEmailPCD.pcd
-      );
-
-      if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
-        throw new Error(`Semaphore signature does not match email PCD`);
-      }
-
-      if (
-        !isEqualEdDSAPublicKey(
-          emailPCD.proof.eddsaPCD.claim.publicKey,
-          this.zupassPublicKey
-        )
-      ) {
-        throw new Error(`Email PCD is not signed by Zupass`);
-      }
+      const { emailClaim } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         const didUpdate = await this.consumerDB.save(
           this.id,
-          emailPCD.claim.emailAddress,
-          emailPCD.claim.semaphoreId,
+          emailClaim.emailAddress,
+          emailClaim.semaphoreId,
           new Date()
         );
 
@@ -913,13 +888,13 @@ export class PretixPipeline implements BasePipeline {
         }
       }
 
-      const email = emailPCD.claim.emailAddress;
+      const email = emailClaim.emailAddress;
       span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
+      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
 
       const tickets = await this.getTicketsForEmail(
         email,
-        credential.claim.identityCommitment
+        emailClaim.semaphoreId
       );
 
       span?.setAttribute("pcds_issued", tickets.length);
@@ -1224,7 +1199,7 @@ export class PretixPipeline implements BasePipeline {
    * ticket data is returned.
    */
   private async checkPretixTicketPCDCanBeCheckedIn(
-    request: GenericIssuancePreCheckRequest
+    request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced<ActionConfigResponseValue>(
       LOG_NAME,
@@ -1233,58 +1208,29 @@ export class PretixPipeline implements BasePipeline {
         tracePipeline(this.definition);
 
         let checkerEmail: string;
-        let ticketId: string;
-        let eventId: string;
+        const { eventId, ticketId } = request;
+
+        // This method can only be used to pre-check for check-ins.
+        // There is no pre-check for any other kind of action at this time.
+        if (request.action.checkin !== true) {
+          throw new PCDHTTPError(400, "Not supported");
+        }
 
         try {
-          const payload = await verifyTicketActionCredential(
-            request.credential
-          );
-          if (
-            !payload.action?.checkin ||
-            !payload?.ticketId ||
-            !payload.eventId ||
-            !payload.emailPCD
-          ) {
-            throw new Error("not implemented");
-          }
-
-          ticketId = payload.ticketId;
-          eventId = payload.eventId;
-          const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.emailPCD.pcd
-          );
-
-          if (
-            !isEqualEdDSAPublicKey(
-              checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-              this.zupassPublicKey
-            )
-          ) {
-            logger(
-              `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
-            );
-            return {
-              success: true,
-              checkinActionInfo: {
-                permissioned: false,
-                canCheckIn: false,
-                reason: { name: "InvalidSignature" }
-              }
-            };
-          }
-
           span?.setAttribute("ticket_id", ticketId);
-          span?.setAttribute(
-            "checker_email",
-            checkerEmailPCD.claim.emailAddress
-          );
+
+          const { emailClaim: checkerEmailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
+              request.credential
+            );
+
+          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
           span?.setAttribute(
             "checked_semaphore_id",
-            checkerEmailPCD.claim.semaphoreId
+            checkerEmailClaim.semaphoreId
           );
 
-          checkerEmail = checkerEmailPCD.claim.emailAddress;
+          checkerEmail = checkerEmailClaim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1324,6 +1270,22 @@ export class PretixPipeline implements BasePipeline {
             const canCheckInTicketResult =
               await this.canCheckInPretixTicket(ticketAtom);
             if (canCheckInTicketResult !== true) {
+              if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                return {
+                  success: true,
+                  checkinActionInfo: {
+                    permissioned: true,
+                    canCheckIn: false,
+                    reason: canCheckInTicketResult,
+                    ticket: {
+                      eventName: this.atomToEventName(ticketAtom),
+                      ticketName: this.atomToTicketName(ticketAtom),
+                      attendeeEmail: ticketAtom.email as string,
+                      attendeeName: ticketAtom.name
+                    }
+                  }
+                };
+              }
               return {
                 success: true,
                 checkinActionInfo: {
@@ -1355,6 +1317,27 @@ export class PretixPipeline implements BasePipeline {
               const canCheckInTicketResult =
                 await this.canCheckInManualTicket(manualTicket);
               if (canCheckInTicketResult !== true) {
+                if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                  const eventConfig = this.getEventById(manualTicket.eventId);
+                  const ticketType = this.getProductById(
+                    eventConfig,
+                    manualTicket.productId
+                  );
+                  return {
+                    success: true,
+                    checkinActionInfo: {
+                      permissioned: true,
+                      canCheckIn: false,
+                      reason: canCheckInTicketResult,
+                      ticket: {
+                        eventName: eventConfig.name,
+                        ticketName: ticketType.name,
+                        attendeeEmail: manualTicket.attendeeEmail,
+                        attendeeName: manualTicket.attendeeName
+                      }
+                    }
+                  };
+                }
                 return {
                   success: true,
                   checkinActionInfo: {
@@ -1425,7 +1408,7 @@ export class PretixPipeline implements BasePipeline {
    * a check-in API request to Pretix.
    */
   private async checkinPretixTicketPCDs(
-    request: GenericIssuanceCheckInRequest
+    request: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return traced(LOG_NAME, "checkinPretixTicketPCDs", async (span) => {
       tracePipeline(this.definition);
@@ -1438,40 +1421,21 @@ export class PretixPipeline implements BasePipeline {
       );
 
       let checkerEmail: string;
-      let ticketId: string;
-      let eventId: string;
+      const { ticketId, eventId } = request;
 
       try {
-        const payload = await verifyTicketActionCredential(request.credential);
-        if (!payload.ticketId || !payload.eventId || !payload.emailPCD) {
-          throw new Error("not implemented");
-        }
-
-        ticketId = payload.ticketId;
-        eventId = payload.eventId;
-        const checkerEmailPCD = await EmailPCDPackage.deserialize(
-          payload.emailPCD.pcd
-        );
-
-        if (
-          !isEqualEdDSAPublicKey(
-            checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-            this.zupassPublicKey
-          )
-        ) {
-          logger(
-            `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
-          );
-          return { success: false, error: { name: "InvalidSignature" } };
-        }
-
         span?.setAttribute("ticket_id", ticketId);
-        span?.setAttribute("checker_email", checkerEmailPCD.claim.emailAddress);
+        const { emailClaim: checkerEmailClaim } =
+          await this.credentialSubservice.verifyAndExpectZupassEmail(
+            request.credential
+          );
+
+        span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
         span?.setAttribute(
           "checked_semaphore_id",
-          checkerEmailPCD.claim.semaphoreId
+          checkerEmailClaim.semaphoreId
         );
-        checkerEmail = checkerEmailPCD.claim.emailAddress;
+        checkerEmail = checkerEmailClaim.emailAddress;
       } catch (e) {
         logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
         setError(e, span);
@@ -1584,13 +1548,13 @@ export class PretixPipeline implements BasePipeline {
       LOG_NAME,
       "checkInPretixTicket",
       async (span): Promise<PodboxTicketActionResponseValue> => {
-        if (ticketAtom.isConsumed) {
+        if (ticketAtom.isConsumed && ticketAtom.timestampConsumed) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
           return {
             success: false,
             error: {
               name: "AlreadyCheckedIn",
-              checkinTimestamp: ticketAtom.timestampConsumed?.toISOString(),
+              checkinTimestamp: ticketAtom.timestampConsumed.toISOString(),
               checker: PRETIX_CHECKER // Pretix does not store a "checker"
             }
           };
@@ -1693,6 +1657,31 @@ export class PretixPipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
+  }
+
+  /**
+   * Returns all of the IDs associated with a Pretix pipeline definition.
+   */
+  public static uniqueIds(definition: PretixPipelineDefinition): string[] {
+    const ids = [definition.id];
+
+    for (const event of definition.options.events) {
+      ids.push(event.genericIssuanceId);
+
+      for (const product of event.products) {
+        ids.push(product.genericIssuanceId);
+      }
+    }
+
+    for (const semaphoreGroup of definition.options.semaphoreGroups ?? []) {
+      ids.push(semaphoreGroup.groupId);
+    }
+
+    for (const manualTicket of definition.options.manualTickets ?? []) {
+      ids.push(manualTicket.id);
+    }
+
+    return ids;
   }
 }
 

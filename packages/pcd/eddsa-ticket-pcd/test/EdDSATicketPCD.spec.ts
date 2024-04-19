@@ -10,8 +10,6 @@ import {
 } from "../src";
 
 describe("EdDSA ticket should work", function () {
-  this.timeout(1000 * 30);
-
   let ticket: EdDSATicketPCD;
 
   this.beforeAll(async () => {

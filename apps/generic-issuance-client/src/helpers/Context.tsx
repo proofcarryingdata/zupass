@@ -1,7 +1,8 @@
-import { createContext } from "react";
-
-// I am overall not sure about this file, so I didn't go too far.
-// I would really like to get set up with Redux asap.
+import {
+  HydratedPipelineHistoryEntry,
+  PipelineDefinition
+} from "@pcd/passport-interface";
+import { createContext, useContext, useMemo } from "react";
 
 export interface GIError {
   name: string;
@@ -15,6 +16,8 @@ export interface GIContextState {
   logout: () => Promise<void>;
   handleAuthToken: (token?: string) => Promise<void>;
   devModeAuthToken?: string;
+  viewingOlderPipelineVersion?: HydratedPipelineHistoryEntry;
+  pipelineDetailsAccordionState?: number[];
 }
 
 export const GIContext = createContext<GIContextState>({
@@ -26,3 +29,31 @@ export const GIContext = createContext<GIContextState>({
   // eslint-disable-next-line @typescript-eslint/no-empty-function
   handleAuthToken: async (_token?: string): Promise<void> => {}
 });
+
+export function useGIContext(): GIContextState {
+  return useContext(GIContext);
+}
+
+export interface HistoryState {
+  viewingHistory: boolean;
+  historyEntry?: HydratedPipelineHistoryEntry;
+  pipeline: PipelineDefinition | undefined;
+}
+
+export function useViewingPipelineDefinition(
+  defaultDefinition?: PipelineDefinition
+): HistoryState {
+  const ctx = useGIContext();
+  const viewingHistory = ctx.viewingOlderPipelineVersion !== undefined;
+  return useMemo(
+    () =>
+      ({
+        viewingHistory,
+        pipeline: viewingHistory
+          ? ctx.viewingOlderPipelineVersion?.pipeline
+          : defaultDefinition,
+        historyEntry: ctx.viewingOlderPipelineVersion
+      }) satisfies HistoryState,
+    [ctx.viewingOlderPipelineVersion, defaultDefinition, viewingHistory]
+  );
+}

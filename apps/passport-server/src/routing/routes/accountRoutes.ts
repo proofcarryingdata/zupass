@@ -3,20 +3,18 @@ import {
   ConfirmEmailRequest,
   CreateNewUserRequest,
   SaltResponseValue,
-  VerifyTokenRequest,
-  VerifyTokenResponseValue
+  VerifyTokenRequest
 } from "@pcd/passport-interface";
 import { normalizeEmail } from "@pcd/util";
 import express, { Request, Response } from "express";
 import { ApplicationContext, GlobalServices } from "../../types";
 import { logger } from "../../util/logger";
 import { checkBody, checkQueryParam, checkUrlParam } from "../params";
-import { PCDHTTPError } from "../pcdHttpError";
 
 export function initAccountRoutes(
   app: express.Application,
   _context: ApplicationContext,
-  { userService, emailTokenService }: GlobalServices
+  { userService }: GlobalServices
 ): void {
   logger("[INIT] initializing account routes");
 
@@ -82,26 +80,9 @@ export function initAccountRoutes(
     const token = checkBody<VerifyTokenRequest, "token">(req, "token");
     const email = checkBody<VerifyTokenRequest, "email">(req, "email");
 
-    const tokenCorrect = await emailTokenService.checkTokenCorrect(
-      email,
-      token
-    );
+    const result = await userService.handleVerifyToken(token, email);
 
-    if (!tokenCorrect) {
-      throw new PCDHTTPError(
-        403,
-        "Wrong token. If you got more than one email, use the latest one."
-      );
-    }
-
-    const encryptionKey = await userService.getEncryptionKeyForUser(email);
-    // If we return the user's encryption key, change the token so this request
-    // can't be replayed.
-    if (encryptionKey) {
-      emailTokenService.saveNewTokenForEmail(email);
-    }
-
-    res.status(200).json({ encryptionKey } satisfies VerifyTokenResponseValue);
+    res.status(200).json(result);
   });
 
   /**

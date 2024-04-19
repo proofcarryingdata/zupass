@@ -13,12 +13,15 @@
     "localdb:up": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log start",
     "localdb:down": "pg_ctl -D apps/passport-server/local-db-data -l apps/passport-server/local-db-log stop",
     "build": "scripts/build.sh",
+    "build:packages": "scripts/build.sh --filter=./packages/**/*  --filter=!./apps/*",
     "dev": "tsx scripts/watch.ts",
     "dev:apps": "turbo run dev --parallel --filter=./apps/* --filter=!./apps/anon-message-client --filter=!./apps/anon-message-client --filter=!./apps/kudosbot-client",
     "telegram:dev": "IS_LOCAL_HTTPS=true PASSPORT_SERVER_URL=https://dev.local:3002 PASSPORT_CLIENT_URL=https://dev.local:3000 yarn dev",
     "docs": "yarn build && typedoc",
-    "lint": "turbo run lint --concurrency=1",
+    "lint": "turbo run lint",
     "test": "turbo run test --concurrency=1",
+    "test:ci": "turbo run test",
+    "gen-test-artifacts": "turbo run gen-test-artifacts",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
@@ -28,34 +31,44 @@
     "check-references": "scripts/check-references.sh",
     "fix-references": "scripts/fix-references.sh",
     "generate-package": "plop --no-progress --plopfile 'templates/package/plopfile.mjs'",
-    "test-generated-package": "tsx scripts/testTemplatePackage.ts"
+    "test-generated-package": "tsx scripts/testTemplatePackage.ts",
+    "test-typedoc": "yarn typedoc --emit none",
+    "db:generate": "turbo run db:generate",
+    "db:push": "turbo run db:push",
+    "pre-deploy": "turbo run pre-deploy",
+    "esmeralda": "yarn workspace passport-server run parse-edge-esmeralda-events"
   },
   "devDependencies": {
-    "@types/circomlibjs": "0.1.4",
+    "@types/circomlibjs": "0.1.6",
+    "@types/node": "^20.11.28",
     "@types/snarkjs": "0.7.5",
     "plop": "^4.0.1",
     "prettier": "^3.0.0",
     "prettier-plugin-organize-imports": "^3.2.2",
-    "typedoc": "^0.25.1",
+    "typanion": "^3.14.0",
+    "typedoc": "^0.25.12",
+    "typescript": "^5.3.3",
     "verdaccio": "^5.27.0",
     "verdaccio-memory": "^10.3.2"
   },
   "engines": {
-    "node": ">=18"
+    "node": "^20"
   },
   "dependencies": {
     "@changesets/cli": "^2.26.0",
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.10.4",
     "@types/react": "^18.0.22",
     "tsx": "^4.6.2",
-    "turbo": "^1.8.5",
+    "turbo": "^1.12.5",
     "turbowatch": "^2.29.4",
     "workspace-tools": "^0.36.4",
     "zx": "^7.2.3"
   },
   "resolutions": {
     "@types/react": "^18.0.22",
+    "@typescript-eslint/typescript-estree": "^7.2.0",
     "react": "^18.2.0",
+    "react-dom": "^18.2.0",
     "ts-node": "^10.9.2",
     "typescript": "^5.3.3"
   },

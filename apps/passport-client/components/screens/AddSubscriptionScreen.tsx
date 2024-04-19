@@ -42,7 +42,7 @@ import { isDefaultSubscription } from "../../src/defaultSubscriptions";
 import { saveSubscriptions } from "../../src/localstorage";
 import {
   clearAllPendingRequests,
-  pendingAddSubscriptionRequestKey,
+  pendingRequestKeys,
   setPendingAddSubscriptionRequest
 } from "../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../src/useSyncE2EEStorage";
@@ -55,7 +55,33 @@ import { FolderCard, FolderExplorerContainer } from "./HomeScreen/Folder";
 
 const DEFAULT_FEEDS_URL = appConfig.zupassServer + "/feeds";
 
-export function AddSubscriptionScreen(): JSX.Element {
+enum FeedFetchStates {
+  Idle,
+  Fetching,
+  Fetched
+}
+
+type FeedFetch =
+  | {
+      state: FeedFetchStates.Idle;
+    }
+  | {
+      state: FeedFetchStates.Fetching;
+    }
+  | {
+      state: FeedFetchStates.Fetched;
+      success: true;
+      feeds: Feed[];
+      providerUrl: string;
+      providerName: string;
+    }
+  | {
+      state: FeedFetchStates.Fetched;
+      success: false;
+      error: string;
+    };
+
+export function AddSubscriptionScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const query = useQuery();
   const url = query?.get("url") ?? "";
@@ -68,15 +94,10 @@ export function AddSubscriptionScreen(): JSX.Element {
   const [providerUrl, setProviderUrl] = useState(
     url.length > 0 ? url : DEFAULT_FEEDS_URL
   );
-  const [infos, setInfos] = useState<Feed[] | undefined>();
-  const [fetching, setFetching] = useState(false);
-  const [fetchedProviderUrl, setFetchedProviderUrl] = useState<string | null>(
-    null
-  );
-  const [fetchedProviderName, setFetchedProviderName] = useState<string | null>(
-    null
-  );
-  const [fetchError, setFetchError] = useState<string | undefined>();
+  const [feedFetch, setFeedFetch] = useState<FeedFetch>({
+    state: FeedFetchStates.Idle
+  });
+
   const { value: subs } = useSubscriptions();
   const self = useSelf();
   const dispatch = useDispatch();
@@ -84,18 +105,16 @@ export function AddSubscriptionScreen(): JSX.Element {
   const [mismatchedEmails, setMismatchedEmails] = useState<boolean>(false);
 
   useEffect(() => {
-    if (self == null || userForcedToLogout) {
+    if (!self || userForcedToLogout) {
       clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(url ?? "");
+      const stringifiedRequest = JSON.stringify(url);
       setPendingAddSubscriptionRequest(stringifiedRequest);
       const emailParameter = suggestedEmail
         ? `&email=${encodeURIComponent(suggestedEmail)}`
         : "";
-      if (self == null) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingAddSubscriptionRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}${emailParameter}`;
-      }
+      window.location.href = `/#/login?redirectedFromAction=true&${
+        pendingRequestKeys.addSubscription
+      }=${encodeURIComponent(stringifiedRequest)}${emailParameter}`;
     } else {
       if (
         suggestedEmail &&
@@ -109,20 +128,22 @@ export function AddSubscriptionScreen(): JSX.Element {
   }, [self, dispatch, url, userForcedToLogout, suggestedEmail]);
 
   const onFetchFeedsClick = useCallback(() => {
-    if (fetching) {
+    if (feedFetch.state === FeedFetchStates.Fetching) {
       return;
     }
 
-    setFetching(true);
-    setFetchError(undefined);
+    setFeedFetch({ state: FeedFetchStates.Fetching });
 
     subs
       .listFeeds(providerUrl)
       .then((response) => {
-        setFetching(false);
-        setInfos(response.feeds);
-        setFetchedProviderUrl(response.providerUrl);
-        setFetchedProviderName(response.providerName);
+        setFeedFetch({
+          state: FeedFetchStates.Fetched,
+          success: true,
+          feeds: response.feeds,
+          providerName: response.providerName,
+          providerUrl: response.providerUrl
+        });
         if (!subs.getProvider(response.providerUrl)) {
           subs.addProvider(response.providerUrl, response.providerName);
           saveSubscriptions(subs);
@@ -130,33 +151,37 @@ export function AddSubscriptionScreen(): JSX.Element {
       })
       .catch((e) => {
         console.log(`error fetching subscription infos ${e}`);
-        setFetching(false);
-        setInfos(undefined);
-        setFetchedProviderUrl(undefined);
-        setFetchedProviderName(undefined);
-        setFetchError(
-          "Unable to fetch subscriptions. Check that the URL is correct, or try again later."
-        );
+        setFeedFetch({
+          state: FeedFetchStates.Fetched,
+          success: false,
+          error:
+            "Unable to fetch subscriptions. Check that the URL is correct, or try again later."
+        });
       });
-  }, [fetching, providerUrl, subs]);
+  }, [providerUrl, subs, feedFetch.state]);
 
   useEffect(() => {
     const url = query?.get("url") ?? "";
     // If a URL was specified in the query string, automatically fetch feeds for it
-    if (url.length > 0 && !fetchError && !fetchedProviderUrl) {
+    if (url.length > 0 && feedFetch.state !== FeedFetchStates.Fetched) {
       onFetchFeedsClick();
     }
-  }, [
-    fetchError,
-    fetchedProviderUrl,
-    fetching,
-    onFetchFeedsClick,
-    providerUrl,
-    query,
-    subs
-  ]);
+  }, [onFetchFeedsClick, providerUrl, query, subs, feedFetch.state]);
 
-  const alreadyFetched = fetchedProviderUrl === providerUrl;
+  const alreadyFetched =
+    feedFetch.state === FeedFetchStates.Fetched &&
+    feedFetch.success &&
+    feedFetch.providerUrl === providerUrl;
+
+  const isFetching = feedFetch.state === FeedFetchStates.Fetching;
+
+  const fetchError =
+    feedFetch.state === FeedFetchStates.Fetched && !feedFetch.success;
+
+  // If self is null, the earlier useEffect hook will take us to the login page
+  if (!self) {
+    return null;
+  }
 
   return (
     <>
@@ -178,37 +203,42 @@ export function AddSubscriptionScreen(): JSX.Element {
               </p>
             </MismatchedEmailWarning>
           )}
-
-          {(fetchError || !isDeepLink) && (
-            <>
-              <Spacer h={8} />
-              <BigInput
-                autoCorrect="off"
-                autoCapitalize="off"
-                disabled={fetching}
-                value={providerUrl}
-                onChange={(e): void => {
-                  setProviderUrl(e.target.value);
-                }}
-              />
-              <Spacer h={8} />
-              <Button
-                disabled={fetching || alreadyFetched}
-                onClick={onFetchFeedsClick}
-              >
-                <Spinner show={fetching} text="List Feeds" />
-              </Button>
-            </>
-          )}
+          {
+            // If this screen was not-deep linked to, or if it *was*
+            // deep-linked to and an error was encountered, show the URL and
+            // button to request the feeds.
+            (!isDeepLink || fetchError) && (
+              <>
+                <Spacer h={8} />
+                <BigInput
+                  autoCorrect="off"
+                  autoCapitalize="off"
+                  disabled={isFetching}
+                  value={providerUrl}
+                  onChange={(e): void => {
+                    setProviderUrl(e.target.value);
+                  }}
+                />
+                <Spacer h={8} />
+                <Button
+                  disabled={isFetching || alreadyFetched}
+                  onClick={onFetchFeedsClick}
+                >
+                  <Spinner show={isFetching} text="List Feeds" />
+                </Button>
+              </>
+            )
+          }
           {fetchError && <SubscriptionErrors>{fetchError}</SubscriptionErrors>}
-          {infos &&
-            infos.map((info, i) => (
+          {feedFetch.state === FeedFetchStates.Fetched &&
+            feedFetch.success &&
+            feedFetch.feeds.map((info, i) => (
               <React.Fragment key={i}>
                 <Spacer h={8} />
                 <SubscriptionInfoRow
                   subscriptions={subs}
-                  providerUrl={fetchedProviderUrl}
-                  providerName={fetchedProviderName}
+                  providerUrl={feedFetch.providerUrl}
+                  providerName={feedFetch.providerName}
                   info={info}
                   key={i}
                   showErrors={false}
@@ -270,10 +300,10 @@ export function SubscriptionInfoRow({
   return (
     <InfoRowContainer
       ref={(element): void => {
-        ref.current = element;
+        ref.current = element ?? undefined;
       }}
-      expanded={moreInfo || isExpanded}
-      lockExpanded={isExpanded}
+      expanded={moreInfo ?? isExpanded ?? false}
+      lockExpanded={isExpanded ?? false}
       onClick={async (e: MouseEvent): Promise<void> => {
         const targetTag = (e.target as HTMLElement).tagName.toLowerCase();
         if (["a", "button"].includes(targetTag)) {
@@ -364,7 +394,7 @@ function SubscribeSection({
   });
 
   const onSubscribeClick = useCallback(() => {
-    (async (): Promise<void> => {
+    ((): void => {
       dispatch({
         type: "add-subscription",
         providerUrl,
@@ -498,11 +528,9 @@ function AlreadySubscribed({
   };
 
   const navigate = useNavigate();
-  const folders = existingSubscription
-    ? _.uniq(existingSubscription.feed.permissions.map((p) => p.folder)).sort(
-        (a, b) => a.localeCompare(b)
-      )
-    : [];
+  const folders = _.uniq(
+    existingSubscription.feed.permissions.map((p) => p.folder)
+  ).sort((a, b) => a.localeCompare(b));
   const goToFolder = useCallback(
     (folder: string) => {
       navigate(`/?folder=${encodeURIComponent(folder)}`);
@@ -578,8 +606,8 @@ const InfoRowContainer = styled.div`
     expanded,
     lockExpanded
   }: {
-    expanded;
-    lockExpanded;
+    expanded: boolean;
+    lockExpanded: boolean;
   }): FlattenSimpleInterpolation => css`
     transition:
       background-color 100ms,

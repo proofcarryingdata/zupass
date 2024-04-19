@@ -43,14 +43,14 @@ export function ScanScreen(): JSX.Element {
           <QrReader
             className="qr"
             onResult={(result, error): void => {
-              if (result != null) {
+              if (result) {
                 console.log(
                   `Got result, considering redirect`,
                   result.getText()
                 );
                 const newLoc = maybeRedirect(result.getText());
                 if (newLoc) nav(newLoc);
-              } else if (error != null) {
+              } else if (error) {
                 //    console.info(error);
               }
             }}

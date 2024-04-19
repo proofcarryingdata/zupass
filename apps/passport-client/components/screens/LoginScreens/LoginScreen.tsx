@@ -10,13 +10,7 @@ import {
 import { appConfig } from "../../../src/appConfig";
 import { useDispatch, useQuery, useSelf } from "../../../src/appHooks";
 import {
-  pendingAddRequestKey,
-  pendingAddSubscriptionRequestKey,
-  pendingGenericIssuanceCheckinRequestKey,
-  pendingGetWithoutProvingRequestKey,
-  pendingProofRequestKey,
-  pendingViewFrogCryptoRequestKey,
-  pendingViewSubscriptionsRequestKey,
+  pendingRequestKeys,
   setPendingAddRequest,
   setPendingAddSubscriptionRequest,
   setPendingGenericIssuanceCheckinRequest,
@@ -44,51 +38,51 @@ export function LoginScreen(): JSX.Element {
   const redirectedFromAction = query?.get("redirectedFromAction") === "true";
 
   const pendingGetWithoutProvingRequest = query?.get(
-    pendingGetWithoutProvingRequestKey
+    pendingRequestKeys.getWithoutProving
   );
-  const pendingAddRequest = query?.get(pendingAddRequestKey);
-  const pendingProveRequest = query?.get(pendingProofRequestKey);
+  const pendingAddRequest = query?.get(pendingRequestKeys.add);
+  const pendingProveRequest = query?.get(pendingRequestKeys.proof);
   const pendingViewSubscriptionsRequest = query?.get(
-    pendingViewSubscriptionsRequestKey
+    pendingRequestKeys.viewSubscriptions
   );
   const pendingAddSubscriptionRequest = query?.get(
-    pendingAddSubscriptionRequestKey
+    pendingRequestKeys.addSubscription
   );
   const pendingViewFrogCryptoRequest = query?.get(
-    pendingViewFrogCryptoRequestKey
+    pendingRequestKeys.viewFrogCrypto
   );
   const pendingGenericIssuanceCheckinRequest = query?.get(
-    pendingGenericIssuanceCheckinRequestKey
+    pendingRequestKeys.genericIssuanceCheckin
   );
   useEffect(() => {
     let pendingRequestForLogging: string | undefined = undefined;
 
-    if (pendingGetWithoutProvingRequest != null) {
+    if (pendingGetWithoutProvingRequest) {
       setPendingGetWithoutProvingRequest(pendingGetWithoutProvingRequest);
-      pendingRequestForLogging = pendingGetWithoutProvingRequestKey;
-    } else if (pendingAddRequest != null) {
+      pendingRequestForLogging = pendingRequestKeys.getWithoutProving;
+    } else if (pendingAddRequest) {
       setPendingAddRequest(pendingAddRequest);
-      pendingRequestForLogging = pendingAddRequestKey;
-    } else if (pendingProveRequest != null) {
+      pendingRequestForLogging = pendingRequestKeys.add;
+    } else if (pendingProveRequest) {
       setPendingProofRequest(pendingProveRequest);
-      pendingRequestForLogging = pendingProofRequestKey;
-    } else if (pendingViewSubscriptionsRequest != null) {
+      pendingRequestForLogging = pendingRequestKeys.proof;
+    } else if (pendingViewSubscriptionsRequest) {
       setPendingViewSubscriptionsRequest(pendingViewSubscriptionsRequest);
-      pendingRequestForLogging = pendingViewSubscriptionsRequestKey;
-    } else if (pendingAddSubscriptionRequest != null) {
+      pendingRequestForLogging = pendingRequestKeys.viewSubscriptions;
+    } else if (pendingAddSubscriptionRequest) {
       setPendingAddSubscriptionRequest(pendingAddSubscriptionRequest);
-      pendingRequestForLogging = pendingAddSubscriptionRequestKey;
-    } else if (pendingViewFrogCryptoRequest != null) {
+      pendingRequestForLogging = pendingRequestKeys.addSubscription;
+    } else if (pendingViewFrogCryptoRequest) {
       setPendingViewFrogCryptoRequest(pendingViewFrogCryptoRequest);
-      pendingRequestForLogging = pendingViewFrogCryptoRequestKey;
-    } else if (pendingGenericIssuanceCheckinRequest != null) {
+      pendingRequestForLogging = pendingRequestKeys.viewFrogCrypto;
+    } else if (pendingGenericIssuanceCheckinRequest) {
       setPendingGenericIssuanceCheckinRequest(
         pendingGenericIssuanceCheckinRequest
       );
-      pendingRequestForLogging = pendingGenericIssuanceCheckinRequestKey;
+      pendingRequestForLogging = pendingRequestKeys.genericIssuanceCheckin;
     }
 
-    if (pendingRequestForLogging != null) {
+    if (pendingRequestForLogging) {
       requestLogToServer(appConfig.zupassServer, "login-with-pending", {
         pending: pendingRequestForLogging
       });
@@ -127,7 +121,7 @@ export function LoginScreen(): JSX.Element {
 
   useEffect(() => {
     // Redirect to home if already logged in
-    if (self != null) {
+    if (self) {
       window.location.hash = "#/";
     }
   }, [self]);

@@ -21,123 +21,139 @@ export function hasPendingRequest(): boolean {
   );
 }
 
-export const pendingGetWithoutProvingRequestKey = "getWithoutProvingRequest";
+export const pendingRequestKeys: Record<string, string> = {
+  getWithoutProving: "getWithoutProvingRequest",
+  add: "pendingAddRequest",
+  halo: "pendingHaloRequest",
+  proof: "pendingProofRequest",
+  viewSubscriptions: "pendingViewSubscriptions",
+  addSubscription: "pendingAddSubscription",
+  viewFrogCrypto: "pendingViewFrogCrypto",
+  genericIssuanceCheckin: "pendingGenericIssuanceCheckin"
+} as const;
 
 export function setPendingGetWithoutProvingRequest(request: string): void {
-  sessionStorage.setItem(pendingGetWithoutProvingRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.getWithoutProving, request);
 }
 
 export function clearPendingGetWithoutProvingRequest(): void {
-  sessionStorage.removeItem(pendingGetWithoutProvingRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.getWithoutProving);
 }
 
 export function getPendingGetWithoutProvingRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingGetWithoutProvingRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.getWithoutProving);
+  return value ?? undefined;
 }
 
-export const pendingAddRequestKey = "pendingAddRequest";
-
 export function setPendingAddRequest(request: string): void {
-  sessionStorage.setItem(pendingAddRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.add, request);
 }
 
 export function clearPendingAddRequest(): void {
-  sessionStorage.removeItem(pendingAddRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.add);
 }
 
 export function getPendingAddRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingAddRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.add);
+  return value ?? undefined;
 }
 
-export const pendingHaloRequestKey = "pendingHaloRequest";
-
 export function setPendingHaloRequest(request: string): void {
-  sessionStorage.setItem(pendingHaloRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.halo, request);
 }
 
 export function clearPendingHaloRequest(): void {
-  sessionStorage.removeItem(pendingHaloRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.halo);
 }
 
 export function getPendingHaloRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingHaloRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.halo);
+  return value ?? undefined;
 }
 
-export const pendingProofRequestKey = "pendingProofRequest";
-
 export function setPendingProofRequest(request: string): void {
-  sessionStorage.setItem(pendingProofRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.proof, request);
 }
 
 export function clearPendingProofRequest(): void {
-  sessionStorage.removeItem(pendingProofRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.proof);
 }
 
 export function getPendingProofRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingProofRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.proof);
+  return value ?? undefined;
 }
 
-export const pendingViewSubscriptionsRequestKey = "pendingViewSubscriptions";
-
 export function setPendingViewSubscriptionsRequest(request: string): void {
-  sessionStorage.setItem(pendingViewSubscriptionsRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.viewSubscriptions, request);
 }
 
 export function clearPendingViewSubscriptionsRequest(): void {
-  sessionStorage.removeItem(pendingViewSubscriptionsRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.viewSubscriptions);
 }
 
 export function getPendingViewSubscriptionsPageRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingViewSubscriptionsRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.viewSubscriptions);
+  return value ?? undefined;
 }
 
-export const pendingAddSubscriptionRequestKey = "pendingAddSubscription";
-
 export function setPendingAddSubscriptionRequest(request: string): void {
-  sessionStorage.setItem(pendingAddSubscriptionRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.addSubscription, request);
 }
 
 export function clearPendingAddSubscriptionRequest(): void {
-  sessionStorage.removeItem(pendingAddSubscriptionRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.addSubscription);
 }
 
 export function getPendingAddSubscriptionPageRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingAddSubscriptionRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.addSubscription);
+  return value ?? undefined;
 }
 
-export const pendingViewFrogCryptoRequestKey = "pendingViewFrogCrypto";
-
 export function setPendingViewFrogCryptoRequest(request: string): void {
-  sessionStorage.setItem(pendingViewFrogCryptoRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.viewFrogCrypto, request);
 }
 
 export function clearPendingViewFrogCryptoRequest(): void {
-  sessionStorage.removeItem(pendingViewFrogCryptoRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.viewFrogCrypto);
 }
 
 export function getPendingViewFrogCryptoPageRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingViewFrogCryptoRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(pendingRequestKeys.viewFrogCrypto);
+  return value ?? undefined;
 }
 
-export const pendingGenericIssuanceCheckinRequestKey =
-  "pendingGenericIssuanceCheckin";
-
 export function setPendingGenericIssuanceCheckinRequest(request: string): void {
-  sessionStorage.setItem(pendingGenericIssuanceCheckinRequestKey, request);
+  sessionStorage.setItem(pendingRequestKeys.genericIssuanceCheckin, request);
 }
 
 export function clearPendingGenericIssuanceCheckinRequest(): void {
-  sessionStorage.removeItem(pendingGenericIssuanceCheckinRequestKey);
+  sessionStorage.removeItem(pendingRequestKeys.genericIssuanceCheckin);
 }
 
 export function getPendingGenericIssuanceCheckinRequest(): string | undefined {
-  const value = sessionStorage.getItem(pendingGenericIssuanceCheckinRequestKey);
-  return value == null ? undefined : value;
+  const value = sessionStorage.getItem(
+    pendingRequestKeys.genericIssuanceCheckin
+  );
+  return value ?? undefined;
+}
+
+/**
+ * Gets any pending request, if any. Returns undefined if none.
+ */
+export function getPendingRequest():
+  | { key: keyof typeof pendingRequestKeys; value: string }
+  | undefined {
+  for (const key in pendingRequestKeys) {
+    const sessionStorageKey = pendingRequestKeys[key];
+    const item = sessionStorage.getItem(sessionStorageKey);
+    if (item) {
+      return {
+        key: key as keyof typeof pendingRequestKeys,
+        value: item
+      };
+    }
+  }
+
+  return undefined;
 }

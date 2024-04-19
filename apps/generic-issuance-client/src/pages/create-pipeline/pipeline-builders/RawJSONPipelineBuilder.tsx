@@ -17,7 +17,7 @@ export default function RawJSONPipelineBuilder(
     <>
       <FancyEditor
         language="json"
-        style={{ height: "400px" }}
+        editorStyle={{ height: "400px" }}
         value={newPipelineJSON}
         setValue={setNewPipelineJSON}
         readonly={false}

@@ -10,7 +10,7 @@ export const execAsync = promisify(exec);
  */
 export function requireEnv(str: string): string {
   const val = process.env[str];
-  if (val == null || val === "") {
+  if (val === null || val === undefined || val === "") {
     throw str;
   }
   return val;

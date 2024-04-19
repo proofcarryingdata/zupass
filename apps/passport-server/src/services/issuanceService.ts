@@ -1,3 +1,4 @@
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { EdDSAFrogPCDPackage, IFrogData } from "@pcd/eddsa-frog-pcd";
 import {
   EdDSAPublicKey,
@@ -17,10 +18,10 @@ import {
   CheckTicketByIdResult,
   CheckTicketInByIdRequest,
   CheckTicketInByIdResult,
+  Credential,
   FeedHost,
   GetOfflineTicketsRequest,
   GetOfflineTicketsResponseValue,
-  ISSUANCE_STRING,
   KnownPublicKeyType,
   KnownTicketGroup,
   KnownTicketTypesResult,
@@ -31,6 +32,8 @@ import {
   PollFeedResponseValue,
   UploadOfflineCheckinsRequest,
   UploadOfflineCheckinsResponseValue,
+  VerificationError,
+  VerifiedCredential,
   VerifyTicketByIdRequest,
   VerifyTicketByIdResult,
   VerifyTicketRequest,
@@ -43,7 +46,7 @@ import {
   ZUZALU_23_VISITOR_PRODUCT_ID,
   ZupassFeedIds,
   ZuzaluUserRole,
-  verifyFeedCredential,
+  verifyCredential,
   zupassDefaultSubscriptions
 } from "@pcd/passport-interface";
 import {
@@ -118,7 +121,10 @@ export class IssuanceService {
   private readonly exportedRSAPrivateKey: string;
   private readonly exportedRSAPublicKey: string;
   private readonly multiprocessService: MultiProcessService;
-  private readonly verificationPromiseCache: LRUCache<string, Promise<boolean>>;
+  private readonly verificationPromiseCache: LRUCache<
+    string,
+    Promise<VerifiedCredential>
+  >;
 
   public constructor(
     context: ApplicationContext,
@@ -136,10 +142,12 @@ export class IssuanceService {
     this.exportedRSAPrivateKey = this.rsaPrivateKey.exportKey("private");
     this.exportedRSAPublicKey = this.rsaPrivateKey.exportKey("public");
     this.eddsaPrivateKey = eddsaPrivateKey;
-    this.verificationPromiseCache = new LRUCache<string, Promise<boolean>>({
+    this.verificationPromiseCache = new LRUCache<
+      string,
+      Promise<VerifiedCredential>
+    >({
       max: 1000
     });
-    this.cachedVerifySignaturePCD = this.cachedVerifySignaturePCD.bind(this);
 
     this.feedHost = new FeedHost(
       [
@@ -153,11 +161,9 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyFeedCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-              const pcds = await this.issueDevconnectPretixTicketPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds =
+                await this.issueDevconnectPretixTicketPCDs(verifiedCredential);
               const ticketsByEvent = _.groupBy(
                 pcds,
                 (pcd) => pcd.claim.ticket.eventName
@@ -166,16 +172,6 @@ export class IssuanceService {
               const devconnectTickets = Object.entries(ticketsByEvent).filter(
                 ([eventName]) => eventName !== "SBC SRW"
               );
-
-              const srwTickets = Object.entries(ticketsByEvent).filter(
-                ([eventName]) => eventName === "SBC SRW"
-              );
-
-              actions.push({
-                type: PCDActionType.DeleteFolder,
-                folder: "SBC SRW",
-                recursive: false
-              });
 
               actions.push({
                 type: PCDActionType.DeleteFolder,
@@ -199,18 +195,6 @@ export class IssuanceService {
                     ])
                   )
                 ).flat()
-              );
-
-              actions.push(
-                ...(await Promise.all(
-                  srwTickets.map(async ([_, tickets]) => ({
-                    type: PCDActionType.ReplaceInFolder,
-                    folder: "SBC SRW",
-                    pcds: await Promise.all(
-                      tickets.map((pcd) => EdDSATicketPCDPackage.serialize(pcd))
-                    )
-                  }))
-                ))
               );
             } catch (e) {
               logger(`Error encountered while serving feed:`, e);
@@ -239,18 +223,6 @@ export class IssuanceService {
               {
                 folder: "Devconnect",
                 type: PCDPermissionType.DeleteFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.AppendToFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.ReplaceInFolder
-              },
-              {
-                folder: "SBC SRW",
-                type: PCDPermissionType.DeleteFolder
               }
             ]
           }
@@ -263,10 +235,7 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              await verifyFeedCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
+              await this.verifyCredential(req.pcd);
               return {
                 actions: [
                   {
@@ -309,11 +278,8 @@ export class IssuanceService {
               if (req.pcd === undefined) {
                 throw new Error(`Missing credential`);
               }
-              const { pcd } = await verifyFeedCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-              const pcds = await this.issueEmailPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds = await this.issueEmailPCDs(verifiedCredential);
 
               // Clear out the folder
               actions.push({
@@ -347,11 +313,8 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyFeedCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-              const pcds = await this.issueZuzaluTicketPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds = await this.issueZuzaluTicketPCDs(verifiedCredential);
 
               // Clear out the folder
               actions.push({
@@ -385,12 +348,9 @@ export class IssuanceService {
               throw new Error(`Missing credential`);
             }
             try {
-              const { pcd } = await verifyFeedCredential(
-                req.pcd,
-                this.cachedVerifySignaturePCD
-              );
-
-              const pcds = await this.issueZuconnectTicketPCDs(pcd);
+              const verifiedCredential = await this.verifyCredential(req.pcd);
+              const pcds =
+                await this.issueZuconnectTicketPCDs(verifiedCredential);
 
               // Clear out the old folder
               actions.push({
@@ -561,10 +521,16 @@ export class IssuanceService {
         };
       }
 
-      if (
-        !(await SemaphoreSignaturePCDPackage.verify(signature)) ||
-        signature.claim.signedMessage !== ISSUANCE_STRING
-      ) {
+      let checker;
+      try {
+        const verifiedCredential = await this.verifyCredential(
+          await SemaphoreSignaturePCDPackage.serialize(signature)
+        );
+        checker = await this.checkUserExists(verifiedCredential);
+        if (!checker) {
+          throw new Error();
+        }
+      } catch (e) {
         return {
           error: {
             name: "NotSuperuser",
@@ -572,19 +538,6 @@ export class IssuanceService {
               "You do not have permission to check this ticket in. Please check with the event host."
           },
 
-          success: false
-        };
-      }
-
-      const checker = await this.checkUserExists(signature);
-
-      if (!checker) {
-        return {
-          error: {
-            name: "NotSuperuser",
-            detailedMessage:
-              "You do not have permission to check this ticket in. Please check with the event host."
-          },
           success: false
         };
       }
@@ -655,39 +608,45 @@ export class IssuanceService {
   }
 
   /**
-   * Returns a promised verification of a PCD, either from the cache or,
-   * if there is no cache entry, from the multiprocess service.
+   * Verifies credentials for feeds and check-in. Provides a simple caching
+   * layer over {@link verifyCredential}.
    */
-  public async cachedVerifySignaturePCD(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-  ): Promise<boolean> {
-    const key = JSON.stringify(serializedPCD);
+  public async verifyCredential(
+    credential: Credential
+  ): Promise<VerifiedCredential> {
+    const key = JSON.stringify(credential);
     const cached = this.verificationPromiseCache.get(key);
+    const span = getActiveSpan();
+    span?.setAttribute("credential_verification_cache_hit", !!cached);
     if (cached) {
       return cached;
     } else {
-      const deserialized = await SemaphoreSignaturePCDPackage.deserialize(
-        serializedPCD.pcd
-      );
-      const promise = SemaphoreSignaturePCDPackage.verify(deserialized);
+      const promise = verifyCredential(credential).catch((err) => {
+        // If we received an unexpected kind of exception, remove the promise
+        // from the cache. Instances of VerificationError indicate that the
+        // credential failed to verify, so we want to keep those in the cache
+        // to avoid re-verifying a failed credential.
+        if (!(err instanceof VerificationError)) {
+          this.verificationPromiseCache.delete(key);
+        }
+        throw err;
+      });
       this.verificationPromiseCache.set(key, promise);
-      // If the promise rejects, delete it from the cache
-      promise.catch(() => this.verificationPromiseCache.delete(key));
       return promise;
     }
   }
 
-  private async checkUserExists(
-    signature: SemaphoreSignaturePCD
-  ): Promise<UserRow | null> {
+  private async checkUserExists({
+    signatureClaim
+  }: VerifiedCredential): Promise<UserRow | null> {
     const user = await fetchUserByCommitment(
       this.context.dbPool,
-      signature.claim.identityCommitment
+      signatureClaim.identityCommitment
     );
 
-    if (user == null) {
+    if (user === null) {
       logger(
-        `can't issue PCDs for ${signature.claim.identityCommitment} because ` +
+        `can't issue PCDs for ${signatureClaim.identityCommitment} because ` +
           `we don't have a user with that commitment in the database`
       );
       return null;
@@ -700,7 +659,7 @@ export class IssuanceService {
    * Fetch all DevconnectPretixTicket entities under a given user's email.
    */
   private async issueDevconnectPretixTicketPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
@@ -718,7 +677,7 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (commitmentRow == null || email == null) {
+        if (!commitmentRow || !email) {
           return [];
         }
 
@@ -897,7 +856,7 @@ export class IssuanceService {
       eventId: t.pretix_events_config_id,
       productId: t.devconnect_pretix_items_info_id,
       timestampConsumed:
-        t.zupass_checkin_timestamp == null
+        t.zupass_checkin_timestamp === null
           ? 0
           : new Date(t.zupass_checkin_timestamp).getTime(),
       timestampSigned: Date.now(),
@@ -959,7 +918,7 @@ export class IssuanceService {
    * Issue an EdDSAFrogPCD from IFrogData signed with IssuanceService's private key.
    */
   public async issueEdDSAFrogPCDs(
-    credential: SerializedPCD<SemaphoreSignaturePCD>,
+    credential: Credential,
     frogData: IFrogData
   ): Promise<SerializedPCD[]> {
     const frogPCD = await EdDSAFrogPCDPackage.serialize(
@@ -991,7 +950,7 @@ export class IssuanceService {
    * multiple PCDs if it were possible to verify secondary emails.
    */
   private async issueEmailPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EmailPCD[]> {
     return traced(
       "IssuanceService",
@@ -1009,7 +968,7 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (commitmentRow == null || email == null) {
+        if (!commitmentRow || !email) {
           return [];
         }
 
@@ -1040,7 +999,7 @@ export class IssuanceService {
   }
 
   private async issueZuzaluTicketPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced("IssuanceService", "issueZuzaluTicketPCDs", async (span) => {
       // The image we use for Zuzalu tickets is served from the same place
@@ -1067,7 +1026,7 @@ export class IssuanceService {
         span?.setAttribute("email", email);
       }
 
-      if (commitmentRow == null || email == null) {
+      if (!commitmentRow || !email) {
         return [];
       }
 
@@ -1110,12 +1069,20 @@ export class IssuanceService {
    * a day pass ticket-holder might upgrade to a full ticket.
    */
   private async issueZuconnectTicketPCDs(
-    credential: SemaphoreSignaturePCD
+    credential: VerifiedCredential
   ): Promise<EdDSATicketPCD[]> {
     return traced(
       "IssuanceService",
       "issueZuconnectTicketPCDs",
       async (span) => {
+        const imageServerUrl = process.env.PASSPORT_CLIENT_URL;
+
+        if (!imageServerUrl) {
+          logger(
+            "[ISSUE] can't issue ZuConnect tickets - unaware of the image server location"
+          );
+          return [];
+        }
         const user = await this.checkUserExists(credential);
         const email = user?.email;
         if (user) {
@@ -1125,7 +1092,7 @@ export class IssuanceService {
           span?.setAttribute("email", email);
         }
 
-        if (user == null || email == null) {
+        if (!user || !email) {
           return [];
         }
 
@@ -1156,7 +1123,13 @@ export class IssuanceService {
               timestampConsumed: 0,
               isConsumed: false,
               isRevoked: false,
-              ticketCategory: TicketCategory.ZuConnect
+              ticketCategory: TicketCategory.ZuConnect,
+              imageUrl: urljoin(
+                imageServerUrl,
+                "images/zuzalu",
+                "zuconnect.png"
+              ),
+              imageAltText: "ZuConnect"
             })
           );
         }
@@ -1423,17 +1396,17 @@ export class IssuanceService {
     req: GetOfflineTicketsRequest,
     res: Response
   ): Promise<void> {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.checkerProof.pcd
-    );
-    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
+    let signatureClaim;
+    try {
+      signatureClaim = (await this.verifyCredential(req.checkerProof))
+        .signatureClaim;
+    } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
     const offlineTickets = await fetchOfflineTicketsForChecker(
       this.context.dbPool,
-      signaturePCD.claim.identityCommitment
+      signatureClaim.identityCommitment
     );
 
     res.json({
@@ -1445,18 +1418,17 @@ export class IssuanceService {
     req: UploadOfflineCheckinsRequest,
     res: Response
   ): Promise<void> {
-    const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-      req.checkerProof.pcd
-    );
-    const valid = await this.cachedVerifySignaturePCD(req.checkerProof);
-
-    if (!valid || signaturePCD.claim.signedMessage !== ISSUANCE_STRING) {
+    let signatureClaim;
+    try {
+      signatureClaim = (await this.verifyCredential(req.checkerProof))
+        .signatureClaim;
+    } catch (_e) {
       throw new PCDHTTPError(403, "invalid proof");
     }
 
     await checkInOfflineTickets(
       this.context.dbPool,
-      signaturePCD.claim.identityCommitment,
+      signatureClaim.identityCommitment,
       req.checkedOfflineInDevconnectTicketIDs
     );
 
@@ -1473,7 +1445,7 @@ export async function startIssuanceService(
   const zupassRsaKey = loadRSAPrivateKey();
   const zupassEddsaKey = loadEdDSAPrivateKey();
 
-  if (zupassRsaKey == null || zupassEddsaKey == null) {
+  if (zupassRsaKey === null || zupassEddsaKey === null) {
     logger("[INIT] can't start issuance service, missing private key");
     return null;
   }
@@ -1571,7 +1543,7 @@ async function setupKnownTicketTypes(
 export function loadRSAPrivateKey(): NodeRSA | null {
   const pkeyEnv = process.env.SERVER_RSA_PRIVATE_KEY_BASE64;
 
-  if (pkeyEnv == null) {
+  if (!pkeyEnv) {
     logger("[INIT] missing environment variable SERVER_RSA_PRIVATE_KEY_BASE64");
     return null;
   }
@@ -1592,7 +1564,7 @@ export function loadRSAPrivateKey(): NodeRSA | null {
 function loadEdDSAPrivateKey(): string | null {
   const pkeyEnv = process.env.SERVER_EDDSA_PRIVATE_KEY;
 
-  if (pkeyEnv == null) {
+  if (!pkeyEnv) {
     logger("[INIT] missing environment variable SERVER_EDDSA_PRIVATE_KEY");
     return null;
   }

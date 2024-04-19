@@ -7,6 +7,9 @@
       "path": "packages/lib/emitter/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/gpcircuits/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/passport-crypto/tsconfig.esm.json"
     },
     {
@@ -22,7 +25,13 @@
       "path": "packages/lib/pcd-types/tsconfig.esm.json"
     },
     {
+      "path": "packages/lib/pod/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/util/tsconfig.esm.json"
+    },
+    {
+      "path": "packages/lib/zupoll-shared/tsconfig.esm.json"
     },
     {
       "path": "packages/pcd/eddsa-frog-pcd/tsconfig.esm.json"
@@ -50,6 +59,9 @@
     },
     {
       "path": "packages/pcd/message-pcd/tsconfig.esm.json"
+    },
+    {
+      "path": "packages/pcd/pod-pcd/tsconfig.esm.json"
     },
     {
       "path": "packages/pcd/rln-pcd/tsconfig.esm.json"
@@ -104,6 +116,9 @@
     },
     {
       "path": "packages/ui/message-pcd-ui/tsconfig.esm.json"
+    },
+    {
+      "path": "packages/ui/pod-pcd-ui/tsconfig.esm.json"
     },
     {
       "path": "packages/ui/rsa-image-pcd-ui/tsconfig.esm.json"

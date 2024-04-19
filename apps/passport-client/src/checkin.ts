@@ -1,60 +1,19 @@
 import {
   CheckTicketByIdResult,
   CheckTicketInByIdResult,
-  ISSUANCE_STRING,
+  CredentialManager,
   OfflineDevconnectTicket,
+  ZUPASS_CREDENTIAL_REQUEST,
   requestCheckInById,
   requestCheckTicketById
 } from "@pcd/passport-interface";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
 import {
-  loadCheckinCredential,
   saveCheckedInOfflineTickets,
-  saveCheckinCredential,
   saveOfflineTickets
 } from "./localstorage";
-
-export async function getOrGenerateCheckinCredential(
-  identity: Identity
-): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
-  let cachedSignaturePCD = loadCheckinCredential(
-    identity.getCommitment().toString()
-  );
-  if (!cachedSignaturePCD) {
-    cachedSignaturePCD = await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: ISSUANCE_STRING
-        }
-      })
-    );
-
-    saveCheckinCredential(
-      identity.getCommitment().toString(),
-      cachedSignaturePCD
-    );
-  }
-
-  return cachedSignaturePCD;
-}
 
 /**
  * For debugging purposes, makes the checkin flow go through the offline-mode
@@ -155,7 +114,7 @@ export async function devconnectCheckByIdWithOffline(
             name: "AlreadyCheckedIn",
             detailedMessage: "This attendee has already been checked in",
             checkinTimestamp: ticket.checkinTimestamp,
-            checker: ticket.checker
+            checker: ticket.checker ?? "Unknown"
           }
         };
       }
@@ -181,10 +140,16 @@ export async function devconnectCheckByIdWithOffline(
       }
     };
   } else {
+    const { pcds, identity, credentialCache } = stateContext.getState();
+    const credentialManager = new CredentialManager(
+      identity,
+      pcds,
+      credentialCache
+    );
     return await requestCheckTicketById(appConfig.zupassServer, {
       ticketId,
-      signature: await getOrGenerateCheckinCredential(
-        stateContext.getState().identity
+      signature: await credentialManager.requestCredential(
+        ZUPASS_CREDENTIAL_REQUEST
       )
     });
   }
@@ -218,10 +183,16 @@ export async function devconnectCheckInByIdWithOffline(
       value: undefined
     };
   } else {
+    const { pcds, identity, credentialCache } = stateContext.getState();
+    const credentialManager = new CredentialManager(
+      identity,
+      pcds,
+      credentialCache
+    );
     return await requestCheckInById(appConfig.zupassServer, {
       ticketId,
-      checkerProof: await getOrGenerateCheckinCredential(
-        stateContext.getState().identity
+      checkerProof: await credentialManager.requestCredential(
+        ZUPASS_CREDENTIAL_REQUEST
       )
     });
   }

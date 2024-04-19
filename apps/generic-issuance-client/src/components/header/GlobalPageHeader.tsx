@@ -1,8 +1,8 @@
 import { Button, FormControl, FormLabel, Switch } from "@chakra-ui/react";
 import { GenericIssuanceSelfResult } from "@pcd/passport-interface";
-import { ReactNode, useCallback, useContext } from "react";
+import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
-import { GIContext } from "../../helpers/Context";
+import { useGIContext } from "../../helpers/Context";
 import { PodboxButton } from "./PodboxButton";
 
 /**
@@ -19,9 +19,12 @@ export function GlobalPageHeader({
 }): ReactNode {
   const leftElements: ReactNode[] = [];
   const rightElements: ReactNode[] = [];
-  const ctx = useContext(GIContext);
+  const ctx = useGIContext();
   const onAdminToggleClick = useCallback(() => {
-    ctx.setState({ isAdminMode: !ctx.isAdminMode });
+    ctx.setState({
+      isAdminMode: !ctx.isAdminMode,
+      pipelineDetailsAccordionState: []
+    });
   }, [ctx]);
 
   const podbox = <PodboxButton key="title" />;
@@ -34,9 +37,7 @@ export function GlobalPageHeader({
         </LeftHalf>
         <RightHalf>
           {/* to prevent page reflow on data load */}
-          <Button style={{ visibility: "hidden" }} variant="outline">
-            ...
-          </Button>
+          <Button style={{ visibility: "hidden" }}>...</Button>
         </RightHalf>
       </HeaderContainer>
     );
@@ -78,7 +79,6 @@ export function GlobalPageHeader({
   rightElements.push(
     <span key="logout">
       <Button
-        variant="outline"
         onClick={async (): Promise<void> => {
           if (confirm("Are you sure you want to log out?")) {
             try {

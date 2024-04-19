@@ -7,8 +7,6 @@ import {
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
-import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { z } from "zod";
 import { getPackages } from "./pcdPackages";
@@ -109,7 +107,7 @@ export function loadOfflineTickets(): OfflineTickets {
 
 const CHECKED_IN_OFFLINE_TICKETS_KEY = "checked_in_offline_devconnect_tickets";
 export function saveCheckedInOfflineTickets(
-  offlineTickets: OfflineDevconnectTicket[]
+  offlineTickets: OfflineDevconnectTicket[] | undefined
 ): void {
   if (!offlineTickets) {
     window.localStorage.removeItem(CHECKED_IN_OFFLINE_TICKETS_KEY);
@@ -120,10 +118,8 @@ export function saveCheckedInOfflineTickets(
     );
   }
 }
-export function loadCheckedInOfflineDevconnectTickets():
-  | OfflineDevconnectTicket[]
-  | undefined {
-  let tickets = [];
+export function loadCheckedInOfflineDevconnectTickets(): OfflineDevconnectTicket[] {
+  let tickets: OfflineDevconnectTicket[] = [];
 
   try {
     tickets = JSON.parse(
@@ -131,6 +127,7 @@ export function loadCheckedInOfflineDevconnectTickets():
     );
   } catch (e) {
     //
+    tickets = [];
   }
 
   return tickets;
@@ -146,7 +143,7 @@ export function loadEncryptionKey(): string | undefined {
 
 export function loadSelf(): User | undefined {
   const self = window.localStorage["self"];
-  if (self != null && self !== "") {
+  if (self && self !== "") {
     return JSON.parse(self);
   }
 }
@@ -228,28 +225,4 @@ export function saveUsingLaserScanner(usingLaserScanner: boolean): void {
 
 export function loadUsingLaserScanner(): boolean {
   return window.localStorage["using_laser_scanner"] === "true";
-}
-
-export function saveCheckinCredential(
-  key: string,
-  serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
-): void {
-  window.localStorage[`checkin_credential_${key}`] =
-    JSON.stringify(serializedPCD);
-}
-
-export function loadCheckinCredential(
-  key: string
-): SerializedPCD<SemaphoreSignaturePCD> | undefined {
-  try {
-    const serializedPCD = JSON.parse(
-      window.localStorage[`checkin_credential_${key}`]
-    );
-    if (serializedPCD) {
-      return serializedPCD;
-    }
-  } catch (e) {
-    // Do nothing
-  }
-  return undefined;
 }

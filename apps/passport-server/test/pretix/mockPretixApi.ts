@@ -19,7 +19,6 @@ export function newMockZuzaluPretixAPI(): IZuzaluPretixAPI | null {
 
   const mocker = new ZuzaluPretixDataMocker(config);
   const mockData = mocker.getMockData();
-  logger("[MOCK] zuzalu pretix data", mockData);
   return getMockPretixAPI(mockData);
 }
 
@@ -30,8 +29,6 @@ export function getMockPretixAPI(
     throwOnFetchSubevents?: boolean;
   }
 ): IZuzaluPretixAPI {
-  logger("[MOCK] instantiating mock zuzalu pretix api");
-
   return {
     config: mockData.config,
     fetchOrders: async (eventID: string): Promise<ZuzaluPretixOrder[]> => {

@@ -1,7 +1,3 @@
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
-import { Identity } from "@semaphore-protocol/identity";
 import urlJoin from "url-join";
 import {
   FrogCryptoShareTelegramHandleRequest,
@@ -25,33 +21,6 @@ export async function requestFrogCryptoUpdateTelegramHandleSharing(
     }),
     req
   );
-}
-
-export async function frogCryptoUpdateTelegramHandleSharing(
-  zupassServerUrl: string,
-  identity: Identity,
-  signedMessage: string,
-  reveal: boolean
-): Promise<FrogCryptoShareTelegramHandleResult> {
-  return requestFrogCryptoUpdateTelegramHandleSharing(zupassServerUrl, {
-    pcd: await SemaphoreSignaturePCDPackage.serialize(
-      await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(
-            await SemaphoreIdentityPCDPackage.prove({
-              identity
-            })
-          )
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: signedMessage
-        }
-      })
-    ),
-    reveal
-  });
 }
 
 export type FrogCryptoShareTelegramHandleResult =

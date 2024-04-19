@@ -1,5 +1,6 @@
 import { HoneycombSDK } from "@honeycombio/opentelemetry-node";
 import opentelemetry, { Span, Tracer } from "@opentelemetry/api";
+import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
 import { ZUPASS_GITHUB_REPOSITORY_URL, flattenObject } from "@pcd/util";
@@ -183,9 +184,9 @@ export async function traced<T>(
     try {
       const result = await func(span);
       if (
-        options == null ||
-        options.autoEndSpan == null ||
-        options.autoEndSpan == true
+        !options ||
+        options.autoEndSpan === undefined ||
+        options.autoEndSpan === true
       ) {
         span.end();
       }
@@ -199,6 +200,7 @@ export async function traced<T>(
 }
 
 export function setError(e: unknown, span?: Span): void {
+  span = span ?? getActiveSpan();
   span?.setAttribute("error", true);
   span?.setAttribute("error_msg", e + "");
 

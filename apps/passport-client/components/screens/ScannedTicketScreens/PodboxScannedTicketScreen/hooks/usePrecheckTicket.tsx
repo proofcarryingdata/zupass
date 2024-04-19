@@ -1,17 +1,14 @@
-import { EmailPCD, EmailPCDPackage, EmailPCDTypeName } from "@pcd/email-pcd";
 import {
-  PodboxActionPreCheckResult,
-  createTicketActionCredentialPayload,
-  requestGenericIssuancePreCheck
+  PODBOX_CREDENTIAL_REQUEST,
+  PodboxTicketActionPreCheckResult,
+  requestPodboxTicketActionPreCheck
 } from "@pcd/passport-interface";
-import { ArgumentTypeName } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { useCallback, useEffect, useState } from "react";
 import urljoin from "url-join";
 import { appConfig } from "../../../../../src/appConfig";
 import {
-  usePCDCollection,
+  useCredentialManager,
+  useDispatch,
   useUserIdentityPCD
 } from "../../../../../src/appHooks";
 
@@ -35,14 +32,14 @@ export function usePreCheckTicket(
     }
   | {
       loading: false;
-      result: PodboxActionPreCheckResult;
+      result: PodboxTicketActionPreCheckResult;
     } {
-  const [inProgress, setInProgress] = useState(true);
   const [result, setResult] = useState<
-    PodboxActionPreCheckResult | undefined
+    PodboxTicketActionPreCheckResult | undefined
   >();
-  const pcdCollection = usePCDCollection();
   const identityPCD = useUserIdentityPCD();
+  const dispatch = useDispatch();
+  const credentialManager = useCredentialManager();
 
   const doPreCheckTicket = useCallback(
     async (ticketId: string | undefined, eventId: string | undefined) => {
@@ -50,49 +47,30 @@ export function usePreCheckTicket(
         return;
       }
 
-      const emailPCDs = pcdCollection.getPCDsByType(
-        EmailPCDTypeName
-      ) as EmailPCD[];
-      if (emailPCDs.length !== 1) {
+      if (!identityPCD) {
+        await dispatch({ type: "participant-invalid" });
         return;
       }
 
-      const serializedEmailPCD = await EmailPCDPackage.serialize(emailPCDs[0]);
-      const payload = createTicketActionCredentialPayload(
-        serializedEmailPCD,
-        { checkin: true },
-        eventId,
-        ticketId
-      );
-
-      const signedPayload = await SemaphoreSignaturePCDPackage.prove({
-        identity: {
-          argumentType: ArgumentTypeName.PCD,
-          value: await SemaphoreIdentityPCDPackage.serialize(identityPCD)
-        },
-        signedMessage: {
-          argumentType: ArgumentTypeName.String,
-          value: JSON.stringify(payload)
-        }
-      });
-
-      const preCheckTicketResult = await requestGenericIssuancePreCheck(
+      const preCheckTicketResult = await requestPodboxTicketActionPreCheck(
         urljoin(appConfig.zupassServer, "generic-issuance/api/pre-check"),
-        await SemaphoreSignaturePCDPackage.serialize(signedPayload)
+        await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
+        { checkin: true },
+        ticketId,
+        eventId
       );
-      setInProgress(false);
       setResult(preCheckTicketResult);
     },
-    [identityPCD, pcdCollection]
+    [credentialManager, dispatch, identityPCD]
   );
 
   useEffect(() => {
     doPreCheckTicket(ticketId, eventId);
   }, [doPreCheckTicket, eventId, ticketId]);
 
-  if (inProgress) {
-    return { loading: true, result: undefined };
-  } else {
+  if (result) {
     return { loading: false, result };
+  } else {
+    return { loading: true, result: undefined };
   }
 }

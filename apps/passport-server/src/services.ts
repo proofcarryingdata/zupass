@@ -4,7 +4,7 @@ import { startE2EEService } from "./services/e2eeService";
 import { startEmailService } from "./services/emailService";
 import { startEmailTokenService } from "./services/emailTokenService";
 import { startFrogcryptoService } from "./services/frogcryptoService";
-import { startGenericIssuanceService } from "./services/generic-issuance/genericIssuanceService";
+import { startGenericIssuanceService } from "./services/generic-issuance/subservices/utils/startGenericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
 import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
@@ -22,14 +22,12 @@ import { startUserService } from "./services/userService";
 import { startZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { startZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
-import { instrumentPCDs } from "./util/instrumentPCDs";
 
 export async function startServices(
   context: ApplicationContext,
   apis: APIs
 ): Promise<GlobalServices> {
   await startTelemetry(context);
-  instrumentPCDs();
 
   const multiprocessService = startMultiProcessService();
   const pagerDutyService = startPagerDutyService();
@@ -44,7 +42,7 @@ export async function startServices(
   const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
-  const emailTokenService = startEmailTokenService(context, rateLimitService);
+  const emailTokenService = startEmailTokenService(context);
   const semaphoreService = startSemaphoreService(context);
   const zuzaluPretixSyncService = startZuzaluPretixSyncService(
     context,

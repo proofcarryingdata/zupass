@@ -92,6 +92,7 @@ export function SyncExistingScreen(): JSX.Element {
         <Spacer h={32} />
         <CenterColumn>
           <BigInput
+            autoFocus
             autoCapitalize="false"
             autoCorrect="false"
             disabled={isLoading}

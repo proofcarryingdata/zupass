@@ -322,7 +322,7 @@ export class ZuzaluPretixSyncService {
               (subEvent) => subEvent.id === positionSubeventId
             )
           )
-          .filter((subEvent) => subEvent != null);
+          .filter((subEvent) => !!subEvent);
 
         const visitorDateRanges = orderSubevents.map(
           (subEvent) =>

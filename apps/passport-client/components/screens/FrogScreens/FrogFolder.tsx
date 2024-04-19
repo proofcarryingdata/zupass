@@ -1,7 +1,4 @@
-import {
-  EdgeCityFolderName,
-  FrogCryptoFolderName
-} from "@pcd/passport-interface";
+import { FrogCryptoFolderName } from "@pcd/passport-interface";
 import _ from "lodash";
 import prettyMilliseconds from "pretty-ms";
 import { PropsWithChildren, useEffect, useMemo, useState } from "react";
@@ -11,7 +8,7 @@ import styled, {
   css,
   keyframes
 } from "styled-components";
-import { usePCDsInFolder, useSubscriptions } from "../../../src/appHooks";
+import { useSubscriptions } from "../../../src/appHooks";
 import { useUserFeedState } from "./FrogCryptoHomeSection";
 
 /**
@@ -37,23 +34,20 @@ export function FrogFolder({
     }>
   >;
 }): JSX.Element {
-  const edgePCDs = usePCDsInFolder(EdgeCityFolderName);
-  const frogcryptoDisabled = edgePCDs.length === 0;
+  // TODO: Add a feature flagging system to prevent having to deploy a code change to change this flag.
+  const frogcryptoGrayscale = true;
   const fetchTimestamp = useFetchTimestamp();
 
   return (
     <Container
       style={
-        frogcryptoDisabled
+        frogcryptoGrayscale
           ? {
-              filter: "grayscale(100%)",
-              cursor: "default"
+              filter: "grayscale(100%)"
             }
           : {}
       }
-      onClick={(): void => {
-        if (!frogcryptoDisabled) onFolderClick(FrogCryptoFolderName);
-      }}
+      onClick={(): void => onFolderClick(FrogCryptoFolderName)}
     >
       <img
         draggable="false"
@@ -62,7 +56,7 @@ export function FrogFolder({
         height={18}
       />
       <SuperFunkyFont>
-        {frogcryptoDisabled ? (
+        {frogcryptoGrayscale ? (
           <DisabledText>{FrogCryptoFolderName}</DisabledText>
         ) : (
           FrogCryptoFolderName.split("").map((letter, i) => (
@@ -72,11 +66,11 @@ export function FrogFolder({
           ))
         )}
       </SuperFunkyFont>
-      {(typeof fetchTimestamp === "number" || frogcryptoDisabled) && (
-        <NewFont $disabled={frogcryptoDisabled}>
+      {(typeof fetchTimestamp === "number" || frogcryptoGrayscale) && (
+        <NewFont $disabled={frogcryptoGrayscale}>
           <CountDown
-            timestamp={fetchTimestamp}
-            frogcryptoDisabled={frogcryptoDisabled}
+            timestamp={fetchTimestamp ?? Date.now()}
+            frogcryptoGrayscale={frogcryptoGrayscale}
           />
         </NewFont>
       )}
@@ -114,7 +108,7 @@ function useFetchTimestamp(): number | null {
         return null;
       }
 
-      return _.min(activeFeeds.map((feed) => feed.nextFetchAt));
+      return _.min(activeFeeds.map((feed) => feed.nextFetchAt)) ?? null;
     } catch (e) {
       console.error(e);
       return null;
@@ -127,18 +121,16 @@ function useFetchTimestamp(): number | null {
  */
 function CountDown({
   timestamp,
-  frogcryptoDisabled
+  frogcryptoGrayscale
 }: {
   timestamp: number;
-  frogcryptoDisabled: boolean;
+  frogcryptoGrayscale: boolean;
 }): JSX.Element {
   const end = useMemo(() => {
     return new Date(timestamp);
   }, [timestamp]);
   const [diffText, setDiffText] = useState(
-    frogcryptoDisabled
-      ? _.upperCase("Returning Soon")
-      : timestamp < Date.now()
+    timestamp < Date.now() && !frogcryptoGrayscale
       ? _.upperCase("Available Now")
       : ""
   );
@@ -147,8 +139,8 @@ function CountDown({
     const interval = setInterval(() => {
       const now = new Date();
       const diffMs = end.getTime() - now.getTime();
-      if (frogcryptoDisabled) {
-        setDiffText(_.upperCase("Returning Soon"));
+      if (frogcryptoGrayscale) {
+        setDiffText("");
       } else if (diffMs < 0) {
         setDiffText(_.upperCase("Available Now"));
       } else {
@@ -164,7 +156,7 @@ function CountDown({
     return () => {
       clearInterval(interval);
     };
-  }, [end, frogcryptoDisabled]);
+  }, [end, frogcryptoGrayscale]);
 
   return <>{diffText}</>;
 }

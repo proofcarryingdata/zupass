@@ -1,11 +1,10 @@
-import { Badge, HStack, Heading, Spinner } from "@chakra-ui/react";
+import { Heading, Spinner } from "@chakra-ui/react";
 import { getError } from "@pcd/passport-interface";
 import { ReactNode, useEffect } from "react";
 import { useParams } from "react-router-dom";
 import styled from "styled-components";
 import { PageContent } from "../../components/Core";
 import { LoadingContent } from "../../components/LoadingContent";
-import { PipelineDisplayNameText } from "../../components/PipelineDisplayUtils";
 import { GlobalPageHeader } from "../../components/header/GlobalPageHeader";
 import { useFetchPipeline } from "../../helpers/useFetchPipeline";
 import { useFetchPipelineInfo } from "../../helpers/useFetchPipelineInfo";
@@ -44,7 +43,6 @@ export default function PipelinePage(): ReactNode {
   }, [userJWT]);
 
   if (maybeRequestError) {
-    // TODO: make this nicer
     return (
       <>
         <GlobalPageHeader user={user} />
@@ -72,60 +70,42 @@ export default function PipelinePage(): ReactNode {
     pipelineDefinition.value?.ownerUserId !== user?.value?.id;
 
   return (
-    <>
-      <GlobalPageHeader
-        user={user}
-        titleContent={(): ReactNode => (
-          <HStack>
-            <span>Pipeline</span>
-            <span
-              style={{
-                fontWeight: "bold"
-              }}
-            >
-              <PipelineDisplayNameText pipeline={pipelineDefinition.value} />{" "}
-            </span>
-            <Badge>{pipelineDefinition.value?.id}</Badge>
-            <div>by {pipelineInfo?.ownerEmail}</div>
-          </HStack>
+    <Container>
+      <HeaderContainer>
+        <GlobalPageHeader user={user} titleContent={(): ReactNode => null} />
+
+        {ownedBySomeoneElse && (
+          <WarningSection>
+            <b>WARNING!</b> You are not the owner of this pipeline, but you can
+            see it because you're an <b>admin</b>. Be <b>Careful</b>!
+          </WarningSection>
         )}
-      />
+      </HeaderContainer>
 
-      {ownedBySomeoneElse && (
-        <WarningSection>
-          <b>WARNING!</b> You are not the owner of this pipeline, but you can
-          see it because you're an <b>admin</b>. Be <b>Careful</b>!
-        </WarningSection>
-      )}
-
-      <PageContent>
-        <TwoColumns>
-          <div className="col2">
-            {pipelineInfoResult.success &&
-              pipelineDefinition.success &&
-              user.success && (
-                <PipelineEditSection
-                  user={user.value}
-                  pipelineInfo={pipelineInfo}
-                  pipeline={pipelineDefinition.value}
-                  isAdminView={isAdminView}
-                />
-              )}
-          </div>
-          <div className="col1">
-            {pipelineInfoResult &&
-              pipelineDefinition.success &&
-              user.success && (
-                <PipelineDetailSection
-                  pipelineInfo={pipelineInfo}
-                  pipeline={pipelineDefinition.value}
-                  isAdminView={isAdminView}
-                />
-              )}
-          </div>
-        </TwoColumns>
-      </PageContent>
-    </>
+      <TwoColumns>
+        <div className="col editor-col">
+          {pipelineInfoResult.success &&
+            pipelineDefinition.success &&
+            user.success && (
+              <PipelineEditSection
+                user={user.value}
+                pipelineInfo={pipelineInfo}
+                pipeline={pipelineDefinition.value}
+                isAdminView={isAdminView}
+              />
+            )}
+        </div>
+        <div className="col details-col">
+          {pipelineInfoResult && pipelineDefinition.success && user.success && (
+            <PipelineDetailSection
+              pipelineInfo={pipelineInfo}
+              pipeline={pipelineDefinition.value}
+              isAdminView={isAdminView}
+            />
+          )}
+        </div>
+      </TwoColumns>
+    </Container>
   );
 }
 
@@ -134,20 +114,50 @@ const WarningSection = styled.div`
   background-color: rgba(238, 255, 0, 0.1);
 `;
 
+const Container = styled.div`
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100vw;
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  justify-content: flex-start;
+  align-items: stretch;
+  flex-direction: column;
+`;
+
+const HeaderContainer = styled.div``;
+
 export const TwoColumns = styled.div`
+  margin: 32px;
+  margin-bottom: 0;
+  margin-right: 0;
+  box-sizing: border-box;
   max-width: 100%;
-  overflow-x: hidden;
+  height: 100%;
+  overflow: hidden;
   display: flex;
   justify-content: space-between;
   align-items: stretch;
   flex-direction: row;
   gap: 32px;
 
-  .col1 {
-    flex-grow: 1;
+  .col {
   }
 
-  .col2 {
+  .editor-col {
+    height: 100%;
+    max-height: 100%;
+    overflow: hidden;
+    padding-bottom: 32px;
+  }
+
+  .details-col {
+    flex-grow: 1;
+    overflow-y: scroll;
+    flex-basis: 500px;
+    padding-bottom: 128px;
   }
 
   ol {

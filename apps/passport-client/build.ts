@@ -48,6 +48,27 @@ const define = {
           process.env.PODBOX_CLIENT_URL
         )
       }
+    : {}),
+  ...(process.env.STRICH_LICENSE_KEY !== undefined
+    ? {
+        "process.env.STRICH_LICENSE_KEY": JSON.stringify(
+          process.env.STRICH_LICENSE_KEY
+        )
+      }
+    : {}),
+  ...(process.env.SCANDIT_LICENSE_KEY !== undefined
+    ? {
+        "process.env.SCANDIT_LICENSE_KEY": JSON.stringify(
+          process.env.SCANDIT_LICENSE_KEY
+        )
+      }
+    : {}),
+  ...(process.env.MULTI_CHOICE_SCAN_ENABLED !== undefined
+    ? {
+        "process.env.MULTI_CHOICE_SCAN_ENABLED": JSON.stringify(
+          process.env.MULTI_CHOICE_SCAN_ENABLED
+        )
+      }
     : {})
 };
 
@@ -97,16 +118,17 @@ const serviceWorkerOpts: BuildOptions = {
 };
 
 run(process.argv[2])
-  .then(() => console.log("Built Zupass client"))
+  .then(() => console.log("Built all Zupass client artifacts"))
   .catch((err) => console.error(err));
 
 async function run(command: string): Promise<void> {
   compileHtml();
+  copyScanditEngine();
 
   switch (command) {
     case "build":
       const appRes = await build({ ...appOpts, minify: true });
-      console.error("Built", appRes);
+      console.error("Built client");
 
       // Bundle size data for use with https://esbuild.github.io/analyze/
       fs.writeFileSync(
@@ -114,11 +136,11 @@ async function run(command: string): Promise<void> {
         JSON.stringify(appRes.metafile)
       );
 
-      const serviceWorkerRes = await build({
+      const _serviceWorkerRes = await build({
         ...serviceWorkerOpts,
         minify: true
       });
-      console.error("Built", serviceWorkerRes);
+      console.error("Built service worker");
       break;
     case "dev":
       const serviceWorkerCtx = await context(serviceWorkerOpts);
@@ -155,6 +177,16 @@ async function run(command: string): Promise<void> {
     default:
       throw new Error(`Unknown command ${command}`);
   }
+}
+
+function copyScanditEngine(): void {
+  fs.cpSync(
+    path.join(
+      "../../node_modules/scandit-web-datacapture-barcode/build/engine"
+    ),
+    path.join("public/scandit-engine"),
+    { recursive: true }
+  );
 }
 
 function compileHtml(): void {

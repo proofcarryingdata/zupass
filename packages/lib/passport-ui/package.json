@@ -19,12 +19,10 @@
   ],
   "scripts": {
     "lint": "eslint \"**/*.ts{,x}\"",
-    "dev": "nodemon -w 'icons/*' convert-icons.mjs",
-    "pre-build": "node convert-icons.mjs",
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -35,19 +33,15 @@
     "styled-components": "^5.3.9"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/mocha": "^10.0.1",
     "@types/pako": "^2.0.0",
     "@types/qr-image": "^3.2.7",
     "@types/react": "^18.0.22",
     "@types/styled-components": "^5.1.26",
-    "camelcase": "^8.0.0",
-    "eslint": "^7.32.0",
+    "eslint": "8.57.0",
     "mocha": "^10.2.0",
-    "nodemon": "^3.0.3",
-    "prettier": "^3.1.1",
-    "svg-to-url": "^3.0.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },

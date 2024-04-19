@@ -6,14 +6,10 @@ import { useLocation } from "react-router-dom";
 import {
   useDispatch,
   useIsSyncSettled,
-  useSelf,
-  useUserForcedToLogout
+  useLoginIfNoSelf,
+  useSelf
 } from "../../../src/appHooks";
-import {
-  clearAllPendingRequests,
-  pendingProofRequestKey,
-  setPendingProofRequest
-} from "../../../src/sessionStorage";
+import { pendingRequestKeys } from "../../../src/sessionStorage";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { err } from "../../../src/util";
 import { CenterColumn, H2, Spacer } from "../../core";
@@ -24,16 +20,15 @@ import { GenericProveScreen } from "./GenericProveScreen";
 import { SemaphoreGroupProveScreen } from "./SemaphoreGroupProveScreen";
 import { SemaphoreSignatureProveScreen } from "./SemaphoreSignatureProveScreen";
 
-export function ProveScreen(): JSX.Element {
+export function ProveScreen(): JSX.Element | null {
   useSyncE2EEStorage();
   const syncSettled = useIsSyncSettled();
   const location = useLocation();
   const dispatch = useDispatch();
   const self = useSelf();
   const params = new URLSearchParams(location.search);
-  const request = JSON.parse(params.get("request")) as PCDGetRequest;
+  const request = JSON.parse(params.get("request") ?? "{}") as PCDGetRequest;
   const screen = getScreen(request);
-  const userForcedToLogout = useUserForcedToLogout();
 
   useEffect(() => {
     if (process.env.NODE_ENV !== "production") {
@@ -53,20 +48,9 @@ export function ProveScreen(): JSX.Element {
     }
   }, [dispatch, screen]);
 
-  useEffect(() => {
-    if (self == null || userForcedToLogout) {
-      clearAllPendingRequests();
-      const stringifiedRequest = JSON.stringify(request);
-      setPendingProofRequest(stringifiedRequest);
-      if (self == null) {
-        window.location.href = `/#/login?redirectedFromAction=true&${pendingProofRequestKey}=${encodeURIComponent(
-          stringifiedRequest
-        )}`;
-      }
-    }
-  }, [request, self, userForcedToLogout]);
+  useLoginIfNoSelf(pendingRequestKeys.proof, request);
 
-  if (self == null) {
+  if (!self) {
     return null;
   }
 
@@ -78,7 +62,7 @@ export function ProveScreen(): JSX.Element {
     );
   }
 
-  if (screen == null) {
+  if (!screen) {
     // Need AppContainer to display error
     return <AppContainer bg="gray" />;
   }

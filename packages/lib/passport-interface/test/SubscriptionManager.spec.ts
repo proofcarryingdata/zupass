@@ -22,8 +22,6 @@ describe("Subscription Manager", async function () {
 
   const identity = new Identity();
 
-  this.timeout(1000 * 30);
-
   this.beforeEach(() => {
     // Means that the time won't change during the test, which could cause
     // spurious issues with timestamps in feed credentials.
@@ -401,10 +399,8 @@ describe("Subscription Manager", async function () {
       }
     });
 
-    const serializedPCD = await EmailPCDPackage.serialize(emailPCD);
-
     const collection = new PCDCollection([EmailPCDPackage], [emailPCD]);
-    const credentialCache = await createCredentialCache();
+    const credentialCache = createCredentialCache();
     const credentialManager = new CredentialManager(
       identity,
       collection,
@@ -422,8 +418,10 @@ describe("Subscription Manager", async function () {
       credentialManager
     );
     expect(actions.length).to.eq(1);
+
+    const serializedEmailPCD = await EmailPCDPackage.serialize(emailPCD);
     // Make sure that the feed was able to decode the EmailPCD
-    expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(serializedPCD);
+    expect(mockFeedApi.receivedPayload?.pcd).to.deep.eq(serializedEmailPCD);
     expect(mockFeedApi.receivedPayload?.timestamp).to.not.be.undefined;
   });
 

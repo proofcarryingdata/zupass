@@ -5,6 +5,9 @@ import {
 } from "@pcd/eddsa-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
+  EDGE_CITY_7_DAY_PRODUCT_IDS,
+  EDGE_CITY_EVENT_ID,
+  ETH_LATAM_2024_EVENT_ID,
   VITALIA_EVENT_ID,
   VITALIA_PUBLIC_KEY,
   ZUCONNECT_23_DAY_PASS_EVENT_ID,
@@ -114,7 +117,7 @@ export class PoapService {
       `[POAP] checking that signer of ticket ${pcd.claim.partialTicket.ticketId} matches intended signer`
     );
 
-    if (signerPublicKey == null) {
+    if (!signerPublicKey) {
       if (!process.env.SERVER_EDDSA_PRIVATE_KEY)
         throw new Error(`missing server eddsa private key .env value`);
 
@@ -142,7 +145,7 @@ export class PoapService {
 
   /**
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
-   * Zuzalu 2023 Ticket and returns the ID of that ticket.
+   * Zuzalu 2023 ticket and returns the ID of that ticket.
    *
    * This function throws an error in the case that the PCD is not
    * valid; for example, here are a few invalid cases
@@ -174,7 +177,7 @@ export class PoapService {
         throw new Error("valid event IDs of PCD does not match Zuzalu 2023");
       }
 
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       span?.setAttribute("ticketId", ticketId);
@@ -188,7 +191,7 @@ export class PoapService {
         this.context.dbPool,
         { uuid: ticketId }
       );
-      if (zuzaluPretixTicket == null) {
+      if (zuzaluPretixTicket === null) {
         throw new Error("zuzalu ticket does not exist");
       }
 
@@ -198,7 +201,7 @@ export class PoapService {
 
   /**
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
-   * ZuConnect 2023 Ticket and returns the ID of that ticket.
+   * ZuConnect 2023 ticket and returns the ID of that ticket.
    *
    * This function throws an error in the case that the PCD is not
    * valid; for example, here are a few invalid cases
@@ -230,18 +233,18 @@ export class PoapService {
         );
       }
 
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       span?.setAttribute("ticketId", ticketId);
 
       logger(`[POAP] fetching zuconnect ticket ${ticketId} from database`);
 
-      const zuconnectTicket = fetchZuconnectTicketById(
+      const zuconnectTicket = await fetchZuconnectTicketById(
         this.context.dbPool,
         ticketId
       );
-      if (zuconnectTicket == null) {
+      if (!zuconnectTicket) {
         throw new Error("zuconnect ticket does not exist");
       }
 
@@ -251,7 +254,7 @@ export class PoapService {
 
   /**
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
-   * Vitalia 2024 Ticket and returns the ID of that ticket.
+   * Vitalia 2024 ticket and returns the ID of that ticket.
    *
    * This function throws an error in the case that the PCD is not
    * valid; for example, here are a few invalid cases
@@ -286,7 +289,123 @@ export class PoapService {
         throw new Error("valid event IDs of PCD does not match Vitalia 2024");
       }
 
-      if (ticketId == null) {
+      if (!ticketId) {
+        throw new Error("ticket ID must be revealed");
+      }
+      span?.setAttribute("ticketId", ticketId);
+
+      return ticketId;
+    });
+  }
+
+  /**
+   * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
+   * Edge City Denver 7-day ticket and returns the ID of that ticket.
+   *
+   * This function throws an error in the case that the PCD is not
+   * valid; for example, here are a few invalid cases
+   *  1. Wrong PCD type
+   *  2. Wrong EdDSA public key
+   *  3. PCD proof is invalid
+   *  4. Event of ticket is not Edge City Denver
+   *  5. Type of ticket is not 7-day pass
+   */
+  private async validateEdgeCityDenverTicket(
+    serializedPCD: string
+  ): Promise<string> {
+    return traced("poap", "validateEdgeCityDenverTicket", async (span) => {
+      if (!process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+        throw new Error(
+          "Missing generic issuance eddsa private key .env value"
+        );
+      const pcd = await this.validateZKEdDSAEventTicketPCD(
+        serializedPCD,
+        await getEdDSAPublicKey(process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+      );
+
+      const {
+        validEventIds,
+        partialTicket: { ticketId, productId }
+      } = pcd.claim;
+
+      logger(
+        `[POAP] checking that validEventds ${validEventIds} matches Edge City Denver`
+      );
+
+      if (
+        !(
+          validEventIds &&
+          validEventIds.length === 1 &&
+          validEventIds[0] === EDGE_CITY_EVENT_ID
+        )
+      ) {
+        throw new Error(
+          "valid event IDs of PCD does not match Edge City Denver"
+        );
+      }
+
+      if (!(productId && EDGE_CITY_7_DAY_PRODUCT_IDS.includes(productId))) {
+        throw new Error(
+          "product ID of PCD does not match Edge City Denver 7-day Pass"
+        );
+      }
+
+      if (!ticketId) {
+        throw new Error("ticket ID must be revealed");
+      }
+      span?.setAttribute("ticketId", ticketId);
+
+      return ticketId;
+    });
+  }
+
+  /**
+   * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
+   * ETH LATAM 2024 ticket and returns the ID of that ticket.
+   *
+   * This function throws an error in the case that the PCD is not
+   * valid; for example, here are a few invalid cases
+   *  1. Wrong PCD type
+   *  2. Wrong EdDSA public key
+   *  3. PCD proof is invalid
+   *  4. Event of ticket is not ETH LATAM 2024
+   *  5. Ticket was not checked in
+   */
+  private async validateETHLatamTicket(serializedPCD: string): Promise<string> {
+    return traced("poap", "validateETHLatamDenverTicket", async (span) => {
+      if (!process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+        throw new Error(
+          "Missing generic issuance eddsa private key .env value"
+        );
+      const pcd = await this.validateZKEdDSAEventTicketPCD(
+        serializedPCD,
+        await getEdDSAPublicKey(process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+      );
+
+      const {
+        validEventIds,
+        partialTicket: { ticketId, isConsumed }
+      } = pcd.claim;
+
+      logger(
+        `[POAP] checking that validEventIds ${validEventIds} matches ETH LATAM 2024`
+      );
+
+      if (
+        !(
+          validEventIds &&
+          validEventIds.length === 1 &&
+          validEventIds[0] === ETH_LATAM_2024_EVENT_ID
+        )
+      ) {
+        throw new Error("valid event IDs of PCD does not match ETH LATAM 2024");
+      }
+
+      if (!isConsumed) {
+        throw new Error("ticket was not checked in at ETH LATAM 2024");
+      }
+
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       span?.setAttribute("ticketId", ticketId);
@@ -337,7 +456,7 @@ export class PoapService {
       }
 
       logger(`[POAP] fetching devconnect ticket ${ticketId} from database`);
-      if (ticketId == null) {
+      if (!ticketId) {
         throw new Error("ticket ID must be revealed");
       }
       const devconnectPretixTicket =
@@ -345,7 +464,7 @@ export class PoapService {
           this.context.dbPool,
           ticketId
         );
-      if (devconnectPretixTicket == null) {
+      if (!devconnectPretixTicket) {
         throw new Error("ticket ID does not exist");
       }
       const { devconnect_pretix_items_info_id, is_consumed, email } =
@@ -398,7 +517,7 @@ export class PoapService {
         ticketId,
         "devconnect"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough Devconnect POAP links");
       }
       return poapLink;
@@ -432,7 +551,7 @@ export class PoapService {
         ticketId,
         "zuzalu23"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough Zuzalu 2023 POAP links");
       }
       return poapLink;
@@ -466,7 +585,7 @@ export class PoapService {
         ticketId,
         "zuconnect"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough ZuConnect POAP links");
       }
       return poapLink;
@@ -478,6 +597,74 @@ export class PoapService {
       return getServerErrorUrl(
         "Contact support",
         "An error occurred while fetching your POAP mint link for ZuConnect."
+      );
+    }
+  }
+
+  /**
+   * Given a ZKEdDSAEventTicketPCD sent to the server for claiming an Edge City Denver POAP,
+   * returns the valid redirect URL to the response handler.
+   *  1. If this ticket is already associated with a POAP mint link, return that link.
+   *  2. If this ticket is not associated with a POAP mint link and more unclaimed POAP
+   *     links exist, then associate that unclaimed link with this ticket and return it.
+   *  3. If this ticket is not associated with a POAP mint link and no more unclaimed
+   *     POAP links exist, return a custom server error URL.
+   */
+  public async getEdgeCityDenverPoapRedirectUrl(
+    serializedPCD: string
+  ): Promise<string> {
+    try {
+      const ticketId = await this.validateEdgeCityDenverTicket(serializedPCD);
+      const poapLink = await this.getPoapClaimUrlByTicketId(
+        ticketId,
+        "edgecitydenver"
+      );
+      if (poapLink === null) {
+        throw new Error("Not enough Edge City Denver POAP links");
+      }
+      return poapLink;
+    } catch (e) {
+      logger("[POAP] getEdgeCityDenverPoapRedirectUrl error", e);
+      this.rollbarService?.reportError(e);
+      // Return the generic /server-error page instead for the route to redirect to,
+      // with a title and description informing the user to contact support.
+      return getServerErrorUrl(
+        "Contact support",
+        "An error occurred while fetching your POAP mint link for Edge City Denver."
+      );
+    }
+  }
+
+  /**
+   * Given a ZKEdDSAEventTicketPCD sent to the server for claiming an ETH LATAM 2024 POAP,
+   * returns the valid redirect URL to the response handler.
+   *  1. If this ticket is already associated with a POAP mint link, return that link.
+   *  2. If this ticket is not associated with a POAP mint link and more unclaimed POAP
+   *     links exist, then associate that unclaimed link with this ticket and return it.
+   *  3. If this ticket is not associated with a POAP mint link and no more unclaimed
+   *     POAP links exist, return a custom server error URL.
+   */
+  public async getETHLatamPoapRedirectUrl(
+    serializedPCD: string
+  ): Promise<string> {
+    try {
+      const ticketId = await this.validateETHLatamTicket(serializedPCD);
+      const poapLink = await this.getPoapClaimUrlByTicketId(
+        ticketId,
+        "ethlatam"
+      );
+      if (poapLink === null) {
+        throw new Error("Not enough ETH LATAM POAP links");
+      }
+      return poapLink;
+    } catch (e) {
+      logger("[POAP] getETHLatamPoapRedirectUrl error", e);
+      this.rollbarService?.reportError(e);
+      // Return the generic /server-error page instead for the route to redirect to,
+      // with a title and description informing the user to contact support.
+      return getServerErrorUrl(
+        "Contact support",
+        `An error occurred while fetching your POAP mint link for ETH LATAM: ${e}`
       );
     }
   }
@@ -500,7 +687,7 @@ export class PoapService {
         ticketId,
         "vitalia"
       );
-      if (poapLink == null) {
+      if (poapLink === null) {
         throw new Error("Not enough Vitalia POAP links");
       }
       return poapLink;
@@ -545,7 +732,7 @@ export class PoapService {
             this.context.dbPool,
             hashedTicketId
           );
-          if (existingPoapLink != null) {
+          if (existingPoapLink !== null) {
             span?.setAttribute("alreadyClaimed", true);
             span?.setAttribute("poapLink", existingPoapLink);
             return existingPoapLink;

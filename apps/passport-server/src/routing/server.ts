@@ -70,7 +70,7 @@ export async function startHttpServer(
         let corsOptions: CorsOptions;
         const methods = ["GET", "POST", "PUT", "DELETE"];
         if (
-          genericIssuanceClientUrl != null &&
+          genericIssuanceClientUrl &&
           req.header("Origin") === genericIssuanceClientUrl
         ) {
           corsOptions = {
@@ -85,9 +85,27 @@ export async function startHttpServer(
           };
         }
 
+        // 86400 is the highest value supported by browsers for caching CORS
+        // responses
+        corsOptions.maxAge = 86400;
+
+        // Allows a later middleware to add additional caching headers
+        corsOptions.preflightContinue = true;
+
         callback(null, corsOptions);
       })
     );
+
+    // Add cache-control to preflight CORS responses in a separate middleware
+    // This is required for the browser to be able to cache these requests
+    app.use((req, res, next) => {
+      if (req.method === "OPTIONS") {
+        res.setHeader("Cache-Control", "public, max-age=86400");
+        res.end();
+      } else {
+        next();
+      }
+    });
 
     initAllRoutes(app, context, globalServices);
 

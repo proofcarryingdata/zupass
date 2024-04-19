@@ -38,10 +38,19 @@ const AlertsOptionsSchema = z.object({
 export type AlertsOptions = z.infer<typeof AlertsOptionsSchema>;
 
 const BasePipelineOptionsSchema = z.object({
+  /**
+   * Paused pipelines don't load data, but their APIs are still
+   * accessible and enabled.
+   */
   paused: z.boolean().optional(),
   name: z.string().optional(),
   notes: z.string().optional(),
-  alerts: AlertsOptionsSchema.optional()
+  alerts: AlertsOptionsSchema.optional(),
+  /**
+   * Protected pipelines can't be deleted.
+   */
+  protected: z.boolean().optional(),
+  important: z.boolean().optional()
 });
 
 export type BasePipelineOptions = z.infer<typeof BasePipelineOptionsSchema>;
@@ -131,7 +140,13 @@ const SemaphoreGroupConfigSchema = z.object({
   name: z.string().min(1),
   memberCriteria: z.array(
     z.object({
+      /**
+       * generic issuance event id
+       */
       eventId: z.string().uuid(),
+      /**
+       * generic issuance product id
+       */
       productId: z.string().uuid().optional()
     })
   )
@@ -466,7 +481,7 @@ export function isCSVPipelineDefinition(
 /**
  * This item is exported so that we can use it for validation on generic issuance server.
  */
-export const PipelineDefinitionSchema = z.union([
+export const PipelineDefinitionSchema = z.discriminatedUnion("type", [
   LemonadePipelineDefinitionSchema,
   PretixPipelineDefinitionSchema,
   CSVPipelineDefinitionSchema
@@ -480,6 +495,19 @@ export const PipelineDefinitionSchema = z.union([
  * of data sources.
  */
 export type PipelineDefinition = z.infer<typeof PipelineDefinitionSchema>;
+
+const PipelineHistoryEntrySchema = z.object({
+  id: z.string().uuid(),
+  pipeline: PipelineDefinitionSchema,
+  timeCreated: z.string(),
+  editorUserId: z.string().optional()
+});
+
+export type PipelineHistoryEntry = z.infer<typeof PipelineHistoryEntrySchema>;
+
+export interface HydratedPipelineHistoryEntry extends PipelineHistoryEntry {
+  editorEmail?: string;
+}
 
 /**
  * {@link Pipeline}s offer PCDs to users via authenticated channels such as

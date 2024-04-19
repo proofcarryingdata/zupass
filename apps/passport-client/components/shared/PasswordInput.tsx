@@ -1,10 +1,5 @@
-import { icons } from "@pcd/passport-ui";
-import {
-  Dispatch,
-  KeyboardEvent,
-  MutableRefObject,
-  SetStateAction
-} from "react";
+import { Dispatch, KeyboardEvent, RefObject, SetStateAction } from "react";
+import { FaRegEye, FaRegEyeSlash } from "react-icons/fa6";
 import styled from "styled-components";
 import { BigInput } from "../core";
 import PasswordStrengthProgress from "./PasswordStrengthProgress";
@@ -17,7 +12,7 @@ interface SetPasswordInputProps {
   placeholder: string;
   showStrengthProgress?: boolean;
   onEnter?: (e: KeyboardEvent<HTMLInputElement>) => void;
-  inputRef?: MutableRefObject<HTMLInputElement>;
+  inputRef?: RefObject<HTMLInputElement>;
   autoFocus?: boolean;
 }
 
@@ -56,11 +51,14 @@ export function PasswordInput({
       <ShowHidePasswordIconContainer>
         <ShowHidePasswordIcon
           draggable="false"
-          src={revealPassword ? icons.eyeClosed : icons.eyeOpen}
-          width={24}
-          height={24}
           onClick={(): void => setRevealPassword((curr) => !curr)}
-        />
+        >
+          {revealPassword ? (
+            <FaRegEye size={24} />
+          ) : (
+            <FaRegEyeSlash size={24} />
+          )}
+        </ShowHidePasswordIcon>
       </ShowHidePasswordIconContainer>
     </Container>
   );
@@ -97,6 +95,8 @@ const ShowHidePasswordIconContainer = styled.div`
   top: 0;
 `;
 
-const ShowHidePasswordIcon = styled.img`
+const ShowHidePasswordIcon = styled.div`
   cursor: pointer;
+  display: flex;
+  align-items: center;
 `;

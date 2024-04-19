@@ -1,0 +1,37 @@
+{
+  "extends": ["//"],
+  "pipeline": {
+    "build": {
+      "dependsOn": ["^build"],
+      "dotEnv": [".env"],
+      "inputs": [
+        "$TURBO_DEFAULT$",
+        "components/**",
+        "pages/**",
+        "public/artifacts/**",
+        "public/fonts/**",
+        "public/images/**",
+        "public/rln-artifacts/**",
+        "public/semaphore-artifacts/**",
+        "public/global-zupass.css",
+        "public/index.hbs",
+        "public/zxcvbn.js",
+        "src/**",
+        "test/**",
+        "build.ts",
+        "globals.d.ts"
+      ],
+      "outputs": [
+        "public/index.html",
+        "public/service-worker.js",
+        "public/js/**"
+      ],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["build"],
+      "inputs": ["$TURBO_DEFAULT$", "test/**"],
+      "cache": true
+    }
+  }
+}

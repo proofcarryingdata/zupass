@@ -1,5 +1,5 @@
-import { sleep } from "@pcd/util";
-import { useCallback, useState } from "react";
+import { getErrorMessage, sleep } from "@pcd/util";
+import { useCallback, useEffect, useState } from "react";
 import styled from "styled-components";
 import {
   useDispatch,
@@ -18,7 +18,7 @@ import { ScreenLoader } from "../shared/ScreenLoader";
  * This uncloseable modal is shown to users of Zupass who have a sync key,
  * and have never created a password. It asks them to create a password.
  */
-export function UpgradeAccountModal(): JSX.Element {
+export function UpgradeAccountModal(): JSX.Element | null {
   useSyncE2EEStorage();
   const [loading, setLoading] = useState(false);
   const dispatch = useDispatch();
@@ -37,6 +37,9 @@ export function UpgradeAccountModal(): JSX.Element {
     await sleep();
     try {
       const currentEncryptionKey = loadEncryptionKey();
+      if (!currentEncryptionKey) {
+        throw new Error("Could not load encryption key");
+      }
       await setPassword(
         newPassword,
         currentEncryptionKey,
@@ -51,14 +54,29 @@ export function UpgradeAccountModal(): JSX.Element {
       });
     } catch (e) {
       console.log("error setting password", e);
-      setError(e.message);
+      alert(
+        `Error setting password
+        
+        ${getErrorMessage(e)}`
+      );
+      setError(getErrorMessage(e));
     } finally {
       setLoading(false);
     }
   }, [loading, newPassword, serverStorageRevision, dispatch, update]);
 
+  useEffect(() => {
+    if (!self) {
+      dispatch({ type: "set-modal", modal: { modalType: "none" } });
+    }
+  }, [dispatch, self]);
+
   if (loading) {
     return <ScreenLoader text="Adding your password..." />;
+  }
+
+  if (!self) {
+    return null;
   }
 
   return (

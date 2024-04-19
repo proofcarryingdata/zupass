@@ -22,12 +22,9 @@ import {
 import { RippleLoader } from "../../core/RippleLoader";
 import { AdhocModal } from "../../modals/AdhocModal";
 import { PCDCardList } from "../../shared/PCDCardList";
-import { SuperFunkyFont } from "../FrogScreens/FrogFolder";
 import { BalancesTab } from "./BalancesTab";
 import { ExperienceModal } from "./ExperienceModal";
 import { useZucashConfetti } from "./useZucashConfetti";
-
-const animSpeedMs = 500;
 
 const TABS = [
   {
@@ -56,36 +53,33 @@ interface GroupedEvent {
   button?: { text: string; link: string };
 }
 
-const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce((acc, item) => {
-  const existingIndex = acc.findIndex(
-    (event) => event.eventName === item.eventName
-  );
-  if (existingIndex > -1) {
-    acc[existingIndex].total += 1;
-  } else {
-    acc.push({
-      eventName: item.eventName,
-      total: item.infinite ? 0 : 1,
-      imageUrl: item.imageUrl,
-      hiddenWhenEmpty: !!item.hiddenWhenEmpty,
-      infinite: !!item.infinite,
-      description: item.description,
-      button: item.button
-    } satisfies GroupedEvent);
-  }
-  return acc;
-}, [] satisfies GroupedEvent[]);
+const groupedResult: GroupedEvent[] = BADGES_EDGE_CITY.reduce<GroupedEvent[]>(
+  (acc, item) => {
+    const existingIndex = acc.findIndex(
+      (event: GroupedEvent) => event.eventName === item.eventName
+    );
+    if (existingIndex > -1) {
+      acc[existingIndex].total += 1;
+    } else {
+      acc.push({
+        eventName: item.eventName,
+        total: item.infinite ? 0 : 1,
+        imageUrl: item.imageUrl,
+        hiddenWhenEmpty: !!item.hiddenWhenEmpty,
+        infinite: !!item.infinite,
+        description: item.description,
+        button: item.button
+      } satisfies GroupedEvent);
+    }
+    return acc;
+  },
+  []
+);
 
 /**
  * Renders EdgeCity UI.
  */
-export function EdgeCityHome({
-  setBrowsingFolder,
-  confetti
-}: {
-  setBrowsingFolder: (folder?: string, tab?: string) => void;
-  confetti: () => Promise<void>;
-}): JSX.Element {
+export function EdgeCityHome(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const tab = searchParams.get("tab") ?? "ticket";
   const setTab = useCallback(
@@ -97,7 +91,7 @@ export function EdgeCityHome({
 
   const edgeCityPCDs = usePCDsInFolder(EdgeCityFolderName);
   const [selectedExperience, setSelectedExperience] =
-    useState<EdDSATicketPCD>(null);
+    useState<EdDSATicketPCD | null>(null);
   const [selectedExperienceIsContact, setSelectedExperienceIsContact] =
     useState(false);
   const [selectedExperienceIsStar, setSelectedExperienceIsStar] =
@@ -110,12 +104,12 @@ export function EdgeCityHome({
   const [error, setError] = useState("");
   const [score, setScore] = useState<EdgeCityBalance | undefined>();
   const [totalExp, setTotalExp] = useState(1);
-  const { email } = useSelf();
+  const self = useSelf();
 
   useEffect(() => {
     setLoading(true);
     requestEdgeCityBalances(appConfig.zupassServer).then((res) => {
-      if (res.success) {
+      if (res.success && res.value.length > 0) {
         const totalExp = Math.max(
           res.value.map((x) => x.balance).reduce((x, y) => x + y),
           0.1
@@ -129,7 +123,7 @@ export function EdgeCityHome({
             balance: (s.balance / totalExp) * TOTAL_SUPPLY
           }))
         );
-      } else {
+      } else if (res.error) {
         setError(res.error);
       }
       setLoading(false);
@@ -137,13 +131,13 @@ export function EdgeCityHome({
   }, []);
 
   useEffect(() => {
-    if (!scores.length || !email) {
+    if (!scores.length || !self?.email) {
       setScore(undefined);
       return;
     }
-    const emailHash = `0x${sha256(`edgecity${email}`)}`;
+    const emailHash = `0x${sha256(`edgecity${self.email}`)}`;
     setScore(scores.find((s) => s.email_hash === emailHash));
-  }, [scores, email]);
+  }, [scores, self]);
 
   useEffect(() => {
     // Set CSS variables on the html element to change into dark mode.
@@ -168,7 +162,7 @@ export function EdgeCityHome({
   const pcdsByEventName: Record<string, EdDSATicketPCD[]> = folders
     .flatMap((folder) => pcds.getAllPCDsInFolder(folder))
     .filter((pcd): pcd is EdDSATicketPCD => pcd.type === EdDSATicketPCDTypeName)
-    .reduce((acc, pcd) => {
+    .reduce<Record<string, EdDSATicketPCD[]>>((acc, pcd) => {
       // Check if the accumulator already has the eventName key
       if (!acc[pcd.claim.ticket.eventName]) {
         // If not, create it and initialize with the current item in an array
@@ -180,10 +174,7 @@ export function EdgeCityHome({
       return acc; // Return the accumulator for the next iteration
     }, {}); // Initial value of the accumulator is an empty object
 
-  const [buttonRef, setButtonRef] = useState<HTMLElement>();
-
-  const [ref, setRef] = useState<HTMLElement>();
-  const [btnText, setBtnText] = useState("FrogCrypto");
+  const [ref, setRef] = useState<HTMLElement | null>(null);
   const z_confetti = useZucashConfetti(ref);
 
   if (loading) {
@@ -261,86 +252,37 @@ export function EdgeCityHome({
         <div style={{ zIndex: 10 }}>
           <ExperiencesHeader>
             <p>
-              Collect EXP by participating in community experiences. <br />
-              <br />
-              Your EXP earns you a fraction of the {TOTAL_SUPPLY} available
-              $ZUCASH.
+              Thank you for participating. View the community experiences that
+              you have collected below.
             </p>
           </ExperiencesHeader>
-          <CategorySection>
-            <CategoryHeader>
-              <EventTitle>FROGCRYPTO</EventTitle>
-              <span></span>
-            </CategoryHeader>
+          {!!pcdsByEventName[CONTACT_EVENT_NAME]?.length && (
+            <CategorySection>
+              <CategoryHeader>
+                <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
+                <span>{`${
+                  (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
+                }/${"∞"}`}</span>
+              </CategoryHeader>
 
-            <CategoryDescription>
-              Collect frogs to earn EXP.
-            </CategoryDescription>
+              <CategoryDescription />
 
-            <FrogCryptoButton
-              ref={(r): void => setButtonRef(r)}
-              onClick={(): void => {
-                buttonRef.classList?.add("big");
-                buttonRef.style.border = "none";
-                buttonRef.style.color = "transparent";
-                document.body.style.overflow = "hidden";
-                setBtnText("");
-                setTimeout(() => {
-                  document.body.style.overflowY = "scroll";
-                  setBrowsingFolder("FrogCrypto");
-                  confetti();
-                }, 400);
-              }}
-            >
-              <div className="wrapper">
-                <div className="expander">
-                  <div className="text">
-                    <SuperFunkyFont
-                      style={{
-                        width: "100%",
-                        display: "flex",
-                        justifyContent: "center",
-                        alignItems: "center"
-                      }}
-                    >
-                      {btnText}
-                    </SuperFunkyFont>
-                  </div>
-                </div>
-              </div>
-            </FrogCryptoButton>
-          </CategorySection>
-          <CategorySection>
-            <CategoryHeader>
-              <EventTitle>{CONTACT_EVENT_NAME}</EventTitle>
-              <span>{`${
-                (pcdsByEventName[CONTACT_EVENT_NAME] ?? []).length
-              }/${"∞"}`}</span>
-            </CategoryHeader>
-
-            <CategoryDescription>
-              Scan another resident's ticket to collect their contact. Worth 10
-              EXP.
-            </CategoryDescription>
-
-            <ItemContainer>
-              {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
-                <ItemCard
-                  key={pcd.id}
-                  onClick={(): void => {
-                    setSelectedExperience(pcd);
-                    setSelectedExperienceIsContact(true);
-                    setSelectedExperienceIsStar(false);
-                  }}
-                >
-                  <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
-                </ItemCard>
-              ))}
-              <Link to="/scan">
-                <CTAButton>Collect Contact</CTAButton>
-              </Link>
-            </ItemContainer>
-          </CategorySection>
+              <ItemContainer>
+                {(pcdsByEventName[CONTACT_EVENT_NAME] ?? []).flatMap((pcd) => (
+                  <ItemCard
+                    key={pcd.id}
+                    onClick={(): void => {
+                      setSelectedExperience(pcd);
+                      setSelectedExperienceIsContact(true);
+                      setSelectedExperienceIsStar(false);
+                    }}
+                  >
+                    <img src={pcd.claim.ticket?.imageUrl} draggable={false} />
+                  </ItemCard>
+                ))}
+              </ItemContainer>
+            </CategorySection>
+          )}
           {groupedResult.map(
             ({
               eventName,
@@ -436,7 +378,6 @@ const Container = styled.div`
 `;
 
 const ExperiencesHeader = styled.div`
-  text-align: center;
   margin-bottom: 32px;
   padding-bottom: 16px;
   border-bottom: 1px solid grey;
@@ -567,64 +508,6 @@ const CTAButton = styled(Button)`
   border: 1px solid white;
   font-size: 0.8em;
   white-space: nowrap;
-`;
-
-const FrogCryptoButton = styled.div`
-  user-select: none;
-  cursor: pointer;
-  width: 100%;
-  height: 50px;
-  max-height: 50px;
-  font-family: PressStart2P;
-  position: relative;
-  z-index: 9998;
-
-  .wrapper {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    width: 100%;
-    height: 100%;
-  }
-
-  .expander {
-    background-color: #206b5e;
-    transition: ${animSpeedMs}ms;
-    position: absolute;
-    top: 0%;
-    left: 0%;
-    width: 100%;
-    height: 100%;
-    border-radius: 4px;
-    border: 1px solid white;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    &:hover {
-      transform: scale(1.05);
-
-      &:active {
-        transform: scale(1.1);
-      }
-    }
-  }
-
-  &.big {
-    .expander {
-      transition: ${animSpeedMs}ms;
-      position: absolute;
-      top: calc(50% - 100vh);
-      left: calc(50% - 100vw);
-      width: 200vw;
-      height: 200vh;
-    }
-  }
 `;
 
 const CategorySection = styled.div`

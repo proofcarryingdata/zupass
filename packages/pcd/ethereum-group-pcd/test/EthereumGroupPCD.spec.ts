@@ -17,7 +17,7 @@ import {
   EthereumGroupPCDPackage,
   GroupType,
   getRawPubKeyBuffer
-} from "../src/EthereumGroupPCD";
+} from "../src";
 
 const zkeyFilePath: string = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath: string = path.join(__dirname, "../artifacts/16.wasm");
@@ -52,7 +52,7 @@ async function groupProof(
   for (let i = 0; i < randM; i++) {
     const otherWallet = ethers.Wallet.createRandom();
     tree.insert(
-      groupType == GroupType.ADDRESS
+      groupType === GroupType.ADDRESS
         ? BigInt(otherWallet.address)
         : poseidon.hashPubKey(getRawPubKeyBuffer(otherWallet.publicKey))
     );
@@ -60,7 +60,7 @@ async function groupProof(
   // Add the prover's ID to the tree
   const proverPubkeyBuffer: Buffer = getRawPubKeyBuffer(wallet.publicKey);
   tree.insert(
-    groupType == GroupType.ADDRESS
+    groupType === GroupType.ADDRESS
       ? BigInt(wallet.address)
       : poseidon.hashPubKey(proverPubkeyBuffer)
   );
@@ -70,7 +70,7 @@ async function groupProof(
   for (let i = 0; i < randN; i++) {
     const otherWallet = ethers.Wallet.createRandom();
     tree.insert(
-      groupType == GroupType.ADDRESS
+      groupType === GroupType.ADDRESS
         ? BigInt(otherWallet.address)
         : poseidon.hashPubKey(getRawPubKeyBuffer(otherWallet.publicKey))
     );
@@ -78,7 +78,7 @@ async function groupProof(
 
   // Get the index of the prover's public key in the tree
   const idIndex = tree.indexOf(
-    groupType == GroupType.ADDRESS
+    groupType === GroupType.ADDRESS
       ? BigInt(wallet.address)
       : poseidon.hashPubKey(proverPubkeyBuffer)
   );
@@ -131,8 +131,8 @@ async function happyPathEthGroupPCD(
 }
 
 describe("Ethereum Group PCD", function () {
+  this.timeout(60 * 1000 * 10);
   let ethGroupPCD: EthereumGroupPCD;
-  this.timeout(8 * 60 * 1000);
 
   this.beforeAll(async function () {
     const addrMembershipConfig = {

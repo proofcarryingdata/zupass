@@ -252,7 +252,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
       // Fetch orders from paginated API
       let url = `${orgUrl}/events`;
-      while (url != null) {
+      while (url) {
         logger(`[GENERIC PRETIX] Fetching events: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
           headers: { Authorization: `Token ${token}` }
@@ -352,7 +352,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
       // Fetch categories from paginated API
       let url = `${orgUrl}/events/${eventID}/categories/`;
-      while (url != null) {
+      while (url) {
         logger(`[GENERIC PRETIX] Fetching categories: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
           headers: { Authorization: `Token ${token}` }
@@ -391,7 +391,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
       // Fetch orders from paginated API
       let url = `${orgUrl}/events/${eventID}/items/`;
-      while (url != null) {
+      while (url) {
         logger(`[GENERIC PRETIX] Fetching items: ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
           headers: { Authorization: `Token ${token}` }
@@ -431,7 +431,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
       // Fetch orders from paginated API
       let url = `${orgUrl}/events/${eventID}/orders/`;
-      while (url != null) {
+      while (url) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
           headers: { Authorization: `Token ${token}` }
@@ -480,7 +480,7 @@ export class GenericPretixAPI implements IGenericPretixAPI {
 
       // Fetch check-in lists from paginated API
       let url = `${orgUrl}/events/${eventID}/checkinlists/`;
-      while (url != null) {
+      while (url) {
         logger(`[GENERIC PRETIX] Fetching orders ${url}`);
         const res = await this.getOrCreateQueue(orgUrl).fetch(url, {
           headers: { Authorization: `Token ${token}` }

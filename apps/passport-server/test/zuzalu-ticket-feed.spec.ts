@@ -1,7 +1,7 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import {
-  createFeedCredentialPayload,
-  pollFeed,
+  requestPollFeed,
+  ZUPASS_CREDENTIAL_REQUEST,
   ZupassFeedIds,
   ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
@@ -17,17 +17,16 @@ import {
 } from "../src/apis/zuzaluPretixAPI";
 import { stopApplication } from "../src/application";
 import { Zupass } from "../src/types";
+import { makeTestCredential } from "./generic-issuance/util";
 import { getMockPretixAPI } from "./pretix/mockPretixApi";
 import { expectZuzaluPretixToHaveSynced } from "./pretix/waitForPretixSyncStatus";
 import { ZuzaluPretixDataMocker } from "./pretix/zuzaluPretixDataMocker";
-import { testLogin } from "./user/testLoginPCDPass";
+import { testLogin } from "./user/testLogin";
 import { overrideEnvironment, testingEnv } from "./util/env";
 import { startTestingApp } from "./util/startTestingApplication";
 import { expectToExist } from "./util/util";
 
-describe("zuzalu pcdpass functionality", function () {
-  this.timeout(30_000);
-
+describe("zuzalu-specific zupass functionality", function () {
   let application: Zupass;
   let pretixMocker: ZuzaluPretixDataMocker;
   let identity: Identity;
@@ -89,12 +88,12 @@ describe("zuzalu pcdpass functionality", function () {
   step(
     "user should be able to be issued Zuzalu ticket PCDs from the server",
     async function () {
-      const payload = JSON.stringify(createFeedCredentialPayload());
-      const response = await pollFeed(
+      const response = await requestPollFeed(
         `${application.expressContext.localEndpoint}/feeds`,
-        identity,
-        payload,
-        ZupassFeedIds.Zuzalu_23
+        {
+          pcd: await makeTestCredential(identity, ZUPASS_CREDENTIAL_REQUEST),
+          feedId: ZupassFeedIds.Zuzalu_23
+        }
       );
 
       if (!response.success) {

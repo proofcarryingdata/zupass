@@ -1,4 +1,4 @@
-export default function Loading() {
+export default function Loading(): JSX.Element {
   return (
     <div className="flex flex-col items-center bg-white p-4">
       <div className="flex items-center justify-center p-2 w-full">
@@ -16,7 +16,7 @@ export default function Loading() {
         </span>
       </div>
       <div className="flex flex-col gap-2 mt-4 w-full">
-        {[...Array(5)].map((_message: any, i: number) => (
+        {[...Array(5)].map((_message: unknown, i: number) => (
           <div
             className="w-full flex flex-col border border-black border-opacity-10 rounded-lg p-4 animate-pulse"
             key={i}

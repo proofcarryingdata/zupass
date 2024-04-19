@@ -93,8 +93,6 @@ export default function DashboardPage(): ReactNode {
         titleContent={(): ReactNode => (
           <HStack>
             <CreatePipelineButtonSection />
-
-            <Heading size="sm">Dashboard</Heading>
             {user.value && (
               <>
                 <span>{user.value.email}</span>

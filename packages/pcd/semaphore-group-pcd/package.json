@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./SemaphoreGroupPCD": {
+      "types": "./dist/types/src/SemaphoreGroupPCD.d.ts",
+      "import": "./dist/esm/src/SemaphoreGroupPCD.js",
+      "require": "./dist/cjs/src/SemaphoreGroupPCD.js"
     }
   },
   "files": [
@@ -23,7 +28,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -45,7 +50,7 @@
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",
     "chai": "^4.3.7",
-    "eslint": "^7.32.0",
+    "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "ts-mocha": "^10.0.0"
   },

@@ -32,9 +32,6 @@
       "path": "../pcd-types/tsconfig.esm.json"
     },
     {
-      "path": "../../pcd/rsa-ticket-pcd/tsconfig.esm.json"
-    },
-    {
       "path": "../../pcd/semaphore-group-pcd/tsconfig.esm.json"
     },
     {

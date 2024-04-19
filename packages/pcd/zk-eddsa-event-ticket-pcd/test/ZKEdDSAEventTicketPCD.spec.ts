@@ -94,8 +94,6 @@ describe("snarkInputFromValidEventIds helper", function () {
 });
 
 describe("ZKEdDSAEventTicketPCD should work", function () {
-  this.timeout(1000 * 30);
-
   let pcd1: ZKEdDSAEventTicketPCD;
 
   const ticketData1: ITicketData = {

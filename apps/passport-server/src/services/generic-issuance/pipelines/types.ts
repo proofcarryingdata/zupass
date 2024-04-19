@@ -21,6 +21,9 @@ export interface BasePipeline {
   stop(): Promise<void>;
 }
 
+/**
+ * Created when a user logs into Podbox via Stytch.
+ */
 export interface PipelineUser {
   id: string;
   email: string;

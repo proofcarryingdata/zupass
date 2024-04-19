@@ -3,14 +3,23 @@
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
-    "lib": ["ES2020", "DOM"],
+    "lib": [
+      "ES2020",
+      "DOM"
+    ],
     "esModuleInterop": true,
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": true
   },
-  "include": ["**/*.ts", "**/*.tsx"],
-  "exclude": ["node_modules"],
+  "include": [
+    "**/*.ts",
+    "**/*.tsx"
+  ],
+  "exclude": [
+    "node_modules"
+  ],
   "references": [
     {
       "path": "../../packages/pcd/eddsa-frog-pcd"
@@ -34,6 +43,12 @@
       "path": "../../packages/lib/pcd-types"
     },
     {
+      "path": "../../packages/lib/pod"
+    },
+    {
+      "path": "../../packages/pcd/pod-pcd"
+    },
+    {
       "path": "../../packages/pcd/semaphore-group-pcd"
     },
     {
@@ -43,6 +58,9 @@
       "path": "../../packages/pcd/semaphore-signature-pcd"
     },
     {
+      "path": "../../packages/lib/util"
+    },
+    {
       "path": "../../packages/pcd/webauthn-pcd"
     },
     {
@@ -50,9 +68,6 @@
     },
     {
       "path": "../../packages/pcd/zk-eddsa-frog-pcd"
-    },
-    {
-      "path": "../../packages/lib/util"
     }
   ]
 }

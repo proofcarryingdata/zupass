@@ -4,6 +4,7 @@ import {
 } from "@pcd/passport-interface";
 import { isRootFolder } from "@pcd/pcd-collection";
 import React, {
+  ReactNode,
   useCallback,
   useEffect,
   useLayoutEffect,
@@ -11,7 +12,7 @@ import React, {
   useState
 } from "react";
 import { useNavigate, useSearchParams } from "react-router-dom";
-import styled from "styled-components";
+import styled, { CSSProperties } from "styled-components";
 import {
   useDispatch,
   useFolders,
@@ -28,10 +29,8 @@ import { AppHeader } from "../../shared/AppHeader";
 import { LoadingIssuedPCDs } from "../../shared/LoadingIssuedPCDs";
 import { PCDCardList } from "../../shared/PCDCardList";
 import { EdgeCityHome } from "../EdgeCityScreens/EdgeCityHome";
-import { useZucashConfetti } from "../EdgeCityScreens/useZucashConfetti";
 import { FrogCryptoHomeSection } from "../FrogScreens/FrogCryptoHomeSection";
 import { FrogFolder } from "../FrogScreens/FrogFolder";
-import { useFrogConfetti } from "../FrogScreens/useFrogParticles";
 import {
   FolderCard,
   FolderDetails,
@@ -46,7 +45,7 @@ const FOLDER_QUERY_PARAM = "folder";
 /**
  * Show the user their Zupass, an overview of cards / PCDs.
  */
-export function HomeScreenImpl(): JSX.Element {
+export function HomeScreenImpl(): JSX.Element | null {
   useSyncE2EEStorage();
   const self = useSelf();
   const navigate = useNavigate();
@@ -56,7 +55,7 @@ export function HomeScreenImpl(): JSX.Element {
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
     const folderPathFromQuery = decodeURIComponent(
-      searchParams.get(FOLDER_QUERY_PARAM)
+      searchParams.get(FOLDER_QUERY_PARAM) ?? ""
     );
     console.log({ folderPathFromQuery });
     if (!folderPathFromQuery || folderPathFromQuery === "null") {
@@ -76,28 +75,15 @@ export function HomeScreenImpl(): JSX.Element {
   const pcdsInFolder = usePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
-  const z_confetti = useZucashConfetti();
-  const f_confetti = useFrogConfetti();
-
-  const setFolderAndTab = useCallback(
-    (folder?: string, tab?: string) => {
-      setBrowsingFolder(folder);
-      if (tab) {
-        setSearchParams({ tab });
-      }
-    },
-    [setSearchParams]
-  );
-
   useEffect(() => {
-    if (self == null && browsingFolder == null) {
+    if (!self && !browsingFolder) {
       console.log("Redirecting to login screen");
       navigate("/login", { replace: true });
     }
   });
 
   useEffect(() => {
-    if (sessionStorage.newAddedPCDID != null) {
+    if (sessionStorage.newAddedPCDID) {
       // scroll to element with id of newAddedPCDID
       const el = document.getElementById(sessionStorage.newAddedPCDID);
       if (el) {
@@ -151,7 +137,7 @@ export function HomeScreenImpl(): JSX.Element {
     }
   }, [browsingFolder, dispatch]);
 
-  if (self == null) return null;
+  if (!self) return null;
 
   return (
     <>
@@ -199,7 +185,7 @@ export function HomeScreenImpl(): JSX.Element {
                   })}
               {isRoot && (
                 <FrogFolder
-                  Container={FolderEntryContainer}
+                  Container={FrogFolderContainer}
                   onFolderClick={onFolderClick}
                 />
               )}
@@ -207,15 +193,9 @@ export function HomeScreenImpl(): JSX.Element {
           )}
 
           {isFrogCrypto ? (
-            <FrogCryptoHomeSection
-              confetti={z_confetti}
-              setBrowsingFolder={setFolderAndTab}
-            />
+            <FrogCryptoHomeSection />
           ) : isEdgeCity ? (
-            <EdgeCityHome
-              confetti={f_confetti}
-              setBrowsingFolder={setFolderAndTab}
-            />
+            <EdgeCityHome />
           ) : (
             <>
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
@@ -244,6 +224,22 @@ export function HomeScreenImpl(): JSX.Element {
         <Spacer h={24} />
       </AppContainer>
     </>
+  );
+}
+
+function FrogFolderContainer({
+  children,
+  onClick,
+  style
+}: {
+  children?: ReactNode;
+  style: CSSProperties;
+  onClick: (event: React.MouseEvent<HTMLElement, MouseEvent>) => void;
+}): JSX.Element {
+  return (
+    <FolderEntryContainer onClick={onClick} style={style}>
+      {children}
+    </FolderEntryContainer>
   );
 }
 

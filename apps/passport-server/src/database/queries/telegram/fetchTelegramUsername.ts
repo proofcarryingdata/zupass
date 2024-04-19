@@ -13,7 +13,7 @@ export async function fetchTelegramUsernameFromSemaphoreId(
     `,
     [sempahoreId]
   );
-  if (result.rowCount == 0) {
+  if (result.rowCount === 0) {
     return null;
   }
   const telegramUsername: string = result.rows[0].telegram_username;

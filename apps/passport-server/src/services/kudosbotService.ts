@@ -155,7 +155,7 @@ export class KudosbotService {
         this.context.dbPool,
         chatId
       );
-      if (telegramConversations.length == 0) {
+      if (telegramConversations.length === 0) {
         return await ctx.reply(
           "Error fetching conversations for given telegram chat id"
         );

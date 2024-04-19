@@ -1,5 +1,3 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
@@ -7,8 +5,7 @@ import {
   PipelineLog,
   PipelineType,
   PollFeedRequest,
-  PollFeedResponseValue,
-  verifyFeedCredential
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -26,8 +23,9 @@ import {
 } from "../../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
+import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
-import { makePLogErr, makePLogInfo } from "../../util";
+import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
 import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
@@ -46,8 +44,7 @@ export class CSVPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
-  private rsaPrivateKey: string;
+  private credentialSubservice: CredentialSubservice;
 
   public get id(): string {
     return this.definition.id;
@@ -61,14 +58,11 @@ export class CSVPipeline implements BasePipeline {
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
     db: IPipelineAtomDB,
-    zupassPublicKey: EdDSAPublicKey,
-    rsaPrivateKey: string
+    credentialSubservice: CredentialSubservice
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
     this.db = db as IPipelineAtomDB<CSVAtom>;
-    this.zupassPublicKey = zupassPublicKey;
-    this.rsaPrivateKey = rsaPrivateKey;
     this.capabilities = [
       {
         type: PipelineCapability.FeedIssuance,
@@ -80,6 +74,7 @@ export class CSVPipeline implements BasePipeline {
         options: this.definition.options.feedOptions
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
+    this.credentialSubservice = credentialSubservice;
   }
 
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
@@ -98,21 +93,10 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { pcd: credential, payload } = await verifyFeedCredential(
-            req.pcd
-          );
-          if (!payload.pcd) {
-            throw new Error("missing email pcd");
-          }
-          const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
-          if (
-            emailPCD.claim.semaphoreId !== credential.claim.identityCommitment
-          ) {
-            throw new Error(`Semaphore signature does not match email PCD`);
-          }
-
-          requesterEmail = emailPCD.claim.emailAddress;
-          requesterSemaphoreId = emailPCD.claim.semaphoreId;
+          const { emailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+          requesterEmail = emailClaim.emailAddress;
+          requesterSemaphoreId = emailClaim.semaphoreId;
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
@@ -128,7 +112,6 @@ export class CSVPipeline implements BasePipeline {
               requesterEmail,
               requesterSemaphoreId,
               eddsaPrivateKey: this.eddsaPrivateKey,
-              rsaPrivateKey: this.rsaPrivateKey,
               pipelineId: this.id
             }
           )
@@ -245,6 +228,15 @@ export class CSVPipeline implements BasePipeline {
   public static is(pipeline: Pipeline): pipeline is CSVPipeline {
     return pipeline.type === PipelineType.CSV;
   }
+
+  /**
+   * Returns all of the unique IDs associated with a CSV pipeline
+   * definition.
+   */
+  public static uniqueIds(definition: CSVPipelineDefinition): string[] {
+    const ids = [definition.id];
+    return ids;
+  }
 }
 
 export function parseCSV(csv: string): Promise<string[][]> {
@@ -284,7 +276,6 @@ export async function makeCSVPCD(
   opts: {
     requesterEmail?: string;
     requesterSemaphoreId?: string;
-    rsaPrivateKey: string;
     eddsaPrivateKey: string;
     pipelineId: string;
   }

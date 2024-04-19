@@ -7,7 +7,7 @@ import {
 } from "@pcd/passport-interface";
 
 export const DEFAULT_FEED_OPTIONS = {
-  feedId: "example-feed-id",
+  feedId: "default-feed",
   feedDisplayName: "Example Feed",
   feedDescription: "Your description here...",
   feedFolder: "Example Folder"

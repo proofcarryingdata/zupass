@@ -42,14 +42,14 @@ export async function pollUser(
 
 // Function that checks whether the user has set a password for their account
 export function hasSetupPassword(user: User): boolean {
-  return user != null && user.salt != null;
+  return !!user && !!user.salt;
 }
 
 export function findUserIdentityPCD(
   pcds: PCDCollection,
   user: User
 ): SemaphoreIdentityPCD | undefined {
-  return findIdentityPCD(pcds, user?.commitment);
+  return findIdentityPCD(pcds, user.commitment);
 }
 
 export function findIdentityPCD(

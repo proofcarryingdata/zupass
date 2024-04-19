@@ -4,7 +4,6 @@ import "mocha";
 import { EdDSAPCD, EdDSAPCDPackage, prove, verify } from "../src";
 
 describe("eddsa-pcd should work", function () {
-  this.timeout(30_000);
   let pcd: EdDSAPCD;
 
   // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103

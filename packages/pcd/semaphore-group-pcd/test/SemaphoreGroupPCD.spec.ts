@@ -6,18 +6,13 @@ import assert from "assert";
 import { expect } from "chai";
 import "mocha";
 import * as path from "path";
-import {
-  SemaphoreGroupPCDArgs,
-  SemaphoreGroupPCDPackage
-} from "../src/SemaphoreGroupPCD";
+import { SemaphoreGroupPCDArgs, SemaphoreGroupPCDPackage } from "../src";
 import { serializeSemaphoreGroup } from "../src/SerializedSemaphoreGroup";
 
 const zkeyFilePath = path.join(__dirname, "../artifacts/16.zkey");
 const wasmFilePath = path.join(__dirname, "../artifacts/16.wasm");
 
 describe("semaphore group identity should work", function () {
-  this.timeout(1000 * 30);
-
   // sets up shared Semaphore args across test cases
   let args: SemaphoreGroupPCDArgs;
   this.beforeAll(async function () {

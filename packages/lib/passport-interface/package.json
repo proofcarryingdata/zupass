@@ -10,6 +10,21 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./PassportPopup/core": {
+      "types": "./dist/types/src/PassportPopup/core.d.ts",
+      "import": "./dist/esm/src/PassportPopup/core.js",
+      "require": "./dist/cjs/src/PassportPopup/core.js"
+    },
+    "./PassportPopup/react": {
+      "types": "./dist/types/src/PassportPopup/react.d.ts",
+      "import": "./dist/esm/src/PassportPopup/react.js",
+      "require": "./dist/cjs/src/PassportPopup/react.js"
+    },
+    "./PassportInterface": {
+      "types": "./dist/types/src/PassportInterface.d.ts",
+      "import": "./dist/esm/src/PassportInterface.js",
+      "require": "./dist/cjs/src/PassportInterface.js"
     }
   },
   "files": [
@@ -22,7 +37,7 @@
     "build": "tsc -b tsconfig.cjs.json tsconfig.esm.json",
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
-    "test": "ts-mocha --config ../../../.mocharc.js --exit test/**/*.spec.ts",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
@@ -34,14 +49,11 @@
     "@pcd/passport-crypto": "0.10.0",
     "@pcd/pcd-collection": "0.10.0",
     "@pcd/pcd-types": "0.10.0",
-    "@pcd/rsa-ticket-pcd": "0.5.0",
     "@pcd/semaphore-group-pcd": "0.10.0",
     "@pcd/semaphore-identity-pcd": "0.10.0",
     "@pcd/semaphore-signature-pcd": "0.10.0",
     "@pcd/util": "0.4.0",
-    "@semaphore-protocol/group": "^3.15.2",
     "@semaphore-protocol/identity": "^3.15.2",
-    "@semaphore-protocol/proof": "^3.15.2",
     "fast-json-stable-stringify": "^2.1.0",
     "js-sha256": "^0.10.1",
     "lodash": "^4.17.21",
@@ -50,14 +62,14 @@
     "zod": "^3.22.4"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "*",
-    "@pcd/tsconfig": "*",
+    "@pcd/eslint-config-custom": "0.10.0",
+    "@pcd/tsconfig": "0.10.0",
     "@types/mocha": "^10.0.1",
     "@types/react": "^18.0.22",
     "@types/url-join": "4.0.1",
     "@types/uuid": "^9.0.0",
     "chai": "^4.3.7",
-    "eslint": "^7.32.0",
+    "eslint": "^8.57.0",
     "mocha": "^10.2.0",
     "mockdate": "^3.0.5",
     "ts-mocha": "^10.0.0",

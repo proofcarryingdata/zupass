@@ -35,7 +35,7 @@ export function ActionButton({
   /**
    * The component to use for the button. Defaults to Button.
    */
-  ButtonComponent?: React.ComponentType<React.ComponentProps<typeof Button>>;
+  ButtonComponent?: FrogSearchButtonType;
 }): JSX.Element {
   const [loading, setLoading] = useState(false);
   // Every user click increment the trigger count, which will trigger the
@@ -173,6 +173,14 @@ export const FrogSearchButton = forwardRef(
   }
 );
 
+export type FrogSearchButtonType =
+  | typeof FrogSearchButton
+  | typeof WrithingVoidSearchButton
+  | typeof TheCapitalSearchButton
+  | typeof DesertSearchButton
+  | typeof JungleSearchButton
+  | typeof CelestialPondSearchButton;
+
 export const Button = styled.button<{ pending?: boolean }>`
   font-size: 16px;
   padding: 8px;
@@ -284,14 +292,17 @@ const TextureSearchButton = forwardRef(
 
 export const DesertSearchButton = forwardRef(
   (
-    props: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    props: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     return (
       <TextureSearchButton
         ref={buttonRef}
-        backgroundImage="url(/images/frogs/desert.jpg)"
         {...props}
+        backgroundImage="url(/images/frogs/desert.jpg)"
       />
     );
   }
@@ -299,14 +310,17 @@ export const DesertSearchButton = forwardRef(
 
 export const JungleSearchButton = forwardRef(
   (
-    props: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    props: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     return (
       <TextureSearchButton
         ref={buttonRef}
-        backgroundImage="url(/images/frogs/jungle.jpg)"
         {...props}
+        backgroundImage="url(/images/frogs/jungle.jpg)"
       />
     );
   }
@@ -317,7 +331,10 @@ export const CelestialPondSearchButton = forwardRef(
     {
       children,
       ...props
-    }: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    }: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     const ref = useRef<HTMLDivElement>(null);
@@ -326,11 +343,11 @@ export const CelestialPondSearchButton = forwardRef(
     return (
       <TextureSearchButton
         ref={buttonRef}
-        backgroundImage="url(/images/frogs/celestialpond.jpg)"
         buttonStyle={{
           padding: 0
         }}
         {...props}
+        backgroundImage="url(/images/frogs/celestialpond.jpg)"
       >
         <div style={{ position: "relative", width: "100%", height: "48px" }}>
           <div
@@ -367,7 +384,10 @@ export const WrithingVoidSearchButton = forwardRef(
       onClick,
       disabled,
       ...props
-    }: React.ComponentPropsWithRef<typeof TextureSearchButton>,
+    }: Omit<
+      React.ComponentPropsWithRef<typeof TextureSearchButton>,
+      "backgroundImage"
+    >,
     buttonRef: React.Ref<HTMLButtonElement>
   ) => {
     const ref = useRef<HTMLDivElement>(null);
@@ -396,7 +416,7 @@ export const WrithingVoidSearchButton = forwardRef(
 
             await new Promise((resolve) => setTimeout(resolve, 16 * 1000));
 
-            await onClick(e);
+            onClick?.(e);
 
             await new Promise((resolve) => setTimeout(resolve, 8 * 1000));
           } finally {
@@ -419,7 +439,6 @@ export const WrithingVoidSearchButton = forwardRef(
       <>
         <TextureSearchButton
           ref={buttonRef}
-          backgroundImage="url(/images/frogs/writhingvoid.png)"
           buttonStyle={{
             padding: 0,
             backgroundColor: "black",
@@ -428,8 +447,9 @@ export const WrithingVoidSearchButton = forwardRef(
             backgroundPosition: "center center"
           }}
           onClick={onClickAnimated}
-          disabled={disabled || animating}
+          disabled={disabled ?? animating}
           {...props}
+          backgroundImage="url(/images/frogs/writhingvoid.png)"
         >
           <div style={{ position: "relative", width: "100%", height: "48px" }}>
             <div

@@ -1,5 +1,5 @@
-import { icons } from "@pcd/passport-ui";
 import { useCallback } from "react";
+import { IoSettingsOutline } from "react-icons/io5";
 import { useDispatch, useHasSetupPassword, useSelf } from "../../src/appHooks";
 import { Button, CenterColumn, Spacer, TextCenter } from "../core";
 import { LinkButton } from "../core/Button";
@@ -27,16 +27,11 @@ export function SettingsModal({
   return (
     <>
       <TextCenter>
-        <img
-          draggable="false"
-          src={icons.settingsPrimary}
-          width={34}
-          height={34}
-        />
+        <IoSettingsOutline color={"#468c80"} size={34} />
       </TextCenter>
       <Spacer h={16} />
       <CenterColumn>
-        <TextCenter>{self.email}</TextCenter>
+        <TextCenter>{self?.email}</TextCenter>
         <Spacer h={16} />
         {!isProveOrAddScreen && (
           <>

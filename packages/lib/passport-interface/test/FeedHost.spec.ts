@@ -17,8 +17,6 @@ const identity = new Identity();
 describe("feed host", async function () {
   const mockFeedApi = new MockFeedApi();
 
-  this.timeout(1000 * 10);
-
   this.beforeEach(() => {
     // Means that the time won't change during the test, which could cause
     // spurious issues with timestamps in feed credentials.

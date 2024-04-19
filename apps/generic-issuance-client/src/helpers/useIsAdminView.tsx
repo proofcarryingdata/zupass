@@ -1,6 +1,5 @@
 import { GenericIssuanceSelfResponseValue } from "@pcd/passport-interface";
-import { useContext } from "react";
-import { GIContext } from "./Context";
+import { useGIContext } from "./Context";
 
 /**
  * Returns true if the currently logged-in user provided
@@ -9,7 +8,7 @@ import { GIContext } from "./Context";
 export function useIsAdminView(
   user?: GenericIssuanceSelfResponseValue
 ): boolean {
-  const ctx = useContext(GIContext);
+  const ctx = useGIContext();
   const isAdminView = !!(ctx.isAdminMode && user?.isAdmin);
   return isAdminView;
 }

@@ -84,7 +84,7 @@ export default function Page(): JSX.Element {
             />
           </>
         )}
-        {signatureProof != null && (
+        {signatureProof && (
           <>
             <p>Got Semaphore Signature Proof from Zupass</p>
 

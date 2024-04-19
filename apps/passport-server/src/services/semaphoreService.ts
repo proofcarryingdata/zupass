@@ -288,7 +288,7 @@ export class SemaphoreService {
       );
 
       if (
-        correspondingLatestGroup == null ||
+        !correspondingLatestGroup ||
         correspondingLatestGroup.rootHash !== localGroup.group.root.toString()
       ) {
         logger(

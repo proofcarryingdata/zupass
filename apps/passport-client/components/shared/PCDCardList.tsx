@@ -55,8 +55,9 @@ export function PCDCardList({
     () =>
       pcds.map((pcd, i) => ({
         value: pcd,
-        name: pcdCollection.getPackage(pcd.type).getDisplayOptions?.(pcd)
-          ?.displayName,
+        name:
+          pcdCollection.getPackage(pcd.type)?.getDisplayOptions?.(pcd)
+            ?.displayName ?? "",
         index: i
       })),
     [pcdCollection, pcds]
@@ -90,7 +91,7 @@ export function PCDCardList({
   const [selectedPCDID, setSelectedPCDID] = useState("");
   const selectedPCD = useMemo(() => {
     // if user just added a PCD, highlight that one
-    if (sessionStorage.newAddedPCDID != null) {
+    if (sessionStorage.newAddedPCDID) {
       const added = pcds.find((pcd) => pcd.id === sessionStorage.newAddedPCDID);
       if (added) {
         return added;
@@ -141,7 +142,7 @@ function ToolBar({
   sortOptions: SortOption[];
   sortState: SortState;
   onSortStateChange: (sortState: SortState) => void;
-}): JSX.Element {
+}): JSX.Element | null {
   if (sortOptions.length === 0) return null;
 
   return (

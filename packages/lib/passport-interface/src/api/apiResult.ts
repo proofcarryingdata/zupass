@@ -95,21 +95,20 @@ export async function onNamedAPIError<TResult>(
   // If server gives us valid JSON, parse it for potential encoded error.
   let apiError: Partial<NamedAPIError> = {};
   let serverProvidedError = false;
-  console.log(resText);
   try {
     const resJSON = JSON.parse(resText);
     // Server must at least specify error.name for us to take its other
     // fields.  If so, we take all fields, but delete any with the wrong type.
-    if (resJSON.error?.name && typeof resJSON.error.name == "string") {
+    if (resJSON.error?.name && typeof resJSON.error.name === "string") {
       serverProvidedError = true;
       apiError = resJSON.error;
       if (
         "detailedMessage" in apiError &&
-        typeof apiError.detailedMessage != "string"
+        typeof apiError.detailedMessage !== "string"
       ) {
         delete apiError.detailedMessage;
       }
-      if ("code" in apiError && typeof apiError.code != "number") {
+      if ("code" in apiError && typeof apiError.code !== "number") {
         delete apiError.code;
       }
     } else {
@@ -135,7 +134,6 @@ export async function onNamedAPIError<TResult>(
 
   // If we got a code (likely HTTP status), we can use it to fill in a missing
   // "name".
-  console.log(apiError);
   if (apiError.name === undefined && apiError.code !== undefined) {
     apiError.name = apiErrorReasonFromCode(apiError.code);
   }
@@ -145,7 +143,6 @@ export async function onNamedAPIError<TResult>(
     apiError.name = ERROR_NAME_UNKNOWN;
   }
 
-  console.log(apiError);
   return { success: false, error: apiError as NamedAPIError };
 }
 

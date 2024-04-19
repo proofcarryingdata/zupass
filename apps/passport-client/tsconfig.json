@@ -1,38 +1,26 @@
 {
   "compilerOptions": {
     "incremental": false,
+    "moduleResolution": "node",
     "resolveJsonModule": true,
     "downlevelIteration": true,
     "jsx": "react-jsx",
-    "lib": [
-      "ES2020",
-      "DOM"
-    ],
+    "target": "ES2020",
+    "lib": ["ES2020", "DOM"],
     "esModuleInterop": true,
     // To allow for mocha and jest to work together:
     // https://stackoverflow.com/a/65568463
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "strict": true
   },
-  "include": [
-    "**/*.ts",
-    "**/*.tsx"
-  ],
-  "exclude": [
-    "node_modules",
-    "src/worker"
-  ],
+  "include": ["**/*.ts", "**/*.tsx"],
+  "exclude": ["node_modules", "src/worker"],
   "references": [
     {
       "path": "../../packages/pcd/eddsa-frog-pcd"
     },
     {
       "path": "../../packages/ui/eddsa-frog-pcd-ui"
-    },
-    {
-      "path": "../../packages/pcd/message-pcd"
-    },
-    {
-      "path": "../../packages/ui/message-pcd-ui"
     },
     {
       "path": "../../packages/pcd/eddsa-pcd"
@@ -68,6 +56,12 @@
       "path": "../../packages/ui/halo-nonce-pcd-ui"
     },
     {
+      "path": "../../packages/pcd/message-pcd"
+    },
+    {
+      "path": "../../packages/ui/message-pcd-ui"
+    },
+    {
       "path": "../../packages/lib/passport-crypto"
     },
     {
@@ -81,6 +75,15 @@
     },
     {
       "path": "../../packages/lib/pcd-types"
+    },
+    {
+      "path": "../../packages/lib/pod"
+    },
+    {
+      "path": "../../packages/pcd/pod-pcd"
+    },
+    {
+      "path": "../../packages/ui/pod-pcd-ui"
     },
     {
       "path": "../../packages/pcd/rsa-image-pcd"

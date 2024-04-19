@@ -7,7 +7,6 @@ import {
   deserializeStorage,
   Feed,
   FeedSubscriptionManager,
-  KnownTicketTypesAndKeys,
   LATEST_PRIVACY_NOTICE,
   NetworkFeedApi,
   requestCreateNewUser,
@@ -26,7 +25,7 @@ import {
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
-import { sleep } from "@pcd/util";
+import { assertUnreachable, sleep } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -61,10 +60,9 @@ import {
   uploadSerializedStorage,
   uploadStorage
 } from "./useSyncE2EEStorage";
-import { assertUnreachable } from "./util";
 import { validateAndLogRunningAppState } from "./validateState";
 
-export type Dispatcher = (action: Action) => void;
+export type Dispatcher = (action: Action) => Promise<void>;
 
 export type Action =
   | {
@@ -75,7 +73,7 @@ export type Action =
       type: "create-user-skip-password";
       email: string;
       token: string;
-      targetFolder: string | undefined
+      targetFolder: string | undefined | null;
     }
   | {
       type: "login";
@@ -134,10 +132,6 @@ export type Action =
       type: "update-subscription-permissions";
       subscriptionId: string;
       permissions: PCDPermission[];
-    }
-  | {
-      type: "set-known-ticket-types-and-keys";
-      knownTicketTypesAndKeys: KnownTicketTypesAndKeys;
     }
   | {
       type: "handle-agreed-privacy-notice";
@@ -251,12 +245,6 @@ export async function dispatch(
         action.subscriptionId,
         action.permissions
       );
-    case "set-known-ticket-types-and-keys":
-      return setKnownTicketTypesAndKeys(
-        state,
-        update,
-        action.knownTicketTypesAndKeys
-      );
     case "handle-agreed-privacy-notice":
       return handleAgreedPrivacyNotice(state, update, action.version);
     case "prompt-to-agree-privacy-notice":
@@ -278,7 +266,7 @@ export async function dispatch(
       );
     default:
       // We can ensure that we never get here using the type system
-      assertUnreachable(action);
+      return assertUnreachable(action);
   }
 }
 
@@ -300,7 +288,7 @@ async function genPassport(
 async function createNewUserSkipPassword(
   email: string,
   token: string,
-  targetFolder: string | undefined,
+  targetFolder: string | undefined | null,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
@@ -325,8 +313,8 @@ async function createNewUserSkipPassword(
   // await savePCDs(pcds);
   // update({ pcds, identity });
   const crypto = await PCDCrypto.newInstance();
-  const encryptionKey = await crypto.generateRandomKey();
-  await saveEncryptionKey(encryptionKey);
+  const encryptionKey = crypto.generateRandomKey();
+  saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -342,7 +330,12 @@ async function createNewUserSkipPassword(
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update, targetFolder);
+    return finishAccountCreation(
+      newUserResult.value,
+      state,
+      update,
+      targetFolder
+    );
   }
 
   update({
@@ -363,9 +356,9 @@ async function createNewUserWithPassword(
 ): Promise<void> {
   const crypto = await PCDCrypto.newInstance();
   const { salt: newSalt, key: encryptionKey } =
-    await crypto.generateSaltAndEncryptionKey(password);
+    crypto.generateSaltAndEncryptionKey(password);
 
-  await saveEncryptionKey(encryptionKey);
+  saveEncryptionKey(encryptionKey);
 
   update({
     encryptionKey
@@ -401,7 +394,7 @@ async function finishAccountCreation(
   user: User,
   state: AppState,
   update: ZuUpdate,
-  targetFolder?: string
+  targetFolder?: string | null
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -489,7 +482,7 @@ async function setSelf(
   let userMismatched = false;
   let hasChangedPassword = false;
 
-  if (state.self && self.salt != state.self.salt) {
+  if (state.self && self.salt !== state.self.salt) {
     // If the password has been changed on a different device, the salts will mismatch
     console.log("User salt mismatch");
     hasChangedPassword = true;
@@ -646,9 +639,9 @@ async function loadAfterLogin(
   let modal: AppState["modal"] = { modalType: "none" };
   if (
     // If on Zupass legacy login, ask user to set passwrod
-    self != null &&
-    encryptionKey == null &&
-    storage.storage.self.salt == null
+    self &&
+    !encryptionKey &&
+    !storage.storage.self.salt
   ) {
     console.log("Asking existing user to set a password");
     modal = { modalType: "upgrade-account-modal" };
@@ -709,14 +702,16 @@ async function saveNewPasswordAndBroadcast(
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
-  const newSelf = { ...state.self, salt: newSalt };
-  saveSelf(newSelf);
-  saveEncryptionKey(newEncryptionKey);
-  notifyPasswordChangeToOtherTabs();
-  update({
-    encryptionKey: newEncryptionKey,
-    self: newSelf
-  });
+  if (state.self) {
+    const newSelf = { ...state.self, salt: newSalt };
+    saveSelf(newSelf);
+    saveEncryptionKey(newEncryptionKey);
+    notifyPasswordChangeToOtherTabs();
+    update({
+      encryptionKey: newEncryptionKey,
+      self: newSelf
+    });
+  }
 }
 
 function userInvalid(update: ZuUpdate): void {
@@ -806,7 +801,7 @@ async function doSync(
     console.log("[SYNC] no user available to sync");
     return undefined;
   }
-  if (loadEncryptionKey() == null) {
+  if (!loadEncryptionKey()) {
     console.log("[SYNC] no encryption key, can't sync");
     return undefined;
   }
@@ -835,7 +830,7 @@ async function doSync(
       state.pcds,
       state.subscriptions
     );
-    if (dlRes.success && dlRes.value != null) {
+    if (dlRes.success && dlRes.value) {
       const { pcds, subscriptions, serverRevision, serverHash } = dlRes.value;
       return {
         downloadedPCDs: true,
@@ -874,6 +869,39 @@ async function doSync(
         state.pcds,
         state.credentialCache
       );
+
+      /**
+       * Because the Email PCD is used as a credential for other feeds, it is
+       * necessary to ensure that the Email PCD is present before polling other
+       * feeds.
+       * We already fetch the Email PCD in {@link finishAccountCreation()}, so
+       * it *should* be present in the PCD collection already. However, there
+       * may have been an intermittent failure (e.g. due to connectivity issues
+       * or the restart of the Zupass server during a deployment). In this
+       * case, we try again here, before continuing to fetch the other feeds.
+       * If there is already an Email PCD then we can skip this step.
+       */
+      if (state.pcds.getPCDsByType(EmailPCDTypeName).length === 0) {
+        console.log(
+          "[SYNC] email PCD not found, attempting to poll Email PCD subscription"
+        );
+        const emailPCDSubscription = state.subscriptions.findSubscription(
+          ZUPASS_FEED_URL,
+          ZupassFeedIds.Email
+        );
+        if (emailPCDSubscription) {
+          console.log("[SYNC] Email PCD subscription found, polling");
+          const emailPCDActions =
+            await state.subscriptions.pollSingleSubscription(
+              emailPCDSubscription,
+              credentialManager
+            );
+          console.log(
+            `[SYNC] Fetched ${emailPCDActions.length} actions from Email PCD feed`
+          );
+          await applyActions(state.pcds, emailPCDActions);
+        }
+      }
       console.log("[SYNC] initalized credentialManager", credentialManager);
       const actions =
         await state.subscriptions.pollSubscriptions(credentialManager);
@@ -973,6 +1001,9 @@ async function syncSubscription(
   try {
     console.log("[SYNC] loading pcds from subscription", subscriptionId);
     const subscription = state.subscriptions.getSubscription(subscriptionId);
+    if (!subscription) {
+      throw new Error(`Subscription ${subscriptionId} not found`);
+    }
     const credentialManager = new CredentialManager(
       state.identity,
       state.pcds,
@@ -994,7 +1025,9 @@ async function syncSubscription(
     });
     onSuccess?.();
   } catch (e) {
-    onError?.(e);
+    if (e instanceof Error) {
+      onError?.(e);
+    }
     console.log(`[SYNC] failed to load issued PCDs, skipping this step`, e);
   }
 }
@@ -1087,25 +1120,6 @@ async function updateSubscriptionPermissions(
   });
 }
 
-async function setKnownTicketTypesAndKeys(
-  _state: AppState,
-  update: ZuUpdate,
-  knownTicketTypesAndKeys: KnownTicketTypesAndKeys
-): Promise<void> {
-  const keyMap = {};
-  knownTicketTypesAndKeys.publicKeys.forEach((k) => {
-    if (!keyMap[k.publicKeyType]) {
-      keyMap[k.publicKeyType] = {};
-    }
-    keyMap[k.publicKeyType][k.publicKeyName] = k;
-  });
-
-  update({
-    knownTicketTypes: knownTicketTypesAndKeys.knownTicketTypes,
-    knownPublicKeys: keyMap
-  });
-}
-
 /**
  * After the user has agreed to the terms, save the updated user record, set
  * `loadedIssuedPCDs` to false in order to prompt a feed refresh, and dismiss
@@ -1116,12 +1130,14 @@ async function handleAgreedPrivacyNotice(
   update: ZuUpdate,
   version: number
 ): Promise<void> {
-  await saveSelf({ ...state.self, terms_agreed: version });
-  update({
-    self: { ...state.self, terms_agreed: version },
-    loadedIssuedPCDs: false,
-    modal: { modalType: "none" }
-  });
+  if (state.self) {
+    saveSelf({ ...state.self, terms_agreed: version });
+    update({
+      self: { ...state.self, terms_agreed: version },
+      loadedIssuedPCDs: false,
+      modal: { modalType: "none" }
+    });
+  }
 }
 
 /**
@@ -1176,7 +1192,7 @@ async function mergeImport(
       !(isSemaphoreIdentityPCD(pcd) && userHasExistingSemaphoreIdentityPCD) &&
       !(
         isSemaphoreIdentityPCD(pcd) &&
-        pcd.claim.identity.getCommitment().toString() !== state.self.commitment
+        pcd.claim.identity.getCommitment().toString() !== state.self?.commitment
       ) &&
       !target.hasPCDWithId(pcd.id)
     );
