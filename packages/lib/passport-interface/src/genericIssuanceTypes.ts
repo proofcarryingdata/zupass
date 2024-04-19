@@ -383,7 +383,11 @@ const PretixEventConfigSchema = z.object({
    * Display name for the event
    */
   name: z.string(),
-  products: z.array(PretixProductConfigSchema)
+  products: z.array(PretixProductConfigSchema),
+  /**
+   * Skip validation of event settings - use with caution!
+   */
+  skipSettingsValidation: z.boolean().optional()
 });
 
 /**
