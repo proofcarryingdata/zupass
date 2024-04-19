@@ -19,6 +19,8 @@ interface AppConfig {
   scanditLicenseKey: string | undefined;
   // is a choice of multiple scanning engines enabled?
   multiChoiceScanEnabled: boolean;
+  // should PODTicketPCDs be visible?
+  showPODTicketPCDs: boolean;
 }
 
 if (
@@ -64,7 +66,8 @@ export const appConfig: AppConfig = {
   rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
   strichLicenseKey: process.env.STRICH_LICENSE_KEY,
   scanditLicenseKey: process.env.SCANDIT_LICENSE_KEY,
-  multiChoiceScanEnabled: process.env.MULTI_CHOICE_SCAN_ENABLED === "true"
+  multiChoiceScanEnabled: process.env.MULTI_CHOICE_SCAN_ENABLED === "true",
+  showPODTicketPCDs: process.env.SHOW_POD_TICKET_PCDS === "true"
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));
