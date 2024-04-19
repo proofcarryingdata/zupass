@@ -22,6 +22,7 @@
     "lint": "turbo run lint",
     "test": "turbo run test --concurrency=1",
     "test:ci": "turbo run test",
+    "gen-test-artifacts": "turbo run gen-test-artifacts",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",

@@ -14,6 +14,7 @@ import {
   GenericPretixOrder,
   GenericPretixProduct,
   GenericPretixProductCategory,
+  ImageOptions,
   ManualTicket,
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
@@ -76,6 +77,11 @@ const LOG_NAME = "PretixPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export const PRETIX_CHECKER = "Pretix";
+
+const VALID_PRETIX_EVENT_SETTINGS: GenericPretixEventSettings = {
+  attendee_emails_asked: true,
+  attendee_emails_required: true
+};
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
@@ -466,11 +472,14 @@ export class PretixPipeline implements BasePipeline {
       const orgUrl = this.definition.options.pretixOrgUrl;
       const token = this.definition.options.pretixAPIKey;
       const eventId = event.externalId;
-      const settings = await this.api.fetchEventSettings(
-        orgUrl,
-        token,
-        eventId
-      );
+      let settings: GenericPretixEventSettings;
+      // When settings validation is skipped, return a valid configuration
+      // rather than calling the API
+      if (event.skipSettingsValidation) {
+        settings = VALID_PRETIX_EVENT_SETTINGS;
+      } else {
+        settings = await this.api.fetchEventSettings(orgUrl, token, eventId);
+      }
       const categories = await this.api.fetchProductCategories(
         orgUrl,
         token,
@@ -804,6 +813,7 @@ export class PretixPipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
+      imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
@@ -947,6 +957,7 @@ export class PretixPipeline implements BasePipeline {
       timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
+      imageUrl: this.atomToImageUrl(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
@@ -1630,8 +1641,24 @@ export class PretixPipeline implements BasePipeline {
     return product.name;
   }
 
+  private imageOptionsToImageUrl(
+    imageOptions: ImageOptions | undefined,
+    isCheckedIn: boolean
+  ): string | undefined {
+    if (!imageOptions) return undefined;
+    if (imageOptions.requireCheckedIn && !isCheckedIn) return undefined;
+    return imageOptions.imageUrl;
+  }
+
   private atomToPretixEventId(ticketAtom: PretixAtom): string {
     return this.getEventById(ticketAtom.eventId).externalId;
+  }
+
+  private atomToImageUrl(ticketAtom: PretixAtom): string | undefined {
+    return this.imageOptionsToImageUrl(
+      this.getEventById(ticketAtom.eventId).imageOptions,
+      ticketAtom.isConsumed
+    );
   }
 
   private getEventById(eventId: string): PretixEventConfig {

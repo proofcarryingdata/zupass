@@ -16,8 +16,11 @@
       "cache": false,
       "persistent": true
     },
+    "gen-test-artifacts": {
+      "cache": true
+    },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^gen-test-artifacts"],
       "inputs": ["$TURBO_DEFAULT$", ".mocharc.js"],
       "cache": true
     },
