@@ -69,6 +69,25 @@ export async function getBallotsVisibleToUserType(
   });
 }
 
+export async function getBallotsForPipelineId(pipelineId: string) {
+  return prisma.ballot.findMany({
+    select: {
+      ballotTitle: true,
+      ballotURL: true,
+      expiry: true,
+      ballotType: true,
+      createdAt: true
+    },
+    orderBy: { expiry: "desc" },
+    where: {
+      ballotType: {
+        in: [BallotType.PODBOX]
+      },
+      pipelineId
+    }
+  });
+}
+
 export async function getBallotById(ballotURL: number) {
   return prisma.ballot.findUnique({
     where: {

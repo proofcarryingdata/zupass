@@ -84,6 +84,7 @@ export const ETH_LATAM_ORGANIZERS_GROUP_URL = urljoin(
 
 export interface GroupJwtPayload extends JwtPayload {
   groupUrl: string;
+  pipelineId?: string;
 }
 
 export function makeAccessToken(payload: GroupJwtPayload): string {
@@ -182,6 +183,7 @@ export const authenticateJWT = (
     );
     if (matchingPodboxLoginConfig) {
       req.authUserType = AuthType.PODBOX;
+      req.pipelineId = matchingPodboxLoginConfig.pipelineId;
       next();
       return;
     }

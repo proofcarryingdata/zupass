@@ -84,9 +84,5 @@ export interface BallotConfig {
   historicGroupPrefix?: string;
 
   description?: string;
-  allowedViewerRealmIds: string[];
-  allowedViewerGroupIds: string[];
-  allowedVoterRealmIds: string[];
-  allowedVoterGroupIds: string[];
   isPublic: boolean;
 }

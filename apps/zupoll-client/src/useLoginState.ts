@@ -6,10 +6,17 @@ import { getLoginRedirectUrl } from "./zupoll-server-api";
 
 const ACCESS_TOKEN_KEY = "access_token";
 const CONFIGURATION_KEY = "configuration";
+const STATE_VERSION_KEY = "state_version";
+const LATEST_STATE_VERSION = "1";
 
 export function loadLoginStateFromLocalStorage(): LoginState | undefined {
   const savedToken: string | undefined = localStorage[ACCESS_TOKEN_KEY];
   const savedLoginConfig: string | undefined = localStorage[CONFIGURATION_KEY];
+  const savedStateVersion: string | undefined = localStorage[STATE_VERSION_KEY];
+
+  if (savedStateVersion !== LATEST_STATE_VERSION) {
+    return undefined;
+  }
 
   let parsedLoginConfig: LoginConfig | undefined;
   try {
@@ -31,6 +38,7 @@ export function loadLoginStateFromLocalStorage(): LoginState | undefined {
 export function clearLoginStateFromLocalStorage(): void {
   localStorage.removeItem(ACCESS_TOKEN_KEY);
   localStorage.removeItem(CONFIGURATION_KEY);
+  localStorage.removeItem(STATE_VERSION_KEY);
 }
 
 export function saveLoginStateToLocalStorage(
@@ -41,6 +49,7 @@ export function saveLoginStateToLocalStorage(
   } else {
     localStorage.setItem(ACCESS_TOKEN_KEY, state.token);
     localStorage.setItem(CONFIGURATION_KEY, JSON.stringify(state.config));
+    localStorage.setItem(STATE_VERSION_KEY, LATEST_STATE_VERSION);
   }
 }
 

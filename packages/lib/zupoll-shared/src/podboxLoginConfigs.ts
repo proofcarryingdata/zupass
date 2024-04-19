@@ -221,10 +221,6 @@ export function makePodboxLoginConfig(
         ballotType: BallotType.PODBOX,
         latestGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
         makeHistoricalGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
-        allowedViewerGroupIds: [residentSemaphoreGroupId],
-        allowedVoterGroupIds: [residentSemaphoreGroupId],
-        allowedVoterRealmIds: [pipelineId],
-        allowedViewerRealmIds: [pipelineId],
         isPublic: false
       }
       // {

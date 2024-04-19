@@ -17,6 +17,7 @@ declare global {
     export interface Request {
       authUserType?: AuthType;
       authGroupUrl?: string;
+      pipelineId?: string;
     }
   }
 }
