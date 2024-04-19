@@ -1,8 +1,8 @@
 import { getPodboxConfigs } from "@pcd/zupoll-shared";
 import { BallotType } from "@prisma/client";
 import express, { NextFunction, Request, Response } from "express";
-import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "src/env";
 import { ApplicationContext } from "../../application";
+import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
 import {
   getBallotById,
   getBallotPolls,
