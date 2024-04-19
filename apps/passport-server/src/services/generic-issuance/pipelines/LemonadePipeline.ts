@@ -831,17 +831,22 @@ export class LemonadePipeline implements BasePipeline {
         });
       }
 
-      ticketActions.push({
-        type: PCDActionType.ReplaceInFolder,
-        folder: this.definition.options.feedOptions.feedFolder,
-        pcds: [
-          ...(await Promise.all(
-            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-          )),
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      if (this.definition.options.enablePODTickets) {
+        ticketPCDs.push(
           ...(await Promise.all(
             podTickets.map((t) => PODTicketPCDPackage.serialize(t))
           ))
-        ]
+        );
+      }
+
+      ticketActions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: ticketPCDs
       });
 
       const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;

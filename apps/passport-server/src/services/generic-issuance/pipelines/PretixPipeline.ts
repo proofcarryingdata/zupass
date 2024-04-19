@@ -941,17 +941,22 @@ export class PretixPipeline implements BasePipeline {
         });
       }
 
-      actions.push({
-        type: PCDActionType.ReplaceInFolder,
-        folder: this.definition.options.feedOptions.feedFolder,
-        pcds: [
-          ...(await Promise.all(
-            tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-          )),
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      if (this.definition.options.enablePODTickets) {
+        ticketPCDs.push(
           ...(await Promise.all(
             podTickets.map((t) => PODTicketPCDPackage.serialize(t))
           ))
-        ]
+        );
+      }
+
+      actions.push({
+        type: PCDActionType.ReplaceInFolder,
+        folder: this.definition.options.feedOptions.feedFolder,
+        pcds: ticketPCDs
       });
 
       const result: PollFeedResponseValue = { actions };
