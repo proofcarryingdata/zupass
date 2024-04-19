@@ -10,7 +10,6 @@ export const columns: ColumnDef<Ballot>[] = [
   {
     accessorKey: "ballotTitle",
     header: "Title",
-    maxSize: 1,
     cell: (cell: CellContext<Ballot, unknown>) => {
       return (
         <div className="px-2" style={{}}>

@@ -30,7 +30,7 @@ export function ThemeSwitcher() {
         onCheckedChange={(newIsLight) => {
           setTheme(newIsLight ? "light" : "dark");
         }}
-      ></Switch>{" "}
+      ></Switch>
       <span>theme - {isLight ? "light" : "dark"}</span>
     </div>
   );
