@@ -254,6 +254,14 @@ export function CreateBallot({
                       ballotURL: 0,
                       createdAt: new Date(),
                       expiry: new Date(Date.now() + 1000 * 60 * 60 * 24)
+                    },
+                    {
+                      id: "1",
+                      body: "smoll questions.",
+                      options: ["option uno", "option dos"],
+                      ballotURL: 0,
+                      createdAt: new Date(),
+                      expiry: new Date(Date.now() + 1000 * 60 * 60 * 24)
                     }
                   ]);
                   setTimeout(() => {

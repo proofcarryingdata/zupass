@@ -17,13 +17,19 @@ export function BallotPoll({
   voteIdx,
   finalVoteIdx,
   onVoted,
-  submitVotes
+  submitVotes,
+  isHackathonView,
+  singlePoll,
+  thisIsHackathonView
 }: {
   canVote: boolean;
   poll: PollWithCounts;
   voteIdx: number | undefined;
   finalVoteIdx: number | undefined;
   onVoted: (pollId: string, voteIdx: number) => void;
+  isHackathonView: boolean;
+  thisIsHackathonView: boolean;
+  singlePoll: boolean;
   submitVotes: () => void;
 }) {
   const [searchTerm, setSearchTerm] = useState("");
@@ -60,23 +66,24 @@ export function BallotPoll({
     undefined
   );
 
-  const isHackathonView = poll.options.length > 6;
-
   return (
     <div>
       {canVote && showingOptionIdx !== undefined && (
         <VoteDialog
           text={poll.options[showingOptionIdx]}
           close={() => setShowingOptionIdx(undefined)}
+          submitButtonText={singlePoll ? "Submit Vote" : "Choose"}
           onVoted={() => {
             onVoted(poll.id, showingOptionIdx);
             setShowingOptionIdx(undefined);
-            submitVotes();
+            if (!singlePoll) {
+              submitVotes();
+            }
           }}
         />
       )}
       <PollHeader>{poll.body}</PollHeader>
-      {isHackathonView && (
+      {thisIsHackathonView && (
         <Input
           placeholder="Search Options"
           value={searchTerm}
@@ -95,14 +102,14 @@ export function BallotPoll({
               canVote
                 ? "hover:bg-white/5 hover:border-foreground/50"
                 : "ring-0 ring-offset-0 ring-transparent cursor-default",
-              voteIdx === idx
+              voteIdx !== undefined && poll.options[voteIdx] === opt
                 ? "bg-green-100 hover:bg-green-200 border-green-500 dark:text-background hover:border-green-600"
                 : ""
             )}
-            key={idx}
+            key={opt}
             onClick={() => {
-              if (isHackathonView && canVote) {
-                setShowingOptionIdx(idx);
+              if (thisIsHackathonView && canVote) {
+                setShowingOptionIdx(poll.options.indexOf(opt));
               } else if (canVote) {
                 onVoted(poll.id, idx);
               }

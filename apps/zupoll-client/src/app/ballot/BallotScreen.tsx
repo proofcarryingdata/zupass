@@ -205,6 +205,8 @@ export function BallotScreen({
     setVoteFromUrl
   });
 
+  const isHackathonView = !!polls.find((p) => p.options.length >= 6);
+
   return (
     <ContentContainer>
       <AppHeader />
@@ -228,24 +230,29 @@ export function BallotScreen({
           </div>
           <DividerWithText></DividerWithText>
           <div className="flex flex-col gap-4 mb-4">
-            {polls.map((poll) => (
-              <BallotPoll
-                key={poll.id}
-                canVote={canVote}
-                poll={poll}
-                voteIdx={pollToVote.get(poll.id)}
-                finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
-                onVoted={onVoted}
-                submitVotes={() => {
-                  if (polls.length < 2) {
-                    createBallotVotePCD();
-                  }
-                }}
-              />
-            ))}
+            {polls.map((poll) => {
+              return (
+                <BallotPoll
+                  isHackathonView={isHackathonView}
+                  thisIsHackathonView={poll.options.length >= 6}
+                  singlePoll={polls.length === 1}
+                  key={poll.id}
+                  canVote={canVote}
+                  poll={poll}
+                  voteIdx={pollToVote.get(poll.id)}
+                  finalVoteIdx={getBallotVotes(ballotId)[poll.id]}
+                  onVoted={onVoted}
+                  submitVotes={() => {
+                    if (polls.length < 2) {
+                      createBallotVotePCD();
+                    }
+                  }}
+                />
+              );
+            })}
           </div>
 
-          {canVote && (
+          {canVote && !(isHackathonView && polls.length === 1) && (
             <>
               <DividerWithText></DividerWithText>
               <Button

@@ -5,11 +5,13 @@ import { Button } from "./button";
 export default function VoteDialog({
   text,
   close,
-  onVoted
+  onVoted,
+  submitButtonText
 }: {
   text: string;
   close: () => void;
   onVoted: () => void;
+  submitButtonText: string;
 }) {
   return (
     <Transition.Root show={true} as={Fragment}>
@@ -57,7 +59,7 @@ export default function VoteDialog({
                     className="w-full"
                     onClick={onVoted}
                   >
-                    Submit Vote
+                    {submitButtonText}
                   </Button>
                   <Button
                     variant="outline"
