@@ -3,7 +3,6 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
-  SelectLabel,
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
@@ -54,9 +53,6 @@ export function SelectLoginGroup({
           .map(([year, group]: [string, LoginGroup[]]) => {
             return (
               <SelectGroup key={year}>
-                <SelectLabel className="font-bold underline">
-                  {year}
-                </SelectLabel>
                 {group
                   .sort((lhs, rhs) => {
                     return (
