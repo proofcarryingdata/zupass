@@ -253,7 +253,8 @@ export function useCreateBallot({
     ballotFromUrl,
     setBallotFromUrl,
     setPcdFromUrl,
-    submitBallot
+    submitBallot,
+    setServerLoading
   ]);
 
   // ran after ballot is submitted by user

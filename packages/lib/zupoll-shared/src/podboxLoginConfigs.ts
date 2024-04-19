@@ -15,6 +15,9 @@ export function getPodboxConfigs(
   const PARC_HQ_DESCRIPTION = "Ballots visible to 0xPARC Employees";
   const PARC_HQ_CONFIG_PIPELINE_ID = "432a2e29-b884-4fd8-886b-04b42ad3242f";
   const PARC_HQ_CONFIG_SEMA_GROUP_ID = "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
+  const PARC_HQ_YEAR = 2024;
+  const PARC_HQ_MONTH = 4;
+  const PARC_HQ_DAY = 1;
   const PARC_HQ_CONFIG = makePodboxLoginConfig(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
@@ -23,7 +26,10 @@ export function getPodboxConfigs(
     PARC_HQ_CONFIG_NAME,
     PARC_HQ_RESIDENTS_NAME,
     PARC_HQ_CONFIG_PIPELINE_ID,
-    PARC_HQ_CONFIG_SEMA_GROUP_ID
+    PARC_HQ_CONFIG_SEMA_GROUP_ID,
+    PARC_HQ_YEAR,
+    PARC_HQ_MONTH,
+    PARC_HQ_DAY
   );
 
   // https://podbox.dev/#/pipelines/c00d3470-7ff8-4060-adc1-e9487d607d42
@@ -39,6 +45,9 @@ export function getPodboxConfigs(
     "c00d3470-7ff8-4060-adc1-e9487d607d42";
   const ESMERALDA_HQ_CONFIG_SEMA_GROUP_ID =
     "02b5e490-0084-43b0-92d7-7ab74c5b0055";
+  const ESEMERALDA_YEAR = 2024;
+  const ESEMERALDA_MONTH = 4;
+  const ESEMERALDA_DAY = 1;
   const ESMERALDA_HQ_CONFIG = makePodboxLoginConfig(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
@@ -47,14 +56,11 @@ export function getPodboxConfigs(
     ESMERALDA_HQ_CONFIG_NAME,
     ESMERALDA_RESIDENTS_NAME,
     ESMERALDA_HQ_CONFIG_PIPELINE_ID,
-    ESMERALDA_HQ_CONFIG_SEMA_GROUP_ID
+    ESMERALDA_HQ_CONFIG_SEMA_GROUP_ID,
+    ESEMERALDA_YEAR,
+    ESEMERALDA_MONTH,
+    ESEMERALDA_DAY
   );
-
-  // https://podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // https://staging.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // https://staging-ivan.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // http://localhost:3005/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // eth prague
 
   // https://podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
   // https://staging.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
@@ -69,6 +75,9 @@ export function getPodboxConfigs(
     "24ac727d-bc2f-4727-bcfa-b15cf2f7037e";
   const ETH_PRAGUE_HQ_CONFIG_SEMA_GROUP_ID =
     "eaf2d5f1-4d8c-4342-92f7-d44e85178951";
+  const ETH_PRAGUE_YEAR = 2024;
+  const ETH_PRAGUE_MONTH = 4;
+  const ETH_PRAGUE_DAY = 1;
   const ETH_PRAGUE_HQ_CONFIG = makePodboxLoginConfig(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
@@ -77,16 +86,43 @@ export function getPodboxConfigs(
     ETH_PRAGUE_HQ_CONFIG_NAME,
     ETH_PRAGUE_RESIDENTS_NAME,
     ETH_PRAGUE_HQ_CONFIG_PIPELINE_ID,
-    ETH_PRAGUE_HQ_CONFIG_SEMA_GROUP_ID
+    ETH_PRAGUE_HQ_CONFIG_SEMA_GROUP_ID,
+    ETH_PRAGUE_YEAR,
+    ETH_PRAGUE_MONTH,
+    ETH_PRAGUE_DAY
   );
 
-  // TODO: eth berlin
   // https://staging-richard.podbox.dev/#/pipelines/e0f80908-4c9e-4bdb-9804-c88e8f64f59b
+  // TODO
+  const ETH_BERLIN_CONFIG_ID = "Eth Berlin";
+  const ETH_BERLIN_CONFIG_NAME = "Eth Berlin";
+  const ETH_BERLIN_RESIDENTS_NAME = "Eth Berlin Attendeess";
+  const ETH_BERLIN_DESCRIPTION =
+    "Ballots created by Eth Berlin Attendees. Add to the discussion by creating a new Ballot!";
+  const ETH_BERLIN_CONFIG_PIPELINE_ID = "e0f80908-4c9e-4bdb-9804-c88e8f64f59b";
+  const ETH_BERLIN_CONFIG_SEMA_GROUP_ID = "todo";
+  const ETH_BERLIN_YEAR = 2024;
+  const ETH_BERLIN_MONTH = 4;
+  const ETH_BERLIN_DAY = 1;
+  const ETH_BERLIN_CONFIG = makePodboxLoginConfig(
+    ZUPASS_CLIENT_URL,
+    ZUPASS_SERVER_URL,
+    ETH_BERLIN_CONFIG_ID,
+    ETH_BERLIN_DESCRIPTION,
+    ETH_BERLIN_CONFIG_NAME,
+    ETH_BERLIN_RESIDENTS_NAME,
+    ETH_BERLIN_CONFIG_PIPELINE_ID,
+    ETH_BERLIN_CONFIG_SEMA_GROUP_ID,
+    ETH_BERLIN_YEAR,
+    ETH_BERLIN_MONTH,
+    ETH_BERLIN_DAY
+  );
 
   return [
     PARC_HQ_CONFIG,
     ESMERALDA_HQ_CONFIG,
-    ETH_PRAGUE_HQ_CONFIG /* TODO: eth berlin */
+    ETH_PRAGUE_HQ_CONFIG,
+    ETH_BERLIN_CONFIG
   ];
 }
 
@@ -98,7 +134,10 @@ export function makePodboxLoginConfig(
   name: string,
   residentName: string,
   pipelineId: string,
-  semaphoreGroupId: string
+  semaphoreGroupId: string,
+  year: number,
+  month: number,
+  day: number
 ): LoginConfig {
   const PARC_GROUP_URL = makePodboxGroupUrl(
     ZUPASS_SERVER_URL,
@@ -107,6 +146,9 @@ export function makePodboxLoginConfig(
   );
 
   const PARC_HQ_CONFIG: LoginConfig = {
+    year,
+    month,
+    day,
     configCategoryId: id,
     groupId: semaphoreGroupId,
     groupUrl: PARC_GROUP_URL,

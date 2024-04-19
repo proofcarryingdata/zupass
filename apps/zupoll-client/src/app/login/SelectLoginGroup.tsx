@@ -3,10 +3,12 @@ import {
   SelectContent,
   SelectGroup,
   SelectItem,
+  SelectLabel,
   SelectTrigger,
   SelectValue
 } from "@/components/ui/select";
 import { LoginCategory } from "@pcd/zupoll-shared";
+import _ from "lodash";
 import { Dispatch, SetStateAction } from "react";
 import { LoginGroup } from "../../api/loginGroups";
 
@@ -34,15 +36,22 @@ export function SelectLoginGroup({
         <SelectValue placeholder="Select a Group to Log In" />
       </SelectTrigger>
       <SelectContent>
-        <SelectGroup>
-          {groups.map((g) => {
-            return (
-              <SelectItem key={g.category} value={g.category}>
-                {g.category}
-              </SelectItem>
-            );
-          })}
-        </SelectGroup>
+        {Object.entries(
+          _.groupBy(groups, (g: LoginGroup) => g.configs[0].year)
+        ).map(([year, group]: [string, LoginGroup[]]) => {
+          return (
+            <SelectGroup key={year}>
+              <SelectLabel>{year}</SelectLabel>
+              {group.map((g) => {
+                return (
+                  <SelectItem key={g.category} value={g.category}>
+                    {g.category}
+                  </SelectItem>
+                );
+              })}
+            </SelectGroup>
+          );
+        })}
       </SelectContent>
     </Select>
   );

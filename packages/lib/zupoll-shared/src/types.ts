@@ -54,6 +54,9 @@ export const CONFIG_GROUPS: LoginCategoryGroups[] = [
 export type LoginCategory = LegacyLoginCategoryName | string;
 
 export interface LoginConfig {
+  year: number;
+  month: number; // starting w/ 1
+  day: number;
   configCategoryId: LoginCategory;
   groupId: string;
   groupUrl: string;
