@@ -305,15 +305,16 @@ export function useCreateBallot({
       USE_CREATE_BALLOT_REDIRECT ? url + ballotUrl : undefined
     );
   }, [
+    ballotConfig,
     voterGroupUrl,
     voterGroupRootHash,
     ballotTitle,
     ballotDescription,
-    ballotConfig,
     expiry,
+    loginState.config.pipelineId,
     polls,
-    onError,
-    url
+    url,
+    onError
   ]);
 
   return { loadingVoterGroupUrl, createBallotPCD };

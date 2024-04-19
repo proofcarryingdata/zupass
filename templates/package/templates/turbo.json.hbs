@@ -13,7 +13,7 @@
     },
     "test": {
       "cache": true,
-      "dependsOn": ["build"],
+      "dependsOn": ["build", "^gen-test-artifacts"],
       "inputs": ["$TURBO_DEFAULT$", "test/**"]
     }
   }
