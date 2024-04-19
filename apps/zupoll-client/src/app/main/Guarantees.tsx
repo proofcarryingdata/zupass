@@ -44,6 +44,10 @@ const GuaranteeContainer = styled.div`
     gap: 6px;
     font-size: 0.8rem;
     flex-direction: column;
+
+    div {
+      width: 100%;
+    }
   }
 `;
 
@@ -67,5 +71,7 @@ const Guarantee = styled.div`
     flex-direction: row;
     margin-bottom: 0;
     align-items: center;
+    max-width: 100% !important;
+    width: 100% !important;
   }
 `;

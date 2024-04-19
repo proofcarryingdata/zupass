@@ -36,8 +36,11 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border bg-card overflow-hidden">
-      <Table className="max-w-full overflow-hidden">
+    <div className="rounded-md border bg-card overflow-hidden ">
+      <Table
+        className="max-w-full overflow-hidden px-8"
+        style={{ overflow: "hidden" }}
+      >
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>

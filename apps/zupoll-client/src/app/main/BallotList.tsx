@@ -9,7 +9,14 @@ import { getTimeBeforeExpiry } from "./getTimeBeforeExpiry";
 export const columns: ColumnDef<Ballot>[] = [
   {
     accessorKey: "ballotTitle",
-    header: "Title"
+    header: "Title",
+    cell: (cell: CellContext<Ballot, unknown>) => {
+      return (
+        <div className="max-w-full overflow-hidden text-ellipsis px-4">
+          {cell.row.original.ballotTitle}
+        </div>
+      );
+    }
   },
   {
     id: "expiry",
@@ -17,7 +24,10 @@ export const columns: ColumnDef<Ballot>[] = [
     cell: (cell: CellContext<Ballot, unknown>) => {
       const isExpired = new Date(cell.row.original.expiry) < new Date();
       return (
-        <div style={{ fontStyle: isExpired ? "italic " : "initial" }}>
+        <div
+          style={{ fontStyle: isExpired ? "italic " : "initial" }}
+          className="px-4"
+        >
           {isExpired
             ? "Expired"
             : getTimeBeforeExpiry(cell.row.original.expiry)}
