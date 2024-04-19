@@ -1,7 +1,4 @@
-import {
-  LoadingButton,
-  LoadingPlaceholderCard
-} from "@/components/ui/LoadingPlaceholder";
+import { LoadingPlaceholderCard } from "@/components/ui/LoadingPlaceholder";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -70,8 +67,6 @@ export function CreateBallot({
   const [serverLoading, setServerLoading] = useState(false);
   const query = useSearchParams();
   useEffect(() => {
-    const url = new URL(window.location.href);
-    console.log({ url });
     // Use URLSearchParams to get the proof query parameter
     const proofString = query?.get("proof") as string;
     const ballotString = query?.get("ballot") as string;
@@ -544,7 +539,7 @@ export function CreateBallot({
       )}
 
       {loadingVoterGroupUrl || serverLoading ? (
-        <LoadingButton />
+        <>asdf</>
       ) : (
         <Button
           className="w-full"

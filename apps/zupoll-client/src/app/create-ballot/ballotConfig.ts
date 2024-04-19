@@ -1,4 +1,5 @@
 import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
+import urljoin from "url-join";
 import {
   EDGE_CITY_ORGANIZER_CONFIG,
   EDGE_CITY_RESIDENT_CONFIG,
@@ -23,7 +24,14 @@ export const STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.STRAWPOLL,
-  isPublic: false
+  isPublic: false,
+  makeHistoricalGroupUrl: (hash) =>
+    urljoin(
+      ZUPASS_SERVER_URL,
+      "semaphore/historic",
+      STRAWPOLL_BALLOT_CONFIG.voterGroupId,
+      hash
+    )
 };
 
 export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
@@ -34,7 +42,14 @@ export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ADVISORYVOTE,
-  isPublic: false
+  isPublic: false,
+  makeHistoricalGroupUrl: (hash) =>
+    urljoin(
+      ZUPASS_SERVER_URL,
+      "semaphore/historic",
+      ADVISORY_VOTE_BALLOT_CONFIG.voterGroupId,
+      hash
+    )
 };
 
 export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
@@ -45,7 +60,14 @@ export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ORGANIZERONLY,
-  isPublic: false
+  isPublic: false,
+  makeHistoricalGroupUrl: (hash) =>
+    urljoin(
+      ZUPASS_SERVER_URL,
+      "semaphore/historic",
+      ORGANIZER_ONLY_BALLOT_CONFIG.voterGroupId,
+      hash
+    )
 };
 
 export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
