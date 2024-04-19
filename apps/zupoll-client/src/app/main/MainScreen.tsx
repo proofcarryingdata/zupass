@@ -55,7 +55,6 @@ export function MainScreen({
 
       const ballotResponse: BallotResponse = await res.json();
       setBallots(ballotResponse.ballots);
-      console.log("loaded ballots:", ballotResponse.ballots);
       setLoadingBallots(false);
     }
 
