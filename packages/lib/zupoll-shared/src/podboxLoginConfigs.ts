@@ -16,7 +16,7 @@ export function getPodboxConfigs(
   const PARC_HQ_CONFIG_PIPELINE_ID = "432a2e29-b884-4fd8-886b-04b42ad3242f";
   const PARC_HQ_CONFIG_SEMA_GROUP_ID = "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
   const PARC_HQ_YEAR = 2024;
-  const PARC_HQ_MONTH = 4;
+  const PARC_HQ_MONTH = 1;
   const PARC_HQ_DAY = 1;
   const PARC_HQ_CONFIG = makePodboxLoginConfig(
     ZUPASS_CLIENT_URL,
@@ -36,7 +36,7 @@ export function getPodboxConfigs(
   // https://staging.podbox.dev/#/pipelines/f343cfdd-965b-4f0a-a429-7371576b323b
   // https://staging-ivan.podbox.dev/#/pipelines/f343cfdd-965b-4f0a-a429-7371576b323b
   // http://localhost:3005/#/pipelines/c00d3470-7ff8-4060-adc1-e9487d607d42
-  const ESMERALDA_HQ_CONFIG_ID = "Edge Esmeralda Resident";
+  const ESMERALDA_HQ_CONFIG_ID = "Edge Esmeralda";
   const ESMERALDA_HQ_CONFIG_NAME = "Edge Esmeralda";
   const ESMERALDA_RESIDENTS_NAME = "Resident Ballots";
   const ESMERALDA_HQ_DESCRIPTION =
@@ -66,11 +66,11 @@ export function getPodboxConfigs(
   // https://staging.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
   // https://staging-ivan.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
   // http://localhost:3005/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  const ETH_PRAGUE_HQ_CONFIG_ID = "Eth Prague";
-  const ETH_PRAGUE_HQ_CONFIG_NAME = "Eth Prague";
-  const ETH_PRAGUE_RESIDENTS_NAME = "Eth Prague Attendeess";
+  const ETH_PRAGUE_HQ_CONFIG_ID = "ETH Prague";
+  const ETH_PRAGUE_HQ_CONFIG_NAME = "ETH Prague";
+  const ETH_PRAGUE_RESIDENTS_NAME = "ETH Prague Attendees";
   const ETH_PRAGUE_HQ_DESCRIPTION =
-    "Ballots created by Eth Prague Attendees. Add to the discussion by creating a new Ballot!";
+    "Ballots created by ETH Prague Attendees. Add to the discussion by creating a new Ballot!";
   const ETH_PRAGUE_HQ_CONFIG_PIPELINE_ID =
     "24ac727d-bc2f-4727-bcfa-b15cf2f7037e";
   const ETH_PRAGUE_HQ_CONFIG_SEMA_GROUP_ID =
@@ -94,11 +94,11 @@ export function getPodboxConfigs(
 
   // https://staging-richard.podbox.dev/#/pipelines/e0f80908-4c9e-4bdb-9804-c88e8f64f59b
   // TODO
-  const ETH_BERLIN_CONFIG_ID = "Eth Berlin";
-  const ETH_BERLIN_CONFIG_NAME = "Eth Berlin";
-  const ETH_BERLIN_RESIDENTS_NAME = "Eth Berlin Attendeess";
+  const ETH_BERLIN_CONFIG_ID = "ETH Berlin";
+  const ETH_BERLIN_CONFIG_NAME = "ETH Berlin";
+  const ETH_BERLIN_RESIDENTS_NAME = "ETH Berlin Attendees";
   const ETH_BERLIN_DESCRIPTION =
-    "Ballots created by Eth Berlin Attendees. Add to the discussion by creating a new Ballot!";
+    "Ballots created by ETH Berlin Attendees. Add to the discussion by creating a new Ballot!";
   const ETH_BERLIN_CONFIG_PIPELINE_ID = "e0f80908-4c9e-4bdb-9804-c88e8f64f59b";
   const ETH_BERLIN_CONFIG_SEMA_GROUP_ID = "todo";
   const ETH_BERLIN_YEAR = 2024;

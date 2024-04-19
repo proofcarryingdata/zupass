@@ -209,7 +209,7 @@ const ErrorContainer = styled.div`
   background-color: var(--danger);
 `;
 
-const GroupNameLabel = styled.div`
+const GroupNameLabel = styled.span`
   display: inline-block;
   padding: 2px 16px;
   border: 1px solid rgba(255, 255, 255, 0.5);

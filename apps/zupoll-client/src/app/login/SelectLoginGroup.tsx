@@ -36,22 +36,50 @@ export function SelectLoginGroup({
         <SelectValue placeholder="Select a Group to Log In" />
       </SelectTrigger>
       <SelectContent>
-        {Object.entries(
-          _.groupBy(groups, (g: LoginGroup) => g.configs[0].year)
-        ).map(([year, group]: [string, LoginGroup[]]) => {
-          return (
-            <SelectGroup key={year}>
-              <SelectLabel>{year}</SelectLabel>
-              {group.map((g) => {
-                return (
-                  <SelectItem key={g.category} value={g.category}>
-                    {g.category}
-                  </SelectItem>
-                );
-              })}
-            </SelectGroup>
-          );
-        })}
+        {Object.entries(_.groupBy(groups, (g: LoginGroup) => g.configs[0].year))
+          .sort((lhs, rhs) => {
+            return (
+              new Date(
+                rhs[1][0].configs[0].year,
+                rhs[1][0].configs[0].month,
+                rhs[1][0].configs[0].day
+              ).getTime() -
+              new Date(
+                lhs[1][0].configs[0].year,
+                lhs[1][0].configs[0].month,
+                lhs[1][0].configs[0].day
+              ).getTime()
+            );
+          })
+          .map(([year, group]: [string, LoginGroup[]]) => {
+            return (
+              <SelectGroup key={year}>
+                <SelectLabel>{year}</SelectLabel>
+                {group
+                  .sort((lhs, rhs) => {
+                    return (
+                      new Date(
+                        rhs.configs[0].year,
+                        rhs.configs[0].month,
+                        rhs.configs[0].day
+                      ).getTime() -
+                      new Date(
+                        lhs.configs[0].year,
+                        lhs.configs[0].month,
+                        lhs.configs[0].day
+                      ).getTime()
+                    );
+                  })
+                  .map((g) => {
+                    return (
+                      <SelectItem key={g.category} value={g.category}>
+                        {g.category}
+                      </SelectItem>
+                    );
+                  })}
+              </SelectGroup>
+            );
+          })}
       </SelectContent>
     </Select>
   );
