@@ -177,21 +177,21 @@ export function AlreadyRegisteredScreen(): JSX.Element | null {
   }, []);
 
   useEffect(() => {
-    if (self || !email || !identityCommitment || !salt) {
+    if (self || !email || !identityCommitment) {
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
         window.location.hash = "#/";
       }
     }
-  }, [self, email, identityCommitment, salt]);
+  }, [self, email, identityCommitment]);
 
   // scroll to top when we navigate to this page
   useLayoutEffect(() => {
     document.body.scrollTop = document.documentElement.scrollTop = 0;
   }, []);
 
-  if (self || !email || !identityCommitment || !salt) {
+  if (self || !email || !identityCommitment) {
     return null;
   }
 
