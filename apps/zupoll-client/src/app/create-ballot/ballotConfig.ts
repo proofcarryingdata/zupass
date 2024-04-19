@@ -78,7 +78,14 @@ export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.DEVCONNECT_STRAW,
-  isPublic: false
+  isPublic: false,
+  makeHistoricalGroupUrl: (hash) =>
+    urljoin(
+      ZUPASS_SERVER_URL,
+      "semaphore/historic",
+      DEVCONNECT_ATTENDEE_BALLOT_CONFIG.voterGroupId,
+      hash
+    )
 };
 
 export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
@@ -89,7 +96,14 @@ export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.DEVCONNECT_ORGANIZER,
-  isPublic: false
+  isPublic: false,
+  makeHistoricalGroupUrl: (hash) =>
+    urljoin(
+      ZUPASS_SERVER_URL,
+      "semaphore/historic",
+      DEVCONNECT_ORGANIZER_BALLOT_CONFIG.voterGroupId,
+      hash
+    )
 };
 
 export const EDGE_CITY_RESIDENT_BALLOT_CONFIG: BallotConfig = {
