@@ -67,12 +67,12 @@ describe("generic issuance - PretixPipeline", function () {
     EthLatAmManualAttendeeEmail,
     EthLatAmManualBouncerIdentity,
     EthLatAmManualBouncerEmail,
+    EthLatAmImageUrl,
     mockServer,
     pretixBackend,
     ethLatAmPretixOrganizer,
     ethLatAmEvent,
     ethLatAmPipeline,
-
     ethLatAmSemaphoreGroupIds
   } = setupTestPretixPipeline();
 
@@ -324,6 +324,7 @@ describe("generic issuance - PretixPipeline", function () {
       expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
         EthLatAmManualBouncerEmail
       );
+      expect(ManualAttendeeTicket.claim.ticket.imageUrl).to.be.undefined;
 
       pretixBackend.checkOut(
         ethLatAmPretixOrganizer.orgUrl,
@@ -361,6 +362,9 @@ describe("generic issuance - PretixPipeline", function () {
           EthLatAmManualAttendeeEmail
         );
         expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeeTicket.claim.ticket.imageUrl).to.eq(
+          EthLatAmImageUrl
+        );
         expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
           Date.now()
         );
@@ -584,6 +588,7 @@ describe("generic issuance - PretixPipeline", function () {
     );
     // Bouncer ticket is checked out
     expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+    expect(bouncerTicket.claim.ticket.imageUrl).to.be.undefined;
 
     // Now check the bouncer in
     const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
