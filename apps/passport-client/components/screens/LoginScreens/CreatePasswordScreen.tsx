@@ -56,6 +56,15 @@ export function CreatePasswordScreen(): JSX.Element | null {
   }, [dispatch, email, token, targetFolder, autoRegister]);
 
   const checkIfShouldRedirect = useCallback(async () => {
+    // Redirect to home if already logged in
+    if (self) {
+      if (hasPendingRequest()) {
+        window.location.hash = "#/login-interstitial";
+      } else {
+        window.location.hash = "#/";
+      }
+      return;
+    }
     if (!email || !validateEmail(email) || !token) {
       return redirectToLoginPageWithError(
         "Invalid email or token, redirecting to login"
@@ -78,6 +87,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
       }
     }
   }, [
+    self,
     email,
     redirectToLoginPageWithError,
     token,
@@ -97,17 +107,6 @@ export function CreatePasswordScreen(): JSX.Element | null {
   useEffect(() => {
     checkIfShouldRedirect();
   }, [checkIfShouldRedirect]);
-
-  useEffect(() => {
-    // Redirect to home if already logged in
-    if (self) {
-      if (hasPendingRequest()) {
-        window.location.hash = "#/login-interstitial";
-      } else {
-        window.location.hash = "#/";
-      }
-    }
-  }, [self]);
 
   const onSetPassword = useCallback(async () => {
     try {
@@ -139,7 +138,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
     return null;
   }
 
-  if (settingPassword) {
+  if (settingPassword || autoRegister) {
     content = <ScreenLoader text="Creating your account..." />;
   } else {
     content = (
