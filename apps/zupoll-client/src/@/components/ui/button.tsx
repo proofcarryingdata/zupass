@@ -11,16 +11,11 @@ ring-foreground active:ring-offset-2 active:ring-2 active:ring-offset-background
 const buttonVariants = cva(BUTTON_CLASSES, {
   variants: {
     variant: {
-      default:
-        "bg-blue-500 shadow hover:bg-blue-400 hover:text-blue-900 text-white",
-      secondary:
-        "bg-gray-500 shadow-sm hover:bg-gray-400 hover:text-gray-900 text-white",
-      destructive:
-        "bg-red-500 shadow-sm hover:bg-red-400 hover:text-red-900 text-white",
-      warning:
-        "bg-yellow-500 shadow-sm hover:bg-yellow-400 hover:text-yellow-900 text-white",
-      creative:
-        "bg-green-500 shadow-sm hover:bg-green-400 hover:text-green-900 text-white",
+      default: "bg-blue-600 shadow hover:bg-blue-500 text-white",
+      secondary: "bg-gray-500 shadow-sm hover:bg-gray-400 text-white",
+      destructive: "bg-red-500 shadow-sm hover:bg-red-600 text-white",
+      warning: "bg-yellow-600 shadow-sm hover:bg-yellow-500 text-white",
+      creative: "bg-green-600 shadow-sm hover:bg-green-500 text-white",
       outline:
         "border border-input bg-background shadow-sm hover:bg-accent border-2",
       ghost: "hover:bg-accent",

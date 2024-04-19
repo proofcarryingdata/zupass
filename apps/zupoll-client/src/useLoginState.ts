@@ -7,7 +7,7 @@ import { getLoginRedirectUrl } from "./zupoll-server-api";
 const ACCESS_TOKEN_KEY = "access_token";
 const CONFIGURATION_KEY = "configuration";
 const STATE_VERSION_KEY = "state_version";
-const LATEST_STATE_VERSION = "2";
+const LATEST_STATE_VERSION = "4";
 
 export function loadLoginStateFromLocalStorage(): LoginState | undefined {
   const savedToken: string | undefined = localStorage[ACCESS_TOKEN_KEY];
