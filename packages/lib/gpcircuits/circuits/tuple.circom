@@ -1,6 +1,6 @@
 pragma circom 2.1.8;
 
-include "circomlib/circuits/poseidon.circom";
+include "circomlib/circuits/poseidon.circom"; // Poseidon hash
 
 /**
  * Module mapping N signals to an N-tuple, represented here
