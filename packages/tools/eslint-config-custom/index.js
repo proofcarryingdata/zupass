@@ -36,7 +36,15 @@ module.exports = {
     "@typescript-eslint/explicit-function-return-type": "error",
     "@typescript-eslint/no-explicit-any": "error",
     "import/default": "off",
-    eqeqeq: ["error", "always"]
+    eqeqeq: ["error", "always"],
+    "no-restricted-syntax": [
+      "error",
+      {
+        selector:
+          "CallExpression[callee.name='describe'] MemberExpression[object.type='ThisExpression'][property.name='timeout']",
+        message: "Manual timeouts in Mocha tests are not allowed."
+      }
+    ]
   },
   settings: {
     "import/resolver": {
