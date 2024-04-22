@@ -290,7 +290,8 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
   ticketActions: TicketActionsOptionsSchema.optional(),
-  semaphoreGroups: SemaphoreGroupListSchema
+  semaphoreGroups: SemaphoreGroupListSchema,
+  enablePODTickets: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -417,7 +418,8 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(PretixEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
-  semaphoreGroups: SemaphoreGroupListSchema
+  semaphoreGroups: SemaphoreGroupListSchema,
+  enablePODTickets: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.

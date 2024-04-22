@@ -24,7 +24,6 @@ export async function prove(args: PODTicketPCDArgs): Promise<PODTicketPCD> {
   if (!args.ticket.value) {
     throw new Error("missing ticket value");
   }
-
   const pod = POD.sign(
     dataToPodEntries<PODTicketPCDClaim["ticket"]>(
       args.ticket.value,

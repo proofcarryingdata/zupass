@@ -238,7 +238,8 @@ export function setupTestLemonadePipeline(): LemonadePipelineTestData {
             }
           ]
         }
-      ]
+      ],
+      enablePODTickets: true
     },
     type: PipelineType.Lemonade
   };
