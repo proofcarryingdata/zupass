@@ -475,7 +475,8 @@ export enum CSVPipelineOutputType {
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
   outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  issueToUnmatchedEmail: z.boolean().optional()
 });
 
 export type CSVPipelineOptions = z.infer<typeof CSVPipelineOptionsSchema>;
