@@ -35,6 +35,8 @@
     "@pcd/pcd-collection": "0.10.0",
     "@pcd/pcd-types": "0.10.0",
     "@pcd/pod": "0.0.1",
+    "@pcd/pod-ticket-pcd": "0.0.1",
+    "@pcd/pod-ticket-pcd-ui": "0.0.1",
     "@pcd/pod-pcd": "0.0.1",
     "@pcd/pod-pcd-ui": "0.0.1",
     "@pcd/rsa-image-pcd": "0.4.0",

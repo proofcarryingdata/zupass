@@ -67,6 +67,9 @@
       "path": "packages/pcd/pod-pcd/tsconfig.esm.json"
     },
     {
+      "path": "packages/pcd/pod-ticket-pcd/tsconfig.esm.json"
+    },
+    {
       "path": "packages/pcd/rln-pcd/tsconfig.esm.json"
     },
     {
@@ -122,6 +125,9 @@
     },
     {
       "path": "packages/ui/pod-pcd-ui/tsconfig.esm.json"
+    },
+    {
+      "path": "packages/ui/pod-ticket-pcd-ui/tsconfig.esm.json"
     },
     {
       "path": "packages/ui/rsa-image-pcd-ui/tsconfig.esm.json"
