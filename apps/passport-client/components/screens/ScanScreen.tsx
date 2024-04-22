@@ -1,3 +1,4 @@
+import { toast } from "react-hot-toast";
 import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
@@ -49,7 +50,20 @@ export function ScanScreen(): JSX.Element {
                   result.getText()
                 );
                 const newLoc = maybeRedirect(result.getText());
-                if (newLoc) nav(newLoc);
+                if (newLoc) {
+                  // Instantly remove any error toasts
+                  toast.remove();
+                  nav(newLoc);
+                } else {
+                  toast.error(
+                    "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
+                    {
+                      id: "scan-error",
+                      duration: 10000,
+                      position: "bottom-center"
+                    }
+                  );
+                }
               } else if (error) {
                 //    console.info(error);
               }
