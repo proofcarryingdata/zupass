@@ -12,7 +12,11 @@ import {
   PollFeedResponseValue,
   PollFeedResult
 } from "../src";
-import { CredentialPayload, verifyCredential } from "../src/Credential";
+import {
+  Credential,
+  CredentialPayload,
+  verifyCredential
+} from "../src/Credential";
 import { IFeedApi } from "../src/FeedAPI";
 
 class MockFeedError extends Error {
