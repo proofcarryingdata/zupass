@@ -43,6 +43,7 @@ import {
 } from "@pcd/pod-ticket-pcd";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { normalizeEmail, str } from "@pcd/util";
+import stable_stringify from "fast-json-stable-stringify";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import { v5 as uuidv5 } from "uuid";
@@ -920,15 +921,6 @@ export class PretixPipeline implements BasePipeline {
         emailClaim.semaphoreId
       );
 
-      const podTickets = await Promise.all(
-        tickets.map((ticket) => {
-          return this.getOrGenerateTicket<PODTicketPCD>(
-            ticket.claim.ticket,
-            PODTicketPCDTypeName
-          );
-        })
-      );
-
       span?.setAttribute("pcds_issued", tickets.length);
 
       const actions: PCDAction[] = [];
@@ -946,6 +938,14 @@ export class PretixPipeline implements BasePipeline {
       );
 
       if (this.definition.options.enablePODTickets) {
+        const podTickets = await Promise.all(
+          tickets.map((ticket) => {
+            return this.getOrGenerateTicket<PODTicketPCD>(
+              ticket.claim.ticket,
+              PODTicketPCDTypeName
+            );
+          })
+        );
         ticketPCDs.push(
           ...(await Promise.all(
             podTickets.map((t) => PODTicketPCDPackage.serialize(t))
@@ -1050,7 +1050,10 @@ export class PretixPipeline implements BasePipeline {
     // ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
-      JSON.stringify(ticketCopy) + eddsaPrivateKey + pipelineId + ticketPCDType
+      stable_stringify(ticketCopy) +
+        eddsaPrivateKey +
+        pipelineId +
+        ticketPCDType
     );
     return hash;
   }
