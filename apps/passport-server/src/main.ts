@@ -17,6 +17,7 @@ logger(
   `[INIT] cwd:${process.cwd()}; Loading environment variables from: ${dotEnvPath} `
 );
 dotenv.config({ path: dotEnvPath });
+logger(`NODE_OPTIONS is ${process.env.NODE_OPTIONS}`);
 logger("[INIT] Starting application");
 
 startApplication();
