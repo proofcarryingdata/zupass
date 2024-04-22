@@ -8,7 +8,7 @@
     "start:dev": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=development ts-node-dev --inspect=4321 --respawn --watch=.env,.env.local src/main.ts -p ./tsconfig.json",
     "dev:worker": "nodemon -w src/multiprocess/worker.ts --exec \"yarn tsc -p ./tsconfig.json\"",
     "dev": "yarn tsc -p ./tsconfig.json && concurrently -r \"yarn start:dev\" \"yarn dev:worker\"",
-    "start": "NODE_OPTIONS=--max_old_space_size=4096 NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
+    "start": "NODE_OPTIONS=${NODE_OPTIONS:---max_old_space_size=4096} NODE_ENV=production PORT=8080 node -r source-map-support/register build/src/main.js",
     "lint": "eslint \"**/*.ts{,x}\"",
     "test:single-threaded": "ts-mocha --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "test": "ts-mocha --parallel --require test/globalhooks.ts --config ../../.mocharc.js --exit 'test/**/*.spec.ts'",
