@@ -17,8 +17,8 @@ import {
   useDispatch,
   useFolders,
   usePCDCollection,
-  usePCDsInFolder,
-  useSelf
+  useSelf,
+  useVisiblePCDsInFolder
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { isEdgeCityFolder, isFrogCryptoFolder } from "../../../src/util";
@@ -71,7 +71,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   }, [pcdCollection, searchParams]);
 
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
-  const pcdsInFolder = usePCDsInFolder(browsingFolder);
+  const pcdsInFolder = useVisiblePCDsInFolder(browsingFolder);
   const foldersInFolder = useFolders(browsingFolder);
 
   useEffect(() => {
