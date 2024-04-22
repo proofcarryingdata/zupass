@@ -209,6 +209,7 @@
     "SCANDIT_LICENSE_KEY",
     "MULTI_CHOICE_SCAN_ENABLED",
     "IRON_SESSION_PASSWORD",
+    "SHOW_POD_TICKET_PCDS",
     "//// add env vars above this line ////"
   ]
 }

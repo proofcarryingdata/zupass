@@ -69,6 +69,13 @@ const define = {
           process.env.MULTI_CHOICE_SCAN_ENABLED
         )
       }
+    : {}),
+  ...(process.env.SHOW_POD_TICKET_PCDS !== undefined
+    ? {
+        "process.env.SHOW_POD_TICKET_PCDS": JSON.stringify(
+          process.env.SHOW_POD_TICKET_PCDS
+        )
+      }
     : {})
 };
 
