@@ -66,13 +66,16 @@ export function usePCDs(): PCD[] {
 
 export function usePCDsInFolder(folder: string): PCD[] {
   const pcds = usePCDCollection();
-  return [
-    ...pcds.getAllPCDsInFolder(folder).filter(
-      (pcd) =>
-        // Filter out PODTicketPCDs unless showPODTicketPCDs is true
-        pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
-    )
-  ];
+  return [...pcds.getAllPCDsInFolder(folder)];
+}
+
+export function useVisiblePCDsInFolder(folder: string): PCD[] {
+  const pcds = usePCDsInFolder(folder);
+  return pcds.filter(
+    (pcd) =>
+      // Filter out PODTicketPCDs unless showPODTicketPCDs is true
+      pcd.type !== PODTicketPCDTypeName || appConfig.showPODTicketPCDs
+  );
 }
 
 export function useFolders(path: string): string[] {

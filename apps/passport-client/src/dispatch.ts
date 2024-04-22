@@ -21,7 +21,7 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
-import { isPODTicketPCD, PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
@@ -573,18 +573,19 @@ async function removePCD(
     // as it only contains the PODTicketPCD.
     // Therefore, when removing the EdDSATicketPCD, we should check to see if
     // there is a matching PODTicketPCD, and remove that too.
-    const podTickets = state.pcds.getPCDsByType(PODTicketPCDTypeName);
-    for (const podTicket of podTickets) {
-      if (
-        isPODTicketPCD(podTicket) &&
-        // Check for the same ticket ID
-        podTicket.claim.ticket.ticketId === pcd.claim.ticket.ticketId &&
-        // Check they're in the same folder
-        state.pcds.getFolderOfPCD(pcd.id) ===
-          state.pcds.getFolderOfPCD(podTicket.id)
-      ) {
-        // Remove the PODTicketPCD
-        state.pcds.remove(podTicket.id);
+    const folder = state.pcds.getFolderOfPCD(pcdId);
+    if (folder) {
+      const otherPCDsInFolder = state.pcds.getAllPCDsInFolder(folder);
+      for (const otherPCD of otherPCDsInFolder) {
+        if (
+          isPODTicketPCD(otherPCD) &&
+          // Check for the same ticket ID
+          otherPCD.claim.ticket.ticketId === pcd.claim.ticket.ticketId
+        ) {
+          // Remove the PODTicketPCD
+          state.pcds.remove(otherPCD.id);
+          break;
+        }
       }
     }
   }
