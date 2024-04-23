@@ -1,4 +1,4 @@
-# @pcd/gpcircuits
+# @pcd/pod-ticket-pcd-ui
 
 ## 0.1.0
 
@@ -9,10 +9,6 @@
 ### Patch Changes
 
 - Updated dependencies
-  - @pcd/pod@0.1.0
-
-## 0.0.1
-
-### Patch Changes
-
-- Initial changeset.
+  - @pcd/passport-ui@0.11.0
+  - @pcd/pcd-types@0.11.0
+  - @pcd/pod-ticket-pcd@0.1.0

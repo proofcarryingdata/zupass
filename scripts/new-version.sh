@@ -9,9 +9,10 @@ yarn changeset
 # Assign new versions to affected packages
 yarn changeset version 
 
-# The path to this script, i.e. the root of the repo
+# The path to this script, i.e. one level down from the root of the repo
 full_path=$(realpath $0)
-dir_path=$(dirname $full_path)
+# Get the path to the parent directory, i.e. the root of the repo 
+dir_path=$(dirname $(dirname $full_path))
 cyan_bold='\033[36;1m'
 
 # Loop over each package
