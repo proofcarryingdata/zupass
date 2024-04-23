@@ -1,6 +1,18 @@
 import { DisplayOptions, PCDPackage, SerializedPCD } from "@pcd/pcd-types";
 import { fromHexString, requireDefinedParameter, toHexString } from "@pcd/util";
-import { Eddsa, Point, buildEddsa } from "circomlibjs";
+import {
+  derivePublicKey,
+  packSignature,
+  signMessage,
+  unpackSignature,
+  verifySignature
+} from "@zk-kit/eddsa-poseidon";
+import { bigIntToHexadecimal, hexadecimalToBigInt } from "@zk-kit/utils";
+import { poseidon1 } from "poseidon-lite/poseidon1";
+import { poseidon12 } from "poseidon-lite/poseidon12";
+import { poseidon13 } from "poseidon-lite/poseidon13";
+import { poseidon2 } from "poseidon-lite/poseidon2";
+import { poseidon3 } from "poseidon-lite/poseidon3";
 import { v4 as uuid } from "uuid";
 import {
   EdDSAInitArgs,
@@ -12,22 +24,23 @@ import {
   EdDSAPublicKey
 } from "./EdDSAPCD";
 
-let initializedPromise: Promise<void> | undefined;
-let eddsa: Eddsa;
-
-/**
- * A promise designed to make sure that the EdDSA algorithm
- * of the `circomlibjs` package has been properly initialized.
- * It only initializes them once.
- */
-async function ensureInitialized(): Promise<void> {
-  if (!initializedPromise) {
-    initializedPromise = (async (): Promise<void> => {
-      eddsa = await buildEddsa();
-    })();
+function poseidonHash(message: bigint[]): bigint {
+  const n = message.length;
+  if (n === 1) {
+    return poseidon1(message);
+  } else if (n === 2) {
+    // as used in EmailPCD
+    return poseidon2(message);
+  } else if (n === 3) {
+    return poseidon3(message);
+  } else if (n === 12) {
+    // as used in EdDSATicketPCD
+    return poseidon12(message);
+  } else if (n === 13) {
+    return poseidon13(message);
+  } else {
+    throw new Error("wrong length");
   }
-
-  await initializedPromise;
 }
 
 /**
@@ -35,8 +48,6 @@ async function ensureInitialized(): Promise<void> {
  * and deriving an {@link EdDSAPCDClaim} from the given {@link EdDSAPCDArgs}.
  */
 export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
-  await ensureInitialized();
-
   let message;
 
   if (!args.privateKey.value) throw new Error("No private key value provided");
@@ -60,7 +71,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   const id = typeof args.id.value === "string" ? args.id.value : uuid();
   const prvKey = fromHexString(args.privateKey.value);
 
-  const hashedMessage = eddsa.poseidon(message);
+  const hashedMessage = poseidonHash(message); // eddsa.poseidon(message);
   const publicKey = await getEdDSAPublicKey(prvKey);
 
   // Make the signature on the message.
@@ -69,7 +80,7 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
   // This is a reference to Montgomery form of numbers for modular
   // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
   const signature = toHexString(
-    eddsa.packSignature(eddsa.signPoseidon(prvKey, hashedMessage))
+    packSignature(signMessage(prvKey, hashedMessage))
   );
 
   return new EdDSAPCD(id, { message, publicKey }, { signature });
@@ -81,22 +92,15 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
  */
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   try {
-    await ensureInitialized();
+    const signature = unpackSignature(fromHexString(pcd.proof.signature));
+    const pubKey: [bigint, bigint] = [
+      hexadecimalToBigInt(pcd.claim.publicKey[0]),
+      hexadecimalToBigInt(pcd.claim.publicKey[1])
+    ];
 
-    const signature = eddsa.unpackSignature(fromHexString(pcd.proof.signature));
+    const hashedMessage = poseidonHash(pcd.claim.message);
 
-    // Note: `F.fromObject` converts a coordinate from standard format to
-    // Montgomery form, which is expected by circomlibjs.  unpackSignature above
-    // does the same for its R8 point.
-    // This is a reference to Montgomery form of numbers for modular
-    // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
-    const pubKey = pcd.claim.publicKey.map((p) =>
-      eddsa.F.fromObject(p)
-    ) as Point;
-
-    const hashedMessage = eddsa.poseidon(pcd.claim.message);
-
-    return eddsa.verifyPoseidon(hashedMessage, signature, pubKey);
+    return verifySignature(hashedMessage, signature, pubKey);
   } catch {
     return false;
   }
@@ -205,17 +209,10 @@ export const EdDSAPCDPackage: PCDPackage<
 export async function getEdDSAPublicKey(
   privateKey: string | Uint8Array
 ): Promise<EdDSAPublicKey> {
-  await ensureInitialized();
-
   if (typeof privateKey === "string") {
     privateKey = fromHexString(privateKey);
   }
 
-  return eddsa.prv2pub(privateKey).map((p) =>
-    // Note: `F.toObject` converts a point from the Montgomery format used by
-    // circomlibjs to standard form.
-    // This is a reference to Montgomery form of numbers for modular
-    // multiplication, NOT Montgomery form of eliptic curves.  See https://en.wikipedia.org/wiki/Montgomery_modular_multiplication#Montgomery_form
-    eddsa.F.toObject(p).toString(16).padStart(64, "0")
-  ) as EdDSAPublicKey;
+  const publicKey = derivePublicKey(privateKey);
+  return [bigIntToHexadecimal(publicKey[0]), bigIntToHexadecimal(publicKey[1])];
 }

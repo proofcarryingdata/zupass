@@ -40,7 +40,7 @@
     "@pcd/semaphore-signature-pcd": "0.11.0",
     "@pcd/util": "0.5.0",
     "@semaphore-protocol/identity": "^3.15.2",
-    "circomlibjs": "^0.1.7",
+    "@zk-kit/eddsa-poseidon": "0.11.0",
     "json-bigint": "^1.0.0",
     "snarkjs": "^0.7.4",
     "uuid": "^9.0.0"
