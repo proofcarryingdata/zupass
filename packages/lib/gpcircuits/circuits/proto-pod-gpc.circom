@@ -4,8 +4,10 @@ include "circomlib/circuits/gates.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
+include "list-membership.circom";
 include "object.circom";
 include "owner.circom";
+include "tuple.circom";
 
 /**
  * This template is the top level of a prototype GPC proof.  Its template parameters are
@@ -28,6 +30,15 @@ template ProtoPODGPC (
     // bitfields).
     MAX_ENTRIES,
 
+    // Indicates the maximum number of list entries for the list membership check.
+    MAX_LIST_ENTRIES,
+
+    // Indicates the maximum number of tuples to generate.
+    MAX_TUPLES,
+
+    // Indicates the arity of the tuples.
+    ARITY,
+    
     // Max depth of the Merkle proof that this entry appears in a POD.  This
     // determines the size of the entryProofSiblings array input, and places an
     // inclusive upper bound on the proofDepth input.
@@ -141,12 +152,43 @@ template ProtoPODGPC (
     );
 
     /*
+     * 1 TupleModule with its inputs & outputs.
+     */
+
+    signal input tupleIndices[MAX_TUPLES][ARITY];
+    
+    signal tupleHashes[MAX_TUPLES] <== TupleModule(ARITY, MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleIndices);
+
+    /*
+     * 1 ListMembershipModule with its inputs & outputs.
+     */
+
+    // Index of entry value (if less than `MAX_ENTRIES`) or tuple hash that ought to be a member.
+    signal input memberIndex;
+
+    // Membership list.
+    signal input membershipList[MAX_LIST_ENTRIES];
+
+    var numEntriesAndTuples = MAX_ENTRIES + MAX_TUPLES;
+
+    if(MAX_LIST_ENTRIES > 0) {
+	signal memberHash <== MaybeInputSelector(numEntriesAndTuples)(
+	    Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
+	    memberIndex);
+	
+	signal isMember <== ListMembershipModule(MAX_LIST_ENTRIES)(
+	    memberHash, membershipList);
+
+	isMember === 1;
+    }
+    
+    /*
      * 1 GlobalModule with its inputs & outputs.
      */
 
     // Watermark is an arbitrary value used to uniquely identify a proof.
     signal input globalWatermark;
 
-    // Catch-all for logic gloabl to the circuit, not tied to any of the other modules above.
+    // Catch-all for logic global to the circuit, not tied to any of the other modules above.
     GlobalModule()(globalWatermark);
 }

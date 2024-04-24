@@ -1,8 +1,8 @@
 {
-  "proto-pod-gpc-1o-1e-5md": {
+  "proto-pod-gpc-1o-1e-10l-2t-2ta-5md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [1, 1, 5],
+    "params": [1, 1, 10, 2, 2, 5],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",
@@ -14,13 +14,16 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "memberIndex",
+      "membershipList",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc-1o-5e-8md": {
+  "proto-pod-gpc-1o-5e-10l-2t-3ta-8md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [1, 5, 8],
+    "params": [1, 5, 10, 2, 3, 8],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",
@@ -32,13 +35,16 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "memberIndex",
+      "membershipList",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc-3o-10e-8md": {
+  "proto-pod-gpc-3o-10e-10l-2t-2ta-8md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [3, 10, 8],
+    "params": [3, 10, 10, 2, 2, 8],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",
@@ -50,6 +56,9 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "memberIndex",
+      "membershipList",
       "globalWatermark"
     ]
   }

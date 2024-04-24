@@ -36,6 +36,13 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
+  // Tuple module (1)
+  /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
+
+  // List membership module (1)
+  /*PUB*/ memberIndex: CircuitSignal;
+  /*PUB*/ membershipList: CircuitSignal /*MAX_LIST_ENTRIES*/[];
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -64,6 +71,9 @@ export type ProtoPODGPCInputNamesType = [
   "ownerSemaphoreV3IdentityTrapdoor",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
+  "tupleIndices",
+  "memberIndex",
+  "membershipList",
   "globalWatermark"
 ];
 
@@ -90,6 +100,13 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
+  // Tuple module (1)
+  /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
+
+  // List membership module (1)
+  /*PUB*/ memberIndex: CircuitSignal;
+  /*PUB*/ membershipList: CircuitSignal /*MAX_LIST_ENTRIES*/[];
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -108,6 +125,9 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "ownerEntryIndex",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
+  "tupleIndices",
+  "memberIndex",
+  "membershipList",
   "globalWatermark"
 ];
 
@@ -143,6 +163,21 @@ export type ProPODGPCCircuitDesc = CircuitDesc & {
    */
   maxEntries: number;
 
+  /**
+   * Number of entries in membership list to be included in proof.
+   */
+  maxListEntries: number;
+
+  /**
+   * Number of tuples which can be included in a proof.
+   */
+  maxTuples: number;
+
+  /**
+   * Arity of tuples which can be included in a proof.
+   */
+  tupleArity: number;
+  
   /**
    * Max depth of POD merkle tree.  Max entries in any object is log2(depth-1).
    */
@@ -234,6 +269,9 @@ export class ProtoPODGPC {
       ownerEntryIndex: allInputs.ownerEntryIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
+      tupleIndices: allInputs.tupleIndices,
+      memberIndex: allInputs.memberIndex,
+      membershipList: allInputs.membershipList,
       globalWatermark: allInputs.globalWatermark
     };
   }
@@ -276,6 +314,9 @@ export class ProtoPODGPC {
       inputs.ownerEntryIndex,
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
+      ...inputs.tupleIndices.flat(),
+      inputs.memberIndex,
+      ...inputs.membershipList,
       inputs.globalWatermark
     ].map(BigInt);
   }
@@ -297,13 +338,19 @@ export class ProtoPODGPC {
   public static pickCircuit(
     nObjects: number,
     nEntries: number,
+    nListEntries: number,
+    nTuples: number,
+    tupleArity: number,
     merkleDepth: number
   ): ProPODGPCCircuitDesc | undefined {
     for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
       if (
         circuitDesc.maxObjects >= nObjects &&
-        circuitDesc.maxEntries >= nEntries &&
-        circuitDesc.merkleMaxDepth >= merkleDepth
+          circuitDesc.maxEntries >= nEntries &&
+	  circuitDesc.maxListEntries >= nListEntries &&
+	  circuitDesc.maxTuples >= nTuples &&
+	  circuitDesc.tupleArity == tupleArity &&
+          circuitDesc.merkleMaxDepth >= merkleDepth
       ) {
         return circuitDesc;
       }
@@ -314,14 +361,20 @@ export class ProtoPODGPC {
   private static circuitNameForParams(
     maxObjects: number,
     maxEntries: number,
+    maxListEntries: number,
+    maxTuples: number,
+    tupleArity: number,
     merkleMaxDepth: number
   ): string {
-    return `${PROTO_POD_GPC_FAMILY_NAME}-${maxObjects}o-${maxEntries}e-${merkleMaxDepth}md`;
+    return `${PROTO_POD_GPC_FAMILY_NAME}-${maxObjects}o-${maxEntries}e-${maxListEntries}l-${maxTuples}t-${tupleArity}ta-${merkleMaxDepth}md`;
   }
 
   private static curcuitDescForParams(
     maxObjects: number,
     maxEntries: number,
+    maxListEntries: number,
+    maxTuples: number,
+    tupleArity: number,
     merkleMaxDepth: number,
     cost: number
   ): ProPODGPCCircuitDesc {
@@ -330,11 +383,17 @@ export class ProtoPODGPC {
       name: ProtoPODGPC.circuitNameForParams(
         maxObjects,
         maxEntries,
+	maxListEntries,
+	maxTuples,
+	tupleArity,
         merkleMaxDepth
       ),
       cost,
       maxObjects,
       maxEntries,
+      maxListEntries,
+      maxTuples,
+      tupleArity,
       merkleMaxDepth
     };
   }
@@ -346,8 +405,8 @@ export class ProtoPODGPC {
    */
   public static CIRCUIT_FAMILY: ProPODGPCCircuitDesc[] = [
     // TODO(POD-P2): Pick convenient circuit sizes for MVP.
-    ProtoPODGPC.curcuitDescForParams(1, 1, 5, 9556),
-    ProtoPODGPC.curcuitDescForParams(1, 5, 8, 19223),
-    ProtoPODGPC.curcuitDescForParams(3, 10, 8, 45276)
+    ProtoPODGPC.curcuitDescForParams(1, 1, 10, 2, 2, 5, 9556),
+    ProtoPODGPC.curcuitDescForParams(1, 5, 10, 2, 3, 8, 19223),
+    ProtoPODGPC.curcuitDescForParams(3, 10, 10, 2, 2, 8, 45276)
   ];
 }

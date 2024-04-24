@@ -11,21 +11,26 @@ template ListMembershipModule(
     // Maximum number of valid values
     MAX_LIST_ENTRIES
 ) {
-    signal input valueHash; // Value hash to be checked.
+    // Value hash to be checked.
+    signal input valueHash; 
 
-    signal input list[MAX_LIST_ENTRIES]; // List of admissible value hashes. Assumed to have repetitions if the actual list length is smaller.
+    // List of admissible value hashes. Assumed to have repetitions if the actual list length is smaller.
+    signal input list[MAX_LIST_ENTRIES]; 
 
     signal output isMember;
 
     signal partialProduct[MAX_LIST_ENTRIES];
 
-    for(var i = 0; i < MAX_LIST_ENTRIES; i++) {
-	if(i == 0) {
+    for (var i = 0; i < MAX_LIST_ENTRIES; i++) {
+	if (i == 0) {
 	    partialProduct[i] <== valueHash - list[i];
 	} else {
 	    partialProduct[i] <== partialProduct[i-1] * (valueHash - list[i]);
 	}
     }
 
-    isMember <== IsZero()(partialProduct[MAX_LIST_ENTRIES - 1]);
+    if (MAX_LIST_ENTRIES == 0)
+	isMember <== 1;
+    else
+	isMember <== IsZero()(partialProduct[MAX_LIST_ENTRIES - 1]);
 }

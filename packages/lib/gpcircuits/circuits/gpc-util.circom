@@ -47,3 +47,39 @@ template InputSelector (N_INPUTS) {
     signal muxOut[1] <== Multiplexer(1, N_INPUTS)(muxIn, selectedIndex);
     signal output out <== muxOut[0];
 }
+
+/**
+ * Array appender. Useful for feeding a combination of arrays
+ * into `InputSelector` or `MaybeInputSelector`.
+ */
+template Append (M, N) {
+    signal input arr1[M];
+    signal input arr2[N];
+    signal output arr[M + N];
+
+    for (var i = 0; i < M; i++) {
+	arr[i] <== arr1[i];
+    }
+
+    for (var i = 0; i < N; i++) {
+	arr[M + i] <== arr2[i];
+    }
+}
+
+// TODO: Is this really the way to go?
+/**
+ * Input selector where `selectedIndex` is interpreted as an index iff it is
+ * not -1. If `selectedIndex` is -1, then this template outputs 0.
+ */
+template MaybeInputSelector (N) {
+    signal input inputs[N];
+    signal input selectedIndex;
+
+    // `delta` is the vector whose ith component is $delta_i^ind$ for i in [0,..., N-1].
+    signal (delta[N], success) <== Decoder(N)(selectedIndex);
+    
+    signal output out <== EscalarProduct(N)(inputs, delta);
+
+    // `selectedIndex` must have been in [0,...,N-1] or -1.
+    (1 - success)*(selectedIndex + 1) === 0;
+}

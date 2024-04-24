@@ -1,8 +1,6 @@
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-//import { poseidon2 } from 'poseidon-lite';
-import {poseidon2, poseidon3, poseidon4} from "poseidon-lite";
 import {
   CircuitSignal,
   TupleModuleInputNamesType,
@@ -14,27 +12,6 @@ import {
   circomkit,
 } from "./common";
 
-function tupleGenerator(
-  paramArity: number,
-  paramMaxValues: number,
-  paramMaxTuples: number,
-  valueHash: bigint[],
-  tupleIndices: number[][]
-): bigint[] {
-  if ((paramArity < 2) || (paramArity > 4))
-    throw new Error("Arity must lie between 2 and 4.");
-  
-  // Select the right hash function
-  let hash = [poseidon2, poseidon3, poseidon4][paramArity - 2];
-
-  return tupleIndices
-    .reduce((tupleHash, indexArray)
-      => tupleHash.concat(
-	[hash(indexArray
-	  .map(i => ((i < paramMaxValues) ? valueHash[i]
-	    : tupleHash[i - paramMaxValues]) ?? 0))]), []);
-}
-
 describe("tuple.TupleModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
   let circuit: WitnessTester<
@@ -42,7 +19,7 @@ describe("tuple.TupleModule should work", function () {
   TupleModuleOutputNamesType
   >;
 
-  const ARITY = 3;
+  const TUPLE_ARITY = 3;
   const MAX_VALUES = 10;
   const MAX_TUPLES = 1;
   
@@ -57,18 +34,18 @@ describe("tuple.TupleModule should work", function () {
 		6473385158056378321498166954089070167092286576993515546044886732291513707206n,
 		10988313713063071867809108687964057220633556390518851184712222931695463056828n,
 		12179220660789871085064982589191069349854593972663574521691268918938647150122n],
-    tupleIndices: [[0,3,5]]
+    tupleIndices: [[0n, 3n, 5n]]
   };
   
   const sampleOutput: TupleModuleOutputs = {
-    tupleHash: tupleGenerator(ARITY, MAX_VALUES, MAX_TUPLES, sampleInput.valueHash, sampleInput.tupleIndices)
+    tupleHashes: [15125314487994541926652962289334348955866307223539330915627677810216053745980n]
   };
 
   this.beforeAll(async () => {
     circuit = await circomkit.WitnessTester("TupleModule", {
       file: "tuple",
       template: "TupleModule",
-      params: [ARITY, MAX_VALUES, MAX_TUPLES]
+      params: [TUPLE_ARITY, MAX_VALUES, MAX_TUPLES]
     });
   });
 
