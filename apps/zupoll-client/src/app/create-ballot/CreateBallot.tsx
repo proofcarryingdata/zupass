@@ -1,3 +1,4 @@
+import ImportDialog from "@/components/ui/ImportDialog";
 import { LoadingPlaceholderCard } from "@/components/ui/LoadingPlaceholder";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
@@ -42,6 +43,7 @@ export function CreateBallot({
   );
   const [ballotFromUrl, setBallotFromUrl] = useState<BallotFromUrl>();
   const [pcdFromUrl, setPcdFromUrl] = useState("");
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const [useLastBallot, setUseLastBallot] = useState(false);
   const getDateString = (date: Date) => {
@@ -160,6 +162,18 @@ export function CreateBallot({
           Can only create polls in the browser, not Telegram
         </p>
       )}
+
+      <ImportDialog
+        show={importDialogOpen}
+        text={"Import Dialog XD"}
+        close={function (): void {
+          setImportDialogOpen(false);
+        }}
+        onImported={function (): void {
+          throw new Error("Function not implemented.");
+        }}
+        submitButtonText={""}
+      />
 
       <Card>
         <CardHeader>
@@ -416,9 +430,7 @@ export function CreateBallot({
           </div>
         </CardContent>
       </Card>
-
       <DividerWithText>Polls</DividerWithText>
-
       <div className="flex flex-col gap-4 mb-2">
         {polls.map((poll, i) => {
           return (
@@ -499,7 +511,6 @@ export function CreateBallot({
           );
         })}
       </div>
-
       {polls.length === 0 ? (
         <NewQuestionPlaceholder
           onClick={() => {
@@ -539,7 +550,6 @@ export function CreateBallot({
           </Button>
         </div>
       )}
-
       {loadingVoterGroupUrl || serverLoading ? (
         <></>
       ) : (
@@ -560,7 +570,7 @@ export function CreateBallot({
             className="w-full mt-2"
             variant="ghost"
             onClick={() => {
-              alert("importing csv");
+              setImportDialogOpen(true);
             }}
           >
             Import Questions
