@@ -6,7 +6,6 @@ import { startEmailTokenService } from "./services/emailTokenService";
 import { startFrogcryptoService } from "./services/frogcryptoService";
 import { startGenericIssuanceService } from "./services/generic-issuance/subservices/utils/startGenericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
-import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPagerDutyService } from "./services/pagerDutyService";
@@ -39,7 +38,6 @@ export async function startServices(
     rollbarService,
     discordService
   );
-  const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
@@ -111,7 +109,6 @@ export async function startServices(
     issuanceService,
     discordService,
     telegramService,
-    kudosbotService,
     frogcryptoService,
     poapService,
     persistentCacheService,
@@ -130,7 +127,6 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.zuzaluPretixSyncService?.stop();
   services.metricsService.stop();
   services.telegramService?.stop();
-  services.kudosbotService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
   services.zuconnectTripshaSyncService?.stop();

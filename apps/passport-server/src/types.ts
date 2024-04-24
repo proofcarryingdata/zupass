@@ -17,7 +17,6 @@ import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
 import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
 import { IssuanceService } from "./services/issuanceService";
-import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PagerDutyService } from "./services/pagerDutyService";
@@ -54,7 +53,6 @@ export interface GlobalServices {
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
-  kudosbotService: KudosbotService | null;
   frogcryptoService: FrogcryptoService | null;
   poapService: PoapService;
   persistentCacheService: PersistentCacheService;
@@ -105,7 +103,6 @@ export interface EnvironmentVariables {
   TELEGRAM_PRIVATE_CHAT_ID?: string;
   PASSPORT_CLIENT_URL?: string;
   ACCOUNT_RESET_RATE_LIMIT_DISABLED?: string;
-  TELEGRAM_KUDOSBOT_TOKEN?: string;
   TICKET_ISSUANCE_CUTOFF_DATE?: string;
   GENERIC_RATE_LIMIT_DISABLED?: string;
   GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY?: string;
