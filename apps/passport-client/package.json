@@ -14,6 +14,7 @@
   },
   "dependencies": {
     "@babel/runtime": "^7.24.0",
+    "@pcd/client-shared": "0.0.1",
     "@pcd/eddsa-frog-pcd": "0.3.0",
     "@pcd/eddsa-frog-pcd-ui": "0.2.0",
     "@pcd/eddsa-pcd": "0.6.0",

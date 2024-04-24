@@ -5,6 +5,7 @@ import {
   useColorMode
 } from "@chakra-ui/react";
 import { useMonaco } from "@monaco-editor/react";
+import { RollbarProvider } from "@pcd/client-shared";
 import { StytchProvider } from "@stytch/react";
 import { StytchUIClient } from "@stytch/vanilla-js";
 import theme from "monaco-themes/themes/GitHub Dark.json";
@@ -20,9 +21,9 @@ import { RouterProvider, createHashRouter } from "react-router-dom";
 import { GlobalStyle } from "./components/GlobalStyle";
 import { PodboxErrorBoundary } from "./components/PodboxErrorBoundary";
 import { RefreshSession } from "./components/RefreshSession";
-import { RollbarProvider } from "./components/RollbarProvider";
 import { IS_PROD } from "./constants";
 import { GIContext, GIContextState } from "./helpers/Context";
+import { appConfig } from "./helpers/appConfig";
 import { NotFound } from "./pages/404";
 import LoginPage from "./pages/LoginPage";
 import CreatePipelinePage from "./pages/create-pipeline/CreatePipelinePage";
@@ -145,7 +146,12 @@ function App(): ReactNode {
   return (
     <>
       <React.StrictMode>
-        <RollbarProvider>
+        <RollbarProvider
+          config={{
+            accessToken: appConfig.rollbarToken,
+            environmentName: appConfig.rollbarEnvName
+          }}
+        >
           <PodboxErrorBoundary>
             <ColorModeScript initialColorMode={THEME.config.initialColorMode} />
             <ChakraProvider theme={THEME}>
