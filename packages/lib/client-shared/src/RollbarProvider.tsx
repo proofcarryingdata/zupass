@@ -2,6 +2,8 @@ import { Provider } from "@rollbar/react";
 import React from "react";
 import { Configuration } from "rollbar";
 
+export { ErrorBoundary } from "@rollbar/react";
+
 export interface ClientRollbarConfig {
   accessToken?: string;
   environmentName?: string;
