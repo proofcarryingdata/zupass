@@ -1155,3 +1155,34 @@ export type GenericIssuanceValidSemaphoreGroupResponseValue = {
 };
 
 export type GenericIssuanceSemaphoreGroupRootResponseValue = string;
+
+/**
+ * Request Podbox tickets for offline checkin, to be used by an authorized
+ * checker. If the credential does not grant sufficient authority then the
+ * request will be denied.
+ */
+export interface PodboxGetOfflineTicketsRequest {
+  credential: Credential;
+}
+
+/**
+ * Data about a ticket and its check-in status, for offline sync.
+ */
+export interface PodboxOfflineTicket {
+  id: string;
+  attendeeEmail: string;
+  attendeeName: string;
+  eventName: string;
+  ticketName: string;
+  checkinTimestamp?: string;
+  checker: string | null;
+  is_consumed?: boolean;
+}
+
+/**
+ * Returned to a checker with permission to sync tickets for offline checkin
+ * for a given event.
+ */
+export interface PodboxGetOfflineTicketsResponseValue {
+  offlineTickets: PodboxOfflineTicket[];
+}
