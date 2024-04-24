@@ -133,7 +133,8 @@ export function useCreateBallot({
           message: "Server is down. Contact support@zupass.org."
         };
         onError(serverDownError);
-        removeQueryParameters(["ballot", "proof", "finished"]);
+        removeQueryParameters(["proof", "finished"]);
+        localStorage.removeItem("pending-ballot");
         setServerLoading(false);
         return;
       }
@@ -146,7 +147,8 @@ export function useCreateBallot({
           message: `Server Error: ${resErr}`
         };
         onError(err);
-        removeQueryParameters(["ballot", "proof", "finished"]);
+        removeQueryParameters(["proof", "finished"]);
+        localStorage.removeItem("pending-ballot");
         setServerLoading(false);
         return;
       }
@@ -287,13 +289,16 @@ export function useCreateBallot({
     localStorage.setItem("lastBallotSignalHashEnc", sigHashEnc);
     localStorage.setItem("lastBallotConfig", stableStringify(ballotConfig));
     localStorage.setItem("lastBallotPolls", stableStringify(polls));
-    const ballotUrl = `?ballot=${encodeURIComponent(
+    localStorage.setItem(
+      "pending-ballot",
       stableStringify({
         ballotConfig,
         ballotSignal,
         polls
       })
-    )}`;
+    );
+
+    const ballotUrl = `/`;
 
     openGroupMembershipPopup(
       ballotConfig.passportAppUrl,

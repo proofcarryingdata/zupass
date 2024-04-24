@@ -71,7 +71,7 @@ export function CreateBallot({
   useEffect(() => {
     // Use URLSearchParams to get the proof query parameter
     const proofString = query?.get("proof") as string;
-    const ballotString = query?.get("ballot") as string;
+    const ballotString = localStorage.getItem("pending-ballot"); // query?.get("ballot") as string;
     if (proofString && ballotString) {
       // Decode the URL-encoded string
       const decodedProofString = decodeURIComponent(proofString);
@@ -79,9 +79,7 @@ export function CreateBallot({
       const proofObject = JSON.parse(decodedProofString);
       const pcdStr = JSON.stringify(proofObject);
 
-      const ballot = JSON.parse(
-        decodeURIComponent(ballotString)
-      ) as BallotFromUrl;
+      const ballot = JSON.parse(ballotString) as BallotFromUrl;
       console.log(`[RECEIVED BALLOT]`, ballot);
       setPcdFromUrl(pcdStr);
       setBallotFromUrl(ballot);
