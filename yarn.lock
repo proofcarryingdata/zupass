@@ -5218,6 +5218,13 @@
   dependencies:
     tiny-invariant "^1.1.0"
 
+"@rollbar/react@^0.12.0-beta":
+  version "0.12.0-beta"
+  resolved "https://registry.yarnpkg.com/@rollbar/react/-/react-0.12.0-beta.tgz#b80dfab1535ece358a0e98a4f26aadee8b54edda"
+  integrity sha512-8udBX0lJwdBBq+O/jqDXpg/giHt8bo/Us1IlTkHEdCBO18Cjj7sxWJ80OPFxiPRNwZgZnhf2HbxQxvLN+4FeJA==
+  dependencies:
+    tiny-invariant "^1.1.0"
+
 "@rushstack/eslint-patch@^1.3.3":
   version "1.7.2"
   resolved "https://registry.yarnpkg.com/@rushstack/eslint-patch/-/eslint-patch-1.7.2.tgz#2d4260033e199b3032a08b41348ac10de21c47e9"
@@ -18359,6 +18366,21 @@ rollbar@^2.26.1, rollbar@^2.26.2:
   version "2.26.2"
   resolved "https://registry.yarnpkg.com/rollbar/-/rollbar-2.26.2.tgz#58627dce65233e7433facb6366fd6e8817f396d3"
   integrity sha512-7ASvrlal87ek2vhTmpu2LPvkdlcnala1qeMT2Ra76s0KjWkQ8d1fTl6dk7AqHx1Qa/puahg3tYw7EPB7wYx9RQ==
+  dependencies:
+    async "~3.2.3"
+    console-polyfill "0.3.0"
+    error-stack-parser "^2.0.4"
+    json-stringify-safe "~5.0.0"
+    lru-cache "~2.2.1"
+    request-ip "~3.3.0"
+    source-map "^0.5.7"
+  optionalDependencies:
+    decache "^3.0.5"
+
+rollbar@^2.26.4:
+  version "2.26.4"
+  resolved "https://registry.yarnpkg.com/rollbar/-/rollbar-2.26.4.tgz#05e47d3b1f52ab6da9f88710ec66371a76cdc3c9"
+  integrity sha512-JKmrj6riYm9ZPJisgxljgH4uCsvjMHDHXrinDF7aAFaP+eoF51HomVPtLcDTYLsrJ568aKVNLUhedFajONBwSg==
   dependencies:
     async "~3.2.3"
     console-polyfill "0.3.0"
