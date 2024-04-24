@@ -3,8 +3,8 @@ import React from "react";
 import { Configuration } from "rollbar";
 
 export interface ClientRollbarConfig {
-  accessToken: string;
-  environmentName: string;
+  accessToken?: string;
+  environmentName?: string;
 }
 
 export function RollbarProvider({

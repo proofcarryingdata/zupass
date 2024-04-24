@@ -111,7 +111,9 @@ export const APP_CONFIG = {
       process.env.NEXT_PUBLIC_DEBUG_TOOLS_ENABLED,
       "NEXT_PUBLIC_DEBUG_TOOLS_ENABLED",
       "false"
-    ) === "true"
+    ) === "true",
+  rollbarAccessToken: process.env.NEXT_ROLLBAR_ACCESS_TOKEN,
+  rollbarEnvName: process.env.NEXT_ROLLBAR_ENVIRONMENT_NAME
 };
 
 export function warnIfEnvMissing(
