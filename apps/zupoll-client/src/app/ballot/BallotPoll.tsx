@@ -30,6 +30,15 @@ export function getOptionLink(option: string): string | undefined {
   }
 }
 
+export function getOptionImage(option: string): string | undefined {
+  try {
+    const opt = JSON.parse(option) as ObjectOption;
+    return opt.imageUrl ?? undefined;
+  } catch (e) {
+    return undefined;
+  }
+}
+
 export function BallotPoll({
   canVote,
   poll,

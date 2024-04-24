@@ -28,6 +28,7 @@ export type Ballot = {
 export interface ObjectOption {
   text: string;
   externalLink: string;
+  imageUrl?: string;
 }
 
 /**

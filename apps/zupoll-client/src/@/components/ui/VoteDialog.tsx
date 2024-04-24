@@ -29,6 +29,10 @@ export default function VoteDialog({
     return getOptionLink(memoText);
   }, [memoText]);
 
+  const name = useMemo(() => {
+    return getOptionName(memoText);
+  }, [memoText]);
+
   return (
     <Transition.Root show={show} as={Fragment}>
       <HeadlessDialog as="div" className="relative z-10" onClose={close}>
@@ -62,25 +66,12 @@ export default function VoteDialog({
                       as="h3"
                       className="text-lg font-semibold leading-6 text-foreground"
                     >
-                      Vote
+                      {name ?? "Vote"}
                     </HeadlessDialog.Title>
-                    <div className="mt-2">
-                      <p className="text-md text-foreground">
-                        {getOptionName(memoText)}{" "}
-                        <input type="hidden" autoFocus={true} />
-                        {link ? (
-                          <>
-                            {" - "}
-                            <Link target="_blank" href={link}>
-                              more details
-                            </Link>
-                          </>
-                        ) : null}
-                      </p>
-                    </div>
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-6 flex flex-col gap-1">
+                  <input type="hidden" autoFocus={true} />
                   <Button
                     variant={"creative"}
                     className="w-full"
@@ -88,12 +79,22 @@ export default function VoteDialog({
                   >
                     {submitButtonText}
                   </Button>
+                  {link ? (
+                    <>
+                      <Link target="_blank" href={link} className="w-full">
+                        <Button variant="outline" className="w-full">
+                          More Details
+                        </Button>
+                      </Link>
+                    </>
+                  ) : null}
+
                   <Button
                     variant="outline"
                     className="w-full"
                     onClick={() => close()}
                   >
-                    Back
+                    Close
                   </Button>
                 </div>
               </HeadlessDialog.Panel>
