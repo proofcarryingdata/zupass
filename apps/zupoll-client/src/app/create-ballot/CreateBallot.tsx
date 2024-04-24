@@ -180,7 +180,6 @@ export function CreateBallot({
             }
           ]);
         }}
-        submitButtonText={"import"}
       />
 
       <Card>

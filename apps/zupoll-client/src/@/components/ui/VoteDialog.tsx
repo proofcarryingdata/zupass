@@ -1,5 +1,6 @@
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
+import { getOptionName } from "../../../app/ballot/BallotPoll";
 import { Button } from "./button";
 
 export default function VoteDialog({
@@ -51,7 +52,9 @@ export default function VoteDialog({
                       Vote
                     </HeadlessDialog.Title>
                     <div className="mt-2">
-                      <p className="text-md text-foreground">{text}</p>
+                      <p className="text-md text-foreground">
+                        {getOptionName(text)}
+                      </p>
                     </div>
                   </div>
                 </div>

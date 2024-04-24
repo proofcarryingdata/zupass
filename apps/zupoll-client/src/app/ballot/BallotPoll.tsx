@@ -5,11 +5,21 @@ import { cn } from "@/lib/utils";
 import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
 import { useMemo, useState } from "react";
 import styled from "styled-components";
+import { ObjectOption } from "../../api/prismaTypes";
 import { PollWithCounts } from "../../api/requestTypes";
 
 type SearchItem = {
   value: string;
 };
+
+export function getOptionName(option: string): string {
+  try {
+    const opt = JSON.parse(option) as ObjectOption;
+    return opt.text ?? option;
+  } catch (e) {
+    return option;
+  }
+}
 
 export function BallotPoll({
   canVote,
@@ -134,7 +144,7 @@ export function BallotPoll({
                 {getVoteDisplay(poll.votes[idx], totalVotes)}
               </PollResult>
             )}
-            <OptionString>{opt}</OptionString>
+            <OptionString>{getOptionName(opt)}</OptionString>
           </div>
         ))}
       </div>

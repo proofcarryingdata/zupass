@@ -2,6 +2,7 @@ import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
 import { getErrorMessage } from "@pcd/util";
 import { parse } from "csv-parse/sync";
 import { Fragment, useCallback, useEffect, useState } from "react";
+import { ObjectOption } from "../../../api/prismaTypes";
 import { Button } from "./button";
 import { Input } from "./input";
 
@@ -19,7 +20,14 @@ async function parseInput(csv: string): Promise<ImportedQuestions | undefined> {
     columns: true,
     skip_empty_lines: true
   }) as DevfolioRow[];
-  return { questions: records.map((r) => `[${r["Project Name"]}](${r.URL})`) };
+  return {
+    questions: records.map((r) =>
+      JSON.stringify({
+        text: r["Project Name"],
+        externalLink: r.URL
+      } satisfies ObjectOption)
+    )
+  };
 }
 
 export default function ImportDialog({
