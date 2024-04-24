@@ -13,6 +13,7 @@ export interface ImportedQuestions {
 interface DevfolioRow {
   "Project Name": string;
   URL: string;
+  Logo: string;
 }
 
 async function parseInput(csv: string): Promise<ImportedQuestions | undefined> {
@@ -24,7 +25,8 @@ async function parseInput(csv: string): Promise<ImportedQuestions | undefined> {
     questions: records.map((r) =>
       JSON.stringify({
         text: r["Project Name"],
-        externalLink: r.URL
+        externalLink: r.URL,
+        imageUrl: r.Logo
       } satisfies ObjectOption)
     )
   };

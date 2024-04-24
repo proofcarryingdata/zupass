@@ -259,7 +259,7 @@ export function BallotScreen({
                 variant={"creative"}
                 onClick={createBallotVotePCD}
                 className="w-full"
-                disabled={pollToVote.size === 0}
+                disabled={pollToVote.size !== polls.length}
               >
                 Submit Votes
               </Button>

@@ -1,7 +1,12 @@
+/* eslint-disable @next/next/no-img-element */
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
 import Link from "next/link";
 import { Fragment, useEffect, useMemo, useState } from "react";
-import { getOptionLink, getOptionName } from "../../../app/ballot/BallotPoll";
+import {
+  getOptionImage,
+  getOptionLink,
+  getOptionName
+} from "../../../app/ballot/BallotPoll";
 import { Button } from "./button";
 
 export default function VoteDialog({
@@ -31,6 +36,10 @@ export default function VoteDialog({
 
   const name = useMemo(() => {
     return getOptionName(memoText);
+  }, [memoText]);
+
+  const imageUrl = useMemo(() => {
+    return getOptionImage(memoText);
   }, [memoText]);
 
   return (
@@ -70,7 +79,16 @@ export default function VoteDialog({
                     </HeadlessDialog.Title>
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-6 flex flex-col gap-1">
+                {imageUrl && (
+                  <div className="mt-2">
+                    <img
+                      src={imageUrl}
+                      className="rounded overflow-hidden"
+                      alt="project image"
+                    />
+                  </div>
+                )}
+                <div className="mt-2 sm:mt-6 flex flex-col gap-1">
                   <input type="hidden" autoFocus={true} />
                   <Button
                     variant={"creative"}
@@ -80,13 +98,11 @@ export default function VoteDialog({
                     {submitButtonText}
                   </Button>
                   {link ? (
-                    <>
-                      <Link target="_blank" href={link} className="w-full">
-                        <Button variant="outline" className="w-full">
-                          More Details
-                        </Button>
-                      </Link>
-                    </>
+                    <Link target="_blank" href={link} className="w-full">
+                      <Button variant="outline" className="w-full">
+                        More Details
+                      </Button>
+                    </Link>
                   ) : null}
 
                   <Button
