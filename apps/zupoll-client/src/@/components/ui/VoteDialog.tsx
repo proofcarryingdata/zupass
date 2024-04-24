@@ -1,6 +1,6 @@
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
 import Link from "next/link";
-import { Fragment, useMemo } from "react";
+import { Fragment, useEffect, useMemo, useState } from "react";
 import { getOptionLink, getOptionName } from "../../../app/ballot/BallotPoll";
 import { Button } from "./button";
 
@@ -11,15 +11,23 @@ export default function VoteDialog({
   onVoted,
   submitButtonText
 }: {
-  text: string;
+  text: string | undefined;
   show: boolean;
   close: () => void;
   onVoted: () => void;
   submitButtonText: string;
 }) {
-  const link = useMemo(() => {
-    return getOptionLink(text);
+  const [memoText, setMemoText] = useState<string>(text ?? "");
+
+  useEffect(() => {
+    if (text !== undefined) {
+      setMemoText(text);
+    }
   }, [text]);
+
+  const link = useMemo(() => {
+    return getOptionLink(memoText);
+  }, [memoText]);
 
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -58,7 +66,8 @@ export default function VoteDialog({
                     </HeadlessDialog.Title>
                     <div className="mt-2">
                       <p className="text-md text-foreground">
-                        {getOptionName(text)}
+                        {getOptionName(memoText)}{" "}
+                        <input type="hidden" autoFocus={true} />
                         {link ? (
                           <>
                             {" - "}

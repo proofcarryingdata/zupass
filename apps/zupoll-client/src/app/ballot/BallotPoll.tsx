@@ -89,14 +89,19 @@ export function BallotPoll({
     <div>
       <VoteDialog
         show={canVote && showingOptionIdx !== undefined}
-        text={poll.options[showingOptionIdx ?? 0]}
+        text={
+          showingOptionIdx === undefined
+            ? undefined
+            : poll.options[showingOptionIdx]
+        }
         close={() => setShowingOptionIdx(undefined)}
         submitButtonText={singlePoll ? "Submit Vote" : "Choose"}
         onVoted={() => {
           onVoted(poll.id, showingOptionIdx ?? 0);
-          setShowingOptionIdx(undefined);
-          if (!singlePoll) {
+          if (singlePoll) {
             submitVotes();
+          } else {
+            setShowingOptionIdx(undefined);
           }
         }}
       />

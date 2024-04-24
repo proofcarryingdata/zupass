@@ -32,12 +32,10 @@ async function parseInput(csv: string): Promise<ImportedQuestions | undefined> {
 
 export default function ImportDialog({
   show,
-  text,
   close,
   onImported
 }: {
   show: boolean;
-  text: string;
   close: () => void;
   onImported: (imported: ImportedQuestions) => void;
 }) {

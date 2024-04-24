@@ -163,16 +163,18 @@ export function CreateBallot({
 
       <ImportDialog
         show={importDialogOpen}
-        text={"Import Dialog XD"}
         close={function (): void {
           setImportDialogOpen(false);
         }}
         onImported={(imported: ImportedQuestions) => {
           setImportDialogOpen(false);
+          setBallotTitle("Hackathon Voting");
+          setBallotDescription("Vote on your favorite hackathon project!");
+          setBallotExpiry(new Date(Date.now() + 60 * 1000 * 60 * 24));
           setPolls([
             {
               ballotURL: 0,
-              body: "asdf",
+              body: "Choose your favorite project below.",
               createdAt: new Date(),
               expiry: new Date(Date.now() + 60 * 1000 * 60 * 24),
               id: "0",
