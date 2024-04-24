@@ -1,6 +1,7 @@
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
-import { getOptionName } from "../../../app/ballot/BallotPoll";
+import Link from "next/link";
+import { Fragment, useMemo } from "react";
+import { getOptionLink, getOptionName } from "../../../app/ballot/BallotPoll";
 import { Button } from "./button";
 
 export default function VoteDialog({
@@ -16,6 +17,10 @@ export default function VoteDialog({
   onVoted: () => void;
   submitButtonText: string;
 }) {
+  const link = useMemo(() => {
+    return getOptionLink(text);
+  }, [text]);
+
   return (
     <Transition.Root show={show} as={Fragment}>
       <HeadlessDialog as="div" className="relative z-10" onClose={close}>
@@ -54,6 +59,14 @@ export default function VoteDialog({
                     <div className="mt-2">
                       <p className="text-md text-foreground">
                         {getOptionName(text)}
+                        {link ? (
+                          <>
+                            {" - "}
+                            <Link target="_blank" href={link}>
+                              more details
+                            </Link>
+                          </>
+                        ) : null}
                       </p>
                     </div>
                   </div>

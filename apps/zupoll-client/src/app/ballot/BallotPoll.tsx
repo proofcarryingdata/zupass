@@ -21,6 +21,15 @@ export function getOptionName(option: string): string {
   }
 }
 
+export function getOptionLink(option: string): string | undefined {
+  try {
+    const opt = JSON.parse(option) as ObjectOption;
+    return opt.externalLink ?? undefined;
+  } catch (e) {
+    return undefined;
+  }
+}
+
 export function BallotPoll({
   canVote,
   poll,
