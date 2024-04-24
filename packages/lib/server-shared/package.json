@@ -1,7 +1,7 @@
 {
   "name": "@pcd/server-shared",
   "private": true,
-  "version": "0.0.0",
+  "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -26,10 +26,13 @@
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
-  "dependencies": {},
+  "dependencies": {
+    "rollbar": "^2.26.4"
+  },
   "devDependencies": {
     "@pcd/eslint-config-custom": "0.11.0",
     "@pcd/tsconfig": "0.11.0",
+    "@pcd/util": "0.5.0",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
     "eslint": "^8.57.0",
