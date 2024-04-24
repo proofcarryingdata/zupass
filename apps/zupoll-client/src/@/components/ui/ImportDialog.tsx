@@ -1,6 +1,7 @@
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
 import { Fragment } from "react";
 import { Button } from "./button";
+import { Input } from "./input";
 
 export interface ImportedQuestions {
   questions: string[];
@@ -10,14 +11,12 @@ export default function ImportDialog({
   show,
   text,
   close,
-  onImported,
-  submitButtonText
+  onImported
 }: {
   show: boolean;
   text: string;
   close: () => void;
   onImported: (imported: ImportedQuestions) => void;
-  submitButtonText: string;
 }) {
   return (
     <Transition.Root show={show} as={Fragment}>
@@ -52,24 +51,31 @@ export default function ImportDialog({
                       as="h3"
                       className="text-lg font-semibold leading-6 text-foreground"
                     >
-                      Vote
+                      Import Questions
                     </HeadlessDialog.Title>
                     <div className="mt-2">
-                      <p className="text-md text-foreground">{text}</p>
+                      <p className="text-md text-foreground">
+                        Import questions from a CSV file
+                      </p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-6 flex flex-col gap-1">
+                  <Input
+                    // className="block w-full mb-5 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
+                    id="small_size"
+                    type="file"
+                  />
                   <Button
                     variant={"creative"}
                     className="w-full"
                     onClick={() => {
                       onImported({
-                        questions: ["XD"]
+                        questions: ["XD", "LMAO"]
                       });
                     }}
                   >
-                    {submitButtonText}
+                    Import
                   </Button>
                   <Button
                     variant="outline"

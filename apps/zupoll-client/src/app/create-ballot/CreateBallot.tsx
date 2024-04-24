@@ -1,4 +1,4 @@
-import ImportDialog from "@/components/ui/ImportDialog";
+import ImportDialog, { ImportedQuestions } from "@/components/ui/ImportDialog";
 import { LoadingPlaceholderCard } from "@/components/ui/LoadingPlaceholder";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
@@ -169,10 +169,20 @@ export function CreateBallot({
         close={function (): void {
           setImportDialogOpen(false);
         }}
-        onImported={function (): void {
-          throw new Error("Function not implemented.");
+        onImported={(imported: ImportedQuestions) => {
+          setImportDialogOpen(false);
+          setPolls([
+            {
+              ballotURL: 0,
+              body: "asdf",
+              createdAt: new Date(),
+              expiry: new Date(Date.now() + 60 * 1000 * 60 * 24),
+              id: "0",
+              options: imported.questions.map((q) => q)
+            }
+          ]);
         }}
-        submitButtonText={""}
+        submitButtonText={"import"}
       />
 
       <Card>
