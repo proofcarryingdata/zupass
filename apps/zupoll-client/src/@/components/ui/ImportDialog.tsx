@@ -61,11 +61,7 @@ export default function ImportDialog({
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-6 flex flex-col gap-1">
-                  <Input
-                    // className="block w-full mb-5 text-xs text-gray-900 border border-gray-300 rounded-lg cursor-pointer bg-gray-50 dark:text-gray-400 focus:outline-none dark:bg-gray-700 dark:border-gray-600 dark:placeholder-gray-400"
-                    id="small_size"
-                    type="file"
-                  />
+                  <Input accept=".csv" id="small_size" type="file" />
                   <Button
                     variant={"creative"}
                     className="w-full"
