@@ -13,12 +13,8 @@ export default function ErrorDialog({
 }) {
   const cancelButtonRef = useRef(null);
 
-  if (!error) {
-    return null;
-  }
-
   return (
-    <Transition.Root show={true} as={Fragment}>
+    <Transition.Root show={!!error} as={Fragment}>
       <Dialog
         as="div"
         className="relative z-10"
@@ -65,7 +61,7 @@ export default function ErrorDialog({
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-sm text-foreground/90">
-                        {error.message}
+                        {error?.message}
                       </p>
                     </div>
                   </div>
