@@ -4,17 +4,19 @@ import { Button } from "./button";
 
 export default function VoteDialog({
   text,
+  show,
   close,
   onVoted,
   submitButtonText
 }: {
   text: string;
+  show: boolean;
   close: () => void;
   onVoted: () => void;
   submitButtonText: string;
 }) {
   return (
-    <Transition.Root show={true} as={Fragment}>
+    <Transition.Root show={show} as={Fragment}>
       <HeadlessDialog as="div" className="relative z-10" onClose={close}>
         <Transition.Child
           as={Fragment}

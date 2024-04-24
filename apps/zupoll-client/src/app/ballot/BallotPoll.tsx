@@ -68,20 +68,19 @@ export function BallotPoll({
 
   return (
     <div>
-      {canVote && showingOptionIdx !== undefined && (
-        <VoteDialog
-          text={poll.options[showingOptionIdx]}
-          close={() => setShowingOptionIdx(undefined)}
-          submitButtonText={singlePoll ? "Submit Vote" : "Choose"}
-          onVoted={() => {
-            onVoted(poll.id, showingOptionIdx);
-            setShowingOptionIdx(undefined);
-            if (!singlePoll) {
-              submitVotes();
-            }
-          }}
-        />
-      )}
+      <VoteDialog
+        show={canVote && showingOptionIdx !== undefined}
+        text={poll.options[showingOptionIdx ?? 0]}
+        close={() => setShowingOptionIdx(undefined)}
+        submitButtonText={singlePoll ? "Submit Vote" : "Choose"}
+        onVoted={() => {
+          onVoted(poll.id, showingOptionIdx ?? 0);
+          setShowingOptionIdx(undefined);
+          if (!singlePoll) {
+            submitVotes();
+          }
+        }}
+      />
       <PollHeader>{poll.body}</PollHeader>
       {thisIsHackathonView && (
         <Input
