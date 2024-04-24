@@ -1,10 +1,15 @@
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import { getErrorMessage } from "@pcd/util";
+import { Fragment, useCallback, useEffect, useState } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
 
 export interface ImportedQuestions {
   questions: string[];
+}
+
+async function parseInput(csv: string): Promise<ImportedQuestions | undefined> {
+  return { questions: ["asdf 1", "asdf 2"] };
 }
 
 export default function ImportDialog({
@@ -18,6 +23,46 @@ export default function ImportDialog({
   close: () => void;
   onImported: (imported: ImportedQuestions) => void;
 }) {
+  const [fileInput, setFileInput] = useState<HTMLInputElement>();
+  const [csvFileValue, setCsvFileValue] = useState<string>();
+  const [parsedQuestions, setParsedQuestions] = useState<ImportedQuestions>();
+
+  useEffect(() => {
+    if (csvFileValue) {
+      parseInput(csvFileValue)
+        .then((result) => {
+          setParsedQuestions(result);
+        })
+        .catch((e) => {
+          alert("failed to parse csv file: s" + getErrorMessage(e));
+        });
+    }
+  }, [csvFileValue]);
+
+  const onInputChange = useCallback(() => {
+    const file = fileInput?.files?.[0];
+
+    if (!file) {
+      return;
+    }
+
+    const reader = new FileReader();
+
+    reader.addEventListener("load", (ev) => {
+      if (typeof reader.result === "string") {
+        setCsvFileValue(reader.result);
+      } else {
+        alert("failed to read csv file - couldn't read as a string");
+      }
+    });
+
+    reader.addEventListener("error", (e) => {
+      alert("failed to read csv file - " + getErrorMessage(e));
+    });
+
+    reader.readAsText(file);
+  }, [fileInput]);
+
   return (
     <Transition.Root show={show} as={Fragment}>
       <HeadlessDialog as="div" className="relative z-10" onClose={close}>
@@ -61,14 +106,20 @@ export default function ImportDialog({
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-6 flex flex-col gap-1">
-                  <Input accept=".csv" id="small_size" type="file" />
+                  <Input
+                    ref={(instance) => setFileInput(instance ?? undefined)}
+                    accept=".csv"
+                    type="file"
+                    onChange={onInputChange}
+                  />
                   <Button
                     variant={"creative"}
                     className="w-full"
+                    disabled={!parsedQuestions}
                     onClick={() => {
-                      onImported({
-                        questions: ["XD", "LMAO"]
-                      });
+                      if (parsedQuestions) {
+                        onImported(parsedQuestions);
+                      }
                     }}
                   >
                     Import
