@@ -1,4 +1,4 @@
-# @pcd/gpcircuits
+# @pcd/pod-ticket-pcd
 
 ## 0.1.0
 
@@ -9,10 +9,7 @@
 ### Patch Changes
 
 - Updated dependencies
+  - @pcd/pcd-types@0.11.0
   - @pcd/pod@0.1.0
-
-## 0.0.1
-
-### Patch Changes
-
-- Initial changeset.
+  - @pcd/util@0.5.0
+  - @pcd/pod-pcd@0.1.0
