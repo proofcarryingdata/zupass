@@ -147,7 +147,8 @@ export function useBallotVoting({
       submitVote(request);
       setVoteFromUrl(undefined);
       setPcdFromUrl("");
-      removeQueryParameters(["vote", "proof", "finished"]);
+      removeQueryParameters(["proof", "finished"]);
+      localStorage.removeItem("pending-vote");
     } else {
       if (pcdState.current !== PCDState.RECEIVED_PCDSTR) return;
       pcdState.current = PCDState.DEFAULT;
@@ -226,6 +227,14 @@ export function useBallotVoting({
 
     const polltoVoteList = [...pollToVote];
 
+    localStorage.setItem(
+      "pending-vote",
+      stableStringify({
+        pollToVoteJSON: polltoVoteList,
+        polls
+      })
+    );
+
     openGroupMembershipPopup(
       loginState.config.passportAppUrl,
       window.location.origin + "/popup",
@@ -234,15 +243,7 @@ export function useBallotVoting({
       sigHashEnc,
       externalNullifier,
       // We know that ?ballotId=1 is the first query param
-      returnUrl
-        ? returnUrl +
-            `&vote=${window.encodeURIComponent(
-              stableStringify({
-                pollToVoteJSON: polltoVoteList,
-                polls
-              })
-            )}`
-        : undefined
+      returnUrl ? returnUrl : undefined
     );
   }, [
     loginState,

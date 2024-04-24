@@ -141,7 +141,7 @@ export function BallotScreen({
     const url = new URL(window.location.href);
     // Use URLSearchParams to get the proof query parameter
     const proofString = url.searchParams.get("proof");
-    const voteString = url.searchParams.get("vote");
+    const voteString = localStorage.getItem("pending-vote");
     if (proofString && voteString) {
       const voteStr = JSON.parse(voteString) as {
         polls: PollWithCounts[];
