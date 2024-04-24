@@ -1,5 +1,53 @@
 # passport-client
 
+## 0.0.27
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.5.0
+  - @pcd/passport-crypto@0.11.0
+  - @pcd/passport-interface@0.11.0
+  - @pcd/passport-ui@0.11.0
+  - @pcd/pcd-collection@0.11.0
+  - @pcd/pcd-types@0.11.0
+  - @pcd/pod@0.1.0
+  - @pcd/util@0.5.0
+  - @pcd/eddsa-frog-pcd@0.3.0
+  - @pcd/eddsa-pcd@0.6.0
+  - @pcd/eddsa-ticket-pcd@0.6.0
+  - @pcd/email-pcd@0.6.0
+  - @pcd/ethereum-ownership-pcd@0.11.0
+  - @pcd/halo-nonce-pcd@0.7.0
+  - @pcd/message-pcd@0.1.0
+  - @pcd/pod-pcd@0.1.0
+  - @pcd/pod-ticket-pcd@0.1.0
+  - @pcd/rsa-image-pcd@0.5.0
+  - @pcd/rsa-pcd@0.6.0
+  - @pcd/rsa-ticket-pcd@0.6.0
+  - @pcd/semaphore-group-pcd@0.11.0
+  - @pcd/semaphore-identity-pcd@0.11.0
+  - @pcd/semaphore-signature-pcd@0.11.0
+  - @pcd/zk-eddsa-event-ticket-pcd@0.5.0
+  - @pcd/zk-eddsa-frog-pcd@0.3.0
+  - @pcd/eddsa-frog-pcd-ui@0.2.0
+  - @pcd/eddsa-pcd-ui@0.2.0
+  - @pcd/eddsa-ticket-pcd-ui@0.2.0
+  - @pcd/email-pcd-ui@0.2.0
+  - @pcd/ethereum-ownership-pcd-ui@0.2.0
+  - @pcd/halo-nonce-pcd-ui@0.2.0
+  - @pcd/message-pcd-ui@0.1.0
+  - @pcd/pod-pcd-ui@0.1.0
+  - @pcd/pod-ticket-pcd-ui@0.1.0
+  - @pcd/rsa-image-pcd-ui@0.2.0
+  - @pcd/rsa-pcd-ui@0.2.0
+  - @pcd/rsa-ticket-pcd-ui@0.2.0
+  - @pcd/semaphore-group-pcd-ui@0.2.0
+  - @pcd/semaphore-identity-pcd-ui@0.2.0
+  - @pcd/semaphore-signature-pcd-ui@0.2.0
+  - @pcd/zk-eddsa-event-ticket-pcd-ui@0.2.0
+  - @pcd/zk-eddsa-frog-pcd-ui@0.2.0
+
 ## 0.0.26
 
 ### Patch Changes

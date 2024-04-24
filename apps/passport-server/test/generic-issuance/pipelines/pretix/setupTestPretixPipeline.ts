@@ -174,7 +174,8 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
         }
       ],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
-      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
+      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl,
+      enablePODTickets: true
     },
     type: PipelineType.Pretix
   };

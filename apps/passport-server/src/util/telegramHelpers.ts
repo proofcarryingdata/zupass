@@ -79,11 +79,6 @@ export interface SessionData {
   lastMessageId?: number;
   selectedChat?: TopicChat;
   chatToJoin?: ChatIDWithChat<ChatIDWithEventsAndMembership>;
-  kudosData?: {
-    senderSemaphoreId: string;
-    recipientSemaphoreId: string;
-    recipientUsername: string;
-  };
   topicToForwardTo?: ChatIDWithChat<TelegramTopicWithFwdInfo>;
 }
 

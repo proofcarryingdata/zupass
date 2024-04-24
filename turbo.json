@@ -109,6 +109,7 @@
     "PAGER_DUTY_SERVICE_ID",
     "NEXT_PUBLIC_PASSPORT_CLIENT_URL",
     "NEXT_PUBLIC_PASSPORT_SERVER_URL",
+    "NODE_OPTIONS",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
@@ -209,6 +210,7 @@
     "SCANDIT_LICENSE_KEY",
     "MULTI_CHOICE_SCAN_ENABLED",
     "IRON_SESSION_PASSWORD",
+    "SHOW_POD_TICKET_PCDS",
     "//// add env vars above this line ////"
   ]
 }

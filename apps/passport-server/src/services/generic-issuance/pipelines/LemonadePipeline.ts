@@ -2,8 +2,10 @@ import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName,
   ITicketData,
   TicketCategory,
+  isEdDSATicketPCD,
   linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDClaim } from "@pcd/email-pcd";
@@ -32,9 +34,15 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import {
+  PODTicketPCD,
+  PODTicketPCDPackage,
+  PODTicketPCDTypeName
+} from "@pcd/pod-ticket-pcd";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
+import stable_stringify from "fast-json-stable-stringify";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import urljoin from "url-join";
@@ -758,7 +766,9 @@ export class LemonadePipeline implements BasePipeline {
 
     // Turn ticket data into PCDs
     const tickets = await Promise.all(
-      ticketDatas.map((t) => this.getOrGenerateTicket(t))
+      ticketDatas.map((t) =>
+        this.getOrGenerateTicket<EdDSATicketPCD>(t, EdDSATicketPCDTypeName)
+      )
     );
 
     return tickets;
@@ -813,12 +823,30 @@ export class LemonadePipeline implements BasePipeline {
         });
       }
 
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      if (this.definition.options.enablePODTickets) {
+        const podTickets = await Promise.all(
+          tickets.map((ticket) => {
+            return this.getOrGenerateTicket<PODTicketPCD>(
+              ticket.claim.ticket,
+              PODTicketPCDTypeName
+            );
+          })
+        );
+        ticketPCDs.push(
+          ...(await Promise.all(
+            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+          ))
+        );
+      }
+
       ticketActions.push({
         type: PCDActionType.ReplaceInFolder,
         folder: this.definition.options.feedOptions.feedFolder,
-        pcds: await Promise.all(
-          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-        )
+        pcds: ticketPCDs
       });
 
       const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
@@ -864,15 +892,19 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
-  private async getOrGenerateTicket(
-    ticketData: ITicketData
-  ): Promise<EdDSATicketPCD> {
+  private async getOrGenerateTicket<T extends EdDSATicketPCD | PODTicketPCD>(
+    ticketData: ITicketData,
+    ticketPCDType: T["type"]
+  ): Promise<T> {
     return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
       span?.setAttribute("ticket_id", ticketData.ticketId);
       span?.setAttribute("ticket_email", ticketData.attendeeEmail);
       span?.setAttribute("ticket_name", ticketData.attendeeName);
 
-      const cachedTicket = await this.getCachedTicket(ticketData);
+      const cachedTicket = await this.getCachedTicket<T>(
+        ticketData,
+        ticketPCDType
+      );
 
       if (cachedTicket) {
         span?.setAttribute("from_cache", true);
@@ -883,10 +915,14 @@ export class LemonadePipeline implements BasePipeline {
         `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
 
-      const generatedTicket = await this.ticketDataToTicketPCD(
-        ticketData,
-        this.eddsaPrivateKey
-      );
+      const generatedTicket: T = (
+        ticketPCDType === EdDSATicketPCDTypeName
+          ? await this.ticketDataToTicketPCD(ticketData, this.eddsaPrivateKey)
+          : await this.ticketDataToPODTicketPCD(
+              ticketData,
+              this.eddsaPrivateKey
+            )
+      ) as T;
 
       try {
         this.cacheTicket(generatedTicket);
@@ -902,6 +938,7 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   private static async getTicketCacheKey(
+    ticketPCDType: string,
     ticketData: ITicketData,
     eddsaPrivateKey: string,
     pipelineId: string
@@ -913,25 +950,35 @@ export class LemonadePipeline implements BasePipeline {
     // ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
-      JSON.stringify(ticketCopy) + eddsaPrivateKey + pipelineId
+      stable_stringify(ticketCopy) +
+        eddsaPrivateKey +
+        pipelineId +
+        ticketPCDType
     );
     return hash;
   }
 
-  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+  private async cacheTicket(
+    ticket: EdDSATicketPCD | PODTicketPCD
+  ): Promise<void> {
     const key = await LemonadePipeline.getTicketCacheKey(
+      ticket.type,
       ticket.claim.ticket,
       this.eddsaPrivateKey,
       this.id
     );
-    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    const serialized = isEdDSATicketPCD(ticket)
+      ? await EdDSATicketPCDPackage.serialize(ticket)
+      : await PODTicketPCDPackage.serialize(ticket);
     this.cacheService.setValue(key, JSON.stringify(serialized));
   }
 
-  private async getCachedTicket(
-    ticketData: ITicketData
-  ): Promise<EdDSATicketPCD | undefined> {
+  private async getCachedTicket<T extends EdDSATicketPCD | PODTicketPCD>(
+    ticketData: ITicketData,
+    ticketPCDType: T["type"]
+  ): Promise<T | undefined> {
     const key = await LemonadePipeline.getTicketCacheKey(
+      ticketPCDType,
       ticketData,
       this.eddsaPrivateKey,
       this.id
@@ -949,9 +996,11 @@ export class LemonadePipeline implements BasePipeline {
         `${LOG_TAG} cache hit for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
       const parsedTicket = JSON.parse(serializedTicket.cache_value);
-      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-        parsedTicket.pcd
-      );
+      const deserializedTicket = (
+        ticketPCDType === EdDSATicketPCDTypeName
+          ? await EdDSATicketPCDPackage.deserialize(parsedTicket.pcd)
+          : await PODTicketPCDPackage.deserialize(parsedTicket.pcd)
+      ) as T;
       return deserializedTicket;
     } catch (e) {
       logger(
@@ -971,6 +1020,32 @@ export class LemonadePipeline implements BasePipeline {
     );
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: stableId,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    return ticketPCD;
+  }
+
+  private async ticketDataToPODTicketPCD(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
+  ): Promise<PODTicketPCD> {
+    const stableId = await getHash(
+      `issued-pod-ticket-${this.id}-${ticketData.ticketId}`
+    );
+
+    const ticketPCD = await PODTicketPCDPackage.prove({
       ticket: {
         value: ticketData,
         argumentType: ArgumentTypeName.Object

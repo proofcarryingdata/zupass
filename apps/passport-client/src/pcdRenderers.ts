@@ -15,6 +15,8 @@ import { MessagePCDUI } from "@pcd/message-pcd-ui";
 import { PCD, PCDUI } from "@pcd/pcd-types";
 import { PODPCDTypeName } from "@pcd/pod-pcd";
 import { PODPCDUI } from "@pcd/pod-pcd-ui";
+import { PODTicketPCDTypeName } from "@pcd/pod-ticket-pcd";
+import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
 import { RSAImagePCDTypeName } from "@pcd/rsa-image-pcd";
 import { RSAImagePCDUI } from "@pcd/rsa-image-pcd-ui";
 import { RSAPCDTypeName } from "@pcd/rsa-pcd";
@@ -46,7 +48,8 @@ const renderablePCDs = [
   ZKEdDSAEventTicketPCDTypeName,
   RSAImagePCDTypeName,
   MessagePCDTypeName,
-  PODPCDTypeName
+  PODPCDTypeName,
+  PODTicketPCDTypeName
 ] as const;
 
 export type RenderablePCDType = (typeof renderablePCDs)[number];
@@ -68,5 +71,6 @@ export const pcdRenderers: {
   [ZKEdDSAEventTicketPCDTypeName]: ZKEdDSAEventTicketPCDUI,
   [RSAImagePCDTypeName]: RSAImagePCDUI,
   [MessagePCDTypeName]: MessagePCDUI,
-  [PODPCDTypeName]: PODPCDUI
+  [PODPCDTypeName]: PODPCDUI,
+  [PODTicketPCDTypeName]: PODTicketPCDUI
 };

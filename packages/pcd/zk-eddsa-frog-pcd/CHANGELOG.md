@@ -1,5 +1,21 @@
 # @pcd/zk-eddsa-frog-pcd
 
+## 0.3.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.11.0
+  - @pcd/util@0.5.0
+  - @pcd/eddsa-frog-pcd@0.3.0
+  - @pcd/eddsa-pcd@0.6.0
+  - @pcd/semaphore-identity-pcd@0.11.0
+  - @pcd/semaphore-signature-pcd@0.11.0
+
 ## 0.2.0
 
 ### Minor Changes

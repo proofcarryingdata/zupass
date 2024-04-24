@@ -1,4 +1,8 @@
-import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import {
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName
+} from "@pcd/eddsa-ticket-pcd";
 import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
 import {
   Credential,
@@ -18,6 +22,11 @@ import {
   expectIsReplaceInFolderAction
 } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import {
+  PODTicketPCD,
+  PODTicketPCDPackage,
+  PODTicketPCDTypeName
+} from "@pcd/pod-ticket-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
@@ -102,13 +111,21 @@ export async function requestCheckInPipelineTicket(
 export function getTicketsFromFeedResponse(
   expectedFolder: string,
   result: PollFeedResult
-): Promise<EdDSATicketPCD[]> {
+): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   expectTrue(result.success);
   const secondAction = result.value.actions[1];
   expectIsReplaceInFolderAction(secondAction);
   expect(secondAction.folder).to.eq(expectedFolder);
   return Promise.all(
-    secondAction.pcds.map((t) => EdDSATicketPCDPackage.deserialize(t.pcd))
+    secondAction.pcds.map((t) => {
+      if (t.type === EdDSATicketPCDTypeName) {
+        return EdDSATicketPCDPackage.deserialize(t.pcd);
+      }
+      if (t.type === PODTicketPCDTypeName) {
+        return PODTicketPCDPackage.deserialize(t.pcd);
+      }
+      throw new Error("Unexpected PCD type");
+    })
   );
 }
 
@@ -136,7 +153,7 @@ export async function requestTicketsFromPipeline(
    * Is owned by this identity.
    */
   identity: Identity
-): Promise<EdDSATicketPCD[]> {
+): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
     pcd: await makeTestCredential(

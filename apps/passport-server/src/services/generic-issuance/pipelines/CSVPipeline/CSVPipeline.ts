@@ -31,6 +31,7 @@ import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
+import { makePODTicketPCD } from "./makePODTicketPCD";
 import {
   makeTicketPCD,
   rowToTicket,
@@ -120,7 +121,9 @@ export class CSVPipeline implements BasePipeline {
               requesterEmail,
               requesterSemaphoreId,
               eddsaPrivateKey: this.eddsaPrivateKey,
-              pipelineId: this.id
+              pipelineId: this.id,
+              issueToUnmatchedEmail:
+                this.definition.options.issueToUnmatchedEmail
             }
           )
         )
@@ -183,7 +186,8 @@ export class CSVPipeline implements BasePipeline {
         );
 
         if (
-          this.definition.options.outputType === CSVPipelineOutputType.Ticket
+          this.definition.options.outputType === CSVPipelineOutputType.Ticket ||
+          this.definition.options.outputType === CSVPipelineOutputType.PODTicket
         ) {
           logs.push(
             makePLogInfo(
@@ -317,6 +321,7 @@ export async function makeCSVPCD(
     requesterSemaphoreId?: string;
     eddsaPrivateKey: string;
     pipelineId: string;
+    issueToUnmatchedEmail?: boolean;
   }
 ): Promise<SerializedPCD | undefined> {
   return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
@@ -331,7 +336,17 @@ export async function makeCSVPCD(
           opts.eddsaPrivateKey,
           opts.requesterEmail,
           opts.requesterSemaphoreId,
-          opts.pipelineId
+          opts.pipelineId,
+          opts.issueToUnmatchedEmail
+        );
+      case CSVPipelineOutputType.PODTicket:
+        return makePODTicketPCD(
+          inputRow,
+          opts.eddsaPrivateKey,
+          opts.requesterEmail,
+          opts.requesterSemaphoreId,
+          opts.pipelineId,
+          opts.issueToUnmatchedEmail
         );
       default:
         // will not compile in case we add a new output type

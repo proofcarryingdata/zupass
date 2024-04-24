@@ -43,7 +43,7 @@ export interface ITicketData {
   // The fields below are not signed and are used for display purposes.
   eventName: string;
   ticketName: string;
-  checkerEmail: string | undefined;
+  checkerEmail?: string | undefined;
   imageUrl?: string | undefined;
   imageAltText?: string | undefined;
   // The fields below are signed using the passport-server's private EdDSA key

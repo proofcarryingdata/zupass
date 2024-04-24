@@ -1,5 +1,19 @@
 # @pcd/pcd-types
 
+## 0.11.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/emitter@0.5.0
+  - @pcd/passport-crypto@0.11.0
+  - @pcd/pcd-types@0.11.0
+  - @pcd/semaphore-identity-pcd@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes

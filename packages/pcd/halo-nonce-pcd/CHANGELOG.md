@@ -1,5 +1,17 @@
 # @pcd/halo-nonce-pcd
 
+## 0.7.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.11.0
+  - @pcd/util@0.5.0
+
 ## 0.6.0
 
 ### Minor Changes
