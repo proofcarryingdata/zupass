@@ -1,5 +1,6 @@
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
 import { getErrorMessage } from "@pcd/util";
+import { parse } from "csv-parse/sync";
 import { Fragment, useCallback, useEffect, useState } from "react";
 import { Button } from "./button";
 import { Input } from "./input";
@@ -8,8 +9,17 @@ export interface ImportedQuestions {
   questions: string[];
 }
 
+interface DevfolioRow {
+  "Project Name": string;
+  URL: string;
+}
+
 async function parseInput(csv: string): Promise<ImportedQuestions | undefined> {
-  return { questions: ["asdf 1", "asdf 2"] };
+  const records = parse(csv, {
+    columns: true,
+    skip_empty_lines: true
+  }) as DevfolioRow[];
+  return { questions: records.map((r) => `[${r["Project Name"]}](${r.URL})`) };
 }
 
 export default function ImportDialog({
