@@ -249,16 +249,16 @@ const sampleInput: ProtoPODGPCInputs = {
   // List membership module (1)
   /*PUB*/ memberIndex: 11,
   /*PUB*/ membershipList: [
-    15199889079322335156476103122660824526659135643269093459401043635656729531279n,
-    9590165529899553128474291837892591965477289750489871115719104271785334709681n,
-    16681373109740913773011645969221746330469820979643693140473169504832728969039n,
     9223174870241747285447854875768802508901134156675815701192278375344491817639n,
     14890920165446339388457607362228644983478896604633197866006965879637653518053n,
     9420571326207018519862762268668316107286057125372072020830447501605285509594n,
     15199889079322335156476103122660824526659135643269093459401043635656729531279n,
-    15199889079322335156476103122660824526659135643269093459401043635656729531279n,
-    15199889079322335156476103122660824526659135643269093459401043635656729531279n,
-    15199889079322335156476103122660824526659135643269093459401043635656729531279n
+    9590165529899553128474291837892591965477289750489871115719104271785334709681n,
+    16681373109740913773011645969221746330469820979643693140473169504832728969039n,
+    9223174870241747285447854875768802508901134156675815701192278375344491817639n,
+    9223174870241747285447854875768802508901134156675815701192278375344491817639n,
+    9223174870241747285447854875768802508901134156675815701192278375344491817639n,
+    9223174870241747285447854875768802508901134156675815701192278375344491817639n
   ],
   
   // Global module (1)
@@ -282,7 +282,7 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
   ownerRevealedNulifierHash:
-    1517081033071132720435657432021139876572843496027662548196342287861804968602n
+  1517081033071132720435657432021139876572843496027662548196342287861804968602n
 };
 
 /**
@@ -410,8 +410,8 @@ function makeTestSignals(
     // to itself.
     if (
       entryInfo.eqEntryIndex !== undefined &&
-      entryInfo.eqEntryIndex < testEntries.length &&
-      entryInfo.eqEntryIndex < paramMaxEntries
+	entryInfo.eqEntryIndex < testEntries.length &&
+	entryInfo.eqEntryIndex < paramMaxEntries
     ) {
       sigEntryEqualToOtherEntryByIndex.push(BigInt(entryInfo.eqEntryIndex));
     } else {
@@ -429,9 +429,9 @@ function makeTestSignals(
 
   // ?
   const indexListPairs = [
-    [1, [85n, sigEntryValue[1]]],
-    [3, [sigEntryValue[3], 876n, 999n]],
-    [4, [sigEntryValue[4]]]].filter(
+    [1, [85n, sigEntryValue[1]].map(x => { return { type: "cryptographic", value: x }; })],
+    [3, [sigEntryValue[3], 876n, 999n].map(x => { return { type: "int", value: x }; })],
+    [4, [sigEntryValue[4]].map(x => { return { type: "int", value: x }; })]].filter(
       pair => sigEntryIsValueEnabled[pair[0]] == 1n
     );
   
@@ -464,9 +464,9 @@ function makeTestSignals(
       entryProofIndex: sigEntryProofIndex,
       entryProofSiblings: sigEntryProofSiblings,
       ownerEntryIndex:
-        paramMaxEntries > sigOwnerEntryIndex
-          ? sigOwnerEntryIndex
-          : BABY_JUB_NEGATIVE_ONE,
+      paramMaxEntries > sigOwnerEntryIndex
+        ? sigOwnerEntryIndex
+        : BABY_JUB_NEGATIVE_ONE,
       ownerSemaphoreV3IdentityNullifier: ownerIdentity.nullifier,
       ownerSemaphoreV3IdentityTrapdoor: ownerIdentity.trapdoor,
       ownerExternalNullifier: 42n,
@@ -479,9 +479,9 @@ function makeTestSignals(
     outputs: {
       entryRevealedValueHash: sigEntryRevealedValueHash,
       ownerRevealedNulifierHash:
-        isNullifierHashRevealed && paramMaxEntries > sigOwnerEntryIndex
-          ? poseidon2([42n, ownerIdentity.nullifier])
-          : BABY_JUB_NEGATIVE_ONE
+      isNullifierHashRevealed && paramMaxEntries > sigOwnerEntryIndex
+        ? poseidon2([42n, ownerIdentity.nullifier])
+        : BABY_JUB_NEGATIVE_ONE
     }
   };
 }
@@ -489,7 +489,7 @@ function makeTestSignals(
 describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   let circuit: WitnessTester<
     ProtoPODGPCInputNamesType,
-    ProtoPODGPCOutputNamesType
+  ProtoPODGPCOutputNamesType
   >;
 
   this.beforeAll(async () => {
