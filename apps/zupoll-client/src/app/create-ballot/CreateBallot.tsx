@@ -541,20 +541,31 @@ export function CreateBallot({
       )}
 
       {loadingVoterGroupUrl || serverLoading ? (
-        <>asdf</>
+        <></>
       ) : (
-        <Button
-          className="w-full"
-          variant="creative"
-          disabled={
-            ballotTitle === "" ||
-            polls.length === 0 ||
-            polls.some((poll) => poll.body === "" || poll.options.length < 2)
-          }
-          onClick={createBallotPCD}
-        >
-          Create Ballot
-        </Button>
+        <>
+          <Button
+            className="w-full"
+            variant="creative"
+            disabled={
+              ballotTitle === "" ||
+              polls.length === 0 ||
+              polls.some((poll) => poll.body === "" || poll.options.length < 2)
+            }
+            onClick={createBallotPCD}
+          >
+            Create Ballot
+          </Button>
+          <Button
+            className="w-full mt-2"
+            variant="ghost"
+            onClick={() => {
+              alert("importing csv");
+            }}
+          >
+            Import Questions
+          </Button>
+        </>
       )}
     </div>
   );
