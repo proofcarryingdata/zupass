@@ -23,6 +23,7 @@ import {
   PipelineLog,
   PipelineSemaphoreGroupInfo,
   PipelineType,
+  PodboxOfflineTicket,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -194,7 +195,9 @@ export class LemonadePipeline implements BasePipeline {
             (ev) => ev.genericIssuanceEventId === eventId
           );
         },
-        preCheck: this.precheckTicketAction.bind(this)
+        preCheck: this.precheckTicketAction.bind(this),
+        getOfflineTickets: this.getOfflineTickets.bind(this),
+        checkInOfflineTickets: this.checkInOfflineTickets.bind(this)
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
@@ -1940,6 +1943,90 @@ export class LemonadePipeline implements BasePipeline {
     }
 
     return ids;
+  }
+
+  /**
+   * Returns offline tickets that the user is entitled to check in, if any.
+   */
+  public async getOfflineTickets(
+    checkerEmail: string
+  ): Promise<PodboxOfflineTicket[]> {
+    return traced(LOG_NAME, "getOfflineTickets", async (_span) => {
+      tracePipeline(this.definition);
+
+      const offlineTickets: PodboxOfflineTicket[] = [];
+
+      for (const event of this.definition.options.events) {
+        if (
+          (await this.canCheckInForEvent(
+            event.genericIssuanceEventId,
+            checkerEmail
+          )) === true
+        ) {
+          // Add offline tickets
+          for (const atom of await this.db.load(this.id)) {
+            if (!atom.email) {
+              continue;
+            }
+            offlineTickets.push({
+              id: atom.id,
+              eventName: this.lemonadeAtomToEventName(atom),
+              ticketName: this.lemonadeAtomToTicketName(atom),
+              attendeeEmail: atom.email.toLowerCase(),
+              attendeeName: atom.name,
+              checker: null,
+              is_consumed: atom.checkinDate instanceof Date
+            });
+          }
+
+          for (const manualTicket of this.definition.options.manualTickets ??
+            []) {
+            const event = this.getEventById(manualTicket.eventId);
+            const product = this.getTicketTypeById(
+              event,
+              manualTicket.productId
+            );
+
+            const checkIn = await this.checkinDB.getByTicketId(
+              this.id,
+              manualTicket.id
+            );
+            offlineTickets.push({
+              id: manualTicket.id,
+              eventName: event.name,
+              ticketName: product.name,
+              attendeeEmail: manualTicket.attendeeEmail,
+              attendeeName: manualTicket.attendeeName,
+              checker: null,
+              is_consumed: checkIn?.timestamp instanceof Date
+            });
+          }
+        }
+      }
+
+      return offlineTickets;
+    });
+  }
+
+  private async checkInOfflineTickets(
+    checkerEmail: string,
+    ticketIds: string[]
+  ): Promise<void> {
+    for (const ticketId of ticketIds) {
+      const atom = await this.db.loadById(this.id, ticketId);
+      if (
+        !atom ||
+        !this.canCheckInForEvent(atom.genericIssuanceEventId, checkerEmail)
+      ) {
+        // is continuing here the right thing to do?
+        continue;
+      }
+      try {
+        await this.lemonadeCheckin(atom, checkerEmail);
+      } catch (_e) {
+        //
+      }
+    }
   }
 }
 

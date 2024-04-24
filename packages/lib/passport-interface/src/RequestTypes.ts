@@ -1186,3 +1186,10 @@ export interface PodboxOfflineTicket {
 export interface PodboxGetOfflineTicketsResponseValue {
   offlineTickets: PodboxOfflineTicket[];
 }
+
+export interface PodboxCheckInOfflineTicketsRequest {
+  credential: Credential;
+  tickets: Record<string, string[]>; // eventID -> ticketID[]
+}
+
+export type PodboxCheckInOfflineTicketsResponseValue = undefined;

@@ -24,6 +24,7 @@ import {
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PipelineZuAuthConfig,
+  PodboxOfflineTicket,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -205,7 +206,9 @@ export class PretixPipeline implements BasePipeline {
             (ev) => ev.genericIssuanceId === eventId
           );
         },
-        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this)
+        preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this),
+        getOfflineTickets: async (): Promise<PodboxOfflineTicket[]> => [],
+        checkInOfflineTickets: async (): Promise<void> => {}
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,

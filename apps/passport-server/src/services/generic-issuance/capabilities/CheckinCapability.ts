@@ -1,5 +1,6 @@
 import {
   ActionConfigResponseValue,
+  PodboxOfflineTicket,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue
@@ -39,6 +40,11 @@ export interface CheckinCapability extends BasePipelineCapability {
   preCheck(
     request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue>;
+  getOfflineTickets(checkerEmail: string): Promise<PodboxOfflineTicket[]>;
+  checkInOfflineTickets(
+    checkerEmail: string,
+    ticketIds: string[]
+  ): Promise<void>;
 }
 
 export function isCheckinCapability(

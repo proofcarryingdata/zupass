@@ -9,6 +9,9 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PodboxGetOfflineTicketsRequest,
+  PodboxGetOfflineTicketsResponseValue,
+  PodboxOfflineTicket,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -519,5 +522,48 @@ export class PipelineAPISubservice {
         return semaphoreGroupCapability.getSupportedGroups();
       }
     );
+  }
+
+  /**
+   * todo a comment
+   */
+  public async handleGetOfflineTickets(
+    request: PodboxGetOfflineTicketsRequest
+  ): Promise<PodboxGetOfflineTicketsResponseValue> {
+    return traced(SERVICE_NAME, "handleGetOfflineTickets", async (span) => {
+      logger(LOG_TAG, "handleGetOfflineTickets", str(request));
+
+      let emailAddress;
+      try {
+        emailAddress = (
+          await this.credentialSubservice.verifyAndExpectZupassEmail(
+            request.credential
+          )
+        ).emailClaim.emailAddress;
+      } catch (_e) {
+        throw new PCDHTTPError(401, "Not authorized");
+      }
+
+      const offlineTickets: PodboxOfflineTicket[] = [];
+
+      for (const pipeline of this.pipelineSubservice.getAllPipelines()) {
+        if (!pipeline.instance) {
+          continue;
+        }
+
+        for (const capability of pipeline?.instance?.capabilities ?? []) {
+          if (isCheckinCapability(capability)) {
+            tracePipeline(pipeline.definition);
+            offlineTickets.push(
+              ...(await capability.getOfflineTickets(emailAddress))
+            );
+          }
+        }
+      }
+
+      span?.setAttribute("offline_tickets_count", offlineTickets.length);
+
+      return { offlineTickets };
+    });
   }
 }

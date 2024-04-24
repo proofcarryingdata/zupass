@@ -2,6 +2,7 @@ import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
+  PODBOX_CREDENTIAL_REQUEST,
   PipelineLogLevel,
   PodboxTicketActionResponseValue,
   createCredentialPayload,
@@ -9,6 +10,7 @@ import {
   requestGenericIssuanceSemaphoreGroup,
   requestGenericIssuanceSemaphoreGroupRoot,
   requestGenericIssuanceValidSemaphoreGroup,
+  requestPodboxGetOfflineTickets,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
 import { ArgumentTypeName } from "@pcd/pcd-types";
@@ -57,6 +59,7 @@ import {
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
+  makeTestCredential,
   proveEmailPCD,
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline,
@@ -1341,6 +1344,46 @@ describe("generic issuance - LemonadePipeline", function () {
       }
     }
   );
+
+  step("can get offline tickets", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    const pipeline = pipelines.find(LemonadePipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(edgeCityPipeline.id);
+
+    {
+      const result = await requestPodboxGetOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        await makeTestCredential(
+          EdgeCityBouncerIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          EdgeCityDenverBouncer.email,
+          ZUPASS_EDDSA_PRIVATE_KEY
+        )
+      );
+
+      expectTrue(result.success);
+      // Bouncer should be able to receive all tickets
+      expectLength(result.value.offlineTickets, 5);
+    }
+
+    {
+      const result = await requestPodboxGetOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        await makeTestCredential(
+          EdgeCityDenverAttendeeIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          EdgeCityDenverAttendee.email,
+          ZUPASS_EDDSA_PRIVATE_KEY
+        )
+      );
+
+      expectTrue(result.success);
+      // Regular attendees can't perform check-in, so can't get offline tickets
+      expectLength(result.value.offlineTickets, 0);
+    }
+  });
 
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);

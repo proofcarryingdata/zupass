@@ -12,6 +12,8 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PodboxGetOfflineTicketsRequest,
+  PodboxGetOfflineTicketsResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -507,5 +509,11 @@ export class PipelineSubservice {
     return this.pipelineAPISubservice.handleGetPipelineSemaphoreGroups(
       pipelineId
     );
+  }
+
+  public async handleGetOfflineTickets(
+    request: PodboxGetOfflineTicketsRequest
+  ): Promise<PodboxGetOfflineTicketsResponseValue> {
+    return this.pipelineAPISubservice.handleGetOfflineTickets(request);
   }
 }

@@ -14,6 +14,8 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
+  PodboxGetOfflineTicketsRequest,
+  PodboxGetOfflineTicketsResponseValue,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
@@ -323,5 +325,14 @@ export class GenericIssuanceService {
    */
   public async getEdgeCityBalances(): Promise<EdgeCityBalance[]> {
     return getEdgeCityBalances(this.context.dbPool);
+  }
+
+  /**
+   * Returns offline tickets for checkin.
+   */
+  public async handleGetOfflineTickets(
+    request: PodboxGetOfflineTicketsRequest
+  ): Promise<PodboxGetOfflineTicketsResponseValue> {
+    return this.pipelineSubservice.handleGetOfflineTickets(request);
   }
 }
