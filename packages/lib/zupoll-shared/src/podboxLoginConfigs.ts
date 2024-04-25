@@ -44,10 +44,10 @@ export function getPodboxConfigs(
 
   const ESMERALDA_CONFIG_ID = "Edge Esmeralda";
   const ESMERALDA_CONFIG_NAME = "Edge Esmeralda";
-  const ESMERALDA_RESIDENTS_NAME = "Resident Poll";
+  const ESMERALDA_RESIDENTS_NAME = "Resident Polls";
   const ESMERALDA_RESIDENTS_DESCRIPTION =
     "Polls created by members of Edge Esmeralda";
-  const ESMERALDA_ORGANIZER_NAME = "Staff Poll";
+  const ESMERALDA_ORGANIZER_NAME = "Staff Polls";
   const ESMERALDA_ORGANIZER_DESCRIPTION =
     "Polls created by Edge Esemeralda Staff";
   const ESMERALDA_DESCRIPTION =

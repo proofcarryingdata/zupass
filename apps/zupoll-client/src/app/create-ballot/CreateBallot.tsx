@@ -286,7 +286,7 @@ export function CreateBallot({
                   }, 1);
                 }}
               >
-                Create Long Ballot
+                Create Long Poll
               </Button>
               <Button
                 style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}
@@ -324,7 +324,7 @@ export function CreateBallot({
                   }, 1);
                 }}
               >
-                Create Regular Ballot
+                Create Poll
               </Button>
             </div>
           </div>
@@ -538,7 +538,7 @@ export function CreateBallot({
           }}
         />
       ) : (
-        <div className="flex flex-row justify-center content-center gap-1 my-2">
+        <div className="flex flex-row justify-center content-center gap-1 mb-1">
           <Button
             className="flex-grow"
             variant="ghost"
@@ -556,7 +556,7 @@ export function CreateBallot({
               ])
             }
           >
-            Add Poll
+            Add Question
           </Button>
         </div>
       )}
@@ -564,6 +564,15 @@ export function CreateBallot({
         <></>
       ) : (
         <>
+          <Button
+            className="w-full mb-1"
+            variant="ghost"
+            onClick={() => {
+              setImportDialogOpen(true);
+            }}
+          >
+            Import
+          </Button>
           <Button
             className="w-full"
             variant="creative"
@@ -574,16 +583,7 @@ export function CreateBallot({
             }
             onClick={createBallotPCD}
           >
-            Create Ballot
-          </Button>
-          <Button
-            className="w-full mt-2"
-            variant="ghost"
-            onClick={() => {
-              setImportDialogOpen(true);
-            }}
-          >
-            Import Questions
+            Create
           </Button>
         </>
       )}

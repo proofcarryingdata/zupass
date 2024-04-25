@@ -147,7 +147,7 @@ export default function ImportDialog({
                     className="w-full"
                     onClick={() => close()}
                   >
-                    Back
+                    Cancel
                   </Button>
                 </div>
               </HeadlessDialog.Panel>
