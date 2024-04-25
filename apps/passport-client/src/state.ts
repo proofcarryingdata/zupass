@@ -5,6 +5,7 @@ import {
   KnownTicketType,
   OfflineDevconnectTicket,
   OfflineTickets,
+  PodboxOfflineTicket,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -113,6 +114,9 @@ export interface AppState {
 
   knownTicketTypes?: KnownTicketType[];
   knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
+
+  podboxOfflineTickets: PodboxOfflineTicket[];
+  checkedInOfflinePodboxTickets: PodboxOfflineTicket[];
 
   offlineTickets: OfflineTickets;
   checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];

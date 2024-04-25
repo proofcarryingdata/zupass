@@ -1170,6 +1170,7 @@ export interface PodboxGetOfflineTicketsRequest {
  */
 export interface PodboxOfflineTicket {
   id: string;
+  eventId: string;
   attendeeEmail: string;
   attendeeName: string;
   eventName: string;
@@ -1192,4 +1193,4 @@ export interface PodboxCheckInOfflineTicketsRequest {
   tickets: Record<string, string[]>; // eventID -> ticketID[]
 }
 
-export type PodboxCheckInOfflineTicketsResponseValue = undefined;
+export type PodboxCheckInOfflineTicketsResponseValue = string[];

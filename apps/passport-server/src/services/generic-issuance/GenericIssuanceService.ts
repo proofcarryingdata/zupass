@@ -14,6 +14,8 @@ import {
   ListFeedsResponseValue,
   PipelineDefinition,
   PipelineInfoResponseValue,
+  PodboxCheckInOfflineTicketsRequest,
+  PodboxCheckInOfflineTicketsResponseValue,
   PodboxGetOfflineTicketsRequest,
   PodboxGetOfflineTicketsResponseValue,
   PodboxTicketActionPreCheckRequest,
@@ -334,5 +336,14 @@ export class GenericIssuanceService {
     request: PodboxGetOfflineTicketsRequest
   ): Promise<PodboxGetOfflineTicketsResponseValue> {
     return this.pipelineSubservice.handleGetOfflineTickets(request);
+  }
+
+  /**
+   * Handles a batch of tickets for offline check-in.
+   */
+  public async handleCheckInOfflineTickets(
+    request: PodboxCheckInOfflineTicketsRequest
+  ): Promise<PodboxCheckInOfflineTicketsResponseValue> {
+    return this.pipelineSubservice.handleCheckInOfflineTickets(request);
   }
 }

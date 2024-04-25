@@ -1,16 +1,11 @@
-import {
-  PODBOX_CREDENTIAL_REQUEST,
-  PodboxTicketActionPreCheckResult,
-  requestPodboxTicketActionPreCheck
-} from "@pcd/passport-interface";
+import { PodboxTicketActionPreCheckResult } from "@pcd/passport-interface";
 import { useCallback, useEffect, useState } from "react";
-import urljoin from "url-join";
-import { appConfig } from "../../../../../src/appConfig";
 import {
-  useCredentialManager,
   useDispatch,
+  useStateContext,
   useUserIdentityPCD
 } from "../../../../../src/appHooks";
+import { podboxPreCheckWithOffline } from "../../../../../src/podboxCheckin";
 
 /**
  * Once a ticket has been scanned by the qr code reader, Zupass makes a
@@ -39,7 +34,7 @@ export function usePreCheckTicket(
   >();
   const identityPCD = useUserIdentityPCD();
   const dispatch = useDispatch();
-  const credentialManager = useCredentialManager();
+  const stateContext = useStateContext();
 
   const doPreCheckTicket = useCallback(
     async (ticketId: string | undefined, eventId: string | undefined) => {
@@ -52,16 +47,15 @@ export function usePreCheckTicket(
         return;
       }
 
-      const preCheckTicketResult = await requestPodboxTicketActionPreCheck(
-        urljoin(appConfig.zupassServer, "generic-issuance/api/pre-check"),
-        await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
-        { checkin: true },
+      const preCheckTicketResult = await podboxPreCheckWithOffline(
         ticketId,
-        eventId
+        eventId,
+        stateContext
       );
+      console.log(preCheckTicketResult);
       setResult(preCheckTicketResult);
     },
-    [credentialManager, dispatch, identityPCD]
+    [dispatch, identityPCD, stateContext]
   );
 
   useEffect(() => {

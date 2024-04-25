@@ -4,6 +4,7 @@ import {
   NetworkFeedApi,
   OfflineDevconnectTicket,
   OfflineTickets,
+  PodboxOfflineTicket,
   User
 } from "@pcd/passport-interface";
 import { PCDCollection } from "@pcd/pcd-collection";
@@ -124,6 +125,62 @@ export function loadCheckedInOfflineDevconnectTickets(): OfflineDevconnectTicket
   try {
     tickets = JSON.parse(
       window.localStorage.getItem(CHECKED_IN_OFFLINE_TICKETS_KEY) ?? "[]"
+    );
+  } catch (e) {
+    //
+    tickets = [];
+  }
+
+  return tickets;
+}
+
+const PODBOX_OFFLINE_TICKETS_KEY = "podbox_offline_tickets";
+export function savePodboxOfflineTickets(
+  offlineTickets: PodboxOfflineTicket[] | undefined
+): void {
+  if (!offlineTickets) {
+    window.localStorage.removeItem(PODBOX_OFFLINE_TICKETS_KEY);
+  } else {
+    window.localStorage.setItem(
+      PODBOX_OFFLINE_TICKETS_KEY,
+      JSON.stringify(offlineTickets)
+    );
+  }
+}
+export function loadPodboxOfflineTickets(): PodboxOfflineTicket[] {
+  let tickets = [];
+
+  try {
+    tickets = JSON.parse(
+      window.localStorage.getItem(PODBOX_OFFLINE_TICKETS_KEY) ?? "[]"
+    );
+  } catch (e) {
+    //
+  }
+
+  return tickets;
+}
+
+const CHECKED_IN_PODBOX_OFFLINE_TICKETS_KEY =
+  "checked_in_offline_podbox_tickets";
+export function saveCheckedInPodboxOfflineTickets(
+  offlineTickets: PodboxOfflineTicket[] | undefined
+): void {
+  if (!offlineTickets) {
+    window.localStorage.removeItem(CHECKED_IN_PODBOX_OFFLINE_TICKETS_KEY);
+  } else {
+    window.localStorage.setItem(
+      CHECKED_IN_PODBOX_OFFLINE_TICKETS_KEY,
+      JSON.stringify(offlineTickets)
+    );
+  }
+}
+export function loadCheckedInPodboxOfflineTickets(): PodboxOfflineTicket[] {
+  let tickets: PodboxOfflineTicket[] = [];
+
+  try {
+    tickets = JSON.parse(
+      window.localStorage.getItem(CHECKED_IN_PODBOX_OFFLINE_TICKETS_KEY) ?? "[]"
     );
   } catch (e) {
     //

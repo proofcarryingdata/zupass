@@ -208,7 +208,7 @@ export class PretixPipeline implements BasePipeline {
         },
         preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this),
         getOfflineTickets: async (): Promise<PodboxOfflineTicket[]> => [],
-        checkInOfflineTickets: async (): Promise<void> => {}
+        checkInOfflineTickets: async (): Promise<string[]> => []
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,

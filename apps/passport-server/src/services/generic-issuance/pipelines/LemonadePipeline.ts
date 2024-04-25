@@ -1970,6 +1970,7 @@ export class LemonadePipeline implements BasePipeline {
             }
             offlineTickets.push({
               id: atom.id,
+              eventId: atom.genericIssuanceEventId,
               eventName: this.lemonadeAtomToEventName(atom),
               ticketName: this.lemonadeAtomToTicketName(atom),
               attendeeEmail: atom.email.toLowerCase(),
@@ -1993,6 +1994,7 @@ export class LemonadePipeline implements BasePipeline {
             );
             offlineTickets.push({
               id: manualTicket.id,
+              eventId: event.genericIssuanceEventId,
               eventName: event.name,
               ticketName: product.name,
               attendeeEmail: manualTicket.attendeeEmail,
@@ -2010,23 +2012,45 @@ export class LemonadePipeline implements BasePipeline {
 
   private async checkInOfflineTickets(
     checkerEmail: string,
+    eventId: string,
     ticketIds: string[]
-  ): Promise<void> {
+  ): Promise<string[]> {
+    if (!(await this.canCheckInForEvent(eventId, checkerEmail))) {
+      return [];
+    }
+
+    // @todo what if a ticket simply no longer exists but the client keeps
+    // trying to check it in?
+
+    const checkedInIds = [];
     for (const ticketId of ticketIds) {
       const atom = await this.db.loadById(this.id, ticketId);
-      if (
-        !atom ||
-        !this.canCheckInForEvent(atom.genericIssuanceEventId, checkerEmail)
-      ) {
-        // is continuing here the right thing to do?
-        continue;
-      }
-      try {
-        await this.lemonadeCheckin(atom, checkerEmail);
-      } catch (_e) {
-        //
+      if (atom) {
+        try {
+          const result = await this.lemonadeCheckin(atom, checkerEmail);
+          // If the ticket is already checked in, tell the client that the
+          // check-in succeeded.
+          if (result.success || result.error.name === "AlreadyCheckedIn") {
+            checkedInIds.push(atom.id);
+          }
+        } catch (e) {
+          // We can ignore exceptions here as we just want to try the next
+          // ticket in the array
+        }
+      } else {
+        const manualTicket = this.getManualTicketById(ticketId);
+        if (manualTicket) {
+          const result = await this.checkInManualTicket(
+            manualTicket,
+            checkerEmail
+          );
+          if (result.success || result.error.name === "AlreadyCheckedIn") {
+            checkedInIds.push(manualTicket.id);
+          }
+        }
       }
     }
+    return checkedInIds;
   }
 }
 

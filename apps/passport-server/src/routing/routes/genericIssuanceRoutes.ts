@@ -14,6 +14,8 @@ import {
   ListFeedsResponseValue,
   PipelineInfoRequest,
   PipelineInfoResponseValue,
+  PodboxCheckInOfflineTicketsRequest,
+  PodboxCheckInOfflineTicketsResponseValue,
   PodboxGetOfflineTicketsRequest,
   PodboxGetOfflineTicketsResponseValue,
   PodboxTicketActionPreCheckRequest,
@@ -493,6 +495,20 @@ export function initGenericIssuanceRoutes(
       const result =
         await genericIssuanceService.handleGetOfflineTickets(request);
       res.json(result satisfies PodboxGetOfflineTicketsResponseValue);
+    }
+  );
+
+  /**
+   * Checks in offline tickets.
+   */
+  app.post(
+    "/generic-issuance/api/checkin-offline-tickets",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const request = req.body as PodboxCheckInOfflineTicketsRequest;
+      const result =
+        await genericIssuanceService.handleCheckInOfflineTickets(request);
+      res.json(result satisfies PodboxCheckInOfflineTicketsResponseValue);
     }
   );
 }

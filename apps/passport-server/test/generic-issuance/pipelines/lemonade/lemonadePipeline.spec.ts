@@ -10,6 +10,7 @@ import {
   requestGenericIssuanceSemaphoreGroup,
   requestGenericIssuanceSemaphoreGroupRoot,
   requestGenericIssuanceValidSemaphoreGroup,
+  requestPodboxCheckInOfflineTickets,
   requestPodboxGetOfflineTickets,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
@@ -1382,6 +1383,69 @@ describe("generic issuance - LemonadePipeline", function () {
       expectTrue(result.success);
       // Regular attendees can't perform check-in, so can't get offline tickets
       expectLength(result.value.offlineTickets, 0);
+    }
+  });
+
+  step("can check in offline tickets", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    const pipeline = pipelines.find(LemonadePipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(edgeCityPipeline.id);
+
+    lemonadeBackend.checkOutAll();
+
+    const bouncerCredential = await makeTestCredential(
+      EdgeCityBouncerIdentity,
+      PODBOX_CREDENTIAL_REQUEST,
+      EdgeCityDenverBouncer.email,
+      ZUPASS_EDDSA_PRIVATE_KEY
+    );
+
+    {
+      const result = await requestPodboxGetOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        bouncerCredential
+      );
+
+      expectTrue(result.success);
+      // Bouncer should be able to receive all tickets
+      expectLength(result.value.offlineTickets, 5);
+
+      const ticketsByEvent = result.value.offlineTickets.reduce(
+        (res, current) => {
+          if (res[current.eventId]) {
+            res[current.eventId].push(current.id);
+          } else {
+            res[current.eventId] = [current.id];
+          }
+          return res;
+        },
+        {} as Record<string, string[]>
+      );
+
+      await requestPodboxCheckInOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        bouncerCredential,
+        ticketsByEvent
+      );
+
+      {
+        await pipeline.load();
+        const result = await requestPodboxGetOfflineTickets(
+          giBackend.expressContext.localEndpoint,
+          bouncerCredential
+        );
+
+        expectTrue(result.success);
+        // Bouncer should be able to receive all tickets
+        expectLength(result.value.offlineTickets, 5);
+        // All tickets should now be consumed.
+        expectLength(
+          result.value.offlineTickets.filter((ot) => ot.is_consumed === true),
+          5
+        );
+      }
     }
   });
 

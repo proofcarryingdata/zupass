@@ -7,7 +7,11 @@ import {
 import { useCallback, useState } from "react";
 import urljoin from "url-join";
 import { appConfig } from "../../../../../../src/appConfig";
-import { useCredentialManager } from "../../../../../../src/appHooks";
+import {
+  useCredentialManager,
+  useStateContext
+} from "../../../../../../src/appHooks";
+import { podboxCheckInWithOffline } from "../../../../../../src/podboxCheckin";
 
 export interface TicketActionExecutor {
   loading: boolean;
@@ -35,6 +39,7 @@ export function useExecuteTicketAction({
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<PodboxTicketActionResult | null>(null);
   const credentialManager = useCredentialManager();
+  const stateContext = useStateContext();
 
   const execute = useCallback(async (): Promise<
     PodboxTicketActionResult | undefined
@@ -43,17 +48,30 @@ export function useExecuteTicketAction({
 
     setLoading(true);
 
-    const checkinResult = await requestPodboxTicketAction(
-      urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
-      await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
-      action,
-      ticketId,
-      eventId
-    );
-    setLoading(false);
-    setResult(checkinResult);
-    return checkinResult;
-  }, [loading, credentialManager, action, ticketId, eventId]);
+    if (action.checkin) {
+      // Check-in actions can be performed offline.
+      const checkinResult = await podboxCheckInWithOffline(
+        ticketId,
+        eventId,
+        stateContext
+      );
+      setLoading(false);
+      setResult(checkinResult);
+      return checkinResult;
+    } else {
+      // Actions other than check-in cannot be performed offline
+      const checkinResult = await requestPodboxTicketAction(
+        urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
+        await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
+        action,
+        ticketId,
+        eventId
+      );
+      setLoading(false);
+      setResult(checkinResult);
+      return checkinResult;
+    }
+  }, [loading, action, ticketId, eventId, stateContext, credentialManager]);
 
   const reset = useCallback(() => {
     setLoading(false);

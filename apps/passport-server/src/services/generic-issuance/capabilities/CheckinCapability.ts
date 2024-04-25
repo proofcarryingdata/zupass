@@ -43,8 +43,9 @@ export interface CheckinCapability extends BasePipelineCapability {
   getOfflineTickets(checkerEmail: string): Promise<PodboxOfflineTicket[]>;
   checkInOfflineTickets(
     checkerEmail: string,
+    eventId: string,
     ticketIds: string[]
-  ): Promise<void>;
+  ): Promise<string[]>;
 }
 
 export function isCheckinCapability(

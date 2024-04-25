@@ -9,6 +9,8 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PodboxCheckInOfflineTicketsRequest,
+  PodboxCheckInOfflineTicketsResponseValue,
   PodboxGetOfflineTicketsRequest,
   PodboxGetOfflineTicketsResponseValue,
   PodboxOfflineTicket,
@@ -564,6 +566,55 @@ export class PipelineAPISubservice {
       span?.setAttribute("offline_tickets_count", offlineTickets.length);
 
       return { offlineTickets };
+    });
+  }
+
+  public async handleCheckInOfflineTickets(
+    request: PodboxCheckInOfflineTicketsRequest
+  ): Promise<PodboxCheckInOfflineTicketsResponseValue> {
+    return traced(SERVICE_NAME, "handleGetOfflineTickets", async (span) => {
+      logger(LOG_TAG, "handleGetOfflineTickets", str(request));
+
+      let emailAddress;
+      try {
+        emailAddress = (
+          await this.credentialSubservice.verifyAndExpectZupassEmail(
+            request.credential
+          )
+        ).emailClaim.emailAddress;
+      } catch (_e) {
+        throw new PCDHTTPError(401, "Not authorized");
+      }
+
+      const checkedInIds: string[] = [];
+
+      for (const pipeline of this.pipelineSubservice.getAllPipelines()) {
+        if (!pipeline.instance) {
+          continue;
+        }
+
+        span?.setAttribute("event_ids", Object.keys(request.tickets));
+
+        for (const capability of pipeline?.instance?.capabilities ?? []) {
+          if (isCheckinCapability(capability)) {
+            tracePipeline(pipeline.definition);
+            for (const [eventId, ticketIds] of Object.entries(
+              request.tickets
+            )) {
+              if (capability.canHandleCheckinForEvent(eventId)) {
+                checkedInIds.push(
+                  ...(await capability.checkInOfflineTickets(
+                    emailAddress,
+                    eventId,
+                    ticketIds
+                  ))
+                );
+              }
+            }
+          }
+        }
+      }
+      return checkedInIds;
     });
   }
 }
