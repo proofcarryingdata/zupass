@@ -42,24 +42,20 @@ export function getPodboxConfigs(
     PARC_HQ_DAY
   );
 
-  // https://podbox.dev/#/pipelines/c00d3470-7ff8-4060-adc1-e9487d607d42
-  // https://staging.podbox.dev/#/pipelines/f343cfdd-965b-4f0a-a429-7371576b323b
-  // https://staging-ivan.podbox.dev/#/pipelines/f343cfdd-965b-4f0a-a429-7371576b323b
-  // http://localhost:3005/#/pipelines/c00d3470-7ff8-4060-adc1-e9487d607d42
   const ESMERALDA_CONFIG_ID = "Edge Esmeralda";
   const ESMERALDA_CONFIG_NAME = "Edge Esmeralda";
-  const ESMERALDA_RESIDENTS_NAME = "Resident Ballots";
+  const ESMERALDA_RESIDENTS_NAME = "Resident Poll";
   const ESMERALDA_RESIDENTS_DESCRIPTION =
-    "Ballots created by members of Edge Esmeralda";
-  const ESMERALDA_ORGANIZER_NAME = "Edge Esmeralda Staff Ballots";
+    "Polls created by members of Edge Esmeralda";
+  const ESMERALDA_ORGANIZER_NAME = "Staff Poll";
   const ESMERALDA_ORGANIZER_DESCRIPTION =
-    "Ballots created by Edge Esemeralda Staff";
+    "Polls created by Edge Esemeralda Staff";
   const ESMERALDA_DESCRIPTION =
-    "Ballots created by Edge Esmeralda Residents. Add to the discussion by creating a new Ballot!";
-  const ESMERALDA_CONFIG_PIPELINE_ID = "f343cfdd-965b-4f0a-a429-7371576b323b";
+    "Polls created at Edge Esmeralda. Add to the discussion by creating a new Ballot!";
+  const ESMERALDA_CONFIG_PIPELINE_ID = "c00d3470-7ff8-4060-adc1-e9487d607d42";
   const ESMERALDA_CONFIG_SEMA_GROUP_ID = "02b5e490-0084-43b0-92d7-7ab74c5b0055";
   const ESMERALDA_CONFIG_ORGANIZER_SEMA_GROUP_ID =
-    "02b5e490-0084-43b0-92d7-7ab74c5b0055";
+    "b7d2a11b-dbf8-4969-a20e-70e657669b62";
   const ESEMERALDA_YEAR = 2024;
   const ESEMERALDA_MONTH = 4;
   const ESEMERALDA_DAY = 1;
@@ -69,10 +65,10 @@ export function getPodboxConfigs(
     ESMERALDA_CONFIG_ID,
     ESMERALDA_DESCRIPTION,
     ESMERALDA_CONFIG_NAME,
+    ESMERALDA_RESIDENTS_NAME,
     ESMERALDA_RESIDENTS_DESCRIPTION,
     ESMERALDA_ORGANIZER_NAME,
     ESMERALDA_ORGANIZER_DESCRIPTION,
-    ESMERALDA_RESIDENTS_NAME,
     ESMERALDA_CONFIG_PIPELINE_ID,
     ESMERALDA_CONFIG_SEMA_GROUP_ID,
     ESMERALDA_CONFIG_ORGANIZER_SEMA_GROUP_ID,
@@ -81,10 +77,6 @@ export function getPodboxConfigs(
     ESEMERALDA_DAY
   );
 
-  // https://podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // https://staging.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // https://staging-ivan.podbox.dev/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
-  // http://localhost:3005/#/pipelines/24ac727d-bc2f-4727-bcfa-b15cf2f7037e
   const ETH_PRAGUE_CONFIG_ID = "ETH Prague";
   const ETH_PRAGUE_CONFIG_NAME = "ETH Prague";
   const ETH_PRAGUE_RESIDENTS_NAME = "ETH Prague Attendees";
@@ -121,13 +113,12 @@ export function getPodboxConfigs(
     ETH_PRAGUE_DAY
   );
 
-  // https://staging-richard.podbox.dev/#/pipelines/e0f80908-4c9e-4bdb-9804-c88e8f64f59b
   const ETH_BERLIN_CONFIG_ID = "ETH Berlin";
   const ETH_BERLIN_CONFIG_NAME = "ETH Berlin";
   const ETH_BERLIN_RESIDENTS_NAME = "ETH Berlin Attendees";
   const ETH_BERLIN_RESIDENTS_DESCRIPTION =
     "Ballots created by ETH Berlin Attendees";
-  const ETH_BERLIN_ORGANIZER_NAME = "ETH Berlin Staff Ballots";
+  const ETH_BERLIN_ORGANIZER_NAME = "Staff Ballots";
   const ETH_BERLIN_ORGANIZER_DESCRIPTION =
     "Ballots created by ETH Berlin Staff";
   const ETH_BERLIN_DESCRIPTION =
@@ -220,8 +211,8 @@ export function makePodboxLoginConfigs(
         passportServerUrl: ZUPASS_SERVER_URL,
         passportAppUrl: ZUPASS_CLIENT_URL,
         ballotType: BallotType.PODBOX,
-        latestGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
-        makeHistoricalGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
+        latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
+        makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
         isPublic: false
       }
     ]
@@ -245,15 +236,15 @@ export function makePodboxLoginConfigs(
       {
         name: organizerName,
         description: organizerDescription,
-        voterGroupId: organizerSemaphoreGroupId,
-        voterGroupUrl: ORGANIZER_GROUP_URL,
+        voterGroupId: residentSemaphoreGroupId,
+        voterGroupUrl: RESIDENT_GROUP_URL,
         creatorGroupId: organizerSemaphoreGroupId,
         creatorGroupUrl: ORGANIZER_GROUP_URL,
         passportServerUrl: ZUPASS_SERVER_URL,
         passportAppUrl: ZUPASS_CLIENT_URL,
         ballotType: BallotType.PODBOX,
-        latestGroupHashUrl: urljoin(ORGANIZER_GROUP_URL, "latest-root"),
-        makeHistoricalGroupUrl: (hash) => urljoin(ORGANIZER_GROUP_URL, hash),
+        latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
+        makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
         isPublic: false
       },
       {
@@ -266,8 +257,8 @@ export function makePodboxLoginConfigs(
         passportServerUrl: ZUPASS_SERVER_URL,
         passportAppUrl: ZUPASS_CLIENT_URL,
         ballotType: BallotType.PODBOX,
-        latestGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
-        makeHistoricalGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
+        latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
+        makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
         isPublic: false
       }
     ]

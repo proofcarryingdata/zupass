@@ -95,6 +95,8 @@ export function CreateBallot({
     [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
   );
 
+  console.log("possible", possibleBallotConfigs);
+
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
     BallotConfig | undefined
   >(possibleBallotConfigs[0]);
@@ -186,7 +188,7 @@ export function CreateBallot({
 
       <Card>
         <CardHeader>
-          <Title className="mb-0">New Ballot</Title>
+          <Title className="mb-0">Create a Poll</Title>
         </CardHeader>
         <CardContent style={{ marginTop: "-20px" }}>
           <div style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}>
@@ -410,20 +412,19 @@ export function CreateBallot({
               display: possibleBallotConfigs.length > 1 ? undefined : "none"
             }}
           >
-            <Subtitle>Ballot Type</Subtitle>
+            <Subtitle>Poll Type</Subtitle>
             <Select
-              // TODO: make this based on ballot config name, not type
-              value={selectedBallotConfig?.name}
-              onValueChange={(value: string) =>
+              value={
+                selectedBallotConfig ? selectedBallotConfig.name : undefined
+              }
+              onValueChange={(newName: string) =>
                 setSelectedBallotConfig(
-                  possibleBallotConfigs.find(
-                    (c) => c.ballotType === value
-                  ) as any
+                  possibleBallotConfigs.find((c) => c.name === newName)
                 )
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a Ballot Type" />
+                <SelectValue placeholder="Select Poll Type" />
               </SelectTrigger>
 
               <SelectContent>
@@ -439,7 +440,9 @@ export function CreateBallot({
           </div>
         </CardContent>
       </Card>
-      <DividerWithText>Polls</DividerWithText>
+
+      <DividerWithText>Questions</DividerWithText>
+
       <div className="flex flex-col gap-4 mb-2">
         {polls.map((poll, i) => {
           return (

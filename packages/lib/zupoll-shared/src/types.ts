@@ -79,8 +79,8 @@ export interface BallotConfig {
   passportServerUrl: string;
   passportAppUrl: string;
   ballotType: BallotType;
-  latestGroupHashUrl?: string;
-  makeHistoricalGroupUrl?: (hash: string) => string;
+  latestVoterGroupHashUrl?: string;
+  makeHistoricVoterGroupUrl?: (hash: string) => string;
   historicGroupPrefix?: string;
 
   description?: string;

@@ -18,7 +18,7 @@ import {
   removeQueryParameters
 } from "../../util";
 import { CreateBallotResponse, createBallot } from "../../zupoll-server-api";
-import { useHistoricSemaphoreUrl } from "./useHistoricSemaphoreUrl";
+import { useHistoricVoterSemaphoreUrl } from "./useHistoricSemaphoreUrl";
 
 export interface BallotFromUrl {
   ballotConfig: BallotConfig;
@@ -119,8 +119,8 @@ export function useCreateBallot({
   const {
     loading: loadingVoterGroupUrl,
     rootHash: voterGroupRootHash,
-    groupUrl: voterGroupUrl
-  } = useHistoricSemaphoreUrl(ballotConfig, onError);
+    voterGroupUrl
+  } = useHistoricVoterSemaphoreUrl(ballotConfig, onError);
 
   const submitBallot = useCallback(
     async (finalRequest: CreateBallotRequest) => {

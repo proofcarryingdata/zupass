@@ -154,7 +154,7 @@ export async function listBallotPolls(
   }
 }
 
-export async function getLatestSemaphoreGroupHash(
+export async function getLatestSemaphoreGroupRoot(
   url: string
 ): Promise<string | null> {
   const res = await fetch(url);

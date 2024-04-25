@@ -2,16 +2,17 @@ import { BallotConfig, BallotType } from "@pcd/zupoll-shared";
 import { useEffect, useState } from "react";
 import urljoin from "url-join";
 import { ZupollError } from "../../types";
-import { getLatestSemaphoreGroupHash } from "../../zupoll-server-api";
+import { getLatestSemaphoreGroupRoot } from "../../zupoll-server-api";
 
-export function useHistoricSemaphoreUrl(
+export function useHistoricVoterSemaphoreUrl(
   ballotConfig: BallotConfig | undefined,
   onError: (error: ZupollError) => void
-): HistoricSemaphoreUrl {
+): HistoricVoterSemaphoreUrl {
   const [loading, setLoading] = useState(true);
-  const [rootHash, setRootHash] = useState<string | null>(null);
-  const semaphoreGroupId = ballotConfig?.voterGroupId ?? "";
-  const semaphoreGroupServer = ballotConfig?.passportServerUrl ?? "";
+  const [latestVoterGroupRootHash, setLatestVoterGroupHash] = useState<
+    string | null
+  >(null);
+
   useEffect(() => {
     if (
       !ballotConfig ||
@@ -21,17 +22,18 @@ export function useHistoricSemaphoreUrl(
       setLoading(false);
       return;
     }
-    const semaphoreGroupId = ballotConfig.voterGroupId;
-    const semaphoreGroupServer = ballotConfig.passportServerUrl;
-    const groupHashUrl = ballotConfig.latestGroupHashUrl
-      ? ballotConfig.latestGroupHashUrl
+
+    const voterLatestRootUrl = ballotConfig.latestVoterGroupHashUrl
+      ? ballotConfig.latestVoterGroupHashUrl
       : urljoin(
-          semaphoreGroupServer,
-          `semaphore/latest-root/${encodeURIComponent(semaphoreGroupId)}`
+          ballotConfig.passportServerUrl,
+          `semaphore/latest-root/${encodeURIComponent(
+            ballotConfig.voterGroupId
+          )}`
         );
 
-    getLatestSemaphoreGroupHash(groupHashUrl)
-      .then((hash) => setRootHash(hash))
+    getLatestSemaphoreGroupRoot(voterLatestRootUrl)
+      .then((hash) => setLatestVoterGroupHash(hash))
       .catch((e: Error) => {
         console.log(e);
         onError({
@@ -44,27 +46,36 @@ export function useHistoricSemaphoreUrl(
       });
   }, [onError, ballotConfig]);
 
-  let groupUrl: string | null = null;
+  let voterGroupUrl: string | null = null;
+
   if (
+    latestVoterGroupRootHash &&
     ballotConfig?.passportServerUrl &&
     ballotConfig.voterGroupId &&
-    rootHash &&
-    ballotConfig.makeHistoricalGroupUrl
+    ballotConfig.makeHistoricVoterGroupUrl
   ) {
-    groupUrl = ballotConfig.makeHistoricalGroupUrl(rootHash);
-  } else if (ballotConfig?.ballotType === BallotType.PODBOX && rootHash) {
-    groupUrl = urljoin(ballotConfig.voterGroupUrl, rootHash);
+    voterGroupUrl = ballotConfig.makeHistoricVoterGroupUrl(
+      latestVoterGroupRootHash
+    );
+  } else if (
+    ballotConfig?.ballotType === BallotType.PODBOX &&
+    latestVoterGroupRootHash
+  ) {
+    voterGroupUrl = urljoin(
+      ballotConfig.voterGroupUrl,
+      latestVoterGroupRootHash
+    );
   }
 
   return {
     loading,
-    rootHash,
-    groupUrl
+    rootHash: latestVoterGroupRootHash,
+    voterGroupUrl
   };
 }
 
-export interface HistoricSemaphoreUrl {
+export interface HistoricVoterSemaphoreUrl {
   loading: boolean;
   rootHash: string | null;
-  groupUrl: string | null;
+  voterGroupUrl: string | null;
 }
