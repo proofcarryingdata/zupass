@@ -162,7 +162,7 @@ export type ProPODGPCCircuitDesc = CircuitDesc & {
    * Number of POD entries which can be included in a proof.
    */
   maxEntries: number;
-  
+
   /**
    * Max depth of POD merkle tree.  Max entries in any object is log2(depth-1).
    */
@@ -349,11 +349,11 @@ export class ProtoPODGPC {
     for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
       if (
         circuitDesc.maxObjects >= nObjects &&
-          circuitDesc.maxEntries >= nEntries &&
-	  circuitDesc.merkleMaxDepth >= merkleDepth &&
-	  circuitDesc.maxListEntries >= nListEntries &&
-	  circuitDesc.maxTuples >= nTuples &&
-	  circuitDesc.tupleArity == tupleArity
+        circuitDesc.maxEntries >= nEntries &&
+        circuitDesc.merkleMaxDepth >= merkleDepth &&
+        circuitDesc.maxListEntries >= nListEntries &&
+        circuitDesc.maxTuples >= nTuples &&
+        circuitDesc.tupleArity == tupleArity
       ) {
         return circuitDesc;
       }
@@ -387,9 +387,9 @@ export class ProtoPODGPC {
         maxObjects,
         maxEntries,
         merkleMaxDepth,
-	maxListEntries,
-	maxTuples,
-	tupleArity
+        maxListEntries,
+        maxTuples,
+        tupleArity
       ),
       cost,
       maxObjects,

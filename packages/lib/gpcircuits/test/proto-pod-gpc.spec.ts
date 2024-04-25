@@ -1,4 +1,4 @@
-import { POD, PODContent, decodePublicKey, decodeSignature} from "@pcd/pod";
+import { POD, PODContent, decodePublicKey, decodeSignature } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
@@ -34,7 +34,6 @@ const MERKLE_MAX_DEPTH = 8;
 const MAX_LIST_ENTRIES = 10;
 const MAX_TUPLES = 2;
 const TUPLE_ARITY = 2;
-
 
 /**
  * This is a hard-coded version of the values produced by makeTestSignals
@@ -244,7 +243,10 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ ownerIsNullfierHashRevealed: 1n,
 
   // Tuple module (1)
-  /*PUB*/ tupleIndices: [[1n, 3n], [10n, 4n]],
+  /*PUB*/ tupleIndices: [
+    [1n, 3n],
+    [10n, 4n]
+  ],
 
   // List membership module (1)
   /*PUB*/ memberIndex: 11,
@@ -260,7 +262,7 @@ const sampleInput: ProtoPODGPCInputs = {
     9223174870241747285447854875768802508901134156675815701192278375344491817639n,
     9223174870241747285447854875768802508901134156675815701192278375344491817639n
   ],
-  
+
   // Global module (1)
   /*PUB*/ globalWatermark: 1337n
 };
@@ -282,7 +284,7 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
   ownerRevealedNulifierHash:
-  1517081033071132720435657432021139876572843496027662548196342287861804968602n
+    1517081033071132720435657432021139876572843496027662548196342287861804968602n
 };
 
 /**
@@ -410,8 +412,8 @@ function makeTestSignals(
     // to itself.
     if (
       entryInfo.eqEntryIndex !== undefined &&
-	entryInfo.eqEntryIndex < testEntries.length &&
-	entryInfo.eqEntryIndex < paramMaxEntries
+      entryInfo.eqEntryIndex < testEntries.length &&
+      entryInfo.eqEntryIndex < paramMaxEntries
     ) {
       sigEntryEqualToOtherEntryByIndex.push(BigInt(entryInfo.eqEntryIndex));
     } else {
@@ -426,26 +428,45 @@ function makeTestSignals(
     );
   }
 
-
   // ?
   const indexListPairs = [
-    [1, [85n, sigEntryValue[1]].map(x => { return { type: "cryptographic", value: x }; })],
-    [3, [sigEntryValue[3], 876n, 999n].map(x => { return { type: "int", value: x }; })],
-    [4, [sigEntryValue[4]].map(x => { return { type: "int", value: x }; })]].filter(
-      pair => sigEntryIsValueEnabled[pair[0]] == 1n
-    );
-  
+    [
+      1,
+      [85n, sigEntryValue[1]].map((x) => {
+        return { type: "cryptographic", value: x };
+      })
+    ],
+    [
+      3,
+      [sigEntryValue[3], 876n, 999n].map((x) => {
+        return { type: "int", value: x };
+      })
+    ],
+    [
+      4,
+      [sigEntryValue[4]].map((x) => {
+        return { type: "int", value: x };
+      })
+    ]
+  ].filter((pair) => sigEntryIsValueEnabled[pair[0]] == 1n);
+
   const [memberIndex, tupleIndices, membershipList] =
-    (indexListPairs.length == 0) ?
-    [BABY_JUB_NEGATIVE_ONE,
-     Array(paramMaxTuples).fill(Array(paramTupleArity).fill(BABY_JUB_NEGATIVE_ONE)),
-     Array(paramMaxListEntries).fill(0)]
-    : ListMembership.generateSignals(indexListPairs.map(p => p[0]),
-				     indexListPairs.map(p => p[1]),
-				     paramMaxEntries,
-				     paramTupleArity,
-				     paramMaxListEntries,
-				     paramMaxTuples);
+    indexListPairs.length == 0
+      ? [
+          BABY_JUB_NEGATIVE_ONE,
+          Array(paramMaxTuples).fill(
+            Array(paramTupleArity).fill(BABY_JUB_NEGATIVE_ONE)
+          ),
+          Array(paramMaxListEntries).fill(0)
+        ]
+      : ListMembership.generateSignals(
+          indexListPairs.map((p) => p[0]),
+          indexListPairs.map((p) => p[1]),
+          paramMaxEntries,
+          paramTupleArity,
+          paramMaxListEntries,
+          paramMaxTuples
+        );
   return {
     inputs: {
       objectContentID: sigObjectContentID,
@@ -464,9 +485,9 @@ function makeTestSignals(
       entryProofIndex: sigEntryProofIndex,
       entryProofSiblings: sigEntryProofSiblings,
       ownerEntryIndex:
-      paramMaxEntries > sigOwnerEntryIndex
-        ? sigOwnerEntryIndex
-        : BABY_JUB_NEGATIVE_ONE,
+        paramMaxEntries > sigOwnerEntryIndex
+          ? sigOwnerEntryIndex
+          : BABY_JUB_NEGATIVE_ONE,
       ownerSemaphoreV3IdentityNullifier: ownerIdentity.nullifier,
       ownerSemaphoreV3IdentityTrapdoor: ownerIdentity.trapdoor,
       ownerExternalNullifier: 42n,
@@ -479,9 +500,9 @@ function makeTestSignals(
     outputs: {
       entryRevealedValueHash: sigEntryRevealedValueHash,
       ownerRevealedNulifierHash:
-      isNullifierHashRevealed && paramMaxEntries > sigOwnerEntryIndex
-        ? poseidon2([42n, ownerIdentity.nullifier])
-        : BABY_JUB_NEGATIVE_ONE
+        isNullifierHashRevealed && paramMaxEntries > sigOwnerEntryIndex
+          ? poseidon2([42n, ownerIdentity.nullifier])
+          : BABY_JUB_NEGATIVE_ONE
     }
   };
 }
@@ -489,14 +510,21 @@ function makeTestSignals(
 describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   let circuit: WitnessTester<
     ProtoPODGPCInputNamesType,
-  ProtoPODGPCOutputNamesType
+    ProtoPODGPCOutputNamesType
   >;
 
   this.beforeAll(async () => {
     circuit = await circomkit.WitnessTester("ProtoPODGPC", {
       file: "proto-pod-gpc",
       template: "ProtoPODGPC",
-      params: [MAX_OBJECTS, MAX_ENTRIES, MERKLE_MAX_DEPTH, MAX_LIST_ENTRIES, MAX_TUPLES, TUPLE_ARITY],
+      params: [
+        MAX_OBJECTS,
+        MAX_ENTRIES,
+        MERKLE_MAX_DEPTH,
+        MAX_LIST_ENTRIES,
+        MAX_TUPLES,
+        TUPLE_ARITY
+      ],
       pubs: PROTO_POD_GPC_PUBLIC_INPUT_NAMES
     });
   });
@@ -541,7 +569,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
       [2, 10, 8, 10, 2, 3]
     ]) {
       const { inputs, outputs } = makeTestSignals(
-	...params,
+        ...params,
         true /*isNullifierHashRevealed*/
       );
       const altCircuit = await circomkit.WitnessTester("ProtoPODGPC", {
@@ -646,7 +674,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
       MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
-      TUPLE_ARITY,
+      TUPLE_ARITY
     );
 
     let { inputs, outputs } = makeTestSignals(
@@ -683,11 +711,11 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
       // Skip the default (largest) config, already tested above.
       if (
         cd.maxObjects === MAX_OBJECTS &&
-          cd.maxEntries === MAX_ENTRIES &&
-	  cd.merkleMaxDepth === MERKLE_MAX_DEPTH &&
-	  cd.maxListEntries == MAX_LIST_ENTRIES &&
-	  cd.maxTuples == MAX_TUPLES &&
-	  cd.tupleArity == TUPLE_ARITY
+        cd.maxEntries === MAX_ENTRIES &&
+        cd.merkleMaxDepth === MERKLE_MAX_DEPTH &&
+        cd.maxListEntries == MAX_LIST_ENTRIES &&
+        cd.maxTuples == MAX_TUPLES &&
+        cd.tupleArity == TUPLE_ARITY
       ) {
         continue;
       }
@@ -696,17 +724,17 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
         cd.maxObjects,
         cd.maxEntries,
         cd.merkleMaxDepth,
-	cd.maxListEntries,
-	cd.maxTuples,
-	cd.tupleArity
+        cd.maxListEntries,
+        cd.maxTuples,
+        cd.tupleArity
       );
       const { inputs, outputs } = makeTestSignals(
         cd.maxObjects,
         cd.maxEntries,
         cd.merkleMaxDepth,
-	cd.maxListEntries,
-	cd.maxTuples,
-	cd.tupleArity,
+        cd.maxListEntries,
+        cd.maxTuples,
+        cd.tupleArity,
         true /*isNullifierHashRevealed*/
       );
       await groth16Test(artifacts, vkey, inputs, outputs);
