@@ -4,12 +4,12 @@ import { poseidon1, poseidon2, poseidon3, poseidon4} from "poseidon-lite";
 const poseidon = [poseidon2, poseidon3, poseidon4];
 
 export type TupleModuleInputs = {
-  valueHash: CircuitSignal[];
+  value: CircuitSignal[];
   tupleIndices: CircuitSignal[][];
 };
 
 export type TupleModuleInputNamesType = [
-  "valueHash",
+  "value",
   "tupleIndices"
 ];
 

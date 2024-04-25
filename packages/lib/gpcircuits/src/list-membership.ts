@@ -6,12 +6,12 @@ import { poseidon1, poseidon2, poseidon3, poseidon4} from "poseidon-lite";
 const poseidon = [poseidon2, poseidon3, poseidon4];
 
 export type ListMembershipModuleInputs = {
-  valueHash: CircuitSignal;
+  value: CircuitSignal;
   list: CircuitSignal[];
 };
 
 export type ListMembershipModuleInputNamesType = [
-  "valueHash",
+  "value",
   "list"
 ];
 

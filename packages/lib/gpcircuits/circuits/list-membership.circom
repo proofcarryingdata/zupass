@@ -11,8 +11,8 @@ template ListMembershipModule(
     // Maximum number of valid values
     MAX_LIST_ENTRIES
 ) {
-    // Value hash to be checked.
-    signal input valueHash; 
+    // Value to be checked.
+    signal input value; 
 
     // List of admissible value hashes. Assumed to have repetitions if the actual list length is smaller.
     signal input list[MAX_LIST_ENTRIES]; 
@@ -23,9 +23,9 @@ template ListMembershipModule(
 
     for (var i = 0; i < MAX_LIST_ENTRIES; i++) {
 	if (i == 0) {
-	    partialProduct[i] <== valueHash - list[i];
+	    partialProduct[i] <== value - list[i];
 	} else {
-	    partialProduct[i] <== partialProduct[i-1] * (valueHash - list[i]);
+	    partialProduct[i] <== partialProduct[i-1] * (value - list[i]);
 	}
     }
 

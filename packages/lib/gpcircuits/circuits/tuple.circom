@@ -15,18 +15,18 @@ include "gpc-util.circom"; // input selector
 template TupleModule(
     // Arity of each generated tuple
     TUPLE_ARITY,
-    // Maximum number of value hashes to choose from
+    // Maximum number of values to choose from
     MAX_VALUES,
     // Maxium number of tuples to generate
     MAX_TUPLES
 ) {
-    // Value hashes as input signals
-    signal input valueHash[MAX_VALUES];
+    // Values as input signals
+    signal input value[MAX_VALUES];
     
     // Array indicating which values form which tuples by index,
     // where an index `i` less than MAX_VALUES refers to
-    // `valueHash[i]` and one less than `MAX_VALUES + MAX_TUPLES`
-    // refers to `valueHash[i - MAX_VALUES]`.
+    // `value[i]` and one less than `MAX_VALUES + MAX_TUPLES`
+    // refers to `value[i - MAX_VALUES]`.
     signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
     // Note that tupleIndices[i][j] = -1 refers to 0 by convention.
 
@@ -47,10 +47,10 @@ template TupleModule(
 	for(var k = 0; k < TUPLE_ARITY; k++) {
 	    // Feed in ith tuple's kth entry's index
 	    inputSelector[i][k].selectedIndex <== tupleIndices[i][k];
-	    // Form the array `valueHash.concat(tupleHashes.slice(0,i))`.
+	    // Form the array `value.concat(tupleHashes.slice(0,i))`.
 	    for(var j = 0; j < MAX_VALUES + i; j++) {
 		inputSelector[i][k].inputs[j]
-		    <== (j < MAX_VALUES) ? valueHash[j]
+		    <== (j < MAX_VALUES) ? value[j]
 		    : tupleHashes[j - MAX_VALUES];
 	    }
 	    

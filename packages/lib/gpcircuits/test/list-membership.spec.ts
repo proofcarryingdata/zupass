@@ -31,14 +31,14 @@ describe("list-membership.ListMembershipModule should work", function () {
 		      19610499204834543146583882237191752133835393319355403157181111118356886459810n];
   
   const sampleInput: ListMembershipModuleInputs = {
-    valueHash: sampleList[3],
+    value: sampleList[3],
     list: extendedSignalArray(sampleList, MAX_ELEMENTS, sampleList[0]) // We fill up the rest with the first element.
   };
 
-  const sampleInput2: ListMembershipModuleInputs = {...sampleInput, valueHash: 0n};
+  const sampleInput2: ListMembershipModuleInputs = {...sampleInput, value: 0n};
   
   const sampleOutput: ListMembershipModuleOutputs = {
-    isMember: + sampleList.includes(sampleInput.valueHash)
+    isMember: + sampleList.includes(sampleInput.value)
   };
 
   const sampleOutput2: ListMembershipModuleOutputs = {
