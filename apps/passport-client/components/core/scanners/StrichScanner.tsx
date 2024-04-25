@@ -5,7 +5,7 @@ import {
   StrichSDK
 } from "@pixelverse/strichjs-sdk";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { appConfig } from "../../src/appConfig";
+import { appConfig } from "../../../src/appConfig";
 
 /**
  * Create BarcodeReader configuration
