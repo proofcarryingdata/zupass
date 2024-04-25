@@ -129,7 +129,7 @@ export function useCreateBallot({
 
       if (res === undefined) {
         const serverDownError: ZupollError = {
-          title: "Creating ballot failed",
+          title: "Creating poll failed",
           message: "Server is down. Contact support@zupass.org."
         };
         onError(serverDownError);
@@ -143,7 +143,7 @@ export function useCreateBallot({
         const resErr = await res.text();
         console.error("error posting vote to the server: ", resErr);
         const err: ZupollError = {
-          title: "Creating ballot failed",
+          title: "Creating poll failed",
           message: `Server Error: ${resErr}`
         };
         onError(err);
@@ -161,7 +161,7 @@ export function useCreateBallot({
         .catch((e) => {
           setServerLoading(false);
           onError({
-            title: "Creating ballot failed",
+            title: "Creating poll failed",
             message: getErrorMessage(e)
           } satisfies ZupollError);
         });

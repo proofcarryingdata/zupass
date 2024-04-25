@@ -91,8 +91,14 @@ export function CreateBallot({
       [
         ...(loginState.config.ballotConfigs ?? []),
         ...loginState.config.canCreateBallotTypes.map((t) => BALLOT_CONFIGS[t])
-      ].filter((c) => c != null),
-    [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
+      ]
+        .filter((c) => c != null)
+        .filter((c) => c.creatorGroupId === loginState.config.groupId),
+    [
+      loginState.config.ballotConfigs,
+      loginState.config.canCreateBallotTypes,
+      loginState.config.groupId
+    ]
   );
 
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
@@ -146,7 +152,7 @@ export function CreateBallot({
   if (serverLoading) {
     return (
       <LoadingPlaceholderCard>
-        <div className="text-center m-4">Creating Ballot</div>
+        <div className="text-center m-4">Creating Poll</div>
       </LoadingPlaceholderCard>
     );
   }

@@ -196,7 +196,7 @@ export function makePodboxLoginConfigs(
     groupUrl: RESIDENT_GROUP_URL,
     passportServerUrl: ZUPASS_SERVER_URL,
     passportAppUrl: ZUPASS_CLIENT_URL,
-    name: name,
+    name: name + " Resident",
     description: description,
     buttonName: "Login",
     canCreateBallotTypes: [BallotType.PODBOX],
