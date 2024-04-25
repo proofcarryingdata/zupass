@@ -162,6 +162,11 @@ export type ProPODGPCCircuitDesc = CircuitDesc & {
    * Number of POD entries which can be included in a proof.
    */
   maxEntries: number;
+  
+  /**
+   * Max depth of POD merkle tree.  Max entries in any object is log2(depth-1).
+   */
+  merkleMaxDepth: number;
 
   /**
    * Number of entries in membership list to be included in proof.
@@ -177,11 +182,6 @@ export type ProPODGPCCircuitDesc = CircuitDesc & {
    * Arity of tuples which can be included in a proof.
    */
   tupleArity: number;
-  
-  /**
-   * Max depth of POD merkle tree.  Max entries in any object is log2(depth-1).
-   */
-  merkleMaxDepth: number;
 };
 
 /**
@@ -332,25 +332,28 @@ export class ProtoPODGPC {
    * @param nObjects the number of objects required
    * @param nEntries the number of entries required
    * @param merkleDepth the max merkle tree depth required
+   * @param nListEntries the number of list entries in the membership list
+   * @param nTuples the number of tuples required
+   * @param tupleArity the arity of each tuple
    * @returns the circuit description, or undefined if no circuit can handle
    *   the required parameters.
    */
   public static pickCircuit(
     nObjects: number,
     nEntries: number,
+    merkleDepth: number,
     nListEntries: number,
     nTuples: number,
-    tupleArity: number,
-    merkleDepth: number
+    tupleArity: number
   ): ProPODGPCCircuitDesc | undefined {
     for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
       if (
         circuitDesc.maxObjects >= nObjects &&
           circuitDesc.maxEntries >= nEntries &&
+	  circuitDesc.merkleMaxDepth >= merkleDepth &&
 	  circuitDesc.maxListEntries >= nListEntries &&
 	  circuitDesc.maxTuples >= nTuples &&
-	  circuitDesc.tupleArity == tupleArity &&
-          circuitDesc.merkleMaxDepth >= merkleDepth
+	  circuitDesc.tupleArity == tupleArity
       ) {
         return circuitDesc;
       }
@@ -361,21 +364,21 @@ export class ProtoPODGPC {
   private static circuitNameForParams(
     maxObjects: number,
     maxEntries: number,
+    merkleMaxDepth: number,
     maxListEntries: number,
     maxTuples: number,
-    tupleArity: number,
-    merkleMaxDepth: number
+    tupleArity: number
   ): string {
-    return `${PROTO_POD_GPC_FAMILY_NAME}-${maxObjects}o-${maxEntries}e-${maxListEntries}l-${maxTuples}t-${tupleArity}ta-${merkleMaxDepth}md`;
+    return `${PROTO_POD_GPC_FAMILY_NAME}-${maxObjects}o-${maxEntries}e-${merkleMaxDepth}md-${maxListEntries}l-${maxTuples}t-${tupleArity}ta`;
   }
 
   private static curcuitDescForParams(
     maxObjects: number,
     maxEntries: number,
+    merkleMaxDepth: number,
     maxListEntries: number,
     maxTuples: number,
     tupleArity: number,
-    merkleMaxDepth: number,
     cost: number
   ): ProPODGPCCircuitDesc {
     return {
@@ -383,18 +386,18 @@ export class ProtoPODGPC {
       name: ProtoPODGPC.circuitNameForParams(
         maxObjects,
         maxEntries,
+        merkleMaxDepth,
 	maxListEntries,
 	maxTuples,
-	tupleArity,
-        merkleMaxDepth
+	tupleArity
       ),
       cost,
       maxObjects,
       maxEntries,
+      merkleMaxDepth,
       maxListEntries,
       maxTuples,
-      tupleArity,
-      merkleMaxDepth
+      tupleArity
     };
   }
 
@@ -405,8 +408,8 @@ export class ProtoPODGPC {
    */
   public static CIRCUIT_FAMILY: ProPODGPCCircuitDesc[] = [
     // TODO(POD-P2): Pick convenient circuit sizes for MVP.
-    ProtoPODGPC.curcuitDescForParams(1, 1, 10, 2, 2, 5, 9556),
-    ProtoPODGPC.curcuitDescForParams(1, 5, 10, 2, 3, 8, 19223),
-    ProtoPODGPC.curcuitDescForParams(3, 10, 10, 2, 2, 8, 45276)
+    ProtoPODGPC.curcuitDescForParams(1, 1, 5, 10, 2, 2, 9556),
+    ProtoPODGPC.curcuitDescForParams(1, 5, 8, 10, 2, 3, 19223),
+    ProtoPODGPC.curcuitDescForParams(3, 10, 8, 10, 2, 2, 45276)
   ];
 }

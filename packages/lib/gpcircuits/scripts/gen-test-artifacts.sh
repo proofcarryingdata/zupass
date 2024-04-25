@@ -6,9 +6,9 @@
 set -ex
 
 GPC_NAMES=(
-  "proto-pod-gpc-1o-1e-10l-2t-2ta-5md"
-  "proto-pod-gpc-1o-5e-10l-2t-3ta-8md"
-  "proto-pod-gpc-3o-10e-10l-2t-2ta-8md"
+  "proto-pod-gpc-1o-1e-5md-10l-2t-2ta"
+  "proto-pod-gpc-1o-5e-8md-10l-2t-3ta"
+  "proto-pod-gpc-3o-10e-8md-10l-2t-2ta"
 )
 
 gen_gpc_artifacts()

@@ -29,6 +29,11 @@ template ProtoPODGPC (
     // sets the size of inputs with the `entry` prefix (whether arrays or
     // bitfields).
     MAX_ENTRIES,
+    
+    // Max depth of the Merkle proof that this entry appears in a POD.  This
+    // determines the size of the entryProofSiblings array input, and places an
+    // inclusive upper bound on the proofDepth input.
+    MERKLE_MAX_DEPTH,
 
     // Indicates the maximum number of list entries for the list membership check.
     MAX_LIST_ENTRIES,
@@ -37,12 +42,7 @@ template ProtoPODGPC (
     MAX_TUPLES,
 
     // Indicates the arity of the tuples.
-    ARITY,
-    
-    // Max depth of the Merkle proof that this entry appears in a POD.  This
-    // determines the size of the entryProofSiblings array input, and places an
-    // inclusive upper bound on the proofDepth input.
-    MERKLE_MAX_DEPTH
+    TUPLE_ARITY
 ) {
     /*
      * 1+ ObjectModules.  Each array corresponds to one input/output for each object module.
@@ -155,9 +155,9 @@ template ProtoPODGPC (
      * 1 TupleModule with its inputs & outputs.
      */
 
-    signal input tupleIndices[MAX_TUPLES][ARITY];
+    signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
     
-    signal tupleHashes[MAX_TUPLES] <== TupleModule(ARITY, MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleIndices);
+    signal tupleHashes[MAX_TUPLES] <== TupleModule(TUPLE_ARITY, MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleIndices);
 
     /*
      * 1 ListMembershipModule with its inputs & outputs.

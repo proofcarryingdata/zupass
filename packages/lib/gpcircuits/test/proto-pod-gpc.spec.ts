@@ -30,10 +30,10 @@ import {
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
+const MERKLE_MAX_DEPTH = 8;
 const MAX_LIST_ENTRIES = 10;
 const MAX_TUPLES = 2;
 const TUPLE_ARITY = 2;
-const MERKLE_MAX_DEPTH = 8;
 
 
 /**
@@ -298,10 +298,10 @@ const sampleOutput: ProtoPODGPCOutputs = {
 function makeTestSignals(
   paramMaxObjects: number,
   paramMaxEntries: number,
+  paramMaxDepth: number,
   paramMaxListEntries: number,
   paramMaxTuples: number,
   paramTupleArity: number,
-  paramMaxDepth: number,
   isNullifierHashRevealed: boolean
 ): { inputs: ProtoPODGPCInputs; outputs: ProtoPODGPCOutputs } {
   // Test data is selected to exercise a lot of features at once, at full
@@ -496,7 +496,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     circuit = await circomkit.WitnessTester("ProtoPODGPC", {
       file: "proto-pod-gpc",
       template: "ProtoPODGPC",
-      params: [MAX_OBJECTS, MAX_ENTRIES, MAX_LIST_ENTRIES, MAX_TUPLES, TUPLE_ARITY, MERKLE_MAX_DEPTH],
+      params: [MAX_OBJECTS, MAX_ENTRIES, MERKLE_MAX_DEPTH, MAX_LIST_ENTRIES, MAX_TUPLES, TUPLE_ARITY],
       pubs: PROTO_POD_GPC_PUBLIC_INPUT_NAMES
     });
   });
@@ -509,10 +509,10 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     let { inputs, outputs } = makeTestSignals(
       MAX_OBJECTS,
       MAX_ENTRIES,
+      MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
       TUPLE_ARITY,
-      MERKLE_MAX_DEPTH,
       true /*isNullifierHashRevealed*/
     );
     expect(inputs).to.deep.eq(sampleInput);
@@ -522,10 +522,10 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     ({ inputs, outputs } = makeTestSignals(
       MAX_OBJECTS,
       MAX_ENTRIES,
+      MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
       TUPLE_ARITY,
-      MERKLE_MAX_DEPTH,
       false /*isNullifierHashRevealed*/
     ));
     await circuit.expectPass(inputs, outputs);
@@ -536,9 +536,9 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     // dimensions (so padding is exercised).  What we're testing here is the
     // ability to handle smaller sizes, with truncated data as necessary.
     for (const params of [
-      [1, 1, 10, 2, 2, 5],
-      [1, 5, 10, 2, 2, 6],
-      [2, 10, 10, 2, 3, 8]
+      [1, 1, 5, 10, 2, 2],
+      [1, 5, 6, 10, 2, 2],
+      [2, 10, 8, 10, 2, 3]
     ]) {
       const { inputs, outputs } = makeTestSignals(
 	...params,
@@ -564,10 +564,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   function prepGroth16Test(
     maxObjects: number,
     maxEntries: number,
+    merkleMaxDepth: number,
     maxListEntries: number,
     maxTuples: number,
-    tupleArity: number,
-    merkleMaxDepth: number
+    tupleArity: number
   ): {
     artifacts: CircuitArtifactPaths;
     vkey: object;
@@ -575,10 +575,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     const circuitDesc = ProtoPODGPC.pickCircuit(
       maxObjects,
       maxEntries,
+      merkleMaxDepth,
       maxListEntries,
       maxTuples,
-      tupleArity,
-      merkleMaxDepth
+      tupleArity
     );
     expect(circuitDesc).to.not.be.undefined;
     if (!circuitDesc) {
@@ -631,10 +631,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     const { artifacts, vkey } = prepGroth16Test(
       MAX_OBJECTS,
       MAX_ENTRIES,
+      MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
-      TUPLE_ARITY,
-      MERKLE_MAX_DEPTH
+      TUPLE_ARITY
     );
     await groth16Test(artifacts, vkey, sampleInput, sampleOutput);
   });
@@ -643,19 +643,19 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     const { artifacts, vkey } = prepGroth16Test(
       MAX_OBJECTS,
       MAX_ENTRIES,
+      MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
       TUPLE_ARITY,
-      MERKLE_MAX_DEPTH
     );
 
     let { inputs, outputs } = makeTestSignals(
       MAX_OBJECTS,
       MAX_ENTRIES,
+      MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
       TUPLE_ARITY,
-      MERKLE_MAX_DEPTH,
       true /*isNullifierHashRevealed*/
     );
     expect(inputs).to.deep.eq(sampleInput);
@@ -665,10 +665,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     ({ inputs, outputs } = makeTestSignals(
       MAX_OBJECTS,
       MAX_ENTRIES,
+      MERKLE_MAX_DEPTH,
       MAX_LIST_ENTRIES,
       MAX_TUPLES,
       TUPLE_ARITY,
-      MERKLE_MAX_DEPTH,
       false /*isNullifierHashRevealed*/
     ));
     await groth16Test(artifacts, vkey, inputs, outputs);
@@ -684,10 +684,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
       if (
         cd.maxObjects === MAX_OBJECTS &&
           cd.maxEntries === MAX_ENTRIES &&
+	  cd.merkleMaxDepth === MERKLE_MAX_DEPTH &&
 	  cd.maxListEntries == MAX_LIST_ENTRIES &&
 	  cd.maxTuples == MAX_TUPLES &&
-	  cd.tupleArity == TUPLE_ARITY &&
-          cd.merkleMaxDepth === MERKLE_MAX_DEPTH
+	  cd.tupleArity == TUPLE_ARITY
       ) {
         continue;
       }
@@ -695,18 +695,18 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
       const { artifacts, vkey } = prepGroth16Test(
         cd.maxObjects,
         cd.maxEntries,
+        cd.merkleMaxDepth,
 	cd.maxListEntries,
 	cd.maxTuples,
-	cd.tupleArity,
-        cd.merkleMaxDepth
+	cd.tupleArity
       );
       const { inputs, outputs } = makeTestSignals(
         cd.maxObjects,
         cd.maxEntries,
+        cd.merkleMaxDepth,
 	cd.maxListEntries,
 	cd.maxTuples,
 	cd.tupleArity,
-        cd.merkleMaxDepth,
         true /*isNullifierHashRevealed*/
       );
       await groth16Test(artifacts, vkey, inputs, outputs);
