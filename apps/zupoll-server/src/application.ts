@@ -14,6 +14,8 @@ export async function startApplication() {
     logger.error("failed to start bot", e);
   });
 
+  await context?.rollbarService?.log("Server Started");
+
   await startServer(context);
 }
 

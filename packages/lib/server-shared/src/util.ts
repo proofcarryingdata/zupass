@@ -10,10 +10,23 @@ export async function getCommitHash(): Promise<string> {
     });
     return result.stdout.trim();
   } catch (e) {
-    console.log("couldn't get commit hash", e);
+    console.error("couldn't get commit hash", e);
   }
 
   return "unknown commit hash";
+}
+
+export async function getCommitMessage(): Promise<string> {
+  try {
+    const result = await execAsync('git show -s --format="%s"', {
+      cwd: process.cwd()
+    });
+    return result.stdout.trim();
+  } catch (e) {
+    console.error("couldn't get commit message", e);
+  }
+
+  return "unknown commit message";
 }
 
 /**

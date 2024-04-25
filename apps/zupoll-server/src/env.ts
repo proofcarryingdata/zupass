@@ -56,6 +56,9 @@ export const ETH_LATAM_ORGANIZERS_GROUP_ID: string = warnIfEnvMissing(
   "217d77d7-0e89-4c39-9d0d-819a575f3f90"
 );
 
+export const ROLLBAR_TOKEN = process.env.ROLLBAR_TOKEN;
+export const ROLLBAR_ENV_NAME = process.env.ROLLBAR_ENV_NAME;
+
 export function warnIfEnvMissing(
   value: string | undefined,
   name: string,
@@ -63,7 +66,7 @@ export function warnIfEnvMissing(
 ): string {
   if (value === undefined) {
     console.warn(
-      `Environment variable ${name} is not set. Using default value ${defaultValue}`
+      `Environment variable ${name} is not set. Using default value '${defaultValue}'`
     );
     return defaultValue;
   }

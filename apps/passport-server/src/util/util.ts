@@ -1,6 +1,5 @@
-import { execAsync, requireEnv } from "@pcd/server-shared";
+import { requireEnv } from "@pcd/server-shared";
 import { spawn } from "child_process";
-import { logger } from "./logger";
 
 /**
  * Generate a random 6-digit random token for use as a token.
@@ -9,19 +8,6 @@ export function randomEmailToken(): string {
   const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
   if (token.length !== 6) throw new Error("Unreachable");
   return token;
-}
-
-export async function getCommitMessage(): Promise<string> {
-  try {
-    const result = await execAsync('git show -s --format="%s"', {
-      cwd: process.cwd()
-    });
-    return result.stdout.trim();
-  } catch (e) {
-    logger("couldn't get commit message", e);
-  }
-
-  return "unknown commit message";
 }
 
 export function isLocalServer(): boolean {
