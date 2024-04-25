@@ -91,7 +91,9 @@ export function useBallotVoting({
           message: `Server Error: ${resErr}`
         };
         if (resErr === "User has already voted on this ballot.") {
-          err.message = "You have already voted on this ballot!";
+          err.message = "You've already voted on this ballot!";
+          err.title = "Your vote was counted!";
+          err.friendly = true;
           setVoted(ballotId);
           refresh(ballotId);
         }

@@ -71,7 +71,7 @@ export interface LoginConfig {
 }
 
 export interface BallotConfig {
-  name?: string;
+  name: string;
   voterGroupId: string;
   voterGroupUrl: string;
   creatorGroupId: string;

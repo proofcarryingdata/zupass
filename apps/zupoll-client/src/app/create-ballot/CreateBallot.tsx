@@ -413,7 +413,7 @@ export function CreateBallot({
             <Subtitle>Ballot Type</Subtitle>
             <Select
               // TODO: make this based on ballot config name, not type
-              value={selectedBallotConfig?.ballotType}
+              value={selectedBallotConfig?.name}
               onValueChange={(value: string) =>
                 setSelectedBallotConfig(
                   possibleBallotConfigs.find(
@@ -428,9 +428,9 @@ export function CreateBallot({
 
               <SelectContent>
                 <SelectGroup>
-                  {possibleBallotConfigs.map((type) => (
-                    <SelectItem key={type.ballotType} value={type.ballotType}>
-                      {type.ballotType}
+                  {possibleBallotConfigs.map((c) => (
+                    <SelectItem key={c.name} value={c.name}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectGroup>
@@ -471,7 +471,7 @@ export function CreateBallot({
                   placeholder="Should we do this?"
                 />
                 <Subtitle>Choices</Subtitle>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   {poll.options.map((option, j) => (
                     <div key={j} className="flex row gap-2">
                       <Input

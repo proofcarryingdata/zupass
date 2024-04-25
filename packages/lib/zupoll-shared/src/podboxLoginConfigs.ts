@@ -207,7 +207,7 @@ export function makePodboxLoginConfigs(
     passportAppUrl: ZUPASS_CLIENT_URL,
     name: name,
     description: description,
-    buttonName: name,
+    buttonName: "Login",
     canCreateBallotTypes: [BallotType.PODBOX],
     ballotConfigs: [
       {
@@ -239,7 +239,7 @@ export function makePodboxLoginConfigs(
     passportAppUrl: ZUPASS_CLIENT_URL,
     name: name + " Organizer",
     description: description,
-    buttonName: "Organizer",
+    buttonName: "Staff",
     canCreateBallotTypes: [BallotType.PODBOX],
     ballotConfigs: [
       {
