@@ -85,4 +85,5 @@ export interface BallotConfig {
 
   description?: string;
   isPublic: boolean;
+  isDefault?: boolean;
 }

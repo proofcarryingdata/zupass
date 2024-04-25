@@ -95,11 +95,9 @@ export function CreateBallot({
     [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
   );
 
-  console.log("possible", possibleBallotConfigs);
-
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
     BallotConfig | undefined
-  >(possibleBallotConfigs[0]);
+  >(possibleBallotConfigs.find((c) => c.isDefault) ?? possibleBallotConfigs[0]);
 
   const { loadingVoterGroupUrl, createBallotPCD } = useCreateBallot({
     ballotTitle,

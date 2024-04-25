@@ -259,7 +259,8 @@ export function makePodboxLoginConfigs(
         ballotType: BallotType.PODBOX,
         latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
         makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
-        isPublic: false
+        isPublic: false,
+        isDefault: true
       }
     ]
   };
