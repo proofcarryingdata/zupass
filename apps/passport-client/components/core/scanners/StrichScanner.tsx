@@ -1,11 +1,10 @@
 import {
   BarcodeReader,
   CodeDetection,
-  Configuration,
-  StrichSDK
+  Configuration
 } from "@pixelverse/strichjs-sdk";
-import { useCallback, useEffect, useRef, useState } from "react";
-import { appConfig } from "../../../src/appConfig";
+import { useCallback, useEffect, useRef } from "react";
+import { useStrichSDKState } from "../../../src/appHooks";
 
 /**
  * Create BarcodeReader configuration
@@ -50,39 +49,10 @@ function ScannerHost({
   const hostElemRef = useRef<HTMLDivElement | null>(null);
 
   // the SDK initialization state
-  const [sdkState, setSdkState] = useState(
-    StrichSDK.isInitialized() ? "initialized" : undefined
-  );
+  const sdkState = useStrichSDKState();
 
   // a reference to a BarcodeReader
   const barcodeReaderRef = useRef<BarcodeReader | null>(null);
-
-  // this effect has no dependencies, so it should run only once (except if React StrictMode is on)
-  useEffect(() => {
-    const initializeSDK = async (): Promise<void> => {
-      if (StrichSDK.isInitialized()) {
-        setSdkState("initialized");
-      } else {
-        try {
-          if (!appConfig.strichLicenseKey) {
-            throw new Error("Strich license key is not defined");
-          }
-          await StrichSDK.initialize(appConfig.strichLicenseKey);
-          console.log(`STRICH SDK initialized successfully`);
-          setSdkState("initialized");
-        } catch (e) {
-          console.error(`Failed to initialize STRICH SDK: ${e}`);
-          setSdkState("initialization-error");
-        }
-      }
-    };
-
-    // run async initialization
-    if (sdkState === undefined) {
-      setSdkState("initializing");
-      initializeSDK();
-    }
-  }, [sdkState]);
 
   // BarcodeReader creation, once SDK is initialized
   useEffect(() => {
