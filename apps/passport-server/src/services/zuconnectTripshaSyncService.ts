@@ -1,4 +1,5 @@
 import { ZUCONNECT_PRODUCT_ID_MAPPINGS } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import _ from "lodash";
 import {
   IZuconnectTripshaAPI,
@@ -13,7 +14,6 @@ import {
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { compareArrays } from "../util/util";
-import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { setError, traced } from "./telemetryService";
 

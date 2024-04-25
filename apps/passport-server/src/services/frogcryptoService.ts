@@ -25,6 +25,7 @@ import {
   PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
+import { RollbarService } from "@pcd/server-shared";
 import _ from "lodash";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
@@ -55,7 +56,6 @@ import {
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { IssuanceService } from "./issuanceService";
-import { RollbarService } from "./rollbarService";
 
 export class FrogcryptoService {
   private readonly context: ApplicationContext;

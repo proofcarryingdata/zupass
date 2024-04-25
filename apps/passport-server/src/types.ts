@@ -1,3 +1,4 @@
+import { RollbarService } from "@pcd/server-shared";
 import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
@@ -24,7 +25,6 @@ import { PersistentCacheService } from "./services/persistentCacheService";
 import { PoapService } from "./services/poapService";
 import { ProvingService } from "./services/provingService";
 import { RateLimitService } from "./services/rateLimitService";
-import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
