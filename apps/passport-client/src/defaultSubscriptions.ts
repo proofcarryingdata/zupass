@@ -47,6 +47,27 @@ export function isDefaultSubscription(sub: Subscription): boolean {
   );
 }
 
+async function listAndSubscribeAll(
+  feedUrl: string,
+  subscriptions: FeedSubscriptionManager
+): Promise<void> {
+  const { feeds, providerName, providerUrl } =
+    await subscriptions.listFeeds(feedUrl);
+
+  if (!subscriptions.hasProvider(feedUrl)) {
+    subscriptions.addProvider(providerUrl, providerName);
+  }
+
+  for (const feed of feeds) {
+    subscriptions.subscribe(
+      providerUrl,
+      feed,
+      // Replace the existing subscription if it already exists
+      true
+    );
+  }
+}
+
 export async function addDefaultSubscriptions(
   subscriptions: FeedSubscriptionManager
 ): Promise<void> {
@@ -61,23 +82,35 @@ export async function addDefaultSubscriptions(
     );
   }
 
+  const subscriptionPromises = [];
+
   for (const feedUrl of DEFAULT_FEED_URLS) {
-    const { feeds, providerName, providerUrl } =
-      await subscriptions.listFeeds(feedUrl);
-
-    if (!subscriptions.hasProvider(feedUrl)) {
-      subscriptions.addProvider(providerUrl, providerName);
+    // DEFAULT_FEED_URLS is a list of URLs to individual feeds
+    // The reason we have to use URL strings is because Zupass doesn't know
+    // about the feed objects in the way that it does for feeds that come from
+    // the Zupass backend (see zupassDefaultSubscriptions above).
+    //
+    // In principle, multiple feeds can live at the same URL. In practice, we
+    // do not do this for feeds served by Podbox (which is where all of the
+    // feeds in DEFAULT_FEED_URLS come from). So, the final part of the URL is
+    // always the feed ID. Given this, we can check to see if the user is
+    // already subscribed to this feed: if so, we do not need to re-subscribe
+    // them.
+    const feedId = feedUrl.split("/").pop();
+    if (
+      feedId &&
+      subscriptions.getSubscriptionsByProviderAndFeedId(feedUrl, feedId)
+        .length === 1
+    ) {
+      continue;
     }
 
-    for (const feed of feeds) {
-      subscriptions.subscribe(
-        providerUrl,
-        feed,
-        // Replace the existing subscription if it already exists
-        true
-      );
-    }
+    // Asynchronously list the feeds and subscribe the user to them.
+    subscriptionPromises.push(listAndSubscribeAll(feedUrl, subscriptions));
   }
+
+  // Wait for subscriptions to have updated.
+  await Promise.allSettled(subscriptionPromises);
 
   // Unsubscribe from legacy Lemonade feeds, if they exist
   const legacyLemonadeProviders = subscriptions
