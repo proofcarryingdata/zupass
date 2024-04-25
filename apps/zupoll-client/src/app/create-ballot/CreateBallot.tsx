@@ -93,13 +93,11 @@ export function CreateBallot({
         ...loginState.config.canCreateBallotTypes.map((t) => BALLOT_CONFIGS[t])
       ]
         .filter((c) => c != null)
-        .filter((c) => c.creatorGroupId === loginState.config.groupId),
-    [
-      loginState.config.ballotConfigs,
-      loginState.config.canCreateBallotTypes,
-      loginState.config.groupId
-    ]
+        .filter((c) => c.canCreate !== false),
+    [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
   );
+
+  console.log("possible", loginState, possibleBallotConfigs);
 
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
     BallotConfig | undefined
