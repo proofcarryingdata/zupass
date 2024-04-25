@@ -61,7 +61,10 @@ export function BallotsForUserSection({
             loading={loading}
             description={loginConfig.description}
             ballots={ballots}
-            filter={(b) => b.ballotType === BallotType.PODBOX}
+            filter={(b) =>
+              b.ballotType === BallotType.PODBOX &&
+              b.pollsterSemaphoreGroupUrl === c.creatorGroupUrl
+            }
           />
         );
       })}

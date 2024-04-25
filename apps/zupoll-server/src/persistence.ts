@@ -76,7 +76,8 @@ export async function getBallotsForPipelineId(pipelineId: string) {
       ballotURL: true,
       expiry: true,
       ballotType: true,
-      createdAt: true
+      createdAt: true,
+      pollsterSemaphoreGroupUrl: true
     },
     orderBy: { expiry: "desc" },
     where: {

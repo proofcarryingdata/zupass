@@ -24,7 +24,7 @@ export function getPodboxConfigs(
   const PARC_HQ_YEAR = 2024;
   const PARC_HQ_MONTH = 1;
   const PARC_HQ_DAY = 1;
-  const PARC_HQ_CONFIG = makePodboxLoginConfig(
+  const PARC_HQ_CONFIG = makePodboxLoginConfigs(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
     PARC_HQ_CONFIG_ID,
@@ -63,7 +63,7 @@ export function getPodboxConfigs(
   const ESEMERALDA_YEAR = 2024;
   const ESEMERALDA_MONTH = 4;
   const ESEMERALDA_DAY = 1;
-  const ESMERALDA_CONFIG = makePodboxLoginConfig(
+  const ESMERALDA_CONFIG = makePodboxLoginConfigs(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
     ESMERALDA_CONFIG_ID,
@@ -99,11 +99,11 @@ export function getPodboxConfigs(
   const ETH_PRAGUE_CONFIG_SEMA_GROUP_ID =
     "eaf2d5f1-4d8c-4342-92f7-d44e85178951";
   const ETH_PRAGUE_CONFIG_ORGANIZER_SEMA_GROUP_ID =
-    "eaf2d5f1-4d8c-4342-92f7-d44e85178951";
+    "db1eac6e-81a8-411c-b22b-7007bf0a3773";
   const ETH_PRAGUE_YEAR = 2024;
   const ETH_PRAGUE_MONTH = 4;
   const ETH_PRAGUE_DAY = 1;
-  const ETH_PRAGUE_CONFIG = makePodboxLoginConfig(
+  const ETH_PRAGUE_CONFIG = makePodboxLoginConfigs(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
     ETH_PRAGUE_CONFIG_ID,
@@ -140,7 +140,7 @@ export function getPodboxConfigs(
   const ETH_BERLIN_YEAR = 2024;
   const ETH_BERLIN_MONTH = 4;
   const ETH_BERLIN_DAY = 1;
-  const ETH_BERLIN_CONFIG = makePodboxLoginConfig(
+  const ETH_BERLIN_CONFIG = makePodboxLoginConfigs(
     ZUPASS_CLIENT_URL,
     ZUPASS_SERVER_URL,
     ETH_BERLIN_CONFIG_ID,
@@ -159,14 +159,14 @@ export function getPodboxConfigs(
   );
 
   return [
-    PARC_HQ_CONFIG,
-    ESMERALDA_CONFIG,
-    ETH_PRAGUE_CONFIG,
-    ETH_BERLIN_CONFIG
+    ...PARC_HQ_CONFIG,
+    ...ESMERALDA_CONFIG,
+    ...ETH_PRAGUE_CONFIG,
+    ...ETH_BERLIN_CONFIG
   ];
 }
 
-export function makePodboxLoginConfig(
+export function makePodboxLoginConfigs(
   ZUPASS_CLIENT_URL: string,
   ZUPASS_SERVER_URL: string,
   id: string,
@@ -182,21 +182,20 @@ export function makePodboxLoginConfig(
   year: number,
   month: number,
   day: number
-): LoginConfig {
+): LoginConfig[] {
   const RESIDENT_GROUP_URL = makePodboxGroupUrl(
     ZUPASS_SERVER_URL,
     pipelineId,
     residentSemaphoreGroupId
   );
 
-  // eslint-disable-next-line @typescript-eslint/no-unused-vars
   const ORGANIZER_GROUP_URL = makePodboxGroupUrl(
     ZUPASS_SERVER_URL,
     pipelineId,
     organizerSemaphoreGroupId
   );
 
-  const PARC_HQ_CONFIG: LoginConfig = {
+  const RESIDENT_CONFIG: LoginConfig = {
     pipelineId,
     year,
     month,
@@ -225,28 +224,56 @@ export function makePodboxLoginConfig(
         makeHistoricalGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
         isPublic: false
       }
-      // {
-      //   name: organizerName,
-      //   description: organizerDescription,
-      //   voterGroupId: organizerSemaphoreGroupId,
-      //   voterGroupUrl: ORGANIZER_GROUP_URL,
-      //   creatorGroupId: residentSemaphoreGroupId,
-      //   creatorGroupUrl: ORGANIZER_GROUP_URL,
-      //   passportServerUrl: ZUPASS_SERVER_URL,
-      //   passportAppUrl: ZUPASS_CLIENT_URL,
-      //   ballotType: BallotType.PODBOX,
-      //   latestGroupHashUrl: urljoin(ORGANIZER_GROUP_URL, "latest-root"),
-      //   makeHistoricalGroupUrl: (hash) => urljoin(ORGANIZER_GROUP_URL, hash),
-      //   allowedViewerGroupIds: [residentSemaphoreGroupId],
-      //   allowedVoterGroupIds: [residentSemaphoreGroupId],
-      //   allowedVoterRealmIds: [pipelineId],
-      //   allowedViewerRealmIds: [pipelineId],
-      //   isPublic: false
-      // }
     ]
   };
 
-  return PARC_HQ_CONFIG;
+  const STAFF_CONFIG: LoginConfig = {
+    pipelineId,
+    year,
+    month,
+    day,
+    configCategoryId: id,
+    groupId: organizerSemaphoreGroupId,
+    groupUrl: ORGANIZER_GROUP_URL,
+    passportServerUrl: ZUPASS_SERVER_URL,
+    passportAppUrl: ZUPASS_CLIENT_URL,
+    name: name + " Organizer",
+    description: description,
+    buttonName: "Organizer",
+    canCreateBallotTypes: [BallotType.PODBOX],
+    ballotConfigs: [
+      {
+        name: organizerName,
+        description: organizerDescription,
+        voterGroupId: organizerSemaphoreGroupId,
+        voterGroupUrl: ORGANIZER_GROUP_URL,
+        creatorGroupId: organizerSemaphoreGroupId,
+        creatorGroupUrl: ORGANIZER_GROUP_URL,
+        passportServerUrl: ZUPASS_SERVER_URL,
+        passportAppUrl: ZUPASS_CLIENT_URL,
+        ballotType: BallotType.PODBOX,
+        latestGroupHashUrl: urljoin(ORGANIZER_GROUP_URL, "latest-root"),
+        makeHistoricalGroupUrl: (hash) => urljoin(ORGANIZER_GROUP_URL, hash),
+        isPublic: false
+      },
+      {
+        name: residentName,
+        description: residentDescription,
+        voterGroupId: residentSemaphoreGroupId,
+        voterGroupUrl: RESIDENT_GROUP_URL,
+        creatorGroupId: residentSemaphoreGroupId,
+        creatorGroupUrl: RESIDENT_GROUP_URL,
+        passportServerUrl: ZUPASS_SERVER_URL,
+        passportAppUrl: ZUPASS_CLIENT_URL,
+        ballotType: BallotType.PODBOX,
+        latestGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
+        makeHistoricalGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
+        isPublic: false
+      }
+    ]
+  };
+
+  return [STAFF_CONFIG, RESIDENT_CONFIG];
 }
 
 export function makePodboxGroupUrl(
