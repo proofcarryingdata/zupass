@@ -1,20 +1,6 @@
-import { exec, spawn } from "child_process";
-import { promisify } from "util";
+import { execAsync, requireEnv } from "@pcd/server-shared";
+import { spawn } from "child_process";
 import { logger } from "./logger";
-
-export const execAsync = promisify(exec);
-
-/**
- * Ensures a given environment variable exists by throwing an error
- * if it doesn't.
- */
-export function requireEnv(str: string): string {
-  const val = process.env[str];
-  if (val === null || val === undefined || val === "") {
-    throw str;
-  }
-  return val;
-}
 
 /**
  * Generate a random 6-digit random token for use as a token.
@@ -23,19 +9,6 @@ export function randomEmailToken(): string {
   const token = (((1 + Math.random()) * 1e6) | 0).toString().substring(1);
   if (token.length !== 6) throw new Error("Unreachable");
   return token;
-}
-
-export async function getCommitHash(): Promise<string> {
-  try {
-    const result = await execAsync("git rev-parse HEAD", {
-      cwd: process.cwd()
-    });
-    return result.stdout.trim();
-  } catch (e) {
-    logger("couldn't get commit hash", e);
-  }
-
-  return "unknown commit hash";
 }
 
 export async function getCommitMessage(): Promise<string> {

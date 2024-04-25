@@ -1,7 +1,7 @@
 import { RollbarService } from "@pcd/server-shared";
+import { requireEnv } from "@pcd/util";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { requireEnv } from "../util/util";
 
 export function startRollbarService(
   context: ApplicationContext
