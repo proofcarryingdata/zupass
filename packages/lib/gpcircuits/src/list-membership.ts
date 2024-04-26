@@ -1,7 +1,7 @@
 import { CircuitSignal } from "./types";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { PODValue, podValueHash } from "@pcd/pod";
-import { poseidon1, poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
+import { poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
 
 const poseidon = [poseidon2, poseidon3, poseidon4];
 
@@ -59,7 +59,7 @@ export class ListMembership {
     paramMaxTuples: number
   ): [number, bigint[][], bigint[]] {
     // Check input
-    if (listIndices.length != membershipLists.length)
+    if (listIndices.length !== membershipLists.length)
       throw new TypeError(
         "The lengths of the index and value list arrays must be the same."
       );
@@ -78,9 +78,9 @@ export class ListMembership {
     });
 
     // Helpers
-    const pad = (arr: any, len: number, padding: any) =>
+    const pad = <A>(arr: A[], len: number, padding: A): A[] =>
       arr.concat(Array(len - arr.length).fill(padding));
-
+      
     // Sort input (TODO: including membership lists) for permutation invariance and hash the individual membership lists.
     const sortedZippedList: [number, bigint[]][] = listIndices
       .map(function (i, j): [number, PODValue[]] {
@@ -90,7 +90,7 @@ export class ListMembership {
       .map((pair) => [pair[0], pair[1].map((x) => podValueHash(x))]); // Hash the elements
 
     // Early return if tuples are not required.
-    if (listIndices.length == 1)
+    if (listIndices.length === 1)
       return [
         listIndices[0],
         [[]],
@@ -152,7 +152,7 @@ export class ListMembership {
       ((reduction: bigint[]) =>
         reduction.length == 1
           ? reduction[0]
-          : hash(pad(reduction, paramTupleArity, 0)))(
+        : hash(pad(reduction, paramTupleArity, BigInt(0))))(
         // After performing the reduction, make sure the reduction led to a single value by padding with 0s,
         ((l: bigint[]) =>
           l.reduce(

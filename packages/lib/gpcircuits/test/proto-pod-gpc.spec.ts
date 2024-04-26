@@ -15,7 +15,6 @@ import {
   ProtoPODGPCInputs,
   ProtoPODGPCOutputNamesType,
   ProtoPODGPCOutputs,
-  Tuple,
   artifactPaths
 } from "../src";
 import {
@@ -448,7 +447,7 @@ function makeTestSignals(
         return { type: "int", value: x };
       })
     ]
-  ].filter((pair) => sigEntryIsValueEnabled[pair[0]] == 1n);
+  ].filter((pair) => sigEntryIsValueEnabled[pair[0]] === 1n);
 
   const [memberIndex, tupleIndices, membershipList] =
     indexListPairs.length == 0
