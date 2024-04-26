@@ -4,7 +4,7 @@ import {
   Configuration
 } from "@pixelverse/strichjs-sdk";
 import { useCallback, useEffect, useRef } from "react";
-import { useDispatch, useStrichSDKState } from "../../../src/appHooks";
+import { useStrichSDKState } from "../../../src/appHooks";
 
 /**
  * Create BarcodeReader configuration
@@ -54,8 +54,6 @@ function ScannerHost({
   // a reference to a BarcodeReader
   const barcodeReaderRef = useRef<BarcodeReader | null>(null);
 
-  const dispatch = useDispatch();
-
   // BarcodeReader creation, once SDK is initialized
   useEffect(() => {
     if (sdkState === "initialized" && barcodeReaderRef.current === null) {
@@ -81,12 +79,8 @@ function ScannerHost({
           barcodeReaderRef.current = null;
         }
       };
-    } else if (sdkState !== "initialized") {
-      // Initialization on app startup may have failed, e.g. if the app was
-      // offline when started.
-      dispatch({ type: "initialize-strich" });
     }
-  }, [addDetection, dispatch, sdkState]);
+  }, [addDetection, sdkState]);
 
   const innerHeight = window.innerHeight;
   // the component acts as the STRICH BarcodeReader host element
