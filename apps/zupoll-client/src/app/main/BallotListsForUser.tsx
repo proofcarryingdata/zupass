@@ -6,7 +6,7 @@ import {
 import { Ballot } from "../../api/prismaTypes";
 import { ZUPASS_CLIENT_URL, ZUPASS_SERVER_URL } from "../../env";
 import { LoginState } from "../../types";
-import { BallotTypeSection } from "./BallotTypeSection";
+import { BallotTypeSection, BallotsForUserSection } from "./BallotTypeSection";
 
 export function BallotListsForUser({
   loginState,
@@ -27,13 +27,11 @@ export function BallotListsForUser({
   return (
     <>
       {matchingPodboxLoginConfig && (
-        <BallotTypeSection
-          visible={true}
-          title={matchingPodboxLoginConfig.name}
+        <BallotsForUserSection
+          loginState={loginState}
           loading={loading}
-          description={matchingPodboxLoginConfig.description}
           ballots={ballots}
-          filter={(b) => b.ballotType === BallotType.PODBOX}
+          loginConfig={matchingPodboxLoginConfig}
         />
       )}
 

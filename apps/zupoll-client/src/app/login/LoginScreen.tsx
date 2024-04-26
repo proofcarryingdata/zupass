@@ -1,12 +1,11 @@
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { AppHeader } from "@/components/ui/Headers";
-import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { useZupassPopupMessages } from "@pcd/passport-interface/PassportPopup/react";
 import { LoginConfig } from "@pcd/zupoll-shared";
 import { useParams } from "next/navigation";
 import { useEffect, useState } from "react";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
+import { ContentContainer } from "../../@/components/ui/Elements";
 import { LEGACY_LOGIN_CONFIGS } from "../../api/loginGroups";
 import { LoginState, ZupollError } from "../../types";
 import { removeQueryParameters } from "../../util";
@@ -86,28 +85,25 @@ export function LoginScreen({
   // Chunk the login options into rows of two options
 
   return (
-    <>
-      <AppHeader actions={<Button className="invisible">test</Button>} />
-      <Center>
-        <ContentContainer>
-          <GuaranteesElement />
+    <ContentContainer>
+      <AppHeader />
 
-          <Card className="my-8">
-            <CardContent className="mt-6">
-              <LoginWidget
-                configs={LEGACY_LOGIN_CONFIGS}
-                onLogin={onLogin}
-                loggingIn={loggingIn}
-                setError={setError}
-                setServerLoading={setServerLoading}
-                serverLoading={serverLoading}
-              />
-            </CardContent>
-          </Card>
+      <GuaranteesElement />
 
-          <ErrorDialog error={error} close={() => setError(undefined)} />
-        </ContentContainer>
-      </Center>
-    </>
+      <Card>
+        <CardContent className="mt-6">
+          <LoginWidget
+            configs={LEGACY_LOGIN_CONFIGS}
+            onLogin={onLogin}
+            loggingIn={loggingIn}
+            setError={setError}
+            setServerLoading={setServerLoading}
+            serverLoading={serverLoading}
+          />
+        </CardContent>
+      </Card>
+
+      <ErrorDialog error={error} close={() => setError(undefined)} />
+    </ContentContainer>
   );
 }

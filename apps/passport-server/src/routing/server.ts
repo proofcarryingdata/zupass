@@ -16,7 +16,6 @@ import { initE2EERoutes } from "./routes/e2eeRoutes";
 import { initFrogcryptoRoutes } from "./routes/frogcryptoRoutes";
 import { initGenericIssuanceRoutes } from "./routes/genericIssuanceRoutes";
 import { initHealthcheckRoutes } from "./routes/healthCheckRoutes";
-import { initKudosbotRoutes } from "./routes/kudosbotRoutes";
 import { initLogRoutes } from "./routes/logRoutes";
 import { initPCDIssuanceRoutes } from "./routes/pcdIssuanceRoutes";
 import { initPoapRoutes } from "./routes/poapRoutes";
@@ -168,7 +167,6 @@ function initAllRoutes(
   initStaticRoutes(app, context);
   initPCDIssuanceRoutes(app, context, globalServices);
   initTelegramRoutes(app, context, globalServices);
-  initKudosbotRoutes(app, context, globalServices);
   initFrogcryptoRoutes(app, context, globalServices);
   initPoapRoutes(app, context, globalServices);
   initLogRoutes(app);

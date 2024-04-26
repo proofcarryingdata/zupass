@@ -21,6 +21,8 @@ export type Ballot = {
   voterSemaphoreGroupRoots: string[];
   ballotType: BallotType;
   expiryNotif: ExpiryNotifStatus | null;
+  pipelineId?: string;
+  isPublic: boolean;
 };
 
 /**

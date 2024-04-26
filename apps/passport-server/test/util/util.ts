@@ -1,4 +1,5 @@
 import { expect } from "chai";
+import JSONBig from "json-bigint";
 import _ from "lodash";
 import { v4 as uuid } from "uuid";
 
@@ -80,7 +81,7 @@ export function expectLength<T>(
 
   if (array.length !== length) {
     throw new Error(
-      `expected ${JSON.stringify(
+      `expected ${JSONBig.stringify(
         array,
         function (_key, value) {
           if (isTimeoutObject(value)) {

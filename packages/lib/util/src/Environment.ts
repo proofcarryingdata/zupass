@@ -52,3 +52,23 @@ export function isWebAssemblySupported(): boolean {
     return false;
   }
 }
+
+/**
+ * Method that tests whether local storage is available by setting and
+ * resetting a test entry in localStorage.
+ */
+export function isLocalStorageAvailable(): boolean {
+  try {
+    const key = `__storage__test`;
+    const originalValue = window.localStorage.getItem(key);
+    window.localStorage.setItem(key, "test");
+    if (originalValue !== null) {
+      window.localStorage.setItem(key, originalValue);
+    } else {
+      window.localStorage.removeItem(key);
+    }
+    return true;
+  } catch (e) {
+    return false;
+  }
+}

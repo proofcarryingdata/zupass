@@ -1,8 +1,11 @@
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName,
   ITicketData,
-  TicketCategory
+  TicketCategory,
+  isEdDSATicketPCD
 } from "@pcd/eddsa-ticket-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
@@ -13,11 +16,14 @@ import {
   GenericPretixOrder,
   GenericPretixProduct,
   GenericPretixProductCategory,
+  ImageOptions,
   ManualTicket,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
   PipelineType,
+  PipelineZuAuthConfig,
   PodboxTicketActionError,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -30,8 +36,14 @@ import {
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName } from "@pcd/pcd-types";
+import {
+  PODTicketPCD,
+  PODTicketPCDPackage,
+  PODTicketPCDTypeName
+} from "@pcd/pod-ticket-pcd";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { normalizeEmail, str } from "@pcd/util";
+import stable_stringify from "fast-json-stable-stringify";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import { v5 as uuidv5 } from "uuid";
@@ -73,6 +85,11 @@ const LOG_NAME = "PretixPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export const PRETIX_CHECKER = "Pretix";
+
+const VALID_PRETIX_EVENT_SETTINGS: GenericPretixEventSettings = {
+  attendee_emails_asked: true,
+  attendee_emails_required: true
+};
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
@@ -161,7 +178,8 @@ export class PretixPipeline implements BasePipeline {
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
-        )
+        ),
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.checkinPretixTicketPCDs.bind(this),
@@ -462,11 +480,14 @@ export class PretixPipeline implements BasePipeline {
       const orgUrl = this.definition.options.pretixOrgUrl;
       const token = this.definition.options.pretixAPIKey;
       const eventId = event.externalId;
-      const settings = await this.api.fetchEventSettings(
-        orgUrl,
-        token,
-        eventId
-      );
+      let settings: GenericPretixEventSettings;
+      // When settings validation is skipped, return a valid configuration
+      // rather than calling the API
+      if (event.skipSettingsValidation) {
+        settings = VALID_PRETIX_EVENT_SETTINGS;
+      } else {
+        settings = await this.api.fetchEventSettings(orgUrl, token, eventId);
+      }
       const categories = await this.api.fetchProductCategories(
         orgUrl,
         token,
@@ -800,6 +821,7 @@ export class PretixPipeline implements BasePipeline {
       attendeeEmail: manualTicket.attendeeEmail,
       attendeeName: manualTicket.attendeeName,
       attendeeSemaphoreId: sempahoreId,
+      imageUrl: this.imageOptionsToImageUrl(event.imageOptions, !!checkIn),
       isConsumed: checkIn ? true : false,
       isRevoked: false,
       timestampSigned: Date.now(),
@@ -853,7 +875,9 @@ export class PretixPipeline implements BasePipeline {
 
     // Turn ticket data into PCDs
     const tickets = await Promise.all(
-      ticketDatas.map((t) => this.getOrGenerateTicket(t))
+      ticketDatas.map((t) =>
+        this.getOrGenerateTicket<EdDSATicketPCD>(t, EdDSATicketPCDTypeName)
+      )
     );
 
     return tickets;
@@ -909,12 +933,30 @@ export class PretixPipeline implements BasePipeline {
         });
       }
 
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      if (this.definition.options.enablePODTickets) {
+        const podTickets = await Promise.all(
+          tickets.map((ticket) => {
+            return this.getOrGenerateTicket<PODTicketPCD>(
+              ticket.claim.ticket,
+              PODTicketPCDTypeName
+            );
+          })
+        );
+        ticketPCDs.push(
+          ...(await Promise.all(
+            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+          ))
+        );
+      }
+
       actions.push({
         type: PCDActionType.ReplaceInFolder,
         folder: this.definition.options.feedOptions.feedFolder,
-        pcds: await Promise.all(
-          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-        )
+        pcds: ticketPCDs
       });
 
       const result: PollFeedResponseValue = { actions };
@@ -943,21 +985,26 @@ export class PretixPipeline implements BasePipeline {
       timestampConsumed: atom.timestampConsumed?.getTime() ?? 0,
       timestampSigned: Date.now(),
       attendeeSemaphoreId: semaphoreId,
+      imageUrl: this.atomToImageUrl(atom),
       isConsumed: atom.isConsumed,
       isRevoked: false,
       ticketCategory: TicketCategory.Generic
     };
   }
 
-  private async getOrGenerateTicket(
-    ticketData: ITicketData
-  ): Promise<EdDSATicketPCD> {
+  private async getOrGenerateTicket<T extends EdDSATicketPCD | PODTicketPCD>(
+    ticketData: ITicketData,
+    ticketPCDType: T["type"]
+  ): Promise<T> {
     return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
       span?.setAttribute("ticket_id", ticketData.ticketId);
       span?.setAttribute("ticket_email", ticketData.attendeeEmail);
       span?.setAttribute("ticket_name", ticketData.attendeeName);
 
-      const cachedTicket = await this.getCachedTicket(ticketData);
+      const cachedTicket = await this.getCachedTicket(
+        ticketData,
+        ticketPCDType
+      );
 
       if (cachedTicket) {
         span?.setAttribute("from_cache", true);
@@ -968,10 +1015,14 @@ export class PretixPipeline implements BasePipeline {
         `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
 
-      const generatedTicket = await this.ticketDataToTicketPCD(
-        ticketData,
-        this.eddsaPrivateKey
-      );
+      const generatedTicket: T = (
+        ticketPCDType === EdDSATicketPCDTypeName
+          ? await this.ticketDataToTicketPCD(ticketData, this.eddsaPrivateKey)
+          : await this.ticketDataToPODTicketPCD(
+              ticketData,
+              this.eddsaPrivateKey
+            )
+      ) as T;
 
       try {
         this.cacheTicket(generatedTicket);
@@ -987,6 +1038,7 @@ export class PretixPipeline implements BasePipeline {
   }
 
   private static async getTicketCacheKey(
+    ticketPCDType: string,
     ticketData: ITicketData,
     eddsaPrivateKey: string,
     pipelineId: string
@@ -998,25 +1050,35 @@ export class PretixPipeline implements BasePipeline {
     // ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
-      JSON.stringify(ticketCopy) + eddsaPrivateKey + pipelineId
+      stable_stringify(ticketCopy) +
+        eddsaPrivateKey +
+        pipelineId +
+        ticketPCDType
     );
     return hash;
   }
 
-  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+  private async cacheTicket(
+    ticket: EdDSATicketPCD | PODTicketPCD
+  ): Promise<void> {
     const key = await PretixPipeline.getTicketCacheKey(
+      ticket.type,
       ticket.claim.ticket,
       this.eddsaPrivateKey,
       this.id
     );
-    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    const serialized = isEdDSATicketPCD(ticket)
+      ? await EdDSATicketPCDPackage.serialize(ticket)
+      : await PODTicketPCDPackage.serialize(ticket);
     this.cacheService.setValue(key, JSON.stringify(serialized));
   }
 
-  private async getCachedTicket(
-    ticketData: ITicketData
-  ): Promise<EdDSATicketPCD | undefined> {
+  private async getCachedTicket<T extends EdDSATicketPCD | PODTicketPCD>(
+    ticketData: ITicketData,
+    ticketPCDType: T["type"]
+  ): Promise<T | undefined> {
     const key = await PretixPipeline.getTicketCacheKey(
+      ticketPCDType,
       ticketData,
       this.eddsaPrivateKey,
       this.id
@@ -1034,9 +1096,11 @@ export class PretixPipeline implements BasePipeline {
         `${LOG_TAG} cache hit for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
       const parsedTicket = JSON.parse(serializedTicket.cache_value);
-      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-        parsedTicket.pcd
-      );
+      const deserializedTicket = (
+        ticketPCDType === EdDSATicketPCDTypeName
+          ? await EdDSATicketPCDPackage.deserialize(parsedTicket.pcd)
+          : await PODTicketPCDPackage.deserialize(parsedTicket.pcd)
+      ) as T;
       return deserializedTicket;
     } catch (e) {
       logger(
@@ -1054,6 +1118,32 @@ export class PretixPipeline implements BasePipeline {
     const stableId = await getHash("issued-ticket-" + ticketData.ticketId);
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: stableId,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    return ticketPCD;
+  }
+
+  private async ticketDataToPODTicketPCD(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
+  ): Promise<PODTicketPCD> {
+    const stableId = await getHash(
+      `issued-pod-ticket-${this.id}-${ticketData.ticketId}`
+    );
+
+    const ticketPCD = await PODTicketPCDPackage.prove({
       ticket: {
         value: ticketData,
         argumentType: ArgumentTypeName.Object
@@ -1626,8 +1716,24 @@ export class PretixPipeline implements BasePipeline {
     return product.name;
   }
 
+  private imageOptionsToImageUrl(
+    imageOptions: ImageOptions | undefined,
+    isCheckedIn: boolean
+  ): string | undefined {
+    if (!imageOptions) return undefined;
+    if (imageOptions.requireCheckedIn && !isCheckedIn) return undefined;
+    return imageOptions.imageUrl;
+  }
+
   private atomToPretixEventId(ticketAtom: PretixAtom): string {
     return this.getEventById(ticketAtom.eventId).externalId;
+  }
+
+  private atomToImageUrl(ticketAtom: PretixAtom): string | undefined {
+    return this.imageOptionsToImageUrl(
+      this.getEventById(ticketAtom.eventId).imageOptions,
+      ticketAtom.isConsumed
+    );
   }
 
   private getEventById(eventId: string): PretixEventConfig {
@@ -1657,6 +1763,27 @@ export class PretixPipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is PretixPipeline {
     return p.type === PipelineType.Pretix;
+  }
+
+  /**
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
+   */
+  private async getZuAuthConfig(): Promise<PipelineZuAuthConfig[]> {
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const metadata = this.definition.options.events.flatMap((ev) =>
+      ev.products.map(
+        (product) =>
+          ({
+            pcdType: "eddsa-ticket-pcd",
+            publicKey,
+            eventId: ev.genericIssuanceId,
+            eventName: ev.name,
+            productId: product.genericIssuanceId,
+            productName: product.name
+          }) satisfies PipelineEdDSATicketZuAuthConfig
+      )
+    );
+    return metadata;
   }
 
   /**

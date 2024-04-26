@@ -1,12 +1,10 @@
-import {
-  LoadingButton,
-  LoadingPlaceholderCard
-} from "@/components/ui/LoadingPlaceholder";
+import { LoadingPlaceholderCard } from "@/components/ui/LoadingPlaceholder";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { FaRegTrashAlt } from "react-icons/fa";
 import { IoMdAdd } from "react-icons/io";
+import styled from "styled-components";
 import { Button } from "../../@/components/ui/button";
 import { Card, CardContent, CardHeader } from "../../@/components/ui/card";
 import { Input } from "../../@/components/ui/input";
@@ -24,8 +22,8 @@ import { BallotSignal } from "../../api/requestTypes";
 import { APP_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
+import { DividerWithText } from "./DividerWithText";
 import { NewQuestionPlaceholder } from "./NewQuestionPlaceholder";
-import { PollsBelowDivider } from "./PollsBelowDivider";
 import { BALLOT_CONFIGS } from "./ballotConfig";
 import { BallotFromUrl, useCreateBallot } from "./useCreateBallot";
 
@@ -69,8 +67,6 @@ export function CreateBallot({
   const [serverLoading, setServerLoading] = useState(false);
   const query = useSearchParams();
   useEffect(() => {
-    const url = new URL(window.location.href);
-    console.log({ url });
     // Use URLSearchParams to get the proof query parameter
     const proofString = query?.get("proof") as string;
     const ballotString = query?.get("ballot") as string;
@@ -169,7 +165,7 @@ export function CreateBallot({
         <CardHeader>
           <Title className="mb-0">New Ballot</Title>
         </CardHeader>
-        <CardContent>
+        <CardContent style={{ marginTop: "-20px" }}>
           <div style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}>
             <Subtitle>Debug Tools</Subtitle>
             <div className="flex flex-row gap-2">
@@ -249,6 +245,14 @@ export function CreateBallot({
                       id: polls.length.toString(),
                       body: "Choose your favorite project.",
                       options: options,
+                      ballotURL: 0,
+                      createdAt: new Date(),
+                      expiry: new Date(Date.now() + 1000 * 60 * 60 * 24)
+                    },
+                    {
+                      id: "1",
+                      body: "smoll questions.",
+                      options: ["option uno", "option dos"],
                       ballotURL: 0,
                       createdAt: new Date(),
                       expiry: new Date(Date.now() + 1000 * 60 * 60 * 24)
@@ -336,7 +340,7 @@ export function CreateBallot({
             }}
           />
 
-          <div className="flex flex-row gap-2 m-2 w-full justify-evenly">
+          <DateQuickActions className="flex flex-row gap-2 m-2 w-full justify-evenly">
             <Button variant="ghost" onClick={() => setExpiry(1000 * 60 * 60)}>
               1hr
             </Button>
@@ -376,7 +380,7 @@ export function CreateBallot({
             >
               1yr
             </Button>
-          </div>
+          </DateQuickActions>
 
           <div
             style={{
@@ -413,7 +417,7 @@ export function CreateBallot({
         </CardContent>
       </Card>
 
-      <PollsBelowDivider />
+      <DividerWithText>Polls</DividerWithText>
 
       <div className="flex flex-col gap-4 mb-2">
         {polls.map((poll, i) => {
@@ -537,7 +541,7 @@ export function CreateBallot({
       )}
 
       {loadingVoterGroupUrl || serverLoading ? (
-        <LoadingButton />
+        <>asdf</>
       ) : (
         <Button
           className="w-full"
@@ -555,3 +559,16 @@ export function CreateBallot({
     </div>
   );
 }
+
+const DateQuickActions = styled.div`
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    flex-wrap: wrap;
+
+    button {
+      flex-grow: 1;
+    }
+  }
+`;

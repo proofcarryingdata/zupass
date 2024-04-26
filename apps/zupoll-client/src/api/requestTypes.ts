@@ -24,6 +24,7 @@ export type BallotSignal = {
   expiry: Date;
   voterSemaphoreGroupUrls: string[];
   voterSemaphoreGroupRoots: string[];
+  pipelineId?: string;
 };
 
 export type PollSignal = {

@@ -73,7 +73,6 @@ export function useBallotVoting({
     async (request: MultiVoteRequest) => {
       setServerLoading(true);
       const res = await voteBallot(request, loginState.token);
-      setServerLoading(false);
 
       if (res === undefined) {
         const serverDownError: ZupollError = {
@@ -81,6 +80,7 @@ export function useBallotVoting({
           message: "Server is down. Contact support@zupass.org."
         };
         onError(serverDownError);
+        setServerLoading(false);
         return;
       }
 
@@ -97,6 +97,7 @@ export function useBallotVoting({
         }
         console.error("Error posting vote to the server: ", resErr);
         onError(err);
+        setServerLoading(false);
         return;
       }
 

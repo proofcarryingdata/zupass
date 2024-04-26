@@ -19,7 +19,7 @@ export function LoginActionsForLoginGroup({
         const shouldEmphasize = i === group.configs.length - 1;
         return (
           <LoginButton
-            key={i}
+            key={group.category + loginConfig.name}
             onLogin={onLogin}
             onError={setError}
             setServerLoading={setServerLoading}

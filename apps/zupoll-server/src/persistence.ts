@@ -69,6 +69,25 @@ export async function getBallotsVisibleToUserType(
   });
 }
 
+export async function getBallotsForPipelineId(pipelineId: string) {
+  return prisma.ballot.findMany({
+    select: {
+      ballotTitle: true,
+      ballotURL: true,
+      expiry: true,
+      ballotType: true,
+      createdAt: true
+    },
+    orderBy: { expiry: "desc" },
+    where: {
+      ballotType: {
+        in: [BallotType.PODBOX]
+      },
+      pipelineId
+    }
+  });
+}
+
 export async function getBallotById(ballotURL: number) {
   return prisma.ballot.findUnique({
     where: {
@@ -158,7 +177,8 @@ export async function createBallot(
       pollsterSemaphoreGroupUrl: request.ballot.pollsterSemaphoreGroupUrl,
       voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots,
       voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
-      ballotType: request.ballot.ballotType
+      ballotType: request.ballot.ballotType,
+      pipelineId: request.ballot.pipelineId
     }
   });
 }

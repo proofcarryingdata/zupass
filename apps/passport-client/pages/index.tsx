@@ -4,7 +4,11 @@ import {
   requestOfflineTickets,
   requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
-import { getErrorMessage, isWebAssemblySupported } from "@pcd/util";
+import {
+  getErrorMessage,
+  isLocalStorageAvailable,
+  isWebAssemblySupported
+} from "@pcd/util";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -27,6 +31,7 @@ import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProving
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
+import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
@@ -268,6 +273,13 @@ function App(): JSX.Element {
           <Routes>
             <Route path="/terms" element={<TermsScreen />} />
             <Route path="*" element={<NoWASMScreen />} />
+          </Routes>
+        </HashRouter>
+      ) : !isLocalStorageAvailable() ? (
+        <HashRouter>
+          <Routes>
+            <Route path="/terms" element={<TermsScreen />} />
+            <Route path="*" element={<LocalStorageNotAccessibleScreen />} />
           </Routes>
         </HashRouter>
       ) : !hasStack ? (

@@ -9,6 +9,7 @@ import {
   requestGenericIssuanceSemaphoreGroup,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
+import { expectIsPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { ONE_DAY_MS, ONE_SECOND_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
@@ -67,12 +68,12 @@ describe("generic issuance - PretixPipeline", function () {
     EthLatAmManualAttendeeEmail,
     EthLatAmManualBouncerIdentity,
     EthLatAmManualBouncerEmail,
+    EthLatAmImageUrl,
     mockServer,
     pretixBackend,
     ethLatAmPretixOrganizer,
     ethLatAmEvent,
     ethLatAmPipeline,
-
     ethLatAmSemaphoreGroupIds
   } = setupTestPretixPipeline();
 
@@ -213,7 +214,7 @@ describe("generic issuance - PretixPipeline", function () {
       );
       expectLength(
         attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
-        1
+        2
       );
       const attendeeTicket = attendeeTickets[0];
       expectToExist(attendeeTicket);
@@ -225,6 +226,16 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
       );
 
+      const attendeePODTicket = attendeeTickets[1];
+      expectToExist(attendeePODTicket);
+      expectIsPODTicketPCD(attendeePODTicket);
+      expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail
+      );
+      expect(attendeePODTicket.claim.ticket.attendeeName).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeName
+      );
+
       const bouncerTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         ethLatAmTicketFeedUrl,
@@ -233,7 +244,7 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
         EthLatAmBouncerIdentity
       );
-      expectLength(bouncerTickets, 1);
+      expectLength(bouncerTickets, 2);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -241,6 +252,15 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
       );
       expect(bouncerTicket.claim.ticket.attendeeName).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
+      );
+      const bouncerPODTicket = bouncerTickets[1];
+      expectToExist(bouncerPODTicket);
+      expectIsPODTicketPCD(bouncerPODTicket);
+      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+      expect(bouncerPODTicket.claim.ticket.attendeeName).to.eq(
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerName
       );
 
@@ -303,10 +323,15 @@ describe("generic issuance - PretixPipeline", function () {
         EthLatAmManualAttendeeEmail,
         EthLatAmManualAttendeeIdentity
       );
-      expectLength(ManualAttendeeTickets, 1);
+      expectLength(ManualAttendeeTickets, 2);
       const ManualAttendeeTicket = ManualAttendeeTickets[0];
       expectIsEdDSATicketPCD(ManualAttendeeTicket);
       expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
+        EthLatAmManualAttendeeEmail
+      );
+      const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+      expectIsPODTicketPCD(ManualAttendeePODTicket);
+      expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
         EthLatAmManualAttendeeEmail
       );
 
@@ -318,12 +343,20 @@ describe("generic issuance - PretixPipeline", function () {
         EthLatAmManualBouncerEmail,
         EthLatAmManualBouncerIdentity
       );
-      expectLength(ManualBouncerTickets, 1);
+      expectLength(ManualBouncerTickets, 2);
       const ManualBouncerTicket = ManualBouncerTickets[0];
       expectIsEdDSATicketPCD(ManualBouncerTicket);
       expect(ManualBouncerTicket.claim.ticket.attendeeEmail).to.eq(
         EthLatAmManualBouncerEmail
       );
+      expect(ManualBouncerTicket.claim.ticket.imageUrl).to.be.undefined;
+
+      const ManualBouncerPODTicket = ManualBouncerTickets[1];
+      expectIsPODTicketPCD(ManualBouncerPODTicket);
+      expect(ManualBouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+        EthLatAmManualBouncerEmail
+      );
+      expect(ManualBouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
 
       pretixBackend.checkOut(
         ethLatAmPretixOrganizer.orgUrl,
@@ -354,14 +387,29 @@ describe("generic issuance - PretixPipeline", function () {
           EthLatAmManualAttendeeEmail,
           EthLatAmManualAttendeeIdentity
         );
-        expectLength(ManualAttendeeTickets, 1);
+        expectLength(ManualAttendeeTickets, 2);
         const ManualAttendeeTicket = ManualAttendeeTickets[0];
         expectIsEdDSATicketPCD(ManualAttendeeTicket);
         expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
           EthLatAmManualAttendeeEmail
         );
         expect(ManualAttendeeTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeeTicket.claim.ticket.imageUrl).to.eq(
+          EthLatAmImageUrl
+        );
         expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
+          Date.now()
+        );
+        const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+        expectIsPODTicketPCD(ManualAttendeePODTicket);
+        expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
+          EthLatAmManualAttendeeEmail
+        );
+        expect(ManualAttendeePODTicket.claim.ticket.isConsumed).to.eq(true);
+        expect(ManualAttendeePODTicket.claim.ticket.imageUrl).to.eq(
+          EthLatAmImageUrl
+        );
+        expect(ManualAttendeePODTicket.claim.ticket.timestampConsumed).to.eq(
           Date.now()
         );
       }
@@ -575,7 +623,7 @@ describe("generic issuance - PretixPipeline", function () {
       pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
       EthLatAmBouncerIdentity
     );
-    expectLength(bouncerTickets, 1);
+    expectLength(bouncerTickets, 2);
     const bouncerTicket = bouncerTickets[0];
     expectToExist(bouncerTicket);
     expectIsEdDSATicketPCD(bouncerTicket);
@@ -584,6 +632,17 @@ describe("generic issuance - PretixPipeline", function () {
     );
     // Bouncer ticket is checked out
     expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+    expect(bouncerTicket.claim.ticket.imageUrl).to.be.undefined;
+
+    const bouncerPODTicket = bouncerTickets[1];
+    expectToExist(bouncerPODTicket);
+    expectIsPODTicketPCD(bouncerPODTicket);
+    expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+    );
+    // Bouncer ticket is checked out
+    expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
+    expect(bouncerPODTicket.claim.ticket.imageUrl).to.be.undefined;
 
     // Now check the bouncer in
     const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
@@ -611,7 +670,7 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
         EthLatAmBouncerIdentity
       );
-      expectLength(bouncerTickets, 1);
+      expectLength(bouncerTickets, 2);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -620,6 +679,15 @@ describe("generic issuance - PretixPipeline", function () {
       );
       // User is now checked in
       expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
+
+      const bouncerPODTicket = bouncerTickets[1];
+      expectToExist(bouncerPODTicket);
+      expectIsPODTicketPCD(bouncerPODTicket);
+      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+      // User is now checked in
+      expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
     }
     {
       // Trying to check in again should fail
@@ -678,7 +746,7 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
         EthLatAmBouncerIdentity
       );
-      expectLength(bouncerTickets, 1);
+      expectLength(bouncerTickets, 2);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -687,6 +755,15 @@ describe("generic issuance - PretixPipeline", function () {
       );
       // Bouncer ticket is checked out
       expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+
+      const bouncerPODTicket = bouncerTickets[1];
+      expectToExist(bouncerPODTicket);
+      expectIsPODTicketPCD(bouncerPODTicket);
+      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+        pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+      );
+      // Bouncer ticket is checked out
+      expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
     }
     {
       // Now check the bouncer in
@@ -713,7 +790,7 @@ describe("generic issuance - PretixPipeline", function () {
           pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
           EthLatAmBouncerIdentity
         );
-        expectLength(bouncerTickets, 1);
+        expectLength(bouncerTickets, 2);
         const bouncerTicket = bouncerTickets[0];
         expectToExist(bouncerTicket);
         expectIsEdDSATicketPCD(bouncerTicket);
@@ -722,6 +799,15 @@ describe("generic issuance - PretixPipeline", function () {
         );
         // User is now checked in
         expect(bouncerTicket.claim.ticket.isConsumed).to.eq(true);
+
+        const bouncerPODTicket = bouncerTickets[1];
+        expectToExist(bouncerPODTicket);
+        expectIsPODTicketPCD(bouncerPODTicket);
+        expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail
+        );
+        // User is now checked in
+        expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(true);
       }
     }
   });
@@ -820,7 +906,7 @@ describe("generic issuance - PretixPipeline", function () {
         ethLatAmPretixOrganizer.ethLatAmBouncerEmail,
         EthLatAmBouncerIdentity
       );
-      expectLength(bouncerTickets, 1);
+      expectLength(bouncerTickets, 2);
       const bouncerTicket = bouncerTickets[0];
       expectToExist(bouncerTicket);
       expectIsEdDSATicketPCD(bouncerTicket);
@@ -829,6 +915,15 @@ describe("generic issuance - PretixPipeline", function () {
       );
       // Bouncer ticket is checked out
       expect(bouncerTicket.claim.ticket.isConsumed).to.eq(false);
+
+      const bouncerPODTicket = bouncerTickets[1];
+      expectToExist(bouncerPODTicket);
+      expectIsPODTicketPCD(bouncerPODTicket);
+      expect(bouncerPODTicket.claim.ticket.attendeeEmail).to.eq(
+        ethLatAmPretixOrganizer.ethLatAmBouncerEmail
+      );
+      // Bouncer ticket is checked out
+      expect(bouncerPODTicket.claim.ticket.isConsumed).to.eq(false);
 
       const ethLatAmCheckinRoute = pipeline.checkinCapability.getCheckinUrl();
 

@@ -39,6 +39,7 @@ import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataS
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
+import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
 import { SectionContainer } from "./SectionContainer";
 
 export function PipelineDetailSection({
@@ -119,6 +120,17 @@ export function PipelineDetailSection({
             <SectionContainer>
               <PipelineSemaphoreGroupsSection
                 lastLoad={pipelineInfo.lastLoad}
+              />
+            </SectionContainer>
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>ZuAuth Config</AccordionButton>
+          <AccordionPanel>
+            <SectionContainer>
+              <PipelineZuAuthConfigSection
+                pipelineZuAuthConfig={pipelineInfo.zuAuthConfig}
               />
             </SectionContainer>
           </AccordionPanel>

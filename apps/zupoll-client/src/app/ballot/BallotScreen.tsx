@@ -4,14 +4,16 @@ import { Skeleton } from "@/components/ui/skeleton";
 import { usePathname, useRouter } from "next/navigation";
 import { useEffect, useState } from "react";
 import styled from "styled-components";
-import { Center, ContentContainer } from "../../@/components/ui/Elements";
-import { AppHeader, SubpageActions } from "../../@/components/ui/Headers";
+import { ContentContainer } from "../../@/components/ui/Elements";
+import { AppHeader } from "../../@/components/ui/Headers";
 import { Title } from "../../@/components/ui/text";
 import { Ballot } from "../../api/prismaTypes";
 import { BallotPollResponse, PollWithCounts } from "../../api/requestTypes";
 import { LoginState, ZupollError } from "../../types";
 import { fmtTimeAgo, fmtTimeFuture } from "../../util";
 import { listBallotPolls } from "../../zupoll-server-api";
+import { DividerWithText } from "../create-ballot/DividerWithText";
+import { LoggedInAs } from "../main/LoggedInAs";
 import { BallotPoll } from "./BallotPoll";
 import { getBallotVotes, useBallotVoting, votedOn } from "./useBallotVoting";
 
@@ -172,7 +174,8 @@ export function BallotScreen({
     const currentVote = pollToVote.get(pollId);
     if (currentVote !== undefined) {
       if (currentVote === voteIdx) {
-        setPollToVote(new Map(pollToVote.set(pollId, undefined)));
+        pollToVote.delete(pollId);
+        setPollToVote(new Map(pollToVote));
         return;
       }
     }
@@ -202,26 +205,37 @@ export function BallotScreen({
     setVoteFromUrl
   });
 
+  const isHackathonView = !!polls.find((p) => p.options.length >= 6);
+
   return (
-    <Center>
-      <AppHeader title={" "} actions={<SubpageActions />} />
-      <ContentContainer>
-        {ballot && polls && (
-          <div>
-            <Title className="mb-0">{ballot.ballotTitle} </Title>
-            <span className="font-normal text-sm text-foreground/90">
-              posted {fmtTimeAgo(new Date(ballot.createdAt))}
-              {" · "}
-              {new Date(ballot.expiry) < new Date() ? (
-                <span style={{ color: "red" }}>expired</span>
-              ) : (
-                <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
-              )}
-            </span>
-            <p className="mt-2">{ballot.ballotDescription}</p>
-            <div className="flex flex-col gap-4 mb-4">
-              {polls.map((poll) => (
+    <ContentContainer>
+      <AppHeader />
+      <LoggedInAs
+        loginState={loginState}
+        logout={logout}
+        showHomeButton={true}
+      />
+      {ballot && polls && (
+        <div>
+          <Title className="mb-0">{ballot.ballotTitle} </Title>
+          <div className="">{ballot.ballotDescription}</div>
+          <div className="font-normal text-sm text-foreground/80">
+            posted anonymously {fmtTimeAgo(new Date(ballot.createdAt))}
+            {" · "}
+            {new Date(ballot.expiry) < new Date() ? (
+              <span className="text-red-600 dark:text-red-300">expired</span>
+            ) : (
+              <>expires {fmtTimeFuture(new Date(ballot.expiry))}</>
+            )}
+          </div>
+          <DividerWithText></DividerWithText>
+          <div className="flex flex-col gap-4 mb-4">
+            {polls.map((poll) => {
+              return (
                 <BallotPoll
+                  isHackathonView={isHackathonView}
+                  thisIsHackathonView={poll.options.length >= 6}
+                  singlePoll={polls.length === 1}
                   key={poll.id}
                   canVote={canVote}
                   poll={poll}
@@ -234,38 +248,40 @@ export function BallotScreen({
                     }
                   }}
                 />
-              ))}
-            </div>
-
-            {canVote && (
-              <>
-                <Button
-                  variant={"creative"}
-                  onClick={createBallotVotePCD}
-                  className="w-full"
-                >
-                  Submit Votes
-                </Button>
-                <TextContainer className="text-foreground/70 mt-2 text-center">
-                  If you created or reset your Zupass after this ballot was
-                  created you will not be able to vote. This is a security
-                  measure designed to prevent double-voting.
-                </TextContainer>
-              </>
-            )}
+              );
+            })}
           </div>
-        )}
 
-        {(!ballot || !polls) && <PlaceholderBallot />}
+          {canVote && !(isHackathonView && polls.length === 1) && (
+            <>
+              <DividerWithText></DividerWithText>
+              <Button
+                variant={"creative"}
+                onClick={createBallotVotePCD}
+                className="w-full"
+                disabled={pollToVote.size === 0}
+              >
+                Submit Votes
+              </Button>
+              <TextContainer className="text-foreground/70 mt-2 text-sm mb-2">
+                If you created or reset your Zupass after this ballot was
+                created you will not be able to vote. This is a security measure
+                designed to prevent double-voting.
+              </TextContainer>
+            </>
+          )}
+        </div>
+      )}
 
-        <ErrorDialog
-          error={error}
-          close={() => {
-            setError(undefined);
-          }}
-        />
-      </ContentContainer>
-    </Center>
+      {(!ballot || !polls) && <PlaceholderBallot />}
+
+      <ErrorDialog
+        error={error}
+        close={() => {
+          setError(undefined);
+        }}
+      />
+    </ContentContainer>
   );
 }
 
@@ -279,17 +295,10 @@ const TextContainer = styled.div`
 function PlaceholderBallot() {
   return (
     <div className="flex flex-col space-y-3">
-      <Skeleton className="h-8 w-[60%]" />
-      <div className="flex flex-row gap-2">
-        <Skeleton className="h-5 w-[100px]" />
-        <Skeleton className="h-5 w-[100px]" />
-      </div>
-      <Skeleton className="h-5 w-[200px]" />
-      <div className="space-y-2">
-        <Skeleton className="h-10 w-full" />
-        <Skeleton className="h-10 w-full" />
-      </div>
-      <Skeleton className="h-7 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
+      <Skeleton className="h-16 w-full" />
     </div>
   );
 }

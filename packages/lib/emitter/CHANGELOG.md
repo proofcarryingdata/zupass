@@ -1,5 +1,11 @@
 # @pcd/emitter
 
+## 0.5.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
 ## 0.4.0
 
 ### Minor Changes

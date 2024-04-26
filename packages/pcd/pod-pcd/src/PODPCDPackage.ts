@@ -112,7 +112,7 @@ export function getDisplayOptions(
 }
 
 /**
- * The PCD package of the EdDSA PCD. It exports an object containing
+ * The PCD package of the POD PCD. It exports an object containing
  * the code necessary to operate on this PCD data.
  */
 export const PODPCDPackage: PCDPackage<

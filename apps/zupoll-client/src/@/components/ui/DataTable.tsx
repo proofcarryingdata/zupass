@@ -36,14 +36,17 @@ export function DataTable<TData, TValue>({
   });
 
   return (
-    <div className="rounded-md border bg-card">
+    <div className="rounded-md border bg-card overflow-hidden ">
       <Table>
         <TableHeader>
           {table.getHeaderGroups().map((headerGroup) => (
             <TableRow key={headerGroup.id}>
               {headerGroup.headers.map((header) => {
                 return (
-                  <TableHead key={header.id}>
+                  <TableHead
+                    key={header.id}
+                    style={{ width: `${header.getSize()}px` }}
+                  >
                     {header.isPlaceholder
                       ? null
                       : flexRender(
@@ -76,9 +79,9 @@ export function DataTable<TData, TValue>({
             ))
           ) : (
             <TableRow>
-              <TableCell colSpan={columns.length} className="h-24 text-center">
+              <TableCell colSpan={columns.length}>
                 {placeholder ?? (
-                  <div className="text-foreground/90">Nothing Yet</div>
+                  <div className="text-foreground/70">Nothing Yet</div>
                 )}
               </TableCell>
             </TableRow>

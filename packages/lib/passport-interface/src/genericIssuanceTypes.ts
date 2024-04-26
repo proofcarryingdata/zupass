@@ -269,6 +269,13 @@ const FeedIssuanceOptionsSchema = z.object({
 
 export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
 
+const ImageOptionsSchema = z.object({
+  imageUrl: z.string(),
+  requireCheckedIn: z.boolean()
+});
+
+export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
+
 const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * Configured by the user when setting up Lemonade as a data source.
@@ -283,7 +290,8 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
   ticketActions: TicketActionsOptionsSchema.optional(),
-  semaphoreGroups: SemaphoreGroupListSchema
+  semaphoreGroups: SemaphoreGroupListSchema,
+  enablePODTickets: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -383,7 +391,15 @@ const PretixEventConfigSchema = z.object({
    * Display name for the event
    */
   name: z.string(),
-  products: z.array(PretixProductConfigSchema)
+  /**
+   * Options to configure displaying an image instead of the QR code
+   */
+  imageOptions: ImageOptionsSchema.optional(),
+  products: z.array(PretixProductConfigSchema),
+  /**
+   * Skip validation of event settings - use with caution!
+   */
+  skipSettingsValidation: z.boolean().optional()
 });
 
 /**
@@ -402,7 +418,8 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(PretixEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
-  semaphoreGroups: SemaphoreGroupListSchema
+  semaphoreGroups: SemaphoreGroupListSchema,
+  enablePODTickets: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -451,13 +468,15 @@ export enum CSVPipelineOutputType {
    * {@link EdDSAMessagePCD}
    */
   Message = "EdDSAMessage",
-  Ticket = "EdDSATicket"
+  Ticket = "EdDSATicket",
+  PODTicket = "PODTicketPCD"
 }
 
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
   outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  issueToUnmatchedEmail: z.boolean().optional()
 });
 
 export type CSVPipelineOptions = z.infer<typeof CSVPipelineOptionsSchema>;

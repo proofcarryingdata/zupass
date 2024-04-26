@@ -1,5 +1,16 @@
 # @pcd/passport-ui
 
+## 0.11.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/message-pcd@0.1.0
+
 ## 0.10.0
 
 ### Minor Changes

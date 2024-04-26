@@ -29,6 +29,7 @@ export function useHistoricSemaphoreUrl(
           semaphoreGroupServer,
           `semaphore/latest-root/${encodeURIComponent(semaphoreGroupId)}`
         );
+
     getLatestSemaphoreGroupHash(groupHashUrl)
       .then((hash) => setRootHash(hash))
       .catch((e: Error) => {
