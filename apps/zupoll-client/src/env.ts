@@ -61,7 +61,10 @@ export const DEVCONNECT_ATTENDEES_GROUP_URL = urljoin(
 export const EDGE_CITY_PIPELINE_URL = `${warnIfEnvMissing(
   process.env.NEXT_PUBLIC_EDGE_CITY_PIPELINE_URL,
   "NEXT_PUBLIC_EDGE_CITY_PIPELINE_URL",
-  "http://localhost:3002/generic-issuance/api/semaphore/b770e504-4c9a-460d-a19c-7b99e3d75d83"
+  urljoin(
+    ZUPASS_SERVER_URL,
+    "generic-issuance/api/semaphore/b770e504-4c9a-460d-a19c-7b99e3d75d83"
+  )
 )}`;
 export const EDGE_CITY_RESIDENTS_GROUP_ID = `${warnIfEnvMissing(
   process.env.NEXT_PUBLIC_EDGE_CITY_RESIDENTS_GROUP_ID,
@@ -84,7 +87,10 @@ export const EDGE_CITY_ORGANIZERS_GROUP_URL = urljoin(
 export const ETH_LATAM_PIPELINE_URL = `${warnIfEnvMissing(
   process.env.NEXT_PUBLIC_ETH_LATAM_PIPELINE_URL,
   "NEXT_PUBLIC_ETH_LATAM_PIPELINE_URL",
-  "http://localhost:3002/generic-issuance/api/semaphore/7044ad01-a670-4585-b5d1-c6c893aac064"
+  urljoin(
+    ZUPASS_SERVER_URL,
+    "generic-issuance/api/semaphore/7044ad01-a670-4585-b5d1-c6c893aac064"
+  )
 )}`;
 export const ETH_LATAM_ATTENDEES_GROUP_ID = `${warnIfEnvMissing(
   process.env.NEXT_PUBLIC_ETH_LATAM_ATTENDEES_GROUP_ID,
