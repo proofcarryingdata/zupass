@@ -168,8 +168,8 @@ export function BallotScreen({
 
   // check voting status
   useEffect(() => {
-    setCanVote(!votedOn(ballotId) && !expired);
-  }, [expired, ballotId, refresh]);
+    setCanVote(!votedOn(ballotId) && !expired && !!loginState);
+  }, [expired, ballotId, refresh, loginState]);
 
   // update votes for polls
   const onVoted = (pollId: string, voteIdx: number) => {
