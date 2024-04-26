@@ -14,9 +14,6 @@
       "path": "../util/tsconfig.cjs.json"
     },
     {
-      "path": "../passport-crypto/tsconfig.cjs.json"
-    },
-    {
       "path": "../../pcd/eddsa-pcd/tsconfig.cjs.json"
     },
     {
