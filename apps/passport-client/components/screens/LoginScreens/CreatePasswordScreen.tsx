@@ -8,6 +8,7 @@ import { BigInput, CenterColumn, H2, HR, Spacer, TextCenter } from "../../core";
 import { Button } from "../../core/Button";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
+import ExpandableText from "../../shared/ExpandableText";
 import { NewPasswordForm } from "../../shared/NewPasswordForm";
 import { ScreenLoader } from "../../shared/ScreenLoader";
 
@@ -130,10 +131,24 @@ export function CreatePasswordScreen(): JSX.Element | null {
         <TextCenter>
           <H2>Choose a Password</H2>
           <Spacer h={24} />
-          This password will be used to generate an encryption key that secures
-          your data. Save your password somewhere you'll be able to find later.
-          If you lose your password, you will have to reset your account, and
-          you'll lose access to your old Zupass Identity and all of your PCDs.
+          <ExpandableText
+            shortText={
+              <>
+                Your password will be used to generate an encryption key that
+                secures your data.
+              </>
+            }
+            longText={
+              <>
+                Your password will be used to generate an encryption key that
+                secures your data. This key will never leave the browser, so
+                save your password somewhere you'll be able to find later. If
+                you lose your password, you will have to reset your account, and
+                you'll lose access to your old Zupass Identity and all of your
+                PCDs.
+              </>
+            }
+          />
         </TextCenter>
         <Spacer h={24} />
 

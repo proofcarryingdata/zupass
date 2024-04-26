@@ -2,6 +2,7 @@ import { Spacer } from "@pcd/passport-ui";
 import { useCallback } from "react";
 import { useDispatch } from "../../src/appHooks";
 import { Button, CenterColumn, H2, TextCenter } from "../core";
+import ExpandableText from "../shared/ExpandableText";
 
 interface ConfirmSkipSetupModalProps {
   onConfirm: () => void;
@@ -22,10 +23,17 @@ export function ConfirmSkipSetupModal({
       <H2>Skipping Password Setup</H2>
       <Spacer h={24} />
       <TextCenter>
-        You are creating a Zupass without setting a password. This means that
-        your PCDs will be encrypted by a key stored on our server. You can
-        always set a password later to reinforce your account with
-        end-to-end-encryption.
+        <ExpandableText
+          shortText="You can always set a password later."
+          longText={
+            <>
+              You are creating a Zupass without setting a password. This means
+              that your PCDs will be encrypted by a key stored on our server.
+              You can always set a password later to reinforce your account with
+              end-to-end-encryption.
+            </>
+          }
+        />
       </TextCenter>
       <Spacer h={24} />
       <CenterColumn>
