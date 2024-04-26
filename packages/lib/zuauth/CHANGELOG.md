@@ -1,5 +1,11 @@
 # @pcd/zuauth
 
+## 1.1.0
+
+### Minor Changes
+
+- Publish CJS build
+
 ## 1.0.0
 
 ### Major Changes
