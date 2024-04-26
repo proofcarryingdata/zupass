@@ -23,6 +23,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
   const [confirmPassword, setConfirmPassword] = useState("");
   const [revealPassword, setRevealPassword] = useState(false);
   const [settingPassword, setSettingPassword] = useState(false);
+  const [skipConfirm, setSkipConfirm] = useState(false);
 
   const redirectToLoginPageWithError = useCallback((e: Error | string) => {
     console.error(e);
@@ -67,15 +68,6 @@ export function CreatePasswordScreen(): JSX.Element | null {
       setSettingPassword(false);
     }
   }, [dispatch, email, token]);
-
-  const openSkipModal = (): Promise<void> =>
-    dispatch({
-      type: "set-modal",
-      modal: {
-        modalType: "confirm-setup-later",
-        onConfirm: onSkipPassword
-      }
-    });
 
   useEffect(() => {
     checkIfShouldRedirect();
@@ -124,6 +116,33 @@ export function CreatePasswordScreen(): JSX.Element | null {
 
   if (settingPassword) {
     content = <ScreenLoader text="Creating your account..." />;
+  } else if (skipConfirm) {
+    content = (
+      <>
+        <Spacer h={64} />
+        <H2>Skipping Password Setup</H2>
+        <Spacer h={24} />
+        <TextCenter>
+          <ExpandableText
+            shortText="You can always set a password later."
+            longText={
+              <>
+                You are creating a Zupass without setting a password. This means
+                that your PCDs will be encrypted by a key stored on our server.
+                You can always set a password later to reinforce your account
+                with end-to-end-encryption.
+              </>
+            }
+          />
+        </TextCenter>
+        <Spacer h={24} />
+        <Button style="danger" onClick={onSkipPassword}>
+          I understand
+        </Button>
+        <Spacer h={8} />
+        <Button onClick={() => setSkipConfirm(false)}>Cancel</Button>
+      </>
+    );
   } else {
     content = (
       <>
@@ -178,7 +197,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
           <Spacer h={24} />
 
           <TextCenter>
-            <Button style="danger" onClick={openSkipModal}>
+            <Button style="danger" onClick={() => setSkipConfirm(true)}>
               Skip for now
             </Button>
           </TextCenter>

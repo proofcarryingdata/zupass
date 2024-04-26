@@ -1,3 +1,4 @@
+import { Spacer } from "@pcd/passport-ui";
 import { ReactNode, useState } from "react";
 
 interface ExpandableTextProps {
@@ -13,7 +14,7 @@ export default function ExpandableText({
   return (
     <div>
       {expanded ? longText : shortText}
-      <br />
+      <Spacer h={4} />
       <a onClick={() => setExpanded((prev) => !prev)}>
         {expanded ? "Show less" : "Learn more"}
       </a>
