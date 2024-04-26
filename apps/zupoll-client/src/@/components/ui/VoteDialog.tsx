@@ -80,11 +80,12 @@ export default function VoteDialog({
                   </div>
                 </div>
                 {imageUrl && (
-                  <div className="mt-2">
+                  <div className="mt-2 min-h-10 flex items-center justify-center bg-black/5">
                     <img
                       src={imageUrl}
                       className="rounded overflow-hidden"
                       alt="project image"
+                      width="100%"
                     />
                   </div>
                 )}
