@@ -53,16 +53,16 @@ template InputSelector (N_INPUTS) {
  * into `InputSelector` or `MaybeInputSelector`.
  */
 template Append (M, N) {
-    signal input arr1[M];
-    signal input arr2[N];
-    signal output arr[M + N];
+    signal input in1[M];
+    signal input in2[N];
+    signal output out[M + N];
 
     for (var i = 0; i < M; i++) {
-	arr[i] <== arr1[i];
+	out[i] <== in1[i];
     }
 
     for (var i = 0; i < N; i++) {
-	arr[M + i] <== arr2[i];
+	out[M + i] <== in2[i];
     }
 }
 

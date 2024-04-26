@@ -156,9 +156,38 @@ template ProtoPODGPC (
      */
 
     signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
-    
-    signal tupleHashes[MAX_TUPLES] <== TupleModule(TUPLE_ARITY, MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleIndices);
 
+    // Tuple hashes to be passed on to other modules.
+    signal tupleHashes[MAX_TUPLES];
+
+    // Components for computing forming the ith tuple
+    // from the indices in `tupleIndices[i]` that
+    // refer to elements of
+    // `entryHashes.concat(tupleHashes.slice(0,i))`.
+    component TupleHasher[MAX_TUPLES];
+
+    for (var i = 0; i < MAX_TUPLES; i++) {
+	// Let the hasher be the tuple module expecting
+	// `MAX_ENTRIES + i` values to choose from.
+	TupleHasher[i] = TupleModule(TUPLE_ARITY, MAX_ENTRIES + i);
+
+	// Select the ith set of indices from `tupleIndices`.
+	TupleHasher[i].tupleIndices <== tupleIndices[i];
+
+	// Feed in the value hashes
+	for (var j = 0; j < MAX_ENTRIES; j++) {
+	    TupleHasher[i].value[j] <== entryValueHashes[j];
+	}
+
+	// ...and the first `i` tuple hashes.
+	for (var j = 0; j < i; j++) {
+	    TupleHasher[i].value[MAX_ENTRIES + j] <== tupleHashes[j];
+	}
+
+	// Return the output.
+	tupleHashes[i] <== TupleHasher[i].tupleHash;
+    }
+    
     /*
      * 1 ListMembershipModule with its inputs & outputs.
      */

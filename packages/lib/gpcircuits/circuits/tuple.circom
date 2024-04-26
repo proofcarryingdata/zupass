@@ -4,61 +4,30 @@ include "circomlib/circuits/poseidon.circom"; // Poseidon hash
 include "gpc-util.circom"; // input selector
 
 /**
- * Module mapping MAX_VALUES signals to MAX_TUPLES tuples of
- * arity TUPLE_ARITY, each of which is encoded in the form of a
- * Poseidon hash on MAX_ARITY elements. Lower-order tuples
- * are assumed to have 0s in unoccupied slots, which may
- * be accomplished by setting the corresponding tuple index
- * to a sufficiently large number, e.g. -1 mod p.
+ * Module mapping TUPLE_ARITY signals chosen from a set of
+ * MAX_VALUES input signals to a tuple hash representing
+ * the corresponding tuple.
  */
 
 template TupleModule(
     // Arity of each generated tuple
     TUPLE_ARITY,
     // Maximum number of values to choose from
-    MAX_VALUES,
-    // Maxium number of tuples to generate
-    MAX_TUPLES
+    MAX_VALUES
 ) {
     // Values as input signals
     signal input value[MAX_VALUES];
     
-    // Array indicating which values form which tuples by index,
-    // where an index `i` less than MAX_VALUES refers to
-    // `value[i]` and one less than `MAX_VALUES + MAX_TUPLES`
-    // refers to `value[i - MAX_VALUES]`.
-    signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
-    // Note that tupleIndices[i][j] = -1 refers to 0 by convention.
+    // Tuple of arity TUPLE_ARITY whose elements are indices
+    // referring to elements of `value`.
+    signal input tupleIndices[TUPLE_ARITY];
+    
+    signal tupleArray[TUPLE_ARITY];
 
-    // Input selector component.
-    component inputSelector[MAX_TUPLES][TUPLE_ARITY];
-
-    for(var i = 0; i < MAX_TUPLES; i++)
-	for(var j = 0; j < TUPLE_ARITY; j++)
-	    inputSelector[i][j] = MaybeInputSelector(MAX_VALUES + i);
-
-    // Array of tuple entries to be hashed.
-    signal tupleArray[MAX_TUPLES][TUPLE_ARITY];
-
-    // Output hashes
-    signal output tupleHashes[MAX_TUPLES];
-
-    for(var i = 0; i < MAX_TUPLES; i++) {
-	for(var k = 0; k < TUPLE_ARITY; k++) {
-	    // Feed in ith tuple's kth entry's index
-	    inputSelector[i][k].selectedIndex <== tupleIndices[i][k];
-	    // Form the array `value.concat(tupleHashes.slice(0,i))`.
-	    for(var j = 0; j < MAX_VALUES + i; j++) {
-		inputSelector[i][k].inputs[j]
-		    <== (j < MAX_VALUES) ? value[j]
-		    : tupleHashes[j - MAX_VALUES];
-	    }
-	    
-	    // Extract the ith tuple's kth field.
-	    tupleArray[i][k] <== inputSelector[i][k].out;
-	}
-	
-	// Finally, Poseidon hash the ith tuple.
-	tupleHashes[i] <== Poseidon(TUPLE_ARITY)(tupleArray[i]);	
+    for(var i = 0; i < TUPLE_ARITY; i++) {
+	tupleArray[i] <== MaybeInputSelector(MAX_VALUES)(value, tupleIndices[i]);
     }
+
+    // Finally, Poseidon hash the tuple.
+    signal output tupleHash <== Poseidon(TUPLE_ARITY)(tupleArray);
 }

@@ -19,7 +19,6 @@ describe("tuple.TupleModule should work", function () {
 
   const TUPLE_ARITY = 3;
   const MAX_VALUES = 10;
-  const MAX_TUPLES = 1;
 
   const sampleInput: TupleModuleInputs = {
     value: [
@@ -34,20 +33,19 @@ describe("tuple.TupleModule should work", function () {
       10988313713063071867809108687964057220633556390518851184712222931695463056828n,
       12179220660789871085064982589191069349854593972663574521691268918938647150122n
     ],
-    tupleIndices: [[0n, 3n, 5n]]
+    tupleIndices: [0n, 3n, 5n]
   };
 
   const sampleOutput: TupleModuleOutputs = {
-    tupleHashes: [
+    tupleHash:
       15125314487994541926652962289334348955866307223539330915627677810216053745980n
-    ]
   };
 
   this.beforeAll(async () => {
     circuit = await circomkit.WitnessTester("TupleModule", {
       file: "tuple",
       template: "TupleModule",
-      params: [TUPLE_ARITY, MAX_VALUES, MAX_TUPLES]
+      params: [TUPLE_ARITY, MAX_VALUES]
     });
   });
 
