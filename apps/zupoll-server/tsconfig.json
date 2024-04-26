@@ -50,6 +50,9 @@
       "path": "../../packages/lib/util"
     },
     {
+      "path": "../../packages/lib/server-shared"
+    },
+    {
       "path": "../../packages/lib/zupoll-shared"
     }
   ]
