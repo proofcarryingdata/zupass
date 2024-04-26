@@ -15,7 +15,8 @@ export function make0xPARChq(
   const PARC_HQ_CONFIG_PIPELINE_ID = "2ee2002c-a14f-4261-b23e-a6b0bcd82b9c";
   const PARC_HQ_CONFIG_RESIDENT_SEMA_GROUP_ID =
     "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
-  const PARC_HQ_CONFIG_ORGANIZER_SEMA_GROUP_ID = "xd";
+  const PARC_HQ_CONFIG_ORGANIZER_SEMA_GROUP_ID =
+    "01097f38-8bb8-44d2-a775-75f9221b0c50";
   const PARC_HQ_YEAR = 2024;
   const PARC_HQ_MONTH = 1;
   const PARC_HQ_DAY = 1;
