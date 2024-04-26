@@ -102,13 +102,15 @@ export const authenticateJWT = (
 
   if (!token) {
     logger.error("no jwt provided", token);
-    return res.sendStatus(401);
+    next();
+    return;
   }
 
   verify(token, ACCESS_TOKEN_SECRET!, (err, group) => {
     if (err) {
       logger.error("jwt was not properly signed", authHeader);
-      return res.sendStatus(403);
+      next();
+      return;
     }
 
     const payload = group as GroupJwtPayload;

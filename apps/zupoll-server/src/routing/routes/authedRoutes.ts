@@ -106,23 +106,6 @@ export function initAuthedRoutes(
     async (req: Request, res: Response, next: NextFunction) => {
       logger.info("/ballots", req.params.ballotURL);
 
-      if (
-        ![
-          AuthType.ZUZALU_ORGANIZER,
-          AuthType.ZUZALU_PARTICIPANT,
-          AuthType.DEVCONNECT_ORGANIZER,
-          AuthType.DEVCONNECT_PARTICIPANT,
-          AuthType.EDGE_CITY_RESIDENT,
-          AuthType.EDGE_CITY_ORGANIZER,
-          AuthType.ETH_LATAM_ATTENDEE,
-          AuthType.ETH_LATAM_ORGANIZER,
-          AuthType.PODBOX
-        ].includes(req.authUserType as any)
-      ) {
-        res.sendStatus(403);
-        return;
-      }
-
       try {
         const ballotURL = parseIntOrThrow(req.params.ballotURL);
         const ballot = await getBallotById(ballotURL);
@@ -131,21 +114,40 @@ export function initAuthedRoutes(
           throw new Error(`ballot with id '${ballotURL}' not found`);
         }
 
-        if (
-          ballot &&
-          !getVisibleBallotTypesForUser(req.authUserType).includes(
-            ballot.ballotType
-          )
-        ) {
-          throw new Error(
-            `Your role of '${req.authUserType}' is not authorized to ` +
-              `view ${ballot.ballotType}. Logout and try again!`
-          );
-        }
+        if (!(ballot as any).isPublic) {
+          if (
+            ![
+              AuthType.ZUZALU_ORGANIZER,
+              AuthType.ZUZALU_PARTICIPANT,
+              AuthType.DEVCONNECT_ORGANIZER,
+              AuthType.DEVCONNECT_PARTICIPANT,
+              AuthType.EDGE_CITY_RESIDENT,
+              AuthType.EDGE_CITY_ORGANIZER,
+              AuthType.ETH_LATAM_ATTENDEE,
+              AuthType.ETH_LATAM_ORGANIZER,
+              AuthType.PODBOX
+            ].includes(req.authUserType as any)
+          ) {
+            res.sendStatus(403);
+            return;
+          }
 
-        if (ballot.pipelineId) {
-          if (req.pipelineId !== ballot.pipelineId) {
-            return res.sendStatus(403);
+          if (
+            ballot &&
+            !getVisibleBallotTypesForUser(req.authUserType).includes(
+              ballot.ballotType
+            )
+          ) {
+            throw new Error(
+              `Your role of '${req.authUserType}' is not authorized to ` +
+                `view ${ballot.ballotType}. Logout and try again!`
+            );
+          }
+
+          if (ballot.pipelineId) {
+            if (req.pipelineId !== ballot.pipelineId) {
+              return res.sendStatus(403);
+            }
           }
         }
 

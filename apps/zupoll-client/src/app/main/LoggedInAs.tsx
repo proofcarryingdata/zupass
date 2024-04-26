@@ -10,11 +10,15 @@ export function LoggedInAs({
   logout,
   showHomeButton
 }: {
-  loginState: LoginState;
+  loginState: LoginState | undefined;
   logout: () => void;
   showHomeButton: boolean;
 }) {
   const router = useRouter();
+
+  if (!loginState) {
+    return null;
+  }
 
   return (
     <div className="flex justify-between items-center w-full">

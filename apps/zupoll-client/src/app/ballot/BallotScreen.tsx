@@ -1,3 +1,5 @@
+"use client";
+
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +25,7 @@ export function BallotScreen({
   logout
 }: {
   ballotURL: string;
-  loginState: LoginState;
+  loginState: LoginState | undefined;
   logout: (ballotURL?: string) => void;
 }) {
   const router = useRouter();
@@ -52,7 +54,7 @@ export function BallotScreen({
   useEffect(() => {
     async function getBallotPolls() {
       setLoadingPolls(true);
-      const res = await listBallotPolls(loginState.token, ballotURL);
+      const res = await listBallotPolls(loginState?.token, ballotURL);
       setLoadingPolls(false);
 
       if (res === undefined) {

@@ -183,7 +183,7 @@ export function useCreateBallot({
     router,
     voterGroupRootHash,
     voterGroupUrl,
-    ballotConfig.creatorGroupUrl,
+    ballotConfig?.creatorGroupUrl,
     pcdFromUrl,
     ballotFromUrl,
     setBallotFromUrl,
