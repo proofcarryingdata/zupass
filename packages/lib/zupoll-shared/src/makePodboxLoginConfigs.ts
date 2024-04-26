@@ -58,7 +58,6 @@ export function makePodboxLoginConfigs(
         ballotType: BallotType.PODBOX,
         latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
         makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
-        isPublic: false,
         canCreate: false
       },
       {
@@ -73,7 +72,6 @@ export function makePodboxLoginConfigs(
         ballotType: BallotType.PODBOX,
         latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
         makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
-        isPublic: false,
         isDefault: true
       }
     ]
@@ -105,8 +103,7 @@ export function makePodboxLoginConfigs(
         passportAppUrl: ZUPASS_CLIENT_URL,
         ballotType: BallotType.PODBOX,
         latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
-        makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
-        isPublic: false
+        makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash)
       },
       {
         name: residentName,
@@ -120,7 +117,6 @@ export function makePodboxLoginConfigs(
         ballotType: BallotType.PODBOX,
         latestVoterGroupHashUrl: urljoin(RESIDENT_GROUP_URL, "latest-root"),
         makeHistoricVoterGroupUrl: (hash) => urljoin(RESIDENT_GROUP_URL, hash),
-        isPublic: false,
         isDefault: true
       }
     ]

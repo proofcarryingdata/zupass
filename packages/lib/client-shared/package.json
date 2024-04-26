@@ -1,6 +1,5 @@
 {
   "name": "@pcd/client-shared",
-  "private": true,
   "version": "0.0.1",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",

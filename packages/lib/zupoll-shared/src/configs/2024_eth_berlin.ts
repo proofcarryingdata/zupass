@@ -67,7 +67,6 @@ export function makeEthBerlin(
     ballotType: BallotType.PODBOX,
     latestVoterGroupHashUrl: urljoin(hackathonVoterGroupUrl, "latest-root"),
     makeHistoricVoterGroupUrl: (hash) => urljoin(hackathonVoterGroupUrl, hash),
-    isPublic: false,
     canCreate: true
   };
 

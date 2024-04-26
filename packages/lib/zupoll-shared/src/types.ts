@@ -84,7 +84,6 @@ export interface BallotConfig {
   historicGroupPrefix?: string;
 
   description?: string;
-  isPublic: boolean;
   isDefault?: boolean;
   canCreate?: boolean;
 }
