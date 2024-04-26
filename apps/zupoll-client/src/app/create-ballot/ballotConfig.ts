@@ -134,9 +134,9 @@ export const EDGE_CITY_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.EDGE_CITY_ORGANIZER,
-  latestVoterGroupHashUrl: EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/latest-root",
+  latestVoterGroupHashUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/latest-root",
   makeHistoricVoterGroupUrl: (hash) =>
-    EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/" + hash,
+    EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/" + hash,
   isPublic: false,
   name: "EDGE_CITY_ORGANIZER_BALLOT_CONFIG"
 };
@@ -164,9 +164,9 @@ export const ETH_LATAM_FEEDBACK_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ETH_LATAM_FEEDBACK,
-  latestVoterGroupHashUrl: ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/latest-root",
+  latestVoterGroupHashUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/latest-root",
   makeHistoricVoterGroupUrl: (hash) =>
-    ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/" + hash,
+    ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/" + hash,
   isPublic: false,
   name: "ETH_LATAM_FEEDBACK_BALLOT_CONFIG"
 };
