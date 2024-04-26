@@ -360,7 +360,15 @@ export function CreateBallot({
               const parsedDate = Date.parse(newExpiry);
               const dateIsValid = !isNaN(parsedDate);
               if (dateIsValid) {
-                setBallotExpiry(new Date(e.target.value));
+                const minTimestamp = Date.now();
+                const maxTimestamp = Date.now() + 1000 * 60 * 60 * 24 * 365 * 5;
+                const selectedDate = new Date(e.target.value);
+                const clampedTimestamp = Math.max(
+                  minTimestamp,
+                  Math.min(maxTimestamp, selectedDate.getTime())
+                );
+                const clampedDate = new Date(clampedTimestamp);
+                setBallotExpiry(clampedDate);
               }
             }}
           />
