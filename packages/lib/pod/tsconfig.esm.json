@@ -14,6 +14,9 @@
       "path": "../util/tsconfig.esm.json"
     },
     {
+      "path": "../passport-crypto/tsconfig.esm.json"
+    },
+    {
       "path": "../../pcd/eddsa-pcd/tsconfig.esm.json"
     },
     {
