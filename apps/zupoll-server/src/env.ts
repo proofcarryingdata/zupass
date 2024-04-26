@@ -1,3 +1,5 @@
+import urljoin from "url-join";
+
 export const IS_PROD: boolean = process.env.NODE_ENV === "production";
 
 export const ZUPASS_CLIENT_URL: string = warnIfEnvMissing(
@@ -28,7 +30,10 @@ export const BOT_ZUPOLL_LINK: string | undefined = warnIfEnvMissing(
 export const EDGE_CITY_PIPELINE_URL: string = warnIfEnvMissing(
   process.env.EDGE_CITY_PIPELINE_URL,
   "EDGE_CITY_PIPELINE_URL",
-  "http://localhost:3002/generic-issuance/api/semaphore/b770e504-4c9a-460d-a19c-7b99e3d75d83"
+  urljoin(
+    ZUPASS_SERVER_URL,
+    "generic-issuance/api/semaphore/b770e504-4c9a-460d-a19c-7b99e3d75d83"
+  )
 );
 export const EDGE_CITY_RESIDENTS_GROUP_ID: string = warnIfEnvMissing(
   process.env.EDGE_CITY_RESIDENTS_GROUP_ID,
@@ -43,7 +48,10 @@ export const EDGE_CITY_ORGANIZERS_GROUP_ID: string = warnIfEnvMissing(
 export const ETH_LATAM_PIPELINE_URL: string = warnIfEnvMissing(
   process.env.ETH_LATAM_PIPELINE_URL,
   "ETH_LATAM_PIPELINE_URL",
-  "http://localhost:3002/generic-issuance/api/semaphore/7044ad01-a670-4585-b5d1-c6c893aac064"
+  urljoin(
+    ZUPASS_SERVER_URL,
+    "generic-issuance/api/semaphore/7044ad01-a670-4585-b5d1-c6c893aac064"
+  )
 );
 export const ETH_LATAM_RESIDENTS_GROUP_ID: string = warnIfEnvMissing(
   process.env.ETH_LATAM_RESIDENTS_GROUP_ID,
