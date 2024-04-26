@@ -71,7 +71,7 @@ export function CreateBallot({
   useEffect(() => {
     // Use URLSearchParams to get the proof query parameter
     const proofString = query?.get("proof") as string;
-    const ballotString = localStorage.getItem("pending-ballot"); // query?.get("ballot") as string;
+    const ballotString = localStorage.getItem("pending-ballot");
     if (proofString && ballotString) {
       // Decode the URL-encoded string
       const decodedProofString = decodeURIComponent(proofString);
@@ -96,8 +96,6 @@ export function CreateBallot({
         .filter((c) => c.canCreate !== false),
     [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
   );
-
-  console.log("possible", loginState, possibleBallotConfigs);
 
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
     BallotConfig | undefined

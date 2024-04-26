@@ -45,6 +45,7 @@ export function LoginWidget(props: LoginWidgetProps) {
             selectedGroup={selectedGroupId}
             setSelectedGroup={setCurGroupCategory}
             groups={LOGIN_GROUPS}
+            loading={props.serverLoading}
           />
         </div>
       </LoginWidgetContentContainer>

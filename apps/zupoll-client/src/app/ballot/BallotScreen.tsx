@@ -207,10 +207,6 @@ export function BallotScreen({
 
   const isHackathonView = !!polls.find((p) => p.options.length >= 6);
 
-  function Test() {
-    throw new Error("asdf");
-    return null;
-  }
   return (
     <ContentContainer>
       <AppHeader />
