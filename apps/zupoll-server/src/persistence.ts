@@ -179,7 +179,8 @@ export async function createBallot(
       voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots,
       voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
       ballotType: request.ballot.ballotType,
-      pipelineId: request.ballot.pipelineId
+      pipelineId: request.ballot.pipelineId,
+      isPublic: request.ballot.public
     }
   });
 }

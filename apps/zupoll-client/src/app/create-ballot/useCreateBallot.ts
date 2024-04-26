@@ -20,58 +20,6 @@ import {
 import { CreateBallotResponse, createBallot } from "../../zupoll-server-api";
 import { useHistoricVoterSemaphoreUrl } from "./useHistoricSemaphoreUrl";
 
-export interface BallotFromUrl {
-  ballotConfig: BallotConfig;
-  ballotSignal: BallotSignal;
-  polls: Poll[];
-}
-
-interface GenerateBallotArgs {
-  ballotTitle: string;
-  ballotDescription: string;
-  expiry: Date;
-  ballotConfig?: BallotConfig;
-  voterGroupUrls: string[];
-  voterGroupRoots: string[];
-  proof: string;
-  ballotType: BallotType;
-  polls: Poll[];
-  creatorGroupUrl: string;
-  pipelineId?: string;
-  isPublic: boolean;
-}
-
-const generateBallotRequest = (
-  args: GenerateBallotArgs
-): CreateBallotRequest => {
-  const finalRequest: CreateBallotRequest = {
-    ballot: {
-      ballotId: "",
-      ballotURL: 0,
-      ballotTitle: args.ballotTitle,
-      ballotDescription: args.ballotDescription,
-      createdAt: new Date(),
-      expiry: args.expiry,
-      proof: args.proof,
-      pollsterType: UserType.ANON,
-      pollsterNullifier: "",
-      pollsterName: null,
-      pollsterUuid: null,
-      pollsterCommitment: null,
-      expiryNotif: null,
-      pollsterSemaphoreGroupUrl: args.creatorGroupUrl,
-      voterSemaphoreGroupUrls: args.voterGroupUrls,
-      voterSemaphoreGroupRoots: args.voterGroupRoots,
-      ballotType: args.ballotType,
-      pipelineId: args.pipelineId,
-      isPublic: args.isPublic
-    },
-    polls: args.polls,
-    proof: args.proof
-  };
-  return finalRequest;
-};
-
 /**
  * Hook that handles requesting a PCD for creating a ballot.
  *
@@ -89,6 +37,7 @@ export function useCreateBallot({
   ballotConfig,
   expiry,
   polls,
+  isPublic,
   onError,
   setServerLoading,
   loginState,
@@ -103,6 +52,7 @@ export function useCreateBallot({
   ballotConfig?: BallotConfig;
   expiry: Date;
   polls: Poll[];
+  isPublic: boolean;
   onError: (err: ZupollError) => void;
   setServerLoading: (loading: boolean) => void;
   loginState: LoginState;
@@ -191,7 +141,7 @@ export function useCreateBallot({
         proof: parsedPcd.pcd,
         creatorGroupUrl: ballotConfig.creatorGroupUrl,
         pipelineId: ballotSignal.pipelineId,
-        isPublic: ballotConfig.isPublic
+        public: ballotFromUrl.ballotSignal.public
       });
       // Do request
       submitBallot(request);
@@ -218,7 +168,7 @@ export function useCreateBallot({
         expiry,
         creatorGroupUrl: ballotConfig.creatorGroupUrl,
         pipelineId: loginState.config.pipelineId,
-        isPublic: ballotConfig.isPublic
+        public: isPublic
       });
 
       submitBallot(finalRequest);
@@ -233,14 +183,15 @@ export function useCreateBallot({
     router,
     voterGroupRootHash,
     voterGroupUrl,
-    ballotConfig?.creatorGroupUrl,
+    ballotConfig.creatorGroupUrl,
     pcdFromUrl,
     ballotFromUrl,
     setBallotFromUrl,
     setPcdFromUrl,
     submitBallot,
     setServerLoading,
-    loginState.config.pipelineId
+    loginState.config.pipelineId,
+    isPublic
   ]);
 
   // ran after ballot is submitted by user
@@ -266,7 +217,8 @@ export function useCreateBallot({
       expiry: expiry,
       voterSemaphoreGroupUrls: [voterGroupUrl],
       voterSemaphoreGroupRoots: [voterGroupRootHash],
-      pipelineId: loginState.config.pipelineId
+      pipelineId: loginState.config.pipelineId,
+      public: isPublic
     };
 
     polls.forEach((poll: Poll) => {
@@ -317,6 +269,7 @@ export function useCreateBallot({
     ballotDescription,
     expiry,
     loginState.config.pipelineId,
+    isPublic,
     polls,
     url,
     onError
@@ -324,3 +277,55 @@ export function useCreateBallot({
 
   return { loadingVoterGroupUrl, createBallotPCD };
 }
+
+export interface BallotFromUrl {
+  ballotConfig: BallotConfig;
+  ballotSignal: BallotSignal;
+  polls: Poll[];
+}
+
+interface GenerateBallotArgs {
+  ballotTitle: string;
+  ballotDescription: string;
+  expiry: Date;
+  ballotConfig?: BallotConfig;
+  voterGroupUrls: string[];
+  voterGroupRoots: string[];
+  proof: string;
+  ballotType: BallotType;
+  polls: Poll[];
+  creatorGroupUrl: string;
+  pipelineId?: string;
+  public: boolean;
+}
+
+const generateBallotRequest = (
+  args: GenerateBallotArgs
+): CreateBallotRequest => {
+  const finalRequest: CreateBallotRequest = {
+    ballot: {
+      ballotId: "",
+      ballotURL: 0,
+      ballotTitle: args.ballotTitle,
+      ballotDescription: args.ballotDescription,
+      createdAt: new Date(),
+      expiry: args.expiry,
+      proof: args.proof,
+      pollsterType: UserType.ANON,
+      pollsterNullifier: "",
+      pollsterName: null,
+      pollsterUuid: null,
+      pollsterCommitment: null,
+      expiryNotif: null,
+      pollsterSemaphoreGroupUrl: args.creatorGroupUrl,
+      voterSemaphoreGroupUrls: args.voterGroupUrls,
+      voterSemaphoreGroupRoots: args.voterGroupRoots,
+      ballotType: args.ballotType,
+      pipelineId: args.pipelineId,
+      public: args.public
+    },
+    polls: args.polls,
+    proof: args.proof
+  };
+  return finalRequest;
+};

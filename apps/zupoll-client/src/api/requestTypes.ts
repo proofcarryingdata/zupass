@@ -25,6 +25,7 @@ export type BallotSignal = {
   voterSemaphoreGroupUrls: string[];
   voterSemaphoreGroupRoots: string[];
   pipelineId?: string;
+  public: boolean;
 };
 
 export type PollSignal = {

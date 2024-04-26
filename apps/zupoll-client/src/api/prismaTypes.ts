@@ -22,7 +22,7 @@ export type Ballot = {
   ballotType: BallotType;
   expiryNotif: ExpiryNotifStatus | null;
   pipelineId?: string;
-  isPublic: boolean;
+  public: boolean;
 };
 
 export interface ObjectOption {

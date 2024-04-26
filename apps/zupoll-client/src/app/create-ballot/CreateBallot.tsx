@@ -1,5 +1,6 @@
 import ImportDialog, { ImportedQuestions } from "@/components/ui/ImportDialog";
 import { LoadingPlaceholderCard } from "@/components/ui/LoadingPlaceholder";
+import { Switch } from "@/components/ui/switch";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -19,7 +20,6 @@ import {
 } from "../../@/components/ui/select";
 import { Subtitle, Title } from "../../@/components/ui/text";
 import { Poll } from "../../api/prismaTypes";
-import { BallotSignal } from "../../api/requestTypes";
 import { APP_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
@@ -101,12 +101,14 @@ export function CreateBallot({
     BallotConfig | undefined
   >(possibleBallotConfigs.find((c) => c.isDefault) ?? possibleBallotConfigs[0]);
 
+  const [isPublic, setIsPublic] = useState(false);
   const { loadingVoterGroupUrl, createBallotPCD } = useCreateBallot({
     ballotTitle,
     ballotDescription,
     ballotConfig: selectedBallotConfig,
     expiry: ballotExpiry,
     polls,
+    isPublic,
     onError,
     setServerLoading,
     loginState,
@@ -121,25 +123,6 @@ export function CreateBallot({
   useEffect(() => {
     stableCreateRef.current = createBallotPCD;
   }, [createBallotPCD]);
-
-  useEffect(() => {
-    if (useLastBallot) {
-      const ballotSignalString = localStorage.getItem("lastBallotSignal");
-      const ballotPollsString = localStorage.getItem("lastBallotPolls");
-
-      if (ballotSignalString && ballotPollsString) {
-        const ballotSignal = JSON.parse(ballotSignalString) as BallotSignal;
-        console.log({ ballotSignal });
-        setBallotTitle(ballotSignal.ballotTitle);
-        setBallotDescription(ballotSignal.ballotDescription);
-        setBallotExpiry(new Date(ballotSignal.expiry));
-
-        const ballotPolls = JSON.parse(ballotPollsString) as Poll[];
-        console.log({ ballotPolls });
-        setPolls(ballotPolls);
-      }
-    }
-  }, [useLastBallot]);
 
   const setExpiry = useCallback((ms: number) => {
     setBallotExpiry(new Date(getDateString(new Date(Date.now() + ms))));
@@ -445,6 +428,8 @@ export function CreateBallot({
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <Subtitle>Public Poll</Subtitle>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
           </div>
         </CardContent>
       </Card>
