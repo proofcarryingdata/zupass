@@ -141,7 +141,7 @@ export function useCreateBallot({
         proof: parsedPcd.pcd,
         creatorGroupUrl: ballotConfig.creatorGroupUrl,
         pipelineId: ballotSignal.pipelineId,
-        public: ballotFromUrl.ballotSignal.public
+        isPublic: ballotFromUrl.ballotSignal.isPublic
       });
       // Do request
       submitBallot(request);
@@ -168,7 +168,7 @@ export function useCreateBallot({
         expiry,
         creatorGroupUrl: ballotConfig.creatorGroupUrl,
         pipelineId: loginState.config.pipelineId,
-        public: isPublic
+        isPublic
       });
 
       submitBallot(finalRequest);
@@ -218,7 +218,7 @@ export function useCreateBallot({
       voterSemaphoreGroupUrls: [voterGroupUrl],
       voterSemaphoreGroupRoots: [voterGroupRootHash],
       pipelineId: loginState.config.pipelineId,
-      public: isPublic
+      isPublic
     };
 
     polls.forEach((poll: Poll) => {
@@ -296,7 +296,7 @@ interface GenerateBallotArgs {
   polls: Poll[];
   creatorGroupUrl: string;
   pipelineId?: string;
-  public: boolean;
+  isPublic: boolean;
 }
 
 const generateBallotRequest = (
@@ -322,7 +322,7 @@ const generateBallotRequest = (
       voterSemaphoreGroupRoots: args.voterGroupRoots,
       ballotType: args.ballotType,
       pipelineId: args.pipelineId,
-      public: args.public
+      isPublic: args.isPublic
     },
     polls: args.polls,
     proof: args.proof

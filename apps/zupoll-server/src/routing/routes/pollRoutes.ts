@@ -91,7 +91,7 @@ export function initPCDRoutes(
         voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
         voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots,
         pipelineId: request.ballot.pipelineId ?? undefined,
-        public: request.ballot.public
+        isPublic: request.ballot.isPublic
       };
 
       request.polls.forEach((poll: Poll) => {
@@ -390,7 +390,7 @@ export type BallotSignal = {
   voterSemaphoreGroupUrls: string[];
   voterSemaphoreGroupRoots: string[];
   pipelineId?: string;
-  public: boolean;
+  isPublic: boolean;
 };
 
 export type PollSignal = {

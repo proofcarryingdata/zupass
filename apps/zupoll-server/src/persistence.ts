@@ -180,7 +180,7 @@ export async function createBallot(
       voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
       ballotType: request.ballot.ballotType,
       pipelineId: request.ballot.pipelineId,
-      isPublic: request.ballot.public
+      isPublic: request.ballot.isPublic
     }
   });
 }
