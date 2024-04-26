@@ -17,7 +17,6 @@ import {
   useDispatch,
   useFolders,
   useLoadedIssuedPCDs,
-  usePCDCollection,
   usePCDsInFolder,
   useSelf
 } from "../../../src/appHooks";
@@ -54,13 +53,11 @@ export function HomeScreenImpl(): JSX.Element | null {
   const dispatch = useDispatch();
   const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
-  const pcdCollection = usePCDCollection();
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
     const folderPathFromQuery = decodeURIComponent(
       searchParams.get(FOLDER_QUERY_PARAM) ?? ""
     );
-    console.log({ folderPathFromQuery });
     if (!folderPathFromQuery || folderPathFromQuery === "null") {
       return "";
     }
@@ -69,10 +66,8 @@ export function HomeScreenImpl(): JSX.Element | null {
       return folderPathFromQuery;
     }
 
-    return pcdCollection.isValidFolder(folderPathFromQuery)
-      ? folderPathFromQuery || ""
-      : folderPathFromQuery || "";
-  }, [pcdCollection, searchParams]);
+    return folderPathFromQuery || "";
+  }, [searchParams]);
 
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
   const pcdsInFolder = usePCDsInFolder(browsingFolder);

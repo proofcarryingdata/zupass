@@ -30,10 +30,8 @@ export function CreatePasswordScreen(): JSX.Element | null {
     window.location.hash = "#/login";
     window.location.reload();
   }, []);
-  console.log("hiiii");
 
   const onSkipPassword = useCallback(async () => {
-    console.log("onSkipPassword");
     try {
       // If email or token are undefined, we will already have redirected to
       // login, so this is just for type-checking
@@ -44,7 +42,8 @@ export function CreatePasswordScreen(): JSX.Element | null {
           type: "create-user-skip-password",
           email,
           token,
-          targetFolder
+          targetFolder,
+          autoRegister
         });
       }
     } finally {
@@ -138,8 +137,10 @@ export function CreatePasswordScreen(): JSX.Element | null {
     return null;
   }
 
-  if (settingPassword || autoRegister) {
+  if (settingPassword) {
     content = <ScreenLoader text="Creating your account..." />;
+  } else if (autoRegister) {
+    content = <ScreenLoader text="Automatically creating your account..." />;
   } else {
     content = (
       <>

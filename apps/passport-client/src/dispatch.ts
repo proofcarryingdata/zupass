@@ -74,6 +74,7 @@ export type Action =
       email: string;
       token: string;
       targetFolder: string | undefined | null;
+      autoRegister: boolean;
     }
   | {
       type: "login";
@@ -177,6 +178,7 @@ export async function dispatch(
         action.email,
         action.token,
         action.targetFolder,
+        action.autoRegister,
         state,
         update
       );
@@ -289,29 +291,25 @@ async function createNewUserSkipPassword(
   email: string,
   token: string,
   targetFolder: string | undefined | null,
+  autoRegister: boolean,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
   update({
     modal: { modalType: "none" }
   });
-  console.log("createNewUserSkipPassword");
-  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-    identity: state.identity
-  });
-  const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+  // Because we skip the genPassword() step of setting the initial PCDs
+  // in the one-click flow, we'll need to do it here.
+  if (autoRegister) {
+    const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+      identity: state.identity
+    });
+    const pcds = new PCDCollection(await getPackages(), [identityPCD]);
 
-  await savePCDs(pcds);
-  update({ pcds });
-  // const identity = new Identity();
-  // const identityPCD = await SemaphoreIdentityPCDPackage.prove({
-  //   identity
-  // });
-  // saveIdentity(identity);
-  // const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+    await savePCDs(pcds);
+    update({ pcds });
+  }
 
-  // await savePCDs(pcds);
-  // update({ pcds, identity });
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = crypto.generateRandomKey();
   saveEncryptionKey(encryptionKey);
