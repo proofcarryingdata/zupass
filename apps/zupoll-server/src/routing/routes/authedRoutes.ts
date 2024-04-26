@@ -114,7 +114,7 @@ export function initAuthedRoutes(
           throw new Error(`ballot with id '${ballotURL}' not found`);
         }
 
-        if (!(ballot as any).isPublic) {
+        if (!ballot.isPublic) {
           if (
             ![
               AuthType.ZUZALU_ORGANIZER,
