@@ -22,7 +22,6 @@ import { appConfig } from "../../../src/appConfig";
 import { usePCDCollection } from "../../../src/appHooks";
 import { getOutdatedBrowserErrorMessage } from "../../../src/devconnectUtils";
 import { OUTDATED_BROWSER_ERROR_MESSAGE } from "../../../src/sharedConstants";
-import { useAppRollbar } from "../../../src/useAppRollbar";
 import { nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
@@ -50,7 +49,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
   ) => void;
   folder?: string;
 }): JSX.Element {
-  const rollbar = useAppRollbar();
   const pcds = usePCDCollection();
   const [args, setArgs] = useState<ArgsOf<T>>(
     JSON.parse(JSON.stringify(initialArgs))
@@ -101,7 +99,6 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
       setProving(false);
 
       if (!pendingPCDResult.success) {
-        rollbar?.error(pendingPCDResult.error);
         if (pendingPCDResult.error.includes(OUTDATED_BROWSER_ERROR_MESSAGE)) {
           setError(getOutdatedBrowserErrorMessage());
         } else {
@@ -132,7 +129,7 @@ export function GenericProveSection<T extends PCDPackage = PCDPackage>({
         setProving(false);
       }
     }
-  }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage, rollbar]);
+  }, [options?.proveOnServer, pcdType, args, onProve, pcdPackage]);
 
   return (
     <Container>
