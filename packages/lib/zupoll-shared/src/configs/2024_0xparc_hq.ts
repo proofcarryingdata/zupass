@@ -12,11 +12,10 @@ export function make0xPARChq(
   const PARC_HQ_ORGANIZER_NAME = "Dev Polls";
   const PARC_HQ_ORGANIZER_DESCRIPTION = "Polls created by the devs of Zupoll";
   const PARC_HQ_DESCRIPTION = "0xPARC Polls - be excellent to each other";
-  const PARC_HQ_CONFIG_PIPELINE_ID = "432a2e29-b884-4fd8-886b-04b42ad3242f";
+  const PARC_HQ_CONFIG_PIPELINE_ID = "2ee2002c-a14f-4261-b23e-a6b0bcd82b9c";
   const PARC_HQ_CONFIG_RESIDENT_SEMA_GROUP_ID =
     "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
-  const PARC_HQ_CONFIG_ORGANIZER_SEMA_GROUP_ID =
-    "4bfd3c3a-9ec5-450d-b407-7454e20d7e58";
+  const PARC_HQ_CONFIG_ORGANIZER_SEMA_GROUP_ID = "xd";
   const PARC_HQ_YEAR = 2024;
   const PARC_HQ_MONTH = 1;
   const PARC_HQ_DAY = 1;
