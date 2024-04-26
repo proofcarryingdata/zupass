@@ -1,3 +1,4 @@
+import { getCommitHash, getCommitMessage } from "@pcd/server-shared";
 import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
 import sendgrid from "@sendgrid/mail";
 import process from "node:process";
@@ -23,7 +24,6 @@ import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncServi
 import { APIs, ApplicationContext, Zupass } from "./types";
 import { logger } from "./util/logger";
 import { trapSigTerm } from "./util/terminate";
-import { getCommitHash, getCommitMessage } from "./util/util";
 
 process.on("unhandledRejection", (reason) => {
   if (reason instanceof Error) {

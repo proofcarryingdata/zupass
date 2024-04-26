@@ -89,7 +89,7 @@
     @apply bg-background text-foreground;
     margin: 0;
     overflow-x: hidden;
-    overflow-y: scroll;
+    overflow-y: auto;
   }
 
   html {
@@ -99,6 +99,11 @@
 
   p {
     @apply mb-4;
+  }
+
+  a {
+    text-decoration: underline;
+    outline: none;
   }
 
   /**

@@ -20,14 +20,17 @@ import { LoginGroup } from "../../api/loginGroups";
 export function SelectLoginGroup({
   selectedGroup,
   setSelectedGroup,
-  groups
+  groups,
+  loading
 }: {
   selectedGroup: LoginCategory | undefined;
   setSelectedGroup: Dispatch<SetStateAction<LoginCategory | undefined>>;
   groups: LoginGroup[];
+  loading: boolean;
 }) {
   return (
     <Select
+      disabled={loading}
       value={selectedGroup}
       onValueChange={(v) => setSelectedGroup(v as LoginCategory)}
     >

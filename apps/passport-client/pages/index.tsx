@@ -1,3 +1,4 @@
+import { RollbarProvider } from "@pcd/client-shared";
 import {
   CredentialManager,
   ZUPASS_CREDENTIAL_REQUEST,
@@ -56,7 +57,6 @@ import {
   CenterColumn,
   GlobalBackground
 } from "../components/shared/AppContainer";
-import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
 import { useStateContext } from "../src/appHooks";
@@ -460,7 +460,12 @@ loadInitialState()
   .then((initialState: AppState) => {
     const root = createRoot(document.querySelector("#root") as Element);
     root.render(
-      <RollbarProvider>
+      <RollbarProvider
+        config={{
+          accessToken: appConfig.rollbarToken,
+          environmentName: appConfig.rollbarEnvName
+        }}
+      >
         <AppStateProvider initialState={initialState}>
           <App />
         </AppStateProvider>
@@ -470,7 +475,12 @@ loadInitialState()
   .catch((error: unknown) => {
     const root = createRoot(document.querySelector("#root") as Element);
     root.render(
-      <RollbarProvider>
+      <RollbarProvider
+        config={{
+          accessToken: appConfig.rollbarToken,
+          environmentName: appConfig.rollbarEnvName
+        }}
+      >
         <GlobalBackground color={"var(--bg-dark-primary)"} />
         <Background>
           <CenterColumn>

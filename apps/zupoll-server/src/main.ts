@@ -21,7 +21,7 @@ dotenv.config({ path: dotEnvPath });
 import { IS_PROD } from "./env";
 
 logger.info(LOGO);
-logger.info(`mode: ${IS_PROD ? "production" : "development"}`);
+logger.info(`[INIT] mode: ${IS_PROD ? "production" : "development"}`);
 logger.info(`[INIT] Loading environment variables from: `);
 logger.info(`[INIT]`, dotEnvPath);
 logger.info("[INIT] Starting Zupoll");

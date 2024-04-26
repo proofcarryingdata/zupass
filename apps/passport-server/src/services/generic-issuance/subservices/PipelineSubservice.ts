@@ -18,6 +18,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
 import {
   IPipelineAtomDB,
@@ -33,7 +34,6 @@ import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
-import { RollbarService } from "../../rollbarService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";

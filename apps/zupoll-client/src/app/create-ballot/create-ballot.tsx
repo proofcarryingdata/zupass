@@ -30,13 +30,16 @@ export function CreateBallotPage() {
       ) : (
         <ContentContainer>
           <AppHeader />
-          <LoggedInAs
-            loginState={loginState}
-            logout={logout}
-            showHomeButton={true}
-          />
+
           <ContentContainer>
-            <CreateBallot loginState={loginState} onError={setError} />
+            <div className="flex flex-col gap-2">
+              <LoggedInAs
+                loginState={loginState}
+                logout={logout}
+                showHomeButton={true}
+              />
+              <CreateBallot loginState={loginState} onError={setError} />
+            </div>
             <ErrorDialog error={error} close={() => setError(undefined)} />
           </ContentContainer>
         </ContentContainer>

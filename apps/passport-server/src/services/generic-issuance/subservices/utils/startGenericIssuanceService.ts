@@ -1,4 +1,5 @@
 import { EdDSAPublicKey, isEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { RollbarService } from "@pcd/server-shared";
 import stytch, { Client } from "stytch";
 import { ILemonadeAPI } from "../../../../apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
@@ -7,7 +8,6 @@ import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
 import { PagerDutyService } from "../../../pagerDutyService";
 import { PersistentCacheService } from "../../../persistentCacheService";
-import { RollbarService } from "../../../rollbarService";
 import { GenericIssuanceService } from "../../GenericIssuanceService";
 
 /**

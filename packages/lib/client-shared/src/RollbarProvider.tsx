@@ -1,24 +1,32 @@
 import { Provider } from "@rollbar/react";
 import React from "react";
 import { Configuration } from "rollbar";
-import { appConfig } from "../../src/appConfig";
+
+export { ErrorBoundary } from "@rollbar/react";
+
+export interface ClientRollbarConfig {
+  accessToken?: string;
+  environmentName?: string;
+}
 
 export function RollbarProvider({
-  children
+  children,
+  config
 }: {
   children: React.ReactNode;
+  config: ClientRollbarConfig;
 }): JSX.Element {
   if (
-    appConfig.rollbarToken === undefined ||
-    appConfig.rollbarEnvName === undefined
+    config.accessToken === undefined ||
+    config.environmentName === undefined
   ) {
     console.log("[ROLLBAR] missing environment variable - not starting");
     return <>{children}</>;
   }
 
   const rollbarConfig: Configuration = {
-    accessToken: appConfig.rollbarToken,
-    environment: appConfig.rollbarEnvName,
+    accessToken: config.accessToken,
+    environment: config.environmentName,
     captureUncaught: true,
     captureUnhandledRejections: true,
     payload: {

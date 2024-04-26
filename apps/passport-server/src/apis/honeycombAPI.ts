@@ -1,9 +1,9 @@
 // eslint-disable-next-line @typescript-eslint/triple-slash-reference
 /// <reference path="../util/declarations/libhoney.d.ts" />
+import { requireEnv } from "@pcd/server-shared";
 import Libhoney from "libhoney";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { requireEnv } from "../util/util";
 
 export function getHoneycombAPI(): Libhoney | null {
   try {

@@ -39,9 +39,9 @@ export function BallotListsForUser({
         visible={
           loginState.config.name === LegacyLoginConfigName.ZUZALU_ORGANIZER
         }
-        title={"Eth LatAm Feedback"}
+        title={"Zuzalu Organizer Polls"}
         loading={loading}
-        description={"Ballots visible and voteable only by Zuzalu organizers"}
+        description={"Polls visible and voteable only by Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ORGANIZERONLY}
       />
@@ -53,7 +53,7 @@ export function BallotListsForUser({
         }
         title={"Organizer Polls"}
         loading={loading}
-        description={"Official ballots from Zuconnect organizers"}
+        description={"Official community polls from Zuzalu Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ORGANIZERONLY}
       />
@@ -65,7 +65,7 @@ export function BallotListsForUser({
         }
         title={"Straw Polls"}
         loading={loading}
-        description={"Unofficial ballots from event participants"}
+        description={"Unofficial polls by event participants"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.STRAWPOLL}
       />
@@ -78,7 +78,7 @@ export function BallotListsForUser({
         }
         title={"Organizer Polls"}
         loading={loading}
-        description={"Ballots created by Devconnect organizers"}
+        description={"Polls created by Devconnect Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.DEVCONNECT_ORGANIZER}
       />
@@ -91,7 +91,7 @@ export function BallotListsForUser({
         }
         title={"Community Polls"}
         loading={loading}
-        description={"Ballots created by Devconnect attendees"}
+        description={"Polls created by Devconnect Attendees"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.DEVCONNECT_STRAW}
       />
@@ -104,7 +104,7 @@ export function BallotListsForUser({
         }
         title={"Community Polls"}
         loading={loading}
-        description={"Ballots created by Edge City attendees"}
+        description={"Polls created by Edge City Attendees"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.EDGE_CITY_RESIDENT}
       />
@@ -117,7 +117,7 @@ export function BallotListsForUser({
         }
         title={"Organizer Feedback"}
         loading={loading}
-        description={"Ballots created by Edge City organizers"}
+        description={"Polls created by Edge City Organizers"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.EDGE_CITY_ORGANIZER}
       />
@@ -130,7 +130,7 @@ export function BallotListsForUser({
         }
         title={"Community Polls"}
         loading={loading}
-        description={"Ballots created by ETH LatAm attendees"}
+        description={"Polls created by ETH LatAm attendees"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ETH_LATAM_STRAWPOLL}
       />
@@ -143,7 +143,7 @@ export function BallotListsForUser({
         }
         title={"Eth LatAm Feedback"}
         loading={loading}
-        description={"Feedback polls for Eth Latam"}
+        description={"Feedback polls for Eth LatAm"}
         ballots={ballots}
         filter={(b) => b.ballotType === BallotType.ETH_LATAM_FEEDBACK}
       />

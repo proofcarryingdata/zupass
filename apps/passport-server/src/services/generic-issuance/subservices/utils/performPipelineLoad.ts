@@ -1,9 +1,9 @@
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { PipelineLoadSummary } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { logger } from "../../../../util/logger";
 import { DiscordService } from "../../../discordService";
 import { PagerDutyService } from "../../../pagerDutyService";
-import { RollbarService } from "../../../rollbarService";
 import { setError } from "../../../telemetryService";
 import {
   traceLoadSummary,

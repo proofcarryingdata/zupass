@@ -5,6 +5,8 @@ export type ZupollError = {
   title: string;
   /** Useful explanation, avoid "Something went wrong." */
   message: string | React.ReactNode;
+  /** Less aggressive errors are displayed in a more friendly way */
+  friendly?: boolean;
   /** Optional stacktrace. */
   stack?: string;
 };
