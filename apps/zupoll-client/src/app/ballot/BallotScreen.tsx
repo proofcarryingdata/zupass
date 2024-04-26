@@ -272,6 +272,18 @@ export function BallotScreen({
               </TextContainer>
             </>
           )}
+
+          {!loginState && (
+            <Button
+              variant={"creative"}
+              className="w-full"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
+              Log In to Vote
+            </Button>
+          )}
         </div>
       )}
 
