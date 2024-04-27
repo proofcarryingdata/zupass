@@ -55,7 +55,7 @@ export function BallotListsForUser({
         loading={loading}
         description={"Official community polls from Zuzalu Organizers"}
         ballots={ballots}
-        filter={(b) => b.ballotType === BallotType.ORGANIZERONLY}
+        filter={(b) => b.ballotType === BallotType.ADVISORYVOTE}
       />
 
       <BallotTypeSection
