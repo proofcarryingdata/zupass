@@ -28,7 +28,7 @@
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau",
-    "gen-test-artifacts": "scripts/gen-test-artifacts.sh"
+    "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts"
   },
   "dependencies": {
     "@pcd/pod": "0.1.0",

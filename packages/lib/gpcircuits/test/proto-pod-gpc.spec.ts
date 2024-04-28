@@ -14,6 +14,9 @@ import {
   ProtoPODGPCInputs,
   ProtoPODGPCOutputNamesType,
   ProtoPODGPCOutputs,
+  ProtoPODGPCParameters,
+  protoPODGPCParameters,
+  protoPODGPCParameterArray,
   artifactPaths
 } from "../src";
 import {
@@ -25,10 +28,17 @@ import {
   sampleEntries2,
   testArray2Bits
 } from "./common";
+import * as util from "util";
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
+
+const GPC_PARAMS = protoPODGPCParameters(
+  MAX_OBJECTS,
+  MAX_ENTRIES,
+  MERKLE_MAX_DEPTH
+);
 
 /**
  * This is a hard-coded version of the values produced by makeTestSignals
@@ -272,9 +282,7 @@ const sampleOutput: ProtoPODGPCOutputs = {
  * inputs will be padded appropriately.
  */
 function makeTestSignals(
-  paramMaxObjects: number,
-  paramMaxEntries: number,
-  paramMaxDepth: number,
+  params: ProtoPODGPCParameters,
   isNullifierHashRevealed: boolean
 ): { inputs: ProtoPODGPCInputs; outputs: ProtoPODGPCOutputs } {
   // Test data is selected to exercise a lot of features at once, at full
@@ -288,7 +296,7 @@ function makeTestSignals(
     { name: "C", objectIndex: 0, eqEntryIndex: undefined },
     { name: "E", objectIndex: 0, eqEntryIndex: undefined }
   ];
-  if (paramMaxObjects > 1) {
+  if (params.maxObjects > 1) {
     testEntries.push({ name: "attendee", objectIndex: 1, eqEntryIndex: 1 });
     testEntries.push({
       name: "eventID",
@@ -318,7 +326,7 @@ function makeTestSignals(
   const sigObjectSignatureR8x = [];
   const sigObjectSignatureR8y = [];
   const sigObjectSignatureS = [];
-  for (let objectIndex = 0; objectIndex < paramMaxObjects; objectIndex++) {
+  for (let objectIndex = 0; objectIndex < params.maxObjects; objectIndex++) {
     // Unused objects get filled in with the same info as object 0.
     const isObjectEnabled = objectIndex < testObjects.length;
     const i = isObjectEnabled ? objectIndex : 0;
@@ -342,7 +350,7 @@ function makeTestSignals(
   const sigEntryProofDepth = [];
   const sigEntryProofIndex = [];
   const sigEntryProofSiblings = [];
-  for (let entryIndex = 0; entryIndex < paramMaxEntries; entryIndex++) {
+  for (let entryIndex = 0; entryIndex < params.maxEntries; entryIndex++) {
     // Unused entries get filled in with the same info as entry 0.
     const isEntryEnabled = entryIndex < testEntries.length;
     const entryInfo = isEntryEnabled ? testEntries[entryIndex] : testEntries[0];
@@ -384,7 +392,7 @@ function makeTestSignals(
     if (
       entryInfo.eqEntryIndex !== undefined &&
       entryInfo.eqEntryIndex < testEntries.length &&
-      entryInfo.eqEntryIndex < paramMaxEntries
+      entryInfo.eqEntryIndex < params.maxEntries
     ) {
       sigEntryEqualToOtherEntryByIndex.push(BigInt(entryInfo.eqEntryIndex));
     } else {
@@ -395,7 +403,7 @@ function makeTestSignals(
 
     // Fillin sibling array, padded with 0s to max length.
     sigEntryProofSiblings.push(
-      extendedSignalArray(entrySignals.proof.siblings, paramMaxDepth)
+      extendedSignalArray(entrySignals.proof.siblings, params.merkleMaxDepth)
     );
   }
 
@@ -417,7 +425,7 @@ function makeTestSignals(
       entryProofIndex: sigEntryProofIndex,
       entryProofSiblings: sigEntryProofSiblings,
       ownerEntryIndex:
-        paramMaxEntries > sigOwnerEntryIndex
+        params.maxEntries > sigOwnerEntryIndex
           ? sigOwnerEntryIndex
           : BABY_JUB_NEGATIVE_ONE,
       ownerSemaphoreV3IdentityNullifier: ownerIdentity.nullifier,
@@ -429,7 +437,7 @@ function makeTestSignals(
     outputs: {
       entryRevealedValueHash: sigEntryRevealedValueHash,
       ownerRevealedNulifierHash:
-        isNullifierHashRevealed && paramMaxEntries > sigOwnerEntryIndex
+        isNullifierHashRevealed && params.maxEntries > sigOwnerEntryIndex
           ? poseidon2([42n, ownerIdentity.nullifier])
           : BABY_JUB_NEGATIVE_ONE
     }
@@ -446,7 +454,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     circuit = await circomkit.WitnessTester("ProtoPODGPC", {
       file: "proto-pod-gpc",
       template: "ProtoPODGPC",
-      params: [MAX_OBJECTS, MAX_ENTRIES, MERKLE_MAX_DEPTH],
+      params: protoPODGPCParameterArray(GPC_PARAMS),
       pubs: PROTO_POD_GPC_PUBLIC_INPUT_NAMES
     });
   });
@@ -457,9 +465,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
 
   it("should accept dynamic input", async () => {
     let { inputs, outputs } = makeTestSignals(
-      MAX_OBJECTS,
-      MAX_ENTRIES,
-      MERKLE_MAX_DEPTH,
+      GPC_PARAMS,
       true /*isNullifierHashRevealed*/
     );
     expect(inputs).to.deep.eq(sampleInput);
@@ -467,33 +473,28 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     await circuit.expectPass(inputs, outputs);
 
     ({ inputs, outputs } = makeTestSignals(
-      MAX_OBJECTS,
-      MAX_ENTRIES,
-      MERKLE_MAX_DEPTH,
+      GPC_PARAMS,
       false /*isNullifierHashRevealed*/
     ));
     await circuit.expectPass(inputs, outputs);
   });
 
   it("should accept with different parameters", async () => {
-    // [3, 10, 8] is the default above, and is larger than the test data in all
-    // dimensions (so padding is exercised).  What we're testing here is the
-    // ability to handle smaller sizes, with truncated data as necessary.
-    for (const params of [
-      [1, 1, 5],
-      [1, 5, 6],
-      [2, 10, 8]
-    ]) {
+    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8 } is the default
+    // above, and is larger than the test data in all dimensions (so padding
+    // is exercised).  What we're testing here is the ability to handle
+    // smaller sizes, with truncated data as necessary.
+    for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
+      (pair) => pair[0]
+    )) {
       const { inputs, outputs } = makeTestSignals(
-        params[0],
-        params[1],
-        params[2],
+        params,
         true /*isNullifierHashRevealed*/
       );
       const altCircuit = await circomkit.WitnessTester("ProtoPODGPC", {
         file: "proto-pod-gpc",
         template: "ProtoPODGPC",
-        params: params
+        params: protoPODGPCParameterArray(params)
       });
       await altCircuit.expectPass(inputs, outputs);
     }
@@ -507,19 +508,11 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
 });
 
 describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", function () {
-  function prepGroth16Test(
-    maxObjects: number,
-    maxEntries: number,
-    merkleMaxDepth: number
-  ): {
+  function prepGroth16Test(params: ProtoPODGPCParameters): {
     artifacts: CircuitArtifactPaths;
     vkey: object;
   } {
-    const circuitDesc = ProtoPODGPC.pickCircuit(
-      maxObjects,
-      maxEntries,
-      merkleMaxDepth
-    );
+    const circuitDesc = ProtoPODGPC.pickCircuit(params);
     expect(circuitDesc).to.not.be.undefined;
     if (!circuitDesc) {
       throw new Error("Missing circuit desc!");
@@ -568,25 +561,15 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   }
 
   it("should accept a sample input", async () => {
-    const { artifacts, vkey } = prepGroth16Test(
-      MAX_OBJECTS,
-      MAX_ENTRIES,
-      MERKLE_MAX_DEPTH
-    );
+    const { artifacts, vkey } = prepGroth16Test(GPC_PARAMS);
     await groth16Test(artifacts, vkey, sampleInput, sampleOutput);
   });
 
   it("should accept dynamic input", async () => {
-    const { artifacts, vkey } = prepGroth16Test(
-      MAX_OBJECTS,
-      MAX_ENTRIES,
-      MERKLE_MAX_DEPTH
-    );
+    const { artifacts, vkey } = prepGroth16Test(GPC_PARAMS);
 
     let { inputs, outputs } = makeTestSignals(
-      MAX_OBJECTS,
-      MAX_ENTRIES,
-      MERKLE_MAX_DEPTH,
+      GPC_PARAMS,
       true /*isNullifierHashRevealed*/
     );
     expect(inputs).to.deep.eq(sampleInput);
@@ -594,9 +577,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     await groth16Test(artifacts, vkey, inputs, outputs);
 
     ({ inputs, outputs } = makeTestSignals(
-      MAX_OBJECTS,
-      MAX_ENTRIES,
-      MERKLE_MAX_DEPTH,
+      GPC_PARAMS,
       false /*isNullifierHashRevealed*/
     ));
     await groth16Test(artifacts, vkey, inputs, outputs);
@@ -607,25 +588,15 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     // dimensions (so padding is exercised).  In addition to exercising the
     // other artifacts, we're testing the ability of our test code to handle
     // smaller sizes, with truncated data as necessary.
-    for (const cd of ProtoPODGPC.CIRCUIT_FAMILY) {
+    for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
-      if (
-        cd.maxObjects === MAX_OBJECTS &&
-        cd.maxEntries === MAX_ENTRIES &&
-        cd.merkleMaxDepth === MERKLE_MAX_DEPTH
-      ) {
+      if (util.isDeepStrictEqual(cd, GPC_PARAMS)) {
         continue;
       }
 
-      const { artifacts, vkey } = prepGroth16Test(
-        cd.maxObjects,
-        cd.maxEntries,
-        cd.merkleMaxDepth
-      );
+      const { artifacts, vkey } = prepGroth16Test(cd);
       const { inputs, outputs } = makeTestSignals(
-        cd.maxObjects,
-        cd.maxEntries,
-        cd.merkleMaxDepth,
+        cd,
         true /*isNullifierHashRevealed*/
       );
       await groth16Test(artifacts, vkey, inputs, outputs);
