@@ -36,7 +36,7 @@ const RedactedText = styled.div<{ redacted: boolean }>`
 
   margin-bottom: 4px;
   padding: 2px;
-  width: 160px;
+  width: 140px;
   position: relative;
   text-align: center;
   transition-property: color, background-color;
@@ -120,8 +120,8 @@ export function PodboxZKModeTicketInfoSection({
           </CardHeader>
           <CardBodyContainer>
             <TicketInfoContainer>
-              <Spread>
-                <span>Ticket Type</span> <RedactedText redacted>x</RedactedText>
+              <Spread style={{ height: 32 }}>
+                <span>Ticket Type</span> {ticket.ticketName}
               </Spread>
               <Spread>
                 <span>Name</span>

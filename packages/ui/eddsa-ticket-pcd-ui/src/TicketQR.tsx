@@ -66,9 +66,12 @@ export function TicketQR({
       //   e: pcd.claim.ticket.eventId
       // });
       const unencoded = JSON.stringify({
-        p: { a: proof.pi_a, b: proof.pi_b, c: proof.pi_c },
+        a: proof.pi_a,
+        b: proof.pi_b,
+        c: proof.pi_c,
         t: pcd.claim.ticket.ticketId,
-        e: pcd.claim.ticket.eventId
+        e: pcd.claim.ticket.eventId,
+        p: pcd.claim.ticket.productId
       });
       const payload = encodeQRPayload(unencoded);
       const verifyLink = makeVerifyLink(verifyURL, payload);
@@ -139,7 +142,8 @@ async function makeSerializedZKProof(
     },
     fieldsToReveal: {
       value: {
-        revealTicketId: true
+        revealTicketId: true,
+        revealProductId: true
       },
       argumentType: ArgumentTypeName.ToggleList
     },

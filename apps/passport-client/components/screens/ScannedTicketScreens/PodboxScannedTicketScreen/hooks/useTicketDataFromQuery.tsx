@@ -51,12 +51,15 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         // );
         const {
           t: ticketId,
-          e: eventId,
-          p: { a, b, c }
+          a: pi_a,
+          b: pi_b,
+          c: pi_c,
+          p: productId,
+          e: eventId
         } = JSON.parse(decodedPayload);
         console.log({ decodedPayload });
         // TODO: check timestamp
-        if (!ticketId || !eventId || !a || !b || !c) {
+        if (!ticketId || !productId || !eventId || !pi_a || !pi_b || !pi_c) {
           setTicketData({
             state: TicketIdState.Error,
             error: "Ticket data is invalid. Please try scanning again."
@@ -78,15 +81,14 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
         const proof: Groth16Proof = {
           protocol: "groth16",
           curve: "bn128",
-          pi_a: a,
-          pi_b: b,
-          pi_c: c
+          pi_a,
+          pi_b,
+          pi_c
         };
-        const validEventIds = [eventId];
-        // const verified = await ZKEdDSAEventTicketPCDPackage.verify(pcd);
         const reconstructedPCD = reconstructZKEdDSAEventTicketPCD(
           ticketId,
-          validEventIds,
+          productId,
+          [eventId],
           proof
         );
         const verified =
@@ -131,6 +133,7 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
 
 function reconstructZKEdDSAEventTicketPCD(
   ticketId: string,
+  productId: string,
   validEventIds: string[],
   proof: Groth16Proof
 ): ZKEdDSAEventTicketPCD {
@@ -143,7 +146,8 @@ function reconstructZKEdDSAEventTicketPCD(
         "1036b75bd06ef48fc98d8a9ad11b42f59d07c1316edf25cf949a87de79d99d1d"
       ],
       partialTicket: {
-        ticketId
+        ticketId,
+        productId
       },
       validEventIds,
       watermark: "1"
