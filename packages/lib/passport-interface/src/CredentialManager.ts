@@ -4,6 +4,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ONE_HOUR_MS } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import stableStringify from "json-stable-stringify";
 import {
   Credential,
   CredentialPayload,
@@ -91,7 +92,7 @@ export class CredentialManager implements CredentialManagerAPI {
    */
   public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
     for (const req of reqs) {
-      if (!this.getCachedCredential(req.pcdType)) {
+      if (!this.getCachedCredential(req)) {
         try {
           this.setCachedCredential(req, await this.generateCredential(req));
         } catch (e) {
@@ -104,9 +105,15 @@ export class CredentialManager implements CredentialManagerAPI {
     }
   }
 
+  private getCacheKey(req: CredentialRequest): string {
+    return stableStringify(req);
+  }
+
   // Get a credential from the local cache, if it exists
-  private getCachedCredential(type?: string): SerializedPCD | undefined {
-    const cacheKey = type ?? "none";
+  private getCachedCredential(
+    req: CredentialRequest
+  ): SerializedPCD | undefined {
+    const cacheKey = this.getCacheKey(req);
     const res = this.cache.get(cacheKey);
     if (res) {
       if (Date.now() - res.timestamp < CACHE_TTL) {
@@ -123,7 +130,7 @@ export class CredentialManager implements CredentialManagerAPI {
     request: CredentialRequest,
     value: SerializedPCD
   ): void {
-    const cacheKey = request.pcdType ?? "none";
+    const cacheKey = this.getCacheKey(request);
     this.cache.set(cacheKey, { value, timestamp: Date.now(), request });
     // This can happen asynchronously, so don't await on the promise
     this.purgeExpiredCredentials();
@@ -147,7 +154,7 @@ export class CredentialManager implements CredentialManagerAPI {
   public async requestCredential(
     req: CredentialRequest
   ): Promise<SerializedPCD> {
-    const cachedCredential = this.getCachedCredential(req.pcdType);
+    const cachedCredential = this.getCachedCredential(req);
     if (cachedCredential) {
       return cachedCredential;
     }
