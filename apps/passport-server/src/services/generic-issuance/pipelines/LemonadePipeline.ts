@@ -57,6 +57,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineOfflineCheckinDB } from "../../../database/queries/pipelineOfflineCheckinDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
@@ -121,6 +122,7 @@ export class LemonadePipeline implements BasePipeline {
    */
   private db: IPipelineAtomDB<LemonadeAtom>;
   private checkinDB: IPipelineCheckinDB;
+  private offlineCheckinDB: IPipelineOfflineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
   private api: ILemonadeAPI;
@@ -155,7 +157,8 @@ export class LemonadePipeline implements BasePipeline {
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
-    credentialSubservice: CredentialSubservice
+    credentialSubservice: CredentialSubservice,
+    offlineCheckinDB: IPipelineOfflineCheckinDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -164,6 +167,7 @@ export class LemonadePipeline implements BasePipeline {
     this.badgeDB = badgeDB;
     this.api = api;
     this.credentialSubservice = credentialSubservice;
+    this.offlineCheckinDB = offlineCheckinDB;
     this.loaded = false;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -262,6 +266,10 @@ export class LemonadePipeline implements BasePipeline {
 
       const logs: PipelineLog[] = [];
       const loadStart = new Date();
+
+      const { checkedInTicketIds, failedTicketIds } =
+        await this.processOfflineCheckins();
+
       const configuredEvents = this.definition.options.events;
       let atomsExpected = 0;
       const credentials = this.getOAuthCredentials();
@@ -455,16 +463,16 @@ export class LemonadePipeline implements BasePipeline {
         }
       });
 
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        await this.triggerSemaphoreGroupUpdate();
+      }
+
       const end = new Date();
       logs.push(
         makePLogInfo(
           `load finished in ${end.getTime() - loadStart.getTime()}ms`
         )
       );
-
-      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        await this.triggerSemaphoreGroupUpdate();
-      }
 
       return {
         latestLogs: logs,
@@ -474,6 +482,8 @@ export class LemonadePipeline implements BasePipeline {
         atomsExpected: atomsExpected,
         errorMessage: undefined,
         semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
+        offlineTicketsCheckedIn: checkedInTicketIds.length,
+        offlineTicketsFailedToCheckIn: failedTicketIds.length,
         success: true
       } satisfies PipelineLoadSummary;
     });
@@ -2014,43 +2024,95 @@ export class LemonadePipeline implements BasePipeline {
     checkerEmail: string,
     eventId: string,
     ticketIds: string[]
-  ): Promise<string[]> {
+  ): Promise<void> {
     if (!(await this.canCheckInForEvent(eventId, checkerEmail))) {
-      return [];
+      return;
     }
 
-    // @todo what if a ticket simply no longer exists but the client keeps
-    // trying to check it in?
-
-    const checkedInIds = [];
+    const offlineCheckinsToSave: string[] = [];
+    // Some of these tickets may have been checked in already, while the
+    // checker was offline. Only save tickets that are not already checked in.
     for (const ticketId of ticketIds) {
       const atom = await this.db.loadById(this.id, ticketId);
-      if (atom) {
-        try {
-          const result = await this.lemonadeCheckin(atom, checkerEmail);
-          // If the ticket is already checked in, tell the client that the
-          // check-in succeeded.
-          if (result.success || result.error.name === "AlreadyCheckedIn") {
-            checkedInIds.push(atom.id);
-          }
-        } catch (e) {
-          // We can ignore exceptions here as we just want to try the next
-          // ticket in the array
-        }
+      if (atom && atom.checkinDate === null) {
+        offlineCheckinsToSave.push(ticketId);
       } else {
         const manualTicket = this.getManualTicketById(ticketId);
         if (manualTicket) {
-          const result = await this.checkInManualTicket(
-            manualTicket,
-            checkerEmail
+          const manualTicketCheckin = await this.checkinDB.getByTicketId(
+            this.id,
+            manualTicket.id
           );
-          if (result.success || result.error.name === "AlreadyCheckedIn") {
-            checkedInIds.push(manualTicket.id);
+          if (manualTicketCheckin === undefined) {
+            offlineCheckinsToSave.push(ticketId);
           }
         }
       }
     }
-    return checkedInIds;
+
+    await this.offlineCheckinDB.addOfflineCheckins(
+      this.id,
+      checkerEmail,
+      offlineCheckinsToSave,
+      new Date()
+    );
+  }
+
+  private async processOfflineCheckins(): Promise<{
+    failedTicketIds: string[];
+    checkedInTicketIds: string[];
+  }> {
+    const offlineCheckins =
+      await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
+
+    const checkedInTicketIds = [];
+    const failedTicketIds = [];
+
+    for (const { ticketId, checkerEmail } of offlineCheckins) {
+      const atom = await this.db.loadById(this.id, ticketId);
+      if (!atom) {
+        const manualTicket = this.getManualTicketById(ticketId);
+        if (manualTicket) {
+          // Check the manual ticket in
+          const result = await this.checkInManualTicket(
+            manualTicket,
+            checkerEmail
+          );
+          if (
+            result.success === true ||
+            result.error.name === "AlreadyCheckedIn"
+          ) {
+            checkedInTicketIds.push(ticketId);
+          } else {
+            failedTicketIds.push(ticketId);
+          }
+        } else {
+          // Ticket does not exist at all.
+          failedTicketIds.push(ticketId);
+        }
+      } else {
+        const result = await this.lemonadeCheckin(atom, checkerEmail);
+        if (result.success || result.error.name === "AlreadyCheckedIn") {
+          checkedInTicketIds.push(ticketId);
+        } else {
+          failedTicketIds.push(ticketId);
+        }
+      }
+    }
+
+    await this.offlineCheckinDB.deleteOfflineCheckins(
+      this.id,
+      checkedInTicketIds
+    );
+
+    for (const failedTicketId of failedTicketIds) {
+      await this.offlineCheckinDB.addFailedOfflineCheckin(
+        this.id,
+        failedTicketId
+      );
+    }
+
+    return { failedTicketIds, checkedInTicketIds };
   }
 }
 

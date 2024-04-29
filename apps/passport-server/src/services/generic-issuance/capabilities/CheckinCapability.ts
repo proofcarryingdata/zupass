@@ -45,7 +45,7 @@ export interface CheckinCapability extends BasePipelineCapability {
     checkerEmail: string,
     eventId: string,
     ticketIds: string[]
-  ): Promise<string[]>;
+  ): Promise<void>;
 }
 
 export function isCheckinCapability(

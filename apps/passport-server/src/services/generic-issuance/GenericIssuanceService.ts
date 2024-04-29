@@ -44,6 +44,10 @@ import {
   PipelineManualTicketDB
 } from "../../database/queries/pipelineManualTicketDB";
 import {
+  IPipelineOfflineCheckinDB,
+  PipelineOfflineCheckinDB
+} from "../../database/queries/pipelineOfflineCheckinDB";
+import {
   IPipelineSemaphoreHistoryDB,
   PipelineSemaphoreHistoryDB
 } from "../../database/queries/pipelineSemaphoreHistoryDB";
@@ -78,6 +82,7 @@ export class GenericIssuanceService {
   private context: ApplicationContext;
   private pipelineAtomDB: IPipelineAtomDB;
   private checkinDB: IPipelineCheckinDB;
+  private offlineCheckinDB: IPipelineOfflineCheckinDB;
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
   private consumerDB: IPipelineConsumerDB;
@@ -105,6 +110,7 @@ export class GenericIssuanceService {
     this.context = context;
     this.rollbarService = rollbarService;
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
+    this.offlineCheckinDB = new PipelineOfflineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
     this.manualTicketDB = new PipelineManualTicketDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
@@ -139,7 +145,8 @@ export class GenericIssuanceService {
         consumerDB: this.consumerDB,
         manualTicketDB: this.manualTicketDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB,
-        credentialSubservice: this.credentialSubservice
+        credentialSubservice: this.credentialSubservice,
+        offlineCheckinDB: this.offlineCheckinDB
       } satisfies InstantiatePipelineArgs
     );
   }

@@ -471,6 +471,8 @@ export interface PipelineLoadSummary {
   success: boolean;
   errorMessage?: string;
   semaphoreGroups?: PipelineSemaphoreGroupInfo[];
+  offlineTicketsCheckedIn?: number;
+  offlineTicketsFailedToCheckIn?: number;
 }
 
 export interface PipelineLog {
@@ -1193,4 +1195,4 @@ export interface PodboxCheckInOfflineTicketsRequest {
   tickets: Record<string, string[]>; // eventID -> ticketID[]
 }
 
-export type PodboxCheckInOfflineTicketsResponseValue = string[];
+export type PodboxCheckInOfflineTicketsResponseValue = void;

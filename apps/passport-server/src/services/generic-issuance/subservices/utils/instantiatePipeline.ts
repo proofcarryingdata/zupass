@@ -10,6 +10,7 @@ import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
 import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
+import { IPipelineOfflineCheckinDB } from "../../../../database/queries/pipelineOfflineCheckinDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
@@ -47,6 +48,7 @@ export interface InstantiatePipelineArgs {
   manualTicketDB: IPipelineManualTicketDB;
   semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   credentialSubservice: CredentialSubservice;
+  offlineCheckinDB: IPipelineOfflineCheckinDB;
 }
 
 /**
@@ -75,7 +77,8 @@ export function instantiatePipeline(
         args.badgeDB,
         args.consumerDB,
         args.semaphoreHistoryDB,
-        args.credentialSubservice
+        args.credentialSubservice,
+        args.offlineCheckinDB
       );
     } else if (isPretixPipelineDefinition(definition)) {
       pipeline = new PretixPipeline(

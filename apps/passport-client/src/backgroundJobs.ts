@@ -192,11 +192,7 @@ export function useBackgroundJobs(): void {
           );
 
         if (checkInOfflineTicketsResult.success) {
-          // Remove any tickets that were successfully checked in
-          const remaining = state.checkedInOfflinePodboxTickets.filter(
-            (ticket) => !checkInOfflineTicketsResult.value.includes(ticket.id)
-          );
-          update({ checkedInOfflinePodboxTickets: remaining });
+          update({ checkedInOfflinePodboxTickets: [] });
           saveCheckedInPodboxOfflineTickets(undefined);
         }
       }

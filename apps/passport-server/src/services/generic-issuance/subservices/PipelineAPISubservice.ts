@@ -586,8 +586,6 @@ export class PipelineAPISubservice {
         throw new PCDHTTPError(401, "Not authorized");
       }
 
-      const checkedInIds: string[] = [];
-
       for (const pipeline of this.pipelineSubservice.getAllPipelines()) {
         if (!pipeline.instance) {
           continue;
@@ -602,19 +600,16 @@ export class PipelineAPISubservice {
               request.tickets
             )) {
               if (capability.canHandleCheckinForEvent(eventId)) {
-                checkedInIds.push(
-                  ...(await capability.checkInOfflineTickets(
-                    emailAddress,
-                    eventId,
-                    ticketIds
-                  ))
+                await capability.checkInOfflineTickets(
+                  emailAddress,
+                  eventId,
+                  ticketIds
                 );
               }
             }
           }
         }
       }
-      return checkedInIds;
     });
   }
 }

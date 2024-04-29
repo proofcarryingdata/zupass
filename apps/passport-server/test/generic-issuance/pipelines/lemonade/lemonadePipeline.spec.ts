@@ -37,6 +37,7 @@ import { stopApplication } from "../../../../src/application";
 import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
+import { sqlQuery } from "../../../../src/database/sqlQuery";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
 import {
   LEMONADE_CHECKER,
@@ -1366,7 +1367,7 @@ describe("generic issuance - LemonadePipeline", function () {
 
       expectTrue(result.success);
       // Bouncer should be able to receive all tickets
-      expectLength(result.value.offlineTickets, 5);
+      expectLength(result.value.offlineTickets, 6);
     }
 
     {
@@ -1394,6 +1395,10 @@ describe("generic issuance - LemonadePipeline", function () {
     expect(pipeline.id).to.eq(edgeCityPipeline.id);
 
     lemonadeBackend.checkOutAll();
+    await sqlQuery(
+      giBackend.context.dbPool,
+      "DELETE from generic_issuance_checkins"
+    );
 
     const bouncerCredential = await makeTestCredential(
       EdgeCityBouncerIdentity,
@@ -1410,7 +1415,7 @@ describe("generic issuance - LemonadePipeline", function () {
 
       expectTrue(result.success);
       // Bouncer should be able to receive all tickets
-      expectLength(result.value.offlineTickets, 5);
+      expectLength(result.value.offlineTickets, 6);
 
       const ticketsByEvent = result.value.offlineTickets.reduce(
         (res, current) => {
@@ -1439,11 +1444,11 @@ describe("generic issuance - LemonadePipeline", function () {
 
         expectTrue(result.success);
         // Bouncer should be able to receive all tickets
-        expectLength(result.value.offlineTickets, 5);
+        expectLength(result.value.offlineTickets, 6);
         // All tickets should now be consumed.
         expectLength(
           result.value.offlineTickets.filter((ot) => ot.is_consumed === true),
-          5
+          6
         );
       }
     }
