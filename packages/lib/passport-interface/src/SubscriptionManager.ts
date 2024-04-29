@@ -193,7 +193,9 @@ export class FeedSubscriptionManager {
         continue;
       }
       responsePromises.push(
-        this.fetchSingleSubscription(subscription, credentialManager)
+        Promise.resolve(
+          await this.fetchSingleSubscription(subscription, credentialManager)
+        )
       );
     }
 
