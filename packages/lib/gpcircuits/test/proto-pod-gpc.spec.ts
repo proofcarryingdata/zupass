@@ -583,9 +583,9 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   });
 
   it("should accept with each circuit in family", async () => {
-    // [3, 10, 8] is the default above, and is larger than the test data in all
-    // dimensions (so padding is exercised).  In addition to exercising the
-    // other artifacts, we're testing the ability of our test code to handle
+    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8 } is the default
+    // above, and is larger than the test data in all dimensions (so padding
+    // is exercised).  What we're testing here is the ability to handle
     // smaller sizes, with truncated data as necessary.
     for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
