@@ -213,7 +213,7 @@ export class UserService {
     }
 
     // If user exists and the token is correct, we continue through the account reset flow.
-    // If user doesn't exist and the token is correct, we continue through thte account creation flow.
+    // If user doesn't exist and the token is correct, we continue through the account creation flow.
 
     if (existingUser) {
       await this.checkAccountResetRateLimit(existingUser);
