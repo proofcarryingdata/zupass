@@ -16,6 +16,7 @@ const CIRCUIT_PARAMETERS = [
 ];
 
 const artifactDir = "artifacts";
+const circuitDir = path.join("circuits", "main");
 const testArtifactDir = path.join(artifactDir, "test");
 
 // Helpers to avoid Wasm OOM errors with larger
@@ -50,10 +51,10 @@ const batchPromise = <A, B>(
     toChunks(arr, maxParallelPromises)
   );
 main = async (): Promise<void> => {
-  // Delete old artifacts
+  // Delete old artifacts and circuits
   if (fs.existsSync(testArtifactDir)) {
     fs.readdirSync(testArtifactDir).forEach((file) =>
-      fs.rm(path.join(testArtifactDir, file), { recursive: true }, (err) => {
+      fs.rmSync(path.join(testArtifactDir, file), {}, (err) => {
         if (err) {
           throw err;
         }
@@ -61,6 +62,16 @@ main = async (): Promise<void> => {
     );
   } else {
     fs.mkdirSync(testArtifactDir);
+  }
+
+  if (fs.existsSync(circuitDir)) {
+    fs.readdirSync(circuitDir).forEach((file) =>
+      fs.rmSync(path.join(circuitDir, file), {}, (err) => {
+        if (err) {
+          throw err;
+        }
+      })
+    );
   }
 
   // Instantiate Circomkit object.
@@ -161,7 +172,7 @@ main = async (): Promise<void> => {
   );
 
   // Clean up.
-  fs.rm("build", { recursive: true }, (err) => {
+  fs.rmSync("build", { recursive: true }, (err) => {
     if (err) {
       throw err;
     }
