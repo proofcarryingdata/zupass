@@ -153,7 +153,7 @@ type ProtoPODGPCParameters = {
 /**
  * ProtoPODGPCParameter constructor.
  */
-export function protoPODGPCParameters(
+export function ProtoPODGPCParameters(
   maxObjects: number,
   maxEntries: number,
   merkleMaxDepth: number
@@ -342,7 +342,7 @@ export class ProtoPODGPC {
     return `${PROTO_POD_GPC_FAMILY_NAME}-${circuitParams.maxObjects}o-${circuitParams.maxEntries}e-${circuitParams.merkleMaxDepth}md`;
   }
 
-  private static curcuitDescForParams(
+  private static circuitDescForParams(
     circuitParams: ProtoPODGPCParameters,
     cost: number
   ): ProtoPODGPCCircuitDesc {
@@ -371,6 +371,6 @@ export class ProtoPODGPC {
   public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] =
     ProtoPODGPC.CIRCUIT_PARAMETERS.sort((a, b) => a[1] - b[1]).map(
       (pair: [ProtoPODGPCParameters, number]): ProtoPODGPCCircuitDesc =>
-        ProtoPODGPC.curcuitDescForParams(pair[0], pair[1])
+        ProtoPODGPC.circuitDescForParams(pair[0], pair[1])
     );
 }

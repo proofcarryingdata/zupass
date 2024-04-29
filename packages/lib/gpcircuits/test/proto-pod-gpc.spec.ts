@@ -15,7 +15,6 @@ import {
   ProtoPODGPCOutputNamesType,
   ProtoPODGPCOutputs,
   ProtoPODGPCParameters,
-  protoPODGPCParameters,
   protoPODGPCParameterArray,
   artifactPaths
 } from "../src";
@@ -34,7 +33,7 @@ const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
 
-const GPC_PARAMS = protoPODGPCParameters(
+const GPC_PARAMS = ProtoPODGPCParameters(
   MAX_OBJECTS,
   MAX_ENTRIES,
   MERKLE_MAX_DEPTH
