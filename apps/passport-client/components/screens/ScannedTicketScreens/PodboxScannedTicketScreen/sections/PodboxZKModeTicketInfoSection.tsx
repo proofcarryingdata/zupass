@@ -9,7 +9,6 @@ import { H4, TextCenter } from "../../../../core";
 import { icons } from "../../../../icons";
 import {
   CardBodyContainer,
-  CardContainerExpanded,
   CardHeader,
   CardOutlineExpanded
 } from "../../../../shared/PCDCard";
@@ -46,41 +45,41 @@ const RedactedText = styled.div<{ redacted: boolean }>`
   transition-duration: 300ms;
 `;
 
-const VerifyLine = styled.div`
-  text-transform: capitalize;
-  margin: 12px 0px;
-`;
+// const VerifyLine = styled.div`
+//   text-transform: capitalize;
+//   margin: 12px 0px;
+// `;
 
-const NameLine = styled.p`
-  margin: 2px 0px;
-`;
+// const NameLine = styled.p`
+//   margin: 2px 0px;
+// `;
 
 // Alterate bottom section
-function VerifiedAndKnownTicket({
-  publicKeyName,
-  ticketName,
-  eventName
-}: {
-  publicKeyName: string;
-  ticketName: string | undefined;
-  eventName: string;
-}): JSX.Element {
-  return (
-    <CardContainerExpanded>
-      <CardOutlineExpanded>
-        <CardHeader col="var(--accent-lite)">
-          <VerifyLine>Verified {eventName} Ticket</VerifyLine>
-          <VerifyLine>
-            {ticketName?.split("\n").map((line) => {
-              return <NameLine>{line}</NameLine>;
-            })}
-          </VerifyLine>
-          <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
-        </CardHeader>
-      </CardOutlineExpanded>
-    </CardContainerExpanded>
-  );
-}
+// function VerifiedAndKnownTicket({
+//   publicKeyName,
+//   ticketName,
+//   eventName
+// }: {
+//   publicKeyName: string;
+//   ticketName: string | undefined;
+//   eventName: string;
+// }): JSX.Element {
+//   return (
+//     <CardContainerExpanded>
+//       <CardOutlineExpanded>
+//         <CardHeader col="var(--accent-lite)">
+//           <VerifyLine>Verified {eventName} Ticket</VerifyLine>
+//           <VerifyLine>
+//             {ticketName?.split("\n").map((line) => {
+//               return <NameLine>{line}</NameLine>;
+//             })}
+//           </VerifyLine>
+//           <VerifyLine>SIGNED BY: {publicKeyName}</VerifyLine>
+//         </CardHeader>
+//       </CardOutlineExpanded>
+//     </CardContainerExpanded>
+//   );
+// }
 
 export function PodboxZKModeTicketInfoSection({
   precheck,

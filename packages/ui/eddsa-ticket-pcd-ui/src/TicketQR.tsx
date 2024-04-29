@@ -152,7 +152,7 @@ async function makeSerializedZKProof(
       argumentType: ArgumentTypeName.BigInt
     },
     watermark: {
-      value: "123",
+      value: "1",
       argumentType: ArgumentTypeName.BigInt
     }
   });

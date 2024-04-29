@@ -146,7 +146,7 @@ function reconstructZKEdDSAEventTicketPCD(
         ticketId
       },
       validEventIds,
-      watermark: "123"
+      watermark: "1"
     },
     proof
   };
