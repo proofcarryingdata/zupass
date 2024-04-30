@@ -990,8 +990,8 @@ export type Badge = {
 };
 
 export interface TicketInfo {
-  attendeeName: string;
-  attendeeEmail: string;
+  attendeeName?: string;
+  attendeeEmail?: string;
   ticketName: string;
   eventName: string;
 }
@@ -1173,12 +1173,12 @@ export interface PodboxGetOfflineTicketsRequest {
 export interface PodboxOfflineTicket {
   id: string;
   eventId: string;
-  attendeeEmail: string;
-  attendeeName: string;
+  attendeeEmail?: string;
+  attendeeName?: string;
   eventName: string;
   ticketName: string;
   checkinTimestamp?: string;
-  checker: string | null;
+  checker?: string | null;
   is_consumed?: boolean;
 }
 

@@ -1,6 +1,5 @@
 import {
   CredentialManager,
-  OfflineDevconnectTicket,
   PODBOX_CREDENTIAL_REQUEST,
   PodboxOfflineTicket,
   PodboxTicketActionPreCheckResult,
@@ -50,7 +49,7 @@ function isOfflinePodboxTicketCheckedIn(
 function checkinOfflinePodboxTicket(
   ticketId: string,
   stateContext: StateContextValue
-): OfflineDevconnectTicket | undefined {
+): PodboxOfflineTicket | undefined {
   const state = stateContext.getState();
   const { podboxOfflineTickets } = stateContext.getState();
   const { checkedInOfflinePodboxTickets } = state;

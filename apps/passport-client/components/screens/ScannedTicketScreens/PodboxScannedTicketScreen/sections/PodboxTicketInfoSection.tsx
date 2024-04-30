@@ -31,12 +31,16 @@ export function PodboxTicketInfoSection({
               <Spread>
                 <span>Ticket Type</span> {ticket.ticketName}
               </Spread>
-              <Spread>
-                <span>Name</span> {ticket.attendeeName}
-              </Spread>
-              <Spread>
-                <span>Email</span> {ticket.attendeeEmail}
-              </Spread>
+              {ticket.attendeeName && (
+                <Spread>
+                  <span>Name</span> {ticket.attendeeName}
+                </Spread>
+              )}
+              {ticket.attendeeEmail && (
+                <Spread>
+                  <span>Email</span> {ticket.attendeeEmail}
+                </Spread>
+              )}
 
               {!precheck?.checkinActionInfo?.canCheckIn &&
                 precheck?.checkinActionInfo?.reason?.name ===

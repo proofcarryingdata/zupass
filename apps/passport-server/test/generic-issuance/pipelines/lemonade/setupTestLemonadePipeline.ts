@@ -239,7 +239,14 @@ export function setupTestLemonadePipeline(): LemonadePipelineTestData {
           ]
         }
       ],
-      enablePODTickets: true
+      enablePODTickets: true,
+      offlineCheckin: {
+        fields: {
+          attendeeEmail: true,
+          attendeeName: true,
+          checker: true
+        }
+      }
     },
     type: PipelineType.Lemonade
   };

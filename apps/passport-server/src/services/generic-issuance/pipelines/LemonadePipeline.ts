@@ -266,9 +266,15 @@ export class LemonadePipeline implements BasePipeline {
 
       const logs: PipelineLog[] = [];
       const loadStart = new Date();
+      let offlineTicketsCheckedIn: number | undefined,
+        offlineTicketsFailedToCheckIn: number | undefined;
 
-      const { checkedInTicketIds, failedTicketIds } =
-        await this.processOfflineCheckins();
+      if (this.definition.options.offlineCheckin !== undefined) {
+        const { checkedInTicketIds, failedTicketIds } =
+          await this.processOfflineCheckins();
+        offlineTicketsCheckedIn = checkedInTicketIds.length;
+        offlineTicketsFailedToCheckIn = failedTicketIds.length;
+      }
 
       const configuredEvents = this.definition.options.events;
       let atomsExpected = 0;
@@ -482,8 +488,8 @@ export class LemonadePipeline implements BasePipeline {
         atomsExpected: atomsExpected,
         errorMessage: undefined,
         semaphoreGroups: this.semaphoreGroupProvider?.getSupportedGroups(),
-        offlineTicketsCheckedIn: checkedInTicketIds.length,
-        offlineTicketsFailedToCheckIn: failedTicketIds.length,
+        offlineTicketsCheckedIn,
+        offlineTicketsFailedToCheckIn,
         success: true
       } satisfies PipelineLoadSummary;
     });
@@ -1382,7 +1388,7 @@ export class LemonadePipeline implements BasePipeline {
         let eventConfig: LemonadePipelineEventConfig;
         const manualTicket = this.getManualTicketById(request.ticketId);
         const ticketAtom = await this.db.loadById(this.id, request.ticketId);
-        let ticketInfo: TicketInfo;
+        let ticketInfo: Required<TicketInfo>;
         let notCheckedIn;
 
         if (ticketAtom) {
@@ -1964,6 +1970,14 @@ export class LemonadePipeline implements BasePipeline {
     return traced(LOG_NAME, "getOfflineTickets", async (_span) => {
       tracePipeline(this.definition);
 
+      if (this.definition.options.offlineCheckin === undefined) {
+        throw new PCDHTTPError(
+          401,
+          "Offline check-in is not enabled for this pipeline"
+        );
+      }
+
+      const enabledFields = this.definition.options.offlineCheckin.fields;
       const offlineTickets: PodboxOfflineTicket[] = [];
 
       for (const event of this.definition.options.events) {
@@ -1983,9 +1997,11 @@ export class LemonadePipeline implements BasePipeline {
               eventId: atom.genericIssuanceEventId,
               eventName: this.lemonadeAtomToEventName(atom),
               ticketName: this.lemonadeAtomToTicketName(atom),
-              attendeeEmail: atom.email.toLowerCase(),
-              attendeeName: atom.name,
-              checker: null,
+              attendeeEmail: enabledFields.attendeeEmail
+                ? atom.email.toLowerCase()
+                : undefined,
+              attendeeName: enabledFields.attendeeName ? atom.name : undefined,
+              checker: enabledFields.checker ? null : undefined,
               is_consumed: atom.checkinDate instanceof Date
             });
           }
@@ -2007,9 +2023,13 @@ export class LemonadePipeline implements BasePipeline {
               eventId: event.genericIssuanceEventId,
               eventName: event.name,
               ticketName: product.name,
-              attendeeEmail: manualTicket.attendeeEmail,
-              attendeeName: manualTicket.attendeeName,
-              checker: null,
+              attendeeEmail: enabledFields.attendeeEmail
+                ? manualTicket.attendeeEmail
+                : undefined,
+              attendeeName: enabledFields.attendeeName
+                ? manualTicket.attendeeName
+                : undefined,
+              checker: enabledFields.checker ? null : undefined,
               is_consumed: checkIn?.timestamp instanceof Date
             });
           }
@@ -2025,6 +2045,13 @@ export class LemonadePipeline implements BasePipeline {
     eventId: string,
     ticketIds: string[]
   ): Promise<void> {
+    if (this.definition.options.offlineCheckin === undefined) {
+      throw new PCDHTTPError(
+        401,
+        "Offline check-in is not enabled for this pipeline"
+      );
+    }
+
     if (!(await this.canCheckInForEvent(eventId, checkerEmail))) {
       return;
     }

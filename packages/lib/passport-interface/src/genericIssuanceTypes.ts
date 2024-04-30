@@ -278,6 +278,23 @@ const ImageOptionsSchema = z.object({
 
 export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
 
+/**
+ * Configuration of fields to be sync'ed locally for offline check-in.
+ * Boolean values, where true means that they field should be sync'ed and false
+ * means that it should not.
+ *
+ * These are the only optional fields. Ticket ID, event ID, event name, ticket
+ * name (name of the product), check-in timestamp and "is consumed" are always
+ * included.
+ */
+const OfflineCheckinOptionsSchema = z.object({
+  fields: z.object({
+    attendeeName: z.boolean(), // The attendee's name
+    attendeeEmail: z.boolean(), // The attendee's email
+    checker: z.boolean() // The email of the person who checked this ticket in
+  })
+});
+
 const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * Configured by the user when setting up Lemonade as a data source.
@@ -293,7 +310,10 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   manualTickets: ManualTicketListSchema,
   ticketActions: TicketActionsOptionsSchema.optional(),
   semaphoreGroups: SemaphoreGroupListSchema,
-  enablePODTickets: z.boolean().optional()
+  enablePODTickets: z.boolean().optional(),
+  // If the offlineCheckin field is undefined, offline check-in is disabled for
+  // this pipeline
+  offlineCheckin: OfflineCheckinOptionsSchema.optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
