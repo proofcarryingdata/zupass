@@ -1,4 +1,4 @@
-import { isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { isEqualEdDSAPublicKey, publicKeyToPoint } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -484,9 +484,10 @@ function publicSignalsFromClaim(claim: ZKEdDSAEventTicketPCDClaim): string[] {
 
   ret.push(claim.nullifierHash || negOne);
 
+  const signerAsPoint = publicKeyToPoint(claim.signer);
   // Public inputs appear in public signals in declaration order
-  ret.push(hexToBigInt(claim.signer[0]).toString());
-  ret.push(hexToBigInt(claim.signer[1]).toString());
+  ret.push(signerAsPoint[0].toString());
+  ret.push(signerAsPoint[1].toString());
 
   for (const eventId of snarkInputForValidEventIds(claim.validEventIds)) {
     ret.push(eventId);

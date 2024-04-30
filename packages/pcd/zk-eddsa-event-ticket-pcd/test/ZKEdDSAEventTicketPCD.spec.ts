@@ -602,10 +602,10 @@ describe("ZKEdDSAEventTicketPCD should work", function () {
       claim.watermark = "111";
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.signer[0] = "123";
+      claim.signer = ["123", "456"];
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
-      claim.signer[1] = "123";
+      claim.signer = "123456";
     });
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAEventTicketPCDClaim) => {
       claim.validEventIds = validEventIdsNoTicket;

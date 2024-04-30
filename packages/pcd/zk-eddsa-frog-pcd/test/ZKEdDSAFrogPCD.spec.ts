@@ -309,11 +309,11 @@ describe("ZKEdDSAFrogPCD should work", function () {
     const validPCD = await ZKEdDSAFrogPCDPackage.prove(pcdArgs);
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.signerPublicKey[0] = "123";
+      claim.signerPublicKey = ["123", "456"];
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {
-      claim.signerPublicKey[1] = "123";
+      claim.signerPublicKey = "123456";
     });
 
     await testVerifyBadClaim(validPCD, (claim: ZKEdDSAFrogPCDClaim) => {

@@ -1,7 +1,14 @@
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { expect } from "chai";
 import "mocha";
-import { EdDSAPCD, EdDSAPCDPackage, prove, verify } from "../src";
+import {
+  EdDSAPCD,
+  EdDSAPCDPackage,
+  EdDSAPublicKey,
+  isEqualEdDSAPublicKey,
+  prove,
+  verify
+} from "../src";
 
 describe("eddsa-pcd should work", function () {
   let pcd: EdDSAPCD;
@@ -13,7 +20,7 @@ describe("eddsa-pcd should work", function () {
   const expectedPublicKey = [
     "1d5ac1f31407018b7d413a4f52c8f74463b30e6ac2238220ad8b254de4eaa3a2",
     "1e1de8a908826c3f9ac2e0ceee929ecd0caf3b99b3ef24523aaab796a6f733c4"
-  ];
+  ] satisfies EdDSAPublicKey;
 
   // Three parameters which represent bigints
   const message: string[] = ["0x12345", "0x54321", "0xdeadbeef"];
@@ -36,7 +43,9 @@ describe("eddsa-pcd should work", function () {
 
     expect(await verify(pcd)).to.be.true;
     expect(pcd.claim.message).to.deep.eq(message.map((s) => BigInt(s)));
-    expect(pcd.claim.publicKey).to.deep.eq(expectedPublicKey);
+    expect(isEqualEdDSAPublicKey(pcd.claim.publicKey, expectedPublicKey)).to.eq(
+      true
+    );
   });
 
   it("should be able to serialize and deserialize a PCD", async function () {
@@ -60,6 +69,8 @@ describe("eddsa-pcd should work", function () {
     expect(deserialized.claim.message).to.deep.eq(
       message.map((s) => BigInt(s))
     );
-    expect(deserialized.claim.publicKey).to.deep.eq(expectedPublicKey);
+    expect(
+      isEqualEdDSAPublicKey(deserialized.claim.publicKey, expectedPublicKey)
+    ).to.be.true;
   });
 });

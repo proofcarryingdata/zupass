@@ -7,7 +7,6 @@ import {
   unpackSignature,
   verifySignature
 } from "@zk-kit/eddsa-poseidon";
-import { bigIntToHexadecimal, hexadecimalToBigInt } from "@zk-kit/utils";
 import { poseidon1 } from "poseidon-lite/poseidon1";
 import { poseidon12 } from "poseidon-lite/poseidon12";
 import { poseidon13 } from "poseidon-lite/poseidon13";
@@ -23,7 +22,13 @@ import {
   EdDSAPCDTypeName,
   EdDSAPublicKey
 } from "./EdDSAPCD";
+import { encodePublicKey, publicKeyToPoint } from "./util/util";
 
+/**
+ * Generates a Poseidon hash from an array of bigint values.
+ * In order to avoid including unnecessary Poseidon constants, we only support
+ * arrays of certain lengths, based on usage by the dependents of EdDSAPCD.
+ */
 function poseidonHash(message: bigint[]): bigint {
   const n = message.length;
   if (n === 1) {
@@ -32,14 +37,16 @@ function poseidonHash(message: bigint[]): bigint {
     // as used in EmailPCD
     return poseidon2(message);
   } else if (n === 3) {
+    // as used in the tests for this package
     return poseidon3(message);
   } else if (n === 12) {
     // as used in EdDSATicketPCD
     return poseidon12(message);
   } else if (n === 13) {
+    // as used in EdDSAFrogPCD
     return poseidon13(message);
   } else {
-    throw new Error("wrong length");
+    throw new Error(`Array of length ${n} not supported.`);
   }
 }
 
@@ -93,14 +100,10 @@ export async function prove(args: EdDSAPCDArgs): Promise<EdDSAPCD> {
 export async function verify(pcd: EdDSAPCD): Promise<boolean> {
   try {
     const signature = unpackSignature(fromHexString(pcd.proof.signature));
-    const pubKey: [bigint, bigint] = [
-      hexadecimalToBigInt(pcd.claim.publicKey[0]),
-      hexadecimalToBigInt(pcd.claim.publicKey[1])
-    ];
-
     const hashedMessage = poseidonHash(pcd.claim.message);
+    const pubKeyPoint = publicKeyToPoint(pcd.claim.publicKey);
 
-    return verifySignature(hashedMessage, signature, pubKey);
+    return verifySignature(hashedMessage, signature, pubKeyPoint);
   } catch {
     return false;
   }
@@ -213,6 +216,6 @@ export async function getEdDSAPublicKey(
     privateKey = fromHexString(privateKey);
   }
 
-  const publicKey = derivePublicKey(privateKey);
-  return [bigIntToHexadecimal(publicKey[0]), bigIntToHexadecimal(publicKey[1])];
+  const unpackedPublicKey = derivePublicKey(privateKey);
+  return encodePublicKey(unpackedPublicKey);
 }

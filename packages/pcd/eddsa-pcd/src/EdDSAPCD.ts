@@ -10,7 +10,7 @@ export const EdDSAPCDTypeName = "eddsa-pcd";
  * a pair of coordinates consisting of hexadecimal strings. The public key is maintained in a standard
  * format and is internally converted to and from the Montgomery format as needed.
  */
-export type EdDSAPublicKey = [string, string];
+export type EdDSAPublicKey = [string, string] | string;
 
 /**
  * Interface containing the arguments that 3rd parties use to

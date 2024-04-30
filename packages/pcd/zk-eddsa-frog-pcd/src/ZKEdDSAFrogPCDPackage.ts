@@ -5,6 +5,7 @@ import {
   IFrogData,
   frogDataToBigInts
 } from "@pcd/eddsa-frog-pcd";
+import { publicKeyToPoint } from "@pcd/eddsa-pcd";
 import {
   ArgumentTypeName,
   DisplayOptions,
@@ -21,7 +22,6 @@ import { STATIC_SIGNATURE_PCD_NULLIFIER } from "@pcd/semaphore-signature-pcd";
 import {
   fromHexString,
   generateSnarkMessageHash,
-  hexToBigInt,
   requireDefinedParameter
 } from "@pcd/util";
 import { unpackSignature } from "@zk-kit/eddsa-poseidon";
@@ -135,6 +135,7 @@ function snarkInputForProof(
 ): Record<string, `${number}` | `${number}`[]> {
   const frogAsBigIntArray = frogDataToBigInts(frogPCD.claim.data);
   const signerPubKey = frogPCD.proof.eddsaPCD.claim.publicKey;
+  const signerAsPoint = publicKeyToPoint(signerPubKey);
 
   // Note: unpackSignature leaves the R8 point's coordinates in Montgomery
   // form, which is then reversed by toObject below.
@@ -161,8 +162,8 @@ function snarkInputForProof(
     reservedField3: frogAsBigIntArray[12].toString(),
 
     // Frog signature fields
-    frogSignerPubkeyAx: hexToBigInt(signerPubKey[0]).toString(),
-    frogSignerPubkeyAy: hexToBigInt(signerPubKey[1]).toString(),
+    frogSignerPubkeyAx: signerAsPoint[0].toString(),
+    frogSignerPubkeyAy: signerAsPoint[1].toString(),
     frogSignatureR8x: rawSig.R8[0].toString(),
     frogSignatureR8y: rawSig.R8[1].toString(),
     frogSignatureS: rawSig.S.toString(),
@@ -249,6 +250,7 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
   // full package initialization.
 
   const t = pcd.claim.partialFrog;
+  const signerAsPoint = publicKeyToPoint(pcd.claim.signerPublicKey);
   // Outputs appear in public signals first
   const publicSignals = [
     pcd.claim.nullifierHash,
@@ -265,8 +267,8 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
     "0",
     "0",
     "0",
-    hexToBigInt(pcd.claim.signerPublicKey[0]).toString(),
-    hexToBigInt(pcd.claim.signerPublicKey[1]).toString(),
+    signerAsPoint[0].toString(),
+    signerAsPoint[1].toString(),
     pcd.claim.externalNullifier,
     pcd.claim.watermark
   ];

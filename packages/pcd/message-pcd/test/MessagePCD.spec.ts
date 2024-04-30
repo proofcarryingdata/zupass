@@ -71,7 +71,7 @@ describe("message-pcd should work", function () {
     /////////////////////////////////
     const copy3 = await MessagePCDPackage.deserialize(ser.pcd);
     expect(true).to.eq(await MessagePCDPackage.verify(copy3));
-    copy3.proof.signature.claim.publicKey[0] += "1";
+    copy3.proof.signature.claim.publicKey += "1";
     expect(false).to.eq(await MessagePCDPackage.verify(copy3));
     await expect(
       checkMsg(copy3, expectedPublicKey)
