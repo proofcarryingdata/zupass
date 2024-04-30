@@ -248,31 +248,34 @@ export async function verify(pcd: ZKEdDSAFrogPCD): Promise<boolean> {
   // verify() requires dependencies but not artifacts (verification key
   // is available in code as vkey imported above), so doesn't require
   // full package initialization.
-
-  const t = pcd.claim.partialFrog;
-  const signerAsPoint = publicKeyToPoint(pcd.claim.signerPublicKey);
-  // Outputs appear in public signals first
-  const publicSignals = [
-    pcd.claim.nullifierHash,
-    t.frogId?.toString() || "0",
-    t.biome?.toString() || "0",
-    t.rarity?.toString() || "0",
-    t.temperament?.toString() || "0",
-    t.jump?.toString() || "0",
-    t.speed?.toString() || "0",
-    t.intelligence?.toString() || "0",
-    t.beauty?.toString() || "0",
-    t.timestampSigned?.toString() || "0",
-    t.ownerSemaphoreId?.toString() || "0",
-    "0",
-    "0",
-    "0",
-    signerAsPoint[0].toString(),
-    signerAsPoint[1].toString(),
-    pcd.claim.externalNullifier,
-    pcd.claim.watermark
-  ];
-  return groth16.verify(vkey, publicSignals, pcd.proof);
+  try {
+    const t = pcd.claim.partialFrog;
+    const signerAsPoint = publicKeyToPoint(pcd.claim.signerPublicKey);
+    // Outputs appear in public signals first
+    const publicSignals = [
+      pcd.claim.nullifierHash,
+      t.frogId?.toString() || "0",
+      t.biome?.toString() || "0",
+      t.rarity?.toString() || "0",
+      t.temperament?.toString() || "0",
+      t.jump?.toString() || "0",
+      t.speed?.toString() || "0",
+      t.intelligence?.toString() || "0",
+      t.beauty?.toString() || "0",
+      t.timestampSigned?.toString() || "0",
+      t.ownerSemaphoreId?.toString() || "0",
+      "0",
+      "0",
+      "0",
+      signerAsPoint[0].toString(),
+      signerAsPoint[1].toString(),
+      pcd.claim.externalNullifier,
+      pcd.claim.watermark
+    ];
+    return groth16.verify(vkey, publicSignals, pcd.proof);
+  } catch (_e) {
+    return false;
+  }
 }
 
 /**

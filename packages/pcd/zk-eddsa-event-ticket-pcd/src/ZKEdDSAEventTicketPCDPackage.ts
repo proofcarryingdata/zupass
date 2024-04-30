@@ -26,7 +26,6 @@ import {
   decStringToBigIntToUuid,
   fromHexString,
   generateSnarkMessageHash,
-  hexToBigInt,
   numberToBigInt,
   requireDefinedParameter,
   uuidToBigInt
@@ -157,6 +156,7 @@ function snarkInputForProof(
 ): Record<string, `${number}` | `${number}`[]> {
   const ticketAsBigIntArray = ticketDataToBigInts(ticketPCD.claim.ticket);
   const pubKey = ticketPCD.proof.eddsaPCD.claim.publicKey;
+  const signerAsPoint = publicKeyToPoint(pubKey);
 
   const rawSig = unpackSignature(
     fromHexString(ticketPCD.proof.eddsaPCD.proof.signature)
@@ -207,8 +207,8 @@ function snarkInputForProof(
     revealReservedSignedField3: "0",
 
     // Ticket signature fields
-    ticketSignerPubkeyAx: hexToBigInt(pubKey[0]).toString(),
-    ticketSignerPubkeyAy: hexToBigInt(pubKey[1]).toString(),
+    ticketSignerPubkeyAx: signerAsPoint[0].toString(),
+    ticketSignerPubkeyAy: signerAsPoint[1].toString(),
     ticketSignatureR8x: rawSig.R8[0].toString(), //eddsa.F.toObject(rawSig.R8[0]).toString(),
     ticketSignatureR8y: rawSig.R8[1].toString(), //eddsa.F.toObject(rawSig.R8[1]).toString(),
     ticketSignatureS: rawSig.S.toString(),
@@ -512,8 +512,12 @@ export async function verify(pcd: ZKEdDSAEventTicketPCD): Promise<boolean> {
   // is available in code as vkey imported above), so doesn't require
   // full package initialization.
 
-  const publicSignals = publicSignalsFromClaim(pcd.claim);
-  return groth16.verify(vkey, publicSignals, pcd.proof);
+  try {
+    const publicSignals = publicSignalsFromClaim(pcd.claim);
+    return groth16.verify(vkey, publicSignals, pcd.proof);
+  } catch (_e) {
+    return false;
+  }
 }
 
 /**
