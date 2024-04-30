@@ -1,4 +1,8 @@
-import { EdDSAPCDPackage, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSAPCDPackage,
+  getEdDSAPublicKey,
+  publicKeyToArrayFormat
+} from "@pcd/eddsa-pcd";
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { BABY_JUB_NEGATIVE_ONE, fromHexString } from "@pcd/util";
 import { r as BABY_JUB_MODULUS, Point } from "@zk-kit/baby-jubjub";
@@ -408,6 +412,22 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
       );
       expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
     }
+
+    // EdDSAPCD represents its signatures as an EC point (2 field elements)
+    // in an array, with each element being 32 bytes encoded as 64 hex digits.
+    const stringifiedPublicKey = unpackedPublicKey.map((n) =>
+      n.toString(16).padStart(64, "0")
+    );
+
+    const pubFromString = publicKeyToArrayFormat(
+      await getEdDSAPublicKey(privateKey)
+    );
+    expect(pubFromString).to.deep.eq(stringifiedPublicKey);
+
+    const pubFromBuffer = publicKeyToArrayFormat(
+      await getEdDSAPublicKey(fromHexString(privateKey))
+    );
+    expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
   });
 
   it("EdDSA signing should match", async function () {
@@ -450,7 +470,9 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
       n.toString(16).padStart(64, "0")
     );
 
-    expect(stringifiedPublicKey).to.deep.eq(pcd.claim.publicKey);
+    expect(stringifiedPublicKey).to.deep.eq(
+      publicKeyToArrayFormat(pcd.claim.publicKey)
+    );
     expect(signature).to.deep.eq(pcd.proof.signature);
   });
 });

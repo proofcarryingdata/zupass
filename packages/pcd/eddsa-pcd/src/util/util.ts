@@ -3,6 +3,7 @@ import { Point } from "@zk-kit/baby-jubjub";
 import { packPublicKey, unpackPublicKey } from "@zk-kit/eddsa-poseidon";
 import {
   BigNumber,
+  bigIntToHexadecimal,
   hexadecimalToBigInt,
   leBigIntToBuffer,
   leBufferToBigInt
@@ -23,7 +24,7 @@ export function newEdDSAPrivateKey(): string {
 }
 
 /**
- * Compares two EdDSA public keys for equality.
+ * Compares two {@link EdDSAPublicKey}s for equality.
  */
 export function isEqualEdDSAPublicKey(
   a: EdDSAPublicKey,
@@ -66,7 +67,7 @@ export function checkPublicKeyFormat(publicKey: string): string {
 }
 
 /**
- * Checks if a value is a valid EdDSAPublicKey
+ * Checks if a value is a valid {@link EdDSAPublicKey}.
  */
 export function isEdDSAPublicKey(
   maybeKey: unknown
@@ -92,12 +93,24 @@ export function isEdDSAPublicKey(
   }
 }
 
+/**
+ * Converts a public key of either format to a {@link Point}, which is a
+ * two-element array of bigints.
+ */
 export function publicKeyToPoint(pubKey: EdDSAPublicKey): Point<bigint> {
   if (typeof pubKey === "string") {
     return decodePublicKey(pubKey);
   } else {
     return [hexadecimalToBigInt(pubKey[0]), hexadecimalToBigInt(pubKey[1])];
   }
+}
+
+/**
+ * Converts a public key of either format to array format.
+ */
+export function publicKeyToArrayFormat(pubKey: EdDSAPublicKey): EdDSAPublicKey {
+  const point = publicKeyToPoint(pubKey);
+  return [bigIntToHexadecimal(point[0]), bigIntToHexadecimal(point[1])];
 }
 
 /**
