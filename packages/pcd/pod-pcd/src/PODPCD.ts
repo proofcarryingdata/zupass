@@ -28,7 +28,7 @@ export type PODPCDArgs = {
    * A {@link ITicketData} object containing ticket information that is encoded into this PCD.
    */
   entries: ObjectArgument<PODEntries>;
-  // TODO(POD-P2): Figure out serializable format here.  ObjectArgument is
+  // TODO(POD-P3): Figure out serializable format here.  ObjectArgument is
   // intended to be directly JSON serializable, so can't contain bigints
   // if used for network requests (e.g. ProveAndAdd).  The choice here should
   // be driven by the needs of the Prove screen.
@@ -125,4 +125,11 @@ export class PODPCD implements PCD<PODPCDClaim, PODPCDProof> {
     this.proof = { signature: pod.signature };
     this._pod = pod;
   }
+}
+
+/**
+ * Convenience function for checking the type of a PODPCD.
+ */
+export function isPODPCD(pcd: PCD): pcd is PODPCD {
+  return pcd.type === PODPCDTypeName;
 }
