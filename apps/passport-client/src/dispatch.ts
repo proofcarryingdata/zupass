@@ -1260,7 +1260,8 @@ async function initializeStrich(
   update: ZuUpdate
 ): Promise<void> {
   if (!appConfig.strichLicenseKey) {
-    throw new Error("Strich license key is not defined");
+    console.log("Strich license key is not defined");
+    return;
   }
   try {
     await StrichSDK.initialize(appConfig.strichLicenseKey);

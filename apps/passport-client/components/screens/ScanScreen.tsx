@@ -65,6 +65,7 @@ export function ScanScreen(): JSX.Element {
           <Spacer h={8} />
           {sdkState === "initialized" && <StrichScanner onResult={onResult} />}
           {sdkState === "error" && <ReactQrReaderScanner onResult={onResult} />}
+          {sdkState === undefined && <div>Initializing scanner...</div>}
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>

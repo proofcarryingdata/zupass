@@ -126,7 +126,6 @@ export interface AppState {
     error?: string;
   };
 
-  //
   strichSDKstate: "initialized" | "error" | undefined;
 }
 
