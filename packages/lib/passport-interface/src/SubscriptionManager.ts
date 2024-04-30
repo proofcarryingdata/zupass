@@ -179,6 +179,8 @@ export class FeedSubscriptionManager {
   ): Promise<SubscriptionActions[]> {
     const responsePromises: Promise<SubscriptionActions[]>[] = [];
 
+    console.log(`polling subscriptions`);
+    console.log(`preparing credentials`);
     await credentialManager.prepareCredentials(
       this.activeSubscriptions.map((sub) => sub.feed.credentialRequest)
     );

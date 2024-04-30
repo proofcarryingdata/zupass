@@ -92,7 +92,9 @@ export class CredentialManager implements CredentialManagerAPI {
    */
   public async prepareCredentials(reqs: CredentialRequest[]): Promise<void> {
     for (const req of reqs) {
+      console.log(`preparing`, req);
       if (!this.getCachedCredential(req)) {
+        console.log(`cache miss for`, req);
         try {
           this.setCachedCredential(req, await this.generateCredential(req));
         } catch (e) {
@@ -101,6 +103,8 @@ export class CredentialManager implements CredentialManagerAPI {
           // pre-generating credentials here, we don't need to take any action
           // if a single credential fails to generate.
         }
+      } else {
+        console.log(`cache hit for`, req);
       }
     }
   }
