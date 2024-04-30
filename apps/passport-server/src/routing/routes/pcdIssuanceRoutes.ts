@@ -71,7 +71,7 @@ export function initPCDIssuanceRoutes(
   app.get("/issue/eddsa-public-key", async (req: Request, res: Response) => {
     checkIssuanceServiceStarted(issuanceService);
     const result = await issuanceService.getEdDSAPublicKey();
-    res.send(result satisfies EdDSAPublicKey);
+    res.send(JSON.stringify(result satisfies EdDSAPublicKey));
   });
 
   /**

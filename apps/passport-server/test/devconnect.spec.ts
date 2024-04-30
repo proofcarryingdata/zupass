@@ -1,4 +1,8 @@
-import { EdDSAPublicKey, getEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import {
+  EdDSAPublicKey,
+  getEdDSAPublicKey,
+  isEdDSAPublicKey
+} from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
@@ -1567,14 +1571,8 @@ describe("devconnect functionality", function () {
       }
 
       publicKeyEdDSA = publicKeyResult.value;
-      const [xValue, yValue] = publicKeyEdDSA;
-      // Check lengths - should be 32 bytes in hex
-      expect(xValue.length).to.eq(64);
-      expect(yValue.length).to.eq(64);
-      // Just to be safe, check against a regex
-      const regex32ByteHexString = /^[0-9A-Fa-f]{64}$/;
-      expect(regex32ByteHexString.test(xValue)).to.eq(true);
-      expect(regex32ByteHexString.test(yValue)).to.eq(true);
+      expect(typeof publicKeyEdDSA).to.eq("string");
+      expect(isEdDSAPublicKey(publicKeyEdDSA)).to.eq(true);
     }
   );
 
