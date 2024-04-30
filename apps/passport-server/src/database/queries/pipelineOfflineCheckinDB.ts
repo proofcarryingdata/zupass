@@ -1,13 +1,8 @@
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
-export const MAX_CHECKIN_ATTEMPTS = 10;
-
 /**
- * Stores check-in records for "manual tickets". These are tickets which are
- * not fetched from remote back-end systems and are therefore not remotely
- * checked-in. Instead, they are specified in the pipeline configuration and
- * are checked in by updating records in the DB.
+ * Interface for the storage of offline checkins for asynchronous processing.
  */
 export interface IPipelineOfflineCheckinDB {
   addOfflineCheckins(
@@ -24,9 +19,7 @@ export interface IPipelineOfflineCheckinDB {
 }
 
 /**
- * Manages the database of check-ins, currently only used for "manual tickets"
- * which are created via Pipeline configuration rather than imported from a
- * back-end system.
+ * Manages offline checkins for asynchronous processing.
  */
 export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
   private db: Pool;
@@ -35,6 +28,9 @@ export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
     this.db = db;
   }
 
+  /**
+   * Add multiple offline check-ins for a given event on a pipeline.
+   */
   public async addOfflineCheckins(
     pipelineId: string,
     checkerEmail: string,
@@ -59,12 +55,15 @@ export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
     );
   }
 
+  /**
+   * Get the offline check-ins for a single pipeline.
+   */
   public async getOfflineCheckinsForPipeline(
     pipelineId: string
   ): Promise<PipelineOfflineCheckin[]> {
     const result = await sqlQuery(
       this.db,
-      `SELECT * FROM generic_issuance_offline_checkins WHERE pipeline_id = $1 AND attempts < ${MAX_CHECKIN_ATTEMPTS}`,
+      `SELECT * FROM generic_issuance_offline_checkins WHERE pipeline_id = $1`,
       [pipelineId]
     );
 
@@ -79,6 +78,10 @@ export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
     );
   }
 
+  /**
+   * Delete specific offline check-ins for a given pipeline ID. To be used when
+   * these check-ins have been processed by the back-end system.
+   */
   public async deleteOfflineCheckins(
     pipelineId: string,
     ticketIds: string[]
@@ -90,6 +93,16 @@ export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
     );
   }
 
+  /**
+   * When a check-in with the back-end system fails, we increment a counter.
+   * This would allow us to manually delete offline check-ins which seem to be
+   * incapable of succeeding.
+   *
+   * Once we have more data about this, we might be able to automatically
+   * delete offline check-ins that fail too many times; however, we also have
+   * to consider the case where a back-end system is down for long enough that
+   * many offline check-ins fail.
+   */
   public async addFailedOfflineCheckin(
     pipelineId: string,
     ticketId: string
