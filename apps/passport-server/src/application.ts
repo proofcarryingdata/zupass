@@ -12,10 +12,6 @@ import {
   IGenericPretixAPI,
   getGenericPretixAPI
 } from "./apis/pretix/genericPretixAPI";
-import {
-  IZuconnectTripshaAPI,
-  getZuconnectTripshaAPI
-} from "./apis/zuconnect/zuconnectTripshaAPI";
 import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
@@ -126,15 +122,6 @@ async function getOverridenApis(
     devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
-  let zuconnectTripshaAPI: IZuconnectTripshaAPI | null = null;
-
-  if (apiOverrides?.zuconnectTripshaAPI) {
-    logger("[INIT] overriding Zuconnect Tripsha API");
-    zuconnectTripshaAPI = apiOverrides.zuconnectTripshaAPI;
-  } else {
-    zuconnectTripshaAPI = getZuconnectTripshaAPI();
-  }
-
   let lemonadeAPI: ILemonadeAPI | null = null;
 
   if (apiOverrides?.lemonadeAPI) {
@@ -157,7 +144,6 @@ async function getOverridenApis(
     emailAPI,
     zuzaluPretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI,
     lemonadeAPI,
     genericPretixAPI
   };
