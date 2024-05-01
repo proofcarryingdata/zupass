@@ -417,7 +417,7 @@ export const AutoIssuanceOptionsSchema = z.object({
   quantity: z.number(),
   schedule: z.object({
     startDate: z.string(),
-    endDate: z.string(),
+    endDate: z.string().optional(),
     intervalMs: z.number()
   })
 });

@@ -107,7 +107,9 @@ function canIssueInThisEpoch(
   email: string
 ): boolean {
   const start = new Date(autoIssuance.schedule.startDate).getTime();
-  const end = new Date(autoIssuance.schedule.endDate).getTime();
+  const end = new Date(
+    autoIssuance.schedule.endDate ?? new Date(3000, 1, 1)
+  ).getTime();
   const now = Date.now();
 
   if (now < start || now > end) {
