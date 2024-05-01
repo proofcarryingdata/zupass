@@ -93,6 +93,12 @@ const LOG_TAG = `[${LOG_NAME}]`;
 
 export const LEMONADE_CHECKER = "Lemonade";
 
+// @todo use the interface defined on the food voucher branch
+interface MemberCriteria {
+  eventId: string;
+  productId: string;
+}
+
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
  * loads data from Lemonade is capable of.
@@ -420,11 +426,11 @@ export class LemonadePipeline implements BasePipeline {
                     : t.user_name,
                 lemonadeEventId: eventConfig.externalId,
                 lemonadeTicketTypeId: t.type_id,
-                genericIssuanceEventId: eventConfig.genericIssuanceEventId,
+                eventId: eventConfig.genericIssuanceEventId,
                 // The 'as string' cast here is safe because we know that the
                 // ticket type exists, having earlier filtered out tickets for
                 // which the ticket type does not exist.
-                genericIssuanceProductId: eventConfig.ticketTypes.find(
+                productId: eventConfig.ticketTypes.find(
                   (ticketType) => ticketType.externalId === t.type_id
                 )?.genericIssuanceProductId as string,
                 lemonadeUserId: t.user_id,
@@ -507,8 +513,8 @@ export class LemonadePipeline implements BasePipeline {
       for (const atom of await this.db.load(this.id)) {
         data.push({
           email: atom.email as string,
-          eventId: atom.genericIssuanceEventId,
-          productId: atom.genericIssuanceProductId
+          eventId: atom.eventId,
+          productId: atom.productId
         });
       }
 
@@ -1191,8 +1197,8 @@ export class LemonadePipeline implements BasePipeline {
 
       // signed fields
       ticketId: atom.id,
-      eventId: atom.genericIssuanceEventId,
-      productId: atom.genericIssuanceProductId,
+      eventId: atom.eventId,
+      productId: atom.productId,
       timestampConsumed:
         atom.checkinDate instanceof Date ? atom.checkinDate.getTime() : 0,
       timestampSigned: Date.now(),
@@ -1225,8 +1231,8 @@ export class LemonadePipeline implements BasePipeline {
       this.id,
       checkerEmail
     )) {
-      if (checkerTicketAtom.genericIssuanceEventId === eventId) {
-        checkerProductIds.push(checkerTicketAtom.genericIssuanceProductId);
+      if (checkerTicketAtom.eventId === eventId) {
+        checkerProductIds.push(checkerTicketAtom.productId);
       }
     }
     for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
@@ -1962,6 +1968,61 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   /**
+   * Returns {@link MemberCriteria} for each of the ticket types this user has
+   * permission to check in.
+   *
+   * @todo adapt this to product-level granularity when food voucher branch is
+   * merged.
+   */
+  private async ticketsUserCanCheckIn(
+    checkerEmail: string
+  ): Promise<MemberCriteria[]> {
+    if (this.definition.options.superuserEmails?.includes(checkerEmail)) {
+      // The user can check in all of the event/product combinations on this
+      // pipeline
+      return this.definition.options.events.flatMap((eventConfig) =>
+        eventConfig.ticketTypes.map((ticketType) => ({
+          eventId: eventConfig.genericIssuanceEventId,
+          productId: ticketType.genericIssuanceProductId
+        }))
+      );
+    }
+
+    // Get all of the products that the checker owns
+    const checkerProductIds: string[] = [];
+    for (const checkerTicketAtom of await this.db.loadByEmail(
+      this.id,
+      checkerEmail
+    )) {
+      checkerProductIds.push(checkerTicketAtom.productId);
+    }
+    for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
+      checkerProductIds.push(manualTicket.productId);
+    }
+
+    // Map over all configured events
+    return this.definition.options.events.reduce((memo, eventConfig) => {
+      if (
+        // Does the user own a superuser product for this event?
+        eventConfig.ticketTypes.some(
+          (ticketType) =>
+            ticketType.isSuperUser &&
+            checkerProductIds.includes(ticketType.genericIssuanceProductId)
+        )
+      ) {
+        // In that case, they can check in any of the product types for this event
+        memo.push(
+          ...eventConfig.ticketTypes.map((ticketType) => ({
+            eventId: eventConfig.genericIssuanceEventId,
+            productId: ticketType.genericIssuanceProductId
+          }))
+        );
+      }
+      return memo;
+    }, [] as MemberCriteria[]);
+  }
+
+  /**
    * Returns offline tickets that the user is entitled to check in, if any.
    */
   public async getOfflineTickets(
@@ -1977,47 +2038,53 @@ export class LemonadePipeline implements BasePipeline {
         );
       }
 
+      const checkerTicketCriteria =
+        await this.ticketsUserCanCheckIn(checkerEmail);
+      if (checkerTicketCriteria.length === 0) {
+        // User can't check anything in, so they don't get any offline tickets.
+        return [];
+      }
+
       const enabledFields = this.definition.options.offlineCheckin.fields;
       const offlineTickets: PodboxOfflineTicket[] = [];
 
-      for (const event of this.definition.options.events) {
-        if (
-          (await this.canCheckInForEvent(
-            event.genericIssuanceEventId,
-            checkerEmail
-          )) === true
-        ) {
-          // Add offline tickets
-          for (const atom of await this.db.load(this.id)) {
-            if (!atom.email) {
-              continue;
-            }
-            offlineTickets.push({
-              id: atom.id,
-              eventId: atom.genericIssuanceEventId,
-              eventName: this.lemonadeAtomToEventName(atom),
-              ticketName: this.lemonadeAtomToTicketName(atom),
-              attendeeEmail: enabledFields.attendeeEmail
-                ? atom.email.toLowerCase()
-                : undefined,
-              attendeeName: enabledFields.attendeeName ? atom.name : undefined,
-              checker: enabledFields.checker ? null : undefined,
-              is_consumed: atom.checkinDate instanceof Date
-            });
-          }
+      for (const atom of await this.db.load(this.id)) {
+        if (!atom.email) {
+          continue;
+        }
 
-          for (const manualTicket of this.definition.options.manualTickets ??
-            []) {
+        // If the user can check in tickets of this type
+        if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+          offlineTickets.push({
+            id: atom.id,
+            eventId: atom.eventId,
+            eventName: this.lemonadeAtomToEventName(atom),
+            ticketName: this.lemonadeAtomToTicketName(atom),
+            attendeeEmail: enabledFields.attendeeEmail
+              ? atom.email.toLowerCase()
+              : undefined,
+            attendeeName: enabledFields.attendeeName ? atom.name : undefined,
+            checker: enabledFields.checker ? null : undefined,
+            is_consumed: atom.checkinDate instanceof Date
+          });
+        }
+      }
+
+      if ((this.definition.options.manualTickets ?? []).length) {
+        const manualCheckIns = await this.checkinDB.getByPipelineId(this.id);
+        for (const manualTicket of this.definition.options.manualTickets ??
+          []) {
+          // If the user can check in tickets of this type
+          if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
             const event = this.getEventById(manualTicket.eventId);
             const product = this.getTicketTypeById(
               event,
               manualTicket.productId
             );
-
-            const checkIn = await this.checkinDB.getByTicketId(
-              this.id,
-              manualTicket.id
+            const checkIn = manualCheckIns.find(
+              (checkIn) => checkIn.ticketId === manualTicket.id
             );
+
             offlineTickets.push({
               id: manualTicket.id,
               eventId: event.genericIssuanceEventId,
@@ -2040,6 +2107,10 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
+  /**
+   * Stores ticket IDs that were checked in by an offline user for asynchronous
+   * check-in with the back-end service.
+   */
   private async checkInOfflineTickets(
     checkerEmail: string,
     eventId: string,
@@ -2052,26 +2123,56 @@ export class LemonadePipeline implements BasePipeline {
       );
     }
 
-    if (!(await this.canCheckInForEvent(eventId, checkerEmail))) {
+    const checkerTicketCriteria =
+      await this.ticketsUserCanCheckIn(checkerEmail);
+    if (checkerTicketCriteria.length === 0) {
+      // User can't check anything in, so log and ignore this request.
+      logger(
+        `${LOG_TAG} User ${checkerEmail} tried to upload offline check-ins but is not permitted to check in any tickets.`
+      );
       return;
     }
 
+    // Not all of the submitted ticket IDs may be valid. For instance, some
+    // tickets will already have been checked in. It is also possible that the
+    // user might not have permission to check the ticket in.
+    //
+    // Because "permission to check in" is a function of the current state of
+    // the checker's tickets, a checker may have had permission to download
+    // tickets in the past, but no longer have permission to check those
+    // tickets in now. We discard any check-ins that the checker does not have
+    // permission to carry out, but we should be careful to ensure that there
+    // are no temporary states in which the checkers's permissions are somehow
+    // missing, e.g. due to a partial sync. This doesn't seem to be possible
+    // right now, but is something to be aware of if we make changes later.
+    // Denied offline check-ins are logged so that we can keep tabs on this.
     const offlineCheckinsToSave: string[] = [];
-    // Some of these tickets may have been checked in already, while the
-    // checker was offline. Only save tickets that are not already checked in.
+
     for (const ticketId of ticketIds) {
       const atom = await this.db.loadById(this.id, ticketId);
       if (atom && atom.checkinDate === null) {
-        offlineCheckinsToSave.push(ticketId);
+        if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+          offlineCheckinsToSave.push(ticketId);
+        } else {
+          logger(
+            `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
+          );
+        }
       } else {
         const manualTicket = this.getManualTicketById(ticketId);
         if (manualTicket) {
-          const manualTicketCheckin = await this.checkinDB.getByTicketId(
-            this.id,
-            manualTicket.id
-          );
-          if (manualTicketCheckin === undefined) {
-            offlineCheckinsToSave.push(ticketId);
+          if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
+            const manualTicketCheckin = await this.checkinDB.getByTicketId(
+              this.id,
+              manualTicket.id
+            );
+            if (manualTicketCheckin === undefined) {
+              offlineCheckinsToSave.push(ticketId);
+            }
+          } else {
+            logger(
+              `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
+            );
           }
         }
       }
@@ -2095,34 +2196,67 @@ export class LemonadePipeline implements BasePipeline {
     const checkedInTicketIds = [];
     const failedTicketIds = [];
 
-    for (const { ticketId, checkerEmail } of offlineCheckins) {
-      const atom = await this.db.loadById(this.id, ticketId);
-      if (!atom) {
-        const manualTicket = this.getManualTicketById(ticketId);
-        if (manualTicket) {
-          // Check the manual ticket in
-          const result = await this.checkInManualTicket(
-            manualTicket,
-            checkerEmail
-          );
-          if (
-            result.success === true ||
-            result.error.name === "AlreadyCheckedIn"
-          ) {
-            checkedInTicketIds.push(ticketId);
+    const ticketIdsGroupedByChecker = offlineCheckins.reduce(
+      (memo, { checkerEmail, ticketId }) => {
+        if (memo[checkerEmail]) {
+          memo[checkerEmail].push(ticketId);
+        } else {
+          memo[checkerEmail] = [ticketId];
+        }
+        return memo;
+      },
+      {} as Record<string, string[]>
+    );
+
+    for (const [checkerEmail, ticketIds] of Object.entries(
+      ticketIdsGroupedByChecker
+    )) {
+      const checkerTicketCriteria =
+        await this.ticketsUserCanCheckIn(checkerEmail);
+      for (const ticketId of ticketIds) {
+        const atom = await this.db.loadById(this.id, ticketId);
+        if (!atom) {
+          const manualTicket = this.getManualTicketById(ticketId);
+          if (manualTicket) {
+            // Can this user check this ticket in?
+            // Should we log something if they can't?
+            if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
+              // Check the manual ticket in
+              const result = await this.checkInManualTicket(
+                manualTicket,
+                checkerEmail
+              );
+              if (
+                result.success === true ||
+                result.error.name === "AlreadyCheckedIn"
+              ) {
+                checkedInTicketIds.push(ticketId);
+              } else {
+                failedTicketIds.push(ticketId);
+              }
+            } else {
+              logger(
+                `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+              );
+            }
           } else {
+            // Ticket does not exist at all.
+            // Should we just silently drop manual tickets that don't exist?
             failedTicketIds.push(ticketId);
           }
         } else {
-          // Ticket does not exist at all.
-          failedTicketIds.push(ticketId);
-        }
-      } else {
-        const result = await this.lemonadeCheckin(atom, checkerEmail);
-        if (result.success || result.error.name === "AlreadyCheckedIn") {
-          checkedInTicketIds.push(ticketId);
-        } else {
-          failedTicketIds.push(ticketId);
+          if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+            const result = await this.lemonadeCheckin(atom, checkerEmail);
+            if (result.success || result.error.name === "AlreadyCheckedIn") {
+              checkedInTicketIds.push(ticketId);
+            } else {
+              failedTicketIds.push(ticketId);
+            }
+          } else {
+            logger(
+              `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+            );
+          }
         }
       }
     }
@@ -2143,6 +2277,21 @@ export class LemonadePipeline implements BasePipeline {
   }
 }
 
+export function ticketMatchesCriteria(
+  t: LemonadeAtom | ManualTicket,
+  criterias: MemberCriteria[]
+): boolean {
+  return !!criterias.find((c) => {
+    if (t.eventId !== c.eventId) {
+      return false;
+    }
+    if (c.productId && c.productId !== t.productId) {
+      return false;
+    }
+    return true;
+  });
+}
+
 /**
  * Intermediate representation which the {@link LemonadePipeline} uses to
  * save tickets, in order to be able to issue tickets based on them later on.
@@ -2151,8 +2300,8 @@ export interface LemonadeAtom extends PipelineAtom {
   name: string;
   lemonadeEventId: string;
   lemonadeTicketTypeId: string;
-  genericIssuanceEventId: string;
-  genericIssuanceProductId: string;
+  eventId: string;
+  productId: string;
   lemonadeUserId: string;
   checkinDate: Date | null;
 }
