@@ -935,6 +935,19 @@ export class PretixPipeline implements BasePipeline {
         new Date()
       );
 
+      if (this.autoIssuanceProvider) {
+        const newManualTickets =
+          await this.autoIssuanceProvider.maybeIssueForUser(
+            emailClaim.emailAddress,
+            await this.getAllManualTickets(),
+            await this.db.loadByEmail(this.id, emailClaim.emailAddress)
+          );
+
+        await Promise.allSettled(
+          newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
+        );
+      }
+
       // If the user's Semaphore commitment has changed, `didUpdate` will be
       // true, and we need to update the Semaphore groups
       if (didUpdate) {
