@@ -954,9 +954,11 @@ export class PretixPipeline implements BasePipeline {
 
       // If the user's Semaphore commitment has changed, `didUpdate` will be
       // true, and we need to update the Semaphore groups
-      if (didUpdate) {
-        span?.setAttribute("semaphore_groups_updated", true);
-        await this.triggerSemaphoreGroupUpdate();
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
+        if (didUpdate) {
+          span?.setAttribute("semaphore_groups_updated", true);
+          await this.triggerSemaphoreGroupUpdate();
+        }
       }
 
       const email = emailClaim.emailAddress;
