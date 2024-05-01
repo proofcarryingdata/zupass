@@ -1264,8 +1264,15 @@ async function initializeStrich(
     return;
   }
   try {
-    await StrichSDK.initialize(appConfig.strichLicenseKey);
-    update({ strichSDKstate: "initialized" });
+    await Promise.race([
+      StrichSDK.initialize(appConfig.strichLicenseKey),
+      sleep(10000)
+    ]);
+    if (StrichSDK.isInitialized()) {
+      update({ strichSDKstate: "initialized" });
+    } else {
+      update({ strichSDKstate: "error" });
+    }
   } catch (e) {
     update({ strichSDKstate: "error" });
   }
