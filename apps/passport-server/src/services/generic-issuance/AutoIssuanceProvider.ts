@@ -1,4 +1,8 @@
-import { AutoIssuanceOptions, ManualTicket } from "@pcd/passport-interface";
+import {
+  AutoIssuanceOptions,
+  ManualTicket,
+  MemberCriteria
+} from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { PretixAtom } from "./pipelines/PretixPipeline";
@@ -35,7 +39,7 @@ export class AutoIssuanceProvider {
 
   public async maybeIssueForUser(
     userEmail: string,
-    _existingManualTickets: ManualTicket[],
+    existingManualTickets: ManualTicket[],
     realTickets: PretixAtom[]
   ): Promise<ManualTicket[]> {
     const userRealTickets = realTickets.filter((t) => t.email === userEmail);
@@ -43,36 +47,32 @@ export class AutoIssuanceProvider {
     const newManualTickets: ManualTicket[] = [];
 
     for (const autoIssuance of this.autoIssuanceConfig) {
-      const matchingRealTicket = userRealTickets.find((t) => {
-        if (t.eventId !== autoIssuance.eventId) {
-          return false;
-        }
-        if (autoIssuance.productId && autoIssuance.productId !== t.productId) {
-          return false;
-        }
-        return true;
-      });
-
-      const matchingManualTicket = userManualTickets.find((t) => {
-        if (t.eventId !== autoIssuance.eventId) {
-          return false;
-        }
-        if (autoIssuance.productId && autoIssuance.productId !== t.productId) {
-          return false;
-        }
-        return true;
-      });
+      const permissioningRealTicket = userRealTickets.find((t) =>
+        ticketMatchesCriteria(t, autoIssuance.memberCriteria)
+      );
+      const permissioningManualTicket = userManualTickets.find((t) =>
+        ticketMatchesCriteria(t, autoIssuance.memberCriteria)
+      );
 
       const matchesIssuanceMembershipCriteria: boolean =
-        !!matchingRealTicket || !!matchingManualTicket;
+        !!permissioningRealTicket || !!permissioningManualTicket;
+
       if (!matchesIssuanceMembershipCriteria) {
+        continue;
+      }
+
+      if (
+        !canIssueInThisEpoch(autoIssuance, existingManualTickets, userEmail)
+      ) {
         continue;
       }
 
       const newManualTicket: ManualTicket = {
         attendeeEmail: userEmail,
         attendeeName:
-          matchingRealTicket?.name ?? matchingManualTicket?.name ?? "no name",
+          permissioningRealTicket?.name ??
+          permissioningManualTicket?.name ??
+          "no name",
         eventId: autoIssuance.eventId,
         productId: autoIssuance.productId,
         id: randomUUID(),
@@ -84,4 +84,54 @@ export class AutoIssuanceProvider {
 
     return newManualTickets;
   }
+}
+
+function ticketMatchesCriteria(
+  t: PretixAtom | ManualTicket,
+  criterias: MemberCriteria[]
+): boolean {
+  return !!criterias.find((c) => {
+    if (t.eventId !== c.eventId) {
+      return false;
+    }
+    if (c.productId && c.productId !== t.productId) {
+      return false;
+    }
+    return true;
+  });
+}
+
+function canIssueInThisEpoch(
+  autoIssuance: AutoIssuanceOptions,
+  manualTickets: ManualTicket[],
+  email: string
+): boolean {
+  const start = new Date(autoIssuance.schedule.startDate).getTime();
+  const end = new Date(autoIssuance.schedule.endDate).getTime();
+  const now = Date.now();
+
+  if (now < start || now > end) {
+    return false;
+  }
+
+  const ticketsForUserInEpoch = manualTickets.filter((t) => {
+    if (t.attendeeEmail !== email) {
+      return false;
+    }
+
+    if (!t.timeCreated) {
+      return false;
+    }
+
+    return (
+      new Date(t.timeCreated).getTime() >=
+      now - autoIssuance.schedule.intervalMs
+    );
+  });
+
+  if (ticketsForUserInEpoch.length !== 0) {
+    return false;
+  }
+
+  return true;
 }
