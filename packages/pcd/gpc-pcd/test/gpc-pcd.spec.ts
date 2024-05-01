@@ -15,7 +15,6 @@ import path from "path";
 import { v4 as uuid } from "uuid";
 import { GPCPCDArgs, GPCPCDPackage } from "../src";
 
-// TODO(POD-P0): Make this a helper in gpcircuits?
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
   __dirname,
   "../../../lib/gpcircuits/artifacts/test"

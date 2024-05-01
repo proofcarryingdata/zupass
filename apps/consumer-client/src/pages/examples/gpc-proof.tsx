@@ -270,14 +270,6 @@ async function verifyProof(
   const localBoundConfig = gpcBindConfig(
     deserializeGPCProofConfig(proofConfig)
   ).boundConfig;
-  console.error(
-    "[ART_DBG] localBoundConfig",
-    serializeGPCBoundConfig(localBoundConfig, 2)
-  );
-  console.error(
-    "[ART_DBG] pcd.claim.confi",
-    serializeGPCBoundConfig(pcd.claim.config, 2)
-  );
   const sameConfig = _.isEqual(localBoundConfig, pcd.claim.config);
   if (!sameConfig) {
     return { valid: false, err: "Config does not match." };

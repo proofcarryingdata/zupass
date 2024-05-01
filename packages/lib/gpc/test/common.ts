@@ -1,3 +1,4 @@
+import { loadCircomkitConfig } from "@pcd/gpcircuits";
 import { PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
@@ -5,20 +6,20 @@ import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
 
-const configFilePath = path.join(__dirname, "../../gpcircuits/circomkit.json");
-const config = JSON.parse(readFileSync(configFilePath, "utf-8"));
-// TODO(POD-P0): Fix paths in config to point to gpcircuits directory
+export const GPCIRCUITS_PACKAGE_PATH = path.join(
+  __dirname,
+  "../../../lib/gpcircuits"
+);
 
 // eslint-disable-next-line import/prefer-default-export
 export const circomkit = new Circomkit({
-  ...config,
+  ...loadCircomkitConfig(GPCIRCUITS_PACKAGE_PATH, readFileSync),
   verbose: false
 });
 
-// TODO(POD-P0): Make this a helper in gpcircuits?
 export const GPC_TEST_ARTIFACTS_PATH = path.join(
-  __dirname,
-  "../../gpcircuits/artifacts/test"
+  GPCIRCUITS_PACKAGE_PATH,
+  "artifacts/test"
 );
 
 // Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
