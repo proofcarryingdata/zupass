@@ -5,6 +5,7 @@ import {
 } from "@pcd/passport-interface";
 import { randomUUID } from "@pcd/util";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
+import { logger } from "../../util/logger";
 import { PretixAtom } from "./pipelines/PretixPipeline";
 
 export class AutoIssuanceProvider {
@@ -72,6 +73,7 @@ export class AutoIssuanceProvider {
         continue;
       }
 
+      const now = new Date();
       for (let i = 0; i < autoIssuance.quantity; i++) {
         const newManualTicket: ManualTicket = {
           attendeeEmail: userEmail,
@@ -82,12 +84,16 @@ export class AutoIssuanceProvider {
           eventId: autoIssuance.eventId,
           productId: autoIssuance.productId,
           id: randomUUID(),
-          timeCreated: new Date().toISOString()
+          timeCreated: now.toISOString()
         };
 
         newManualTickets.push(newManualTicket);
       }
     }
+
+    logger(
+      `[AUTO_ISSUANCE] auto-issuing ${newManualTickets.length} tickets for user ${userEmail}`
+    );
 
     return newManualTickets;
   }
@@ -124,9 +130,9 @@ function canIssueInThisEpoch(
   const end = new Date(
     autoIssuance.schedule.endDate ?? new Date(3000, 1, 1)
   ).getTime();
-  const now = Date.now();
+  const now = new Date().getTime();
 
-  if (now < start || now > end) {
+  if (now < start || now >= end) {
     return false;
   }
 
@@ -136,7 +142,7 @@ function canIssueInThisEpoch(
     }
 
     if (!t.timeCreated) {
-      return false;
+      return true;
     }
 
     return (

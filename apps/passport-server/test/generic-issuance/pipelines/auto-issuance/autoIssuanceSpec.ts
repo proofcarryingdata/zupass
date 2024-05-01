@@ -52,7 +52,8 @@ import { setupAutoIssuancePipeline } from "./setupAutoIssuancePipeline";
  */
 describe("generic issuance - PretixPipeline", function () {
   const nowDate = new Date();
-  const now = Date.now();
+  MockDate.set(nowDate);
+  const now = nowDate.getTime();
 
   let ZUPASS_EDDSA_PRIVATE_KEY: string;
   let giBackend: Zupass;
@@ -214,8 +215,8 @@ describe("generic issuance - PretixPipeline", function () {
         AutoIssuanceAttendeeIdentity
       );
       expectLength(
-        attendeeTickets.map((t) => t.claim.ticket.attendeeEmail),
-        2
+        attendeeTickets.map((t) => t.claim.ticket),
+        (1 + 2) * 2 // 1 ticket + pod + 2 vouchers + 2 voucher pods
       );
       const attendeeTicket = attendeeTickets[0];
       expectToExist(attendeeTicket);
@@ -227,7 +228,7 @@ describe("generic issuance - PretixPipeline", function () {
         pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeName
       );
 
-      const attendeePODTicket = attendeeTickets[1];
+      const attendeePODTicket = attendeeTickets[5];
       expectToExist(attendeePODTicket);
       expectIsPODTicketPCD(attendeePODTicket);
       expect(attendeePODTicket.claim.ticket.attendeeEmail).to.eq(

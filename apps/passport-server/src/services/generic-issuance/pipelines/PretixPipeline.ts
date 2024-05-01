@@ -899,6 +899,7 @@ export class PretixPipeline implements BasePipeline {
     );
     // Load manual tickets from the definition
     const manualTickets = await this.getManualTicketsForEmail(email);
+
     // Convert manual tickets to ticket data and add to array
     ticketDatas.push(
       ...(await Promise.all(

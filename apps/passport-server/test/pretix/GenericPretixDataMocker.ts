@@ -493,10 +493,6 @@ export class GenericPretixDataMocker {
       autoIssuanceFoodVendorProduct,
       autoIssuanceSettings,
 
-      // TODO:
-      // ethBerlinAttendeeEmail,
-      // ethBerlinBouncerEmail,
-
       orgUrl,
       token,
 
@@ -559,7 +555,6 @@ export class GenericPretixDataMocker {
       secret: this.randomPositionSecret(),
       email: orderEmail,
       positions: positions.map(([product, email, name, answers]) =>
-        // TODO @rob - is the sub event id meant to be using `this.nextId()`
         this.newPosition(
           orderId,
           email,

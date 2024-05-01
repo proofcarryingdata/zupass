@@ -118,6 +118,37 @@ export function setupAutoIssuancePipeline(): AutoIssuancePipelineTestData {
         feedId: "auto-issuance"
       },
       events: autoIssuanceConfiguredEvents,
+      userPermissions: [
+        {
+          members: [
+            {
+              eventId: autoIssuanceEventId,
+              productId: autoIssuanceFoodVendorProduct.genericIssuanceId
+            }
+          ],
+          canCheckIn: {
+            eventId: autoIssuanceEventId,
+            productId: autoIssuanceFoodVoucherProduct.genericIssuanceId
+          }
+        }
+      ],
+      autoIssuance: [
+        {
+          memberCriteria: [
+            {
+              eventId: autoIssuanceEventId,
+              productId: autoIssuanceAttendeeProduct.genericIssuanceId
+            }
+          ],
+          eventId: autoIssuanceEventId,
+          productId: autoIssuanceFoodVoucherProduct.genericIssuanceId,
+          quantity: 2,
+          schedule: {
+            startDate: new Date().toISOString(),
+            intervalMs: 60_000_000
+          }
+        }
+      ],
       manualTickets: [
         {
           id: randomUUID(),
