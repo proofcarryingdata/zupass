@@ -352,7 +352,8 @@ export class PretixPipeline implements BasePipeline {
         if (this.autoIssuanceProvider) {
           const newManualTickets = await this.autoIssuanceProvider.load(
             this.consumerDB,
-            await this.getAllManualTickets()
+            await this.getAllManualTickets(),
+            atomsToSave
           );
 
           for (const newTicket of newManualTickets) {
