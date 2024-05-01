@@ -57,13 +57,17 @@ export function gpcArtifactPaths(
 
 /**
  * Returns an array which is a copy of `inputArray` extended to `totalLength`,
- * with new values filled with `fillValue` (default 0).
+ * with new values filled with `fillValue` (default 0).  Input array is
+ * returned as-is if `totalLength` is not longer than its length.
  */
 export function extendedSignalArray(
   inputArray: CircuitSignal[],
   totalLength: number,
   fillValue = 0n
 ): CircuitSignal[] {
+  if (totalLength <= inputArray.length) {
+    return inputArray;
+  }
   return inputArray.concat(
     new Array(totalLength - inputArray.length).fill(fillValue)
   );

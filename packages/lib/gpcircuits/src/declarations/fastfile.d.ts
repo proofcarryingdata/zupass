@@ -4,7 +4,7 @@
 // It doesn't claim to be a complete, or even necessarily accurate
 // representation of the fastfile module, which is JavaScript without types.
 declare module "fastfile" {
-  export class FastFile {
+  export interface FastFile {
     public totalSize: number | bigint;
     public async read(length: number | bigint): Uint8Array;
     public async close(): void;
