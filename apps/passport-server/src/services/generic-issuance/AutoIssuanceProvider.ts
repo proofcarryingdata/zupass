@@ -1,4 +1,5 @@
-import { AutoIssuanceOptions } from "@pcd/passport-interface";
+import { AutoIssuanceOptions, ManualTicket } from "@pcd/passport-interface";
+import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 
 export class AutoIssuanceProvider {
   private pipelineId: string;
@@ -10,5 +11,12 @@ export class AutoIssuanceProvider {
   ) {
     this.pipelineId = pipelineId;
     this.autoIssuanceConfig = autoIssuanceConfig;
+  }
+
+  public async load(
+    _consumerDB: IPipelineConsumerDB,
+    _existingManualTickets: ManualTicket[]
+  ): Promise<ManualTicket[]> {
+    return [];
   }
 }

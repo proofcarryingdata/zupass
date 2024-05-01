@@ -54,6 +54,7 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
@@ -126,6 +127,7 @@ export class PretixPipeline implements BasePipeline {
   private api: IGenericPretixAPI;
   private checkinDB: IPipelineCheckinDB;
   private consumerDB: IPipelineConsumerDB;
+  private manualTicketDB: IPipelineManualTicketDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private autoIssuanceProvider: AutoIssuanceProvider | undefined;
@@ -156,6 +158,7 @@ export class PretixPipeline implements BasePipeline {
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
+    manualTicketDB: IPipelineManualTicketDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -163,6 +166,7 @@ export class PretixPipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
     this.consumerDB = consumerDB;
+    this.manualTicketDB = manualTicketDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
     if (this.definition.options.autoIssuance) {
       this.autoIssuanceProvider = new AutoIssuanceProvider(
@@ -345,7 +349,17 @@ export class PretixPipeline implements BasePipeline {
           `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`
         );
 
-        // TODO: error handling
+        if (this.autoIssuanceProvider) {
+          const newManualTickets = await this.autoIssuanceProvider.load(
+            this.consumerDB,
+            this.definition.options.manualTickets ?? []
+          );
+
+          for (const newTicket of newManualTickets) {
+            await this.manualTicketDB.save(this.id, newTicket);
+          }
+        }
+
         await this.db.save(this.definition.id, atomsToSave);
         logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
@@ -904,20 +918,18 @@ export class PretixPipeline implements BasePipeline {
       const { emailClaim } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        const didUpdate = await this.consumerDB.save(
-          this.id,
-          emailClaim.emailAddress,
-          emailClaim.semaphoreId,
-          new Date()
-        );
+      const didUpdate = await this.consumerDB.save(
+        this.id,
+        emailClaim.emailAddress,
+        emailClaim.semaphoreId,
+        new Date()
+      );
 
-        // If the user's Semaphore commitment has changed, `didUpdate` will be
-        // true, and we need to update the Semaphore groups
-        if (didUpdate) {
-          span?.setAttribute("semaphore_groups_updated", true);
-          await this.triggerSemaphoreGroupUpdate();
-        }
+      // If the user's Semaphore commitment has changed, `didUpdate` will be
+      // true, and we need to update the Semaphore groups
+      if (didUpdate) {
+        span?.setAttribute("semaphore_groups_updated", true);
+        await this.triggerSemaphoreGroupUpdate();
       }
 
       const email = emailClaim.emailAddress;
