@@ -128,6 +128,18 @@ const LemonadePipelineTicketTypeConfigSchema = z.object({
   name: z.string()
 });
 
+export const MemberCriteriaSchema = z.object({
+  /**
+   * generic issuance event id
+   */
+  eventId: z.string().uuid(),
+  /**
+   * generic issuance product id
+   */
+  productId: z.string().uuid().optional()
+});
+export type MemberCriteria = z.infer<typeof MemberCriteriaSchema>;
+
 const SemaphoreGroupConfigSchema = z.object({
   /**
    * Defines the set of event ID/product ID pairs that qualify a ticket-holder
@@ -138,18 +150,7 @@ const SemaphoreGroupConfigSchema = z.object({
    */
   groupId: z.string().uuid(),
   name: z.string().min(1),
-  memberCriteria: z.array(
-    z.object({
-      /**
-       * generic issuance event id
-       */
-      eventId: z.string().uuid(),
-      /**
-       * generic issuance product id
-       */
-      productId: z.string().uuid().optional()
-    })
-  )
+  memberCriteria: z.array(MemberCriteriaSchema)
 });
 
 export type SemaphoreGroupConfig = z.infer<typeof SemaphoreGroupConfigSchema>;
@@ -408,6 +409,32 @@ const PretixEventConfigSchema = z.object({
  */
 export type PretixEventConfig = z.infer<typeof PretixEventConfigSchema>;
 
+export const AutoIssuanceOptionsSchema = z.object({
+  memberCriteria: z.array(MemberCriteriaSchema),
+  eventId: z.string(),
+  productId: z.string(),
+  quantity: z.number(),
+  schedule: z.object({
+    startDate: z.string(),
+    endDate: z.string(),
+    intervalMs: z.number()
+  })
+});
+
+export type AutoIssuanceOptions = z.infer<typeof AutoIssuanceOptionsSchema>;
+
+export const UserPermissionsOptionsSchema = z.object({
+  members: z.array(MemberCriteriaSchema),
+  canCheckIn: z.object({
+    eventId: z.string(),
+    productId: z.string().optional()
+  })
+});
+
+export type UserPermissionsOptions = z.infer<
+  typeof UserPermissionsOptionsSchema
+>;
+
 const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * This object represents a configuration from which the server can instantiate
@@ -419,7 +446,9 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
   semaphoreGroups: SemaphoreGroupListSchema,
-  enablePODTickets: z.boolean().optional()
+  enablePODTickets: z.boolean().optional(),
+  autoIssuance: AutoIssuanceOptionsSchema.optional(),
+  userPermissions: UserPermissionsOptionsSchema.optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.

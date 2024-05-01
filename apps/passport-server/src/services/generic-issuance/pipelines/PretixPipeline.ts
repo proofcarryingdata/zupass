@@ -60,6 +60,7 @@ import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
+import { AutoIssuanceProvider } from "../AutoIssuanceProvider";
 import {
   SemaphoreGroupProvider,
   SemaphoreGroupTicketInfo
@@ -127,6 +128,7 @@ export class PretixPipeline implements BasePipeline {
   private consumerDB: IPipelineConsumerDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
+  private autoIssuanceProvider: AutoIssuanceProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
@@ -162,6 +164,12 @@ export class PretixPipeline implements BasePipeline {
     this.api = api;
     this.consumerDB = consumerDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    if (this.definition.options.autoIssuance) {
+      this.autoIssuanceProvider = new AutoIssuanceProvider(
+        this.id,
+        this.definition.options.autoIssuance
+      );
+    }
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
         this.id,
