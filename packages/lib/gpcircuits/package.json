@@ -33,7 +33,6 @@
   },
   "dependencies": {
     "@pcd/pod": "0.1.0",
-    "@types/lodash": "^4.17.0",
     "snarkjs": "^0.7.3"
   },
   "devDependencies": {
@@ -42,6 +41,7 @@
     "@pcd/util": "^0.5.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
+    "@types/lodash": "^4.17.0",
     "@types/mocha": "^10.0.1",
     "@zk-kit/circuits": "1.0.0-beta",
     "circomkit": "^0.0.24",

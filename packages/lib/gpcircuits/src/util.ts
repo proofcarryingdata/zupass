@@ -1,6 +1,5 @@
 import path from "path";
 import { CircuitArtifactPaths, CircuitDesc } from "./types";
-import * as fs from "fs/promises";
 
 export function artifactPaths(
   root: string,
@@ -13,13 +12,10 @@ export function artifactPaths(
   };
 }
 
-/**
- * Helpers
+/** Splits an array `arr` into chunks of size
+ * `n` in order. If `arr.length` is not a multiple of `n`,
+ * then the last chunk will be of length `arr.length % n`.
  */
-
-// Procedure for splitting an array `arr` into chunks of size
-// `n` in order. If `arr.length` is not a multiple of `n`,
-// then the last chunk will be of length `arr.length % n`.
 export function toChunks<A>(arr: A[], n: number): A[][] {
   return arr.reduce(
     (chunks: A[][], a: A) => {
@@ -33,9 +29,10 @@ export function toChunks<A>(arr: A[], n: number): A[][] {
   );
 }
 
-// Procedure for applying a Promise-valued function to
-// array elements sequentially. Necessary to avoid OOM
-// for particularly heavy computations.
+/** Applies a Promise-valued function to array elements
+ * sequentially. Necessary to avoid OOM for particularly
+ * heavy computations.
+ */
 export function seqPromise<A, B>(
   f: (a: A) => Promise<B>,
   arr: A[]
@@ -53,33 +50,17 @@ export function seqPromise<A, B>(
     );
 }
 
-// Procedure for applying a Promise-values function to
-// array eleemnts `maxParallelPromises` calls at a time.
+/** Applies a Promise-values function to array eleemnts
+ * `maxParallelPromises` calls at a time.
+ */
 export function batchPromise<A, B>(
   maxParallelPromises: number,
   f: (a: A) => Promise<B>,
   arr: A[]
 ): Promise<B[]> {
-  const concatenateArrays: <C>(arrays: C[][]) => C[] = (arrays) =>
-    arrays.reduce(
-      (concatenatedArray, arr) => concatenatedArray.concat(arr),
-      []
-    );
   // Execute sequence of promises
   return seqPromise(
     (arr) => Promise.all(arr.map(f)), // by mapping each `maxParallelpromises` sized chunk of `arr` by `f`
     toChunks(arr, maxParallelPromises)
-  ).then(concatenateArrays); // Then concatenate the resulting arrays.
-}
-
-// Maximum number of parallel promises to avoid
-// OOM issues.
-export const maxParallelPromises = 4;
-
-// Filesystem-related helpers
-// A procedure for clearing a directory.
-export async function clearDir(directory: string) {
-  for (const file of await fs.readdir(directory)) {
-    await fs.rm(path.join(directory, file));
-  }
+  ).then(Array.flat); // Then concatenate the resulting arrays.
 }

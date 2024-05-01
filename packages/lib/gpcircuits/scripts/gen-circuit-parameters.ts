@@ -8,7 +8,8 @@ import {
   ProtoPODGPCParameters,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES
 } from "../src/proto-pod-gpc";
-import { batchPromise, clearDir, maxParallelPromises } from "../src/util";
+import { batchPromise } from "../src/util";
+import { clearDir, MAX_PARALLEL_PROMISES } from "./util";
 
 // Circuit parameters used to generate artifacts.
 const CIRCUIT_PARAMETERS = [
@@ -17,9 +18,10 @@ const CIRCUIT_PARAMETERS = [
   [3, 10, 8]
 ];
 
-const circuitDir = path.join("circuits", "main");
+const projectDir = path.join(__dirname, "..");
+const circuitDir = path.join(projectDir, "circuits", "main");
 
-main = async (): Promise<void> => {
+async function main(): Promise<void> {
   // Delete old circuits
   if (await fsExists(circuitDir)) {
     await clearDir(circuitDir);
@@ -48,25 +50,27 @@ main = async (): Promise<void> => {
   );
 
   // Write `circuits.json`.
-  await fs.writeFile("./circuits.json", JSON.stringify(circuitsJson, null, 2));
+  await fs.writeFile(
+    path.join(projectDir, "circuits.json"),
+    JSON.stringify(circuitsJson, null, 2)
+  );
 
   console.log("circuits.json written successfully.");
 
   // Instantiate circuits.
   circuitNames.forEach((circuitName) => circomkit.instantiate(circuitName));
 
-  // Compile circuits.
+  // Compile circuits in parallel.
   await batchPromise(
-    maxParallelPromises,
+    MAX_PARALLEL_PROMISES,
     (circuitName) => circomkit.compile(circuitName),
     circuitNames
   );
 
-  // Get circuit costs.
+  // Get circuit costs in parallel.
   const circuitCosts = await Promise.all(
-    circuitNames.map(
-      /*async*/ (circuitName) =>
-        circomkit.info(circuitName).then((info) => info.constraints)
+    circuitNames.map((circuitName) =>
+      circomkit.info(circuitName).then((info) => info.constraints)
     )
   );
 
@@ -78,15 +82,15 @@ main = async (): Promise<void> => {
 
   // Write `circuitParameters.json`.
   await fs.writeFile(
-    path.join("src", "circuitParameters.json"),
+    path.join(projectDir, "src", "circuitParameters.json"),
     JSON.stringify(circuitParamJson, null, 2)
   );
 
   // Clean up.
-  await fs.rm("build", { recursive: true });
+  await fs.rm(path.join(projectDir, "build"), { recursive: true });
 
   console.log("gen-circuit-parameters completed successfully!");
-};
+}
 
 main()
   .then(() => process.exit())

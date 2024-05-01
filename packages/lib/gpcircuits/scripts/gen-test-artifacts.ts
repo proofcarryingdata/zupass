@@ -4,12 +4,14 @@ import circuitsJson from "../circuits.json";
 import * as fs from "fs/promises";
 import { existsSync as fsExists } from "fs";
 import * as path from "path";
-import { batchPromise, clearDir, maxParallelPromises } from "../src/util";
+import { batchPromise } from "../src/util";
+import { clearDir, MAX_PARALLEL_PROMISES } from "./util";
 
-const artifactDir = "artifacts";
+const projectDir = path.join(__dirname, "..");
+const artifactDir = path.join(projectDir, "artifacts");
 const testArtifactDir = path.join(artifactDir, "test");
 
-main = async (): Promise<void> => {
+async function main(): Promise<void> {
   // Delete old artifacts
   if (await fsExists(testArtifactDir)) {
     await clearDir(testArtifactDir);
@@ -23,9 +25,9 @@ main = async (): Promise<void> => {
   // Read circuit names from circuits.json
   const circuitNames = Object.keys(circuitsJson);
 
-  // Set up circuits.
+  // Set up circuits in parallel.
   await batchPromise(
-    maxParallelPromises,
+    MAX_PARALLEL_PROMISES,
     (circuitName) => circomkit.setup(circuitName),
     circuitNames
   );
@@ -52,7 +54,7 @@ main = async (): Promise<void> => {
   }
 
   console.log("gen-test-artifacts completed successfully!");
-};
+}
 
 main()
   .then(() => process.exit())
