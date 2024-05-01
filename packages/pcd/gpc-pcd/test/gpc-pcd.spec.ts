@@ -116,3 +116,5 @@ describe("GPCPCD should work", async function () {
     expect(await GPCPCDPackage.verify(deserialized)).to.be.true;
   });
 });
+
+// TODO(POD-P1): Full unit-test suite beyond single prototype.

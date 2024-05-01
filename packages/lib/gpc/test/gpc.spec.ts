@@ -71,3 +71,5 @@ describe("gpc library should work", async function () {
     expect(isVerified).to.be.true;
   });
 });
+
+// TODO(POD-P1): Full unit-test suite beyond single prototype.

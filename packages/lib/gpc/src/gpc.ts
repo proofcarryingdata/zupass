@@ -24,10 +24,6 @@ import {
 } from "./gpcTypes";
 import { canonicalizeConfig, makeCircuitIdentifier } from "./gpcUtil";
 
-// TODO(POD-P1): Consider whether all the separate checking and canonicalizaion
-// are valuable, or if some can be eliminated in favor of simply letting
-// compilation crash on bad inputs.
-
 /**
  * Checks, binds, and canonicalizes a GPCProofConfig so it can be reused
  * for multiple proofs.  See {@link GPCBoundConfig} for more details.

@@ -240,10 +240,10 @@ export function getProveDisplayOptions(): ProveDisplayOptions<GPCPCDArgs> {
             return false;
           }
 
-          // TODO(POD-P1): Filter to only PODs which contain the entries
+          // TODO(POD-P3): Filter to only PODs which contain the entries
           // mentioned in config.
 
-          // TODO(POD-P1): Use validatorParams to filter by more constraints
+          // TODO(POD-P3): Use validatorParams to filter by more constraints
           // not included in config.
           // E.g. require revealed value to be a specific value, or require
           // public key to be a specific key.

@@ -56,7 +56,7 @@ export type GPCPCDArgs = {
    * information.
    */
   pod: PCDArgument<PODPCD>;
-  // TODO(POD-P1): Support more than one POD.
+  // TODO(POD-P3): Support more than one POD.
 
   /**
    * Optional secret info identifying the owner of PODs, if needed by the proof
@@ -78,7 +78,7 @@ export type GPCPCDArgs = {
    * the same proof.
    */
   watermark: StringArgument;
-  // TODO(POD-P1): Support PODValue of multiple types.
+  // TODO(POD-P3): Support PODValue of multiple types.
 
   /**
    * A string that uniquely identifies a {@link GPCPCD}. If this argument is
@@ -89,7 +89,7 @@ export type GPCPCDArgs = {
    * this PCD type doesn't enforce that.
    */
   id?: StringArgument;
-  // TODO(POD-P1): Support PODValue of multiple types.
+  // TODO(POD-P3): Support PODValue of multiple types.
 };
 
 /**
