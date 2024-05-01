@@ -16,7 +16,11 @@
       "cache": false,
       "persistent": true
     },
+    "clean-test-artifacts": {
+      "cache": false
+    },
     "gen-test-artifacts": {
+      "dependsOn": ["^gen-test-artifacts"],
       "cache": true
     },
     "test": {

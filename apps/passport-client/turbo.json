@@ -32,6 +32,18 @@
       "dependsOn": ["build"],
       "inputs": ["$TURBO_DEFAULT$", "test/**"],
       "cache": true
+    },
+    "gen-test-artifacts": {
+      "dependsOn": ["^gen-test-artifacts"],
+      "inputs": ["../../packages/lib/gpcircuits/artifacts/**"],
+      "outputs": ["public/artifacts/test/proto-pod-gpc/**"],
+      "outputMode": "new-only",
+      "cache": true
+    },
+    "dev": {
+      "dependsOn": ["gen-test-artifacts"],
+      "cache": false,
+      "persistent": true
     }
   }
 }
