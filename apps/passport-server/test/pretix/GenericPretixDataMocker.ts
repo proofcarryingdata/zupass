@@ -19,8 +19,7 @@ export interface IMockGenericIssuancePretixBackendData {
 
   // specific data for easier testing
   ethLatAmOrganizer: IOrganizer;
-  // TODO: test multi-organizer scenarios better
-  // ethBerlinOrganizer: IOrganizer;
+  autoIssuanceOrganizer: IOrganizer;
 }
 
 export interface IOrganizer {
@@ -38,9 +37,13 @@ export interface IOrganizer {
 
   ethLatAmAttendeeEmail: string;
   ethLatAmBouncerEmail: string;
+  autoIssuanceAttendeeEmail: string;
+  autoIssuanceBouncerEmail: string;
 
   ethLatAmAttendeeName: string;
   ethLatAmBouncerName: string;
+  autoIssuanceAttendeeName: string;
+  autoIssuanceBouncerName: string;
 
   // eth berlin setup type
 
@@ -50,9 +53,14 @@ export interface IOrganizer {
   ethBerlinBouncerProduct: GenericPretixProduct;
   ethBerlinTshirtProduct: GenericPretixProduct;
 
-  // TODO:
-  // ethBerlinAttendeeEmail: string;
-  // ethBerlinBouncerEmail: string;
+  // auto-issuance setup type
+
+  autoIssuance: GenericPretixEvent;
+  autoIssuanceSettings: GenericPretixEventSettings;
+  autoIssuanceAttendeeProduct: GenericPretixProduct;
+  autoIssuanceBouncerProduct: GenericPretixProduct;
+  autoIssuanceFoodVoucherProduct: GenericPretixProduct;
+  autoIssuanceFoodVendorProduct: GenericPretixProduct;
 
   // in the future - other setup types?
   // ...
@@ -228,17 +236,18 @@ export class GenericPretixDataMocker {
   }
 
   private newMockData(): IMockGenericIssuancePretixBackendData {
-    const organizer1 = this.newOrganizer("PRETIX_ORGANIZER_ONE");
-    // const organizer2 = this.newOrganizer("PRETIX_ORGANIZER_TWO");
+    const ethLatAmOrganizer = this.newOrganizer("PRETIX_ORGANIZER_ONE");
+    const autoIssuanceOrganizer = this.newOrganizer("AUTO_ISSUANCE_ORGANIZER");
 
     const organizersByOrgUrl = new Map<string, IOrganizer>();
-    organizersByOrgUrl.set(organizer1.orgUrl, organizer1);
-    // organizersByOrgUrl.set(organizer2.orgUrl, organizer2);
+    organizersByOrgUrl.set(ethLatAmOrganizer.orgUrl, ethLatAmOrganizer);
+    organizersByOrgUrl.set(autoIssuanceOrganizer.orgUrl, autoIssuanceOrganizer);
 
     return {
-      organizers: [organizer1],
+      organizers: [ethLatAmOrganizer],
       organizersByOrgUrl: organizersByOrgUrl,
-      ethLatAmOrganizer: organizer1
+      ethLatAmOrganizer,
+      autoIssuanceOrganizer
     };
   }
 
@@ -259,22 +268,36 @@ export class GenericPretixDataMocker {
       .trim();
     const ethLatAmBouncerName = randomName();
 
+    const autoIssuanceBouncerEmail = `bouncer-1${name}@test.com`
+      .toLowerCase()
+      .trim();
+    const autoIssuanceBouncerName = randomName();
+
+    const autoIssuanceAttendeeEmail = `attendee-1-${name}@test.com`
+      .toLowerCase()
+      .trim();
+    const autoIssuanceAttendeeName = randomName();
+
     const ethLatAm = this.newEvent("ethLatAm", "eth-lat-am");
     const ethBerlin = this.newEvent("eth-berlin", "eth-berlin");
+    const autoIssuance = this.newEvent("auto-issuance", "auto-issuance");
 
-    // TODO: @richard @rob @josh - what settings should we lock in for Eth LatAm and Eth Berlin?
     const ethLatAmSettings = this.newEventSettings();
     const ethBerlinSettings = this.newEventSettings();
+    const autoIssuanceSettings = this.newEventSettings();
 
-    // TODO: @richard / @rob - what categories are relevant for each event?
     const ticketCategory = this.nextId();
     const addonCategory = this.nextId();
     const ethLatAmCategories = [
       this.newProductCategory(ticketCategory, { is_addon: false }),
       this.newProductCategory(addonCategory, { is_addon: true })
     ];
-
     const ethBerlinCategories = [
+      this.newProductCategory(ticketCategory, { is_addon: false }),
+      this.newProductCategory(addonCategory, { is_addon: true })
+    ];
+
+    const autoIssuanceCategories = [
       this.newProductCategory(ticketCategory, { is_addon: false }),
       this.newProductCategory(addonCategory, { is_addon: true })
     ];
@@ -312,6 +335,21 @@ export class GenericPretixDataMocker {
       }
     );
 
+    const autoIssuanceAttendeeProduct: GenericPretixProduct =
+      this.newProductType("auto-issuance-attendee-product", ticketCategory);
+    const autoIssuanceBouncerProduct = this.newProductType(
+      "auto-issuance-bouncer-product",
+      ticketCategory
+    );
+    const autoIssuanceFoodVoucherProduct = this.newProductType(
+      "auto-issuance-food-voucher-product",
+      ticketCategory
+    );
+    const autoIssuanceFoodVendorProduct = this.newProductType(
+      "auto-issuance-food-vendor-product",
+      ticketCategory
+    );
+
     const ethLatAmOrders: GenericPretixOrder[] = [
       this.newOrder(ethLatAmAttendeeEmail, ethLatAmAttendeeName, [
         [
@@ -346,21 +384,54 @@ export class GenericPretixDataMocker {
           ]
         ]
       ])
-
-      // TODO: more orders and positions
     ];
 
-    // TODO: model some example orders once we get further along with the
-    // EthBerlin account.
     const ethBerlinOrders: GenericPretixOrder[] = [];
+    const autoIssuanceOrders: GenericPretixOrder[] = [
+      this.newOrder(autoIssuanceAttendeeEmail, autoIssuanceAttendeeName, [
+        [
+          autoIssuanceAttendeeProduct.id,
+          autoIssuanceAttendeeEmail,
+          "", // Name left empty, question-answer name will be used instead
+          [
+            {
+              question: 1,
+              answer: autoIssuanceAttendeeName,
+              question_identifier: NAME_QUESTION_IDENTIFIER,
+              options: [],
+              option_identifiers: []
+            }
+          ]
+        ]
+      ]),
+
+      this.newOrder(autoIssuanceBouncerEmail, autoIssuanceBouncerName, [
+        [
+          autoIssuanceBouncerProduct.id,
+          autoIssuanceBouncerEmail,
+          "", // Name left empty, question-answer name will be used instead
+          [
+            {
+              question: 1,
+              answer: autoIssuanceBouncerName,
+              question_identifier: NAME_QUESTION_IDENTIFIER,
+              options: [],
+              option_identifiers: []
+            }
+          ]
+        ]
+      ])
+    ];
 
     const ordersByEventID = new Map<string, GenericPretixOrder[]>();
     ordersByEventID.set(ethLatAm.slug, ethLatAmOrders);
     ordersByEventID.set(ethBerlin.slug, ethBerlinOrders);
+    ordersByEventID.set(autoIssuance.slug, autoIssuanceOrders);
 
     const eventsByEventID = new Map<string, GenericPretixEvent>();
     eventsByEventID.set(ethLatAm.slug, ethLatAm);
     eventsByEventID.set(ethBerlin.slug, ethBerlin);
+    eventsByEventID.set(autoIssuance.slug, autoIssuance);
 
     const productsByEventID = new Map<string, GenericPretixProduct[]>();
     productsByEventID.set(ethLatAm.slug, [
@@ -373,16 +444,24 @@ export class GenericPretixDataMocker {
       ethBerlinTshirtProduct,
       ethLatAmTShirtProduct
     ]);
+    productsByEventID.set(autoIssuance.slug, [
+      autoIssuanceAttendeeProduct,
+      autoIssuanceBouncerProduct,
+      autoIssuanceFoodVoucherProduct,
+      autoIssuanceFoodVendorProduct
+    ]);
 
     const settingsByEventID = new Map<string, GenericPretixEventSettings>();
     settingsByEventID.set(ethLatAm.slug, ethLatAmSettings);
     settingsByEventID.set(ethBerlin.slug, ethBerlinSettings);
+    settingsByEventID.set(autoIssuance.slug, autoIssuanceSettings);
     const productCategoriesByEventID = new Map<
       string,
       GenericPretixProductCategory[]
     >();
     productCategoriesByEventID.set(ethLatAm.slug, ethLatAmCategories);
     productCategoriesByEventID.set(ethBerlin.slug, ethBerlinCategories);
+    productCategoriesByEventID.set(autoIssuance.slug, autoIssuanceCategories);
 
     return {
       ethLatAm,
@@ -393,15 +472,26 @@ export class GenericPretixDataMocker {
 
       ethLatAmAttendeeEmail,
       ethLatAmBouncerEmail,
+      autoIssuanceAttendeeEmail,
+      autoIssuanceBouncerEmail,
 
       ethLatAmAttendeeName,
       ethLatAmBouncerName,
+      autoIssuanceAttendeeName,
+      autoIssuanceBouncerName,
 
       ethBerlin,
       ethBerlinSettings,
       ethBerlinAttendeeProduct,
       ethBerlinBouncerProduct,
       ethBerlinTshirtProduct,
+
+      autoIssuance,
+      autoIssuanceAttendeeProduct,
+      autoIssuanceBouncerProduct,
+      autoIssuanceFoodVoucherProduct,
+      autoIssuanceFoodVendorProduct,
+      autoIssuanceSettings,
 
       // TODO:
       // ethBerlinAttendeeEmail,
@@ -415,7 +505,7 @@ export class GenericPretixDataMocker {
       productsByEventID,
       settingsByEventID,
       productCategoriesByEventID
-    };
+    } satisfies IOrganizer;
   }
 
   private newEvent(name: string, slug: string): GenericPretixEvent {
