@@ -1,11 +1,9 @@
 import { PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
-import { expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
-import { CircuitSignal } from "../src";
 
 const configFilePath = path.join(__dirname, "../circomkit.json");
 const config = JSON.parse(readFileSync(configFilePath, "utf-8"));
@@ -46,32 +44,3 @@ export const sampleEntries2 = {
   eventID: { type: "cryptographic", value: 456n },
   ticketID: { type: "cryptographic", value: 999n }
 } satisfies PODEntries;
-
-/**
- * Convert an array of bit signals into a single packed bigint.
- * Error handling is via chai.expect, so only useful in unit tests.
- */
-export function testArray2Bits(boolArray: bigint[]): bigint {
-  let bits = 0n;
-  for (let i = 0; i < boolArray.length; i++) {
-    expect(boolArray[i]).to.be.oneOf([0n, 1n]);
-    if (boolArray[i] === 1n) {
-      bits |= 1n << BigInt(i);
-    }
-  }
-  return bits;
-}
-
-/**
- * Returns an array which is a copy of `inputArray` extended to `totalLength`,
- * with new values filled with `fillValue` (default 0).
- */
-export function extendedSignalArray(
-  inputArray: CircuitSignal[],
-  totalLength: number,
-  fillValue = 0n
-): CircuitSignal[] {
-  return inputArray.concat(
-    new Array(totalLength - inputArray.length).fill(fillValue)
-  );
-}

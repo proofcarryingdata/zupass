@@ -468,6 +468,7 @@ loadInitialState()
     );
   })
   .catch((error: unknown) => {
+    console.error(error);
     const root = createRoot(document.querySelector("#root") as Element);
     root.render(
       <RollbarProvider
