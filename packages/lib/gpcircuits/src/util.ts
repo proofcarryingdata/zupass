@@ -1,5 +1,6 @@
 import path from "path";
 import { CircuitArtifactPaths, CircuitDesc } from "./types";
+import * as fs from "fs/promises";
 
 export function artifactPaths(
   root: string,
@@ -74,3 +75,11 @@ export function batchPromise<A, B>(
 // Maximum number of parallel promises to avoid
 // OOM issues.
 export const maxParallelPromises = 4;
+
+// Filesystem-related helpers
+// A procedure for clearing a directory.
+export async function clearDir(directory: string) {
+  for (const file of await fs.readdir(directory)) {
+    await fs.rm(path.join(directory, file));
+  }
+}

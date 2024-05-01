@@ -1,28 +1,27 @@
 import circomkitJson from "../circomkit.json";
 import { Circomkit } from "circomkit";
-import * as fs from "fs";
+import circuitsJson from "../circuits.json";
+import * as fs from "fs/promises";
+import { existsSync as fsExists } from "fs";
 import * as path from "path";
-import { batchPromise, maxParallelPromises } from "../src/util";
+import { batchPromise, clearDir, maxParallelPromises } from "../src/util";
 
 const artifactDir = "artifacts";
 const testArtifactDir = path.join(artifactDir, "test");
 
 main = async (): Promise<void> => {
   // Delete old artifacts
-  if (fs.existsSync(testArtifactDir)) {
-    fs.readdirSync(testArtifactDir).forEach((file) =>
-      fs.rmSync(path.join(testArtifactDir, file), {}, (err) => {
-        if (err) {
-          throw err;
-        }
-      })
-    );
+  if (await fsExists(testArtifactDir)) {
+    await clearDir(testArtifactDir);
   } else {
-    fs.mkdirSync(testArtifactDir);
+    await fs.mkdir(testArtifactDir);
   }
 
   // Instantiate Circomkit object.
   const circomkit = new Circomkit(circomkitJson);
+
+  // Read circuit names from circuits.json
+  const circuitNames = Object.keys(circuitsJson);
 
   // Set up circuits.
   await batchPromise(
@@ -32,26 +31,25 @@ main = async (): Promise<void> => {
   );
 
   // Move artifacts to the right place.
-  circuitNames.forEach((circuitName) =>
-    [
-      ["groth16_vkey.json", circuitName + "-vkey.json"],
-      ["groth16_pkey.zkey", circuitName + "-pkey.zkey"],
-      [
-        path.join(circuitName + "_js", circuitName + ".wasm"),
+  for (const circuitName of circuitNames) {
+    await fs.rename(
+      path.join("build", circuitName, "groth16_vkey.json"),
+      path.join(testArtifactDir, circuitName + "-vkey.json")
+    );
+    await fs.rename(
+      path.join("build", circuitName, "groth16_pkey.zkey"),
+      path.join(testArtifactDir, circuitName + "-pkey.zkey")
+    );
+    await fs.rename(
+      path.join(
+        "build",
+        circuitName,
+        circuitName + "_js",
         circuitName + ".wasm"
-      ]
-    ].forEach((filePair) =>
-      fs.rename(
-        path.join("build", circuitName, filePair[0]),
-        path.join(testArtifactDir, filePair[1]),
-        (err) => {
-          if (err) {
-            throw err;
-          }
-        }
-      )
-    )
-  );
+      ),
+      path.join(testArtifactDir, circuitName + ".wasm")
+    );
+  }
 
   console.log("gen-test-artifacts completed successfully!");
 };
@@ -59,5 +57,5 @@ main = async (): Promise<void> => {
 main()
   .then(() => process.exit())
   .catch((err) => {
-    throw err;
+    console.error(err);
   });

@@ -1,13 +1,14 @@
 import circomkitJson from "../circomkit.json";
 import { Circomkit } from "circomkit";
-import * as fs from "fs";
+import * as fs from "fs/promises";
+import { existsSync as fsExists } from "fs";
 import * as path from "path";
 import {
   ProtoPODGPC,
   ProtoPODGPCParameters,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES
 } from "../src/proto-pod-gpc";
-import { batchPromise, maxParallelPromises } from "../src/util";
+import { batchPromise, clearDir, maxParallelPromises } from "../src/util";
 
 // Circuit parameters used to generate artifacts.
 const CIRCUIT_PARAMETERS = [
@@ -20,14 +21,8 @@ const circuitDir = path.join("circuits", "main");
 
 main = async (): Promise<void> => {
   // Delete old circuits
-  if (fs.existsSync(circuitDir)) {
-    fs.readdirSync(circuitDir).forEach((file) =>
-      fs.rmSync(path.join(circuitDir, file), {}, (err) => {
-        if (err) {
-          throw err;
-        }
-      })
-    );
+  if (await fsExists(circuitDir)) {
+    await clearDir(circuitDir);
   }
 
   // Instantiate Circomkit object.
@@ -53,15 +48,7 @@ main = async (): Promise<void> => {
   );
 
   // Write `circuits.json`.
-  fs.writeFileSync(
-    "./circuits.json",
-    JSON.stringify(circuitsJson, null, 2),
-    (err) => {
-      if (err) {
-        throw err;
-      }
-    }
-  );
+  await fs.writeFile("./circuits.json", JSON.stringify(circuitsJson, null, 2));
 
   console.log("circuits.json written successfully.");
 
@@ -90,22 +77,13 @@ main = async (): Promise<void> => {
   ]);
 
   // Write `circuitParameters.json`.
-  fs.writeFileSync(
+  await fs.writeFile(
     path.join("src", "circuitParameters.json"),
-    JSON.stringify(circuitParamJson, null, 2),
-    (err) => {
-      if (err) {
-        throw err;
-      }
-    }
+    JSON.stringify(circuitParamJson, null, 2)
   );
 
   // Clean up.
-  fs.rmSync("build", { recursive: true }, (err) => {
-    if (err) {
-      throw err;
-    }
-  });
+  await fs.rm("build", { recursive: true });
 
   console.log("gen-circuit-parameters completed successfully!");
 };
@@ -113,5 +91,5 @@ main = async (): Promise<void> => {
 main()
   .then(() => process.exit())
   .catch((err) => {
-    throw err;
+    console.error(err);
   });
