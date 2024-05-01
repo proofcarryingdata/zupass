@@ -1,3 +1,4 @@
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import type { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
@@ -73,13 +74,25 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     proofDescription
   } = zuAuthArgs;
 
-  const eventIds = [],
-    productIds = [],
-    publicKeys = [];
+  const eventIds: string[] = [],
+    productIds: string[] = [],
+    publicKeys: EdDSAPublicKey[] = [];
 
   for (const em of config) {
+    if (em.productId) {
+      if (eventIds.length > productIds.length) {
+        throw new Error(
+          "It is not possible to mix events with product IDs and events without product IDs"
+        );
+      }
+      productIds.push(em.productId);
+    }
+    if (!em.productId && productIds.length > 0) {
+      throw new Error(
+        "It is not possible to mix events with product IDs and events without product IDs"
+      );
+    }
     eventIds.push(em.eventId);
-    productIds.push(em.productId);
     publicKeys.push(em.publicKey);
   }
 

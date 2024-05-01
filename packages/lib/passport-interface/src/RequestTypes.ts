@@ -497,8 +497,8 @@ export interface PipelineEdDSATicketZuAuthConfig {
   publicKey: EdDSAPublicKey;
   eventId: string; // UUID
   eventName: string;
-  productId: string; // UUID
-  productName: string;
+  productId?: string; // UUID
+  productName?: string;
 }
 
 // could be |'ed with other types of metadata
