@@ -39,11 +39,13 @@ export interface IOrganizer {
   ethLatAmBouncerEmail: string;
   autoIssuanceAttendeeEmail: string;
   autoIssuanceBouncerEmail: string;
+  autoIssuanceFoodVendorEmail: string;
 
   ethLatAmAttendeeName: string;
   ethLatAmBouncerName: string;
   autoIssuanceAttendeeName: string;
   autoIssuanceBouncerName: string;
+  autoIssuanceFoodVendorName: string;
 
   // eth berlin setup type
 
@@ -278,6 +280,11 @@ export class GenericPretixDataMocker {
       .trim();
     const autoIssuanceAttendeeName = randomName();
 
+    const autoIssuanceFoodVendorEmail = `food-vendor-1-${name}@test.com`
+      .toLowerCase()
+      .trim();
+    const autoIssuanceFoodVendorName = randomName();
+
     const ethLatAm = this.newEvent("ethLatAm", "eth-lat-am");
     const ethBerlin = this.newEvent("eth-berlin", "eth-berlin");
     const autoIssuance = this.newEvent("auto-issuance", "auto-issuance");
@@ -420,6 +427,23 @@ export class GenericPretixDataMocker {
             }
           ]
         ]
+      ]),
+
+      this.newOrder(autoIssuanceFoodVendorEmail, autoIssuanceFoodVendorName, [
+        [
+          autoIssuanceFoodVendorProduct.id,
+          autoIssuanceFoodVendorEmail,
+          "", // Name left empty, question-answer name will be used instead
+          [
+            {
+              question: 1,
+              answer: autoIssuanceFoodVendorName,
+              question_identifier: NAME_QUESTION_IDENTIFIER,
+              options: [],
+              option_identifiers: []
+            }
+          ]
+        ]
       ])
     ];
 
@@ -474,11 +498,13 @@ export class GenericPretixDataMocker {
       ethLatAmBouncerEmail,
       autoIssuanceAttendeeEmail,
       autoIssuanceBouncerEmail,
+      autoIssuanceFoodVendorEmail,
 
       ethLatAmAttendeeName,
       ethLatAmBouncerName,
       autoIssuanceAttendeeName,
       autoIssuanceBouncerName,
+      autoIssuanceFoodVendorName,
 
       ethBerlin,
       ethBerlinSettings,

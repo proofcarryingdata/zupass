@@ -206,6 +206,17 @@ describe("generic issuance - PretixPipeline", function () {
       expect(pipeline.id).to.eq(autoIssuancePipeline.id);
       const autoIssuanceTicketFeedUrl = pipeline.issuanceCapability.feedUrl;
       const autoIssuanceIssuanceDateTime = new Date();
+
+      const foodVendorTickets = await requestTicketsFromPipeline(
+        pipeline.issuanceCapability.options.feedFolder,
+        autoIssuanceTicketFeedUrl,
+        pipeline.issuanceCapability.options.feedId,
+        ZUPASS_EDDSA_PRIVATE_KEY,
+        pretixBackend.get().autoIssuanceOrganizer.autoIssuanceFoodVendorEmail,
+        AutoIssuanceAttendeeIdentity
+      );
+      expectLength(foodVendorTickets, 2); // just their food vendor ticket and corresponding pod ticket
+
       const attendeeTickets = await requestTicketsFromPipeline(
         pipeline.issuanceCapability.options.feedFolder,
         autoIssuanceTicketFeedUrl,
