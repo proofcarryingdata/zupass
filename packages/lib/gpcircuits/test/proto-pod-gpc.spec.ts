@@ -27,7 +27,7 @@ import {
   sampleEntries2,
   testArray2Bits
 } from "./common";
-import * as util from "util";
+import isEqual from "lodash";
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
@@ -589,7 +589,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     // smaller sizes, with truncated data as necessary.
     for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
-      if (util.isDeepStrictEqual(cd, GPC_PARAMS)) {
+      if (isEqual(cd, GPC_PARAMS)) {
         continue;
       }
 

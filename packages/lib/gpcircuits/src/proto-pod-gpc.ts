@@ -1,6 +1,6 @@
 import { Groth16Proof, groth16 } from "snarkjs";
 import { CircuitDesc, CircuitSignal } from "./types";
-import circuitParamJson from "../artifacts/circuitParameters.json";
+import circuitParamJson from "./circuitParameters.json";
 
 const PROTO_POD_GPC_FAMILY_NAME = "proto-pod-gpc";
 
@@ -133,7 +133,7 @@ export type ProtoPODGPCOutputNamesType = [
 /**
  * Type containing proto POD GPC parameters.
  */
-type ProtoPODGPCParameters = {
+export type ProtoPODGPCParameters = {
   /**
    * Number of POD objects which can be included in a proof.
    */
