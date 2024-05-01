@@ -61,7 +61,10 @@ import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
-import { AutoIssuanceProvider } from "../AutoIssuanceProvider";
+import {
+  AutoIssuanceProvider,
+  anyTicketMatchesCriteria
+} from "../AutoIssuanceProvider";
 import {
   SemaphoreGroupProvider,
   SemaphoreGroupTicketInfo
@@ -1213,6 +1216,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async canCheckInForEvent(
     eventId: string,
+    productId: string,
     checkerEmail: string
   ): Promise<true | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
@@ -1223,19 +1227,19 @@ export class PretixPipeline implements BasePipeline {
       return { name: "InvalidTicket" };
     }
 
+    const realCheckerTickets = await this.db.loadByEmail(this.id, checkerEmail);
+    const manualCheckerTickets =
+      await this.getManualTicketsForEmail(checkerEmail);
+
     // Collect all of the product IDs that the checker owns for this event
     const checkerProductIds: string[] = [];
-    for (const checkerTicketAtom of await this.db.loadByEmail(
-      this.id,
-      checkerEmail
-    )) {
+
+    for (const checkerTicketAtom of realCheckerTickets) {
       if (checkerTicketAtom.eventId === eventId) {
         checkerProductIds.push(checkerTicketAtom.productId);
       }
     }
-    for (const manualTicket of await this.getManualTicketsForEmail(
-      checkerEmail
-    )) {
+    for (const manualTicket of manualCheckerTickets) {
       if (manualTicket.eventId === eventConfig.genericIssuanceId) {
         checkerProductIds.push(manualTicket.productId);
       }
@@ -1250,6 +1254,34 @@ export class PretixPipeline implements BasePipeline {
 
     if (hasSuperUserTicket) {
       return true;
+    }
+
+    if (this.definition.options.userPermissions) {
+      const matchingPermission = this.definition.options.userPermissions.find(
+        (policy) => {
+          if (policy.canCheckIn.eventId !== eventId) {
+            return false;
+          }
+
+          if (
+            policy.canCheckIn.productId &&
+            policy.canCheckIn.productId !== productId
+          ) {
+            return false;
+          }
+
+          const checkerPolicymatch = anyTicketMatchesCriteria(
+            [...realCheckerTickets, ...manualCheckerTickets],
+            policy.members
+          );
+
+          return checkerPolicymatch;
+        }
+      );
+
+      if (matchingPermission) {
+        return true;
+      }
     }
 
     return { name: "NotSuperuser" };
@@ -1380,10 +1412,16 @@ export class PretixPipeline implements BasePipeline {
           };
         }
 
+        const checkingInTicket = await this.db.loadById(this.id, ticketId);
+        if (!checkingInTicket) {
+          throw new Error(`ticket with id '${ticketId}' does not exist`);
+        }
+
         try {
           // Verify that checker can check in tickets for the specified event
           const canCheckInResult = await this.canCheckInForEvent(
             eventId,
+            checkingInTicket.productId,
             checkerEmail
           );
 
@@ -1577,8 +1615,15 @@ export class PretixPipeline implements BasePipeline {
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { success: false, error: { name: "InvalidSignature" } };
       }
+
+      const checkingInTicket = await this.db.loadById(this.id, ticketId);
+      if (!checkingInTicket) {
+        throw new Error(`ticket with id '${ticketId}' does not exist`);
+      }
+
       const canCheckInResult = await this.canCheckInForEvent(
         eventId,
+        checkingInTicket.productId,
         checkerEmail
       );
       if (canCheckInResult !== true) {

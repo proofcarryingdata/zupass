@@ -89,7 +89,14 @@ export class AutoIssuanceProvider {
   }
 }
 
-function ticketMatchesCriteria(
+export function anyTicketMatchesCriteria(
+  ts: Array<PretixAtom | ManualTicket>,
+  criterias: MemberCriteria[]
+): boolean {
+  return !!ts.find((t) => ticketMatchesCriteria(t, criterias));
+}
+
+export function ticketMatchesCriteria(
   t: PretixAtom | ManualTicket,
   criterias: MemberCriteria[]
 ): boolean {
