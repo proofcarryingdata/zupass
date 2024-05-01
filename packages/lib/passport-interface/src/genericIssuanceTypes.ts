@@ -448,8 +448,8 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   manualTickets: ManualTicketListSchema,
   semaphoreGroups: SemaphoreGroupListSchema,
   enablePODTickets: z.boolean().optional(),
-  autoIssuance: AutoIssuanceOptionsSchema.optional(),
-  userPermissions: UserPermissionsOptionsSchema.optional()
+  autoIssuance: z.array(AutoIssuanceOptionsSchema).optional(),
+  userPermissions: z.array(UserPermissionsOptionsSchema).optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
