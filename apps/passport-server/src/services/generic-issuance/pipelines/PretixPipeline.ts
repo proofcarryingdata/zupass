@@ -1412,8 +1412,11 @@ export class PretixPipeline implements BasePipeline {
           };
         }
 
-        const checkingInTicket = await this.db.loadById(this.id, ticketId);
-        if (!checkingInTicket) {
+        const realTicket = await this.db.loadById(this.id, ticketId);
+        const manualTicket = await this.getManualTicketById(ticketId);
+        const checkinInProductId =
+          realTicket?.productId ?? manualTicket?.productId;
+        if (!checkinInProductId) {
           throw new Error(`ticket with id '${ticketId}' does not exist`);
         }
 
@@ -1421,7 +1424,7 @@ export class PretixPipeline implements BasePipeline {
           // Verify that checker can check in tickets for the specified event
           const canCheckInResult = await this.canCheckInForEvent(
             eventId,
-            checkingInTicket.productId,
+            checkinInProductId,
             checkerEmail
           );
 
@@ -1616,16 +1619,19 @@ export class PretixPipeline implements BasePipeline {
         return { success: false, error: { name: "InvalidSignature" } };
       }
 
-      const checkingInTicket = await this.db.loadById(this.id, ticketId);
-      if (!checkingInTicket) {
+      const realTicket = await this.db.loadById(this.id, ticketId);
+      const manualTicket = await this.getManualTicketById(ticketId);
+      const checkinInProductId =
+        realTicket?.productId ?? manualTicket?.productId;
+      if (!checkinInProductId) {
         throw new Error(`ticket with id '${ticketId}' does not exist`);
       }
-
       const canCheckInResult = await this.canCheckInForEvent(
         eventId,
-        checkingInTicket.productId,
+        checkinInProductId,
         checkerEmail
       );
+
       if (canCheckInResult !== true) {
         return { success: false, error: canCheckInResult };
       }
