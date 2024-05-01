@@ -14,4 +14,3 @@ export async function clearDir(directory: string) {
  * OOM issues.
  */
 export const MAX_PARALLEL_PROMISES = 4;
-w;
