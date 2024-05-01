@@ -72,19 +72,21 @@ export class AutoIssuanceProvider {
         continue;
       }
 
-      const newManualTicket: ManualTicket = {
-        attendeeEmail: userEmail,
-        attendeeName:
-          permissioningRealTicket?.name ??
-          permissioningManualTicket?.attendeeName ??
-          "no name",
-        eventId: autoIssuance.eventId,
-        productId: autoIssuance.productId,
-        id: randomUUID(),
-        timeCreated: new Date().toISOString()
-      };
+      for (let i = 0; i < autoIssuance.quantity; i++) {
+        const newManualTicket: ManualTicket = {
+          attendeeEmail: userEmail,
+          attendeeName:
+            permissioningRealTicket?.name ??
+            permissioningManualTicket?.attendeeName ??
+            "no name",
+          eventId: autoIssuance.eventId,
+          productId: autoIssuance.productId,
+          id: randomUUID(),
+          timeCreated: new Date().toISOString()
+        };
 
-      newManualTickets.push(newManualTicket);
+        newManualTickets.push(newManualTicket);
+      }
     }
 
     return newManualTickets;
