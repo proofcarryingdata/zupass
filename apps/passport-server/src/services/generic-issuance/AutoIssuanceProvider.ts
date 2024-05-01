@@ -46,7 +46,9 @@ export class AutoIssuanceProvider {
     realTickets: PretixAtom[]
   ): Promise<ManualTicket[]> {
     const userRealTickets = realTickets.filter((t) => t.email === userEmail);
-    const userManualTickets = realTickets.filter((t) => t.email === userEmail);
+    const userManualTickets = existingManualTickets.filter(
+      (t) => t.attendeeEmail === userEmail
+    );
     const newManualTickets: ManualTicket[] = [];
 
     for (const autoIssuance of this.autoIssuanceConfig) {
@@ -74,7 +76,7 @@ export class AutoIssuanceProvider {
         attendeeEmail: userEmail,
         attendeeName:
           permissioningRealTicket?.name ??
-          permissioningManualTicket?.name ??
+          permissioningManualTicket?.attendeeName ??
           "no name",
         eventId: autoIssuance.eventId,
         productId: autoIssuance.productId,
