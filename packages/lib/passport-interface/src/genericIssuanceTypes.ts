@@ -91,7 +91,8 @@ const ManualTicketSchema = z.object({
   /**
    * The full name of the attendee.
    */
-  attendeeName: z.string().min(1)
+  attendeeName: z.string().min(1),
+  timeCreated: z.string().optional()
 });
 
 const ManualTicketListSchema = z

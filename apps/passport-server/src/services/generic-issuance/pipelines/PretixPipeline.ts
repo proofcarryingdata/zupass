@@ -352,7 +352,7 @@ export class PretixPipeline implements BasePipeline {
         if (this.autoIssuanceProvider) {
           const newManualTickets = await this.autoIssuanceProvider.load(
             this.consumerDB,
-            this.definition.options.manualTickets ?? []
+            await this.getAllManualTickets()
           );
 
           for (const newTicket of newManualTickets) {
@@ -413,6 +413,12 @@ export class PretixPipeline implements BasePipeline {
     );
   }
 
+  private async getAllManualTickets(): Promise<ManualTicket[]> {
+    return (this.definition.options.manualTickets ?? []).concat(
+      await this.manualTicketDB.loadAll(this.id)
+    );
+  }
+
   /**
    * Collects data that is require for Semaphore groups to update.
    * Returns an array of { eventId, productId, email } objects, which the
@@ -430,7 +436,7 @@ export class PretixPipeline implements BasePipeline {
         });
       }
 
-      for (const manualTicket of this.definition.options.manualTickets ?? []) {
+      for (const manualTicket of await this.getAllManualTickets()) {
         data.push({
           email: manualTicket.attendeeEmail,
           eventId: manualTicket.eventId,
@@ -471,7 +477,7 @@ export class PretixPipeline implements BasePipeline {
   private async cleanUpManualCheckins(): Promise<void> {
     return traced(LOG_NAME, "cleanUpManualCheckins", async (span) => {
       const ticketIds = new Set(
-        (this.definition.options.manualTickets ?? []).map(
+        (await this.getAllManualTickets()).map(
           (manualTicket) => manualTicket.id
         )
       );
@@ -855,16 +861,18 @@ export class PretixPipeline implements BasePipeline {
     };
   }
 
-  private getManualTicketsForEmail(email: string): ManualTicket[] {
-    return (this.definition.options.manualTickets ?? []).filter(
-      (manualTicket) => {
-        return manualTicket.attendeeEmail.toLowerCase() === email;
-      }
-    );
+  private async getManualTicketsForEmail(
+    email: string
+  ): Promise<ManualTicket[]> {
+    return (await this.getAllManualTickets()).filter((manualTicket) => {
+      return manualTicket.attendeeEmail.toLowerCase() === email;
+    });
   }
 
-  private getManualTicketById(id: string): ManualTicket | undefined {
-    return (this.definition.options.manualTickets ?? []).find(
+  private async getManualTicketById(
+    id: string
+  ): Promise<ManualTicket | undefined> {
+    return (await this.getAllManualTickets()).find(
       (manualTicket) => manualTicket.id === id
     );
   }
@@ -885,7 +893,7 @@ export class PretixPipeline implements BasePipeline {
       this.atomToTicketData(t, identityCommitment)
     );
     // Load manual tickets from the definition
-    const manualTickets = this.getManualTicketsForEmail(email);
+    const manualTickets = await this.getManualTicketsForEmail(email);
     // Convert manual tickets to ticket data and add to array
     ticketDatas.push(
       ...(await Promise.all(
@@ -1210,7 +1218,9 @@ export class PretixPipeline implements BasePipeline {
         checkerProductIds.push(checkerTicketAtom.productId);
       }
     }
-    for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
+    for (const manualTicket of await this.getManualTicketsForEmail(
+      checkerEmail
+    )) {
       if (manualTicket.eventId === eventConfig.genericIssuanceId) {
         checkerProductIds.push(manualTicket.productId);
       }
@@ -1421,7 +1431,7 @@ export class PretixPipeline implements BasePipeline {
             }
           } else {
             // No Pretix atom found, try looking for a manual ticket
-            const manualTicket = this.getManualTicketById(ticketId);
+            const manualTicket = await this.getManualTicketById(ticketId);
             if (manualTicket && manualTicket.eventId === eventId) {
               // Manual ticket found
               const canCheckInTicketResult =
@@ -1565,7 +1575,7 @@ export class PretixPipeline implements BasePipeline {
       if (ticketAtom && ticketAtom.eventId === eventId) {
         return this.checkInPretixTicket(ticketAtom, checkerEmail);
       } else {
-        const manualTicket = this.getManualTicketById(ticketId);
+        const manualTicket = await this.getManualTicketById(ticketId);
         if (manualTicket && manualTicket.eventId === eventId) {
           // Manual ticket found, check in with the DB
           return this.checkInManualTicket(manualTicket, checkerEmail);
@@ -1824,6 +1834,7 @@ export class PretixPipeline implements BasePipeline {
       ids.push(semaphoreGroup.groupId);
     }
 
+    // todo: also load manual tickets from db here
     for (const manualTicket of definition.options.manualTickets ?? []) {
       ids.push(manualTicket.id);
     }
