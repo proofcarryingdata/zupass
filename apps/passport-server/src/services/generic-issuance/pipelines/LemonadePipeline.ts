@@ -2030,7 +2030,7 @@ export class LemonadePipeline implements BasePipeline {
   public async getOfflineTickets(
     checkerEmail: string
   ): Promise<PodboxOfflineTicket[]> {
-    return traced(LOG_NAME, "getOfflineTickets", async (_span) => {
+    return traced(LOG_NAME, "getOfflineTickets", async (span) => {
       tracePipeline(this.definition);
 
       if (this.definition.options.offlineCheckin === undefined) {
@@ -2043,6 +2043,7 @@ export class LemonadePipeline implements BasePipeline {
       const checkerTicketCriteria =
         await this.ticketsUserCanCheckIn(checkerEmail);
       if (checkerTicketCriteria.length === 0) {
+        span?.setAttribute("offline_tickets_returned", 0);
         // User can't check anything in, so they don't get any offline tickets.
         return [];
       }
@@ -2105,6 +2106,8 @@ export class LemonadePipeline implements BasePipeline {
         }
       }
 
+      span?.setAttribute("offline_tickets_returned", offlineTickets.length);
+
       return offlineTickets;
     });
   }
@@ -2118,120 +2121,159 @@ export class LemonadePipeline implements BasePipeline {
     eventId: string,
     ticketIds: string[]
   ): Promise<void> {
-    if (this.definition.options.offlineCheckin === undefined) {
-      throw new PCDHTTPError(
-        401,
-        "Offline check-in is not enabled for this pipeline"
-      );
-    }
+    return traced(LOG_NAME, "checkInOfflineTickets", async (span) => {
+      tracePipeline(this.definition);
 
-    const checkerTicketCriteria =
-      await this.ticketsUserCanCheckIn(checkerEmail);
-    if (checkerTicketCriteria.length === 0) {
-      // User can't check anything in, so log and ignore this request.
-      logger(
-        `${LOG_TAG} User ${checkerEmail} tried to upload offline check-ins but is not permitted to check in any tickets.`
-      );
-      return;
-    }
+      if (this.definition.options.offlineCheckin === undefined) {
+        throw new PCDHTTPError(
+          401,
+          "Offline check-in is not enabled for this pipeline"
+        );
+      }
 
-    // Not all of the submitted ticket IDs may be valid. For instance, some
-    // tickets will already have been checked in. It is also possible that the
-    // user might not have permission to check the ticket in.
-    //
-    // Because "permission to check in" is a function of the current state of
-    // the checker's tickets, a checker may have had permission to download
-    // tickets in the past, but no longer have permission to check those
-    // tickets in now. We discard any check-ins that the checker does not have
-    // permission to carry out, but we should be careful to ensure that there
-    // are no temporary states in which the checkers's permissions are somehow
-    // missing, e.g. due to a partial sync. This doesn't seem to be possible
-    // right now, but is something to be aware of if we make changes later.
-    // Denied offline check-ins are logged so that we can keep tabs on this.
-    const offlineCheckinsToSave: string[] = [];
+      const checkerTicketCriteria =
+        await this.ticketsUserCanCheckIn(checkerEmail);
+      if (checkerTicketCriteria.length === 0) {
+        // User can't check anything in, so log and ignore this request.
+        logger(
+          `${LOG_TAG} User ${checkerEmail} tried to upload offline check-ins but is not permitted to check in any tickets.`
+        );
+        return;
+      }
 
-    for (const ticketId of ticketIds) {
-      const atom = await this.db.loadById(this.id, ticketId);
-      if (atom && atom.checkinDate === null) {
-        if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
-          offlineCheckinsToSave.push(ticketId);
-        } else {
-          logger(
-            `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
-          );
-        }
-      } else {
-        const manualTicket = this.getManualTicketById(ticketId);
-        if (manualTicket) {
-          if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
-            const manualTicketCheckin = await this.checkinDB.getByTicketId(
-              this.id,
-              manualTicket.id
-            );
-            if (manualTicketCheckin === undefined) {
-              offlineCheckinsToSave.push(ticketId);
-            }
+      // Not all of the submitted ticket IDs may be valid. For instance, some
+      // tickets will already have been checked in. It is also possible that the
+      // user might not have permission to check the ticket in.
+      //
+      // Because "permission to check in" is a function of the current state of
+      // the checker's tickets, a checker may have had permission to download
+      // tickets in the past, but no longer have permission to check those
+      // tickets in now. We discard any check-ins that the checker does not have
+      // permission to carry out, but we should be careful to ensure that there
+      // are no temporary states in which the checkers's permissions are somehow
+      // missing, e.g. due to a partial sync. This doesn't seem to be possible
+      // right now, but is something to be aware of if we make changes later.
+      // Denied offline check-ins are logged so that we can keep tabs on this.
+      const offlineCheckinsToSave: string[] = [];
+
+      for (const ticketId of ticketIds) {
+        const atom = await this.db.loadById(this.id, ticketId);
+        if (atom && atom.checkinDate === null) {
+          if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+            offlineCheckinsToSave.push(ticketId);
           } else {
             logger(
               `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
             );
           }
+        } else {
+          const manualTicket = this.getManualTicketById(ticketId);
+          if (manualTicket) {
+            if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
+              const manualTicketCheckin = await this.checkinDB.getByTicketId(
+                this.id,
+                manualTicket.id
+              );
+              if (manualTicketCheckin === undefined) {
+                offlineCheckinsToSave.push(ticketId);
+              }
+            } else {
+              logger(
+                `${LOG_TAG} User ${checkerEmail} tried to upload offline check-in for ticket ID ${ticketId} but is not permitted to do so.`
+              );
+            }
+          }
         }
       }
-    }
 
-    await this.offlineCheckinDB.addOfflineCheckins(
-      this.id,
-      checkerEmail,
-      offlineCheckinsToSave,
-      new Date()
-    );
+      span?.setAttribute(
+        "offline_checkins_added",
+        offlineCheckinsToSave.length
+      );
+
+      await this.offlineCheckinDB.addOfflineCheckins(
+        this.id,
+        checkerEmail,
+        offlineCheckinsToSave,
+        new Date()
+      );
+    });
   }
 
+  /**
+   * Performs a full check-in with the back-end for check-ins which were
+   * collected by an offline checker.
+   *
+   * This may involve checking in multiple tickets, from multiple different
+   * checkers. Due to the asynchronous nature of the check-in, we cannot report
+   * failure directly to the user, so we record a count of the failures.
+   */
   private async processOfflineCheckins(): Promise<{
     failedTicketIds: string[];
     checkedInTicketIds: string[];
   }> {
-    const offlineCheckins =
-      await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
+    return traced(LOG_NAME, "processOfflineCheckins", async (span) => {
+      tracePipeline(this.definition);
 
-    const checkedInTicketIds = [];
-    const failedTicketIds = [];
+      const offlineCheckins =
+        await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
 
-    const ticketIdsGroupedByChecker = offlineCheckins.reduce(
-      (memo, { checkerEmail, ticketId }) => {
-        if (memo[checkerEmail]) {
-          memo[checkerEmail].push(ticketId);
-        } else {
-          memo[checkerEmail] = [ticketId];
-        }
-        return memo;
-      },
-      {} as Record<string, string[]>
-    );
+      const checkedInTicketIds = [];
+      const failedTicketIds = [];
+      span?.setAttribute("offline_checkin_count", offlineCheckins.length);
 
-    for (const [checkerEmail, ticketIds] of Object.entries(
-      ticketIdsGroupedByChecker
-    )) {
-      const checkerTicketCriteria =
-        await this.ticketsUserCanCheckIn(checkerEmail);
-      for (const ticketId of ticketIds) {
-        const atom = await this.db.loadById(this.id, ticketId);
-        if (!atom) {
-          const manualTicket = this.getManualTicketById(ticketId);
-          if (manualTicket) {
-            // Can this user check this ticket in?
-            // Should we log something if they can't?
-            if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
-              // Check the manual ticket in
-              const result = await this.checkInManualTicket(
-                manualTicket,
-                checkerEmail
-              );
-              if (
-                result.success === true ||
-                result.error.name === "AlreadyCheckedIn"
-              ) {
+      const ticketIdsGroupedByChecker = offlineCheckins.reduce(
+        (memo, { checkerEmail, ticketId }) => {
+          if (memo[checkerEmail]) {
+            memo[checkerEmail].push(ticketId);
+          } else {
+            memo[checkerEmail] = [ticketId];
+          }
+          return memo;
+        },
+        {} as Record<string, string[]>
+      );
+
+      for (const [checkerEmail, ticketIds] of Object.entries(
+        ticketIdsGroupedByChecker
+      )) {
+        const checkerTicketCriteria =
+          await this.ticketsUserCanCheckIn(checkerEmail);
+        for (const ticketId of ticketIds) {
+          const atom = await this.db.loadById(this.id, ticketId);
+          if (!atom) {
+            const manualTicket = this.getManualTicketById(ticketId);
+            if (manualTicket) {
+              // Can this user check this ticket in?
+              // Should we log something if they can't?
+              if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
+                // Check the manual ticket in
+                const result = await this.checkInManualTicket(
+                  manualTicket,
+                  checkerEmail
+                );
+                if (
+                  result.success === true ||
+                  result.error.name === "AlreadyCheckedIn"
+                ) {
+                  checkedInTicketIds.push(ticketId);
+                } else {
+                  failedTicketIds.push(ticketId);
+                }
+              } else {
+                logger(
+                  `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                );
+              }
+            } else {
+              // Ticket does not exist at all.
+              // Should we just silently drop manual tickets that don't exist?
+              failedTicketIds.push(ticketId);
+            }
+          } else {
+            if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+              const result = await this.lemonadeCheckin(atom, checkerEmail);
+              if (result.success || result.error.name === "AlreadyCheckedIn") {
                 checkedInTicketIds.push(ticketId);
               } else {
                 failedTicketIds.push(ticketId);
@@ -2241,41 +2283,30 @@ export class LemonadePipeline implements BasePipeline {
                 `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
               );
             }
-          } else {
-            // Ticket does not exist at all.
-            // Should we just silently drop manual tickets that don't exist?
-            failedTicketIds.push(ticketId);
-          }
-        } else {
-          if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
-            const result = await this.lemonadeCheckin(atom, checkerEmail);
-            if (result.success || result.error.name === "AlreadyCheckedIn") {
-              checkedInTicketIds.push(ticketId);
-            } else {
-              failedTicketIds.push(ticketId);
-            }
-          } else {
-            logger(
-              `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
-            );
           }
         }
       }
-    }
 
-    await this.offlineCheckinDB.deleteOfflineCheckins(
-      this.id,
-      checkedInTicketIds
-    );
-
-    for (const failedTicketId of failedTicketIds) {
-      await this.offlineCheckinDB.addFailedOfflineCheckin(
+      await this.offlineCheckinDB.deleteOfflineCheckins(
         this.id,
-        failedTicketId
+        checkedInTicketIds
       );
-    }
 
-    return { failedTicketIds, checkedInTicketIds };
+      for (const failedTicketId of failedTicketIds) {
+        await this.offlineCheckinDB.addFailedOfflineCheckin(
+          this.id,
+          failedTicketId
+        );
+      }
+
+      span?.setAttribute("failed_ticket_id_count", failedTicketIds.length);
+      span?.setAttribute(
+        "checked_in_ticket_id_count",
+        checkedInTicketIds.length
+      );
+
+      return { failedTicketIds, checkedInTicketIds };
+    });
   }
 
   private async getQueuedOfflineCheckins(): Promise<PipelineOfflineCheckin[]> {
