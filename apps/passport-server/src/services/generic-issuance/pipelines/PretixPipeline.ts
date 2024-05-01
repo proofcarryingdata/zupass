@@ -356,9 +356,9 @@ export class PretixPipeline implements BasePipeline {
             atomsToSave
           );
 
-          for (const newTicket of newManualTickets) {
-            await this.manualTicketDB.save(this.id, newTicket);
-          }
+          await Promise.allSettled(
+            newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
+          );
         }
 
         await this.db.save(this.definition.id, atomsToSave);
