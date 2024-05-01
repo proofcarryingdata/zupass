@@ -175,7 +175,14 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
       ],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
       pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl,
-      enablePODTickets: true
+      enablePODTickets: true,
+      offlineCheckin: {
+        fields: {
+          attendeeEmail: true,
+          attendeeName: true,
+          checker: true
+        }
+      }
     },
     type: PipelineType.Pretix
   };

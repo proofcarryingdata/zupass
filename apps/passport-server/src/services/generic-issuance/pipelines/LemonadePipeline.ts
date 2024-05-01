@@ -88,17 +88,12 @@ import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
+import { MemberCriteria, ticketMatchesCriteria } from "./utils";
 
 const LOG_NAME = "LemonadePipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
 
 export const LEMONADE_CHECKER = "Lemonade";
-
-// @todo use the interface defined on the food voucher branch
-interface MemberCriteria {
-  eventId: string;
-  productId: string;
-}
 
 /**
  * Class encapsulating the complete set of behaviors that a {@link Pipeline} which
@@ -2118,7 +2113,6 @@ export class LemonadePipeline implements BasePipeline {
    */
   private async checkInOfflineTickets(
     checkerEmail: string,
-    eventId: string,
     ticketIds: string[]
   ): Promise<void> {
     return traced(LOG_NAME, "checkInOfflineTickets", async (span) => {
@@ -2312,21 +2306,6 @@ export class LemonadePipeline implements BasePipeline {
   private async getQueuedOfflineCheckins(): Promise<PipelineOfflineCheckin[]> {
     return this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
   }
-}
-
-export function ticketMatchesCriteria(
-  t: LemonadeAtom | ManualTicket,
-  criterias: MemberCriteria[]
-): boolean {
-  return !!criterias.find((c) => {
-    if (t.eventId !== c.eventId) {
-      return false;
-    }
-    if (c.productId && c.productId !== t.productId) {
-      return false;
-    }
-    return true;
-  });
 }
 
 /**

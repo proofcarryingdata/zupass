@@ -611,11 +611,7 @@ export class PipelineAPISubservice {
               request.tickets
             )) {
               if (capability.canHandleCheckinForEvent(eventId)) {
-                await capability.checkInOfflineTickets(
-                  emailAddress,
-                  eventId,
-                  ticketIds
-                );
+                await capability.checkInOfflineTickets(emailAddress, ticketIds);
               }
             }
           }

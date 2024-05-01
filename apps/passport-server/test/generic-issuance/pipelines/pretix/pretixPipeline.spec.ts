@@ -2,11 +2,14 @@ import { getEdDSAPublicKey, newEdDSAPrivateKey } from "@pcd/eddsa-pcd";
 import { expectIsEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
+  PODBOX_CREDENTIAL_REQUEST,
   PipelineLogLevel,
   PodboxTicketActionResponseValue,
   PretixPipelineDefinition,
   createCredentialPayload,
   requestGenericIssuanceSemaphoreGroup,
+  requestPodboxCheckInOfflineTickets,
+  requestPodboxGetOfflineTickets,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
 import { expectIsPODTicketPCD } from "@pcd/pod-ticket-pcd";
@@ -21,6 +24,7 @@ import { PipelineCheckinDB } from "../../../../src/database/queries/pipelineChec
 import { PipelineConsumerDB } from "../../../../src/database/queries/pipelineConsumerDB";
 import { PipelineDefinitionDB } from "../../../../src/database/queries/pipelineDefinitionDB";
 import { PipelineUserDB } from "../../../../src/database/queries/pipelineUserDB";
+import { sqlQuery } from "../../../../src/database/sqlQuery";
 import { GenericIssuanceService } from "../../../../src/services/generic-issuance/GenericIssuanceService";
 import {
   PRETIX_CHECKER,
@@ -28,6 +32,7 @@ import {
 } from "../../../../src/services/generic-issuance/pipelines/PretixPipeline";
 import { PipelineUser } from "../../../../src/services/generic-issuance/pipelines/types";
 import { Zupass } from "../../../../src/types";
+import { IMockGenericIssuancePretixBackendData } from "../../../pretix/GenericPretixDataMocker";
 import { overrideEnvironment, testingEnv } from "../../../util/env";
 import { startTestingApp } from "../../../util/startTestingApplication";
 import {
@@ -39,6 +44,7 @@ import {
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
+  makeTestCredential,
   proveEmailPCD,
   requestCheckInPipelineTicket,
   requestTicketsFromPipeline,
@@ -78,6 +84,9 @@ describe("generic issuance - PretixPipeline", function () {
   } = setupTestPretixPipeline();
 
   const pipelineDefinitions = [ethLatAmPipeline];
+
+  const beforeUseBackup: IMockGenericIssuancePretixBackendData =
+    pretixBackend.backup();
 
   /**
    * Sets up a Zupass/Generic issuance backend with one pipeline:
@@ -1003,6 +1012,115 @@ describe("generic issuance - PretixPipeline", function () {
       }
     }
   );
+
+  step("can get offline tickets", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    const pipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+
+    {
+      const result = await requestPodboxGetOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        await makeTestCredential(
+          EthLatAmBouncerIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+          ZUPASS_EDDSA_PRIVATE_KEY
+        )
+      );
+
+      expectTrue(result.success);
+      // Bouncer should be able to receive all tickets
+      // Only 2 tickets since manual tickets were removed in an earlier test
+      expectLength(result.value.offlineTickets, 2);
+    }
+
+    {
+      const result = await requestPodboxGetOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        await makeTestCredential(
+          EthLatAmAttendeeIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          pretixBackend.get().ethLatAmOrganizer.ethLatAmAttendeeEmail,
+          ZUPASS_EDDSA_PRIVATE_KEY
+        )
+      );
+
+      expectTrue(result.success);
+      // Regular attendees can't perform check-in, so can't get offline tickets
+      expectLength(result.value.offlineTickets, 0);
+    }
+  });
+
+  step("can check in offline tickets", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    const pipeline = pipelines.find(PretixPipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(ethLatAmPipeline.id);
+
+    await sqlQuery(
+      giBackend.context.dbPool,
+      "DELETE from generic_issuance_checkins"
+    );
+
+    pretixBackend.restore(beforeUseBackup);
+
+    const bouncerCredential = await makeTestCredential(
+      EthLatAmBouncerIdentity,
+      PODBOX_CREDENTIAL_REQUEST,
+      pretixBackend.get().ethLatAmOrganizer.ethLatAmBouncerEmail,
+      ZUPASS_EDDSA_PRIVATE_KEY
+    );
+
+    {
+      const result = await requestPodboxGetOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        bouncerCredential
+      );
+
+      expectTrue(result.success);
+      // Bouncer should be able to receive all tickets
+      expectLength(result.value.offlineTickets, 2);
+
+      const ticketsByEvent = result.value.offlineTickets.reduce(
+        (res, current) => {
+          if (res[current.eventId]) {
+            res[current.eventId].push(current.id);
+          } else {
+            res[current.eventId] = [current.id];
+          }
+          return res;
+        },
+        {} as Record<string, string[]>
+      );
+
+      await requestPodboxCheckInOfflineTickets(
+        giBackend.expressContext.localEndpoint,
+        bouncerCredential,
+        ticketsByEvent
+      );
+
+      {
+        await pipeline.load();
+        const result = await requestPodboxGetOfflineTickets(
+          giBackend.expressContext.localEndpoint,
+          bouncerCredential
+        );
+
+        expectTrue(result.success);
+        // Bouncer should be able to receive all tickets
+        expectLength(result.value.offlineTickets, 2);
+        // All tickets should now be consumed.
+        expectLength(
+          result.value.offlineTickets.filter((ot) => ot.is_consumed === true),
+          2
+        );
+      }
+    }
+  });
 
   step("Authenticated Generic Issuance Endpoints", async () => {
     expectToExist(giService);
