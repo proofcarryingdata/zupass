@@ -21,6 +21,7 @@ import {
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineOfflineCheckin,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxOfflineTicket,
@@ -207,7 +208,8 @@ export class LemonadePipeline implements BasePipeline {
         },
         preCheck: this.precheckTicketAction.bind(this),
         getOfflineTickets: this.getOfflineTickets.bind(this),
-        checkInOfflineTickets: this.checkInOfflineTickets.bind(this)
+        checkInOfflineTickets: this.checkInOfflineTickets.bind(this),
+        getQueuedOfflineCheckins: this.getQueuedOfflineCheckins.bind(this)
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
@@ -2274,6 +2276,10 @@ export class LemonadePipeline implements BasePipeline {
     }
 
     return { failedTicketIds, checkedInTicketIds };
+  }
+
+  private async getQueuedOfflineCheckins(): Promise<PipelineOfflineCheckin[]> {
+    return this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
   }
 }
 

@@ -21,6 +21,7 @@ import {
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
+  PipelineOfflineCheckin,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PipelineZuAuthConfig,
@@ -208,7 +209,10 @@ export class PretixPipeline implements BasePipeline {
         },
         preCheck: this.checkPretixTicketPCDCanBeCheckedIn.bind(this),
         getOfflineTickets: async (): Promise<PodboxOfflineTicket[]> => [],
-        checkInOfflineTickets: async (): Promise<void> => {}
+        checkInOfflineTickets: async (): Promise<void> => {},
+        getQueuedOfflineCheckins: async (): Promise<
+          PipelineOfflineCheckin[]
+        > => []
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,

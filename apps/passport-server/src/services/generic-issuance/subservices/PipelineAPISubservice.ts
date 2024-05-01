@@ -9,6 +9,7 @@ import {
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PipelineOfflineCheckin,
   PodboxCheckInOfflineTicketsRequest,
   PodboxCheckInOfflineTicketsResponseValue,
   PodboxGetOfflineTicketsRequest,
@@ -149,6 +150,15 @@ export class PipelineAPISubservice {
         pipelineInstance.id
       );
 
+      const checkinCapability =
+        pipelineInstance.capabilities.find(isCheckinCapability);
+
+      let queuedOfflineCheckins: PipelineOfflineCheckin[] = [];
+      if (checkinCapability) {
+        queuedOfflineCheckins =
+          await checkinCapability.getQueuedOfflineCheckins();
+      }
+
       if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");
       }
@@ -182,7 +192,8 @@ export class PipelineAPISubservice {
         editHistory: await this.pipelineSubservice.getPipelineEditHistory(
           pipelineId,
           100
-        )
+        ),
+        queuedOfflineCheckins
       } satisfies PipelineInfoResponseValue;
 
       traceFlattenedObject(span, { loadSummary: lastLoad });

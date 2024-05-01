@@ -494,6 +494,14 @@ export interface PipelineInfoConsumer {
   timeUpdated: string;
 }
 
+export interface PipelineOfflineCheckin {
+  pipelineId: string;
+  ticketId: string;
+  checkerEmail: string;
+  checkinTimestamp: Date;
+  attempts: number;
+}
+
 export interface PipelineEdDSATicketZuAuthConfig {
   pcdType: typeof EdDSATicketPCDTypeName;
   publicKey: EdDSAPublicKey;
@@ -514,6 +522,7 @@ export interface PipelineInfoResponseValue {
   latestConsumers?: PipelineInfoConsumer[];
   editHistory?: HydratedPipelineHistoryEntry[];
   zuAuthConfig?: PipelineZuAuthConfig[];
+  queuedOfflineCheckins?: PipelineOfflineCheckin[];
 }
 
 export interface ListSingleFeedRequest {

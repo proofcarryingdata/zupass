@@ -1,3 +1,4 @@
+import { PipelineOfflineCheckin } from "@pcd/passport-interface";
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../sqlQuery";
 
@@ -113,12 +114,4 @@ export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
       [pipelineId, ticketId]
     );
   }
-}
-
-export interface PipelineOfflineCheckin {
-  pipelineId: string;
-  ticketId: string;
-  checkerEmail: string;
-  checkinTimestamp: Date;
-  attempts: number;
 }

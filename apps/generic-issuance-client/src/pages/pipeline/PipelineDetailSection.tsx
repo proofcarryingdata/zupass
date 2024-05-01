@@ -37,6 +37,7 @@ import {
 import { PipelineLatestConsumersSection } from "./DetailsSections/PipelineLatestConsumersSection";
 import { PipelineLatestDataSection } from "./DetailsSections/PipelineLatestDataSection";
 import { PipelineLatestLogsSection } from "./DetailsSections/PipelineLatestLogsSection";
+import { PipelineQueuedOfflineCheckinsSection } from "./DetailsSections/PipelineQueuedOfflineCheckins";
 import { PipelineSemaphoreGroupsSection } from "./DetailsSections/PipelineSemaphoreGroupsSection";
 import { PipelineVersionHistorySection } from "./DetailsSections/PipelineVersionHistorySection";
 import { PipelineZuAuthConfigSection } from "./DetailsSections/PipelineZuAuthConfig";
@@ -149,6 +150,15 @@ export function PipelineDetailSection({
             <PipelineLatestDataSection
               lastLoad={pipelineInfo.lastLoad}
               latestAtoms={pipelineInfo.latestAtoms}
+            />
+          </AccordionPanel>
+        </AccordionItem>
+
+        <AccordionItem>
+          <AccordionButton>Queued Offline Check-ins</AccordionButton>
+          <AccordionPanel>
+            <PipelineQueuedOfflineCheckinsSection
+              queuedOfflineCheckins={pipelineInfo.queuedOfflineCheckins}
             />
           </AccordionPanel>
         </AccordionItem>
