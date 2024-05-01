@@ -1,9 +1,6 @@
-import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { poseidon2 } from "poseidon-lite";
 import {
-  CircuitSignal,
   ListMembershipModuleInputNamesType,
   ListMembershipModuleInputs,
   ListMembershipModuleOutputNamesType,

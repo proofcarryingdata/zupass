@@ -1,8 +1,6 @@
-import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
-  CircuitSignal,
   TupleModuleInputNamesType,
   TupleModuleInputs,
   TupleModuleOutputNamesType,

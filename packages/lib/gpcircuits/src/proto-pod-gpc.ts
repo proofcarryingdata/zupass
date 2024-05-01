@@ -353,7 +353,7 @@ export class ProtoPODGPC {
         circuitDesc.merkleMaxDepth >= merkleDepth &&
         circuitDesc.maxListEntries >= nListEntries &&
         circuitDesc.maxTuples >= nTuples &&
-        circuitDesc.tupleArity == tupleArity
+        circuitDesc.tupleArity === tupleArity
       ) {
         return circuitDesc;
       }

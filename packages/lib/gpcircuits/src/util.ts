@@ -11,3 +11,11 @@ export function artifactPaths(
     vkeyPath: path.join(root, cd.name + "-vkey.json")
   };
 }
+
+/**
+ * Returns a copy of `inputArray` padded to length `len` with padding
+ * `padding`.
+ */
+export function padArray<A>(inputArr: A[], len: number, padding: A): A[] {
+  return inputArr.concat(Array(len - inputArr.length).fill(padding));
+}

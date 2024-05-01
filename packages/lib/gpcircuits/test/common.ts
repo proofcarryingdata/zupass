@@ -5,7 +5,7 @@ import { expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
-import { CircuitSignal } from "../src";
+import { CircuitSignal, padArray } from "../src";
 
 const configFilePath = path.join(__dirname, "../circomkit.json");
 const config = JSON.parse(readFileSync(configFilePath, "utf-8"));
@@ -71,7 +71,5 @@ export function extendedSignalArray(
   totalLength: number,
   fillValue = 0n
 ): CircuitSignal[] {
-  return inputArray.concat(
-    new Array(totalLength - inputArray.length).fill(fillValue)
-  );
+  return padArray(inputArray, totalLength, fillValue);
 }
