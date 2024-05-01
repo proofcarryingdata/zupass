@@ -1,11 +1,17 @@
+import { useCallback, useEffect } from "react";
 import { toast } from "react-hot-toast";
-import { QrReader } from "react-qr-reader";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
-import { useLaserScannerKeystrokeInput } from "../../src/appHooks";
+import {
+  useDispatch,
+  useLaserScannerKeystrokeInput,
+  useStrichSDKState
+} from "../../src/appHooks";
 import { loadUsingLaserScanner } from "../../src/localstorage";
 import { maybeRedirect } from "../../src/util";
 import { H5, Spacer, TextCenter } from "../core";
+import { ReactQrReaderScanner } from "../core/scanners/ReactQRReaderScanner";
+import { StrichScanner } from "../core/scanners/StrichScanner";
 import { AppContainer } from "../shared/AppContainer";
 import { IndicateIfOffline } from "../shared/IndicateIfOffline";
 import {
@@ -13,24 +19,39 @@ import {
   Home
 } from "./ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
 
-const ButtonsContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  flex-direction: row;
-  gap: 8px;
-  margin-bottom: 16px;
-
-  button {
-    flex-grow: 1;
-  }
-`;
-
 // Scan a PCD QR code, then go to /verify to verify and display the proof.
 export function ScanScreen(): JSX.Element {
   const usingLaserScanner = loadUsingLaserScanner();
   useLaserScannerKeystrokeInput();
   const nav = useNavigate();
+
+  const onResult = useCallback(
+    (result: string): void => {
+      console.log(`Got result, considering redirect`, result);
+      const newLoc = maybeRedirect(result);
+      if (newLoc) {
+        // Instantly remove any error toasts
+        toast.remove();
+        nav(newLoc);
+      } else {
+        toast.error(
+          "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
+          { id: "scan-error", duration: 10000, position: "bottom-center" }
+        );
+      }
+    },
+    [nav]
+  );
+
+  // the SDK initialization state
+  const sdkState = useStrichSDKState();
+  const dispatch = useDispatch();
+
+  useEffect(() => {
+    if (sdkState !== "initialized") {
+      dispatch({ type: "initialize-strich" });
+    }
+  }, [dispatch, sdkState]);
 
   return (
     <AppContainer bg="gray">
@@ -41,37 +62,10 @@ export function ScanScreen(): JSX.Element {
             <Back />
             <Home />
           </ButtonsContainer>
-          <QrReader
-            className="qr"
-            onResult={(result, error): void => {
-              if (result) {
-                console.log(
-                  `Got result, considering redirect`,
-                  result.getText()
-                );
-                const newLoc = maybeRedirect(result.getText());
-                if (newLoc) {
-                  // Instantly remove any error toasts
-                  toast.remove();
-                  nav(newLoc);
-                } else {
-                  toast.error(
-                    "The QR code you scanned is not a Zupass QR code. Make sure the QR code you're scanning comes from the Zupass app.",
-                    {
-                      id: "scan-error",
-                      duration: 10000,
-                      position: "bottom-center"
-                    }
-                  );
-                }
-              } else if (error) {
-                //    console.info(error);
-              }
-            }}
-            constraints={{ facingMode: "environment", aspectRatio: 1 }}
-            ViewFinder={ViewFinder}
-            containerStyle={{ width: "100%" }}
-          />
+          <Spacer h={8} />
+          {sdkState === "initialized" && <StrichScanner onResult={onResult} />}
+          {sdkState === "error" && <ReactQrReaderScanner onResult={onResult} />}
+          {sdkState === undefined && <div>Initializing scanner...</div>}
           <Spacer h={16} />
           <TextCenter>Scan a ticket</TextCenter>
         </QRContainer>
@@ -107,67 +101,31 @@ export function ScanScreen(): JSX.Element {
   );
 }
 
-function ViewFinder(): JSX.Element {
-  return (
-    <ScanOverlayWrap>
-      <Guidebox>
-        <Corner top left />
-        <Corner top />
-        <Corner left />
-        <Corner />
-      </Guidebox>
-    </ScanOverlayWrap>
-  );
-}
-
 const Orange = styled.span`
   font-weight: bold;
   color: orange;
-`;
-
-const ScanOverlayWrap = styled.div`
-  position: absolute;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 1;
-  margin: 16px;
 `;
 
 const FullWidthRow = styled.div`
   width: 100%;
 `;
 
-const Guidebox = styled.div`
-  position: absolute;
-  top: 50%;
-  left: 50%;
-  transform: translate(-50%, -50%);
-  width: 75%;
-  height: 75%;
-  background: rgba(255, 255, 255, 0.05);
-  border-radius: 8px;
-`;
-
-const Corner = styled.div<{ top?: boolean; left?: boolean }>`
-  position: absolute;
-  ${(p): string => (p.top ? "top: 0" : "bottom: 0")};
-  ${(p): string => (p.left ? "left: 0" : "right: 0")};
-  border: 2px solid white;
-  ${(p): string => (p.left ? "border-right: none" : "border-left: none")};
-  ${(p): string => (p.top ? "border-bottom: none" : "border-top: none")};
-  width: 16px;
-  height: 16px;
-  ${(p): string => (p.left && p.top ? "border-radius: 8px 0 0 0;" : "")};
-  ${(p): string => (p.left && !p.top ? "border-radius: 0 0 0 8px;" : "")};
-  ${(p): string => (!p.left && p.top ? "border-radius: 0 8px 0 0;" : "")};
-  ${(p): string => (!p.left && !p.top ? "border-radius: 0 0 8px 0;" : "")};
-`;
-
 const QRContainer = styled.div`
   width: 100%;
 
   .qr {
+  }
+`;
+
+const ButtonsContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  flex-direction: row;
+  gap: 8px;
+  margin-bottom: 16px;
+
+  button {
+    flex-grow: 1;
   }
 `;
