@@ -59,5 +59,5 @@ select * from pipeline_manual_tickets where pipelineId=$1;
 }
 
 function rowToManualTicket(row: QueryResultRow): ManualTicket {
-  return row.manualTicket as ManualTicket;
+  return row.manualticket as ManualTicket;
 }

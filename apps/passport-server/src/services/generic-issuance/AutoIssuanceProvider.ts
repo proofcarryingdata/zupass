@@ -19,22 +19,25 @@ export class AutoIssuanceProvider {
     this.autoIssuanceConfig = autoIssuanceConfig;
   }
 
-  public async load(
+  public async dripNewManualTickets(
     consumerDB: IPipelineConsumerDB,
     existingManualTickets: ManualTicket[],
     realTickets: PretixAtom[]
   ): Promise<ManualTicket[]> {
     const allConsumers = await consumerDB.loadAll(this.pipelineId);
+    const newManualTickets: ManualTicket[] = [];
 
     for (const consumer of allConsumers) {
-      await this.maybeIssueForUser(
-        consumer.email,
-        existingManualTickets,
-        realTickets
+      newManualTickets.push(
+        ...(await this.maybeIssueForUser(
+          consumer.email,
+          existingManualTickets,
+          realTickets
+        ))
       );
     }
 
-    return [];
+    return newManualTickets;
   }
 
   public async maybeIssueForUser(

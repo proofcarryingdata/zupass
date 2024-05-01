@@ -350,11 +350,12 @@ export class PretixPipeline implements BasePipeline {
         );
 
         if (this.autoIssuanceProvider) {
-          const newManualTickets = await this.autoIssuanceProvider.load(
-            this.consumerDB,
-            await this.getAllManualTickets(),
-            atomsToSave
-          );
+          const newManualTickets =
+            await this.autoIssuanceProvider.dripNewManualTickets(
+              this.consumerDB,
+              await this.getAllManualTickets(),
+              atomsToSave
+            );
 
           await Promise.allSettled(
             newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
@@ -415,9 +416,9 @@ export class PretixPipeline implements BasePipeline {
   }
 
   private async getAllManualTickets(): Promise<ManualTicket[]> {
-    return (this.definition.options.manualTickets ?? []).concat(
-      await this.manualTicketDB.loadAll(this.id)
-    );
+    return (this.definition.options.manualTickets ?? [])
+      .concat(await this.manualTicketDB.loadAll(this.id))
+      .filter((t) => !!t);
   }
 
   /**
