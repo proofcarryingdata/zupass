@@ -104,12 +104,12 @@ export async function batchPromise<A, B>(
   arr: A[]
 ): Promise<B[]> {
   // Execute sequence of promises
-  const promisedChunks = await seqPromise(
+  const chunks = await seqPromise(
     (arr) => Promise.all(arr.map(f)), // by mapping each `maxParallelpromises` sized chunk of `arr` by `f`
     toChunks(arr, maxParallelPromises)
   );
 
-  return promisedChunks.flat(); // Then concatenate the chunks.
+  return chunks.flat(); // Then concatenate the chunks.
 }
 /** Returns an array which is a copy of `inputArray` extended to `totalLength`,
  * with new values filled with `fillValue` (default 0).  Input array is

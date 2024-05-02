@@ -11,7 +11,7 @@ export async function clearDir(directory: string): Promise<void> {
 }
 
 /**
- * Maximum number of parallel promises to avoid
- * OOM issues.
+ * Maximum number of parallel promises for Circomkit calls
+ * to avoid OOM issues.
  */
 export const MAX_PARALLEL_PROMISES = 4;
