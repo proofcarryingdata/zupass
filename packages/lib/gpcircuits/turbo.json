@@ -8,7 +8,7 @@
         "../../../node_modules/circomkit/**",
         "../../../node_modules/circomlib/**",
         "../../../node_modules/@zk-kit/circuits/**",
-        "scripts/gen-test-artifacts.sh",
+        "scripts/gen-test-artifacts.ts",
         "circuits/**",
         "circomkit.json",
         "circuits.json"

@@ -1,5 +1,6 @@
 import { Groth16Proof, groth16 } from "snarkjs";
 import { CircuitDesc, CircuitSignal } from "./types";
+import circuitParamJson from "./circuitParameters.json";
 import { loadVerificationKey } from "./util";
 
 /**
@@ -154,6 +155,27 @@ export type ProtoPODGPCCircuitParams = {
 };
 
 /**
+ * ProtoPODGPCCircuitParams constructor.
+ */
+export function ProtoPODGPCCircuitParams(
+  maxObjects: number,
+  maxEntries: number,
+  merkleMaxDepth: number
+): ProtoPODGPCCircuitParams {
+  return { maxObjects, maxEntries, merkleMaxDepth };
+}
+
+/**
+ * Mapping taking a ProtoPODGPCParameter to its array representation.
+ * This is necessary for invocations of the circuits themselves.
+ */
+export function protoPODGPCCircuitParamArray(
+  params: ProtoPODGPCCircuitParams
+): number[] {
+  return [params.maxObjects, params.maxEntries, params.merkleMaxDepth];
+}
+
+/**
  * Circuit description with parameters specific to ProtoPODGPC family.
  */
 export type ProtoPODGPCCircuitDesc = CircuitDesc & ProtoPODGPCCircuitParams;
@@ -294,9 +316,7 @@ export class ProtoPODGPC {
    * Picks the smallest available circuit in this family which can handle the
    * size parameters of a desired configuration.
    *
-   * @param nObjects the number of objects required
-   * @param nEntries the number of entries required
-   * @param merkleDepth the max merkle tree depth required
+   * @param params a lower bound on the parameters required
    * @returns the circuit description, or undefined if no circuit can handle
    *   the required parameters.
    */
@@ -357,42 +377,40 @@ export class ProtoPODGPC {
   }
 
   private static circuitNameForParams(
-    maxObjects: number,
-    maxEntries: number,
-    merkleMaxDepth: number
+    params: ProtoPODGPCCircuitParams
   ): string {
-    return `${maxObjects}o-${maxEntries}e-${merkleMaxDepth}md`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md`;
   }
 
   private static circuitDescForParams(
-    maxObjects: number,
-    maxEntries: number,
-    merkleMaxDepth: number,
+    circuitParams: ProtoPODGPCCircuitParams,
     cost: number
   ): ProtoPODGPCCircuitDesc {
     return {
       family: PROTO_POD_GPC_FAMILY_NAME,
-      name: ProtoPODGPC.circuitNameForParams(
-        maxObjects,
-        maxEntries,
-        merkleMaxDepth
-      ),
+      name: ProtoPODGPC.circuitNameForParams(circuitParams),
       cost,
-      maxObjects,
-      maxEntries,
-      merkleMaxDepth
+      ...circuitParams
     };
   }
+
+  /**
+   * Circuit parameters pulled from `circuitParameters.json`
+   * in the form of pairs consisting of the circuit parameters
+   * and the cost of the circuit in constraints.
+   */
+  static CIRCUIT_PARAMETERS: [ProtoPODGPCCircuitParams, number][] =
+    circuitParamJson as [ProtoPODGPCCircuitParams, number][];
 
   /**
    * List of pre-compiled circuits, sorted in order of increasing cost.
    * These should match the declarations in circuits.json for circomkit,
    * and each should correspond to an available set of precompiled artifacts.
    */
-  public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] = [
-    // TODO(POD-P2): Pick convenient circuit sizes for MVP.
-    ProtoPODGPC.circuitDescForParams(1, 1, 5, 9556),
-    ProtoPODGPC.circuitDescForParams(1, 5, 8, 19223),
-    ProtoPODGPC.circuitDescForParams(3, 10, 8, 45276)
-  ];
+  // TODO(POD-P2): Pick convenient circuit sizes for MVP.
+  public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] =
+    ProtoPODGPC.CIRCUIT_PARAMETERS.sort((a, b) => a[1] - b[1]).map(
+      (pair: [ProtoPODGPCCircuitParams, number]): ProtoPODGPCCircuitDesc =>
+        ProtoPODGPC.circuitDescForParams(pair[0], pair[1])
+    );
 }

@@ -28,7 +28,8 @@
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
     "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-test-artifacts",
-    "gen-test-artifacts": "scripts/gen-test-artifacts.sh",
+    "gen-circuit-parameters": "npx tsx scripts/gen-circuit-parameters.ts",
+    "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts",
     "clean-test-artifacts": "rm -rf artifacts/test"
   },
   "dependencies": {
@@ -47,6 +48,7 @@
     "circomkit": "^0.0.24",
     "circomlib": "^2.0.5",
     "eslint": "^8.57.0",
+    "lodash": "^4.17.21",
     "mocha": "^10.2.0",
     "poseidon-lite": "^0.2.0",
     "ts-mocha": "^10.0.0",

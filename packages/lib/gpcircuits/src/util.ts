@@ -56,7 +56,62 @@ export function gpcArtifactPaths(
 }
 
 /**
- * Returns an array which is a copy of `inputArray` extended to `totalLength`,
+ * Splits an array `arr` into chunks of size
+ * `n` in order. If `arr.length` is not a multiple of `n`,
+ * then the last chunk will be of length `arr.length % n`.
+ */
+export function toChunks<A>(arr: A[], n: number): A[][] {
+  const chunks: A[][] = [[]];
+
+  for (const a of arr) {
+    const lastChunkIndex = chunks.length - 1;
+    const lastChunk = chunks[lastChunkIndex];
+    if (lastChunk.length < n) {
+      lastChunk.push(a);
+    } else {
+      chunks.push([a]);
+    }
+  }
+
+  return chunks;
+}
+
+/**
+ * Applies a Promise-valued function to array elements
+ * sequentially. Necessary to avoid OOM for particularly
+ * heavy computations.
+ */
+export async function seqPromise<A, B>(
+  f: (a: A) => Promise<B>,
+  arr: A[]
+): Promise<B[]> {
+  const outputArray: B[] = [];
+
+  for (const a of arr) {
+    outputArray.push(await f(a));
+  }
+
+  return outputArray;
+}
+
+/**
+ * Applies a Promise-values function to array eleemnts
+ * `maxParallelPromises` calls at a time.
+ */
+export async function batchPromise<A, B>(
+  maxParallelPromises: number,
+  f: (a: A) => Promise<B>,
+  arr: A[]
+): Promise<B[]> {
+  // Execute sequence of promises
+  const chunks = await seqPromise(
+    (arr) => Promise.all(arr.map(f)), // by mapping each `maxParallelpromises` sized chunk of `arr` by `f`
+    toChunks(arr, maxParallelPromises)
+  );
+
+  return chunks.flat(); // Then concatenate the chunks.
+}
+/** Returns an array which is a copy of `inputArray` extended to `totalLength`,
  * with new values filled with `fillValue` (default 0).  Input array is
  * returned as-is if `totalLength` is not longer than its length.
  */
