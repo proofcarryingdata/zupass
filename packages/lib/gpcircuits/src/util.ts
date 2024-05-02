@@ -12,7 +12,8 @@ export function artifactPaths(
   };
 }
 
-/** Splits an array `arr` into chunks of size
+/**
+ * Splits an array `arr` into chunks of size
  * `n` in order. If `arr.length` is not a multiple of `n`,
  * then the last chunk will be of length `arr.length % n`.
  */
@@ -29,38 +30,38 @@ export function toChunks<A>(arr: A[], n: number): A[][] {
   );
 }
 
-/** Applies a Promise-valued function to array elements
+/**
+ * Applies a Promise-valued function to array elements
  * sequentially. Necessary to avoid OOM for particularly
  * heavy computations.
  */
-export function seqPromise<A, B>(
+export async function seqPromise<A, B>(
   f: (a: A) => Promise<B>,
   arr: A[]
 ): Promise<B[]> {
-  // Delayed/lazy form of f
-  const delayedF: (a: A) => () => Promise<B> = (a) => () => f(a);
-  return arr
-    .map(delayedF) // Delay the fulfilment of each promise.
-    .reduce(
-      (promisesPast: Promise<B[]>, delayedPromise: () => Promise<B>) =>
-        promisesPast.then((arr) =>
-          delayedPromise().then((x: B) => arr.concat([x]))
-        ),
-      Promise.resolve([]) // Start with an empty promise.
-    );
+  let outputArray: B[] = [];
+
+  for (const a of arr) {
+    outputArray.push(await f(a));
+  }
+
+  return outputArray;
 }
 
-/** Applies a Promise-values function to array eleemnts
+/**
+ * Applies a Promise-values function to array eleemnts
  * `maxParallelPromises` calls at a time.
  */
-export function batchPromise<A, B>(
+export async function batchPromise<A, B>(
   maxParallelPromises: number,
   f: (a: A) => Promise<B>,
   arr: A[]
 ): Promise<B[]> {
   // Execute sequence of promises
-  return seqPromise(
+  const promisedChunks = await seqPromise(
     (arr) => Promise.all(arr.map(f)), // by mapping each `maxParallelpromises` sized chunk of `arr` by `f`
     toChunks(arr, maxParallelPromises)
-  ).then((arr) => arr.flat()); // Then concatenate the resulting arrays.
+  );
+
+  return promisedChunks.flat(); // Then concatenate the chunks.
 }

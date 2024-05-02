@@ -10,7 +10,8 @@ export async function clearDir(directory: string) {
   }
 }
 
-/** Maximum number of parallel promises to avoid
+/**
+ * Maximum number of parallel promises to avoid
  * OOM issues.
  */
 export const MAX_PARALLEL_PROMISES = 4;
