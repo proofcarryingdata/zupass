@@ -1,4 +1,4 @@
-import { CircuitDesc, ProtoPODGPCCircuitParams } from "@pcd/gpcircuits";
+import { CircuitDesc } from "@pcd/gpcircuits";
 import {
   PODName,
   PODValue,
@@ -186,21 +186,6 @@ export function splitCircuitIdentifier(circuitIdentifier: GPCIdentifier): {
  */
 export function makeCircuitIdentifier(circuitDesc: CircuitDesc): GPCIdentifier {
   return `${circuitDesc.family}_${circuitDesc.name}`;
-}
-
-/**
- * @returns a set of parameters representing the unified (maximum) requirements
- *   of the two input parameters.
- */
-export function mergeRequiredParams(
-  rp1: ProtoPODGPCCircuitParams,
-  rp2: ProtoPODGPCCircuitParams
-): ProtoPODGPCCircuitParams {
-  return {
-    maxObjects: Math.max(rp1.maxObjects, rp2.maxObjects),
-    maxEntries: Math.max(rp1.maxEntries, rp2.maxEntries),
-    merkleMaxDepth: Math.max(rp1.merkleMaxDepth, rp2.merkleMaxDepth)
-  };
 }
 
 /**

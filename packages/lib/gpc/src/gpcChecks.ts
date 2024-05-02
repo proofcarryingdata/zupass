@@ -25,7 +25,6 @@ import {
 } from "./gpcTypes";
 import {
   checkPODEntryIdentifier,
-  mergeRequiredParams,
   splitCircuitIdentifier,
   splitPODEntryIdentifier
 } from "./gpcUtil";
@@ -52,7 +51,7 @@ export function checkProofArgs(
 ): ProtoPODGPCCircuitParams {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
-  const requriedParams = mergeRequiredParams(
+  const requriedParams = ProtoPODGPC.mergeRequiredParams(
     checkProofConfig(proofConfig),
     checkProofInputs(proofInputs)
   );
@@ -336,7 +335,7 @@ export function checkVerifyArgs(
 ): ProtoPODGPCCircuitParams {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
-  const requriedParams = mergeRequiredParams(
+  const requriedParams = ProtoPODGPC.mergeRequiredParams(
     checkProofConfig(boundConfig),
     checkRevealedClaims(revealedClaims)
   );
