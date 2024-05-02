@@ -74,7 +74,7 @@ export function HomeScreenImpl(): JSX.Element | null {
   const foldersInFolder = useFolders(browsingFolder);
 
   useEffect(() => {
-    if (!self && !browsingFolder) {
+    if (!self) {
       console.log("Redirecting to login screen");
       navigate("/login", { replace: true });
     }

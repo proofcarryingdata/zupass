@@ -207,7 +207,7 @@ export class UserService {
       throw new PCDHTTPError(
         403,
         existingUser
-          ? `This email ${email} has already been registered. Please login instead.`
+          ? `The email ${email} has already been registered. Please login instead.`
           : `Wrong token. If you got more than one email, use the latest one.`
       );
     }

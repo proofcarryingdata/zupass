@@ -137,10 +137,8 @@ export function CreatePasswordScreen(): JSX.Element | null {
     return null;
   }
 
-  if (settingPassword) {
+  if (settingPassword || autoRegister) {
     content = <ScreenLoader text="Creating your account..." />;
-  } else if (autoRegister) {
-    content = <ScreenLoader text="Automatically creating your account..." />;
   } else {
     content = (
       <>

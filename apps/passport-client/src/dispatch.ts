@@ -75,8 +75,10 @@ export type Action =
       type: "create-user-skip-password";
       email: string;
       token: string;
-      targetFolder: string | undefined | null;
+      /** If autoRegister is "true", Zupass will attempt to automatically register an account */
       autoRegister: boolean;
+      /** Zupass will attempt to automatically direct a user to targetFolder on registration */
+      targetFolder: string | undefined | null;
     }
   | {
       type: "login";
@@ -469,7 +471,9 @@ async function finishAccountCreation(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = targetFolder ? `#/?folder=${targetFolder}` : "#/";
+    window.location.hash = targetFolder
+      ? `#/?folder=${encodeURIComponent(targetFolder)}`
+      : "#/";
   }
 }
 
