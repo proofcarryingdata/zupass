@@ -16,7 +16,7 @@ async function main(): Promise<void> {
   if (await fsExists(testArtifactDir)) {
     await clearDir(testArtifactDir);
   } else {
-    await fs.mkdir(testArtifactDir);
+    await fs.mkdir(testArtifactDir, { recursive: true });
   }
 
   // Instantiate Circomkit object.
