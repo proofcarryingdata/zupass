@@ -50,7 +50,7 @@ import { setupAutoIssuancePipeline } from "./setupAutoIssuancePipeline";
  * Tests for {@link GenericIssuanceService}, in particular the {@link PretixPipeline} implementing
  * auto-issuance features.
  */
-describe("generic issuance - PretixPipeline", function () {
+describe("generic issuance - PretixPipeline w/ auto-issuance enabled", function () {
   const nowDate = new Date();
   MockDate.set(nowDate);
   const now = nowDate.getTime();
