@@ -85,6 +85,9 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
           value: args.externalNullifier.value
         } satisfies PODStringValue)
       : undefined;
+  if (externalNullifier !== undefined && ownerSemaphorePCD === undefined) {
+    throw new Error("External nullifier requires an owner identity PCD.");
+  }
   const watermark =
     args.watermark.value !== undefined
       ? ({
@@ -97,8 +100,14 @@ async function checkProofArgs(args: GPCPCDArgs): Promise<{
     proofConfig,
     proofInputs: {
       pods: { pod0: podPCD.pod },
-      ownerSemaphoreV3: ownerSemaphorePCD?.claim?.identity,
-      externalNullifier: externalNullifier,
+      ...(ownerSemaphorePCD !== undefined
+        ? {
+            owner: {
+              semaphoreV3: ownerSemaphorePCD?.claim?.identity,
+              externalNullifier: externalNullifier
+            }
+          }
+        : {}),
       watermark: watermark
     }
   };

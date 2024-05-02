@@ -155,7 +155,7 @@ export function compileProofConfig(
     // Add this entry's value (if enabled) for EntryModule.
     // Plaintext value is only enabled if it is needed by some other
     // configured constraint, which for now is only the owner commitment.
-    const isValueEnabled = !!entryInfo.entryConfig.isOwnerCommitment;
+    const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
     if (isValueEnabled && entrySignals.value === undefined) {
       throw new Error("Numeric entry value is unavailable when required.");
     }
@@ -171,12 +171,12 @@ export function compileProofConfig(
     // An entry is always compared either to the first owner entry (to ensure
     // only one owner), or to another entry specified by config, or to itself
     // in order to make the constraint a nop.
-    if (entryInfo.entryConfig.isOwnerCommitment) {
+    if (entryInfo.entryConfig.isOwnerID) {
       if (firstOwnerIndex === 0) {
         firstOwnerIndex = entryInfo.entryIndex;
       } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
         throw new Error(
-          "Can't use isOwnerCommitment and equalsEntry on the same entry."
+          "Can't use isOwnerID and equalsEntry on the same entry."
         );
       }
       sigEntryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
@@ -213,21 +213,21 @@ export function compileProofConfig(
   // Signals for owner module, which is enabled if any entry config declared
   // it was an owner commitment.
   const hasOwner = firstOwnerIndex !== 0;
-  if (hasOwner && proofInputs.ownerSemaphoreV3 === undefined) {
+  if (hasOwner && proofInputs.owner === undefined) {
     throw new Error("Missing owner identity.");
   }
   const sigOwnerEntryIndex = hasOwner
     ? BigInt(firstOwnerIndex)
     : BABY_JUB_NEGATIVE_ONE;
   const sigOwnerSemaphoreV3IdentityNullifier =
-    proofInputs.ownerSemaphoreV3?.nullifier ?? BABY_JUB_NEGATIVE_ONE;
+    proofInputs.owner?.semaphoreV3?.nullifier ?? BABY_JUB_NEGATIVE_ONE;
   const sigOwnerSemaphoreV3IdentityTrapdoor =
-    proofInputs.ownerSemaphoreV3?.trapdoor ?? BABY_JUB_NEGATIVE_ONE;
+    proofInputs.owner?.semaphoreV3.trapdoor ?? BABY_JUB_NEGATIVE_ONE;
   const sigOwnerExternalNullifier = makeWatermarkSignal(
-    proofInputs.externalNullifier
+    proofInputs.owner?.externalNullifier
   );
   const sigOwnerIsNullfierHashRevealed =
-    proofInputs.externalNullifier !== undefined ? 1n : 0n;
+    proofInputs.owner?.externalNullifier !== undefined ? 1n : 0n;
 
   // Set global watermark.
   const sigGlobalWatermark = makeWatermarkSignal(proofInputs.watermark);
@@ -375,7 +375,7 @@ export function compileVerifyConfig(
     // Add this entry's value config EntryModule.
     // Plaintext value is only enabled if it is needed by some other
     // configured constraint, which for now is only the owner commitment.
-    const isValueEnabled = !!entryInfo.entryConfig.isOwnerCommitment;
+    const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
     sigEntryIsValueEnabled.push(isValueEnabled ? 1n : 0n);
     sigEntryIsValueHashRevealed.push(
       entryInfo.entryConfig.isRevealed ? 1n : 0n
@@ -390,12 +390,12 @@ export function compileVerifyConfig(
     // An entry is always compared either to the first owner entry (to ensure
     // only one owner), or to another entry specified by config, or to itself
     // in order to make the constraint a nop.
-    if (entryInfo.entryConfig.isOwnerCommitment) {
+    if (entryInfo.entryConfig.isOwnerID) {
       if (firstOwnerIndex === 0) {
         firstOwnerIndex = entryInfo.entryIndex;
       } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
         throw new Error(
-          "Can't use isOwnerCommitment and equalsEntry on the same entry."
+          "Can't use isOwnerID and equalsEntry on the same entry."
         );
       }
       sigEntryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
@@ -433,12 +433,12 @@ export function compileVerifyConfig(
     ? BigInt(firstOwnerIndex)
     : BABY_JUB_NEGATIVE_ONE;
   const sigOwnerExternalNullifier = makeWatermarkSignal(
-    verifyRevealed.externalNullifier
+    verifyRevealed.owner?.externalNullifier
   );
   const sigOwnerIsNullfierHashRevealed =
-    verifyRevealed.nullifierHash !== undefined ? 1n : 0n;
+    verifyRevealed.owner?.nullifierHash !== undefined ? 1n : 0n;
   const sigOwnerRevealedNulifierHash =
-    verifyRevealed.nullifierHash ?? BABY_JUB_NEGATIVE_ONE;
+    verifyRevealed.owner?.nullifierHash ?? BABY_JUB_NEGATIVE_ONE;
 
   // Set global watermark.
   const sigGlobalWatermark = makeWatermarkSignal(verifyRevealed.watermark);
@@ -498,11 +498,13 @@ export function makeRevealedClaims(
 
   return {
     pods: revealedObjects,
-    ...(proofInputs.externalNullifier !== undefined
-      ? { externalNullifier: proofInputs.externalNullifier }
-      : {}),
-    ...(proofInputs.externalNullifier !== undefined
-      ? { nullifierHash: BigInt(circuitOutputs.ownerRevealedNulifierHash) }
+    ...(proofInputs.owner?.externalNullifier !== undefined
+      ? {
+          owner: {
+            externalNullifier: proofInputs.owner.externalNullifier,
+            nullifierHash: BigInt(circuitOutputs.ownerRevealedNulifierHash)
+          }
+        }
       : {}),
     ...(proofInputs.watermark !== undefined
       ? { watermark: proofInputs.watermark }

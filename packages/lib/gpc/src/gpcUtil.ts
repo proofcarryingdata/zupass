@@ -85,7 +85,7 @@ function canonicalizeEntryConfig(
   // Set optional fields only when they have non-default values.
   return {
     isRevealed: proofEntryConfig.isRevealed,
-    ...(proofEntryConfig.isOwnerCommitment ? { isOwnerCommitment: true } : {}),
+    ...(proofEntryConfig.isOwnerID ? { isOwnerID: true } : {}),
     ...(proofEntryConfig.equalsEntry !== undefined
       ? { equalsEntry: proofEntryConfig.equalsEntry }
       : {})

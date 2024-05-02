@@ -129,16 +129,14 @@ function checkProofEntryConfig(
     "boolean"
   );
 
-  if (entryConfig.isOwnerCommitment !== undefined) {
+  if (entryConfig.isOwnerID !== undefined) {
     requireType(
-      `${nameForErrorMessages}.isOwnerCommitment`,
-      entryConfig.isOwnerCommitment,
+      `${nameForErrorMessages}.isOwnerID`,
+      entryConfig.isOwnerID,
       "boolean"
     );
     if (entryConfig.equalsEntry !== undefined) {
-      throw new Error(
-        "Can't use isOwnerCommitment and equalsEntry on the same entry."
-      );
+      throw new Error("Can't use isOwnerID and equalsEntry on the same entry.");
     }
   }
 
@@ -179,17 +177,20 @@ export function checkProofInputs(
     );
   }
 
-  if (proofInputs.ownerSemaphoreV3 !== undefined) {
-    requireType(`ownerSemaphoreV3`, proofInputs.ownerSemaphoreV3, "object");
-    if (!(proofInputs.ownerSemaphoreV3 instanceof Identity)) {
+  if (proofInputs.owner !== undefined) {
+    requireType(`owner.SemaphoreV3`, proofInputs.owner.semaphoreV3, "object");
+    if (!(proofInputs.owner.semaphoreV3 instanceof Identity)) {
       throw new TypeError(
-        `ownerSemaphoreV3 must be a SemaphoreV3 Identity object.`
+        `owner.semaphoreV3 must be a SemaphoreV3 Identity object.`
       );
     }
-  }
 
-  if (proofInputs.externalNullifier !== undefined) {
-    checkPODValue("externalNullifier", proofInputs.externalNullifier);
+    if (proofInputs.owner.externalNullifier !== undefined) {
+      checkPODValue(
+        "owner.externalNullifier",
+        proofInputs.owner.externalNullifier
+      );
+    }
   }
 
   if (proofInputs.watermark !== undefined) {
@@ -257,14 +258,14 @@ export function checkProofInputsForConfig(
       }
 
       // If this entry identifies the owner, we should have a matching Identity.
-      if (entryConfig.isOwnerCommitment) {
+      if (entryConfig.isOwnerID) {
         hasOwnerEntry = true;
-        if (proofInputs.ownerSemaphoreV3 === undefined) {
+        if (proofInputs.owner === undefined) {
           throw new Error(
             "Proof configuration expects owner, but no owner identity given."
           );
         }
-        if (podValue.value !== proofInputs.ownerSemaphoreV3.commitment) {
+        if (podValue.value !== proofInputs.owner.semaphoreV3.commitment) {
           throw new Error(
             `Configured owner commitment in POD doesn't match given Identity.`
           );
@@ -301,9 +302,15 @@ export function checkProofInputsForConfig(
     }
   }
 
-  // Check nullifier configuration.
-  if (proofInputs.externalNullifier !== undefined && !hasOwnerEntry) {
-    throw new Error("Nullifier hash requires a defined owner entry.");
+  // Check that owner is not specified unnecessarily.
+  if (
+    proofInputs.owner !== undefined &&
+    !hasOwnerEntry &&
+    proofInputs.owner.externalNullifier === undefined
+  ) {
+    throw new Error(
+      "Owner identity is given, but not used for any configuration."
+    );
   }
 }
 
@@ -382,20 +389,15 @@ export function checkRevealedClaims(
     );
   }
 
-  if (revealedClaims.externalNullifier !== undefined) {
-    checkPODValue("externalNullifier", revealedClaims.externalNullifier);
-  }
-
-  if (revealedClaims.nullifierHash !== undefined) {
-    requireType("nullifierHash", revealedClaims.nullifierHash, "bigint");
-  }
-
-  if (
-    (revealedClaims.externalNullifier !== undefined) !==
-    (revealedClaims.nullifierHash !== undefined)
-  ) {
-    throw new Error(
-      "Claims must include both externalNullifier and nullifierHash or neither."
+  if (revealedClaims.owner !== undefined) {
+    checkPODValue(
+      "owner.externalNullifier",
+      revealedClaims.owner.externalNullifier
+    );
+    requireType(
+      "owner.nullifierHash",
+      revealedClaims.owner.nullifierHash,
+      "bigint"
     );
   }
 
@@ -457,7 +459,6 @@ export function checkVerifyClaimsForConfig(
   }
 
   // Each configured entry to be revealed should be revealed in claims.
-  let hasOwnerEntry = false;
   for (const [objName, objConfig] of Object.entries(boundConfig.pods)) {
     // Examine config for each revealed entry.
     for (const [entryName, entryConfig] of Object.entries(objConfig.entries)) {
@@ -488,8 +489,6 @@ export function checkVerifyClaimsForConfig(
           );
         }
       }
-
-      hasOwnerEntry ||= !!entryConfig.isOwnerCommitment;
     }
   }
 
@@ -520,11 +519,6 @@ export function checkVerifyClaimsForConfig(
         }
       }
     }
-  }
-
-  // Check nullifier configuration.
-  if (revealedClaims.nullifierHash !== undefined && !hasOwnerEntry) {
-    throw new Error("Nullifier hash requires a defined owner entry.");
   }
 }
 

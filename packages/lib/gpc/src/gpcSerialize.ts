@@ -12,9 +12,8 @@ const jsonBigSerializer = JSONBig({
 });
 
 /**
- * Serializes GPCProofConfig to a string in a full-fidelity format.  Calling
- * {@link deserializePODEntries} will reconstruct the same `PODEntries`
- * including their type information.
+ * Serializes `GPCProofConfig` to a string in a full-fidelity format.  Calling
+ * {@link deserializeGPCProofConfig} will reconstruct the same object.
  *
  * @param toSerialize the GPCProofConfig to serialize
  * @param space pretty-printing configuration, as defined by the corresponding
@@ -29,8 +28,9 @@ export function serializeGPCProofConfig(
 }
 
 /**
- * Deserializes `PODEntries` from the full-fidelity format produced by
- * {@link serializePODEntries}.
+ * Deserializes `GPCProofConfig` from the full-fidelity format produced by
+ * {@link serializeGPCProofConfig}, and checks the validity of the
+ * configuration.
  *
  * @param serialized a string representation of `GPCProofConfig`
  * @returns `GPCProofConfig` deserialized from the string
@@ -38,16 +38,16 @@ export function serializeGPCProofConfig(
  */
 export function deserializeGPCProofConfig(serialized: string): GPCProofConfig {
   const deserialized = jsonBigSerializer.parse(serialized);
+  // TODO(POD-P2): Consider separating these steps to allow deserializing without checking.
   checkProofConfig(deserialized);
   return deserialized;
 }
 
 /**
- * Serializes GPCBoundConfig to a string in a full-fidelity format.  Calling
- * {@link deserializePODEntries} will reconstruct the same `PODEntries`
- * including their type information.
+ * Serializes `GPCBoundConfig` to a string in a full-fidelity format.  Calling
+ * {@link deserializeGPCBoundConfig} will reconstruct the same object.
  *
- * @param toSerialize the GPCBoundConfig to serialize
+ * @param toSerialize the GPCProofConfig to serialize
  * @param space pretty-printing configuration, as defined by the corresponding
  *   argument to JSON.stringify.
  * @returns a string representation
@@ -60,8 +60,9 @@ export function serializeGPCBoundConfig(
 }
 
 /**
- * Deserializes `PODEntries` from the full-fidelity format produced by
- * {@link serializePODEntries}.
+ * Deserializes `GPCBoundConfig` from the full-fidelity format produced by
+ * {@link serializeGPCBoundConfig}, and checks the validity of the
+ * configuration.
  *
  * @param serialized a string representation of `GPCBoundConfig`
  * @returns `GPCBoundConfig` deserialized from the string
@@ -69,14 +70,15 @@ export function serializeGPCBoundConfig(
  */
 export function deserializeGPCBoundConfig(serialized: string): GPCBoundConfig {
   const deserialized = jsonBigSerializer.parse(serialized);
+  // TODO(POD-P2): Consider separating these steps to allow deserializing without checking.
   checkBoundConfig(deserialized);
   return deserialized;
 }
 
 /**
- * Serializes GPCRevealedClaims to a string in a full-fidelity format.  Calling
- * {@link deserializePODEntries} will reconstruct the same `PODEntries`
- * including their type information.
+ * Serializes `GPCRevealedClaims` to a string in a full-fidelity format.
+ * Calling {@link deserializeGPCRevealedClaims} will reconstruct the same
+ * object.
  *
  * @param toSerialize the GPCRevealedClaims to serialize
  * @param space pretty-printing configuration, as defined by the corresponding
@@ -91,8 +93,9 @@ export function serializeGPCRevealedClaims(
 }
 
 /**
- * Deserializes `PODEntries` from the full-fidelity format produced by
- * {@link serializePODEntries}.
+ * Deserializes `GPCRevealedClaims` from the full-fidelity format produced by
+ * {@link serializeGPCRevealedClaims}, and checks the validity of the
+ * claims.
  *
  * @param serialized a string representation of `GPCRevealedClaims`
  * @returns `GPCRevealedClaims` deserialized from the string
@@ -102,6 +105,7 @@ export function deserializeGPCRevealedClaims(
   serialized: string
 ): GPCRevealedClaims {
   const deserialized = jsonBigSerializer.parse(serialized);
+  // TODO(POD-P2): Consider separating these steps to allow deserializing without checking.
   checkRevealedClaims(deserialized);
   return deserialized;
 }

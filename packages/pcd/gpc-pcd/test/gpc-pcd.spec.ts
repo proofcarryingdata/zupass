@@ -56,7 +56,7 @@ describe("GPCPCD should work", async function () {
           entries: {
             A: { isRevealed: true },
             E: { isRevealed: false, equalsEntry: "pod0.A" },
-            owner: { isRevealed: false, isOwnerCommitment: true }
+            owner: { isRevealed: false, isOwnerID: true }
           }
         }
       }
@@ -103,7 +103,8 @@ describe("GPCPCD should work", async function () {
       pod.signerPublicKey
     );
     expect(gpcPCD.claim.revealed.pods.pod0.entries?.A?.value).to.eq(123n);
-    expect(gpcPCD.claim.revealed.externalNullifier).to.not.be.undefined;
+    expect(gpcPCD.claim.revealed.owner?.externalNullifier).to.not.be.undefined;
+    expect(gpcPCD.claim.revealed.owner?.nullifierHash).to.not.be.undefined;
     expect(gpcPCD.claim.revealed.watermark?.value).to.eq("some watermark");
     expect(gpcPCD.claim.config.circuitIdentifier).to.eq(
       "proto-pod-gpc_1o-5e-8md"

@@ -133,11 +133,11 @@ export default function Page(): JSX.Element {
                 {pcd.claim.revealed.watermark && (
                   <p>{`Watermark: ${pcd.claim.revealed.watermark.value}`}</p>
                 )}
-                {pcd.claim.revealed.externalNullifier && (
-                  <p>{`External Nullifier: ${pcd.claim.revealed.externalNullifier.value}`}</p>
+                {pcd.claim.revealed.owner?.externalNullifier && (
+                  <p>{`External Nullifier: ${pcd.claim.revealed.owner?.externalNullifier.value}`}</p>
                 )}
-                {pcd.claim.revealed.nullifierHash && (
-                  <p>{`Nullifier Hash: ${pcd.claim.revealed.nullifierHash}`}</p>
+                {pcd.claim.revealed.owner?.nullifierHash && (
+                  <p>{`Nullifier Hash: ${pcd.claim.revealed.owner?.nullifierHash}`}</p>
                 )}
               </>
             )}
@@ -254,8 +254,8 @@ async function verifyProof(
   if (!verified) return { valid: false };
 
   const sameExternalNullifier =
-    pcd.claim.revealed.externalNullifier?.value === externalNullifier ||
-    (!pcd.claim.revealed.externalNullifier && !externalNullifier);
+    pcd.claim.revealed.owner?.externalNullifier?.value === externalNullifier ||
+    (!pcd.claim.revealed.owner?.externalNullifier && !externalNullifier);
   if (!sameExternalNullifier) {
     return { valid: false, err: "External nullifier does not match." };
   }

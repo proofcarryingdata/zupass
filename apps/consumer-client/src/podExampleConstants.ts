@@ -35,7 +35,7 @@ export const EXAMPLE_GPC_CONFIG = `{
         },
         "owner": {
           "isRevealed": false,
-          "isOwnerCommitment": true
+          "isOwnerID": true
         }
       }
     }

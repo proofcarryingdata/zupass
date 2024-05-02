@@ -2,7 +2,13 @@ import { POD } from "@pcd/pod";
 import { expect } from "chai";
 import "mocha";
 import { poseidon2 } from "poseidon-lite/poseidon2";
-import { GPCProofConfig, GPCProofInputs, gpcProve, gpcVerify } from "../src";
+import {
+  GPCProofConfig,
+  GPCProofInputs,
+  GPCRevealedClaims,
+  gpcProve,
+  gpcVerify
+} from "../src";
 import { makeWatermarkSignal } from "../src/gpcUtil";
 import {
   GPC_TEST_ARTIFACTS_PATH,
@@ -20,15 +26,17 @@ describe("gpc library should work", async function () {
           entries: {
             A: { isRevealed: true },
             E: { isRevealed: false, equalsEntry: "pod1.A" },
-            owner: { isRevealed: false, isOwnerCommitment: true }
+            owner: { isRevealed: false, isOwnerID: true }
           }
         }
       }
     };
     const proofInputs: GPCProofInputs = {
       pods: { pod1 },
-      ownerSemaphoreV3: ownerIdentity,
-      externalNullifier: { type: "int", value: 42n },
+      owner: {
+        semaphoreV3: ownerIdentity,
+        externalNullifier: { type: "int", value: 42n }
+      },
       watermark: { type: "int", value: 1337n }
     };
     const { proof, boundConfig, revealedClaims } = await gpcProve(
@@ -54,13 +62,15 @@ describe("gpc library should work", async function () {
           signerPublicKey: pod1.signerPublicKey
         }
       },
-      externalNullifier: { type: "int", value: 42n },
-      nullifierHash: poseidon2([
-        makeWatermarkSignal({ type: "int", value: 42n }),
-        ownerIdentity.nullifier
-      ]),
+      owner: {
+        externalNullifier: { type: "int", value: 42n },
+        nullifierHash: poseidon2([
+          makeWatermarkSignal({ type: "int", value: 42n }),
+          ownerIdentity.nullifier
+        ])
+      },
       watermark: { type: "int", value: 1337n }
-    });
+    } satisfies GPCRevealedClaims);
 
     const isVerified = await gpcVerify(
       proof,
