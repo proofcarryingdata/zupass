@@ -54,12 +54,17 @@ import {
 } from "../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
+import { IPipelineManualTicketDB } from "../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../database/queries/pipelineSemaphoreHistoryDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { mostRecentCheckinEvent } from "../../../util/devconnectTicket";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
+import {
+  AutoIssuanceProvider,
+  anyTicketMatchesCriteria
+} from "../AutoIssuanceProvider";
 import {
   SemaphoreGroupProvider,
   SemaphoreGroupTicketInfo
@@ -125,8 +130,10 @@ export class PretixPipeline implements BasePipeline {
   private api: IGenericPretixAPI;
   private checkinDB: IPipelineCheckinDB;
   private consumerDB: IPipelineConsumerDB;
+  private manualTicketDB: IPipelineManualTicketDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
+  private autoIssuanceProvider: AutoIssuanceProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
 
   public get id(): string {
@@ -154,6 +161,7 @@ export class PretixPipeline implements BasePipeline {
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     consumerDB: IPipelineConsumerDB,
+    manualTicketDB: IPipelineManualTicketDB,
     semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
@@ -161,7 +169,14 @@ export class PretixPipeline implements BasePipeline {
     this.db = db as IPipelineAtomDB<PretixAtom>;
     this.api = api;
     this.consumerDB = consumerDB;
+    this.manualTicketDB = manualTicketDB;
     this.semaphoreHistoryDB = semaphoreHistoryDB;
+    if (this.definition.options.autoIssuance) {
+      this.autoIssuanceProvider = new AutoIssuanceProvider(
+        this.id,
+        this.definition.options.autoIssuance
+      );
+    }
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
       this.semaphoreGroupProvider = new SemaphoreGroupProvider(
         this.id,
@@ -337,7 +352,19 @@ export class PretixPipeline implements BasePipeline {
           `saving ${atomsToSave.length} atoms for pipeline id '${this.id}' of type ${this.type}`
         );
 
-        // TODO: error handling
+        if (this.autoIssuanceProvider) {
+          const newManualTickets =
+            await this.autoIssuanceProvider.dripNewManualTickets(
+              this.consumerDB,
+              await this.getAllManualTickets(),
+              atomsToSave
+            );
+
+          await Promise.allSettled(
+            newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
+          );
+        }
+
         await this.db.save(this.definition.id, atomsToSave);
         logs.push(makePLogInfo(`saved ${atomsToSave.length} items`));
 
@@ -391,6 +418,12 @@ export class PretixPipeline implements BasePipeline {
     );
   }
 
+  private async getAllManualTickets(): Promise<ManualTicket[]> {
+    return (this.definition.options.manualTickets ?? []).concat(
+      await this.manualTicketDB.loadAll(this.id)
+    );
+  }
+
   /**
    * Collects data that is require for Semaphore groups to update.
    * Returns an array of { eventId, productId, email } objects, which the
@@ -408,7 +441,7 @@ export class PretixPipeline implements BasePipeline {
         });
       }
 
-      for (const manualTicket of this.definition.options.manualTickets ?? []) {
+      for (const manualTicket of await this.getAllManualTickets()) {
         data.push({
           email: manualTicket.attendeeEmail,
           eventId: manualTicket.eventId,
@@ -449,7 +482,7 @@ export class PretixPipeline implements BasePipeline {
   private async cleanUpManualCheckins(): Promise<void> {
     return traced(LOG_NAME, "cleanUpManualCheckins", async (span) => {
       const ticketIds = new Set(
-        (this.definition.options.manualTickets ?? []).map(
+        (await this.getAllManualTickets()).map(
           (manualTicket) => manualTicket.id
         )
       );
@@ -833,16 +866,18 @@ export class PretixPipeline implements BasePipeline {
     };
   }
 
-  private getManualTicketsForEmail(email: string): ManualTicket[] {
-    return (this.definition.options.manualTickets ?? []).filter(
-      (manualTicket) => {
-        return manualTicket.attendeeEmail.toLowerCase() === email;
-      }
-    );
+  private async getManualTicketsForEmail(
+    email: string
+  ): Promise<ManualTicket[]> {
+    return (await this.getAllManualTickets()).filter((manualTicket) => {
+      return manualTicket.attendeeEmail.toLowerCase() === email;
+    });
   }
 
-  private getManualTicketById(id: string): ManualTicket | undefined {
-    return (this.definition.options.manualTickets ?? []).find(
+  private async getManualTicketById(
+    id: string
+  ): Promise<ManualTicket | undefined> {
+    return (await this.getAllManualTickets()).find(
       (manualTicket) => manualTicket.id === id
     );
   }
@@ -863,7 +898,8 @@ export class PretixPipeline implements BasePipeline {
       this.atomToTicketData(t, identityCommitment)
     );
     // Load manual tickets from the definition
-    const manualTickets = this.getManualTicketsForEmail(email);
+    const manualTickets = await this.getManualTicketsForEmail(email);
+
     // Convert manual tickets to ticket data and add to array
     ticketDatas.push(
       ...(await Promise.all(
@@ -896,16 +932,29 @@ export class PretixPipeline implements BasePipeline {
       const { emailClaim } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        const didUpdate = await this.consumerDB.save(
-          this.id,
-          emailClaim.emailAddress,
-          emailClaim.semaphoreId,
-          new Date()
-        );
+      const didUpdate = await this.consumerDB.save(
+        this.id,
+        emailClaim.emailAddress,
+        emailClaim.semaphoreId,
+        new Date()
+      );
 
-        // If the user's Semaphore commitment has changed, `didUpdate` will be
-        // true, and we need to update the Semaphore groups
+      if (this.autoIssuanceProvider) {
+        const newManualTickets =
+          await this.autoIssuanceProvider.maybeIssueForUser(
+            emailClaim.emailAddress,
+            await this.getAllManualTickets(),
+            await this.db.loadByEmail(this.id, emailClaim.emailAddress)
+          );
+
+        await Promise.allSettled(
+          newManualTickets.map((t) => this.manualTicketDB.save(this.id, t))
+        );
+      }
+
+      // If the user's Semaphore commitment has changed, `didUpdate` will be
+      // true, and we need to update the Semaphore groups
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         if (didUpdate) {
           span?.setAttribute("semaphore_groups_updated", true);
           await this.triggerSemaphoreGroupUpdate();
@@ -1170,6 +1219,7 @@ export class PretixPipeline implements BasePipeline {
    */
   private async canCheckInForEvent(
     eventId: string,
+    productId: string,
     checkerEmail: string
   ): Promise<true | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
@@ -1180,17 +1230,19 @@ export class PretixPipeline implements BasePipeline {
       return { name: "InvalidTicket" };
     }
 
+    const realCheckerTickets = await this.db.loadByEmail(this.id, checkerEmail);
+    const manualCheckerTickets =
+      await this.getManualTicketsForEmail(checkerEmail);
+
     // Collect all of the product IDs that the checker owns for this event
     const checkerProductIds: string[] = [];
-    for (const checkerTicketAtom of await this.db.loadByEmail(
-      this.id,
-      checkerEmail
-    )) {
+
+    for (const checkerTicketAtom of realCheckerTickets) {
       if (checkerTicketAtom.eventId === eventId) {
         checkerProductIds.push(checkerTicketAtom.productId);
       }
     }
-    for (const manualTicket of this.getManualTicketsForEmail(checkerEmail)) {
+    for (const manualTicket of manualCheckerTickets) {
       if (manualTicket.eventId === eventConfig.genericIssuanceId) {
         checkerProductIds.push(manualTicket.productId);
       }
@@ -1205,6 +1257,34 @@ export class PretixPipeline implements BasePipeline {
 
     if (hasSuperUserTicket) {
       return true;
+    }
+
+    if (this.definition.options.userPermissions) {
+      const matchingPermission = this.definition.options.userPermissions.find(
+        (policy) => {
+          if (policy.canCheckIn.eventId !== eventId) {
+            return false;
+          }
+
+          if (
+            policy.canCheckIn.productId &&
+            policy.canCheckIn.productId !== productId
+          ) {
+            return false;
+          }
+
+          const checkerPolicymatch = anyTicketMatchesCriteria(
+            [...realCheckerTickets, ...manualCheckerTickets],
+            policy.members
+          );
+
+          return checkerPolicymatch;
+        }
+      );
+
+      if (matchingPermission) {
+        return true;
+      }
     }
 
     return { name: "NotSuperuser" };
@@ -1335,10 +1415,19 @@ export class PretixPipeline implements BasePipeline {
           };
         }
 
+        const realTicket = await this.db.loadById(this.id, ticketId);
+        const manualTicket = await this.getManualTicketById(ticketId);
+        const checkinInProductId =
+          realTicket?.productId ?? manualTicket?.productId;
+        if (!checkinInProductId) {
+          throw new Error(`ticket with id '${ticketId}' does not exist`);
+        }
+
         try {
           // Verify that checker can check in tickets for the specified event
           const canCheckInResult = await this.canCheckInForEvent(
             eventId,
+            checkinInProductId,
             checkerEmail
           );
 
@@ -1401,7 +1490,7 @@ export class PretixPipeline implements BasePipeline {
             }
           } else {
             // No Pretix atom found, try looking for a manual ticket
-            const manualTicket = this.getManualTicketById(ticketId);
+            const manualTicket = await this.getManualTicketById(ticketId);
             if (manualTicket && manualTicket.eventId === eventId) {
               // Manual ticket found
               const canCheckInTicketResult =
@@ -1532,10 +1621,20 @@ export class PretixPipeline implements BasePipeline {
         span?.setAttribute("checkin_error", "InvalidSignature");
         return { success: false, error: { name: "InvalidSignature" } };
       }
+
+      const realTicket = await this.db.loadById(this.id, ticketId);
+      const manualTicket = await this.getManualTicketById(ticketId);
+      const checkinInProductId =
+        realTicket?.productId ?? manualTicket?.productId;
+      if (!checkinInProductId) {
+        throw new Error(`ticket with id '${ticketId}' does not exist`);
+      }
       const canCheckInResult = await this.canCheckInForEvent(
         eventId,
+        checkinInProductId,
         checkerEmail
       );
+
       if (canCheckInResult !== true) {
         return { success: false, error: canCheckInResult };
       }
@@ -1545,7 +1644,7 @@ export class PretixPipeline implements BasePipeline {
       if (ticketAtom && ticketAtom.eventId === eventId) {
         return this.checkInPretixTicket(ticketAtom, checkerEmail);
       } else {
-        const manualTicket = this.getManualTicketById(ticketId);
+        const manualTicket = await this.getManualTicketById(ticketId);
         if (manualTicket && manualTicket.eventId === eventId) {
           // Manual ticket found, check in with the DB
           return this.checkInManualTicket(manualTicket, checkerEmail);
@@ -1804,6 +1903,7 @@ export class PretixPipeline implements BasePipeline {
       ids.push(semaphoreGroup.groupId);
     }
 
+    // todo: also load manual tickets from db here
     for (const manualTicket of definition.options.manualTickets ?? []) {
       ids.push(manualTicket.id);
     }

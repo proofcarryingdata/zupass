@@ -36,6 +36,10 @@ import {
   PipelineConsumerDB
 } from "../../database/queries/pipelineConsumerDB";
 import {
+  IPipelineManualTicketDB,
+  PipelineManualTicketDB
+} from "../../database/queries/pipelineManualTicketDB";
+import {
   IPipelineSemaphoreHistoryDB,
   PipelineSemaphoreHistoryDB
 } from "../../database/queries/pipelineSemaphoreHistoryDB";
@@ -73,6 +77,7 @@ export class GenericIssuanceService {
   private contactDB: IContactSharingDB;
   private badgeDB: IBadgeGiftingDB;
   private consumerDB: IPipelineConsumerDB;
+  private manualTicketDB: IPipelineManualTicketDB;
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private genericPretixAPI: IGenericPretixAPI;
   private rollbarService: RollbarService | null;
@@ -97,6 +102,7 @@ export class GenericIssuanceService {
     this.rollbarService = rollbarService;
     this.checkinDB = new PipelineCheckinDB(context.dbPool);
     this.consumerDB = new PipelineConsumerDB(context.dbPool);
+    this.manualTicketDB = new PipelineManualTicketDB(context.dbPool);
     this.semaphoreHistoryDB = new PipelineSemaphoreHistoryDB(context.dbPool);
     this.genericPretixAPI = pretixAPI;
     this.contactDB = new ContactSharingDB(this.context.dbPool);
@@ -127,6 +133,7 @@ export class GenericIssuanceService {
         contactDB: this.contactDB,
         badgeDB: this.badgeDB,
         consumerDB: this.consumerDB,
+        manualTicketDB: this.manualTicketDB,
         semaphoreHistoryDB: this.semaphoreHistoryDB,
         credentialSubservice: this.credentialSubservice
       } satisfies InstantiatePipelineArgs
