@@ -23,7 +23,7 @@ export class PipelineManualTicketDB implements IPipelineManualTicketDB {
     await sqlQuery(
       this.db,
       `
-insert into pipeline_manual_tickets(pipelineId, manualTicket) values ($1, $2);
+insert into pipeline_manual_tickets(pipeline_id, manual_ticket) values ($1, $2);
 `,
       [pipelineId, ticket]
     );
@@ -37,8 +37,8 @@ insert into pipeline_manual_tickets(pipelineId, manualTicket) values ($1, $2);
       this.db,
       `
 select * from pipeline_manual_tickets where 
-pipelineId=$1 and 
-manualTicket->>'attendeeEmail' = ANY($2)`,
+pipeline_id=$1 and 
+manual_ticket->>'attendeeEmail' = ANY($2)`,
       [pipelineId, emailAddresses]
     );
 
@@ -49,7 +49,7 @@ manualTicket->>'attendeeEmail' = ANY($2)`,
     const res = await sqlQuery(
       this.db,
       `
-select * from pipeline_manual_tickets where pipelineId=$1;
+select * from pipeline_manual_tickets where pipeline_id=$1;
     `,
       [pipelineId]
     );
@@ -59,5 +59,5 @@ select * from pipeline_manual_tickets where pipelineId=$1;
 }
 
 function rowToManualTicket(row: QueryResultRow): ManualTicket {
-  return row.manualticket as ManualTicket;
+  return row.manual_ticket as ManualTicket;
 }

@@ -1,4 +1,4 @@
 CREATE TABLE if not exists pipeline_manual_tickets (
-  pipelineId UUID not null,
-  manualTicket JSONB not null
+  pipeline_id UUID not null,
+  manual_ticket JSONB not null
 );
