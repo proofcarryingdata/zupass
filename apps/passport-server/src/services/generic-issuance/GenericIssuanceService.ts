@@ -16,6 +16,8 @@ import {
   PipelineInfoResponseValue,
   PodboxCheckInOfflineTicketsRequest,
   PodboxCheckInOfflineTicketsResponseValue,
+  PodboxDeleteOfflineCheckinRequest,
+  PodboxDeleteOfflineCheckinResponseValue,
   PodboxGetOfflineTicketsRequest,
   PodboxGetOfflineTicketsResponseValue,
   PodboxTicketActionPreCheckRequest,
@@ -352,5 +354,15 @@ export class GenericIssuanceService {
     request: PodboxCheckInOfflineTicketsRequest
   ): Promise<PodboxCheckInOfflineTicketsResponseValue> {
     return this.pipelineSubservice.handleCheckInOfflineTickets(request);
+  }
+
+  /**
+   * Handles the deletion of a single queued offline check-in.
+   */
+  public async handleDeleteOfflineCheckin(
+    user: PipelineUser,
+    request: PodboxDeleteOfflineCheckinRequest
+  ): Promise<PodboxDeleteOfflineCheckinResponseValue> {
+    return this.pipelineSubservice.handleDeleteOfflineCheckin(user, request);
   }
 }

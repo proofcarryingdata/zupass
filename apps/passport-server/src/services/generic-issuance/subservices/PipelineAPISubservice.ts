@@ -12,6 +12,8 @@ import {
   PipelineOfflineCheckin,
   PodboxCheckInOfflineTicketsRequest,
   PodboxCheckInOfflineTicketsResponseValue,
+  PodboxDeleteOfflineCheckinRequest,
+  PodboxDeleteOfflineCheckinResponseValue,
   PodboxGetOfflineTicketsRequest,
   PodboxGetOfflineTicketsResponseValue,
   PodboxOfflineTicket,
@@ -617,6 +619,36 @@ export class PipelineAPISubservice {
           }
         }
       }
+    });
+  }
+
+  public async handleDeleteOfflineCheckin(
+    user: PipelineUser,
+    { ticketId, pipelineId }: PodboxDeleteOfflineCheckinRequest
+  ): Promise<PodboxDeleteOfflineCheckinResponseValue> {
+    return traced(SERVICE_NAME, "handleDeleteOfflineCheckin", async (span) => {
+      span?.setAttribute("pipeline_id", pipelineId);
+      span?.setAttribute("ticket_id", ticketId);
+      traceUser(user);
+      const pipelineSlot =
+        await this.pipelineSubservice.ensurePipelineSlotExists(pipelineId);
+      tracePipeline(pipelineSlot.definition);
+      const pipeline =
+        await this.pipelineSubservice.ensurePipelineStarted(pipelineId);
+      this.pipelineSubservice.ensureUserHasPipelineDefinitionAccess(
+        user,
+        pipelineSlot.definition
+      );
+
+      const checkinCapability = pipeline.capabilities.find(isCheckinCapability);
+      if (!checkinCapability) {
+        throw new PCDHTTPError(
+          403,
+          `pipeline ${pipeline.id} does not have a check-in capability`
+        );
+      }
+
+      return checkinCapability.deleteOfflineCheckin(ticketId);
     });
   }
 }

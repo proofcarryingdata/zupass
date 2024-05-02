@@ -204,7 +204,8 @@ export class LemonadePipeline implements BasePipeline {
         preCheck: this.precheckTicketAction.bind(this),
         getOfflineTickets: this.getOfflineTickets.bind(this),
         checkInOfflineTickets: this.checkInOfflineTickets.bind(this),
-        getQueuedOfflineCheckins: this.getQueuedOfflineCheckins.bind(this)
+        getQueuedOfflineCheckins: this.getQueuedOfflineCheckins.bind(this),
+        deleteOfflineCheckin: this.deleteOfflineCheckin.bind(this)
       } satisfies CheckinCapability,
       {
         type: PipelineCapability.SemaphoreGroup,
@@ -273,10 +274,14 @@ export class LemonadePipeline implements BasePipeline {
         offlineTicketsFailedToCheckIn: number | undefined;
 
       if (this.definition.options.offlineCheckin !== undefined) {
-        const { checkedInTicketIds, failedTicketIds } =
-          await this.processOfflineCheckins();
+        const {
+          checkedInTicketIds,
+          failedTicketIds,
+          logs: offlineCheckinLogs
+        } = await this.processOfflineCheckins();
         offlineTicketsCheckedIn = checkedInTicketIds.length;
         offlineTicketsFailedToCheckIn = failedTicketIds.length;
+        logs.push(...offlineCheckinLogs);
       }
 
       const configuredEvents = this.definition.options.events;
@@ -2205,10 +2210,12 @@ export class LemonadePipeline implements BasePipeline {
   private async processOfflineCheckins(): Promise<{
     failedTicketIds: string[];
     checkedInTicketIds: string[];
+    logs: PipelineLog[];
   }> {
     return traced(LOG_NAME, "processOfflineCheckins", async (span) => {
       tracePipeline(this.definition);
 
+      const logs: PipelineLog[] = [];
       const offlineCheckins =
         await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
 
@@ -2236,10 +2243,10 @@ export class LemonadePipeline implements BasePipeline {
         for (const ticketId of ticketIds) {
           const atom = await this.db.loadById(this.id, ticketId);
           if (!atom) {
+            // Ticket does not exist in the atom DB, so perhaps it is a manual
+            // ticket.
             const manualTicket = this.getManualTicketById(ticketId);
             if (manualTicket) {
-              // Can this user check this ticket in?
-              // Should we log something if they can't?
               if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
                 // Check the manual ticket in
                 const result = await this.checkInManualTicket(
@@ -2256,25 +2263,47 @@ export class LemonadePipeline implements BasePipeline {
                 }
               } else {
                 logger(
-                  `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                  `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but this check-in is not being performed as they lack permissions.`
+                );
+                logs.push(
+                  makePLogWarn(
+                    `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                  )
                 );
               }
             } else {
-              // Ticket does not exist at all.
-              // Should we just silently drop manual tickets that don't exist?
+              // Ticket does not exist in the manual ticket configuration either.
+              logs.push(
+                makePLogWarn(
+                  `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this ticket does not exist.`
+                )
+              );
               failedTicketIds.push(ticketId);
             }
           } else {
             if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
               const result = await this.lemonadeCheckin(atom, checkerEmail);
+              // If the ticket is already checked in, just treat this as a success
               if (result.success || result.error.name === "AlreadyCheckedIn") {
                 checkedInTicketIds.push(ticketId);
               } else {
                 failedTicketIds.push(ticketId);
+                logs.push(
+                  makePLogWarn(
+                    `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but check-in failed due to ${JSON.stringify(
+                      result.error
+                    )}.`
+                  )
+                );
               }
             } else {
               logger(
-                `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but this check-in is not being performed as they lack permissions.`
+              );
+              logs.push(
+                makePLogWarn(
+                  `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                )
               );
             }
           }
@@ -2299,12 +2328,16 @@ export class LemonadePipeline implements BasePipeline {
         checkedInTicketIds.length
       );
 
-      return { failedTicketIds, checkedInTicketIds };
+      return { failedTicketIds, checkedInTicketIds, logs };
     });
   }
 
   private async getQueuedOfflineCheckins(): Promise<PipelineOfflineCheckin[]> {
     return this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
+  }
+
+  private async deleteOfflineCheckin(ticketId: string): Promise<void> {
+    return this.offlineCheckinDB.deleteOfflineCheckins(this.id, [ticketId]);
   }
 }
 

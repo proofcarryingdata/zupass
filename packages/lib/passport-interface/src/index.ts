@@ -57,6 +57,7 @@ export * from "./api/requestOneClickLogin";
 export * from "./api/requestPasswordSalt";
 export * from "./api/requestPipelineInfo";
 export * from "./api/requestPodboxCheckInOfflineTickets";
+export * from "./api/requestPodboxDeleteOfflineCheckin";
 export * from "./api/requestPodboxGetOfflineTickets";
 export * from "./api/requestPodboxTicketAction";
 export * from "./api/requestPodboxTicketActionPreCheck";

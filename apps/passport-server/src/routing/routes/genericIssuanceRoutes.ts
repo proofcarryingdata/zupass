@@ -16,6 +16,8 @@ import {
   PipelineInfoResponseValue,
   PodboxCheckInOfflineTicketsRequest,
   PodboxCheckInOfflineTicketsResponseValue,
+  PodboxDeleteOfflineCheckinRequest,
+  PodboxDeleteOfflineCheckinResponseValue,
   PodboxGetOfflineTicketsRequest,
   PodboxGetOfflineTicketsResponseValue,
   PodboxTicketActionPreCheckRequest,
@@ -509,6 +511,25 @@ export function initGenericIssuanceRoutes(
       const result =
         await genericIssuanceService.handleCheckInOfflineTickets(request);
       res.json(result satisfies PodboxCheckInOfflineTicketsResponseValue);
+    }
+  );
+
+  /**
+   * Deletes a single queued offline check-in.
+   */
+  app.post(
+    "/generic-issuance/api/delete-offline-checkin",
+    async (req: express.Request, res: express.Response) => {
+      checkGenericIssuanceServiceStarted(genericIssuanceService);
+      const request = req.body as PodboxDeleteOfflineCheckinRequest;
+      const user = await genericIssuanceService.authSession(req);
+      traceUser(user);
+
+      const result = await genericIssuanceService.handleDeleteOfflineCheckin(
+        user,
+        request
+      );
+      res.json(result satisfies PodboxDeleteOfflineCheckinResponseValue);
     }
   );
 }

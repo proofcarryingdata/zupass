@@ -1,6 +1,9 @@
+import { Button } from "@chakra-ui/react";
 import { PipelineOfflineCheckin } from "@pcd/passport-interface";
-import { ReactNode } from "react";
+import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
+import { deleteOfflineCheckin } from "../../../helpers/Mutations";
+import { useJWT } from "../../../helpers/userHooks";
 import { timeAgo } from "../../../helpers/util";
 
 /**
@@ -11,10 +14,32 @@ import { timeAgo } from "../../../helpers/util";
  * it refers to is deleted in the back-end system.
  */
 export function PipelineQueuedOfflineCheckinsSection({
+  pipelineId,
   queuedOfflineCheckins
 }: {
+  pipelineId: string;
   queuedOfflineCheckins?: PipelineOfflineCheckin[];
 }): ReactNode {
+  const userJWT = useJWT();
+  const onDeleteClick = useCallback(
+    (ticketId: string) => {
+      if (!userJWT) {
+        alert("not logged in");
+        return;
+      }
+      if (
+        window.confirm("Are you sure you want to delete this offline check-in?")
+      ) {
+        deleteOfflineCheckin(userJWT, pipelineId, ticketId)
+          .then(() => window.location.reload())
+          .catch(() =>
+            window.alert("Error occured when deleting offline check-in")
+          );
+      }
+    },
+    [pipelineId, userJWT]
+  );
+
   if (!queuedOfflineCheckins || queuedOfflineCheckins.length === 0) {
     return (
       <div>
@@ -25,46 +50,67 @@ export function PipelineQueuedOfflineCheckinsSection({
   }
 
   return (
-    <OfflineCheckinTable>
-      <thead>
-        <tr>
-          <th>Ticket ID</th>
-          <th>Checker</th>
-          <th>Time</th>
-          <th>Attempts</th>
-        </tr>
-      </thead>
-      <tbody>
-        {queuedOfflineCheckins
-          .sort(
-            (a, b) =>
-              a.checkinTimestamp.getTime() - b.checkinTimestamp.getTime()
-          )
-          .map((offlineCheckin) => {
-            const checkinDate = new Date(
-              offlineCheckin.checkinTimestamp
-            ).toLocaleDateString();
-            const checkinAgo = timeAgo.format(
-              new Date(offlineCheckin.checkinTimestamp),
-              "mini"
-            );
-            return (
-              <tr key={offlineCheckin.ticketId}>
-                <TicketID title={offlineCheckin.ticketId}>
-                  {offlineCheckin.ticketId}
-                </TicketID>
-                <CheckerEmail title={offlineCheckin.checkerEmail}>
-                  {offlineCheckin.checkerEmail}
-                </CheckerEmail>
-                <td title={checkinDate}>{checkinAgo} ago</td>
-                <td>{offlineCheckin.attempts}</td>
-              </tr>
-            );
-          })}
-      </tbody>
-    </OfflineCheckinTable>
+    <div>
+      <Explainer>
+        Offline check-ins with multiple failures may be stuck. Check the logs to
+        see if they need to be deleted.
+      </Explainer>
+      <OfflineCheckinTable>
+        <thead>
+          <tr>
+            <th>Ticket ID</th>
+            <th>Checker</th>
+            <th>Time</th>
+            <th>Failures</th>
+            <th>Options</th>
+          </tr>
+        </thead>
+        <tbody>
+          {queuedOfflineCheckins
+            .sort(
+              (a, b) =>
+                a.checkinTimestamp.getTime() - b.checkinTimestamp.getTime()
+            )
+            .map((offlineCheckin) => {
+              const checkinDate = new Date(
+                offlineCheckin.checkinTimestamp
+              ).toLocaleDateString();
+              const checkinAgo = timeAgo.format(
+                new Date(offlineCheckin.checkinTimestamp),
+                "mini"
+              );
+              return (
+                <tr key={offlineCheckin.ticketId}>
+                  <TicketID title={offlineCheckin.ticketId}>
+                    {offlineCheckin.ticketId}
+                  </TicketID>
+                  <CheckerEmail title={offlineCheckin.checkerEmail}>
+                    {offlineCheckin.checkerEmail}
+                  </CheckerEmail>
+                  <td title={checkinDate}>{checkinAgo} ago</td>
+                  <td>{offlineCheckin.attempts}</td>
+                  <td>
+                    <Button
+                      size="xs"
+                      colorScheme="red"
+                      onClick={() => onDeleteClick(offlineCheckin.ticketId)}
+                    >
+                      Delete
+                    </Button>
+                  </td>
+                </tr>
+              );
+            })}
+        </tbody>
+      </OfflineCheckinTable>
+    </div>
   );
 }
+
+const Explainer = styled.div`
+  font-size: 0.8rem;
+  margin-bottom: 12px;
+`;
 
 const OfflineCheckinTable = styled.table`
   border-spacing: 5px 2px;

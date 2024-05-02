@@ -1205,3 +1205,14 @@ export interface PodboxCheckInOfflineTicketsRequest {
 }
 
 export type PodboxCheckInOfflineTicketsResponseValue = void;
+
+/**
+ * Deletion of a queued offline check-in from the admin dashboard.
+ */
+export type PodboxDeleteOfflineCheckinResponseValue = void;
+
+export interface PodboxDeleteOfflineCheckinRequest {
+  pipelineId: string;
+  ticketId: string;
+  jwt: string;
+}

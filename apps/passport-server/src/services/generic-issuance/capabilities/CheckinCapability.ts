@@ -1,6 +1,7 @@
 import {
   ActionConfigResponseValue,
   PipelineOfflineCheckin,
+  PodboxDeleteOfflineCheckinResponseValue,
   PodboxOfflineTicket,
   PodboxTicketActionPreCheckRequest,
   PodboxTicketActionRequest,
@@ -47,6 +48,9 @@ export interface CheckinCapability extends BasePipelineCapability {
     ticketIds: string[]
   ): Promise<void>;
   getQueuedOfflineCheckins(): Promise<PipelineOfflineCheckin[]>;
+  deleteOfflineCheckin(
+    ticketId: string
+  ): Promise<PodboxDeleteOfflineCheckinResponseValue>;
 }
 
 export function isCheckinCapability(

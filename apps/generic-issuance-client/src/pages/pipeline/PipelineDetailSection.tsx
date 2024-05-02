@@ -158,6 +158,7 @@ export function PipelineDetailSection({
           <AccordionButton>Queued Offline Check-ins</AccordionButton>
           <AccordionPanel>
             <PipelineQueuedOfflineCheckinsSection
+              pipelineId={pipeline.id}
               queuedOfflineCheckins={pipelineInfo.queuedOfflineCheckins}
             />
           </AccordionPanel>

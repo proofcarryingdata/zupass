@@ -2,8 +2,10 @@ import {
   GenericIssuanceDeletePipelineResponse,
   GenericIssuanceUpsertPipelineResponse,
   PipelineDefinition,
+  PodboxDeleteOfflineCheckinResult,
   requestGenericIssuanceDeletePipeline,
-  requestGenericIssuanceUpsertPipeline
+  requestGenericIssuanceUpsertPipeline,
+  requestPodboxDeleteOfflineCheckin
 } from "@pcd/passport-interface";
 import { ZUPASS_SERVER_URL } from "../constants";
 
@@ -40,4 +42,17 @@ export const deletePipeline = async (
   );
 
   return deleteResponse;
+};
+
+export const deleteOfflineCheckin = async (
+  userJWT: string,
+  pipelineId: string,
+  ticketId: string
+): Promise<PodboxDeleteOfflineCheckinResult> => {
+  return requestPodboxDeleteOfflineCheckin(
+    ZUPASS_SERVER_URL,
+    pipelineId,
+    ticketId,
+    userJWT
+  );
 };
