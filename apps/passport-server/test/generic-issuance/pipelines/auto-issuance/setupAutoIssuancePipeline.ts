@@ -145,7 +145,8 @@ export function setupAutoIssuancePipeline(): AutoIssuancePipelineTestData {
           quantity: 2,
           schedule: {
             startDate: new Date().toISOString(),
-            intervalMs: 60_000_000
+            intervalMs: 60_000,
+            endDate: new Date(Date.now() + 60_000 * 2 + 1).toISOString()
           }
         }
       ],

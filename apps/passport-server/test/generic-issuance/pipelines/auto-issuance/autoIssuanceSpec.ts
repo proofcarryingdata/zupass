@@ -79,6 +79,11 @@ describe("generic issuance - PretixPipeline", function () {
     autoIssuanceSemaphoreGroupIds
   } = setupAutoIssuancePipeline();
 
+  const autoIssuanceInterval = autoIssuancePipeline.options.autoIssuance?.[0]
+    ?.schedule?.intervalMs as number;
+  const autoIssuanceEnd = autoIssuancePipeline.options.autoIssuance?.[0]
+    ?.schedule?.endDate as string;
+
   const pipelineDefinitions = [autoIssuancePipeline];
 
   /**
@@ -229,6 +234,58 @@ describe("generic issuance - PretixPipeline", function () {
         attendeeTickets.map((t) => t.claim.ticket),
         (1 + 2) * 2 // 1 ticket + pod + 2 vouchers + 2 voucher pods
       );
+
+      {
+        // issuing again immediately does not give you further food vouchers
+        const attendeeTickets = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          autoIssuanceTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
+          AutoIssuanceAttendeeIdentity
+        );
+        expectLength(
+          attendeeTickets.map((t) => t.claim.ticket),
+          (1 + 2) * 2 // 1 ticket + pod + 2 vouchers + 2 voucher pods
+        );
+
+        const savedDate = new Date();
+        MockDate.set(
+          new Date(savedDate.getTime() + autoIssuanceInterval + 1000)
+        );
+        // issuing again after `autoIssuanceInterval` ms does give you further food vouchers
+        const attendeeTicketsAfterSomeTime = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          autoIssuanceTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
+          AutoIssuanceAttendeeIdentity
+        );
+        expectLength(
+          attendeeTicketsAfterSomeTime.map((t) => t.claim.ticket),
+          (1 + 4) * 2 // 1 ticket + pod + 4 vouchers + 4 voucher pods
+        );
+
+        MockDate.set(new Date(new Date(autoIssuanceEnd).getTime() + 1));
+        // issuing after auto issuance end yields no further food vouchers
+        const attendeeTicketsAfterEnd = await requestTicketsFromPipeline(
+          pipeline.issuanceCapability.options.feedFolder,
+          autoIssuanceTicketFeedUrl,
+          pipeline.issuanceCapability.options.feedId,
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceAttendeeEmail,
+          AutoIssuanceAttendeeIdentity
+        );
+        expectLength(
+          attendeeTicketsAfterEnd.map((t) => t.claim.ticket),
+          (1 + 4) * 2 // 1 ticket + pod + 4 vouchers + 4 voucher pods
+        );
+
+        MockDate.set(savedDate);
+      }
+
       const attendeeTicket = attendeeTickets[0];
       const attendeeFoodVoucherTicket = attendeeTickets[1];
       expectIsEdDSATicketPCD(attendeeFoodVoucherTicket);
