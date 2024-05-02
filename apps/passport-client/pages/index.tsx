@@ -41,7 +41,6 @@ import { NewPassportScreen } from "../components/screens/LoginScreens/NewPasspor
 import { PrivacyNoticeScreen } from "../components/screens/LoginScreens/PrivacyNoticeScreen";
 import { SyncExistingScreen } from "../components/screens/LoginScreens/SyncExistingScreen";
 import { MissingScreen } from "../components/screens/MissingScreen";
-import { MultiChoiceScanScreen } from "../components/screens/MultiChoiceScanScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
@@ -254,6 +253,7 @@ function useBackgroundJobs(): void {
     setupBroadcastChannel(dispatch);
     setupUsingLaserScanning();
     startBackgroundJobs();
+    dispatch({ type: "initialize-strich" });
 
     return () => {
       closeBroadcastChannel();
@@ -332,12 +332,7 @@ function RouterImpl(): JSX.Element {
           <Route path="halo" element={<HaloScreen />} />
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
-          {!appConfig.multiChoiceScanEnabled && (
-            <Route path="scan" element={<ScanScreen />} />
-          )}
-          {appConfig.multiChoiceScanEnabled && (
-            <Route path="scan" element={<MultiChoiceScanScreen />} />
-          )}
+          <Route path="scan" element={<ScanScreen />} />
           {/* This route is used by non-Devconnect tickets */}
           <Route path="verify" element={<SecondPartyTicketVerifyScreen />} />
           {/* This route is used to check in a Devconnect ticket with only
@@ -473,6 +468,7 @@ loadInitialState()
     );
   })
   .catch((error: unknown) => {
+    console.error(error);
     const root = createRoot(document.querySelector("#root") as Element);
     root.render(
       <RollbarProvider

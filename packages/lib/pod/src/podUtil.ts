@@ -113,7 +113,30 @@ export function checkPODName(name?: string): string {
 }
 
 /**
- * Checks that `value` has the run-time type given by `typeName`.
+ * Checks that `value` has the run-time type given by `typeName`.  Works for
+ * any Typescript Type.
+ *
+ * @param nameForErrorMessages the name for this value, used only for error
+ *   messages.
+ * @param value the value to check
+ * @param typeName the expected type
+ * @throws TypeError if the value does not have the expected type
+ */
+export function requireType(
+  nameForErrorMessages: string,
+  value: unknown,
+  typeName: string
+): void {
+  if (typeof value !== typeName) {
+    throw new TypeError(
+      `Invalid value for entry ${nameForErrorMessages}.  Expected type ${typeName}.`
+    );
+  }
+}
+
+/**
+ * Checks that `value` has the run-time type given by `typeName`.  Compile-time
+ * type of input/output is limited to expected POD value types.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -122,16 +145,12 @@ export function checkPODName(name?: string): string {
  * @returns the value unmodified, for easy chaining
  * @throws TypeError if the value does not have the expected type
  */
-export function requireType(
+export function requireValueType(
   nameForErrorMessages: string,
   value: string | bigint,
   typeName: string
 ): string | bigint {
-  if (typeof value !== typeName) {
-    throw new TypeError(
-      `Invalid value for entry ${nameForErrorMessages}.  Expected type ${typeName}.`
-    );
-  }
+  requireType(nameForErrorMessages, value, typeName);
   return value;
 }
 
@@ -187,10 +206,10 @@ export function checkPODValue(
   }
   switch (podValue.type) {
     case "string":
-      requireType(nameForErrorMessages, podValue.value, "string");
+      requireValueType(nameForErrorMessages, podValue.value, "string");
       break;
     case "cryptographic":
-      requireType(nameForErrorMessages, podValue.value, "bigint");
+      requireValueType(nameForErrorMessages, podValue.value, "bigint");
       checkBigintBounds(
         nameForErrorMessages,
         podValue.value,
@@ -199,7 +218,7 @@ export function checkPODValue(
       );
       break;
     case "int":
-      requireType(nameForErrorMessages, podValue.value, "bigint");
+      requireValueType(nameForErrorMessages, podValue.value, "bigint");
       checkBigintBounds(
         nameForErrorMessages,
         podValue.value,

@@ -5,7 +5,7 @@ import { existsSync as fsExists } from "fs";
 import * as path from "path";
 import {
   ProtoPODGPC,
-  ProtoPODGPCParameters,
+  ProtoPODGPCCircuitParams,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES
 } from "../src/proto-pod-gpc";
 import { batchPromise } from "../src/util";
@@ -35,7 +35,7 @@ async function main(): Promise<void> {
 
   // Form circuit names
   const circuitNames = CIRCUIT_PARAMETERS.map((params) =>
-    ProtoPODGPC.circuitNameForParams(ProtoPODGPCParameters(...params))
+    ProtoPODGPC.circuitNameForParams(ProtoPODGPCCircuitParams(...params))
   );
 
   // Form `circuits.json`.
@@ -79,7 +79,7 @@ async function main(): Promise<void> {
 
   // Form `circuitParameters.json`.
   const circuitParamJson = circuitCosts.map((cost, i) => [
-    ProtoPODGPCParameters(...CIRCUIT_PARAMETERS[i]),
+    ProtoPODGPCCircuitParams(...CIRCUIT_PARAMETERS[i]),
     cost
   ]);
 

@@ -1,3 +1,4 @@
+import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDTypeName } from "@pcd/eddsa-ticket-pcd/EdDSATicketPCD";
 import type { PipelineEdDSATicketZuAuthConfig } from "@pcd/passport-interface";
 import { constructZupassPcdGetRequestUrl } from "@pcd/passport-interface/PassportInterface";
@@ -73,13 +74,41 @@ export function constructZkTicketProofUrl(zuAuthArgs: ZuAuthArgs): string {
     proofDescription
   } = zuAuthArgs;
 
-  const eventIds = [],
-    productIds = [],
-    publicKeys = [];
+  const eventIds: string[] = [],
+    productIds: string[] = [],
+    publicKeys: EdDSAPublicKey[] = [];
 
+  /**
+   * {@link constructZupassPcdGetRequestUrl} takes a set of parameters which it
+   * uses to build a prove screen. Some of these are passed through to the
+   * `getProveDisplayOptions` function of the relevant {@link PCDPackage},
+   * which in this case is {@link ZKEdDSAEventTicketPCDPackage}.
+   *
+   * This package supports custom options, where the parameters can contain a
+   * list of event IDs and a list of product IDs. However, it is designed to
+   * support two specific scenarios:
+   * 1) the lists of event IDs and product IDs are of exactly equal length
+   * 2) the list of product IDs is empty
+   *
+   * So, the user can pass in a configuration to ZuAuth in which each item has
+   * both an event ID and a product ID, or in which each item has an event ID
+   * and no product ID, but can't mix the two.
+   */
   for (const em of config) {
+    if (em.productId) {
+      if (eventIds.length > productIds.length) {
+        throw new Error(
+          "It is not possible to mix events with product IDs and events without product IDs"
+        );
+      }
+      productIds.push(em.productId);
+    }
+    if (!em.productId && productIds.length > 0) {
+      throw new Error(
+        "It is not possible to mix events with product IDs and events without product IDs"
+      );
+    }
     eventIds.push(em.eventId);
-    productIds.push(em.productId);
     publicKeys.push(em.publicKey);
   }
 

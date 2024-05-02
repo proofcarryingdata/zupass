@@ -27,12 +27,14 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
-    "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-test-artifacts",
     "gen-circuit-parameters": "npx tsx scripts/gen-circuit-parameters.ts",
-    "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts"
+    "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts",
+    "clean-test-artifacts": "rm -rf artifacts/test"
   },
   "dependencies": {
     "@pcd/pod": "0.1.0",
+    "fastfile": "0.0.20",
     "snarkjs": "^0.7.3"
   },
   "devDependencies": {

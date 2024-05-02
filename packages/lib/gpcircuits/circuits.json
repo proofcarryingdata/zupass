@@ -1,5 +1,5 @@
 {
-  "proto-pod-gpc-1o-1e-5md": {
+  "1o-1e-5md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -21,7 +21,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc-1o-5e-8md": {
+  "1o-5e-8md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -43,7 +43,7 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc-3o-10e-8md": {
+  "3o-10e-8md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [

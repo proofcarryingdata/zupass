@@ -2,7 +2,6 @@ import { POD, PODContent, decodePublicKey, decodeSignature } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
-import { readFileSync } from "fs";
 import "mocha";
 import path from "path";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -14,18 +13,18 @@ import {
   ProtoPODGPCInputs,
   ProtoPODGPCOutputNamesType,
   ProtoPODGPCOutputs,
-  ProtoPODGPCParameters,
-  protoPODGPCParameterArray,
-  artifactPaths
+  ProtoPODGPCCircuitParams,
+  protoPODGPCCircuitParamArray,
+  array2Bits,
+  extendedSignalArray,
+  gpcArtifactPaths
 } from "../src";
 import {
   circomkit,
-  extendedSignalArray,
   ownerIdentity,
   privateKey,
   sampleEntries,
-  sampleEntries2,
-  testArray2Bits
+  sampleEntries2
 } from "./common";
 import isEqual from "lodash";
 
@@ -33,7 +32,7 @@ const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
 
-const GPC_PARAMS = ProtoPODGPCParameters(
+const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_OBJECTS,
   MAX_ENTRIES,
   MERKLE_MAX_DEPTH
@@ -304,6 +303,7 @@ function makeTestSignals(
     });
   }
   const sigOwnerEntryIndex = 1n;
+  const hasOwner = params.maxEntries > sigOwnerEntryIndex;
 
   // Build and sign test PODs.
   const pods = [];
@@ -417,18 +417,19 @@ function makeTestSignals(
       entryObjectIndex: sigEntryObjectIndex,
       entryNameHash: sigEntryNameHash,
       entryValue: sigEntryValue,
-      entryIsValueEnabled: testArray2Bits(sigEntryIsValueEnabled),
-      entryIsValueHashRevealed: testArray2Bits(sigEntryIsValueHashRevealed),
+      entryIsValueEnabled: array2Bits(sigEntryIsValueEnabled),
+      entryIsValueHashRevealed: array2Bits(sigEntryIsValueHashRevealed),
       entryEqualToOtherEntryByIndex: sigEntryEqualToOtherEntryByIndex,
       entryProofDepth: sigEntryProofDepth,
       entryProofIndex: sigEntryProofIndex,
       entryProofSiblings: sigEntryProofSiblings,
-      ownerEntryIndex:
-        params.maxEntries > sigOwnerEntryIndex
-          ? sigOwnerEntryIndex
-          : BABY_JUB_NEGATIVE_ONE,
-      ownerSemaphoreV3IdentityNullifier: ownerIdentity.nullifier,
-      ownerSemaphoreV3IdentityTrapdoor: ownerIdentity.trapdoor,
+      ownerEntryIndex: hasOwner ? sigOwnerEntryIndex : BABY_JUB_NEGATIVE_ONE,
+      ownerSemaphoreV3IdentityNullifier: hasOwner
+        ? ownerIdentity.nullifier
+        : BABY_JUB_NEGATIVE_ONE,
+      ownerSemaphoreV3IdentityTrapdoor: hasOwner
+        ? ownerIdentity.trapdoor
+        : BABY_JUB_NEGATIVE_ONE,
       ownerExternalNullifier: 42n,
       ownerIsNullfierHashRevealed: isNullifierHashRevealed ? 1n : 0n,
       globalWatermark: 1337n
@@ -453,7 +454,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
     circuit = await circomkit.WitnessTester("ProtoPODGPC", {
       file: "proto-pod-gpc",
       template: "ProtoPODGPC",
-      params: protoPODGPCParameterArray(GPC_PARAMS),
+      params: protoPODGPCCircuitParamArray(GPC_PARAMS),
       pubs: PROTO_POD_GPC_PUBLIC_INPUT_NAMES
     });
   });
@@ -493,7 +494,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
       const altCircuit = await circomkit.WitnessTester("ProtoPODGPC", {
         file: "proto-pod-gpc",
         template: "ProtoPODGPC",
-        params: protoPODGPCParameterArray(params)
+        params: protoPODGPCCircuitParamArray(params)
       });
       await altCircuit.expectPass(inputs, outputs);
     }
@@ -517,7 +518,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
       throw new Error("Missing circuit desc!");
     }
 
-    const artifacts = artifactPaths(
+    const artifacts = gpcArtifactPaths(
       path.join(__dirname, "../artifacts/test"),
       circuitDesc
     );
@@ -525,14 +526,11 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     expect(artifacts.pkeyPath).to.not.be.empty;
     expect(artifacts.vkeyPath).to.not.be.empty;
 
-    const vkey = JSON.parse(readFileSync(artifacts.vkeyPath, "utf-8"));
-
-    return { artifacts, vkey };
+    return artifacts;
   }
 
   async function groth16Test(
     artifacts: CircuitArtifactPaths,
-    vkey: object,
     inputs: ProtoPODGPCInputs,
     expectedOutputs: ProtoPODGPCOutputs
   ): Promise<void> {
@@ -551,7 +549,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     expect(publicSignals).to.deep.eq(expectedPublicSignals);
 
     const verified = await ProtoPODGPC.verify(
-      vkey,
+      artifacts.vkeyPath,
       proof,
       ProtoPODGPC.filterPublicInputs(inputs),
       outputs
@@ -565,7 +563,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   });
 
   it("should accept dynamic input", async () => {
-    const { artifacts, vkey } = prepGroth16Test(GPC_PARAMS);
+    const { artifacts, _vkey } = prepGroth16Test(GPC_PARAMS);
 
     let { inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
@@ -573,13 +571,13 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     );
     expect(inputs).to.deep.eq(sampleInput);
     expect(outputs).to.deep.eq(sampleOutput);
-    await groth16Test(artifacts, vkey, inputs, outputs);
+    await groth16Test(artifacts, inputs, outputs);
 
     ({ inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
       false /*isNullifierHashRevealed*/
     ));
-    await groth16Test(artifacts, vkey, inputs, outputs);
+    await groth16Test(artifacts, inputs, outputs);
   });
 
   it("should accept with each circuit in family", async () => {
@@ -593,12 +591,12 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
         continue;
       }
 
-      const { artifacts, vkey } = prepGroth16Test(cd);
+      const { artifacts, _vkey } = prepGroth16Test(cd);
       const { inputs, outputs } = makeTestSignals(
         cd,
         true /*isNullifierHashRevealed*/
       );
-      await groth16Test(artifacts, vkey, inputs, outputs);
+      await groth16Test(artifacts, inputs, outputs);
     }
   });
 });

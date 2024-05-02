@@ -1,8 +1,12 @@
 import { Groth16Proof, groth16 } from "snarkjs";
 import { CircuitDesc, CircuitSignal } from "./types";
 import circuitParamJson from "./circuitParameters.json";
+import { loadVerificationKey } from "./util";
 
-const PROTO_POD_GPC_FAMILY_NAME = "proto-pod-gpc";
+/**
+ * Name identifier for the Proto-POD-GPC family of circuits.
+ */
+export const PROTO_POD_GPC_FAMILY_NAME = "proto-pod-gpc";
 
 /**
  * Full set of input signals to a ProtoPODGPC proof.  See comments for
@@ -131,9 +135,9 @@ export type ProtoPODGPCOutputNamesType = [
 ];
 
 /**
- * Type containing proto POD GPC parameters.
+ * Configurable size parameters for a ProtoPODGPC circuit.
  */
-export type ProtoPODGPCParameters = {
+export type ProtoPODGPCCircuitParams = {
   /**
    * Number of POD objects which can be included in a proof.
    */
@@ -145,19 +149,19 @@ export type ProtoPODGPCParameters = {
   maxEntries: number;
 
   /**
-   * Max depth of POD merkle tree.  Max entries in any object is log2(depth-1).
+   * Max depth of POD merkle tree.  Max entries in any object is 2^(depth-1).
    */
   merkleMaxDepth: number;
 };
 
 /**
- * ProtoPODGPCParameter constructor.
+ * ProtoPODGPCCircuitParams constructor.
  */
-export function ProtoPODGPCParameters(
+export function ProtoPODGPCCircuitParams(
   maxObjects: number,
   maxEntries: number,
   merkleMaxDepth: number
-): ProtoPODGPCParameters {
+): ProtoPODGPCCircuitParams {
   return { maxObjects, maxEntries, merkleMaxDepth };
 }
 
@@ -165,8 +169,8 @@ export function ProtoPODGPCParameters(
  * Mapping taking a ProtoPODGPCParameter to its array representation.
  * This is necessary for invocations of the circuits themselves.
  */
-export function protoPODGPCParameterArray(
-  params: ProtoPODGPCParameters
+export function protoPODGPCCircuitParamArray(
+  params: ProtoPODGPCCircuitParams
 ): number[] {
   return [params.maxObjects, params.maxEntries, params.merkleMaxDepth];
 }
@@ -174,7 +178,7 @@ export function protoPODGPCParameterArray(
 /**
  * Circuit description with parameters specific to ProtoPODGPC family.
  */
-export type ProtoPODGPCCircuitDesc = CircuitDesc & ProtoPODGPCParameters;
+export type ProtoPODGPCCircuitDesc = CircuitDesc & ProtoPODGPCCircuitParams;
 
 /**
  * Utility functions for the ProtoPODGPC family of circuits.
@@ -220,7 +224,7 @@ export class ProtoPODGPC {
   /**
    * Verify a proof for a circuit in this library.
    *
-   * @param vkey verification key imported from JSON file.
+   * @param vkeyPath path to verification key as a JSON file.
    *   See {@link artifactPaths}.
    * @param proof Groth16 proof.
    * @param publicInputs claimed public inputs to the circuit.
@@ -230,15 +234,16 @@ export class ProtoPODGPC {
    * @returns true if the proof is valid
    */
   public static async verify(
-    vkey: object,
+    vkeyPath: string,
     proof: Groth16Proof,
     publicInputs: ProtoPODGPCPublicInputs,
     outputs: ProtoPODGPCOutputs
   ): Promise<boolean> {
     const publicSignals = ProtoPODGPC.makePublicSignals(publicInputs, outputs);
     return await groth16.verify(
-      vkey,
-      // Snarkjs actually allows bigints, but @types/snarkjs doesn't know that.
+      await loadVerificationKey(vkeyPath),
+      // Snarkjs actually allows bigints (via call to stringifyBigInts in
+      // ffjavascript), but @types/snarkjs doesn't know that.
       publicSignals as unknown as string[],
       proof
     );
@@ -308,10 +313,6 @@ export class ProtoPODGPC {
   }
 
   /**
-   * , and returns its circuit description.  Returns
-   * if there is no large enough circuit.
-   */
-  /**
    * Picks the smallest available circuit in this family which can handle the
    * size parameters of a desired configuration.
    *
@@ -320,15 +321,11 @@ export class ProtoPODGPC {
    *   the required parameters.
    */
   public static pickCircuit(
-    params: ProtoPODGPCParameters
+    requiredParameters: ProtoPODGPCCircuitParams
   ): ProtoPODGPCCircuitDesc | undefined {
-    const paramArray = protoPODGPCParameterArray(params);
-
     for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
       if (
-        protoPODGPCParameterArray(circuitDesc).every(
-          (param, i) => param >= paramArray[i]
-        )
+        ProtoPODGPC.circuitMeetsRequirements(circuitDesc, requiredParameters)
       ) {
         return circuitDesc;
       }
@@ -336,14 +333,57 @@ export class ProtoPODGPC {
     return undefined;
   }
 
-  public static circuitNameForParams(
-    circuitParams: ProtoPODGPCParameters
+  /**
+   * Finds the description of a circuit in this family by name.
+   *
+   * @param familyName the circuit family name
+   * @param circuitName the name of the circuit
+   * @returns the circuit description, or undefined if the name is
+   *   unrecognized.
+   */
+  public static findCircuit(
+    familyName: string,
+    circuitName: string
+  ): ProtoPODGPCCircuitDesc | undefined {
+    if (familyName && familyName !== PROTO_POD_GPC_FAMILY_NAME) {
+      return undefined;
+    }
+    for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
+      if (circuitName && circuitDesc.name === circuitName) {
+        return circuitDesc;
+      }
+    }
+    return undefined;
+  }
+
+  /**
+   * Checks whether a described circuit can meet a required set of parameters.
+   * This will be true if each of the circuit's parameters is greater than or
+   * equal to the required value.
+   *
+   * @param circuitDesc description of the circuit to check
+   * @param requiredParams the min required value of each circuit parameter
+   * @returns `true` if the circuit meets the requirements.
+   */
+  public static circuitMeetsRequirements(
+    circuitDesc: ProtoPODGPCCircuitDesc,
+    requiredParams: ProtoPODGPCCircuitParams
+  ): boolean {
+    return (
+      circuitDesc.maxObjects >= requiredParams.maxObjects &&
+      circuitDesc.maxEntries >= requiredParams.maxEntries &&
+      circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth
+    );
+  }
+
+  private static circuitNameForParams(
+    params: ProtoPODGPCCircuitParams
   ): string {
-    return `${PROTO_POD_GPC_FAMILY_NAME}-${circuitParams.maxObjects}o-${circuitParams.maxEntries}e-${circuitParams.merkleMaxDepth}md`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md`;
   }
 
   private static circuitDescForParams(
-    circuitParams: ProtoPODGPCParameters,
+    circuitParams: ProtoPODGPCCircuitParams,
     cost: number
   ): ProtoPODGPCCircuitDesc {
     return {
@@ -359,8 +399,8 @@ export class ProtoPODGPC {
    * in the form of pairs consisting of the circuit parameters
    * and the cost of the circuit in constraints.
    */
-  static CIRCUIT_PARAMETERS: [ProtoPODGPCParameters, number][] =
-    circuitParamJson as [ProtoPODGPCParameters, number][];
+  static CIRCUIT_PARAMETERS: [ProtoPODGPCCircuitParams, number][] =
+    circuitParamJson as [ProtoPODGPCCircuitParams, number][];
 
   /**
    * List of pre-compiled circuits, sorted in order of increasing cost.
@@ -370,7 +410,7 @@ export class ProtoPODGPC {
   // TODO(POD-P2): Pick convenient circuit sizes for MVP.
   public static CIRCUIT_FAMILY: ProtoPODGPCCircuitDesc[] =
     ProtoPODGPC.CIRCUIT_PARAMETERS.sort((a, b) => a[1] - b[1]).map(
-      (pair: [ProtoPODGPCParameters, number]): ProtoPODGPCCircuitDesc =>
+      (pair: [ProtoPODGPCCircuitParams, number]): ProtoPODGPCCircuitDesc =>
         ProtoPODGPC.circuitDescForParams(pair[0], pair[1])
     );
 }
