@@ -61,16 +61,19 @@ export function gpcArtifactPaths(
  * then the last chunk will be of length `arr.length % n`.
  */
 export function toChunks<A>(arr: A[], n: number): A[][] {
-  return arr.reduce(
-    (chunks: A[][], a: A) => {
-      const lastChunkIndex = chunks.length - 1;
-      const lastChunk = chunks[lastChunkIndex];
-      return lastChunk.length < n // If the last chunk is incomplete
-        ? chunks.slice(0, lastChunkIndex).concat([lastChunk.concat([a])]) // Append the current value to it.
-        : chunks.concat([[a]]); // Else start a new chunk with the current value in it.
-    },
-    [[]]
-  );
+  const chunks: A[][] = [[]];
+
+  for (const a of arr) {
+    const lastChunkIndex = chunks.length - 1;
+    const lastChunk = chunks[lastChunkIndex];
+    if (lastChunk.length < n) {
+      lastChunk.push(a);
+    } else {
+      chunks.push([a]);
+    }
+  }
+
+  return chunks;
 }
 
 /**
