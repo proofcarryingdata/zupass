@@ -136,11 +136,11 @@ export function CreatePasswordScreen(): JSX.Element | null {
           />
         </TextCenter>
         <Spacer h={24} />
-        <Button style="danger" onClick={onSkipPassword}>
-          I understand
-        </Button>
+        <Button onClick={onSkipPassword}>I understand</Button>
         <Spacer h={8} />
-        <Button onClick={() => setSkipConfirm(false)}>Cancel</Button>
+        <Button style="secondary" onClick={() => setSkipConfirm(false)}>
+          Cancel
+        </Button>
       </>
     );
   } else {
