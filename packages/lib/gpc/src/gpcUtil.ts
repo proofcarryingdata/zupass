@@ -116,6 +116,16 @@ export function checkPODEntryIdentifier(
 }
 
 /**
+ * Creates a PODEntryIdentifier for a named entry in a named object.
+ */
+export function makePODEntryIdentifier(
+  objName: PODName,
+  entryName: PODName
+): PODEntryIdentifier {
+  return `${objName}.${entryName}`;
+}
+
+/**
  * Splits a PODEntryIdentifier into its component parts with friendly names
  * for easy access.
  *

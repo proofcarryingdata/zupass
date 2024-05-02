@@ -297,11 +297,13 @@ export type GPCRevealedClaims = {
 
   /**
    * Revelaed information about the owner specified in the proof, if any.
-   * The owner's identity may  be linked to individual entries of each POD, but
-   * this is optional as specified in configuration.
    *
    * The owner's identity is never directly revealed.  Instead if a nullifier
    * was calcluated, the information required to interpret it is included here.
+   *
+   * The owner's identity may also be linked to individual entries of each POD,
+   * but this is optional as specified in configuration.  The presence or
+   * absence of this field is unaffected by the entry configuration.
    */
   owner?: {
     // TODO(POD-P1): Change the code to match the structure of the owner subobject.

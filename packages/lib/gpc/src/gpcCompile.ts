@@ -16,15 +16,33 @@ import {
 } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import {
-  GPCProofConfig,
+  GPCBoundConfig,
   GPCProofInputs,
   GPCRevealedClaims,
   GPCRevealedObjectClaims
 } from "./gpcTypes";
 import { makeWatermarkSignal } from "./gpcUtil";
 
+/**
+ * Converts a high-level description of a GPC proof to be generated into
+ * the specific circuit signals needed to generate the proof with a specific
+ * circuit.
+ * 
+ * This code assumes that the arguments have already been checked to be
+ * well-formed represent a valid proof configuration using
+ * {@link checkProofArgs}, and that the selected circuit fits the requirements
+ * of the proof using {@link checkCircuitParameters}.  Any invalid input might
+ * result in errors thrown from TypeScript, or might simply result in a failure
+ * to generate a proof.
+ * 
+ * @param proofConfig the configuration for the proof
+ * @param proofInputs the inputs for the proof
+ * @param circuitDesc the description of the specific circuit to use for
+ *   the proof.
+ * @returns circuit input signals for proof generation
+ */
 export function compileProofConfig(
-  proofConfig: GPCProofConfig,
+  proofConfig: GPCBoundConfig,
   proofInputs: GPCProofInputs,
   circuitDesc: ProtoPODGPCCircuitDesc
 ): ProtoPODGPCInputs {
@@ -258,8 +276,27 @@ export function compileProofConfig(
   };
 }
 
+/**
+ * Converts a high-level description of a GPC proof already generated into
+ * the specific circuit signals needed to verify the proof with a specific
+ * circuit.
+ * 
+ * This code assumes that the arguments have already been checked to be
+ * well-formed represent a valid proof configuration using
+ * {@link checkVerifyArgs}, and that the selected circuit fits the requirements
+ * of the proof using {@link checkCircuitParameters}.  Any invalid input might
+ * result in errors thrown from TypeScript, or might simply result in a failure
+ * to verify a proof.
+ * 
+ * @param verifyConfig the configuration for the proof
+ * @param verifyRevealed the revealed inputs and outputs from the proof
+ * @param circuitDesc the description of the specific circuit to use for
+ *   the proof.
+ * @returns circuit public input and output signals which match what was
+ *   produced at proving time
+ */
 export function compileVerifyConfig(
-  verifyConfig: GPCProofConfig,
+  verifyConfig: GPCBoundConfig,
   verifyRevealed: GPCRevealedClaims,
   circuitDesc: ProtoPODGPCCircuitDesc
 ): {
@@ -465,8 +502,23 @@ export function compileVerifyConfig(
   };
 }
 
+/**
+ * Creates a high-level description of the public claims of a proof, by
+ * redacting information from the proof's inputs and outputs.
+ * 
+ * This code assumes that the arguments have already been checked to be
+ * well-formed represent a valid proof configuration using
+ * {@link checkProofArgs} and the outputs come from a successful proof.  Any
+ * invalid input might result in errors thrown from TypeScript, or might simply
+ * result in claims which will fail to verify later.
+ * 
+ * @param proofConfig the configuration of the proof
+ * @param proofInputs the inputs to the proof
+ * @param circuitOutputs the outputs of the proof circuit
+ * @returns a redacted view of inputs and outputs
+ */
 export function makeRevealedClaims(
-  proofConfig: GPCProofConfig,
+  proofConfig: GPCBoundConfig,
   proofInputs: GPCProofInputs,
   circuitOutputs: ProtoPODGPCOutputs
 ): GPCRevealedClaims {
