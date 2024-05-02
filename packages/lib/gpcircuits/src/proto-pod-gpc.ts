@@ -1,6 +1,6 @@
 import { Groth16Proof, groth16 } from "snarkjs";
-import { CircuitDesc, CircuitSignal } from "./types";
 import circuitParamJson from "./circuitParameters.json";
+import { CircuitDesc, CircuitSignal } from "./types";
 import { loadVerificationKey } from "./util";
 
 /**
@@ -166,13 +166,25 @@ export function ProtoPODGPCCircuitParams(
 }
 
 /**
- * Mapping taking a ProtoPODGPCParameter to its array representation.
+ * Mapping taking a ProtoPODGPCCircuitParams to its array representation.
+ * Inverse of {@link arrayToProtoPODGPCCircuitParam}.
  * This is necessary for invocations of the circuits themselves.
  */
 export function protoPODGPCCircuitParamArray(
   params: ProtoPODGPCCircuitParams
 ): number[] {
   return [params.maxObjects, params.maxEntries, params.merkleMaxDepth];
+}
+
+/**
+ * Mapping taking an array representation of parameters to
+ * a ProtoPODGPCCircuitParams object.  Inverse of
+ * {@link protoPODGPCCircuitParamArray}.
+ */
+export function arrayToProtoPODGPCCircuitParam(
+  params: number[]
+): ProtoPODGPCCircuitParams {
+  return ProtoPODGPCCircuitParams(params[0], params[1], params[2]);
 }
 
 /**
@@ -376,9 +388,29 @@ export class ProtoPODGPC {
     );
   }
 
-  private static circuitNameForParams(
-    params: ProtoPODGPCCircuitParams
-  ): string {
+  /**
+   * Calculates the merged set of parameters which meets the unified (maximum)
+   * requirements of both inputs.
+   *
+   * @param rp1 first set of required parameters
+   * @param rp2 second set of required paremeters
+   * @returns unified (maximum) parameters
+   */
+  public static mergeRequiredParams(
+    rp1: ProtoPODGPCCircuitParams,
+    rp2: ProtoPODGPCCircuitParams
+  ): ProtoPODGPCCircuitParams {
+    const array1 = protoPODGPCCircuitParamArray(rp1);
+    const array2 = protoPODGPCCircuitParamArray(rp2);
+    return arrayToProtoPODGPCCircuitParam(
+      array1.map((p, i) => Math.max(p, array2[i]))
+    );
+  }
+
+  /**
+   * Generates a circuit name based on parameters.
+   */
+  public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
     return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md`;
   }
 
