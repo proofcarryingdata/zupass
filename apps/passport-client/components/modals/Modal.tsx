@@ -9,7 +9,6 @@ import { CircleButton } from "../core/Button";
 import { Overscroll } from "../shared/Overscroll";
 import { AnotherDeviceChangedPasswordModal } from "./AnotherDeviceChangedPasswordModal";
 import { ChangedPasswordModal } from "./ChangedPasswordModal";
-import { ConfirmSkipSetupModal } from "./ConfirmSkipSetupModal";
 import { FrogCryptoExportPCDsModal } from "./FrogCryptoExportPCDsModal";
 import { FrogCryptoUpdateTelegramModal } from "./FrogCryptoUpdateTelegramModal";
 import { InfoModal } from "./InfoModal";
@@ -77,7 +76,6 @@ function isModalDismissable(modal: AppState["modal"]): boolean {
     "another-device-changed-password",
     "upgrade-account-modal",
     "require-add-password",
-    "confirm-setup-later",
     "privacy-notice"
   ];
 
@@ -101,8 +99,6 @@ function getModalBody(
       return <ChangedPasswordModal />;
     case "resolve-subscription-error":
       return <ResolveSubscriptionErrorModal />;
-    case "confirm-setup-later":
-      return <ConfirmSkipSetupModal onConfirm={modal.onConfirm} />;
     case "upgrade-account-modal":
       return <UpgradeAccountModal />;
     case "require-add-password":

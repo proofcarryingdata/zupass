@@ -31,7 +31,6 @@ export interface AppState {
     | { modalType: "changed-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "resolve-subscription-error" }
-    | { modalType: "confirm-setup-later"; onConfirm: () => void }
     | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
     | { modalType: "none" }
