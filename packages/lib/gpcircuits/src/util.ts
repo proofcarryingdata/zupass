@@ -1,3 +1,4 @@
+import { CircomkitConfig } from "circomkit";
 import * as fastfile from "fastfile";
 import { PathLike } from "fs";
 import path from "path";
@@ -169,7 +170,7 @@ export function array2Bits(boolArray: bigint[]): bigint {
 export function loadCircomkitConfig(
   gpcircuitsPackagePath: string,
   readFileSync: (path: PathLike, options: BufferEncoding) => string
-): object {
+): Partial<CircomkitConfig> {
   function replaceConfigPath(
     configValue: string,
     gpcircuitsPath: string
@@ -199,5 +200,5 @@ export function loadCircomkitConfig(
       readFileSync(path.join(gpcircuitsPackagePath, "circomkit.json"), "utf-8")
     ),
     gpcircuitsPackagePath
-  );
+  ) as Partial<CircomkitConfig>;
 }
