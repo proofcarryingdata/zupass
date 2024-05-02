@@ -6,6 +6,7 @@ import * as path from "path";
 import {
   ProtoPODGPC,
   ProtoPODGPCCircuitParams,
+  PROTO_POD_GPC_FAMILY_NAME,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES
 } from "../src/proto-pod-gpc";
 import { batchPromise } from "../src/util";
@@ -34,8 +35,11 @@ async function main(): Promise<void> {
   const circomkit = new Circomkit(circomkitJson);
 
   // Form circuit names
-  const circuitNames = CIRCUIT_PARAMETERS.map((params) =>
-    ProtoPODGPC.circuitNameForParams(ProtoPODGPCCircuitParams(...params))
+  const circuitNames = CIRCUIT_PARAMETERS.map(
+    (params) =>
+      PROTO_POD_GPC_FAMILY_NAME +
+      "_" +
+      ProtoPODGPC.circuitNameForParams(ProtoPODGPCCircuitParams(...params))
   );
 
   // Form `circuits.json`.

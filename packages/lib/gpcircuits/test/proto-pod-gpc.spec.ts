@@ -508,10 +508,9 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
 });
 
 describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", function () {
-  function prepGroth16Test(params: ProtoPODGPCParameters): {
-    artifacts: CircuitArtifactPaths;
-    vkey: object;
-  } {
+  function prepGroth16Test(
+    params: ProtoPODGPCParameters
+  ): CircuitArtifactPaths {
     const circuitDesc = ProtoPODGPC.pickCircuit(params);
     expect(circuitDesc).to.not.be.undefined;
     if (!circuitDesc) {
@@ -558,12 +557,12 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   }
 
   it("should accept a sample input", async () => {
-    const { artifacts, vkey } = prepGroth16Test(GPC_PARAMS);
-    await groth16Test(artifacts, vkey, sampleInput, sampleOutput);
+    const artifacts = prepGroth16Test(GPC_PARAMS);
+    await groth16Test(artifacts, sampleInput, sampleOutput);
   });
 
   it("should accept dynamic input", async () => {
-    const { artifacts, _vkey } = prepGroth16Test(GPC_PARAMS);
+    const artifacts = prepGroth16Test(GPC_PARAMS);
 
     let { inputs, outputs } = makeTestSignals(
       GPC_PARAMS,
@@ -591,7 +590,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
         continue;
       }
 
-      const { artifacts, _vkey } = prepGroth16Test(cd);
+      const artifacts = prepGroth16Test(cd);
       const { inputs, outputs } = makeTestSignals(
         cd,
         true /*isNullifierHashRevealed*/
