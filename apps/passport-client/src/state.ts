@@ -31,7 +31,6 @@ export interface AppState {
     | { modalType: "changed-password" }
     | { modalType: "another-device-changed-password" }
     | { modalType: "resolve-subscription-error" }
-    | { modalType: "confirm-setup-later"; onConfirm: () => void }
     | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
     | { modalType: "none" }
@@ -125,6 +124,8 @@ export interface AppState {
     imported?: number;
     error?: string;
   };
+
+  strichSDKstate: "initialized" | "error" | undefined;
 }
 
 export interface AppError {

@@ -1,6 +1,5 @@
 {
   "name": "@pcd/pod-pcd",
-  "private": true,
   "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
@@ -20,6 +19,7 @@
   },
   "files": [
     "dist",
+    "./CHANGELOG.md",
     "./README.md",
     "./LICENSE"
   ],

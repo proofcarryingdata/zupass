@@ -25,6 +25,12 @@ export type Ballot = {
   isPublic: boolean;
 };
 
+export interface ObjectOption {
+  text: string;
+  externalLink: string;
+  imageUrl?: string;
+}
+
 /**
  * Model Poll
  */
@@ -32,6 +38,9 @@ export type Poll = {
   id: string;
   createdAt: Date;
   body: string;
+  /**
+   * Either a string or a {@code JSON.stringify}'d {@link ObjectOption}
+   */
   options: string[];
   expiry: Date;
   ballotURL: number | null;

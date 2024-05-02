@@ -1,4 +1,5 @@
 import { KnownPublicKeyType, KnownTicketGroup } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { Pool } from "postgres-pool";
 import { IDevconnectPretixAPI } from "../apis/devconnect/devconnectPretixAPI";
 import {
@@ -15,7 +16,6 @@ import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { OrganizerSync } from "./devconnect/organizerSync";
 import { ZUPASS_TICKET_PUBLIC_KEY_NAME } from "./issuanceService";
-import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { setError, traced } from "./telemetryService";
 

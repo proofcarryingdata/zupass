@@ -27,6 +27,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "lodash": "^4.17.21",
     "url-join": "^4.0.1"
   },
   "devDependencies": {

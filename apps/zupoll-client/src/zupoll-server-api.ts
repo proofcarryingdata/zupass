@@ -39,7 +39,7 @@ export async function createBallot(
 
 export async function voteBallot(
   request: MultiVoteRequest,
-  accessToken: string
+  accessToken: string | undefined
 ): Promise<Response | undefined> {
   if (!accessToken) return undefined;
 
@@ -134,11 +134,9 @@ export async function listBallots(
 }
 
 export async function listBallotPolls(
-  accessToken: string | null,
+  accessToken: string | null | undefined,
   ballotURL: string
 ): Promise<Response | undefined> {
-  if (!accessToken) return undefined;
-
   const url = urljoin(ZUPOLL_SERVER_URL, `ballot-polls`, ballotURL);
 
   try {
@@ -154,7 +152,7 @@ export async function listBallotPolls(
   }
 }
 
-export async function getLatestSemaphoreGroupHash(
+export async function getLatestSemaphoreGroupRoot(
   url: string
 ): Promise<string | null> {
   const res = await fetch(url);

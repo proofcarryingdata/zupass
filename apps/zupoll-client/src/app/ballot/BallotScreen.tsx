@@ -1,3 +1,5 @@
+"use client";
+
 import ErrorDialog from "@/components/ui/ErrorDialog";
 import { Button } from "@/components/ui/button";
 import { Skeleton } from "@/components/ui/skeleton";
@@ -23,7 +25,7 @@ export function BallotScreen({
   logout
 }: {
   ballotURL: string;
-  loginState: LoginState;
+  loginState: LoginState | undefined;
   logout: (ballotURL?: string) => void;
 }) {
   const router = useRouter();
@@ -52,7 +54,7 @@ export function BallotScreen({
   useEffect(() => {
     async function getBallotPolls() {
       setLoadingPolls(true);
-      const res = await listBallotPolls(loginState.token, ballotURL);
+      const res = await listBallotPolls(loginState?.token, ballotURL);
       setLoadingPolls(false);
 
       if (res === undefined) {
@@ -141,7 +143,7 @@ export function BallotScreen({
     const url = new URL(window.location.href);
     // Use URLSearchParams to get the proof query parameter
     const proofString = url.searchParams.get("proof");
-    const voteString = url.searchParams.get("vote");
+    const voteString = localStorage.getItem("pending-vote");
     if (proofString && voteString) {
       const voteStr = JSON.parse(voteString) as {
         polls: PollWithCounts[];
@@ -166,8 +168,8 @@ export function BallotScreen({
 
   // check voting status
   useEffect(() => {
-    setCanVote(!votedOn(ballotId) && !expired);
-  }, [expired, ballotId, refresh]);
+    setCanVote(!votedOn(ballotId) && !expired && !!loginState);
+  }, [expired, ballotId, refresh, loginState]);
 
   // update votes for polls
   const onVoted = (pollId: string, voteIdx: number) => {
@@ -259,7 +261,7 @@ export function BallotScreen({
                 variant={"creative"}
                 onClick={createBallotVotePCD}
                 className="w-full"
-                disabled={pollToVote.size === 0}
+                disabled={pollToVote.size !== polls.length}
               >
                 Submit Votes
               </Button>
@@ -269,6 +271,18 @@ export function BallotScreen({
                 designed to prevent double-voting.
               </TextContainer>
             </>
+          )}
+
+          {!loginState && (
+            <Button
+              variant={"creative"}
+              className="w-full"
+              onClick={() => {
+                window.location.href = "/";
+              }}
+            >
+              Log In to Vote
+            </Button>
           )}
         </div>
       )}

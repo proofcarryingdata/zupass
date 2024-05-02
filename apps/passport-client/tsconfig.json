@@ -26,6 +26,9 @@
   ],
   "references": [
     {
+      "path": "../../packages/lib/client-shared"
+    },
+    {
       "path": "../../packages/pcd/eddsa-frog-pcd"
     },
     {

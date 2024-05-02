@@ -61,6 +61,7 @@ import {
   SemaphoreSignaturePCD,
   SemaphoreSignaturePCDPackage
 } from "@pcd/semaphore-signature-pcd";
+import { RollbarService } from "@pcd/server-shared";
 import { ONE_HOUR_MS, getErrorMessage } from "@pcd/util";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import { Response } from "express";
@@ -106,7 +107,6 @@ import {
 import { zuzaluRoleToProductId } from "../util/zuzaluUser";
 import { MultiProcessService } from "./multiProcessService";
 import { PersistentCacheService } from "./persistentCacheService";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 export const ZUPASS_TICKET_PUBLIC_KEY_NAME = "Zupass";

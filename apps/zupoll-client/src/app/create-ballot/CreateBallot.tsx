@@ -1,4 +1,6 @@
+import ImportDialog, { ImportedQuestions } from "@/components/ui/ImportDialog";
 import { LoadingPlaceholderCard } from "@/components/ui/LoadingPlaceholder";
+import { Switch } from "@/components/ui/switch";
 import { BallotConfig } from "@pcd/zupoll-shared";
 import { useSearchParams } from "next/navigation";
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
@@ -18,7 +20,6 @@ import {
 } from "../../@/components/ui/select";
 import { Subtitle, Title } from "../../@/components/ui/text";
 import { Poll } from "../../api/prismaTypes";
-import { BallotSignal } from "../../api/requestTypes";
 import { APP_CONFIG } from "../../env";
 import { LoginState, ZupollError } from "../../types";
 import { USE_CREATE_BALLOT_REDIRECT } from "../../util";
@@ -42,6 +43,7 @@ export function CreateBallot({
   );
   const [ballotFromUrl, setBallotFromUrl] = useState<BallotFromUrl>();
   const [pcdFromUrl, setPcdFromUrl] = useState("");
+  const [importDialogOpen, setImportDialogOpen] = useState(false);
 
   const [useLastBallot, setUseLastBallot] = useState(false);
   const getDateString = (date: Date) => {
@@ -69,7 +71,7 @@ export function CreateBallot({
   useEffect(() => {
     // Use URLSearchParams to get the proof query parameter
     const proofString = query?.get("proof") as string;
-    const ballotString = query?.get("ballot") as string;
+    const ballotString = localStorage.getItem("pending-ballot");
     if (proofString && ballotString) {
       // Decode the URL-encoded string
       const decodedProofString = decodeURIComponent(proofString);
@@ -77,9 +79,7 @@ export function CreateBallot({
       const proofObject = JSON.parse(decodedProofString);
       const pcdStr = JSON.stringify(proofObject);
 
-      const ballot = JSON.parse(
-        decodeURIComponent(ballotString)
-      ) as BallotFromUrl;
+      const ballot = JSON.parse(ballotString) as BallotFromUrl;
       console.log(`[RECEIVED BALLOT]`, ballot);
       setPcdFromUrl(pcdStr);
       setBallotFromUrl(ballot);
@@ -91,20 +91,24 @@ export function CreateBallot({
       [
         ...(loginState.config.ballotConfigs ?? []),
         ...loginState.config.canCreateBallotTypes.map((t) => BALLOT_CONFIGS[t])
-      ].filter((c) => c != null),
+      ]
+        .filter((c) => c != null)
+        .filter((c) => c.canCreate !== false),
     [loginState.config.ballotConfigs, loginState.config.canCreateBallotTypes]
   );
 
   const [selectedBallotConfig, setSelectedBallotConfig] = useState<
     BallotConfig | undefined
-  >(possibleBallotConfigs[0]);
+  >(possibleBallotConfigs.find((c) => c.isDefault) ?? possibleBallotConfigs[0]);
 
+  const [isPublic, setIsPublic] = useState(false);
   const { loadingVoterGroupUrl, createBallotPCD } = useCreateBallot({
     ballotTitle,
     ballotDescription,
     ballotConfig: selectedBallotConfig,
     expiry: ballotExpiry,
     polls,
+    isPublic,
     onError,
     setServerLoading,
     loginState,
@@ -120,25 +124,6 @@ export function CreateBallot({
     stableCreateRef.current = createBallotPCD;
   }, [createBallotPCD]);
 
-  useEffect(() => {
-    if (useLastBallot) {
-      const ballotSignalString = localStorage.getItem("lastBallotSignal");
-      const ballotPollsString = localStorage.getItem("lastBallotPolls");
-
-      if (ballotSignalString && ballotPollsString) {
-        const ballotSignal = JSON.parse(ballotSignalString) as BallotSignal;
-        console.log({ ballotSignal });
-        setBallotTitle(ballotSignal.ballotTitle);
-        setBallotDescription(ballotSignal.ballotDescription);
-        setBallotExpiry(new Date(ballotSignal.expiry));
-
-        const ballotPolls = JSON.parse(ballotPollsString) as Poll[];
-        console.log({ ballotPolls });
-        setPolls(ballotPolls);
-      }
-    }
-  }, [useLastBallot]);
-
   const setExpiry = useCallback((ms: number) => {
     setBallotExpiry(new Date(getDateString(new Date(Date.now() + ms))));
   }, []);
@@ -146,7 +131,7 @@ export function CreateBallot({
   if (serverLoading) {
     return (
       <LoadingPlaceholderCard>
-        <div className="text-center m-4">Creating Ballot</div>
+        <div className="text-center m-4">Creating Poll</div>
       </LoadingPlaceholderCard>
     );
   }
@@ -161,9 +146,32 @@ export function CreateBallot({
         </p>
       )}
 
+      <ImportDialog
+        show={importDialogOpen}
+        close={function (): void {
+          setImportDialogOpen(false);
+        }}
+        onImported={(imported: ImportedQuestions) => {
+          setImportDialogOpen(false);
+          setBallotTitle("Hackathon Voting");
+          setBallotDescription("Vote on your favorite hackathon project!");
+          setBallotExpiry(new Date(Date.now() + 60 * 1000 * 60 * 24));
+          setPolls([
+            {
+              ballotURL: 0,
+              body: "Choose your favorite project below.",
+              createdAt: new Date(),
+              expiry: new Date(Date.now() + 60 * 1000 * 60 * 24),
+              id: "0",
+              options: imported.questions.map((q) => q)
+            }
+          ]);
+        }}
+      />
+
       <Card>
         <CardHeader>
-          <Title className="mb-0">New Ballot</Title>
+          <Title className="mb-0">Create a Poll</Title>
         </CardHeader>
         <CardContent style={{ marginTop: "-20px" }}>
           <div style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}>
@@ -263,7 +271,7 @@ export function CreateBallot({
                   }, 1);
                 }}
               >
-                Create Long Ballot
+                Create Long Poll
               </Button>
               <Button
                 style={APP_CONFIG.debugToolsEnabled ? {} : { display: "none" }}
@@ -301,7 +309,7 @@ export function CreateBallot({
                   }, 1);
                 }}
               >
-                Create Regular Ballot
+                Create Poll
               </Button>
             </div>
           </div>
@@ -335,7 +343,15 @@ export function CreateBallot({
               const parsedDate = Date.parse(newExpiry);
               const dateIsValid = !isNaN(parsedDate);
               if (dateIsValid) {
-                setBallotExpiry(new Date(e.target.value));
+                const minTimestamp = Date.now();
+                const maxTimestamp = Date.now() + 1000 * 60 * 60 * 24 * 365 * 5;
+                const selectedDate = new Date(e.target.value);
+                const clampedTimestamp = Math.max(
+                  minTimestamp,
+                  Math.min(maxTimestamp, selectedDate.getTime())
+                );
+                const clampedDate = new Date(clampedTimestamp);
+                setBallotExpiry(clampedDate);
               }
             }}
           />
@@ -387,37 +403,38 @@ export function CreateBallot({
               display: possibleBallotConfigs.length > 1 ? undefined : "none"
             }}
           >
-            <Subtitle>Ballot Type</Subtitle>
+            <Subtitle>Poll Type</Subtitle>
             <Select
-              // TODO: make this based on ballot config name, not type
-              value={selectedBallotConfig?.ballotType}
-              onValueChange={(value: string) =>
+              value={
+                selectedBallotConfig ? selectedBallotConfig.name : undefined
+              }
+              onValueChange={(newName: string) =>
                 setSelectedBallotConfig(
-                  possibleBallotConfigs.find(
-                    (c) => c.ballotType === value
-                  ) as any
+                  possibleBallotConfigs.find((c) => c.name === newName)
                 )
               }
             >
               <SelectTrigger className="w-full">
-                <SelectValue placeholder="Select a Ballot Type" />
+                <SelectValue placeholder="Select Poll Type" />
               </SelectTrigger>
 
               <SelectContent>
                 <SelectGroup>
-                  {possibleBallotConfigs.map((type) => (
-                    <SelectItem key={type.ballotType} value={type.ballotType}>
-                      {type.ballotType}
+                  {possibleBallotConfigs.map((c) => (
+                    <SelectItem key={c.name} value={c.name}>
+                      {c.name}
                     </SelectItem>
                   ))}
                 </SelectGroup>
               </SelectContent>
             </Select>
+            <Subtitle>Public Poll</Subtitle>
+            <Switch checked={isPublic} onCheckedChange={setIsPublic} />
           </div>
         </CardContent>
       </Card>
 
-      <DividerWithText>Polls</DividerWithText>
+      <DividerWithText>Questions</DividerWithText>
 
       <div className="flex flex-col gap-4 mb-2">
         {polls.map((poll, i) => {
@@ -450,7 +467,7 @@ export function CreateBallot({
                   placeholder="Should we do this?"
                 />
                 <Subtitle>Choices</Subtitle>
-                <div className="flex flex-col gap-1">
+                <div className="flex flex-col gap-2">
                   {poll.options.map((option, j) => (
                     <div key={j} className="flex row gap-2">
                       <Input
@@ -499,7 +516,6 @@ export function CreateBallot({
           );
         })}
       </div>
-
       {polls.length === 0 ? (
         <NewQuestionPlaceholder
           onClick={() => {
@@ -517,7 +533,7 @@ export function CreateBallot({
           }}
         />
       ) : (
-        <div className="flex flex-row justify-center content-center gap-1 my-2">
+        <div className="flex flex-row justify-center content-center gap-1 mb-1">
           <Button
             className="flex-grow"
             variant="ghost"
@@ -535,26 +551,36 @@ export function CreateBallot({
               ])
             }
           >
-            Add Poll
+            Add Question
           </Button>
         </div>
       )}
-
       {loadingVoterGroupUrl || serverLoading ? (
-        <>asdf</>
+        <></>
       ) : (
-        <Button
-          className="w-full"
-          variant="creative"
-          disabled={
-            ballotTitle === "" ||
-            polls.length === 0 ||
-            polls.some((poll) => poll.body === "" || poll.options.length < 2)
-          }
-          onClick={createBallotPCD}
-        >
-          Create Ballot
-        </Button>
+        <>
+          <Button
+            className="w-full mb-1"
+            variant="ghost"
+            onClick={() => {
+              setImportDialogOpen(true);
+            }}
+          >
+            Import
+          </Button>
+          <Button
+            className="w-full"
+            variant="creative"
+            disabled={
+              ballotTitle === "" ||
+              polls.length === 0 ||
+              polls.some((poll) => poll.body === "" || poll.options.length < 2)
+            }
+            onClick={createBallotPCD}
+          >
+            Create
+          </Button>
+        </>
       )}
     </div>
   );

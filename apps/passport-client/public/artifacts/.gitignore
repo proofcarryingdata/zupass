@@ -1,0 +1,3 @@
+# Local-only artifact directory for local testing.
+# TODO(POD-P3): Consider whether to remove this when prod artifacts are in place.
+test

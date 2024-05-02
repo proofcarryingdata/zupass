@@ -1,4 +1,5 @@
 import { DateRange, ZuzaluUserRole } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { Pool } from "postgres-pool";
 import {
   IZuzaluPretixAPI,
@@ -16,7 +17,6 @@ import {
   pretixTicketsDifferent,
   ticketsToMapByEmail
 } from "../util/zuzaluUser";
-import { RollbarService } from "./rollbarService";
 import { SemaphoreService } from "./semaphoreService";
 import { traced } from "./telemetryService";
 
