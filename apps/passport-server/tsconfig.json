@@ -39,6 +39,9 @@
       "path": "../../packages/pcd/eddsa-ticket-pcd"
     },
     {
+      "path": "../../packages/lib/server-shared"
+    },
+    {
       "path": "../../packages/pcd/email-pcd"
     },
     {
@@ -60,10 +63,10 @@
       "path": "../../packages/lib/pod"
     },
     {
-      "path": "../../packages/pcd/pod-ticket-pcd"
+      "path": "../../packages/pcd/pod-pcd"
     },
     {
-      "path": "../../packages/pcd/pod-pcd"
+      "path": "../../packages/pcd/pod-ticket-pcd"
     },
     {
       "path": "../../packages/pcd/rln-pcd"

@@ -16,7 +16,11 @@
       "cache": false,
       "persistent": true
     },
+    "clean-test-artifacts": {
+      "cache": false
+    },
     "gen-test-artifacts": {
+      "dependsOn": ["^gen-test-artifacts"],
       "cache": true
     },
     "test": {
@@ -206,6 +210,8 @@
     "MIN_LOG_LEVEL",
     "ACCESS_TOKEN_SECRET",
     "NEXT_PUBLIC_DEBUG_TOOLS_ENABLED",
+    "NEXT_ROLLBAR_ACCESS_TOKEN",
+    "NEXT_ROLLBAR_ENVIRONMENT_NAME",
     "STRICH_LICENSE_KEY",
     "SCANDIT_LICENSE_KEY",
     "MULTI_CHOICE_SCAN_ENABLED",

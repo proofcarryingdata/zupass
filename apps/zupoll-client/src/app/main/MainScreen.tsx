@@ -78,7 +78,7 @@ export function MainScreen({
               router.push("/create-ballot");
             }}
           >
-            Create a Ballot
+            Create a Poll
           </Button>
         </div>
 

@@ -21,7 +21,7 @@ import {
   isPODNumericValue,
   podEntriesFromSimplifiedJSON,
   podEntriesToSimplifiedJSON,
-  requireType,
+  requireValueType,
   serializePODEntries
 } from "../src";
 import {
@@ -182,7 +182,7 @@ describe("podUtil input checkers should work", async function () {
       ["hello", "string"]
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
-      const checked = requireType("valueName", testInput[0], testInput[1]);
+      const checked = requireValueType("valueName", testInput[0], testInput[1]);
       expect(checked).to.eq(testInput[0]);
     }
   });
@@ -199,7 +199,7 @@ describe("podUtil input checkers should work", async function () {
     ] as [string | bigint, string][];
     for (const testInput of testCases) {
       const fn = (): void => {
-        requireType("valueName", testInput[0], testInput[1]);
+        requireValueType("valueName", testInput[0], testInput[1]);
       };
       expect(fn).to.throw(TypeError, "valueName");
     }

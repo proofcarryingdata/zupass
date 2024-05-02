@@ -299,3 +299,7 @@ export function useLoginIfNoSelf(
     }
   }, [key, request, self, userForcedToLogout]);
 }
+
+export function useStrichSDKState(): AppState["strichSDKstate"] {
+  return useSelector((s) => s.strichSDKstate, []);
+}

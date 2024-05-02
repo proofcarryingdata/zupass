@@ -14,25 +14,15 @@ export function BallotPage() {
     useSavedLoginState(router);
 
   useEffect(() => {
-    if (definitelyNotLoggedIn) {
-      logout(ballotURL ?? undefined);
-    }
-  }, [ballotURL, definitelyNotLoggedIn, logout]);
-
-  useEffect(() => {
     const id = query?.get("id");
     if (id == null) {
       window.location.href = "/";
     } else {
-      if (!loginState || definitelyNotLoggedIn) {
-        console.log(`[STORING BALLOT URL]`, pathname);
-        localStorage.setItem("preLoginRoute", pathname ?? "");
-      }
       setBallotURL(id.toString());
     }
   }, [loginState, definitelyNotLoggedIn, query, pathname]);
 
-  if (!loginState || !ballotURL) {
+  if (!ballotURL) {
     return null;
   }
 

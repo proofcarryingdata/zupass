@@ -18,6 +18,7 @@ import {
   ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { RollbarService } from "@pcd/server-shared";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -35,7 +36,6 @@ import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_ticke
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { getServerErrorUrl } from "../util/util";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 // Set up an async-lock to prevent race conditions when two separate invocations

@@ -49,7 +49,7 @@ export function useBallotVoting({
   onError: (err: ZupollError) => void;
   setServerLoading: (loading: boolean) => void;
   refresh: (id: string) => void;
-  loginState: LoginState;
+  loginState: LoginState | undefined;
   pcdFromUrl?: string;
   voteFromUrl?: {
     polls: PollWithCounts[];
@@ -72,7 +72,7 @@ export function useBallotVoting({
   const submitVote = useCallback(
     async (request: MultiVoteRequest) => {
       setServerLoading(true);
-      const res = await voteBallot(request, loginState.token);
+      const res = await voteBallot(request, loginState?.token);
 
       if (res === undefined) {
         const serverDownError: ZupollError = {
@@ -91,7 +91,10 @@ export function useBallotVoting({
           message: `Server Error: ${resErr}`
         };
         if (resErr === "User has already voted on this ballot.") {
-          err.message = "You have already voted on this ballot!";
+          err.message =
+            "You've already voted on this ballot! Reload to see the latest results.";
+          err.title = "Your vote was counted!";
+          err.friendly = true;
           setVoted(ballotId);
           refresh(ballotId);
         }
@@ -107,7 +110,7 @@ export function useBallotVoting({
       setBallotVotes(ballotId, multiVotesResponse.userVotes);
       refresh(ballotId);
     },
-    [ballotId, loginState.token, onError, refresh, setServerLoading]
+    [ballotId, loginState?.token, onError, refresh, setServerLoading]
   );
 
   // process pcdStr and send request
@@ -147,7 +150,8 @@ export function useBallotVoting({
       submitVote(request);
       setVoteFromUrl(undefined);
       setPcdFromUrl("");
-      removeQueryParameters(["vote", "proof", "finished"]);
+      removeQueryParameters(["proof", "finished"]);
+      localStorage.removeItem("pending-vote");
     } else {
       if (pcdState.current !== PCDState.RECEIVED_PCDSTR) return;
       pcdState.current = PCDState.DEFAULT;
@@ -196,12 +200,18 @@ export function useBallotVoting({
   ]);
 
   const createBallotVotePCD = useCallback(async () => {
+    if (!loginState) {
+      onError({
+        title: "Not Logged In",
+        message: "Log in to vote"
+      } satisfies ZupollError);
+      return;
+    }
     if (pollToVote.size === 0) {
-      const emptyBallotError: ZupollError = {
+      onError({
         title: "Empty Ballot",
         message: "Answer at least one question"
-      };
-      onError(emptyBallotError);
+      } satisfies ZupollError);
       return;
     }
     pcdState.current = PCDState.AWAITING_PCDSTR;
@@ -226,6 +236,14 @@ export function useBallotVoting({
 
     const polltoVoteList = [...pollToVote];
 
+    localStorage.setItem(
+      "pending-vote",
+      stableStringify({
+        pollToVoteJSON: polltoVoteList,
+        polls
+      })
+    );
+
     openGroupMembershipPopup(
       loginState.config.passportAppUrl,
       window.location.origin + "/popup",
@@ -234,15 +252,7 @@ export function useBallotVoting({
       sigHashEnc,
       externalNullifier,
       // We know that ?ballotId=1 is the first query param
-      returnUrl
-        ? returnUrl +
-            `&vote=${window.encodeURIComponent(
-              stableStringify({
-                pollToVoteJSON: polltoVoteList,
-                polls
-              })
-            )}`
-        : undefined
+      returnUrl ? returnUrl : undefined
     );
   }, [
     loginState,

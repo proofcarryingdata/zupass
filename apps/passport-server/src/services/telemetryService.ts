@@ -3,12 +3,12 @@ import opentelemetry, { Span, Tracer } from "@opentelemetry/api";
 import { getActiveSpan } from "@opentelemetry/api/build/src/trace/context-utils";
 import { getNodeAutoInstrumentations } from "@opentelemetry/auto-instrumentations-node";
 import { NodeSDK } from "@opentelemetry/sdk-node";
+import { getCommitMessage } from "@pcd/server-shared";
 import { ZUPASS_GITHUB_REPOSITORY_URL, flattenObject } from "@pcd/util";
 import Libhoney from "libhoney";
 import urljoin from "url-join";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { getCommitMessage } from "../util/util";
 
 // todo get rid of these globals
 let honeyClient: Libhoney | null;

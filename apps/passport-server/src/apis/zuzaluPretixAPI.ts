@@ -1,6 +1,6 @@
+import { requireEnv } from "@pcd/server-shared";
 import { traced } from "../services/telemetryService";
 import { logger } from "../util/logger";
-import { requireEnv } from "../util/util";
 import { instrumentedFetch } from "./fetch";
 
 const TRACE_SERVICE = "PretixAPI";

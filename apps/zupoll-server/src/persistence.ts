@@ -76,7 +76,8 @@ export async function getBallotsForPipelineId(pipelineId: string) {
       ballotURL: true,
       expiry: true,
       ballotType: true,
-      createdAt: true
+      createdAt: true,
+      pollsterSemaphoreGroupUrl: true
     },
     orderBy: { expiry: "desc" },
     where: {
@@ -178,7 +179,8 @@ export async function createBallot(
       voterSemaphoreGroupRoots: request.ballot.voterSemaphoreGroupRoots,
       voterSemaphoreGroupUrls: request.ballot.voterSemaphoreGroupUrls,
       ballotType: request.ballot.ballotType,
-      pipelineId: request.ballot.pipelineId
+      pipelineId: request.ballot.pipelineId,
+      isPublic: request.ballot.isPublic
     }
   });
 }

@@ -1,20 +1,49 @@
+/* eslint-disable @next/next/no-img-element */
 import { Dialog as HeadlessDialog, Transition } from "@headlessui/react";
-import { Fragment } from "react";
+import Link from "next/link";
+import { Fragment, useEffect, useMemo, useState } from "react";
+import {
+  getOptionImage,
+  getOptionLink,
+  getOptionName
+} from "../../../app/ballot/BallotPoll";
 import { Button } from "./button";
 
 export default function VoteDialog({
   text,
+  show,
   close,
   onVoted,
   submitButtonText
 }: {
-  text: string;
+  text: string | undefined;
+  show: boolean;
   close: () => void;
   onVoted: () => void;
   submitButtonText: string;
 }) {
+  const [memoText, setMemoText] = useState<string>(text ?? "");
+
+  useEffect(() => {
+    if (text !== undefined) {
+      setMemoText(text);
+    }
+  }, [text]);
+
+  const link = useMemo(() => {
+    return getOptionLink(memoText);
+  }, [memoText]);
+
+  const name = useMemo(() => {
+    return getOptionName(memoText);
+  }, [memoText]);
+
+  const imageUrl = useMemo(() => {
+    return getOptionImage(memoText);
+  }, [memoText]);
+
   return (
-    <Transition.Root show={true} as={Fragment}>
+    <Transition.Root show={show} as={Fragment}>
       <HeadlessDialog as="div" className="relative z-10" onClose={close}>
         <Transition.Child
           as={Fragment}
@@ -46,14 +75,22 @@ export default function VoteDialog({
                       as="h3"
                       className="text-lg font-semibold leading-6 text-foreground"
                     >
-                      Vote
+                      {name ?? "Vote"}
                     </HeadlessDialog.Title>
-                    <div className="mt-2">
-                      <p className="text-md text-foreground">{text}</p>
-                    </div>
                   </div>
                 </div>
-                <div className="mt-5 sm:mt-6 flex flex-col gap-1">
+                {imageUrl && (
+                  <div className="mt-2 min-h-10 flex items-center justify-center bg-black/5">
+                    <img
+                      src={imageUrl}
+                      className="rounded overflow-hidden"
+                      alt="project image"
+                      width="100%"
+                    />
+                  </div>
+                )}
+                <div className="mt-2 sm:mt-6 flex flex-col gap-1">
+                  <input type="hidden" autoFocus={true} />
                   <Button
                     variant={"creative"}
                     className="w-full"
@@ -61,12 +98,20 @@ export default function VoteDialog({
                   >
                     {submitButtonText}
                   </Button>
+                  {link ? (
+                    <Link target="_blank" href={link} className="w-full">
+                      <Button variant="outline" className="w-full">
+                        More Details
+                      </Button>
+                    </Link>
+                  ) : null}
+
                   <Button
                     variant="outline"
                     className="w-full"
                     onClick={() => close()}
                   >
-                    Back
+                    Close
                   </Button>
                 </div>
               </HeadlessDialog.Panel>

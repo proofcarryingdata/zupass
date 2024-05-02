@@ -1,0 +1,26 @@
+[
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 1,
+      "merkleMaxDepth": 5
+    },
+    12593
+  ],
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 5,
+      "merkleMaxDepth": 8
+    },
+    32708
+  ],
+  [
+    {
+      "maxObjects": 3,
+      "maxEntries": 10,
+      "merkleMaxDepth": 8
+    },
+    72200
+  ]
+]

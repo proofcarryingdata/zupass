@@ -5,11 +5,39 @@ import { cn } from "@/lib/utils";
 import FuzzySearch from "fuzzy-search"; // Or: var FuzzySearch = require('fuzzy-search');
 import { useMemo, useState } from "react";
 import styled from "styled-components";
+import { ObjectOption } from "../../api/prismaTypes";
 import { PollWithCounts } from "../../api/requestTypes";
 
 type SearchItem = {
   value: string;
 };
+
+export function getOptionName(option: string): string {
+  try {
+    const opt = JSON.parse(option) as ObjectOption;
+    return opt.text ?? option;
+  } catch (e) {
+    return option;
+  }
+}
+
+export function getOptionLink(option: string): string | undefined {
+  try {
+    const opt = JSON.parse(option) as ObjectOption;
+    return opt.externalLink ?? undefined;
+  } catch (e) {
+    return undefined;
+  }
+}
+
+export function getOptionImage(option: string): string | undefined {
+  try {
+    const opt = JSON.parse(option) as ObjectOption;
+    return opt.imageUrl ?? undefined;
+  } catch (e) {
+    return undefined;
+  }
+}
 
 export function BallotPoll({
   canVote,
@@ -68,20 +96,24 @@ export function BallotPoll({
 
   return (
     <div>
-      {canVote && showingOptionIdx !== undefined && (
-        <VoteDialog
-          text={poll.options[showingOptionIdx]}
-          close={() => setShowingOptionIdx(undefined)}
-          submitButtonText={singlePoll ? "Submit Vote" : "Choose"}
-          onVoted={() => {
-            onVoted(poll.id, showingOptionIdx);
+      <VoteDialog
+        show={canVote && showingOptionIdx !== undefined}
+        text={
+          showingOptionIdx === undefined
+            ? undefined
+            : poll.options[showingOptionIdx]
+        }
+        close={() => setShowingOptionIdx(undefined)}
+        submitButtonText={singlePoll ? "Submit Vote" : "Choose"}
+        onVoted={() => {
+          onVoted(poll.id, showingOptionIdx ?? 0);
+          if (singlePoll) {
+            submitVotes();
+          } else {
             setShowingOptionIdx(undefined);
-            if (!singlePoll) {
-              submitVotes();
-            }
-          }}
-        />
-      )}
+          }
+        }}
+      />
       <PollHeader>{poll.body}</PollHeader>
       {thisIsHackathonView && (
         <Input
@@ -135,7 +167,7 @@ export function BallotPoll({
                 {getVoteDisplay(poll.votes[idx], totalVotes)}
               </PollResult>
             )}
-            <OptionString>{opt}</OptionString>
+            <OptionString>{getOptionName(opt)}</OptionString>
           </div>
         ))}
       </div>

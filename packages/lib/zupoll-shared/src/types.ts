@@ -71,7 +71,7 @@ export interface LoginConfig {
 }
 
 export interface BallotConfig {
-  name?: string;
+  name: string;
   voterGroupId: string;
   voterGroupUrl: string;
   creatorGroupId: string;
@@ -79,10 +79,11 @@ export interface BallotConfig {
   passportServerUrl: string;
   passportAppUrl: string;
   ballotType: BallotType;
-  latestGroupHashUrl?: string;
-  makeHistoricalGroupUrl?: (hash: string) => string;
+  latestVoterGroupHashUrl?: string;
+  makeHistoricVoterGroupUrl?: (hash: string) => string;
   historicGroupPrefix?: string;
 
   description?: string;
-  isPublic: boolean;
+  isDefault?: boolean;
+  canCreate?: boolean;
 }

@@ -3,11 +3,16 @@
   "version": "0.0.0",
   "license": "GPL-3.0-or-later",
   "private": true,
-  "workspaces": [
-    "apps/*",
-    "packages/*/*",
-    "examples/*"
-  ],
+  "workspaces": {
+    "packages": [
+      "apps/*",
+      "packages/*/*",
+      "examples/*"
+    ],
+    "nohoist": [
+      "*"
+    ]
+  },
   "scripts": {
     "localdb:restart": "yarn localdb:down && yarn localdb:init && yarn localdb:up",
     "localdb:init": "bash -c 'rm -rf apps/passport-server/local-db-data/ && initdb -U admin --pwfile=<(echo password) -A password -D apps/passport-server/local-db-data'",
@@ -23,6 +28,7 @@
     "test": "turbo run test --concurrency=1",
     "test:ci": "turbo run test",
     "gen-test-artifacts": "turbo run gen-test-artifacts",
+    "clean-test-artifacts": "turbo run clean-test-artifacts",
     "prepublishOnly": "turbo run prepublishOnly --parallel",
     "typecheck": "turbo run typecheck --parallel",
     "clean": "turbo run clean --parallel && yarn clean:root",
@@ -60,7 +66,7 @@
     "@monorepo-utils/workspaces-to-typescript-project-references": "^2.10.4",
     "@types/react": "^18.0.22",
     "tsx": "^4.6.2",
-    "turbo": "^1.12.5",
+    "turbo": "^1.13.2",
     "turbowatch": "^2.29.4",
     "workspace-tools": "^0.36.4",
     "zx": "^7.2.3"

@@ -6,9 +6,9 @@
 set -ex
 
 GPC_NAMES=(
-  "proto-pod-gpc-1o-1e-5md"
-  "proto-pod-gpc-1o-5e-8md"
-  "proto-pod-gpc-3o-10e-8md"
+  "proto-pod-gpc_1o-1e-5md"
+  "proto-pod-gpc_1o-5e-8md"
+  "proto-pod-gpc_3o-10e-8md"
 )
 
 gen_gpc_artifacts()
@@ -29,11 +29,10 @@ CIRCOMKIT_BUILD_DIR="$PACKAGE_DIR/build"
 
 cd "$PACKAGE_DIR"
 mkdir -p "$ARTIFACTS_DIR"
-rm -rf "$ARTIFACTS_DIR/*.json" "$ARTIFACTS_DIR/*.zkey" "$ARTIFACTS_DIR/*.wasm"
+rm -rf "$ARTIFACTS_DIR"/*.json "$ARTIFACTS_DIR"/*.zkey "$ARTIFACTS_DIR"/*.wasm
 
 for GPC_NAME in ${GPC_NAMES[@]}; do
   gen_gpc_artifacts "$GPC_NAME"
 done
 
-echo gen-test-artifacts completed successfully!
-
+echo gpcircuits/gen-test-artifacts completed successfully!

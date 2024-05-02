@@ -20,6 +20,7 @@ import {
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { Request } from "express";
 import { Client } from "stytch";
 import { ILemonadeAPI } from "../../apis/lemonade/lemonadeAPI";
@@ -49,7 +50,6 @@ import { logger } from "../../util/logger";
 import { DiscordService } from "../discordService";
 import { PagerDutyService } from "../pagerDutyService";
 import { PersistentCacheService } from "../persistentCacheService";
-import { RollbarService } from "../rollbarService";
 import { InMemoryPipelineAtomDB } from "./InMemoryPipelineAtomDB";
 import { Pipeline, PipelineUser } from "./pipelines/types";
 import { CredentialSubservice } from "./subservices/CredentialSubservice";

@@ -24,14 +24,14 @@ export const STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.STRAWPOLL,
-  isPublic: false,
-  makeHistoricalGroupUrl: (hash) =>
+  makeHistoricVoterGroupUrl: (hash) =>
     urljoin(
       ZUPASS_SERVER_URL,
       "semaphore/historic",
       STRAWPOLL_BALLOT_CONFIG.voterGroupId,
       hash
-    )
+    ),
+  name: "STRAWPOLL_BALLOT_CONFIG"
 };
 
 export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
@@ -42,14 +42,14 @@ export const ADVISORY_VOTE_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ADVISORYVOTE,
-  isPublic: false,
-  makeHistoricalGroupUrl: (hash) =>
+  makeHistoricVoterGroupUrl: (hash) =>
     urljoin(
       ZUPASS_SERVER_URL,
       "semaphore/historic",
       ADVISORY_VOTE_BALLOT_CONFIG.voterGroupId,
       hash
-    )
+    ),
+  name: "ADVISORY_VOTE_BALLOT_CONFIG"
 };
 
 export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
@@ -60,14 +60,14 @@ export const ORGANIZER_ONLY_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ORGANIZERONLY,
-  isPublic: false,
-  makeHistoricalGroupUrl: (hash) =>
+  makeHistoricVoterGroupUrl: (hash) =>
     urljoin(
       ZUPASS_SERVER_URL,
       "semaphore/historic",
       ORGANIZER_ONLY_BALLOT_CONFIG.voterGroupId,
       hash
-    )
+    ),
+  name: "ORGANIZER_ONLY_BALLOT_CONFIG"
 };
 
 export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
@@ -78,14 +78,14 @@ export const DEVCONNECT_ATTENDEE_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.DEVCONNECT_STRAW,
-  isPublic: false,
-  makeHistoricalGroupUrl: (hash) =>
+  makeHistoricVoterGroupUrl: (hash) =>
     urljoin(
       ZUPASS_SERVER_URL,
       "semaphore/historic",
       DEVCONNECT_ATTENDEE_BALLOT_CONFIG.voterGroupId,
       hash
-    )
+    ),
+  name: "DEVCONNECT_ATTENDEE_BALLOT_CONFIG"
 };
 
 export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
@@ -96,14 +96,14 @@ export const DEVCONNECT_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.DEVCONNECT_ORGANIZER,
-  isPublic: false,
-  makeHistoricalGroupUrl: (hash) =>
+  makeHistoricVoterGroupUrl: (hash) =>
     urljoin(
       ZUPASS_SERVER_URL,
       "semaphore/historic",
       DEVCONNECT_ORGANIZER_BALLOT_CONFIG.voterGroupId,
       hash
-    )
+    ),
+  name: "DEVCONNECT_ORGANIZER_BALLOT_CONFIG"
 };
 
 export const EDGE_CITY_RESIDENT_BALLOT_CONFIG: BallotConfig = {
@@ -114,10 +114,10 @@ export const EDGE_CITY_RESIDENT_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.EDGE_CITY_RESIDENT,
-  latestGroupHashUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/latest-root",
-  makeHistoricalGroupUrl: (hash) =>
+  latestVoterGroupHashUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/latest-root",
+  makeHistoricVoterGroupUrl: (hash) =>
     EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/" + hash,
-  isPublic: false
+  name: "EDGE_CITY_RESIDENT_BALLOT_CONFIG"
 };
 
 export const EDGE_CITY_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
@@ -128,10 +128,10 @@ export const EDGE_CITY_ORGANIZER_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.EDGE_CITY_ORGANIZER,
-  latestGroupHashUrl: EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/latest-root",
-  makeHistoricalGroupUrl: (hash) =>
-    EDGE_CITY_ORGANIZER_CONFIG.groupUrl + "/" + hash,
-  isPublic: false
+  latestVoterGroupHashUrl: EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/latest-root",
+  makeHistoricVoterGroupUrl: (hash) =>
+    EDGE_CITY_RESIDENT_CONFIG.groupUrl + "/" + hash,
+  name: "EDGE_CITY_ORGANIZER_BALLOT_CONFIG"
 };
 
 export const ETH_LATAM_STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
@@ -142,10 +142,10 @@ export const ETH_LATAM_STRAWPOLL_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ETH_LATAM_STRAWPOLL,
-  latestGroupHashUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/latest-root",
-  makeHistoricalGroupUrl: (hash) =>
+  latestVoterGroupHashUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/latest-root",
+  makeHistoricVoterGroupUrl: (hash) =>
     ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/" + hash,
-  isPublic: false
+  name: "ETH_LATAM_STRAWPOLL_BALLOT_CONFIG"
 };
 
 export const ETH_LATAM_FEEDBACK_BALLOT_CONFIG: BallotConfig = {
@@ -156,10 +156,10 @@ export const ETH_LATAM_FEEDBACK_BALLOT_CONFIG: BallotConfig = {
   passportServerUrl: ZUPASS_SERVER_URL,
   passportAppUrl: ZUPASS_CLIENT_URL,
   ballotType: BallotType.ETH_LATAM_FEEDBACK,
-  latestGroupHashUrl: ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/latest-root",
-  makeHistoricalGroupUrl: (hash) =>
-    ETH_LATAM_ORGANIZER_CONFIG.groupUrl + "/" + hash,
-  isPublic: false
+  latestVoterGroupHashUrl: ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/latest-root",
+  makeHistoricVoterGroupUrl: (hash) =>
+    ETH_LATAM_ATTENDEE_CONFIG.groupUrl + "/" + hash,
+  name: "ETH_LATAM_FEEDBACK_BALLOT_CONFIG"
 };
 
 export const BALLOT_CONFIGS = {
