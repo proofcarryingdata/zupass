@@ -62,5 +62,5 @@ export function batchPromise<A, B>(
   return seqPromise(
     (arr) => Promise.all(arr.map(f)), // by mapping each `maxParallelpromises` sized chunk of `arr` by `f`
     toChunks(arr, maxParallelPromises)
-  ).then(Array.flat); // Then concatenate the resulting arrays.
+  ).then((arr) => arr.flat()); // Then concatenate the resulting arrays.
 }

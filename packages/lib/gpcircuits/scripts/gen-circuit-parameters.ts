@@ -11,6 +11,9 @@ import {
 import { batchPromise } from "../src/util";
 import { clearDir, MAX_PARALLEL_PROMISES } from "./util";
 
+// !!! SINGLE SOURCE OF TRUTH !!!
+// IF YOU CHANGE THIS, MAKE SURE TO RUN
+// `yarn gen-circuit-parameters`.
 // Circuit parameters used to generate artifacts.
 const CIRCUIT_PARAMETERS = [
   [1, 1, 5],
