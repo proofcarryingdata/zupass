@@ -4,11 +4,13 @@ import { Identity } from "@semaphore-protocol/identity";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
-import { loadCircomkitConfig } from "../src";
+
+const configFilePath = path.join(__dirname, "../circomkit.json");
+const config = JSON.parse(readFileSync(configFilePath, "utf-8"));
 
 // eslint-disable-next-line import/prefer-default-export
 export const circomkit = new Circomkit({
-  ...loadCircomkitConfig(path.join(__dirname, "../"), readFileSync),
+  ...config,
   verbose: false
 });
 
