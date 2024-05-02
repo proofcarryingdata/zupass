@@ -141,8 +141,19 @@ function canIssueInThisEpoch(
       return false;
     }
 
+    // only manual tickets issued by {@link AutoIssuanceProvider}
+    // have a `timeCreated` field, so we filter out those that don't.
     if (!t.timeCreated) {
-      return true;
+      return false;
+    }
+
+    // only count auto-issued tickets that match the given `autoIssuance`
+    // configuration.
+    if (
+      t.eventId !== autoIssuance.eventId ||
+      t.productId !== autoIssuance.productId
+    ) {
+      return false;
     }
 
     return (

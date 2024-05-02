@@ -425,13 +425,13 @@ describe("generic issuance - PretixPipeline", function () {
         AutoIssuanceManualAttendeeEmail,
         AutoIssuanceManualAttendeeIdentity
       );
-      expectLength(ManualAttendeeTickets, 2);
+      expectLength(ManualAttendeeTickets, 6);
       const ManualAttendeeTicket = ManualAttendeeTickets[0];
       expectIsEdDSATicketPCD(ManualAttendeeTicket);
       expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
         AutoIssuanceManualAttendeeEmail
       );
-      const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+      const ManualAttendeePODTicket = ManualAttendeeTickets[3];
       expectIsPODTicketPCD(ManualAttendeePODTicket);
       expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
         AutoIssuanceManualAttendeeEmail
@@ -489,7 +489,7 @@ describe("generic issuance - PretixPipeline", function () {
           AutoIssuanceManualAttendeeEmail,
           AutoIssuanceManualAttendeeIdentity
         );
-        expectLength(ManualAttendeeTickets, 2);
+        expectLength(ManualAttendeeTickets, 6);
         const ManualAttendeeTicket = ManualAttendeeTickets[0];
         expectIsEdDSATicketPCD(ManualAttendeeTicket);
         expect(ManualAttendeeTicket.claim.ticket.attendeeEmail).to.eq(
@@ -502,7 +502,7 @@ describe("generic issuance - PretixPipeline", function () {
         expect(ManualAttendeeTicket.claim.ticket.timestampConsumed).to.eq(
           Date.now()
         );
-        const ManualAttendeePODTicket = ManualAttendeeTickets[1];
+        const ManualAttendeePODTicket = ManualAttendeeTickets[3];
         expectIsPODTicketPCD(ManualAttendeePODTicket);
         expect(ManualAttendeePODTicket.claim.ticket.attendeeEmail).to.eq(
           AutoIssuanceManualAttendeeEmail
