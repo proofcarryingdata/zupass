@@ -230,6 +230,8 @@ describe("generic issuance - PretixPipeline", function () {
         (1 + 2) * 2 // 1 ticket + pod + 2 vouchers + 2 voucher pods
       );
       const attendeeTicket = attendeeTickets[0];
+      const attendeeFoodVoucherTicket = attendeeTickets[1];
+      expectIsEdDSATicketPCD(attendeeFoodVoucherTicket);
       expectToExist(attendeeTicket);
       expectIsEdDSATicketPCD(attendeeTicket);
       expect(attendeeTicket.claim.ticket.attendeeEmail).to.eq(
@@ -279,6 +281,35 @@ describe("generic issuance - PretixPipeline", function () {
 
       const autoIssuanceCheckinRoute =
         pipeline.checkinCapability.getCheckinUrl();
+
+      {
+        const foodVendorChecksInFoodVoucher =
+          await requestCheckInPipelineTicket(
+            pipeline.checkinCapability.getCheckinUrl(),
+            ZUPASS_EDDSA_PRIVATE_KEY,
+            pretixBackend.get().autoIssuanceOrganizer
+              .autoIssuanceFoodVendorEmail,
+            new Identity(),
+            attendeeFoodVoucherTicket
+          );
+
+        expect(foodVendorChecksInFoodVoucher.value).to.deep.eq({
+          success: true
+        });
+
+        const foodVendorChecksInGATicket = await requestCheckInPipelineTicket(
+          pipeline.checkinCapability.getCheckinUrl(),
+          ZUPASS_EDDSA_PRIVATE_KEY,
+          pretixBackend.get().autoIssuanceOrganizer.autoIssuanceFoodVendorEmail,
+          new Identity(),
+          attendeeTicket
+        );
+
+        expect(foodVendorChecksInGATicket.value).to.deep.eq({
+          success: false,
+          error: { name: "NotSuperuser" }
+        });
+      }
 
       const bouncerCheckInBouncer = await requestCheckInPipelineTicket(
         autoIssuanceCheckinRoute,
@@ -578,8 +609,8 @@ describe("generic issuance - PretixPipeline", function () {
 
     const checkinDB = new PipelineCheckinDB(giBackend.context.dbPool);
     const checkins = await checkinDB.getByPipelineId(autoIssuancePipeline.id);
-    // Manual attendee ticket was checked in
-    expectLength(checkins, 1);
+    // Manual attendee ticket and food voucher was checked in
+    expectLength(checkins, 2);
 
     const userDB = new PipelineUserDB(giBackend.context.dbPool);
     const adminUser = await userDB.getUserById(adminGIUserId);
@@ -609,8 +640,8 @@ describe("generic issuance - PretixPipeline", function () {
     // Verify that there are no checkins in the DB now
     {
       const checkins = await checkinDB.getByPipelineId(autoIssuancePipeline.id);
-      // no checkins are found as the tickets have been deleted
-      expectLength(checkins, 0);
+      // only food voucher checkin is found as the tickets have been deleted
+      expectLength(checkins, 1);
     }
   });
 

@@ -30,7 +30,6 @@ export function setupAutoIssuancePipeline(): AutoIssuancePipelineTestData {
   const autoIssuanceGIUserEmail = "auto-issuance-user@test.com";
   const AutoIssuanceBouncerIdentity = new Identity();
   const AutoIssuanceAttendeeIdentity = new Identity();
-  const AutoIssuanceFoodVendorIdentity = new Identity();
 
   const AutoIssuanceManualAttendeeIdentity = new Identity();
   const AutoIssuanceManualAttendeeEmail = "manual_attendee@example.com";
@@ -234,7 +233,6 @@ export function setupAutoIssuancePipeline(): AutoIssuancePipelineTestData {
     autoIssuanceGIUserEmail,
     AutoIssuanceBouncerIdentity,
     AutoIssuanceAttendeeIdentity,
-    AutoIssuanceFoodVendorIdentity,
     AutoIssuanceManualAttendeeIdentity,
     AutoIssuanceManualAttendeeEmail,
     AutoIssuanceManualBouncerIdentity,
@@ -262,7 +260,6 @@ export interface AutoIssuancePipelineTestData {
   autoIssuanceGIUserEmail: string;
   AutoIssuanceBouncerIdentity: Identity;
   AutoIssuanceAttendeeIdentity: Identity;
-  AutoIssuanceFoodVendorIdentity: Identity;
   AutoIssuanceManualAttendeeIdentity: Identity;
   AutoIssuanceManualAttendeeEmail: string;
   AutoIssuanceManualBouncerIdentity: Identity;
