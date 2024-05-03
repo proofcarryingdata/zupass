@@ -26,6 +26,7 @@
     "clean": "rm -rf dist node_modules *.tsbuildinfo"
   },
   "dependencies": {
+    "@zk-kit/baby-jubjub": "^1.0.0-beta",
     "buffer": "^6.0.3",
     "email-validator": "^2.0.4",
     "js-sha256": "^0.10.1",

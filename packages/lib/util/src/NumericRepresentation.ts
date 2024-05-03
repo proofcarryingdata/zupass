@@ -60,3 +60,39 @@ export function hexToBigInt(v: string): bigint {
 export function booleanToBigInt(v: boolean): bigint {
   return BigInt(v ? 1 : 0);
 }
+
+export function bigIntToBase64(bn: bigint): string {
+  // source: https://coolaj86.com/articles/bigints-and-base64-in-javascript/
+  let hex = BigInt(bn).toString(16);
+  if (hex.length % 2) {
+    hex = "0" + hex;
+  }
+
+  const bin = [];
+  let i = 0;
+  let d;
+  let b;
+  while (i < hex.length) {
+    d = parseInt(hex.slice(i, i + 2), 16);
+    b = String.fromCharCode(d);
+    bin.push(b);
+    i += 2;
+  }
+
+  return btoa(bin.join(""));
+}
+
+export function base64ToBigInt(b64: string): bigint {
+  const bin = atob(b64);
+  const hex: string[] = [];
+
+  bin.split("").forEach(function (ch) {
+    let h = ch.charCodeAt(0).toString(16);
+    if (h.length % 2) {
+      h = "0" + h;
+    }
+    hex.push(h);
+  });
+
+  return BigInt("0x" + hex.join(""));
+}

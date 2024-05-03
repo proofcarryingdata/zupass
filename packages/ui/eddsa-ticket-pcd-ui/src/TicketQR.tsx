@@ -14,6 +14,7 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
+import { encodeG1Point } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -66,9 +67,9 @@ export function TicketQR({
       //   e: pcd.claim.ticket.eventId
       // });
       const unencoded = JSON.stringify({
-        a: proof.pi_a,
+        a: encodeG1Point(proof.pi_a),
         b: proof.pi_b,
-        c: proof.pi_c,
+        c: encodeG1Point(proof.pi_c),
         t: pcd.claim.ticket.ticketId,
         e: pcd.claim.ticket.eventId,
         p: pcd.claim.ticket.productId

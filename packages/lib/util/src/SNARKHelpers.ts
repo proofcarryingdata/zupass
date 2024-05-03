@@ -1,3 +1,4 @@
+import { packPoint, unpackPoint } from "@zk-kit/baby-jubjub";
 import { sha256 } from "js-sha256";
 
 /**
@@ -29,4 +30,16 @@ export function generateSnarkMessageHash(signal: string | undefined): bigint {
   // right shift to fit into a field element, which is 254 bits long
   // shift by 8 ensures we have a 253 bit element
   return BigInt("0x" + sha256(signal ?? "")) >> 8n;
+}
+
+export function encodeG1Point(point: string[]): string {
+  const [x, y] = point;
+  return packPoint([BigInt(x), BigInt(y)]).toString();
+}
+
+export function decodeG1Point(encoded: string): string[] | null {
+  const unpacked = unpackPoint(BigInt(encoded));
+  if (!unpacked) return null;
+  const [x, y] = unpacked;
+  return [x.toString(), y.toString(), "1"];
 }
