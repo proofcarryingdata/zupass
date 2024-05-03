@@ -1,4 +1,5 @@
 import {
+  GPCBoundConfig,
   deserializeGPCProofConfig,
   gpcBindConfig,
   serializeGPCBoundConfig
@@ -91,19 +92,19 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
-        Watermark (or empty for none):
-        <textarea
-          value={watermark}
-          onChange={(e): void => {
-            setWatermark(e.target.value);
-          }}
-        />
-        <br />
         External Nullifier (or empty for none):
         <textarea
           value={externalNullifier}
           onChange={(e): void => {
             setExternalNullifier(e.target.value);
+          }}
+        />
+        <br />
+        Watermark (or empty for none):
+        <textarea
+          value={watermark}
+          onChange={(e): void => {
+            setWatermark(e.target.value);
           }}
         />
         <br />
@@ -267,9 +268,14 @@ async function verifyProof(
     return { valid: false, err: "Watermark does not match." };
   }
 
-  const localBoundConfig = gpcBindConfig(
-    deserializeGPCProofConfig(proofConfig)
-  ).boundConfig;
+  let localBoundConfig: GPCBoundConfig;
+  try {
+    localBoundConfig = gpcBindConfig(
+      deserializeGPCProofConfig(proofConfig)
+    ).boundConfig;
+  } catch (configError) {
+    return { valid: false, err: "Invalid proof config." };
+  }
   const sameConfig = _.isEqual(localBoundConfig, pcd.claim.config);
   if (!sameConfig) {
     return { valid: false, err: "Config does not match." };

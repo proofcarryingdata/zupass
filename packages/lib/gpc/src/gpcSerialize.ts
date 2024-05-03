@@ -12,6 +12,23 @@ const jsonBigSerializer = JSONBig({
 });
 
 /**
+ * Wrapper to alter the error behavior of JSONBig.parse, which seems to throw
+ * an object which has a name of "SyntaxError" but doesn't extend Error.
+ */
+//eslint-disable-next-line @typescript-eslint/no-explicit-any
+function parseWrapper(serialized: string, nameForErrors: string): any {
+  // TODO(POD-P3): Consider generalizing this in @pcd/util.
+  try {
+    return jsonBigSerializer.parse(serialized);
+  } catch (e: unknown) {
+    if (e instanceof Error) {
+      throw e;
+    }
+    throw new SyntaxError(`Invalid serialized ${nameForErrors}.`);
+  }
+}
+
+/**
  * Serializes `GPCProofConfig` to a string in a full-fidelity format.  Calling
  * {@link deserializeGPCProofConfig} will reconstruct the same object.
  *
@@ -37,7 +54,7 @@ export function serializeGPCProofConfig(
  * @throws TypeError if the serialized form is invalid
  */
 export function deserializeGPCProofConfig(serialized: string): GPCProofConfig {
-  const deserialized = jsonBigSerializer.parse(serialized);
+  const deserialized = parseWrapper(serialized, "proof config");
   // TODO(POD-P2): Consider separating these steps to allow deserializing without checking.
   checkProofConfig(deserialized);
   return deserialized;
@@ -69,7 +86,7 @@ export function serializeGPCBoundConfig(
  * @throws TypeError if the serialized form is invalid
  */
 export function deserializeGPCBoundConfig(serialized: string): GPCBoundConfig {
-  const deserialized = jsonBigSerializer.parse(serialized);
+  const deserialized = parseWrapper(serialized, "bound proof config");
   // TODO(POD-P2): Consider separating these steps to allow deserializing without checking.
   checkBoundConfig(deserialized);
   return deserialized;
@@ -104,7 +121,7 @@ export function serializeGPCRevealedClaims(
 export function deserializeGPCRevealedClaims(
   serialized: string
 ): GPCRevealedClaims {
-  const deserialized = jsonBigSerializer.parse(serialized);
+  const deserialized = parseWrapper(serialized, "revealed claims");
   // TODO(POD-P2): Consider separating these steps to allow deserializing without checking.
   checkRevealedClaims(deserialized);
   return deserialized;

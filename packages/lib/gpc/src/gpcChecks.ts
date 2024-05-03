@@ -305,16 +305,21 @@ export function checkProofInputsForConfig(
     }
   }
 
+  // TODO(POD-P1): Should we include this check?  It might catch mistakes, but
+  // also it makes calling code more complex, since it can't simply always
+  // provide an owner ID.  An unused owner ID affects only private circuit
+  // inputs, so it doesn't really matter.s
+  //
   // Check that owner is not specified unnecessarily.
-  if (
-    proofInputs.owner !== undefined &&
-    !hasOwnerEntry &&
-    proofInputs.owner.externalNullifier === undefined
-  ) {
-    throw new Error(
-      "Owner identity is given, but not used for any configuration."
-    );
-  }
+  // if (
+  //   proofInputs.owner !== undefined &&
+  //   !hasOwnerEntry &&
+  //   proofInputs.owner.externalNullifier === undefined
+  // ) {
+  //   throw new Error(
+  //     "Owner identity is given, but not used for any configuration."
+  //   );
+  // }
 }
 
 /**
