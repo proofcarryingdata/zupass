@@ -1,16 +1,16 @@
-import circomkitJson from "../circomkit.json";
-import { Circomkit } from "circomkit";
-import * as fs from "fs/promises";
+import { Circomkit, CircomkitConfig } from "circomkit";
 import { existsSync as fsExists } from "fs";
+import * as fs from "fs/promises";
 import * as path from "path";
+import circomkitJson from "../circomkit.json";
 import {
-  ProtoPODGPC,
-  ProtoPODGPCCircuitParams,
   PROTO_POD_GPC_FAMILY_NAME,
-  PROTO_POD_GPC_PUBLIC_INPUT_NAMES
+  PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
+  ProtoPODGPC,
+  arrayToProtoPODGPCCircuitParam
 } from "../src/proto-pod-gpc";
 import { batchPromise } from "../src/util";
-import { clearDir, MAX_PARALLEL_PROMISES } from "./util";
+import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 
 // !!! SINGLE SOURCE OF TRUTH !!!
 // IF YOU CHANGE THIS, MAKE SURE TO RUN
@@ -32,14 +32,14 @@ async function main(): Promise<void> {
   }
 
   // Instantiate Circomkit object.
-  const circomkit = new Circomkit(circomkitJson);
+  const circomkit = new Circomkit(circomkitJson as Partial<CircomkitConfig>);
 
   // Form circuit names
   const circuitNames = CIRCUIT_PARAMETERS.map(
     (params) =>
       PROTO_POD_GPC_FAMILY_NAME +
       "_" +
-      ProtoPODGPC.circuitNameForParams(ProtoPODGPCCircuitParams(...params))
+      ProtoPODGPC.circuitNameForParams(arrayToProtoPODGPCCircuitParam(params))
   );
 
   // Form `circuits.json`.
@@ -83,7 +83,7 @@ async function main(): Promise<void> {
 
   // Form `circuitParameters.json`.
   const circuitParamJson = circuitCosts.map((cost, i) => [
-    ProtoPODGPCCircuitParams(...CIRCUIT_PARAMETERS[i]),
+    arrayToProtoPODGPCCircuitParam(CIRCUIT_PARAMETERS[i]),
     cost
   ]);
 
@@ -93,9 +93,6 @@ async function main(): Promise<void> {
     JSON.stringify(circuitParamJson, null, 2)
   );
 
-  // Clean up.
-  await fs.rm(path.join(projectDir, "build"), { recursive: true });
-
   console.log("gen-circuit-parameters completed successfully!");
 }
 
@@ -103,4 +100,5 @@ main()
   .then(() => process.exit())
   .catch((err) => {
     console.error(err);
+    process.exit(1);
   });

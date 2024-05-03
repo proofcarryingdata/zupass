@@ -1,11 +1,11 @@
-import circomkitJson from "../circomkit.json";
-import { Circomkit } from "circomkit";
-import circuitsJson from "../circuits.json";
-import * as fs from "fs/promises";
+import { Circomkit, CircomkitConfig } from "circomkit";
 import { existsSync as fsExists } from "fs";
+import * as fs from "fs/promises";
 import * as path from "path";
+import circomkitJson from "../circomkit.json";
+import circuitsJson from "../circuits.json";
 import { batchPromise } from "../src/util";
-import { clearDir, MAX_PARALLEL_PROMISES } from "./util";
+import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 
 const projectDir = path.join(__dirname, "..");
 const artifactDir = path.join(projectDir, "artifacts");
@@ -20,29 +20,38 @@ async function main(): Promise<void> {
   }
 
   // Instantiate Circomkit object.
-  const circomkit = new Circomkit(circomkitJson);
+  const circomkit = new Circomkit(circomkitJson as Partial<CircomkitConfig>);
 
   // Read circuit names from circuits.json
   const circuitNames = Object.keys(circuitsJson);
 
-  // Set up circuits in parallel.
+  // Compile and set up circuits in parallel to generate all artifacts.
+  // The batching lets us compile up to 4 circuits at a time to avoid OOM
+  // issues.  The awaits within the lambda below ensures that compile and
+  // setup of the same circuit happen in sequence.
   await batchPromise(
     MAX_PARALLEL_PROMISES,
-    (circuitName) => circomkit.setup(circuitName),
+    async (circuitName) => {
+      // Note that setup will implicitly compile if r1cs file doesn't exist, but
+      // it won't check if inputs have changed or other files (e.g. wasm) are
+      // missing, so we do both steps explicitly here.
+      await circomkit.compile(circuitName);
+      await circomkit.setup(circuitName);
+    },
     circuitNames
   );
 
   // Move artifacts to the right place.
   for (const circuitName of circuitNames) {
-    await fs.rename(
+    await fs.copyFile(
       path.join("build", circuitName, "groth16_vkey.json"),
       path.join(testArtifactDir, circuitName + "-vkey.json")
     );
-    await fs.rename(
+    await fs.copyFile(
       path.join("build", circuitName, "groth16_pkey.zkey"),
       path.join(testArtifactDir, circuitName + "-pkey.zkey")
     );
-    await fs.rename(
+    await fs.copyFile(
       path.join(
         "build",
         circuitName,
@@ -60,4 +69,5 @@ main()
   .then(() => process.exit())
   .catch((err) => {
     console.error(err);
+    process.exit(1);
   });

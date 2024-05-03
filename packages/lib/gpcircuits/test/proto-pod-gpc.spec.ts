@@ -2,6 +2,7 @@ import { POD, PODContent, decodePublicKey, decodeSignature } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
+import _ from "lodash";
 import "mocha";
 import path from "path";
 import { poseidon2 } from "poseidon-lite/poseidon2";
@@ -9,15 +10,15 @@ import {
   CircuitArtifactPaths,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
+  ProtoPODGPCCircuitParams,
   ProtoPODGPCInputNamesType,
   ProtoPODGPCInputs,
   ProtoPODGPCOutputNamesType,
   ProtoPODGPCOutputs,
-  ProtoPODGPCCircuitParams,
-  protoPODGPCCircuitParamArray,
   array2Bits,
   extendedSignalArray,
-  gpcArtifactPaths
+  gpcArtifactPaths,
+  protoPODGPCCircuitParamArray
 } from "../src";
 import {
   circomkit,
@@ -26,7 +27,6 @@ import {
   sampleEntries,
   sampleEntries2
 } from "./common";
-import isEqual from "lodash";
 
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
@@ -280,7 +280,7 @@ const sampleOutput: ProtoPODGPCOutputs = {
  * inputs will be padded appropriately.
  */
 function makeTestSignals(
-  params: ProtoPODGPCParameters,
+  params: ProtoPODGPCCircuitParams,
   isNullifierHashRevealed: boolean
 ): { inputs: ProtoPODGPCInputs; outputs: ProtoPODGPCOutputs } {
   // Test data is selected to exercise a lot of features at once, at full
@@ -509,7 +509,7 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
 
 describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", function () {
   function prepGroth16Test(
-    params: ProtoPODGPCParameters
+    params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {
     const circuitDesc = ProtoPODGPC.pickCircuit(params);
     expect(circuitDesc).to.not.be.undefined;
@@ -586,7 +586,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     // smaller sizes, with truncated data as necessary.
     for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
-      if (isEqual(cd, GPC_PARAMS)) {
+      if (_.isEqual(cd, GPC_PARAMS)) {
         continue;
       }
 
