@@ -1,34 +1,56 @@
 {
-  "ValueOrNegativeOne": {
-    "file": "gpc-util",
-    "template": "ValueOrNegativeOne"
-  },
-  "InputSelector": {
-    "file": "gpc-util",
-    "template": "InputSelector",
-    "params": [2]
-  },
-  "ObjectModule": {
-    "file": "object",
-    "template": "ObjectModule"
-  },
-  "OwnerModuleSemaphoreV3": {
-    "file": "owner",
-    "template": "OwnerModuleSemaphoreV3"
-  },
-  "EntryModule": {
-    "file": "entry",
-    "template": "EntryModule",
-    "params": [10]
-  },
-  "GlobalModule": {
-    "file": "global",
-    "template": "GlobalModule"
-  },
-  "ProtoPODGPC": {
+  "proto-pod-gpc_1o-1e-5md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [1, 5, 8],
+    "params": [
+      1,
+      1,
+      5
+    ],
+    "pubs": [
+      "objectSignerPubkeyAx",
+      "objectSignerPubkeyAy",
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueEnabled",
+      "entryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "ownerEntryIndex",
+      "ownerExternalNullifier",
+      "ownerIsNullfierHashRevealed",
+      "globalWatermark"
+    ]
+  },
+  "proto-pod-gpc_1o-5e-8md": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      1,
+      5,
+      8
+    ],
+    "pubs": [
+      "objectSignerPubkeyAx",
+      "objectSignerPubkeyAy",
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueEnabled",
+      "entryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "ownerEntryIndex",
+      "ownerExternalNullifier",
+      "ownerIsNullfierHashRevealed",
+      "globalWatermark"
+    ]
+  },
+  "proto-pod-gpc_3o-10e-8md": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      3,
+      10,
+      8
+    ],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",

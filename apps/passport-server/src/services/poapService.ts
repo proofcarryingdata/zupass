@@ -7,6 +7,7 @@ import { getHash } from "@pcd/passport-crypto";
 import {
   EDGE_CITY_7_DAY_PRODUCT_IDS,
   EDGE_CITY_EVENT_ID,
+  ETH_LATAM_2024_EVENT_ID,
   VITALIA_EVENT_ID,
   VITALIA_PUBLIC_KEY,
   ZUCONNECT_23_DAY_PASS_EVENT_ID,
@@ -17,6 +18,7 @@ import {
   ZUZALU_23_EVENT_ID
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { RollbarService } from "@pcd/server-shared";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -34,7 +36,6 @@ import { fetchLoggedInZuzaluUser } from "../database/queries/zuzalu_pretix_ticke
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
 import { getServerErrorUrl } from "../util/util";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 // Set up an async-lock to prevent race conditions when two separate invocations
@@ -360,6 +361,61 @@ export class PoapService {
 
   /**
    * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
+   * ETH LATAM 2024 ticket and returns the ID of that ticket.
+   *
+   * This function throws an error in the case that the PCD is not
+   * valid; for example, here are a few invalid cases
+   *  1. Wrong PCD type
+   *  2. Wrong EdDSA public key
+   *  3. PCD proof is invalid
+   *  4. Event of ticket is not ETH LATAM 2024
+   *  5. Ticket was not checked in
+   */
+  private async validateETHLatamTicket(serializedPCD: string): Promise<string> {
+    return traced("poap", "validateETHLatamDenverTicket", async (span) => {
+      if (!process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+        throw new Error(
+          "Missing generic issuance eddsa private key .env value"
+        );
+      const pcd = await this.validateZKEdDSAEventTicketPCD(
+        serializedPCD,
+        await getEdDSAPublicKey(process.env.GENERIC_ISSUANCE_EDDSA_PRIVATE_KEY)
+      );
+
+      const {
+        validEventIds,
+        partialTicket: { ticketId, isConsumed }
+      } = pcd.claim;
+
+      logger(
+        `[POAP] checking that validEventIds ${validEventIds} matches ETH LATAM 2024`
+      );
+
+      if (
+        !(
+          validEventIds &&
+          validEventIds.length === 1 &&
+          validEventIds[0] === ETH_LATAM_2024_EVENT_ID
+        )
+      ) {
+        throw new Error("valid event IDs of PCD does not match ETH LATAM 2024");
+      }
+
+      if (!isConsumed) {
+        throw new Error("ticket was not checked in at ETH LATAM 2024");
+      }
+
+      if (!ticketId) {
+        throw new Error("ticket ID must be revealed");
+      }
+      span?.setAttribute("ticketId", ticketId);
+
+      return ticketId;
+    });
+  }
+
+  /**
+   * Validates that a serialized ZKEdDSAEventTicketPCD is a valid
    * Devconnect Cowork ticket that has been checked in, and returns
    * the ID of that ticket.
    *
@@ -575,6 +631,40 @@ export class PoapService {
       return getServerErrorUrl(
         "Contact support",
         "An error occurred while fetching your POAP mint link for Edge City Denver."
+      );
+    }
+  }
+
+  /**
+   * Given a ZKEdDSAEventTicketPCD sent to the server for claiming an ETH LATAM 2024 POAP,
+   * returns the valid redirect URL to the response handler.
+   *  1. If this ticket is already associated with a POAP mint link, return that link.
+   *  2. If this ticket is not associated with a POAP mint link and more unclaimed POAP
+   *     links exist, then associate that unclaimed link with this ticket and return it.
+   *  3. If this ticket is not associated with a POAP mint link and no more unclaimed
+   *     POAP links exist, return a custom server error URL.
+   */
+  public async getETHLatamPoapRedirectUrl(
+    serializedPCD: string
+  ): Promise<string> {
+    try {
+      const ticketId = await this.validateETHLatamTicket(serializedPCD);
+      const poapLink = await this.getPoapClaimUrlByTicketId(
+        ticketId,
+        "ethlatam"
+      );
+      if (poapLink === null) {
+        throw new Error("Not enough ETH LATAM POAP links");
+      }
+      return poapLink;
+    } catch (e) {
+      logger("[POAP] getETHLatamPoapRedirectUrl error", e);
+      this.rollbarService?.reportError(e);
+      // Return the generic /server-error page instead for the route to redirect to,
+      // with a title and description informing the user to contact support.
+      return getServerErrorUrl(
+        "Contact support",
+        `An error occurred while fetching your POAP mint link for ETH LATAM: ${e}`
       );
     }
   }

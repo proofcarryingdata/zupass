@@ -1,13 +1,14 @@
-import { EmailPCDPackage } from "@pcd/email-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   CSVPipelineDefinition,
   CSVPipelineOutputType,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineType,
+  PipelineZuAuthConfig,
   PollFeedRequest,
-  PollFeedResponseValue,
-  verifyFeedCredential
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
@@ -25,11 +26,17 @@ import {
 } from "../../capabilities/FeedIssuanceCapability";
 import { PipelineCapability } from "../../capabilities/types";
 import { tracePipeline } from "../../honeycombQueries";
+import { CredentialSubservice } from "../../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../../types";
 import { makePLogErr, makePLogInfo } from "../logging";
 import { BasePipeline, Pipeline } from "../types";
 import { makeMessagePCD } from "./makeMessagePCD";
-import { makeTicketPCD, summarizeEventAndProductIds } from "./makeTicketPCD";
+import { makePODTicketPCD } from "./makePODTicketPCD";
+import {
+  makeTicketPCD,
+  rowToTicket,
+  summarizeEventAndProductIds
+} from "./makeTicketPCD";
 
 const LOG_NAME = "CSVPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
@@ -45,6 +52,7 @@ export class CSVPipeline implements BasePipeline {
   private eddsaPrivateKey: string;
   private db: IPipelineAtomDB<CSVAtom>;
   private definition: CSVPipelineDefinition;
+  private credentialSubservice: CredentialSubservice;
 
   public get id(): string {
     return this.definition.id;
@@ -57,7 +65,8 @@ export class CSVPipeline implements BasePipeline {
   public constructor(
     eddsaPrivateKey: string,
     definition: CSVPipelineDefinition,
-    db: IPipelineAtomDB
+    db: IPipelineAtomDB,
+    credentialSubservice: CredentialSubservice
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -70,9 +79,11 @@ export class CSVPipeline implements BasePipeline {
           this.id,
           this.definition.options.feedOptions.feedId
         ),
-        options: this.definition.options.feedOptions
+        options: this.definition.options.feedOptions,
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability
     ] as unknown as BasePipelineCapability[];
+    this.credentialSubservice = credentialSubservice;
   }
 
   private async issue(req: PollFeedRequest): Promise<PollFeedResponseValue> {
@@ -91,21 +102,10 @@ export class CSVPipeline implements BasePipeline {
 
       if (req.pcd) {
         try {
-          const { pcd: credential, payload } = await verifyFeedCredential(
-            req.pcd
-          );
-          if (!payload.pcd) {
-            throw new Error("missing email pcd");
-          }
-          const emailPCD = await EmailPCDPackage.deserialize(payload.pcd.pcd);
-          if (
-            emailPCD.claim.semaphoreId !== credential.claim.identityCommitment
-          ) {
-            throw new Error(`Semaphore signature does not match email PCD`);
-          }
-
-          requesterEmail = emailPCD.claim.emailAddress;
-          requesterSemaphoreId = emailPCD.claim.semaphoreId;
+          const { emailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
+          requesterEmail = emailClaim.emailAddress;
+          requesterSemaphoreId = emailClaim.semaphoreId;
         } catch (e) {
           logger(LOG_TAG, "credential PCD not verified for req", req);
         }
@@ -121,7 +121,9 @@ export class CSVPipeline implements BasePipeline {
               requesterEmail,
               requesterSemaphoreId,
               eddsaPrivateKey: this.eddsaPrivateKey,
-              pipelineId: this.id
+              pipelineId: this.id,
+              issueToUnmatchedEmail:
+                this.definition.options.issueToUnmatchedEmail
             }
           )
         )
@@ -184,7 +186,8 @@ export class CSVPipeline implements BasePipeline {
         );
 
         if (
-          this.definition.options.outputType === CSVPipelineOutputType.Ticket
+          this.definition.options.outputType === CSVPipelineOutputType.Ticket ||
+          this.definition.options.outputType === CSVPipelineOutputType.PODTicket
         ) {
           logs.push(
             makePLogInfo(
@@ -239,6 +242,37 @@ export class CSVPipeline implements BasePipeline {
   }
 
   /**
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
+   */
+  private async getZuAuthConfig(): Promise<PipelineZuAuthConfig[]> {
+    if (this.definition.options.outputType !== CSVPipelineOutputType.Ticket) {
+      // We don't have a metadata format for anything that isn't a ticket
+      return [];
+    }
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const uniqueProductMetadata: Record<
+      string,
+      PipelineEdDSATicketZuAuthConfig
+    > = {};
+    // Find all of the unique products and create a metadata entry
+    for (const atom of await this.db.load(this.id)) {
+      // Passing "" as the Semaphore ID here is a bit of a hack
+      const ticket = rowToTicket(atom.row, "", this.id);
+      if (ticket) {
+        uniqueProductMetadata[ticket.productId] = {
+          pcdType: "eddsa-ticket-pcd",
+          publicKey,
+          productId: ticket.productId,
+          eventId: ticket.eventId,
+          eventName: ticket.eventName,
+          productName: ticket.ticketName
+        };
+      }
+    }
+    return Object.values(uniqueProductMetadata);
+  }
+
+  /**
    * Returns all of the unique IDs associated with a CSV pipeline
    * definition.
    */
@@ -287,6 +321,7 @@ export async function makeCSVPCD(
     requesterSemaphoreId?: string;
     eddsaPrivateKey: string;
     pipelineId: string;
+    issueToUnmatchedEmail?: boolean;
   }
 ): Promise<SerializedPCD | undefined> {
   return traced("makeCSVPCD", "makeCSVPCD", async (span) => {
@@ -301,7 +336,17 @@ export async function makeCSVPCD(
           opts.eddsaPrivateKey,
           opts.requesterEmail,
           opts.requesterSemaphoreId,
-          opts.pipelineId
+          opts.pipelineId,
+          opts.issueToUnmatchedEmail
+        );
+      case CSVPipelineOutputType.PODTicket:
+        return makePODTicketPCD(
+          inputRow,
+          opts.eddsaPrivateKey,
+          opts.requesterEmail,
+          opts.requesterSemaphoreId,
+          opts.pipelineId,
+          opts.issueToUnmatchedEmail
         );
       default:
         // will not compile in case we add a new output type

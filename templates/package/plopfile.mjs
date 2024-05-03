@@ -2,7 +2,7 @@ import { readdirSync, existsSync } from "fs";
 import path from "path";
 import util from "util";
 import * as childProcess from "child_process";
-import { getWorkspaceRoot } from "workspace-tools";
+import { getWorkspaceRoot, getPackageInfos } from "workspace-tools";
 
 /**
  * Heavily inspired by https://github.com/lomri123/monorepo-component-generator/blob/main/plop/plopfile.mjs
@@ -14,6 +14,10 @@ const exec = util.promisify(childProcess.exec);
 
 const workspaceRoot = getWorkspaceRoot(process.env.PWD);
 const packagesPath = path.resolve(workspaceRoot, "packages");
+const packageInfo = getPackageInfos(packagesPath);
+
+const tsConfigVersion = packageInfo["@pcd/tsconfig"].version;
+const eslintConfigVersion = packageInfo["@pcd/eslint-config-custom"].version;
 
 const toKebabCase = (string) =>
   string
@@ -124,7 +128,8 @@ export default function (plop) {
       {
         type: "add",
         templateFile: "templates/package.json.hbs",
-        path: `${packagesPath}/{{kebabCase group}}/{{kebabCase name}}/package.json`
+        path: `${packagesPath}/{{kebabCase group}}/{{kebabCase name}}/package.json`,
+        data: { tsConfigVersion, eslintConfigVersion }
       },
       {
         type: "add",

@@ -1,10 +1,8 @@
 import {
   ActionConfigResponseValue,
-  GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineListEntry,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
-  GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
@@ -14,10 +12,13 @@ import {
   PipelineHistoryEntry,
   PipelineInfoResponseValue,
   PipelineLoadSummary,
+  PodboxTicketActionPreCheckRequest,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue
 } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
 import {
   IPipelineAtomDB,
@@ -33,11 +34,11 @@ import { ApplicationContext } from "../../../types";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
-import { RollbarService } from "../../rollbarService";
 import { traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline, PipelineUser } from "../pipelines/types";
 import { PipelineSlot } from "../types";
+import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineAPISubservice } from "./PipelineAPISubservice";
 import { PipelineExecutorSubservice } from "./PipelineExecutorSubservice";
 import { UserSubservice } from "./UserSubservice";
@@ -64,6 +65,7 @@ export class PipelineSubservice {
     pipelineAtomDB: IPipelineAtomDB,
     consumerDB: IPipelineConsumerDB,
     userSubservice: UserSubservice,
+    credentialSubservice: CredentialSubservice,
     pagerdutyService: PagerDutyService | null,
     discordService: DiscordService | null,
     rollbarService: RollbarService | null,
@@ -80,7 +82,11 @@ export class PipelineSubservice {
       instantiatePipelineArgs
     );
     this.userSubservice = userSubservice;
-    this.pipelineAPISubservice = new PipelineAPISubservice(consumerDB, this);
+    this.pipelineAPISubservice = new PipelineAPISubservice(
+      consumerDB,
+      this,
+      credentialSubservice
+    );
   }
 
   /**
@@ -419,13 +425,13 @@ export class PipelineSubservice {
   }
 
   public async handleCheckIn(
-    req: GenericIssuanceCheckInRequest
+    req: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return this.pipelineAPISubservice.handleCheckIn(req);
   }
 
   public async handlePreCheck(
-    req: GenericIssuancePreCheckRequest
+    req: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return this.pipelineAPISubservice.handlePreCheck(req);
   }

@@ -91,7 +91,8 @@ const ManualTicketSchema = z.object({
   /**
    * The full name of the attendee.
    */
-  attendeeName: z.string().min(1)
+  attendeeName: z.string().min(1),
+  timeCreated: z.string().optional()
 });
 
 const ManualTicketListSchema = z
@@ -128,6 +129,18 @@ const LemonadePipelineTicketTypeConfigSchema = z.object({
   name: z.string()
 });
 
+export const MemberCriteriaSchema = z.object({
+  /**
+   * generic issuance event id
+   */
+  eventId: z.string().uuid(),
+  /**
+   * generic issuance product id
+   */
+  productId: z.string().uuid().optional()
+});
+export type MemberCriteria = z.infer<typeof MemberCriteriaSchema>;
+
 const SemaphoreGroupConfigSchema = z.object({
   /**
    * Defines the set of event ID/product ID pairs that qualify a ticket-holder
@@ -138,12 +151,7 @@ const SemaphoreGroupConfigSchema = z.object({
    */
   groupId: z.string().uuid(),
   name: z.string().min(1),
-  memberCriteria: z.array(
-    z.object({
-      eventId: z.string().uuid(),
-      productId: z.string().uuid().optional()
-    })
-  )
+  memberCriteria: z.array(MemberCriteriaSchema)
 });
 
 export type SemaphoreGroupConfig = z.infer<typeof SemaphoreGroupConfigSchema>;
@@ -263,6 +271,13 @@ const FeedIssuanceOptionsSchema = z.object({
 
 export type FeedIssuanceOptions = z.infer<typeof FeedIssuanceOptionsSchema>;
 
+const ImageOptionsSchema = z.object({
+  imageUrl: z.string(),
+  requireCheckedIn: z.boolean()
+});
+
+export type ImageOptions = z.infer<typeof ImageOptionsSchema>;
+
 const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
    * Configured by the user when setting up Lemonade as a data source.
@@ -277,7 +292,8 @@ const LemonadePipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
   ticketActions: TicketActionsOptionsSchema.optional(),
-  semaphoreGroups: SemaphoreGroupListSchema
+  semaphoreGroups: SemaphoreGroupListSchema,
+  enablePODTickets: z.boolean().optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -377,7 +393,15 @@ const PretixEventConfigSchema = z.object({
    * Display name for the event
    */
   name: z.string(),
-  products: z.array(PretixProductConfigSchema)
+  /**
+   * Options to configure displaying an image instead of the QR code
+   */
+  imageOptions: ImageOptionsSchema.optional(),
+  products: z.array(PretixProductConfigSchema),
+  /**
+   * Skip validation of event settings - use with caution!
+   */
+  skipSettingsValidation: z.boolean().optional()
 });
 
 /**
@@ -385,6 +409,32 @@ const PretixEventConfigSchema = z.object({
  * Pretix account.
  */
 export type PretixEventConfig = z.infer<typeof PretixEventConfigSchema>;
+
+export const AutoIssuanceOptionsSchema = z.object({
+  memberCriteria: z.array(MemberCriteriaSchema),
+  eventId: z.string(),
+  productId: z.string(),
+  quantity: z.number(),
+  schedule: z.object({
+    startDate: z.string(),
+    endDate: z.string().optional(),
+    intervalMs: z.number()
+  })
+});
+
+export type AutoIssuanceOptions = z.infer<typeof AutoIssuanceOptionsSchema>;
+
+export const UserPermissionsOptionsSchema = z.object({
+  members: z.array(MemberCriteriaSchema),
+  canCheckIn: z.object({
+    eventId: z.string(),
+    productId: z.string().optional()
+  })
+});
+
+export type UserPermissionsOptions = z.infer<
+  typeof UserPermissionsOptionsSchema
+>;
 
 const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   /**
@@ -396,7 +446,10 @@ const PretixPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   events: z.array(PretixEventConfigSchema),
   feedOptions: FeedIssuanceOptionsSchema,
   manualTickets: ManualTicketListSchema,
-  semaphoreGroups: SemaphoreGroupListSchema
+  semaphoreGroups: SemaphoreGroupListSchema,
+  enablePODTickets: z.boolean().optional(),
+  autoIssuance: z.array(AutoIssuanceOptionsSchema).optional(),
+  userPermissions: z.array(UserPermissionsOptionsSchema).optional()
 }).refine((val) => {
   // Validate that the manual tickets have event and product IDs that match the
   // event configuration.
@@ -445,13 +498,15 @@ export enum CSVPipelineOutputType {
    * {@link EdDSAMessagePCD}
    */
   Message = "EdDSAMessage",
-  Ticket = "EdDSATicket"
+  Ticket = "EdDSATicket",
+  PODTicket = "PODTicketPCD"
 }
 
 const CSVPipelineOptionsSchema = BasePipelineOptionsSchema.extend({
   csv: z.string(),
   outputType: z.nativeEnum(CSVPipelineOutputType).optional(),
-  feedOptions: FeedIssuanceOptionsSchema
+  feedOptions: FeedIssuanceOptionsSchema,
+  issueToUnmatchedEmail: z.boolean().optional()
 });
 
 export type CSVPipelineOptions = z.infer<typeof CSVPipelineOptionsSchema>;

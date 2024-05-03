@@ -38,6 +38,8 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
   const EthLatAmManualBouncerIdentity = new Identity();
   const EthLatAmManualBouncerEmail = "manual_bouncer@example.com";
 
+  const EthLatAmImageUrl = "eth-latam-image-url";
+
   const pretixBackend = new GenericPretixDataMocker();
   const ethLatAmPretixOrganizer = pretixBackend.get().ethLatAmOrganizer;
   const ethLatAmEvent = ethLatAmPretixOrganizer.ethLatAm;
@@ -60,6 +62,10 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
       genericIssuanceId: ethLatAmEventId,
       externalId: ethLatAmEvent.slug,
       name: "Eth LatAm",
+      imageOptions: {
+        imageUrl: EthLatAmImageUrl,
+        requireCheckedIn: true
+      },
       products: ethLatAmProducts.map((product: GenericPretixProduct) => {
         return {
           externalId: product.id.toString(),
@@ -168,7 +174,8 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
         }
       ],
       pretixAPIKey: ethLatAmPretixOrganizer.token,
-      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl
+      pretixOrgUrl: ethLatAmPretixOrganizer.orgUrl,
+      enablePODTickets: true
     },
     type: PipelineType.Pretix
   };
@@ -190,6 +197,7 @@ export function setupTestPretixPipeline(): PretixPipelineTestData {
     EthLatAmManualAttendeeEmail,
     EthLatAmManualBouncerIdentity,
     EthLatAmManualBouncerEmail,
+    EthLatAmImageUrl,
     pretixBackend,
     ethLatAmPretixOrganizer,
     ethLatAmEvent,
@@ -226,6 +234,7 @@ export interface PretixPipelineTestData {
   ethLatAmAttendeeProduct: IConfiguredProduct;
   ethLatAmBouncerProduct: IConfiguredProduct;
   ethLatAmPipeline: PretixPipelineDefinition;
+  EthLatAmImageUrl: string | undefined;
   ethLatAmSemaphoreGroupIds: {
     all: string;
     bouncers: string;
@@ -243,9 +252,15 @@ export interface IConfiguredProduct {
   nameQuestionPretixQuestionIdentitifier: string;
 }
 
+export interface IConfiguredImageDetails {
+  imageUrl: string;
+  requireCheckedIn: boolean;
+}
+
 export interface ConfiguredEvent {
   genericIssuanceId: string;
   externalId: string;
   name: string;
+  imageOptions: IConfiguredImageDetails | undefined;
   products: Array<IConfiguredProduct>;
 }

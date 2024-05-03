@@ -7,6 +7,14 @@
     {
       "type": "node",
       "request": "attach",
+      "name": "Attach to Mocha test",
+      "port": 9229,
+      "restart": true,
+      "cwd": "${workspaceRoot}"
+    },
+    {
+      "type": "node",
+      "request": "attach",
       "name": "Attach to passport-server",
       "port": 4321,
       "restart": true,

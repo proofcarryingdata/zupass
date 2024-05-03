@@ -1,5 +1,17 @@
 # @pcd/rsa-ticket-pcd
 
+## 0.6.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.11.0
+  - @pcd/rsa-pcd@0.6.0
+
 ## 0.5.0
 
 ### Minor Changes

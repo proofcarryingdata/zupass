@@ -1,5 +1,19 @@
 # @pcd/semaphore-group-pcd
 
+## 0.11.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
+### Patch Changes
+
+- Updated dependencies
+  - @pcd/pcd-types@0.11.0
+  - @pcd/util@0.5.0
+  - @pcd/semaphore-identity-pcd@0.11.0
+  - @pcd/semaphore-signature-pcd@0.11.0
+
 ## 0.10.0
 
 ### Minor Changes

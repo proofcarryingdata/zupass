@@ -10,18 +10,13 @@ import {
   EntryModuleInputNamesType,
   EntryModuleInputs,
   EntryModuleOutputNamesType,
-  EntryModuleOutputs
+  EntryModuleOutputs,
+  extendedSignalArray
 } from "../src";
-import {
-  circomkit,
-  extendedSignalArray,
-  privateKey,
-  sampleEntries
-} from "./common";
+import { circomkit, privateKey, sampleEntries } from "./common";
 
 describe("entry.EntryModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  this.timeout(10000);
   let circuit: WitnessTester<
     EntryModuleInputNamesType,
     EntryModuleOutputNamesType
@@ -221,7 +216,6 @@ describe("entry.EntryModule should work", function () {
 
 describe("entry.EntryConstraintModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  this.timeout(10000);
   let circuit: WitnessTester<
     EntryConstraintModuleInputNamesType,
     EntryConstraintModuleOutputNamesType

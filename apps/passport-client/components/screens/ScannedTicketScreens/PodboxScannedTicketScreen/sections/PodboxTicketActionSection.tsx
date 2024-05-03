@@ -1,8 +1,8 @@
-import { PodboxActionPreCheckResult } from "@pcd/passport-interface";
+import { PodboxTicketActionPreCheckResult } from "@pcd/passport-interface";
 import { Spacer } from "@pcd/passport-ui";
 import { useState } from "react";
 import styled from "styled-components";
-import { FakeBack, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
+import { Back, ScanAnotherTicket } from "../PodboxScannedTicketScreen";
 import { PodboxTicketInfoSection } from "./PodboxTicketInfoSection";
 import { PodboxZKModeTicketInfoSection } from "./PodboxZKModeTicketInfoSection";
 import { PodboxTicketActionErrorSection } from "./actions/PodboxTicketErrors";
@@ -24,7 +24,7 @@ export function PodboxTicketActionSection({
 }: {
   ticketId: string;
   eventId: string;
-  precheck: PodboxActionPreCheckResult;
+  precheck: PodboxTicketActionPreCheckResult;
   zkMode: boolean;
 }): JSX.Element {
   const [isLoading, setIsLoading] = useState(false);
@@ -46,7 +46,7 @@ export function PodboxTicketActionSection({
       <>
         <Spacer h={32} />
         <TopRow>
-          <FakeBack />
+          <Back />
           <ScanAnotherTicket disabled={isLoading} />
         </TopRow>
         <Spacer h={16} />
@@ -64,7 +64,7 @@ export function PodboxTicketActionSection({
       <>
         <Spacer h={32} />
         <TopRow>
-          <FakeBack />
+          <Back />
           <ScanAnotherTicket disabled={isLoading} />
         </TopRow>
         <Spacer h={16} />
@@ -80,7 +80,7 @@ export function PodboxTicketActionSection({
       <Spacer h={32} />
 
       <TopRow>
-        <FakeBack />
+        <Back />
         <ScanAnotherTicket disabled={isLoading} />
       </TopRow>
 

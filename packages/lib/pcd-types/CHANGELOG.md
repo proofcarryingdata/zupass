@@ -1,5 +1,11 @@
 # @pcd/pcd-types
 
+## 0.11.0
+
+### Minor Changes
+
+- Lightweight PCD package imports and new authentication libraries
+
 ## 0.10.0
 
 ### Minor Changes

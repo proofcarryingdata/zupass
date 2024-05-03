@@ -1,8 +1,15 @@
+import { RollbarProvider } from "@pcd/client-shared";
 import {
+  CredentialManager,
+  ZUPASS_CREDENTIAL_REQUEST,
   requestOfflineTickets,
   requestOfflineTicketsCheckin
 } from "@pcd/passport-interface";
-import { getErrorMessage, isWebAssemblySupported } from "@pcd/util";
+import {
+  getErrorMessage,
+  isLocalStorageAvailable,
+  isWebAssemblySupported
+} from "@pcd/util";
 import * as React from "react";
 import { useCallback, useEffect, useMemo, useState } from "react";
 import { createRoot } from "react-dom/client";
@@ -25,6 +32,7 @@ import { GetWithoutProvingScreen } from "../components/screens/GetWithoutProving
 import { HaloScreen } from "../components/screens/HaloScreen/HaloScreen";
 import { HomeScreen } from "../components/screens/HomeScreen/HomeScreen";
 import { ImportBackupScreen } from "../components/screens/ImportBackupScreen";
+import { LocalStorageNotAccessibleScreen } from "../components/screens/LocalStorageNotAccessibleScreen";
 import { AlreadyRegisteredScreen } from "../components/screens/LoginScreens/AlreadyRegisteredScreen";
 import { CreatePasswordScreen } from "../components/screens/LoginScreens/CreatePasswordScreen";
 import { LoginInterstitialScreen } from "../components/screens/LoginScreens/LoginInterstitialScreen";
@@ -48,7 +56,6 @@ import {
   CenterColumn,
   GlobalBackground
 } from "../components/shared/AppContainer";
-import { RollbarProvider } from "../components/shared/RollbarProvider";
 import { useTsParticles } from "../components/shared/useTsParticles";
 import { appConfig } from "../src/appConfig";
 import { useStateContext } from "../src/appHooks";
@@ -56,7 +63,6 @@ import {
   closeBroadcastChannel,
   setupBroadcastChannel
 } from "../src/broadcastChannel";
-import { getOrGenerateCheckinCredential } from "../src/checkin";
 import { Action, StateContext, dispatch } from "../src/dispatch";
 import { Emitter } from "../src/emitter";
 import { loadInitialState } from "../src/loadInitialState";
@@ -122,20 +128,6 @@ function useBackgroundJobs(): void {
         // Reschedule next poll.
         lastBackgroundPoll = Date.now();
         setupPolling();
-      }
-    };
-
-    const generateCheckinCredential = async (): Promise<void> => {
-      // This ensures that the check-in credential is pre-cached before the
-      // first check-in attempt.
-      try {
-        const state = getState();
-        if (!state.identity) {
-          throw new Error("Missing identity");
-        }
-        await getOrGenerateCheckinCredential(state.identity);
-      } catch (e) {
-        console.log("Could not get or generate checkin credential:", e);
       }
     };
 
@@ -205,13 +197,21 @@ function useBackgroundJobs(): void {
         return;
       }
 
+      const credentialManager = new CredentialManager(
+        getState().identity,
+        getState().pcds,
+        getState().credentialCache
+      );
+
       if (state.checkedinOfflineDevconnectTickets.length > 0) {
         const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
           appConfig.zupassServer,
           {
             checkedOfflineInDevconnectTicketIDs:
               state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-            checkerProof: await getOrGenerateCheckinCredential(state.identity)
+            checkerProof: await credentialManager.requestCredential(
+              ZUPASS_CREDENTIAL_REQUEST
+            )
           }
         );
 
@@ -226,7 +226,9 @@ function useBackgroundJobs(): void {
       const offlineTicketsResult = await requestOfflineTickets(
         appConfig.zupassServer,
         {
-          checkerProof: await getOrGenerateCheckinCredential(state.identity)
+          checkerProof: await credentialManager.requestCredential(
+            ZUPASS_CREDENTIAL_REQUEST
+          )
         }
       );
 
@@ -246,12 +248,12 @@ function useBackgroundJobs(): void {
       setupPolling();
       startJobSyncOfflineCheckins();
       jobCheckConnectivity();
-      generateCheckinCredential();
     };
 
     setupBroadcastChannel(dispatch);
     setupUsingLaserScanning();
     startBackgroundJobs();
+    dispatch({ type: "initialize-strich" });
 
     return () => {
       closeBroadcastChannel();
@@ -271,6 +273,13 @@ function App(): JSX.Element {
           <Routes>
             <Route path="/terms" element={<TermsScreen />} />
             <Route path="*" element={<NoWASMScreen />} />
+          </Routes>
+        </HashRouter>
+      ) : !isLocalStorageAvailable() ? (
+        <HashRouter>
+          <Routes>
+            <Route path="/terms" element={<TermsScreen />} />
+            <Route path="*" element={<LocalStorageNotAccessibleScreen />} />
           </Routes>
         </HashRouter>
       ) : !hasStack ? (
@@ -446,7 +455,12 @@ loadInitialState()
   .then((initialState: AppState) => {
     const root = createRoot(document.querySelector("#root") as Element);
     root.render(
-      <RollbarProvider>
+      <RollbarProvider
+        config={{
+          accessToken: appConfig.rollbarToken,
+          environmentName: appConfig.rollbarEnvName
+        }}
+      >
         <AppStateProvider initialState={initialState}>
           <App />
         </AppStateProvider>
@@ -454,9 +468,15 @@ loadInitialState()
     );
   })
   .catch((error: unknown) => {
+    console.error(error);
     const root = createRoot(document.querySelector("#root") as Element);
     root.render(
-      <RollbarProvider>
+      <RollbarProvider
+        config={{
+          accessToken: appConfig.rollbarToken,
+          environmentName: appConfig.rollbarEnvName
+        }}
+      >
         <GlobalBackground color={"var(--bg-dark-primary)"} />
         <Background>
           <CenterColumn>

@@ -1,3 +1,4 @@
+import { RollbarService } from "@pcd/server-shared";
 import { Application } from "express";
 import * as http from "http";
 import Libhoney from "libhoney";
@@ -5,7 +6,6 @@ import { Pool } from "postgres-pool";
 import { IEmailAPI } from "./apis/emailAPI";
 import { ILemonadeAPI } from "./apis/lemonade/lemonadeAPI";
 import { IGenericPretixAPI } from "./apis/pretix/genericPretixAPI";
-import { IZuconnectTripshaAPI } from "./apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import {
   DevconnectPretixAPIFactory,
@@ -17,7 +17,6 @@ import { EmailTokenService } from "./services/emailTokenService";
 import { FrogcryptoService } from "./services/frogcryptoService";
 import { GenericIssuanceService } from "./services/generic-issuance/GenericIssuanceService";
 import { IssuanceService } from "./services/issuanceService";
-import { KudosbotService } from "./services/kudosbotService";
 import { MetricsService } from "./services/metricsService";
 import { MultiProcessService } from "./services/multiProcessService";
 import { PagerDutyService } from "./services/pagerDutyService";
@@ -25,11 +24,9 @@ import { PersistentCacheService } from "./services/persistentCacheService";
 import { PoapService } from "./services/poapService";
 import { ProvingService } from "./services/provingService";
 import { RateLimitService } from "./services/rateLimitService";
-import { RollbarService } from "./services/rollbarService";
 import { SemaphoreService } from "./services/semaphoreService";
 import { TelegramService } from "./services/telegramService";
 import { UserService } from "./services/userService";
-import { ZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { ZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 
 export interface ApplicationContext {
@@ -49,12 +46,10 @@ export interface GlobalServices {
   provingService: ProvingService;
   zuzaluPretixSyncService: ZuzaluPretixSyncService | null;
   devconnectPretixSyncService: DevconnectPretixSyncService | null;
-  zuconnectTripshaSyncService: ZuconnectTripshaSyncService | null;
   metricsService: MetricsService;
   issuanceService: IssuanceService | null;
   discordService: DiscordService | null;
   telegramService: TelegramService | null;
-  kudosbotService: KudosbotService | null;
   frogcryptoService: FrogcryptoService | null;
   poapService: PoapService;
   persistentCacheService: PersistentCacheService;
@@ -79,7 +74,6 @@ export interface APIs {
   emailAPI: IEmailAPI | null;
   zuzaluPretixAPI: IZuzaluPretixAPI | null;
   devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
-  zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
   lemonadeAPI: ILemonadeAPI | null;
   genericPretixAPI: IGenericPretixAPI | null;
 }
@@ -105,7 +99,6 @@ export interface EnvironmentVariables {
   TELEGRAM_PRIVATE_CHAT_ID?: string;
   PASSPORT_CLIENT_URL?: string;
   ACCOUNT_RESET_RATE_LIMIT_DISABLED?: string;
-  TELEGRAM_KUDOSBOT_TOKEN?: string;
   TICKET_ISSUANCE_CUTOFF_DATE?: string;
   GENERIC_RATE_LIMIT_DISABLED?: string;
   GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY?: string;

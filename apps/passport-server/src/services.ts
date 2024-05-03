@@ -6,7 +6,6 @@ import { startEmailTokenService } from "./services/emailTokenService";
 import { startFrogcryptoService } from "./services/frogcryptoService";
 import { startGenericIssuanceService } from "./services/generic-issuance/subservices/utils/startGenericIssuanceService";
 import { startIssuanceService } from "./services/issuanceService";
-import { startKudosbotService } from "./services/kudosbotService";
 import { startMetricsService } from "./services/metricsService";
 import { startMultiProcessService } from "./services/multiProcessService";
 import { startPagerDutyService } from "./services/pagerDutyService";
@@ -14,12 +13,11 @@ import { startPersistentCacheService } from "./services/persistentCacheService";
 import { startPoapService } from "./services/poapService";
 import { startProvingService } from "./services/provingService";
 import { startRateLimitService } from "./services/rateLimitService";
-import { startRollbarService } from "./services/rollbarService";
 import { startSemaphoreService } from "./services/semaphoreService";
+import { startRollbarService } from "./services/startRollbarService";
 import { startTelegramService } from "./services/telegramService";
 import { startTelemetry } from "./services/telemetryService";
 import { startUserService } from "./services/userService";
-import { startZuconnectTripshaSyncService } from "./services/zuconnectTripshaSyncService";
 import { startZuzaluPretixSyncService } from "./services/zuzaluPretixSyncService";
 import { APIs, ApplicationContext, GlobalServices } from "./types";
 
@@ -39,7 +37,6 @@ export async function startServices(
     rollbarService,
     discordService
   );
-  const kudosbotService = await startKudosbotService(context, rollbarService);
   const provingService = await startProvingService(rollbarService);
   const emailService = startEmailService(context, apis.emailAPI);
   const emailTokenService = startEmailTokenService(context);
@@ -55,12 +52,6 @@ export async function startServices(
     rollbarService,
     semaphoreService,
     apis.devconnectPretixAPIFactory
-  );
-  const zuconnectTripshaSyncService = await startZuconnectTripshaSyncService(
-    context,
-    rollbarService,
-    semaphoreService,
-    apis.zuconnectTripshaAPI
   );
   const userService = startUserService(
     context,
@@ -106,12 +97,10 @@ export async function startServices(
     provingService,
     zuzaluPretixSyncService,
     devconnectPretixSyncService,
-    zuconnectTripshaSyncService,
     metricsService,
     issuanceService,
     discordService,
     telegramService,
-    kudosbotService,
     frogcryptoService,
     poapService,
     persistentCacheService,
@@ -130,10 +119,8 @@ export async function stopServices(services: GlobalServices): Promise<void> {
   services.zuzaluPretixSyncService?.stop();
   services.metricsService.stop();
   services.telegramService?.stop();
-  services.kudosbotService?.stop();
   services.persistentCacheService.stop();
   services.devconnectPretixSyncService?.stop();
-  services.zuconnectTripshaSyncService?.stop();
   services.frogcryptoService?.stop();
   await services.discordService?.stop();
   await services.multiprocessService.stop();

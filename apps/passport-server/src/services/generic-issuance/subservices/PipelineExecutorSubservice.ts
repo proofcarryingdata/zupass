@@ -2,11 +2,11 @@ import {
   PipelineDefinition,
   PipelineLoadSummary
 } from "@pcd/passport-interface";
+import { RollbarService } from "@pcd/server-shared";
 import { str } from "@pcd/util";
 import { logger } from "../../../util/logger";
 import { DiscordService } from "../../discordService";
 import { PagerDutyService } from "../../pagerDutyService";
-import { RollbarService } from "../../rollbarService";
 import { setError, traced } from "../../telemetryService";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { Pipeline } from "../pipelines/types";

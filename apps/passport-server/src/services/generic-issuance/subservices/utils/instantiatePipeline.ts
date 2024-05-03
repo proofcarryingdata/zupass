@@ -1,4 +1,3 @@
-import { EdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   PipelineDefinition,
   isCSVPipelineDefinition,
@@ -10,6 +9,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
@@ -22,6 +22,7 @@ import { CSVPipeline } from "../../pipelines/CSVPipeline/CSVPipeline";
 import { LemonadePipeline } from "../../pipelines/LemonadePipeline";
 import { PretixPipeline } from "../../pipelines/PretixPipeline";
 import { Pipeline } from "../../pipelines/types";
+import { CredentialSubservice } from "../CredentialSubservice";
 
 /**
  * All the state necessary to instantiate any type of {@link Pipeline}.
@@ -31,7 +32,6 @@ import { Pipeline } from "../../pipelines/types";
  * - {@link PretixPipeline}
  */
 export interface InstantiatePipelineArgs {
-  zupassPublicKey: EdDSAPublicKey;
   /**
    * Used to sign all PCDs created by all the {@link Pipeline}s.
    */
@@ -44,7 +44,9 @@ export interface InstantiatePipelineArgs {
   contactDB: IContactSharingDB;
   badgeDB: IBadgeGiftingDB;
   consumerDB: IPipelineConsumerDB;
+  manualTicketDB: IPipelineManualTicketDB;
   semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
+  credentialSubservice: CredentialSubservice;
 }
 
 /**
@@ -67,13 +69,13 @@ export function instantiatePipeline(
         definition,
         args.pipelineAtomDB,
         args.lemonadeAPI,
-        args.zupassPublicKey,
         args.cacheService,
         args.checkinDB,
         args.contactDB,
         args.badgeDB,
         args.consumerDB,
-        args.semaphoreHistoryDB
+        args.semaphoreHistoryDB,
+        args.credentialSubservice
       );
     } else if (isPretixPipelineDefinition(definition)) {
       pipeline = new PretixPipeline(
@@ -81,17 +83,19 @@ export function instantiatePipeline(
         definition,
         args.pipelineAtomDB,
         args.genericPretixAPI,
-        args.zupassPublicKey,
+        args.credentialSubservice,
         args.cacheService,
         args.checkinDB,
         args.consumerDB,
+        args.manualTicketDB,
         args.semaphoreHistoryDB
       );
     } else if (isCSVPipelineDefinition(definition)) {
       pipeline = new CSVPipeline(
         args.eddsaPrivateKey,
         definition,
-        args.pipelineAtomDB
+        args.pipelineAtomDB,
+        args.credentialSubservice
       );
     }
 

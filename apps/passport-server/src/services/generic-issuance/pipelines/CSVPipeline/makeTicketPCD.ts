@@ -85,7 +85,8 @@ export async function makeTicketPCD(
   eddsaPrivateKey: string,
   requesterEmail: string | undefined,
   requesterSemaphoreId: string | undefined,
-  pipelineId: string
+  pipelineId: string,
+  issueToUnmatchedEmail: boolean | undefined
 ): Promise<SerializedPCD | undefined> {
   return traced("", "makeEdDSAMessageCSVPCD", async () => {
     if (!requesterEmail || !requesterSemaphoreId) {
@@ -98,7 +99,7 @@ export async function makeTicketPCD(
       return undefined;
     }
 
-    if (ticket.attendeeEmail !== requesterEmail) {
+    if (!issueToUnmatchedEmail && ticket.attendeeEmail !== requesterEmail) {
       return undefined;
     }
 

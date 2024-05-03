@@ -32,9 +32,6 @@
       "path": "../pcd-types/tsconfig.cjs.json"
     },
     {
-      "path": "../../pcd/rsa-ticket-pcd/tsconfig.cjs.json"
-    },
-    {
       "path": "../../pcd/semaphore-group-pcd/tsconfig.cjs.json"
     },
     {

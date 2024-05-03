@@ -1,41 +1,48 @@
-import { EdDSAPublicKey, isEqualEdDSAPublicKey } from "@pcd/eddsa-pcd";
+import { getEdDSAPublicKey } from "@pcd/eddsa-pcd";
 import {
   EdDSATicketPCD,
   EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName,
   ITicketData,
   TicketCategory,
+  isEdDSATicketPCD,
   linkToTicket
 } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
+import { EmailPCDClaim } from "@pcd/email-pcd";
 import { getHash } from "@pcd/passport-crypto";
 import {
   ActionConfigResponseValue,
   BadgeConfig,
   CONTACT_EVENT_NAME,
-  GenericIssuanceCheckInRequest,
-  GenericIssuancePreCheckRequest,
   LemonadePipelineDefinition,
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
+  PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
   PipelineSemaphoreGroupInfo,
   PipelineType,
   PodboxTicketActionError,
+  PodboxTicketActionPreCheckRequest,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
   PollFeedResponseValue,
   TicketInfo,
-  isPerDayBadge,
-  verifyFeedCredential,
-  verifyTicketActionCredential
+  isPerDayBadge
 } from "@pcd/passport-interface";
 import { PCDAction, PCDActionType } from "@pcd/pcd-collection";
 import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
+import {
+  PODTicketPCD,
+  PODTicketPCDPackage,
+  PODTicketPCDTypeName
+} from "@pcd/pod-ticket-pcd";
 import { SerializedSemaphoreGroup } from "@pcd/semaphore-group-pcd";
 import { str } from "@pcd/util";
 import { randomUUID } from "crypto";
+import stable_stringify from "fast-json-stable-stringify";
 import PQueue from "p-queue";
 import { DatabaseError } from "pg";
 import urljoin from "url-join";
@@ -54,6 +61,7 @@ import {
   IBadgeGiftingDB,
   IContactSharingDB
 } from "../../../database/queries/ticketActionDBs";
+import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
@@ -73,6 +81,7 @@ import {
 import { SemaphoreGroupCapability } from "../capabilities/SemaphoreGroupCapability";
 import { PipelineCapability } from "../capabilities/types";
 import { tracePipeline } from "../honeycombQueries";
+import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
@@ -95,7 +104,6 @@ export class LemonadePipeline implements BasePipeline {
    */
   private eddsaPrivateKey: string;
   private definition: LemonadePipelineDefinition;
-  private zupassPublicKey: EdDSAPublicKey;
 
   // Pending check-ins are check-ins which have either completed (and have
   // succeeded) or are in-progress, but which are not yet reflected in the data
@@ -121,6 +129,7 @@ export class LemonadePipeline implements BasePipeline {
   private semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   private semaphoreGroupProvider: SemaphoreGroupProvider | undefined;
   private semaphoreUpdateQueue: PQueue;
+  private credentialSubservice: CredentialSubservice;
 
   public get id(): string {
     return this.definition.id;
@@ -139,13 +148,13 @@ export class LemonadePipeline implements BasePipeline {
     definition: LemonadePipelineDefinition,
     db: IPipelineAtomDB,
     api: ILemonadeAPI,
-    zupassPublicKey: EdDSAPublicKey,
     cacheService: PersistentCacheService,
     checkinDB: IPipelineCheckinDB,
     contactDB: IContactSharingDB,
     badgeDB: IBadgeGiftingDB,
     consumerDB: IPipelineConsumerDB,
-    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB
+    semaphoreHistoryDB: IPipelineSemaphoreHistoryDB,
+    credentialSubservice: CredentialSubservice
   ) {
     this.eddsaPrivateKey = eddsaPrivateKey;
     this.definition = definition;
@@ -153,7 +162,7 @@ export class LemonadePipeline implements BasePipeline {
     this.contactDB = contactDB;
     this.badgeDB = badgeDB;
     this.api = api;
-    this.zupassPublicKey = zupassPublicKey;
+    this.credentialSubservice = credentialSubservice;
     this.loaded = false;
 
     if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
@@ -173,7 +182,8 @@ export class LemonadePipeline implements BasePipeline {
         feedUrl: makeGenericIssuanceFeedUrl(
           this.id,
           this.definition.options.feedOptions.feedId
-        )
+        ),
+        getZuAuthConfig: this.getZuAuthConfig.bind(this)
       } satisfies FeedIssuanceCapability,
       {
         checkin: this.executeTicketAction.bind(this),
@@ -756,7 +766,9 @@ export class LemonadePipeline implements BasePipeline {
 
     // Turn ticket data into PCDs
     const tickets = await Promise.all(
-      ticketDatas.map((t) => this.getOrGenerateTicket(t))
+      ticketDatas.map((t) =>
+        this.getOrGenerateTicket<EdDSATicketPCD>(t, EdDSATicketPCDTypeName)
+      )
     );
 
     return tickets;
@@ -772,40 +784,18 @@ export class LemonadePipeline implements BasePipeline {
         throw new Error("missing credential pcd");
       }
 
-      // TODO: cache the verification
-      const { pcd: credential, payload } = await verifyFeedCredential(req.pcd);
+      const { emailClaim } =
+        await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      const serializedEmailPCD = payload.pcd;
-      if (!serializedEmailPCD) {
-        throw new Error("missing email pcd");
-      }
-
-      const emailPCD = await EmailPCDPackage.deserialize(
-        serializedEmailPCD.pcd
+      // Consumer is validated, so save them in the consumer list
+      const didUpdate = await this.consumerDB.save(
+        this.id,
+        emailClaim.emailAddress,
+        emailClaim.semaphoreId,
+        new Date()
       );
 
-      if (emailPCD.claim.semaphoreId !== credential.claim.identityCommitment) {
-        throw new Error(`Semaphore signature does not match email PCD`);
-      }
-
-      if (
-        !isEqualEdDSAPublicKey(
-          emailPCD.proof.eddsaPCD.claim.publicKey,
-          this.zupassPublicKey
-        )
-      ) {
-        throw new Error(`Email PCD is not signed by Zupass`);
-      }
-
       if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        // Consumer is validated, so save them in the consumer list
-        const didUpdate = await this.consumerDB.save(
-          this.id,
-          emailPCD.claim.emailAddress,
-          emailPCD.claim.semaphoreId,
-          new Date()
-        );
-
         // If the user's Semaphore commitment has changed, `didUpdate` will be
         // true, and we need to update the Semaphore groups
         if (didUpdate) {
@@ -814,13 +804,13 @@ export class LemonadePipeline implements BasePipeline {
         }
       }
 
-      const email = emailPCD.claim.emailAddress.toLowerCase();
+      const email = emailClaim.emailAddress.toLowerCase();
       span?.setAttribute("email", email);
-      span?.setAttribute("semaphore_id", emailPCD.claim.semaphoreId);
+      span?.setAttribute("semaphore_id", emailClaim.semaphoreId);
 
       const tickets = await this.getTicketsForEmail(
         email,
-        credential.claim.identityCommitment
+        emailClaim.semaphoreId
       );
 
       const ticketActions: PCDAction[] = [];
@@ -833,12 +823,30 @@ export class LemonadePipeline implements BasePipeline {
         });
       }
 
+      const ticketPCDs = await Promise.all(
+        tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
+      );
+
+      if (this.definition.options.enablePODTickets) {
+        const podTickets = await Promise.all(
+          tickets.map((ticket) => {
+            return this.getOrGenerateTicket<PODTicketPCD>(
+              ticket.claim.ticket,
+              PODTicketPCDTypeName
+            );
+          })
+        );
+        ticketPCDs.push(
+          ...(await Promise.all(
+            podTickets.map((t) => PODTicketPCDPackage.serialize(t))
+          ))
+        );
+      }
+
       ticketActions.push({
         type: PCDActionType.ReplaceInFolder,
         folder: this.definition.options.feedOptions.feedFolder,
-        pcds: await Promise.all(
-          tickets.map((t) => EdDSATicketPCDPackage.serialize(t))
-        )
+        pcds: ticketPCDs
       });
 
       const contactsFolder = `${this.definition.options.feedOptions.feedFolder}/contacts`;
@@ -884,15 +892,19 @@ export class LemonadePipeline implements BasePipeline {
     });
   }
 
-  private async getOrGenerateTicket(
-    ticketData: ITicketData
-  ): Promise<EdDSATicketPCD> {
+  private async getOrGenerateTicket<T extends EdDSATicketPCD | PODTicketPCD>(
+    ticketData: ITicketData,
+    ticketPCDType: T["type"]
+  ): Promise<T> {
     return traced(LOG_NAME, "getOrGenerateTicket", async (span) => {
       span?.setAttribute("ticket_id", ticketData.ticketId);
       span?.setAttribute("ticket_email", ticketData.attendeeEmail);
       span?.setAttribute("ticket_name", ticketData.attendeeName);
 
-      const cachedTicket = await this.getCachedTicket(ticketData);
+      const cachedTicket = await this.getCachedTicket<T>(
+        ticketData,
+        ticketPCDType
+      );
 
       if (cachedTicket) {
         span?.setAttribute("from_cache", true);
@@ -903,10 +915,14 @@ export class LemonadePipeline implements BasePipeline {
         `${LOG_TAG} cache miss for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
 
-      const generatedTicket = await this.ticketDataToTicketPCD(
-        ticketData,
-        this.eddsaPrivateKey
-      );
+      const generatedTicket: T = (
+        ticketPCDType === EdDSATicketPCDTypeName
+          ? await this.ticketDataToTicketPCD(ticketData, this.eddsaPrivateKey)
+          : await this.ticketDataToPODTicketPCD(
+              ticketData,
+              this.eddsaPrivateKey
+            )
+      ) as T;
 
       try {
         this.cacheTicket(generatedTicket);
@@ -922,6 +938,7 @@ export class LemonadePipeline implements BasePipeline {
   }
 
   private static async getTicketCacheKey(
+    ticketPCDType: string,
     ticketData: ITicketData,
     eddsaPrivateKey: string,
     pipelineId: string
@@ -933,25 +950,35 @@ export class LemonadePipeline implements BasePipeline {
     // ineffective.
     delete ticketCopy.timestampSigned;
     const hash = await getHash(
-      JSON.stringify(ticketCopy) + eddsaPrivateKey + pipelineId
+      stable_stringify(ticketCopy) +
+        eddsaPrivateKey +
+        pipelineId +
+        ticketPCDType
     );
     return hash;
   }
 
-  private async cacheTicket(ticket: EdDSATicketPCD): Promise<void> {
+  private async cacheTicket(
+    ticket: EdDSATicketPCD | PODTicketPCD
+  ): Promise<void> {
     const key = await LemonadePipeline.getTicketCacheKey(
+      ticket.type,
       ticket.claim.ticket,
       this.eddsaPrivateKey,
       this.id
     );
-    const serialized = await EdDSATicketPCDPackage.serialize(ticket);
+    const serialized = isEdDSATicketPCD(ticket)
+      ? await EdDSATicketPCDPackage.serialize(ticket)
+      : await PODTicketPCDPackage.serialize(ticket);
     this.cacheService.setValue(key, JSON.stringify(serialized));
   }
 
-  private async getCachedTicket(
-    ticketData: ITicketData
-  ): Promise<EdDSATicketPCD | undefined> {
+  private async getCachedTicket<T extends EdDSATicketPCD | PODTicketPCD>(
+    ticketData: ITicketData,
+    ticketPCDType: T["type"]
+  ): Promise<T | undefined> {
     const key = await LemonadePipeline.getTicketCacheKey(
+      ticketPCDType,
       ticketData,
       this.eddsaPrivateKey,
       this.id
@@ -969,9 +996,11 @@ export class LemonadePipeline implements BasePipeline {
         `${LOG_TAG} cache hit for ticket id ${ticketData.ticketId} on pipeline ${this.id}`
       );
       const parsedTicket = JSON.parse(serializedTicket.cache_value);
-      const deserializedTicket = await EdDSATicketPCDPackage.deserialize(
-        parsedTicket.pcd
-      );
+      const deserializedTicket = (
+        ticketPCDType === EdDSATicketPCDTypeName
+          ? await EdDSATicketPCDPackage.deserialize(parsedTicket.pcd)
+          : await PODTicketPCDPackage.deserialize(parsedTicket.pcd)
+      ) as T;
       return deserializedTicket;
     } catch (e) {
       logger(
@@ -991,6 +1020,32 @@ export class LemonadePipeline implements BasePipeline {
     );
 
     const ticketPCD = await EdDSATicketPCDPackage.prove({
+      ticket: {
+        value: ticketData,
+        argumentType: ArgumentTypeName.Object
+      },
+      privateKey: {
+        value: eddsaPrivateKey,
+        argumentType: ArgumentTypeName.String
+      },
+      id: {
+        value: stableId,
+        argumentType: ArgumentTypeName.String
+      }
+    });
+
+    return ticketPCD;
+  }
+
+  private async ticketDataToPODTicketPCD(
+    ticketData: ITicketData,
+    eddsaPrivateKey: string
+  ): Promise<PODTicketPCD> {
+    const stableId = await getHash(
+      `issued-pod-ticket-${this.id}-${ticketData.ticketId}`
+    );
+
+    const ticketPCD = await PODTicketPCDPackage.prove({
       ticket: {
         value: ticketData,
         argumentType: ArgumentTypeName.Object
@@ -1263,7 +1318,7 @@ export class LemonadePipeline implements BasePipeline {
    * ticket data is returned.
    */
   private async precheckTicketAction(
-    request: GenericIssuancePreCheckRequest
+    request: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced<ActionConfigResponseValue>(
       LOG_NAME,
@@ -1273,6 +1328,12 @@ export class LemonadePipeline implements BasePipeline {
 
         let actorEmail: string;
 
+        // This method can only be used to pre-check for check-ins.
+        // There is no pre-check for any other kind of action at this time.
+        if (request.action.checkin !== true) {
+          throw new PCDHTTPError(400, "Not supported");
+        }
+
         const result: ActionConfigResponseValue = {
           success: true,
           giveBadgeActionInfo: undefined,
@@ -1280,39 +1341,21 @@ export class LemonadePipeline implements BasePipeline {
           getContactActionInfo: undefined
         };
 
-        let payload;
         // 1) verify that the requester is who they say they are
         try {
-          payload = await verifyTicketActionCredential(request.credential);
-          span?.setAttribute("ticket_id", payload.ticketId);
-
-          const checkerEmailPCD = await EmailPCDPackage.deserialize(
-            payload.emailPCD.pcd
-          );
-
-          if (
-            !isEqualEdDSAPublicKey(
-              checkerEmailPCD.proof.eddsaPCD.claim.publicKey,
-              this.zupassPublicKey
-            )
-          ) {
-            logger(
-              `${LOG_TAG} Email ${checkerEmailPCD.claim.emailAddress} not signed by Zupass`
+          span?.setAttribute("ticket_id", request.ticketId);
+          const { emailClaim: checkerEmailClaim } =
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
+              request.credential
             );
 
-            return { success: false, error: { name: "InvalidSignature" } };
-          }
-
-          span?.setAttribute(
-            "checker_email",
-            checkerEmailPCD.claim.emailAddress
-          );
+          span?.setAttribute("checker_email", checkerEmailClaim.emailAddress);
           span?.setAttribute(
             "checked_semaphore_id",
-            checkerEmailPCD.claim.semaphoreId
+            checkerEmailClaim.semaphoreId
           );
 
-          actorEmail = checkerEmailPCD.claim.emailAddress;
+          actorEmail = checkerEmailClaim.emailAddress;
         } catch (e) {
           logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
           setError(e, span);
@@ -1324,8 +1367,8 @@ export class LemonadePipeline implements BasePipeline {
         }
 
         let eventConfig: LemonadePipelineEventConfig;
-        const manualTicket = this.getManualTicketById(payload.ticketId);
-        const ticketAtom = await this.db.loadById(this.id, payload.ticketId);
+        const manualTicket = this.getManualTicketById(request.ticketId);
+        const ticketAtom = await this.db.loadById(this.id, request.ticketId);
         let ticketInfo: TicketInfo;
         let notCheckedIn;
 
@@ -1360,7 +1403,7 @@ export class LemonadePipeline implements BasePipeline {
 
         // 1) checkin action
         const canCheckIn = await this.canCheckInForEvent(
-          payload.eventId,
+          request.eventId,
           actorEmail
         );
         if (canCheckIn !== true) {
@@ -1479,7 +1522,7 @@ export class LemonadePipeline implements BasePipeline {
    * appropriate function to attempt a check-in.
    */
   private async executeTicketAction(
-    request: GenericIssuanceCheckInRequest
+    request: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return traced<PodboxTicketActionResponseValue>(
       LOG_NAME,
@@ -1487,10 +1530,20 @@ export class LemonadePipeline implements BasePipeline {
       async (span): Promise<PodboxTicketActionResponseValue> => {
         tracePipeline(this.definition);
 
-        const payload = await verifyTicketActionCredential(request.credential);
-        const emailPCD = await EmailPCDPackage.deserialize(
-          payload.emailPCD.pcd
-        );
+        let emailClaim: EmailPCDClaim;
+        try {
+          emailClaim = (
+            await this.credentialSubservice.verifyAndExpectZupassEmail(
+              request.credential
+            )
+          ).emailClaim;
+        } catch (e) {
+          logger(`${LOG_TAG} Failed to verify credential due to error: `, e);
+          setError(e, span);
+          span?.setAttribute("checkin_error", "InvalidSignature");
+          return { success: false, error: { name: "InvalidSignature" } };
+        }
+
         const precheck = await this.precheckTicketAction(request);
         logger(
           LOG_TAG,
@@ -1503,7 +1556,7 @@ export class LemonadePipeline implements BasePipeline {
           return precheck;
         }
 
-        if (payload.action.getContact) {
+        if (request.action.getContact) {
           if (!precheck.getContactActionInfo?.permissioned) {
             return {
               success: false,
@@ -1518,10 +1571,10 @@ export class LemonadePipeline implements BasePipeline {
             };
           }
 
-          const ticketId = payload.ticketId;
+          const ticketId = request.ticketId;
           const ticket = await this.db.loadById(this.id, ticketId);
           const manualTicket = this.getManualTicketById(ticketId);
-          const scannerEmail = emailPCD.claim.emailAddress;
+          const scannerEmail = emailClaim.emailAddress;
           const scaneeEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
           if (scaneeEmail) {
@@ -1540,14 +1593,14 @@ export class LemonadePipeline implements BasePipeline {
               error: { name: "InvalidTicket" }
             };
           }
-        } else if (payload.action.giftBadge) {
-          const ticketId = payload.ticketId;
+        } else if (request.action.giftBadge) {
+          const ticketId = request.ticketId;
           const ticket = await this.db.loadById(this.id, ticketId);
           const manualTicket = this.getManualTicketById(ticketId);
           const recipientEmail = ticket?.email ?? manualTicket?.attendeeEmail;
 
           const matchingBadges: BadgeConfig[] =
-            payload.action.giftBadge.badgeIds
+            request.action.giftBadge.badgeIds
               .map((id) =>
                 (
                   this.definition.options?.ticketActions?.badges?.choices ?? []
@@ -1574,7 +1627,7 @@ export class LemonadePipeline implements BasePipeline {
             // prevent wrong ppl from issuing wrong badges
             if (
               !b.givers?.includes("*") &&
-              !b.givers?.includes(emailPCD.claim.emailAddress)
+              !b.givers?.includes(emailClaim.emailAddress)
             ) {
               return false;
             }
@@ -1585,7 +1638,7 @@ export class LemonadePipeline implements BasePipeline {
           if (recipientEmail) {
             await this.badgeDB.giveBadges(
               this.id,
-              emailPCD.claim.emailAddress,
+              emailClaim.emailAddress,
               recipientEmail,
               allowedBadges
             );
@@ -1599,7 +1652,7 @@ export class LemonadePipeline implements BasePipeline {
               error: { name: "InvalidTicket" }
             };
           }
-        } else if (payload.action?.checkin) {
+        } else if (request.action?.checkin) {
           if (precheck.checkinActionInfo?.reason) {
             return {
               success: false,
@@ -1612,33 +1665,30 @@ export class LemonadePipeline implements BasePipeline {
           ).filter((badge) => badge.grantOnCheckin);
 
           // First see if we have an atom which matches the ticket ID
-          const ticketAtom = await this.db.loadById(this.id, payload.ticketId);
+          const ticketAtom = await this.db.loadById(this.id, request.ticketId);
           if (
             ticketAtom &&
             // Ensure that the checker-provided event ID matches the ticket
-            this.lemonadeAtomToZupassEventId(ticketAtom) === payload.eventId
+            this.lemonadeAtomToZupassEventId(ticketAtom) === request.eventId
           ) {
             if (ticketAtom.email) {
               await this.badgeDB.giveBadges(
                 this.id,
-                emailPCD.claim.emailAddress,
+                emailClaim.emailAddress,
                 ticketAtom.email,
                 autoGrantBadges
               );
             }
 
             // We found a Lemonade atom, so check in with the Lemonade backend
-            return this.lemonadeCheckin(
-              ticketAtom,
-              emailPCD.claim.emailAddress
-            );
+            return this.lemonadeCheckin(ticketAtom, emailClaim.emailAddress);
           } else {
             // No Lemonade atom found, try looking for a manual ticket
-            const manualTicket = this.getManualTicketById(payload.ticketId);
-            if (manualTicket && manualTicket.eventId === payload.eventId) {
+            const manualTicket = this.getManualTicketById(request.ticketId);
+            if (manualTicket && manualTicket.eventId === request.eventId) {
               await this.badgeDB.giveBadges(
                 this.id,
-                emailPCD.claim.emailAddress,
+                emailClaim.emailAddress,
                 manualTicket.attendeeEmail,
                 autoGrantBadges
               );
@@ -1646,13 +1696,13 @@ export class LemonadePipeline implements BasePipeline {
               // Manual ticket found, check in with the DB
               return this.checkInManualTicket(
                 manualTicket,
-                emailPCD.claim.emailAddress
+                emailClaim.emailAddress
               );
             } else {
               // Didn't find any matching ticket
               logger(
-                `${LOG_TAG} Could not find ticket ${payload.ticketId} ` +
-                  `for event ${payload.eventId} for checkin requested by ${emailPCD.claim.emailAddress} ` +
+                `${LOG_TAG} Could not find ticket ${request.ticketId} ` +
+                  `for event ${request.eventId} for checkin requested by ${emailClaim.emailAddress} ` +
                   `on pipeline ${this.id}`
               );
               span?.setAttribute("checkin_error", "InvalidTicket");
@@ -1844,6 +1894,27 @@ export class LemonadePipeline implements BasePipeline {
 
   public static is(p: Pipeline): p is LemonadePipeline {
     return p.type === PipelineType.Lemonade;
+  }
+
+  /**
+   * Retrieves ZuAuth configuration for this pipeline's PCDs.
+   */
+  private async getZuAuthConfig(): Promise<PipelineEdDSATicketZuAuthConfig[]> {
+    const publicKey = await getEdDSAPublicKey(this.eddsaPrivateKey);
+    const metadata = this.definition.options.events.flatMap((ev) =>
+      ev.ticketTypes.map(
+        (ticketType) =>
+          ({
+            pcdType: "eddsa-ticket-pcd",
+            publicKey,
+            eventId: ev.genericIssuanceEventId,
+            eventName: ev.name,
+            productId: ticketType.genericIssuanceProductId,
+            productName: ticketType.name
+          }) satisfies PipelineEdDSATicketZuAuthConfig
+      )
+    );
+    return metadata;
   }
 
   /**

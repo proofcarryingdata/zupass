@@ -3,7 +3,7 @@
   "pipeline": {
     "build": {
       "dependsOn": ["^build"],
-      "inputs": [".nvmrc"],
+      "inputs": ["$TURBO_DEFAULT$", ".nvmrc"],
       "outputs": [],
       "cache": true,
       "dotEnv": [".env"]
@@ -16,8 +16,15 @@
       "cache": false,
       "persistent": true
     },
+    "clean-test-artifacts": {
+      "cache": false
+    },
+    "gen-test-artifacts": {
+      "dependsOn": ["^gen-test-artifacts"],
+      "cache": true
+    },
     "test": {
-      "dependsOn": ["^build"],
+      "dependsOn": ["^build", "^gen-test-artifacts"],
       "inputs": ["$TURBO_DEFAULT$", ".mocharc.js"],
       "cache": true
     },
@@ -106,6 +113,7 @@
     "PAGER_DUTY_SERVICE_ID",
     "NEXT_PUBLIC_PASSPORT_CLIENT_URL",
     "NEXT_PUBLIC_PASSPORT_SERVER_URL",
+    "NODE_OPTIONS",
     "//// add env vars above this line ////"
   ],
   "globalEnv": [
@@ -183,6 +191,32 @@
     "ZUPASS_CLIENT_URL_CONSUMER",
     "ZUPASS_SERVER_URL_CONSUMER",
     "CONSUMER_SERVER_URL",
+    "BOT_TOKEN",
+    "BOT_ZUPOLL_LINK",
+    "ZUPASS_CLIENT_URL",
+    "ZUPASS_SERVER_URL",
+    "ZUPOLL_CLIENT_URL",
+    "ZUPOLL_SERVER_URL",
+    "BOT_ZUPOLL_LINK",
+    "EDGE_CITY_PIPELINE_URL",
+    "EDGE_CITY_RESIDENTS_GROUP_ID",
+    "EDGE_CITY_ORGANIZERS_GROUP_ID",
+    "ETH_LATAM_PIPELINE_URL",
+    "ETH_LATAM_RESIDENTS_GROUP_ID",
+    "ETH_LATAM_ORGANIZERS_GROUP_ID",
+    "ALLOW_REPEAT_VOTES",
+    "BOT_SUPERGROUP_ID",
+    "BOT_CHANNEL_ID",
+    "MIN_LOG_LEVEL",
+    "ACCESS_TOKEN_SECRET",
+    "NEXT_PUBLIC_DEBUG_TOOLS_ENABLED",
+    "NEXT_ROLLBAR_ACCESS_TOKEN",
+    "NEXT_ROLLBAR_ENVIRONMENT_NAME",
+    "STRICH_LICENSE_KEY",
+    "SCANDIT_LICENSE_KEY",
+    "MULTI_CHOICE_SCAN_ENABLED",
+    "IRON_SESSION_PASSWORD",
+    "SHOW_POD_TICKET_PCDS",
     "//// add env vars above this line ////"
   ]
 }

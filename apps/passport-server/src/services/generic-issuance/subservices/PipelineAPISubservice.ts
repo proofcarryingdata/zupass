@@ -1,23 +1,21 @@
 import {
   ActionConfigResponseValue,
   Feed,
-  GenericIssuanceCheckInRequest,
   GenericIssuanceHistoricalSemaphoreGroupResponseValue,
   GenericIssuancePipelineSemaphoreGroupsResponseValue,
-  GenericIssuancePreCheckRequest,
   GenericIssuanceSemaphoreGroupResponseValue,
   GenericIssuanceSemaphoreGroupRootResponseValue,
   GenericIssuanceValidSemaphoreGroupResponseValue,
   ListFeedsResponseValue,
   PipelineInfoConsumer,
   PipelineInfoResponseValue,
+  PodboxTicketActionPreCheckRequest,
+  PodboxTicketActionRequest,
   PodboxTicketActionResponseValue,
   PollFeedRequest,
-  PollFeedResponseValue,
-  TicketActionPayload
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDPermissionType, getPcdsFromActions } from "@pcd/pcd-collection";
-import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { str } from "@pcd/util";
 import { IPipelineConsumerDB } from "../../../database/queries/pipelineConsumerDB";
 import { PCDHTTPError } from "../../../routing/pcdHttpError";
@@ -35,6 +33,7 @@ import {
 } from "../capabilities/SemaphoreGroupCapability";
 import { tracePipeline, traceUser } from "../honeycombQueries";
 import { PipelineUser } from "../pipelines/types";
+import { CredentialSubservice } from "./CredentialSubservice";
 import { PipelineSubservice } from "./PipelineSubservice";
 
 const SERVICE_NAME = "PIPELINE_API_SUBSERVICE";
@@ -48,13 +47,16 @@ const LOG_TAG = `[${SERVICE_NAME}]`;
 export class PipelineAPISubservice {
   private pipelineSubservice: PipelineSubservice;
   private consumerDB: IPipelineConsumerDB;
+  private credentialSubservice: CredentialSubservice;
 
   public constructor(
     consumerDB: IPipelineConsumerDB,
-    pipelineSubservice: PipelineSubservice
+    pipelineSubservice: PipelineSubservice,
+    credentailSubservice: CredentialSubservice
   ) {
     this.pipelineSubservice = pipelineSubservice;
     this.consumerDB = consumerDB;
+    this.credentialSubservice = credentailSubservice;
   }
 
   /**
@@ -138,10 +140,9 @@ export class PipelineAPISubservice {
         pipelineHasSemaphoreGroups = true;
       }
 
-      // Only actually run the query if there are Semaphore groups
-      const latestConsumers = pipelineHasSemaphoreGroups
-        ? await this.consumerDB.loadAll(pipelineInstance.id)
-        : [];
+      const latestConsumers = await this.consumerDB.loadAll(
+        pipelineInstance.id
+      );
 
       if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");
@@ -156,6 +157,8 @@ export class PipelineAPISubservice {
           name: f.options.feedDisplayName,
           url: f.feedUrl
         })),
+
+        zuAuthConfig: await pipelineFeeds[0].getZuAuthConfig(),
 
         latestConsumers: !pipelineHasSemaphoreGroups
           ? undefined
@@ -247,29 +250,23 @@ export class PipelineAPISubservice {
    * {@link PipelineDefinition}'s superuser configuration.
    */
   public async handleCheckIn(
-    req: GenericIssuanceCheckInRequest
+    req: PodboxTicketActionRequest
   ): Promise<PodboxTicketActionResponseValue> {
     return traced(SERVICE_NAME, "handleCheckIn", async (span) => {
       logger(LOG_TAG, "handleCheckIn", str(req));
 
-      // This is sub-optimal, but since tickets do not identify the pipelines
-      // they come from, we have to match the ticket to the pipeline this way.
-      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        req.credential.pcd
-      );
-      const signaturePCDValid =
-        await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-      if (!signaturePCDValid) {
-        throw new Error("credential signature invalid");
+      try {
+        await this.credentialSubservice.verifyAndExpectZupassEmail(
+          req.credential
+        );
+      } catch (_e) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
       }
 
-      const payload: TicketActionPayload = JSON.parse(
-        signaturePCD.claim.signedMessage
-      );
-
-      const eventId = payload.eventId;
-      // TODO detect mismatch between eventId and ticketId?
+      const eventId = req.eventId;
 
       span?.setAttribute("event_id", eventId);
 
@@ -304,28 +301,23 @@ export class PipelineAPISubservice {
    * by their credential.
    */
   public async handlePreCheck(
-    req: GenericIssuancePreCheckRequest
+    req: PodboxTicketActionPreCheckRequest
   ): Promise<ActionConfigResponseValue> {
     return traced(SERVICE_NAME, "handlePreCheck", async (span) => {
       logger(SERVICE_NAME, "handlePreCheck", str(req));
 
-      // This is sub-optimal, but since tickets do not identify the pipelines
-      // they come from, we have to match the ticket to the pipeline this way.
-      const signaturePCD = await SemaphoreSignaturePCDPackage.deserialize(
-        req.credential.pcd
-      );
-      const signaturePCDValid =
-        await SemaphoreSignaturePCDPackage.verify(signaturePCD);
-
-      if (!signaturePCDValid) {
-        throw new Error("credential signature invalid");
+      try {
+        await this.credentialSubservice.verifyAndExpectZupassEmail(
+          req.credential
+        );
+      } catch (e) {
+        return {
+          success: false,
+          error: { name: "InvalidSignature" }
+        };
       }
 
-      const payload: TicketActionPayload = JSON.parse(
-        signaturePCD.claim.signedMessage
-      );
-
-      const eventId = payload.eventId;
+      const eventId = req.eventId;
       span?.setAttribute("event_id", eventId);
 
       for (const pipeline of this.pipelineSubservice.getAllPipelines()) {

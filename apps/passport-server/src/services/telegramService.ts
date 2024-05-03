@@ -13,6 +13,7 @@ import {
   RedirectTopicDataPayload
 } from "@pcd/passport-interface";
 import { SerializedPCD } from "@pcd/pcd-types";
+import { RollbarService } from "@pcd/server-shared";
 import {
   ONE_HOUR_MS,
   bigIntToPseudonymEmoji,
@@ -101,7 +102,6 @@ import {
 } from "../util/telegramHelpers";
 import { checkSlidingWindowRateLimit, isValidEmoji } from "../util/util";
 import { DiscordService } from "./discordService";
-import { RollbarService } from "./rollbarService";
 import { setError, traced } from "./telemetryService";
 
 const ALLOWED_TICKET_MANAGERS = [

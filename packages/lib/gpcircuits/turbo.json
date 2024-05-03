@@ -1,17 +1,38 @@
 {
   "extends": ["//"],
   "pipeline": {
+    "gen-test-artifacts": {
+      "dependsOn": [],
+      "inputs": [
+        "../../../node_modules/circom/**",
+        "../../../node_modules/circomkit/**",
+        "../../../node_modules/circomlib/**",
+        "../../../node_modules/@zk-kit/circuits/**",
+        "scripts/gen-test-artifacts.ts",
+        "circuits/**",
+        "circomkit.json",
+        "circuits.json"
+      ],
+      "outputs": ["artifacts/**"],
+      "outputMode": "new-only",
+      "cache": true
+    },
     "build": {
       "dependsOn": ["^build"],
       "inputs": [
         "$TURBO_DEFAULT$",
         "src/**",
         "circuits/**",
-        "test/**",
         "circomkit.json",
         "circuits.json"
       ],
       "outputs": ["dist/**", "*.tsbuildinfo"],
+      "cache": true
+    },
+    "test": {
+      "dependsOn": ["build", "^gen-test-artifacts", "gen-test-artifacts"],
+      "inputs": ["$TURBO_DEFAULT$", "test/**", "artifacts/**"],
+      "outputs": [],
       "cache": true
     }
   }

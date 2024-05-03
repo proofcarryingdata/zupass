@@ -1,3 +1,4 @@
+import { isEdDSATicketPCD } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDTypeName } from "@pcd/email-pcd";
 import { PCDCrypto } from "@pcd/passport-crypto";
 import {
@@ -20,12 +21,14 @@ import {
 } from "@pcd/passport-interface";
 import { PCDCollection, PCDPermission } from "@pcd/pcd-collection";
 import { PCD, SerializedPCD } from "@pcd/pcd-types";
+import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import {
   isSemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage,
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
+import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -149,6 +152,9 @@ export type Action =
       type: "merge-import";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
+    }
+  | {
+      type: "initialize-strich";
     };
 
 export type StateContextValue = {
@@ -262,6 +268,8 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
+    case "initialize-strich":
+      return initializeStrich(state, update);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -562,6 +570,31 @@ async function removePCD(
   update: ZuUpdate,
   pcdId: string
 ): Promise<void> {
+  const pcd = state.pcds.getById(pcdId);
+  if (!appConfig.showPODTicketPCDs && pcd && isEdDSATicketPCD(pcd)) {
+    // EdDSATicketPCDs are currently duplicated as PODTicketPCDs. Since
+    // PODTicketPCDs are hidden, they cannot be removed via the UI. IF an
+    // EdDSATicketPCD is remove but its counterpart PODTicketPCD is not, then
+    // the folder containing them both will remain but will appear to be empty,
+    // as it only contains the PODTicketPCD.
+    // Therefore, when removing the EdDSATicketPCD, we should check to see if
+    // there is a matching PODTicketPCD, and remove that too.
+    const folder = state.pcds.getFolderOfPCD(pcdId);
+    if (folder) {
+      const otherPCDsInFolder = state.pcds.getAllPCDsInFolder(folder);
+      for (const otherPCD of otherPCDsInFolder) {
+        if (
+          isPODTicketPCD(otherPCD) &&
+          // Check for the same ticket ID
+          otherPCD.claim.ticket.ticketId === pcd.claim.ticket.ticketId
+        ) {
+          // Remove the PODTicketPCD
+          state.pcds.remove(otherPCD.id);
+          break;
+        }
+      }
+    }
+  }
   state.pcds.remove(pcdId);
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
@@ -1220,4 +1253,27 @@ async function removeAllPCDsInFolder(
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
   window.scrollTo({ top: 0 });
+}
+
+async function initializeStrich(
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
+  if (!appConfig.strichLicenseKey) {
+    console.log("Strich license key is not defined");
+    return;
+  }
+  try {
+    await Promise.race([
+      StrichSDK.initialize(appConfig.strichLicenseKey),
+      sleep(10000)
+    ]);
+    if (StrichSDK.isInitialized()) {
+      update({ strichSDKstate: "initialized" });
+    } else {
+      update({ strichSDKstate: "error" });
+    }
+  } catch (e) {
+    update({ strichSDKstate: "error" });
+  }
 }

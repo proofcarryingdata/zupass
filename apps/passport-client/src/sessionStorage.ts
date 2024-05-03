@@ -21,7 +21,7 @@ export function hasPendingRequest(): boolean {
   );
 }
 
-export const pendingRequestKeys = {
+export const pendingRequestKeys: Record<string, string> = {
   getWithoutProving: "getWithoutProvingRequest",
   add: "pendingAddRequest",
   halo: "pendingHaloRequest",
@@ -145,7 +145,8 @@ export function getPendingRequest():
   | { key: keyof typeof pendingRequestKeys; value: string }
   | undefined {
   for (const key in pendingRequestKeys) {
-    const item = sessionStorage.getItem(key);
+    const sessionStorageKey = pendingRequestKeys[key];
+    const item = sessionStorage.getItem(sessionStorageKey);
     if (item) {
       return {
         key: key as keyof typeof pendingRequestKeys,

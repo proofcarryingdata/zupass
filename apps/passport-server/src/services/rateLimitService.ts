@@ -1,3 +1,4 @@
+import { RollbarService } from "@pcd/server-shared";
 import { ONE_DAY_MS, ONE_HOUR_MS } from "@pcd/util";
 import {
   consumeRateLimitToken,
@@ -6,7 +7,6 @@ import {
 } from "../database/queries/rateLimit";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 export type RateLimitedActionType =

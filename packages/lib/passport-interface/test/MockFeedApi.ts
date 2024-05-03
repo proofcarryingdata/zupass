@@ -1,6 +1,7 @@
 import { PCDActionType, PCDPermissionType } from "@pcd/pcd-collection";
 import { SerializedPCD } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { getErrorMessage } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
 import MockDate from "mockdate";
@@ -11,11 +12,12 @@ import {
   PollFeedResponseValue,
   PollFeedResult
 } from "../src";
-import { IFeedApi } from "../src/FeedAPI";
 import {
-  FeedCredentialPayload,
-  verifyFeedCredential
-} from "../src/FeedCredential";
+  Credential,
+  CredentialPayload,
+  verifyCredential
+} from "../src/Credential";
+import { IFeedApi } from "../src/FeedAPI";
 
 class MockFeedError extends Error {
   public code: number;
@@ -25,10 +27,19 @@ class MockFeedError extends Error {
   }
 }
 
+async function extractPayload(
+  credential: Credential
+): Promise<CredentialPayload> {
+  return JSON.parse(
+    (await SemaphoreSignaturePCDPackage.deserialize(credential.pcd)).claim
+      .signedMessage
+  );
+}
+
 export class MockFeedApi implements IFeedApi {
   private feedHosts: Map<string, FeedHost>;
 
-  public receivedPayload: FeedCredentialPayload | undefined;
+  public receivedPayload: CredentialPayload | undefined;
 
   public issuanceDisabled = false;
 
@@ -66,10 +77,10 @@ export class MockFeedApi implements IFeedApi {
                 if (this.issuanceDisabled) {
                   throw new MockFeedError("Issuance disabled", 410);
                 }
-                const { payload } = await verifyFeedCredential(
+                await verifyCredential(req.pcd as SerializedPCD);
+                this.receivedPayload = await extractPayload(
                   req.pcd as SerializedPCD
                 );
-                this.receivedPayload = payload;
 
                 return {
                   actions: [
@@ -114,10 +125,10 @@ export class MockFeedApi implements IFeedApi {
                 if (this.issuanceDisabled) {
                   throw new MockFeedError("Issuance disabled", 410);
                 }
-                const { payload } = await verifyFeedCredential(
+                await verifyCredential(req.pcd as SerializedPCD);
+                this.receivedPayload = await extractPayload(
                   req.pcd as SerializedPCD
                 );
-                this.receivedPayload = payload;
 
                 return {
                   actions: [
@@ -159,10 +170,10 @@ export class MockFeedApi implements IFeedApi {
                 if (this.issuanceDisabled) {
                   throw new MockFeedError("Issuance disabled", 410);
                 }
-                const { payload } = await verifyFeedCredential(
+                await verifyCredential(req.pcd as SerializedPCD);
+                this.receivedPayload = await extractPayload(
                   req.pcd as SerializedPCD
                 );
-                this.receivedPayload = payload;
 
                 return {
                   actions: []

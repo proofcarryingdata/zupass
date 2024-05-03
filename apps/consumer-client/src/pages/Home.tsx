@@ -35,10 +35,7 @@ function Page(): JSX.Element {
             </Link>
           </li>
           <li>
-            <Link to="/examples/zu-auth">
-              EdDSA Ticket PCD anonymous and non-anonymous authentication from
-              Zupass
-            </Link>
+            <Link to="/examples/zuauth">ZuAuth authentication of tickets</Link>
           </li>
           <li>
             <Link to="/examples/zk-eddsa-frog-proof">

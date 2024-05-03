@@ -1,5 +1,6 @@
 import { Biome, IFrogData, Rarity } from "@pcd/eddsa-frog-pcd";
 import {
+  Credential,
   FROG_FREEROLLS,
   FROG_SCORE_CAP,
   FrogCryptoComputedUserState,
@@ -21,12 +22,10 @@ import {
   ListFeedsResponseValue,
   ListSingleFeedRequest,
   PollFeedRequest,
-  PollFeedResponseValue,
-  verifyFeedCredential
+  PollFeedResponseValue
 } from "@pcd/passport-interface";
 import { PCDActionType } from "@pcd/pcd-collection";
-import { SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreSignaturePCD } from "@pcd/semaphore-signature-pcd";
+import { RollbarService } from "@pcd/server-shared";
 import _ from "lodash";
 import { FrogCryptoUserFeedState } from "../database/models";
 import {
@@ -57,7 +56,6 @@ import {
 } from "../util/frogcrypto";
 import { logger } from "../util/logger";
 import { IssuanceService } from "./issuanceService";
-import { RollbarService } from "./rollbarService";
 
 export class FrogcryptoService {
   private readonly context: ApplicationContext;
@@ -86,10 +84,7 @@ export class FrogcryptoService {
             if (req.pcd === undefined) {
               throw new PCDHTTPError(400, `Missing credential`);
             }
-            await verifyFeedCredential(
-              req.pcd,
-              this.issuanceService.cachedVerifySignaturePCD
-            );
+            await this.issuanceService.verifyCredential(req.pcd);
 
             return {
               actions: [
@@ -147,7 +142,7 @@ export class FrogcryptoService {
       throw new PCDHTTPError(400, "feedIds must be an array");
     }
 
-    const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
+    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
 
     const userFeeds = _.keyBy(
       await fetchUserFeedsState(this.context.dbPool, semaphoreId),
@@ -170,7 +165,7 @@ export class FrogcryptoService {
   public async updateTelegramHandleSharing(
     req: FrogCryptoShareTelegramHandleRequest
   ): Promise<FrogCryptoShareTelegramHandleResponseValue> {
-    const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(req.pcd);
+    const semaphoreId = await this.verifyCredentialAndGetSemaphoreId(req.pcd);
 
     await updateUserScoreboardPreference(
       this.context.dbPool,
@@ -189,10 +184,11 @@ export class FrogcryptoService {
   }
 
   private async reserveFrogData(
-    pcd: SerializedPCD<SemaphoreSignaturePCD>,
+    credential: Credential,
     feed: FrogCryptoFeed
   ): Promise<IFrogData> {
-    const semaphoreId = await this.cachedVerifyPCDAndGetSemaphoreId(pcd);
+    const semaphoreId =
+      await this.verifyCredentialAndGetSemaphoreId(credential);
 
     await initializeUserFeedState(this.context.dbPool, semaphoreId, feed.id);
 
@@ -390,27 +386,25 @@ export class FrogcryptoService {
     };
   }
 
-  private async cachedVerifyPCDAndGetSemaphoreId(
-    serializedPCD: SerializedPCD<SemaphoreSignaturePCD>
+  private async verifyCredentialAndGetSemaphoreId(
+    credential: Credential
   ): Promise<string> {
     try {
-      const { pcd } = await verifyFeedCredential(
-        serializedPCD,
-        this.issuanceService.cachedVerifySignaturePCD
-      );
-      return pcd.claim.identityCommitment;
+      const { signatureClaim } =
+        await this.issuanceService.verifyCredential(credential);
+      return signatureClaim.identityCommitment;
     } catch (e) {
-      throw new PCDHTTPError(400, "invalid PCD");
+      throw new PCDHTTPError(400, "invalid credential");
     }
   }
 
   /**
-   * Verify signature PCD against a static list of admin identities.
+   * Verify credential against a static list of admin identities.
    */
   private async cachedVerifyAdminSignaturePCD(
-    pcd: SerializedPCD<SemaphoreSignaturePCD>
+    credential: Credential
   ): Promise<void> {
-    const id = await this.cachedVerifyPCDAndGetSemaphoreId(pcd);
+    const id = await this.verifyCredentialAndGetSemaphoreId(credential);
     const user = await fetchUserByCommitment(this.context.dbPool, id);
     if (!user) {
       throw new PCDHTTPError(400, "invalid PCD");

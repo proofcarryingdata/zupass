@@ -1,5 +1,7 @@
 import {
   PCDGetRequest,
+  postPendingPCDMessage,
+  postSerializedPCDMessage,
   requestProveOnServer,
   requestSemaphoreGroup
 } from "@pcd/passport-interface";
@@ -23,6 +25,7 @@ import {
 import { getHost, nextFrame } from "../../../src/util";
 import { Button } from "../../core";
 import { RippleLoader } from "../../core/RippleLoader";
+import { BackButton } from "../../shared/ScreenNavigation";
 
 export function SemaphoreGroupProveScreen({
   req
@@ -91,35 +94,54 @@ export function SemaphoreGroupProveScreen({
           );
         }
 
+        if (window.opener && req.postMessage) {
+          postPendingPCDMessage(window.opener, pendingPCDResult.value);
+          window.close();
+        }
+
         safeRedirectPending(req.returnUrl, pendingPCDResult.value);
       } else {
         const { prove, serialize } = SemaphoreGroupPCDPackage;
         const pcd = await prove(args);
         const serializedPCD = await serialize(pcd);
+        if (window.opener && req.postMessage) {
+          postSerializedPCDMessage(window.opener, serializedPCD);
+          window.close();
+        }
         safeRedirect(req.returnUrl, serializedPCD);
       }
     } catch (e) {
       const errorMessage = getErrorMessage(e);
       if (errorMessage.indexOf("The identity is not part of the group") >= 0) {
-        setError("You are not part of this group.");
+        setError("You are not part of this group");
       } else {
         setError(errorMessage);
       }
     }
-  }, [identity, group, req.args, req.options?.proveOnServer, req.returnUrl]);
+  }, [
+    identity,
+    group,
+    req.args,
+    req.options?.proveOnServer,
+    req.postMessage,
+    req.returnUrl
+  ]);
 
   const lines: ReactNode[] = [];
   if (group === null) {
     lines.push(<p>Loading the group...</p>);
   } else {
     lines.push(
-      <p>
+      <p style={{ textAlign: "center" }}>
         <b>{getHost(req.returnUrl)}</b> will receive a proof that you're one of{" "}
-        {group.members.length} members of {group.name}.
+        {group.members.length} members of <br />
+        <GroupNameLabel>{group.name}</GroupNameLabel>
       </p>
     );
     lines.push(
-      <p>This zero-knowledge proof won't reveal anything else about you.</p>
+      <p style={{ textAlign: "center" }}>
+        This zero-knowledge proof won't reveal anything else about you
+      </p>
     );
   }
 
@@ -133,6 +155,10 @@ export function SemaphoreGroupProveScreen({
     lines.push(<ErrorContainer>{error}</ErrorContainer>);
   } else {
     lines.push(<RippleLoader />);
+  }
+
+  if (!proving || error) {
+    lines.push(<BackButton />);
   }
 
   return (
@@ -199,4 +225,13 @@ const ErrorContainer = styled.div`
   justify-content: center;
   align-items: center;
   background-color: var(--danger);
+`;
+
+const GroupNameLabel = styled.span`
+  display: inline-block;
+  padding: 2px 16px;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  border-radius: 4px;
+  margin: 4px;
+  background-color: rgba(255, 255, 255, 0.1);
 `;

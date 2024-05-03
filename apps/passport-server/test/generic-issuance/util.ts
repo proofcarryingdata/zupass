@@ -1,23 +1,34 @@
-import { EdDSATicketPCD, EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
-import { EmailPCDPackage } from "@pcd/email-pcd";
 import {
-  FeedCredentialPayload,
+  EdDSATicketPCD,
+  EdDSATicketPCDPackage,
+  EdDSATicketPCDTypeName
+} from "@pcd/eddsa-ticket-pcd";
+import { EmailPCD, EmailPCDPackage } from "@pcd/email-pcd";
+import {
+  Credential,
+  CredentialManager,
+  CredentialPayload,
+  CredentialRequest,
   InfoResult,
+  PODBOX_CREDENTIAL_REQUEST,
   PodboxTicketActionResult,
   PollFeedResult,
-  createFeedCredentialPayload,
-  createTicketActionCredentialPayload,
   requestPipelineInfo,
   requestPodboxTicketAction,
   requestPollFeed
 } from "@pcd/passport-interface";
-import { expectIsReplaceInFolderAction } from "@pcd/pcd-collection";
-import { ArgumentTypeName, SerializedPCD } from "@pcd/pcd-types";
-import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import {
-  SemaphoreSignaturePCD,
-  SemaphoreSignaturePCDPackage
-} from "@pcd/semaphore-signature-pcd";
+  PCDCollection,
+  expectIsReplaceInFolderAction
+} from "@pcd/pcd-collection";
+import { ArgumentTypeName } from "@pcd/pcd-types";
+import {
+  PODTicketPCD,
+  PODTicketPCDPackage,
+  PODTicketPCDTypeName
+} from "@pcd/pod-ticket-pcd";
+import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
 import {
@@ -74,42 +85,22 @@ export async function requestCheckInPipelineTicket(
   checkerIdentity: Identity,
   ticket: EdDSATicketPCD
 ): Promise<PodboxTicketActionResult> {
-  const checkerEmailPCD = await EmailPCDPackage.prove({
-    privateKey: {
-      value: zupassEddsaPrivateKey,
-      argumentType: ArgumentTypeName.String
-    },
-    id: {
-      value: "email-id",
-      argumentType: ArgumentTypeName.String
-    },
-    emailAddress: {
-      value: checkerEmail,
-      argumentType: ArgumentTypeName.String
-    },
-    semaphoreId: {
-      value: checkerIdentity.commitment.toString(),
-      argumentType: ArgumentTypeName.String
-    }
-  });
-  const serializedTicketCheckerEmailPCD =
-    await EmailPCDPackage.serialize(checkerEmailPCD);
+  const ticketCheckerFeedCredential = await makeTestCredential(
+    checkerIdentity,
+    PODBOX_CREDENTIAL_REQUEST,
+    checkerEmail,
+    zupassEddsaPrivateKey
+  );
 
-  const ticketCheckerPayload = createTicketActionCredentialPayload(
-    serializedTicketCheckerEmailPCD,
+  return requestPodboxTicketAction(
+    checkinRoute,
+    ticketCheckerFeedCredential,
     {
       checkin: true
     },
-    ticket.claim.ticket.eventId,
-    ticket.claim.ticket.ticketId
+    ticket.claim.ticket.ticketId,
+    ticket.claim.ticket.eventId
   );
-
-  const ticketCheckerFeedCredential = await signFeedCredentialPayload(
-    checkerIdentity,
-    ticketCheckerPayload
-  );
-
-  return requestPodboxTicketAction(checkinRoute, ticketCheckerFeedCredential);
 }
 
 /**
@@ -120,13 +111,21 @@ export async function requestCheckInPipelineTicket(
 export function getTicketsFromFeedResponse(
   expectedFolder: string,
   result: PollFeedResult
-): Promise<EdDSATicketPCD[]> {
+): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   expectTrue(result.success);
   const secondAction = result.value.actions[1];
   expectIsReplaceInFolderAction(secondAction);
   expect(secondAction.folder).to.eq(expectedFolder);
   return Promise.all(
-    secondAction.pcds.map((t) => EdDSATicketPCDPackage.deserialize(t.pcd))
+    secondAction.pcds.map((t) => {
+      if (t.type === EdDSATicketPCDTypeName) {
+        return EdDSATicketPCDPackage.deserialize(t.pcd);
+      }
+      if (t.type === PODTicketPCDTypeName) {
+        return PODTicketPCDPackage.deserialize(t.pcd);
+      }
+      throw new Error("Unexpected PCD type");
+    })
   );
 }
 
@@ -154,33 +153,14 @@ export async function requestTicketsFromPipeline(
    * Is owned by this identity.
    */
   identity: Identity
-): Promise<EdDSATicketPCD[]> {
+): Promise<(EdDSATicketPCD | PODTicketPCD)[]> {
   const ticketPCDResponse = await requestPollFeed(feedUrl, {
     feedId: feedId,
-    pcd: await signFeedCredentialPayload(
+    pcd: await makeTestCredential(
       identity,
-      createFeedCredentialPayload(
-        await EmailPCDPackage.serialize(
-          await EmailPCDPackage.prove({
-            privateKey: {
-              value: zupassEddsaPrivateKey,
-              argumentType: ArgumentTypeName.String
-            },
-            id: {
-              value: "email-id",
-              argumentType: ArgumentTypeName.String
-            },
-            emailAddress: {
-              value: email,
-              argumentType: ArgumentTypeName.String
-            },
-            semaphoreId: {
-              value: identity.commitment.toString(),
-              argumentType: ArgumentTypeName.String
-            }
-          })
-        )
-      )
+      PODBOX_CREDENTIAL_REQUEST,
+      email,
+      zupassEddsaPrivateKey
     )
   });
 
@@ -188,18 +168,65 @@ export async function requestTicketsFromPipeline(
 }
 
 /**
- * TODO: extract this to the `@pcd/passport-interface` package.
+ * Makes a credential for a given email address and Semaphore identity, by
+ * generating a new Email PCD using the provided private key.
+ *
+ * Uses {@link testCredentialCache} to avoid regenerating the same credential
+ * repeately.
  */
-export async function signFeedCredentialPayload(
+export async function makeTestCredential(
   identity: Identity,
-  payload: FeedCredentialPayload
-): Promise<SerializedPCD<SemaphoreSignaturePCD>> {
+  request: CredentialRequest,
+  email?: string,
+  zupassEddsaPrivateKey?: string
+): Promise<Credential> {
+  if (request.pcdType === "email-pcd") {
+    if (!email || !zupassEddsaPrivateKey) {
+      throw new Error(
+        "Can't create a credential containing an EmailPCD without email address and private key"
+      );
+    }
+    const emailPCD = await proveEmailPCD(
+      email,
+      zupassEddsaPrivateKey,
+      identity
+    );
+    // Credential Manager will need to be able to look up the Email PCD, and use
+    // an identity. We instantiate a PCDCollection here, mirroring the usage on
+    // the client.
+    const credentialManager = new CredentialManager(
+      identity,
+      new PCDCollection([EmailPCDPackage], [emailPCD]),
+      new Map()
+    );
+    return credentialManager.requestCredential(request);
+  } else {
+    // No Email PCD required here
+    const credentialManager = new CredentialManager(
+      identity,
+      new PCDCollection([], []),
+      new Map()
+    );
+    return credentialManager.requestCredential(request);
+  }
+}
+
+/**
+ * Sign a credential payload.
+ * Only use this to generate "incorrect" credentials, such as those containing
+ * invalid PCDs, expired timestamps, and so on, otherwise use
+ * {@link makeTestCredential} above.
+ */
+export async function signCredentialPayload(
+  identity: Identity,
+  payload: CredentialPayload
+): Promise<Credential> {
   const signaturePCD = await SemaphoreSignaturePCDPackage.prove({
     identity: {
       argumentType: ArgumentTypeName.PCD,
       value: await SemaphoreIdentityPCDPackage.serialize(
         await SemaphoreIdentityPCDPackage.prove({
-          identity: identity
+          identity
         })
       )
     },
@@ -209,5 +236,30 @@ export async function signFeedCredentialPayload(
     }
   });
 
-  return await SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+  return SemaphoreSignaturePCDPackage.serialize(signaturePCD);
+}
+
+export async function proveEmailPCD(
+  email: string,
+  zupassEddsaPrivateKey: string,
+  identity: Identity
+): Promise<EmailPCD> {
+  return EmailPCDPackage.prove({
+    privateKey: {
+      value: zupassEddsaPrivateKey,
+      argumentType: ArgumentTypeName.String
+    },
+    id: {
+      value: "email-id",
+      argumentType: ArgumentTypeName.String
+    },
+    emailAddress: {
+      value: email,
+      argumentType: ArgumentTypeName.String
+    },
+    semaphoreId: {
+      value: identity.commitment.toString(),
+      argumentType: ArgumentTypeName.String
+    }
+  });
 }

@@ -1,0 +1,159 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --background: 0 0% 100%;
+    --foreground: 222.2 84% 4.9%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 222.2 84% 4.9%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 222.2 84% 4.9%;
+
+    --primary: 222.2 47.4% 11.2%;
+    --primary-foreground: 210 40% 98%;
+
+    --secondary: 210 40% 96.1%;
+    --secondary-foreground: 222.2 47.4% 11.2%;
+
+    --muted: 210 40% 96.1%;
+    --muted-foreground: 215.4 16.3% 46.9%;
+
+    --test: hsl(0, 0%, 22%);
+    --accent: 0 0% 90%;
+    --accent-foreground: 222.2 84% 4.9%;
+
+    --warning: 45 74% 47%;
+    --warning-foreground: 210 40% 98%;
+
+    --creative: 120 55% 55%;
+    --creative-foreground: 210 40% 98%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 214.3 31.8% 91.4%;
+    --input: 214.3 31.8% 91.4%;
+    --ring: 222.2 84% 4.9%;
+
+    --radius: 0.5rem;
+  }
+
+  .dark {
+    --background: 175 19% 30%;
+    --foreground: 210 40% 99%;
+
+    --card: 175 19% 27%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 175 19% 14%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 210 40% 98%;
+    --primary-foreground: 222.2 47.4% 11.2%;
+
+    --secondary: 217.2 32.6% 17.5%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 175 19% 25%;
+    --muted-foreground: 210 40% 98%;
+
+    --accent: 175 19% 25%;
+    --accent-foreground: 210 40% 98%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 175 19% 35%;
+    --input: 175 19% 35%;
+    --ring: 212.7 26.8% 90.9%;
+  }
+}
+
+@layer base {
+  .stroke-custom {
+    path {
+      stroke-width: 1px !important;
+    }
+  }
+
+  * {
+    @apply border-border;
+    box-sizing: border-box;
+  }
+
+  body {
+    @apply bg-background text-foreground;
+    margin: 0;
+    overflow-x: hidden;
+    overflow-y: auto;
+  }
+
+  html {
+    font-size: 1rem;
+    --screen-padding: 2rem;
+  }
+
+  p {
+    @apply mb-4;
+  }
+
+  a {
+    text-decoration: underline;
+    outline: none;
+  }
+
+  /**
+   * mobile styling
+   */
+  @media screen and (max-width: 640px) {
+    html {
+      font-size: 1.1rem;
+      --screen-padding: 1rem;
+    }
+
+    input {
+      font-size: 16px !important;
+    }
+  }
+
+  @font-face {
+    font-family: "OpenSans";
+    font-style: normal;
+    font-weight: 300;
+    src: url(/fonts/OpenSans-Light.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: "OpenSans";
+    font-style: italic;
+    font-weight: 300;
+    src: url(/fonts/OpenSans-LightItalic.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: "OpenSans";
+    font-style: normal;
+    font-weight: 400;
+    src: url(/fonts/OpenSans-Regular.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: "OpenSans";
+    font-style: normal;
+    font-weight: 500;
+    src: url(/fonts/OpenSans-Medium.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: "OpenSans";
+    font-style: normal;
+    font-weight: 600;
+    src: url(/fonts/OpenSans-SemiBold.ttf) format("truetype");
+  }
+  @font-face {
+    font-family: "OpenSans";
+    font-style: normal;
+    font-weight: 700;
+    src: url(/fonts/OpenSans-Bold.ttf) format("truetype");
+  }
+}

@@ -5,6 +5,7 @@
   "compilerOptions": {
     "outDir": "dist",
     "declarationDir": "dist/types",
-    "rootDir": "."
+    "rootDir": ".",
+    "lib": ["ES2022", "DOM"]
   }
 }

@@ -1,6 +1,6 @@
 {
   "name": "@pcd/gpcircuits",
-  "version": "0.0.1",
+  "version": "0.1.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -14,6 +14,10 @@
   },
   "files": [
     "dist",
+    "scripts",
+    "circuits",
+    "!circuits/test",
+    "./CHANGELOG.md",
     "./README.md",
     "./LICENSE"
   ],
@@ -23,15 +27,20 @@
     "typecheck": "yarn tsc --noEmit",
     "prepublishOnly": "yarn clean && yarn build",
     "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
-    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+    "clean": "rm -rf dist node_modules *.tsbuildinfo build circuits/test ptau && yarn clean-test-artifacts",
+    "gen-circuit-parameters": "npx tsx scripts/gen-circuit-parameters.ts",
+    "gen-test-artifacts": "npx tsx scripts/gen-test-artifacts.ts",
+    "clean-test-artifacts": "rm -rf artifacts/test"
   },
   "dependencies": {
-    "@pcd/pod": "0.0.1"
+    "@pcd/pod": "0.1.0",
+    "fastfile": "0.0.20",
+    "snarkjs": "^0.7.3"
   },
   "devDependencies": {
-    "@pcd/eslint-config-custom": "0.10.0",
-    "@pcd/tsconfig": "0.10.0",
-    "@pcd/util": "^0.4.0",
+    "@pcd/eslint-config-custom": "0.11.0",
+    "@pcd/tsconfig": "0.11.0",
+    "@pcd/util": "^0.5.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "@types/chai": "^4.3.5",
     "@types/mocha": "^10.0.1",
@@ -39,7 +48,9 @@
     "circomkit": "^0.0.24",
     "circomlib": "^2.0.5",
     "eslint": "^8.57.0",
+    "lodash": "^4.17.21",
     "mocha": "^10.2.0",
+    "poseidon-lite": "^0.2.0",
     "ts-mocha": "^10.0.0",
     "typescript": "^5.3.3"
   },

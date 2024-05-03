@@ -1,0 +1,4 @@
+.env
+.prod.env
+.staging.env
+*.env

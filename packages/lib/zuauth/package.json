@@ -1,0 +1,67 @@
+{
+  "name": "@pcd/zuauth",
+  "private": false,
+  "version": "1.2.0",
+  "license": "GPL-3.0-or-later",
+  "main": "./dist/cjs/src/index.js",
+  "module": "./dist/esm/src/index.js",
+  "types": "./dist/types/src/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/types/src/index.d.ts",
+      "import": "./dist/esm/src/index.js",
+      "require": "./dist/cjs/src/index.js"
+    },
+    "./server": {
+      "types": "./dist/types/src/server.d.ts",
+      "import": "./dist/esm/src/server.js",
+      "require": "./dist/cjs/src/server.js"
+    },
+    "./client": {
+      "types": "./dist/types/src/zuauth.d.ts",
+      "import": "./dist/esm/src/zuauth.js",
+      "require": "./dist/cjs/src/zuauth.js"
+    }
+  },
+  "files": [
+    "dist",
+    "./README.md",
+    "./LICENSE"
+  ],
+  "scripts": {
+    "lint": "eslint \"**/*.ts{,x}\"",
+    "build": "tsc -b tsconfig.esm.json tsconfig.cjs.json",
+    "typecheck": "yarn tsc --noEmit",
+    "prepublishOnly": "yarn clean && yarn build",
+    "test": "ts-mocha --config ../../../.mocharc.js --exit 'test/**/*.spec.ts'",
+    "clean": "rm -rf dist node_modules *.tsbuildinfo"
+  },
+  "dependencies": {
+    "@pcd/eddsa-pcd": "^0.6.0",
+    "@pcd/eddsa-ticket-pcd": "^0.6.0",
+    "@pcd/passport-interface": "^0.11.0",
+    "@pcd/pcd-types": "^0.11.0",
+    "@pcd/semaphore-identity-pcd": "^0.11.0",
+    "@pcd/zk-eddsa-event-ticket-pcd": "^0.5.0"
+  },
+  "devDependencies": {
+    "@pcd/eslint-config-custom": "0.11.0",
+    "@pcd/tsconfig": "0.11.0",
+    "@semaphore-protocol/identity": "^3.15.2",
+    "@types/chai": "^4.3.5",
+    "@types/mocha": "^10.0.1",
+    "@types/react": "^18.2.0",
+    "eslint": "^8.57.0",
+    "mocha": "^10.2.0",
+    "ts-mocha": "^10.0.0",
+    "typescript": "^5.3.3",
+    "uuid": "^9.0.1"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "peerDependencies": {
+    "react": "^18.2.0",
+    "react-dom": "^18.2.0"
+  }
+}

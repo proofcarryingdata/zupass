@@ -13,6 +13,14 @@ interface AppConfig {
   rollbarToken: string | undefined;
   // the environment to which the client uploads errors in rollbar
   rollbarEnvName: string | undefined;
+  // license key for Strich scanner
+  strichLicenseKey: string | undefined;
+  // license key for Scandit scanner
+  scanditLicenseKey: string | undefined;
+  // is a choice of multiple scanning engines enabled?
+  multiChoiceScanEnabled: boolean;
+  // should PODTicketPCDs be visible?
+  showPODTicketPCDs: boolean;
 }
 
 if (
@@ -31,13 +39,35 @@ if (
   alert("FROGCRYPTO_SERVER_URL not set");
 }
 
+if (
+  process.env.MULTI_CHOICE_SCAN_ENABLED === "true" &&
+  (!process.env.STRICH_LICENSE_KEY || process.env.STRICH_LICENSE_KEY === "") &&
+  global.window &&
+  !!global.window.alert
+) {
+  alert("STRICH_LICENSE_KEY not set");
+}
+
+if (
+  process.env.MULTI_CHOICE_SCAN_ENABLED === "true" &&
+  (!process.env.SCANDIT_LICENSE_KEY || process.env.STRICH_LICENSE_KEY === "") &&
+  global.window &&
+  !!global.window.alert
+) {
+  alert("SCANDIT_LICENSE_KEY not set");
+}
+
 export const appConfig: AppConfig = {
   devMode: process.env.NODE_ENV !== "production",
   zupassServer: process.env.PASSPORT_SERVER_URL as string,
   frogCryptoServer: process.env.FROGCRYPTO_SERVER_URL as string,
   maxIdentityProofAgeMs: ONE_HOUR_MS * 4,
   rollbarToken: process.env.ROLLBAR_TOKEN,
-  rollbarEnvName: process.env.ROLLBAR_ENV_NAME
+  rollbarEnvName: process.env.ROLLBAR_ENV_NAME,
+  strichLicenseKey: process.env.STRICH_LICENSE_KEY,
+  scanditLicenseKey: process.env.SCANDIT_LICENSE_KEY,
+  multiChoiceScanEnabled: process.env.MULTI_CHOICE_SCAN_ENABLED === "true",
+  showPODTicketPCDs: process.env.SHOW_POD_TICKET_PCDS === "true"
 };
 
 console.log("App Config: " + JSON.stringify(appConfig));

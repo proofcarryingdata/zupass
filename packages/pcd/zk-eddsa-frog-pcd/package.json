@@ -1,6 +1,6 @@
 {
   "name": "@pcd/zk-eddsa-frog-pcd",
-  "version": "0.2.0",
+  "version": "0.3.0",
   "license": "GPL-3.0-or-later",
   "main": "./dist/cjs/src/index.js",
   "module": "./dist/esm/src/index.js",
@@ -10,6 +10,11 @@
       "types": "./dist/types/src/index.d.ts",
       "import": "./dist/esm/src/index.js",
       "require": "./dist/cjs/src/index.js"
+    },
+    "./ZKEdDSAFrogPCD": {
+      "types": "./dist/types/src/ZKEdDSAFrogPCD.d.ts",
+      "import": "./dist/esm/src/ZKEdDSAFrogPCD.js",
+      "require": "./dist/cjs/src/ZKEdDSAFrogPCD.js"
     }
   },
   "files": [
@@ -28,12 +33,12 @@
     "artifacts:generate": "pcd-artifacts generate -o src/artifacts && cp src/artifacts/* ../../apps/passport-client/public/artifacts/zk-eddsa-frog-pcd && cp src/artifacts/* ../../apps/passport-server/public/artifacts/zk-eddsa-frog-pcd && cp -f ./artifacts/circuit.json ./src/circuit.json"
   },
   "dependencies": {
-    "@pcd/eddsa-frog-pcd": "^0.2.0",
-    "@pcd/eddsa-pcd": "0.5.0",
-    "@pcd/pcd-types": "^0.10.0",
-    "@pcd/semaphore-identity-pcd": "0.10.0",
-    "@pcd/semaphore-signature-pcd": "0.10.0",
-    "@pcd/util": "0.4.0",
+    "@pcd/eddsa-frog-pcd": "^0.3.0",
+    "@pcd/eddsa-pcd": "0.6.0",
+    "@pcd/pcd-types": "^0.11.0",
+    "@pcd/semaphore-identity-pcd": "0.11.0",
+    "@pcd/semaphore-signature-pcd": "0.11.0",
+    "@pcd/util": "0.5.0",
     "@semaphore-protocol/identity": "^3.15.2",
     "circomlibjs": "^0.1.7",
     "json-bigint": "^1.0.0",
@@ -42,8 +47,8 @@
   },
   "devDependencies": {
     "@pcd/artifacts": "0.4.0",
-    "@pcd/eslint-config-custom": "0.10.0",
-    "@pcd/tsconfig": "0.10.0",
+    "@pcd/eslint-config-custom": "0.11.0",
+    "@pcd/tsconfig": "0.11.0",
     "@types/json-bigint": "^1.0.1",
     "@types/mocha": "^10.0.1",
     "@types/uuid": "^9.0.0",

@@ -10,7 +10,7 @@ import { generateSnarkMessageHash } from "@pcd/util";
 import { useCallback, useEffect, useState } from "react";
 import { requestSemaphoreGroup } from "./api/requestSemaphoreGroup";
 import { constructZupassPcdGetRequestUrl } from "./PassportInterface";
-import { openZupassPopup } from "./PassportPopup";
+import { openZupassPopup } from "./PassportPopup/core";
 import { useSerializedPCD } from "./SerializedPCDIntegration";
 
 /**

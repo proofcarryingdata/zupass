@@ -149,20 +149,6 @@ export function Home({ disabled }: { disabled?: boolean }): JSX.Element {
   );
 }
 
-export function FakeBack({ disabled }: { disabled?: boolean }): JSX.Element {
-  const onClick = useCallback(() => {
-    window.location.href = "/#/?folder=Edge%2520City&tab=experiences";
-  }, []);
-
-  return (
-    <>
-      <Button style="outline-lite" onClick={onClick} disabled={disabled}>
-        Back
-      </Button>
-    </>
-  );
-}
-
 export function Back({ disabled }: { disabled?: boolean }): JSX.Element {
   const onClick = useCallback(() => {
     window.history.back();
@@ -179,18 +165,6 @@ export function Back({ disabled }: { disabled?: boolean }): JSX.Element {
 
 export const TicketInfoContainer = styled.div`
   padding: 16px;
-`;
-
-export const Container = styled.div`
-  margin-top: 64px;
-  color: var(--bg-dark-primary);
-  width: 400px;
-  padding: 0px 32px;
-`;
-
-export const CheckinSuccess = styled.span`
-  color: green;
-  font-size: 1.5em;
 `;
 
 export const Spread = styled.div`
