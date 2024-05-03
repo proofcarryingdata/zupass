@@ -58,7 +58,7 @@ export function HomeScreenImpl(): JSX.Element | null {
     const folderPathFromQuery = decodeURIComponent(
       searchParams.get(FOLDER_QUERY_PARAM) ?? ""
     );
-    if (!folderPathFromQuery || folderPathFromQuery === "null") {
+    if (!folderPathFromQuery) {
       return "";
     }
     // FrogCrypto is always valid even if user doesn't have any FrogPCD
