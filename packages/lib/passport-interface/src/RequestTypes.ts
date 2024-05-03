@@ -1169,8 +1169,8 @@ export type GenericIssuanceSemaphoreGroupRootResponseValue = string;
 
 /**
  * Request Podbox tickets for offline checkin, to be used by an authorized
- * checker. If the credential does not grant sufficient authority then the
- * request will be denied.
+ * checker. The credential will be used to look up the products a user owns, or
+ * to match the user against a "superuserEmails" list on some pipelines.
  */
 export interface PodboxGetOfflineTicketsRequest {
   credential: Credential;
@@ -1192,13 +1192,16 @@ export interface PodboxOfflineTicket {
 }
 
 /**
- * Returned to a checker with permission to sync tickets for offline checkin
- * for a given event.
+ * Returned to a checker with permission to sync tickets for offline check-in.
  */
 export interface PodboxGetOfflineTicketsResponseValue {
   offlineTickets: PodboxOfflineTicket[];
 }
 
+/**
+ * Tickets that the checker checked in while offline. Groups by event to make
+ * it easier for Podbox to find the right pipeline to route the check-ins to.
+ */
 export interface PodboxCheckInOfflineTicketsRequest {
   credential: Credential;
   tickets: Record<string, string[]>; // eventID -> ticketID[]
