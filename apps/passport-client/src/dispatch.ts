@@ -76,6 +76,10 @@ export type Action =
       type: "create-user-skip-password";
       email: string;
       token: string;
+      /** If autoRegister is "true", Zupass will attempt to automatically register an account */
+      autoRegister: boolean;
+      /** Zupass will attempt to automatically direct a user to targetFolder on registration */
+      targetFolder: string | undefined | null;
     }
   | {
       type: "login";
@@ -181,6 +185,8 @@ export async function dispatch(
       return createNewUserSkipPassword(
         action.email,
         action.token,
+        action.targetFolder,
+        action.autoRegister,
         state,
         update
       );
@@ -294,12 +300,26 @@ async function genPassport(
 async function createNewUserSkipPassword(
   email: string,
   token: string,
+  targetFolder: string | undefined | null,
+  autoRegister: boolean,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
   update({
     modal: { modalType: "none" }
   });
+  // Because we skip the genPassword() step of setting the initial PCDs
+  // in the one-click flow, we'll need to do it here.
+  if (autoRegister) {
+    const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+      identity: state.identity
+    });
+    const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+
+    await savePCDs(pcds);
+    update({ pcds });
+  }
+
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = crypto.generateRandomKey();
   saveEncryptionKey(encryptionKey);
@@ -314,11 +334,17 @@ async function createNewUserSkipPassword(
     token,
     state.identity.commitment.toString(),
     undefined,
-    encryptionKey
+    encryptionKey,
+    autoRegister
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(
+      newUserResult.value,
+      state,
+      update,
+      targetFolder
+    );
   }
 
   update({
@@ -353,6 +379,7 @@ async function createNewUserWithPassword(
     token,
     state.identity.commitment.toString(),
     newSalt,
+    undefined,
     undefined
   );
 
@@ -376,7 +403,8 @@ async function createNewUserWithPassword(
 async function finishAccountCreation(
   user: User,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  targetFolder?: string | null
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -451,7 +479,9 @@ async function finishAccountCreation(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = "#/";
+    window.location.hash = targetFolder
+      ? `#/?folder=${encodeURIComponent(targetFolder)}`
+      : "#/";
   }
 }
 

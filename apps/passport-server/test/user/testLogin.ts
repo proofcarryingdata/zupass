@@ -84,7 +84,8 @@ export async function testLogin(
     token,
     commitment,
     skipSetupPassword ? undefined : salt,
-    encryptionKey
+    encryptionKey,
+    undefined
   );
 
   if (!newUserResult.value) {

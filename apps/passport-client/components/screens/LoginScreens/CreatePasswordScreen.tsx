@@ -18,6 +18,8 @@ export function CreatePasswordScreen(): JSX.Element | null {
   const query = useQuery();
   const email = query?.get("email");
   const token = query?.get("token");
+  const autoRegister = query?.get("autoRegister") === "true";
+  const targetFolder = query?.get("targetFolder");
   const [error, setError] = useState<string | undefined>();
   const [password, setPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
@@ -31,26 +33,6 @@ export function CreatePasswordScreen(): JSX.Element | null {
     window.location.reload();
   }, []);
 
-  const checkIfShouldRedirect = useCallback(async () => {
-    if (!email || !validateEmail(email) || !token) {
-      return redirectToLoginPageWithError(
-        "Invalid email or token, redirecting to login"
-      );
-    }
-
-    const verifyTokenResult = await requestVerifyToken(
-      appConfig.zupassServer,
-      email,
-      token
-    );
-
-    if (!verifyTokenResult.success) {
-      return redirectToLoginPageWithError(
-        "Invalid email or token, redirecting to login"
-      );
-    }
-  }, [email, redirectToLoginPageWithError, token]);
-
   const onSkipPassword = useCallback(async () => {
     try {
       // If email or token are undefined, we will already have redirected to
@@ -61,28 +43,70 @@ export function CreatePasswordScreen(): JSX.Element | null {
         await dispatch({
           type: "create-user-skip-password",
           email,
-          token
+          token,
+          targetFolder,
+          autoRegister
         });
       }
     } finally {
       setSettingPassword(false);
+      if (autoRegister) {
+        window.location.href = "#/";
+      }
     }
-  }, [dispatch, email, token]);
+  }, [dispatch, email, token, targetFolder, autoRegister]);
 
-  useEffect(() => {
-    checkIfShouldRedirect();
-  }, [checkIfShouldRedirect]);
-
-  useEffect(() => {
+  const checkIfShouldRedirect = useCallback(async () => {
     // Redirect to home if already logged in
     if (self) {
+      // Present alert if we had tried to auto-register with a different
+      // email than the currently logged-in email.
+      if (autoRegister && email !== self.email) {
+        alert(
+          `You are already logged in as ${self.email}. Please log out and try navigating to the link again.`
+        );
+      }
+
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
         window.location.hash = "#/";
       }
+      return;
     }
-  }, [self]);
+    if (!email || !validateEmail(email) || !token) {
+      return redirectToLoginPageWithError(
+        "Invalid email or token, redirecting to login"
+      );
+    }
+
+    if (autoRegister) {
+      await onSkipPassword();
+    } else {
+      const verifyTokenResult = await requestVerifyToken(
+        appConfig.zupassServer,
+        email,
+        token
+      );
+
+      if (!verifyTokenResult.success) {
+        return redirectToLoginPageWithError(
+          "Invalid email or token, redirecting to login"
+        );
+      }
+    }
+  }, [
+    self,
+    email,
+    redirectToLoginPageWithError,
+    token,
+    autoRegister,
+    onSkipPassword
+  ]);
+
+  useEffect(() => {
+    checkIfShouldRedirect();
+  }, [checkIfShouldRedirect]);
 
   const onSetPassword = useCallback(async () => {
     try {
@@ -114,7 +138,7 @@ export function CreatePasswordScreen(): JSX.Element | null {
     return null;
   }
 
-  if (settingPassword) {
+  if (settingPassword || autoRegister) {
     content = <ScreenLoader text="Creating your account..." />;
   } else if (skipConfirm) {
     content = (

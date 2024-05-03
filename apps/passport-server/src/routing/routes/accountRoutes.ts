@@ -110,7 +110,7 @@ export function initAccountRoutes(
     const email = normalizeEmail(
       checkBody<CreateNewUserRequest, "email">(req, "email")
     );
-    const { salt, encryptionKey } =
+    const { salt, encryptionKey, autoRegister } =
       req.body as CreateNewUserRequest as CreateNewUserRequest;
     const token = checkBody<CreateNewUserRequest, "token">(req, "token");
     const commitment = checkBody<CreateNewUserRequest, "commitment">(
@@ -124,6 +124,7 @@ export function initAccountRoutes(
       commitment,
       salt,
       encryptionKey,
+      autoRegister,
       res
     );
   });
