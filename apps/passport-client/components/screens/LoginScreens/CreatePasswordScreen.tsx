@@ -59,6 +59,14 @@ export function CreatePasswordScreen(): JSX.Element | null {
   const checkIfShouldRedirect = useCallback(async () => {
     // Redirect to home if already logged in
     if (self) {
+      // Present alert if we had tried to auto-register with a different
+      // email than the currently logged-in email.
+      if (autoRegister && email !== self.email) {
+        alert(
+          `You are already logged in as ${self.email}. Please log out and try navigating to the link again.`
+        );
+      }
+
       if (hasPendingRequest()) {
         window.location.hash = "#/login-interstitial";
       } else {
