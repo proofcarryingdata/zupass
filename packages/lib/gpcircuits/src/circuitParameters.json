@@ -1,0 +1,35 @@
+[
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 1,
+      "merkleMaxDepth": 5,
+      "maxListEntries": 10,
+      "maxTuples": 2,
+      "tupleArity": 2
+    },
+    6876
+  ],
+  [
+    {
+      "maxObjects": 1,
+      "maxEntries": 5,
+      "merkleMaxDepth": 6,
+      "maxListEntries": 10,
+      "maxTuples": 2,
+      "tupleArity": 2
+    },
+    14009
+  ],
+  [
+    {
+      "maxObjects": 3,
+      "maxEntries": 10,
+      "merkleMaxDepth": 8,
+      "maxListEntries": 10,
+      "maxTuples": 2,
+      "tupleArity": 2
+    },
+    36088
+  ]
+]

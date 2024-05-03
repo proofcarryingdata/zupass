@@ -187,6 +187,7 @@ async function run(command: string): Promise<void> {
 }
 
 function copyScanditEngine(): void {
+  // @todo this can be removed if we're sure we don't need Scandit as an option
   fs.cpSync(
     path.join(
       "../../node_modules/scandit-web-datacapture-barcode/build/engine"

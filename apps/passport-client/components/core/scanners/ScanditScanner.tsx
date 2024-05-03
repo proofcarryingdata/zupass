@@ -2,7 +2,7 @@ import { sleep } from "@pcd/util";
 import { useEffect } from "react";
 import * as SDCBarcode from "scandit-web-datacapture-barcode";
 import * as SDCCore from "scandit-web-datacapture-core";
-import { appConfig } from "../../src/appConfig";
+import { appConfig } from "../../../src/appConfig";
 
 const licenseKey = appConfig.scanditLicenseKey;
 

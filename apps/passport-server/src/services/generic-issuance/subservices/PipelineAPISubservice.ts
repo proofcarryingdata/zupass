@@ -140,10 +140,9 @@ export class PipelineAPISubservice {
         pipelineHasSemaphoreGroups = true;
       }
 
-      // Only actually run the query if there are Semaphore groups
-      const latestConsumers = pipelineHasSemaphoreGroups
-        ? await this.consumerDB.loadAll(pipelineInstance.id)
-        : [];
+      const latestConsumers = await this.consumerDB.loadAll(
+        pipelineInstance.id
+      );
 
       if (!pipelineSlot.owner) {
         throw new Error("owner does not exist");

@@ -9,6 +9,7 @@ import { IGenericPretixAPI } from "../../../../apis/pretix/genericPretixAPI";
 import { IPipelineAtomDB } from "../../../../database/queries/pipelineAtomDB";
 import { IPipelineCheckinDB } from "../../../../database/queries/pipelineCheckinDB";
 import { IPipelineConsumerDB } from "../../../../database/queries/pipelineConsumerDB";
+import { IPipelineManualTicketDB } from "../../../../database/queries/pipelineManualTicketDB";
 import { IPipelineSemaphoreHistoryDB } from "../../../../database/queries/pipelineSemaphoreHistoryDB";
 import {
   IBadgeGiftingDB,
@@ -43,6 +44,7 @@ export interface InstantiatePipelineArgs {
   contactDB: IContactSharingDB;
   badgeDB: IBadgeGiftingDB;
   consumerDB: IPipelineConsumerDB;
+  manualTicketDB: IPipelineManualTicketDB;
   semaphoreHistoryDB: IPipelineSemaphoreHistoryDB;
   credentialSubservice: CredentialSubservice;
 }
@@ -85,6 +87,7 @@ export function instantiatePipeline(
         args.cacheService,
         args.checkinDB,
         args.consumerDB,
+        args.manualTicketDB,
         args.semaphoreHistoryDB
       );
     } else if (isCSVPipelineDefinition(definition)) {

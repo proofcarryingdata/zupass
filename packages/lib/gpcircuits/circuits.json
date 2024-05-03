@@ -1,8 +1,15 @@
 {
-  "proto-pod-gpc-1o-1e-5md-10l-2t-2ta": {
+  "proto-pod-gpc_1o-1e-5md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [1, 1, 5, 10, 2, 2],
+    "params": [
+      1,
+      1,
+      5,
+      10,
+      2,
+      2
+    ],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",
@@ -20,10 +27,17 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc-1o-5e-8md-10l-2t-3ta": {
+  "proto-pod-gpc_1o-5e-6md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [1, 5, 8, 10, 2, 3],
+    "params": [
+      1,
+      5,
+      6,
+      10,
+      2,
+      2
+    ],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",
@@ -41,10 +55,17 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc-3o-10e-8md-10l-2t-2ta": {
+  "proto-pod-gpc_3o-10e-8md": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
-    "params": [3, 10, 8, 10, 2, 2],
+    "params": [
+      3,
+      10,
+      8,
+      10,
+      2,
+      2
+    ],
     "pubs": [
       "objectSignerPubkeyAx",
       "objectSignerPubkeyAy",

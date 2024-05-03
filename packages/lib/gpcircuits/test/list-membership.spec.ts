@@ -1,12 +1,13 @@
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
+  extendedSignalArray,
   ListMembershipModuleInputNamesType,
   ListMembershipModuleInputs,
   ListMembershipModuleOutputNamesType,
   ListMembershipModuleOutputs
 } from "../src";
-import { circomkit, extendedSignalArray } from "./common";
+import { circomkit } from "./common";
 
 describe("list-membership.ListMembershipModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.

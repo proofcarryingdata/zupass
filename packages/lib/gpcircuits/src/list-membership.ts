@@ -14,6 +14,7 @@ export type ListMembershipModuleOutputs = { isMember: CircuitSignal };
 
 export type ListMembershipModuleOutputNamesType = ["isMember"];
 
+// TODO: Rename to prepareList?
 export function hashList(
   paramMaxEntries: number,
   paramTupleArity: number,
