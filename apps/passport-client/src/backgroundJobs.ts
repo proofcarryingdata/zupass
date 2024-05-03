@@ -1,9 +1,6 @@
 import {
   CredentialManager,
   PODBOX_CREDENTIAL_REQUEST,
-  ZUPASS_CREDENTIAL_REQUEST,
-  requestOfflineTickets,
-  requestOfflineTicketsCheckin,
   requestPodboxCheckInOfflineTickets,
   requestPodboxGetOfflineTickets
 } from "@pcd/passport-interface";
@@ -16,9 +13,7 @@ import {
   setupBroadcastChannel
 } from "./broadcastChannel";
 import {
-  saveCheckedInOfflineTickets,
   saveCheckedInPodboxOfflineTickets,
-  saveOfflineTickets,
   savePodboxOfflineTickets,
   saveUsingLaserScanner
 } from "./localstorage";
@@ -152,9 +147,7 @@ export function useBackgroundJobs(): void {
     };
 
     const startJobSyncOfflineCheckins = async (): Promise<void> => {
-      await jobSyncOfflineCheckins();
       await jobSyncPodboxOfflineCheckins();
-      setInterval(jobSyncOfflineCheckins, 1000 * 60);
       setInterval(jobSyncPodboxOfflineCheckins, 1000 * 60);
     };
 
@@ -207,55 +200,6 @@ export function useBackgroundJobs(): void {
           podboxOfflineTickets: offlineTicketsResult.value.offlineTickets
         });
         savePodboxOfflineTickets(offlineTicketsResult.value.offlineTickets);
-      }
-    };
-
-    const jobSyncOfflineCheckins = async (): Promise<void> => {
-      const state = getState();
-      if (!state.self || state.offline) {
-        return;
-      }
-
-      const credentialManager = new CredentialManager(
-        getState().identity,
-        getState().pcds,
-        getState().credentialCache
-      );
-
-      if (state.checkedinOfflineDevconnectTickets.length > 0) {
-        const checkinOfflineTicketsResult = await requestOfflineTicketsCheckin(
-          appConfig.zupassServer,
-          {
-            checkedOfflineInDevconnectTicketIDs:
-              state.checkedinOfflineDevconnectTickets.map((t) => t.id),
-            checkerProof: await credentialManager.requestCredential(
-              ZUPASS_CREDENTIAL_REQUEST
-            )
-          }
-        );
-
-        if (checkinOfflineTicketsResult.success) {
-          update({
-            checkedinOfflineDevconnectTickets: []
-          });
-          saveCheckedInOfflineTickets(undefined);
-        }
-      }
-
-      const offlineTicketsResult = await requestOfflineTickets(
-        appConfig.zupassServer,
-        {
-          checkerProof: await credentialManager.requestCredential(
-            ZUPASS_CREDENTIAL_REQUEST
-          )
-        }
-      );
-
-      if (offlineTicketsResult.success) {
-        update({
-          offlineTickets: offlineTicketsResult.value.offlineTickets
-        });
-        saveOfflineTickets(offlineTicketsResult.value.offlineTickets);
       }
     };
 
