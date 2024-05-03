@@ -6,6 +6,7 @@ import {
 import { randomUUID } from "@pcd/util";
 import { IPipelineConsumerDB } from "../../database/queries/pipelineConsumerDB";
 import { logger } from "../../util/logger";
+import { LemonadeAtom } from "./pipelines/LemonadePipeline";
 import { PretixAtom } from "./pipelines/PretixPipeline";
 
 export class AutoIssuanceProvider {
@@ -107,7 +108,7 @@ export function anyTicketMatchesCriteria(
 }
 
 export function ticketMatchesCriteria(
-  t: PretixAtom | ManualTicket,
+  t: PretixAtom | LemonadeAtom | ManualTicket,
   criterias: MemberCriteria[]
 ): boolean {
   return !!criterias.find((c) => {

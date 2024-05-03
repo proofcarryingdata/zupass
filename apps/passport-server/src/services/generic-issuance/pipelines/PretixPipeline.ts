@@ -18,6 +18,7 @@ import {
   GenericPretixProductCategory,
   ImageOptions,
   ManualTicket,
+  MemberCriteria,
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
@@ -66,7 +67,8 @@ import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traced } from "../../telemetryService";
 import {
   AutoIssuanceProvider,
-  anyTicketMatchesCriteria
+  anyTicketMatchesCriteria,
+  ticketMatchesCriteria
 } from "../AutoIssuanceProvider";
 import {
   SemaphoreGroupProvider,
@@ -88,7 +90,6 @@ import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
-import { MemberCriteria, ticketMatchesCriteria } from "./utils";
 
 const LOG_NAME = "PretixPipeline";
 const LOG_TAG = `[${LOG_NAME}]`;

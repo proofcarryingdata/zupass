@@ -18,6 +18,7 @@ import {
   LemonadePipelineEventConfig,
   LemonadePipelineTicketTypeConfig,
   ManualTicket,
+  MemberCriteria,
   PipelineEdDSATicketZuAuthConfig,
   PipelineLoadSummary,
   PipelineLog,
@@ -68,6 +69,7 @@ import { PCDHTTPError } from "../../../routing/pcdHttpError";
 import { logger } from "../../../util/logger";
 import { PersistentCacheService } from "../../persistentCacheService";
 import { setError, traceFlattenedObject, traced } from "../../telemetryService";
+import { ticketMatchesCriteria } from "../AutoIssuanceProvider";
 import {
   SemaphoreGroupProvider,
   SemaphoreGroupTicketInfo
@@ -88,7 +90,6 @@ import { CredentialSubservice } from "../subservices/CredentialSubservice";
 import { BasePipelineCapability } from "../types";
 import { makePLogErr, makePLogInfo, makePLogWarn } from "./logging";
 import { BasePipeline, Pipeline } from "./types";
-import { MemberCriteria, ticketMatchesCriteria } from "./utils";
 
 const LOG_NAME = "LemonadePipeline";
 const LOG_TAG = `[${LOG_NAME}]`;
