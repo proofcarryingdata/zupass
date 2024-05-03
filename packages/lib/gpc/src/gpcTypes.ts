@@ -216,7 +216,6 @@ export type GPCProofInputs = {
    * an entry with {@link isOwnerID} set, or for a nullifier.
    */
   owner?: {
-    // TODO(POD-P1): Change the code to match the structure of the owner subobject.
     /**
      * The owner's identity using Semaphore V3.  In future, alternative owner
      * identity types may be supported, and this will become an optional field.
@@ -306,7 +305,6 @@ export type GPCRevealedClaims = {
    * absence of this field is unaffected by the entry configuration.
    */
   owner?: {
-    // TODO(POD-P1): Change the code to match the structure of the owner subobject.
     /**
      * If this field is set, it matches the corresponding field in
      * {@link GPCProofInputs}, and {@link nullifierHash} will also be set.  The

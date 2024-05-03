@@ -1,4 +1,5 @@
 import {
+  CircuitSignal,
   ProtoPODGPCCircuitDesc,
   ProtoPODGPCInputs,
   ProtoPODGPCOutputs,
@@ -7,6 +8,7 @@ import {
   extendedSignalArray
 } from "@pcd/gpcircuits";
 import {
+  POD,
   PODName,
   PODValue,
   decodePublicKey,
@@ -17,11 +19,111 @@ import {
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import {
   GPCBoundConfig,
+  GPCProofEntryConfig,
   GPCProofInputs,
+  GPCProofObjectConfig,
   GPCRevealedClaims,
-  GPCRevealedObjectClaims
+  GPCRevealedObjectClaims,
+  PODEntryIdentifier
 } from "./gpcTypes";
 import { makeWatermarkSignal } from "./gpcUtil";
+
+/**
+ * Per-object info extracted by {@link prepCompilerMaps}.
+ */
+type CompilerObjInfo<ObjInput> = {
+  objName: PODName;
+  objIndex: number;
+  objConfig: GPCProofObjectConfig;
+  objInput: ObjInput;
+};
+
+/**
+ * Per-entry info extracted by {@link prepCompilerMaps}.
+ * Info about the object containing the entry is duplicated here for
+ * quick access.
+ */
+type CompilerEntryInfo<ObjInput> = {
+  objName: PODName;
+  objIndex: number;
+  objConfig: GPCProofObjectConfig;
+  objInput: ObjInput;
+  entryName: PODEntryIdentifier;
+  entryIndex: number;
+  entryConfig: GPCProofEntryConfig;
+};
+
+/**
+ * Helper function for the first phase of compiling inputs for prove or verify.
+ * Config and input information is gathered into maps for easy lookup by
+ * name/identifier later.
+ *
+ * Objects and entries are both sorted by name.  For entries, the order is by
+ * object name first, entry name second (not the same as sorting by qualified
+ * name as a single string).  Maps maintain insertion order so callers can
+ * iterate in the same order.
+ *
+ * @param config proof config
+ * @param inputs input object for prove or verify
+ *   (GPCProofInput or GPCRevealedClaims).
+ * @returns
+ */
+function prepCompilerMaps<
+  ProofInput extends GPCProofInputs | GPCRevealedClaims,
+  ObjInput extends POD | GPCRevealedObjectClaims
+>(
+  config: GPCBoundConfig,
+  inputs: ProofInput
+): {
+  objMap: Map<PODName, CompilerObjInfo<ObjInput>>;
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<ObjInput>>;
+} {
+  // Each of the two nested loops below sorts its names, which
+  // implicitly creates the desired order in the resulting Maps.
+  const objMap = new Map();
+  const entryMap = new Map();
+  let objIndex = 0;
+  let entryIndex = 0;
+  const objNameOrder = Object.keys(config.pods).sort();
+  for (const objName of objNameOrder) {
+    const objConfig = config.pods[objName];
+    if (objConfig === undefined) {
+      throw new Error(`Missing config for object ${objName}.`);
+    }
+    const objInput = inputs.pods[objName];
+    if (objInput === undefined) {
+      throw new Error(`Missing input for object ${objName}.`);
+    }
+
+    objMap.set(objName, { objConfig, objInput, objIndex });
+
+    const entryNameOrder = Object.keys(objConfig.entries).sort();
+    for (const entryName of entryNameOrder) {
+      const entryConfig = objConfig.entries[entryName];
+      if (entryConfig === undefined) {
+        throw new Error(`Missing config for entry ${objName}.${entryName}.`);
+      }
+
+      const entryQualifiedName = `${objName}.${entryName}`;
+
+      entryMap.set(entryQualifiedName, {
+        objName,
+        objIndex,
+        objConfig,
+        objInput,
+        entryName,
+        entryIndex,
+        entryConfig
+      });
+
+      entryIndex++;
+    }
+
+    objIndex++;
+  }
+
+  return { objMap, entryMap };
+}
 
 /**
  * Converts a high-level description of a GPC proof to be generated into
@@ -52,54 +154,11 @@ export function compileProofConfig(
   //    by a separate function which combines them.
   // 3) Figure out how to share more code with compileVerifyConfig
 
-  // First gather info about the necessary objects and entries into two Maps
-  // for later lookups.
-  // Objects and entries are both sorted by name.  For entries, the order is by
-  // object name first, entry name second (not the same as sorting by qualified
-  // name).  Each of the two nested loops below sorts its names, which
-  // implicitly creates the desired order in the resulting Maps.  Maps maintain
-  // insertion order for the loops below.
-  const objMap = new Map();
-  const entryMap = new Map();
-  let objIndex = 0;
-  let entryIndex = 0;
-  const objNameOrder = Object.keys(proofConfig.pods).sort();
-  for (const objName of objNameOrder) {
-    const objConfig = proofConfig.pods[objName];
-    if (objConfig === undefined) {
-      throw new Error(`Missing config for object ${objName}.`);
-    }
-    const objPOD = proofInputs.pods[objName];
-    if (objPOD === undefined) {
-      throw new Error(`Missing POD for object ${objName}.`);
-    }
-
-    objMap.set(objName, { objConfig, objPOD, objIndex });
-
-    const entryNameOrder = Object.keys(objConfig.entries).sort();
-    for (const entryName of entryNameOrder) {
-      const entryConfig = objConfig.entries[entryName];
-      if (entryConfig === undefined) {
-        throw new Error(`Missing config for entry ${objName}.${entryName}.`);
-      }
-
-      const entryQualifiedName = `${objName}.${entryName}`;
-
-      entryMap.set(entryQualifiedName, {
-        objName,
-        objConfig,
-        objPOD,
-        objIndex,
-        entryName,
-        entryConfig,
-        entryIndex
-      });
-
-      entryIndex++;
-    }
-
-    objIndex++;
-  }
+  // Put the objects and entries in order, in maps for easy lookups.
+  const { objMap, entryMap } = prepCompilerMaps<GPCProofInputs, POD>(
+    proofConfig,
+    proofInputs
+  );
 
   // ObjectModule module inputs are 1D arrays indexed by Object.  Some will
   // be packed into bits below.
@@ -113,10 +172,10 @@ export function compileProofConfig(
   // Fill in used ObjectModule inputs from the Object Map.  This loop maintains
   // the order of insertion above.
   for (const objInfo of objMap.values()) {
-    const publicKey = decodePublicKey(objInfo.objPOD.signerPublicKey);
-    const signature = decodeSignature(objInfo.objPOD.signature);
+    const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
+    const signature = decodeSignature(objInfo.objInput.signature);
 
-    sigObjectContentID.push(objInfo.objPOD.contentID);
+    sigObjectContentID.push(objInfo.objInput.contentID);
     sigObjectSignerPubkeyAx.push(publicKey[0]);
     sigObjectSignerPubkeyAy.push(publicKey[1]);
     sigObjectSignatureR8x.push(signature.R8[0]);
@@ -145,7 +204,7 @@ export function compileProofConfig(
   const sigEntryProofDepth = [];
   const sigEntryProofIndex = [];
   const sigEntryProofSiblings = [];
-  const sigEntryValue = [];
+  const sigEntryValue: CircuitSignal[] = [];
   const sigEntryIsValueEnabled = [];
   const sigEntryIsValueHashRevealed = [];
   const sigEntryEqualToOtherEntryByIndex = [];
@@ -154,7 +213,7 @@ export function compileProofConfig(
   // the order of insertion above.
   let firstOwnerIndex = 0;
   for (const entryInfo of entryMap.values()) {
-    const entrySignals = entryInfo.objPOD.content.generateEntryCircuitSignals(
+    const entrySignals = entryInfo.objInput.content.generateEntryCircuitSignals(
       entryInfo.entryName
     );
 
@@ -174,12 +233,14 @@ export function compileProofConfig(
     // Plaintext value is only enabled if it is needed by some other
     // configured constraint, which for now is only the owner commitment.
     const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
-    if (isValueEnabled && entrySignals.value === undefined) {
-      throw new Error("Numeric entry value is unavailable when required.");
+    if (isValueEnabled) {
+      if (entrySignals.value === undefined) {
+        throw new Error("Numeric entry value is unavailable when required.");
+      }
+      sigEntryValue.push(entrySignals.value);
+    } else {
+      sigEntryValue.push(BABY_JUB_NEGATIVE_ONE);
     }
-    sigEntryValue.push(
-      isValueEnabled ? entrySignals.value : BABY_JUB_NEGATIVE_ONE
-    );
     sigEntryIsValueEnabled.push(isValueEnabled ? 1n : 0n);
     sigEntryIsValueHashRevealed.push(
       entryInfo.entryConfig.isRevealed ? 1n : 0n
@@ -309,65 +370,11 @@ export function compileVerifyConfig(
   //    by a separate function which combines them.
   // 3) Figure out how to share more code with compileVerifyConfig
 
-  // First gather info about the necessary objects and entries into two Maps
-  // for later lookups.
-  // Objects and entries are both sorted by name.  For entries, the order is by
-  // object name first, entry name second (not the same as sorting by qualified
-  // name).  Each of the two nested loops below sorts its names, which
-  // implicitly creates the desired order in the resulting Maps.  Maps maintain
-  // insertion order for the loops below.
-  const objMap = new Map();
-  const entryMap = new Map();
-  let objIndex = 0;
-  let entryIndex = 0;
-  const objNameOrder = Object.keys(verifyConfig.pods).sort();
-  for (const objName of objNameOrder) {
-    const objConfig = verifyConfig.pods[objName];
-    if (objConfig === undefined) {
-      throw new Error(`Missing config for object ${objName}.`);
-    }
-    const objRevealed = verifyRevealed.pods[objName];
-    if (objRevealed === undefined) {
-      throw new Error(`Missing POD for object ${objName}.`);
-    }
-
-    objMap.set(objName, { objConfig, objRevealed, objIndex });
-
-    const entryNameOrder = Object.keys(objConfig.entries).sort();
-    for (const entryName of entryNameOrder) {
-      const entryConfig = objConfig.entries[entryName];
-      if (entryConfig === undefined) {
-        throw new Error(`Missing config for entry ${objName}.${entryName}.`);
-      }
-
-      const entryQualifiedName = `${objName}.${entryName}`;
-      let entryValue = undefined;
-      if (entryConfig.isRevealed) {
-        if (objRevealed.entries === undefined) {
-          throw new Error("Missing revealed entries.");
-        }
-        entryValue = objRevealed.entries[entryName];
-        if (entryValue === undefined) {
-          throw new Error(`Missing revealed entry ${objName}.${entryName}.`);
-        }
-      }
-
-      entryMap.set(entryQualifiedName, {
-        objName,
-        objConfig,
-        objRevealed,
-        objIndex,
-        entryName,
-        entryConfig,
-        entryIndex,
-        entryValue
-      });
-
-      entryIndex++;
-    }
-
-    objIndex++;
-  }
+  // Put the objects and entries in order, in maps for easy lookups.
+  const { objMap, entryMap } = prepCompilerMaps<
+    GPCRevealedClaims,
+    GPCRevealedObjectClaims
+  >(verifyConfig, verifyRevealed);
 
   // ObjectModule module inputs are 1D arrays indexed by Object.  Some will
   // be packed into bits below.
@@ -377,7 +384,7 @@ export function compileVerifyConfig(
   // Fill in used ObjectModule inputs from the Object Map.  This loop maintains
   // the order of insertion above.
   for (const objInfo of objMap.values()) {
-    const publicKey = decodePublicKey(objInfo.objRevealed.signerPublicKey);
+    const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
 
     sigObjectSignerPubkeyAx.push(publicKey[0]);
     sigObjectSignerPubkeyAy.push(publicKey[1]);
@@ -405,6 +412,20 @@ export function compileVerifyConfig(
   // the order of insertion above.
   let firstOwnerIndex = 0;
   for (const entryInfo of entryMap.values()) {
+    // Fetch the entry value, if it's configured to be revealed.
+    let revealedEntryValue: PODValue | undefined = undefined;
+    if (entryInfo.entryConfig.isRevealed) {
+      if (entryInfo.objInput.entries === undefined) {
+        throw new Error("Missing revealed entries.");
+      }
+      revealedEntryValue = entryInfo.objInput.entries[entryInfo.entryName];
+      if (revealedEntryValue === undefined) {
+        throw new Error(
+          `Missing revealed entry ${entryInfo.objName}.${entryInfo.entryName}.`
+        );
+      }
+    }
+
     // Add this entry's basic identity and membership proof for EntryModule.
     sigEntryObjectIndex.push(BigInt(entryInfo.objIndex));
     sigEntryNameHash.push(podNameHash(entryInfo.entryName));
@@ -418,8 +439,8 @@ export function compileVerifyConfig(
       entryInfo.entryConfig.isRevealed ? 1n : 0n
     );
     sigEntryRevealedValueHash.push(
-      entryInfo.entryConfig.isRevealed
-        ? podValueHash(entryInfo.entryValue)
+      revealedEntryValue !== undefined
+        ? podValueHash(revealedEntryValue)
         : BABY_JUB_NEGATIVE_ONE
     );
 
