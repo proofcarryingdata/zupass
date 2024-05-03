@@ -631,11 +631,9 @@ export type CreateNewUserRequest = {
   email: string;
   token: string;
   commitment: string;
-  /**
-   * Zupass users don't have a salt.
-   */
   salt: string | undefined;
   encryptionKey: string | undefined;
+  autoRegister?: boolean;
 };
 
 /**

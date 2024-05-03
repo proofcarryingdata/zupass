@@ -184,6 +184,7 @@ export class UserService {
     commitment: string,
     salt: string | undefined,
     encryptionKey: string | undefined,
+    autoRegister: boolean | undefined,
     res: Response
   ): Promise<void> {
     logger(
@@ -203,17 +204,22 @@ export class UserService {
 
     const existingUser = await fetchUserByEmail(this.context.dbPool, email);
 
-    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+    // Prevent accidental account re-creation/reset for one-click links clicked by existing users
+    if (existingUser && autoRegister) {
       throw new PCDHTTPError(
         403,
-        existingUser
-          ? `The email ${email} has already been registered. Please login instead.`
-          : `Wrong token. If you got more than one email, use the latest one.`
+        `The email ${email} has already been registered. Please log in instead.`
       );
     }
 
-    // If user exists and the token is correct, we continue through the account reset flow.
-    // If user doesn't exist and the token is correct, we continue through the account creation flow.
+    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+      throw new PCDHTTPError(
+        403,
+        autoRegister
+          ? `Invalid link. Please manually create an account with ${email}.`
+          : `Wrong token. If you got more than one email, use the latest one.`
+      );
+    }
 
     if (existingUser) {
       await this.checkAccountResetRateLimit(existingUser);

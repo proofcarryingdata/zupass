@@ -334,7 +334,8 @@ async function createNewUserSkipPassword(
     token,
     state.identity.commitment.toString(),
     undefined,
-    encryptionKey
+    encryptionKey,
+    autoRegister
   );
 
   if (newUserResult.success) {
@@ -378,6 +379,7 @@ async function createNewUserWithPassword(
     token,
     state.identity.commitment.toString(),
     newSalt,
+    undefined,
     undefined
   );
 
