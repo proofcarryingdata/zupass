@@ -1505,7 +1505,7 @@ describe("generic issuance - LemonadePipeline", function () {
     }
   });
 
-  step("offline check-ins can fail", async () => {
+  step("offline check-ins failures are properly recorded", async () => {
     expectToExist(giService);
     const pipelines = await giService.getAllPipelineInstances();
     const pipeline = pipelines.find(LemonadePipeline.is);
