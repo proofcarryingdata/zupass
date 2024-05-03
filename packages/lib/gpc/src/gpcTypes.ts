@@ -211,9 +211,6 @@ export type GPCProofInputs = {
    * contain the owner's public ID can be configured to be revealed.  A
    * nullifier can also be calculated which is tied to the owner's identity,
    * to allow identifying duplicate proofs without de-anonymizing.
-   *
-   * This field should be omitted if an owner is not needed for either
-   * an entry with {@link isOwnerID} set, or for a nullifier.
    */
   owner?: {
     /**

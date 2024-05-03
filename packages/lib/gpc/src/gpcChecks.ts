@@ -240,7 +240,6 @@ export function checkProofInputsForConfig(
   }
 
   // Examine config for each object.
-  let hasOwnerEntry = false;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     // This named object in config should be provided in input.
     const pod = proofInputs.pods[objName];
@@ -262,7 +261,6 @@ export function checkProofInputsForConfig(
 
       // If this entry identifies the owner, we should have a matching Identity.
       if (entryConfig.isOwnerID) {
-        hasOwnerEntry = true;
         if (proofInputs.owner === undefined) {
           throw new Error(
             "Proof configuration expects owner, but no owner identity given."
@@ -304,22 +302,6 @@ export function checkProofInputsForConfig(
       }
     }
   }
-
-  // TODO(POD-P1): Should we include this check?  It might catch mistakes, but
-  // also it makes calling code more complex, since it can't simply always
-  // provide an owner ID.  An unused owner ID affects only private circuit
-  // inputs, so it doesn't really matter.s
-  //
-  // Check that owner is not specified unnecessarily.
-  // if (
-  //   proofInputs.owner !== undefined &&
-  //   !hasOwnerEntry &&
-  //   proofInputs.owner.externalNullifier === undefined
-  // ) {
-  //   throw new Error(
-  //     "Owner identity is given, but not used for any configuration."
-  //   );
-  // }
 }
 
 /**
