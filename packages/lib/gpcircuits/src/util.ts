@@ -139,15 +139,15 @@ export function extendedSignalArray(
  * Convert an array of bit signals into a single packed bigint.
  * This will throw an Error if any of the elements is not 0 or 1.
  */
-export function array2Bits(boolArray: bigint[]): bigint {
+export function array2Bits(boolArray: CircuitSignal[]): bigint {
   let bits = 0n;
   for (let i = 0; i < boolArray.length; i++) {
-    if (boolArray[i] !== 0n && boolArray[i] !== 1n) {
+    if (BigInt(boolArray[i]) !== 0n && BigInt(boolArray[i]) !== 1n) {
       throw new Error(
         `Input to array2Bits must be 0n or 1n not ${boolArray[i]}.`
       );
     }
-    if (boolArray[i] === 1n) {
+    if (BigInt(boolArray[i]) === 1n) {
       bits |= 1n << BigInt(i);
     }
   }

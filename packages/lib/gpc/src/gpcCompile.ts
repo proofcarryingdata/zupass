@@ -1,5 +1,7 @@
 import {
   CircuitSignal,
+  EntryModuleInputs,
+  ObjectModuleInputs,
   ProtoPODGPCCircuitDesc,
   ProtoPODGPCInputs,
   ProtoPODGPCOutputs,
@@ -22,6 +24,7 @@ import {
   GPCProofEntryConfig,
   GPCProofInputs,
   GPCProofObjectConfig,
+  GPCProofOwnerInputs,
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
   PODEntryIdentifier
@@ -160,93 +163,188 @@ export function compileProofConfig(
     proofInputs
   );
 
-  // ObjectModule module inputs are 1D arrays indexed by Object.  Some will
-  // be packed into bits below.
-  const sigObjectContentID = [];
-  const sigObjectSignerPubkeyAx = [];
-  const sigObjectSignerPubkeyAy = [];
-  const sigObjectSignatureR8x = [];
-  const sigObjectSignatureR8y = [];
-  const sigObjectSignatureS = [];
+  // Create subset of inputs for object modules, padded to max size.
+  const circuitObjInputs = combineObjectModuleInputs(
+    Array.from(objMap.values()).map(compileProofObject),
+    circuitDesc.maxObjects
+  );
 
-  // Fill in used ObjectModule inputs from the Object Map.  This loop maintains
-  // the order of insertion above.
-  for (const objInfo of objMap.values()) {
-    const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
-    const signature = decodeSignature(objInfo.objInput.signature);
+  // Create subset of inputs for entry modules, padded to max size.
+  const circuitEntryInputs = combineEntryModuleInputs(
+    Array.from(entryMap.values()).map((e) =>
+      compileProofEntry(e, circuitDesc.merkleMaxDepth)
+    ),
+    circuitDesc.maxEntries
+  );
 
-    sigObjectContentID.push(objInfo.objInput.contentID);
-    sigObjectSignerPubkeyAx.push(publicKey[0]);
-    sigObjectSignerPubkeyAy.push(publicKey[1]);
-    sigObjectSignatureR8x.push(signature.R8[0]);
-    sigObjectSignatureR8y.push(signature.R8[1]);
-    sigObjectSignatureS.push(signature.S);
-  }
+  // Create subset of inputs for entry comparisons and ownership, which share
+  // some of the same circuitry.
+  const { circuitEntryConstraintInputs, entryConstraintMetadata } =
+    compileProofEntryConstraints(entryMap, circuitDesc.maxEntries);
 
+  // Create subset of inputs for owner module.
+  const circuitOwnerInputs = compileProofOwner(
+    proofInputs.owner,
+    entryConstraintMetadata.firstOwnerIndex
+  );
+
+  // Create other global inputs.
+  const circuitGlobalInputs = compileProofGlobal(proofInputs);
+
+  // Return all the resulting signals input to the gpcircuits library.
+  // The specific return type of each compile phase above lets the TS compiler
+  // confirm that all expected fields have been set with the right types (though
+  // not their array sizes).
+  return {
+    ...circuitObjInputs,
+    ...circuitEntryInputs,
+    ...circuitEntryConstraintInputs,
+    ...circuitOwnerInputs,
+    ...circuitGlobalInputs
+  };
+}
+
+function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
+  const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
+  const signature = decodeSignature(objInfo.objInput.signature);
+
+  return {
+    contentID: objInfo.objInput.contentID,
+    signerPubkeyAx: publicKey[0],
+    signerPubkeyAy: publicKey[1],
+    signatureR8x: signature.R8[0],
+    signatureR8y: signature.R8[1],
+    signatureS: signature.S
+  };
+}
+
+function combineObjectModuleInputs(
+  allObjInputs: ObjectModuleInputs[],
+  maxObjects: number
+): {
+  objectContentID: CircuitSignal /*MAX_OBJECTS*/[];
+  objectSignerPubkeyAx: CircuitSignal /*MAX_OBJECTS*/[];
+  objectSignerPubkeyAy: CircuitSignal /*MAX_OBJECTS*/[];
+  objectSignatureR8x: CircuitSignal /*MAX_OBJECTS*/[];
+  objectSignatureR8y: CircuitSignal /*MAX_OBJECTS*/[];
+  objectSignatureS: CircuitSignal /*MAX_OBJECTS*/[];
+} {
   // Spare object slots get filled in with copies of Object 0.
-  for (
-    let objIndex = objMap.size;
-    objIndex < circuitDesc.maxObjects;
-    objIndex++
-  ) {
-    sigObjectContentID.push(sigObjectContentID[0]);
-    sigObjectSignerPubkeyAx.push(sigObjectSignerPubkeyAx[0]);
-    sigObjectSignerPubkeyAy.push(sigObjectSignerPubkeyAy[0]);
-    sigObjectSignatureR8x.push(sigObjectSignatureR8x[0]);
-    sigObjectSignatureR8y.push(sigObjectSignatureR8y[0]);
-    sigObjectSignatureS.push(sigObjectSignatureS[0]);
+  for (let objIndex = allObjInputs.length; objIndex < maxObjects; objIndex++) {
+    allObjInputs.push({ ...allObjInputs[0] });
   }
 
-  // EntryModule inputs are 1D arrays indexed entry, excepting siblings which
-  // is a 2D array also indexed by tree depth.
-  const sigEntryObjectIndex = [];
-  const sigEntryNameHash = [];
-  const sigEntryProofDepth = [];
-  const sigEntryProofIndex = [];
-  const sigEntryProofSiblings = [];
-  const sigEntryValue: CircuitSignal[] = [];
-  const sigEntryIsValueEnabled = [];
-  const sigEntryIsValueHashRevealed = [];
-  const sigEntryEqualToOtherEntryByIndex = [];
+  // Combine indidvidual arrays to form the circuit inputs.
+  return {
+    objectContentID: allObjInputs.map((o) => o.contentID),
+    objectSignerPubkeyAx: allObjInputs.map((o) => o.signerPubkeyAx),
+    objectSignerPubkeyAy: allObjInputs.map((o) => o.signerPubkeyAy),
+    objectSignatureR8x: allObjInputs.map((o) => o.signatureR8x),
+    objectSignatureR8y: allObjInputs.map((o) => o.signatureR8y),
+    objectSignatureS: allObjInputs.map((o) => o.signatureS)
+  };
+}
 
-  // Fill in used EntryModule inputs from the Entry Map.  This loop maintains
-  // the order of insertion above.
-  let firstOwnerIndex = 0;
-  for (const entryInfo of entryMap.values()) {
-    const entrySignals = entryInfo.objInput.content.generateEntryCircuitSignals(
-      entryInfo.entryName
-    );
+function compileProofEntry(
+  entryInfo: CompilerEntryInfo<POD>,
+  merkleMaxDepth: number
+): EntryModuleInputs {
+  const entrySignals = entryInfo.objInput.content.generateEntryCircuitSignals(
+    entryInfo.entryName
+  );
 
-    // Add this entry's basic identity and membership proof for EntryModule.
-    sigEntryObjectIndex.push(BigInt(entryInfo.objIndex));
-    sigEntryNameHash.push(entrySignals.nameHash);
-    sigEntryProofDepth.push(BigInt(entrySignals.proof.siblings.length));
-    sigEntryProofIndex.push(BigInt(entrySignals.proof.index));
-    sigEntryProofSiblings.push(
-      extendedSignalArray(
-        entrySignals.proof.siblings,
-        circuitDesc.merkleMaxDepth
-      )
-    );
-
-    // Add this entry's value (if enabled) for EntryModule.
-    // Plaintext value is only enabled if it is needed by some other
-    // configured constraint, which for now is only the owner commitment.
-    const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
-    if (isValueEnabled) {
-      if (entrySignals.value === undefined) {
-        throw new Error("Numeric entry value is unavailable when required.");
-      }
-      sigEntryValue.push(entrySignals.value);
-    } else {
-      sigEntryValue.push(BABY_JUB_NEGATIVE_ONE);
+  // Plaintext value is only enabled if it is needed by some other
+  // configured constraint, which for now is only the owner commitment.
+  const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
+  let entryValue = BABY_JUB_NEGATIVE_ONE;
+  if (isValueEnabled) {
+    if (entrySignals.value === undefined) {
+      throw new Error("Numeric entry value is unavailable when required.");
     }
-    sigEntryIsValueEnabled.push(isValueEnabled ? 1n : 0n);
-    sigEntryIsValueHashRevealed.push(
-      entryInfo.entryConfig.isRevealed ? 1n : 0n
-    );
+    entryValue = entrySignals.value;
+  }
 
-    // Deal with equality comparision and ownership, which share circuitry.
+  return {
+    // ContentID holding index is a lie, but it allows reusing the inputs type.
+    objectContentID: BigInt(entryInfo.objIndex),
+    nameHash: entrySignals.nameHash,
+    isValueHashRevealed: entryInfo.entryConfig.isRevealed ? 1n : 0n,
+    proofDepth: BigInt(entrySignals.proof.siblings.length),
+    proofIndex: BigInt(entrySignals.proof.index),
+    proofSiblings: extendedSignalArray(
+      entrySignals.proof.siblings,
+      merkleMaxDepth
+    ),
+    value: entryValue,
+    isValueEnabled: isValueEnabled ? 1n : 0n
+  };
+}
+
+function combineEntryModuleInputs(
+  allEntryInputs: EntryModuleInputs[],
+  maxEntries: number
+): {
+  entryObjectIndex: CircuitSignal /*MAX_ENTRIES*/[];
+  entryNameHash: CircuitSignal /*MAX_ENTRIES*/[];
+  entryValue: CircuitSignal /*MAX_ENTRIES*/[];
+  entryIsValueEnabled: CircuitSignal /*MAX_ENTRIES packed bits*/;
+  entryIsValueHashRevealed: CircuitSignal /*MAX_ENTRIES packed bits*/;
+  entryProofDepth: CircuitSignal /*MAX_ENTRIES*/[];
+  entryProofIndex: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH packed bits*/;
+  entryProofSiblings: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH*/[];
+} {
+  // Spare entry slots are filled with the name of Entry 0, value disabled.
+  for (
+    let entryIndex = allEntryInputs.length;
+    entryIndex < maxEntries;
+    entryIndex++
+  ) {
+    allEntryInputs.push({
+      objectContentID: allEntryInputs[0].objectContentID,
+      nameHash: allEntryInputs[0].nameHash,
+      isValueHashRevealed: 0n,
+      proofDepth: allEntryInputs[0].proofDepth,
+      proofIndex: allEntryInputs[0].proofIndex,
+      proofSiblings: [...allEntryInputs[0].proofSiblings],
+      value: 0n,
+      isValueEnabled: 0n
+    });
+  }
+
+  // Combine indidvidual arrays to form the circuit inputs, as 1D arrays, 2D
+  // arrays, or bitfields as appropriate.
+  return {
+    // ContentID holding index is a lie, but it allows reusing the inputs type.
+    entryObjectIndex: allEntryInputs.map((e) => e.objectContentID),
+    entryNameHash: allEntryInputs.map((e) => e.nameHash),
+    entryValue: allEntryInputs.map((e) => e.value),
+    entryIsValueEnabled: array2Bits(
+      allEntryInputs.map((e) => e.isValueEnabled)
+    ),
+    entryIsValueHashRevealed: array2Bits(
+      allEntryInputs.map((e) => e.isValueHashRevealed)
+    ),
+    entryProofDepth: allEntryInputs.map((e) => e.proofDepth),
+    entryProofIndex: allEntryInputs.map((e) => e.proofIndex),
+    entryProofSiblings: allEntryInputs.map((e) => e.proofSiblings)
+  };
+}
+
+function compileProofEntryConstraints(
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<POD>>,
+  maxEntries: number
+): {
+  circuitEntryConstraintInputs: {
+    entryEqualToOtherEntryByIndex: CircuitSignal[];
+  };
+  entryConstraintMetadata: {
+    firstOwnerIndex: number;
+  };
+} {
+  // Deal with equality comparision and POD ownership, which share circuitry.
+  let firstOwnerIndex = 0;
+  const entryEqualToOtherEntryByIndex: bigint[] = [];
+  for (const entryInfo of entryMap.values()) {
     // An entry is always compared either to the first owner entry (to ensure
     // only one owner), or to another entry specified by config, or to itself
     // in order to make the constraint a nop.
@@ -258,7 +356,7 @@ export function compileProofConfig(
           "Can't use isOwnerID and equalsEntry on the same entry."
         );
       }
-      sigEntryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
+      entryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
     } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
       const otherEntryInfo = entryMap.get(entryInfo.entryConfig.equalsEntry);
       if (otherEntryInfo === undefined) {
@@ -266,78 +364,64 @@ export function compileProofConfig(
           `Missing entry ${entryInfo.entryConfig.equalsEntry} for equality comparison.`
         );
       }
-      sigEntryEqualToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
+      entryEqualToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
     } else {
-      sigEntryEqualToOtherEntryByIndex.push(BigInt(entryInfo.entryIndex));
+      entryEqualToOtherEntryByIndex.push(BigInt(entryInfo.entryIndex));
     }
   }
 
-  // Spare entry slots are filled with the name of Entry 0, with value disabled.
-  for (
-    let entryIndex = entryMap.size;
-    entryIndex < circuitDesc.maxEntries;
-    entryIndex++
-  ) {
-    sigEntryObjectIndex.push(0n);
-    sigEntryNameHash.push(sigEntryNameHash[0]);
-    sigEntryValue.push(0n);
-    sigEntryIsValueEnabled.push(0n);
-    sigEntryIsValueHashRevealed.push(0n);
-    sigEntryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
-    sigEntryProofDepth.push(sigEntryProofDepth[0]);
-    sigEntryProofIndex.push(sigEntryProofIndex[0]);
-    sigEntryProofSiblings.push([...sigEntryProofSiblings[0]]);
+  // Spare entry slots always compare to themselves, to be a nop.
+  for (let entryIndex = entryMap.size; entryIndex < maxEntries; entryIndex++) {
+    entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
   }
 
-  // Signals for owner module, which is enabled if any entry config declared
-  // it was an owner commitment.
+  return {
+    circuitEntryConstraintInputs: {
+      entryEqualToOtherEntryByIndex
+    },
+    entryConstraintMetadata: { firstOwnerIndex }
+  };
+}
+
+function compileProofOwner(
+  ownerInput: GPCProofOwnerInputs | undefined,
+  firstOwnerIndex: number
+): {
+  ownerEntryIndex: CircuitSignal;
+  ownerSemaphoreV3IdentityNullifier: CircuitSignal;
+  ownerSemaphoreV3IdentityTrapdoor: CircuitSignal;
+  ownerExternalNullifier: CircuitSignal;
+  ownerIsNullfierHashRevealed: CircuitSignal;
+} {
+  // Owner module is enabled if any entry config declared it was an owner
+  // commitment.  It can't be enabled purely for purpose of nullifier hash,
+  // since an unconstrained owner could be set to any random numbers.
   const hasOwner = firstOwnerIndex !== 0;
-  if (hasOwner && proofInputs.owner === undefined) {
+  if (hasOwner && ownerInput?.semaphoreV3 === undefined) {
     throw new Error("Missing owner identity.");
   }
-  const sigOwnerEntryIndex = hasOwner
-    ? BigInt(firstOwnerIndex)
-    : BABY_JUB_NEGATIVE_ONE;
-  const sigOwnerSemaphoreV3IdentityNullifier =
-    hasOwner && proofInputs.owner?.semaphoreV3?.nullifier !== undefined
-      ? proofInputs.owner.semaphoreV3.nullifier
-      : BABY_JUB_NEGATIVE_ONE;
-  const sigOwnerSemaphoreV3IdentityTrapdoor =
-    hasOwner && proofInputs.owner?.semaphoreV3?.nullifier !== undefined
-      ? proofInputs.owner.semaphoreV3.trapdoor
-      : BABY_JUB_NEGATIVE_ONE;
-  const sigOwnerExternalNullifier = makeWatermarkSignal(
-    proofInputs.owner?.externalNullifier
-  );
-  const sigOwnerIsNullfierHashRevealed =
-    proofInputs.owner?.externalNullifier !== undefined ? 1n : 0n;
 
-  // Set global watermark.
-  const sigGlobalWatermark = makeWatermarkSignal(proofInputs.watermark);
-
-  // Return all the resulting signals input to the gpcircuits library.
   return {
-    objectContentID: sigObjectContentID,
-    objectSignerPubkeyAx: sigObjectSignerPubkeyAx,
-    objectSignerPubkeyAy: sigObjectSignerPubkeyAy,
-    objectSignatureR8x: sigObjectSignatureR8x,
-    objectSignatureR8y: sigObjectSignatureR8y,
-    objectSignatureS: sigObjectSignatureS,
-    entryObjectIndex: sigEntryObjectIndex,
-    entryNameHash: sigEntryNameHash,
-    entryValue: sigEntryValue,
-    entryIsValueEnabled: array2Bits(sigEntryIsValueEnabled),
-    entryIsValueHashRevealed: array2Bits(sigEntryIsValueHashRevealed),
-    entryEqualToOtherEntryByIndex: sigEntryEqualToOtherEntryByIndex,
-    entryProofDepth: sigEntryProofDepth,
-    entryProofIndex: sigEntryProofIndex,
-    entryProofSiblings: sigEntryProofSiblings,
-    ownerEntryIndex: sigOwnerEntryIndex,
-    ownerSemaphoreV3IdentityNullifier: sigOwnerSemaphoreV3IdentityNullifier,
-    ownerSemaphoreV3IdentityTrapdoor: sigOwnerSemaphoreV3IdentityTrapdoor,
-    ownerExternalNullifier: sigOwnerExternalNullifier,
-    ownerIsNullfierHashRevealed: sigOwnerIsNullfierHashRevealed,
-    globalWatermark: sigGlobalWatermark
+    ownerEntryIndex: hasOwner ? BigInt(firstOwnerIndex) : BABY_JUB_NEGATIVE_ONE,
+    ownerSemaphoreV3IdentityNullifier:
+      hasOwner && ownerInput?.semaphoreV3.nullifier !== undefined
+        ? ownerInput.semaphoreV3.nullifier
+        : BABY_JUB_NEGATIVE_ONE,
+    ownerSemaphoreV3IdentityTrapdoor:
+      hasOwner && ownerInput?.semaphoreV3?.nullifier !== undefined
+        ? ownerInput.semaphoreV3.trapdoor
+        : BABY_JUB_NEGATIVE_ONE,
+    ownerExternalNullifier: makeWatermarkSignal(ownerInput?.externalNullifier),
+    ownerIsNullfierHashRevealed:
+      ownerInput?.externalNullifier !== undefined ? 1n : 0n
+  };
+}
+
+function compileProofGlobal(proofInputs: GPCProofInputs): {
+  globalWatermark: CircuitSignal;
+} {
+  return {
+    globalWatermark: makeWatermarkSignal(proofInputs.watermark)
   };
 }
 

@@ -179,6 +179,34 @@ export type GPCBoundConfig = GPCProofConfig & {
 };
 
 /**
+ * Optional part of {@link GPCProofInputs} relating to an owner's identity.
+ */
+export type GPCProofOwnerInputs = {
+  /**
+   * The owner's identity using Semaphore V3.  In future, alternative owner
+   * identity types may be supported, and this will become an optional field.
+   * This will be ignored if no entry is marked with {@link isOwnerID}.
+   */
+  semaphoreV3: Identity;
+
+  /**
+   * If this field is set, a nullifier hash will be calculated and revealed
+   * in the proof.  The hash is uniquely tied to this value, and to the
+   * owner's private identity.  This allows identifying duplicate proofs (e.g.
+   * to avoid double spending or voting) without de-anonymizing the owner.
+   *
+   * This field can be a {@link PODValue} of any type, and will be represented
+   * in the circuit as a number or a hash as appropriate.  When the proof
+   * is verified, the external nullifier is also verified (as a public input).
+   *
+   * This field cannot be set if no entry is marked with {@link isOwnerID},
+   * because such a nullifier would not be cryptographically tied to anything
+   * verifiable.
+   */
+  externalNullifier?: PODValue;
+};
+
+/**
  * Contains the specific input data for proof.  GPC inputs tend to differ for
  * each proof, as opposed to configuration (see {@link GPCProofConfig} which
  * tends to be fixed and reusable.
@@ -215,30 +243,7 @@ export type GPCProofInputs = {
    * This field can be omitted if an owner is not needed for any entry
    * an entry with {@link isOwnerID} set.
    */
-  owner?: {
-    /**
-     * The owner's identity using Semaphore V3.  In future, alternative owner
-     * identity types may be supported, and this will become an optional field.
-     * This will be ignored if no entry is marked with {@link isOwnerID}.
-     */
-    semaphoreV3: Identity;
-
-    /**
-     * If this field is set, a nullifier hash will be calculated and revealed
-     * in the proof.  The hash is uniquely tied to this value, and to the
-     * owner's private identity.  This allows identifying duplicate proofs (e.g.
-     * to avoid double spending or voting) without de-anonymizing the owner.
-     *
-     * This field can be a {@link PODValue} of any type, and will be represented
-     * in the circuit as a number or a hash as appropriate.  When the proof
-     * is verified, the external nullifier is also verified (as a public input).
-     *
-     * This field cannot be set if no entry is marked with {@link isOwnerID},
-     * because such a nullifier would not be cryptographically tied to anything
-     * verifiable.
-     */
-    externalNullifier?: PODValue;
-  };
+  owner?: GPCProofOwnerInputs;
 
   /**
    * If this field is set, the given value will be included in the resulting
@@ -277,6 +282,33 @@ export type GPCRevealedObjectClaims = {
 };
 
 /**
+ * Optional part of {@link GPCRevealedClaims} claims relating to an owner's
+ * identity.
+ */
+export type GPCRevealedOwnerClaims = {
+  /**
+   * If this field is set, it matches the corresponding field in
+   * {@link GPCProofInputs}, and {@link nullifierHash} will also be set.  The
+   * hash is uniquely tied to this value, and to the owner's private identity.
+   * This allows identifying duplicate proofs (e.g. to avoid double spending
+   * or voting) without de-anonymizing the owner.
+   *
+   * This field can be a {@link PODValue} of any type, and will be represented
+   * in the circuit as a number or a hash as appropriate.  When the proof
+   * is verified, the external nullifier is also verified (as a public input).
+   */
+  externalNullifier: PODValue;
+
+  /**
+   * If set, this is a hash calculated in the proof, tied to the
+   * {@link externalNullifier} value and the owner's identity.  This allows
+   * identifying duplicate proofs (e.g. to avoid double spending or voting)
+   * without de-anonymizing the owner.
+   */
+  nullifierHash: bigint;
+};
+
+/**
  * Contains the public data revealed in a GPC proof.  These are redacted or
  * derived from {@link GPCProofInputs}.  GPC inputs and claims tend to differ
  * for each proof, as opposed to configuration (see {@link GPCBoundConfig} which
@@ -309,28 +341,7 @@ export type GPCRevealedClaims = {
    * but this is optional as specified in configuration.  The presence or
    * absence of this field is unaffected by the entry configuration.
    */
-  owner?: {
-    /**
-     * If this field is set, it matches the corresponding field in
-     * {@link GPCProofInputs}, and {@link nullifierHash} will also be set.  The
-     * hash is uniquely tied to this value, and to the owner's private identity.
-     * This allows identifying duplicate proofs (e.g. to avoid double spending
-     * or voting) without de-anonymizing the owner.
-     *
-     * This field can be a {@link PODValue} of any type, and will be represented
-     * in the circuit as a number or a hash as appropriate.  When the proof
-     * is verified, the external nullifier is also verified (as a public input).
-     */
-    externalNullifier: PODValue;
-
-    /**
-     * If set, this is a hash calculated in the proof, tied to the
-     * {@link externalNullifier} value and the owner's identity.  This allows
-     * identifying duplicate proofs (e.g. to avoid double spending or voting)
-     * without de-anonymizing the owner.
-     */
-    nullifierHash: bigint;
-  };
+  owner?: GPCRevealedOwnerClaims;
 
   /**
    * If this field is set, it matches the corresponding field in
