@@ -2189,12 +2189,14 @@ export class LemonadePipeline implements BasePipeline {
         offlineCheckinsToSave.length
       );
 
-      await this.offlineCheckinDB.addOfflineCheckins(
-        this.id,
-        checkerEmail,
-        offlineCheckinsToSave,
-        new Date()
-      );
+      if (offlineCheckinsToSave.length > 0) {
+        await this.offlineCheckinDB.addOfflineCheckins(
+          this.id,
+          checkerEmail,
+          offlineCheckinsToSave,
+          new Date()
+        );
+      }
     });
   }
 

@@ -9,6 +9,7 @@ import {
   requestPodboxTicketActionPreCheck
 } from "@pcd/passport-interface";
 import _ from "lodash";
+import urljoin from "url-join";
 import { appConfig } from "./appConfig";
 import { StateContextValue } from "./dispatch";
 import {
@@ -159,7 +160,7 @@ export async function podboxPreCheckWithOffline(
       credentialCache
     );
     return await requestPodboxTicketActionPreCheck(
-      appConfig.zupassServer,
+      urljoin(appConfig.zupassServer, "generic-issuance/api/pre-check"),
       await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
       { checkin: true },
       ticketId,
@@ -207,7 +208,7 @@ export async function podboxCheckInWithOffline(
       credentialCache
     );
     return await requestPodboxTicketAction(
-      appConfig.zupassServer,
+      urljoin(appConfig.zupassServer, "generic-issuance/api/check-in"),
       await credentialManager.requestCredential(ZUPASS_CREDENTIAL_REQUEST),
       { checkin: true },
       ticketId,

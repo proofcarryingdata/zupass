@@ -46,7 +46,9 @@ export class PipelineOfflineCheckinDB implements IPipelineOfflineCheckinDB {
           (_, i) =>
             `($${i * 4 + 1},$${i * 4 + 2}, $${i * 4 + 3}, $${i * 4 + 4})`
         )
-        .join(",")}`,
+        .join(",")}
+       ON CONFLICT (ticket_id) DO UPDATE SET
+       checker_email = excluded.checker_email, checkin_timestamp = excluded.checkin_timestamp`,
       ticketIds.flatMap((ticketId) => [
         pipelineId,
         checkerEmail,

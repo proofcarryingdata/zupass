@@ -20,7 +20,7 @@ export async function requestPodboxCheckInOfflineTickets(
     async (resText) => {
       return {
         success: true,
-        value: JSON.parse(resText) as PodboxCheckInOfflineTicketsResponseValue
+        value: JSON.parse(resText)
       };
     },
     {
