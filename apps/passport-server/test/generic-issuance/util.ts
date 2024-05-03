@@ -31,6 +31,7 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import stable_stringify from "fast-json-stable-stringify";
 import { Pool } from "postgres-pool";
 import { sqlQuery } from "../../src/database/sqlQuery";
 import {
@@ -182,7 +183,7 @@ export async function makeTestCredential(
   zupassEddsaPrivateKey?: string
 ): Promise<Credential> {
   const cache = new Map<string, Promise<Credential>>();
-  const cacheKey = JSON.stringify({
+  const cacheKey = stable_stringify({
     identity: identity.toString(),
     request,
     email,
