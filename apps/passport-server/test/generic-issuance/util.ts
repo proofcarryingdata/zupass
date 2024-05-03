@@ -171,8 +171,7 @@ export async function requestTicketsFromPipeline(
  * Makes a credential for a given email address and Semaphore identity, by
  * generating a new Email PCD using the provided private key.
  *
- * Uses {@link testCredentialCache} to avoid regenerating the same credential
- * repeately.
+ * Uses a cache to avoid regenerating the same credential.
  */
 export async function makeTestCredential(
   identity: Identity,
@@ -180,34 +179,50 @@ export async function makeTestCredential(
   email?: string,
   zupassEddsaPrivateKey?: string
 ): Promise<Credential> {
-  if (request.pcdType === "email-pcd") {
-    if (!email || !zupassEddsaPrivateKey) {
-      throw new Error(
-        "Can't create a credential containing an EmailPCD without email address and private key"
-      );
-    }
-    const emailPCD = await proveEmailPCD(
-      email,
-      zupassEddsaPrivateKey,
-      identity
-    );
-    // Credential Manager will need to be able to look up the Email PCD, and use
-    // an identity. We instantiate a PCDCollection here, mirroring the usage on
-    // the client.
-    const credentialManager = new CredentialManager(
-      identity,
-      new PCDCollection([EmailPCDPackage], [emailPCD]),
-      new Map()
-    );
-    return credentialManager.requestCredential(request);
+  const cache = new Map<string, Promise<Credential>>();
+  const cacheKey = JSON.stringify({
+    identity: identity.toString(),
+    request,
+    email,
+    zupassEddsaPrivateKey
+  });
+  if (cache.has(cacheKey)) {
+    return cache.get(cacheKey) as Promise<Credential>;
   } else {
-    // No Email PCD required here
-    const credentialManager = new CredentialManager(
-      identity,
-      new PCDCollection([], []),
-      new Map()
-    );
-    return credentialManager.requestCredential(request);
+    const doMakeTestCredential = async (): Promise<Credential> => {
+      if (request.pcdType === "email-pcd") {
+        if (!email || !zupassEddsaPrivateKey) {
+          throw new Error(
+            "Can't create a credential containing an EmailPCD without email address and private key"
+          );
+        }
+        const emailPCD = await proveEmailPCD(
+          email,
+          zupassEddsaPrivateKey,
+          identity
+        );
+        // Credential Manager will need to be able to look up the Email PCD, and use
+        // an identity. We instantiate a PCDCollection here, mirroring the usage on
+        // the client.
+        const credentialManager = new CredentialManager(
+          identity,
+          new PCDCollection([EmailPCDPackage], [emailPCD]),
+          new Map()
+        );
+        return credentialManager.requestCredential(request);
+      } else {
+        // No Email PCD required here
+        const credentialManager = new CredentialManager(
+          identity,
+          new PCDCollection([], []),
+          new Map()
+        );
+        return credentialManager.requestCredential(request);
+      }
+    };
+    const promise = doMakeTestCredential();
+    cache.set(cacheKey, promise);
+    return promise;
   }
 }
 
