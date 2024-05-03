@@ -1,3 +1,4 @@
+import { APIResult } from "@pcd/passport-interface";
 import { expect } from "chai";
 import JSONBig from "json-bigint";
 import _ from "lodash";
@@ -48,6 +49,23 @@ export function expectTrue(value: boolean): asserts value is true {
 export function expectFalse(value: boolean): asserts value is false {
   if (value !== false) {
     throw new Error("Expected value to be false");
+  }
+}
+
+/**
+ * Use to check if a request succeeded
+ */
+export function expectSuccess<T = unknown>(
+  result: APIResult
+): asserts result is { success: true; value: T } {
+  if (!result.success) {
+    throw new Error(
+      `Expected request to succeed, instead got failure:\n${JSON.stringify(
+        result,
+        null,
+        2
+      )}`
+    );
   }
 }
 

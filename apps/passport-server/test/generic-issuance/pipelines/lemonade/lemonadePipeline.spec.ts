@@ -10,7 +10,9 @@ import {
   requestGenericIssuanceSemaphoreGroup,
   requestGenericIssuanceSemaphoreGroupRoot,
   requestGenericIssuanceValidSemaphoreGroup,
+  requestPipelineInfo,
   requestPodboxCheckInOfflineTickets,
+  requestPodboxDeleteOfflineCheckin,
   requestPodboxGetOfflineTickets,
   requestPodboxTicketAction
 } from "@pcd/passport-interface";
@@ -55,6 +57,7 @@ import { startTestingApp } from "../../../util/startTestingApplication";
 import {
   expectFalse,
   expectLength,
+  expectSuccess,
   expectToExist,
   expectTrue
 } from "../../../util/util";
@@ -129,8 +132,10 @@ describe("generic issuance - LemonadePipeline", function () {
     );
 
     await overrideEnvironment({
+      ...testingEnv,
       GENERIC_ISSUANCE_ZUPASS_PUBLIC_KEY: zupassPublicKey,
-      ...testingEnv
+      STYTCH_BYPASS: "true",
+      NODE_ENV: "test"
     });
 
     giBackend = await startTestingApp({
@@ -1451,6 +1456,83 @@ describe("generic issuance - LemonadePipeline", function () {
           6
         );
       }
+    }
+  });
+
+  step("offline check-ins can fail", async () => {
+    expectToExist(giService);
+    const pipelines = await giService.getAllPipelineInstances();
+    const pipeline = pipelines.find(LemonadePipeline.is);
+    expectToExist(pipeline);
+    expect(pipeline.id).to.eq(edgeCityPipeline.id);
+
+    // Because offline check-ins are asynchronous, it's possible that the
+    // state of the back-end system could have changed since the offline
+    // check-in was recorded. This might even include unexpected things like
+    // tickets being deleted. If this happens for a synchronous check-in, we
+    // can directly inform the user that the check-in failed. However, since
+    // offline check-ins are asynchronous, and the actual check-in to the
+    // back-end is non-interactive, we can't inform the user if something went
+    // wrong. Instead, we have to record the failure, and make it visible in
+    // the Podbox dashboard.
+
+    // Simulate adding an offline check-in for a ticket that no longer exists
+    const failedOfflineCheckinTicketId = randomUUID();
+    await sqlQuery(
+      giBackend.context.dbPool,
+      "INSERT INTO generic_issuance_offline_checkins (pipeline_id, ticket_id, checker_email, checkin_timestamp) VALUES($1, $2, $3, $4)",
+      [
+        edgeCityPipeline.id,
+        failedOfflineCheckinTicketId,
+        EdgeCityDenverBouncer.email,
+        new Date()
+      ]
+    );
+
+    // Failed check-ins appear in the load summary
+    const loadResult = await pipeline.load();
+    expect(loadResult.offlineTicketsFailedToCheckIn).to.eq(1);
+    // A log message should also be included
+    expectTrue(
+      !!loadResult.latestLogs.find(
+        (log) =>
+          log.value ===
+          `User ${EdgeCityDenverBouncer.email} uploaded offline check-in for ticket ID ${failedOfflineCheckinTicketId} but this ticket does not exist.`
+      )
+    );
+
+    // Pipeline info should include the failed offline check-in in the queue
+    const pipelineInfo = await requestPipelineInfo(
+      adminGIUserEmail,
+      giBackend.expressContext.localEndpoint,
+      pipeline.id
+    );
+    expectSuccess(pipelineInfo);
+    expectLength(pipelineInfo.value.queuedOfflineCheckins, 1);
+    expect(pipelineInfo.value.queuedOfflineCheckins?.[0].ticketId).to.eq(
+      failedOfflineCheckinTicketId
+    );
+
+    // Admins/owners can delete failed offline check-ins
+    await requestPodboxDeleteOfflineCheckin(
+      giBackend.expressContext.localEndpoint,
+      pipeline.id,
+      failedOfflineCheckinTicketId,
+      adminGIUserEmail
+    );
+    {
+      // Dashboard should report no offline check-ins in the queue
+      const pipelineInfo = await requestPipelineInfo(
+        adminGIUserEmail,
+        giBackend.expressContext.localEndpoint,
+        pipeline.id
+      );
+      expectSuccess(pipelineInfo);
+      expectLength(pipelineInfo.value.queuedOfflineCheckins, 0);
+
+      // Pipeline load should report no offline check-in failures
+      const loadResult = await pipeline.load();
+      expect(loadResult.offlineTicketsFailedToCheckIn).to.eq(0);
     }
   });
 
