@@ -64,6 +64,7 @@ import {
 import {
   assertUserMatches,
   checkPipelineInfoEndpoint,
+  deleteManualTicketCheckins,
   makeTestCredential,
   proveEmailPCD,
   requestCheckInPipelineTicket,
@@ -1400,10 +1401,7 @@ describe("generic issuance - LemonadePipeline", function () {
     expect(pipeline.id).to.eq(edgeCityPipeline.id);
 
     lemonadeBackend.checkOutAll();
-    await sqlQuery(
-      giBackend.context.dbPool,
-      "DELETE from generic_issuance_checkins"
-    );
+    await deleteManualTicketCheckins(giBackend.context.dbPool);
 
     const bouncerCredential = await makeTestCredential(
       EdgeCityBouncerIdentity,
@@ -1412,50 +1410,98 @@ describe("generic issuance - LemonadePipeline", function () {
       ZUPASS_EDDSA_PRIVATE_KEY
     );
 
+    const result = await requestPodboxGetOfflineTickets(
+      giBackend.expressContext.localEndpoint,
+      bouncerCredential
+    );
+
+    expectTrue(result.success);
+    // Bouncer should be able to receive all tickets
+    expectLength(result.value.offlineTickets, 6);
+
+    const ticketsByEvent = result.value.offlineTickets.reduce(
+      (res, current) => {
+        if (res[current.eventId]) {
+          res[current.eventId].push(current.id);
+        } else {
+          res[current.eventId] = [current.id];
+        }
+        return res;
+      },
+      {} as Record<string, string[]>
+    );
+
+    await requestPodboxCheckInOfflineTickets(
+      giBackend.expressContext.localEndpoint,
+      bouncerCredential,
+      ticketsByEvent
+    );
+
+    // Offline check-ins have not been processed yet
+    const pipelineInfo = await requestPipelineInfo(
+      adminGIUserEmail,
+      giBackend.expressContext.localEndpoint,
+      pipeline.id
+    );
+    expectSuccess(pipelineInfo);
+    expectLength(pipelineInfo.value.queuedOfflineCheckins, 6);
+
+    // Verify that the tickets are checked in.
+    const loadResult = await pipeline.load();
+    expect(loadResult.offlineTicketsCheckedIn).to.eq(6);
+
+    // If we fetch offline tickets again, they should all appear to be
+    // checked in.
+    const getOfflineTicketsResult = await requestPodboxGetOfflineTickets(
+      giBackend.expressContext.localEndpoint,
+      bouncerCredential
+    );
+
+    expectTrue(getOfflineTicketsResult.success);
+    // Bouncer should be able to receive all tickets
+    expectLength(getOfflineTicketsResult.value.offlineTickets, 6);
+    // All tickets should now be consumed.
+    expectLength(
+      getOfflineTicketsResult.value.offlineTickets.filter(
+        (ot) => ot.is_consumed === true
+      ),
+      6
+    );
+
+    // Try the same thing as a non-permissioned user.
     {
-      const result = await requestPodboxGetOfflineTickets(
-        giBackend.expressContext.localEndpoint,
-        bouncerCredential
+      // Reset check-in state.
+      lemonadeBackend.checkOutAll();
+      await deleteManualTicketCheckins(giBackend.context.dbPool);
+
+      const attendeeCredential = await makeTestCredential(
+        EdgeCityDenverAttendeeIdentity,
+        PODBOX_CREDENTIAL_REQUEST,
+        EdgeCityDenverAttendee.email,
+        ZUPASS_EDDSA_PRIVATE_KEY
       );
 
-      expectTrue(result.success);
-      // Bouncer should be able to receive all tickets
-      expectLength(result.value.offlineTickets, 6);
-
-      const ticketsByEvent = result.value.offlineTickets.reduce(
-        (res, current) => {
-          if (res[current.eventId]) {
-            res[current.eventId].push(current.id);
-          } else {
-            res[current.eventId] = [current.id];
-          }
-          return res;
-        },
-        {} as Record<string, string[]>
-      );
-
+      // Attempt to send offline check-ins as a user without permission to check
+      // tickets in for this pipeline. Will not throw an error, but will not add
+      // any of the posted tickets to the queue either.
       await requestPodboxCheckInOfflineTickets(
         giBackend.expressContext.localEndpoint,
-        bouncerCredential,
+        attendeeCredential,
         ticketsByEvent
       );
 
-      {
-        await pipeline.load();
-        const result = await requestPodboxGetOfflineTickets(
-          giBackend.expressContext.localEndpoint,
-          bouncerCredential
-        );
+      // We should find no offline check-ins in the queue.
+      const pipelineInfo = await requestPipelineInfo(
+        adminGIUserEmail,
+        giBackend.expressContext.localEndpoint,
+        pipeline.id
+      );
+      expectSuccess(pipelineInfo);
+      expectLength(pipelineInfo.value.queuedOfflineCheckins, 0);
 
-        expectTrue(result.success);
-        // Bouncer should be able to receive all tickets
-        expectLength(result.value.offlineTickets, 6);
-        // All tickets should now be consumed.
-        expectLength(
-          result.value.offlineTickets.filter((ot) => ot.is_consumed === true),
-          6
-        );
-      }
+      // When we load the pipeline, no check-ins should be processed.
+      const secondLoadResult = await pipeline.load();
+      expect(secondLoadResult.offlineTicketsCheckedIn).to.eq(0);
     }
   });
 
@@ -1466,15 +1512,23 @@ describe("generic issuance - LemonadePipeline", function () {
     expectToExist(pipeline);
     expect(pipeline.id).to.eq(edgeCityPipeline.id);
 
-    // Because offline check-ins are asynchronous, it's possible that the
-    // state of the back-end system could have changed since the offline
-    // check-in was recorded. This might even include unexpected things like
-    // tickets being deleted. If this happens for a synchronous check-in, we
-    // can directly inform the user that the check-in failed. However, since
-    // offline check-ins are asynchronous, and the actual check-in to the
-    // back-end is non-interactive, we can't inform the user if something went
-    // wrong. Instead, we have to record the failure, and make it visible in
-    // the Podbox dashboard.
+    // The synchronization of offline check-ins with the back-end is a
+    // non-interactive process that occurs as part of the pipeline load. When
+    // a user uploads offline check-ins from their device, those are queued for
+    // processing, and the user does not receive any feedback on whether those
+    // check-ins succeeded.
+    //
+    // When processing offline check-ins, various errors may occur. The
+    // back-end system may be down, or the tickets that were checked in offline
+    // may have been changed or even deleted. These are unlikely problems, but
+    // if we are unable to synchronize an offline check-in then there is no way
+    // to notify the user of the problem.
+    //
+    // Instead, we retry failed offline check-ins on each pipeline load, and
+    // record the state of these. Pipeline owners, editors, and admins can view
+    // the state of the offline check-in queue on the Podbox dashboard, and can
+    // manually delete offline check-ins that cannot be completed (e.g. because
+    // the ticket has been deleted).
 
     // Simulate adding an offline check-in for a ticket that no longer exists
     const failedOfflineCheckinTicketId = randomUUID();

@@ -31,6 +31,8 @@ import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { Identity } from "@semaphore-protocol/identity";
 import { expect } from "chai";
+import { Pool } from "postgres-pool";
+import { sqlQuery } from "../../src/database/sqlQuery";
 import {
   Pipeline,
   PipelineUser
@@ -277,4 +279,8 @@ export async function proveEmailPCD(
       argumentType: ArgumentTypeName.String
     }
   });
+}
+
+export async function deleteManualTicketCheckins(db: Pool): Promise<void> {
+  await sqlQuery(db, "DELETE from generic_issuance_checkins");
 }
