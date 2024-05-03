@@ -94,12 +94,22 @@ export async function podboxPreCheckWithOffline(
       return {
         success: true,
         value: {
-          success: false,
-          error: {
-            name: "AlreadyCheckedIn",
-            detailedMessage: "You've checked this ticket in in offline mode.",
-            checker: "You",
-            checkinTimestamp: checkedInTicket.checkinTimestamp as string
+          success: true,
+          checkinActionInfo: {
+            permissioned: true,
+            canCheckIn: false,
+            reason: {
+              name: "AlreadyCheckedIn",
+              detailedMessage: "This attendee has already been checked in",
+              checkinTimestamp: checkedInTicket.checkinTimestamp as string,
+              checker: checkedInTicket.checker ?? "Unknown"
+            },
+            ticket: {
+              attendeeEmail: checkedInTicket.attendeeEmail,
+              attendeeName: checkedInTicket.attendeeName,
+              eventName: checkedInTicket.eventName,
+              ticketName: checkedInTicket.ticketName
+            }
           }
         }
       };
@@ -111,12 +121,22 @@ export async function podboxPreCheckWithOffline(
         return {
           success: true,
           value: {
-            success: false,
-            error: {
-              name: "AlreadyCheckedIn",
-              detailedMessage: "This attendee has already been checked in",
-              checkinTimestamp: ticket.checkinTimestamp as string,
-              checker: ticket.checker ?? "Unknown"
+            success: true,
+            checkinActionInfo: {
+              permissioned: true,
+              canCheckIn: false,
+              reason: {
+                name: "AlreadyCheckedIn",
+                detailedMessage: "This attendee has already been checked in",
+                checkinTimestamp: ticket.checkinTimestamp as string,
+                checker: ticket.checker ?? "Unknown"
+              },
+              ticket: {
+                attendeeEmail: ticket.attendeeEmail,
+                attendeeName: ticket.attendeeName,
+                eventName: ticket.eventName,
+                ticketName: ticket.ticketName
+              }
             }
           }
         };

@@ -52,7 +52,6 @@ export function usePreCheckTicket(
         eventId,
         stateContext
       );
-      console.log(preCheckTicketResult);
       setResult(preCheckTicketResult);
     },
     [dispatch, identityPCD, stateContext]
