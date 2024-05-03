@@ -113,7 +113,9 @@ export class PODContent {
    * due to the optimizations of the Lean-IMT datastructure (see @zk-kit/imt).
    */
   public get merkleTreeDepth(): number {
-    return this.merkleTree.depth;
+    return this._merkleTree !== undefined
+      ? this.merkleTree.depth
+      : calcMinMerkleDepthForEntries(this._map.size);
   }
 
   /**
@@ -253,4 +255,28 @@ export class PODContent {
     }
     return entryInfo;
   }
+}
+
+/**
+ * Calculates the minimum Merkle tree depth of a POD containing the given number
+ * of entries.  Since names and values are separate leaves of the tree, the
+ * formula is ceil(log2(2 * nEntries)).
+ *
+ * @param nEntries entry count
+ * @returns the required Merkle tree depth
+ */
+export function calcMinMerkleDepthForEntries(nEntries: number): number {
+  return Math.ceil(Math.log2(2 * Math.ceil(nEntries)));
+}
+
+/**
+ * Calculates the maximum number of entries which can be supported by a POD
+ * with a given Merkle tree depth.  Since names and values are separate leaves
+ * of the tree, the formula is 2**(merkleDepth-1)
+ *
+ * @param merkleDepth the depth of a POD Merkle tree
+ * @returns the maximum number of entries of any POD with the given depth
+ */
+export function calcMaxEntriesForMerkleDepth(merkleDepth: number): number {
+  return Math.floor(2 ** Math.floor(merkleDepth - 1));
 }

@@ -1,3 +1,4 @@
+import { RollbarService } from "@pcd/server-shared";
 import { getCacheSize } from "../database/queries/cache";
 import { fetchE2EEStorageCount } from "../database/queries/e2ee";
 import { fetchUserCount } from "../database/queries/users";
@@ -7,7 +8,6 @@ import {
 } from "../database/queries/zuzalu_pretix_tickets/fetchZuzaluUser";
 import { ApplicationContext } from "../types";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 interface Metrics {

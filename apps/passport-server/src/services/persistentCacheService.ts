@@ -1,3 +1,4 @@
+import { RollbarService } from "@pcd/server-shared";
 import { Pool } from "postgres-pool";
 import {
   CacheEntry,
@@ -6,7 +7,6 @@ import {
   setCacheValue
 } from "../database/queries/cache";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 import { traced } from "./telemetryService";
 
 export class PersistentCacheService {

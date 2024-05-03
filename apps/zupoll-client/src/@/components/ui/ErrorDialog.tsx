@@ -13,12 +13,8 @@ export default function ErrorDialog({
 }) {
   const cancelButtonRef = useRef(null);
 
-  if (!error) {
-    return null;
-  }
-
   return (
-    <Transition.Root show={true} as={Fragment}>
+    <Transition.Root show={!!error} as={Fragment}>
       <Dialog
         as="div"
         className="relative z-10"
@@ -50,39 +46,39 @@ export default function ErrorDialog({
             >
               <Dialog.Panel className="relative transform overflow-hidden rounded-lg bg-background px-4 pb-4 pt-5 text-left shadow-xl transition-all sm:my-8 sm:w-full sm:max-w-lg sm:p-6">
                 <div className="sm:flex sm:items-start">
-                  <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
-                    <ExclamationTriangleIcon
-                      className="h-6 w-6 text-red-600"
-                      aria-hidden="true"
-                    />
-                  </div>
+                  {error?.friendly ? (
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-green-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <ExclamationTriangleIcon
+                        className="h-6 w-6 text-green-600"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  ) : (
+                    <div className="mx-auto flex h-12 w-12 flex-shrink-0 items-center justify-center rounded-full bg-red-100 sm:mx-0 sm:h-10 sm:w-10">
+                      <ExclamationTriangleIcon
+                        className="h-6 w-6 text-red-600"
+                        aria-hidden="true"
+                      />
+                    </div>
+                  )}
+
                   <div className="mt-3 text-center sm:ml-4 sm:mt-0 sm:text-left">
                     <Dialog.Title
                       as="h3"
                       className="text-base font-semibold leading-6 text-foreground/90"
                     >
-                      Error
+                      {error?.title ?? "Error"}
                     </Dialog.Title>
                     <div className="mt-2">
                       <p className="text-sm text-foreground/90">
-                        {error.message}
+                        {error?.message}
                       </p>
                     </div>
                   </div>
                 </div>
                 <div className="mt-5 sm:mt-4 flex flex-row-reverse gap-2">
                   <Button
-                    variant={"outline"}
-                    type="button"
-                    onClick={() => {
-                      window.location.reload();
-                    }}
-                    ref={cancelButtonRef}
-                  >
-                    Reload
-                  </Button>
-                  <Button
-                    variant={"outline"}
+                    variant={"ghost"}
                     type="button"
                     onClick={() => {
                       window.location.href = "/";
@@ -90,6 +86,16 @@ export default function ErrorDialog({
                     ref={cancelButtonRef}
                   >
                     Home
+                  </Button>
+                  <Button
+                    variant={"default"}
+                    type="button"
+                    onClick={() => {
+                      window.location.reload();
+                    }}
+                    ref={cancelButtonRef}
+                  >
+                    Reload
                   </Button>
                 </div>
               </Dialog.Panel>

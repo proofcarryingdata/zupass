@@ -9,10 +9,6 @@ import {
   IGenericPretixAPI,
   getGenericPretixAPI
 } from "../../src/apis/pretix/genericPretixAPI";
-import {
-  IZuconnectTripshaAPI,
-  getZuconnectTripshaAPI
-} from "../../src/apis/zuconnect/zuconnectTripshaAPI";
 import { IZuzaluPretixAPI } from "../../src/apis/zuzaluPretixAPI";
 import { DevconnectPretixAPIFactory } from "../../src/services/devconnectPretixSyncService";
 import { APIs } from "../../src/types";
@@ -22,7 +18,6 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
   let emailAPI: IEmailAPI | null;
   let pretixAPI: IZuzaluPretixAPI | null;
   let devconnectPretixAPIFactory: DevconnectPretixAPIFactory | null;
-  let zuconnectTripshaAPI: IZuconnectTripshaAPI | null;
   let lemonadeAPI: ILemonadeAPI | null;
   let genericPretixAPI: IGenericPretixAPI | null;
 
@@ -52,12 +47,6 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
-  if (apiOverrides?.zuconnectTripshaAPI) {
-    zuconnectTripshaAPI = apiOverrides.zuconnectTripshaAPI;
-  } else {
-    zuconnectTripshaAPI = getZuconnectTripshaAPI();
-  }
-
   if (apiOverrides?.lemonadeAPI) {
     lemonadeAPI = apiOverrides.lemonadeAPI;
   } else {
@@ -74,7 +63,6 @@ export function mockAPIs(apiOverrides?: Partial<APIs>): APIs {
     emailAPI,
     zuzaluPretixAPI: pretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI,
     lemonadeAPI,
     genericPretixAPI
   };

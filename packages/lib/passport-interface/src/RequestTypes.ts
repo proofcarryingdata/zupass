@@ -497,8 +497,8 @@ export interface PipelineEdDSATicketZuAuthConfig {
   publicKey: EdDSAPublicKey;
   eventId: string; // UUID
   eventName: string;
-  productId: string; // UUID
-  productName: string;
+  productId?: string; // UUID
+  productName?: string;
 }
 
 // could be |'ed with other types of metadata
@@ -631,11 +631,9 @@ export type CreateNewUserRequest = {
   email: string;
   token: string;
   commitment: string;
-  /**
-   * Zupass users don't have a salt.
-   */
   salt: string | undefined;
   encryptionKey: string | undefined;
+  autoRegister?: boolean;
 };
 
 /**

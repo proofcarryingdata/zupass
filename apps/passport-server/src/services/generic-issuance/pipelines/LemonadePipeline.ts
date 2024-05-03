@@ -787,15 +787,15 @@ export class LemonadePipeline implements BasePipeline {
       const { emailClaim } =
         await this.credentialSubservice.verifyAndExpectZupassEmail(req.pcd);
 
-      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
-        // Consumer is validated, so save them in the consumer list
-        const didUpdate = await this.consumerDB.save(
-          this.id,
-          emailClaim.emailAddress,
-          emailClaim.semaphoreId,
-          new Date()
-        );
+      // Consumer is validated, so save them in the consumer list
+      const didUpdate = await this.consumerDB.save(
+        this.id,
+        emailClaim.emailAddress,
+        emailClaim.semaphoreId,
+        new Date()
+      );
 
+      if ((this.definition.options.semaphoreGroups ?? []).length > 0) {
         // If the user's Semaphore commitment has changed, `didUpdate` will be
         // true, and we need to update the Semaphore groups
         if (didUpdate) {

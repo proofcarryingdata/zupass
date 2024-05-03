@@ -1,3 +1,4 @@
+import { getCommitHash, getCommitMessage } from "@pcd/server-shared";
 import { ZUPASS_GITHUB_REPOSITORY_URL } from "@pcd/util";
 import sendgrid from "@sendgrid/mail";
 import process from "node:process";
@@ -11,10 +12,6 @@ import {
   IGenericPretixAPI,
   getGenericPretixAPI
 } from "./apis/pretix/genericPretixAPI";
-import {
-  IZuconnectTripshaAPI,
-  getZuconnectTripshaAPI
-} from "./apis/zuconnect/zuconnectTripshaAPI";
 import { ZuzaluPretixAPI, getZuzaluPretixAPI } from "./apis/zuzaluPretixAPI";
 import { getDB } from "./database/postgresPool";
 import { startHttpServer, stopHttpServer } from "./routing/server";
@@ -23,7 +20,6 @@ import { DevconnectPretixAPIFactory } from "./services/devconnectPretixSyncServi
 import { APIs, ApplicationContext, Zupass } from "./types";
 import { logger } from "./util/logger";
 import { trapSigTerm } from "./util/terminate";
-import { getCommitHash, getCommitMessage } from "./util/util";
 
 process.on("unhandledRejection", (reason) => {
   if (reason instanceof Error) {
@@ -126,15 +122,6 @@ async function getOverridenApis(
     devconnectPretixAPIFactory = getDevconnectPretixAPI;
   }
 
-  let zuconnectTripshaAPI: IZuconnectTripshaAPI | null = null;
-
-  if (apiOverrides?.zuconnectTripshaAPI) {
-    logger("[INIT] overriding Zuconnect Tripsha API");
-    zuconnectTripshaAPI = apiOverrides.zuconnectTripshaAPI;
-  } else {
-    zuconnectTripshaAPI = getZuconnectTripshaAPI();
-  }
-
   let lemonadeAPI: ILemonadeAPI | null = null;
 
   if (apiOverrides?.lemonadeAPI) {
@@ -157,7 +144,6 @@ async function getOverridenApis(
     emailAPI,
     zuzaluPretixAPI,
     devconnectPretixAPIFactory,
-    zuconnectTripshaAPI,
     lemonadeAPI,
     genericPretixAPI
   };

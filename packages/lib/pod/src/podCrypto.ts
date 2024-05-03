@@ -57,6 +57,8 @@ export function podValueHash(podValue: PODValue): bigint {
     case "cryptographic":
       // TODO(POD-P2): Finalize choice of hash for POD cryptographics.
       return podIntHash(podValue.value);
+    default:
+      throw new TypeError(`Unexpected type in PODValue ${podValue}.`);
   }
 }
 

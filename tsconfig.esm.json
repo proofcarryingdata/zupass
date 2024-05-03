@@ -4,6 +4,9 @@
   // References are automatically maintained by `yarn fix-references`
   "references": [
     {
+      "path": "packages/lib/client-shared/tsconfig.esm.json"
+    },
+    {
       "path": "packages/lib/emitter/tsconfig.esm.json"
     },
     {
@@ -26,6 +29,9 @@
     },
     {
       "path": "packages/lib/pod/tsconfig.esm.json"
+    },
+    {
+      "path": "packages/lib/server-shared/tsconfig.esm.json"
     },
     {
       "path": "packages/lib/util/tsconfig.esm.json"

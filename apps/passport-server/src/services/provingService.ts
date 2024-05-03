@@ -16,11 +16,11 @@ import { RSAPCDPackage } from "@pcd/rsa-pcd";
 import { RSATicketPCDPackage } from "@pcd/rsa-ticket-pcd";
 import { SemaphoreGroupPCDPackage } from "@pcd/semaphore-group-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
+import { RollbarService } from "@pcd/server-shared";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
 import path from "path";
 import { PCDHTTPError } from "../routing/pcdHttpError";
 import { logger } from "../util/logger";
-import { RollbarService } from "./rollbarService";
 
 /**
  * Responsible for server-side proving that can optionally be used by clients.

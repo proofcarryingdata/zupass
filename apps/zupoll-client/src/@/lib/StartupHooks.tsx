@@ -1,7 +1,9 @@
 "use client";
 
 import { useTheme } from "@/components/ui/ThemeSwitcher";
+import { RollbarProvider } from "@pcd/client-shared";
 import { useEffect } from "react";
+import { APP_CONFIG } from "../../env";
 
 export function StartupHooks({ children }: React.PropsWithChildren) {
   useTheme();
@@ -23,5 +25,14 @@ export function StartupHooks({ children }: React.PropsWithChildren) {
     });
   });
 
-  return <>{children}</>;
+  return (
+    <RollbarProvider
+      config={{
+        accessToken: APP_CONFIG.rollbarAccessToken,
+        environmentName: APP_CONFIG.rollbarEnvName
+      }}
+    >
+      {children}
+    </RollbarProvider>
+  );
 }

@@ -28,6 +28,7 @@ import {
   SemaphoreIdentityPCDTypeName
 } from "@pcd/semaphore-identity-pcd";
 import { assertUnreachable, sleep } from "@pcd/util";
+import { StrichSDK } from "@pixelverse/strichjs-sdk";
 import { Identity } from "@semaphore-protocol/identity";
 import _ from "lodash";
 import { createContext } from "react";
@@ -75,6 +76,10 @@ export type Action =
       type: "create-user-skip-password";
       email: string;
       token: string;
+      /** If autoRegister is "true", Zupass will attempt to automatically register an account */
+      autoRegister: boolean;
+      /** Zupass will attempt to automatically direct a user to targetFolder on registration */
+      targetFolder: string | undefined | null;
     }
   | {
       type: "login";
@@ -151,6 +156,9 @@ export type Action =
       type: "merge-import";
       collection: PCDCollection;
       pcdsToMergeIds: Set<PCD["id"]>;
+    }
+  | {
+      type: "initialize-strich";
     };
 
 export type StateContextValue = {
@@ -177,6 +185,8 @@ export async function dispatch(
       return createNewUserSkipPassword(
         action.email,
         action.token,
+        action.targetFolder,
+        action.autoRegister,
         state,
         update
       );
@@ -264,6 +274,8 @@ export async function dispatch(
         action.collection,
         action.pcdsToMergeIds
       );
+    case "initialize-strich":
+      return initializeStrich(state, update);
     default:
       // We can ensure that we never get here using the type system
       return assertUnreachable(action);
@@ -288,12 +300,26 @@ async function genPassport(
 async function createNewUserSkipPassword(
   email: string,
   token: string,
+  targetFolder: string | undefined | null,
+  autoRegister: boolean,
   state: AppState,
   update: ZuUpdate
 ): Promise<void> {
   update({
     modal: { modalType: "none" }
   });
+  // Because we skip the genPassword() step of setting the initial PCDs
+  // in the one-click flow, we'll need to do it here.
+  if (autoRegister) {
+    const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+      identity: state.identity
+    });
+    const pcds = new PCDCollection(await getPackages(), [identityPCD]);
+
+    await savePCDs(pcds);
+    update({ pcds });
+  }
+
   const crypto = await PCDCrypto.newInstance();
   const encryptionKey = crypto.generateRandomKey();
   saveEncryptionKey(encryptionKey);
@@ -308,11 +334,17 @@ async function createNewUserSkipPassword(
     token,
     state.identity.commitment.toString(),
     undefined,
-    encryptionKey
+    encryptionKey,
+    autoRegister
   );
 
   if (newUserResult.success) {
-    return finishAccountCreation(newUserResult.value, state, update);
+    return finishAccountCreation(
+      newUserResult.value,
+      state,
+      update,
+      targetFolder
+    );
   }
 
   update({
@@ -347,6 +379,7 @@ async function createNewUserWithPassword(
     token,
     state.identity.commitment.toString(),
     newSalt,
+    undefined,
     undefined
   );
 
@@ -370,7 +403,8 @@ async function createNewUserWithPassword(
 async function finishAccountCreation(
   user: User,
   state: AppState,
-  update: ZuUpdate
+  update: ZuUpdate,
+  targetFolder?: string | null
 ): Promise<void> {
   // Verify that the identity is correct.
   if (
@@ -445,7 +479,9 @@ async function finishAccountCreation(
   if (hasPendingRequest()) {
     window.location.hash = "#/login-interstitial";
   } else {
-    window.location.hash = "#/";
+    window.location.hash = targetFolder
+      ? `#/?folder=${encodeURIComponent(targetFolder)}`
+      : "#/";
   }
 }
 
@@ -1247,4 +1283,27 @@ async function removeAllPCDsInFolder(
   await savePCDs(state.pcds);
   update({ pcds: state.pcds });
   window.scrollTo({ top: 0 });
+}
+
+async function initializeStrich(
+  state: AppState,
+  update: ZuUpdate
+): Promise<void> {
+  if (!appConfig.strichLicenseKey) {
+    console.log("Strich license key is not defined");
+    return;
+  }
+  try {
+    await Promise.race([
+      StrichSDK.initialize(appConfig.strichLicenseKey),
+      sleep(10000)
+    ]);
+    if (StrichSDK.isInitialized()) {
+      update({ strichSDKstate: "initialized" });
+    } else {
+      update({ strichSDKstate: "error" });
+    }
+  } catch (e) {
+    update({ strichSDKstate: "error" });
+  }
 }

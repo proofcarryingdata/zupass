@@ -8,6 +8,8 @@ import {
   POD_CRYPTOGRAPHIC_MIN,
   POD_INT_MAX,
   POD_INT_MIN,
+  calcMaxEntriesForMerkleDepth,
+  calcMinMerkleDepthForEntries,
   clonePODEntries,
   clonePODValue,
   isPODNumericValue,
@@ -274,5 +276,40 @@ describe("PODContent class should work", async function () {
       };
       expect(fn).to.throw(TypeError, "badValueName");
     }
+  });
+});
+
+describe("PODContent helpers should work", async function () {
+  it("calcMinMerkleDepthForEntries should calculate correctly", function () {
+    // Valid queries
+    expect(calcMinMerkleDepthForEntries(1)).to.eq(1);
+    expect(calcMinMerkleDepthForEntries(2)).to.eq(2);
+    expect(calcMinMerkleDepthForEntries(3)).to.eq(3);
+    expect(calcMinMerkleDepthForEntries(4)).to.eq(3);
+    expect(calcMinMerkleDepthForEntries(5)).to.eq(4);
+    expect(calcMinMerkleDepthForEntries(123)).to.eq(8);
+    expect(calcMinMerkleDepthForEntries(4095)).to.eq(13);
+    expect(calcMinMerkleDepthForEntries(4096)).to.eq(13);
+    expect(calcMinMerkleDepthForEntries(4097)).to.eq(14);
+
+    // Invalid queries
+    expect(calcMinMerkleDepthForEntries(0)).to.eq(-Infinity);
+    expect(calcMinMerkleDepthForEntries(2.5)).to.eq(3);
+    expect(calcMinMerkleDepthForEntries(-1)).to.be.NaN;
+  });
+
+  it("calcMaxEntriesForMerkleDepth should calculate correctly", function () {
+    // Valid queries
+    expect(calcMaxEntriesForMerkleDepth(1)).to.eq(1);
+    expect(calcMaxEntriesForMerkleDepth(2)).to.eq(2);
+    expect(calcMaxEntriesForMerkleDepth(3)).to.eq(4);
+    expect(calcMaxEntriesForMerkleDepth(4)).to.eq(8);
+    expect(calcMaxEntriesForMerkleDepth(5)).to.eq(16);
+    expect(calcMaxEntriesForMerkleDepth(13)).to.eq(4096);
+
+    // Invalid queries
+    expect(calcMaxEntriesForMerkleDepth(0)).to.eq(0);
+    expect(calcMaxEntriesForMerkleDepth(2.5)).to.eq(2);
+    expect(calcMaxEntriesForMerkleDepth(-1)).to.eq(0);
   });
 });
