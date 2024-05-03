@@ -1,5 +1,11 @@
 # @pcd/zuauth
 
+## 1.2.0
+
+### Minor Changes
+
+- Make product IDs optional for ZuAuth config
+
 ## 1.1.0
 
 ### Minor Changes
