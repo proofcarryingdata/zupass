@@ -16,6 +16,13 @@ import {
 } from "./localstorage";
 
 /**
+ * @deprecated This file contains code that is no longer in use. However, it is
+ * a dependency for Devconnect check-in URLs, which technically still work. We
+ * can safely remove this once Devconnect check-in URLs are no longer linked to
+ * from QR codes.
+ */
+
+/**
  * For debugging purposes, makes the checkin flow go through the offline-mode
  * version even in the case that we're actually online.
  */
