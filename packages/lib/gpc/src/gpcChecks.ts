@@ -240,6 +240,7 @@ export function checkProofInputsForConfig(
   }
 
   // Examine config for each object.
+  let hasOwnerEntry = false;
   for (const [objName, objConfig] of Object.entries(proofConfig.pods)) {
     // This named object in config should be provided in input.
     const pod = proofInputs.pods[objName];
@@ -261,6 +262,7 @@ export function checkProofInputsForConfig(
 
       // If this entry identifies the owner, we should have a matching Identity.
       if (entryConfig.isOwnerID) {
+        hasOwnerEntry = true;
         if (proofInputs.owner === undefined) {
           throw new Error(
             "Proof configuration expects owner, but no owner identity given."
@@ -301,6 +303,11 @@ export function checkProofInputsForConfig(
         }
       }
     }
+  }
+  // Check that nullifier isn't requested if it's not linked to anything.
+  // An owner ID not checked against a commitment can be any arbitray numbers.
+  if (proofInputs.owner?.externalNullifier !== undefined && !hasOwnerEntry) {
+    throw new Error("Nullifier requires an entry containing owner ID.");
   }
 }
 

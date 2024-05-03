@@ -211,11 +211,15 @@ export type GPCProofInputs = {
    * contain the owner's public ID can be configured to be revealed.  A
    * nullifier can also be calculated which is tied to the owner's identity,
    * to allow identifying duplicate proofs without de-anonymizing.
+   *
+   * This field can be omitted if an owner is not needed for any entry
+   * an entry with {@link isOwnerID} set.
    */
   owner?: {
     /**
      * The owner's identity using Semaphore V3.  In future, alternative owner
      * identity types may be supported, and this will become an optional field.
+     * This will be ignored if no entry is marked with {@link isOwnerID}.
      */
     semaphoreV3: Identity;
 
@@ -228,6 +232,10 @@ export type GPCProofInputs = {
      * This field can be a {@link PODValue} of any type, and will be represented
      * in the circuit as a number or a hash as appropriate.  When the proof
      * is verified, the external nullifier is also verified (as a public input).
+     *
+     * This field cannot be set if no entry is marked with {@link isOwnerID},
+     * because such a nullifier would not be cryptographically tied to anything
+     * verifiable.
      */
     externalNullifier?: PODValue;
   };

@@ -299,9 +299,13 @@ export function compileProofConfig(
     ? BigInt(firstOwnerIndex)
     : BABY_JUB_NEGATIVE_ONE;
   const sigOwnerSemaphoreV3IdentityNullifier =
-    proofInputs.owner?.semaphoreV3?.nullifier ?? BABY_JUB_NEGATIVE_ONE;
+    hasOwner && proofInputs.owner?.semaphoreV3?.nullifier !== undefined
+      ? proofInputs.owner.semaphoreV3.nullifier
+      : BABY_JUB_NEGATIVE_ONE;
   const sigOwnerSemaphoreV3IdentityTrapdoor =
-    proofInputs.owner?.semaphoreV3.trapdoor ?? BABY_JUB_NEGATIVE_ONE;
+    hasOwner && proofInputs.owner?.semaphoreV3?.nullifier !== undefined
+      ? proofInputs.owner.semaphoreV3.trapdoor
+      : BABY_JUB_NEGATIVE_ONE;
   const sigOwnerExternalNullifier = makeWatermarkSignal(
     proofInputs.owner?.externalNullifier
   );
