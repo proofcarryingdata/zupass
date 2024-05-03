@@ -184,6 +184,7 @@ export class UserService {
     commitment: string,
     salt: string | undefined,
     encryptionKey: string | undefined,
+    autoRegister: boolean | undefined,
     res: Response
   ): Promise<void> {
     logger(
@@ -201,14 +202,24 @@ export class UserService {
       );
     }
 
-    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+
+    // Prevent accidental account re-creation/reset for one-click links clicked by existing users
+    if (existingUser && autoRegister) {
       throw new PCDHTTPError(
         403,
-        `Wrong token. If you got more than one email, use the latest one.`
+        `The email ${email} has already been registered. Please log in instead.`
       );
     }
 
-    const existingUser = await fetchUserByEmail(this.context.dbPool, email);
+    if (!(await this.emailTokenService.checkTokenCorrect(email, token))) {
+      throw new PCDHTTPError(
+        403,
+        autoRegister
+          ? `Invalid link. Please manually create an account with ${email}.`
+          : `Wrong token. If you got more than one email, use the latest one.`
+      );
+    }
 
     if (existingUser) {
       await this.checkAccountResetRateLimit(existingUser);

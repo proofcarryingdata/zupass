@@ -16,7 +16,8 @@ export async function requestCreateNewUser(
   token: string,
   commitment: string,
   salt: HexString | undefined,
-  encryptionKey: HexString | undefined
+  encryptionKey: HexString | undefined,
+  autoRegister: boolean | undefined
 ): Promise<NewUserResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/account/new-participant"),
@@ -29,7 +30,8 @@ export async function requestCreateNewUser(
       token,
       commitment,
       salt,
-      encryptionKey
+      encryptionKey,
+      autoRegister
     } satisfies CreateNewUserRequest
   );
 }

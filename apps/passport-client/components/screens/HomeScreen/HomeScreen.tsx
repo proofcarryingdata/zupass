@@ -16,13 +16,14 @@ import styled, { CSSProperties } from "styled-components";
 import {
   useDispatch,
   useFolders,
-  usePCDCollection,
+  useLoadedIssuedPCDs,
   useSelf,
   useVisiblePCDsInFolder
 } from "../../../src/appHooks";
 import { useSyncE2EEStorage } from "../../../src/useSyncE2EEStorage";
 import { isEdgeCityFolder, isFrogCryptoFolder } from "../../../src/util";
 import { Button, Placeholder, Spacer } from "../../core";
+import { RippleLoader } from "../../core/RippleLoader";
 import { MaybeModal } from "../../modals/Modal";
 import { AppContainer } from "../../shared/AppContainer";
 import { AppHeader } from "../../shared/AppHeader";
@@ -50,8 +51,8 @@ export function HomeScreenImpl(): JSX.Element | null {
   const self = useSelf();
   const navigate = useNavigate();
   const dispatch = useDispatch();
+  const loadedIssuedPCDs = useLoadedIssuedPCDs();
 
-  const pcdCollection = usePCDCollection();
   const [searchParams, setSearchParams] = useSearchParams();
   const defaultBrowsingFolder = useMemo(() => {
     const folderPathFromQuery = decodeURIComponent(
@@ -65,10 +66,8 @@ export function HomeScreenImpl(): JSX.Element | null {
       return folderPathFromQuery;
     }
 
-    return pcdCollection.isValidFolder(folderPathFromQuery)
-      ? folderPathFromQuery
-      : "";
-  }, [pcdCollection, searchParams]);
+    return folderPathFromQuery || "";
+  }, [searchParams]);
 
   const [browsingFolder, setBrowsingFolder] = useState(defaultBrowsingFolder);
   const pcdsInFolder = useVisiblePCDsInFolder(browsingFolder);
@@ -200,8 +199,10 @@ export function HomeScreenImpl(): JSX.Element | null {
               {!(foldersInFolder.length === 0 && isRoot) && <Separator />}
               {pcdsInFolder.length > 0 ? (
                 <PCDCardList pcds={pcdsInFolder} />
-              ) : (
+              ) : loadedIssuedPCDs ? (
                 <NoPcdsContainer>This folder has no PCDs</NoPcdsContainer>
+              ) : (
+                <RippleLoader />
               )}
               {pcdsInFolder.length > 1 && !isRoot && (
                 <>
