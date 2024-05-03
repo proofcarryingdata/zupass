@@ -90,7 +90,7 @@ export class GenericPretixDataMocker {
   }
 
   public restore(data: IMockGenericIssuancePretixBackendData): void {
-    this.data = data;
+    this.data = structuredClone(data);
   }
 
   public get(): IMockGenericIssuancePretixBackendData {

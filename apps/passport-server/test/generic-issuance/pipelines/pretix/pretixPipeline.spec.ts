@@ -84,7 +84,10 @@ describe("generic issuance - PretixPipeline", function () {
     ethLatAmPretixOrganizer,
     ethLatAmEvent,
     ethLatAmPipeline,
-    ethLatAmSemaphoreGroupIds
+    ethLatAmSemaphoreGroupIds,
+    ethLatAmEventId,
+    ethLatAmAttendeeProduct,
+    ethLatAmBouncerProduct
   } = setupTestPretixPipeline();
 
   const pipelineDefinitions = [ethLatAmPipeline];
@@ -1068,6 +1071,7 @@ describe("generic issuance - PretixPipeline", function () {
 
     pretixBackend.restore(beforeUseBackup);
     await deleteManualTicketCheckins(giBackend.context.dbPool);
+    await pipeline.load();
 
     const bouncerCredential = await makeTestCredential(
       EthLatAmBouncerIdentity,
@@ -1139,6 +1143,7 @@ describe("generic issuance - PretixPipeline", function () {
       // Reset check-in state.
       pretixBackend.restore(beforeUseBackup);
       await deleteManualTicketCheckins(giBackend.context.dbPool);
+      await pipeline.load();
 
       const attendeeCredential = await makeTestCredential(
         EthLatAmAttendeeIdentity,
@@ -1168,6 +1173,120 @@ describe("generic issuance - PretixPipeline", function () {
       // When we load the pipeline, no check-ins should be processed.
       const secondLoadResult = await pipeline.load();
       expect(secondLoadResult.offlineTicketsCheckedIn).to.eq(0);
+    }
+    {
+      // Reset check-in state.
+      pretixBackend.restore(beforeUseBackup);
+      await deleteManualTicketCheckins(giBackend.context.dbPool);
+      await pipeline.load();
+
+      // Test granting the attendee product special permissions
+      const userDB = new PipelineUserDB(giBackend.context.dbPool);
+      const adminUser = await userDB.getUserById(adminGIUserId);
+      expectToExist(adminUser);
+
+      // Get the pipeline definition
+      const latestPipelineDefinition = (await giService.getPipeline(
+        ethLatAmPipeline.id
+      )) as PretixPipelineDefinition;
+      const newPipelineDefinition = structuredClone(latestPipelineDefinition);
+      // Set permissions
+      newPipelineDefinition.options.userPermissions = [
+        {
+          members: [
+            {
+              eventId: ethLatAmEventId,
+              productId: ethLatAmAttendeeProduct.genericIssuanceId
+            }
+          ],
+          // Attendees can check in bouncers (but not regular attendees!)
+          canCheckIn: {
+            eventId: ethLatAmEventId,
+            productId: ethLatAmBouncerProduct.genericIssuanceId
+          }
+        }
+      ];
+      // Update the definition
+      const { restartPromise } = await giService.upsertPipelineDefinition(
+        adminUser,
+        newPipelineDefinition
+      );
+      await restartPromise;
+      {
+        // Find the (new) running pipeline
+        const pipelines = await giService.getAllPipelineInstances();
+        expectToExist(pipelines);
+        expectLength(pipelines, 1);
+        const pipeline = pipelines.find(PretixPipeline.is);
+        expectToExist(pipeline);
+        expect(pipeline.id).to.eq(newPipelineDefinition.id);
+
+        const attendeeCredential = await makeTestCredential(
+          EthLatAmAttendeeIdentity,
+          PODBOX_CREDENTIAL_REQUEST,
+          ethLatAmPretixOrganizer.ethLatAmAttendeeEmail,
+          ZUPASS_EDDSA_PRIVATE_KEY
+        );
+
+        const result = await requestPodboxGetOfflineTickets(
+          giBackend.expressContext.localEndpoint,
+          attendeeCredential
+        );
+
+        expectTrue(result.success);
+        // Attendee can only check in one ticket (the bouncer)
+        expectLength(result.value.offlineTickets, 1);
+
+        const ticketsByEvent = result.value.offlineTickets.reduce(
+          (res, current) => {
+            if (res[current.eventId]) {
+              res[current.eventId].push(current.id);
+            } else {
+              res[current.eventId] = [current.id];
+            }
+            return res;
+          },
+          {} as Record<string, string[]>
+        );
+
+        await requestPodboxCheckInOfflineTickets(
+          giBackend.expressContext.localEndpoint,
+          attendeeCredential,
+          ticketsByEvent
+        );
+
+        // Offline check-ins have not been processed yet
+        const pipelineInfo = await requestPipelineInfo(
+          adminGIUserEmail,
+          giBackend.expressContext.localEndpoint,
+          pipeline.id
+        );
+        expectSuccess(pipelineInfo);
+        // The one ticket should be in the queue for check-in
+        expectLength(pipelineInfo.value.queuedOfflineCheckins, 1);
+
+        // Verify that the ticket is checked in.
+        const loadResult = await pipeline.load();
+        expect(loadResult.offlineTicketsCheckedIn).to.eq(1);
+
+        // If we fetch offline tickets again, they should all appear to be
+        // checked in.
+        const getOfflineTicketsResult = await requestPodboxGetOfflineTickets(
+          giBackend.expressContext.localEndpoint,
+          attendeeCredential
+        );
+
+        expectTrue(getOfflineTicketsResult.success);
+        // Bouncer should be able to receive all tickets
+        expectLength(getOfflineTicketsResult.value.offlineTickets, 1);
+        // All tickets should now be consumed.
+        expectLength(
+          getOfflineTicketsResult.value.offlineTickets.filter(
+            (ot) => ot.is_consumed === true
+          ),
+          1
+        );
+      }
     }
   });
 

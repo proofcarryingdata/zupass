@@ -1944,37 +1944,38 @@ export class PretixPipeline implements BasePipeline {
   /**
    * Returns {@link MemberCriteria} for each of the ticket types this user has
    * permission to check in.
-   *
-   * @todo adapt this to product-level granularity when food voucher branch is
-   * merged.
    */
   private async ticketsUserCanCheckIn(
     checkerEmail: string
   ): Promise<MemberCriteria[]> {
-    // Pretix pipeline does not have a "superuserEmails" config option
+    const checkerTickets = [
+      ...(await this.db.loadByEmail(this.id, checkerEmail)),
+      ...(await this.getManualTicketsForEmail(checkerEmail))
+    ];
 
-    // Get all of the products that the checker owns
-    const checkerProductIds: string[] = [];
-    for (const checkerTicketAtom of await this.db.loadByEmail(
-      this.id,
-      checkerEmail
-    )) {
-      checkerProductIds.push(checkerTicketAtom.productId);
-    }
-    for (const manualTicket of await this.getManualTicketsForEmail(
-      checkerEmail
-    )) {
-      checkerProductIds.push(manualTicket.productId);
+    const permittedTickets: MemberCriteria[] = [];
+
+    for (const permission of this.definition.options.userPermissions ?? []) {
+      if (
+        checkerTickets.find((ticket) =>
+          ticketMatchesCriteria(ticket, permission.members)
+        )
+      ) {
+        permittedTickets.push(permission.canCheckIn);
+      }
     }
 
-    // Map over all configured events
+    // Return any event/product combinations for which the user has a superuser
+    // ticket.
     return this.definition.options.events.reduce((memo, eventConfig) => {
       if (
         // Does the user own a superuser product for this event?
         eventConfig.products.some(
           (product) =>
             product.isSuperUser &&
-            checkerProductIds.includes(product.genericIssuanceId)
+            checkerTickets.find(
+              (ticket) => ticket.productId === product.genericIssuanceId
+            )
         )
       ) {
         // In that case, they can check in any of the product types for this event
@@ -1986,7 +1987,7 @@ export class PretixPipeline implements BasePipeline {
         );
       }
       return memo;
-    }, [] as MemberCriteria[]);
+    }, permittedTickets);
   }
 
   /**

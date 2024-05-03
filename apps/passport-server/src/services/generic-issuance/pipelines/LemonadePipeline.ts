@@ -1973,9 +1973,6 @@ export class LemonadePipeline implements BasePipeline {
   /**
    * Returns {@link MemberCriteria} for each of the ticket types this user has
    * permission to check in.
-   *
-   * @todo adapt this to product-level granularity when food voucher branch is
-   * merged.
    */
   private async ticketsUserCanCheckIn(
     checkerEmail: string
@@ -2003,7 +2000,8 @@ export class LemonadePipeline implements BasePipeline {
       checkerProductIds.push(manualTicket.productId);
     }
 
-    // Map over all configured events
+    // Return any event/product combinations for which the user has a superuser
+    // ticket.
     return this.definition.options.events.reduce((memo, eventConfig) => {
       if (
         // Does the user own a superuser product for this event?
