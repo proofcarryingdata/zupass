@@ -109,7 +109,7 @@ function checkProofObjConfig(
 ): number {
   if (Object.keys(objConfig.entries).length === 0) {
     throw new TypeError(
-      `Must prove at least one entry in object "${nameForErrorMessages}.`
+      `Must prove at least one entry in object "${nameForErrorMessages}".`
     );
   }
 
@@ -330,7 +330,7 @@ export function checkVerifyArgs(
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
   const requriedParams = ProtoPODGPC.mergeRequiredParams(
-    checkProofConfig(boundConfig),
+    checkBoundConfig(boundConfig),
     checkRevealedClaims(revealedClaims)
   );
 
@@ -353,7 +353,7 @@ export function checkBoundConfig(
   boundConfig: GPCBoundConfig
 ): ProtoPODGPCCircuitParams {
   if (boundConfig.circuitIdentifier === undefined) {
-    throw new TypeError("Bound config must include circuit name.");
+    throw new TypeError("Bound config must include circuit identifier.");
   }
 
   return checkProofConfig(boundConfig);

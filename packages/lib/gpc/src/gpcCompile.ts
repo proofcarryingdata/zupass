@@ -27,6 +27,7 @@ import {
   GPCProofOwnerInputs,
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
+  GPCRevealedOwnerClaims,
   PODEntryIdentifier
 } from "./gpcTypes";
 import { makeWatermarkSignal } from "./gpcUtil";
@@ -151,12 +152,6 @@ export function compileProofConfig(
   proofInputs: GPCProofInputs,
   circuitDesc: ProtoPODGPCCircuitDesc
 ): ProtoPODGPCInputs {
-  // TODO(POD-P1): This function is too long and needs refactoring ideas:
-  // 1) Build the arrays in-place inside a result object to avoid all the vars.
-  // 2) Helper functions which build individual module config objects, followed
-  //    by a separate function which combines them.
-  // 3) Figure out how to share more code with compileVerifyConfig
-
   // Put the objects and entries in order, in maps for easy lookups.
   const { objMap, entryMap } = prepCompilerMaps<GPCProofInputs, POD>(
     proofConfig,
@@ -164,13 +159,13 @@ export function compileProofConfig(
   );
 
   // Create subset of inputs for object modules, padded to max size.
-  const circuitObjInputs = combineObjectModuleInputs(
+  const circuitObjInputs = combineProofObjects(
     Array.from(objMap.values()).map(compileProofObject),
     circuitDesc.maxObjects
   );
 
   // Create subset of inputs for entry modules, padded to max size.
-  const circuitEntryInputs = combineEntryModuleInputs(
+  const circuitEntryInputs = combineProofEntries(
     Array.from(entryMap.values()).map((e) =>
       compileProofEntry(e, circuitDesc.merkleMaxDepth)
     ),
@@ -218,7 +213,7 @@ function compileProofObject(objInfo: CompilerObjInfo<POD>): ObjectModuleInputs {
   };
 }
 
-function combineObjectModuleInputs(
+function combineProofObjects(
   allObjInputs: ObjectModuleInputs[],
   maxObjects: number
 ): {
@@ -234,7 +229,6 @@ function combineObjectModuleInputs(
     allObjInputs.push({ ...allObjInputs[0] });
   }
 
-  // Combine indidvidual arrays to form the circuit inputs.
   return {
     objectContentID: allObjInputs.map((o) => o.contentID),
     objectSignerPubkeyAx: allObjInputs.map((o) => o.signerPubkeyAx),
@@ -280,7 +274,7 @@ function compileProofEntry(
   };
 }
 
-function combineEntryModuleInputs(
+function combineProofEntries(
   allEntryInputs: EntryModuleInputs[],
   maxEntries: number
 ): {
@@ -331,7 +325,7 @@ function combineEntryModuleInputs(
 }
 
 function compileProofEntryConstraints(
-  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<POD>>,
+  entryMap: Map<PODEntryIdentifier, CompilerEntryInfo<unknown>>,
   maxEntries: number
 ): {
   circuitEntryConstraintInputs: {
@@ -417,7 +411,7 @@ function compileProofOwner(
   };
 }
 
-function compileProofGlobal(proofInputs: GPCProofInputs): {
+function compileProofGlobal(proofInputs: GPCProofInputs | GPCRevealedClaims): {
   globalWatermark: CircuitSignal;
 } {
   return {
@@ -452,161 +446,231 @@ export function compileVerifyConfig(
   circuitPublicInputs: ProtoPODGPCPublicInputs;
   circuitOutputs: ProtoPODGPCOutputs;
 } {
-  // TODO(POD-P1): This function is too long and needs refactoring ideas:
-  // 1) Build the arrays in-place inside a result object to avoid all the vars.
-  // 2) Helper functions which build individual module config objects, followed
-  //    by a separate function which combines them.
-  // 3) Figure out how to share more code with compileVerifyConfig
-
   // Put the objects and entries in order, in maps for easy lookups.
   const { objMap, entryMap } = prepCompilerMaps<
     GPCRevealedClaims,
     GPCRevealedObjectClaims
   >(verifyConfig, verifyRevealed);
 
-  // ObjectModule module inputs are 1D arrays indexed by Object.  Some will
-  // be packed into bits below.
-  const sigObjectSignerPubkeyAx = [];
-  const sigObjectSignerPubkeyAy = [];
-
-  // Fill in used ObjectModule inputs from the Object Map.  This loop maintains
-  // the order of insertion above.
-  for (const objInfo of objMap.values()) {
-    const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
-
-    sigObjectSignerPubkeyAx.push(publicKey[0]);
-    sigObjectSignerPubkeyAy.push(publicKey[1]);
-  }
-
-  // Spare object slots get filled in with copies of Object 0.
-  for (
-    let objIndex = objMap.size;
-    objIndex < circuitDesc.maxObjects;
-    objIndex++
-  ) {
-    sigObjectSignerPubkeyAx.push(sigObjectSignerPubkeyAx[0]);
-    sigObjectSignerPubkeyAy.push(sigObjectSignerPubkeyAy[0]);
-  }
-
-  // EntryModule inputs are 1D arrays indexed entry.
-  const sigEntryObjectIndex = [];
-  const sigEntryNameHash = [];
-  const sigEntryIsValueEnabled = [];
-  const sigEntryIsValueHashRevealed = [];
-  const sigEntryRevealedValueHash = [];
-  const sigEntryEqualToOtherEntryByIndex = [];
-
-  // Fill in used EntryModule inputs from the Entry Map.  This loop maintains
-  // the order of insertion above.
-  let firstOwnerIndex = 0;
-  for (const entryInfo of entryMap.values()) {
-    // Fetch the entry value, if it's configured to be revealed.
-    let revealedEntryValue: PODValue | undefined = undefined;
-    if (entryInfo.entryConfig.isRevealed) {
-      if (entryInfo.objInput.entries === undefined) {
-        throw new Error("Missing revealed entries.");
-      }
-      revealedEntryValue = entryInfo.objInput.entries[entryInfo.entryName];
-      if (revealedEntryValue === undefined) {
-        throw new Error(
-          `Missing revealed entry ${entryInfo.objName}.${entryInfo.entryName}.`
-        );
-      }
-    }
-
-    // Add this entry's basic identity and membership proof for EntryModule.
-    sigEntryObjectIndex.push(BigInt(entryInfo.objIndex));
-    sigEntryNameHash.push(podNameHash(entryInfo.entryName));
-
-    // Add this entry's value config EntryModule.
-    // Plaintext value is only enabled if it is needed by some other
-    // configured constraint, which for now is only the owner commitment.
-    const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
-    sigEntryIsValueEnabled.push(isValueEnabled ? 1n : 0n);
-    sigEntryIsValueHashRevealed.push(
-      entryInfo.entryConfig.isRevealed ? 1n : 0n
-    );
-    sigEntryRevealedValueHash.push(
-      revealedEntryValue !== undefined
-        ? podValueHash(revealedEntryValue)
-        : BABY_JUB_NEGATIVE_ONE
-    );
-
-    // Deal with equality comparision and ownership, which share circuitry.
-    // An entry is always compared either to the first owner entry (to ensure
-    // only one owner), or to another entry specified by config, or to itself
-    // in order to make the constraint a nop.
-    if (entryInfo.entryConfig.isOwnerID) {
-      if (firstOwnerIndex === 0) {
-        firstOwnerIndex = entryInfo.entryIndex;
-      } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
-        throw new Error(
-          "Can't use isOwnerID and equalsEntry on the same entry."
-        );
-      }
-      sigEntryEqualToOtherEntryByIndex.push(BigInt(firstOwnerIndex));
-    } else if (entryInfo.entryConfig.equalsEntry !== undefined) {
-      const otherEntryInfo = entryMap.get(entryInfo.entryConfig.equalsEntry);
-      if (otherEntryInfo === undefined) {
-        throw new Error(
-          `Missing entry ${entryInfo.entryConfig.equalsEntry} for equality comparison.`
-        );
-      }
-      sigEntryEqualToOtherEntryByIndex.push(BigInt(otherEntryInfo.entryIndex));
-    } else {
-      sigEntryEqualToOtherEntryByIndex.push(BigInt(entryInfo.entryIndex));
-    }
-  }
-
-  // Spare entry slots are filled with the name of Entry 0, with value disabled.
-  for (
-    let entryIndex = entryMap.size;
-    entryIndex < circuitDesc.maxEntries;
-    entryIndex++
-  ) {
-    sigEntryObjectIndex.push(0n);
-    sigEntryNameHash.push(sigEntryNameHash[0]);
-    sigEntryIsValueEnabled.push(0n);
-    sigEntryIsValueHashRevealed.push(0n);
-    sigEntryRevealedValueHash.push(BABY_JUB_NEGATIVE_ONE);
-    sigEntryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
-  }
-
-  // Signals for owner module, which is enabled if any entry config declared
-  // it was an owner commitment.
-  const hasOwner = firstOwnerIndex !== 0;
-  const sigOwnerEntryIndex = hasOwner
-    ? BigInt(firstOwnerIndex)
-    : BABY_JUB_NEGATIVE_ONE;
-  const sigOwnerExternalNullifier = makeWatermarkSignal(
-    verifyRevealed.owner?.externalNullifier
+  // Create subset of inputs for object modules, padded to max size.
+  const circuitObjInputs = combineVerifyObjects(
+    Array.from(objMap.values()).map(compileVerifyObject),
+    circuitDesc.maxObjects
   );
-  const sigOwnerIsNullfierHashRevealed =
-    verifyRevealed.owner?.nullifierHash !== undefined ? 1n : 0n;
-  const sigOwnerRevealedNulifierHash =
-    verifyRevealed.owner?.nullifierHash ?? BABY_JUB_NEGATIVE_ONE;
 
-  // Set global watermark.
-  const sigGlobalWatermark = makeWatermarkSignal(verifyRevealed.watermark);
+  // Create subset of inputs and outputs for entry modules, padded to max size.
+  const { circuitEntryInputs, circuitEntryOutputs } = combineVerifyEntries(
+    Array.from(entryMap.values()).map(compileVerifyEntry),
+    circuitDesc.maxEntries
+  );
+
+  // Create subset of inputs for entry comparisons and ownership, which share
+  // some of the same circuitry.  This logic is shared with compileProofConfig,
+  // since all the signals involved are public.
+  const { circuitEntryConstraintInputs, entryConstraintMetadata } =
+    compileProofEntryConstraints(entryMap, circuitDesc.maxEntries);
+
+  // Create subset of inputs and outputs for owner module.
+  const { circuitOwnerInputs, circuitOwnerOutputs } = compileVerifyOwner(
+    verifyRevealed.owner,
+    entryConstraintMetadata.firstOwnerIndex
+  );
+
+  // Create other global inputs.  Logic shared with compileProofConfig,
+  // since all the signals involved are public.
+  const circuitGlobalInputs = compileProofGlobal(verifyRevealed);
 
   // Return all the resulting signals input to the gpcircuits library.
+  // The specific return type of each compile phase above lets the TS compiler
+  // confirm that all expected fields have been set with the right types (though
+  // not their array sizes).
   return {
     circuitPublicInputs: {
-      objectSignerPubkeyAx: sigObjectSignerPubkeyAx,
-      objectSignerPubkeyAy: sigObjectSignerPubkeyAy,
-      entryObjectIndex: sigEntryObjectIndex,
-      entryNameHash: sigEntryNameHash,
-      entryIsValueEnabled: array2Bits(sigEntryIsValueEnabled),
-      entryIsValueHashRevealed: array2Bits(sigEntryIsValueHashRevealed),
-      entryEqualToOtherEntryByIndex: sigEntryEqualToOtherEntryByIndex,
-      ownerEntryIndex: sigOwnerEntryIndex,
-      ownerExternalNullifier: sigOwnerExternalNullifier,
-      ownerIsNullfierHashRevealed: sigOwnerIsNullfierHashRevealed,
-      globalWatermark: sigGlobalWatermark
+      ...circuitObjInputs,
+      ...circuitEntryInputs,
+      ...circuitEntryConstraintInputs,
+      ...circuitOwnerInputs,
+      ...circuitGlobalInputs
     },
     circuitOutputs: {
-      entryRevealedValueHash: sigEntryRevealedValueHash,
-      ownerRevealedNulifierHash: sigOwnerRevealedNulifierHash
+      ...circuitEntryOutputs,
+      ...circuitOwnerOutputs
+    }
+  };
+}
+
+type CompilerVerifyObjectInputs = {
+  signerPubkeyAx: CircuitSignal;
+  signerPubkeyAy: CircuitSignal;
+};
+
+function compileVerifyObject(
+  objInfo: CompilerObjInfo<GPCRevealedObjectClaims>
+): CompilerVerifyObjectInputs {
+  const publicKey = decodePublicKey(objInfo.objInput.signerPublicKey);
+  return {
+    signerPubkeyAx: publicKey[0],
+    signerPubkeyAy: publicKey[1]
+  };
+}
+
+function combineVerifyObjects(
+  allObjInputs: CompilerVerifyObjectInputs[],
+  maxObjects: number
+): {
+  objectSignerPubkeyAx: CircuitSignal[];
+  objectSignerPubkeyAy: CircuitSignal[];
+} {
+  // Spare object slots get filled in with copies of Object 0.
+  for (let objIndex = allObjInputs.length; objIndex < maxObjects; objIndex++) {
+    allObjInputs.push({ ...allObjInputs[0] });
+  }
+
+  return {
+    objectSignerPubkeyAx: allObjInputs.map((o) => o.signerPubkeyAx),
+    objectSignerPubkeyAy: allObjInputs.map((o) => o.signerPubkeyAy)
+  };
+}
+
+type CompilerVerifyEntryInputs = {
+  objectIndex: CircuitSignal;
+  nameHash: CircuitSignal;
+  isValueEnabled: CircuitSignal;
+  isValueHashRevealed: CircuitSignal;
+};
+
+type CompilerVerifyEntryOutputs = {
+  revealedValueHash: CircuitSignal;
+};
+
+function compileVerifyEntry(
+  entryInfo: CompilerEntryInfo<GPCRevealedObjectClaims>
+): { inputs: CompilerVerifyEntryInputs; outputs: CompilerVerifyEntryOutputs } {
+  // Plaintext value is only enabled if it is needed by some other
+  // configured constraint, which for now is only the owner commitment.
+  const isValueEnabled = !!entryInfo.entryConfig.isOwnerID;
+
+  // Fetch the entry value, if it's configured to be revealed.
+  let revealedEntryValue: PODValue | undefined = undefined;
+  if (entryInfo.entryConfig.isRevealed) {
+    if (entryInfo.objInput.entries === undefined) {
+      throw new Error("Missing revealed entries.");
+    }
+    revealedEntryValue = entryInfo.objInput.entries[entryInfo.entryName];
+    if (revealedEntryValue === undefined) {
+      throw new Error(
+        `Missing revealed entry ${entryInfo.objName}.${entryInfo.entryName}.`
+      );
+    }
+  }
+
+  return {
+    inputs: {
+      objectIndex: BigInt(entryInfo.objIndex),
+      nameHash: podNameHash(entryInfo.entryName),
+      isValueEnabled: isValueEnabled ? 1n : 0n,
+      isValueHashRevealed: entryInfo.entryConfig.isRevealed ? 1n : 0n
+    },
+    outputs: {
+      revealedValueHash:
+        revealedEntryValue !== undefined
+          ? podValueHash(revealedEntryValue)
+          : BABY_JUB_NEGATIVE_ONE
+    }
+  };
+}
+
+function combineVerifyEntries(
+  allEntryInputsOutputs: {
+    inputs: CompilerVerifyEntryInputs;
+    outputs: CompilerVerifyEntryOutputs;
+  }[],
+  maxEntries: number
+): {
+  circuitEntryInputs: {
+    entryObjectIndex: CircuitSignal[];
+    entryNameHash: CircuitSignal[];
+    entryIsValueEnabled: CircuitSignal;
+    entryIsValueHashRevealed: CircuitSignal;
+  };
+  circuitEntryOutputs: {
+    entryRevealedValueHash: CircuitSignal[];
+  };
+} {
+  // Spare entry slots are filled with the name of Entry 0, value disabled.
+  for (
+    let entryIndex = allEntryInputsOutputs.length;
+    entryIndex < maxEntries;
+    entryIndex++
+  ) {
+    allEntryInputsOutputs.push({
+      inputs: {
+        objectIndex: allEntryInputsOutputs[0].inputs.objectIndex,
+        nameHash: allEntryInputsOutputs[0].inputs.nameHash,
+        isValueEnabled: 0n,
+        isValueHashRevealed: 0n
+      },
+      outputs: {
+        revealedValueHash: BABY_JUB_NEGATIVE_ONE
+      }
+    });
+  }
+
+  // Combine indidvidual arrays to form the circuit inputs, as 1D arrays, 2D
+  // arrays, or bitfields as appropriate.
+  return {
+    circuitEntryInputs: {
+      entryObjectIndex: allEntryInputsOutputs.map(
+        (io) => io.inputs.objectIndex
+      ),
+      entryNameHash: allEntryInputsOutputs.map((io) => io.inputs.nameHash),
+      entryIsValueEnabled: array2Bits(
+        allEntryInputsOutputs.map((io) => io.inputs.isValueEnabled)
+      ),
+      entryIsValueHashRevealed: array2Bits(
+        allEntryInputsOutputs.map((io) => io.inputs.isValueHashRevealed)
+      )
+    },
+    circuitEntryOutputs: {
+      entryRevealedValueHash: allEntryInputsOutputs.map(
+        (io) => io.outputs.revealedValueHash
+      )
+    }
+  };
+}
+
+function compileVerifyOwner(
+  ownerInput: GPCRevealedOwnerClaims | undefined,
+  firstOwnerIndex: number
+): {
+  circuitOwnerInputs: {
+    ownerEntryIndex: CircuitSignal;
+    ownerExternalNullifier: CircuitSignal;
+    ownerIsNullfierHashRevealed: CircuitSignal;
+  };
+  circuitOwnerOutputs: {
+    ownerRevealedNulifierHash: CircuitSignal;
+  };
+} {
+  // Owner module is enabled if any entry config declared it was an owner
+  // commitment.  It can't be enabled purely for purpose of nullifier hash,
+  // since an unconstrained owner could be set to any random numbers.
+  const hasOwner = firstOwnerIndex !== 0;
+
+  return {
+    circuitOwnerInputs: {
+      ownerEntryIndex: hasOwner
+        ? BigInt(firstOwnerIndex)
+        : BABY_JUB_NEGATIVE_ONE,
+      ownerExternalNullifier: makeWatermarkSignal(
+        ownerInput?.externalNullifier
+      ),
+      ownerIsNullfierHashRevealed:
+        ownerInput?.externalNullifier !== undefined ? 1n : 0n
+    },
+    circuitOwnerOutputs: {
+      ownerRevealedNulifierHash:
+        ownerInput?.nullifierHash ?? BABY_JUB_NEGATIVE_ONE
     }
   };
 }

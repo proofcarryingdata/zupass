@@ -2,6 +2,7 @@ import { loadCircomkitConfig } from "@pcd/gpcircuits";
 import { PODEntries } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { Identity } from "@semaphore-protocol/identity";
+import { AssertionError, assert, expect } from "chai";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
@@ -43,6 +44,7 @@ export const sampleEntries = {
   H: { type: "int", value: 8n },
   I: { type: "int", value: 9n },
   J: { type: "int", value: 10n },
+  otherTicketID: { type: "int", value: 999n },
   owner: { type: "cryptographic", value: ownerIdentity.commitment }
 } satisfies PODEntries;
 
@@ -52,3 +54,23 @@ export const sampleEntries2 = {
   eventID: { type: "cryptographic", value: 456n },
   ticketID: { type: "cryptographic", value: 999n }
 } satisfies PODEntries;
+
+export async function expectAsyncError(
+  fn: () => Promise<void>,
+  typeName: string,
+  errSubstring?: string
+): Promise<void> {
+  try {
+    await fn();
+    assert.fail("Expected an error to be thrown.");
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  } catch (e: any) {
+    if (e instanceof AssertionError) {
+      throw e;
+    }
+    expect(e.constructor.name).to.eq(typeName);
+    if (errSubstring) {
+      expect("" + e).to.contain(errSubstring);
+    }
+  }
+}
