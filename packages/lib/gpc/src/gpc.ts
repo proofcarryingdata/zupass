@@ -1,6 +1,7 @@
 import {
   ProtoPODGPC,
   ProtoPODGPCCircuitDesc,
+  ProtoPODGPCCircuitParams,
   gpcArtifactPaths
 } from "@pcd/gpcircuits";
 import { Groth16Proof } from "snarkjs";
@@ -17,46 +18,54 @@ import {
 } from "./gpcCompile";
 import {
   GPCBoundConfig,
-  GPCIdentifier,
   GPCProofConfig,
   GPCProofInputs,
   GPCRevealedClaims
 } from "./gpcTypes";
 import { canonicalizeConfig, makeCircuitIdentifier } from "./gpcUtil";
 
+function bindConfigWithRequirements(
+  proofConfig: GPCProofConfig,
+  requiredParams: ProtoPODGPCCircuitParams
+): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
+  // Assumes proofConfig has already been checked by the caller.
+  const circuitDesc = checkCircuitParameters(
+    requiredParams,
+    proofConfig.circuitIdentifier
+  );
+  const boundConfig = canonicalizeConfig(
+    proofConfig,
+    makeCircuitIdentifier(circuitDesc)
+  );
+  return { boundConfig, circuitDesc };
+}
+
 /**
  * Checks, binds, and canonicalizes a GPCProofConfig so it can be reused
  * for multiple proofs.  See {@link GPCBoundConfig} for more details.
  *
+ * If the config specifies a specific circuit identifier, that circuit will
+ * be used to bind.  Otherwise this function will pick the smallest circuit
+ * which fits the config.
+ *
  * Note that this function cannot verify anything about future inputs.  In
  * particular the max POD size supported by an auto-selected circuit might
  * not be sufficient for all inputs.  If you need a larger size, you should pick
- * your circuit explicitly using the circuitIdentifier argument.
+ * your circuit explicitly using `proofConfig.circuitIdentifier`.
  *
  * @param proofConfig the raw proof config to bind.
- * @param circuitIdentifier an optional identifier of the specific circuit
- *   to choose.  If not specified, this function will pick the smallest
- *   circuit which can handle the config.
  * @returns a new configuration object bound and canonicalized as described
  *   above.
  * @throws TypeError if the input configuration is malformed
  * @throws Error if the requirements of the given configuration are impossible
  *   to meet with the given circuit
  */
-export function gpcBindConfig(
-  proofConfig: GPCProofConfig,
-  circuitIdentifier?: GPCIdentifier
-): {
+export function gpcBindConfig(proofConfig: GPCProofConfig): {
   boundConfig: GPCBoundConfig;
   circuitDesc: ProtoPODGPCCircuitDesc;
 } {
   const requiredParams = checkProofConfig(proofConfig);
-  const circuitDesc = checkCircuitParameters(requiredParams, circuitIdentifier);
-  const boundConfig = canonicalizeConfig(
-    proofConfig,
-    makeCircuitIdentifier(circuitDesc)
-  );
-  return { boundConfig, circuitDesc };
+  return bindConfigWithRequirements(proofConfig, requiredParams);
 }
 
 /**
@@ -91,15 +100,12 @@ export async function gpcProve(
   revealedClaims: GPCRevealedClaims;
 }> {
   const requiredParams = checkProofArgs(proofConfig, proofInputs);
-  const circuitDesc = checkCircuitParameters(
-    requiredParams,
-    proofConfig.circuitIdentifier
-  );
-  const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
-  const boundConfig = canonicalizeConfig(
+  const { boundConfig, circuitDesc } = bindConfigWithRequirements(
     proofConfig,
-    makeCircuitIdentifier(circuitDesc)
+    requiredParams
   );
+
+  const artifactPaths = gpcArtifactPaths(pathToArtifacts, circuitDesc);
 
   const circuitInputs = compileProofConfig(
     boundConfig,
