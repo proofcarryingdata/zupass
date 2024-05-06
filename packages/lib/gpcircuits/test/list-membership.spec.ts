@@ -1,3 +1,4 @@
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
@@ -16,8 +17,6 @@ describe("list-membership.ListMembershipModule should work", function () {
     ListMembershipModuleOutputNamesType
   >;
 
-  const MAX_ELEMENTS = 10;
-
   // Here the list of admissible values contains only 5 elements.
   const sampleList = [
     8905486818455134363060055817991647390962079139440460714076410595226736943033n,
@@ -27,18 +26,22 @@ describe("list-membership.ListMembershipModule should work", function () {
     19610499204834543146583882237191752133835393319355403157181111118356886459810n
   ];
 
-  const sampleInput: ListMembershipModuleInputs = {
-    value: sampleList[3],
-    list: extendedSignalArray(sampleList, MAX_ELEMENTS, sampleList[0]) // We fill up the rest with the first element.
+  // Sample input with arbitrary padding
+  const sampleInput: (n: number) => ListMembershipModuleInputs = (n) => {
+    return {
+      list: extendedSignalArray(sampleList, n, sampleList[0]), // We fill up the rest with the first element.
+      value: sampleList[3]
+    };
   };
 
+  // Non-membership case
   const sampleInput2: ListMembershipModuleInputs = {
-    ...sampleInput,
+    list: sampleList,
     value: 0n
   };
 
   const sampleOutput: ListMembershipModuleOutputs = {
-    isMember: +sampleList.includes(sampleInput.value)
+    isMember: +true
   };
 
   const sampleOutput2: ListMembershipModuleOutputs = {
@@ -46,18 +49,32 @@ describe("list-membership.ListMembershipModule should work", function () {
   };
 
   this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("ListMembershipModule", {
-      file: "list-membership",
-      template: "ListMembershipModule",
-      params: [MAX_ELEMENTS]
-    });
+    circuit = async (n) =>
+      await circomkit.WitnessTester("ListMembershipModule", {
+        file: "list-membership",
+        template: "ListMembershipModule",
+        params: [n]
+      });
   });
 
   it("should successfully verify list membership", async () => {
-    await circuit.expectPass(sampleInput, sampleOutput);
+    await circuit(sampleList.length).then((c) =>
+      c.expectPass(sampleInput(sampleList.length), sampleOutput)
+    );
+  });
+
+  it("should successfully verify list membership with padding of various sizes", async () => {
+    for (let i = 0; i < 10; i++) {
+      const listLength = 2 * (i + 1) * sampleList.length;
+      await circuit(listLength).then((c) =>
+        c.expectPass(sampleInput(listLength), sampleOutput)
+      );
+    }
   });
 
   it("should successfully verify list non-membership", async () => {
-    await circuit.expectPass(sampleInput2, sampleOutput2);
+    await circuit(sampleList.length).then((c) =>
+      c.expectPass(sampleInput2, sampleOutput2)
+    );
   });
 });
