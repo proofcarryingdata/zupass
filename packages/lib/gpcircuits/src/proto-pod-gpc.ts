@@ -45,8 +45,8 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
 
   // List membership module (1)
-  /*PUB*/ memberIndex: CircuitSignal;
-  /*PUB*/ membershipList: CircuitSignal /*MAX_LIST_ENTRIES*/[];
+  /*PUB*/ memberIndex: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ membershipList: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
@@ -109,8 +109,8 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
 
   // List membership module (1)
-  /*PUB*/ memberIndex: CircuitSignal;
-  /*PUB*/ membershipList: CircuitSignal /*MAX_LIST_ENTRIES*/[];
+  /*PUB*/ memberIndex: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ membershipList: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
@@ -174,7 +174,12 @@ export type ProtoPODGPCCircuitParams = {
   merkleMaxDepth: number;
 
   /**
-   * Number of entries in membership list to be included in proof.
+   * Number of membership lists
+   */
+  maxLists: number;
+
+  /**
+   * Number of entries in each membership list to be included in proof.
    */
   maxListEntries: number;
 
@@ -190,12 +195,48 @@ export type ProtoPODGPCCircuitParams = {
 };
 
 /**
+ * Size parameters for GPC data before processing for ProtoPODGPC circuit.
+ */
+export type ProtoPODGPCRequiredParams = {
+  /**
+   * Number of POD objects which must be included in a proof.
+   */
+  nObjects: number;
+
+  /**
+   * Number of POD entries which can be included in a proof.
+   */
+  nEntries: number;
+
+  /**
+   * Depth of POD merkle tree.  Max entries in any object is 2^(depth-1).
+   */
+  merkleMaxDepth: number;
+
+  /**
+   * Number of membership lists
+   */
+  nLists: number;
+
+  /**
+   * Minimum required number of entries in each membership list to be included in proof.
+   */
+  nListEntries: number;
+
+  /**
+   * Arities of tuples which must included in a proof.
+   */
+  tupleArities: number[];
+};
+
+/**
  * ProtoPODGPCCircuitParams constructor.
  */
 export function ProtoPODGPCCircuitParams(
   maxObjects: number,
   maxEntries: number,
   merkleMaxDepth: number,
+  maxLists: number,
   maxListEntries: number,
   maxTuples: number,
   tupleArity: number
@@ -204,6 +245,7 @@ export function ProtoPODGPCCircuitParams(
     maxObjects,
     maxEntries,
     merkleMaxDepth,
+    maxLists,
     maxListEntries,
     maxTuples,
     tupleArity
@@ -222,6 +264,7 @@ export function protoPODGPCCircuitParamArray(
     params.maxObjects,
     params.maxEntries,
     params.merkleMaxDepth,
+    params.maxLists,
     params.maxListEntries,
     params.maxTuples,
     params.tupleArity
@@ -242,7 +285,8 @@ export function arrayToProtoPODGPCCircuitParam(
     params[2],
     params[3],
     params[4],
-    params[5]
+    params[5],
+    params[6]
   );
 }
 
@@ -383,8 +427,8 @@ export class ProtoPODGPC {
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
       ...inputs.tupleIndices.flat(),
-      inputs.memberIndex,
-      ...inputs.membershipList,
+      ...inputs.memberIndex,
+      ...inputs.membershipList.flat(),
       inputs.globalWatermark
     ].map(BigInt);
   }
@@ -447,10 +491,14 @@ export class ProtoPODGPC {
     requiredParams: ProtoPODGPCCircuitParams
   ): boolean {
     return (
-      // TODO: Add tuples and lists.
       circuitDesc.maxObjects >= requiredParams.maxObjects &&
       circuitDesc.maxEntries >= requiredParams.maxEntries &&
-      circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth
+      circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth &&
+      // TODO: Rework this part.
+      circuitDesc.maxLists >= requiredParams.maxLists &&
+      circuitDesc.maxListEntries >= requiredParams.maxListEntries &&
+      circuitDesc.maxTuples >= requiredParams.maxTuples &&
+      circuitDesc.tupleArity >= 2
     );
   }
 
@@ -477,7 +525,7 @@ export class ProtoPODGPC {
    * Generates a circuit name based on parameters.
    */
   public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
-    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxLists}l-${params.maxListEntries}le-${params.maxTuples}t-${params.tupleArity}ta`;
   }
 
   private static circuitDescForParams(

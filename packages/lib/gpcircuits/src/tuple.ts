@@ -1,7 +1,7 @@
 import { PODValue, podValueHash } from "@pcd/pod";
 import { CircuitSignal } from "./types";
 import { poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
-import { padArray } from "./util";
+import { padArray, toChunks } from "./util";
 
 const poseidon = [poseidon2, poseidon3, poseidon4];
 
@@ -17,11 +17,45 @@ export type TupleModuleOutputs = { tupleHash: CircuitSignal };
 export type TupleModuleOutputNamesType = ["tupleHash"];
 
 /**
- * N <=  pTA => 1 = numTuples
- * pTA < N < 2pTA => 2 = numTuples
- * 2pTA <= N < 3pTA => 3 = numTuples
- * => numTuples =
+ * Determines the number of `paramTupleArity`-sized tuples
+ * necessary to represent a tuple of arity `tupleArity`.
+ * Throws a `RangeError` if the tuple arity parameter is not proper.
  */
+export function requiredNumTuples(
+  paramTupleArity: number,
+  tupleArity: number
+): number {
+  if (paramTupleArity < 2) {
+    throw new RangeError("The tuple arity parameter must be at least 2.");
+  } else {
+    return tupleArity <= paramTupleArity
+      ? 1
+      : Math.ceil((tupleArity - 1) / (paramTupleArity - 1));
+  }
+}
+
+/**
+ * Determines the maximum tuple arity representable by the
+ * given parameters.
+ * Throws a `RangeError` is the parameters are not proper.
+ */
+export function maxTupleArity(
+  paramMaxTuples: number,
+  paramTupleArity: number
+): number {
+  if (paramTupleArity < 2) {
+    throw new RangeError("The tuple arity parameter must be at least 2.");
+  } else if (paramMaxTuples < 0) {
+    throw new RangeError(
+      "The maximum tuple number parameter must be nonnegative."
+    );
+  } else {
+    return paramMaxTuples === 0
+      ? 0
+      : paramTupleArity + (paramTupleArity - 1) * (paramMaxTuples - 1);
+  }
+}
+
 /**
  * This procedure takes an N-tuple of `indices` (referring
  * to elements of some array of values) and returns its
@@ -31,10 +65,10 @@ export type TupleModuleOutputNamesType = ["tupleHash"];
  * first index is used as padding. More concretely,
  * Given indices [i_1, ..., i_N], if N <= `paramTupleArity`
  * then
- * tupleIndices(paramTupleArity, firstTupleIndex, indices)
+ * computeTupleIndices(paramTupleArity, firstTupleIndex, indices)
  *  === [[i_1, ..., i_N].concat(Array(paramTupleArity-N).fill(i_1))].
  * Else,
- * tupleIndices(paramTupleArity, firstTupleIndex, indices)
+ * computeTupleIndices(paramTupleArity, firstTupleIndex, indices)
  * === [indices.slice(0, paramTupleArity)]
  *		.concat(tupleIndices(
  *				     paramTupleArity,
@@ -42,9 +76,15 @@ export type TupleModuleOutputNamesType = ["tupleHash"];
  *				    [firstTupleIndex].concat(
 				 indices.slice(paramTupleArity)))).
  * Examples:
- * tupleIndices(2, 5, [1, 3, 4]) === [[1, 3], [5, 4]]
- * tupleIndices(3, 5, [0, 1, 4, 2]) === [[0, 1, 4], [5, 2, 0]]
- * tupleIndices(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
+ * computeTupleIndices(2, 5, [1, 3, 4]) === [[1, 3], [5, 4]]
+ * computeTupleIndices(3, 5, [0, 1, 4, 2]) === [[0, 1, 4], [5, 2, 0]]
+ * computeTupleIndices(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
+ *
+ * @param paramTupleArity the arity of the output tuple
+ * @param firstTupleIndex the index of the first output tuple
+ * @param indices the entry value indices forming the input tuple
+ * @returns list of index tuples of arity `paramTupleArity` representing the input tuple
+ * @throws RangeError if the parameters are not in the proper ranges.
  */
 export function computeTupleIndices(
   paramTupleArity: number,
@@ -64,29 +104,30 @@ export function computeTupleIndices(
   // Note the first index.
   const firstIndex = indices[0];
 
-  // Split `indices into appropriate chunks.
-  const [lastTuplePtr, tupleIndices] = indices.reduce(
-    (acc: [number, number[][]], i) => {
-      const [tupleCount, tupleIndices] = acc;
-      const lastTuplePtr = tupleIndices.length - 1;
-      const lastTuple = tupleIndices[lastTuplePtr];
-      return lastTuple.length < paramTupleArity
-        ? [
-            tupleCount,
-            tupleIndices.slice(0, lastTuplePtr).concat([lastTuple.concat([i])])
-          ]
-        : [
-            tupleCount + 1,
-            tupleIndices.concat([[firstTupleIndex + tupleCount, i]])
-          ];
-    },
-    [0, [[]]]
-  );
+  // The tuple indices will begin with the first `paramTupleArity` indices.
+  const tupleIndices = [indices.slice(0, paramTupleArity)];
 
-  // Pad the last tuple of `tupleIndices` with `firstIndex` if it is not of length `paramTupleArity` and return.
+  // If we have more than that,
+  if (indices.length > paramTupleArity) {
+    // split the remainder into `paramTupleArity - 1` sized chunks.
+    const unlinkedChunks = toChunks(
+      indices.slice(paramTupleArity),
+      paramTupleArity - 1
+    );
+
+    // Prepend the 'index' of the preceding tuple
+    // to each of these chunks and push them onto `tupleIndices`.
+    unlinkedChunks.forEach((chunk, i) =>
+      tupleIndices.push([firstTupleIndex + i].concat(chunk))
+    );
+  }
+
+  // Take note of the last tuple for padding purposes.
+  const lastTuplePtr = tupleIndices.length - 1;
   const lastTuple = tupleIndices[lastTuplePtr];
   const lastTupleLength = lastTuple.length;
 
+  // Pad the last tuple of `tupleIndices` with `firstIndex` if it is not of length `paramTupleArity` and return.
   const paddedTupleIndices =
     lastTupleLength < paramTupleArity
       ? tupleIndices
@@ -103,6 +144,10 @@ export function computeTupleIndices(
  * tuple down to one element, `paramTupleArity` elements at a time, via
  * the Poseidon hash function, padding the tuple with the hash of `values[0]`
  * if necessary.
+ *
+ * @param paramTupleArity the arity of the output tuple
+ * @param values the values forming the input tuple
+ * @returns appropriately-formed hash of the input tuple
  */
 export function hashTuple(paramTupleArity: number, values: PODValue[]): bigint {
   // First hash 'em all.

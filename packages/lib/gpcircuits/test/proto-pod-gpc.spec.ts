@@ -8,8 +8,7 @@ import path from "path";
 import { poseidon2 } from "poseidon-lite";
 import {
   CircuitArtifactPaths,
-  hashList,
-  padArray,
+  processLists,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
   ProtoPODGPCCircuitParams,
@@ -20,7 +19,9 @@ import {
   array2Bits,
   extendedSignalArray,
   gpcArtifactPaths,
-  protoPODGPCCircuitParamArray
+  maxTupleArity,
+  protoPODGPCCircuitParamArray,
+  zipLists
 } from "../src";
 import {
   circomkit,
@@ -33,6 +34,7 @@ import {
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
+const MAX_LISTS = 1;
 const MAX_LIST_ENTRIES = 10;
 const MAX_TUPLES = 2;
 const TUPLE_ARITY = 2;
@@ -41,6 +43,7 @@ const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_OBJECTS,
   MAX_ENTRIES,
   MERKLE_MAX_DEPTH,
+  MAX_LISTS,
   MAX_LIST_ENTRIES,
   MAX_TUPLES,
   TUPLE_ARITY
@@ -255,23 +258,25 @@ const sampleInput: ProtoPODGPCInputs = {
 
   // Tuple module (1)
   /*PUB*/ tupleIndices: [
-    [0, 3],
-    [10, 4]
+    [0n, 3n],
+    [10n, 4n]
   ],
 
   // List membership module (1)
-  /*PUB*/ memberIndex: 11,
+  /*PUB*/ memberIndex: [11n],
   /*PUB*/ membershipList: [
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    5627234783640014495730634314663457046633987290129261556210682514903827437201n,
-    15824265215470742900351319517403805905492337104347079586577312587220569618280n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-    8993031575169517501320565465605080718450193850910703654052189665847060371180n
+    [
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      5627234783640014495730634314663457046633987290129261556210682514903827437201n,
+      15824265215470742900351319517403805905492337104347079586577312587220569618280n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
+      8993031575169517501320565465605080718450193850910703654052189665847060371180n
+    ]
   ],
 
   // Global module (1)
@@ -435,7 +440,6 @@ function makeTestSignals(
     );
   }
 
-  // TODO: maxTuples = 0; maxLists = 0.
   // A list of pairs of indices and values.
   // The values will be zipped together to form the
   // actual membership list.
@@ -458,52 +462,40 @@ function makeTestSignals(
         return { type: "int", value: x };
       })
     ]
-  ].filter((pair) => sigEntryIsValueEnabled[pair[0]] === 1n);
+  ]
+    // Consider only those entry values that are enabled.
+    .filter((pair) => sigEntryIsValueEnabled[pair[0]] === 1n)
+    // Truncate tuple arity if necessary.
+    .slice(0, maxTupleArity(params.maxTuples, params.tupleArity));
 
-  // Form indices.
-  const memberIndex2 = listData.map((pair) => pair[0]);
-  const tupleList = listData
-    .map((pair) => pair[1])
-    .slice(1)
-    .reduce(
-      (list, values) => list.map((tuple, i) => tuple.concat([values[i]])),
-      listData[0][1].map((x) => [x])
-    );
+  // Form lists and indices.
+  const memberIndex1 = listData.map((pair) => pair[0]);
+  const list1 = zipLists(listData.map((pair) => pair[1]));
+  const [memberIndex2, list2] =
+    sigEntryIsValueEnabled[1] === 1n
+      ? [
+          [1],
+          [sigEntryValue[1], 19n, 7n, 0n, 12n, 13n].map((value) => {
+            return [{ type: "cryptographic", value }];
+          })
+        ]
+      : [[], []];
 
-  const hashedList = hashList(
-    params.maxEntries,
-    params.tupleArity,
-    params.maxListEntries,
-    params.maxEntries,
-    memberIndex2,
-    tupleList
+  // Form lists of indices and membership lists, truncating where
+  // necessary
+  const memberIndices = [memberIndex1, memberIndex2].slice(0, params.maxLists);
+  const membershipLists = [list1, list2]
+    // Truncate list of membership lists if necessary.
+    .slice(0, params.maxLists)
+    // Truncate membership lists if necessary.
+    .map((list) => list.slice(0, params.maxListEntries));
+
+  const { tupleIndices, memberIndex, membershipList } = processLists(
+    params,
+    memberIndices,
+    membershipLists
   );
 
-  const memberIndex = hashedList.memberIndex;
-  const tupleIndices = padArray(
-    hashedList.tupleIndices,
-    params.maxTuples,
-    padArray([], params.tupleArity, 0)
-  );
-  const membershipList = hashedList.membershipList;
-
-  // const [memberIndex, tupleIndices, membershipList] =
-  //   indexListPairs.length == 0
-  //     ? [
-  //         BABY_JUB_NEGATIVE_ONE,
-  //         Array(paramMaxTuples).fill(
-  //           Array(paramTupleArity).fill(BABY_JUB_NEGATIVE_ONE)
-  //         ),
-  //         Array(paramMaxListEntries).fill(0)
-  //       ]
-  //     : ListMembership.generateSignals(
-  //         indexListPairs.map((p) => p[0]),
-  //         indexListPairs.map((p) => p[1]),
-  //         paramMaxEntries,
-  //         paramTupleArity,
-  //         paramMaxListEntries,
-  //         paramMaxTuples
-  //     );
   return {
     inputs: {
       objectContentID: sigObjectContentID,
@@ -616,7 +608,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     //    expect(circuitDesc).to.not.be.undefined;
     if (!circuitDesc) {
       throw new Error(
-        `None of the circuit descriptions can accommodate for the following parameters: ${JSON.stringify(
+        `None of the circuit descriptions can accommodate the following parameters: ${JSON.stringify(
           params
         )}`
       );
@@ -700,6 +692,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
         cd,
         true /*isNullifierHashRevealed*/
       );
+
       await groth16Test(artifacts, inputs, outputs);
     }
   });

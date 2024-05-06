@@ -55,15 +55,6 @@ export function gpcArtifactPaths(
   };
 }
 
-// TODO: Combine with `extendedSignalArray`.
-/**
- * Returns a copy of `inputArray` padded to length `len` with padding
- * `padding`.
- */
-export function padArray<A>(inputArr: A[], len: number, padding: A): A[] {
-  return inputArr.concat(Array(len - inputArr.length).fill(padding));
-}
-
 /**
  * Splits an array `arr` into chunks of size
  * `n` in order. If `arr.length` is not a multiple of `n`,
@@ -120,21 +111,34 @@ export async function batchPromise<A, B>(
 
   return chunks.flat(); // Then concatenate the chunks.
 }
-/** Returns an array which is a copy of `inputArray` extended to `totalLength`,
- * with new values filled with `fillValue` (default 0).  Input array is
- * returned as-is if `totalLength` is not longer than its length.
+/**
+ * Returns an array which is a copy of `inputArray` extended to `totalLength`,
+ * with new values filled with `fillValue`.  Input array is returned as-is if
+ * `totalLength` is not longer than its length.
  */
-export function extendedSignalArray(
-  inputArray: CircuitSignal[],
+export function padArray<A>(
+  inputArray: A[],
   totalLength: number,
-  fillValue = 0n
-): CircuitSignal[] {
+  fillValue: A
+): A[] {
   if (totalLength <= inputArray.length) {
     return inputArray;
   }
   return inputArray.concat(
     new Array(totalLength - inputArray.length).fill(fillValue)
   );
+}
+
+/**
+ * Version of `padArray` specialised to `CircuitSignal` arrays with
+ * `0n` as default `fillValue`.
+ */
+export function extendedSignalArray(
+  inputArray: CircuitSignal[],
+  totalLength: number,
+  fillValue = 0n
+): CircuitSignal[] {
+  return padArray(inputArray, totalLength, fillValue);
 }
 
 /**
@@ -154,4 +158,31 @@ export function array2Bits(boolArray: bigint[]): bigint {
     }
   }
   return bits;
+}
+
+/**
+ * Zips up a list of lists, i.e. forms pairs, triples, ... from
+ * a list of two, three, ... lists.
+ * Examples:
+ * zipLists([[1, 2, 3], [4, 5, 6]]) === [[1,4], [2, 5], [3, 6]],
+ * zipLists([[99, 976], [3, 2], [4, 7]]) === [[99, 3, 4], [976, 2, 7]].
+ * Throws a `TypeError` if the lengths of the sublists are not all equal.
+ */
+export function zipLists<A>(lists: A[][]): A[][] {
+  if (lists.length === 0) {
+    return [];
+  }
+  const listLength = lists[0].length;
+  if (lists.slice(1).some((list) => list.length !== listLength)) {
+    throw new TypeError("All lists must be of the same length.");
+  }
+  return (
+    lists
+      // Embed each element of each sublist into an array.
+      .map((list) => list.map((x) => [x]))
+      .reduce((zippedList, list) =>
+        // Concatenate each of these sublist elements to each other.
+        zippedList.map((tuple, i) => tuple.concat(list[i]))
+      )
+  );
 }

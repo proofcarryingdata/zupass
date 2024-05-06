@@ -4,7 +4,6 @@ import { Identity } from "@semaphore-protocol/identity";
 import { Circomkit } from "circomkit";
 import { readFileSync } from "fs";
 import path from "path";
-import { CircuitSignal, padArray } from "../src";
 
 const configFilePath = path.join(__dirname, "../circomkit.json");
 const config = JSON.parse(readFileSync(configFilePath, "utf-8"));

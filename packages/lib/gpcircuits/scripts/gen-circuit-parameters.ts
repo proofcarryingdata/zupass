@@ -17,9 +17,11 @@ import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 // `yarn gen-circuit-parameters`.
 // Circuit parameters used to generate artifacts.
 const CIRCUIT_PARAMETERS = [
-  [1, 1, 5, 10, 2, 2],
-  [1, 5, 6, 10, 2, 2],
-  [3, 10, 8, 10, 2, 2]
+  [1, 1, 5, 1, 10, 2, 2],
+  [1, 5, 6, 1, 10, 2, 2],
+  [3, 10, 8, 1, 10, 2, 2],
+  [3, 10, 8, 2, 20, 1, 4],
+  [5, 20, 10, 3, 20, 4, 3]
 ];
 
 const projectDir = path.join(__dirname, "..");

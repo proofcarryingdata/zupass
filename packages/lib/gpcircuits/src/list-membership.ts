@@ -1,7 +1,9 @@
+import { ProtoPODGPCCircuitParams } from "./proto-pod-gpc";
 import { CircuitSignal } from "./types";
 import { PODValue, podValueHash } from "@pcd/pod";
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { computeTupleIndices, hashTuple } from "./tuple";
-import { padArray } from "./util";
+import { extendedSignalArray, padArray } from "./util";
 
 export type ListMembershipModuleInputs = {
   value: CircuitSignal;
@@ -14,11 +16,96 @@ export type ListMembershipModuleOutputs = { isMember: CircuitSignal };
 
 export type ListMembershipModuleOutputNamesType = ["isMember"];
 
-// TODO: Rename to prepareList?
-export function hashList(
-  paramMaxEntries: number,
-  paramTupleArity: number,
-  paramMaxListEntries: number,
+/**
+ * Processes several membership lists of tuples together with
+ * the corresponding entry value indices by means of successive
+ * applications of {@link processSingleList}.
+ *
+ * @param params parameters of the ProtoPODGPC the list is processed for
+ * @param memberIndices the indices of the entry values (or tuples) each of which is a member of the corresponding list
+ * @param lists the membership lists of tuples
+ * @returns list of tuple indices of arity `params.tupleArity` representing the input tuples,
+ * numbers representing the indices of the entry values/entry value tuples which are members
+ *  of the lists, and the membership lists in hashed form.
+ * @throws RangeError if any of the indices are out of bounds.
+ * @throws TypeError if the list and index arrays are malformed.
+ */
+export function processLists(
+  params: ProtoPODGPCCircuitParams,
+  memberIndices: number[][],
+  lists: PODValue[][][]
+): {
+  tupleIndices: CircuitSignal[][];
+  memberIndex: CircuitSignal[];
+  membershipList: CircuitSignal[][];
+} {
+  let firstTupleIndex = params.maxEntries;
+  const unpaddedOutputObject: {
+    tupleIndices: CircuitSignal[][];
+    memberIndices: CircuitSignal[];
+    membershipLists: CircuitSignal[][];
+  } = {
+    tupleIndices: [],
+    memberIndices: [],
+    membershipLists: []
+  };
+
+  for (let i = 0; i < memberIndices.length; i++) {
+    const processedList = processSingleList(
+      params,
+      firstTupleIndex,
+      memberIndices[i],
+      lists[i]
+    );
+    processedList.tupleIndices.forEach((indexTuple: number[]) =>
+      unpaddedOutputObject.tupleIndices.push(indexTuple.map(BigInt))
+    );
+    unpaddedOutputObject.memberIndices.push(BigInt(processedList.memberIndex));
+    unpaddedOutputObject.membershipLists.push(processedList.membershipList);
+    firstTupleIndex += processedList.tupleIndices.length;
+  }
+
+  // Pad and return
+  return {
+    tupleIndices: padArray(
+      unpaddedOutputObject.tupleIndices,
+      params.maxTuples,
+      extendedSignalArray([], params.tupleArity)
+    ),
+    memberIndex: extendedSignalArray(
+      unpaddedOutputObject.memberIndices,
+      params.maxLists,
+      BABY_JUB_NEGATIVE_ONE
+    ),
+    membershipList: padArray(
+      unpaddedOutputObject.membershipLists,
+      params.maxLists,
+      extendedSignalArray([], params.maxListEntries)
+    )
+  };
+}
+
+/**
+ * Processes a single membership list together with the (multi-)index
+ * of the entry value (or entry value tuple) that ought to
+ * be a member of this list. This is done by means of appropriate
+ * applications of {@link hashTuple} and {@link computeTupleIndices}.
+ * If no tuples are involved, then both `memberIndex` and `list` are
+ * singletons.
+ *
+ * @param params parameters of the ProtoPODGPC the list is processed for
+ * @param firstTupleIndex the index of the first output tuple
+ * @param memberIndex the index of the entry value (or tuple) which is a member of the list
+ * @param list the membership list of tuples
+ * @returns list of tuple indices of arity `params.tupleArity` representing the input tuple,
+ * number representing the index of the entry value (tuple) which is a member of
+ * the list, and the membership list in hashed form.
+ * @throws RangeError if any of the indices are out of bounds with respect
+ * to the given parameters.
+ * @throws TypeError if the list and index arrays are malformed.
+ */
+export function processSingleList(
+  params: ProtoPODGPCCircuitParams,
   firstTupleIndex: number,
   memberIndex: number[],
   list: PODValue[][]
@@ -34,7 +121,7 @@ export function hashList(
   }
 
   // Check bounds
-  if (memberIndex.some((i) => i >= paramMaxEntries)) {
+  if (memberIndex.some((i) => i >= params.maxEntries)) {
     throw new RangeError(`Member index ${memberIndex} out of bounds.`);
   }
 
@@ -45,19 +132,19 @@ export function hashList(
 
   if (memberIndexIsTuple) {
     const tupleIndices = computeTupleIndices(
-      paramTupleArity,
+      params.tupleArity,
       firstTupleIndex,
       memberIndex
     );
     const unpaddedMembershipList = list.map((l) =>
-      hashTuple(paramTupleArity, l)
+      hashTuple(params.tupleArity, l)
     );
     return {
       tupleIndices: tupleIndices,
       memberIndex: firstTupleIndex + tupleIndices.length - 1,
       membershipList: padArray(
         unpaddedMembershipList,
-        paramMaxListEntries,
+        params.maxListEntries,
         unpaddedMembershipList[0]
       )
     };
@@ -68,7 +155,7 @@ export function hashList(
       memberIndex: memberIndex[0],
       membershipList: padArray(
         unpaddedMembershipList,
-        paramMaxListEntries,
+        params.maxListEntries,
         unpaddedMembershipList[0]
       )
     };
