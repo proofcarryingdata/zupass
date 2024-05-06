@@ -1,4 +1,3 @@
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import {
@@ -49,7 +48,7 @@ describe("list-membership.ListMembershipModule should work", function () {
   };
 
   this.beforeAll(async () => {
-    circuit = async (n) =>
+    circuit = async (n: number): Promise<WitnessTester> =>
       await circomkit.WitnessTester("ListMembershipModule", {
         file: "list-membership",
         template: "ListMembershipModule",
