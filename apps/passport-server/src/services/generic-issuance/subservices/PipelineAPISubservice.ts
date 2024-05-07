@@ -568,7 +568,6 @@ export class PipelineAPISubservice {
 
         for (const capability of pipeline?.instance?.capabilities ?? []) {
           if (isCheckinCapability(capability)) {
-            tracePipeline(pipeline.definition);
             offlineTickets.push(
               ...(await capability.getOfflineTickets(emailAddress))
             );

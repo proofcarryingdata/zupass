@@ -21,8 +21,7 @@ import { pollUser } from "./user";
 
 /**
  * To set up usingLaserScanning local storage, which turns off the camera
- * on the scan screen so the laser scanner can be used. This flag will be
- * exclusively used on the Devconnect laser scanning devices.
+ * on the scan screen so the laser scanner can be used.
  */
 function setupUsingLaserScanning(): void {
   const queryParams = new URLSearchParams(window.location.search.slice(1));

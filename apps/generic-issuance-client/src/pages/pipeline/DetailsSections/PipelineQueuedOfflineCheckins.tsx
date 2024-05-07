@@ -1,5 +1,6 @@
 import { Button } from "@chakra-ui/react";
 import { PipelineOfflineCheckin } from "@pcd/passport-interface";
+import { getErrorMessage } from "@pcd/util";
 import { ReactNode, useCallback } from "react";
 import styled from "styled-components";
 import { deleteOfflineCheckin } from "../../../helpers/Mutations";
@@ -32,15 +33,23 @@ export function PipelineQueuedOfflineCheckinsSection({
       ) {
         deleteOfflineCheckin(userJWT, pipelineId, ticketId)
           .then(() => window.location.reload())
-          .catch(() =>
-            window.alert("Error occured when deleting offline check-in")
+          .catch((e: unknown) =>
+            window.alert(
+              `Error occured when deleting offline check-in: ${getErrorMessage(
+                e
+              )}`
+            )
           );
       }
     },
     [pipelineId, userJWT]
   );
 
-  if (!queuedOfflineCheckins || queuedOfflineCheckins.length === 0) {
+  if (!queuedOfflineCheckins) {
+    return <div>This pipeline does not support offline check-in.</div>;
+  }
+
+  if (queuedOfflineCheckins.length === 0) {
     return (
       <div>
         There are no offline check-ins queued for synchronization with the
