@@ -404,30 +404,16 @@ describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async fun
         n.toString(16).padStart(64, "0")
       );
 
-      const pubFromString = await getEdDSAPublicKey(testPrivateKey);
+      const pubFromString = publicKeyToArrayFormat(
+        await getEdDSAPublicKey(testPrivateKey)
+      );
       expect(pubFromString).to.deep.eq(stringifiedPublicKey);
 
-      const pubFromBuffer = await getEdDSAPublicKey(
-        fromHexString(testPrivateKey)
+      const pubFromBuffer = publicKeyToArrayFormat(
+        await getEdDSAPublicKey(fromHexString(testPrivateKey))
       );
       expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
     }
-
-    // EdDSAPCD represents its signatures as an EC point (2 field elements)
-    // in an array, with each element being 32 bytes encoded as 64 hex digits.
-    const stringifiedPublicKey = unpackedPublicKey.map((n) =>
-      n.toString(16).padStart(64, "0")
-    );
-
-    const pubFromString = publicKeyToArrayFormat(
-      await getEdDSAPublicKey(privateKey)
-    );
-    expect(pubFromString).to.deep.eq(stringifiedPublicKey);
-
-    const pubFromBuffer = publicKeyToArrayFormat(
-      await getEdDSAPublicKey(fromHexString(privateKey))
-    );
-    expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
   });
 
   it("EdDSA signing should match", async function () {
