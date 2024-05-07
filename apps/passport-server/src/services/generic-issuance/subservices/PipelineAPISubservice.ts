@@ -540,7 +540,14 @@ export class PipelineAPISubservice {
   }
 
   /**
-   * todo a comment
+   * Returns offline tickets that this user is entitled to check in.
+   * Because the client does not know about the existence of pipelines, we have
+   * to find the relevant pipelines by requesting tickets from each one. They
+   * will return any tickets which the user, identified by email address, has
+   * the capability to check in.
+   *
+   * This is acceptable for now but the overhead will eventually become large
+   * once we have many pipelines.
    */
   public async handleGetOfflineTickets(
     request: PodboxGetOfflineTicketsRequest
@@ -555,7 +562,7 @@ export class PipelineAPISubservice {
             request.credential
           )
         ).emailClaim.emailAddress;
-      } catch (_e) {
+      } catch {
         throw new PCDHTTPError(401, "Not authorized");
       }
 
@@ -581,11 +588,20 @@ export class PipelineAPISubservice {
     });
   }
 
+  /**
+   * Handles the upload of tickets for offline check-in.
+   *
+   * The client has already grouped the tickets by event, which allows us to
+   * quickly find the appropriate pipeline by asking each pipeline if it
+   * supports the event. Being able to route check-ins more efficiently to
+   * pipelines would be useful, and future ticket designs should make this
+   * possible.
+   */
   public async handleCheckInOfflineTickets(
     request: PodboxCheckInOfflineTicketsRequest
   ): Promise<PodboxCheckInOfflineTicketsResponseValue> {
-    return traced(SERVICE_NAME, "handleGetOfflineTickets", async (span) => {
-      logger(LOG_TAG, "handleGetOfflineTickets", str(request));
+    return traced(SERVICE_NAME, "handleCheckInOfflineTickets", async (span) => {
+      logger(LOG_TAG, "handleCheckInOfflineTickets", str(request));
 
       let emailAddress;
       try {
