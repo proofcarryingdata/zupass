@@ -13,7 +13,7 @@ const testArtifactDir = path.join(artifactDir, "test");
 
 async function main(): Promise<void> {
   // Delete old artifacts
-  if (await fsExists(testArtifactDir)) {
+  if (fsExists(testArtifactDir)) {
     await clearDir(testArtifactDir);
   } else {
     await fs.mkdir(testArtifactDir, { recursive: true });

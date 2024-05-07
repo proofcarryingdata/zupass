@@ -29,7 +29,7 @@ const circuitDir = path.join(projectDir, "circuits", "main");
 
 async function main(): Promise<void> {
   // Delete old circuits
-  if (await fsExists(circuitDir)) {
+  if (fsExists(circuitDir)) {
     await clearDir(circuitDir);
   }
 

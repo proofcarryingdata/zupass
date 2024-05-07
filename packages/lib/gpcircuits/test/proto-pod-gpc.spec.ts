@@ -1,4 +1,10 @@
-import { POD, PODContent, decodePublicKey, decodeSignature } from "@pcd/pod";
+import {
+  POD,
+  PODContent,
+  PODValue,
+  decodePublicKey,
+  decodeSignature
+} from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
@@ -376,7 +382,7 @@ function makeTestSignals(
   const sigEntryObjectIndex = [];
   const sigEntryNameHash = [];
   const sigEntryValue = [];
-  const sigEntryIsValueEnabled = [];
+  const sigEntryIsValueEnabled: bigint[] = [];
   const sigEntryIsValueHashRevealed = [];
   const sigEntryRevealedValueHash = [];
   const sigEntryEqualToOtherEntryByIndex = [];
@@ -463,6 +469,7 @@ function makeTestSignals(
       })
     ]
   ]
+    .map((pair) => pair as [number, PODValue[]])
     // Consider only those entry values that are enabled.
     .filter((pair) => sigEntryIsValueEnabled[pair[0]] === 1n)
     // Truncate tuple arity if necessary.
@@ -471,7 +478,7 @@ function makeTestSignals(
   // Form lists and indices.
   const memberIndex1 = listData.map((pair) => pair[0]);
   const list1 = zipLists(listData.map((pair) => pair[1]));
-  const [memberIndex2, list2] =
+  const [memberIndex2, list2]: [number[], PODValue[][]] =
     sigEntryIsValueEnabled[1] === 1n
       ? [
           [1],

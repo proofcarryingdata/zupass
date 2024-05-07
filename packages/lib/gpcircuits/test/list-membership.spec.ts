@@ -11,9 +11,13 @@ import { circomkit } from "./common";
 
 describe("list-membership.ListMembershipModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  let circuit: WitnessTester<
-    ListMembershipModuleInputNamesType,
-    ListMembershipModuleOutputNamesType
+  let circuit: (
+    n: number
+  ) => Promise<
+    WitnessTester<
+      ListMembershipModuleInputNamesType,
+      ListMembershipModuleOutputNamesType
+    >
   >;
 
   // Here the list of admissible values contains only 5 elements.
@@ -40,16 +44,16 @@ describe("list-membership.ListMembershipModule should work", function () {
   };
 
   const sampleOutput: ListMembershipModuleOutputs = {
-    isMember: +true
+    isMember: BigInt(+true)
   };
 
   const sampleOutput2: ListMembershipModuleOutputs = {
-    isMember: +false
+    isMember: BigInt(+false)
   };
 
   this.beforeAll(async () => {
-    circuit = async (n: number): Promise<WitnessTester> =>
-      await circomkit.WitnessTester("ListMembershipModule", {
+    circuit = (n): Promise<WitnessTester> =>
+      circomkit.WitnessTester("ListMembershipModule", {
         file: "list-membership",
         template: "ListMembershipModule",
         params: [n]
