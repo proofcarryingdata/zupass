@@ -2002,7 +2002,7 @@ export class LemonadePipeline implements BasePipeline {
 
     // Return any event/product combinations for which the user has a superuser
     // ticket.
-    return this.definition.options.events.reduce((memo, eventConfig) => {
+    return this.definition.options.events.flatMap((eventConfig) => {
       if (
         // Does the user own a superuser product for this event?
         eventConfig.ticketTypes.some(
@@ -2011,16 +2011,12 @@ export class LemonadePipeline implements BasePipeline {
             checkerProductIds.includes(ticketType.genericIssuanceProductId)
         )
       ) {
-        // In that case, they can check in any of the product types for this event
-        memo.push(
-          ...eventConfig.ticketTypes.map((ticketType) => ({
-            eventId: eventConfig.genericIssuanceEventId,
-            productId: ticketType.genericIssuanceProductId
-          }))
-        );
+        // By not specifying a product ID, we are indicating that *all*
+        // products can be checked in by this user.
+        return [{ eventId: eventConfig.genericIssuanceEventId }];
       }
-      return memo;
-    }, [] as MemberCriteria[]);
+      return [];
+    });
   }
 
   /**

@@ -1965,29 +1965,28 @@ export class PretixPipeline implements BasePipeline {
       }
     }
 
-    // Return any event/product combinations for which the user has a superuser
-    // ticket.
-    return this.definition.options.events.reduce((memo, eventConfig) => {
-      if (
-        // Does the user own a superuser product for this event?
-        eventConfig.products.some(
-          (product) =>
-            product.isSuperUser &&
-            checkerTickets.find(
-              (ticket) => ticket.productId === product.genericIssuanceId
-            )
-        )
-      ) {
-        // In that case, they can check in any of the product types for this event
-        memo.push(
-          ...eventConfig.products.map((product) => ({
-            eventId: eventConfig.genericIssuanceId,
-            productId: product.genericIssuanceId
-          }))
-        );
-      }
-      return memo;
-    }, permittedTickets);
+    permittedTickets.push(
+      // Return any event/product combinations for which the user has a superuser
+      // ticket.
+      ...this.definition.options.events.flatMap((eventConfig) => {
+        if (
+          // Does the user own a superuser product for this event?
+          eventConfig.products.some(
+            (product) =>
+              product.isSuperUser &&
+              checkerTickets.find(
+                (ticket) => ticket.productId === product.genericIssuanceId
+              )
+          )
+        ) {
+          // In that case, they can check in any of the product types for this event
+          return [{ eventId: eventConfig.genericIssuanceId }];
+        }
+        return [];
+      })
+    );
+
+    return permittedTickets;
   }
 
   /**
@@ -2001,7 +2000,7 @@ export class PretixPipeline implements BasePipeline {
 
       if (this.definition.options.offlineCheckin === undefined) {
         throw new PCDHTTPError(
-          401,
+          400,
           "Offline check-in is not enabled for this pipeline"
         );
       }
@@ -2090,7 +2089,7 @@ export class PretixPipeline implements BasePipeline {
 
       if (this.definition.options.offlineCheckin === undefined) {
         throw new PCDHTTPError(
-          401,
+          400,
           "Offline check-in is not enabled for this pipeline"
         );
       }
