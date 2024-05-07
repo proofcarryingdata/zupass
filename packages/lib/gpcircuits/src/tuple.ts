@@ -63,11 +63,9 @@ export function maxTupleArity(
  * tuples of arity `paramMaxArity`, where these tuples
  * are indexed starting at `firstTupleIndex` and the
  * first index is used as padding. More concretely,
- * Given indices [i_1, ..., i_N], if N <= `paramTupleArity`
- * then
+ * Given indices [i_1, ..., i_N], if N <= `paramTupleArity`,
  * computeTupleIndices(paramTupleArity, firstTupleIndex, indices)
- *  === [[i_1, ..., i_N].concat(Array(paramTupleArity-N).fill(i_1))].
- * Else,
+ *  === padArray([i_1, ..., i_N], paramTupleArity, i_1), else
  * computeTupleIndices(paramTupleArity, firstTupleIndex, indices)
  * === [indices.slice(0, paramTupleArity)]
  *		.concat(tupleIndices(
@@ -81,7 +79,8 @@ export function maxTupleArity(
  * computeTupleIndices(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
  *
  * @param paramTupleArity the arity of the output tuple
- * @param firstTupleIndex the index of the first output tuple
+ * @param firstTupleIndex the index of the first output tuple in the combined array of
+ * entry and tuple value hashes
  * @param indices the entry value indices forming the input tuple
  * @returns list of index tuples of arity `paramTupleArity` representing the input tuple
  * @throws RangeError if the parameters are not in the proper ranges.

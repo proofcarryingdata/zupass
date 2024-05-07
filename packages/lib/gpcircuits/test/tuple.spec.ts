@@ -1,12 +1,149 @@
+import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
+import { poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
 import {
+  computeTupleIndices,
+  hashTuple,
+  maxTupleArity,
+  requiredNumTuples,
   TupleModuleInputNamesType,
   TupleModuleInputs,
   TupleModuleOutputNamesType,
   TupleModuleOutputs
 } from "../src";
 import { circomkit } from "./common";
+import { PODValue, podValueHash } from "@pcd/pod";
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
+
+describe("Tuple helpers should work", function () {
+  it("should compute the right number of required tuples for different input tuple arities", () => {
+    [
+      [2, 2, 1],
+      [3, 3, 1],
+      [4, 4, 1],
+      [2, 5, 4],
+      [3, 5, 2],
+      [4, 5, 2]
+    ].forEach((triple) =>
+      expect(requiredNumTuples(triple[0], triple[1])).to.equal(triple[2])
+    );
+  });
+
+  it("should compute the right maximum tuple arity representable by different parameters", () => {
+    [
+      [1, 2, 2],
+      [1, 3, 3],
+      [1, 4, 4],
+      [4, 2, 5],
+      [2, 3, 5],
+      [2, 4, 7]
+    ].forEach((triple) =>
+      expect(maxTupleArity(triple[0], triple[1])).to.equal(triple[2])
+    );
+  });
+
+  it("should compute the right tuple indices for different input tuples and parameters", () => {
+    [
+      [2, 4, [0, 1], [[0, 1]]],
+      [3, 4, [0, 1, 2], [[0, 1, 2]]],
+      [4, 4, [0, 1, 2, 3], [[0, 1, 2, 3]]],
+      [
+        2,
+        5,
+        [1, 3, 4],
+        [
+          [1, 3],
+          [5, 4]
+        ]
+      ],
+      [
+        3,
+        5,
+        [0, 1, 4, 2],
+        [
+          [0, 1, 4],
+          [5, 2, 0]
+        ]
+      ],
+      [
+        4,
+        6,
+        [3, 4, 2, 1, 5],
+        [
+          [3, 4, 2, 1],
+          [6, 5, 3, 3]
+        ]
+      ]
+    ]
+      .map((quadruple) => quadruple as [number, number, number[], number[][]])
+      .forEach((quadruple) =>
+        expect(
+          computeTupleIndices(quadruple[0], quadruple[1], quadruple[2])
+        ).to.deep.equal(quadruple[3])
+      );
+  });
+
+  it("should compute the right tuple hashes", () => {
+    const input = [98n, 37n, 0n, BABY_JUB_NEGATIVE_ONE];
+    const inputAsInts: PODValue[] = input.map((value) => {
+      return { type: "int", value };
+    });
+    const inputAsCryptographics: PODValue[] = input.map((value) => {
+      return { type: "cryptographic", value };
+    });
+    const inputAsStrings: PODValue[] = input.map((value) => {
+      return { type: "string", value: value.toString() };
+    });
+    for (const input of [inputAsInts, inputAsCryptographics, inputAsStrings]) {
+      const inputHashes = input.map(podValueHash);
+      [
+        [2, input.slice(0, 2), poseidon2(inputHashes.slice(0, 2))],
+        [3, input.slice(0, 3), poseidon3(inputHashes.slice(0, 3))],
+        [4, input, poseidon4(inputHashes)],
+        [
+          2,
+          input,
+          poseidon2([
+            poseidon2([
+              poseidon2([inputHashes[0], inputHashes[1]]),
+              inputHashes[2]
+            ]),
+            inputHashes[3]
+          ])
+        ],
+        [
+          3,
+          input,
+          poseidon3([
+            poseidon3([inputHashes[0], inputHashes[1], inputHashes[2]]),
+            inputHashes[3],
+            inputHashes[0]
+          ])
+        ],
+        [
+          4,
+          input.concat([input[1]]),
+          poseidon4([
+            poseidon4([
+              inputHashes[0],
+              inputHashes[1],
+              inputHashes[2],
+              inputHashes[3]
+            ]),
+            inputHashes[1],
+            inputHashes[0],
+            inputHashes[0]
+          ])
+        ]
+      ]
+        .map((triple) => triple as [number, PODValue[], bigint])
+        .forEach((triple) =>
+          expect(hashTuple(triple[0], triple[1])).to.equal(triple[2])
+        );
+    }
+  });
+});
 
 describe("tuple.TupleModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
