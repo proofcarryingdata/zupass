@@ -51,17 +51,25 @@ export function processLists(
   };
 
   for (let i = 0; i < memberIndices.length; i++) {
+    // Process each of the lists
     const processedList = processSingleList(
       params,
       firstTupleIndex,
       memberIndices[i],
       lists[i]
     );
+
+    // Push tuple indices as bigints.
     processedList.tupleIndices.forEach((indexTuple: number[]) =>
       unpaddedOutputObject.tupleIndices.push(indexTuple.map(BigInt))
     );
+    // Push member indices as bigints.
     unpaddedOutputObject.memberIndices.push(BigInt(processedList.memberIndex));
+
+    // Push the hashed membership list.
     unpaddedOutputObject.membershipLists.push(processedList.membershipList);
+
+    // Increment the first tuple index.
     firstTupleIndex += processedList.tupleIndices.length;
   }
 
@@ -70,16 +78,19 @@ export function processLists(
     tupleIndices: padArray(
       unpaddedOutputObject.tupleIndices,
       params.maxTuples,
+      // Pad with tuples of 0.
       extendedSignalArray([], params.tupleArity)
     ),
     memberIndex: extendedSignalArray(
       unpaddedOutputObject.memberIndices,
       params.maxLists,
+      // Pad with -1 (mod p).
       BABY_JUB_NEGATIVE_ONE
     ),
     membershipList: padArray(
       unpaddedOutputObject.membershipLists,
       params.maxLists,
+      // Pad with lists of zeroes.
       extendedSignalArray([], params.maxListEntries)
     )
   };
@@ -164,6 +175,7 @@ export function processSingleList(
       membershipList: padArray(
         unpaddedMembershipList,
         params.maxListEntries,
+        // Pad with first entry in the list.
         unpaddedMembershipList[0]
       )
     };
