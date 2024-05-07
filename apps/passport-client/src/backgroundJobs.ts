@@ -13,7 +13,6 @@ import {
   setupBroadcastChannel
 } from "./broadcastChannel";
 import {
-  saveCheckedInPodboxOfflineTickets,
   savePodboxOfflineTickets,
   saveUsingLaserScanner
 } from "./localstorage";
@@ -174,19 +173,11 @@ export function useBackgroundJobs(): void {
           },
           {} as Record<string, string[]>
         );
-        const checkInOfflineTicketsResult =
-          await requestPodboxCheckInOfflineTickets(
-            appConfig.zupassServer,
-            await credentialManager.requestCredential(
-              PODBOX_CREDENTIAL_REQUEST
-            ),
-            ticketsByEvent
-          );
-
-        if (checkInOfflineTicketsResult.success) {
-          update({ checkedInOfflinePodboxTickets: [] });
-          saveCheckedInPodboxOfflineTickets(undefined);
-        }
+        await requestPodboxCheckInOfflineTickets(
+          appConfig.zupassServer,
+          await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
+          ticketsByEvent
+        );
       }
 
       const offlineTicketsResult = await requestPodboxGetOfflineTickets(

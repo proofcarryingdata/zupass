@@ -1,10 +1,6 @@
 import {
   CredentialCache,
   FeedSubscriptionManager,
-  KnownPublicKey,
-  KnownTicketType,
-  OfflineDevconnectTicket,
-  OfflineTickets,
   PodboxOfflineTicket,
   User
 } from "@pcd/passport-interface";
@@ -112,14 +108,9 @@ export interface AppState {
   // point where we know our state was the same as the server.
   serverStorageHash?: string;
 
-  knownTicketTypes?: KnownTicketType[];
-  knownPublicKeys?: Record<string, Record<string, KnownPublicKey>>;
-
   podboxOfflineTickets: PodboxOfflineTicket[];
   checkedInOfflinePodboxTickets: PodboxOfflineTicket[];
 
-  offlineTickets: OfflineTickets;
-  checkedinOfflineDevconnectTickets: OfflineDevconnectTicket[];
   offline: boolean;
 
   // @todo screen-specific data should perhaps have a structure similar to

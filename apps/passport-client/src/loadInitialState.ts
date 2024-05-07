@@ -1,11 +1,9 @@
 import { createStorageBackedCredentialCache } from "@pcd/passport-interface";
 import { Identity } from "@semaphore-protocol/identity";
 import {
-  loadCheckedInOfflineDevconnectTickets,
   loadCheckedInPodboxOfflineTickets,
   loadEncryptionKey,
   loadIdentity,
-  loadOfflineTickets,
   loadPCDs,
   loadPersistentSyncStatus,
   loadPodboxOfflineTickets,
@@ -29,10 +27,7 @@ export async function loadInitialState(): Promise<AppState> {
   const pcds = await loadPCDs(self);
   const encryptionKey = loadEncryptionKey();
   const subscriptions = await loadSubscriptions();
-  const offlineTickets = loadOfflineTickets();
   const podboxOfflineTickets = loadPodboxOfflineTickets();
-  const checkedInOfflineDevconnectTickets =
-    loadCheckedInOfflineDevconnectTickets();
   const checkedInOfflinePodboxTickets = loadCheckedInPodboxOfflineTickets();
 
   let modal = { modalType: "none" } as AppState["modal"];
@@ -60,9 +55,7 @@ export async function loadInitialState(): Promise<AppState> {
     subscriptions,
     resolvingSubscriptionId: undefined,
     credentialCache,
-    offlineTickets,
     podboxOfflineTickets,
-    checkedinOfflineDevconnectTickets: checkedInOfflineDevconnectTickets,
     checkedInOfflinePodboxTickets,
     offline: !window.navigator.onLine,
     serverStorageRevision: persistentSyncStatus.serverStorageRevision,

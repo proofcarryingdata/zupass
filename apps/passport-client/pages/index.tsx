@@ -38,9 +38,8 @@ import { MissingScreen } from "../components/screens/MissingScreen";
 import { NoWASMScreen } from "../components/screens/NoWASMScreen";
 import { ProveScreen } from "../components/screens/ProveScreen/ProveScreen";
 import { ScanScreen } from "../components/screens/ScanScreen";
-import { DevconnectCheckinByIdScreen } from "../components/screens/ScannedTicketScreens/DevconnectCheckinByIdScreen";
+import { ExpiredTicketScreen } from "../components/screens/ScannedTicketScreens/ExpiredTicket";
 import { PodboxScannedTicketScreen } from "../components/screens/ScannedTicketScreens/PodboxScannedTicketScreen/PodboxScannedTicketScreen";
-import { SecondPartyTicketVerifyScreen } from "../components/screens/ScannedTicketScreens/SecondPartyTicketVerifyScreen";
 import { ServerErrorScreen } from "../components/screens/ServerErrorScreen";
 import { SubscriptionsScreen } from "../components/screens/SubscriptionsScreen";
 import { TermsScreen } from "../components/screens/TermsScreen";
@@ -136,14 +135,6 @@ function RouterImpl(): JSX.Element {
           <Route path="add" element={<AddScreen />} />
           <Route path="prove" element={<ProveScreen />} />
           <Route path="scan" element={<ScanScreen />} />
-          {/* This route is used by non-Devconnect tickets */}
-          <Route path="verify" element={<SecondPartyTicketVerifyScreen />} />
-          {/* This route is used to check in a Devconnect ticket with only
-              the ticket ID in the parameters */}
-          <Route
-            path="checkin-by-id"
-            element={<DevconnectCheckinByIdScreen />}
-          />
           <Route path="subscriptions" element={<SubscriptionsScreen />} />
           <Route path="add-subscription" element={<AddSubscriptionScreen />} />
           <Route path="telegram" element={<HomeScreen />} />
@@ -159,6 +150,7 @@ function RouterImpl(): JSX.Element {
             path="generic-checkin"
             element={<PodboxScannedTicketScreen />}
           />
+          <Route path="expired-ticket" element={<ExpiredTicketScreen />} />
           <Route path="*" element={<MissingScreen />} />
         </Route>
       </Routes>
