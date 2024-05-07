@@ -115,13 +115,13 @@
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_5o-20e-10md-3l-20le-4t-3ta": {
+  "proto-pod-gpc_5o-15e-9md-3l-20le-4t-3ta": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       5,
-      20,
-      10,
+      15,
+      9,
       3,
       20,
       4,

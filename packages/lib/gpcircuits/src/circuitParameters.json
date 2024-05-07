@@ -50,13 +50,13 @@
   [
     {
       "maxObjects": 5,
-      "maxEntries": 20,
-      "merkleMaxDepth": 10,
+      "maxEntries": 15,
+      "merkleMaxDepth": 9,
       "maxLists": 3,
       "maxListEntries": 20,
       "maxTuples": 4,
       "tupleArity": 3
     },
-    78166
+    60516
   ]
 ]
