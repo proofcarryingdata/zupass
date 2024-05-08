@@ -1,6 +1,13 @@
+import { CircomkitConfig } from "circomkit";
 import * as fastfile from "fastfile";
+import { PathLike } from "fs";
+import path from "path";
 import { CircuitArtifactPaths, CircuitDesc, CircuitSignal } from "./types";
 
+/**
+ * Represents a pre-loaded verification key to be passed to SnarkJS, as loaded
+ * by {@link loadVerificationKey}.
+ */
 export type VerificationKey = object;
 
 /**
@@ -132,17 +139,66 @@ export function extendedSignalArray(
  * Convert an array of bit signals into a single packed bigint.
  * This will throw an Error if any of the elements is not 0 or 1.
  */
-export function array2Bits(boolArray: bigint[]): bigint {
+export function array2Bits(boolArray: CircuitSignal[]): bigint {
   let bits = 0n;
   for (let i = 0; i < boolArray.length; i++) {
-    if (boolArray[i] !== 0n && boolArray[i] !== 1n) {
+    if (BigInt(boolArray[i]) !== 0n && BigInt(boolArray[i]) !== 1n) {
       throw new Error(
         `Input to array2Bits must be 0n or 1n not ${boolArray[i]}.`
       );
     }
-    if (boolArray[i] === 1n) {
+    if (BigInt(boolArray[i]) === 1n) {
       bits |= 1n << BigInt(i);
     }
   }
   return bits;
+}
+
+/**
+ * Loads the configuration for Circomkit for use in unit tests or scripts.
+ * All paths in the config will be fixed up to be based on the given package
+ * path, rather than relative to the current working directory.
+ *
+ * @param gpcircuitsPackagePath file path to the root of the gpcircuits
+ *   package in the repo
+ * @param readFileSync callable function for readFileSync, or a compatible
+ *   replacement in browser.  This is necessary to avoid polyfill errors since
+ *   this function is intended for utests, but included in a library which
+ *   can be loaded in a browser.
+ * @returns a Circomkit config object suitable for the Circomkit constructor.
+ */
+export function loadCircomkitConfig(
+  gpcircuitsPackagePath: string,
+  readFileSync: (path: PathLike, options: BufferEncoding) => string
+): Partial<CircomkitConfig> {
+  function replaceConfigPath(
+    configValue: string,
+    gpcircuitsPath: string
+  ): string {
+    if (configValue.startsWith("./")) {
+      return configValue.replace(/^\.\//, gpcircuitsPath + "/");
+    } else if (configValue.startsWith("../")) {
+      return path.join(gpcircuitsPath, configValue);
+    }
+    return configValue;
+  }
+  function replaceConfigPaths(
+    config: Record<string, string | string[]>,
+    gpcircuitsPath: string
+  ): object {
+    for (const [name, value] of Object.entries(config)) {
+      if (typeof value === "string") {
+        config[name] = replaceConfigPath(value, gpcircuitsPath);
+      } else if (typeof value === "object" && Array.isArray(value)) {
+        config[name] = value.map((p) => replaceConfigPath(p, gpcircuitsPath));
+      }
+    }
+    return config;
+  }
+  return replaceConfigPaths(
+    JSON.parse(
+      readFileSync(path.join(gpcircuitsPackagePath, "circomkit.json"), "utf-8")
+    ),
+    gpcircuitsPackagePath
+  ) as Partial<CircomkitConfig>;
 }

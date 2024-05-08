@@ -77,3 +77,16 @@ export function fmtDuration(totalMs: number): string {
   }
   return hoursFmt + ":" + minutesFmt + ":" + secondsFmt;
 }
+
+/**
+ * Converts an empty string to undefined, while passing other argument
+ * values through unmodified.
+ */
+export function emptyStrToUndefined(
+  inStr: string | undefined
+): string | undefined {
+  if (inStr === "") {
+    return undefined;
+  }
+  return inStr;
+}
