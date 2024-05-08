@@ -155,17 +155,12 @@ export async function prove(args: GPCPCDArgs): Promise<GPCPCD> {
  */
 export async function verify(pcd: GPCPCD): Promise<boolean> {
   const zkArtifactPath = ensureInitialized();
-  try {
-    return gpcVerify(
-      pcd.proof.groth16Proof,
-      pcd.claim.config,
-      pcd.claim.revealed,
-      zkArtifactPath
-    );
-  } catch (e) {
-    console.error("Verifying invalid GPC proof data:", e);
-    return false;
-  }
+  return gpcVerify(
+    pcd.proof.groth16Proof,
+    pcd.claim.config,
+    pcd.claim.revealed,
+    zkArtifactPath
+  );
 }
 
 /**
@@ -180,6 +175,8 @@ export async function serialize(pcd: GPCPCD): Promise<SerializedPCD<GPCPCD>> {
     pcd: JSON.stringify({
       id: pcd.id,
       claim: {
+        // These fields are pre-serialized to a string so that JSONBig isn't
+        // needed above.
         config: serializeGPCBoundConfig(pcd.claim.config),
         revealed: serializeGPCRevealedClaims(pcd.claim.revealed)
       },
