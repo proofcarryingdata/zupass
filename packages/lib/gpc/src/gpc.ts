@@ -48,10 +48,12 @@ function bindConfigWithRequirements(
  * be used to bind.  Otherwise this function will pick the smallest circuit
  * which fits the config.
  *
- * Note that this function cannot verify anything about future inputs.  In
- * particular the max POD size supported by an auto-selected circuit might
- * not be sufficient for all inputs.  If you need a larger size, you should pick
- * your circuit explicitly using `proofConfig.circuitIdentifier`.
+ * Note that this function does not necessarily produce a configuration that
+ * will work for all possible inputs. In particular the max POD size supported
+ * by an auto-selected circuit might not be sufficient for all inputs.  If you
+ * anticipate a larger size, you should pick your circuit explicitly using
+ * `proofConfig.circuitIdentifier`.  (See {@link ProtoPODGPC.CIRCUIT_FAMILY}
+ * for supported circuits.)
  *
  * @param proofConfig the raw proof config to bind.
  * @returns a new configuration object bound and canonicalized as described
@@ -76,7 +78,9 @@ export function gpcBindConfig(proofConfig: GPCProofConfig): {
  *
  * The specific ZK circuit used will be picked as the smallest supported
  * circuit which can fit the configuration and inputs.  If you need a specific
- * circuit to be used instead, you can specify that in the `proofConfig`.
+ * circuit to be used instead (e.g. to support larger object sizes for
+ * future reuse), you can specify that in `proofConfig.circuitIdentifier`.
+ * (See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
  *
  * @param proofConfig the configuration specifying the constraints to be proven.
  * @param proofInputs the input data (PODs and other values) specific to this

@@ -70,7 +70,8 @@ type CompilerEntryInfo<ObjInput> = {
  * @param config proof config
  * @param inputs input object for prove or verify
  *   (GPCProofInput or GPCRevealedClaims).
- * @returns
+ * @returns maps for looking up objects by name, and entries by identifier.
+ *   See the map value types for what's included.
  */
 function prepCompilerMaps<
   ProofInput extends GPCProofInputs | GPCRevealedClaims,
@@ -224,7 +225,8 @@ function combineProofObjects(
   objectSignatureR8y: CircuitSignal /*MAX_OBJECTS*/[];
   objectSignatureS: CircuitSignal /*MAX_OBJECTS*/[];
 } {
-  // Spare object slots get filled in with copies of Object 0.
+  // Object modules don't have an explicit disabled state, so spare object
+  // slots get filled in with copies of Object 0.
   for (let objIndex = allObjInputs.length; objIndex < maxObjects; objIndex++) {
     allObjInputs.push({ ...allObjInputs[0] });
   }
@@ -239,10 +241,16 @@ function combineProofObjects(
   };
 }
 
+// Reusing EntryModuleInputs is a convenient way to not miss any fields, but
+// there are some differences in the GPC-level inputs vs. the per-module inputs.
+type EntryModuleCompilerInputs = Omit<EntryModuleInputs, "objectContentID"> & {
+  objectIndex: bigint;
+};
+
 function compileProofEntry(
   entryInfo: CompilerEntryInfo<POD>,
   merkleMaxDepth: number
-): EntryModuleInputs {
+): EntryModuleCompilerInputs {
   const entrySignals = entryInfo.objInput.content.generateEntryCircuitSignals(
     entryInfo.entryName
   );
@@ -259,8 +267,7 @@ function compileProofEntry(
   }
 
   return {
-    // ContentID holding index is a lie, but it allows reusing the inputs type.
-    objectContentID: BigInt(entryInfo.objIndex),
+    objectIndex: BigInt(entryInfo.objIndex),
     nameHash: entrySignals.nameHash,
     isValueHashRevealed: entryInfo.entryConfig.isRevealed ? 1n : 0n,
     proofDepth: BigInt(entrySignals.proof.siblings.length),
@@ -275,7 +282,7 @@ function compileProofEntry(
 }
 
 function combineProofEntries(
-  allEntryInputs: EntryModuleInputs[],
+  allEntryInputs: EntryModuleCompilerInputs[],
   maxEntries: number
 ): {
   entryObjectIndex: CircuitSignal /*MAX_ENTRIES*/[];
@@ -287,14 +294,15 @@ function combineProofEntries(
   entryProofIndex: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH packed bits*/;
   entryProofSiblings: CircuitSignal /*MAX_ENTRIES*/[] /*MERKLE_MAX_DEPTH*/[];
 } {
-  // Spare entry slots are filled with the name of Entry 0, value disabled.
+  // Entry modules don't have an explicit disabled state, so spare entry slots
+  // are filled with the name of Entry 0, value disabled.
   for (
     let entryIndex = allEntryInputs.length;
     entryIndex < maxEntries;
     entryIndex++
   ) {
     allEntryInputs.push({
-      objectContentID: allEntryInputs[0].objectContentID,
+      objectIndex: allEntryInputs[0].objectIndex,
       nameHash: allEntryInputs[0].nameHash,
       isValueHashRevealed: 0n,
       proofDepth: allEntryInputs[0].proofDepth,
@@ -309,7 +317,7 @@ function combineProofEntries(
   // arrays, or bitfields as appropriate.
   return {
     // ContentID holding index is a lie, but it allows reusing the inputs type.
-    entryObjectIndex: allEntryInputs.map((e) => e.objectContentID),
+    entryObjectIndex: allEntryInputs.map((e) => e.objectIndex),
     entryNameHash: allEntryInputs.map((e) => e.nameHash),
     entryValue: allEntryInputs.map((e) => e.value),
     entryIsValueEnabled: array2Bits(
@@ -364,7 +372,8 @@ function compileProofEntryConstraints(
     }
   }
 
-  // Spare entry slots always compare to themselves, to be a nop.
+  // Equality constraints don't have an explicit disabled state, so spare
+  // entry slots always compare to themselves, to be a nop.
   for (let entryIndex = entryMap.size; entryIndex < maxEntries; entryIndex++) {
     entryEqualToOtherEntryByIndex.push(BigInt(entryIndex));
   }
@@ -424,12 +433,11 @@ function compileProofGlobal(proofInputs: GPCProofInputs | GPCRevealedClaims): {
  * the specific circuit signals needed to verify the proof with a specific
  * circuit.
  *
- * This code assumes that the arguments have already been checked to be
- * well-formed represent a valid proof configuration using
- * {@link checkVerifyArgs}, and that the selected circuit fits the requirements
- * of the proof using {@link checkCircuitParameters}.  Any invalid input might
- * result in errors thrown from TypeScript, or might simply result in a failure
- * to verify a proof.
+ * This code assumes that the arguments have already been checked using {@link
+ * checkVerifyArgs}, and their requirements have already been checked using
+ * {@link checkCircuitParameters}.  This function doesn't duplicate any
+ * checking, so invalid input might result in errors thrown from TypeScript,
+ * or might simply result in a failure to verify a proof.
  *
  * @param verifyConfig the configuration for the proof
  * @param verifyRevealed the revealed inputs and outputs from the proof
@@ -521,7 +529,8 @@ function combineVerifyObjects(
   objectSignerPubkeyAx: CircuitSignal[];
   objectSignerPubkeyAy: CircuitSignal[];
 } {
-  // Spare object slots get filled in with copies of Object 0.
+  // Object modules don't have an explicit disabled state, so spare object
+  // slots get filled in with copies of Object 0.
   for (let objIndex = allObjInputs.length; objIndex < maxObjects; objIndex++) {
     allObjInputs.push({ ...allObjInputs[0] });
   }
@@ -649,7 +658,7 @@ function compileVerifyOwner(
     ownerIsNullfierHashRevealed: CircuitSignal;
   };
   circuitOwnerOutputs: {
-    ownerRevealedNulifierHash: CircuitSignal;
+    ownerRevealedNullifierHash: CircuitSignal;
   };
 } {
   // Owner module is enabled if any entry config declared it was an owner
@@ -669,7 +678,7 @@ function compileVerifyOwner(
         ownerInput?.externalNullifier !== undefined ? 1n : 0n
     },
     circuitOwnerOutputs: {
-      ownerRevealedNulifierHash:
+      ownerRevealedNullifierHash:
         ownerInput?.nullifierHash ?? BABY_JUB_NEGATIVE_ONE
     }
   };
@@ -679,11 +688,11 @@ function compileVerifyOwner(
  * Creates a high-level description of the public claims of a proof, by
  * redacting information from the proof's inputs and outputs.
  *
- * This code assumes that the arguments have already been checked to be
- * well-formed represent a valid proof configuration using
- * {@link checkProofArgs} and the outputs come from a successful proof.  Any
- * invalid input might result in errors thrown from TypeScript, or might simply
- * result in claims which will fail to verify later.
+ * This code assumes that the arguments have already been checked using {@link
+ * checkProofArgs}, and their requirements have already been checked using
+ * {@link checkCircuitParameters}.  This function doesn't duplicate any
+ * checking, so invalid input might result in errors thrown from TypeScript,
+ * or might simply result in a failure to generate a proof.
  *
  * @param proofConfig the configuration of the proof
  * @param proofInputs the inputs to the proof
@@ -727,7 +736,7 @@ export function makeRevealedClaims(
       ? {
           owner: {
             externalNullifier: proofInputs.owner.externalNullifier,
-            nullifierHash: BigInt(circuitOutputs.ownerRevealedNulifierHash)
+            nullifierHash: BigInt(circuitOutputs.ownerRevealedNullifierHash)
           }
         }
       : {}),

@@ -143,7 +143,7 @@ export function splitPODEntryIdentifier(entryIdentifier: PODEntryIdentifier): {
 }
 
 /**
- * Checks the format of a CircuitIdentifier, and return its subcomponents.
+ * Checks the format of a GPCIdentifier, and return its subcomponents.
  *
  * @param nameForErrorMessages the name for this value, used only for error
  *   messages.
@@ -165,7 +165,7 @@ export function checkCircuitIdentifier(
 }
 
 /**
- * Splits a CircuitIdentifier into its component parts with friendly names
+ * Splits a GPCIdentifier into its component parts with friendly names
  * for easy access.
  *
  * @param circuitIdentifier the identifier to split

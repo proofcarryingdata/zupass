@@ -116,6 +116,8 @@ export type GPCProofConfig = {
    * and verifying.  If not specified, {@link gpcProve} or {@link gpcBindConfig}
    * will pick the smallest supported circuit which can handle this
    * configuration.
+   *
+   * See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
    */
   circuitIdentifier?: GPCIdentifier;
 
@@ -174,6 +176,8 @@ export type GPCBoundConfig = GPCProofConfig & {
    * {@link GPCIdentifier} specifying a specific ZK circuit to use in proving
    * and verifying.  Same meaning as in {@link GPCProofConfig} except here it
    * is a required field.
+   *
+   * See {@link ProtoPODGPC.CIRCUIT_FAMILY} for supported circuits.)
    */
   circuitIdentifier: GPCIdentifier;
 };

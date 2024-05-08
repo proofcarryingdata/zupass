@@ -51,7 +51,7 @@ export function checkProofArgs(
 ): ProtoPODGPCCircuitParams {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
-  const requriedParams = ProtoPODGPC.mergeRequiredParams(
+  const requiridParams = ProtoPODGPC.mergeRequiredParams(
     checkProofConfig(proofConfig),
     checkProofInputs(proofInputs)
   );
@@ -59,7 +59,7 @@ export function checkProofArgs(
   // Check that config and inputs properly correspond to each other.
   checkProofInputsForConfig(proofConfig, proofInputs);
 
-  return requriedParams;
+  return requiridParams;
 }
 
 /**
@@ -230,7 +230,7 @@ export function checkProofInputsForConfig(
 
   // Config and inputs should have same number of objects.
   const nConfiguredObjects = Object.keys(proofConfig.pods).length;
-  const nInputObjects = Object.keys(proofConfig.pods).length;
+  const nInputObjects = Object.keys(proofInputs.pods).length;
   if (nConfiguredObjects !== nInputObjects) {
     throw new Error(
       `Incorrect number of input objects.` +
@@ -329,7 +329,7 @@ export function checkVerifyArgs(
 ): ProtoPODGPCCircuitParams {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
-  const requriedParams = ProtoPODGPC.mergeRequiredParams(
+  const requiridParams = ProtoPODGPC.mergeRequiredParams(
     checkBoundConfig(boundConfig),
     checkRevealedClaims(revealedClaims)
   );
@@ -337,7 +337,7 @@ export function checkVerifyArgs(
   // Check that config and inputs properly correspond to each other.
   checkVerifyClaimsForConfig(boundConfig, revealedClaims);
 
-  return requriedParams;
+  return requiridParams;
 }
 
 /**
@@ -419,6 +419,11 @@ function checkRevealedObjectClaims(
       checkPODName(entryName);
       checkPODValue(`${nameForErrorMessages}.${entryName}`, entryValue);
       nEntries++;
+    }
+    if (nEntries === 0) {
+      throw new TypeError(
+        `Revealed object "${nameForErrorMessages}" entries should be undefined not empty.`
+      );
     }
   }
 
@@ -524,8 +529,8 @@ export function checkVerifyClaimsForConfig(
  * by a known circuit.  This is not an exact match, but instead each parameter
  * of the chosen circuit must be greater than or equal to the required value.
  *
- * If the circuit name is not given, this will pick the check will pick the
- * smallest known circuit which can satisfy the requirements.
+ * If the circuit name is not given, this will pick the smallest supported
+ * circuit which can satisfy the requirements.
  *
  * @param requiredParameters the minimum required parameter values
  * @param circuitIdentifier a specific circuit to be used

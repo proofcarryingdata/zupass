@@ -51,7 +51,8 @@ export function serializeGPCProofConfig(
  *
  * @param serialized a string representation of `GPCProofConfig`
  * @returns `GPCProofConfig` deserialized from the string
- * @throws TypeError if the serialized form is invalid
+ * @throws SyntaxError if the serialized form cannot be parsed
+ * @throws TypeError if the serialized form doesn't match the expected type
  */
 export function deserializeGPCProofConfig(serialized: string): GPCProofConfig {
   const deserialized = parseWrapper(serialized, "proof config");
@@ -83,7 +84,8 @@ export function serializeGPCBoundConfig(
  *
  * @param serialized a string representation of `GPCBoundConfig`
  * @returns `GPCBoundConfig` deserialized from the string
- * @throws TypeError if the serialized form is invalid
+ * @throws SyntaxError if the serialized form cannot be parsed
+ * @throws TypeError if the serialized form doesn't match the expected type
  */
 export function deserializeGPCBoundConfig(serialized: string): GPCBoundConfig {
   const deserialized = parseWrapper(serialized, "bound proof config");
@@ -116,7 +118,8 @@ export function serializeGPCRevealedClaims(
  *
  * @param serialized a string representation of `GPCRevealedClaims`
  * @returns `GPCRevealedClaims` deserialized from the string
- * @throws TypeError if the serialized form is invalid
+ * @throws SyntaxError if the serialized form cannot be parsed
+ * @throws TypeError if the serialized form doesn't match the expected type
  */
 export function deserializeGPCRevealedClaims(
   serialized: string

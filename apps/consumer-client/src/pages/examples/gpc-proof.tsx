@@ -14,6 +14,7 @@ import {
 import { ArgumentTypeName } from "@pcd/pcd-types";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreIdentityPCDPackage } from "@pcd/semaphore-identity-pcd";
+import { emptyStrToUndefined } from "@pcd/util";
 import JSONBig from "json-bigint";
 import _ from "lodash";
 import { useEffect, useState } from "react";
@@ -43,8 +44,8 @@ export default function Page(): JSX.Element {
     pcdStr,
     onVerified,
     proofConfig,
-    emptyToUndefined(watermark),
-    emptyToUndefined(externalNullifier)
+    emptyStrToUndefined(watermark),
+    emptyStrToUndefined(externalNullifier)
   );
 
   return (
@@ -58,9 +59,8 @@ export default function Page(): JSX.Element {
         ZK proof is generated using a GPC (General Purpose Circuit).
       </p>
       <p>
-        The underlying PCD that this example uses is{" "}
-        <code>ZKEdDSAEventTicketPCD</code>. You can find more documentation
-        regarding this PCD{" "}
+        The underlying PCD that this example uses is <code>GPCPCD</code>. You
+        can find more documentation regarding this PCD{" "}
         <CodeLink file="/tree/main/packages/pcd/gpc-pcd">
           here on GitHub
         </CodeLink>{" "}
@@ -73,8 +73,8 @@ export default function Page(): JSX.Element {
               ZUPASS_URL,
               window.location.origin + "#/popup",
               proofConfig,
-              emptyToUndefined(watermark),
-              emptyToUndefined(externalNullifier)
+              emptyStrToUndefined(watermark),
+              emptyStrToUndefined(externalNullifier)
             )
           }
           disabled={valid}
@@ -282,11 +282,4 @@ async function verifyProof(
   }
 
   return { valid: true };
-}
-
-function emptyToUndefined(inStr: string | undefined): string | undefined {
-  if (inStr === "") {
-    return undefined;
-  }
-  return inStr;
 }
