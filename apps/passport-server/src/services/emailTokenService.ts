@@ -21,6 +21,9 @@ export class EmailTokenService {
     token: string
   ): Promise<boolean> {
     const savedToken = await this.getTokenForEmail(email);
+    if (!savedToken) {
+      return false;
+    }
     return token === savedToken;
   }
 

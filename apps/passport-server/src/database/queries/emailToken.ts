@@ -15,7 +15,7 @@ export async function fetchEmailToken(
     [email]
   );
 
-  return result.rows[0].token || null;
+  return result.rows[0]?.token || null;
 }
 
 /**

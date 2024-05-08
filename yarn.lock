@@ -7494,13 +7494,6 @@
   dependencies:
     "@zag-js/dom-query" "0.16.0"
 
-"@zk-kit/baby-jubjub@0.3.0":
-  version "0.3.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-0.3.0.tgz#78b8d3226670dd02dc8ced713aec64d6bb2a6e62"
-  integrity sha512-mA3/M/+4C2vDtc0SpXf/q/nsvwBh+s42ou176sgDzqIBQD/u/N+LaLGorDh+X5AD3dVMHb8rheFpnnrJmjsqdA==
-  dependencies:
-    "@zk-kit/utils" "0.6.0"
-
 "@zk-kit/baby-jubjub@1.0.0-beta":
   version "1.0.0-beta"
   resolved "https://registry.yarnpkg.com/@zk-kit/baby-jubjub/-/baby-jubjub-1.0.0-beta.tgz#35781f5607d28113582cc218c33dee4cc78b9ac5"
@@ -7515,13 +7508,13 @@
   dependencies:
     circomlib "^2.0.5"
 
-"@zk-kit/eddsa-poseidon@0.11.0":
-  version "0.11.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-0.11.0.tgz#f648b50a79ce660df75896d8fafa30c0f6eb9a43"
-  integrity sha512-8XgIVSD+nTnTEjvdrFVvju6lVQ5rxCfkBnf/nCFN/IteiIpYX7LnxrTOV7pIp3RrWL29WuTvNrT8TlBrHRrUFA==
+"@zk-kit/eddsa-poseidon@1.0.0-beta":
+  version "1.0.0-beta"
+  resolved "https://registry.yarnpkg.com/@zk-kit/eddsa-poseidon/-/eddsa-poseidon-1.0.0-beta.tgz#5402ce7db3b4271e4b07fd1cc23e7ab919c7e057"
+  integrity sha512-MDkOBB7FB3Zi1rM9U3us+nDxkeT8RA2/qZMYzqcpC0yMbT5+/zkML5kGyJo2CS7O0k0oakNKqKdU5HUx1K7aVQ==
   dependencies:
-    "@zk-kit/baby-jubjub" "0.3.0"
-    "@zk-kit/utils" "0.8.1"
+    "@zk-kit/baby-jubjub" "1.0.0-beta"
+    "@zk-kit/utils" "1.0.0-beta.4"
     buffer "6.0.3"
 
 "@zk-kit/groth16@0.3.0":
@@ -7547,24 +7540,17 @@
   resolved "https://registry.yarnpkg.com/@zk-kit/incremental-merkle-tree/-/incremental-merkle-tree-1.1.0.tgz#6b0ccce56f9e05ccf73f7ea4fa746d5ef7d24b1d"
   integrity sha512-WnNR/GQse3lX8zOHMU8zwhgX8u3qPoul8w4GjJ0WDHq+VGJimo7EGheRZ/ILeBQabnlzAerdv3vBqYBehBeoKA==
 
-"@zk-kit/utils@0.6.0":
-  version "0.6.0"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.6.0.tgz#30124e98df8e29f7af31e19ce4dc6302f178c0a4"
-  integrity sha512-sUF1yVjlGmm7/NIN/+d+N8WOcI77bTzgV5+vZmp/S7lXcy4fmO+5TdHERRsDbs8Ep8K33EOC6V+U+JXzmjSe5A==
-  dependencies:
-    buffer "^6.0.3"
-
-"@zk-kit/utils@0.8.1":
-  version "0.8.1"
-  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-0.8.1.tgz#9d358542e6b223dde35f32f3e161d1d3a41b0644"
-  integrity sha512-m5cvnYo5IBZQCO8H5X0Mw3rGRGEoSqlYXVVF1+4M9IT3olDWcJHLPRqtYGF9zNf+vXV/21srpZ0hX3X2Lzp1TQ==
-  dependencies:
-    buffer "^6.0.3"
-
 "@zk-kit/utils@1.0.0-beta":
   version "1.0.0-beta"
   resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0-beta.tgz#aacbdc39b193560bdcaad34038f22402d742bc30"
   integrity sha512-9ihWoFFnsxvVsvr/EpxdxXs1WgZuay/ZUWBNvX8oA9/TB/PiB31tpZV93jkH+JG6C2wcDPinNSLkq3qwtYMAQg==
+  dependencies:
+    buffer "^6.0.3"
+
+"@zk-kit/utils@1.0.0-beta.4":
+  version "1.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0-beta.4.tgz#3811d2c77279eea8ca07084ba2c7d5147adc8560"
+  integrity sha512-MwsiIykjq02JlyZyv2bGraB9cV0ZC7bJz74DEDT7rwoxl1UBAVk6uiZ10fj1qCcfoLO+1wpwo5viHPPWYOW8Hg==
   dependencies:
     buffer "^6.0.3"
 
