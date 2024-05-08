@@ -2030,7 +2030,7 @@ export class LemonadePipeline implements BasePipeline {
 
       if (this.definition.options.offlineCheckin === undefined) {
         throw new PCDHTTPError(
-          401,
+          400,
           "Offline check-in is not enabled for this pipeline"
         );
       }
@@ -2120,7 +2120,7 @@ export class LemonadePipeline implements BasePipeline {
 
       if (this.definition.options.offlineCheckin === undefined) {
         throw new PCDHTTPError(
-          401,
+          400,
           "Offline check-in is not enabled for this pipeline"
         );
       }
