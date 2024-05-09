@@ -30,7 +30,11 @@ import {
   GPCRevealedOwnerClaims,
   PODEntryIdentifier
 } from "./gpcTypes";
-import { makeWatermarkSignal } from "./gpcUtil";
+import {
+  dummyListMembership,
+  dummyTuples,
+  makeWatermarkSignal
+} from "./gpcUtil";
 
 /**
  * Per-object info extracted by {@link prepCompilerMaps}.
@@ -184,6 +188,12 @@ export function compileProofConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
+  // Create subset of inputs for multituple module padded to max size.
+  const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+
+  // Create subset of inputs for list membership module padded to max size.
+  const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+
   // Create other global inputs.
   const circuitGlobalInputs = compileProofGlobal(proofInputs);
 
@@ -196,6 +206,8 @@ export function compileProofConfig(
     ...circuitEntryInputs,
     ...circuitEntryConstraintInputs,
     ...circuitOwnerInputs,
+    ...circuitMultiTupleInputs,
+    ...circuitListMembershipInputs,
     ...circuitGlobalInputs
   };
 }
@@ -484,6 +496,12 @@ export function compileVerifyConfig(
     entryConstraintMetadata.firstOwnerIndex
   );
 
+  // Create subset of inputs for multituple module padded to max size.
+  const circuitMultiTupleInputs = dummyTuples(circuitDesc);
+
+  // Create subset of inputs for list membership module padded to max size.
+  const circuitListMembershipInputs = dummyListMembership(circuitDesc);
+
   // Create other global inputs.  Logic shared with compileProofConfig,
   // since all the signals involved are public.
   const circuitGlobalInputs = compileProofGlobal(verifyRevealed);
@@ -498,6 +516,8 @@ export function compileVerifyConfig(
       ...circuitEntryInputs,
       ...circuitEntryConstraintInputs,
       ...circuitOwnerInputs,
+      ...circuitMultiTupleInputs,
+      ...circuitListMembershipInputs,
       ...circuitGlobalInputs
     },
     circuitOutputs: {

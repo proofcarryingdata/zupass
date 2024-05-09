@@ -19,7 +19,7 @@ import { circomkit } from "./common";
 import { PODValue, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 
-describe("Tuple helpers should work", function () {
+describe("MultiTuple helpers should work", function () {
   it("should compute the right number of required tuples for different input tuple arities", () => {
     [
       [2, 2, 1],

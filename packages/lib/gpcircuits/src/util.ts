@@ -193,6 +193,7 @@ export function zipLists<A>(lists: A[][]): A[][] {
       )
   );
 }
+
 /**
  * Loads the configuration for Circomkit for use in unit tests or scripts.
  * All paths in the config will be fixed up to be based on the given package
