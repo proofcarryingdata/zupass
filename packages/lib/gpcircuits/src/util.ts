@@ -161,7 +161,7 @@ export function array2Bits(boolArray: bigint[]): bigint {
 }
 
 /**
- * Zips up a list of lists, i.e. forms pairs, triples, ... from
+ * Zips up a an array of arrays, i.e. forms pairs, triples, ... from
  * a list of two, three, ... lists.
  * Examples:
  * zipLists([[1, 2, 3], [4, 5, 6]]) === [[1,4], [2, 5], [3, 6]],

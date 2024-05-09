@@ -1,5 +1,5 @@
 {
-  "proto-pod-gpc_1o-1e-5md-1l-10le-2t-2ta": {
+  "proto-pod-gpc_1o-1e-5md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -23,12 +23,12 @@
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
-      "memberIndex",
-      "membershipList",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-5e-6md-1l-10le-2t-2ta": {
+  "proto-pod-gpc_1o-5e-6md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -52,12 +52,12 @@
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
-      "memberIndex",
-      "membershipList",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-1l-10le-2t-2ta": {
+  "proto-pod-gpc_3o-10e-8md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -81,12 +81,12 @@
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
-      "memberIndex",
-      "membershipList",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md-2l-20le-1t-4ta": {
+  "proto-pod-gpc_3o-10e-8md-2x20l-1x4t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
@@ -110,37 +110,8 @@
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
       "tupleIndices",
-      "memberIndex",
-      "membershipList",
-      "globalWatermark"
-    ]
-  },
-  "proto-pod-gpc_5o-15e-9md-3l-20le-4t-3ta": {
-    "file": "proto-pod-gpc",
-    "template": "ProtoPODGPC",
-    "params": [
-      5,
-      15,
-      9,
-      3,
-      20,
-      4,
-      3
-    ],
-    "pubs": [
-      "objectSignerPubkeyAx",
-      "objectSignerPubkeyAy",
-      "entryObjectIndex",
-      "entryNameHash",
-      "entryIsValueEnabled",
-      "entryIsValueHashRevealed",
-      "entryEqualToOtherEntryByIndex",
-      "ownerEntryIndex",
-      "ownerExternalNullifier",
-      "ownerIsNullfierHashRevealed",
-      "tupleIndices",
-      "memberIndex",
-      "membershipList",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   }

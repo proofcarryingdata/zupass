@@ -1,162 +1,25 @@
-import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
 import {
-  computeTupleIndices,
-  hashTuple,
-  maxTupleArity,
-  requiredNumTuples,
-  TupleModuleInputNamesType,
-  TupleModuleInputs,
-  TupleModuleOutputNamesType,
-  TupleModuleOutputs
+  TupleHasherInputNamesType,
+  TupleHasherInputs,
+  TupleHasherOutputNamesType,
+  TupleHasherOutputs
 } from "../src";
 import { circomkit } from "./common";
-import { PODValue, podValueHash } from "@pcd/pod";
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 
-describe("Tuple helpers should work", function () {
-  it("should compute the right number of required tuples for different input tuple arities", () => {
-    [
-      [2, 2, 1],
-      [3, 3, 1],
-      [4, 4, 1],
-      [2, 5, 4],
-      [3, 5, 2],
-      [4, 5, 2]
-    ].forEach((triple) =>
-      expect(requiredNumTuples(triple[0], triple[1])).to.equal(triple[2])
-    );
-  });
-
-  it("should compute the right maximum tuple arity representable by different parameters", () => {
-    [
-      [1, 2, 2],
-      [1, 3, 3],
-      [1, 4, 4],
-      [4, 2, 5],
-      [2, 3, 5],
-      [2, 4, 7]
-    ].forEach((triple) =>
-      expect(maxTupleArity(triple[0], triple[1])).to.equal(triple[2])
-    );
-  });
-
-  it("should compute the right tuple indices for different input tuples and parameters", () => {
-    [
-      [2, 4, [0, 1], [[0, 1]]],
-      [3, 4, [0, 1, 2], [[0, 1, 2]]],
-      [4, 4, [0, 1, 2, 3], [[0, 1, 2, 3]]],
-      [
-        2,
-        5,
-        [1, 3, 4],
-        [
-          [1, 3],
-          [5, 4]
-        ]
-      ],
-      [
-        3,
-        5,
-        [0, 1, 4, 2],
-        [
-          [0, 1, 4],
-          [5, 2, 0]
-        ]
-      ],
-      [
-        4,
-        6,
-        [3, 4, 2, 1, 5],
-        [
-          [3, 4, 2, 1],
-          [6, 5, 3, 3]
-        ]
-      ]
-    ]
-      .map((quadruple) => quadruple as [number, number, number[], number[][]])
-      .forEach((quadruple) =>
-        expect(
-          computeTupleIndices(quadruple[0], quadruple[1], quadruple[2])
-        ).to.deep.equal(quadruple[3])
-      );
-  });
-
-  it("should compute the right tuple hashes", () => {
-    const input = [98n, 37n, 0n, BABY_JUB_NEGATIVE_ONE];
-    const inputAsInts: PODValue[] = input.map((value) => {
-      return { type: "int", value };
-    });
-    const inputAsCryptographics: PODValue[] = input.map((value) => {
-      return { type: "cryptographic", value };
-    });
-    const inputAsStrings: PODValue[] = input.map((value) => {
-      return { type: "string", value: value.toString() };
-    });
-    for (const input of [inputAsInts, inputAsCryptographics, inputAsStrings]) {
-      const inputHashes = input.map(podValueHash);
-      [
-        [2, input.slice(0, 2), poseidon2(inputHashes.slice(0, 2))],
-        [3, input.slice(0, 3), poseidon3(inputHashes.slice(0, 3))],
-        [4, input, poseidon4(inputHashes)],
-        [
-          2,
-          input,
-          poseidon2([
-            poseidon2([
-              poseidon2([inputHashes[0], inputHashes[1]]),
-              inputHashes[2]
-            ]),
-            inputHashes[3]
-          ])
-        ],
-        [
-          3,
-          input,
-          poseidon3([
-            poseidon3([inputHashes[0], inputHashes[1], inputHashes[2]]),
-            inputHashes[3],
-            inputHashes[0]
-          ])
-        ],
-        [
-          4,
-          input.concat([input[1]]),
-          poseidon4([
-            poseidon4([
-              inputHashes[0],
-              inputHashes[1],
-              inputHashes[2],
-              inputHashes[3]
-            ]),
-            inputHashes[1],
-            inputHashes[0],
-            inputHashes[0]
-          ])
-        ]
-      ]
-        .map((triple) => triple as [number, PODValue[], bigint])
-        .forEach((triple) =>
-          expect(hashTuple(triple[0], triple[1])).to.equal(triple[2])
-        );
-    }
-  });
-});
-
-describe("tuple.TupleModule should work", function () {
+describe("tuple.TupleHasher should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
   let circuit: WitnessTester<
-    TupleModuleInputNamesType,
-    TupleModuleOutputNamesType
+    TupleHasherInputNamesType,
+    TupleHasherOutputNamesType
   >;
 
   const TUPLE_ARITY = 3;
   const MAX_VALUES = 10;
 
-  const sampleInput: TupleModuleInputs = {
-    value: [
+  const sampleInput: TupleHasherInputs = {
+    tupleElements: [
       8905486818455134363060055817991647390962079139440460714076410595226736943033n,
       371570493675795085340917563256321114090422950170926983546930236206324642985n,
       21855291653660581372252244680535463430106492049961256436916646040420709922401n,
@@ -171,15 +34,15 @@ describe("tuple.TupleModule should work", function () {
     tupleIndices: [0n, 3n, 5n]
   };
 
-  const sampleOutput: TupleModuleOutputs = {
+  const sampleOutput: TupleHasherOutputs = {
     tupleHash:
       15125314487994541926652962289334348955866307223539330915627677810216053745980n
   };
 
   this.beforeAll(async () => {
-    circuit = await circomkit.WitnessTester("TupleModule", {
+    circuit = await circomkit.WitnessTester("TupleHasher", {
       file: "tuple",
-      template: "TupleModule",
+      template: "TupleHasher",
       params: [TUPLE_ARITY, MAX_VALUES]
     });
   });
@@ -188,3 +51,4 @@ describe("tuple.TupleModule should work", function () {
     await circuit.expectPass(sampleInput, sampleOutput);
   });
 });
+// TODO(POD-P3): Flesh out tests.

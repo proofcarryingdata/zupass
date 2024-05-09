@@ -5,7 +5,7 @@
       "maxEntries": 1,
       "merkleMaxDepth": 5,
       "maxLists": 1,
-      "maxListEntries": 10,
+      "maxListElements": 10,
       "maxTuples": 2,
       "tupleArity": 2
     },
@@ -17,7 +17,7 @@
       "maxEntries": 5,
       "merkleMaxDepth": 6,
       "maxLists": 1,
-      "maxListEntries": 10,
+      "maxListElements": 10,
       "maxTuples": 2,
       "tupleArity": 2
     },
@@ -29,7 +29,7 @@
       "maxEntries": 10,
       "merkleMaxDepth": 8,
       "maxLists": 1,
-      "maxListEntries": 10,
+      "maxListElements": 10,
       "maxTuples": 2,
       "tupleArity": 2
     },
@@ -41,22 +41,10 @@
       "maxEntries": 10,
       "merkleMaxDepth": 8,
       "maxLists": 2,
-      "maxListEntries": 20,
+      "maxListElements": 20,
       "maxTuples": 1,
       "tupleArity": 4
     },
     35952
-  ],
-  [
-    {
-      "maxObjects": 5,
-      "maxEntries": 15,
-      "merkleMaxDepth": 9,
-      "maxLists": 3,
-      "maxListEntries": 20,
-      "maxTuples": 4,
-      "tupleArity": 3
-    },
-    60516
   ]
 ]

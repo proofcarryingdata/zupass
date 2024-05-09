@@ -58,15 +58,14 @@ template Append (M, N) {
     signal output out[M + N];
 
     for (var i = 0; i < M; i++) {
-	out[i] <== in1[i];
+	      out[i] <== in1[i];
     }
 
     for (var i = 0; i < N; i++) {
-	out[M + i] <== in2[i];
+	      out[M + i] <== in2[i];
     }
 }
 
-// TODO: Is this really the way to go?
 /**
  * Input selector where `selectedIndex` is interpreted as an index iff it is
  * not -1. If `selectedIndex` is -1, then this template outputs 0.

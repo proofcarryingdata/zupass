@@ -22,7 +22,7 @@ describe("List membership helpers should work", function () {
     ...ProtoPODGPC.CIRCUIT_PARAMETERS[0][0],
     maxEntries: 6,
     tupleArity: 2,
-    maxListEntries: 10,
+    maxListElements: 10,
     maxTuples: 1
   };
 
@@ -41,52 +41,60 @@ describe("List membership helpers should work", function () {
     const list1 = [0n, 1n, 2n, 3n].map((value) => [
       { type: "int", value } as PODValue
     ]);
-    const memberIndex1 = [0];
+    const listComparisonValueIndex1 = [0];
 
     // List membership with tuples
     const list2 = list1.map((x) => x.concat(x));
-    const memberIndex2 = [0, 2];
+    const listComparisonValueIndex2 = [0, 2];
 
     for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
       (pair) => pair[0]
     )) {
-      expect(processSingleList(params, 6, memberIndex1, list1)).to.deep.equal({
+      expect(
+        processSingleList(params, 6, listComparisonValueIndex1, list1)
+      ).to.deep.equal({
         tupleIndices: [],
-        memberIndex: 0,
-        membershipList: padArray(
+        listComparisonValueIndex: 0,
+        listValidValues: padArray(
           list1.map((x) => podValueHash(x[0])),
-          params.maxListEntries,
+          params.maxListElements,
           podValueHash(list1[0][0])
         )
       });
     }
 
-    expect(processSingleList(params1, 6, memberIndex2, list2)).to.deep.equal({
+    expect(
+      processSingleList(params1, 6, listComparisonValueIndex2, list2)
+    ).to.deep.equal({
       tupleIndices: [[0, 2]],
-      memberIndex: 6,
-      membershipList: padArray(
+      listComparisonValueIndex: 6,
+      listValidValues: padArray(
         list2.map((x) => hashTuple(params1.tupleArity, x)),
-        params1.maxListEntries,
+        params1.maxListElements,
         hashTuple(params1.tupleArity, list2[0])
       )
     });
 
-    expect(processSingleList(params2, 6, memberIndex2, list2)).to.deep.equal({
+    expect(
+      processSingleList(params2, 6, listComparisonValueIndex2, list2)
+    ).to.deep.equal({
       tupleIndices: [[0, 2, 0]],
-      memberIndex: 6,
-      membershipList: padArray(
+      listComparisonValueIndex: 6,
+      listValidValues: padArray(
         list2.map((x) => hashTuple(params2.tupleArity, x)),
-        params1.maxListEntries,
+        params1.maxListElements,
         hashTuple(params2.tupleArity, list2[0])
       )
     });
 
-    expect(processSingleList(params3, 6, memberIndex2, list2)).to.deep.equal({
+    expect(
+      processSingleList(params3, 6, listComparisonValueIndex2, list2)
+    ).to.deep.equal({
       tupleIndices: [[0, 2, 0, 0]],
-      memberIndex: 6,
-      membershipList: padArray(
+      listComparisonValueIndex: 6,
+      listValidValues: padArray(
         list2.map((x) => hashTuple(params3.tupleArity, x)),
-        params1.maxListEntries,
+        params1.maxListElements,
         hashTuple(params3.tupleArity, list2[0])
       )
     });
@@ -107,9 +115,9 @@ describe("List membership helpers should work", function () {
       list1.map((x) => [x])
     ];
 
-    const memberIndices = [[0, 1], [2, 3, 4, 5], [0]];
+    const listComparisonValueIndices = [[0, 1], [2, 3, 4, 5], [0]];
 
-    const membershipList1 = [
+    const listValidValues1 = [
       [
         5761833800329748082551817559300086650797914616924753469673239650843627935146n,
         17469414314922515317374944768007856796862394642440288583832552538492770007297n,
@@ -148,7 +156,7 @@ describe("List membership helpers should work", function () {
       ]
     ];
 
-    const membershipList2 = [
+    const listValidValues2 = [
       [
         19807313840762825537239430494583375754967739397068537685303260758245683156086n,
         20825757977558359782800140446441091744662712907152513288142672663645932253678n,
@@ -187,7 +195,7 @@ describe("List membership helpers should work", function () {
       ]
     ];
 
-    const membershipList3 = [
+    const listValidValues3 = [
       [
         7696853836372712575501086906563412132955804226675214283831137449214042819560n,
         1246437017664158814676582093837535272588521578125556742159132138283084848586n,
@@ -226,34 +234,40 @@ describe("List membership helpers should work", function () {
       ]
     ];
 
-    expect(processLists(params1, memberIndices, lists)).to.deep.equal({
+    expect(
+      processLists(params1, listComparisonValueIndices, lists)
+    ).to.deep.equal({
       tupleIndices: [
         [0n, 1n],
         [2n, 3n],
         [7n, 4n],
         [8n, 5n]
       ],
-      memberIndex: [6n, 9n, 0n],
-      membershipList: membershipList1
+      listComparisonValueIndex: [6n, 9n, 0n],
+      listValidValues: listValidValues1
     });
 
-    expect(processLists(params2, memberIndices, lists)).to.deep.equal({
+    expect(
+      processLists(params2, listComparisonValueIndices, lists)
+    ).to.deep.equal({
       tupleIndices: [
         [0n, 1n, 0n],
         [2n, 3n, 4n],
         [7n, 5n, 2n]
       ],
-      memberIndex: [6n, 8n, 0n],
-      membershipList: membershipList2
+      listComparisonValueIndex: [6n, 8n, 0n],
+      listValidValues: listValidValues2
     });
 
-    expect(processLists(params3, memberIndices, lists)).to.deep.equal({
+    expect(
+      processLists(params3, listComparisonValueIndices, lists)
+    ).to.deep.equal({
       tupleIndices: [
         [0n, 1n, 0n, 0n],
         [2n, 3n, 4n, 5n]
       ],
-      memberIndex: [6n, 7n, 0n],
-      membershipList: membershipList3
+      listComparisonValueIndex: [6n, 7n, 0n],
+      listValidValues: listValidValues3
     });
   });
 });
@@ -281,15 +295,15 @@ describe("list-membership.ListMembershipModule should work", function () {
   // Sample input with arbitrary padding
   const sampleInput: (n: number) => ListMembershipModuleInputs = (n) => {
     return {
-      list: extendedSignalArray(sampleList, n, sampleList[0]), // We fill up the rest with the first element.
-      value: sampleList[3]
+      listValidValues: extendedSignalArray(sampleList, n, sampleList[0]), // We fill up the rest with the first element.
+      comparisonValue: sampleList[3]
     };
   };
 
   // Non-membership case
   const sampleInput2: ListMembershipModuleInputs = {
-    list: sampleList,
-    value: 0n
+    listValidValues: sampleList,
+    comparisonValue: 0n
   };
 
   const sampleOutput: ListMembershipModuleOutputs = {
@@ -330,3 +344,4 @@ describe("list-membership.ListMembershipModule should work", function () {
     );
   });
 });
+// TODO(POD-P3): Flesh out tests.

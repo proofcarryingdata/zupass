@@ -7,7 +7,7 @@ import {
   PROTO_POD_GPC_FAMILY_NAME,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
-  arrayToProtoPODGPCCircuitParam
+  protoPODGPCCircuitParamArray
 } from "../src/proto-pod-gpc";
 import { batchPromise } from "../src/util";
 import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
@@ -17,11 +17,42 @@ import { MAX_PARALLEL_PROMISES, clearDir } from "./util";
 // `yarn gen-circuit-parameters`.
 // Circuit parameters used to generate artifacts.
 const CIRCUIT_PARAMETERS = [
-  [1, 1, 5, 1, 10, 2, 2],
-  [1, 5, 6, 1, 10, 2, 2],
-  [3, 10, 8, 1, 10, 2, 2],
-  [3, 10, 8, 2, 20, 1, 4],
-  [5, 15, 9, 3, 20, 4, 3]
+  {
+    maxObjects: 1,
+    maxEntries: 1,
+    merkleMaxDepth: 5,
+    maxLists: 1,
+    maxListElements: 10,
+    maxTuples: 2,
+    tupleArity: 2
+  },
+  {
+    maxObjects: 1,
+    maxEntries: 5,
+    merkleMaxDepth: 6,
+    maxLists: 1,
+    maxListElements: 10,
+    maxTuples: 2,
+    tupleArity: 2
+  },
+  {
+    maxObjects: 3,
+    maxEntries: 10,
+    merkleMaxDepth: 8,
+    maxLists: 1,
+    maxListElements: 10,
+    maxTuples: 2,
+    tupleArity: 2
+  },
+  {
+    maxObjects: 3,
+    maxEntries: 10,
+    merkleMaxDepth: 8,
+    maxLists: 2,
+    maxListElements: 20,
+    maxTuples: 1,
+    tupleArity: 4
+  }
 ];
 
 const projectDir = path.join(__dirname, "..");
@@ -39,13 +70,13 @@ async function main(): Promise<void> {
   // Form circuit names
   const circuitNames = CIRCUIT_PARAMETERS.map(
     (params) =>
-      PROTO_POD_GPC_FAMILY_NAME +
-      "_" +
-      ProtoPODGPC.circuitNameForParams(arrayToProtoPODGPCCircuitParam(params))
+      PROTO_POD_GPC_FAMILY_NAME + "_" + ProtoPODGPC.circuitNameForParams(params)
   );
 
   // Form `circuits.json`.
-  const circuitsJson = CIRCUIT_PARAMETERS.reduce(
+  const circuitsJson = CIRCUIT_PARAMETERS.map(
+    protoPODGPCCircuitParamArray
+  ).reduce(
     (json, params, i) => ({
       ...json,
       [circuitNames[i]]: {
@@ -85,7 +116,7 @@ async function main(): Promise<void> {
 
   // Form `circuitParameters.json`.
   const circuitParamJson = circuitCosts.map((cost, i) => [
-    arrayToProtoPODGPCCircuitParam(CIRCUIT_PARAMETERS[i]),
+    CIRCUIT_PARAMETERS[i],
     cost
   ]);
 

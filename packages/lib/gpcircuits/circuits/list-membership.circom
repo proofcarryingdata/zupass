@@ -9,28 +9,30 @@ include "circomlib/circuits/comparators.circom";
  */
 template ListMembershipModule(
     // Maximum number of valid values
-    MAX_LIST_ENTRIES
+    MAX_LIST_ELEMENTS
 ) {
     // Value to be checked.
-    signal input value; 
+    signal input comparisonValue; 
 
     // List of admissible value hashes. Assumed to have repetitions if the actual list length is smaller.
-    signal input list[MAX_LIST_ENTRIES]; 
+    signal input listValidValues[MAX_LIST_ELEMENTS]; 
 
+    // Boolean indicating whether `comparisonValue` lies in `listValidValues`.
     signal output isMember;
 
-    signal partialProduct[MAX_LIST_ENTRIES];
+    signal partialProduct[MAX_LIST_ELEMENTS];
 
-    for (var i = 0; i < MAX_LIST_ENTRIES; i++) {
-	if (i == 0) {
-	    partialProduct[i] <== value - list[i];
-	} else {
-	    partialProduct[i] <== partialProduct[i-1] * (value - list[i]);
-	}
+    for (var i = 0; i < MAX_LIST_ELEMENTS; i++) {
+	      if (i == 0) {
+	          partialProduct[i] <== comparisonValue - listValidValues[i];
+	      } else {
+	          partialProduct[i] <== partialProduct[i-1] * (comparisonValue - listValidValues[i]);
+	      }
     }
 
-    if (MAX_LIST_ENTRIES == 0)
-	isMember <== 1;
-    else
-	isMember <== IsZero()(partialProduct[MAX_LIST_ENTRIES - 1]);
+    if (MAX_LIST_ELEMENTS == 0) {
+	      isMember <== 0;
+    } else {
+	      isMember <== IsZero()(partialProduct[MAX_LIST_ELEMENTS - 1]);
+    }
 }

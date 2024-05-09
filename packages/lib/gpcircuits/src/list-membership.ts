@@ -1,16 +1,16 @@
 import { ProtoPODGPCCircuitParams } from "./proto-pod-gpc";
 import { CircuitSignal } from "./types";
-import { PODValue, podValueHash } from "@pcd/pod";
+import { PODValueTuple, podValueHash } from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
-import { computeTupleIndices, hashTuple } from "./tuple";
+import { computeTupleIndices, hashTuple } from "./multituple";
 import { extendedSignalArray, padArray } from "./util";
 
 export type ListMembershipModuleInputs = {
-  value: CircuitSignal;
-  list: CircuitSignal[];
+  comparisonValue: CircuitSignal;
+  listValidValues: CircuitSignal[];
 };
 
-export type ListMembershipModuleInputNamesType = ["value", "list"];
+export type ListMembershipModuleInputNamesType = ["comparisonValue", "list"];
 
 export type ListMembershipModuleOutputs = { isMember: CircuitSignal };
 
@@ -22,40 +22,41 @@ export type ListMembershipModuleOutputNamesType = ["isMember"];
  * applications of {@link processSingleList}.
  *
  * @param params parameters of the ProtoPODGPC the list is processed for
- * @param memberIndices the indices of the entry values (or tuples) each of which is a member of the corresponding list
- * @param lists the membership lists of tuples
- * @returns list of tuple indices of arity `params.tupleArity` representing the input tuples,
- * numbers representing the indices of the entry values/entry value tuples which are members
- *  of the lists, and the membership lists in hashed form.
+ * @param listComparisonValueIndices the indices of the entry values (or tuples) each of which is a member of the corresponding list
+ * @param lists arrays of tuples of constant values
+ * @returns the circuit inputs necessary for the list membership portion of the ProtoPODGPC
+ * circuit, viz. a list of tuple indices of arity `params.tupleArity` representing the input
+ * tuples, numbers representing the indices of the entry values/entry value tuples which are
+ * members of the lists, and the membership lists in hashed form.
  * @throws RangeError if any of the indices are out of bounds.
  * @throws TypeError if the list and index arrays are malformed.
  */
 export function processLists(
   params: ProtoPODGPCCircuitParams,
-  memberIndices: number[][],
-  lists: PODValue[][][]
+  listComparisonValueIndices: number[][],
+  lists: PODValueTuple[][]
 ): {
   tupleIndices: CircuitSignal[][];
-  memberIndex: CircuitSignal[];
-  membershipList: CircuitSignal[][];
+  listComparisonValueIndex: CircuitSignal[];
+  listValidValues: CircuitSignal[][];
 } {
-  let firstTupleIndex = params.maxEntries;
+  let firstAvailableTupleIndex = params.maxEntries;
   const unpaddedOutputObject: {
     tupleIndices: CircuitSignal[][];
-    memberIndices: CircuitSignal[];
-    membershipLists: CircuitSignal[][];
+    listComparisonValueIndices: CircuitSignal[];
+    listValidValuess: CircuitSignal[][];
   } = {
     tupleIndices: [],
-    memberIndices: [],
-    membershipLists: []
+    listComparisonValueIndices: [],
+    listValidValuess: []
   };
 
-  for (let i = 0; i < memberIndices.length; i++) {
+  for (let i = 0; i < listComparisonValueIndices.length; i++) {
     // Process each of the lists
     const processedList = processSingleList(
       params,
-      firstTupleIndex,
-      memberIndices[i],
+      firstAvailableTupleIndex,
+      listComparisonValueIndices[i],
       lists[i]
     );
 
@@ -64,13 +65,15 @@ export function processLists(
       unpaddedOutputObject.tupleIndices.push(indexTuple.map(BigInt))
     );
     // Push member indices as bigints.
-    unpaddedOutputObject.memberIndices.push(BigInt(processedList.memberIndex));
+    unpaddedOutputObject.listComparisonValueIndices.push(
+      BigInt(processedList.listComparisonValueIndex)
+    );
 
     // Push the hashed membership list.
-    unpaddedOutputObject.membershipLists.push(processedList.membershipList);
+    unpaddedOutputObject.listValidValuess.push(processedList.listValidValues);
 
     // Increment the first tuple index.
-    firstTupleIndex += processedList.tupleIndices.length;
+    firstAvailableTupleIndex += processedList.tupleIndices.length;
   }
 
   // Pad and return
@@ -81,17 +84,17 @@ export function processLists(
       // Pad with tuples of 0.
       extendedSignalArray([], params.tupleArity)
     ),
-    memberIndex: extendedSignalArray(
-      unpaddedOutputObject.memberIndices,
+    listComparisonValueIndex: extendedSignalArray(
+      unpaddedOutputObject.listComparisonValueIndices,
       params.maxLists,
       // Pad with -1 (mod p).
       BABY_JUB_NEGATIVE_ONE
     ),
-    membershipList: padArray(
-      unpaddedOutputObject.membershipLists,
+    listValidValues: padArray(
+      unpaddedOutputObject.listValidValuess,
       params.maxLists,
       // Pad with lists of zeroes.
-      extendedSignalArray([], params.maxListEntries)
+      extendedSignalArray([], params.maxListElements)
     )
   };
 }
@@ -101,14 +104,17 @@ export function processLists(
  * of the entry value (or entry value tuple) that ought to
  * be a member of this list. This is done by means of appropriate
  * applications of {@link hashTuple} and {@link computeTupleIndices}.
- * If no tuples are involved, then `memberIndex` is a singleton and
- * `list` a list of singletons.
+ * If no tuples are involved, then `listComparisonValueIndex` is a
+ * singleton and `list` a list of singletons. The list is padded with
+ * its first entry to fill the underlying array up to its capacity
+ * (`params.maxListElements`) while ensuring that there are no false
+ * positives in list membership checks.
  *
  * @param params parameters of the ProtoPODGPC the list is processed for
- * @param firstTupleIndex the index of the first output tuple in the combined array of
+ * @param firstAvailableTupleIndex the index of the first output tuple in the combined array of
  * entry and tuple value hashes.
- * @param memberIndex the index of the entry value (or tuple) which is a member of the list
- * @param list the membership list of tuples
+ * @param listComparisonValueIndex tuple of indices of inputs to be compared to the list elements
+ * @param list the tuples of constant values making up the list
  * @returns list of tuple indices of arity `params.tupleArity` representing the input tuple,
  * number representing the index of the entry value (tuple) which is a member of
  * the list, and the (unpadded) membership list in hashed form.
@@ -118,36 +124,42 @@ export function processLists(
  */
 export function processSingleList(
   params: ProtoPODGPCCircuitParams,
-  firstTupleIndex: number,
-  memberIndex: number[],
-  list: PODValue[][]
-): { tupleIndices: number[][]; memberIndex: number; membershipList: bigint[] } {
+  firstAvailableTupleIndex: number,
+  listComparisonValueIndex: number[],
+  list: PODValueTuple[]
+): {
+  tupleIndices: number[][];
+  listComparisonValueIndex: number;
+  listValidValues: bigint[];
+} {
   // Check types
-  if (list.length === 0 || memberIndex.length === 0) {
+  if (list.length === 0 || listComparisonValueIndex.length === 0) {
     throw new TypeError("The list and member index must be nonempty.");
   }
-  if (list.some((x) => x.length !== memberIndex.length)) {
+  if (list.some((x) => x.length !== listComparisonValueIndex.length)) {
     throw new TypeError(
       "The arity of the member index and list elements must coincide."
     );
   }
 
   // Check bounds
-  if (memberIndex.some((i) => i >= params.maxEntries)) {
-    throw new RangeError(`Member index ${memberIndex} out of bounds.`);
+  if (listComparisonValueIndex.some((i) => i >= params.maxEntries)) {
+    throw new RangeError(
+      `Member index ${listComparisonValueIndex} out of bounds.`
+    );
   }
 
-  // `memberIndex` will either have one element and thus represent an
-  // entry value or it will have multiple elements and thus represent
-  // a tuple of entry values.
-  const memberIndexIsTuple = memberIndex.length > 1;
+  // `listComparisonValueIndex` will either have one element and thus represent an
+  // entry value hash or it will have multiple elements and thus represent
+  // a tuple of such hashes.
+  const listComparisonValueIndexIsTuple = listComparisonValueIndex.length > 1;
 
-  if (memberIndexIsTuple) {
+  if (listComparisonValueIndexIsTuple) {
     // Compute the tuple indices corresponding to the member index.
     const tupleIndices = computeTupleIndices(
       params.tupleArity,
-      firstTupleIndex,
-      memberIndex
+      firstAvailableTupleIndex,
+      listComparisonValueIndex
     );
     // Pass each tuple in the membership list to the tuple hasher.
     const unpaddedMembershipList = list.map((l) =>
@@ -156,10 +168,11 @@ export function processSingleList(
     // Return the object with padded hashed membership list.
     return {
       tupleIndices: tupleIndices,
-      memberIndex: firstTupleIndex + tupleIndices.length - 1,
-      membershipList: padArray(
+      listComparisonValueIndex:
+        firstAvailableTupleIndex + tupleIndices.length - 1,
+      listValidValues: padArray(
         unpaddedMembershipList,
-        params.maxListEntries,
+        params.maxListElements,
         unpaddedMembershipList[0]
       )
     };
@@ -171,11 +184,12 @@ export function processSingleList(
     // Return the object with padded hashed membership list.
     return {
       tupleIndices: [],
-      memberIndex: memberIndex[0],
-      membershipList: padArray(
+      listComparisonValueIndex: listComparisonValueIndex[0],
+      listValidValues: padArray(
         unpaddedMembershipList,
-        params.maxListEntries,
-        // Pad with first entry in the list.
+        params.maxListElements,
+        // Pad with first entry in the list to fill the array up to its capacity
+        // without there being a false positive.
         unpaddedMembershipList[0]
       )
     };

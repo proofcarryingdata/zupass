@@ -39,7 +39,10 @@ async function main(): Promise<void> {
   );
 
   // Fetch powers of tau files in sequence (if necessary). This is done
-  // separately from the setup step below to avoid race conditions.
+  // separately from the setup step below to avoid race conditions where
+  // two circuit setups running in parallel require the same ptau file:
+  // One of them will download the ptau file and the other will find
+  // a partially downloaded file and throw an error declaring it invalid.
   for (const circuitName of circuitNames) {
     await circomkit.ptau(circuitName);
   }

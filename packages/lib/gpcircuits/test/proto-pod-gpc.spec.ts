@@ -134,7 +134,6 @@ const sampleInput: ProtoPODGPCInputs = {
   ],
   /*PUB*/ entryIsValueEnabled: 59n,
   /*PUB*/ entryIsValueHashRevealed: 21n,
-
   // Entry constraint modules.
   /*PUB*/ entryEqualToOtherEntryByIndex: [
     3n,
@@ -269,8 +268,8 @@ const sampleInput: ProtoPODGPCInputs = {
   ],
 
   // List membership module (1)
-  /*PUB*/ memberIndex: [11n],
-  /*PUB*/ membershipList: [
+  /*PUB*/ listComparisonValueIndex: [11n],
+  /*PUB*/ listValidValues: [
     [
       8993031575169517501320565465605080718450193850910703654052189665847060371180n,
       5627234783640014495730634314663457046633987290129261556210682514903827437201n,
@@ -476,9 +475,9 @@ function makeTestSignals(
     .slice(0, maxTupleArity(params.maxTuples, params.tupleArity));
 
   // Form lists and indices.
-  const memberIndex1 = listData.map((pair) => pair[0]);
+  const listComparisonValueIndex1 = listData.map((pair) => pair[0]);
   const list1 = zipLists(listData.map((pair) => pair[1]));
-  const [memberIndex2, list2]: [number[], PODValue[][]] =
+  const [listComparisonValueIndex2, list2]: [number[], PODValue[][]] =
     sigEntryIsValueEnabled[1] === 1n
       ? [
           [1],
@@ -490,18 +489,18 @@ function makeTestSignals(
 
   // Form lists of indices and membership lists, truncating where
   // necessary
-  const memberIndices = [memberIndex1, memberIndex2].slice(0, params.maxLists);
-  const membershipLists = [list1, list2]
+  const listComparisonValueIndices = [
+    listComparisonValueIndex1,
+    listComparisonValueIndex2
+  ].slice(0, params.maxLists);
+  const listValidValuess = [list1, list2]
     // Truncate list of membership lists if necessary.
     .slice(0, params.maxLists)
     // Truncate membership lists if necessary.
-    .map((list) => list.slice(0, params.maxListEntries));
+    .map((list) => list.slice(0, params.maxListElements));
 
-  const { tupleIndices, memberIndex, membershipList } = processLists(
-    params,
-    memberIndices,
-    membershipLists
-  );
+  const { tupleIndices, listComparisonValueIndex, listValidValues } =
+    processLists(params, listComparisonValueIndices, listValidValuess);
 
   return {
     inputs: {
@@ -530,8 +529,8 @@ function makeTestSignals(
       ownerExternalNullifier: 42n,
       ownerIsNullfierHashRevealed: isNullifierHashRevealed ? 1n : 0n,
       tupleIndices: tupleIndices,
-      memberIndex: memberIndex,
-      membershipList: membershipList,
+      listComparisonValueIndex: listComparisonValueIndex,
+      listValidValues: listValidValues,
       globalWatermark: 1337n
     },
     outputs: {
@@ -612,7 +611,6 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {
     const circuitDesc = ProtoPODGPC.pickCircuit(params);
-    //    expect(circuitDesc).to.not.be.undefined;
     if (!circuitDesc) {
       throw new Error(
         `None of the circuit descriptions can accommodate the following parameters: ${JSON.stringify(

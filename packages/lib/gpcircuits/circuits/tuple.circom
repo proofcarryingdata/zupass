@@ -5,18 +5,18 @@ include "gpc-util.circom"; // input selector
 
 /**
  * Module mapping TUPLE_ARITY signals chosen from a set of
- * MAX_VALUES input signals to a tuple hash representing
+ * MAX_ELEMENTS input signals to a tuple hash representing
  * the corresponding tuple.
  */
 
-template TupleModule(
+template TupleHasher(
     // Arity of each generated tuple
     TUPLE_ARITY,
-    // Maximum number of values to choose from
-    MAX_VALUES
+    // Maximum number of elements to choose from
+    MAX_ELEMENTS
 ) {
-    // Values as input signals
-    signal input value[MAX_VALUES];
+    // Tuple elements as input signals
+    signal input tupleElements[MAX_ELEMENTS];
     
     // Tuple of arity TUPLE_ARITY whose elements are indices
     // referring to elements of `value`.
@@ -25,7 +25,7 @@ template TupleModule(
     signal tupleArray[TUPLE_ARITY];
 
     for(var i = 0; i < TUPLE_ARITY; i++) {
-	tupleArray[i] <== MaybeInputSelector(MAX_VALUES)(value, tupleIndices[i]);
+	tupleArray[i] <== MaybeInputSelector(MAX_ELEMENTS)(tupleElements, tupleIndices[i]);
     }
 
     // Finally, Poseidon hash the tuple.
