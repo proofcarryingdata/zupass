@@ -5,6 +5,7 @@ import {
   GroupType
 } from "@pcd/ethereum-group-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import { GPCPCDArgs, GPCPCDPackage } from "@pcd/gpc-pcd";
 import {
   constructZupassPcdAddRequestUrl,
   constructZupassPcdProveAndAddRequestUrl,
@@ -32,30 +33,19 @@ import { v4 as uuid } from "uuid";
 import { HomeLink } from "../../components/Core";
 import { ExampleContainer } from "../../components/ExamplePage";
 import { EVERYONE_SEMAPHORE_GROUP_URL, ZUPASS_URL } from "../../constants";
+import {
+  EXAMPLE_EDDSA_PRIVATE_KEY,
+  EXAMPLE_GPC_CONFIG,
+  EXAMPLE_OWNER_IDENTITY,
+  EXAMPLE_POD_CONTENT
+} from "../../podExampleConstants";
 import { sendZupassRequest } from "../../util";
-
-// Key borrowed from https://github.com/iden3/circomlibjs/blob/4f094c5be05c1f0210924a3ab204d8fd8da69f49/test/eddsa.js#L103
-const EXAMPLE_EDDSA_PRIVATE_KEY =
-  "0001020304050607080900010203040506070809000102030405060708090001";
-
-const EXAMPLE_POD_CONTENT = `{
-  "A": 123,
-  "B": 321,
-  "C": "hello",
-  "D": "foobar",
-  "E": 123,
-  "F": 4294967295,
-  "G": 7,
-  "H": 8,
-  "I": 9,
-  "J": 10,
-  "owner": 18711405342588116796533073928767088921854096266145046362753928030796553161041
-}`;
 
 export default function Page(): JSX.Element {
   const [signedMessage, setSignedMessage] = useState("1");
   const [folder, setFolder] = useState("");
   const [podContent, setPodContent] = useState(EXAMPLE_POD_CONTENT);
+  const [gpcConfig, setGPCConfig] = useState(EXAMPLE_GPC_CONFIG);
   const [podFolder, setPodFolder] = useState("Test PODs");
 
   return (
@@ -148,8 +138,18 @@ export default function Page(): JSX.Element {
           }}
         />
         <br />
+        GPC Proof config:{" "}
+        <textarea
+          cols={40}
+          rows={15}
+          value={gpcConfig}
+          onChange={(e): void => {
+            setGPCConfig(e.target.value);
+          }}
+        />
+        <br />
         <label>
-          Folder to add PCD to:
+          Folder to add POD/GPC to:
           <input
             type="text"
             value={podFolder}
@@ -167,6 +167,17 @@ export default function Page(): JSX.Element {
           }
         >
           add a new POD to Zupass
+        </button>
+        <button
+          onClick={(): Promise<void> =>
+            addGPCPCD(
+              podContent,
+              gpcConfig,
+              podFolder.length > 0 ? podFolder : undefined
+            )
+          }
+        >
+          add a GPC Proof to Zupass
         </button>
       </ExampleContainer>
     </div>
@@ -547,6 +558,71 @@ async function addPODPCD(
     ZUPASS_URL,
     window.location.origin + "#/popup",
     serializedPODPCD,
+    podFolder
+  );
+
+  sendZupassRequest(url);
+}
+
+async function addGPCPCD(
+  podContent: string,
+  gpcConfig: string,
+  podFolder: string | undefined
+): Promise<void> {
+  await GPCPCDPackage.init?.({
+    zkArtifactPath: ZUPASS_URL + "artifacts/test/proto-pod-gpc"
+  });
+
+  const podPCD = new PODPCD(
+    uuid(),
+    POD.sign(
+      podEntriesFromSimplifiedJSON(podContent),
+      EXAMPLE_EDDSA_PRIVATE_KEY
+    )
+  );
+
+  const identityPCD = await SemaphoreIdentityPCDPackage.prove({
+    identity: EXAMPLE_OWNER_IDENTITY
+  });
+
+  const proveArgs: GPCPCDArgs = {
+    proofConfig: {
+      argumentType: ArgumentTypeName.String,
+      value: gpcConfig
+    },
+    pod: {
+      value: await PODPCDPackage.serialize(podPCD),
+      argumentType: ArgumentTypeName.PCD
+    },
+    identity: {
+      value: await SemaphoreIdentityPCDPackage.serialize(identityPCD),
+      argumentType: ArgumentTypeName.PCD
+    },
+    externalNullifier: {
+      value: "example nullifier",
+      argumentType: ArgumentTypeName.String
+    },
+    watermark: {
+      value: "example watermark",
+      argumentType: ArgumentTypeName.String
+    },
+    id: {
+      argumentType: ArgumentTypeName.String,
+      value: uuid()
+    }
+  };
+
+  const newPCD = await GPCPCDPackage.prove(proveArgs);
+  if (!(await GPCPCDPackage.verify(newPCD))) {
+    throw new Error("New GPC does not verify!");
+  }
+
+  const serializedPCD = await GPCPCDPackage.serialize(newPCD);
+
+  const url = constructZupassPcdAddRequestUrl(
+    ZUPASS_URL,
+    window.location.origin + "#/popup",
+    serializedPCD,
     podFolder
   );
 

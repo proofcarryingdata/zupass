@@ -149,7 +149,7 @@ template ProtoPODGPC (
 
     // Owner module verifies owner's ID, and generates nullifier.
     signal ownerIsEnabled <== NOT()(IsZero()(ownerEntryIndex + 1));
-    signal output ownerRevealedNulifierHash <== OwnerModuleSemaphoreV3()(
+    signal output ownerRevealedNullifierHash <== OwnerModuleSemaphoreV3()(
         enabled <== ownerIsEnabled,
         identityNullifier <== ownerSemaphoreV3IdentityNullifier,
         identityTrapdoor <== ownerSemaphoreV3IdentityTrapdoor,

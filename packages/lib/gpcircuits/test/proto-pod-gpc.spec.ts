@@ -304,7 +304,7 @@ const sampleOutput: ProtoPODGPCOutputs = {
     21888242871839275222246405745257275088548364400416034343698204186575808495616n,
     21888242871839275222246405745257275088548364400416034343698204186575808495616n
   ],
-  ownerRevealedNulifierHash:
+  ownerRevealedNullifierHash:
     1517081033071132720435657432021139876572843496027662548196342287861804968602n
 };
 
@@ -535,7 +535,7 @@ function makeTestSignals(
     },
     outputs: {
       entryRevealedValueHash: sigEntryRevealedValueHash,
-      ownerRevealedNulifierHash:
+      ownerRevealedNullifierHash:
         isNullifierHashRevealed && params.maxEntries > sigOwnerEntryIndex
           ? poseidon2([42n, ownerIdentity.nullifier])
           : BABY_JUB_NEGATIVE_ONE

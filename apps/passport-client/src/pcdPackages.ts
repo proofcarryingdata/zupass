@@ -3,6 +3,7 @@ import { EdDSAPCDPackage } from "@pcd/eddsa-pcd";
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
 import { EmailPCDPackage } from "@pcd/email-pcd";
 import { EthereumOwnershipPCDPackage } from "@pcd/ethereum-ownership-pcd";
+import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { HaLoNoncePCDPackage } from "@pcd/halo-nonce-pcd";
 import { MessagePCDPackage } from "@pcd/message-pcd";
 import { PCDPackage } from "@pcd/pcd-types";
@@ -62,6 +63,9 @@ async function loadPackages(): Promise<PCDPackage[]> {
   await MessagePCDPackage.init?.({});
 
   await PODPCDPackage.init?.({});
+  await GPCPCDPackage.init?.({
+    zkArtifactPath: "/artifacts/test/proto-pod-gpc"
+  });
 
   return [
     SemaphoreGroupPCDPackage,
@@ -80,6 +84,7 @@ async function loadPackages(): Promise<PCDPackage[]> {
     EmailPCDPackage,
     MessagePCDPackage,
     PODPCDPackage,
-    PODTicketPCDPackage
+    PODTicketPCDPackage,
+    GPCPCDPackage
   ];
 }

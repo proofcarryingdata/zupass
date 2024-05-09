@@ -62,6 +62,12 @@
       "path": "../../packages/ui/ethereum-ownership-pcd-ui"
     },
     {
+      "path": "../../packages/pcd/gpc-pcd"
+    },
+    {
+      "path": "../../packages/ui/gpc-pcd-ui"
+    },
+    {
       "path": "../../packages/pcd/halo-nonce-pcd"
     },
     {
