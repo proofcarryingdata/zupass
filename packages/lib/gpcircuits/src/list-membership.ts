@@ -10,7 +10,10 @@ export type ListMembershipModuleInputs = {
   listValidValues: CircuitSignal[];
 };
 
-export type ListMembershipModuleInputNamesType = ["comparisonValue", "list"];
+export type ListMembershipModuleInputNamesType = [
+  "comparisonValue",
+  "listValidValues"
+];
 
 export type ListMembershipModuleOutputs = { isMember: CircuitSignal };
 
