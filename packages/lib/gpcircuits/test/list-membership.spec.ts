@@ -303,12 +303,6 @@ describe("list-membership.ListMembershipModule should work", function () {
     };
   };
 
-  // Non-membership case
-  const sampleInput2: ListMembershipModuleInputs = {
-    validValues: sampleList,
-    comparisonValue: 0n
-  };
-
   const sampleOutput: ListMembershipModuleOutputs = {
     isMember: BigInt(+true)
   };
@@ -332,6 +326,15 @@ describe("list-membership.ListMembershipModule should work", function () {
     );
   });
 
+  it("should successfully verify list non-membership", async () => {
+    await circuit(sampleList.length).then((c) =>
+      c.expectPass(
+        { ...sampleInput(sampleList.length), comparisonValue: 0n },
+        sampleOutput2
+      )
+    );
+  });
+
   it("should successfully verify list membership with padding of various sizes", async () => {
     for (let i = 0; i < 10; i++) {
       const listLength = 2 * (i + 1) * sampleList.length;
@@ -341,10 +344,15 @@ describe("list-membership.ListMembershipModule should work", function () {
     }
   });
 
-  it("should successfully verify list non-membership", async () => {
-    await circuit(sampleList.length).then((c) =>
-      c.expectPass(sampleInput2, sampleOutput2)
-    );
+  it("should successfully verify list non-membership with padding of various sizes", async () => {
+    for (let i = 0; i < 10; i++) {
+      const listLength = 2 * (i + 1) * sampleList.length;
+      await circuit(listLength).then((c) =>
+        c.expectPass(
+          { ...sampleInput(listLength), comparisonValue: 0n },
+          sampleOutput2
+        )
+      );
+    }
   });
 });
-// TODO(POD-P3): Flesh out tests.
