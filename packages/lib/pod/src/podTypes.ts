@@ -75,6 +75,11 @@ export const POD_INT_MAX = (1n << 63n) - 1n;
 export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
 
 /**
+ * Represents a tuple of POD values as an array.
+ */
+export type PODValueTuple = PODValue[];
+
+/**
  * A set of entries defining a POD, represented in an object.  POD entries
  * are always Merklized in sorted order.  Entries extracted from a `POD`
  * instance will always iterate in sorted order, but inputs used to create

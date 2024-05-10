@@ -7,7 +7,7 @@
   "dirCircuits": "./circuits",
   "dirInputs": "./inputs",
   "dirBuild": "./build",
-  "optimization": 1,
+  "optimization": 2,
   "inspect": true,
   "include": [
     "../../../node_modules",

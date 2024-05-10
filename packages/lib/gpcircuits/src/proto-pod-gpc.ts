@@ -41,6 +41,13 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
+  // MultiTuple module (1)
+  /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
+
+  // List membership module (1+)
+  /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -69,6 +76,9 @@ export type ProtoPODGPCInputNamesType = [
   "ownerSemaphoreV3IdentityTrapdoor",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
+  "tupleIndices",
+  "listComparisonValueIndex",
+  "listValidValues",
   "globalWatermark"
 ];
 
@@ -95,6 +105,13 @@ export type ProtoPODGPCPublicInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
+  // Tuple module (1)
+  /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
+
+  // List membership module (1)
+  /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
+  /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
+
   // Global module (1)
   /*PUB*/ globalWatermark: CircuitSignal;
 };
@@ -113,6 +130,9 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
   "ownerEntryIndex",
   "ownerExternalNullifier",
   "ownerIsNullfierHashRevealed",
+  "tupleIndices",
+  "listComparisonValueIndex",
+  "listValidValues",
   "globalWatermark"
 ];
 
@@ -152,6 +172,27 @@ export type ProtoPODGPCCircuitParams = {
    * Max depth of POD merkle tree.  Max entries in any object is 2^(depth-1).
    */
   merkleMaxDepth: number;
+
+  /**
+   * Number of membership lists
+   */
+  maxLists: number;
+
+  /**
+   * Number of entries in each membership list to be included in proof.
+   */
+  maxListElements: number;
+
+  /**
+   * Number of tuples which can be included in a proof.
+   */
+  maxTuples: number;
+
+  /**
+   * Arity (i.e. size or width) of tuples which can be included in a proof,
+   * e.g. tupleArity = 2 for pairs or tupleArity = 3 for triples.
+   */
+  tupleArity: number;
 };
 
 /**
@@ -160,9 +201,21 @@ export type ProtoPODGPCCircuitParams = {
 export function ProtoPODGPCCircuitParams(
   maxObjects: number,
   maxEntries: number,
-  merkleMaxDepth: number
+  merkleMaxDepth: number,
+  maxLists: number,
+  maxListElements: number,
+  maxTuples: number,
+  tupleArity: number
 ): ProtoPODGPCCircuitParams {
-  return { maxObjects, maxEntries, merkleMaxDepth };
+  return {
+    maxObjects,
+    maxEntries,
+    merkleMaxDepth,
+    maxLists,
+    maxListElements,
+    maxTuples,
+    tupleArity
+  };
 }
 
 /**
@@ -173,7 +226,15 @@ export function ProtoPODGPCCircuitParams(
 export function protoPODGPCCircuitParamArray(
   params: ProtoPODGPCCircuitParams
 ): number[] {
-  return [params.maxObjects, params.maxEntries, params.merkleMaxDepth];
+  return [
+    params.maxObjects,
+    params.maxEntries,
+    params.merkleMaxDepth,
+    params.maxLists,
+    params.maxListElements,
+    params.maxTuples,
+    params.tupleArity
+  ];
 }
 
 /**
@@ -184,7 +245,15 @@ export function protoPODGPCCircuitParamArray(
 export function arrayToProtoPODGPCCircuitParam(
   params: number[]
 ): ProtoPODGPCCircuitParams {
-  return ProtoPODGPCCircuitParams(params[0], params[1], params[2]);
+  return ProtoPODGPCCircuitParams(
+    params[0],
+    params[1],
+    params[2],
+    params[3],
+    params[4],
+    params[5],
+    params[6]
+  );
 }
 
 /**
@@ -278,6 +347,9 @@ export class ProtoPODGPC {
       ownerEntryIndex: allInputs.ownerEntryIndex,
       ownerExternalNullifier: allInputs.ownerExternalNullifier,
       ownerIsNullfierHashRevealed: allInputs.ownerIsNullfierHashRevealed,
+      tupleIndices: allInputs.tupleIndices,
+      listComparisonValueIndex: allInputs.listComparisonValueIndex,
+      listValidValues: allInputs.listValidValues,
       globalWatermark: allInputs.globalWatermark
     };
   }
@@ -320,6 +392,9 @@ export class ProtoPODGPC {
       inputs.ownerEntryIndex,
       inputs.ownerExternalNullifier,
       inputs.ownerIsNullfierHashRevealed,
+      ...inputs.tupleIndices.flat(),
+      ...inputs.listComparisonValueIndex,
+      ...inputs.listValidValues.flat(),
       inputs.globalWatermark
     ].map(BigInt);
   }
@@ -368,6 +443,8 @@ export class ProtoPODGPC {
     return undefined;
   }
 
+  // TODO(POD-P2): Replace `ProtoPODGPCCircuitParams` with a different type
+  // allowing more flexibility with choices of tuple parameters.
   /**
    * Checks whether a described circuit can meet a required set of parameters.
    * This will be true if each of the circuit's parameters is greater than or
@@ -384,7 +461,11 @@ export class ProtoPODGPC {
     return (
       circuitDesc.maxObjects >= requiredParams.maxObjects &&
       circuitDesc.maxEntries >= requiredParams.maxEntries &&
-      circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth
+      circuitDesc.merkleMaxDepth >= requiredParams.merkleMaxDepth &&
+      circuitDesc.maxLists >= requiredParams.maxLists &&
+      circuitDesc.maxListElements >= requiredParams.maxListElements &&
+      circuitDesc.maxTuples >= requiredParams.maxTuples &&
+      circuitDesc.tupleArity >= requiredParams.tupleArity
     );
   }
 
@@ -411,7 +492,7 @@ export class ProtoPODGPC {
    * Generates a circuit name based on parameters.
    */
   public static circuitNameForParams(params: ProtoPODGPCCircuitParams): string {
-    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md`;
+    return `${params.maxObjects}o-${params.maxEntries}e-${params.merkleMaxDepth}md-${params.maxLists}x${params.maxListElements}l-${params.maxTuples}x${params.tupleArity}t`;
   }
 
   private static circuitDescForParams(

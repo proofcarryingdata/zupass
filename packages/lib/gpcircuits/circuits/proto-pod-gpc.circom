@@ -4,6 +4,8 @@ include "circomlib/circuits/gates.circom";
 include "entry.circom";
 include "global.circom";
 include "gpc-util.circom";
+include "list-membership.circom";
+include "multituple.circom";
 include "object.circom";
 include "owner.circom";
 
@@ -27,11 +29,27 @@ template ProtoPODGPC (
     // sets the size of inputs with the `entry` prefix (whether arrays or
     // bitfields).
     MAX_ENTRIES,
-
+    
     // Max depth of the Merkle proof that this entry appears in a POD.  This
     // determines the size of the entryProofSiblings array input, and places an
     // inclusive upper bound on the proofDepth input.
-    MERKLE_MAX_DEPTH
+    MERKLE_MAX_DEPTH,
+
+    // Indicates the number of ListMembership modules included in this GPC,
+    // setting the largest number of distinct membership lists for (tuples of)
+    // entry values which can be checked.
+    MAX_LISTS,
+    
+    // Indicates the maximum number of list entries for each list membership check.
+    MAX_LIST_ELEMENTS,
+
+    // Indicates the number of tuples included in this GPC, setting the
+    // largest number of distinct tuples which can be expressed.
+    MAX_TUPLES,
+
+    // Indicates the arity (i.e. width or size) of the each tuple, e.g.
+    // TUPLE_ARITY = 2 for pairs or TUPLE_ARITY = 3 for triples.
+    TUPLE_ARITY
 ) {
     /*
      * 1+ ObjectModules.  Each array corresponds to one input/output for each object module.
@@ -141,12 +159,50 @@ template ProtoPODGPC (
     );
 
     /*
+     * 1 MultiTupleModule with its inputs & outputs.
+     */
+
+    // Array of indices of elements forming the desired tuples (cf. MultiTupleModule).
+    signal input tupleIndices[MAX_TUPLES][TUPLE_ARITY];
+
+    // Hashes representing these tuples.
+    signal tupleHashes[MAX_TUPLES] <== MultiTupleModule(MAX_TUPLES, TUPLE_ARITY, MAX_ENTRIES)(entryValueHashes, tupleIndices);
+    
+    /*
+     * (MAX_LISTS) ListMembershipModules with their inputs & outputs.
+     */
+
+    // Index of entry value (if less than `MAX_ENTRIES`) or tuple hash that ought to be a member
+    // of the ith list.
+    // This is equal to -1 wherever a list membership check is not required, which has the effect of
+    // checking that the value 0 is a member of the list of valid values, which should also be set
+    // to a list of zeroes to match.
+    signal input listComparisonValueIndex[MAX_LISTS];
+
+    // List of accepted values for membership checks. Depending on the indices above, these need to
+    // match element value hashes, tuple hashes, or a constant value of 0 for disabled checks.
+    signal input listValidValues[MAX_LISTS][MAX_LIST_ELEMENTS];
+
+    // Indicators of whether the list membership checks pass.
+    signal isMember[MAX_LISTS];
+
+    for (var i = 0; i < MAX_LISTS; i++) {
+        isMember[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
+            MaybeInputSelector(MAX_ENTRIES + MAX_TUPLES)(
+                Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
+                listComparisonValueIndex[i]),
+            listValidValues[i]);
+
+        isMember[i] === 1;
+    }
+    
+    /*
      * 1 GlobalModule with its inputs & outputs.
      */
 
     // Watermark is an arbitrary value used to uniquely identify a proof.
     signal input globalWatermark;
 
-    // Catch-all for logic gloabl to the circuit, not tied to any of the other modules above.
+    // Catch-all for logic global to the circuit, not tied to any of the other modules above.
     GlobalModule()(globalWatermark);
 }

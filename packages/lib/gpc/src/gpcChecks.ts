@@ -26,7 +26,11 @@ import {
 import {
   checkPODEntryIdentifier,
   splitCircuitIdentifier,
-  splitPODEntryIdentifier
+  splitPODEntryIdentifier,
+  DEFAULT_MAX_LISTS,
+  DEFAULT_MAX_LIST_ELEMENTS,
+  DEFAULT_MAX_TUPLES,
+  DEFAULT_TUPLE_ARITY
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -96,11 +100,15 @@ export function checkProofConfig(
     );
   }
 
-  return {
-    maxObjects: totalObjects,
-    maxEntries: totalEntries,
-    merkleMaxDepth: requiredMerkleDepth
-  };
+  return ProtoPODGPCCircuitParams(
+    totalObjects,
+    totalEntries,
+    requiredMerkleDepth,
+    DEFAULT_MAX_LISTS,
+    DEFAULT_MAX_LIST_ELEMENTS,
+    DEFAULT_MAX_TUPLES,
+    DEFAULT_TUPLE_ARITY
+  );
 }
 
 function checkProofObjConfig(
@@ -200,11 +208,15 @@ export function checkProofInputs(
     checkPODValue("watermark", proofInputs.watermark);
   }
 
-  return {
-    maxObjects: totalObjects,
-    maxEntries: 1,
-    merkleMaxDepth: requiredMerkleDepth
-  };
+  return ProtoPODGPCCircuitParams(
+    totalObjects,
+    1,
+    requiredMerkleDepth,
+    DEFAULT_MAX_LISTS,
+    DEFAULT_MAX_LIST_ELEMENTS,
+    DEFAULT_MAX_TUPLES,
+    DEFAULT_TUPLE_ARITY
+  );
 }
 
 /**
@@ -402,11 +414,15 @@ export function checkRevealedClaims(
     checkPODValue("watermark", revealedClaims.watermark);
   }
 
-  return {
-    maxObjects: totalObjects,
-    maxEntries: totalEntries,
-    merkleMaxDepth: requiredMerkleDepth
-  };
+  return ProtoPODGPCCircuitParams(
+    totalObjects,
+    totalEntries,
+    requiredMerkleDepth,
+    DEFAULT_MAX_LISTS,
+    DEFAULT_MAX_LIST_ELEMENTS,
+    DEFAULT_MAX_TUPLES,
+    DEFAULT_TUPLE_ARITY
+  );
 }
 
 function checkRevealedObjectClaims(

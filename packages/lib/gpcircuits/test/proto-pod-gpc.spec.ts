@@ -1,13 +1,20 @@
-import { POD, PODContent, decodePublicKey, decodeSignature } from "@pcd/pod";
+import {
+  POD,
+  PODContent,
+  PODValue,
+  decodePublicKey,
+  decodeSignature
+} from "@pcd/pod";
 import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import _ from "lodash";
 import "mocha";
 import path from "path";
-import { poseidon2 } from "poseidon-lite/poseidon2";
+import { poseidon2 } from "poseidon-lite";
 import {
   CircuitArtifactPaths,
+  processLists,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
   ProtoPODGPCCircuitParams,
@@ -18,7 +25,9 @@ import {
   array2Bits,
   extendedSignalArray,
   gpcArtifactPaths,
-  protoPODGPCCircuitParamArray
+  maxTupleArity,
+  protoPODGPCCircuitParamArray,
+  zipLists
 } from "../src";
 import {
   circomkit,
@@ -31,11 +40,19 @@ import {
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
+const MAX_LISTS = 2;
+const MAX_LIST_ENTRIES = 20;
+const MAX_TUPLES = 1;
+const TUPLE_ARITY = 4;
 
 const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_OBJECTS,
   MAX_ENTRIES,
-  MERKLE_MAX_DEPTH
+  MERKLE_MAX_DEPTH,
+  MAX_LISTS,
+  MAX_LIST_ENTRIES,
+  MAX_TUPLES,
+  TUPLE_ARITY
 );
 
 /**
@@ -245,6 +262,58 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: 42n,
   /*PUB*/ ownerIsNullfierHashRevealed: 1n,
 
+  // Tuple module (1)
+  /*PUB*/ tupleIndices: [[0n, 3n, 4n, 0n]],
+
+  // List membership module (1)
+  /*PUB*/ listComparisonValueIndex: [10n, 2n],
+  /*PUB*/ listValidValues: [
+    [
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      954489746909414943235318963334958574786280599689599263480891969739728384259n,
+      14817656240911277280926105257184239284772234817449371516440573267665276657878n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n
+    ],
+    [
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      258071104886281019673049751947634554232920835393595101028404753707746639950n,
+      182079048417179539545970732679096371357369048564078539272006698153726644528n,
+      405595751139330719253651185729874002724136903095462474029135259130005398986n,
+      335052023995624983314817417909713543427783448856740419267425738064439102915n,
+      324520210211906104838118463364480817452902646208281319078648035184917687310n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n
+    ]
+  ],
+
   // Global module (1)
   /*PUB*/ globalWatermark: 1337n
 };
@@ -342,7 +411,7 @@ function makeTestSignals(
   const sigEntryObjectIndex = [];
   const sigEntryNameHash = [];
   const sigEntryValue = [];
-  const sigEntryIsValueEnabled = [];
+  const sigEntryIsValueEnabled: bigint[] = [];
   const sigEntryIsValueHashRevealed = [];
   const sigEntryRevealedValueHash = [];
   const sigEntryEqualToOtherEntryByIndex = [];
@@ -400,12 +469,74 @@ function makeTestSignals(
     sigEntryProofDepth.push(BigInt(entrySignals.proof.siblings.length));
     sigEntryProofIndex.push(BigInt(entrySignals.proof.index));
 
-    // Fillin sibling array, padded with 0s to max length.
+    // Fill in sibling array, padded with 0s to max length.
     sigEntryProofSiblings.push(
       extendedSignalArray(entrySignals.proof.siblings, params.merkleMaxDepth)
     );
   }
 
+  // A list of pairs of indices and values.
+  // The values will be zipped together to form the
+  // actual membership list.
+  const listData = [
+    [
+      0,
+      [sigEntryValue[0], 85n, 0n].map((x) => {
+        return { type: "int", value: x };
+      })
+    ],
+    [
+      3,
+      [sigEntryValue[3], 876n, 999n].map((x) => {
+        return { type: "cryptographic", value: x };
+      })
+    ],
+    [
+      4,
+      [sigEntryValue[4], 103n, 1n].map((x) => {
+        return { type: "cryptographic", value: x };
+      })
+    ]
+  ]
+    .map((pair) => pair as [number, PODValue[]])
+    // Omit those entry value indices outside of the appropriate range
+    .filter((pair) => pair[0] < Math.min(params.maxEntries, testEntries.length))
+    // Truncate tuple arity if necessary.
+    .slice(0, maxTupleArity(params.maxTuples, params.tupleArity));
+
+  // Form lists and indices.
+  const listComparisonValueIndex1 = listData.map((pair) => pair[0]);
+  const list1 = zipLists(listData.map((pair) => pair[1]));
+  const [listComparisonValueIndex2, list2]: [number[], PODValue[][]] = [
+    [2],
+    [
+      sampleEntries[testEntries[2]["name"] as keyof typeof sampleEntries].value,
+      "bună",
+      "你好",
+      "привет",
+      "سلام",
+      "שלום"
+    ].map((value) => {
+      return [{ type: "string", value }];
+    })
+  ] as [number[], PODValue[][]];
+
+  // Form lists of indices and membership lists, truncating where
+  // necessary
+  const numLists = listComparisonValueIndex2.some((i) => i >= params.maxEntries)
+    ? 1
+    : params.maxLists;
+  const listComparisonValueIndices = [
+    listComparisonValueIndex1,
+    listComparisonValueIndex2
+  ].slice(0, numLists);
+  const listValidValuess = [list1, list2]
+    .slice(0, numLists)
+    // Truncate membership lists if necessary.
+    .map((list) => list.slice(0, params.maxListElements));
+
+  const { tupleIndices, listComparisonValueIndex, listValidValues } =
+    processLists(params, listComparisonValueIndices, listValidValuess);
   return {
     inputs: {
       objectContentID: sigObjectContentID,
@@ -432,6 +563,9 @@ function makeTestSignals(
         : BABY_JUB_NEGATIVE_ONE,
       ownerExternalNullifier: 42n,
       ownerIsNullfierHashRevealed: isNullifierHashRevealed ? 1n : 0n,
+      tupleIndices: tupleIndices,
+      listComparisonValueIndex: listComparisonValueIndex,
+      listValidValues: listValidValues,
       globalWatermark: 1337n
     },
     outputs: {
@@ -480,10 +614,10 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   });
 
   it("should accept with different parameters", async () => {
-    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8 } is the default
-    // above, and is larger than the test data in all dimensions (so padding
-    // is exercised).  What we're testing here is the ability to handle
-    // smaller sizes, with truncated data as necessary.
+    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8, ... } is the default
+    // above, and is larger than the test data in all dimensions (so padding is
+    // exercised).  What we're testing here is the ability to handle smaller
+    // sizes, with truncated data as necessary.
     for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
       (pair) => pair[0]
     )) {
@@ -512,9 +646,12 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
     params: ProtoPODGPCCircuitParams
   ): CircuitArtifactPaths {
     const circuitDesc = ProtoPODGPC.pickCircuit(params);
-    expect(circuitDesc).to.not.be.undefined;
     if (!circuitDesc) {
-      throw new Error("Missing circuit desc!");
+      throw new Error(
+        `None of the circuit descriptions can accommodate the following parameters: ${JSON.stringify(
+          params
+        )}`
+      );
     }
 
     const artifacts = gpcArtifactPaths(
@@ -580,10 +717,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   });
 
   it("should accept with each circuit in family", async () => {
-    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8 } is the default
-    // above, and is larger than the test data in all dimensions (so padding
-    // is exercised).  What we're testing here is the ability to handle
-    // smaller sizes, with truncated data as necessary.
+    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8, ... } is the default
+    // above, and is larger than the test data in all dimensions (so padding is
+    // exercised).  What we're testing here is the ability to handle smaller
+    // sizes, with truncated data as necessary.
     for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
       if (_.isEqual(cd, GPC_PARAMS)) {
@@ -595,6 +732,7 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
         cd,
         true /*isNullifierHashRevealed*/
       );
+
       await groth16Test(artifacts, inputs, outputs);
     }
   });

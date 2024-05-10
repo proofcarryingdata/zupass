@@ -1,11 +1,15 @@
 {
-  "proto-pod-gpc_1o-1e-5md": {
+  "proto-pod-gpc_1o-1e-5md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       1,
-      5
+      5,
+      1,
+      10,
+      2,
+      2
     ],
     "pubs": [
       "objectSignerPubkeyAx",
@@ -18,16 +22,23 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_1o-5e-8md": {
+  "proto-pod-gpc_1o-5e-6md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       1,
       5,
-      8
+      6,
+      1,
+      10,
+      2,
+      2
     ],
     "pubs": [
       "objectSignerPubkeyAx",
@@ -40,16 +51,23 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   },
-  "proto-pod-gpc_3o-10e-8md": {
+  "proto-pod-gpc_3o-10e-8md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",
     "params": [
       3,
       10,
-      8
+      8,
+      1,
+      10,
+      2,
+      2
     ],
     "pubs": [
       "objectSignerPubkeyAx",
@@ -62,6 +80,38 @@
       "ownerEntryIndex",
       "ownerExternalNullifier",
       "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listValidValues",
+      "globalWatermark"
+    ]
+  },
+  "proto-pod-gpc_3o-10e-8md-2x20l-1x4t": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      3,
+      10,
+      8,
+      2,
+      20,
+      1,
+      4
+    ],
+    "pubs": [
+      "objectSignerPubkeyAx",
+      "objectSignerPubkeyAy",
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueEnabled",
+      "entryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "ownerEntryIndex",
+      "ownerExternalNullifier",
+      "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listValidValues",
       "globalWatermark"
     ]
   }

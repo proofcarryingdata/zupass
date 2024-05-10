@@ -13,7 +13,7 @@ const testArtifactDir = path.join(artifactDir, "test");
 
 async function main(): Promise<void> {
   // Delete old artifacts
-  if (await fsExists(testArtifactDir)) {
+  if (fsExists(testArtifactDir)) {
     await clearDir(testArtifactDir);
   } else {
     await fs.mkdir(testArtifactDir, { recursive: true });
@@ -25,19 +25,32 @@ async function main(): Promise<void> {
   // Read circuit names from circuits.json
   const circuitNames = Object.keys(circuitsJson);
 
-  // Compile and set up circuits in parallel to generate all artifacts.
-  // The batching lets us compile up to 4 circuits at a time to avoid OOM
-  // issues.  The awaits within the lambda below ensures that compile and
-  // setup of the same circuit happen in sequence.
+  // Compile circuits in parallel. The batching lets us compile up to 4
+  // circuits at a time to avoid OOM issues.
   await batchPromise(
     MAX_PARALLEL_PROMISES,
-    async (circuitName) => {
-      // Note that setup will implicitly compile if r1cs file doesn't exist, but
-      // it won't check if inputs have changed or other files (e.g. wasm) are
-      // missing, so we do both steps explicitly here.
-      await circomkit.compile(circuitName);
-      await circomkit.setup(circuitName);
-    },
+    // Note that setup will implicitly compile if r1cs file doesn't exist, but
+    // it won't check if inputs have changed or other files (e.g. wasm) are
+    // missing, so we do both steps explicitly here. Also, this step is
+    // necessary for the ptau step below.
+    (circuitName) => circomkit.compile(circuitName),
+    circuitNames
+  );
+
+  // Fetch powers of tau files in sequence (if necessary). This is done
+  // separately from the setup step below to avoid race conditions where
+  // two circuit setups running in parallel require the same ptau file:
+  // One of them will download the ptau file and the other will find
+  // a partially downloaded file and throw an error declaring it invalid.
+  for (const circuitName of circuitNames) {
+    await circomkit.ptau(circuitName);
+  }
+
+  // Set up circuits in parallel to generate all artifacts. This is done
+  // 4 circuits as a time for the same reason outlined above.
+  await batchPromise(
+    MAX_PARALLEL_PROMISES,
+    (circuitName) => circomkit.setup(circuitName),
     circuitNames
   );
 
