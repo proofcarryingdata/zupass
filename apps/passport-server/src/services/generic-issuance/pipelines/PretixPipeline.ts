@@ -1996,13 +1996,8 @@ export class PretixPipeline implements BasePipeline {
     checkerEmail: string
   ): Promise<PodboxOfflineTicket[]> {
     return traced(LOG_NAME, "getOfflineTickets", async (span) => {
-      tracePipeline(this.definition);
-
       if (this.definition.options.offlineCheckin === undefined) {
-        throw new PCDHTTPError(
-          400,
-          "Offline check-in is not enabled for this pipeline"
-        );
+        return [];
       }
 
       const checkerTicketCriteria =
@@ -2085,13 +2080,11 @@ export class PretixPipeline implements BasePipeline {
     ticketIds: string[]
   ): Promise<void> {
     return traced(LOG_NAME, "checkInOfflineTickets", async (span) => {
-      tracePipeline(this.definition);
-
       if (this.definition.options.offlineCheckin === undefined) {
-        throw new PCDHTTPError(
-          400,
-          "Offline check-in is not enabled for this pipeline"
+        logger(
+          `${LOG_TAG} User ${checkerEmail} tried to upload offline check-ins for an event managed by pipeline ${this.id}, but offline check-in is not enabled.`
         );
+        return;
       }
 
       const checkerTicketCriteria =
