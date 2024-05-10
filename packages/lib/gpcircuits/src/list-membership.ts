@@ -114,7 +114,7 @@ export function processLists(
 /**
  * Generates part of the ProtoPODGPC circuit inputs for a single
  * list membership check. This is used to generate the full inputs
- * for multiple list membersh> checks in (@link processLists).
+ * for multiple list membership checks in (@link processLists).
  *
  * Processes a single membership list together with the (multi-)index
  * of the entry value (or entry value tuple) that ought to
