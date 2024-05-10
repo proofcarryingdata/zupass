@@ -13,7 +13,7 @@ describe("tuple.TupleHasher should work", function () {
     tupleArity: number
   ) => Promise<
     WitnessTester<TupleHasherInputNamesType, TupleHasherOutputNamesType>
-  > = (tupleArity): Promise<WitnessTester> =>
+  > = (tupleArity) =>
     circomkit.WitnessTester("TupleHasher", {
       file: "tuple",
       template: "TupleHasher",

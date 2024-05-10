@@ -277,15 +277,19 @@ describe("List membership helpers should work", function () {
 
 describe("list-membership.ListMembershipModule should work", function () {
   // Circuit compilation sometimes takes more than the default timeout of 2s.
-  let circuit: (
+  const circuit: (
     n: number
   ) => Promise<
     WitnessTester<
       ListMembershipModuleInputNamesType,
       ListMembershipModuleOutputNamesType
     >
-  >;
-
+  > = (n) =>
+    circomkit.WitnessTester("ListMembershipModule", {
+      file: "list-membership",
+      template: "ListMembershipModule",
+      params: [n]
+    });
   // Here the list of admissible values contains only 5 elements.
   const sampleList = [
     8905486818455134363060055817991647390962079139440460714076410595226736943033n,
@@ -310,15 +314,6 @@ describe("list-membership.ListMembershipModule should work", function () {
   const sampleOutput2: ListMembershipModuleOutputs = {
     isMember: BigInt(+false)
   };
-
-  this.beforeAll(async () => {
-    circuit = (n): Promise<WitnessTester> =>
-      circomkit.WitnessTester("ListMembershipModule", {
-        file: "list-membership",
-        template: "ListMembershipModule",
-        params: [n]
-      });
-  });
 
   it("should successfully verify list membership", async () => {
     await circuit(sampleList.length).then((c) =>
