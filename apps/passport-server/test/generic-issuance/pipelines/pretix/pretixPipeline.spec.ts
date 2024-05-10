@@ -1107,18 +1107,7 @@ describe("generic issuance - PretixPipeline", function () {
       ticketsByEvent
     );
 
-    // Offline check-ins have not been processed yet
-    const pipelineInfo = await requestPipelineInfo(
-      adminGIUserEmail,
-      giBackend.expressContext.localEndpoint,
-      pipeline.id
-    );
-    expectSuccess(pipelineInfo);
-    expectLength(pipelineInfo.value.queuedOfflineCheckins, 2);
-
-    // Verify that the tickets are checked in.
-    const loadResult = await pipeline.load();
-    expect(loadResult.offlineTicketsCheckedIn).to.eq(2);
+    await pipeline.load();
 
     // If we fetch offline tickets again, they should all appear to be
     // checked in.
@@ -1255,19 +1244,7 @@ describe("generic issuance - PretixPipeline", function () {
           ticketsByEvent
         );
 
-        // Offline check-ins have not been processed yet
-        const pipelineInfo = await requestPipelineInfo(
-          adminGIUserEmail,
-          giBackend.expressContext.localEndpoint,
-          pipeline.id
-        );
-        expectSuccess(pipelineInfo);
-        // The one ticket should be in the queue for check-in
-        expectLength(pipelineInfo.value.queuedOfflineCheckins, 1);
-
-        // Verify that the ticket is checked in.
-        const loadResult = await pipeline.load();
-        expect(loadResult.offlineTicketsCheckedIn).to.eq(1);
+        await pipeline.load();
 
         // If we fetch offline tickets again, they should all appear to be
         // checked in.

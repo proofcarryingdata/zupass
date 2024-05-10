@@ -1437,18 +1437,7 @@ describe("generic issuance - LemonadePipeline", function () {
       ticketsByEvent
     );
 
-    // Offline check-ins have not been processed yet
-    const pipelineInfo = await requestPipelineInfo(
-      adminGIUserEmail,
-      giBackend.expressContext.localEndpoint,
-      pipeline.id
-    );
-    expectSuccess(pipelineInfo);
-    expectLength(pipelineInfo.value.queuedOfflineCheckins, 6);
-
-    // Verify that the tickets are checked in.
-    const loadResult = await pipeline.load();
-    expect(loadResult.offlineTicketsCheckedIn).to.eq(6);
+    await pipeline.load();
 
     // If we fetch offline tickets again, they should all appear to be
     // checked in.

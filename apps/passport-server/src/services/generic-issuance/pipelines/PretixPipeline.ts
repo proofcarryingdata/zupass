@@ -127,6 +127,8 @@ export class PretixPipeline implements BasePipeline {
     { status: CheckinStatus; timestamp: number }
   >;
 
+  private processOfflineCheckinQueue: PQueue;
+
   /**
    * This is where the Pipeline stores atoms so that they don't all have
    * to be stored in-memory.
@@ -251,6 +253,7 @@ export class PretixPipeline implements BasePipeline {
     this.offlineCheckinDB = offlineCheckinDB;
     this.semaphoreUpdateQueue = new PQueue({ concurrency: 1 });
     this.credentialSubservice = credentialSubservice;
+    this.processOfflineCheckinQueue = new PQueue({ concurrency: 1 });
   }
 
   public async start(): Promise<void> {
@@ -2148,7 +2151,6 @@ export class PretixPipeline implements BasePipeline {
       );
 
       if (offlineCheckinsToSave.length > 0) {
-        const now = new Date();
         logger(
           `${LOG_TAG} User ${checkerEmail} uploaded ${offlineCheckinsToSave.length} offline-check-ins to pipeline ${this.id}`
         );
@@ -2156,15 +2158,10 @@ export class PretixPipeline implements BasePipeline {
           this.id,
           checkerEmail,
           offlineCheckinsToSave,
-          now
+          new Date()
         );
-        const timestamp = now.getTime();
-        for (const ticketId of offlineCheckinsToSave) {
-          this.pendingCheckIns.set(ticketId, {
-            status: CheckinStatus.Pending,
-            timestamp
-          });
-        }
+        // Asynchronously process offline check-ins.
+        this.processOfflineCheckins();
       }
     });
   }
@@ -2182,122 +2179,133 @@ export class PretixPipeline implements BasePipeline {
     checkedInTicketIds: string[];
     logs: PipelineLog[];
   }> {
-    return traced(LOG_NAME, "processOfflineCheckins", async (span) => {
-      const logs: PipelineLog[] = [];
-      const offlineCheckins =
-        await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
+    // Prevent concurrent attempts to process offline check-ins.
+    return this.processOfflineCheckinQueue.add(() =>
+      traced(LOG_NAME, "processOfflineCheckins", async (span) => {
+        const logs: PipelineLog[] = [];
+        const offlineCheckins =
+          await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
 
-      const checkedInTicketIds = [];
-      const failedTicketIds = [];
-      span?.setAttribute("offline_checkin_count", offlineCheckins.length);
+        const checkedInTicketIds = [];
+        const failedTicketIds = [];
+        span?.setAttribute("offline_checkin_count", offlineCheckins.length);
 
-      const ticketIdsGroupedByChecker = offlineCheckins.reduce(
-        (memo, { checkerEmail, ticketId }) => {
-          if (memo[checkerEmail]) {
-            memo[checkerEmail].push(ticketId);
-          } else {
-            memo[checkerEmail] = [ticketId];
-          }
-          return memo;
-        },
-        {} as Record<string, string[]>
-      );
+        const ticketIdsGroupedByChecker = offlineCheckins.reduce(
+          (memo, { checkerEmail, ticketId }) => {
+            if (memo[checkerEmail]) {
+              memo[checkerEmail].push(ticketId);
+            } else {
+              memo[checkerEmail] = [ticketId];
+            }
+            return memo;
+          },
+          {} as Record<string, string[]>
+        );
 
-      for (const [checkerEmail, ticketIds] of Object.entries(
-        ticketIdsGroupedByChecker
-      )) {
-        const checkerTicketCriteria =
-          await this.ticketsUserCanCheckIn(checkerEmail);
-        for (const ticketId of ticketIds) {
-          const atom = await this.db.loadById(this.id, ticketId);
-          if (!atom) {
-            // Ticket does not exist in the atom DB, so perhaps it is a manual
-            // ticket.
-            const manualTicket = await this.getManualTicketById(ticketId);
-            if (manualTicket) {
-              if (ticketMatchesCriteria(manualTicket, checkerTicketCriteria)) {
-                // Check the manual ticket in
-                const result = await this.checkInManualTicket(
-                  manualTicket,
+        for (const [checkerEmail, ticketIds] of Object.entries(
+          ticketIdsGroupedByChecker
+        )) {
+          const checkerTicketCriteria =
+            await this.ticketsUserCanCheckIn(checkerEmail);
+          for (const ticketId of ticketIds) {
+            const atom = await this.db.loadById(this.id, ticketId);
+            if (!atom) {
+              // Ticket does not exist in the atom DB, so perhaps it is a manual
+              // ticket.
+              const manualTicket = await this.getManualTicketById(ticketId);
+              if (manualTicket) {
+                if (
+                  ticketMatchesCriteria(manualTicket, checkerTicketCriteria)
+                ) {
+                  // Check the manual ticket in
+                  const result = await this.checkInManualTicket(
+                    manualTicket,
+                    checkerEmail
+                  );
+                  if (
+                    result.success === true ||
+                    result.error.name === "AlreadyCheckedIn"
+                  ) {
+                    checkedInTicketIds.push(ticketId);
+                  } else {
+                    failedTicketIds.push(ticketId);
+                  }
+                } else {
+                  logger(
+                    `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but this check-in is not being performed as they lack permissions.`
+                  );
+                  logs.push(
+                    makePLogWarn(
+                      `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                    )
+                  );
+                }
+              } else {
+                // Ticket does not exist in the manual ticket configuration either.
+                logs.push(
+                  makePLogWarn(
+                    `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this ticket does not exist.`
+                  )
+                );
+                failedTicketIds.push(ticketId);
+              }
+            } else {
+              if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
+                const result = await this.checkInPretixTicket(
+                  atom,
                   checkerEmail
                 );
+                // If the ticket is already checked in, just treat this as a success
                 if (
-                  result.success === true ||
+                  result.success ||
                   result.error.name === "AlreadyCheckedIn"
                 ) {
                   checkedInTicketIds.push(ticketId);
                 } else {
                   failedTicketIds.push(ticketId);
+                  logs.push(
+                    makePLogWarn(
+                      `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but check-in failed due to ${JSON.stringify(
+                        result.error
+                      )}.`
+                    )
+                  );
                 }
               } else {
                 logger(
-                  `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} on pipeline ${this.id} but this check-in is not being performed as they lack permissions.`
-                );
-                logs.push(
-                  makePLogWarn(
-                    `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
-                  )
-                );
-              }
-            } else {
-              // Ticket does not exist in the manual ticket configuration either.
-              logs.push(
-                makePLogWarn(
-                  `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this ticket does not exist.`
-                )
-              );
-              failedTicketIds.push(ticketId);
-            }
-          } else {
-            if (ticketMatchesCriteria(atom, checkerTicketCriteria)) {
-              const result = await this.checkInPretixTicket(atom, checkerEmail);
-              // If the ticket is already checked in, just treat this as a success
-              if (result.success || result.error.name === "AlreadyCheckedIn") {
-                checkedInTicketIds.push(ticketId);
-              } else {
-                failedTicketIds.push(ticketId);
-                logs.push(
-                  makePLogWarn(
-                    `User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but check-in failed due to ${JSON.stringify(
-                      result.error
-                    )}.`
-                  )
-                );
-              }
-            } else {
-              logger(
-                `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
-              );
-              logs.push(
-                makePLogWarn(
                   `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
-                )
-              );
+                );
+                logs.push(
+                  makePLogWarn(
+                    `${LOG_TAG} User ${checkerEmail} uploaded offline check-in for ticket ID ${ticketId} but this check-in is not being performed as they lack permissions.`
+                  )
+                );
+              }
             }
           }
         }
-      }
 
-      await this.offlineCheckinDB.deleteOfflineCheckins(
-        this.id,
-        checkedInTicketIds
-      );
-
-      for (const failedTicketId of failedTicketIds) {
-        await this.offlineCheckinDB.addFailedOfflineCheckin(
+        await this.offlineCheckinDB.deleteOfflineCheckins(
           this.id,
-          failedTicketId
+          checkedInTicketIds
         );
-      }
 
-      span?.setAttribute("failed_ticket_id_count", failedTicketIds.length);
-      span?.setAttribute(
-        "checked_in_ticket_id_count",
-        checkedInTicketIds.length
-      );
+        for (const failedTicketId of failedTicketIds) {
+          await this.offlineCheckinDB.addFailedOfflineCheckin(
+            this.id,
+            failedTicketId
+          );
+        }
 
-      return { failedTicketIds, checkedInTicketIds, logs };
-    });
+        span?.setAttribute("failed_ticket_id_count", failedTicketIds.length);
+        span?.setAttribute(
+          "checked_in_ticket_id_count",
+          checkedInTicketIds.length
+        );
+
+        return { failedTicketIds, checkedInTicketIds, logs };
+      })
+    );
   }
 
   private async getQueuedOfflineCheckins(): Promise<PipelineOfflineCheckin[]> {
