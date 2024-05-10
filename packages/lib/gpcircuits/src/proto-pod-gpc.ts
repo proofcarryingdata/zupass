@@ -41,10 +41,10 @@ export type ProtoPODGPCInputs = {
   /*PUB*/ ownerExternalNullifier: CircuitSignal;
   /*PUB*/ ownerIsNullfierHashRevealed: CircuitSignal;
 
-  // Tuple module (1)
+  // MultiTuple module (1)
   /*PUB*/ tupleIndices: CircuitSignal /*MAX_TUPLES*/[] /*TUPLE_ARITY*/[];
 
-  // List membership module (1)
+  // List membership module (1+)
   /*PUB*/ listComparisonValueIndex: CircuitSignal /*MAX_LISTS*/[];
   /*PUB*/ listValidValues: CircuitSignal /*MAX_LISTS*/[] /*MAX_LIST_ENTRIES*/[];
 

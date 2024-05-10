@@ -58,11 +58,11 @@ template Append (M, N) {
     signal output out[M + N];
 
     for (var i = 0; i < M; i++) {
-	      out[i] <== in1[i];
+        out[i] <== in1[i];
     }
 
     for (var i = 0; i < N; i++) {
-	      out[M + i] <== in2[i];
+        out[M + i] <== in2[i];
     }
 }
 

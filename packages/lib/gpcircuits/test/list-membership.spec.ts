@@ -23,7 +23,7 @@ describe("List membership helpers should work", function () {
     maxEntries: 6,
     tupleArity: 2,
     maxListElements: 10,
-    maxTuples: 1
+    maxTuples: 4
   };
 
   const params2 = {
@@ -253,7 +253,8 @@ describe("List membership helpers should work", function () {
       tupleIndices: [
         [0n, 1n, 0n],
         [2n, 3n, 4n],
-        [7n, 5n, 2n]
+        [7n, 5n, 2n],
+        [0n, 0n, 0n]
       ],
       listComparisonValueIndex: [6n, 8n, 0n],
       listValidValues: listValidValues2
@@ -264,7 +265,9 @@ describe("List membership helpers should work", function () {
     ).to.deep.equal({
       tupleIndices: [
         [0n, 1n, 0n, 0n],
-        [2n, 3n, 4n, 5n]
+        [2n, 3n, 4n, 5n],
+        [0n, 0n, 0n, 0n],
+        [0n, 0n, 0n, 0n]
       ],
       listComparisonValueIndex: [6n, 7n, 0n],
       listValidValues: listValidValues3
@@ -295,14 +298,14 @@ describe("list-membership.ListMembershipModule should work", function () {
   // Sample input with arbitrary padding
   const sampleInput: (n: number) => ListMembershipModuleInputs = (n) => {
     return {
-      listValidValues: extendedSignalArray(sampleList, n, sampleList[0]), // We fill up the rest with the first element.
+      validValues: extendedSignalArray(sampleList, n, sampleList[0]), // We fill up the rest with the first element.
       comparisonValue: sampleList[3]
     };
   };
 
   // Non-membership case
   const sampleInput2: ListMembershipModuleInputs = {
-    listValidValues: sampleList,
+    validValues: sampleList,
     comparisonValue: 0n
   };
 

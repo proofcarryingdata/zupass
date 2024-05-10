@@ -40,10 +40,10 @@ import {
 const MAX_OBJECTS = 3;
 const MAX_ENTRIES = 10;
 const MERKLE_MAX_DEPTH = 8;
-const MAX_LISTS = 1;
-const MAX_LIST_ENTRIES = 10;
-const MAX_TUPLES = 2;
-const TUPLE_ARITY = 2;
+const MAX_LISTS = 2;
+const MAX_LIST_ENTRIES = 20;
+const MAX_TUPLES = 1;
+const TUPLE_ARITY = 4;
 
 const GPC_PARAMS = ProtoPODGPCCircuitParams(
   MAX_OBJECTS,
@@ -134,19 +134,6 @@ const sampleInput: ProtoPODGPCInputs = {
   ],
   /*PUB*/ entryIsValueEnabled: 59n,
   /*PUB*/ entryIsValueHashRevealed: 21n,
-  // Entry constraint modules.
-  /*PUB*/ entryEqualToOtherEntryByIndex: [
-    3n,
-    1n,
-    2n,
-    3n,
-    1n,
-    5n,
-    3n,
-    3n,
-    3n,
-    3n
-  ],
   entryProofDepth: [5n, 3n, 5n, 5n, 3n, 3n, 5n, 5n, 5n, 5n],
   entryProofIndex: [0n, 6n, 4n, 8n, 0n, 2n, 0n, 0n, 0n, 0n],
   entryProofSiblings: [
@@ -252,6 +239,20 @@ const sampleInput: ProtoPODGPCInputs = {
     ]
   ],
 
+  // Entry constraint modules.
+  /*PUB*/ entryEqualToOtherEntryByIndex: [
+    3n,
+    1n,
+    2n,
+    3n,
+    1n,
+    5n,
+    3n,
+    3n,
+    3n,
+    3n
+  ],
+
   // Owner module (1)
   /*PUB*/ ownerEntryIndex: 1n,
   ownerSemaphoreV3IdentityNullifier:
@@ -262,25 +263,54 @@ const sampleInput: ProtoPODGPCInputs = {
   /*PUB*/ ownerIsNullfierHashRevealed: 1n,
 
   // Tuple module (1)
-  /*PUB*/ tupleIndices: [
-    [0n, 3n],
-    [10n, 4n]
-  ],
+  /*PUB*/ tupleIndices: [[0n, 3n, 4n, 0n]],
 
   // List membership module (1)
-  /*PUB*/ listComparisonValueIndex: [11n],
+  /*PUB*/ listComparisonValueIndex: [10n, 2n],
   /*PUB*/ listValidValues: [
     [
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      5627234783640014495730634314663457046633987290129261556210682514903827437201n,
-      15824265215470742900351319517403805905492337104347079586577312587220569618280n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n,
-      8993031575169517501320565465605080718450193850910703654052189665847060371180n
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      954489746909414943235318963334958574786280599689599263480891969739728384259n,
+      14817656240911277280926105257184239284772234817449371516440573267665276657878n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n,
+      20512592176305604055339687149127083785801266243853050528476250996567095522131n
+    ],
+    [
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      258071104886281019673049751947634554232920835393595101028404753707746639950n,
+      182079048417179539545970732679096371357369048564078539272006698153726644528n,
+      405595751139330719253651185729874002724136903095462474029135259130005398986n,
+      335052023995624983314817417909713543427783448856740419267425738064439102915n,
+      324520210211906104838118463364480817452902646208281319078648035184917687310n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n,
+      79413589009516425735881875984458315063673535229512653237262904385386810264n
     ]
   ],
 
@@ -452,56 +482,61 @@ function makeTestSignals(
     [
       0,
       [sigEntryValue[0], 85n, 0n].map((x) => {
-        return { type: "cryptographic", value: x };
+        return { type: "int", value: x };
       })
     ],
     [
       3,
       [sigEntryValue[3], 876n, 999n].map((x) => {
-        return { type: "int", value: x };
+        return { type: "cryptographic", value: x };
       })
     ],
     [
       4,
       [sigEntryValue[4], 103n, 1n].map((x) => {
-        return { type: "int", value: x };
+        return { type: "cryptographic", value: x };
       })
     ]
   ]
     .map((pair) => pair as [number, PODValue[]])
-    // Consider only those entry values that are enabled.
-    .filter((pair) => sigEntryIsValueEnabled[pair[0]] === 1n)
+    // Omit those entry value indices outside of the appropriate range
+    .filter((pair) => pair[0] < Math.min(params.maxEntries, testEntries.length))
     // Truncate tuple arity if necessary.
     .slice(0, maxTupleArity(params.maxTuples, params.tupleArity));
 
   // Form lists and indices.
   const listComparisonValueIndex1 = listData.map((pair) => pair[0]);
   const list1 = zipLists(listData.map((pair) => pair[1]));
-  const [listComparisonValueIndex2, list2]: [number[], PODValue[][]] =
-    sigEntryIsValueEnabled[1] === 1n
-      ? [
-          [1],
-          [sigEntryValue[1], 19n, 7n, 0n, 12n, 13n].map((value) => {
-            return [{ type: "cryptographic", value }];
-          })
-        ]
-      : [[], []];
+  const [listComparisonValueIndex2, list2]: [number[], PODValue[][]] = [
+    [2],
+    [
+      sampleEntries[testEntries[2]["name"] as keyof typeof sampleEntries].value,
+      "bună",
+      "你好",
+      "привет",
+      "سلام",
+      "שלום"
+    ].map((value) => {
+      return [{ type: "string", value }];
+    })
+  ] as [number[], PODValue[][]];
 
   // Form lists of indices and membership lists, truncating where
   // necessary
+  const numLists = listComparisonValueIndex2.some((i) => i >= params.maxEntries)
+    ? 1
+    : params.maxLists;
   const listComparisonValueIndices = [
     listComparisonValueIndex1,
     listComparisonValueIndex2
-  ].slice(0, params.maxLists);
+  ].slice(0, numLists);
   const listValidValuess = [list1, list2]
-    // Truncate list of membership lists if necessary.
-    .slice(0, params.maxLists)
+    .slice(0, numLists)
     // Truncate membership lists if necessary.
     .map((list) => list.slice(0, params.maxListElements));
 
   const { tupleIndices, listComparisonValueIndex, listValidValues } =
     processLists(params, listComparisonValueIndices, listValidValuess);
-
   return {
     inputs: {
       objectContentID: sigObjectContentID,
@@ -579,10 +614,10 @@ describe("proto-pod-gpc.ProtoPODGPC (WitnessTester) should work", function () {
   });
 
   it("should accept with different parameters", async () => {
-    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8 } is the default
-    // above, and is larger than the test data in all dimensions (so padding
-    // is exercised).  What we're testing here is the ability to handle
-    // smaller sizes, with truncated data as necessary.
+    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8, ... } is the default
+    // above, and is larger than the test data in all dimensions (so padding is
+    // exercised).  What we're testing here is the ability to handle smaller
+    // sizes, with truncated data as necessary.
     for (const params of ProtoPODGPC.CIRCUIT_PARAMETERS.map(
       (pair) => pair[0]
     )) {
@@ -682,10 +717,10 @@ describe("proto-pod-gpc.ProtoPODGPC (Precompiled Artifacts) should work", functi
   });
 
   it("should accept with each circuit in family", async () => {
-    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8 } is the default
-    // above, and is larger than the test data in all dimensions (so padding
-    // is exercised).  What we're testing here is the ability to handle
-    // smaller sizes, with truncated data as necessary.
+    // { maxObjects: 3, maxEntries: 10, merkleMaxDepth: 8, ... } is the default
+    // above, and is larger than the test data in all dimensions (so padding is
+    // exercised).  What we're testing here is the ability to handle smaller
+    // sizes, with truncated data as necessary.
     for (const cd of ProtoPODGPC.CIRCUIT_PARAMETERS.map((pair) => pair[0])) {
       // Skip the default (largest) config, already tested above.
       if (_.isEqual(cd, GPC_PARAMS)) {

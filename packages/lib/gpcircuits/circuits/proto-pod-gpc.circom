@@ -174,22 +174,26 @@ template ProtoPODGPC (
 
     // Index of entry value (if less than `MAX_ENTRIES`) or tuple hash that ought to be a member
     // of the ith list.
-    // This is equal to -1 if the list membership check is disabled.
+    // This is equal to -1 wherever a list membership check is not required, which has the effect of
+    // checking that the value 0 is a member of the list of valid values, which should also be set
+    // to a list of zeroes to match.
     signal input listComparisonValueIndex[MAX_LISTS];
 
-    // Membership list.
+    // List of accepted values for membership checks. Depending on the indices above, these need to
+    // match element value hashes, tuple hashes, or a constant value of 0 for disabled checks.
     signal input listValidValues[MAX_LISTS][MAX_LIST_ELEMENTS];
 
     // Indicators of whether the list membership checks pass.
     signal isMember[MAX_LISTS];
 
     for (var i = 0; i < MAX_LISTS; i++) {
-	      isMember[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
-	          MaybeInputSelector(MAX_ENTRIES + MAX_TUPLES)(
-	              Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
-	              listComparisonValueIndex[i]), listValidValues[i]);
+        isMember[i] <== ListMembershipModule(MAX_LIST_ELEMENTS)(
+            MaybeInputSelector(MAX_ENTRIES + MAX_TUPLES)(
+                Append(MAX_ENTRIES, MAX_TUPLES)(entryValueHashes, tupleHashes),
+                listComparisonValueIndex[i]),
+            listValidValues[i]);
 
-	      isMember[i] === 1;
+        isMember[i] === 1;
     }
     
     /*

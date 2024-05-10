@@ -15,24 +15,24 @@ template ListMembershipModule(
     signal input comparisonValue; 
 
     // List of admissible value hashes. Assumed to have repetitions if the actual list length is smaller.
-    signal input listValidValues[MAX_LIST_ELEMENTS]; 
+    signal input validValues[MAX_LIST_ELEMENTS]; 
 
-    // Boolean indicating whether `comparisonValue` lies in `listValidValues`.
+    // Boolean indicating whether `comparisonValue` lies in `validValues`.
     signal output isMember;
 
     signal partialProduct[MAX_LIST_ELEMENTS];
 
     for (var i = 0; i < MAX_LIST_ELEMENTS; i++) {
-	      if (i == 0) {
-	          partialProduct[i] <== comparisonValue - listValidValues[i];
-	      } else {
-	          partialProduct[i] <== partialProduct[i-1] * (comparisonValue - listValidValues[i]);
-	      }
+        if (i == 0) {
+            partialProduct[i] <== comparisonValue - validValues[i];
+        } else {
+            partialProduct[i] <== partialProduct[i-1] * (comparisonValue - validValues[i]);
+        }
     }
 
     if (MAX_LIST_ELEMENTS == 0) {
-	      isMember <== 0;
+        isMember <== 0;
     } else {
-	      isMember <== IsZero()(partialProduct[MAX_LIST_ELEMENTS - 1]);
+        isMember <== IsZero()(partialProduct[MAX_LIST_ELEMENTS - 1]);
     }
 }

@@ -17,7 +17,8 @@ export type MultiTupleModuleOutputNamesType = ["tupleHashes"];
 /**
  * Determines the number of `paramTupleArity`-sized tuples
  * necessary to represent a tuple of arity `tupleArity`.
- * Throws a `RangeError` if the tuple arity parameter is not proper.
+ * Throws a `RangeError` if the tuple arity or tuple arity
+ * parameter is not proper.
  */
 export function requiredNumTuples(
   paramTupleArity: number,
@@ -25,15 +26,18 @@ export function requiredNumTuples(
 ): number {
   if (paramTupleArity < 2) {
     throw new RangeError("The tuple arity parameter must be at least 2.");
-  } else {
-    // If there is only one element, we require no tuples, else if there are
-    // `paramTupleArity` elements or less,we require one tuple.
-    // Else, we require one tuple for the first `paramTupleArity` elements
-    // plus one for every additional `paramTupleArity` - 1 elements, since
-    // the first tuple element for every subsequent tuple will be reserved
-    // for the index pointing to the preceding tuple.
-    return Math.ceil((tupleArity - 1) / (paramTupleArity - 1));
   }
+  if (tupleArity < 1) {
+    throw new RangeError("Invalid tuple arity.");
+  }
+
+  // If there is only one element, we require no tuples, else if there are
+  // `paramTupleArity` elements or less,we require one tuple.
+  // Else, we require one tuple for the first `paramTupleArity` elements
+  // plus one for every additional `paramTupleArity` - 1 elements, since
+  // the first tuple element for every subsequent tuple will be reserved
+  // for the index pointing to the preceding tuple.
+  return Math.ceil((tupleArity - 1) / (paramTupleArity - 1));
 }
 
 /**
@@ -65,20 +69,28 @@ export function maxTupleArity(
 }
 
 /**
+
+ * Decomposes a tuple into a chain of tuples of arity
+ * `paramTupleArity`, indexing the tuples starting from
+ * `firstAvailableTupleIndex`.
+ *
+ * Generates part of the signal inputs for MultiTupleModule.
+ *
+ * Examples:
+ * computeTupleIndices(2, 5, [1, 3, 4]) === [[1, 3], [5, 4]]
+ * computeTupleIndices(3, 5, [0, 1, 4, 2]) === [[0, 1, 4], [5, 2, 0]]
+ * computeTupleIndices(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
+ *
  * This procedure takes an N-tuple of `indices` (referring
  * to elements of some array of values) and returns its
  * representation as an appropriately linked sequence of
- * tuples of arity `paramMaxArity`, where these tuples
+ * tuples of arity `paramTupleArity`, where these tuples
  * are indexed starting at `firstAvailableTupleIndex` and the
  * first index is used as padding. 'Appropriately linked'
  * means that the first slot of every output tuple after
  * the first has an index referring to the preceding
  * tuple.
  *
- * Examples:
- * computeTupleIndices(2, 5, [1, 3, 4]) === [[1, 3], [5, 4]]
- * computeTupleIndices(3, 5, [0, 1, 4, 2]) === [[0, 1, 4], [5, 2, 0]]
- * computeTupleIndices(4, 6, [3, 4, 2, 1, 5]) === [[3, 4, 2, 1], [6, 5, 3, 3]]
  *
  * @param paramTupleArity the arity of the output tuple
  * @param firstAvailableTupleIndex the index of the first output tuple in the combined array of
@@ -98,10 +110,8 @@ export function computeTupleIndices(
     );
   }
 
-  // Note the first index.
-  const firstIndex = indices[0];
-
-  // The tuple indices will begin with the first `paramTupleArity` indices.
+  // The tuple indices will begin with the first `paramTupleArity` indices
+  // since it is first in the chain.
   const tupleIndices = [indices.slice(0, paramTupleArity)];
 
   // If we have more than that,
@@ -113,18 +123,19 @@ export function computeTupleIndices(
     );
 
     // Prepend the 'index' of the preceding tuple
-    // to each of these chunks and push them onto `tupleIndices`.
+    // to each chunks to link it to the preceding
+    // one and push it onto `tupleIndices`.
     unlinkedChunks.forEach((chunk, i) =>
       tupleIndices.push([firstAvailableTupleIndex + i].concat(chunk))
     );
   }
 
-  // Take note of the last tuple for padding purposes.
+  // Pad the last tuple of `tupleIndices` with `firstIndex` if it is not of length `paramTupleArity` and return.
+  const firstIndex = indices[0];
   const lastTupleIdx = tupleIndices.length - 1;
   const lastTuple = tupleIndices[lastTupleIdx];
   const lastTupleLength = lastTuple.length;
 
-  // Pad the last tuple of `tupleIndices` with `firstIndex` if it is not of length `paramTupleArity` and return.
   for (let i = 0; i < paramTupleArity - lastTupleLength; i++) {
     lastTuple.push(firstIndex);
   }
@@ -196,37 +207,27 @@ export function multiTupleHasher(
     return [firstChunkHash];
   }
 
-  // Else, proceed as follows:
-  const hasher = (tuple: bigint[], hashes: bigint[]): bigint[] =>
-    tuple.length <= paramTupleArity - 1
-      ? // If we have <= `paramTupleArity` - 1 elements, prepend the preceding
-        // chunk hash, pad and hash, appending it to the list of `hashes` computed
-        // so far.
-        hashes.concat(
-          tupleHasher(
-            padArray(
-              [hashes[hashes.length - 1]].concat(tuple),
-              paramTupleArity,
-              firstValueHash
-            )
-          )
+  // Else, store the first chunk's hash and iterate through each
+  // of the following chunks of size `paramTupleArity` - 1, prepending
+  // the preceding chunk's hash and padding with the first value hash
+  // where necessary.
+  const hashes = [firstChunkHash];
+  for (
+    let i = paramTupleArity;
+    i < valueHashes.length;
+    i += paramTupleArity - 1
+  ) {
+    hashes.push(
+      tupleHasher(
+        padArray(
+          [hashes[hashes.length - 1]].concat(
+            valueHashes.slice(i, i + paramTupleArity - 1)
+          ),
+          paramTupleArity,
+          firstValueHash
         )
-      : // Else, take the first `paramTupleArity` - 1 elements, prepend the
-        // preceding hash and hash, appending this to the list of `hashes`
-        // computed so far and running the process again after dropping these
-        // `paramTupleArity` - 1 elements.
-        hasher(
-          tuple.slice(paramTupleArity - 1),
-          hashes.concat(
-            tupleHasher(
-              [hashes[hashes.length - 1]].concat(
-                tuple.slice(0, paramTupleArity - 1)
-              )
-            )
-          )
-        );
-
-  // Run `hasher` with the (wrapped) first chunk hash as initial value
-  // and return.
-  return hasher(valueHashes.slice(paramTupleArity), [firstChunkHash]);
+      )
+    );
+  }
+  return hashes;
 }

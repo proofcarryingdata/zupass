@@ -75,7 +75,7 @@ export const POD_INT_MAX = (1n << 63n) - 1n;
 export type PODValue = PODStringValue | PODCryptographicValue | PODIntValue;
 
 /**
- * POD value tuples are arrays of PODValues.
+ * Represents a tuple of POD values as an array.
  */
 export type PODValueTuple = PODValue[];
 

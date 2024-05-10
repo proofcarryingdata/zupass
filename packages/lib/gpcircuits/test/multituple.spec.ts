@@ -22,6 +22,9 @@ import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 describe("MultiTuple helpers should work", function () {
   it("should compute the right number of required tuples for different input tuple arities", () => {
     [
+      [2, 1, 0],
+      [3, 1, 0],
+      [4, 1, 0],
       [2, 2, 1],
       [3, 3, 1],
       [4, 4, 1],
@@ -35,6 +38,9 @@ describe("MultiTuple helpers should work", function () {
 
   it("should compute the right maximum tuple arity representable by different parameters", () => {
     [
+      [0, 2, 0],
+      [0, 3, 0],
+      [0, 4, 0],
       [1, 2, 2],
       [1, 3, 3],
       [1, 4, 4],
@@ -206,11 +212,11 @@ describe("multituple.MultiTupleModule should work", function () {
     });
   });
 
-  it("should produce expected output", async () => {
-    // The case of one tuple
+  it("should produce expected output for one tuple", async () => {
     await circuit.expectPass(sampleInput, sampleOutput);
+  });
 
-    // The case of multiple tuples
+  it("should produce expected output for multiple tuples", async () => {
     const elements: PODValue[] = [98n, 9867n, 227n, 3877n, 6536n, 2n].map(
       (value) => {
         return { type: "int", value };
@@ -218,17 +224,19 @@ describe("multituple.MultiTupleModule should work", function () {
     );
     const maxTuples = 5;
     for (const tuple of [
-      [0, 1],
-      [0, 1, 2],
-      [0, 1, 2, 3],
-      [0, 1, 2, 3, 4],
-      [0, 1, 2, 3, 4, 5]
+      [1, 0],
+      [0, 5, 2],
+      [3, 1, 0, 2],
+      [5, 2, 4, 3, 0],
+      [4, 2, 1, 3, 0, 5]
     ]) {
       for (const tupleArity of [2, 3, 4]) {
         const inputs: MultiTupleModuleInputs = {
           tupleElements: elements.map(podValueHash),
           tupleIndices: padArray(
-            computeTupleIndices(tupleArity, elements.length, tuple),
+            computeTupleIndices(tupleArity, elements.length, tuple).map((x) =>
+              x.map(BigInt)
+            ),
             maxTuples,
             padArray([], tupleArity, 0n)
           )
@@ -255,4 +263,3 @@ describe("multituple.MultiTupleModule should work", function () {
     }
   });
 });
-// TODO(POD-P3): Flesh out tests.

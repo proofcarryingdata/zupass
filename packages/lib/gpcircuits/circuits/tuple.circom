@@ -19,13 +19,13 @@ template TupleHasher(
     signal input tupleElements[MAX_ELEMENTS];
     
     // Tuple of arity TUPLE_ARITY whose elements are indices
-    // referring to elements of `value`.
+    // referring to elements of `tupleElements`.
     signal input tupleIndices[TUPLE_ARITY];
     
     signal tupleArray[TUPLE_ARITY];
 
     for(var i = 0; i < TUPLE_ARITY; i++) {
-	tupleArray[i] <== MaybeInputSelector(MAX_ELEMENTS)(tupleElements, tupleIndices[i]);
+        tupleArray[i] <== InputSelector(MAX_ELEMENTS)(tupleElements, tupleIndices[i]);
     }
 
     // Finally, Poseidon hash the tuple.

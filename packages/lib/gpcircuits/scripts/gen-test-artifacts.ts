@@ -26,8 +26,7 @@ async function main(): Promise<void> {
   const circuitNames = Object.keys(circuitsJson);
 
   // Compile circuits in parallel. The batching lets us compile up to 4
-  // circuits at a time to avoid OOM issues.  The awaits within the lambda
-  // below ensures that compile and setup of the same circuit happen in sequence.
+  // circuits at a time to avoid OOM issues.
   await batchPromise(
     MAX_PARALLEL_PROMISES,
     // Note that setup will implicitly compile if r1cs file doesn't exist, but

@@ -223,7 +223,11 @@ export const DEFAULT_MAX_LIST_ELEMENTS = 1;
 export const DEFAULT_MAX_TUPLES = 1;
 export const DEFAULT_TUPLE_ARITY = 2;
 
-// Returns default values for the input to the (multi)tuple module.
+// Returns default values for the input to the (multi)tuple module, viz.
+// an array of tuples of 0, which corresponds to choosing the 0th entry
+// value hash. Since these are not constrained anywhere (i.e. not in the
+// list membership check, cf. below), there is no effect on the underlying
+// logic.
 export function dummyTuples(circuitDesc: ProtoPODGPCCircuitDesc): {
   tupleIndices: CircuitSignal[][];
 } {
@@ -236,7 +240,10 @@ export function dummyTuples(circuitDesc: ProtoPODGPCCircuitDesc): {
   };
 }
 
-// Returns default values for the inputs to the list membership module.
+// Returns default values for the inputs to the list membership module, viz.
+// a comparison value index of -1, which is a reference to the value 0, and
+// a list of valid values consisting of zeroes. This results in the list
+// membership check being trivially satisfied.
 export function dummyListMembership(circuitDesc: ProtoPODGPCCircuitDesc): {
   listComparisonValueIndex: CircuitSignal[];
   listValidValues: CircuitSignal[][];

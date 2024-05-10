@@ -7,12 +7,12 @@ import { extendedSignalArray, padArray } from "./util";
 
 export type ListMembershipModuleInputs = {
   comparisonValue: CircuitSignal;
-  listValidValues: CircuitSignal[];
+  validValues: CircuitSignal[];
 };
 
 export type ListMembershipModuleInputNamesType = [
   "comparisonValue",
-  "listValidValues"
+  "validValues"
 ];
 
 export type ListMembershipModuleOutputs = { isMember: CircuitSignal };
@@ -20,13 +20,14 @@ export type ListMembershipModuleOutputs = { isMember: CircuitSignal };
 export type ListMembershipModuleOutputNamesType = ["isMember"];
 
 /**
- * Processes several membership lists of tuples together with
- * the corresponding entry value indices by means of successive
- * applications of {@link processSingleList}.
+ * Generates the ProtoPODGPC circuit inputs for multiple list
+ * membership checks including the required input to the tuple
+ * module whenever necessary.
  *
  * @param params parameters of the ProtoPODGPC the list is processed for
- * @param listComparisonValueIndices the indices of the entry values (or tuples) each of which is a member of the corresponding list
- * @param lists arrays of tuples of constant values
+ * @param listComparisonValueIndices an array of arrays of indices of entry values, each of which
+ * refers to a tuple of entry values that should be a member of the corresponding list.
+ * @param lists arrays of tuples of constant values to compare against
  * @returns the circuit inputs necessary for the list membership portion of the ProtoPODGPC
  * circuit, viz. a list of tuple indices of arity `params.tupleArity` representing the input
  * tuples, numbers representing the indices of the entry values/entry value tuples which are
@@ -75,8 +76,15 @@ export function processLists(
     // Push the hashed membership list.
     unpaddedOutputObject.listValidValuess.push(processedList.listValidValues);
 
-    // Increment the first tuple index.
+    // Advance the first tuple index.
     firstAvailableTupleIndex += processedList.tupleIndices.length;
+
+    // Ensure that we haven't computed too many tuples for the given circuit parameters.
+    if (firstAvailableTupleIndex > params.maxTuples + params.maxEntries) {
+      throw new RangeError(
+        `The maximum tuple size parameter (${params.maxTuples}) cannot accommodate the required tuples.`
+      );
+    }
   }
 
   // Pad and return
@@ -84,13 +92,14 @@ export function processLists(
     tupleIndices: padArray(
       unpaddedOutputObject.tupleIndices,
       params.maxTuples,
-      // Pad with tuples of 0.
+      // Pad with tuples of index 0.
       extendedSignalArray([], params.tupleArity)
     ),
     listComparisonValueIndex: extendedSignalArray(
       unpaddedOutputObject.listComparisonValueIndices,
       params.maxLists,
-      // Pad with -1 (mod p).
+      // Pad with -1 (mod p), which makes the comparison value
+      // the fixed constant 0 in the corresponding circuit.
       BABY_JUB_NEGATIVE_ONE
     ),
     listValidValues: padArray(
@@ -103,13 +112,19 @@ export function processLists(
 }
 
 /**
+ * Generates part of the ProtoPODGPC circuit inputs for a single
+ * list membership check. This is used to generate the full inputs
+ * for multiple list membersh> checks in (@link processLists).
+ *
  * Processes a single membership list together with the (multi-)index
  * of the entry value (or entry value tuple) that ought to
  * be a member of this list. This is done by means of appropriate
  * applications of {@link hashTuple} and {@link computeTupleIndices}.
  * If no tuples are involved, then `listComparisonValueIndex` is a
- * singleton and `list` a list of singletons. The list is padded with
- * its first entry to fill the underlying array up to its capacity
+ * singleton (a list containing a single element) and `list` a list
+ * of singletons; the underlying values are hashed as-is rather than
+ * being being hashed as 1-ary tuples. The list is padded with its
+ * first entry to fill the underlying array up to its capacity
  * (`params.maxListElements`) while ensuring that there are no false
  * positives in list membership checks.
  *
@@ -148,7 +163,7 @@ export function processSingleList(
   // Check bounds
   if (listComparisonValueIndex.some((i) => i >= params.maxEntries)) {
     throw new RangeError(
-      `Member index ${listComparisonValueIndex} out of bounds.`
+      `List comparison value index ${listComparisonValueIndex} out of bounds.`
     );
   }
 
@@ -158,7 +173,7 @@ export function processSingleList(
   const listComparisonValueIndexIsTuple = listComparisonValueIndex.length > 1;
 
   if (listComparisonValueIndexIsTuple) {
-    // Compute the tuple indices corresponding to the member index.
+    // Compute the tuple indices corresponding to the comparison value indices.
     const tupleIndices = computeTupleIndices(
       params.tupleArity,
       firstAvailableTupleIndex,
@@ -176,6 +191,8 @@ export function processSingleList(
       listValidValues: padArray(
         unpaddedMembershipList,
         params.maxListElements,
+        // Pad with first entry in the list to fill the array up to its capacity
+        // without there being a false positive.
         unpaddedMembershipList[0]
       )
     };
