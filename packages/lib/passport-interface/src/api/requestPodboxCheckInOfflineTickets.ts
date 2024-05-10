@@ -17,10 +17,10 @@ export async function requestPodboxCheckInOfflineTickets(
 ): Promise<PodboxCheckinOfflineTicketsResult> {
   return httpPostSimple(
     urlJoin(zupassServerUrl, "/generic-issuance/api/checkin-offline-tickets"),
-    async (resText) => {
+    async () => {
       return {
         success: true,
-        value: JSON.parse(resText)
+        value: undefined
       };
     },
     {

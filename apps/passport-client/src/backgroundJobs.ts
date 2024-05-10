@@ -148,6 +148,7 @@ export function useBackgroundJobs(): void {
             width: "80vw"
           }
         });
+        jobSyncPodboxOfflineCheckins();
       }
     };
 
