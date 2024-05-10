@@ -6,6 +6,7 @@ export * from "./Errors";
 export * from "./NumericRepresentation";
 export * from "./Pseudonyms";
 export * from "./SNARKHelpers";
+export * from "./Ticket";
 export * from "./Types";
 export * from "./promises";
 export * from "./strings";

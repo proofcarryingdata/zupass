@@ -1,5 +1,5 @@
 import { decodeQRPayload } from "@pcd/passport-ui";
-import { decodeGroth16Proof, randomUUID } from "@pcd/util";
+import { decodeGroth16Proof, getTicketType, randomUUID } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -46,16 +46,19 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
     if (!id && pcdStr) {
       const decodedPayload = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
-        const [ticketId, productId, eventId, ...packedProof] =
+        const [ticketId, zkTicketCode, ...packedProof] =
           JSON.parse(decodedPayload);
+        const ticketType = getTicketType(zkTicketCode);
         console.log({ decodedPayload });
-        if (!ticketId || !productId || !eventId || packedProof.length !== 8) {
+        if (!ticketId || !ticketType || packedProof.length !== 8) {
           setTicketData({
             state: TicketIdState.Error,
             error: "Ticket data is invalid. Please try scanning again."
           });
           return;
         }
+
+        const { productId, eventId } = ticketType;
 
         const proof = decodeGroth16Proof(packedProof);
         console.log({ proof, decodedPayload });

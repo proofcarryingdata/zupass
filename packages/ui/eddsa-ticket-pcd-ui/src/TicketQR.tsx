@@ -14,7 +14,7 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
-import { encodeGroth16Proof } from "@pcd/util";
+import { encodeGroth16Proof, getZKTicketCode } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -56,8 +56,10 @@ export function TicketQR({
 
       const unencoded = JSON.stringify([
         pcd.claim.ticket.ticketId,
-        pcd.claim.ticket.productId,
-        pcd.claim.ticket.eventId,
+        getZKTicketCode({
+          productId: pcd.claim.ticket.productId,
+          eventId: pcd.claim.ticket.eventId
+        }),
         ...packed
       ]);
       const payload = encodeQRPayload(unencoded);

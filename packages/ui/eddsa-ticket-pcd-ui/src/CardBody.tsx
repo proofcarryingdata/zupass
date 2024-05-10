@@ -14,6 +14,7 @@ import {
 } from "@pcd/passport-ui";
 import { PCDUI } from "@pcd/pcd-types";
 import { SemaphoreIdentityPCD } from "@pcd/semaphore-identity-pcd";
+import { supportsZKMode } from "@pcd/util";
 import { useCallback, useState } from "react";
 import { TicketQR } from "./TicketQR";
 
@@ -84,9 +85,19 @@ function EdDSATicketPCDCardBody({
           <RedactedText redacted={redact}>
             {ticketData?.attendeeEmail}
           </RedactedText>
-          <ZKMode>
-            <ToggleSwitch label="ZK mode" checked={zk} onChange={onToggle} />
-          </ZKMode>
+          {ticketData &&
+            supportsZKMode({
+              eventId: ticketData.eventId,
+              productId: ticketData.productId
+            }) && (
+              <ZKMode>
+                <ToggleSwitch
+                  label="ZK mode"
+                  checked={zk}
+                  onChange={onToggle}
+                />
+              </ZKMode>
+            )}
         </TicketInfo>
       )}
     </Container>
