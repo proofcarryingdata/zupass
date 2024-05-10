@@ -7541,6 +7541,14 @@
     circom_runtime "0.1.24"
     ffjavascript "0.2.60"
 
+"@zk-kit/groth16@^0.5.0":
+  version "0.5.0"
+  resolved "https://registry.yarnpkg.com/@zk-kit/groth16/-/groth16-0.5.0.tgz#4b95f279d54be9baafe13cb3660aebc41a2a281e"
+  integrity sha512-19hKaxuNi+sNARaUA5HuiNiBoN5jnh6DeScEMlrVgFirIrmsGsEPyC8J1oCvDbd4qww+OVNJEnw3gvOp6hYP5w==
+  dependencies:
+    circom_runtime "0.1.24"
+    ffjavascript "0.2.62"
+
 "@zk-kit/imt@2.0.0-beta.4":
   version "2.0.0-beta.4"
   resolved "https://registry.yarnpkg.com/@zk-kit/imt/-/imt-2.0.0-beta.4.tgz#35bc4e3dfac7fa78d7b82f4227d6ed59b8e85222"
@@ -7574,6 +7582,13 @@
   version "1.0.0-beta"
   resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0-beta.tgz#aacbdc39b193560bdcaad34038f22402d742bc30"
   integrity sha512-9ihWoFFnsxvVsvr/EpxdxXs1WgZuay/ZUWBNvX8oA9/TB/PiB31tpZV93jkH+JG6C2wcDPinNSLkq3qwtYMAQg==
+  dependencies:
+    buffer "^6.0.3"
+
+"@zk-kit/utils@^1.0.0-beta.4":
+  version "1.0.0-beta.4"
+  resolved "https://registry.yarnpkg.com/@zk-kit/utils/-/utils-1.0.0-beta.4.tgz#3811d2c77279eea8ca07084ba2c7d5147adc8560"
+  integrity sha512-MwsiIykjq02JlyZyv2bGraB9cV0ZC7bJz74DEDT7rwoxl1UBAVk6uiZ10fj1qCcfoLO+1wpwo5viHPPWYOW8Hg==
   dependencies:
     buffer "^6.0.3"
 
@@ -11789,6 +11804,15 @@ ffjavascript@0.2.60, ffjavascript@^0.2.38, ffjavascript@^0.2.45, ffjavascript@^0
   version "0.2.60"
   resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.60.tgz#4d8ae613d6bf4e98b3cc29ba10c626f5853854cf"
   integrity sha512-T/9bnEL5xAZRDbQoEMf+pM9nrhK+C3JyZNmqiWub26EQorW7Jt+jR54gpqDhceA4Nj0YctPQwYnl8xa52/A26A==
+  dependencies:
+    wasmbuilder "0.0.16"
+    wasmcurves "0.2.2"
+    web-worker "^1.2.0"
+
+ffjavascript@0.2.62:
+  version "0.2.62"
+  resolved "https://registry.yarnpkg.com/ffjavascript/-/ffjavascript-0.2.62.tgz#f508dfe662a70181598ec5eb8ce5127eb342f624"
+  integrity sha512-uJ7MTrdzhX/3f+hxn0XhdXbJCqYZJSBB6y2/ui4t21vKYVjyTMlU80pPXu40ir6qpqbrdzUeKdlOdJ0aFG9UNA==
   dependencies:
     wasmbuilder "0.0.16"
     wasmcurves "0.2.2"

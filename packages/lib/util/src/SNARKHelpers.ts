@@ -1,5 +1,10 @@
-import { packPoint, unpackPoint } from "@zk-kit/baby-jubjub";
+import {
+  PackedGroth16Proof,
+  packGroth16Proof,
+  unpackGroth16Proof
+} from "@zk-kit/utils";
 import { sha256 } from "js-sha256";
+import { Groth16Proof } from "snarkjs";
 
 /**
  * Encoding of -1 in a Baby Jubjub field element (as p-1).
@@ -32,14 +37,30 @@ export function generateSnarkMessageHash(signal: string | undefined): bigint {
   return BigInt("0x" + sha256(signal ?? "")) >> 8n;
 }
 
-export function encodeG1Point(point: string[]): string {
-  const [x, y] = point;
-  return packPoint([BigInt(x), BigInt(y)]).toString();
+// eslint-disable-next-line @typescript-eslint/no-explicit-any
+// let bn128: any;
+
+// export async function encodeG1Point(point: string[]): Promise<string> {
+//   if (!bn128) {
+//     bn128 = await buildBn128();
+//   }
+//   const [x, y, z] = point;
+//   return bn128.G1.fromObject([BigInt(x), BigInt(y), BigInt(z)]);
+// }
+
+// export function decodeG1Point(encoded: string): string[] | null {
+//   const unpacked = unpackPoint(BigInt(encoded));
+//   if (!unpacked) return null;
+//   const [x, y] = unpacked;
+//   return [x.toString(), y.toString(), "1"];
+// }
+
+export function encodeGroth16Proof(proof: Groth16Proof): PackedGroth16Proof {
+  return packGroth16Proof(proof);
 }
 
-export function decodeG1Point(encoded: string): string[] | null {
-  const unpacked = unpackPoint(BigInt(encoded));
-  if (!unpacked) return null;
-  const [x, y] = unpacked;
-  return [x.toString(), y.toString(), "1"];
+export function decodeGroth16Proof(
+  packedProof: PackedGroth16Proof
+): Groth16Proof {
+  return unpackGroth16Proof(packedProof);
 }

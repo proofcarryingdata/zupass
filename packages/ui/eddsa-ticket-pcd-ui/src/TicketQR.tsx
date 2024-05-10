@@ -14,7 +14,7 @@ import {
   SemaphoreIdentityPCD,
   SemaphoreIdentityPCDPackage
 } from "@pcd/semaphore-identity-pcd";
-import { encodeG1Point } from "@pcd/util";
+import { encodeGroth16Proof } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -52,28 +52,14 @@ export function TicketQR({
       console.log("ZKPCD");
       console.log(serializedZKPCD);
       const proof = JSON.parse(serializedZKPCD.pcd).proof as Groth16Proof;
+      const packed = encodeGroth16Proof(proof);
 
-      // const packedA = packPoint([
-      //   BigInt(proof.pi_a[0]),
-      //   BigInt(proof.pi_a[1])
-      // ]).toString();
-      // const packedC = packPoint([
-      //   BigInt(proof.pi_c[0]),
-      //   BigInt(proof.pi_c[1])
-      // ]).toString();
-      // const unencoded = JSON.stringify({
-      //   p: { a: packedA, b: proof.pi_b, c: packedC },
-      //   t: pcd.claim.ticket.ticketId,
-      //   e: pcd.claim.ticket.eventId
-      // });
-      const unencoded = JSON.stringify({
-        a: encodeG1Point(proof.pi_a),
-        b: proof.pi_b,
-        c: encodeG1Point(proof.pi_c),
-        t: pcd.claim.ticket.ticketId,
-        e: pcd.claim.ticket.eventId,
-        p: pcd.claim.ticket.productId
-      });
+      const unencoded = JSON.stringify([
+        pcd.claim.ticket.ticketId,
+        pcd.claim.ticket.productId,
+        pcd.claim.ticket.eventId,
+        ...packed
+      ]);
       const payload = encodeQRPayload(unencoded);
       const verifyLink = makeVerifyLink(verifyURL, payload);
       console.log({ verifyLink, unencoded, payload });

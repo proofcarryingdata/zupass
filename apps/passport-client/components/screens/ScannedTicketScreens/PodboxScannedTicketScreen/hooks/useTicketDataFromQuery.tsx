@@ -1,5 +1,5 @@
 import { decodeQRPayload } from "@pcd/passport-ui";
-import { decodeG1Point, randomUUID } from "@pcd/util";
+import { decodeGroth16Proof, randomUUID } from "@pcd/util";
 import {
   ZKEdDSAEventTicketPCD,
   ZKEdDSAEventTicketPCDPackage
@@ -46,63 +46,18 @@ export function useTicketDataFromQuery(): TicketIdAndEventId {
     if (!id && pcdStr) {
       const decodedPayload = decodeQRPayload(pcdStr);
       const verify = async (): Promise<void> => {
-        // const pcd = await ZKEdDSAEventTicketPCDPackage.deserialize(
-        //   JSON.parse(decodedPCD).pcd
-        // );
-        const {
-          t: ticketId,
-          a: pi_a_compressed,
-          b: pi_b,
-          c: pi_c_compressed,
-          p: productId,
-          e: eventId
-        } = JSON.parse(decodedPayload);
+        const [ticketId, productId, eventId, ...packedProof] =
+          JSON.parse(decodedPayload);
         console.log({ decodedPayload });
-        // TODO: check timestamp
-        if (
-          !ticketId ||
-          !productId ||
-          !eventId ||
-          !pi_a_compressed ||
-          !pi_b ||
-          !pi_c_compressed
-        ) {
+        if (!ticketId || !productId || !eventId || packedProof.length !== 8) {
           setTicketData({
             state: TicketIdState.Error,
             error: "Ticket data is invalid. Please try scanning again."
           });
           return;
         }
-        // TODO: Packing and unpacking
-        // const unpackedA = unpackPoint(BigInt(a));
-        // const unpackedC = unpackPoint(BigInt(c));
-        // console.log({ unpackedA, unpackedC });
-        // if (!unpackedA || !unpackedC) {
-        //   setTicketData({
-        //     state: TicketIdState.Error,
-        //     error: "Proof data is invalid. Please try scanning again."
-        //   });
-        //   return;
-        // }
-        const pi_a = decodeG1Point(pi_a_compressed);
-        const pi_c = decodeG1Point(pi_c_compressed);
-        console.log({ pi_a, pi_c });
-        if (!pi_a || !pi_c) {
-          setTicketData({
-            state: TicketIdState.Error,
-            error: "Ticket data is invalid. Please try scanning again."
-          });
-          return;
-        }
-        console.log({ pi_a, pi_c, pi_a_compressed, pi_c_compressed });
 
-        const proof: Groth16Proof = {
-          protocol: "groth16",
-          curve: "bn128",
-          pi_a,
-          pi_b,
-          pi_c
-        };
+        const proof = decodeGroth16Proof(packedProof);
         console.log({ proof, decodedPayload });
         const reconstructedPCD = reconstructZKEdDSAEventTicketPCD(
           ticketId,
