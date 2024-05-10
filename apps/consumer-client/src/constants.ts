@@ -2,11 +2,24 @@ import urljoin from "url-join";
 
 export const PCD_GITHUB_URL = "https://github.com/proofcarryingdata/pcd";
 
-export const IS_PROD = process.env.NODE_ENV === "production";
-export const IS_STAGING = process.env.NODE_ENV === "staging";
-export const ZUPASS_CLIENT_URL_ENV = process.env.ZUPASS_CLIENT_URL_CONSUMER;
-export const ZUPASS_SERVER_URL_ENV = process.env.ZUPASS_SERVER_URL_CONSUMER;
-export const CONSUMER_SERVER_URL_ENV = process.env.CONSUMER_SERVER_URL;
+function sanitizeEnv(envStr: string | undefined): string | undefined {
+  if (envStr === "" || envStr === "undefined") {
+    return undefined;
+  }
+  return envStr;
+}
+
+export const IS_PROD = sanitizeEnv(process.env.NODE_ENV) === "production";
+export const IS_STAGING = sanitizeEnv(process.env.NODE_ENV) === "staging";
+export const ZUPASS_CLIENT_URL_ENV = sanitizeEnv(
+  process.env.ZUPASS_CLIENT_URL_CONSUMER
+);
+export const ZUPASS_SERVER_URL_ENV = sanitizeEnv(
+  process.env.ZUPASS_SERVER_URL_CONSUMER
+);
+export const CONSUMER_SERVER_URL_ENV = sanitizeEnv(
+  process.env.CONSUMER_SERVER_URL
+);
 
 export const ZUPASS_URL = ZUPASS_CLIENT_URL_ENV
   ? ZUPASS_CLIENT_URL_ENV

@@ -33,12 +33,7 @@ export async function prove(args: PODPCDArgs): Promise<PODPCD> {
  * the function returns true, otherwise false.
  */
 export async function verify(pcd: PODPCD): Promise<boolean> {
-  try {
-    return pcd.pod.verifySignature();
-  } catch (e) {
-    console.error("Verifying invalid POD data:", e);
-    return false;
-  }
+  return pcd.pod.verifySignature();
 }
 
 /**

@@ -122,7 +122,7 @@ export const PROTO_POD_GPC_PUBLIC_INPUT_NAMES = [
  */
 export type ProtoPODGPCOutputs = {
   entryRevealedValueHash: CircuitSignal /*MAX_ENTRIES*/[];
-  ownerRevealedNulifierHash: CircuitSignal;
+  ownerRevealedNullifierHash: CircuitSignal;
 };
 
 /**
@@ -131,7 +131,7 @@ export type ProtoPODGPCOutputs = {
  */
 export type ProtoPODGPCOutputNamesType = [
   "entryRevealedValueHash",
-  "ownerRevealedNulifierHash"
+  "ownerRevealedNullifierHash"
 ];
 
 /**
@@ -295,7 +295,7 @@ export class ProtoPODGPC {
   ): ProtoPODGPCOutputs {
     return {
       entryRevealedValueHash: publicSignals.slice(0, maxEntries),
-      ownerRevealedNulifierHash: publicSignals[maxEntries]
+      ownerRevealedNullifierHash: publicSignals[maxEntries]
     };
   }
 
@@ -309,7 +309,7 @@ export class ProtoPODGPC {
   ): bigint[] {
     return [
       ...outputs.entryRevealedValueHash,
-      outputs.ownerRevealedNulifierHash,
+      outputs.ownerRevealedNullifierHash,
       ...inputs.objectSignerPubkeyAx,
       ...inputs.objectSignerPubkeyAy,
       ...inputs.entryObjectIndex,

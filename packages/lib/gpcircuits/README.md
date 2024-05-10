@@ -28,3 +28,6 @@ TODO(POD-P3): Detailed description of the GPC concept and design.
 
 TODO(POD-P3): Introduction to the circuits and helper Typescript code
 in this package, with an example.
+
+TODO(POD-P3): List of supported circuits in the family, with available
+paramaters, so users can manually pick a circuit identifier.

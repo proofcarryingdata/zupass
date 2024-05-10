@@ -385,25 +385,29 @@ describe("podCrypto signing should work", async function () {
 
 describe("podCrypto use of zk-kit should be compatible with EdDSAPCD", async function () {
   it("EdDSA public/private key handling should match", async function () {
-    const podContent = PODContent.fromEntries(sampleEntries1);
-    const { publicKey } = signPODRoot(podContent.contentID, privateKey);
-    const unpackedPublicKey = decodePublicKey(publicKey);
-    expect(unpackedPublicKey).to.not.be.null;
-    if (!unpackedPublicKey) {
-      throw new Error("Bad public key point!");
+    for (const testPrivateKey of testPrivateKeys) {
+      const podContent = PODContent.fromEntries(sampleEntries1);
+      const { publicKey } = signPODRoot(podContent.contentID, testPrivateKey);
+      const unpackedPublicKey = decodePublicKey(publicKey);
+      expect(unpackedPublicKey).to.not.be.null;
+      if (!unpackedPublicKey) {
+        throw new Error("Bad public key point!");
+      }
+
+      // EdDSAPCD represents its signatures as an EC point (2 field elements)
+      // in an array, with each element being 32 bytes encoded as 64 hex digits.
+      const stringifiedPublicKey = unpackedPublicKey.map((n) =>
+        n.toString(16).padStart(64, "0")
+      );
+
+      const pubFromString = await getEdDSAPublicKey(testPrivateKey);
+      expect(pubFromString).to.deep.eq(stringifiedPublicKey);
+
+      const pubFromBuffer = await getEdDSAPublicKey(
+        fromHexString(testPrivateKey)
+      );
+      expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
     }
-
-    // EdDSAPCD represents its signatures as an EC point (2 field elements)
-    // in an array, with each element being 32 bytes encoded as 64 hex digits.
-    const stringifiedPublicKey = unpackedPublicKey.map((n) =>
-      n.toString(16).padStart(64, "0")
-    );
-
-    const pubFromString = await getEdDSAPublicKey(privateKey);
-    expect(pubFromString).to.deep.eq(stringifiedPublicKey);
-
-    const pubFromBuffer = await getEdDSAPublicKey(fromHexString(privateKey));
-    expect(pubFromBuffer).to.deep.eq(stringifiedPublicKey);
   });
 
   it("EdDSA signing should match", async function () {
@@ -521,33 +525,43 @@ describe("podCrypto's zk-kit should be compatible with circomlibjs", async funct
   });
 
   it("signPODRoot should match", function () {
-    const podContent = PODContent.fromEntries(sampleEntries1);
-    const primaryImpl = signPODRoot(podContent.contentID, privateKey);
-    const altImpl = altCrypto.signPODRoot(podContent.contentID, privateKey);
-    expect(altImpl).to.deep.eq(primaryImpl);
+    for (const testPrivateKey of testPrivateKeys) {
+      const podContent = PODContent.fromEntries(sampleEntries1);
+      const primaryImpl = signPODRoot(podContent.contentID, testPrivateKey);
+      const altImpl = altCrypto.signPODRoot(
+        podContent.contentID,
+        testPrivateKey
+      );
+      expect(altImpl).to.deep.eq(primaryImpl);
+    }
   });
 
   it("verifyPODRootSignature should match", function () {
-    const podContent = PODContent.fromEntries(sampleEntries1);
-    const primaryImpl = signPODRoot(podContent.contentID, privateKey);
-    const altImpl = altCrypto.signPODRoot(podContent.contentID, privateKey);
-    expect(altImpl).to.deep.eq(primaryImpl);
+    for (const testPrivateKey of testPrivateKeys) {
+      const podContent = PODContent.fromEntries(sampleEntries1);
+      const primaryImpl = signPODRoot(podContent.contentID, testPrivateKey);
+      const altImpl = altCrypto.signPODRoot(
+        podContent.contentID,
+        testPrivateKey
+      );
+      expect(altImpl).to.deep.eq(primaryImpl);
 
-    // Swap data to prove that primary impl can verify alternate impl's output,
-    // and vice versa.
-    expect(
-      verifyPODRootSignature(
-        podContent.contentID,
-        altImpl.signature,
-        altImpl.publicKey
-      )
-    ).to.be.true;
-    expect(
-      altCrypto.verifyPODRootSignature(
-        podContent.contentID,
-        primaryImpl.signature,
-        primaryImpl.publicKey
-      )
-    ).to.be.true;
+      // Swap data to prove that primary impl can verify alternate impl's output,
+      // and vice versa.
+      expect(
+        verifyPODRootSignature(
+          podContent.contentID,
+          altImpl.signature,
+          altImpl.publicKey
+        )
+      ).to.be.true;
+      expect(
+        altCrypto.verifyPODRootSignature(
+          podContent.contentID,
+          primaryImpl.signature,
+          primaryImpl.publicKey
+        )
+      ).to.be.true;
+    }
   });
 });
