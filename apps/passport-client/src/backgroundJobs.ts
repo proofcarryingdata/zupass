@@ -13,6 +13,7 @@ import {
   setupBroadcastChannel
 } from "./broadcastChannel";
 import {
+  saveCheckedInPodboxOfflineTickets,
   savePodboxOfflineTickets,
   saveUsingLaserScanner
 } from "./localstorage";
@@ -40,6 +41,8 @@ export function useBackgroundJobs(): void {
     let activePollTimeout: NodeJS.Timeout | undefined = undefined;
     let lastBackgroundPoll = 0;
     const BG_POLL_INTERVAL_MS = 1000 * 60;
+
+    const abortEventListeners = new AbortController();
 
     /**
      * Idempotently enables or disables periodic polling of jobPollServerUpdates,
@@ -118,8 +121,12 @@ export function useBackgroundJobs(): void {
     };
 
     const jobCheckConnectivity = async (): Promise<void> => {
-      window.addEventListener("offline", () => setIsOffline(true));
-      window.addEventListener("online", () => setIsOffline(false));
+      window.addEventListener("offline", () => setIsOffline(true), {
+        signal: abortEventListeners.signal
+      });
+      window.addEventListener("online", () => setIsOffline(false), {
+        signal: abortEventListeners.signal
+      });
     };
 
     const setIsOffline = (offline: boolean): void => {
@@ -173,11 +180,15 @@ export function useBackgroundJobs(): void {
           },
           {} as Record<string, string[]>
         );
-        await requestPodboxCheckInOfflineTickets(
+        const checkinResult = await requestPodboxCheckInOfflineTickets(
           appConfig.zupassServer,
           await credentialManager.requestCredential(PODBOX_CREDENTIAL_REQUEST),
           ticketsByEvent
         );
+        if (checkinResult.success) {
+          update({ checkedInOfflinePodboxTickets: [] });
+          saveCheckedInPodboxOfflineTickets(undefined);
+        }
       }
 
       const offlineTicketsResult = await requestPodboxGetOfflineTickets(
@@ -195,9 +206,15 @@ export function useBackgroundJobs(): void {
 
     const startBackgroundJobs = (): void => {
       console.log("[JOB] Starting background jobs...");
-      document.addEventListener("visibilitychange", () => {
-        setupPolling();
-      });
+      document.addEventListener(
+        "visibilitychange",
+        () => {
+          setupPolling();
+        },
+        {
+          signal: abortEventListeners.signal
+        }
+      );
       setupPolling();
       startJobSyncOfflineCheckins();
       jobCheckConnectivity();
@@ -210,6 +227,7 @@ export function useBackgroundJobs(): void {
 
     return () => {
       closeBroadcastChannel();
+      abortEventListeners.abort();
     };
   });
 }

@@ -2148,6 +2148,7 @@ export class PretixPipeline implements BasePipeline {
       );
 
       if (offlineCheckinsToSave.length > 0) {
+        const now = new Date();
         logger(
           `${LOG_TAG} User ${checkerEmail} uploaded ${offlineCheckinsToSave.length} offline-check-ins to pipeline ${this.id}`
         );
@@ -2155,8 +2156,15 @@ export class PretixPipeline implements BasePipeline {
           this.id,
           checkerEmail,
           offlineCheckinsToSave,
-          new Date()
+          now
         );
+        const timestamp = now.getTime();
+        for (const ticketId of offlineCheckinsToSave) {
+          this.pendingCheckIns.set(ticketId, {
+            status: CheckinStatus.Pending,
+            timestamp
+          });
+        }
       }
     });
   }
@@ -2175,8 +2183,6 @@ export class PretixPipeline implements BasePipeline {
     logs: PipelineLog[];
   }> {
     return traced(LOG_NAME, "processOfflineCheckins", async (span) => {
-      tracePipeline(this.definition);
-
       const logs: PipelineLog[] = [];
       const offlineCheckins =
         await this.offlineCheckinDB.getOfflineCheckinsForPipeline(this.id);
