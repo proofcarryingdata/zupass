@@ -1,4 +1,5 @@
 import { EdDSATicketPCDPackage } from "@pcd/eddsa-ticket-pcd";
+import { GPCPCDPackage } from "@pcd/gpc-pcd";
 import { PODPCDPackage } from "@pcd/pod-pcd";
 import { SemaphoreSignaturePCDPackage } from "@pcd/semaphore-signature-pcd";
 import { ZKEdDSAEventTicketPCDPackage } from "@pcd/zk-eddsa-event-ticket-pcd";
@@ -8,6 +9,7 @@ import {
   EdDSATicketProveCase,
   EdDSATicketVerifyCase
 } from "./cases/EdDSATicketTimer";
+import { GPCPCDProveCase, GPCPCDVerifyCase } from "./cases/GPCTimer";
 import { PODProveCase, PODVerifyCase } from "./cases/PODTimer";
 import {
   SemaphoreSignatureProveCase,
@@ -35,6 +37,10 @@ const TIME_TEST_CONFIGS: Record<string, Record<string, () => TimerCase>> = {
   [ZKEdDSAEventTicketPCDPackage.name]: {
     prove: () => new ZKEdDSAEventTicketProveCase(),
     verify: () => new ZKEdDSAEventTicketVerifyCase()
+  },
+  [GPCPCDPackage.name]: {
+    prove: () => new GPCPCDProveCase(),
+    verify: () => new GPCPCDVerifyCase()
   }
 };
 
