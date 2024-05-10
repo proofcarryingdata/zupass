@@ -2179,6 +2179,9 @@ export class LemonadePipeline implements BasePipeline {
       );
 
       if (offlineCheckinsToSave.length > 0) {
+        logger(
+          `${LOG_TAG} User ${checkerEmail} uploaded ${offlineCheckinsToSave.length} offline-check-ins to pipeline ${this.id}`
+        );
         await this.offlineCheckinDB.addOfflineCheckins(
           this.id,
           checkerEmail,
