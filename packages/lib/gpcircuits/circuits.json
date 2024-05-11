@@ -57,6 +57,35 @@
       "globalWatermark"
     ]
   },
+  "proto-pod-gpc_3o-10e-8md-0x0l-0x0t": {
+    "file": "proto-pod-gpc",
+    "template": "ProtoPODGPC",
+    "params": [
+      3,
+      10,
+      8,
+      0,
+      0,
+      0,
+      0
+    ],
+    "pubs": [
+      "objectSignerPubkeyAx",
+      "objectSignerPubkeyAy",
+      "entryObjectIndex",
+      "entryNameHash",
+      "entryIsValueEnabled",
+      "entryIsValueHashRevealed",
+      "entryEqualToOtherEntryByIndex",
+      "ownerEntryIndex",
+      "ownerExternalNullifier",
+      "ownerIsNullfierHashRevealed",
+      "tupleIndices",
+      "listComparisonValueIndex",
+      "listValidValues",
+      "globalWatermark"
+    ]
+  },
   "proto-pod-gpc_3o-10e-8md-1x10l-2x2t": {
     "file": "proto-pod-gpc",
     "template": "ProtoPODGPC",

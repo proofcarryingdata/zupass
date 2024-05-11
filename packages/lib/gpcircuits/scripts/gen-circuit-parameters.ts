@@ -39,6 +39,15 @@ const CIRCUIT_PARAMETERS = [
     maxObjects: 3,
     maxEntries: 10,
     merkleMaxDepth: 8,
+    maxLists: 0,
+    maxListElements: 0,
+    maxTuples: 0,
+    tupleArity: 0
+  },
+  {
+    maxObjects: 3,
+    maxEntries: 10,
+    merkleMaxDepth: 8,
     maxLists: 1,
     maxListElements: 10,
     maxTuples: 2,
