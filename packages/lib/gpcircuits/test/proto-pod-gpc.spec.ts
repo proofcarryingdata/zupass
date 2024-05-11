@@ -501,8 +501,13 @@ function makeTestSignals(
     .map((pair) => pair as [number, PODValue[]])
     // Omit those entry value indices outside of the appropriate range
     .filter((pair) => pair[0] < Math.min(params.maxEntries, testEntries.length))
-    // Truncate tuple arity if necessary.
-    .slice(0, maxTupleArity(params.maxTuples, params.tupleArity));
+    .slice(
+      0,
+      // Omit the tuples entirely if our circuit does not allow any.
+      params.maxTuples === 0
+        ? 0
+        : maxTupleArity(params.maxTuples, params.tupleArity)
+    );
 
   // Form lists and indices.
   const listComparisonValueIndex1 = listData.map((pair) => pair[0]);
@@ -522,15 +527,20 @@ function makeTestSignals(
   ] as [number[], PODValue[][]];
 
   // Form lists of indices and membership lists, truncating where
-  // necessary
+  // necessary.
   const numLists = listComparisonValueIndex2.some((i) => i >= params.maxEntries)
-    ? 1
+    ? Math.min(1, params.maxLists)
     : params.maxLists;
   const listComparisonValueIndices = [
     listComparisonValueIndex1,
     listComparisonValueIndex2
-  ].slice(0, numLists);
+  ]
+    // Omit index if it is empty.
+    .filter((list) => list.length > 0)
+    .slice(0, numLists);
   const listValidValuess = [list1, list2]
+    // Omit index if it is empty
+    .filter((list) => list.length > 0)
     .slice(0, numLists)
     // Truncate membership lists if necessary.
     .map((list) => list.slice(0, params.maxListElements));
