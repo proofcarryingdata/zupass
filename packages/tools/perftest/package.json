@@ -14,6 +14,8 @@
     "log-symbols": "^4.1.0",
     "uuid": "^9.0.0",
     "@pcd/eddsa-ticket-pcd": "^0.6.0",
+    "@pcd/gpc": "^0.0.1",
+    "@pcd/gpc-pcd": "^0.0.1",
     "@pcd/pcd-types": "^0.11.0",
     "@pcd/pod": "^0.1.0",
     "@pcd/pod-pcd": "^0.1.0",
