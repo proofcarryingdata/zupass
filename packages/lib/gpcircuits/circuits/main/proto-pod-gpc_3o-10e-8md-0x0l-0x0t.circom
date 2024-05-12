@@ -3,4 +3,8 @@ pragma circom 2.1.8;
 
 include "../proto-pod-gpc.circom";
 
+<<<<<<<< HEAD:packages/lib/gpcircuits/circuits/main/proto-pod-gpc_3o-10e-8md-0x0l-0x0t.circom
 component main {public[objectSignerPubkeyAx, objectSignerPubkeyAy, entryObjectIndex, entryNameHash, entryIsValueEnabled, entryIsValueHashRevealed, entryEqualToOtherEntryByIndex, ownerEntryIndex, ownerExternalNullifier, ownerIsNullfierHashRevealed, tupleIndices, listComparisonValueIndex, listValidValues, globalWatermark]} = ProtoPODGPC(3, 10, 8, 0, 0, 0, 0);
+========
+component main {public[objectSignerPubkeyAx, objectSignerPubkeyAy, entryObjectIndex, entryNameHash, entryIsValueEnabled, entryIsValueHashRevealed, entryEqualToOtherEntryByIndex, ownerEntryIndex, ownerExternalNullifier, ownerIsNullfierHashRevealed, tupleIndices, listComparisonValueIndex, listValidValues, globalWatermark]} = ProtoPODGPC(3, 10, 8, 1, 10, 2, 2);
+>>>>>>>> 6a7229e988fb77b4c24a96ac4875cd0fff461ac8:packages/lib/gpcircuits/circuits/main/proto-pod-gpc_3o-10e-8md-1x10l-2x2t.circom
