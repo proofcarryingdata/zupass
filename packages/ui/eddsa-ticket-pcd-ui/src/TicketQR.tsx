@@ -60,7 +60,11 @@ export function TicketQR({
           productId: pcd.claim.ticket.productId,
           eventId: pcd.claim.ticket.eventId
         }),
-        ...packed
+        // FIXME
+        packed[0],
+        packed[2],
+        packed[4],
+        packed[6]
       ]);
       const payload = encodeQRPayload(unencoded);
       const verifyLink = makeVerifyLink(verifyURL, payload);
