@@ -5,8 +5,6 @@ import {
   css,
   styled
 } from "@pcd/passport-ui";
-import { H4, TextCenter } from "../../../../core";
-import { icons } from "../../../../icons";
 import {
   CardBodyContainer,
   CardHeader,
@@ -96,19 +94,6 @@ export function PodboxZKModeTicketInfoSection({
   if (ticket) {
     return (
       <>
-        <TextCenter>
-          <Spacer h={24} />
-          <img
-            style={{ display: "block", margin: "0 auto" }}
-            draggable="false"
-            width="90"
-            height="90"
-            src={icons.verifyValid}
-          />
-          <Spacer h={24} />
-          <H4 col="var(--accent-dark)">PROOF VERIFIED.</H4>
-          <Spacer h={24} />
-        </TextCenter>
         {/* <VerifiedAndKnownTicket
           publicKeyName="Department of Decentralization"
           ticketName=""
