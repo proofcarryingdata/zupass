@@ -22,6 +22,8 @@ export interface EdDSATicketPCDCardProps {
   // The user's Semaphore identity is necessary for generating a ZK proof from
   // the EdDSATicketPCD.
   identityPCD: SemaphoreIdentityPCD;
+  openInfoModal: () => void;
+  loadSeenZKModeInfo: () => boolean;
   // The URL to use when encoding a serialized PCD on the query string.
   verifyURL: string;
   // The URL to use for the simpler case of sending some identifiers rather
@@ -42,6 +44,8 @@ export const EdDSATicketPCDUI: PCDUI<EdDSATicketPCD, EdDSATicketPCDCardProps> =
 function EdDSATicketPCDCardBody({
   pcd,
   identityPCD,
+  openInfoModal,
+  loadSeenZKModeInfo,
   verifyURL,
   idBasedVerifyURL
 }: {
@@ -52,9 +56,13 @@ function EdDSATicketPCDCardBody({
   const ticketData = getEdDSATicketData(pcd);
 
   const [zk, setZk] = useState<boolean>(idBasedVerifyURL === undefined);
+  const seenZKModeInfo = loadSeenZKModeInfo();
   const onToggle = useCallback(() => {
+    if (!zk && !seenZKModeInfo) {
+      openInfoModal();
+    }
     setZk(!zk);
-  }, [zk]);
+  }, [zk, openInfoModal, seenZKModeInfo]);
 
   const redact = zk && idBasedVerifyURL !== undefined;
 
@@ -74,6 +82,8 @@ function EdDSATicketPCDCardBody({
             identityPCD={identityPCD}
             verifyURL={verifyURL}
             idBasedVerifyURL={idBasedVerifyURL}
+            openInfoModal={openInfoModal}
+            loadSeenZKModeInfo={loadSeenZKModeInfo}
             zk={zk}
           />
           <Spacer h={8} />

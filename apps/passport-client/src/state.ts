@@ -33,7 +33,7 @@ export interface AppState {
     | { modalType: "resolve-subscription-error" }
     | { modalType: "require-add-password" }
     | { modalType: "privacy-notice" }
-    // | { modalType: "zk-mode-info" }
+    | { modalType: "zk-mode-info" }
     | { modalType: "none" }
     | {
         modalType: "frogcrypto-update-telegram";

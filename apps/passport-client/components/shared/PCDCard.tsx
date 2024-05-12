@@ -9,8 +9,13 @@ import { isPODTicketPCD } from "@pcd/pod-ticket-pcd";
 import { PODTicketPCDUI } from "@pcd/pod-ticket-pcd-ui";
 import { memo, useCallback, useContext, useMemo } from "react";
 import styled, { FlattenSimpleInterpolation, css } from "styled-components";
-import { usePCDCollection, useUserIdentityPCD } from "../../src/appHooks";
+import {
+  useDispatch,
+  usePCDCollection,
+  useUserIdentityPCD
+} from "../../src/appHooks";
 import { StateContext } from "../../src/dispatch";
+import { loadSeenZKModeInfo } from "../../src/localstorage";
 import { pcdRenderers } from "../../src/pcdRenderers";
 import { usePackage } from "../../src/usePackage";
 import { Button, H4, Spacer, TextCenter } from "../core";
@@ -155,6 +160,11 @@ function getUI(
 function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
   const Card = EdDSATicketPCDUI.renderCardBody;
   const identityPCD = useUserIdentityPCD();
+  const dispatch = useDispatch();
+  const openInfoModal = useCallback(
+    () => dispatch({ type: "set-modal", modal: { modalType: "zk-mode-info" } }),
+    [dispatch]
+  );
   const ticketCategory = pcd.claim.ticket.ticketCategory;
   // If using only an ID in the URL, choose different verification screen based
   // on ticket category. Worth remembering that this does not check the public
@@ -196,8 +206,10 @@ function TicketWrapper({ pcd }: { pcd: EdDSATicketPCD }): JSX.Element | null {
     <Card
       pcd={pcd}
       identityPCD={identityPCD}
+      loadSeenZKModeInfo={loadSeenZKModeInfo}
       verifyURL={verifyURL}
       idBasedVerifyURL={idBasedVerifyURL}
+      openInfoModal={openInfoModal}
     />
   ) : null;
 }

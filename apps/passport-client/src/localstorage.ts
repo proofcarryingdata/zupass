@@ -77,6 +77,14 @@ export async function loadSubscriptions(): Promise<FeedSubscriptionManager> {
   );
 }
 
+export function saveSeenZKModeInfo(seenZKModeInfo: boolean): void {
+  window.localStorage["seen_zk_mode_info"] = seenZKModeInfo.toString();
+}
+
+export function loadSeenZKModeInfo(): boolean {
+  return window.localStorage["seen_zk_mode_info"] === "true";
+}
+
 const OFFLINE_TICKETS_KEY = "offline_tickets";
 export function saveOfflineTickets(
   offlineTickets: OfflineTickets | undefined

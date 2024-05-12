@@ -150,6 +150,7 @@ export function Home({ disabled }: { disabled?: boolean }): JSX.Element {
 }
 
 export function Back({ disabled }: { disabled?: boolean }): JSX.Element {
+  // ayo?
   const onClick = useCallback(() => {
     window.history.back();
   }, []);

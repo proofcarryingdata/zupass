@@ -18,6 +18,7 @@ import { RequireAddPasswordModal } from "./RequireAddPasswordModal";
 import { ResolveSubscriptionErrorModal } from "./ResolveSubscriptionError";
 import { SettingsModal } from "./SettingsModal";
 import { UpgradeAccountModal } from "./UpgradeAccountModal";
+import { ZKModeInfoModal } from "./ZKModeInfoModal";
 
 export function MaybeModal({
   fullScreen,
@@ -105,6 +106,8 @@ function getModalBody(
       return <RequireAddPasswordModal />;
     case "privacy-notice":
       return <PrivacyNoticeModal />;
+    case "zk-mode-info":
+      return <ZKModeInfoModal />;
     case "frogcrypto-update-telegram":
       return (
         <FrogCryptoUpdateTelegramModal
