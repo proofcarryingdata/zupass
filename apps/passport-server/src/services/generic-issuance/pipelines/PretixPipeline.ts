@@ -1221,7 +1221,7 @@ export class PretixPipeline implements BasePipeline {
     eventId: string,
     productId: string,
     checkerEmail: string
-  ): Promise<true | PodboxTicketActionError> {
+  ): Promise<"superuser" | "policy" | PodboxTicketActionError> {
     const eventConfig = this.definition.options.events.find(
       (e) => e.genericIssuanceId === eventId
     );
@@ -1256,9 +1256,10 @@ export class PretixPipeline implements BasePipeline {
     });
 
     if (hasSuperUserTicket) {
-      return true;
+      return "superuser";
     }
 
+    // good?
     if (this.definition.options.userPermissions) {
       const matchingPermission = this.definition.options.userPermissions.find(
         (policy) => {
@@ -1267,6 +1268,7 @@ export class PretixPipeline implements BasePipeline {
           }
 
           if (
+            // don't need productId
             policy.canCheckIn.productId &&
             policy.canCheckIn.productId !== productId
           ) {
@@ -1283,7 +1285,7 @@ export class PretixPipeline implements BasePipeline {
       );
 
       if (matchingPermission) {
-        return true;
+        return "policy";
       }
     }
 
@@ -1294,6 +1296,7 @@ export class PretixPipeline implements BasePipeline {
     ticketAtom: PretixAtom
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInPretixTicket", async (span) => {
+      // boom
       // Is the ticket already checked in?
       // Only check if ticket is already checked in here, to avoid leaking
       // information about ticket check-in status to unpermitted users.
@@ -1328,14 +1331,11 @@ export class PretixPipeline implements BasePipeline {
    * is a pending check-in.
    */
   private async canCheckInManualTicket(
-    manualTicket: ManualTicket
+    ticketId: string
   ): Promise<true | PodboxTicketActionError> {
     return traced(LOG_NAME, "canCheckInManualTicket", async (span) => {
       // Is the ticket already checked in?
-      const checkIn = await this.checkinDB.getByTicketId(
-        this.id,
-        manualTicket.id
-      );
+      const checkIn = await this.checkinDB.getByTicketId(this.id, ticketId);
 
       if (checkIn) {
         span?.setAttribute("precheck_error", "AlreadyCheckedIn");
@@ -1347,7 +1347,7 @@ export class PretixPipeline implements BasePipeline {
       }
 
       // Is there a pending check-in for the ticket?
-      const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
+      const pendingCheckin = this.pendingCheckIns.get(ticketId);
       if (pendingCheckin) {
         span?.setAttribute("precheck_error", "AlreadyCheckedIn");
         return {
@@ -1431,7 +1431,10 @@ export class PretixPipeline implements BasePipeline {
             checkerEmail
           );
 
-          if (canCheckInResult !== true) {
+          if (
+            canCheckInResult !== "superuser" &&
+            canCheckInResult !== "policy"
+          ) {
             span?.setAttribute("precheck_error", canCheckInResult.name);
             return {
               success: true,
@@ -1446,16 +1449,40 @@ export class PretixPipeline implements BasePipeline {
           // First see if we have an atom which matches the ticket ID
           const ticketAtom = await this.db.loadById(this.id, ticketId);
           if (ticketAtom && ticketAtom.eventId === eventId) {
-            const canCheckInTicketResult =
-              await this.canCheckInPretixTicket(ticketAtom);
-            if (canCheckInTicketResult !== true) {
-              if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+            if (canCheckInResult === "superuser") {
+              const canCheckInTicketResult =
+                await this.canCheckInPretixTicket(ticketAtom);
+              if (canCheckInTicketResult !== true) {
+                if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                  return {
+                    success: true,
+                    checkinActionInfo: {
+                      permissioned: true,
+                      canCheckIn: false,
+                      reason: canCheckInTicketResult,
+                      ticket: {
+                        eventName: this.atomToEventName(ticketAtom),
+                        ticketName: this.atomToTicketName(ticketAtom),
+                        attendeeEmail: ticketAtom.email as string,
+                        attendeeName: ticketAtom.name
+                      }
+                    }
+                  };
+                }
+                return {
+                  success: true,
+                  checkinActionInfo: {
+                    permissioned: false,
+                    canCheckIn: false,
+                    reason: canCheckInTicketResult
+                  }
+                };
+              } else {
                 return {
                   success: true,
                   checkinActionInfo: {
                     permissioned: true,
-                    canCheckIn: false,
-                    reason: canCheckInTicketResult,
+                    canCheckIn: true,
                     ticket: {
                       eventName: this.atomToEventName(ticketAtom),
                       ticketName: this.atomToTicketName(ticketAtom),
@@ -1465,36 +1492,61 @@ export class PretixPipeline implements BasePipeline {
                   }
                 };
               }
-              return {
-                success: true,
-                checkinActionInfo: {
-                  permissioned: false,
-                  canCheckIn: false,
-                  reason: canCheckInTicketResult
-                }
-              };
             } else {
-              return {
-                success: true,
-                checkinActionInfo: {
-                  permissioned: true,
-                  canCheckIn: true,
-                  ticket: {
-                    eventName: this.atomToEventName(ticketAtom),
-                    ticketName: this.atomToTicketName(ticketAtom),
-                    attendeeEmail: ticketAtom.email as string,
-                    attendeeName: ticketAtom.name
-                  }
+              // policy case
+              const canCheckInTicketResult = await this.canCheckInManualTicket(
+                ticketAtom.id
+              );
+
+              if (canCheckInTicketResult !== true) {
+                if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
+                  return {
+                    success: true,
+                    checkinActionInfo: {
+                      permissioned: true,
+                      canCheckIn: false,
+                      reason: canCheckInTicketResult,
+                      ticket: {
+                        eventName: this.atomToEventName(ticketAtom),
+                        ticketName: this.atomToTicketName(ticketAtom),
+                        attendeeEmail: ticketAtom.email as string,
+                        attendeeName: ticketAtom.name
+                      }
+                    }
+                  };
                 }
-              };
+                return {
+                  success: true,
+                  checkinActionInfo: {
+                    permissioned: false,
+                    canCheckIn: false,
+                    reason: canCheckInTicketResult
+                  }
+                };
+              } else {
+                return {
+                  success: true,
+                  checkinActionInfo: {
+                    permissioned: true,
+                    canCheckIn: true,
+                    ticket: {
+                      eventName: this.atomToEventName(ticketAtom),
+                      ticketName: this.atomToTicketName(ticketAtom),
+                      attendeeEmail: ticketAtom.email as string,
+                      attendeeName: ticketAtom.name
+                    }
+                  }
+                };
+              }
             }
           } else {
             // No Pretix atom found, try looking for a manual ticket
             const manualTicket = await this.getManualTicketById(ticketId);
             if (manualTicket && manualTicket.eventId === eventId) {
               // Manual ticket found
-              const canCheckInTicketResult =
-                await this.canCheckInManualTicket(manualTicket);
+              const canCheckInTicketResult = await this.canCheckInManualTicket(
+                manualTicket.id
+              );
               if (canCheckInTicketResult !== true) {
                 if (canCheckInTicketResult.name === "AlreadyCheckedIn") {
                   const eventConfig = this.getEventById(manualTicket.eventId);
@@ -1635,19 +1687,27 @@ export class PretixPipeline implements BasePipeline {
         checkerEmail
       );
 
-      if (canCheckInResult !== true) {
+      if (canCheckInResult !== "superuser" && canCheckInResult !== "policy") {
         return { success: false, error: canCheckInResult };
       }
 
       // First see if we have an atom which matches the ticket ID
       const ticketAtom = await this.db.loadById(this.id, ticketId);
       if (ticketAtom && ticketAtom.eventId === eventId) {
-        return this.checkInPretixTicket(ticketAtom, checkerEmail);
+        if (canCheckInResult === "superuser") {
+          return this.checkInPretixTicket(ticketAtom, checkerEmail);
+        } else {
+          return this.checkInManualTicket(ticketId, eventId, checkerEmail);
+        }
       } else {
         const manualTicket = await this.getManualTicketById(ticketId);
         if (manualTicket && manualTicket.eventId === eventId) {
           // Manual ticket found, check in with the DB
-          return this.checkInManualTicket(manualTicket, checkerEmail);
+          return this.checkInManualTicket(
+            manualTicket.id,
+            manualTicket.eventId,
+            checkerEmail
+          );
         } else {
           // Didn't find any matching ticket
           logger(
@@ -1664,14 +1724,15 @@ export class PretixPipeline implements BasePipeline {
    * Checks a manual ticket into the DB.
    */
   private async checkInManualTicket(
-    manualTicket: ManualTicket,
+    ticketId: string,
+    eventId: string,
     checkerEmail: string
   ): Promise<PodboxTicketActionResponseValue> {
     return traced<PodboxTicketActionResponseValue>(
       LOG_NAME,
       "checkInManualTicket",
       async (span): Promise<PodboxTicketActionResponseValue> => {
-        const pendingCheckin = this.pendingCheckIns.get(manualTicket.id);
+        const pendingCheckin = this.pendingCheckIns.get(ticketId);
         if (pendingCheckin) {
           span?.setAttribute("checkin_error", "AlreadyCheckedIn");
           return {
@@ -1687,24 +1748,24 @@ export class PretixPipeline implements BasePipeline {
         }
 
         try {
-          await this.checkinDB.checkIn(this.id, manualTicket.id, new Date());
-          this.pendingCheckIns.set(manualTicket.id, {
+          await this.checkinDB.checkIn(this.id, ticketId, new Date());
+          this.pendingCheckIns.set(ticketId, {
             status: CheckinStatus.Success,
             timestamp: Date.now()
           });
         } catch (e) {
           logger(
-            `${LOG_TAG} Failed to check in ticket ${manualTicket.id} for event ${manualTicket.eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
+            `${LOG_TAG} Failed to check in ticket ${ticketId} for event ${eventId} on behalf of checker ${checkerEmail} on pipeline ${this.id}`
           );
           setError(e, span);
-          this.pendingCheckIns.delete(manualTicket.id);
+          this.pendingCheckIns.delete(ticketId);
 
           if (e instanceof DatabaseError) {
             // We may have received a DatabaseError due to an insertion conflict
             // Detect this conflict by looking for an existing check-in.
             const existingCheckin = await this.checkinDB.getByTicketId(
               this.id,
-              manualTicket.id
+              ticketId
             );
             if (existingCheckin) {
               span?.setAttribute("checkin_error", "AlreadyCheckedIn");

@@ -39,6 +39,11 @@ const SUPPORTED_ZK_MODE_TICKETS: Array<TicketType> = [
     eventId: "53edb3e7-6733-41e0-a9be-488877c5c572",
     productId: "deb248b4-9ef8-422f-b475-e94234721dc2"
   },
+  // ETHBerlin - swagscanner
+  {
+    eventId: "53edb3e7-6733-41e0-a9be-488877c5c572",
+    productId: "eeb248b4-9ef8-422f-b475-e94234721dc2"
+  },
   // TEST ETHBerlin event
   {
     eventId: "87360b16-06c4-4dcd-9593-26e8a7450777",
