@@ -75,6 +75,7 @@ export interface SessionData {
   selectedEvent?: LinkedPretixTelegramEvent;
   anonBotExists: boolean;
   authBotURL: string;
+  directLinkMode: boolean;
   anonBotURL: string;
   lastMessageId?: number;
   selectedChat?: TopicChat;
@@ -743,10 +744,12 @@ export const chatsToJoinV2 = async (
         );
 
         range.webApp(`Join ${chat.chat?.title}`, proofUrl).row();
-        range.text(`↰  Back`, async (ctx) => {
-          ctx.session.chatToJoin = undefined;
-          ctx.menu.update();
-        });
+        if (!ctx.session.directLinkMode) {
+          range.text(`↰  Back`, async (ctx) => {
+            ctx.session.chatToJoin = undefined;
+            ctx.menu.update();
+          });
+        }
       } else {
         const chatsWithMembership = await getChatsWithMembershipStatus(
           db,

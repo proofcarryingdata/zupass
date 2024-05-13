@@ -289,6 +289,7 @@ export class TelegramService {
             if (username) span?.setAttribute("username", username);
             const firstName = ctx?.from?.first_name;
             const name = firstName || username;
+            ctx.session.directLinkMode = false;
             if (ctx.match && Number.isInteger(Number(ctx.match))) {
               const [chatWithMembership] = await getChatsWithMembershipStatus(
                 ctx.session.dbPool,
@@ -298,6 +299,7 @@ export class TelegramService {
               );
               if (chatWithMembership) {
                 ctx.session.chatToJoin = chatWithMembership;
+                ctx.session.directLinkMode = true;
                 const chatTitle = chatWithMembership.chat?.title;
                 return await ctx.reply(
                   `Welcome ${name}! 👋\n\nClick the button below to join${
@@ -1727,7 +1729,8 @@ export async function startTelegramService(
     dbPool: context.dbPool,
     anonBotExists,
     authBotURL,
-    anonBotURL
+    anonBotURL,
+    directLinkMode: false
   });
 
   if (anonBotExists) {
