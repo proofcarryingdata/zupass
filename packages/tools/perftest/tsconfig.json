@@ -27,6 +27,12 @@
       "path": "../../pcd/eddsa-ticket-pcd"
     },
     {
+      "path": "../../lib/gpc"
+    },
+    {
+      "path": "../../pcd/gpc-pcd"
+    },
+    {
       "path": "../../lib/pcd-types"
     },
     {
