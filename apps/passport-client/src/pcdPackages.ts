@@ -64,7 +64,8 @@ async function loadPackages(): Promise<PCDPackage[]> {
 
   await PODPCDPackage.init?.({});
   await GPCPCDPackage.init?.({
-    zkArtifactPath: "/artifacts/test/proto-pod-gpc"
+    zkArtifactPath:
+      "https://github.com/proofcarryingdata/snark-artifacts/raw/artwyman/experimental/packages/proto-pod-gpc"
   });
 
   return [
