@@ -14,7 +14,6 @@ import path from "path";
 import { poseidon2 } from "poseidon-lite";
 import {
   CircuitArtifactPaths,
-  processLists,
   PROTO_POD_GPC_PUBLIC_INPUT_NAMES,
   ProtoPODGPC,
   ProtoPODGPCCircuitParams,
@@ -26,6 +25,7 @@ import {
   extendedSignalArray,
   gpcArtifactPaths,
   maxTupleArity,
+  processLists,
   protoPODGPCCircuitParamArray,
   zipLists
 } from "../src";

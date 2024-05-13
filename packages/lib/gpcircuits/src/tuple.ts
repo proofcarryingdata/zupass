@@ -1,5 +1,5 @@
-import { CircuitSignal } from "./types";
 import { poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
+import { CircuitSignal } from "./types";
 
 // We restrict attention to smaller tuple sizes for simplicity, i.e.
 // arities 2, 3 and 4.

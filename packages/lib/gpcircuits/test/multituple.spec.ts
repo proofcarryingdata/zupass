@@ -1,23 +1,23 @@
+import { PODValue, podValueHash } from "@pcd/pod";
+import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
 import { poseidon2, poseidon3, poseidon4 } from "poseidon-lite";
 import {
+  MultiTupleModuleInputNamesType,
+  MultiTupleModuleInputs,
+  MultiTupleModuleOutputNamesType,
+  MultiTupleModuleOutputs,
   computeTupleIndices,
   hashTuple,
   maxTupleArity,
   multiTupleHasher,
   padArray,
   requiredNumTuples,
-  tupleHasher,
-  MultiTupleModuleInputNamesType,
-  MultiTupleModuleInputs,
-  MultiTupleModuleOutputNamesType,
-  MultiTupleModuleOutputs
+  tupleHasher
 } from "../src";
 import { circomkit } from "./common";
-import { PODValue, podValueHash } from "@pcd/pod";
-import { BABY_JUB_NEGATIVE_ONE } from "@pcd/util";
 
 describe("MultiTuple helpers should work", function () {
   it("should compute the right number of required tuples for different input tuple arities", () => {
