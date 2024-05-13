@@ -1,18 +1,18 @@
+import { PODValue, podValueHash } from "@pcd/pod";
 import { expect } from "chai";
 import { WitnessTester } from "circomkit";
 import "mocha";
-import { PODValue, podValueHash } from "@pcd/pod";
 import {
-  extendedSignalArray,
   ListMembershipModuleInputNamesType,
   ListMembershipModuleInputs,
   ListMembershipModuleOutputNamesType,
   ListMembershipModuleOutputs,
+  ProtoPODGPC,
+  extendedSignalArray,
+  hashTuple,
   padArray,
   processLists,
   processSingleList,
-  ProtoPODGPC,
-  hashTuple,
   zipLists
 } from "../src";
 import { circomkit } from "./common";

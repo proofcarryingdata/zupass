@@ -24,13 +24,13 @@ import {
   GPCRevealedObjectClaims
 } from "./gpcTypes";
 import {
-  checkPODEntryIdentifier,
-  splitCircuitIdentifier,
-  splitPODEntryIdentifier,
   DEFAULT_MAX_LISTS,
   DEFAULT_MAX_LIST_ELEMENTS,
   DEFAULT_MAX_TUPLES,
-  DEFAULT_TUPLE_ARITY
+  DEFAULT_TUPLE_ARITY,
+  checkPODEntryIdentifier,
+  splitCircuitIdentifier,
+  splitPODEntryIdentifier
 } from "./gpcUtil";
 
 // TODO(POD-P2): Split out the parts of this which should be public from
@@ -210,7 +210,7 @@ export function checkProofInputs(
 
   return ProtoPODGPCCircuitParams(
     totalObjects,
-    1,
+    totalObjects,
     requiredMerkleDepth,
     DEFAULT_MAX_LISTS,
     DEFAULT_MAX_LIST_ELEMENTS,

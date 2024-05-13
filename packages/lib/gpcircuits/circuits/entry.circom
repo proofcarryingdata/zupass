@@ -1,6 +1,6 @@
 pragma circom 2.1.8;
 
-include "@zk-kit/circuits/circom/binary-merkle-root.circom";
+include "@zk-kit/binary-merkle-root.circom/src/binary-merkle-root.circom";
 include "circomlib/circuits/bitify.circom";
 include "gpc-util.circom";
 
