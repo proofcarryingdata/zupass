@@ -22,8 +22,8 @@ import {
   GPCRevealedClaims
 } from "./gpcTypes";
 import {
-  canonicalizeConfig,
   GPCRequirements,
+  canonicalizeConfig,
   makeCircuitIdentifier
 } from "./gpcUtil";
 

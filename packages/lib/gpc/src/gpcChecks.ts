@@ -26,8 +26,8 @@ import {
 import {
   DEFAULT_LIST_ELEMENTS,
   DEFAULT_TUPLE_ARITIES,
-  checkPODEntryIdentifier,
   GPCRequirements,
+  checkPODEntryIdentifier,
   splitCircuitIdentifier,
   splitPODEntryIdentifier
 } from "./gpcUtil";

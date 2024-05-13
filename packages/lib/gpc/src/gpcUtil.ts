@@ -5,10 +5,10 @@ import {
   ProtoPODGPCCircuitDesc
 } from "@pcd/gpcircuits";
 import {
-  PODName,
-  PODValue,
   checkPODName,
   getPODValueForCircuit,
+  PODName,
+  PODValue,
   podValueHash,
   requireType
 } from "@pcd/pod";
