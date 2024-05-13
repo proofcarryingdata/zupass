@@ -370,14 +370,14 @@ export type GPCRevealedClaims = {
 };
 
 /**
- * GPC circuit requirements for a given proof configuration.
+ * General-purpose circuit requirements for a given proof configuration.
  * These values will be appropriately checked against the circuit configurations
  * at our disposal in order to accommodate all of the proof inputs. For the
  * objects, entries, Merkle tree depth and membership list sizes, this amounts
  * to picking the circuit description whose corresponding parameters exceed
  * these numbers, while the choice of tuple parameters is more involved.
  */
-export type GPCCircuitRequirements = {
+export type GPCRequirements = {
   /**
    * Number of POD objects which must be included in a proof.
    */
@@ -407,13 +407,13 @@ export type GPCCircuitRequirements = {
 /**
  * GPCSizeRequirements constructor.
  */
-export function GPCCircuitRequirements(
+export function GPCRequirements(
   nObjects: number,
   nEntries: number,
   merkleMaxDepth: number,
   nListElements: number[] = [],
   tupleArities: number[] = []
-): GPCCircuitRequirements {
+): GPCRequirements {
   return {
     nObjects,
     nEntries,

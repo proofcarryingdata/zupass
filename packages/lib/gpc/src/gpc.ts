@@ -20,13 +20,13 @@ import {
   GPCProofConfig,
   GPCProofInputs,
   GPCRevealedClaims,
-  GPCCircuitRequirements
+  GPCRequirements
 } from "./gpcTypes";
 import { canonicalizeConfig, makeCircuitIdentifier } from "./gpcUtil";
 
 function bindConfigWithRequirements(
   proofConfig: GPCProofConfig,
-  circuitReq: GPCCircuitRequirements
+  circuitReq: GPCRequirements
 ): { boundConfig: GPCBoundConfig; circuitDesc: ProtoPODGPCCircuitDesc } {
   // Assumes proofConfig has already been checked by the caller.
   const circuitDesc = checkCircuitParameters(

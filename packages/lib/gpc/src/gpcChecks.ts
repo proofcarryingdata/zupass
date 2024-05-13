@@ -22,7 +22,7 @@ import {
   GPCProofObjectConfig,
   GPCRevealedClaims,
   GPCRevealedObjectClaims,
-  GPCCircuitRequirements
+  GPCRequirements
 } from "./gpcTypes";
 import {
   checkPODEntryIdentifier,
@@ -50,7 +50,7 @@ import {
 export function checkProofArgs(
   proofConfig: GPCProofConfig,
   proofInputs: GPCProofInputs
-): GPCCircuitRequirements {
+): GPCRequirements {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
   const circuitReq = mergeRequirements(
@@ -72,9 +72,7 @@ export function checkProofArgs(
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
-export function checkProofConfig(
-  proofConfig: GPCProofConfig
-): GPCCircuitRequirements {
+export function checkProofConfig(proofConfig: GPCProofConfig): GPCRequirements {
   if (proofConfig.circuitIdentifier !== undefined) {
     requireType("circuitIdentifier", proofConfig.circuitIdentifier, "string");
   }
@@ -97,7 +95,7 @@ export function checkProofConfig(
     );
   }
 
-  return GPCCircuitRequirements(
+  return GPCRequirements(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
@@ -162,9 +160,7 @@ function checkProofEntryConfig(
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
-export function checkProofInputs(
-  proofInputs: GPCProofInputs
-): GPCCircuitRequirements {
+export function checkProofInputs(proofInputs: GPCProofInputs): GPCRequirements {
   requireType("pods", proofInputs.pods, "object");
 
   let totalObjects = 0;
@@ -202,7 +198,7 @@ export function checkProofInputs(
     checkPODValue("watermark", proofInputs.watermark);
   }
 
-  return GPCCircuitRequirements(
+  return GPCRequirements(
     totalObjects,
     1,
     requiredMerkleDepth,
@@ -332,7 +328,7 @@ export function checkProofInputsForConfig(
 export function checkVerifyArgs(
   boundConfig: GPCBoundConfig,
   revealedClaims: GPCRevealedClaims
-): GPCCircuitRequirements {
+): GPCRequirements {
   // Check that config and inputs are individually valid, and extract their
   // circuit requirements.
   const circuitReq = mergeRequirements(
@@ -354,9 +350,7 @@ export function checkVerifyArgs(
  * @throws TypeError if one of the objects is malformed
  * @throws Error if logical requirements between fields are not met
  */
-export function checkBoundConfig(
-  boundConfig: GPCBoundConfig
-): GPCCircuitRequirements {
+export function checkBoundConfig(boundConfig: GPCBoundConfig): GPCRequirements {
   if (boundConfig.circuitIdentifier === undefined) {
     throw new TypeError("Bound config must include circuit identifier.");
   }
@@ -375,7 +369,7 @@ export function checkBoundConfig(
  */
 export function checkRevealedClaims(
   revealedClaims: GPCRevealedClaims
-): GPCCircuitRequirements {
+): GPCRequirements {
   let totalObjects = 0;
   let totalEntries = 0;
   let requiredMerkleDepth = 0;
@@ -406,7 +400,7 @@ export function checkRevealedClaims(
     checkPODValue("watermark", revealedClaims.watermark);
   }
 
-  return GPCCircuitRequirements(
+  return GPCRequirements(
     totalObjects,
     totalEntries,
     requiredMerkleDepth,
@@ -541,7 +535,7 @@ export function checkVerifyClaimsForConfig(
  * @throws Error if there are no circuits satisfying the given requirements.
  */
 export function circuitDescForRequirements(
-  circuitReq: GPCCircuitRequirements
+  circuitReq: GPCRequirements
 ): ProtoPODGPCCircuitDesc {
   for (const circuitDesc of ProtoPODGPC.CIRCUIT_FAMILY) {
     if (circuitDescMeetsRequirements(circuitDesc, circuitReq)) {
@@ -565,7 +559,7 @@ export function circuitDescForRequirements(
  */
 export function circuitDescMeetsRequirements(
   circuitDesc: ProtoPODGPCCircuitDesc,
-  circuitReq: GPCCircuitRequirements
+  circuitReq: GPCRequirements
 ): boolean {
   // Check tuple parameter compatibility.
   // Indicate negative tuple requirement check if `requiredNumTuples` throws due
@@ -605,10 +599,10 @@ export function circuitDescMeetsRequirements(
  */
 
 export function mergeRequirements(
-  rs1: GPCCircuitRequirements,
-  rs2: GPCCircuitRequirements
-): GPCCircuitRequirements {
-  return GPCCircuitRequirements(
+  rs1: GPCRequirements,
+  rs2: GPCRequirements
+): GPCRequirements {
+  return GPCRequirements(
     Math.max(rs1.nObjects, rs2.nObjects),
     Math.max(rs1.nEntries, rs2.nEntries),
     Math.max(rs1.merkleMaxDepth, rs2.merkleMaxDepth),
@@ -635,7 +629,7 @@ export function mergeRequirements(
  *   the named circuit cannot do so.
  */
 export function checkCircuitParameters(
-  requiredParameters: GPCCircuitRequirements,
+  requiredParameters: GPCRequirements,
   circuitIdentifier?: GPCIdentifier
 ): ProtoPODGPCCircuitDesc {
   if (circuitIdentifier !== undefined) {
